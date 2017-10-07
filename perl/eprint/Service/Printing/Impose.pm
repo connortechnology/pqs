@@ -39,14 +39,10 @@ sub impositions {
 
     my $substrates = get_substrates($dbh, $project); # Fits image at least.
 print STDERR "HAVE NO PAPER \n" unless @{$substrates};
-<<<<<<< HEAD
     my $subs = @{$substrates};
     
 use Data::Dumper;
 print STDERR "HAVE PAPER: $subs PRESSES: $presses \n", Dumper($substrates);
-=======
-#print STDERR "HAVE PRESES, SUBSTRATE ", Dumper($presses, $substrates);
->>>>>>> f33429f7a0f78a86a8560a4eafe01cbcd3eaaf5b
 
     my @styles     = get_runstyles(       $project);
 
