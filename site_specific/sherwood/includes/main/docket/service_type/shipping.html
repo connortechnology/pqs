@@ -1,0 +1,67 @@
+<div style=" padding-left: 2em; ">
+	<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"><span class="label">Shipping Type:&nbsp;&nbsp;</span>
+	<? if ($$variable{'rdbShippingContents'} ne 'Other') ?>
+		<?rdbShippingContents?>
+	<? else ($$variable{'rdbShippingContents'} ne 'Other') ?>
+		Samples
+	<? endif ($$variable{'rdbShippingContents'} ne 'Other') ?></td>
+    <td width="50%"><span class="label">Method:&nbsp;&nbsp;</span>
+	<?hdnShipVia1?></td>
+  </tr>
+  <tr>
+    <td><span class="label">Blind Shipment:&nbsp;&nbsp;</span>
+	<? if chkBlindShipment ?>
+	<?chkBlindShipment?>
+	<? else chkBlindShipment ?>
+	No
+	<? endif chkBlindShipment ?></td>
+    <td><span class="label">Shipment Weight:&nbsp;&nbsp;</span>
+	<? eval ( ($$variable{'weight1'} , $$variable{'weight2'}, $$variable{'weight3'}) = split /,/ , $$variable{'txtShipmentWeight'} )?>
+	
+	<? if ($$variable{'qtyIndex'} == 1) ?>
+		<?weight1?>&nbsp;lbs
+	<? endif ($$variable{'qtyIndex'} == 1) ?>
+	<? if ($$variable{'qtyIndex'} == 2) ?>
+		<?weight2?>&nbsp;lbs
+	<? endif ($$variable{'qtyIndex'} == 2) ?>
+	<? if ($$variable{'qtyIndex'} == 3) ?>
+		<?weight3?>&nbsp;lbs
+	<? endif ($$variable{'qtyIndex'} == 3) ?></td>
+  </tr>
+  <tr>
+    <td><span class="label">Company:&nbsp;&nbsp;</span>
+	<?txtShippingCompany?></td>
+    <td><span class="label">Contact:&nbsp;&nbsp;</span>
+	<?txtShippingContact?></td>
+  </tr>
+  <tr>
+  	<td><span class="label">Phone:&nbsp;&nbsp;</span>
+	<?txtShippingPhone?></td>
+    <td><span class="label">Email:&nbsp;&nbsp;</span>
+	<?txtShippingEmail?></td>
+  </tr>
+  <tr>
+  	<td><span class="label">Ship Address:&nbsp;&nbsp;</span>
+    <?txtShippingCompany?>
+    <div style=" padding-left: 9em; ">
+		<?txtShippingAddress1?><br />
+
+    <? if ( $$variable{'txtShippingAddress2'} ) ?>
+		<?txtShippingAddress2?><br />
+
+	<? endif ( $$variable{'txtShippingAddress2'} ) ?>
+    <?txtShippingCity?>,
+	<?ddmShippingStateProvince?>,
+	<?ddmShippingCountry?><br />
+
+	<?txtShippingPostalCode?></div></td>
+    <td valign="top"><? if (($$variable{UserType} eq 'E') or ($$variable{UserType} eq 'A')) ?>
+	<a href="/main/proj/shipping_labels.html?ServiceIndex=<?sid?>"><strong>Shipping Labels</strong></a>
+	<? endif (($$variable{UserType} eq 'E') or ($$variable{UserType} eq 'A')) ?></td>
+  </tr>
+  
+</table>
+ 	
+</div>

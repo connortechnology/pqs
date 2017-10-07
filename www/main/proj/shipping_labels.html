@@ -1,0 +1,236 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+        <!--#include virtual="/includes/web_page_title.html" -->
+        Projects - Shipping Labels
+        <!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" type="text/css" rel="stylesheet" media="screen" />
+	<link href="/styles/shipping_labels.css" type="text/css" rel="stylesheet" media="screen" />
+	<link href="/styles/shipping_labels_print.css" type="text/css" rel="stylesheet" media="print" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/shipping_labels.js"></script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187; </span> Shipping Labels</h1>
+
+
+	<fieldset class="hidden-details">
+		<legend>
+			Printing Instructions
+		</legend>
+		
+		<p>Shipping labels print directly from this page. A Print Preview will display how the labels will print.</p>
+
+		<p>On this page, Shipping Labels with checked-off checkboxes will print, those without will not, allowing the correct number of labels to be printed without waste.</p>
+
+		<p>10 labels are printed per sheet. When printing 25 labels, 2 separate print commands need to be issued. With the first, With the first, print 2 copies of a full 10 label sheet, producing 20 shipping labels. Then, uncheck 5 checkboxes, issue another Print command through your web browser, and the 5 remaining labels with checks in their checkboxes will be printed &#8211; providing a total of 25 shipping labels.</p>
+
+		<p>If this is your first time printing labels, or your labels are not printing correctly, please be sure that printing scale is set to 100%, all margins are 0.5 inches (12.7 millimetres) and all header and footer information is blank. These settings are typically accessed from the File menu, under Page Setup.</p>
+		
+		<p>Once in Page Setup:<br />
+			<ul style="margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0;">
+				<li>Windows users with Microsoft Internet Explorer 6 will see their settings right away.</li>
+				<li>Windows users with Mozilla Firefox will need to click the &quot;Margins &amp; Header/Footer&quot; tab.</li>
+				<li>Mac Users will need to select &quot;Custom Paper Size&quot; from &quot;Settings&quot;, and set margins there.</li>
+			</ul>
+		</p>
+	</fieldset>
+
+
+	<fieldset>
+		<legend>
+			Shipping Labels
+		</legend>
+
+		<br class="clear" />
+	
+		<? loop SHIP_ADR ?>
+			<div class="page">
+				<address class="label row1 col1">
+					<label for="r1-c1">
+						<input id="r1-c1" type="checkbox" class="print-chk" checked="checked" />
+						<strong><?txtShippingCompany?></strong><br />
+						<? if ($$variable{txtShippingContact}) ?>
+							<em>Attn: <?txtShippingContact?></em><br />
+						<? endif ($$variable{txtShippingContact}) ?>
+						<?txtShippingAddress1?><br />
+						<? if ($$variable{txtShippingAddress2}) ?>
+							<?txtShippingAddress2?><br />
+						<? endif ($$variable{txtShippingAddress2}) ?>
+						<?txtShippingCity?>, <?ddmShippingStateProvince?><br />
+						<?ddmShippingCountry?> &nbsp;<?txtShippingPostalCode?><br />
+					</label>
+				</address>
+		
+				<address class="label row1 col2">
+					<label for="r1-c2">
+						<input id="r1-c2" type="checkbox" class="print-chk" checked="checked" />
+						<strong><?txtShippingCompany?></strong><br />
+						<? if ($$variable{txtShippingContact}) ?>
+							<em>Attn: <?txtShippingContact?></em><br />
+						<? endif ($$variable{txtShippingContact}) ?>
+						<?txtShippingAddress1?><br />
+						<? if ($$variable{txtShippingAddress2}) ?>
+							<?txtShippingAddress2?><br />
+						<? endif ($$variable{txtShippingAddress2}) ?>
+						<?txtShippingCity?>, <?ddmShippingStateProvince?><br />
+						<?ddmShippingCountry?> &nbsp;<?txtShippingPostalCode?><br />
+					</label>
+				</address>
+		
+				<br class="clear extra" />
+		
+				<address class="label row2 col1">
+					<label for="r2-c1">
+						<input id="r2-c1" type="checkbox" class="print-chk" checked="checked" />
+						<strong><?txtShippingCompany?></strong><br />
+						<? if ($$variable{txtShippingContact}) ?>
+							<em>Attn: <?txtShippingContact?></em><br />
+						<? endif ($$variable{txtShippingContact}) ?>
+						<?txtShippingAddress1?><br />
+						<? if ($$variable{txtShippingAddress2}) ?>
+							<?txtShippingAddress2?><br />
+						<? endif ($$variable{txtShippingAddress2}) ?>
+						<?txtShippingCity?>, <?ddmShippingStateProvince?><br />
+						<?ddmShippingCountry?> &nbsp;<?txtShippingPostalCode?><br />
+					</label>
+				</address>
+		
+				<address class="label row2 col2">
+					<label for="r2-c2">
+						<input id="r2-c2" type="checkbox" class="print-chk" checked="checked" />
+						<strong><?txtShippingCompany?></strong><br />
+						<? if ($$variable{txtShippingContact}) ?>
+							<em>Attn: <?txtShippingContact?></em><br />
+						<? endif ($$variable{txtShippingContact}) ?>
+						<?txtShippingAddress1?><br />
+						<? if ($$variable{txtShippingAddress2}) ?>
+							<?txtShippingAddress2?><br />
+						<? endif ($$variable{txtShippingAddress2}) ?>
+						<?txtShippingCity?>, <?ddmShippingStateProvince?><br />
+						<?ddmShippingCountry?> &nbsp;<?txtShippingPostalCode?><br />
+					</label>
+				</address>
+		
+				<br class="clear extra" />
+		
+				<address class="label row3 col1">
+					<label for="r3-c1">
+						<input id="r3-c1" type="checkbox" class="print-chk" checked="checked" />
+						<strong><?txtShippingCompany?></strong><br />
+						<? if ($$variable{txtShippingContact}) ?>
+							<em>Attn: <?txtShippingContact?></em><br />
+						<? endif ($$variable{txtShippingContact}) ?>
+						<?txtShippingAddress1?><br />
+						<? if ($$variable{txtShippingAddress2}) ?>
+							<?txtShippingAddress2?><br />
+						<? endif ($$variable{txtShippingAddress2}) ?>
+						<?txtShippingCity?>, <?ddmShippingStateProvince?><br />
+						<?ddmShippingCountry?> &nbsp;<?txtShippingPostalCode?><br />
+					</label>
+				</address>
+		
+				<address class="label row3 col2">
+					<label for="r3-c2">
+						<input id="r3-c2" type="checkbox" class="print-chk" checked="checked" />
+						<strong><?txtShippingCompany?></strong><br />
+						<? if ($$variable{txtShippingContact}) ?>
+							<em>Attn: <?txtShippingContact?></em><br />
+						<? endif ($$variable{txtShippingContact}) ?>
+						<?txtShippingAddress1?><br />
+						<? if ($$variable{txtShippingAddress2}) ?>
+							<?txtShippingAddress2?><br />
+						<? endif ($$variable{txtShippingAddress2}) ?>
+						<?txtShippingCity?>, <?ddmShippingStateProvince?><br />
+						<?ddmShippingCountry?> &nbsp;<?txtShippingPostalCode?><br />
+					</label>
+				</address>
+				
+				<br class="clear extra" />
+		
+				<address class="label row4 col1">
+					<label for="r4-c1">
+						<input id="r4-c1" type="checkbox" class="print-chk" checked="checked" />
+						<strong><?txtShippingCompany?></strong><br />
+						<? if ($$variable{txtShippingContact}) ?>
+							<em>Attn: <?txtShippingContact?></em><br />
+						<? endif ($$variable{txtShippingContact}) ?>
+						<?txtShippingAddress1?><br />
+						<? if ($$variable{txtShippingAddress2}) ?>
+							<?txtShippingAddress2?><br />
+						<? endif ($$variable{txtShippingAddress2}) ?>
+						<?txtShippingCity?>, <?ddmShippingStateProvince?><br />
+						<?ddmShippingCountry?> &nbsp;<?txtShippingPostalCode?><br />
+					</label>
+				</address>
+		
+				<address class="label row4 col2">
+					<label for="r4-c2">
+						<input id="r4-c2" type="checkbox" class="print-chk" checked="checked" />
+						<strong><?txtShippingCompany?></strong><br />
+						<? if ($$variable{txtShippingContact}) ?>
+							<em>Attn: <?txtShippingContact?></em><br />
+						<? endif ($$variable{txtShippingContact}) ?>
+						<?txtShippingAddress1?><br />
+						<? if ($$variable{txtShippingAddress2}) ?>
+							<?txtShippingAddress2?><br />
+						<? endif ($$variable{txtShippingAddress2}) ?>
+						<?txtShippingCity?>, <?ddmShippingStateProvince?><br />
+						<?ddmShippingCountry?> &nbsp;<?txtShippingPostalCode?><br />
+					</label>
+				</address>
+				
+				<br class="clear extra" />
+		
+				<address class="label row5 col1">
+					<label for="r5-c1">
+						<input id="r5-c1" type="checkbox" class="print-chk" checked="checked" />
+						<strong><?txtShippingCompany?></strong><br />
+						<? if ($$variable{txtShippingContact}) ?>
+							<em>Attn: <?txtShippingContact?></em><br />
+						<? endif ($$variable{txtShippingContact}) ?>
+						<?txtShippingAddress1?><br />
+						<? if ($$variable{txtShippingAddress2}) ?>
+							<?txtShippingAddress2?><br />
+						<? endif ($$variable{txtShippingAddress2}) ?>
+						<?txtShippingCity?>, <?ddmShippingStateProvince?><br />
+						<?ddmShippingCountry?> &nbsp;<?txtShippingPostalCode?><br />
+					</label>
+				</address>
+		
+				<address class="label row5 col2">
+					<label for="r5-c2">
+						<input id="r5-c2" type="checkbox" class="print-chk" checked="checked" />
+						<strong><?txtShippingCompany?></strong><br />
+						<? if ($$variable{txtShippingContact}) ?>
+							<em>Attn: <?txtShippingContact?></em><br />
+						<? endif ($$variable{txtShippingContact}) ?>
+						<?txtShippingAddress1?><br />
+						<? if ($$variable{txtShippingAddress2}) ?>
+							<?txtShippingAddress2?><br />
+						<? endif ($$variable{txtShippingAddress2}) ?>
+						<?txtShippingCity?>, <?ddmShippingStateProvince?><br />
+						<?ddmShippingCountry?> &nbsp;<?txtShippingPostalCode?><br />
+					</label>
+				</address>
+			</div>
+		<? endloop SHIP_ADR ?>
+		<br />
+	</fieldset>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

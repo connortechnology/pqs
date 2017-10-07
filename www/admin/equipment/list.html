@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude"><head>
+		<title tal:content="title">Print-Quotes Title</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+
+		<!-- TEMPORARY: Header menus. -->
+		<script type="text/javascript" src="/javascripts/other.js"></script>
+	</head>
+	<body>
+
+		<xi:include href="/includes/c1-tal.html" />
+
+		<!-- Sidebar -->
+		<div id="sidebar">
+			<div class="option">
+				<!-- THIS SHOULD BE A LIST! Short on time right now and no CSS defined. -->
+				<table class="no-formatting">
+					<thead>
+						<tr>
+							<th>Types</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr tal:repeat="type equipment">
+							<td><a href="#Cutter" tal:attributes="href string:#$type/data/0/type_ref" tal:content="type/group">Cutter</a></td>
+						</tr>
+						<tr tal:replace="nothing">
+							<td><a href="#Drill">Drill</a></td>
+						</tr>
+						<tr tal:replace="nothing">
+							<td><a href="#Folder">Folder</a></td>
+						</tr>
+						<tr class="selected" tal:replace="nothing">
+							<td><a href="#Press">Press</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<div id="content">
+			<h1><span class="title-section">System &#187; Production &#187;</span> Equipment &#187; Inventory</h1>
+			
+			<fieldset>
+				<legend>
+					Equipment Inventory
+				</legend>
+
+				<!-- Button bar. -->
+				<div class="button-bar">
+					<form method="get" action="/admin/specifications">
+						<select name="type" class="float-right" style="margin-top: 1px; margin-left: 0.5em;">
+							<option value="14" tal:repeat="t types" tal:content="t/name" tal:attributes="value t/id">Offset Press</option>
+							<option value="12" tal:replace="nothing">Folder</option>
+						</select>
+
+						<input type="submit" class="button right" value="New Equipment" />
+					</form>
+					<br />
+					</div>
+				<!-- Display equipment by the grouping chosen. -->
+				<div id="Printing" tal:repeat="type equipment" tal:attributes="id type/data/0/type_ref"  class="group">
+					<h2 tal:content="type/group" tal:attributes="id type/group">Press</h2>
+					<!-- We really need a better handler for this JS. The confirmation dialogue should also give a bulletted list of equipment string ids that will be deleted. A possible way to do this is to give the string id link an id of the numeric id and do an ElementByID lookup to get that value for use in the dialogue. -->
+					<form method="post" action="equipment" onsubmit="alert(form.elements['delete']); return false;" > <!-- return confirm('Are you sure you want to delete this equiment?'); -->
+						<table class="common">
+							<colgroup class="id" />
+							<colgroup class="name" />
+							<colgroup class="description" />
+							<colgroup class="delete" />
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>Name</th>
+									<th>Description</th>
+									<!-- <th title="Remove">R</th> -->
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="even" tal:repeat="equip type/data" tal:attributes="class decode:repeat/even 0 'even' 'odd'">
+									<td><a href="/admin/pricing/pricing.html" tal:content="equip/id"   tal:attributes="href string:/admin/pricing?equipment=$equip/eid">HM-SM74-5C-P</a></td>
+									<td><a href="/admin/pricing/pricing.html" tal:content="equip/name" tal:attributes="href string:/admin/pricing?equipment=$equip/eid">Heidelberg Speedmaster SM 74</a></td>
+									<td tal:content="equip/description">A 5 colour perfecting press with attached aqueous coater.</td>
+	<!--						<td>
+	Stupid IE doesn't properly support this HTML4 Spec TAG! Instead of doing it with checkboxes or individual forms wrapped around submit buttons with hidden fields for the values, we'll work around it with an id attribute and JS. Not a nice solution but good enough for now
+										<button id="314" type="submit" name="delete" title="Delete" value="314" tal:attributes="id equip/eid;value equip/eid;title string:Delete $equip/id" onclick="this.form.elements[this.name].value=this.id; alert(this.form.elements[this.name].value)">
+											X
+										</button>
+									</td>
+	-->
+								</tr>
+							</tbody>
+						</table>
+					</form>
+				</div>
+			</fieldset>
+		</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

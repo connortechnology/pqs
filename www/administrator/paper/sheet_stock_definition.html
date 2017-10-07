@@ -1,0 +1,200 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Paper - View Sheet Stock Definition
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<!--#include virtual="/includes/h2-js.html" -->
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">Fields &#187;</span> definition for sheet stock</h1>
+
+	<table class="no-td">
+		<tr>
+			<th>Field Name</th>
+			<th>Description</th>
+			<th>Data Type</th>
+			<th>Example</th>
+		</tr>
+		<tr>
+			<td> strCategory * </td>
+			<td> Category of the stock </td>
+			<td> text </td>
+			<td> Cover </td>
+		</tr>
+		<tr>
+			<td> strId * </td>
+			<td> Stock ID </td>
+			<td> text </td>
+			<td> House-C-C2S-W-10-23x35 </td>
+		</tr>
+		<tr>
+			<td> strName * </td>
+			<td> Name of the stock </td>
+			<td> text </td>
+			<td> Cover-HouseStock </td>
+		</tr>
+		<tr>
+			<td> strDetails </td>
+			<td> Details of the stock (used for envelopes window positioning only) </td>
+			<td> text </td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td> strFinish * </td>
+			<td> Finish coating </td>
+			<td> text </td>
+			<td> Coated 2 Sides </td>
+		</tr>
+		<tr>
+			<td> strColour * </td>
+			<td> <?ws_Colour?> of the stock </td>
+			<td> text </td>
+			<td> White </td>
+		</tr>
+		<tr>
+			<td> strMweight * </td>
+			<td> Weight of the stock per 1000 sheet </td>
+			<td> text </td>
+			<td> 278 </td>
+		</tr>
+		<tr>
+			<td> strWeight * </td>
+			<td> Thickness name </td>
+			<td> text </td>
+			<td> 10 PT - Cover </td>
+		</tr>
+		<tr>
+			<td> strCalliper * </td>
+			<td> Thickness of 1 sheet in 1000's of inch </td>
+			<td> text </td>
+			<td> 0.01 </td>
+		</tr>
+		<tr>
+			<td> dblWidth * </td>
+			<td> Width of sheet (grain direction) </td>
+			<td> numeric </td>
+			<td> 35.0000 </td>
+		</tr>
+		<tr>
+			<td> dblHeight * </td>
+			<td> Height of sheet </td>
+			<td> numeric </td>
+			<td> 23.0000 </td>
+		</tr>
+		<tr>
+			<td> lngPackageqty * </td>
+			<td> How many sheets per package? </td>
+			<td> integer </td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td> ysnBreakable * </td>
+			<td> Can we buy part of a package? </td>
+			<td> Y/N </td>
+			<td> Y </td>
+		</tr>
+		<tr>
+			<td> dblBrokencartonprice </td>
+			<td> Stock price for buying part of a package (paper supplier reference price) </td>
+			<td> numeric </td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td> dblEndbracketprice </td>
+			<td> End bracket price (paper supplier reference price) </td>
+			<td> numeric </td>
+			<td> 177.25 </td>
+		</tr>
+		<tr>
+			<td> dbl1tonprice </td>
+			<td> Stock price for buying 1 ton (paper supplier reference price) </td>
+			<td> numeric </td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td> dbl5tonprice </td>
+			<td> Stock price for buying 5 tons (paper supplier reference price) </td>
+			<td> numeric </td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td> dbl20tonprice </td>
+			<td> Stock price for buying 20 tons (paper supplier reference price) </td>
+			<td> numeric </td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td> dblOtherprice </td>
+			<td> Discount stock price, such as a contract price (paper supplier reference price) </td>
+			<td> numeric </td>
+			<td> 122 </td>
+		</tr>
+		<tr>
+			<td> strSupplier * </td>
+			<td> Supplier of the stock </td>
+			<td> text </td>
+			<td> Misc </td>
+		</tr>
+		<tr>
+			<td> strTemplate </td>
+			<td> Filter stock by project template </td>
+			<td> text </td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td> ysnDoublesided * </td>
+			<td> Does the stock have same coating on both sides? </td>
+			<td> Y/N </td>
+			<td> Y </td>
+		</tr>
+		<tr>
+			<td> ysnCutpaper * </td>
+			<td> Can the stock be cut down? </td>
+			<td> Y/N </td>
+			<td> Y </td>
+		</tr>
+		<tr>
+			<td> lngMulipart </td>
+			<td> Number of multiple parts? </td>
+			<td> integer </td>
+			<td> 1 </td>
+		</tr>
+		<tr>
+			<td> ysnPerfecting * </td>
+			<td> Is it stiff enough to perfect without gutters? </td>
+			<td> Y/N </td>
+			<td> N </td>
+		</tr>
+		<tr>
+			<td> lngSort </td>
+			<td> Sort order in paper pull downs </td>
+			<td> integer </td>
+			<td> 0 </td>
+		</tr>
+		<tr>
+			<td> Recommendations * </td>
+			<td> Project types the stock is recommended for </td>
+			<td> text </td>
+			<td> Booklets, Books, Brochures, BusinessCards, Calendars, Cards, Catalogues, Covers, Custom, Envelopes, Flyers, Inserts, Labels, Magazines, Manuals, Maps, MultiVersion, NewsLetters, Packaging, Pamphlets/Leaflets, Posters, PresentationFolders, PressSheetCombination, Reports, Screen, Tags/Tickets </td>
+		</tr>
+	</table>
+
+	<p>Fields marked with an * are required in CSV import files, otherwise the fields are optional.</p>
+
+	<div class="button-bar">
+		<a href="/administrator/paper/import_export.html" class="button">Back to Stock Import / Export</a>
+		<br class="clear" />
+	</div>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

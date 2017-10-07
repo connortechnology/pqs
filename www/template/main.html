@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title><!--#include virtual="/includes/web_page_title.html" -->
+		My Products - PDF Template</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<style type="text/css">
+		#data { 
+			margin: -1px -1px 2ex -1px; 
+			width: 100%; 
+			overflow: auto; 
+			padding: 1px; 
+		}
+	</style>
+    <script type="text/javascript">
+	
+	function approvedcheck()
+	{
+		if (!document.getElementById("approvebox").value) {
+		  alert ('You must enter your intials in the textbox to approve the conditions before continuing.');
+		}
+		
+	}
+	
+	
+
+	
+	</script>
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Account &#187;</span> PDF Template</h1>
+
+	<p style="text-align:center">PLEASE PROOF CAREFULLY. Once your flyer is approved for print and submitted, you will not be able to make changes and assume all responsibility in any errors or omissions in your proof. You agree that Impact Marketing &amp; Consulting Inc. will not be held liable for errors that were present at the time you approved your proof for print.</p>
+	<p style="text-align:center">VEUILLEZ RELIRE L&prime;&Eacute;PREUVE ATTENTIVEMENT. Une fois que votre d&eacute;pliant est approuv&eacute; et soumis pour impression, vous ne serez pas en mesure d&prime;y apporter des changements et vous devrez assumer toute responsabilit&eacute; pour les erreurs ou omissions dans votre &eacute;preuve. Vous convenez qu&prime;Impact Marketing &amp; Consulting Inc. ne sera pas tenu responsable des erreurs qui &eacute;taient pr&eacute;sentes au moment o&ugrave; vous avez approuv&eacute; votre &eacute;preuve pour impression.</p>
+
+	 
+
+	<?if count?>
+		<br />
+		<p>Existing record data for the selected template is available for viewing below.
+        <? if is_staff ?>
+   
+    <br class="clear" />
+     <? endif is_staff ?></p>
+
+		<form method="get" action="/build">
+			<input type="hidden" name="pid"   value="<?pid?>" />
+			<input type="hidden" name="level" value="0" />
+
+			<?if create_to_order?>
+				<input type="hidden" name="create_to_order" value="1" />
+			<?endif create_to_order?>
+
+			
+		</form>
+			<? if ($$variable{user_id} eq '10283'  || $$variable{is_staff} || $$variable{user_id} eq '129' || $$variable{user_id} eq '162') ?>
+        <!-- user_id 129   = Company Name 10028 = Company ID 129 -->
+        <!-- user_id 162   = Company Name 10100 = Company ID 147 -->
+        <!-- user_id 10283 = Comapny Name 10283 = Company ID 10283 -->
+	<div id="data">
+			<table>
+				<caption style="margin-top: 0.5ex;" align="bottom"><?count?> record<?if multiple:count?>s<?endif multiple:count?></caption>
+
+				<thead>
+					<tr>
+						<?loop headers?>		
+							<th><?name?></th>
+						<?endloop headers?>		
+					</tr>
+				</thead>
+
+				<tbody>
+					<?loop data?>
+						<?eval ($variable->{row} = $variable->{_row} - 1)?>
+						<tr class="r<?_even?>" onclick="window.location='record.html?pid=<?pid?>;offset=<?row?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>'">
+								<td>Record <?_row?> </td>
+						</tr>
+					<?endloop data?>
+                    <tr><? eval( use Data::Dumper; print STDERR Dumper($variable) ) ?>
+                    </tr>
+				</tbody>
+			</table>
+		</div>
+        	<? endif ($$variable{user_id} eq '10283'  || $$variable{is_staff} || $$variable{user_id} eq '129' || $$variable{user_id} eq '162') ?>
+
+		<form method="get" action="/build" name="f1" id="f1"  >
+			<input type="hidden" name="pid"   value="<?pid?>" />
+			<input type="hidden" name="level" value="0" />
+
+			<?if create_to_order?>
+				<input type="hidden" name="create_to_order" value="1" />
+			<?endif create_to_order?>
+			<div id="previews" align="center">
+        <? loop pages ?>
+		       
+                    <div class="preview">
+                    	
+                    	<? eval( $variable->{page} = $variable->{_row} -1 ) ?>
+                        <!--<img width="600px" id="p<?_row?>" alt="Page <?_row?> Preview is Loading ..." src="/pdf/render?pid=<?pid?>&<?record_link?>;n=<?page?>"  onclick="window.location='record.html?pid=<?pid?>;<?if create_to_order?>;create_to_order=1<?endif create_to_order?>'" <? if _last ?>onload="buttonvisibility()"<? endif _last ?> />-->
+                         
+ 		<embed src="/pdf/render?pid=<?pid?>&;n=<?page?>;file_type=pdf" width="825px" height="600px" >
+       If you do not have the Adobe Acrobat Plugin; Download the PDF for <a href="/pdf/render?pid=<?pid?>&;n=<?page?>;file_type=pdf">Page <?_row?>  here</a>. <br />
+       Note you will need Adobe Acrobat Reader or Higher to view the PDF. <br />
+       To Download Adobe Acrobat Reader <a href="http://get.adobe.com/reader/otherversions/"> click here</a>.
+        <br />
+                    </div>        
+            <? endloop pages ?>
+
+        
+               
+            </div>
+            
+           
+            <table style="border:2px solid #E41937;">
+            <tr style="border:none">
+            <td style="border:none">
+            <p style="font-size:16px; text-align:justify;">
+            &nbsp;&nbsp;&nbsp;I certify that I have checked my flyer proof and it is free from errors, ready for print and that I have saved or printed a copy of the flyer for my records. Impact Marketing & Consulting Inc. will not be held responsible for any errors or omissions.</p>
+            <p style="font-size:20px; text-align:justify;"><strong>Please enter your initials in the textbox to continue: </strong><input name="approvebox" type="text" style="background-color:#FF6" id="approvebox" size="2" />
+            </p>
+            </td>
+            </tr>
+            <tr style="border:none">
+            <td style="border:none">
+         
+			<div class="button-bar" style="overflow: hidden;" >
+          <input value="Make Corrections" class="button left" onclick="window.location='record.html?pid=<?pid?>;<?if create_to_order?>;create_to_order=1<?endif create_to_order?>'" style="text-align:center; height:15px; width:auto"/> 
+
+				<input type="submit"  value="Approve and Continue" id="ApproveButton" class="button right" onmousedown="approvedcheck()" />
+			</div>
+            </form>
+            </td>
+            </tr>
+            </table>
+            
+		
+
+	<?else count?>
+		<p>No existing record data available for the selected template. Please <a href="record.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">click here</a> to add record data.</p>
+	<?endif count?>
+    <? if is staff ?>
+    <a href="assets.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">Edit Assets here.</a>
+     <? endif is staff ?>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	 <? if is_staff ?>
+    <ul>
+		<li><a href="assets.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">Assets</a></li>
+		<li><a href="data.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">Bulk Data</a></li>
+		<li><a href="record.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">Records</a></li>
+	</ul>
+     <? endif is_staff ?>
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

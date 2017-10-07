@@ -1,0 +1,352 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title tal:content="title">Print-Quotes Title</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+
+		<script type="text/javascript" src="/javascripts/admin/form.js"></script>
+
+		<!-- TEMPORARY: Header menus. -->
+		<script type="text/javascript" src="/javascripts/other.js"></script>
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+	</head>
+	<body>
+		<!-- TEMPORARY: Old header. -->
+		<xi:include href="/includes/c1-tal.html" />
+		<!-- We might want to consider flowing the page differently so the sidebar gets displayed under the info pane if no CSS is used. Not too hard if we put the sidebar div inside the content div, after an info div, and then take it out of the flow with postiion: fixed; -->
+
+		<!-- Sidebar -->
+		<div id="sidebar">
+
+			<div class="option">
+				<table class="no-formatting">
+					<thead>
+						<tr>
+							<th>Material Type</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="disabled" tal:repeat="t types" tal:attributes="class decode:t/exists 0 'disabled' nothing">
+							<td tal:define="selected eq:t/id type/id" tal:attributes="class decode:selected 1 'selected' nothing"><a href="#Finishing" tal:omit-tag="true:selected" tal:attributes="href string:material?pricelist=${list/id}&materialtype=${t/id}" tal:content="t/name">Finishing</a></td>
+						</tr>
+						<tr tal:replace="nothing">
+							<td><a href="#Ink">Ink</a></td>
+						</tr>
+						<tr class="selected" tal:replace="nothing">
+							<td><a href="#Plate">&#9830; Plate</a></td>
+						</tr>
+						<tr tal:replace="nothing">
+							<td><a href="#Punching">Punching</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="option">
+				<table class="no-formatting">
+					<thead>
+						<tr>
+							<th colspan="3">Price Lists</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="selected" tal:repeat="l lists" tal:attributes="class decode:l/exists 0 'disabled' nothing">
+							<td tal:define="selected eq:l/id list/id" tal:attributes="class decode:selected 1 'selected' nothing"><a href="#Default" tal:omit-tag="true:selected" tal:attributes="href string:material?pricelist=${l/id}&materialtype=${type/id}" tal:content="l/name">Defualt</a></td>
+							<td tal:content="l/currency">CDN</td>
+							<td tal:content="l/symbol">$</td>
+						</tr>
+						<tr class="disabled" tal:replace="nothing">
+							<td><a href="#Trade">Trade</a></td>
+							<td>CDN</td>
+							<td>$</td>
+						</tr>
+						<tr tal:replace="nothing">
+							<td><a href="#Default">Defualt</a></td>
+							<td>USD</td>
+							<td>$</td>
+						</tr>
+						<tr class="disabled" tal:replace="nothing">
+							<td><a href="#Export">Export</a></td>
+							<td>CHN</td>
+							<td>&yen;</td>
+						</tr>
+					</tbody>
+				</table>
+				<!-- Audit log for the current page. -->
+				<div class="option">
+					<a class="back" href="/admin/audit_log.html" tal:attributes="href string:/admin/audit_log?page=${uri_escape: r/uri}&query=${uri_escape: r/args}">History</a>				</div>
+			</div>
+			<!-- Leave off for now as this might be confusing especially given the wrapping that will occur due to the length of service names. Though we may want to consider a CSS driven (w/ some JS help for IE?) dropdown menu/bar so
+			<hr style="margin-bottom: 2ex;" />
+			<div class="option">
+				<table>
+					<thead>
+						<tr>
+							<th>Materials</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><a href="#Trapping">One Colour Impression</a></td>
+						</tr>
+						<tr>
+							<td><a href="#ImpositionLayout">Two Colour Impression</a></td>
+						</tr>
+						<tr>
+							<td><a href="#Printing">Foo</a></td>
+						</tr>
+						<tr>
+							<td><a href="#Scoring">Bar</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+ -->
+		</div>
+
+		<div id="content">
+			<h1><span class="title-section">System &#187; Production &#187;</span> Material Pricing : <span tal:replace="type/name">Plates</span></h1>
+
+			<!-- Display the pricing for every material (for now). -->
+			<div id="Plates" tal:attributes="id type/name" class="group">
+
+				<!-- We really shouldn't be posting here, instead we should post elsewhere and redirect internally. (So we're back to a GET) -->
+				<form method="POST" name="pricing" action="material?pricelist=$list/id&materialtype=$type/id">
+					<input type="hidden" name="pricelist"    value="$list/id" />
+					<input type="hidden" name="materialtype" value="$type/id" />
+					<!-- Button bar. -->
+
+					<fieldset>
+						<legend>
+							Pricing
+						</legend>
+	
+						<!-- All material pricing is ranged on quantity. -->
+						<table tal:repeat="material pricing" class="multi">
+							<colgroup>
+								<col class="min" />
+								<col class="max" />
+							</colgroup>
+							<colgroup>
+								<col class="cost" />
+								<col class="markup" />
+								<col class="price" />
+							</colgroup>
+							<colgroup class="equipment" />
+							<thead>
+								<tr class="service">
+									<th colspan="5" ><input type="text" tal:attributes="value material/name;id string:$material/id-material_name;name string:$material/id-material_name" style="border:solid 1px; width:300px; text-align:left"/></th>
+									<th colspan="1" class="top"><input value="Delete" onclick="return confirm('Are you sure you want to delete this record?')"  tal:attributes="name string:$material/id-delete" type="submit" style="width:45px; float:none" class="button" id="delete_material" /><a href="#content"> ^</a></th>
+								</tr>
+								<tr class="units">
+									<th colspan="2" tal:content="unit/ranged">Units</th>
+									<th colspan="3" tal:content="unit/price">Per 1000 Units</th>
+									<th> </th>
+								</tr>
+								<tr class="per-service">
+									<th class="min">Min.</th>
+									<th class="max">Max.</th>
+									<th class="cost">Cost (<span tal:content="list/symbol">$</span>)</th>
+									<th class="markup">Markup (%)</th>
+									<th class="price">Price (<span tal:content="list/symbol">$</span>)</th>
+	
+									<th class="equipment">Equipment</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="even" tal:repeat="range material/ranges"  tal:attributes="class decode:repeat/even 0 'even' 'odd'">
+									<td><input type="text" value="0"      tal:attributes="id string:$material/id-$repeat/index-min;name string:$material/id-$repeat/index-min;value range/min" /></td>
+									<td><input type="text" value="1000"   tal:attributes="id string:$material/id-$repeat/index-max;name string:$material/id-$repeat/index-max;value range/max" /></td>
+									<td><input type="text" value="100.00" tal:attributes="id string:$material/id-$repeat/index-cost;name string:$material/id-$repeat/index-cost;value range/cost" /></td>
+									<td><input type="text" value="15.00"  tal:attributes="id string:$material/id-$repeat/index-markup;name string:$material/id-$repeat/index-markup;value range/markup" /></td>
+									<td><input type="text" value="115.00" tal:attributes="id string:$material/id-$repeat/index-price;name string:$material/id-$repeat/index-price;value range/price" /></td>
+									<td><input type="text" value="QM46"   tal:attributes="id string:$material/id-$repeat/index-equip;name string:$material/id-$repeat/index-equip;value range/equip" /></td>
+								</tr>
+								<tr class="odd" tal:replace="nothing">
+									<td><input type="text" value="1000" /></td>
+									<td><input type="text" value="2000" /></td>
+									<td><input type="text" value="90.00" /></td>
+									<td><input type="text" value="15.00" /></td>
+									<td><input type="text" value="103.50" /></td>
+									<td><input type="text" value="QM46" /></td>
+								</tr>
+								<tr class="even" tal:replace="nothing">
+									<td><input type="text" value="2000" /></td>
+									<td><input type="text" value="3000" /></td>
+									<td><input type="text" value="87.00" /></td>
+									<td><input type="text" value="15.00" /></td>
+									<td><input type="text" value="100.05" /></td>
+									<td><input type="text" value="QM46" /></td>
+								</tr>
+								<tr class="odd" tal:replace="nothing">
+									<td><input type="text" value="3000" /></td>
+									<td><input type="text" value="10000" /></td>
+									<td><input type="text" value="84.50" /></td>
+									<td><input type="text" value="15.00" /></td>
+									<td><input type="text" value="97.12" /></td>
+									<td><input type="text" value="QM46" /></td>
+								</tr>
+								<tr class="even" tal:replace="nothing">
+									<td><input type="text" value="10000" /></td>
+									<td><input type="text" value="&#8734;" /></td>
+									<td><input type="text" value="82.00" /></td>
+									<td><input type="text" value="15.00" /></td>
+									<td><input type="text" value="94.30" /></td>
+									<td><input type="text" value="QM46" /></td>
+								</tr>
+								<tr class="odd" tal:replace="nothing">
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+								<tr class="even" tal:replace="nothing">
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+								<tr class="odd" tal:replace="nothing">
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+							</tbody>
+							<tfoot>
+								<tr>
+									<th colspan="4"></th>
+									<td colspan="2" class="discountable"><label>Discountable?<input type="checkbox" value="1" checked="true" tal:attributes="id string:$material/id-0-discountable;name string:$material/id-0-discountable;checked decode:material/discountable 1 'true' nothing" /></label></td>
+								</tr>
+							</tfoot>
+						</table>
+						<table tal:replace="nothing" class="multi">
+							<colgroup>
+								<col class="min" />
+								<col class="max" />
+							</colgroup>
+							<colgroup>
+								<col class="cost" />
+								<col class="markup" />
+								<col class="price" />
+							</colgroup>
+							<thead>
+								<tr class="service">
+									<th colspan="4">40" Plate</th>
+									<th colspan="1" class="top"><a href="#content">^</a></th>
+								</tr>
+								<tr class="units">
+									<th colspan="2">Impression</th>
+									<th colspan="3">Per 1000 Impressions</th>
+								</tr>
+								<tr class="per-service">
+									<th class="min">Min.</th>
+									<th class="max">Max.</th>
+									<th class="cost">Cost ($)</th>
+									<th class="markup">Markup (%)</th>
+									<th class="price">Price ($)</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="even">
+									<td><input type="text" value="0" /></td>
+									<td><input type="text" value="1000" /></td>
+									<td><input type="text" value="100.00" /></td>
+									<td><input type="text" value="15.00" /></td>
+									<td><input type="text" value="115.00" /></td>
+								</tr>
+								<tr class="odd">
+									<td><input type="text" value="1000" /></td>
+									<td><input type="text" value="2000" /></td>
+									<td><input type="text" value="90.00" /></td>
+									<td><input type="text" value="15.00" /></td>
+									<td><input type="text" value="103.50" /></td>
+								</tr>
+								<tr class="even">
+									<td><input type="text" value="2000" /></td>
+									<td><input type="text" value="3000" /></td>
+									<td><input type="text" value="87.00" /></td>
+									<td><input type="text" value="15.00" /></td>
+									<td><input type="text" value="100.05" /></td>
+								</tr>
+								<tr class="odd">
+									<td><input type="text" value="3000" /></td>
+									<td><input type="text" value="10000" /></td>
+									<td><input type="text" value="84.50" /></td>
+									<td><input type="text" value="15.00" /></td>
+									<td><input type="text" value="97.12" /></td>
+								</tr>
+								<tr class="even">
+									<td><input type="text" value="10000" /></td>
+									<td><input type="text" value="&#8734;" /></td>
+									<td><input type="text" value="82.00" /></td>
+									<td><input type="text" value="15.00" /></td>
+									<td><input type="text" value="94.30" /></td>
+								</tr>
+								<tr class="odd">
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+								<tr class="even">
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+								<tr class="odd">
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+							</tbody>
+							<tfoot>
+								<tr>
+									<th colspan="3"></th>
+									<td colspan="2" class="discountable"><label>Discountable?<input type="checkbox" value="1" checked="true" /></label></td>
+								</tr>
+							</tfoot>
+						</table>
+
+						<br />
+						<table class="multi">
+                            <thead>
+                                <tr>
+                                    <td style="border:none">
+                                    New Material: <input type="text" value="" name="new_material" id="new_material" style="border:solid 1px; width:500px; text-align:left"/>
+                                    </td>
+                                </tr>
+                            </thead>
+                        </table>
+						<div class="button-bar">
+							<input name="save" type="submit" class="button right" value="Save" />
+							<input id="reset" name="reset" type="reset" class="button" value="Reset" />
+							<!--  <input name="new"   type="submit" class="button" value="New" />
+							<input name="copy"   type="submit" class="button" value="Copy" />
+							<input name="delete" type="submit" class="button" value="Delete" /> -->
+							<br />
+						</div>
+						
+						<br />
+					</fieldset>
+
+				</form>
+			</div>
+		</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

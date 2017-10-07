@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Reports - Custom
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Reports &#187;</span> Custom</h1>
+
+	<fieldset>
+		<legend>
+			Search
+		</legend>
+
+		<p class="none">&nbsp;</p>
+
+		<form method="post" id="f1" name="f1" onsubmit="return fmCheck(f1);">
+
+			<label for="ddmStoredReport">Report Name:</label>
+			<select id="ddmStoredReport" name="ddmStoredReport" size=1 onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value=""> Select </option>
+				<?ddmStoredReport?>
+			</select>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="&lt;&lt;" />
+				<input class="button" type="submit" name="btnFunction" value="&gt;&gt;" />
+				<input class="button" type="button" value="New" onclick="addCheck(f1);" />
+				<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=2;" />
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<br />
+			</div>
+			<br />
+
+			<label for="strReportName">Report Name:</label>
+			<input type="text" id="strReportName" name="strReportName" value="<?strReportName?>" size="65" class="input-text" />
+			<br />
+
+			<label for="strSQLCommand">SQL Command Text:</label>
+			<textarea id="strSQLCommand" name="strSQLCommand" class="fixed large"><?strSQLCommand?></textarea>
+		</form>
+
+		<br />
+
+		<form method="post" action="/administrator/reports/reports_custom_results.html" id="f2" name="f2">
+			<div class="button-bar indent-regular pad-top">
+				<input class="button" type="submit" name="btnFunction" value="Show Results" />
+				<input class="button" type="submit" name="btnFunction" value="Download in CSV Format" />
+				<br />
+			</div>
+
+			<input type="hidden" id="hiddenReportID" name="hiddenReportID" value="<?hiddenReportID?>" />
+		</form>
+		<br />
+	</fieldset>
+</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

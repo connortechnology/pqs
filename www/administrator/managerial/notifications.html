@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Managerial - Notifications
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<style type="text/css">
+		input.input-text { width: 40em; }
+	</style>
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">System &#187; Configuration &#187;</span> Notifications</h1>
+
+	<form id="f1" name="f1" method="post">
+
+		<fieldset>
+			<legend>
+				Notifications
+			</legend>
+
+			<p>Enter the E-mail address you would like notifications to be sent to.</p>
+
+			<label for="txtAdministratorEmail">Administrative E-mails:</label>
+			<input type="text" id="txtAdministratorEmail" name="txtAdministratorEmail" size="30" class="input-text" value="<?txtAdministratorEmail?>" />
+			<br />
+			
+			<label for="txtHelpdeskEmail">Helpdesk Requests:</label>
+			<input type="text" id="txtHelpdeskEmail" name="txtHelpdeskEmail" size="30" class="input-text" value="<?txtHelpdeskEmail?>" />
+			<br />
+			
+			<label for="txtFileUploadEmail">File Uploads:</label>
+			<input type="text" id="txtFileUploadEmail" name="txtFileUploadEmail" size="30" class="input-text" value="<?txtFileUploadEmail?>" />
+			<br />
+			
+			<label for="txtUserRegistrationEmail">New User Registrations:</label>
+			<input type="text" id="txtUserRegistrationEmail" name="txtUserRegistrationEmail" size="30" class="input-text" value="<?txtUserRegistrationEmail?>" />
+			<br />
+
+			<label for="txtCreditApplicationEmail">Credit Applications:</label>
+			<input type="text" id="txtCreditApplicationEmail" name="txtCreditApplicationEmail" size="30" class="input-text" value="<?txtCreditApplicationEmail?>" />
+			<br />
+
+			<label for="txtQuotingEmail">Quotes:</label>
+			<input type="text" id="txtQuotingEmail" name="txtQuotingEmail" class="input-text" size="30" value="<?txtQuotingEmail?>" />
+			<br />
+			
+			<label for="txtOrderingEmail">Orders:</label>
+			<input type="text" id="txtOrderingEmail" name="txtOrderingEmail" size="30" class="input-text" value="<?txtOrderingEmail?>" />
+			<br />
+			
+			<label for="txtAccountingEmail">Invoices:</label>
+			<input type="text" id="txtAccountingEmail" name="txtAccountingEmail" size="30" class="input-text" value="<?txtAccountingEmail?>" />
+			<br />
+			
+			<label for="txtRMAEmail">Return Authorizations:</label>
+			<input type="text" id="txtRMAEmail" name="txtRMAEmail" size="30" class="input-text" value="<?txtRMAEmail?>" />
+			<br />
+
+			<label for="txtProjectCompletionEmail">Project Completion Invoice:</label>
+			<input type="text" id="txtProjectCompletionEmail" name="txtProjectCompletionEmail" size="30" class="input-text" value="<?txtProjectCompletionEmail?>" />
+			<br />
+
+			<label for="Production Changes">Production Changes:</label>
+	     	<input type="text" id="txtProductionChanges" name="txtProductionChanges" size="30" class="input-text" value="<?txtProductionChanges?>" />
+			<br />
+            
+			<label for="InventoryReorder">Inventory Reorder:</label>
+	      	<input type="text" id="InventoryReorder" name="InventoryReorder" size="30" class="input-text" value="<?InventoryReorder?>" />
+
+        <br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="Save" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Managerial - Taxes
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">System &#187; Configuration &#187;</span> Taxes</h1>
+
+	<form method="post" action="/administrator/managerial/taxes.html" name="f1">
+		<fieldset>
+			<legend>
+				Details
+			</legend>
+
+			<table class="no-center no-formatting" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+					<th style="width: 20em; text-align: left;">Region</th>
+					<th style="width: 10em;">Federal (%)</th>
+					<th style="width: 10em;">Prov. / State (%)</th>
+					<th style="width: 10em;">Harmonized (%)</th>
+				</tr>
+	
+				<? while ( @$variable{'statename','state_id','gst','pst','hst'} = splice @{$$variable{'TAXES'}},0,5; ) ?>
+					<tr>
+						<td><label for="txtFST<?state_id?>" class="label"><?statename?></label></td>
+						<td style="text-align: center;"><input type="text" id="txtFST<?state_id?>" name="txtFST<?state_id?>" class="smBox" size="9" value="<?gst?>" /></td>
+						<td style="text-align: center;"><input type="text" id="txtSST<?state_id?>" name="txtSST<?state_id?>" class="smBox" size="9" value="<?pst?>" /></td>
+						<td style="text-align: center;"><input type="text" id="txtHST<?state_id?>" name="txtHST<?state_id?>" class="smBox" size="9" value="<?hst?>" /></td>
+					</tr>
+	
+					<? if ( @$variable{'statename','state_id','gst','pst','hst'} = splice @{$$variable{'TAXES'}},0,5; ) ?>
+						<tr>
+							<td><label for="txtFST<?state_id?>" class="label"><?statename?></label></td>
+							<td style="text-align: center;"><input type="text" id="txtFST<?state_id?>" name="txtFST<?state_id?>" class="smBox" size="9" value="<?gst?>" /></td>
+							<td style="text-align: center;"><input type="text" id="txtSST<?state_id?>" name="txtSST<?state_id?>" class="smBox" size="9" value="<?pst?>" /></td>
+							<td style="text-align: center;"><input type="text" id="txtHST<?state_id?>" name="txtHST<?state_id?>" class="smBox" size="9" value="<?hst?>" /></td>
+						</tr>
+					<? endif ( @$variable{'statename','state_id','gst','pst','hst'} = splice @{$$variable{'TAXES'}},0,5; ) ?>
+				<? endwhile ( @$variable{'statename','state_id','gst','pst','hst'} = splice @{$$variable{'TAXES'}},0,5; ) ?>
+	
+				<tr>
+					<td>&nbsp;</td>
+					
+					<td colspan="3">
+						<div class="button-bar">
+							<input class="button" type="reset" />
+							<input class="button" type="submit" name="btnFunction" value="Submit" />
+							<br />
+						</div>
+					</td>
+				</tr>
+			</table>
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

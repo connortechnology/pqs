@@ -1,0 +1,14 @@
+<? loop signature?>
+    <div style=" padding-left: 2em; ">
+        <table class="no-formatting no-padding" style="margin: 0;  " cellspacing="0" cellpadding="0" border="0" width="90%">
+         
+          <tr>
+          
+            <? if ($$variable{reference}) ?><td width="50%"><span class="label">Signature Group - </span><?reference?></td><? endif ($$variable{reference}) ?>
+            <td width="50%"><strong>Qty:&nbsp;&nbsp;</strong> <?txtPlateQuantity?>&nbsp;-&nbsp;<?ddmPlateType?></td>
+          </tr>
+          
+        </table>
+        
+    </div>
+<? endloop signature?>

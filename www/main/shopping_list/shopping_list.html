@@ -1,0 +1,44 @@
+<h1><?shopping_list.name?> (<?shopping_list.id?>)</h1>
+<form action="shopping_list.html?id=<?shopping_list.id?>" method="post">
+  <table>
+    <tr>
+      <th>Id</th>
+      <th>Name</th>
+      <th>Price per unit</th>
+      <th>Quantity</th>
+      <th>Cost</th>
+      <th></th>
+    </tr>
+    <?loop contents?>
+      <tr>
+        <td><?id?></td>
+        <td><?name?></td>
+        <td>$<?price?></td>
+        <td><input name="qty[<?item?>]" value="<?quantity?>" /></td>
+        <td>$<?cost?></td>
+        <td><a href="shopping_list.html?id=<?shopping_list.id?>&delete=<?item?>">delete</a></td>
+      </tr>
+    <?endloop contents?>
+  </table>
+  Total: $<?shopping_list.cost?>
+  <select name="new_product">
+    <option value="">--</option>
+    <?loop products ?>
+      <option value="<?id?>"><?name?></option>
+    <?endloop products ?>
+  </select>
+  Qty: <input name="new_qty" />
+  <input type=submit />
+</form>
+<form method="post" action="/main/quote/quote_details.html">
+  <input type="hidden" value="Process Quote" name="btnFunction">
+  <input type="hidden" value="<?shopping_list.id?>" name="ProjectIndex">
+  <input type="hidden" value="product" name="ProjectType">
+  <input type="submit" value="Add to Quote" class="button right">
+</form>
+<form method="post" action="/main/order/order_submit.html">
+  <input type="hidden" value="<?shopping_list.id?>" name="ProjectIndex">
+  <input type="hidden" value="product" name="ProjectType">
+  <input type="hidden" value="Process Order" name="btnFunction">
+  <input type="submit" value="Add to Order" class="button right">
+</form>

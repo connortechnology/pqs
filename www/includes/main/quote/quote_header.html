@@ -1,0 +1,60 @@
+		<div id="quote-box">
+			<!-- Header. -->
+			<div id="quote-header">
+				<? if (( $$variable{'ResellerForEndUser'} eq 'Y') && ($$variable{'user_type'} eq 'C')) ?>
+				<h2><?ByCompanyName?></h2>
+				<? else  (( $$variable{'ResellerForEndUser'} eq 'Y') && ($$variable{'user_type'} eq 'C')) ?>
+				<img src="/images/e-mail/email_logo.gif" alt="<? company ?>" />
+				<address><!--#include virtual="/includes/company_contact_email_content_info.html"--></address>
+				<? endif (( $$variable{'ResellerForEndUser'} eq 'Y') && ($$variable{'user_type'} eq 'C')) ?>
+				<div id="primary_info">
+					<table>
+							<tr>
+								<th>Quote ID:</th>
+								<td><a href="/main/order/order_history_details.html?Issue_Cookie=true&order_id=<?ORDER_ID?>">
+      						</a><a href="/main/quote/quote_history_details.html?Issue_Cookie=true&quote_id=<?QUOTE_ID?>">
+      						<?QUOTE_ID?>
+      						</a><a href="/main/order/order_history_details.html?Issue_Cookie=true&order_id=<?ORDER_ID?>">      						</a>								</td>
+							</tr>
+							<tr>
+								<th>Date:</th>
+								<td><?DATE?></td>
+							</tr>
+					</table>
+				</div>
+			</div>
+			<table class="customer">
+				<thead>
+					<tr>
+						<th>Prepared By:</th>
+						<th>Prepared For:</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><address><?BySalutation?> <?ByFirstName?> <?ByLastName?><br />
+								<?ByCompanyName?><br />
+								<? if ( $$variable{'ByAddress1'} ) ?><?ByAddress1?><br /><? endif ( $$variable{'ByAddress1'} ) ?>
+								<? if ( $$variable{'ByAddress2'} ) ?><?ByAddress2?><br /><? endif ( $$variable{'ByAddress2'} ) ?>
+								<?CCITYPROV?><br />
+								<?ByPostalCode?><br />
+								<?ByPhone?><? if ( $$variable{'ByExtension'} ) ?> &nbsp;Ext. <?ByExtension?><? endif ( $$variable{'ByExtension'} ) ?><br />
+								<?ByFax?><br />
+								<?ByEmail?><br />
+								</address>
+						</td>
+						<td><address><?ForSalutation?> <?ForFirstName?> <?ForLastName?><br />
+								<?ForCompanyName?><br />
+								<? if ( $$variable{'ForAddress1'} ) ?><?ForAddress1?><br /><? endif ( $$variable{'ForAddress1'} ) ?>
+								<? if ( $$variable{'ForAddress2'} ne '' ) ?><?ForAddress2?><br /><? endif ( $$variable{'ForAddress2'} ne '' ) ?>
+								<?FCITYPROV?><br />
+								<?ForPostalCode?><br />
+								<?ForPhone?><? if ( $$variable{'ForExtension'} ) ?> &nbsp;Ext. <?ForExtension?><? endif ( $$variable{'ForExtension'} ) ?><br />
+								<?ForFax?><br />
+								<?ForEmail?><br />
+								</address>
+					</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>

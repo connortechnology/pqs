@@ -1,0 +1,73 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Files View
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms2.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/process.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+<style>
+
+.intable {
+	border-radius: 10px !important;
+	padding: 6px;
+	background-color:#FFFFFF;
+	text-align:center;	
+	height:195px !important;
+	width:200px;
+	font-size:13px;
+	padding: 6px 6px 6px 6px !important;
+	vertical-align:central;
+	font-weight:bold;
+	float:left;
+	margin:4px 4px 50px 4px;
+
+	
+}
+a.ex1:hover {color:#000000;}
+</style>
+	
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Files &#187;</span> View Folders</h1>
+    <p>Select the file you wish to download</p>
+
+<? loop FILES ?>
+<div class="intable" style="word-wrap:break-word;">
+    <a class="ex1" href="<?location?>" style="color:#F48595;">
+        <?if thumbnail?>
+            <div style="height:240px; width:200px; border:1px solid #CCC">
+            	<div style="min-height:200px"><img src="<?thumbnail?>" align="middle" style="max-height:200px; max-width:200px; "/></div>
+            	<div style="vertical-align: bottom; text-align:center"><?short_name?></div>
+            </div>
+        <?else thumbnail?>
+            <div style="height:240px; width:200px; border:1px solid #CCC">
+            	<div style="min-height:200px"><?if dir?><img src="/images/main/folder.gif" align="middle" /><?else dir?><img src="/images/main/file.gif" align="middle" style="max-height:200px; max-width:200px; " /><?endif dir?></div>
+            	<div style="vertical-align: bottom; text-align:center"><?short_name?></div>
+            </div>
+        <?endif thumbnail?>
+    </a>
+</div>
+<? endloop FILES ?>
+
+
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/products.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.category?> - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+	<script type="text/javascript" src="/javascripts/proj/service/diecutting.js"></script>
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<form id="f1" name="f1" method="POST" action="/service/<?lc:service.ref?>">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+
+		<!--#include virtual="/includes/main/proj/dimensions_boxes_only.html"-->
+		
+		<fieldset>
+			<legend>
+				Kiss Cutting
+			</legend>
+			
+			<p>Will you be supplying a <span class="tip" title="A custom image or shape formed on a hardened engraving stamp used in die cutting, foil stamping and embossing.">custom die</span>?</p>
+			<label>You Supply Custom Die:</label>
+			<label for="rdbSuppliedDieYes" class="radio"><input type="radio" id="rdbSuppliedDieYes" name="rdbSuppliedDie" value="Y" <?rdbSuppliedDieY?> />Yes</label>
+			<label for="rdbSuppliedDieNo" class="radio"><input type="radio" id="rdbSuppliedDieNo" name="rdbSuppliedDie" value="N" <?rdbSuppliedDieN?> />No</label>
+			<br />
+		
+			<p>What are the dimensions of the <span class="tip" title="Cutting the top layer of a pressure sensitive sheet and not the backing. Often used with labels and adhesives.">kiss cut</span> image?</p>
+			<label for="txtDieWidth">Kiss Cut Dimensions:</label>
+			<input id="txtDieWidth" name="txtDieWidth" size="9" value="<?txtDieWidth?>" class="smBox" />
+			<input id="txtDieHeight" name="txtDieHeight" size="9" value="<?txtDieHeight?>" class="smBox" />
+			<label for="txtDieHeight" class="post-input">(W&#8243; &#215; H&#8243;)</label>
+			<br />
+		
+			<p>What type of die is required for the project? If known, please input the amount of steel rule that will be required to create the die.</p>
+			<label>Die Type:</label>
+			<div>	
+				<label for="rdbDieCuttingSimpleSimple" class="radio" style="width: 8em;"><input type="radio" id="rdbDieCuttingSimpleSimple" name="rdbDieCutting" value="Simple" <?rdbDieCuttingSimple?> />Simple</label>
+				<label for="txtSteelRuleLengthSimple" class="label" style="padding-bottom: 1ex;"><input id="txtSteelRuleLengthSimple" name="txtSteelRuleLengthSimple" size="9" value="<?txtSteelRuleLengthSimple?>" class="smbox" />&nbsp; linear inches</label>		
+				<br />
+			
+				<label for="rdbDieCuttingAverage" class="radio" style="width: 8em;"><input type="radio" id="rdbDieCuttingAverage" name="rdbDieCutting" value="Average" <?rdbDieCuttingAverage?> />Average</label>
+				<label for="txtSteelRuleLengthAverage" class="label"><input id="txtSteelRuleLengthAverage" name="txtSteelRuleLengthAverage" size="9" value="<?txtSteelRuleLengtAverage?>" class="smbox" />&nbsp; linear inches</label>
+				<br />
+				
+				<label for="rdbDieCuttingComplex" class="radio" style="width: 8em;"><input type="radio" id="rdbDieCuttingComplex" name="rdbDieCutting" value="Complex" <?rdbDieCuttingComplex?> />Complex</label>
+				<label for="txtSteelRuleLengthComplex" class="label"><input id="txtSteelRuleLengthComplex" name="txtSteelRuleLengthComplex" size="9" value="<?txtSteelRuleLengtComplex?>" class="smbox" />&nbsp; linear inches</label>
+			</div>
+			<br />
+			
+			<p>How many bends are included in your kiss cut image? (ie. Circles - 4 Bends, Half Moon - 2 Bends, Five Point Star Burst - 10 bends.)</p>
+			<label for="txtDieCutBends">Quantity of Die Rule Bends:</label>
+			<input id="txtDieCutBends" name="txtDieCutBends" size="9" value="<?txtDieCutBends?>" class="smBox" />
+			<br />
+		
+			<p>Does your die cut image require any <span class="tip" title="Cutting the top layer of a pressure sensitive sheet and not the backing. Often used with labels and adhesives.">kiss cut</span> areas smaller than 1&quot; in diameter? If yes please specifiy how many areas need to be <span class="tip" title="Cutting the top layer of a pressure sensitive sheet and not the backing. Often used with labels and adhesives.">kiss cut</span> punched to a diameter of 1&quot; or less.</p>
+			<label for="txtDieCutPunches">Quantity of Die Cut Punches:</label>
+			<input id="txtDieCutPunches" name="txtDieCutPunches" size="9" value="<?txtDieCutPunches?>" class="smBox" />
+			<br />
+		</fieldset>
+
+		<? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+			<!--#include virtual="/includes/main/proj/equipment_with_imposition.html"-->
+			<!--#include virtual="/includes/main/proj/die_prices.html"-->
+		<? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_bindery.html"-->
+	</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

@@ -1,0 +1,217 @@
+<title><!--#include virtual="/includes/company_name.html" --> Bindery Types</title>
+<p>All Maximum page quantites below are based on 20-24lb bond stock. If a thicker stock is chosen you may not be able to fit as many pages in your book.</p>
+<table style="margin: 0 auto;" border="0" cellspacing="0" cellpadding="0" cols="2" class="no-formatting" width="300px">
+
+<tr>
+
+					<td><label for="NoBindery" class="label"><img src="/images/main/products/8.5x11_no_fold.gif" width="75" height="75" /></label></td>
+				
+					<td><label for="NoBindery" class="label"><input name="BinderyTypePop" id="NoBindery" value="NoBindery" type="radio" onClick="SetNoBindery();" />No Bindery<br class="right" />No Maximum</label></td>
+					
+                    </tr>
+                    <tr>
+
+					<td><label for="NoBinderySlipSheet" class="label"><img src="/images/main/products/8.5x11_no_fold.gif" width="75" height="75" /></label></td>
+				
+					<td><label for="NoBinderySlipSheet" class="label"><input name="BinderyTypePop" id="NoBinderySlipSheet" value="NoBinderySlipSheet" type="radio" onClick="SetNoBinderySlipSheet();" />No Bindery with Slip Sheets<br class="right" />No Maximum</label></td>
+					
+                    </tr>
+                    <tr>
+
+					<td><label for="3HolePunchBinder" class="label"><img src="/images/main/project_templates/multipage/binders.gif" width="75" height="75" /></label></td>
+				
+					<td><label for="3HolePunchBinder" class="label"><input name="BinderyTypePop" id="3HolePunchBinder" value="3HolePunchBinder" type="radio" onClick="Set3HolePunchBinder();" />3 Hole Punch With Binders<br class="right" />Maximum 780 Page Book</label></td>
+					
+                    </tr>
+<tr>
+
+					<td><label for="3HolePunch" class="label"><img src="/images/main/project_templates/multipage/3holepunch.gif" width="75" height="75" /></label></td>
+				
+					<td><label for="3HolePunch" class="label"><input name="BinderyTypePop" id="3HolePunch" value="3HolePunch" type="radio" onClick="Set3HolePunch();" />3 Hole Punch (unbound)<br class="right" />
+                    No Maximum</label></td>
+					
+                    </tr>
+		
+        			<tr>
+					<td><label for="CornerStitching" class="label"><img src="/images/main/project_templates/multipage/cornerstitching.gif" width="75" height="75" /></label></td>
+					
+					<td><label for="CornerStitching" class="label"><input name="BinderyTypePop" id="CornerStitching" value="CornerStitching" type="radio" onClick="SetCornerStitching();" />Corner Staple<br class="right" />Maximum 150 Page Book</label></td>
+					
+					</tr>
+                    <tr>
+					<td><label for="CornerStitch3Punch" class="label"><img src="/images/main/project_templates/multipage/cornerstitching3hole.gif" width="75" height="75" /></label></td>
+					
+					<td><label for="CornerStitch3Punch" class="label"><input name="BinderyTypePop" id="CornerStitch3Punch" value="CornerStitch3Punch" type="radio" onClick="SetCornerStitch3Punch();" />Corner Staple with 3 Hole Punch<br class="right" />Maximum 150 Page Book</label></td>
+					
+					</tr>
+		
+                <tr>
+					<td><img src="/images/main/project_templates/multipage/fastback.gif" width="75" height="75" /></td>
+					
+					<td><label for="FastBack" class="label"><input name="BinderyTypePop" id="FastBack" value="FastBack" type="radio" onClick="SetFastBack();" />Tape Binding<br class="right" />Maximum 700 Page Book</label></td>
+					
+				</tr>
+               
+				
+                <tr>
+					<td><img src="/images/main/project_templates/multipage/perfectbinding.gif" width="75" height="75" /></td>
+					
+					<td><label for="PerfectBinding" class="label"><input name="BinderyTypePop" id="PerfectBinding" value="PerfectBinding" type="radio" onClick="SetPerfectBinding();" />Perfect Binding<br class="right" />Maximum 400 Page Book</label></td>
+					
+				</tr>
+                
+               
+               
+                <tr>
+					<td><img src="/images/main/project_templates/multipage/cerlox.gif" width="75" height="75" /></td>
+					
+					<td><label for="Cerlox" class="label"><input name="BinderyTypePop" id="Cerlox" value="Cerlox" type="radio" onClick="SetCerlox();" />Plastic Comb (Cerlox)<br class="right" />Maximum 850 Page Book</label></td>
+					
+				</tr>
+                 <tr>
+					<td><img src="/images/main/project_templates/multipage/proclick.gif" width="75" height="75" /></td>
+					
+					<td><label for="Proclick" class="label"><input name="BinderyTypePop" id="Proclick" value="Proclick" type="radio" onClick="SetProclick();" />Proclick<br class="right" />Maximum 250 Page Book</label></td>
+					
+				</tr>
+                <tr>
+					<td><img src="/images/main/project_templates/multipage/saddlestitching.gif" width="75" height="75" /></td>
+					
+					<td><label for="SaddleStitching" class="label"><input name="BinderyTypePop" id="SaddleStitching" value="SaddleStitching" type="radio" onClick="SetSaddleStitching();" />Saddle Stitching<br class="right" />Maximum 60 Page Book</label></td>
+					
+				</tr>
+
+		
+				
+			   
+
+			</table>
+            
+            
+             <script language="javascript">
+			 function SetNoBindery() 
+   			 { 
+      		  window.opener.document.getElementById("Bindery").value = 
+                            document.getElementById("NoBindery").value; 
+			  window.opener.coveroption();
+			  window.opener.binderymaxpages(); 
+			  window.opener.checkcovertype();
+			  window.opener.foldtypepersize();
+      		  return false; 
+    } 
+		  	function SetNoBinderySlipSheet() 
+   			 { 
+      		  window.opener.document.getElementById("Bindery").value = 
+                            document.getElementById("NoBinderySlipSheet").value; 
+			  window.opener.coveroption();
+			  window.opener.binderymaxpages(); 
+			  window.opener.checkcovertype();
+			  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+			function Set3HolePunchBinder() 
+   			 { 
+      		  window.opener.document.getElementById("Bindery").value = 
+                            document.getElementById("3HolePunchBinder").value; 
+			  window.opener.coveroption();
+			  window.opener.binderymaxpages(); 
+			  window.opener.checkcovertype();
+			  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+			function Set3HolePunch() 
+   			 { 
+      		  window.opener.document.getElementById("Bindery").value = 
+                            document.getElementById("3HolePunch").value; 
+			  window.opener.coveroption();
+			  window.opener.binderymaxpages(); 
+			  window.opener.checkcovertype();
+			  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+			function SetCornerStitching() 
+   			 { 
+      		  window.opener.document.getElementById("Bindery").value = 
+                            document.getElementById("CornerStitching").value; 
+			  window.opener.coveroption();
+			  window.opener.binderymaxpages(); 
+			  window.opener.checkcovertype();
+			  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+				function SetCornerStitch3Punch() 
+   			 { 
+      		  window.opener.document.getElementById("Bindery").value = 
+                            document.getElementById("CornerStitch3Punch").value; 
+			  window.opener.coveroption();
+			  window.opener.binderymaxpages(); 
+			  window.opener.checkcovertype();
+			  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+
+			function SetFastBack() 
+   			 { 
+      		  window.opener.document.getElementById("Bindery").value = 
+                            document.getElementById("FastBack").value; 
+			  window.opener.coveroption();
+			  window.opener.binderymaxpages(); 
+			  window.opener.checkcovertype();
+			  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+
+			function SetPerfectBinding() 
+   			 { 
+      		  window.opener.document.getElementById("Bindery").value = 
+                            document.getElementById("PerfectBinding").value; 
+			  window.opener.coveroption();
+			  window.opener.binderymaxpages(); 
+			  window.opener.checkcovertype();
+			  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+
+			function SetCerlox() 
+   			 { 
+      		  window.opener.document.getElementById("Bindery").value = 
+                            document.getElementById("Cerlox").value; 
+			  window.opener.coveroption();
+			  window.opener.binderymaxpages(); 
+			  window.opener.checkcovertype();
+			  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+
+			function SetProclick() 
+   			 { 
+      		  window.opener.document.getElementById("Bindery").value = 
+                            document.getElementById("Proclick").value; 
+			  window.opener.coveroption();
+			  window.opener.binderymaxpages(); 
+			  window.opener.checkcovertype();
+			  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+
+function SetSaddleStitching() 
+   			 { 
+      		  window.opener.document.getElementById("Bindery").value = 
+                            document.getElementById("SaddleStitching").value; 
+			  window.opener.coveroption();
+			  window.opener.binderymaxpages(); 
+			  window.opener.checkcovertype();
+			  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+			</script>

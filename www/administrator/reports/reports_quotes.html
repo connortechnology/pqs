@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Reports - Quotes
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Reports &#187;</span> Quotes</h1>
+
+	<form id="f1" name="f1" method="post" action="reports_quotes.html">
+
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+	
+			<p>Choose report criteria and click show results. You may download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.</p>
+
+			<label for="search">Search:</label>
+			<input name="search" id="search" value="<?search?>" />
+			<br />
+			<label for="ddmCustomers">Customers:</label>
+			<select id="ddmCustomers" name="ddmCustomers" size="1">
+				<option value=""> All Customers </option>
+				<?ddmCustomers?>
+			</select>
+			<br />
+
+			<label for="ddmStatus">Status:</label>
+			<select id="ddmStatus" name="ddmStatus" size="1">
+				<option value=""> All </option>
+				<option value="Incomplete" <?ddmStatusIncomplete?> > Incomplete </option>
+				<option value="Complete" <?ddmStatusComplete?> > Complete </option>
+				<option value="Re-Opened" <?ddmStatusRe-Opened?> > Re-Opened </option>
+			</select>
+			<br />
+
+			<label for="ddmEmployees">Sales Reps:</label>
+			<select id="ddmEmployees" name="ddmEmployees" size="1">
+				<option value=""> All Employees </option>
+				<?ddmEmployees?>
+			</select>
+			<br />
+
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?startmonths?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?startdays?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?startyears?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?endmonths?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?enddays?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?endyears?>
+			</select>
+			<br />
+
+			<label for="dblTotal1">Total Price Range:</label>
+			<input type="text" id="dblTotal1" name="dblTotal1" size="9" class="smBox" value="<?dblTotal1?>" onkeyup="calc_from_cost(f1, this);" />
+			<label for="dblTotal2" class="value">&nbsp;to&nbsp;</label>
+			<input type="text" id="dblTotal2" name="dblTotal2" size="9" class="smBox" value="<?dblTotal2?>" onkeyup="calc_from_cost(f1, this);" />
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Download in CSV Format" />
+				<input class="button" type="submit" name="btnFunction" value="Show Results" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Results
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<? if ($variable->{quotes}) ?>
+			<table cellspacing="0" border="0" cellpadding="0">
+				<tr>
+					<th>Quote ID</th>
+					<th>Project</th>
+					<th>Date</th>
+					<th>Prepared By</th>
+					<th>Prepared For</th>
+					<th>Total1</th>
+					<th>Total2</th>
+					<th>Total3</th>
+				</tr>
+
+				<?loop quotes?>
+					<tr<?if ($variable->{_even}) ?> class='colRow'<?endif ($variable->{_even}) ?>>
+						<td><a href="/main/quote/quote_history_details.html?quote_id=<?qid?>"><?qid?></a></td>
+						<td style="text-align: left;"><? loop projects ?><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>"><?pid?> - <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
+						<td style="text-align: center;"><?qdate?></td>
+						<td style="text-align: center;"><?byname?></td>
+						<td style="text-align: center;"><?forname?></td>
+						<td style="text-align: right;">$<?sale1?></td>
+						<td style="text-align: right;">$<?sale2?></td>
+						<td style="text-align: right;">$<?sale3?></td>
+					</tr>
+				<?endloop quotes?>
+
+				<tr class="no-formatting">
+					<td colspan="8" style="font-size: 0.25em;">&nbsp;</td>
+				</tr>
+
+				<tr class="no-formatting">
+					<td colspan="5" style="text-align: right;"><strong>Report Totals:</strong> </td>
+					<td style="text-align: right; border-top: 3px double black;">$<?ReportTotal1?></td>
+					<td style="text-align: right; border-top: 3px double black;">$<?ReportTotal2?></td>
+					<td style="text-align: right; border-top: 3px double black;">$<?ReportTotal3?></td>
+				</tr>
+			</table>
+
+			<? else ($variable->{quotes}) ?>
+		  <p>There were no results matching your criteria.</p>
+			<? endif ($variable->{quotes}) ?>
+			<br />
+		</fieldset>
+	</form>
+</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

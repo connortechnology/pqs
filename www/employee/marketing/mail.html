@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Marketing - Mail Confirmation
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script >
+		<?UserArray?>
+		<?CategoryArray?>
+
+		function view_email() {
+			window.open('','email_template','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+		
+		//killing off all the really bad javascript that was embedded in mail.html - replacing it with one function - Duke
+		function select_emails(form) {
+		//this is giant and ugly, but it is a heck of a lot better than what there was
+		//and it is also capable of working with the trashy perl that we've already got
+			//if checkbox unchecked or name in mailing list then
+			 //if name in a selected marketing list (or no lists selected) then
+			  //if name in a company list (or no companies selected) then
+			   //highlight the name
+			for (var name_index=0;name_index<form.selectSpecificCustomers.options.length;name_index++) {
+				var category_flag = false;
+				var company_flag = false;
+				var pricelist_flag = false;
+				var found_company = false;
+				var found_category = false;
+				var found_pricelist = false;
+				if (!(form.chkMailingList.checked) || UserArray[name_index].mailinglist == 'Y') {
+					for (var category_index=0;category_index<form.selectMarketingCategory.options.length;category_index++) {
+						if (form.selectMarketingCategory.options[category_index].selected) {
+							category_flag = true;
+							for (var list_index=0;list_index<CategoryArray[form.selectMarketingCategory.options[category_index].value].length; list_index++) {
+								if (CategoryArray[form.selectMarketingCategory.options[category_index].value][list_index] == UserArray[name_index].index) {
+									found_category = true;
+								}
+							}
+						}
+					}
+					if (category_flag == false) {
+						found_category = true;
+					}
+					for (var company_index=0;company_index<form.selectCompany.options.length;company_index++) {
+						if (form.selectCompany.options[company_index].selected) {
+							company_flag = true;
+							if (UserArray[name_index].company == form.selectCompany.options[company_index].value) {
+								found_company = true;
+							}
+						}
+					}
+					if (company_flag == false) {
+						found_company = true;
+					}
+					for (var pricelist_index=0;pricelist_index<form.selectPricelist.options.length;pricelist_index++) {
+						if (form.selectPricelist.options[pricelist_index].selected) {
+							pricelist_flag = true;
+							if (UserArray[name_index].pricelist == form.selectPricelist.options[pricelist_index].value) {
+								found_pricelist = true;
+							}
+						}
+					}
+					if (pricelist_flag == false) {
+						found_pricelist = true;
+					}
+				}
+				if (found_company && found_category && found_pricelist) {
+					form.selectSpecificCustomers.options[name_index].selected = true
+				} else {
+					form.selectSpecificCustomers.options[name_index].selected = false;
+				}
+			}
+		}
+
+		function user( index, name, email, mailinglist, company, pricelist ) {
+			this.index = index;
+			this.name = name;
+			this.email = email;
+			this.mailinglist = mailinglist;
+			this.company = company;
+			this.pricelist = pricelist;
+		}
+	</script>
+
+	<!-- #CROSSCODING: we are doing something in perl to make js code, then dumping it via html (instead of jsrs, etc) - this is dumbtarded - Duke -->
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Marketing &#187;</span> E-mail</h1>
+
+	<form id="f1" name="f1" method="post" action="mail_confirmation.html" enctype="multipart/form-data">
+		
+		<fieldset>
+			<legend>
+				Email Recipients
+			</legend>
+
+			<p>Filter by the following criteria.</p>
+	
+			<label for="chkMailingList">Mailing List:</label>
+			<label for="chkMailingList" class="checkbox"><input type="checkbox" id="chkMailingList" name="chkMailingList" value="N" onclick="select_emails(f1);" />Filter by Mailing List</label>
+			<br />
+
+			<p>Ctrl+click to select or deselect multiple values. (Use to narrow selections.)</p>
+			
+			<label for="selectMarketingCategory">Marketing Categories:</label>
+			<select multiple="multiple" id="selectMarketingCategory" name="selectMarketingCategory" class="marg-bot sel-multi" size="5" onchange="select_emails(f1);">
+				<?MarketingCategories?>
+			</select>
+			<br />
+
+			<label for="selectCompany">Companies:</label>
+			<select multiple="multiple" id="selectCompany" name="selectCompany" size="5" class="marg-bot sel-multi" onchange="select_emails(f1);">
+				<?Companies?>
+			</select>
+			<br />
+
+			<label for="selectPricelist">Price Lists:</label>
+			<select multiple="multiple" id="selectPricelist" name="selectPricelist" size="5" class="marg-bot sel-multi" onchange="select_emails(f1);">
+				<?Pricelists?>
+			</select>
+			<br />
+
+			<label for="selectSpecificCustomers">Customers:</label>
+			<select multiple="multiple" id="selectSpecificCustomers" name="selectSpecificCustomers" class="marg-bot sel-multi" size="5">
+				<?customers?>
+			</select>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Email Contents
+			</legend>
+	
+			<p class="none">&nbsp;</p>
+	
+			<label for="txtEmailTemplateFile">E-mail Template:</label>
+			<input type="file" id="txtEmailTemplateFile" name="txtEmailTemplateFile" class="file" />
+			<br />
+
+			<label for="txtSubject">E-mail Subject:</label>
+			<input type="text" id="txtSubject" name="txtSubject" size="30" class="input-text" />
+			<br />
+
+			<label for="txtBody">E-mail Body:</label>
+			<textarea id="txtBody" name="txtBody" rows="10"></textarea>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" onclick="f1.action='view_email.html';f1.target='email_template';" value="View Email" />
+				<input class="button" type="submit" onclick="f1.action='mail_confirmation.html';f1.target='_self';" value="Send Email" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+	</form>
+</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

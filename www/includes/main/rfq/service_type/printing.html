@@ -1,0 +1,174 @@
+&nbsp;<?txtServiceDescription?><br />
+
+<? if ( $$variable{pressType} eq 'inkjetprinter' ) ?>
+	<span class="label">Type </span>
+	<? if ($$variable{outdoor_printing}) ?>
+		<?outdoor_printing?>
+	<? else ($$variable{outdoor_printing}) ?>
+		Indoor
+	<? endif ($$variable{outdoor_printing}) ?>
+<? endif ( $$variable{pressType} eq 'inkjetprinter' ) ?>
+
+
+
+
+<? if ( $$variable{pressType} ne 'inkjetprinter' ) ?>
+		
+		<span class="label">Col Bars </span>
+		<? if ( $$variable{'colour_bar'} == 1 ) ?>
+			Yes
+		<? else ( $$variable{'colour_bar'} == 1 ) ?>
+			No
+		<? endif ( $$variable{'colour_bar'} == 1 ) ?>
+
+<? endif ( $$variable{pressType} ne 'inkjetprinter' ) ?>
+
+		<span class="label">Approval </span>
+		<? if ( $$variable{'needs_approval'} == 1 ) ?>
+			Yes
+		<? else ( $$variable{'needs_approval'} == 1 ) ?>
+			No
+		<? endif ( $$variable{'needs_approval'} == 1 ) ?>
+		
+		<span class="label"><?ws_Colour?> Match </span>
+		<?ddmColourMatch?>
+		<br />
+		
+
+		<!-- Colour Information Per Side -->
+		<?loop SIDE?>
+			<span class="label">Side <?side?></span>
+			<span class="label">Inks </span>
+			<?std?>
+			<? if  ($$variable{pms}) ?>
+				<? if  ($$variable{std}) ?>
+					<span class="label"> + </span>
+				<? else  ($$variable{std}) ?>
+					<span class="label"> PMS </span>
+				<? endif  ($$variable{std}) ?>
+			    <?pms?>
+			<? endif  ($$variable{pms}) ?>
+
+            <? if chem_emboss ?>
+                    <span class="label">Chemical Emboss</span>
+            <? endif chem_emboss ?>
+
+			<? if  ($$variable{varnish}) ?>
+			<span class="label"> Varnish </span>
+				<?varnish?>
+			<? endif  ($$variable{varnish}) ?>
+			<? if  ($$variable{coating}) ?>
+			<span class="label"> Coating </span>
+				<?coating?>
+			<? endif  ($$variable{coating}) ?>
+			<? if lf_coverage ?>
+				<span class="label"> Coverage </span>
+				<?lf_coverage?>
+			<? endif lf_coverage ?>
+			<? if lf_quality ?>
+				<span class="label"> Quality </span>
+				<?lf_quality?>
+			<? endif lf_quality ?>
+		<?endloop SIDE?>
+
+
+
+	<? if ($$variable{s0_laminate}) ?>
+		<span class="label">Lamination </span>
+		<span class="label">Side 1 </span><?s0_laminate?> 
+		<br />
+	<? endif ($$variable{s0_laminate}) ?>
+
+	<? if ($$variable{s1_laminate}) ?>
+		<span class="label">Lamination </span>
+		<span class="label">Side 2 </span><?s1_laminate?>
+		<br />
+	<? endif ($$variable{s1_laminate}) ?>
+
+	<? if ($$variable{mounting_type}) ?>
+		<span class="label">Mounting </span>
+		<?mounting_type?>
+		<br />
+	<? endif ($$variable{mounting_type}) ?>
+
+
+		<!-- Version Information -->
+		<? if ( $$variable{FORMS} ) ?>
+		
+		<br />
+		<table class="no-formatting no-padding" style="margin: 0;" width="100%" cellspacing="0" cellpadding="0" border="0">
+			<tr>
+					<td colspan="4" style="padding-left: 1em;"><strong>Version Information </strong> 
+				<tr>
+            <?loop FORMS?>
+				
+				
+				<?loop VERSIONS?>
+					<tr>
+						<td style="padding-left: 1em;"><?label?> (<?float:requested?> %)</td>
+						<td style="padding-left: 1em;"><strong>Req Qty 1:</strong>
+							 <?int:requested_qty1?></td>
+						<? if requested_qty2 ?>
+                        <td style="padding-left: 1em;"><strong>Req Qty 2:</strong>
+							 <?int:requested_qty2?></td>
+                        <? endif requested_qty2 ?>
+                        <? if requested_qty3 ?>
+						<td style="padding-left: 1em;"><strong>Req Qty 3:</strong>
+							 <?int:requested_qty3?></td>
+                        <? endif requested_qty3 ?>
+					</tr>
+				<?endloop VERSIONS?>
+				
+		
+			<?endloop FORMS?>
+		</table>
+		<? endif ( $$variable{FORMS} ) ?>
+		<!-- END Version Information -->
+
+
+	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
+		<? if ($$variable{stock_custom}) ?>
+			<span class="label">Customer Supplied Stock </span>
+			<?stock_custom?>
+			<br />
+		<? endif ($$variable{stock_custom}) ?>	
+	<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
+		
+        <br />
+		<span class="label">Stock </span>
+	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
+		
+
+		<? if ($$variable{stock_custom}) ?>
+			<span class="label">Estimated Value </span>
+			<?stock_finish?> , <?stock_weight?>
+		<? else ($$variable{stock_custom}) ?>
+			<?stock_name?> , <?stock_finish?> , <?stock_colour?> , <?stock_weight?>, <?txtStockCalliper?>
+		<? endif ($$variable{stock_custom}) ?>
+		 
+		<br />
+	<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
+	
+
+		<span class="label">Grain </span>
+		<? if ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
+			No Preference
+		<? else ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
+			<? if ( $$variable{'grain_direction'} == 1 ) ?>
+				Height
+			<? else ( $$variable{'grain_direction'} == 1 ) ?>
+				Width
+			<? endif ( $$variable{'grain_direction'} == 1 ) ?>
+		<? endif ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
+
+	<? endif ($variable->{pressType} ne 'inkjetprinter') ?>
+
+	<span class="label">Customer Supplied </span>
+	<? if ($$variable{'stock_supplied'})?>
+		Yes
+	<? else ($$variable{'stock_supplied'})?>
+		No
+	<? endif ($$variable{'stock_supplied'})?>
+
+
+<!-- <?hdnPaperBuyQuantity1?> <?hdnPaperBuyQuantity2?> <?hdnPaperBuyQuantity3?> -->

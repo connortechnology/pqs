@@ -1,0 +1,528 @@
+<br class="clear" />
+<fieldset class="critical">
+    <script type="text/javascript">
+<!--
+    function toggle_visibility(id) {
+       var e = document.getElementById(id);
+       if(e.style.display == 'none')
+          e.style.display = 'block';
+       else
+          e.style.display = 'none';
+    }
+//-->
+</script>
+		<legend><?ws_Colour?> Critical</legend>
+    <label for="colourcritical_enabled" class="checkbox indent-label"><input name="colourcritical_enabled" type="checkbox" value="1" id="colourcritical_enabled"  onclick="toggle_visibility('colourcritical_options');" />Project is <?ws_Colour?> Critical</label><br />
+    <div id="colourcritical_options" style="display:none;">
+    <label class="" title="" for="extra_waste">Extra Waste:</label>
+    <input value="" name="colourcritical_extra_waste" class="" id="colourcritical_extra_waste" size="9" />
+    <br />
+    <label class="" title="" for="extra_waste">Make Ready (%):</label>
+    <input value="" name="colourcritical_make_ready" class="" id="colourcritical_make_ready" size="9" />
+    </div>
+    <script type="text/javascript">
+    <!--
+        var ccen = document.getElementById('colourcritical_enabled');
+        if (ccen.checked) {
+          toggle_visibility('colourcritical_options');
+        }
+    -->
+    </script>
+   </fieldset>
+<div class="link-outer" id="cc_link">
+	<div class="link-inner">
+		<label for="side_link" class="linkage" title="Link Side One &amp; Side Two"><img src="/images/misc/link.png" /><input type="checkbox" id="side_link" name="side_link" value="1" /><img src="/images/misc/link.png" /></label>
+	</div>
+</div>
+
+<br class="clear" />
+
+<fieldset id="side1" class="colours-coatings half left">
+	<legend>Side One</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<? if ($variable->{multiversion_allowed}) ?>
+		<span id="s0_mv_changes" class="multiversion-label">Changes with each version. <img src="/images/misc/arrow.png" /></span><br />
+	<? endif ($variable->{multiversion_allowed}) ?>
+
+	<fieldset class="ink"<? if ( $$variable{project}{press_type}{ref} eq 'digital') ?> style="padding-bottom: 1ex;"<? endif ( $$variable{project}{press_type}{ref} eq 'digital') ?>>
+		<legend><?ws_Colour?>s</legend>
+
+		<p class="none">&nbsp;</p>
+
+		<? if ($variable->{multiversion_allowed}) ?>
+			<input name="s0_black_mv" id="s0_black_mv" type="checkbox" class="multiversion checkbox" />
+		<? endif ($variable->{multiversion_allowed}) ?>
+
+		<label for="s0_black" class="checkbox indent-label"><input name="s0_black" id="s0_black" type="checkbox" value="1" />Black</label><br />
+
+		<? if (($$variable{project}{press_type}{ref} eq 'digital') && ($variable->{multiversion_allowed})) ?>
+			<input name="s0_process_mv" id="s0_process_mv" type="checkbox" class="multiversion checkbox" />
+		<? endif (($$variable{project}{press_type}{ref} eq 'digital') && ($variable->{multiversion_allowed})) ?>
+		
+		<label for="s0_process" class="checkbox indent-label"><input name="s0_process" id="s0_process" type="checkbox" value="1" /><? if ( $$variable{project}{press_type}{ref} ne 'digital') ?>Four <?ws_Colour?> Process (<span class="tip" title="Cyan, Magenta, Yellow, blacK">CMYK</span>)<? else ( $$variable{project}{press_type}{ref} ne 'digital') ?>Full <?ws_Colour?><? endif ( $$variable{project}{press_type}{ref} ne 'digital') ?></label><br />
+		
+
+        <!-- ******* START OF CUSTOM MG FEATURES ******* -->
+
+        <? if can_metal_effects ?>
+		<label for="s0_metal_effects" class="checkbox indent-label">
+        <input name="s0_metal_effects" id="s0_metal_effects" type="checkbox" value="1" />Metal Effects </label><br>
+
+		<label for="s0_chem_emboss" class="checkbox indent-label">
+        <input name="s0_chem_emboss" id="s0_chem_emboss" type="checkbox" value="1" />Chemical Emboss</label><br>
+
+        <? endif can_metal_effects ?>
+        <!-- ******* END OF CUSTOM MG FEATURES ******* -->
+
+
+		<? if ( $$variable{project}{press_type}{ref} ne 'digital') ?>
+			<? if ($variable->{multiversion_allowed}) ?>
+				<div id="s0_process_plates" style="width: 100%;">
+					<input id="s0_process_black_mv" name="s0_black_mv" type="checkbox" class="multiversion checkbox" />
+					<label for="s0_process_black_mv" class="checkbox indent-process-mv top-process-mv">Black plate is variable? </label>
+					<br />
+	
+					<input id="s0_process_mv" name="s0_process_mv" type="checkbox" class="multiversion checkbox" />
+					<label for="s0_process_mv" class="checkbox indent-process-mv"><acronym class="tip" title="Cyan, Yellow, Magenta">CYM</acronym> plates are variable?</label>
+					<br />
+				</div>
+				<br />
+			<? endif ($variable->{multiversion_allowed}) ?>
+
+			<fieldset class="pms">
+				<legend>Spot <?ws_Colour?>s</legend>
+	
+				<p class="none">&nbsp;</p>
+
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s0_pms_1_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+				<select id="s0_pms_1_type" name="s0_pms_1_type">
+                    <?fill_ink_materials?>
+                </select>
+                               
+                <input name="s0_pms_1_name" type="text" class="pms-colour" />
+				<input name="s0_pms_1_coverage" type="text" class="pms-percent" />%
+				<br />
+
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s0_pms_2_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s0_pms_2_type" name="s0_pms_2_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s0_pms_2_name" type="text" class="pms-colour" />
+				<input name="s0_pms_2_coverage" type="text" class="pms-percent" />%
+				<br />
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s0_pms_3_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s0_pms_3_type" name="s0_pms_3_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s0_pms_3_name" type="text" class="pms-colour" />
+				<input name="s0_pms_3_coverage" type="text" class="pms-percent" />%
+				<br />
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s0_pms_4_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s0_pms_4_type" name="s0_pms_4_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s0_pms_4_name" type="text" class="pms-colour" />
+				<input name="s0_pms_4_coverage" type="text" class="pms-percent" />%
+				<br />
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s0_pms_5_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s0_pms_5_type" name="s0_pms_5_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s0_pms_5_name" type="text" class="pms-colour" />
+				<input name="s0_pms_5_coverage" type="text" class="pms-percent" />%
+				<br />
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s0_pms_6_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s0_pms_6_type" name="s0_pms_6_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s0_pms_6_name" type="text" class="pms-colour" />
+				<input name="s0_pms_6_coverage" type="text" class="pms-percent" />%
+				<br />
+
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s0_pms_7_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s0_pms_7_type" name="s0_pms_7_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s0_pms_7_name" type="text" class="pms-colour" />
+				<input name="s0_pms_7_coverage" type="text" class="pms-percent" />%
+				<br />
+
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s0_pms_8_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s0_pms_8_type" name="s0_pms_8_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s0_pms_8_name" type="text" class="pms-colour" />
+				<input name="s0_pms_8_coverage" type="text" class="pms-percent" />%
+				<br />
+			</fieldset>	
+		<? endif ( $$variable{project}{press_type}{ref} ne 'digital') ?>
+
+		<br />
+	</fieldset>
+    
+	<? if ( $$variable{project}{press_type}{ref} ne 'digital') ?>
+		<fieldset class="varnish">
+			<legend>Varnish</legend>
+	
+			<p class="none">&nbsp;</p>
+	
+			<label for="s0_varnish_flood_gloss" class="radio indent-label" style="white-space: nowrap;"><input name="s0_varnish_flood" id="s0_varnish_flood_gloss" type="radio" value="gloss" />Overall Gloss</label>
+			<label for="s0_varnish_flood_matte" class="radio indent-label" style="white-space: nowrap;"><input name="s0_varnish_flood" id="s0_varnish_flood_matte" type="radio" value="matte" />Overall Matte</label><br />
+			<label for="s0_varnish_flood_none" class="radio indent-label" style="white-space: nowrap; padding-bottom: 1ex;"><input name="s0_varnish_flood" id="s0_varnish_flood_none" type="radio" value="" />None</label><br />
+
+			<? if ($variable->{multiversion_allowed}) ?>
+				<input type="checkbox" name="s0_varnish_spot_mv" value="gloss" class="multiversion checkbox" />
+			<? endif ($variable->{multiversion_allowed}) ?>
+			<label for="s0_varnish_spot_gloss" class="checkbox indent-label"><input name="s0_varnish_spot_gloss" id="s0_varnish_spot_gloss" type="checkbox" value="gloss" />Spot Gloss</label><br />
+			<? if ($variable->{multiversion_allowed}) ?>
+				<input type="checkbox" name="s0_varnish_spot_mv" value="matte" class="multiversion checkbox" />
+			<? endif ($variable->{multiversion_allowed}) ?>
+			<label for="s0_varnish_spot_matte" class="checkbox indent-label"><input name="s0_varnish_spot_matte" id="s0_varnish_spot_matte" type="checkbox" value="matte" />Spot Matte</label><br />
+	
+			<label for="s0_drytrap" class="checkbox indent-label" style="padding-top: 1ex;"><input name="s0_drytrap" id="s0_drytrap" type="checkbox" />Dry Trap</label>
+			<br />
+		</fieldset>
+	
+	<? if ( $$variable{'can_aq'} || $$variable{'can_uv'} ) ?>
+
+		<fieldset class="coating">
+			<legend>Coating</legend>
+	
+			<p class="none">&nbsp;</p>
+	
+	    	<? if can_aq ?>
+			  <label for="s0_coating_type_aqueous" class="radio indent-label" style="width: 8em; padding-right: 0 !important;">
+				<input name="s0_coating_type" id="s0_coating_type_aqueous" type="radio" value="aqueous" />Aqueous
+			  </label>
+	    	<? endif can_aq ?>
+            <? if can_soft_touch ?>
+			  <label for="s0_coating_type_soft_touch" class="radio indent-label" style="width: 8em; padding-right: 0 !important;">
+				<input name="s0_coating_type" id="s0_coating_type_soft_touch" type="radio" value="soft_touch" />Soft Touch
+			  </label>
+	    	<? endif can_soft_touch ?>
+
+	    	<? if can_uv ?>
+			<!-- Because the first option is indented we must adjust our label attributes
+				 if we are not displaying the AQ option -->
+
+			  <label for="s0_coating_type_uv" 
+	    		<? if can_aq ?>
+			  	  class="radio" style="width: 6em; padding-right: 0 !important;">
+	    		<? else can_aq ?>
+			  	  class="radio indent-label" style="width: 8em; padding-right: 0 !important;">
+	    		<? endif can_aq ?>
+
+				<input name="s0_coating_type" id="s0_coating_type_uv" type="radio" value="uv" />UV
+			  </label>
+	    	<? endif can_uv ?>
+
+			<label for="s0_coating_type_none" class="radio" style="width: auto; padding-right: 0 !important;">
+				<input name="s0_coating_type" id="s0_coating_type_none" type="radio" value="" />None
+			</label>
+
+			<br />
+
+			<label for="s0_coating_texture_gloss" class="radio indent-label" style="width: 8em; padding-right: 0 !important;">
+				<input name="s0_coating_texture" id="s0_coating_texture_gloss" type="radio" value="gloss" checked="checked" />Gloss
+			</label>
+			<label for="s0_coating_texture_silk" class="radio" style="width: 6em; padding-right: 0 !important;">
+				<input name="s0_coating_texture" id="s0_coating_texture_silk" type="radio" value="silk" />Silk
+			</label>
+			<label for="s0_coating_texture_matte" class="radio" style="width: auto; padding-right: 0 !important;">
+				<input name="s0_coating_texture" id="s0_coating_texture_matte" type="radio" value="matte" />Matte
+			</label>
+			<br />
+			<label for="s0_coating_spot" class="checkbox indent-label">
+				<input name="s0_coating_spot" id="s0_coating_spot" type="checkbox" value="1" />Spot
+			</label>
+			<br />
+		</fieldset>
+	<? endif ( $$variable{'can_aq'} || $$variable{'can_uv'} ) ?>
+	<? endif ( $$variable{project}{press_type}{ref} ne 'digital') ?>
+
+	<br />
+</fieldset>
+
+<fieldset id="side2" class="colours-coatings half right">
+	<legend>Side Two</legend>
+
+	<div id="side2_linked">
+		This side shares the same specifications as side one.<br />
+		Click the chain / checkbox above to unlink them.
+	</div>
+
+	<p class="none">&nbsp;</p>
+
+	<? if ($variable->{multiversion_allowed}) ?>
+		<span id="s1_mv_changes" class="multiversion-label">Changes with each version. <img src="/images/misc/arrow.png" /></span><br />
+	<? endif ($variable->{multiversion_allowed}) ?>
+
+	<fieldset class="ink"<? if ( $$variable{project}{press_type}{ref} eq 'digital') ?> style="padding-bottom: 1ex;"<? endif ( $$variable{project}{press_type}{ref} eq 'digital') ?>>
+		<legend><?ws_Colour?>s</legend>
+
+		<p class="none">&nbsp;</p>
+
+		<? if ($variable->{multiversion_allowed}) ?>
+			<input name="s1_black_mv" id="s1_black_mv" type="checkbox" class="multiversion checkbox" />
+		<? endif ($variable->{multiversion_allowed}) ?>
+		<label for="s1_black" class="checkbox indent-label"><input name="s1_black" id="s1_black" type="checkbox" value="1" />Black</label><br />
+
+		<? if (($$variable{project}{press_type}{ref} eq 'digital') && ($variable->{multiversion_allowed})) ?>
+			<input name="s1_process_mv" id="s1_process_mv" type="checkbox" class="multiversion checkbox" />
+		<? endif (($$variable{project}{press_type}{ref} eq 'digital') && ($variable->{multiversion_allowed})) ?>
+
+		<label for="s1_process" class="checkbox indent-label"><input name="s1_process" id="s1_process" type="checkbox" value="1" /><? if ( $$variable{project}{press_type}{ref} ne 'digital') ?>Four <?ws_Colour?> Process (<span class="tip" title="Cyan, Magenta, Yellow, blacK">CMYK</span>)<? else ( $$variable{project}{press_type}{ref} ne 'digital') ?>Full <?ws_Colour?><? endif ( $$variable{project}{press_type}{ref} ne 'digital') ?></label><br />
+
+        <!-- ******* START OF CUSTOM MG FEATURES *** <?can_metal_effects?> **** -->
+
+        <? if can_metal_effects ?>
+		<label for="s1_metal_effects" class="checkbox indent-label">
+        <input name="s1_metal_effects" id="s1_metal_effects" type="checkbox" value="1" />Metal Effects </label><br>
+
+		<label for="s1_chem_emboss" class="checkbox indent-label">
+        <input name="s1_chem_emboss" id="s1_chem_emboss" type="checkbox" value="1" />Chemical Emboss</label><br>
+        <? endif can_metal_effects ?>
+
+        <!-- ******* END OF CUSTOM MG FEATURES ******* -->
+
+		<? if ( $$variable{project}{press_type}{ref} ne 'digital') ?>
+			<? if ($variable->{multiversion_allowed}) ?>
+				<div id="s1_process_plates" style="width: 100%;">
+					<input id="s1_process_black_mv" name="s1_black_mv" type="checkbox" class="multiversion checkbox" />
+					<label for="s1_process_black_mv" class="checkbox indent-process-mv top-process-mv">Black plate is variable?</label>
+					<br />
+		
+					<input id="s1_process_mv" name="s1_process_mv" type="checkbox" class="multiversion checkbox" />
+					<label for="s1_process_mv" class="checkbox indent-process-mv"><acronym class="tip" title="Cyan, Yellow, Magenta">CYM</acronym> plates are variable?</label>
+					<br />
+				</div>
+				<br />
+			<? endif ($variable->{multiversion_allowed}) ?>
+	
+			<fieldset class="pms">
+				<legend>Spot <?ws_Colour?>s</legend>
+	
+				<p class="none">&nbsp;</p>
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s1_pms_1_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s1_pms_1_type" name="s1_pms_1_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s1_pms_1_name" type="text" class="pms-colour" />
+				<input name="s1_pms_1_coverage" type="text" class="pms-percent" />%
+				<br />
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s1_pms_2_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s1_pms_2_type" name="s1_pms_2_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s1_pms_2_name" type="text" class="pms-colour" />
+				<input name="s1_pms_2_coverage" type="text" class="pms-percent" />%
+				<br />
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s1_pms_3_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s1_pms_3_type" name="s1_pms_3_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s1_pms_3_name" type="text" class="pms-colour" />
+				<input name="s1_pms_3_coverage" type="text" class="pms-percent" />%
+				<br />
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s1_pms_4_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s1_pms_4_type" name="s1_pms_4_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s1_pms_4_name" type="text" class="pms-colour" />
+				<input name="s1_pms_4_coverage" type="text" class="pms-percent" />%
+				<br />
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s1_pms_5_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s1_pms_5_type" name="s1_pms_5_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s1_pms_5_name" type="text" class="pms-colour" />
+				<input name="s1_pms_5_coverage" type="text" class="pms-percent" />%
+				<br />
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s1_pms_6_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s1_pms_6_type" name="s1_pms_6_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s1_pms_6_name" type="text" class="pms-colour" />
+				<input name="s1_pms_6_coverage" type="text" class="pms-percent" />%
+				<br />
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s1_pms_7_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s1_pms_7_type" name="s1_pms_7_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s1_pms_7_name" type="text" class="pms-colour" />
+				<input name="s1_pms_7_coverage" type="text" class="pms-percent" />%
+				<br />
+	
+				<? if ($variable->{multiversion_allowed}) ?>
+					<input name="s1_pms_8_mv" type="checkbox" class="multiversion checkbox" />
+				<? endif ($variable->{multiversion_allowed}) ?>
+                
+                <select id="s1_pms_8_type" name="s1_pms_8_type">
+                    <?fill_ink_materials?>
+                </select>
+                
+				<input name="s1_pms_8_name" type="text" class="pms-colour" />
+				<input name="s1_pms_8_coverage" type="text" class="pms-percent" />%
+				<br />
+			</fieldset>
+		<? endif ( $$variable{project}{press_type}{ref} ne 'digital') ?>
+		<? endif ( $$variable{project}{press_type}{ref} ne 'digital') ?>
+
+		<br />
+	</fieldset>
+ 
+	<? if ( $$variable{project}{press_type}{ref} ne 'digital') ?>
+		<fieldset class="varnish">
+			<legend>Varnish</legend>
+	
+			<p class="none">&nbsp;</p>
+
+			<label for="s1_varnish_flood_gloss" class="radio indent-label" style="white-space: nowrap;"><input name="s1_varnish_flood" id="s1_varnish_flood_gloss" type="radio" value="gloss" />Overall Gloss</label>
+			<label for="s1_varnish_flood_matte" class="radio indent-label" style="white-space: nowrap;"><input name="s1_varnish_flood" id="s1_varnish_flood_matte" type="radio" value="matte" />Overall Matte</label><br />
+			<label for="s1_varnish_flood_none" class="radio indent-label" style="white-space: nowrap; padding-bottom: 1ex;"><input name="s1_varnish_flood" id="s1_varnish_flood_none" type="radio" value="" />None</label><br />
+	
+			<? if ($variable->{multiversion_allowed}) ?>
+				<input type="checkbox" name="s1_varnish_spot_mv" value="gloss" class="multiversion checkbox" />
+			<? endif ($variable->{multiversion_allowed}) ?>
+			<label for="s1_varnish_spot_gloss" class="checkbox indent-label"><input name="s1_varnish_spot_gloss" id="s1_varnish_spot_gloss" type="checkbox" value="gloss" />Spot Gloss</label><br />
+			<? if ($variable->{multiversion_allowed}) ?>
+				<input type="checkbox" name="s1_varnish_spot_mv" value="matte" class="multiversion checkbox" />
+			<? endif ($variable->{multiversion_allowed}) ?>
+			<label for="s1_varnish_spot_matte" class="checkbox indent-label"><input name="s1_varnish_spot_matte" id="s1_varnish_spot_matte" type="checkbox" value="matte" />Spot Matte</label><br />
+	
+			<label for="s1_drytrap" class="checkbox indent-label" style="padding-top: 1ex;"><input name="s1_drytrap" id="s1_drytrap" type="checkbox" />Dry Trap</label>
+			<br />
+		</fieldset>
+	
+
+	<? if ( $$variable{'can_aq'} || $$variable{'can_uv'} ) ?>
+
+		<fieldset class="coating">
+			<legend>Coating</legend>
+	
+			<p class="none">&nbsp;</p>
+	
+	    	<? if can_aq ?>
+			  <label for="s1_coating_type_aqueous" class="radio indent-label" style="width: 8em; padding-right: 0 !important;">
+				<input name="s1_coating_type" id="s1_coating_type_aqueous" type="radio" value="aqueous" />Aqueous
+			  </label>
+	    	<? endif can_aq ?>
+			<? if can_soft_touch ?>
+			  <label for="s1_coating_type_soft_touch" class="radio indent-label" style="width: 8em; padding-right: 0 !important;">
+				<input name="s1_coating_type" id="s1_coating_type_soft_touch" type="radio" value="soft_touch" />Soft Touch
+			  </label>
+	    	<? endif can_soft_touch ?>
+	    	<? if can_uv ?>
+			<!-- Because the first option is indented we must adjust our label attributes
+				 if we are not displaying the AQ option -->
+
+			  <label for="s1_coating_type_uv" 
+	    		<? if can_aq ?>
+			  	  class="radio" style="width: 6em; padding-right: 0 !important;">
+	    		<? else can_aq ?>
+			  	  class="radio indent-label" style="width: 8em; padding-right: 0 !important;">
+	    		<? endif can_aq ?>
+
+				<input name="s1_coating_type" id="s1_coating_type_uv" type="radio" value="uv" />UV
+			  </label>
+	    	<? endif can_uv ?>
+
+			<label for="s1_coating_type_none" class="radio" style="width: auto; padding-right: 0 !important;">
+				<input name="s1_coating_type" id="s1_coating_type_none" type="radio" value="" />None
+			</label>
+
+			<br />
+
+			<label for="s1_coating_texture_gloss" class="radio indent-label" style="width: 8em; padding-right: 0 !important;">
+				<input name="s1_coating_texture" id="s1_coating_texture_gloss" type="radio" value="gloss" checked="checked" />Gloss
+			</label>
+			<label for="s1_coating_texture_silk" class="radio" style="width: 6em; padding-right: 0 !important;">
+				<input name="s1_coating_texture" id="s1_coating_texture_silk" type="radio" value="silk" />Silk
+			</label>
+			<label for="s1_coating_texture_matte" class="radio" style="width: auto; padding-right: 0 !important;">
+				<input name="s1_coating_texture" id="s1_coating_texture_matte" type="radio" value="matte" />Matte
+			</label>
+			<br />
+			<label for="s1_coating_spot" class="checkbox indent-label">
+				<input name="s1_coating_spot" id="s1_coating_spot" type="checkbox" value="1" />Spot
+			</label>
+			<br />
+		</fieldset>
+	<? endif ( $$variable{'can_aq'} || $$variable{'can_uv'} ) ?>
+	<? endif ( $$variable{project}{press_type}{ref} ne 'digital') ?>
+
+	<br />
+</fieldset>
+
+<br class="clear" />

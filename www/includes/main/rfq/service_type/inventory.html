@@ -1,0 +1,16 @@
+<div style="font-size:1em">
+<? if ($$variable{'txtCheckOutQty'})?>
+<span class="label">Qty </span>
+<?txtCheckOutQty?></td>
+<? endif ($$variable{'txtCheckOutQty'})?>
+<span class="label">In Qty </span>
+<? if ($$variable{'qtyIndex'} == 1) ?>
+<?txtInventoryQty1?>
+<? endif ($$variable{'qtyIndex'} == 1) ?>
+<? if ($$variable{'qtyIndex'} == 2) ?>
+<?txtInventoryQty2?>
+<? endif ($$variable{'qtyIndex'} == 2) ?>
+<? if ($$variable{'qtyIndex'} == 3) ?>
+<?txtInventoryQty3?>
+<? endif ($$variable{'qtyIndex'} == 3) ?>
+</div>

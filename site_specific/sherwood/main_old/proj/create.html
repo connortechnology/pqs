@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - Create Project
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/tabs.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/create.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
+
+	<script  type="text/javascript">
+		// Each press has different project types it can process.
+		var PRESS_TO_PROJECT = eval(<?press_to_project?>);
+
+		// Project types belong to groups with similar allowable service types.
+		var PROJECT_GROUPS = eval(<?project_groups?>);
+
+		// Groups list service type _EXCLUSIONS_ ie. services they can't have.
+		var SERVICE_TYPES_BY_GROUP = eval(<?service_types_by_group?>);
+
+		function hideq(){
+			$('txtQuantity2').hide();
+			$('txtQuantity3').hide();
+			$('q2').hide();
+			$('q3').hide();
+			$('DigiFed').value = 1;
+		}
+		window.onload=hideq; 
+		
+		function showq(){
+			$('txtQuantity2').show();
+			$('txtQuantity3').show();
+			$('q2').show();
+			$('q3').show();
+			$('DigiFed').value = 0;
+		}
+	</script>
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> Create Project</h1>
+
+	<form action="dispatch.html" method="post" name="f1" id="f1" onsubmit="return validate_data(this)">
+		<input type="hidden" name="action" value="create" />
+		<input type="hidden" name="DigiFed" id="DigiFed" value="" />
+		<?if predefined ?>
+			<input type="hidden" name="predefined"      value="<?predefined?>" />
+			<input type="hidden" name="create_to_order" value="<?create_to_order?>" />
+
+			<?if template ?>
+				<input type="hidden" name="template"      value="<?template?>" />
+			<?endif template ?>
+		<?endif predefined ?>
+
+
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+
+		<?if not:predefined ?>
+			<? if ($variable->{press_types} > 1) ?>
+				<fieldset id="equipment-type">
+					<legend>Equipment Type</legend>
+
+					<p>What type of equipment would you like to perform the printing of your project?</p>
+
+					<div class="width thirds">
+						<?loop press_types ?>
+							<label class="no-pad-bot">
+								<input type="radio" name="rdbPressType" value="<?press?>" <? if ($$variable{'press'} eq $$variable{'SelectedPress'})?> checked="checked" <? endif ($$variable{'press'} eq $$variable{'SelectedPress'})?> onClick="showq()" />
+								<?name?>
+							</label>
+						<?endloop press_types ?>
+						<label class="no-pad-bot"><input name="rdbPressType" type="radio"
+						onClick="hideq()" value="press" checked="checked">
+					  Digital/Sheetfed</label>
+					</div>
+					<br />
+				</fieldset>
+			<? else ($variable->{press_types} > 1) ?>
+				<?loop press_types ?>
+					<input type="hidden" name="rdbPressType" value="<?press?>" /> 
+				<?endloop press_types ?>
+			<? endif ($variable->{press_types} > 1) ?>
+
+
+			<div id='project_types'>
+				<fieldset id="project-type">
+					<legend>
+						Project Type
+					</legend>
+
+					<p>What type of project would you like to create?</p>
+
+					<!-- Single Page Projects. -->
+					<? if project_type.singlepage ?>
+
+						<div class="nothing">
+							<h4>Single Sheet Flat or Folded Print Projects</h4>
+
+							<div class="width thirds">
+								<? loop project_type.singlepage ?>
+									<label for="rdbProjectType-<?id?>" class="no-pad-bot">
+										<input type="radio" id="rdbProjectType-<?id?>" name="rdbProjectType" value="<?id?>" <? if ($$variable{type} eq $$variable{id}) ?>checked="checked"<? endif ($$variable{type} eq $$variable{id}) ?> />
+										<?name?>
+									</label>
+								<? endloop project_type.singlepage ?>
+							</div>
+						</div>
+					<? endif project_type.singlepage ?>
+
+
+					<!-- Multi-page Projects. -->
+					<?if project_type.multipage ?>
+						<br /><!-- Do Not Remove BR Tag - FireFox Fix -->
+
+						<div class="nothing">
+							<h4>Multi-Sheet Bound Print Projects</h4>
+
+							<div id="multi-page-projects" class="width thirds">
+								<? loop project_type.multipage ?>
+									<label for="rdbProjectType-<?id?>" class="no-pad-bot">
+										<input type="radio" id="rdbProjectType-<?id?>" name="rdbProjectType" value="<?id?>"	<? if ($$variable{type} eq $$variable{id}) ?>checked="checked"<? endif ($$variable{type} eq $$variable{id}) ?> />
+										<?name?>
+									</label>
+								<? endloop project_type.multipage ?>
+							</div>
+						</div>
+					<?endif project_type.multipage ?>
+
+
+					<!-- Screen Projects. -->
+					<?if project_type.screen ?>
+						<br /><!-- Do Not Remove BR Tag - FireFox Fix -->
+
+						<div class="nothing">
+							<h4>Screen Print Projects</h4>
+
+							<div class="width thirds">
+								<? loop project_type.screen ?>
+									<label for="rdbProjectType-<?id?>" class="no-pad-bot">
+										<input type="radio" id="rdbProjectType-<?id?>" name="rdbProjectType" value="<?id?>" <? if ($$variable{type} eq $$variable{id}) ?>checked="checked"<? endif ($$variable{type} eq $$variable{id}) ?> />
+										<?name?>
+									</label>
+								<? endloop project_type.screen ?>
+							</div>
+						</div>
+					<?endif project_type.screen ?>
+
+
+					<!-- Inkjet Projects. -->
+					<?if project_type.inkjet ?>
+						<br /><!-- Do Not Remove BR Tag - FireFox Fix -->
+
+						<div class="nothing">
+							<h4>Larger Format Print Projects</h4>
+
+							<div class="width thirds">
+								<? loop project_type.inkjet ?>
+									<label for="rdbProjectType-<?id?>" class="no-pad-bot">
+										<input type="radio" id="rdbProjectType-<?id?>" name="rdbProjectType" value="<?id?>" <? if ($$variable{type} eq $$variable{id}) ?>checked="checked"<? endif ($$variable{type} eq $$variable{id}) ?> />
+										<?name?>
+									</label>
+								<? endloop project_type.inkjet ?>
+							</div>
+						</div>
+					<?endif project_type.inkjet ?>
+
+					<br />
+				</fieldset>
+			</div>
+		<?endif not:predefined ?>
+
+		<!--#include virtual="/includes/main/proj/project_create_edit.html" -->
+
+		<div class="button-bar">
+				<!--#include virtual="/includes/main/proj/buttons.html" -->
+			<br class="clear" />
+		</div>
+	</form>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

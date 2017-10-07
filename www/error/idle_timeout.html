@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Idle Error Page
+		
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body onload="document.f1.txtEmail.focus();">
+
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Error &#187;</span> Idled too Long</h1>
+	
+	<p>This server enforces an idle limit of <?idletime?> seconds. You have exceeded this limit, and have been automatically logged out. You may log in again, and continue any projects, orders, or quotes that you had started.<p>
+
+	<p>Please enter your e-mail address and password to login.</p>
+
+	<p><strong> * </strong> If you have not registered for an account please click<a href="/main/account/registration.html"> <strong> here </strong> </a>to register.</p>
+
+	<form name="f1" method="post" action="/main/account/confirmation_login.html">
+		<fieldset>
+			<legend>
+				Login
+			</legend>
+
+			<p>Please enter your e-mail address and password to login.</p>
+
+			<label for="txtEmail">E-mail:</label>
+			<input type="text" name="txtEmail" size="30" class="input-text" />
+			<br />
+
+			<label for="txtPassword">Password:</label>
+			<input type="password" name="txtPassword" size="30" class="input-text" />
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" value="Submit" />
+				<br />
+			</div>
+
+			<input type="hidden" name="Destination" value="<?Destination?>" />
+			
+			<br />
+		</fieldset>
+	</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

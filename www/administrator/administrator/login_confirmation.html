@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Administrative Login Confirmation
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Administrative &#187;</span> Login Confirmation</h1>
+
+	<? if ( $$variable{'USER_GREETING'} ) ?>
+		<p><?USER_GREETING?></p>
+	<? endif ( $$variable{'USER_GREETING'} ) ?>
+
+	<? if ( $$variable{'USER_CATEGORY_GREETING'} ) ?>
+		<p><?USER_CATEGORY_GREETING?></p>
+	<? endif ( $$variable{'USER_CATEGORY_GREETING'} ) ?>
+
+	<? if ( $$variable{'CUSTOMER_GREETING'} ) ?>
+		<p><?CUSTOMER_GREETING?></p>
+	<? endif ( $$variable{'CUSTOMER_GREETING'} ) ?>
+
+	<? if ( $$variable{'CUSTOMER_CATEGORY_GREETING'} ) ?>
+		<p><?CUSTOMER_CATEGORY_GREETING?></p>
+	<? endif ( $$variable{'CUSTOMER_CATEGORY_GREETING'} ) ?>
+
+	<p><?Destination?></p>
+
+	<!--
+	<p>To view Print-Quotes Software Manuals and Documentation <a href="/administrator/administrator/documentation.html">Click Here</a> or use the "Documents" link under the "Administrator Menu".</p>
+	-->
+</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

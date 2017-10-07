@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Project - Files - Upload
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+
+	<link href="/styles/forms.css"         rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/project_files.css" rel="stylesheet" type="text/css" media="screen" />
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Project &#187;</span> Files &#187; Upload</h1>
+
+	<p>
+		<? if empty:files ?>
+			There aren't any files associated with this project yet, please click “Browse” below if you want to upload files for this project.
+		<? else empty:files ?>
+			To add new files to this project, please click “Browse” to choose the file. 
+		<? endif empty:files ?>
+	</p>
+
+	<!-- File upload. -->
+	<form id="upload" name="upload" method="post" enctype="multipart/form-data" action="<?siteURL?>/main/proj/file_action.html">
+		<input type="hidden" name="pid" value="<?pid?>" />
+
+		<fieldset>
+			<legend>Files</legend>
+
+			<?if not:is_staff?>
+				<p class="note">For detailed instruction and file preparation tips, please see <a href="/main/support/support_file_preparation_upload.html">“File Preperation and Uploading”</a> in our support section.</p>
+			<?endif not:is_staff?>
+
+			<table class="no-formatting" style="margin: auto; margin-bottom: 1ex;">
+				<tr>
+					<th class="l">Filename</th>
+					<th class="l">Description</th>
+				</tr>
+
+				<tr>
+					<td><input type="file" class="file" size="40" name="filename-1" onchange="growTable(this)"/></td>
+					<td class="l">
+						<input type="text" name="description-1" style="width: 20em;" class="input-text" />
+					</td>
+				</tr>
+			</table>
+			
+			<?if is_staff?>
+            <p>Your file(s) will automatically be approved for proof. To approve for print as well, please check off the box below. </p>
+				<label for="approve_for">Approved for print?</label>
+				<input type="checkbox" id="approve_for" name="approve_for" value="production" />
+			<?else is_staff?>
+				<p class="note">If any problems occur when uploading please contact <a href="/main/support/support_help_desk.html">customer service</a>.</p>
+			<?endif is_staff?>
+
+		</fieldset>
+
+		<?if is_staff?>
+			<fieldset>
+				<!--#include virtual="/includes/main/proj/notification_contacts.html" -->
+			</fieldset>
+
+			<input type="submit" name="upload" class="button" value="Upload" style="float: right;" />
+		<?else is_staff ?>
+
+			<!-- File approval confirmation for end-users. -->
+			<fieldset id="approval">
+				<legend>Approval</legend>
+
+				<p>I, <?user.name?>, hereby confirm that the selected files are free
+				of all defects and I have checked all textual information, including
+				spelling and grammar; all graphical image, designs, and <?ws_colour?>s; the
+				overall layout and format; and all other aspects of the files.</p>
+
+				<p>The selected files are approved for 
+					<select name="approve_for">
+						<option value="prepress">proof</option>
+						<option value="production" selected="selected">print</option>
+					</select>.
+				</p> 
+
+				<br />
+				Signed, <br />
+				<input class="button" type="submit" style="float: right; margin: 0;" name="upload" value="Upload" />
+				<input type="text" name="initials" maxlength="2" style="width: 3em; margin-left: 4em;" /> <em>Please enter your initials (<?user.initials?>).</em>
+
+			</fieldset>
+			</form>
+
+		<?endif is_staff?>
+	</form>
+<br /><br /><br />
+<p>
+Default project file format is Adobe PDF (Portable Document Format) unless specified otherwise. To avoid any additional file preparation charges please read and follow our <a href="/main/support/support_file_preparation_upload.html">file preparation instructions</a> carefully. All project files and proofs must be approved prior to printing. Heavy ink coverage, non-standard production files or additional services required may be subject to additional charges. 
+</p>
+	<!--#include virtual="/includes/f1-main.html" -->
+	<a href="/main/proj/proj_view.html?pid=<?pid?>">Project</a>
+	<ul style="margin-bottom: 2ex">
+		<li><a href="/main/proj/proj_view.html?pid=<?pid?>">View</a></li>
+		<li><a href="/main/proj/files.html?pid=<?pid?>">Files</a></li>
+	</ul>
+
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

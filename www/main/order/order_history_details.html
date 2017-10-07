@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Orders - Order Details
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/order.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/project.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript">
+		function open_printer_friendly_version() {
+			window.open('/main/order/order_invoice_printer_friendly.html?order_id=<?ORDER_ID?>','printerfriendlyorder','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+		function open_packing_slip() {
+			window.open('/main/order/order_invoice_printer_friendly.html?order_id=<?ORDER_ID?>&PackingSlip=1','printerfriendlyorder','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+
+		function reuse_order() {
+			var valid = 1;
+		<? if ( $$variable{'InvalidPrices'} ) ?>
+			alert('The prices on some of your projects may have changed. Please click on the projects marked in red to update your pricing');
+			valid =  0;
+		<? endif ( $$variable{'InvalidPrices'} ) ?>
+			return valid;
+		}
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Orders &#187;</span> Order Details</h1>
+
+	<p>To view production status by individual service, please click on the project name.</p>
+
+	<div class="button-bar">
+		<input type="button" class="button" onclick="open_printer_friendly_version();return false;" value="Printer Friendly" />
+
+		<? if ( $$variable{'AmountOutstanding'} ) ?>
+			<? if ( configuration::get_value( $log, $dbh, 'PaymentProcessor' ) ne '' ) ?>
+				<form name="f3" method="post" action="/main/payment/payment_make.html">
+					<input type="button" class="button" onclick="f3.submit();return false;" value="Make Payment" />
+					<input type="hidden" name="order_id" value="<?ORDER_ID?>" />
+				</form>
+			<? endif ( configuration::get_value( $log, $dbh, 'PaymentProcessor' ) ne '' ) ?>
+		<? endif ( $$variable{'AmountOutstanding'} ) ?>
+
+		<? if ( ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) or ( $$variable{'ORDER_STATUS'} eq 'Pending Deposit' ) ) ?>
+			<? if ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+				<form name="f5" method="post" action="/main/order/order_history_details.html">
+					<input type="submit" name="f5.submit();return false;" class="button right" value="Cancel Order" />
+					<input type="hidden" name="order_id" value="<?ORDER_ID?>" />
+					<input type="hidden" name="btnFunction" value="Cancel" />
+				</form>
+			<? endif ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+            	
+
+		<?if ($variable->{is_staff} || $variable->{user_id} eq '293')?>
+        <? if ( $$variable{'ORDER_STATUS'} eq 'Pending Date Approval' ) ?>
+				<form name="f7" method="post" action="/main/order/order_history_details.html">
+					<input type="submit" name="OrderDateModify"   class="button right" value="Delivery Dates Need Modification" />
+                    <input type="submit" name="OrderDateApproved" class="button right" value="Approve All Delivery Dates" />
+					<input type="hidden" name="order_id" value="<?ORDER_ID?>" />
+				</form>
+			 <? endif ( $$variable{'ORDER_STATUS'} eq 'Pending Date Approval' ) ?>
+          <?endif ($variable->{is_staff} || $variable->{user_id} eq '293')?>
+
+			<? if ( $$variable{'ORDER_STATUS'} eq 'Cancelled' ) ?>
+				<form name="f6" method="post" action="/main/order/order_selection.html">
+					<input type="submit" name="f6.submit();return false;" class="button right" value="Re-Open Order" />
+					<input type="hidden" name="order_id" value="<?ORDER_ID?>" />
+					<input type="hidden" name="btnFunction" value="ReOpen" />
+				</form>
+			<? endif ( $$variable{'ORDER_STATUS'} eq 'Cancelled' ) ?>
+           
+           <? else ( ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) or ( $$variable{'ORDER_STATUS'} eq 'Pending Deposit' ) ) ?>
+          <? if ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+            <a class="button right" href="#" onclick="alert('Please call us at <!--#include virtual="/includes/company_telephone_number.html"--> and we will help you cancel your order.');">Cancel Order</a>
+           <? endif ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+		<? endif ( ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) or ( $$variable{'ORDER_STATUS'} eq 'Pending Deposit' ) ) ?>
+		<br class="clear" />
+		</div>
+
+	<br class="clear" />
+
+	<!--#include virtual="/includes/forms/order.html"-->
+
+	 
+    		<?if additionalOrderInformation?><div id="additionalorderinformation">
+			<em>Additional Order Information:</em><br/>
+			<?additionalOrderInformation?><br /></div>
+            <?endif additionalOrderInformation?>
+		
+
+	<div id="repcomment">
+		<em>Representative:</em>
+		<?AdministratorName?>
+
+		<p>
+			<em>Comments:</em>
+			<?AdministratorComments?>
+		</p>
+	</div>
+    
+    <? if is_staff ?>
+	<? if ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+    <fieldset>
+				<legend>Customer Selection</legend>
+				
+				<p>As an employee or administrator you may now move this order to a different customer account by selecting it from the pull down below. Any projects attached to this order will be moved into the selected customer's account history. Please note the shipping information will remain the same as originally entered. To edit this after moving accounts select the project ID above and select the shipping service name, edit the information and save the page. If it does not update onto the order page you will need to cancel and re-open your order to see your changes.</p>
+				<form name="f8" method="post" action="/main/order/order_history_details.html">
+				<label for="ddmCustomer">Customer account:</label>
+				<select id="ddmCustomer" name="ddmCustomer">
+					<option value="">- use current account -</option>
+					<?ddmCustomer?>
+				</select>
+				<br />
+				
+					<input type="submit" name="f6.submit();return false;" class="button right" value="Move Order" />
+					<input type="hidden" name="order_id" value="<?ORDER_ID?>" />
+                    
+				</form>
+                </fieldset>
+                <? endif ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+                <? endif is_staff ?>
+	<!-- Standard disclaimer -->
+	<div id="disclaimer">
+		<!--#include virtual="/includes/invoice_disclaimer.html"-->
+	</div>
+	
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/order.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

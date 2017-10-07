@@ -1,0 +1,89 @@
+<? if ($$variable{isServicePricing}) ?>
+
+	<h2 id="pricing_title">Pricing</h2>
+	<br class="clear" />
+
+	<div id="pricing">
+
+		<table class="no-formatting">
+			<col style="width: 55%;" />
+			<col style="width: 15%;" />
+			<col style="width: 10%;" />
+			<col style="width: 15%;" />
+			<col style="width: 5%;" />
+
+			<thead>
+				<tr>
+					<th style="width: 55%; text-align: left;">Quantity</th>
+					<th style="width: 15%;">Printing</th>
+					<th style="width: 10%;">&nbsp;</th>
+					<th style="width: 15%;">Total</th>
+					<th style="width: 5%;">&nbsp;</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				<? if ( $$variable{'QUANTITY1'} > 0 ) ?>
+					<tr>
+						<td rowspan="2" class="quantity"><?QUANTITY1?><input value="" name="txtQuantity1" type="hidden" /></td>
+						<td>$&nbsp;<span id="txtPrice1"><?total_unit?></span></td>
+						<td>&nbsp;</td>
+
+						<td class="total">$&nbsp;<span id="total_price"><?total_price?></span></td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="each">
+						<td><span id="txtUnitPrice1"><?txtUnitPrice1?</span></td>
+						<td class="each">ea.</td>
+
+						<td class="total"><span id="unit_price"><?unit_price?></span></td>
+						<td class="each">ea.</td>
+					</tr>
+				<? endif ( $$variable{'QUANTITY1'} > 0 ) ?>
+
+				<? if ( $$variable{'QUANTITY2'} > 0 ) ?>
+					<tr class="new-quantity">
+						<td rowspan="2" class="quantity"><?QUANTITY2?><input value="" name="txtQuantity2" type="hidden" /></td>
+						<td>$&nbsp;<span id="txtPrice2"><?total_unit?></span></td>
+						<td>&nbsp;</td>
+
+						<td class="total">$&nbsp;<span id="total_price"><?total_price?></span></td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="each">
+						<td><span id="txtUnitPrice2"><?txtUnitPrice2?></span></td>
+						<td class="each">ea.</td>
+
+						<td class="total"><span id="unit_price"><?unit_price?></span></td>
+						<td class="each">ea.</td>
+					</tr>
+				<? endif ( $$variable{'QUANTITY2'} > 0 ) ?>
+
+				<? if ( $$variable{'QUANTITY3'} > 0 ) ?>
+					<tr class="new-quantity">
+						<td rowspan="2" class="quantity"><?QUANTITY3?><input value="" name="txtQuantity3" type="hidden" /></td>
+						<td>$&nbsp;<span id="txtPrice3"><?total_unit?></span></td>
+						<td>&nbsp;</td>
+
+						<td class="total">$&nbsp;<span id="total_price"><?total_price?></span></td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="each">
+						<td><span id="txtUnitPrice3"><?txtUnitPrice3?></span></td>
+						<td class="each">ea.</td>
+
+						<td class="total"><span id="unit_price"><?unit_price?></span></td>
+						<td class="each">ea.</td>
+					</tr>
+				<? endif ( $$variable{'QUANTITY3'} > 0 ) ?>
+			</tbody>
+		</table>
+		<br class="clear" />
+	</div>
+	<br class="clear" />
+
+<? else ($$variable{isServicePricing}) ?>
+	<input type="hidden" name="txtQuantity1" id="txtQuantity1" value="<?project.quantity.0?>" />
+	<input type="hidden" name="txtQuantity2" id="txtQuantity2" value="<?project.quantity.1?>" />
+	<input type="hidden" name="txtQuantity3" id="txtQuantity3" value="<?project.quantity.2?>" />
+<? endif ($$variable{isServicePricing}) ?>

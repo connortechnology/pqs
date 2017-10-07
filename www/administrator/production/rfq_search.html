@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>
+<!--#include virtual="/includes/web_page_title.html" -->
+Production - Production RFQ Search</title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-admin-css.html" -->
+<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+<!--#include virtual="/includes/h2-js.html" -->
+<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+  <h1><span class="title-section">Production &#187;</span> RFQ's &#187; Projects</h1>
+  <p>Please  input a project ID and click &quot;Go&quot; or select a search criteria  and click &quot;Show Results&quot;. You may then click on a <strong> Project ID </strong> to view project details.</p>
+  <p>Click on the Project ID to create a new RFQ</p>
+  <p>Click on the RFQ Status to view a previous RFQ</p>
+  <form id="ProjectIndex-form" name="ProjectIndex" method="GET" action="/administrator/production/project_view.html">
+    <fieldset>
+      <legend> Project ID </legend>
+      <p class="none">&nbsp;</p>
+      <label for="ProjectIndex">Project ID:</label>
+      <input id="ProjectIndex" name="ProjectIndex" size="9" class="smBox" onkeyup="calc('f1');" />
+      <input class="button smGo" type="submit" value="Go" />
+      <br />
+    </fieldset>
+  </form>
+  <form id="f1" name="f1" method="post" action="rfq_search.html">
+    <fieldset>
+      <legend> Search </legend>
+      <p class="none">&nbsp;</p>
+      <label for="ddmCustomer">Customer:</label>
+      <select id="ddmCustomer" name="ddmCustomer" size="1">
+        <option value=""> All Customers </option>
+        <?ddmCustomer?>
+      </select>
+      <br />
+      <label for="ddmStatus">Project Status:</label>
+      <select id="ddmStatus" name="ddmStatus" size="1">
+        <option value="" <?ddmStatus?> > All Projects</option>
+        <option value="Ordered" <?ddmStatusOrdered?> > Ordered Projects </option>
+        <option value="Unordered"<?ddmStatusUnordered?> > Unordered Projects </option>
+        <option value="Complete" <?ddmStatusComplete?> > Complete </option>
+        <option value="In Production" <?ddmStatusIn Production?> > In Production </option>
+         <option value="predefined" <?ddmStatuspredefined?> > Predefined Projects </option>
+        <option value="Quoted" <?ddmStatusQuoted?> > Quoted Projects </option>
+      </select>
+      <br />
+      <label for="ddmStatus">RFQ Status:</label>
+      <select id="ddmRFQStatus" name="ddmRFQStatus" size="1">
+        <option value="Open" <?ddmRFQStatusOpen?> > Open </option>
+        <option value="Closed" <?ddmRFQStatusClosed?> > Closed </option>
+        <option value=""  <?ddmRFQStatus?> > All Projects </option>
+      </select>
+      <br />      
+      <label for="ddmStartMonth">Start Date:</label>
+      <select id="ddmStartMonth" name="ddmStartMonth">
+        <?ddmStartMonth?>
+      </select>
+      <select id="ddmStartDay" name="ddmStartDay">
+        <?ddmStartDay?>
+      </select>
+      <select id="ddmStartYear" name="ddmStartYear">
+        <?ddmStartYear?>
+      </select>
+      <br />
+      <label for="ddmEndMonth">End Date:</label>
+      <select id="ddmEndMonth" name="ddmEndMonth">
+        <?ddmEndMonth?>
+      </select>
+      <select id="ddmEndDay" name="ddmEndDay">
+        <?ddmEndDay?>
+      </select>
+      <select id="ddmEndYear" name="ddmEndYear">
+        <?ddmEndYear?>
+      </select>
+      <br />
+      <div class="button-bar indent-regular">
+        <input class="button" type="reset" />
+        <input class="button" type="submit" value="Show Results" />
+        <br />
+      </div>
+      <br />
+    </fieldset>
+    <fieldset>
+      <legend> Results </legend>
+      <p class="none">&nbsp;</p>
+      <? if ( $$variable{'projects'} ) ?>
+      <table border="0" cellspacing="0" cellpadding="0" width="100%" style="margin:0 0 0 0 !important;">
+         <tr>
+          <th style="text-align: center; background-color:#666666; " colspan="4">Project</th>
+          <th style="text-align: center; border-left:2px solid #FFF !important; background-color:#666666;" colspan="3">RFQ</th>
+        </tr>
+        <tr>
+          <th style="text-align: center;">ID</th>
+          <th style="text-align: center;">Customer</th>
+          <th style="text-align: center;">Name</th>
+          <th style="text-align: center;">Status</th>
+          <th style="text-align: center; border-left:2px solid #FFF !important;">Due Date</th>
+          <th style="text-align: center; ">Sent</th>
+          <th style="text-align: center; ">Status</th>
+        </tr>
+        <? loop projects ?>
+        <tr>
+          <td style="text-align: left;"><a href="/administrator/production/project_view.html?order_id=<?order_id?>&ProjectIndex=<?pid?>">
+            <?pid?>
+            </a></td>
+          <td style="text-align: left;"><?cust_name?></td>
+          <td style="text-align: left;"><?ref?></td>
+          <td style="text-align: center;"><?status?></td>
+          <td style="text-align: center;"><?due_date?></td>
+          <td style="text-align: center;"><a href="/administrator/production/rfq_project_summary.html?pid=<?pid?>">
+            <?rfq_sent?>
+            </a></td>
+          <td style="text-align: center;"><a href="/administrator/production/rfq_list.html">
+            <?rfq_status?>
+            </a></td>
+        </tr>
+        <? endloop projects ?>
+      </table>
+      <? else ( $$variable{'projects'} ) ?>
+      <p>There were no results matching your criteria.</p>
+      <? endif ( $$variable{'projects'} ) ?>
+      <br />
+    </fieldset>
+  </form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

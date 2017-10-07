@@ -1,0 +1,32 @@
+<? if ($$variable{isServicePricing}) ?>
+
+	<h2 id="pricing_title">Pricing</h2>
+	<br class="clear" />
+
+	<div id="pricing">
+		<table class="no-formatting">
+			<col style="width: 50%;" />
+			<col style="width: 45%;" />
+			<col style="width: 5%;" />
+
+			<thead>
+				<tr>
+					<th style="width: 30%; text-align: left;">Service</th>
+					<th style="width: 15%;">Total</th>
+					<th style="width: 5%;">&nbsp;</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				<tr>
+					<td class="service"><?service.name?></td>
+					<td class="price" id="txtPrice1">$&nbsp;<?txtPrice1?></td>
+					<td>&nbsp;</td>
+				</tr>
+			</tbody>
+		</table>
+		<br class="clear" />
+	</div>
+	<br class="clear" />
+
+<? endif ($$variable{isServicePricing}) ?>

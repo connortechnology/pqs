@@ -1,0 +1,85 @@
+<? if ($$variable{'PrepressServiceTypes'}) ?>
+
+	<fieldset>
+		<legend>
+			Prepress Services
+		</legend>
+		
+		<p>Which prepress services are required for the project? Please select all that apply.</p>
+		
+		<div class="width thirds">
+
+			<? loop PrepressServiceTypes ?>
+				<? if ( ($$variable{'PressType'} ne 'digital') || ($$variable{'id'} ne "PlateMaking" ) && ($$variable{'PressType'} eq 'digital')) ?>
+
+					<label for="project_service-<?id?>" class="no-pad-bot">
+						<input type="checkbox" id="project_service-<?id?>" name="project_service" value="<?id?>" 
+						<? if ( sets::isin $$variable{'id'}, @{$$variable{'SelectedServices'}} ) ?> checked="checked" <? endif ( sets::isin $$variable{'id'}, @{$$variable{'SelectedServices'}} ) ?>
+						<? if ( sets::isin $$variable{'id'}, @{$$variable{'DisabledServices'}} ) ?> disabled="disabled" <? endif ( sets::isin $$variable{'id'}, @{$$variable{'DisabledServices'}} ) ?> />
+
+						<?name?>
+					</label>
+				<? endif ( ($$variable{'PressType'} ne 'digital') || ($$variable{'id'} ne "PlateMaking" ) && ($$variable{'PressType'} eq 'digital')) ?>
+
+			<? endloop PrepressServiceTypes ?>
+
+		</div>
+		
+		<br />
+	</fieldset>
+
+<? endif ($$variable{'PrepressServiceTypes'}) ?>
+
+
+<? if ($$variable{'BinderyServiceTypes'}) ?>
+
+	<fieldset>
+		<legend>
+			Other Services
+		</legend>
+		
+		<p>What other services are required for the project? Please select all that apply.</p>
+		
+		<div class="width thirds">
+			<? loop BinderyServiceTypes ?>
+				<label for="project_service-<?id?>">
+					<input type="checkbox" id="project_service-<?id?>" name="project_service" value="<?id?>" 
+					<? if ( sets::isin $$variable{'id'}, @{$$variable{'SelectedServices'}} ) ?> checked="checked" <? endif ( sets::isin $$variable{'id'}, @{$$variable{'SelectedServices'}} ) ?>
+					<? if ( sets::isin $$variable{'id'}, @{$$variable{'DisabledServices'}} ) ?> disabled="disabled" <? endif ( sets::isin $$variable{'id'}, @{$$variable{'DisabledServices'}} ) ?> />
+		
+					<?name?>
+				</label>
+			<? endloop BinderyServiceTypes ?>			
+		</div>
+		<br />
+	</fieldset>
+
+<? endif ($$variable{'BinderyServiceTypes'}) ?>
+
+
+<? if ( @{$$variable{'SpecialtyServiceTypes'}} ) ?>
+
+	<fieldset>
+		<legend>
+			Specialty Finishing Services
+		</legend>
+		
+		<p>What type of specialty finishing services are required for the project? Please select all that apply.</p>
+
+		<div class="width thirds">
+		
+			<?loop SpecialtyServiceTypes?>
+				<label for="project_service-<?id?>">
+					<input type="checkbox" id="project_service-<?id?>" name="project_service" value="<?id?>" 
+					<? if ( sets::isin $$variable{'id'}, @{$$variable{'SelectedServices'}} ) ?> checked="checked" <? endif ( sets::isin $$variable{'id'}, @{$$variable{'SelectedServices'}} ) ?>
+					<? if ( sets::isin $$variable{'id'}, @{$$variable{'DisabledServices'}} ) ?> disabled="disabled" <? endif ( sets::isin $$variable{'id'}, @{$$variable{'DisabledServices'}} ) ?> />
+					
+					<?name?>
+				</label>
+			<?endloop SpecialtyServiceTypes?>
+
+		</div>
+		<br />
+	</fieldset>
+
+<? endif ( @{$$variable{'SpecialtyServiceTypes'}} ) ?>

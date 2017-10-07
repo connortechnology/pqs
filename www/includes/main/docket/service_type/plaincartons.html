@@ -1,0 +1,27 @@
+<? if ($$variable{'qtyIndex'} == 1) ?>
+	<?hdnSkidQuantity1?>
+<? endif ($$variable{'qtyIndex'} == 1) ?>
+<? if ($$variable{'qtyIndex'} == 2) ?>
+	<?hdnSkidQuantity2?>
+<? endif ($$variable{'qtyIndex'} == 2) ?>
+<? if ($$variable{'qtyIndex'} == 3) ?>
+	<?hdnSkidQuantity3?>
+<? endif ($$variable{'qtyIndex'} == 3) ?>
+
+<span class="label">Carton Weight </span>
+<? if ($$variable{'qtyIndex'} == 1) ?>
+	<?txtCartonWeight1?>
+<? endif ($$variable{'qtyIndex'} == 1) ?>
+<? if ($$variable{'qtyIndex'} == 2) ?>
+	<?txtCartonWeight2?>
+<? endif ($$variable{'qtyIndex'} == 2) ?>
+<? if ($$variable{'qtyIndex'} == 3) ?>
+	<?txtCartonWeight3?>
+<? endif ($$variable{'qtyIndex'} == 3) ?>
+lbs
+
+<span class="label">Carton Size</span>
+<?ddmPackageType?>
+
+<span class="label">Projects per Carton</span>
+<?txtItemsPerPackage?>

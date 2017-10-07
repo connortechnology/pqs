@@ -1,0 +1,55 @@
+<div style="font-size:1em">
+<? if ( $$variable{'template'} =~ /PresentationFolder/ ) ?>
+	<span class="label">Number of Pockets</span>
+	<? if ( $variable->{pockets} == 1 ) ?>
+		Standard 1
+	<? endif ( $variable->{pockets} == 1 ) ?>
+	<? if ( $variable->{pockets} == 2 ) ?>
+		Standard 2
+	<? endif ( $variable->{pockets} == 2 ) ?>
+	<? if ( $variable->{pockets} == 0 ) ?>
+		Custom
+	<? endif ( $variable->{pockets} == 0 ) ?>
+
+	<span class="label">Pocket Size</span>
+	<? if ( $variable->{rdbPocketSize} ) ?>
+		<?rdbPocketSize?>
+	<? else ( $variable->{rdbPocketSize} ) ?>
+		Custom
+	<? endif ( $variable->{rdbPocketSize} ) ?>
+	
+	<? if ( $$variable{'rdbBusinessCardSlot'} ne 'None' ) ?>
+		<span class="label">Business Card Holders</span>
+		<?rdbBusinessCardSlot?>
+		<?rdbBusinessCardStyle?>
+	<? endif ( $$variable{'rdbBusinessCardSlot'} ne 'None' ) ?>
+
+<? else ( $$variable{'template'} =~ /PresentationFolder/ ) ?>
+    <span class="label">Image Size</span>
+    <?txtDieWidth?>x<?txtDieHeight?>"
+.	
+    <? if ($$variable{'txtDieCutBends'}) ?>
+        <span class="label">Die Bends</span>
+        <?txtDieCutBends?>
+    <? endif ($$variable{'txtDieCutBends'}) ?>
+
+    <? if ($$variable{'txtDieCutPunches'}) ?>
+        <span class="label">Die Punchs</span>
+        <?txtDieCutPunches?>
+    <? endif ($$variable{'txtDieCutPunches'}) ?>
+	
+	<? if ($$variable{'rdbHoleClearing'}) ?>
+		<span class="label">Hole Clearing</span>
+		<?rdbHoleClearing?>
+	<? endif ($$variable{'rdbHoleClearing'}) ?>
+	
+	<? if ($$variable{'txtHoleClearingHoles'}) ?>
+		<span class="label">Hole Qty</span>
+		<?txtHoleClearingHoles?>
+	<? endif ($$variable{'txtHoleClearingHoles'}) ?>
+
+<? endif ( $$variable{'template'} =~ /PresentationFolder/ ) ?>
+
+<span class="label">Laminating</span>
+<?rdbGlued?>
+</div>

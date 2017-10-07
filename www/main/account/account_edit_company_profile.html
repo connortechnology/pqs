@@ -1,0 +1,299 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Account - Edit Company Profile
+		
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Account &#187;</span> Edit Company Profile</h1>
+
+	<p>Your company profile can be modified using the fields below. Use the Save button when finished.</p>
+
+   <form id="account_edit_company_profile" method="post" onsubmit="return fmCheck(f1);" name="f1">
+
+	<div class="button-bar">
+		<input class="button" type="reset" />
+		<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+		<br class="clear" />
+	</div>
+    <br />
+
+	<font size="3"><strong>Company Information:</strong></font><br /><br />
+
+	<label for="txtAccountNum">Account No:</label>
+	<input type="hidden" id="txtAccountNum" name="txtAccountNum" value="<?txtAccountNum?>" class="input-text" />
+	<br />
+
+	<label for="txtCompanyName">Company Name:</label>
+	<input type="text" id="txtCompanyName" name="txtCompanyName" value="<?txtCompanyName?>" class="input-text" />
+	<br />
+
+	<label for="txtAddress1">Address 1:</label>
+	<input type="text" id="txtAddress1" name="txtAddress1" value="<?txtAddress1?>" class="input-text" />
+	<br />
+
+	<label for="txtAddress2">Address 2 &amp; Mail Stop:</label>
+	<input type="text" id="txtAddress2" name="txtAddress2" value="<?txtAddress2?>" class="input-text" />
+	<br />
+
+	<label for="txtCity">City:</label>
+	<input type="text" id="txtCity" name="txtCity" value="<?txtCity?>" class="input-text" />
+	<br />
+
+	<label for="ddmStateProvince" >Province/State:</label>
+	<select id="ddmStateProvince" name="ddmStateProvince">
+		<option value="">- Please select one. -</option>
+		<?ddmStateProvince?>
+	</select>
+	<br />
+
+	<label for="ddmCountry">Country:</label>
+	<select id="ddmCountry" name="ddmCountry">
+		<option value="">- Please select one. -</option>
+		<?ddmCountry?>
+	</select>
+	<br />
+
+	<label for="txtPostalCode">Postal Code/Zip:</label>
+	<input type="text" id="txtPostalCode" name="txtPostalCode" value="<?txtPostalCode?>" class="input-text" />
+	<br />
+
+	<label for="txtOtherCountry">Other Country:</label>
+	<input type="text" id="txtOtherCountry" name="txtOtherCountry" value="<?txtOtherCountry?>" class="input-text" />
+	<br />
+
+	<label for="txtPhone">Phone:</label>
+	<input type="text" id="txtPhone" name="txtPhone" value="<?txtPhone?>" class="input-text" />
+	<br />
+
+	<label for="txtExtension">Extension:</label>
+	<input type="text" id="txtExtension" name="txtExtension" value="<?txtExtension?>" class="input-text" maxlength="4" />
+	<br />
+
+	<label for="txtFax">Fax:</label>
+	<input type="text" id="txtFax" name="txtFax" value="<?txtFax?>" class="input-text" />
+	<br />
+
+	<font size="3"><strong>Business Information:</strong></font><br /><br />
+	<label for="txtLegalBusinessName">Legal Name:</label>
+	<input type="text" id="txtLegalBusinessName" name="txtLegalBusinessName" value="<?txtLegalBusinessName?>" class="input-text" />
+	<br />
+
+	<span class="label">Legal Form:</span>
+	<label class="radio"><input type="radio" id="rdbLegalForm" name="rdbLegalForm" value="<?rdbLegalFormCorporation?>" />Corporation </label>
+	<label class="radio"><input type="radio" id="rdbLegalForm" name="rdbLegalForm" value="<?rdbLegalFormSoleProprietor?>" />Sole Proprietor </label>
+	<label class="radio"><input type="radio" id="rdbLegalForm" name="rdbLegalForm" value="<?rdbLegalFormPartnership?>" />Partnership </label>
+	<br />
+
+	<label>Start Date:</label>
+	<select id="ddmStartMonth" name="ddmStartMonth">
+		<option value="">- Please select one. -</option>
+		<?ddmStartMonth?>
+	</select>
+	<input type="text" id="txtStartYear" name="txtStartYear" value="<?txtStartYear?>" class="input-text" />
+	<br />
+
+	<label for="txtPesidentOwner">President/Owner:</label>
+	<input type="text" id="txtPresidentOwner" name="txtPresidentOwner" value="<?txtPresidentOwner?>" class="input-text" />
+	<br />
+
+ 	<label># of Employees:</label>
+	<select id="ddmEmployees" name="ddmEmployees">
+		<option value="">- Please select one. -</option>
+		<?ddmEmployees?>
+	</select>
+	<br />
+
+	 <label>Annual Sales:</label>
+	<select id="ddmAnnualSales" name="ddmAnnualSales">
+		<option value="">- Please select one. -</option>
+		<?ddmAnnualSales?>
+	</select>
+	<br />
+
+    <label for="txtPSTNumber">PST # or State Tax #:</label>
+    <input type="text" id="txtPSTNumber" name="txtPSTNumber" value="<?txtPSTNumber?>" class="input-text" />
+    <br />
+    <label for="txtGSTNumber">GST # or Fed.ID #/SSN #:</label>
+    <input type="text" id="txtGSTNumber" name="txtGSTNumber" value="<?txtGSTNumber?>" class="input-text" />
+    <br />
+	<br /><br />
+	<font size="3"><strong>Shipping Information:</strong></font><br /><br />
+    <label for="txtShippingCompanyName">Company Name:</label>
+    <input type="text" id="txtShippingCompanyName" name="txtShippingCompanyName" value="<?txtShippingCompanyName?>" class="input-text" />
+    <br />
+    <label for="txtShippingFirstName">First Name:</label>
+    <input type="text" id="txtShippingFirstName" name="txtShippingFirstName" value="<?txtShippingFirstName?>" class="input-text" />
+    <br />
+    <label for="txtShippingLastName">Last Name:</label>
+    <input type="text" id="txtShippingLastName" name="txtShippingLastName" value="<?txtShippingLastName?>" class="input-text" />
+    <br />
+
+	<span class="label">Salutation:</span>
+	<label class="radio"><input type="radio" id="rdbShippingSalutation" name="rdbShippingSalutation" value="<?rdbShippingSalutationMr.?>" />Mr. </label>
+	<label class="radio"><input type="radio" id="rdbShippingSalutation" name="rdbShippingSalutation" value="<?rdbShippingSalutationMrs.?>" />Mrs. </label>
+	<label class="radio"><input type="radio" id="rdbShippingSalutation" name="rdbShippingSalutation" value="<?rdbShippingSalutationMs.?>" />Ms. </label>
+	<label class="radio"><input type="radio" id="rdbShippingSalutation" name="rdbShippingSalutation" value="<?rdbShippingSalutationMiss?>" />Miss </label>
+	<br />
+
+	<label for="txtShippingAddress1">Address 1:</label>
+	<input type="text" id="txtShippingAddress1" name="txtShippingAddress1" value="<?txtShippingAddress1?>" class="input-text" />
+	<br />
+	<label for="txtShippingAddress2">Address 2 &amp; Mail Stop:</label>
+	<input type="text" id="txtShippingAddress2" name="txtShippingAddress2" value="<?txtShippingAddress2?>" class="input-text" />
+	<br />
+	<label for="txtShippingCity">City:</label>
+	<input type="text" id="txtShippingCity" name="txtShippingCity" value="<?txtShippingCity?>" class="input-text" />
+	<br />
+	<label for="ddmShippingStateProvince" >Province/State:</label>
+	<select id="ddmShippingStateProvince" name="ddmShippingStateProvince">
+		<option value="">- Please select one. -</option>
+	 	<?ddmShippingStateProvince?>
+	</select>
+	<br />
+	<label for="txtShippingOtherStateProvince">Other:</label>
+	<input type="text" id="txtShippingOtherStateProvince" name="txtShippingOtherStateProvince" value="<?txtShippingOtherStateProvince?>" class="input-text" />
+	<br />
+	<label for="txtShippingPostalCode">Postal Code/Zip:</label>
+	<input type="text" id="txtShippingPostalCode" name="txtShippingPostalCode" value="<?txtShippingPostalCode?>" class="input-text" />
+	<br />
+	<label for="ddmShippingCountry">Country:</label>
+	<select id="ddmShippingCountry" name="ddmShippingCountry">
+		<option value="">- Please select one. -</option>
+		<?ddmShippingCountry?>
+	</select>
+	<br />
+
+	<label for="txtShippingOtherCountry">Other:</label>
+	<input type="text" id="txtShippingOtherCountry" name="txtShippingOtherCountry" value="<?txtShippingOtherCountry?>" class="input-text" />
+	<br />
+	<label for="txtShippingPhone">Phone:</label>
+	<input type="text" id="txtShippingPhone" name="txtShippingPhone" value="<?txtShippingPhone?>" class="input-text" />
+	<br />
+	<label for="txtShippingExtension">Extension:</label>
+	<input type="text" id="txtShippingExtension" name="txtShippingExtension" value="<?txtShippingExtension?>" class="input-text" maxlength="4" />
+	<br />
+	<label for="txtShippingFax">Fax:</label>
+	<input type="text" id="txtShippingFax" name="txtShippingFax" value="<?txtShippingFax?>" class="input-text" />
+	<br />
+	<label for="txtShippingEmail">E-Mail:</label>
+	<input type="text" id="txtShippingEmail" name="txtShippingEmail" value="<?txtShippingEmail?>" class="input-text" />
+	<br />
+	<br /><br />
+
+ 	<font size="3"><strong>Bank Information:</strong></font><br /><br />
+
+    <label for="txtBankName">Bank Name:</label>
+    <input type="text" id="txtBankName" name="txtBankName" value="<?txtBankName?>" class="input-text" />
+    <br />
+    <label for="txtBankBranch">Branch #:</label>
+    <input type="text" id="txtBankBranch" name="txtBankBranch" value="<?txtBankBranch?>" class="input-text" />
+    <br />
+    <label for="txtBankAccountNo">Bank Account #:</label>
+    <input type="text" id="txtBankAccountNo" name="txtBankAccountNo" value="<?txtBankAccountNo?>" class="input-text" />
+    <br />
+    <label for="txtBankAccountManager">Account Manager:</label>
+    <input type="text" id="txtBankAccountManager" name="txtBankAccountManager" value="<?txtBankAccountManager?>" class="input-text" />
+    <br />
+    <label for="txtBankPhone">Bank Phone:</label>
+    <input type="text" id="txtBankPhone" name="txtBankPhone" value="<?txtBankPhone?>" class="input-text" />
+    <br />
+    <label for="txtBankFax">Bank Fax:</label>
+    <input type="text" id="txtBankFax" name="txtBankFax" value="<?txtBankFax?>" class="input-text" />
+    <br />
+    <label for="txtBankEmail">Bank E-mail:</label>
+    <input type="text" id="txtBankEmail" name="txtBankEmail" value="<?txtBankEmail?>" class="input-text" />
+    <br />
+	<br /><br />
+ 	<font size="3"><strong>Please provide 3 trade references:</strong></font><br /><br />
+    <label for="txtTradeReferenceCompanyName1">Company Name:</label>
+    <input type="text" id="txtTradeReferenceCompanyName1" name="txtTradeReferenceCompanyName1" value="<?txtTradeReferenceCompanyName1?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceContact1">Contact:</label>
+    <input type="text" id="txtTradeReferenceContact1" name="txtTradeReferenceContact1" value="<?txtTradeReferenceContact1?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferencePhone1">Phone:</label>
+    <input type="text" id="txtTradeReferencePhone1" name="txtTradeReferencePhone1" value="<?txtTradeReferencePhone1?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceExt1">Extension:</label>
+    <input type="text" id="txtTradeReferenceExt1" name="txtTradeReferenceExt1" value="<?txtTradeReferenceExt1?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceFax1">Fax:</label>
+    <input type="text" id="txtTradeReferenceFax1" name="txtTradeReferenceFax1" value="<?txtTradeReferenceFax1?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceEmail1">E-mail:</label>
+    <input type="text" id="txtTradeReferenceEmail1" name="txtTradeReferenceEmail1" value="<?txtTradeReferenceEmail1?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceCreditLimit1">Monthly Credit Limit:</label>
+    <input type="text" id="txtTradeReferenceCreditLimit1" name="txtTradeReferenceCreditLimit1" value="<?txtTradeReferenceCreditLimit1?>" class="input-text" />
+    <br />
+	<br /><br />
+
+ 	<label for="txtTradeReferenceCompanyName2">Company Name:</label>
+ 	<input type="text" id="txtTradeReferenceCompanyName2" name="txtTradeReferenceCompanyName2" value="<?txtTradeReferenceCompanyName2?>" class="input-text" />
+ 	<br />
+    <label for="txtTradeReferenceContact2">Contact:</label>
+    <input type="text" id="txtTradeReferenceContact2" name="txtTradeReferenceContact2" value="<?txtTradeReferenceContact2?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferencePhone2">Phone:</label>
+    <input type="text" id="txtTradeReferencePhone2" name="txtTradeReferencePhone2" value="<?txtTradeReferencePhone2?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceExt2">Extension:</label>
+    <input type="text" id="txtTradeReferenceExt2" name="txtTradeReferenceExt2" value="<?txtTradeReferenceExt2?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceFax2">Fax:</label>
+    <input type="text" id="txtTradeReferenceFax2" name="txtTradeReferenceFax2" value="<?txtTradeReferenceFax2?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceEmail2">E-mail:</label>
+    <input type="text" id="txtTradeReferenceEmail2" name="txtTradeReferenceEmail2" value="<?txtTradeReferenceEmail2?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceCreditLimit2">Monthly Credit Limit:</label>
+    <input type="text" id="txtTradeReferenceCreditLimit2" name="txtTradeReferenceCreditLimit2" value="<?txtTradeReferenceCreditLimit2?>" class="input-text" />
+    <br />
+	<br /><br />
+
+	<label for="txtTradeReferenceCompanyName3">Company Name:</label>
+	<input type="text" id="txtTradeReferenceCompanyName3" name="txtTradeReferenceCompanyName3" value="<?txtTradeReferenceCompanyName3?>" class="input-text" />
+	<br />
+    <label for="txtTradeReferenceContact3">Contact:</label>
+    <input type="text" id="txtTradeReferenceContact3" name="txtTradeReferenceContact3" value="<?txtTradeReferenceContact3?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferencePhone3">Phone:</label>
+    <input type="text" id="txtTradeReferencePhone3" name="txtTradeReferencePhone3" value="<?txtTradeReferencePhone3?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceExt3">Extension:</label>
+    <input type="text" id="txtTradeReferenceExt3" name="txtTradeReferenceExt3" value="<?txtTradeReferenceExt3?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceFax3">Fax:</label>
+    <input type="text" id="txtTradeReferenceFax3" name="txtTradeReferenceFax3" value="<?txtTradeReferenceFax3?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceEmail3">E-mail:</label>
+    <input type="text" id="txtTradeReferenceEmail3" name="txtTradeReferenceEmail3" value="<?txtTradeReferenceEmail3?>" class="input-text" />
+    <br />
+    <label for="txtTradeReferenceCreditLimit3">Monthly Credit Limit:</label>
+    <input type="text" id="txtTradeReferenceCreditLimit3" name="txtTradeReferenceCreditLimit3" value="<?txtTradeReferenceCreditLimit3?>" class="input-text" />
+    <br />
+	<br /><br />
+
+	<div class="button-bar">
+		<input class="button" type="reset" />
+		<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+		<br class="clear" />
+		</div>
+	</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

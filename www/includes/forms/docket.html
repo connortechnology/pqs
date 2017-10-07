@@ -1,0 +1,131 @@
+<script type="text/javascript">
+Event.observe(window, 'load', function (e) {
+    <? if ( $$variable{'certified'} eq 'fsc' ) ?>
+      	getElementByClass('info');
+	$('fsc_cert').innerHTML = '<strong>FSC - Forest Stewardship Council Certified</strong>';
+	$('material').style.minHeight = "110px";
+     <? endif ( $$variable{'certified'} eq 'fsc' ) ?>
+	 
+    <? if ( $$variable{'certified'} eq 'sfi' ) ?>
+      	getElementByClass('info');
+	$('fsc_cert').innerHTML = '<strong>SFI - Sustainable Forestry Initiative Certified</strong>';
+	$('material').style.minHeight = "110px";
+    <? endif ( $$variable{'certified'} eq 'sfi' ) ?>
+	 
+    <? if ( $$variable{'certified'} eq 'pefc' ) ?>
+      	getElementByClass('info');
+	$('fsc_cert').innerHTML = '<strong>PEFC - Programme for the Endorsement of Forest Certification</strong>';
+	$('material').style.minHeight = "110px";
+    <? endif ( $$variable{'certified'} eq 'pefc' ) ?>
+	
+	   if ( $('secureprint').value == 1) {
+      	getElementByClass('info');
+	$('secureprint').innerHTML = '<strong>Secure Print Item</strong>';
+	$('material').style.minHeight = "110px";
+      }
+    });
+</script>
+
+<div id="project-view">
+	<!-- Standard project header (shared between project view, quotes, orders, docket, etc.) -->
+
+	<!--#include virtual="/includes/main/docket/header.html" -->
+
+	<!-- Sevice Type Summaries. -->
+	<? if ($$variable{Category} != -1) ?>
+		<?loop categories?>
+			<div class="category">
+				<h5><?name?> Information </h5>
+
+				<?loop service_type?>
+					<div class="group">
+
+					<td>
+						<h4><?name?></h4>
+						<?html?>
+
+						<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+							<? if ( $variable->{sid} ) ?>
+							<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
+							<br />
+                            
+                            <!-- If service is equal to shipping display below Add/Edit link and pop up comment window with new tracking ID-->
+                            
+							<? if ( $variable->{id} eq 'Shipping' ) ?>
+
+                            <a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Tracking ID Add/Edit</a>
+                           <br/> 
+                           
+							<? endif ( $variable->{id} eq 'Shipping' ) ?>
+                            
+                            <? endif ( $variable->{sid} ) ?>
+
+							<? if ( ! $variable->{sid} ) ?>
+							<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?CommentType=ImpComment&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
+							<br />
+							<? endif ( ! $variable->{sid} ) ?>
+                            
+						<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+
+
+						<?if ($$variable{comment}) ?>
+							<p class="comment">Comment: <?comment?></p>
+						<?endif ($$variable{comment}) ?>
+
+						<?if ($$variable{trackingnumber}) ?>
+							<p class="comment"><strong>Tracking ID </strong><?trackingnumber?></p>
+					  <?endif ($$variable{trackingnumber}) ?>
+					</div>
+				<?endloop service_type?>
+
+				<?if (@{$$variable{supplied_service_type}} )?>
+					<div <? ($$variable{categorymenu} != 0)?>class="supplied"<? ($$variable{CategoryMenu} != 0)?>>
+						<h3>Supplied</h3>
+					</div>
+					<?loop supplied_service_type?>
+						<div class="group">
+							<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+								<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
+							<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+
+							<h4><?name?></h4>
+							<?html?>
+
+							<?if ($$variable{comment}) ?>
+								<p>Comment: <?comment?></p>
+							<?endif ($$variable{comment}) ?>
+						</div>
+					<?endloop supplied_service_type?>
+				
+				<?endif (@{$$variable{supplied_service_type}} )?>
+			</div>
+		<?endloop categories?>
+	<? endif ($$variable{Category} != -1) ?>
+
+	<? if ((! $$variable{Category}) || ($$variable{Category} == -1)) ?>
+		<div class="category">
+			<h5>Materials Information</h5>
+			<?loop materials?>
+				<div class="group">
+					<strong><?category?></strong>
+
+			<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+								<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?CommentType=PaperComment&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
+			<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+
+					<? if ($$variable{stock_supplied}) ?><strong> - Customer Supplied Stock</strong> <?stock_custom?><? endif ($$variable{stock_supplied}) ?>
+					<?loop subMaterials?>
+						<div class="indent">
+                        <label id="fsc_cert"></label>
+                         <label id="secureprint"></label>		
+							<? if ($$variable{'category'} eq 'Inks')?><strong>Colour </strong><?endif ($$variable{'category'} eq 'Inks')?>
+							<? if ($$variable{stock_supplied}) ?><strong>Estimated Value</strong><? endif ($$variable{stock_supplied}) ?> <?name?> <?value?>	<br />
+							<strong>Est Press Sheet Qty </strong><?qty?> <strong>Act Qty</strong><!-- Value Filled in Manually -->
+						</div>
+					<?endloop subMaterials?>
+			</div>
+
+			<?endloop materials?>
+		</div>
+	<? endif ((! $$variable{Category}) || ($$variable{Category} == -1)) ?>
+</div>

@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Account - My Inventory
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Account &#187;</span> My Inventory</h1>
+
+	<? if ( $$variable{'user_id'} eq '0' ) ?>
+		<p>Only logged in customers have a project inventory history.</p>
+	<? else ( $$variable{'user_id'} eq '0' ) ?>
+		<p>Please click on an <strong>Project  ID</strong> to view project details.</p>
+
+		<? if ( @{$$variable{'PROJECTS'}} == 0 ) ?>
+			<p>There are no projects which match your search criteria.</p>
+		<? else ( @{$$variable{'PROJECTS'}} == 0 ) ?>
+			<table border="0" cellspacing="0" cellpadding="0">
+				<tr>
+					<th style="text-align: left;">Project ID</th>
+					<th style="text-align: left;">Order ID</th>
+					<th style="text-align: center;">Quantity</th>
+					<th style="text-align: center;">Check Out Date</th>
+				</tr>
+				
+				<? while ( @$variable{'index', 'order_id', 'qty', 'checkindate', 'requireddate'} = splice @{$$variable{'PROJECTS'}},0,5; ) ?>
+					<tr>
+						<td style="text-align: left;"><a href="/main/proj/proj_view.html?ProjectIndex=<?index?>"><?index?></a>&nbsp;</td>
+						<td style="text-align: left;"><a href="/main/order/order_history_details.html?order_id=<?order_id?>"><?rev:order_id?></a>&nbsp;</td>
+						<td style="text-align: center;">&nbsp;<?qty?></td>
+						<td style="text-align: center;"><?checkindate?>&nbsp;</td>
+					</tr>
+				<? endwhile ( @$variable{'index', 'order_id', 'qty', 'checkindate', 'requireddate'} = splice @{$$variable{'PROJECTS'}},0,5; ) ?>
+			</table>
+		<? endif ( @{$$variable{'PROJECTS'}} == 0 ) ?>
+		</form>
+	<? endif ( $$variable{'user_id'} eq '0' ) ?>
+
+	<script  type="text/javascript">
+		function preload() {
+			b1 = new Image();
+			b1.src = "/images/buttons/on/submit.gif"
+			Delete = new Image();
+			Delete.src = "/images/buttons/on/delete.gif"
+		}
+	</script>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!-- Basic Info. -->
+<div class="category">
+	<!-- Company/Docket ID -->
+	<h5>
+		<? if (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
+			<span class="id">Docket ID: <?HeaderInfo.docket_id?></span>
+		<? endif (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
+
+		Project Information
+	</h5>
+
+	<!-- Primary info call-out. -->
+	<table id="primary_info" class="no-formatting">
+		<? if ($variable->{HeaderInfo}{'date_required'}) ?>
+			<tr>
+				<th>Required by:</th>
+				<td><?HeaderInfo.date_required?></td>
+			</tr>
+
+			<tr>
+				<th>Quantity:</th>
+				<td style="font-weight: bold;"><?HeaderInfo.OrderedQuantity?></td>
+			</tr>
+
+			<tr>
+				<th>Order ID:</th>
+				<td><span class="id"><?HeaderInfo.order_id?></span></td>
+			</tr>
+		<? endif ($variable->{HeaderInfo}{'date_required'}) ?>
+
+		<tr>
+			<th>Project ID:</th>
+			<td><span class="id"><?HeaderInfo.id?></span>
+			<br>
+			<? loop pqtys ?>
+				<a href="/main/proj/proj_view.html?pid=<?id?>"><?id?></a><br>
+			<? endloop pqtys ?>
+			</td>
+		</tr>
+
+ <? if ( ($$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' )) ?>
+     <? if ( $variable->{docket} ) ?>
+        <tr>
+            <th>Internal ID:</th>
+            <td>
+
+                <form name='iid' id='iid' action='/main/proj/proj_docket.html?Projectindex=<?HeaderInfo.id?>' method="post" />
+                <input type="text" name="InternalID" value="<?InternalID?>" size='4' />
+                </form>
+            </td>
+        </tr>
+     <? else ( $variable->{docket} ) ?>
+     	<? if ( $variable->{HeaderInfo}{InternalID} ) ?>
+        <tr>
+            <th>Internal ID:</th>
+            <td>
+                <?HeaderInfo.InternalID?>
+            </td>
+        </tr>
+     	<? endif ( $variable->{HeaderInfo}{InternalID} ) ?>
+
+     <? endif ( $variable->{docket} ) ?>
+<? endif ( ($$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' )) ?>
+
+		<? if ($$variable{checkout}) ?>
+			<tr>
+				<th>Check-In ID:</th>
+				<td><a href="/main/proj/proj_view.html?ProjectIndex=<?checkin_pid?>"><?checkin_pid?></a></td>
+			</tr>
+		<? endif ($$variable{checkout}) ?>
+	</table>
+
+
+	<table class="docket no-formatting">
+		<colgroup class="column" >
+			<col class="header" />
+			<col class="data" />
+		</colgroup>
+		<colgroup class="column">
+			<col class="header" />
+			<col class="data" />
+		</colgroup>
+		<tbody>
+			<tr>
+				<th>Reference:</th>
+				<td colspan="3"><h4 style="font-size:15px"><?HeaderInfo.reference?></h4></td>
+			</tr>
+			<tr>
+				<th>Type:</th>
+				<td><?HeaderInfo.ProjectType?></td>
+
+				<th>Status:</th>
+				<td><?ucfirst:HeaderInfo.status?></td>
+			</tr>
+			<tr>
+				<th>Created on:</th>
+				<td><?HeaderInfo.date_created?></td>
+
+				<th>Created by:</th>
+				<td><?HeaderInfo.user?></td>
+			</tr>
+			<tr rowspan="2">
+				<th>Comments:</th>
+				<td colspan="3"><?HeaderInfo.comments?></td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+<!-- Contact Info. -->
+<div class="category">
+	<h5>Contact Information</h5>
+
+	<table class="docket no-formatting">
+		<colgroup class="column" >
+			<col class="header" />
+			<col class="data" />
+		</colgroup>
+		<colgroup class="column">
+			<col class="header" />
+			<col class="data" />
+		</colgroup>
+		<tbody>
+		<tr>
+			<th>Company:</th><td><?HeaderInfo.company?></td>
+			<th>Phone:</th><td><?HeaderInfo.phoneNumber?><? if ( $$variable{'OrderExtension'} ne '' ) ?>&nbsp;Ext:&nbsp;<?OrderExtension?><? endif ( $$variable{'OrderExtension'} ne '' ) ?></td>
+		</tr>
+			<? if ($variable->{HeaderInfo}{OrderLastName}) ?>
+		<tr>
+			<th>Contact:</th><td><?HeaderInfo.OrderSalutation?> <?HeaderInfo.OrderFirstName?>	<?HeaderInfo.OrderLastName?></td>
+			<th>Ordered By:</th><td><?HeaderInfo.OrderSalutation?> <?HeaderInfo.OrderFirstName?>	<?HeaderInfo.OrderLastName?></td>
+		</tr>
+			<? endif ($variable->{HeaderInfo}{OrderLastName}) ?>
+		</tbody>
+	</table>
+</div>
+
+<!-- Format and Software. -->
+<? if (not $$variable{checkout}) ?>
+	<div class="category">
+		<h5>Project Summary</h5>
+		<table class="docket no-formatting">
+			<colgroup class="column" >
+				<col class="header" />
+				<col class="data" />
+			</colgroup>
+			<colgroup class="column">
+				<col class="header" />
+				<col class="data" />
+			</colgroup>
+			<tbody>
+				<tr>
+					<th>Format:</th>
+					<td><?HeaderInfo.design?></td>
+					<? if ($variable->{HeaderInfo}{design} eq 'ElectronicFile') ?>
+						<th>File Type:</th>
+						<td><?HeaderInfo.software?></td>
+					<? else ($variable->{HeaderInfo}{design} eq 'ElectronicFile') ?>
+						<td colspan="2"></td>
+					<? endif ($variable->{HeaderInfo}{design} eq 'ElectronicFile') ?>
+				</tr>
+				<tr>
+					<? if ($variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
+							<th>Finished:</th><td>
+							<? if ( $variable->{HeaderInfo}{final_height} ) ?>
+								<?HeaderInfo.final_height?> x <?HeaderInfo.final_width?> (H x W)
+							<? endif ( $variable->{HeaderInfo}{final_height} ) ?>
+							</td>
+							<th>Flat:</th><td><?HeaderInfo.flat_height?> x <?HeaderInfo.flat_width?> (H x W)</td>
+					<? else ($variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
+						<th>Height:</th><td><?HeaderInfo.txtItemHeight?></td>
+						<th>Width:</th><td><?HeaderInfo.txtItemWidth?></td>
+					</tr>
+					<tr>
+						<th>Depth:</th><td><?HeaderInfo.txtItemDepth?></td>
+						<th>Surfaces Printed On:</th><td><?HeaderInfo.txtScreenPrintingSurfaces?></td>
+					<? endif ($variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
+				</tr>
+				<tr>
+					<th>Colours:</th>
+					<td>
+						<?loop HeaderInfo.colours?>
+							<?colour1?><?side1_info?> / <?colour2?><?side2_info?>
+
+							<?if (! $$variable{_last})?>,<?endif (! $$variable{_last})?>
+						<?endloop HeaderInfo.colours?>
+					</td>
+
+					<? if ($variable->{HeaderInfo}{ptype} ne 'PressSheetCombination')?>
+						<th>Versions:</th>
+						<td><?HeaderInfo.txtNameQuantity?></td>
+					<? else ($variable->{HeaderInfo}{ptype} ne 'PressSheetCombination')?>
+						<th>Items Cut:</th>
+						<td><?HeaderInfo.txtPressSheetComboItems?></td>
+					<? endif ($variable->{HeaderInfo}{ptype} ne 'PressSheetCombination')?>
+				</tr>
+				<? if ($variable->{HeaderInfo}{multipage} and $variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
+					<tr>
+						<th>Pages:</th>
+						<td><?HeaderInfo.txtTotalPageQuantity?></td>
+						<th>Signature Groups:</th>
+						<td><?HeaderInfo.txtSignatureQuantity?></td>
+					</tr>
+					<tr>
+						<th>Spreads:</th>
+						<td><?HeaderInfo.interior_spreads?></td>
+						<th>GF Spreads: </th>
+						<td><?HeaderInfo.gatefolded_spreads?></td>
+					</tr>
+					<tr>
+						<th>Cover:</th>
+						<td><?HeaderInfo.rdbCover?></td>
+						<th>Inserts or APs:</th>
+						<td><?HeaderInfo.txtInsertQuantity?></td>
+					</tr>
+				<? endif ($variable->{HeaderInfo}{multipage} and $variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
+			<?if HeaderInfo.pad_sheets?>
+               		<tr>
+                          <th>Pad Sheets:</th>
+                          <td><?HeaderInfo.pad_sheets?></td>
+                          <th></th>
+                          <td></td>
+                        </tr> 
+			<?endif HeaderInfo.pad_sheets?>
+                    
+			</tbody>
+		</table>
+	</div>
+<? endif (not $$variable{checkout}) ?>

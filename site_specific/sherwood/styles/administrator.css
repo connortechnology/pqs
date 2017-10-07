@@ -1,0 +1,174 @@
+/* __________ Elements __________ */
+
+body {
+	margin: 32px 24px 30px 212px;
+	padding: 0;
+
+	background-color: #FFFFFF;
+	background-image: url('/images/administrator/menu/left-menu-background.gif');
+	background-repeat: repeat-y;
+}
+
+
+fieldset table {
+	margin: 2ex 1.5em !important;
+}
+
+
+fieldset br {
+	display: block;
+	clear: both;
+	height: 0;
+	margin: 0;
+	line-height: 0;
+	font-size: 1px;
+	visibility: hidden;
+}
+
+
+/*__________ Button Bar __________*/
+
+fieldset .button-bar {
+	margin: 1ex 1.5em 0 1.5em;
+}
+
+/* Holly Hack \*/
+* html fieldset .button-bar {
+	margin: 0;
+	padding: 1ex 1.9em 0 1.9em;
+}
+/* */
+
+/* Button Bar Indent */
+fieldset div.indent-regular {
+	width: auto;
+	margin: 0 0 0 18.95em;
+	/* 0.5em difference between Main & Admin */
+}
+
+/* Holy Hack \*/
+* html div.indent-regular {
+	margin: 0;
+	padding: 0 0 0 18.9em;}
+/* */
+
+
+
+fieldset table .button-bar {margin: 0 0 0 -1px; padding: 0;}
+/* IE Fix - Strange, But True \*/
+* html fieldset table .button-bar {padding-left: 2px;}
+/* */
+
+fieldset .auto-width {width: auto !important;}
+
+/* __________ Fixed Nav __________ */
+
+	/* Header & Nav */
+
+#fixedHeader {
+	position: absolute;
+
+	top: 0;
+	left: 0;
+	right: 0;
+
+	z-index: 88;
+}
+
+* html #fixedHeader {width: 150%;}
+
+/* Temporary until Fix for Netscape Browser
+body > #fixedHeader {
+	position: fixed;
+}
+*/
+
+#headNav {
+	width: 100%;
+	padding: 0;
+
+	white-space: nowrap;
+	text-align: left;
+
+	color: white;
+}
+
+* html #nav {
+	padding-top: 3px;
+	padding-bottom: 1px;
+}
+
+#nav li ul ul {
+	margin: -3.4ex 0 0 11em !important;
+}
+
+
+/* __________ Page Elements __________ */
+
+	/* Side Bar */
+
+#sidebar {
+	position: absolute;
+	top: 40px;
+	left: 0;
+	
+	width: 200px;
+	margin: 0;
+}
+
+
+	/* Content */
+
+#content
+{
+	width: 780px;
+
+	margin: 0px;
+	padding: 0;
+
+	background-color: #FFFFFF;
+}
+
+
+	/* Footer */
+
+#footer {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+
+	width: 150%;
+
+	clear: both;
+	padding: 2px 0 4px 0;
+	background-color: #7D7D7D;
+
+	color: white;
+}
+/* Holly Hack \*/
+* html #footer {
+	padding-bottom: 1px;
+}
+/* */
+
+#footer #version {
+    position: fixed; 
+    right: 1ex; 
+    color: #ADADAD; 
+}
+
+#footer a:link    	{ color: white; }
+#footer a:visited 	{ color: white; }
+#footer a:hover   	{ color: black; }
+#footer a:active  	{ color: #FFFFFF; }
+
+
+
+/* Should #footWrapper be called #sock? */
+#footWrapper > #footer {
+	position: fixed;
+}
+
+#footer-text {
+	padding-left: 15px;
+}

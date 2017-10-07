@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Paper - Definitions
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" media="screen" />
+	
+	<style type="text/css" media="screen">
+		label.stock-type {width: 10em !important;}
+		label.stock-delete {margin-top: 0.2ex !important; padding-top: 0.7ex !important;}
+	</style>
+	
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">System &#187; Stock &#187;</span> Import / Export</h1>
+
+	<!-- Status message for import success/failure. -->
+	<? if ($variable->{message}) ?>
+		<p style="font-weight: bold; font-size: 1.4em;">
+			<?message?>
+		</p>
+	<? endif ($variable->{message}) ?>
+
+	<fieldset>
+		<legend>
+			Import / Export
+		</legend>
+
+		<form name="f1" method="post" action="import_export.html" enctype="multipart/form-data">			
+
+			<p>Paper Definition files <strong> must </strong> be in a comma separated values (CSV) format. All columns <strong> must </strong> have titles as the first row of data will be treated as column titles, and hence will be ignored.  The field order is irrelevant.</p>
+			
+			<p>
+				<strong>To Import a Paper Definitions file:</strong>
+				Choose the type of paper you wish to import (by clicking on the appropriate radio button above), select &quot;Browse&quot; and select the file containing your new definitions. Click &quot;Open&quot;, then click on &quot;Import Paper&quot;.
+			</p>
+
+			<p>
+				<strong>To Export a Paper Definitions file:</strong>
+				Choose the type of paper you wish to export (by clicking on the appropriate radio button above), select &quot;Export Paper&quot; and select &quot;Open&quot; this will download the Paper Definitions file to your &quot;Temporary Internet Files&quot; folder and automatically open the file for you. You can then make any necessary changes and then import the file back in. You can then open this in a spreadsheet program such as Microsoft Excel&trade;.
+			</p>
+
+			<p>
+				<strong> Predeletion: </strong> If you want to wipe out all paper of the type you are importing, prior to import, you may do so by clicking on the
+				corresponding checkbox; predeletion of stocks will also clear pricing for those stocks and you will be required to reprice your
+				stocks with a pricing file. Clicking “Delete all current Stocks” will also delete recommendations & visibility.
+			</p>
+			
+			<p>
+				<strong> Individual Stock Removal: </strong> If individual stocks are to be removed from the spreadsheet, type "DELETE" in the category column. Those stocks will be removed after the stock definitions file has been imported.
+			</p>
+
+			<label>Current Definitions:</label>
+			<div class="text" style="width: 70%;">
+				<p style="margin-top: -1px; margin-left: -6px; padding-top: 0;"><a href="sheet_stock_definition.html">Click to View Sheet Stock Field Definitions</a></p>
+				<? if ($variable->{has_web}) ?>
+					<p style="margin-left: -5px; padding-top: 0;"><a href="roll_stock_definition.html">Click to View Roll Stock Fields Definition</a></p>
+				<? endif ($variable->{has_web}) ?>
+			</div>
+			<br />
+
+			<span class="label">Stock Type:</span>
+			
+			<div>
+				<label for="type-sheet" class="radio stock-type"><input type="radio" id="type-sheet" name="type" value="sheet" checked="checked" tabindex="1" />Sheet Stock</label><br />
+				<? if ($variable->{has_web}) ?>
+					<label for="type-roll" class="radio stock-type"><input type="radio" id="type-roll" name="type" value="roll" tabindex="2" />Roll Stock</label>
+				<? endif ($variable->{has_web}) ?>
+			</div>
+			<div style="margin-top: -1ex;">
+				<label for="chkDeleteSheets" class="checkbox stock-delete" style="margin-bottom: -0.6ex;"><input type="checkbox" id="chkDeleteSheets" name="chkDeleteSheets" />Delete all current sheet stocks and pricing before import?</label><br />
+				<? if ($variable->{has_web}) ?>
+					<label for="chkDeleteRolls" class="checkbox stock-delete"><input type="checkbox" id="chkDeleteRolls" name="chkDeleteRolls" />Delete all current roll stocks and pricing before import?</label><br />
+				<? endif ($variable->{has_web}) ?>
+			</div>
+			<br />
+
+			<label for="filePaper">Paper Definitions:</label>
+			<input type="file" id="filePaper" name="filePaper" class="file" />
+			<br />
+
+			<label for="ddmPriceList">Price List:</label>
+			<select id="ddmPriceList" name="ddmPriceList" class="marg-bot" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
+				<option value=""> - Select - </option>
+				<?ddmPriceList?>
+			</select>
+			<br />
+
+			<label for="filePrices">Pricing File (Optional):</label>
+			<input type="file" id="filePrices" name="filePrices" class="file" />
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input type="submit" name="import" class="button" value="Import Paper" />
+				<input type="submit" name="export" class="button" value="Export Paper" />
+				<br />
+			</div>
+
+			<input type="hidden" name="btnFunction" />
+		</form>
+		
+		<br />
+	</fieldset>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

@@ -1,0 +1,613 @@
+<!--<? eval ( use Data::Dumper; print STDERR Dumper($variable) ) ?>-->
+<?if is_docket?>
+<table>
+<!-- <?txtServiceDescription?> -->
+<tr><td style="border:none !important;">
+<?if is_staff ?>
+	<a href="/main/proj/proj_printer_summ_price_breakdown.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>#chosen">
+		<?desc?> </a> Signature: <?txtSignatureQuantity?>
+<?else is_staff ?>
+	Project Type <?ProjectType?>
+<?endif is_staff ?>
+</td></tr>
+
+<? if ( $$variable{pressType} eq 'inkjetprinter' ) ?>
+	<tr><td style="border:none !important;">Type 
+	<? if ($$variable{outdoor_printing}) ?>
+		<?outdoor_printing?>
+	<? else ($$variable{outdoor_printing}) ?>
+		Indoor
+	<? endif ($$variable{outdoor_printing}) ?>
+    </td></tr>
+<? endif ( $$variable{pressType} eq 'inkjetprinter' ) ?>
+
+
+<tr><td style="border:none !important;">
+	<strong>Press: </strong> 
+	<?hdnPress?>
+</td></tr>
+<? if ( $$variable{pressType} eq 'press' || $$variable{pressType} eq 'screen' || $$variable{pressType} eq 'web') ?>
+	<tr><td style="border:none !important;">	Run Style 
+		<?runstyle?>
+	
+		<?if ($$variable{'pressType'} ne 'screen') ?>Plates 
+						    <?else ($$variable{'pressType'} ne 'screen') ?>Screens
+							<?endif($$variable{'pressType'} ne 'screen') ?>
+		
+
+		<?txtPlateQuantity?>
+		<? if($$variable{'pressType'} ne 'screen')?>
+			-<?plate_type?>
+		<? endif($$variable{'pressType'} ne 'screen') ?>
+		
+		Col Bars 
+		<? if ( $$variable{'colour_bar'} == 1 ) ?>
+			Yes
+		<? else ( $$variable{'colour_bar'} == 1 ) ?>
+			No
+		<? endif ( $$variable{'colour_bar'} == 1 ) ?>
+</td></tr>
+<? endif ( $$variable{pressType} eq 'press' || $$variable{pressType} eq 'screen' || $$variable{pressType} eq 'web') ?>
+<? if ( $$variable{pressType} ne 'digital' ) ?>
+	<tr><td style="border:none !important;">	Approval 
+		<? if ( $$variable{'needs_approval'} == 1 ) ?>
+			Yes
+		<? else ( $$variable{'needs_approval'} == 1 ) ?>
+			No
+		<? endif ( $$variable{'needs_approval'} == 1 ) ?>
+		
+		<?ws_Colour?> Match 
+		<?ddmColourMatch?>
+<? endif ( $$variable{pressType} ne 'digital' ) ?>
+		
+		
+</td></tr>
+		<!-- Colour Information Per Side -->
+		<? if ( $$variable{colourcritical_extra_waste} || $$variable{colourcritical_make_ready} ) ?>
+<tr><td style="border:none !important;"><strong><?ws_Colour?> Critical -</strong> Extra Waste: <?colourcritical_extra_waste?> Make Ready %: <?colourcritical_make_ready?></td></tr>
+<? endif ( $$variable{colourcritical_extra_waste} || $$variable{colourcritical_make_ready} ) ?>
+        <?loop SIDE?>
+        <tr><td style="border:none !important;">
+			<strong> <?if ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>Front Cover <?else ($$variable{txtServiceDescription} eq 'Cover Spreads') ?> <?if not:single?>Inside <?endif not:single?><?endif ($$variable{txtServiceDescription} eq 'Cover Spreads') ?> Print <?ws_Colour?>s Side <?side?>: </strong>
+			
+            <? if  ($$variable{std}) ?>
+            <?if ($$variable{std} eq ' CMYK') ?>
+            <? if ( $$variable{pressType} ne 'digital' ) ?><?std?><? else ( $$variable{pressType} ne 'digital' ) ?>Full <?ws_Colour?><? endif ( $$variable{pressType} ne 'digital' ) ?>
+           <?else ($$variable{std} eq ' CMYK') ?>
+            <?std?>
+            <?endif ($$variable{std} eq ' CMYK') ?>
+            <? if  ($$variable{pms}) ?> + <? endif  ($$variable{pms}) ?><? else  ($$variable{std}) ?> <? if  ($$variable{pms}) ?><? else  ($$variable{pms}) ?>None<? endif  ($$variable{pms}) ?><? endif  ($$variable{std}) ?> <? if  ($$variable{pms}) ?><?pms?><? endif  ($$variable{pms}) ?>
+			</td></tr>
+<!--            <? if  ($$variable{pms}) ?>
+				<? if  ($$variable{std}) ?>
+					 + 
+				<? else  ($$variable{std}) ?>
+					 PMS 
+				<? endif  ($$variable{std}) ?>
+
+			    <?pms?>
+			<? endif  ($$variable{pms}) ?>
+-->
+  <? if chem_emboss ?>
+              <tr><td style="border:none !important;">      Chemical Emboss</td></tr>
+            <? endif chem_emboss ?>
+
+			<? if  ($$variable{varnish}) ?>
+			<tr><td style="border:none !important;"> Varnish 
+				<?varnish?></td></tr>
+			<? endif  ($$variable{varnish}) ?>
+			<? if  ($$variable{coating}) ?>
+			<tr><td style="border:none !important;"> Coating 
+				<?coating?></td></tr>
+			<? endif  ($$variable{coating}) ?>
+			<? if lf_coverage ?>
+			<tr><td style="border:none !important;">	 Coverage 
+				<?lf_coverage?></td></tr>
+			<? endif lf_coverage ?>
+			<? if lf_quality ?>
+				<tr><td style="border:none !important;"> Quality 
+				<?lf_quality?></td></tr>
+			<? endif lf_quality ?>
+				
+		<?endloop SIDE?>
+
+
+
+	<? if ($$variable{s0_laminate}) ?>
+		<tr><td style="border:none !important;">Lamination 
+		Side 1 <?s0_laminate?> 
+		</td></tr>
+	<? endif ($$variable{s0_laminate}) ?>
+
+	<? if ($$variable{s1_laminate}) ?>
+		<tr><td style="border:none !important;">Lamination 
+		Side 2 <?s1_laminate?>
+		</td></tr>
+	<? endif ($$variable{s1_laminate}) ?>
+
+	<? if ($$variable{mounting_type}) ?>
+		<tr><td style="border:none !important;">Mounting 
+		<?mounting_type?>
+		</td></tr>
+	<? endif ($$variable{mounting_type}) ?>
+    
+<?if mvmpinfo?>Versions: <?HeaderInfo.txtNameQuantity?>
+Version Information: <?mvmpinfo?>
+<?endif mvmpinfo?>
+
+		<!-- Version Information -->
+		<? if ( $$variable{FORMS} ) ?>
+		 <tr><td style="border:none !important;">Version Information 
+		
+		<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0">
+			<?loop FORMS?>
+				 <tr style="text-align: left !important; border:none !important;">
+					<td colspan="4" style="padding-left: 1em;"><strong><?label?></strong> 
+				 <tr style="text-align: left !important; border:none !important;">
+				
+				<?loop VERSIONS?>
+					 <tr style="text-align: left !important; border:none !important;">
+						<td style="padding-left: 2em;"><?label?></td>
+						<td style="padding-left: 2em;"><strong>Req Qty:</strong>
+							 <?int:requested_qty?></td>
+						<td style="padding-left: 2em;">(<?float:requested?> %)</td>
+						<td style="padding-left: 2em;"><strong>Qty Out:</strong>
+							 <?slots?></td>
+						<td style="padding-left: 2em;"><strong>Printed Qty:</strong>
+							 <?int:final_qty?></td>
+					</tr>
+				<?endloop VERSIONS?>
+				 <tr style="text-align: left !important; border:none !important;">
+					<td colspan="4" style="padding-left: 2em;">Net Sheets: <strong><?net_sheets?></strong></td>
+				 <tr style="text-align: left !important; border:none !important;">
+		
+			<?endloop FORMS?>
+		</table>
+        </td></tr>
+		<? endif ( $$variable{FORMS} ) ?>
+		<!-- END Version Information -->
+
+
+	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
+		<? if ($$variable{stock_custom}) ?>
+			<tr><td style="border:none !important;">Customer Supplied Stock 
+			<?stock_custom?>
+			</td></tr>
+		<? endif ($$variable{stock_custom}) ?>	
+	<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
+
+	<tr style="border-bottom:1px solid #000000 !important;"><td style="border:none !important;"><strong><?if ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>Front Cover Paper <?else ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>Inside Paper <?endif ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>Stock: </strong> 
+	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
+		<?hdnSheetSizeHeight?> x <?hdnSheetSizeWidth?>
+
+		<? if ($$variable{stock_custom}) ?>
+			Estimated Value 
+			<?stock_finish?> , <?stock_weight?><br>
+		<? else ($$variable{stock_custom}) ?>
+			- <?stock_name?> , <?stock_finish?> , <?stock_colour?> , <?stock_weight?>, <?txtStockCalliper?>
+  <? endif ($$variable{stock_custom}) ?>
+	<br/>
+
+<?if MultiColour?>
+<table style="border:none !important;" >
+<?loop MultiColour?>
+		<tr style="border:none !important;"><td style="border:none !important;"><?name?></td><td style="border:none !important;"><?value?></td></tr>
+<?endloop MultiColour?>
+</table>
+<?endif MultiColour?>
+		</td></tr>
+        
+		 <?if ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>
+			<?if back_stock_name?>
+			<tr><td style="border:none !important;"><strong>Back Cover <?ws_Colour?>s Side 1:</strong><?if ($$variable{back_colour1} eq '1') ?> Black<?endif ($$variable{back_colour1} eq '1') ?><?if ($$variable{back_colour1} eq '4') ?> <? if ( $$variable{pressType} ne 'digital' ) ?>CMYK<? else ( $$variable{pressType} ne 'digital' ) ?>Full <?ws_Colour?><? endif ( $$variable{pressType} ne 'digital' ) ?><?endif ($$variable{back_colour1} eq '4') ?></td></tr>
+            
+			<tr><td style="border:none !important;"><strong>Back Cover <?ws_Colour?>s Side 2:</strong><?if ($$variable{back_colour2} eq '1') ?> Black<?endif ($$variable{back_colour2} eq '1') ?><?if ($$variable{back_colour2} eq '4') ?> <? if ( $$variable{pressType} ne 'digital' ) ?>CMYK<? else ( $$variable{pressType} ne 'digital' ) ?>Full <?ws_Colour?><? endif ( $$variable{pressType} ne 'digital' ) ?><?endif ($$variable{back_colour2} eq '4') ?><?if ($$variable{back_colour2} eq '0') ?> None<?endif ($$variable{back_colour2} eq '0') ?></td></tr>
+  <tr style="border-bottom:1px solid #000000 !important;"><td style="border:none !important;"><strong>Back Cover Stock:</strong>
+			 <?back_stock_name?> , <?back_stock_finish?> , <?back_stock_colour?> , <?back_stock_weight?>
+             </td></tr>
+        <?endif back_stock_name?>
+		
+	       
+		<?endif ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>
+
+  <?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
+	
+	<? if ($variable->{pressType} ne 'inkjetprinter') ?>
+		<tr><td style="border:none !important;"><strong>Gross Sheet Qty:</strong> 
+		<? if ( $$variable{'QtyIndex'} == 1 ) ?>
+			<?hdnSheetQuantity1?>
+		<? endif ( $$variable{'QtyIndex'} == 1 ) ?>
+		<? if ( $$variable{'QtyIndex'} == 2 ) ?>
+			<?hdnSheetQuantity2?>
+		<? endif ( $$variable{'QtyIndex'} == 2 ) ?>
+		<? if ( $$variable{'QtyIndex'} == 3 ) ?>
+			<?hdnSheetQuantity3?>
+		<? endif ( $$variable{'QtyIndex'} == 3 ) ?>
+	
+		Net Qty 
+		<? if ( $$variable{'QtyIndex'} == 1  ) ?>
+			<?hdnNetSheetCount1?>
+		<? endif ( $$variable{'QtyIndex'} == 1  ) ?>
+		<? if ( $$variable{'QtyIndex'} == 2  ) ?>
+			<?hdnNetSheetCount2?>
+		<? endif ( $$variable{'QtyIndex'} == 2  ) ?>
+		<? if ( $$variable{'QtyIndex'} == 3  ) ?>
+			<?hdnNetSheetCount3?>
+		<? endif ( $$variable{'QtyIndex'} == 3  ) ?>
+
+		Grain 
+		<? if ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
+			No Preference
+		<? else ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
+			<? if ( $$variable{'grain_direction'} == 1 ) ?>
+				Height
+			<? else ( $$variable{'grain_direction'} == 1 ) ?>
+				Width
+			<? endif ( $$variable{'grain_direction'} == 1 ) ?>
+<tr><td style="border:none !important;">
+<?if is_staff ?>
+	<a href="/main/proj/proj_printer_summ_price_breakdown.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>#chosen">
+		<?desc?> </a>
+<?else is_staff ?>
+	Project Type <?ProjectType?>
+<?endif is_staff ?>
+</td></tr>
+
+<? if ( $$variable{pressType} eq 'inkjetprinter' ) ?>
+	<tr><td style="border:none !important;">Type 
+	<? if ($$variable{outdoor_printing}) ?>
+		<?outdoor_printing?>
+	<? else ($$variable{outdoor_printing}) ?>
+		Indoor
+	<? endif ($$variable{outdoor_printing}) ?>
+    </td></tr>
+<? endif ( $$variable{pressType} eq 'inkjetprinter' ) ?>
+
+
+<div class="indent">
+<tr><td style="border:none !important;">
+	<strong>Press: </strong> 
+	<?hdnPress?>
+</td></tr>
+<? if ( $$variable{pressType} eq 'press' || $$variable{pressType} eq 'screen' || $$variable{pressType} eq 'web') ?>
+	<tr><td style="border:none !important;">	Run Style 
+		<?runstyle?>
+	
+		<?if ($$variable{'pressType'} ne 'screen') ?>Plates 
+						    <?else ($$variable{'pressType'} ne 'screen') ?>Screens
+							<?endif($$variable{'pressType'} ne 'screen') ?>
+		
+
+		<?txtPlateQuantity?>
+		<? if($$variable{'pressType'} ne 'screen')?>
+			-<?plate_type?>
+		<? endif($$variable{'pressType'} ne 'screen') ?>
+		
+		Col Bars 
+		<? if ( $$variable{'colour_bar'} == 1 ) ?>
+			Yes
+		<? else ( $$variable{'colour_bar'} == 1 ) ?>
+			No
+		<? endif ( $$variable{'colour_bar'} == 1 ) ?>
+</td></tr>
+<? endif ( $$variable{pressType} eq 'press' || $$variable{pressType} eq 'screen' || $$variable{pressType} eq 'web') ?>
+<? if ( $$variable{pressType} ne 'digital' ) ?>
+	<tr><td style="border:none !important;">	Approval 
+		<? if ( $$variable{'needs_approval'} == 1 ) ?>
+			Yes
+		<? else ( $$variable{'needs_approval'} == 1 ) ?>
+			No
+		<? endif ( $$variable{'needs_approval'} == 1 ) ?>
+		
+		<?ws_Colour?> Match 
+		<?ddmColourMatch?>
+<? endif ( $$variable{pressType} ne 'digital' ) ?>
+		
+		
+</td></tr>
+		<!-- Colour Information Per Side -->
+				<? if ( $$variable{colourcritical_extra_waste} || $$variable{colourcritical_make_ready} ) ?>
+<tr><td style="border:none !important;"><strong><?ws_Colour?> Critical -</strong> Extra Waste: <?colourcritical_extra_waste?> Make Ready %: <?colourcritical_make_ready?></td></tr>
+<? endif ( $$variable{colourcritical_extra_waste} || $$variable{colourcritical_make_ready} ) ?>
+
+        <?loop SIDE?>
+        <tr><td style="border:none !important;">
+			<strong> <?if ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>Front Cover <?else ($$variable{txtServiceDescription} eq 'Cover Spreads') ?> <?if not:single?>Inside <?endif not:single?><?endif ($$variable{txtServiceDescription} eq 'Cover Spreads') ?> Print <?ws_Colour?>s Side <?side?>: </strong>
+			<? if  ($$variable{std}) ?><?std?><? if  ($$variable{pms}) ?> + <? endif  ($$variable{pms}) ?><? else  ($$variable{std}) ?> <? if  ($$variable{pms}) ?> PMS <? else  ($$variable{pms}) ?>None<? endif  ($$variable{pms}) ?><? endif  ($$variable{std}) ?> <? if  ($$variable{pms}) ?><?pms?><? endif  ($$variable{pms}) ?>
+			</td></tr>
+<!--            <? if  ($$variable{pms}) ?>
+				<? if  ($$variable{std}) ?>
+					 + 
+				<? else  ($$variable{std}) ?>
+					 PMS 
+				<? endif  ($$variable{std}) ?>
+
+			    <?pms?>
+			<? endif  ($$variable{pms}) ?>
+-->
+  <? if chem_emboss ?>
+              <tr><td style="border:none !important;">      Chemical Emboss</td></tr>
+            <? endif chem_emboss ?>
+
+			<? if  ($$variable{varnish}) ?>
+			<tr><td style="border:none !important;"> Varnish 
+				<?varnish?></td></tr>
+			<? endif  ($$variable{varnish}) ?>
+			<? if  ($$variable{coating}) ?>
+			<tr><td style="border:none !important;"> Coating 
+				<?coating?></td></tr>
+			<? endif  ($$variable{coating}) ?>
+			<? if lf_coverage ?>
+			<tr><td style="border:none !important;">	 Coverage 
+				<?lf_coverage?></td></tr>
+			<? endif lf_coverage ?>
+			<? if lf_quality ?>
+				<tr><td style="border:none !important;"> Quality 
+				<?lf_quality?></td></tr>
+			<? endif lf_quality ?>
+				
+		<?endloop SIDE?>
+
+
+
+	<? if ($$variable{s0_laminate}) ?>
+		<tr><td style="border:none !important;">Lamination 
+		Side 1 <?s0_laminate?> 
+		</td></tr>
+	<? endif ($$variable{s0_laminate}) ?>
+
+	<? if ($$variable{s1_laminate}) ?>
+		<tr><td style="border:none !important;">Lamination 
+		Side 2 <?s1_laminate?>
+		</td></tr>
+	<? endif ($$variable{s1_laminate}) ?>
+
+	<? if ($$variable{mounting_type}) ?>
+		<tr><td style="border:none !important;">Mounting 
+		<?mounting_type?>
+		</td></tr>
+	<? endif ($$variable{mounting_type}) ?>
+
+
+		<!-- Version Information -->
+		<? if ( $$variable{FORMS} ) ?>
+		 <tr><td style="border:none !important;">Version Information 
+		
+		<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0">
+			<?loop FORMS?>
+				 <tr style="text-align: left !important; border:none !important;">
+					<td colspan="4" style="padding-left: 1em;"><strong><?label?></strong> 
+				 <tr style="text-align: left !important; border:none !important;">
+				
+				<?loop VERSIONS?>
+					 <tr style="text-align: left !important; border:none !important;">
+						<td style="padding-left: 2em;"><?label?></td>
+						<td style="padding-left: 2em;"><strong>Req Qty:</strong>
+							 <?int:requested_qty?></td>
+						<td style="padding-left: 2em;">(<?float:requested?> %)</td>
+						<td style="padding-left: 2em;"><strong>Qty Out:</strong>
+							 <?slots?></td>
+						<td style="padding-left: 2em;"><strong>Printed Qty:</strong>
+							 <?int:final_qty?></td>
+					</tr>
+				<?endloop VERSIONS?>
+				 <tr style="text-align: left !important; border:none !important;">
+					<td colspan="4" style="padding-left: 2em;">Net Sheets: <strong><?net_sheets?></strong></td>
+				 <tr style="text-align: left !important; border:none !important;">
+		
+			<?endloop FORMS?>
+		</table>
+        </td></tr>
+		<? endif ( $$variable{FORMS} ) ?>
+		<!-- END Version Information -->
+
+
+	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
+		<? if ($$variable{stock_custom}) ?>
+			<tr><td style="border:none !important;">Customer Supplied Stock 
+			<?stock_custom?>
+			</td></tr>
+		<? endif ($$variable{stock_custom}) ?>	
+	<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
+
+	<tr><td style="border:none !important;"><strong>Stock:</strong> 
+	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
+		<?hdnSheetSizeHeight?> x <?hdnSheetSizeWidth?>
+
+		<? if ($$variable{stock_custom}) ?>
+			Estimated Value 
+			<?stock_finish?> , <?stock_weight?><br>
+		<? else ($$variable{stock_custom}) ?>
+			- <?stock_name?> , <?stock_finish?> , <?stock_colour?> , <?stock_weight?>, <?txtStockCalliper?>
+  <? endif ($$variable{stock_custom}) ?>
+		</td></tr>
+        
+		 <?if ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>
+			<?if back_stock_name?>
+			<tr><td style="border:none !important;"><strong>Back Cover <?ws_Colour?>s Side 1:</strong><?if ($$variable{back_colour1} eq '1') ?> Black<?endif ($$variable{back_colour1} eq '1') ?><?if ($$variable{back_colour1} eq '4') ?> <? if ( $$variable{pressType} ne 'digital' ) ?>CMYK<? else ( $$variable{pressType} ne 'digital' ) ?>Full <?ws_Colour?><? endif ( $$variable{pressType} ne 'digital' ) ?><?endif ($$variable{back_colour1} eq '4') ?></td></tr>
+            
+			<tr><td style="border:none !important;"><strong>Back Cover <?ws_Colour?>s Side 2:</strong><?if ($$variable{back_colour2} eq '1') ?> Black<?endif ($$variable{back_colour2} eq '1') ?><?if ($$variable{back_colour2} eq '4') ?> <? if ( $$variable{pressType} ne 'digital' ) ?>CMYK<? else ( $$variable{pressType} ne 'digital' ) ?>Full <?ws_Colour?><? endif ( $$variable{pressType} ne 'digital' ) ?><?endif ($$variable{back_colour2} eq '4') ?><?if ($$variable{back_colour2} eq '0') ?> None<?endif ($$variable{back_colour2} eq '0') ?></td></tr>
+  <tr><td style="border:none !important;"><strong>Back Cover Stock:</strong>
+			 <?back_stock_name?> , <?back_stock_finish?> , <?back_stock_colour?> , <?back_stock_weight?>
+             </td></tr>
+        <?endif back_stock_name?>
+		
+	        <? if cover.black_cover ?>
+            <tr><td style="border:none !important;"><strong>Black Back:</strong> Yes</td></tr>
+            <? endif cover.black_cover ?>
+            <? if cover.clear_cover ?>
+			<tr><td style="border:none !important;"><strong>Clear Cover: </strong>Yes</td></tr>
+             <? endif cover.clear_cover ?>
+		<?endif ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>
+
+  <?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
+	
+	<? if ($variable->{pressType} ne 'inkjetprinter') ?>
+		<tr><td style="border:none !important;"><strong>Gross Sheet Qty:</strong> 
+		<? if ( $$variable{'QtyIndex'} == 1 ) ?>
+			<?hdnSheetQuantity1?>
+		<? endif ( $$variable{'QtyIndex'} == 1 ) ?>
+		<? if ( $$variable{'QtyIndex'} == 2 ) ?>
+			<?hdnSheetQuantity2?>
+		<? endif ( $$variable{'QtyIndex'} == 2 ) ?>
+		<? if ( $$variable{'QtyIndex'} == 3 ) ?>
+			<?hdnSheetQuantity3?>
+		<? endif ( $$variable{'QtyIndex'} == 3 ) ?>
+	
+		Net Qty 
+		<? if ( $$variable{'QtyIndex'} == 1  ) ?>
+			<?hdnNetSheetCount1?>
+		<? endif ( $$variable{'QtyIndex'} == 1  ) ?>
+		<? if ( $$variable{'QtyIndex'} == 2  ) ?>
+			<?hdnNetSheetCount2?>
+		<? endif ( $$variable{'QtyIndex'} == 2  ) ?>
+		<? if ( $$variable{'QtyIndex'} == 3  ) ?>
+			<?hdnNetSheetCount3?>
+		<? endif ( $$variable{'QtyIndex'} == 3  ) ?>
+
+		Grain 
+		<? if ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
+			No Preference
+		<? else ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
+			<? if ( $$variable{'grain_direction'} == 1 ) ?>
+				Height
+			<? else ( $$variable{'grain_direction'} == 1 ) ?>
+				Width
+			<? endif ( $$variable{'grain_direction'} == 1 ) ?>
+		<? endif ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
+        </td></tr>
+	<? endif ($variable->{pressType} ne 'inkjetprinter') ?>
+
+
+	<tr><td style="border:none !important;">Customer Supplied 
+	<? if ($$variable{'stock_supplied'})?>
+		Yes
+	<? else ($$variable{'stock_supplied'})?>
+		No
+	<? endif ($$variable{'stock_supplied'})?>
+    </td></tr>
+</table>
+
+<!-- Input is used by javascript to modifiy colours on docket for fsc certified stock requirements -->
+	<input type="hidden" id="fsc_certified" name="fsc_certified" value="<?fsc_certified?>" />
+
+<!-- <?hdnPaperBuyQuantity1?> <?hdnPaperBuyQuantity2?> <?hdnPaperBuyQuantity3?> -->
+<?else is_docket?>
+
+
+<table style="text-align: left !important; border:none !important; margin: 0px 0px 0px 0px;">
+
+		<!-- Colour Information Per Side -->
+		<?loop SIDE?>
+        
+			 <tr style="text-align: left !important; border:none !important;">
+			<td style="text-align: left !important; border:none !important; padding-left: 0px !important;">
+<strong><?if ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>Front Cover <?else ($$variable{txtServiceDescription} eq 'Cover Spreads') ?> <?if not:single?>Inside<?endif not:single?><?endif ($$variable{txtServiceDescription} eq 'Cover Spreads') ?> Print <?ws_Colour?>s Side <?side?>: </strong>
+			
+			<? if  ($$variable{std}) ?>
+            <?if ($$variable{std} eq ' CMYK') ?>
+            <? if ( $$variable{pressType} ne 'digital' ) ?><?std?>
+            <? else ( $$variable{pressType} ne 'digital' ) ?>Full <?ws_Colour?><? endif ( $$variable{pressType} ne 'digital' ) ?>
+            <?else ($$variable{std} eq ' CMYK') ?>
+            <?std?>
+            <?endif ($$variable{std} eq ' CMYK') ?>
+            <? if  ($$variable{pms}) ?> + <? endif  ($$variable{pms}) ?><? else  ($$variable{std}) ?> <? if  ($$variable{pms}) ?> PMS <? else  ($$variable{pms}) ?>None<? endif  ($$variable{pms}) ?>
+            <? endif  ($$variable{std}) ?> 
+            <? if  ($$variable{pms}) ?><?pms?><? endif  ($$variable{pms}) ?>
+		</td>
+        </tr>
+        	
+                    <? if chem_emboss ?>
+                     <tr style="text-align: left !important; border:none !important;">
+                    <td style="text-align: left !important; border:none !important; padding-left: 0px !important;">
+                    Chemical Emboss
+                    </td></tr>
+           			 <? endif chem_emboss ?>
+
+			<? if  ($$variable{varnish}) ?>
+			 <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;"> Varnish 
+				<?varnish?>
+                </td></tr>
+			<? endif  ($$variable{varnish}) ?>
+            
+			<? if  ($$variable{coating}) ?>
+			 <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;"> Coating 
+				<?coating?> </td></tr>
+			<? endif  ($$variable{coating}) ?>
+            
+			<? if lf_coverage ?>
+				 <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;"> Coverage 
+				<?lf_coverage?> </td></tr>
+			<? endif lf_coverage ?>
+            
+			<? if lf_quality ?>
+				 <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;"> Quality 
+				<?lf_quality?> </td></tr>
+			<? endif lf_quality ?>
+				
+		<?endloop SIDE?>
+
+</table>
+<table style="text-align: left !important; border:none !important; margin: 0px 0px 0px 0px;">
+
+	<? if ($$variable{s0_laminate}) ?>
+		 <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;">Lamination 
+		Side 1 <?s0_laminate?> 
+		</td></tr>
+	<? endif ($$variable{s0_laminate}) ?>
+
+	<? if ($$variable{s1_laminate}) ?>
+		 <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;">Lamination 
+		Side 2 <?s1_laminate?>
+		</td></tr>
+	<? endif ($$variable{s1_laminate}) ?>
+
+	<? if ($$variable{mounting_type}) ?>
+		 <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;">Mounting 
+		<?mounting_type?>
+		</td></tr>
+	<? endif ($$variable{mounting_type}) ?>
+
+	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
+		<? if ($$variable{stock_custom}) ?>
+			 <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;">Customer Supplied Stock 
+			<?stock_custom?>
+			</td></tr>
+		<? endif ($$variable{stock_custom}) ?>	
+	<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
+
+	
+	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
+		 <tr style="text-align: left !important; border-bottom:1px solid #000000 !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;"><strong><?if ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>Front Cover Paper <?else ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>Inside Paper <?endif ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>Stock: </strong>
+		<? if ($$variable{stock_custom}) ?>
+			Estimated Value 
+			<?stock_finish?> , <?stock_weight?></td></tr>
+		<? else ($$variable{stock_custom}) ?>
+			<?stock_name?>, <?stock_finish?>, <?stock_colour?>, <?stock_weight?>, <?txtStockCalliper?> </td></tr>
+		<? endif ($$variable{stock_custom}) ?>
+
+
+		
+        <?if ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>
+			
+      		 <?if back_stock_name?>
+			 <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;"><strong>Back Cover <?ws_Colour?>s Side 1:</strong><?if ($$variable{back_colour1} eq '1') ?> Black<?endif ($$variable{back_colour1} eq '1') ?><?if ($$variable{back_colour1} eq '4') ?> <? if ( $$variable{pressType} ne 'digital' ) ?>CMYK<? else ( $$variable{pressType} ne 'digital' ) ?>Full <?ws_Colour?><? endif ( $$variable{pressType} ne 'digital' ) ?><?endif ($$variable{back_colour1} eq '4') ?></td></tr>
+			 <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;"><strong>Back Cover <?ws_Colour?>s Side 2:</strong><?if ($$variable{back_colour2} eq '1') ?> Black<?endif ($$variable{back_colour2} eq '1') ?><?if ($$variable{back_colour2} eq '4') ?> <? if ( $$variable{pressType} ne 'digital' ) ?>CMYK<? else ( $$variable{pressType} ne 'digital' ) ?>Full <?ws_Colour?><? endif ( $$variable{pressType} ne 'digital' ) ?><?endif ($$variable{back_colour2} eq '4') ?><?if ($$variable{back_colour2} eq '0') ?> None<?endif ($$variable{back_colour2} eq '0') ?></td></tr>
+			 <tr style="text-align: left !important;border-bottom:1px solid #000000 !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;"><strong>Back Cover Stock:</strong>
+			 <?back_stock_name?> , <?back_stock_finish?> , <?back_stock_colour?> , <?back_stock_weight?></td></tr>
+         <?endif back_stock_name?>
+		
+	        <? if cover.black_cover ?>
+             <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;"><strong>Black Back:</strong> Yes</td></tr>
+            <? endif cover.black_cover ?>
+            <? if cover.clear_cover ?>
+			 <tr style="text-align: left !important; border:none !important;"><td style="text-align: left !important; border:none !important; padding-left: 0px !important;"><strong>Clear Cover: </strong>Yes</td></tr>
+             <? endif cover.clear_cover ?>
+            
+		<?endif ($$variable{txtServiceDescription} eq 'Cover Spreads') ?>
+
+	<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
+
+<!-- <?hdnPaperBuyQuantity1?> <?hdnPaperBuyQuantity2?> <?hdnPaperBuyQuantity3?> -->
+</table>
+<?endif is_docket?>

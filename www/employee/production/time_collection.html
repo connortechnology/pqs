@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production > Time Collection > Time Allocation
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Time Collection &#187;</span> Time Allocation</h1>
+ <fieldset>
+            <legend>
+                Instructions
+          </legend>
+	<p>Located at the top of the screen is your Punch In/Punch Out time clock for your day. To Punch in your start time for the day Select the Punch In Button. When you are done working for the day select the Punch Out button. If you are currently punched in it will display the date and time you punched in last. To view your In/Out History select the history button below.</p>
+    <p> The List at the bottom of the page has been populated with services you have been assigned. To Start a service first select the Equipment you are doing the work on then select the Start Button in the row of the service you wish to start. To Stop a service push the Stop button. To view your Service history select the Service name. To Remove a service you have been assigned select the remove button (note: this will only remove services that you have not entered time against. Once you have time history it will stay in your list until it is completed then it will still show in your history).</p>
+   
+    </fieldset>
+    <form action="" method="post" name="f2" id="f2">
+        <fieldset>
+            <legend>
+                Punch In/Out
+          </legend>
+			
+           <table  border="0" cellspacing="0" cellpadding="0" style="border:none !important;" width="97%">         
+          <? if ( $$variable{'UserType'} eq 'A' ) ?>
+            <tr><td width="16%" style="border:none !important;">User Name:</td>
+            <td style="border:none !important;">
+			<select id="ddmUser" name="ddmUser" >
+				<option value=""> Select a User </option>
+				<option value=""> ----------------- </option>
+				<?FILL_STAFF_LIST?>
+			</select><input type="button" name="btnFunction" class="button" value="Go" />
+			</td>
+            </tr>
+           
+                       
+					   <? endif ( $$variable{'UserType'} eq 'A' ) ?>
+
+
+			
+			<?if not:in?>
+            <tr>
+            <td style="border:none !important;">
+				<a class="button" href="/employee/production/time_collection.html?Punch_In=1">Punch IN</a></td>
+            <td style="border:none !important;">Not Punched in</td>
+            </tr>
+			<?else not:in?>
+			<tr>
+            <td style="border:none !important;">
+				<a class="button" href="/employee/production/time_collection.html?Punch_Out=1">Punch OUT</a></td>
+            <td style="border:none !important;">Punched in at: <?in?></td>
+            </tr>
+			<?endif not:in?>
+            <tr>
+            <td colspan="2" style="border:none !important;"><a class="button" href="/employee/production/time_punch_history.html">View Punch HISTORY</a></td>
+            </tr>
+            </table>
+			</fieldset>
+			</form>
+
+            <fieldset>
+            <legend>
+               Time Allocation
+            </legend>
+                <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
+                    <tr>
+                      <th>Due Date</th>
+                      <th>Order ID</th>
+                      <th>Project ID</th>
+                        <th>Service Name</th>
+                        <th>Equipment</th>
+                        <th>Status</th>
+						<!--
+                        <th>Priority</th>
+						-->
+                        <th>Start</th>
+                        <th>Stop</th>
+                        <th>Remove</th>
+                        <th>Duration</th>
+                    </tr>
+
+						<?loop SERVICES ?>
+    					<form action="time_collection.html" method="post" name="f_<?lngserviceindex?>" >
+						<input type="hidden" name="service" value="<?lngserviceindex?>" />
+
+                        <tr>
+                          <td style="text-align: left;"><?daterequired?></td>
+                          <td style="text-align: left;"><?lngorderid?></td>
+                          <td style="text-align: left;"><?lngprojectindex?></td>
+                            <td style="text-align: left;"> 
+								<a href="/employee/production/time_service_history.html"><?strservicetype?></a>
+							</td>
+                            <td style="text-align: left;">
+								<select id="ddmEquipment" name="ddmEquipment" >
+									<option value=""> Equipment List</option>
+									<option value=""> ----------------- </option>
+									<?EQUIPMENT?>
+								</select>
+							</td>
+                            <td style="text-align: left;"><?strstatus?></td>
+							<!--
+                            <td class="select c" style="text-align: center;">
+								<input type="text" name="priority" id="priority" size="5" /></td>
+							-->
+                            <td class="select c" style="text-align: center;">
+								<?if not:start.id?>
+								<input type="submit" name="START" class="button" value="START" />
+								<?endif not:start.id?>
+								</td>
+                            <td class="select c" style="text-align: center;">
+								<?if start.id?>
+								<input type="submit" name="STOP" class="button" value="STOP" />
+								<?endif start.id?>
+							</td>
+                            <td class="select c" style="text-align: center;">
+								<?if not:duration?><input type="submit" name="REMOVE" class="button" value="REMOVE" /><?endif not:duration?>
+							</td>
+                            <td class="select c" style="text-align: center;"><?duration?></td>
+                        </tr>
+
+    					</form>
+						<?endloop SERVICES ?>
+                        
+                         
+                </table>
+            <br />
+            
+        </fieldset>
+
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

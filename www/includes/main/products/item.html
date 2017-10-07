@@ -1,0 +1,1034 @@
+<DIV id="TipLayer" style="visibility:hidden;position:absolute;z-index:1000;top:-100;"></DIV>
+<!--<SCRIPT language="javascript" src="/javascripts/style.js" type="text/javascript"></SCRIPT> 
+--><script type="text/javascript">
+function loadwithpage() {
+	 <? if service.Bindery ?>backcovertype();  <? endif service.Bindery ?>
+	 <? if service.Bindery ?>covertype(); <? endif service.Bindery ?>
+	 <? if service.Bindery ?>coveroption();<? endif service.Bindery ?>
+	<? if ($variable->{category}{name} eq 'Tabs') ?> tabsonly();<? endif ($variable->{category}{name} eq 'Tabs') ?> 
+<? if service.Folding ?fold_type(); foldnolam(); foldtypepersize();
+<? endif service.Folding ?>
+}
+	
+	
+    window.onload=loadwithpage;
+
+function popUpClosed() {
+    window.location.reload();
+}
+
+function open_upload() {
+	var win = (window.open('/main/products/upload.html','','newWin,left=600,width=645,top=250,height=401,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no'  ));
+
+	Event.observe(window, 'unload', function (e) {
+		win.document.forms['upload'].submit();
+	});
+}
+function no_upload() {
+
+	Event.observe(window, 'unload', function (e) {
+	});
+}
+
+
+ function binderymaxpages() {
+	var pages = document.getElementById("txtPageQuantity").value;
+	var bind = $('Bindery').options[$('Bindery').selectedIndex].value;
+	if (bind=="3HolePunchBinder"){
+		//alert ('3 hole with binders');
+		if (pages > 780){
+		alert ('The Maximum quantity of pages for 3 Hole Punch with Binders is 780 pages (of 20-24lb bond stock). Please select a different Bindery type.');
+		}
+	}
+	if (bind=="CornerStitching" || bind=="CornerStitch3Punch"){
+		//alert ('3 hole with binders');
+		if (pages > 150){
+		alert ('The Maximum quantity of pages for Corner Staple is 150 pages (of 20-24lb bond stock). Please select a different Bindery type.');
+		}
+	}
+	if (bind=="FastBack"){
+		//alert ('3 hole with binders');
+		if (pages > 700){
+		alert ('The Maximum quantity of pages for Tape Binding is 700 pages (of 20-24lb bond stock). Please select a different Bindery type.');
+		}
+	}
+	if (bind=="PerfectBinding"){
+		//alert ('3 hole with binders');
+		if (pages > 400){
+		alert ('The Maximum quantity of pages for Perfect Binding is 400 pages (of 20-24lb bond stock). Please select a different Bindery type.');
+		}
+	}
+	if (bind=="Cerlox"){
+		//alert ('3 hole with binders');
+		if (pages > 850){
+		alert ('The Maximum quantity of pages for Plastic Comb (Cerlox) is 850 pages (of 20-24lb bond stock). Please select a different Bindery type.');
+		}
+	}
+	if (bind=="Proclick"){
+		//alert ('3 hole with binders');
+		if (pages > 250){
+		alert ('The Maximum quantity of pages for Proclick is 250 pages (of 20-24lb bond stock). Please select a different Bindery type.');
+		}
+	}
+	if (bind=="SaddleStitching"){
+		//alert ('3 hole with binders');
+		if (pages > 60){
+		alert ('The Maximum quantity of pages for Saddle Stitching is 60 pages (of 20-24lb bond stock). Please select a different Bindery type.');
+		}
+	}
+	 
+ }
+ 
+ function checkcovertype () {
+  var frontcover = $('CoverType').options[$('CoverType').selectedIndex];
+  var backcover = $('BackCoverType').options[$('BackCoverType').selectedIndex];
+ 
+		 if (frontcover.disabled==true) {
+		alert ('Since your Bindery type has changed please select a valid Front Cover type'); 
+		 }
+		 if (backcover.disabled==true) {
+		alert ('Since your Bindery type has changed please select a valid Back Cover type'); 
+		 }
+ 
+ }
+ 
+ function checkbacking () {
+	// alert ('start check pad');
+	 var pads = $('Pads').options[$('Pads').selectedIndex].value;
+	// alert (pads);
+ 		 if (pads=="Padding") {
+	//	alert ('Padding Yes'); 
+		document.getElementById("rdbCardboardBacking").checked=true;
+		 }
+		else {
+			 document.getElementById("rdbCardboardBacking").checked=false;
+		}
+ 
+ }
+ 
+ function sspagesmin() {
+	var pages = document.getElementById("txtPageQuantity").value;
+	// alert (pages);
+	
+		// alert(pages);
+		 
+		 var x=document.getElementById("Bindery");
+			var i;
+			for (i=0;i<x.length;i++)
+			{
+			if (x.options[i].text == 'Saddle Stitching' &&  pages <= 7)
+			{
+				x.options[i].style.display="none";
+			}
+			else {
+				
+				x.options[i].style.display="list-item";
+			}
+			}
+ }
+
+ 
+ function calc_tabs_pages() {
+	 
+	 if ($('tabs')) {
+	 var tabsselect = $('Tabs').options[$('Tabs').selectedIndex].value;
+	// alert (tabsselect);
+	 
+	 if (tabsselect == 1) {
+	//	alert ('Tabs Yes');
+	 
+	 var pages = document.getElementById("txtPageQuantity").value;
+	// alert (pages);
+	 if (pages == '') {
+		// alert(pages);
+		 pages = 0;
+		 document.getElementById("txtPageQuantity").value = 0;
+	 }
+	 
+	 var tabs = document.getElementById("txtTabsQuantity").value;
+ 	 //alert (tabs);
+	 
+	 var tabstosheet = (tabs * 2);
+	 //alert (tabstosheet);
+	// alert(pages);
+	 var totalpages = parseInt(pages) + parseInt(tabstosheet);
+	 //alert (totalpages);
+ 
+ 	document.getElementById("txtPageQuantity").value = totalpages;
+	
+ 	}
+ }
+ }
+ 
+ function tabsonly () {
+	<? if ($variable->{category}{name} eq 'Tabs') ?> 
+			$('CoverType').selectedIndex = 2;
+			$('BackCoverType').selectedIndex = 2;
+			$('frontcoverrow').style.display="none";
+			$('BackCoverRow').style.display="none";
+		//	$('pagesrow').style.display="none";
+	<? endif ($variable->{category}{name} eq 'Tabs') ?> 
+ }
+ 
+ function autoselectvalidsize (size){
+				var x=document.getElementById("Unfolded Size *:");
+				var i;
+				for (i=0;i<x.length;i++)
+				{
+				if (x.options[i].text == size)
+				{
+					x.selectedIndex=i;
+				}
+				}
+ 
+ }
+ 
+ function foldtypepersize () {
+	//alert ('start function');
+	var foldtypeselected = $('FoldType').options[$('FoldType').selectedIndex].text;
+	//alert (foldtypeselected);
+	//var size1 = $('width').value=11;$('height').value=8.5;
+	//var size2 = $('width').value=14;$('height').value=8.5;
+	//var size3 = $('width').value=17;$('height').value=11;
+	//var size4 = $('width').value=25;$('height').value=11;
+	//var size5 = $('width').value=25.5;$('height').value=11;
+	//var size6 = $('width').value=22;$('height').value=8.5;
+	
+	
+	if  (foldtypeselected == '2 Panel Half Fold') {
+			var x=document.getElementById("Unfolded Size *:");
+			var i;
+			for (i=0;i<x.length;i++)
+			{
+			if (x.options[i].text == '8.5x11' || x.options[i].text == '8.5x14' || x.options[i].text == '11x17')
+			{
+				x.options[i].style.display="list-item";
+			}
+			else {
+				x.options[i].style.display="none";
+			}
+			}
+			if	(x.options[x.selectedIndex].style.display=="none"){
+			autoselectvalidsize ('8.5x11');
+		// <? if ($variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+		// $('width').value=11;$('height').value=8.5;
+		//<? endif ($variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+			}
+			if	(x.options[i.selected.text]=="8.5x14"){
+			alert ('8.5x14');	
+			}
+			}
+	
+	if  (foldtypeselected == '3 Panel Roll Fold') {
+			var x=document.getElementById("Unfolded Size *:");
+			var i;
+			for (i=0;i<x.length;i++)
+			{
+			if (x.options[i].text == '8.5x11' || x.options[i].text == '8.5x14' || x.options[i].text == '11x17' || x.options[i].text == '11x25')
+			{
+				x.options[i].style.display="list-item";
+			}
+			else {
+				x.options[i].style.display="none";
+			}
+			}
+			if	(x.options[x.selectedIndex].style.display=="none"){
+			autoselectvalidsize ('8.5x11');
+		//	 <? if ($variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+		//	 $('width').value=11;$('height').value=8.5;
+		//	 <? endif ($variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+			}
+			}
+	
+	if  (foldtypeselected == '3 Panel Z Fold (Accordian)') {
+			var x=document.getElementById("Unfolded Size *:");
+			var i;
+			for (i=0;i<x.length;i++)
+			{
+			if (x.options[i].text == '8.5x11' || x.options[i].text == '8.5x14' || x.options[i].text == '11x17' || x.options[i].text == '11x25.5')
+			{
+				x.options[i].style.display="list-item";
+			}
+			else {
+				x.options[i].style.display="none";
+			}
+			}
+			if	(x.options[x.selectedIndex].style.display=="none"){
+			autoselectvalidsize ('8.5x11');
+		//	 <? if ($variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+		//	 $('width').value=11;$('height').value=8.5;
+		//	 <? endif ($variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+			}
+			}
+	
+	if  (foldtypeselected == '4 Panel Double Parallel Fold' || foldtypeselected == 'Double Gate Fold') {
+			var x=document.getElementById("Unfolded Size *:");
+			var i;
+			for (i=0;i<x.length;i++)
+			{
+			if (x.options[i].text == '8.5x14' || x.options[i].text == '8.5x22')
+			{
+				x.options[i].style.display="list-item";
+			}
+			else {
+				x.options[i].style.display="none";
+			}
+			}
+			if	(x.options[x.selectedIndex].style.display=="none"){
+			autoselectvalidsize ('8.5x14');
+		//	 <? if ($variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+		//	 $('width').value=14;$('height').value=8.5;
+		//	 <? endif ($variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+			}
+			}
+	
+	if  (foldtypeselected == 'None') {
+			var x=document.getElementById("Unfolded Size *:");
+			var i;
+			for (i=0;i<x.length;i++) {
+				x.options[i].style.display="list-item";
+			}
+			}
+	
+ }
+ 
+var coverhide ='start';
+ function covertype() {
+	 <? if service.Bindery ?>
+	 var bind = $('CoverType').options[$('CoverType').selectedIndex].value;
+	
+if (bind=="SelfCover" || bind=="SelfCoverClear"){
+	coverhide = 'hidden';
+	$('frontcover1').style.display="none";
+	$('frontcover2').style.display="none";
+	$('frontcover3').style.display="none";
+}
+
+else {
+	coverhide = 'nohidden';
+	$('frontcover1').style.display="table-row";
+	$('frontcover2').style.display="table-row";
+	$('frontcover3').style.display="table-row";
+}
+<? endif service.Bindery ?>
+ }
+ 
+var backhide ='start';
+ function backcovertype() {
+	 <? if service.Bindery ?>
+	 var bind = $('BackCoverType').options[$('BackCoverType').selectedIndex].value;
+	
+if (bind=="BackSelfCover" || bind=="BackSelfCoverBlack"){
+	backhide = 'hidden';
+	$('backcover1').style.display="none";
+	$('backcover2').style.display="none";
+	$('backcover3').style.display="none";
+}
+
+else {
+	backhide = 'nohidden';
+	$('backcover1').style.display="table-row";
+	$('backcover2').style.display="table-row";
+	$('backcover3').style.display="table-row";
+}
+<? endif service.Bindery ?>
+ }
+ 
+ function check_text (f,n) {
+		var cc =  document.getElementById(f);
+		if ( cc.value == '' ) {
+			return 'Please Enter a ' + n + '\n';
+		}
+		return '';
+}
+
+ function check_fields () {
+		
+		var msg = '';
+		
+		msg += check_text('txtProjectReference','Project Name');
+		msg += check_text('txtQuantity1','Quantity');
+		
+		<? if service.Bindery ?>var tabsselect = $('Tabs').options[$('Tabs').selectedIndex].value;<? endif service.Bindery ?>
+	 
+		
+		<? if service.Bindery ?>
+		if (tabsselect == 0) {
+			msg += check_text('txtPageQuantity','Number of Pages');
+		}
+		<? endif service.Bindery ?>
+		
+		
+		
+		<? if service.Bindery ?>
+			var text = 'Please Select a Inside Paper Stock';
+		<? else service.Bindery ?>
+			var text = 'Please Select a Paper Stock';
+		<? endif service.Bindery ?>
+		var x = $('stock_colour').options[$('stock_colour').selectedIndex].value;
+		if (x == ''){
+			msg += text + ' Color' + '\n';
+		}
+		var x = $('stock_finish').options[$('stock_finish').selectedIndex].value;
+		if (x == ''){
+			msg +=  text + ' Finish' + '\n';
+		}
+		var x = $('stock_weight').options[$('stock_weight').selectedIndex].value;
+		if (x == ''){
+			msg +=  text + ' Weight' + '\n';
+		}
+		var x = $('stock_name').options[$('stock_name').selectedIndex].value;
+		if (x == ''){
+			msg +=  text + ' Name' + '\n';
+		}
+		
+		if (coverhide == 'nohidden')	 {
+			
+			var x = $('cover_stock_colour').options[$(cover_stock_colour).selectedIndex].value;
+		if (x == ''){
+			msg += 'Please Select a Front Cover Paper Stock Color' + '\n';
+		}
+		var x = $('cover_stock_finish').options[$(cover_stock_finish).selectedIndex].value;
+		if (x == ''){
+			msg +=  'Please Select a Front Cover Paper Stock Finish' + '\n';
+		}
+		var x = $('cover_stock_weight').options[$(cover_stock_weight).selectedIndex].value;
+		if (x == ''){
+			msg +=  'Please Select a Front Cover Paper Stock Weight' + '\n';
+		}
+		var x = $('cover_stock_name').options[$(cover_stock_name).selectedIndex].value;
+		if (x == ''){
+			msg +=  'Please Select a Front Cover Paper Stock Name' + '\n';
+		}
+			}
+			
+			if (backhide == 'nohidden')	 {
+			
+			var x = $('back_stock_colour').options[$(back_stock_colour).selectedIndex].value;
+		if (x == ''){
+			msg += 'Please Select a Back Cover Paper Stock Color' + '\n';
+		}
+		var x = $('back_stock_finish').options[$(back_stock_finish).selectedIndex].value;
+		if (x == ''){
+			msg +=  'Please Select a Back Cover Paper Stock Finish' + '\n';
+		}
+		var x = $('back_stock_weight').options[$(back_stock_weight).selectedIndex].value;
+		if (x == ''){
+			msg +=  'Please Select a Back Cover Paper Stock Weight' + '\n';
+		}
+		var x = $('back_stock_name').options[$(back_stock_name).selectedIndex].value;
+		if (x == ''){
+			msg +=  'Please Select a Back Cover Paper Stock Name' + '\n';
+		}
+			}
+			
+		var month =  document.getElementById('ddmDueDateMonth1');
+		var day   =  document.getElementById('ddmDueDateDay1');
+		var year  =  document.getElementById('ddmDueDateYear1');
+		var time  =  document.getElementById('ddmDueDateTime');
+		
+		if ( month.selectedIndex == 0 ) {
+			msg += 'Please Select a Delivery Month' + '\n';
+
+		}
+		if ( day.selectedIndex == 0 ) {
+			msg += 'Please Select a Delivery Day' + '\n';
+
+		}
+		if ( year.selectedIndex == 0 ) {
+			msg += 'Please Select a Delivery Year' + '\n';
+
+		}
+		if ( time.selectedIndex == 0 ) {
+			msg += 'Please Select a Delivery Time' + '\n';
+
+		}
+		
+		<? if service.Bindery ?>
+		var value = $('txtPageQuantity').value;
+		if (value%2 > 0) {
+			msg += 'Please enter an even number of Pages' + '\n';
+		}
+		<? endif service.Bindery ?>
+		
+		if (!$('HardCopyOnly').checked && !$('HardCopyPlusFile').checked && !$('NoHardCopyPlusFile').checked){
+			msg += 'Please select an Artwork File Type' + '\n';
+		}
+		 
+		
+		if ($('width')) {
+			if ($('width').value == '') {
+				msg += 'Please enter the Width of your Project' + '\n';
+			}
+		}
+		
+		if ($('height')) {
+			if ($('height').value == '') {
+				msg += 'Please enter the Height of your Project' + '\n';
+			}
+		}
+		
+return msg;
+		
+}
+
+
+ 
+ 
+function validateform () {
+		var msg = '';
+		msg += check_fields();
+		if (msg != '' ) {
+			
+			alert(msg);
+			return false;
+		}
+		else {
+		if ($('tabs')) {
+			calc_tabs_pages();
+		}
+		}
+}
+
+
+
+function mc () {
+//	alert ('mc start');
+	var color = $('stock_colour').options[$('stock_colour').selectedIndex].text
+	if (color=='Multicolor') {
+//		alert  ('mc is true');
+			$('multicolor').style.display="table-row";
+		}
+		else {
+//			alert  ('mc is not true');
+			$('multicolor').style.display="none";
+}
+		//if (color=='Please Select'){
+//			alert  ('mc is please select');
+//			$('multicolor').style.display="none";
+//		}
+}
+</script>  
+
+<style type="text/css">
+th {
+	padding: 0.1ex 0.65em 0.25ex !important;
+}
+
+td {
+background-color:#FFFFFF !important; 
+border:none !important;
+padding-top:8px !important;
+height:33px !important;
+padding: 0.1ex 0.45em 0.25ex !important;
+}
+
+</style>
+
+
+
+<p>Please answer the following questions and click &quot;Request a Quote&quot; or &quot;Place an Order&quot; when finished. Fields marked with an * are required.</p>
+<hr />
+<?name?>
+<hr />
+<div class="product">
+<img src="<?image?>" width="130" height="130" style="padding:10px;" align="left" />
+
+	
+	<form name='f1' id='f1' action="/main/products/select.html" onsubmit="return (validateform());">
+		<input type="hidden" name="item" value="<?id?>" />
+		<input type="hidden" name="auto_pid" value="<?pid?>" />
+		<input type="hidden" name="cover_stock_type" value="cover" />
+		<input type="hidden" name="back_cover_stock_type" value="cover" />
+		<p></p>
+        <h3><?name?></h3>
+		<p><?description?></p>
+
+		<div class="views" style="margin-left:0 !important; margin-right:0 !important;">
+
+			<!-- Question view. -->
+			<div>
+			  <table>
+               <? if is_staff ?> 
+               <tr>
+               <td>Account:</td>
+               <td><h1><a href="/main/account/account_select_customer.html"><?user.company.name?></a></h1></td>
+               </tr>
+               
+               <tr>
+                 
+                 <td>
+                      Customer Name:
+                 </td>
+              
+                    <td>
+                    <select id="ddmUser" name="ddmUser" >
+						<option value="">- Please select one. -</option>
+						<?USERS?>
+					</select>
+                    
+                    </td>
+                    <td colspan="2"><a href="/main/account/user_registration.html" target="_new">Add New User Here</a></td>
+                    </tr>
+                    <? endif is_staff ?>
+                  <tr>
+                 <td>
+                      Project Name *:
+                    </td>
+              
+                    <td colspan="2" style="padding-right:0px !important;">
+                    <input type="text" name="txtProjectReference" id="txtProjectReference" style="width:397px" />
+                    </td>
+                    <td style="padding-left:0px">
+                    <img src="/images/main/products/question.jpg" width="18" height="18" style="float:left; cursor: pointer; padding-top:1px; padding-left:0px" onmouseover="" onclick="(window.open('/includes/main/products/tooltip/ProjectName.html','Project Name','newWin,left=600,width=340,top=250,height=250,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no'));"/>
+                    
+                    </td>
+                  </tr>
+                     <tr>
+                 <td>
+                      Comments:
+                    </td>
+              
+                     <td colspan="2" style="padding-right:0px !important;">
+                    <input type="text" name="txtComments" id="txtComments" style="width:397px" />
+                    </td>
+                    <td style="padding-bottom:13px !important; ">
+                     <img src="/images/main/products/question.jpg" width="18" height="18" style="float:left; cursor: pointer; padding-top:1px; padding-left:0px" onmouseover="" onclick="window.open('/includes/main/products/tooltip/ProjectComments.html','Comments','newWin,left=600,width=340,top=250,height=250,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/>
+                    </td>
+                    </tr>
+                          
+                </table>
+               
+
+                 
+                 <table>    
+                  <tr>
+                    <td width="160px">
+                      Quantity *:
+                    </td>
+              
+                     <td colspan="2">
+                     <input type="text" name="txtQuantity1" id="txtQuantity1" size="16" />
+                     
+                      <? if is_staff ?><input name="ForceDigital" type="checkbox" id="ForceDigital" value="1" /> Force to Run on Digital<? endif is_staff ?>
+					</td>
+                    <td colspan="2"></td>
+                 </tr> 
+
+                 <? if not:service.Bindery ?><!--#include virtual="/includes/main/products/multi_version.html" --> <? endif not:service.Bindery ?>
+
+                 <? if service.Folding ?> <!--#include virtual="/includes/main/products/Folding.html" --><? endif service.Folding ?>
+
+                  <? if service.Bindery ?><!--#include virtual="/includes/main/products/Pages.html" --> <? endif service.Bindery ?>
+                 <? if service.Bindery ?> <!--#include virtual="/includes/main/products/Bindery.html" --><? endif service.Bindery ?>
+                 <? if service.Bindery ?><!--#include virtual="/includes/main/products/Covers.html" --> <? endif service.Bindery ?>
+                 <? if service.Bindery ?><!--#include virtual="/includes/main/products/BackCovers.html" --> <? endif service.Bindery ?>   	
+                
+                 <? if ($variable->{press_type} eq 'inkjetprinter' || $variable->{category}{name} eq 'Pads' || $variable->{category}{name} eq 'Labels' || $variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+                    <tr>
+                    	<td>
+                             
+							Unfolded Size *:
+                        </td>
+                         <td colspan="4">
+                        <select name="size" id="Unfolded Size *:" >
+                       		<option id="man" value="1">Manually Enter</option>
+							<? if ($variable->{press_type} eq 'inkjetprinter') ?>
+                            <option id="22x28" value="22x28" onclick="$('width').value=22;$('height').value=28;" >22x28 Iron Man</option>
+                            <? endif ($variable->{press_type} eq 'inkjetprinter') ?>
+                            
+                            <? if ($variable->{category}{name} eq 'Pads') ?>
+                            <option id="4.25x5.5" value="4.25x5.5" onclick="$('width').value=4.25;$('height').value=5.5;" >4.25x5.5</option>
+                            <option id="5.5x8.5" value="5.5x8.5" onclick="$('width').value=5.5;$('height').value=8.5;" >5.5x8.5</option>
+                            <option id="8.5x11" value="8.5x11" onclick="$('width').value=8.5;$('height').value=11;" >8.5x11</option>
+                            <? endif ($variable->{category}{name} eq 'Pads') ?>
+                            
+                            <? if ($variable->{category}{name} eq 'Labels') ?>
+                            <option id="1.375x2.125" value="1.375x2.125" onclick="$('width').value=1.375;$('height').value=2.125;" >1.375x2.125 (32up on 8.5x11)</option>
+                            <option id="2.125x2.75" value="2.125x2.75" onclick="$('width').value=2.125;$('height').value=2.75;" >2.125x2.75 (16up on 8.5x11)</option>
+                            <option id="2.75x4.25" value="2.75x4.25" onclick="$('width').value=2.75;$('height').value=4.25;" >2.75x4.25 (8up on 8.5x11)</option>
+                            <option id="4.25x5.5" value="4.25x5.5" onclick="$('width').value=4.25;$('height').value=5.5;" >4.25x5.5 (4up on 8.5x11)</option>
+                            <option id="4.25x11" value="4.25x11" onclick="$('width').value=4.25;$('height').value=11;" >4.25x11 (2up on 8.5x11)</option>
+                            <option id="8.5x11" value="8.5x11" onclick="$('width').value=8.5;$('height').value=11;" >8.5x11 (1up on 8.5x11)</option>
+                            <? endif ($variable->{category}{name} eq 'Labels') ?>
+                            
+                         <? if ($variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+                           <option id="8.5x11" value="8.5x11" onclick="$('width').value=8.5;$('height').value=11;" >8.5x11</option>
+                           <option id="3.5x4.5" value="3.5x4.5" onclick="$('width').value=3.5;$('height').value=4.5;" >3.5x4.5</option>
+                           <option id="4.5x4.5" value="4.5x4.5" onclick="$('width').value=4.5;$('height').value=4.5;" >4.5x4.5</option>
+                            <option id="5.5x8.5" value="5.5x8.5" onclick="$('width').value=5.5;$('height').value=8.5;" >5.5x8.5</option>
+                           <option id="8.5x14" value="8.5x14" onclick="$('width').value=8.5;$('height').value=14;" >8.5x14</option>
+                            <option id="11x17" value="11x17" onclick="$('width').value=11;$('height').value=17;" >11x17</option>
+                           <option id="12x18" value="12x18" onclick="$('width').value=12;$('height').value=18;" >12x18</option>
+                           <option id="13x19" value="13x19" onclick="$('width').value=13;$('height').value=19;" >13x19</option>
+                           <option id="18x24" value="18x24" onclick="$('width').value=18;$('height').value=24;" >18x24</option>
+                           <option id="22x28" value="22x28" onclick="$('width').value=22;$('height').value=28;" >22x28 Iron Man</option>
+                           <option id="24x36" value="24x36" onclick="$('width').value=24;$('height').value=36;" >24x36</option>
+                            <? endif ($variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+						</select>
+                        <input type="text" name="width" id="width" size="5" />"W
+                        <input type="text" name="height" id="height" size="5" />"H   
+                        
+						</td>
+                     </tr> 
+<!--                     <? endif ($variable->{press_type} eq 'inkjetprinter') ?>     
+-->				 
+
+                 <? endif ($variable->{press_type} eq 'inkjetprinter' || $variable->{category}{name} eq 'Pads' || $variable->{category}{name} eq 'Labels' || $variable->{category}{name} eq 'Single Sheet Projects Advanced') ?>
+                <?loop questions?>
+				
+                <tr  <? if service.Bindery ?><?if _last ?>style="border-top:1px solid #000000 !important"<?endif _last ?> <? endif service.Bindery ?>><td><?label?></td>
+                 <td colspan="4"><select name="q<?id?>" id="<?label?>" style="width:400px;" onchange="foldtypepersize();">
+							<?loop answers?>
+							<option id="a<?n?>" value="<?n?>"><?label?></option>
+							<?endloop answers?>
+						</select>
+				</td>
+                </tr>
+                
+					
+				<?endloop questions?>
+				
+                     <tr >
+                     <td><? if service.Bindery ?>Inside <? endif service.Bindery ?>Paper Stock *:</td>
+                     <td colspan="3">
+                     <p>Please choose a color, finish, weight and name.</p>
+	                 <p style="font-size:0.91em"><strong>If you cannot find the Paper Stock you are looking for below please call us at:<br /> <!--#include virtual="/includes/company_telephone_number.html"--> and we would be happy to assist you.</strong></p>
+					</td>
+                    <td><input type="button" id="stock_unbind_all" value="Reset Paper" class="button" />
+                    </td>
+                    </tr>
+                    <tr   <? if service.Bindery ?>style="border-bottom:1px solid #000000 !important" <? endif service.Bindery ?>>
+                    <td></td>
+                    <td width="150px">
+			<label for="stock_colour" style="width: auto; margin-top: -3ex; padding: 0;">Paper <?ws_Colour?>:<img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer;"  title="Click for more details on this field" onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockColor.html', 'Colour','newWin,left=600,width=340,top=250,height=250,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label><br />
+			<select id="stock_colour"  name="stock_colour" style="width:125px" title="The Color of your paper stock">
+				<?loop stock.colour ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop stock.colour ?>
+				
+			</select>
+           
+		</td>
+         <td width="150px">
+			<label for="stock_finish" style="width: auto; margin-top: -3ex; padding: 0;">Finish:<img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer;"  title="Click for more details on this field" onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockFinish.html','Finish','newWin,left=600,width=340,top=250,height=250,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label><br />
+			<select id="stock_finish" name="stock_finish" style="width:125px" title="The Finish/Coatings of your paper stock">
+				<?loop stock.finish ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop stock.finish ?>
+				
+			</select>
+            
+		</td>
+                 <td width="150px">
+                 <label for="stock_weight" style="width: auto; margin-top: -3ex; padding: 0;">Weight:<img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer;"  title="Click for more details on this field" onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockWeight.html','Weight','newWin1,left=600,width=585,top=250,height=285,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label><br />
+			<select id="stock_weight" name="stock_weight" style="width:125px" title="The Weight/Thickness of your paper stock">
+				<?loop stock.weight ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop stock.weight ?>
+				
+			</select>
+            
+           </td>
+           <td width="150px">
+            <label for="stock_name" style="width: auto; margin-top: -3ex; padding: 0;">Name:<img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer;" title="Click for more details on this field" onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockName.html','Name','newWin,left=600,width=340,top=250,height=250,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label><br />
+			<select id="stock_name" name="stock_name" style="width:125px" title="The Type of your paper stock">
+				<?loop stock.name ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop stock.name ?>
+				
+			</select>
+            
+                 </td>   
+       
+        </tr>
+       			<tr id="multicolor" style="display:none">
+                <td></td>
+                <td colspan="4">
+                Please specify the quantity of sheets needed for each color:
+			<table>
+            <tr><td>Blue:</td> <td><input type="text" name="multi-colour_Blue" id="multi-colour_Blue" size="16" /></td><td>Peach:</td> <td><input type="text" name="multi-colour_Peach" id="multi-colour_Peach" size="16" /><br /></td></tr>
+			<tr><td>Canary:</td> <td><input type="text" name="multi-colour_Canary" id="multi-colour_Canary" size="16" /><br /></td><td>Pink:</td> <td><input type="text" name="multi-colour_Pink" id="multi-colour_Pink" size="16" /><br /></td></tr>
+			<tr><td>Salmon:</td> <td><input type="text" name="multi-colour_Salmon" id="multi-colour_Salmon" size="16" /><br /></td><td>Goldenrod:</td> <td><input type="text" name="multi-colour_Goldenrod" id="multi-colour_Goldenrod" size="16" /><br /></td></tr>
+			<tr><td>Green:</td> <td><input type="text" name="multi-colour_Green" id="multi-colour_Green" size="16" /><br /></td><td>Ivory:</td> <td><input type="text" name="multi-colour_Ivory" id="multi-colour_Ivory" size="16" /><br /></td></tr>
+			<tr><td>White:</td> <td><input type="text" name="multi-colour_White" id="multi-colour_White" size="16" /><br /></td></tr>
+			
+            
+			</table>
+                </td>
+                    </tr>
+                     
+                     <? if service.Bindery ?>
+
+                     <tr id="frontcover1"> <td>Front Cover Print Colors *:</td>
+                 <td colspan="4"><select name="cover_colour" style="width:400px;">
+
+							
+							<option id="a276f" value="1/0">Black on 1 Side</option>
+							
+							<option id="a277f" value="1/1">Black on 2 Sides</option>
+							
+							<option id="a278f" value="4/0">Color on 1 Side</option>
+							
+							<option id="a279f" value="4/4">Color on 2 Sides</option>
+							
+						</select>
+				</td>
+                </tr>
+                     <tr id="frontcover2">
+                     <td>Front Cover Paper Stock *:</td>
+                     <td colspan="3">
+                      <p>Please choose a color, finish, weight and name.</p>
+	                 <p style="font-size:0.91em"><strong>If you cannot find the Paper Stock you are looking for below please call us at:<br /> <!--#include virtual="/includes/company_telephone_number.html"--> and we would be happy to assist you.</strong></p>
+					</td>
+                    <td><input type="button" id="cover_stock_unbind_all" value="Reset Paper" class="button" />
+                    </td>
+                    </tr>
+                    <tr id="frontcover3" style="border-bottom:1px solid #000000 !important">
+                    <td></td>
+                    <td width="150px">
+			<label for="cover_stock_colour" style="width: auto; margin-top: -3ex; padding: 0;">Paper <?ws_Colour?>: <img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer;" onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockColor.html', 'color2','newWin,left=600,width=340,top=250,height=250,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label>
+                       <br />
+			<select id="cover_stock_colour" name="cover_stock_colour" style="width:125px">
+				<?loop cover_stock.colour ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop cover_stock.colour ?>
+				
+			</select>
+            
+		</td>
+         <td width="150px">
+			<label for="cover_stock_finish" style="width: auto; margin-top: -3ex; padding: 0;">Finish:<img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer;" onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockFinish.html','Finish2','newWin,left=600,width=340,top=250,height=250,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label><br />
+			<select id="cover_stock_finish" name="cover_stock_finish" style="width:125px">
+				<?loop cover_stock.finish ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop cover_stock.finish ?>
+				
+			</select>
+            
+		</td>
+                 <td width="150px">
+                 <label for="cover_stock_weight" style="width: auto; margin-top: -3ex; padding: 0;">Weight: <img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer;" onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockWeight.html','weight2','newWin,left=600,width=585,top=250,height=285,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label><br />
+			<select id="cover_stock_weight" name="cover_stock_weight" style="width:125px">
+				<?loop cover_stock.weight ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop cover_stock.weight ?>
+				
+			</select>
+           
+           </td>
+           <td width="150px">
+            <label for="cover_stock_name" style="width: auto; margin-top: -3ex; padding: 0;">Name:<img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer; " onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockName.html', 'Name2','newWin,left=600,width=340,top=250,height=250,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label><br />
+			<select id="cover_stock_name" name="cover_stock_name" style="width:125px">
+				<?loop cover_stock.name ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop cover_stock.name ?>
+				
+			</select>
+            
+                 </td>   
+       
+        </tr>
+        
+        <tr id="backcover1">
+                 <td>Back Cover Print Colors *:</td>
+                 <td colspan="4"><select name="back_colour" style="width:400px;">
+							
+							<option id="a276b" value="1/0">Black on 1 Side</option>
+							
+							<option id="a277b" value="1/1">Black on 2 Sides</option>
+							
+							<option id="a278b" value="4/0">Color on 1 Side</option>
+							
+							<option id="a279b" value="4/4">Color on 2 Sides</option>
+							
+						</select>
+				</td>
+                </tr>
+                     <tr id="backcover2">
+                     <td>Back Cover Paper Stock *:</td>
+                     <td colspan="3">
+                      <p>Please choose a color, finish, weight and name.</p>
+	                 <p style="font-size:0.91em"><strong>If you cannot find the Paper Stock you are looking for below please call us at:<br /> <!--#include virtual="/includes/company_telephone_number.html"--> and we would be happy to assist you.</strong></p>
+					</td>
+                    <td><input type="button" id="back_stock_unbind_all" value="Reset Paper" class="button" />
+                    </td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #000000 !important" id="backcover3">
+                    <td></td>
+                    <td width="150px">
+			<label for="back_stock_colour" style="width: auto; margin-top: -3ex; padding: 0;">Paper <?ws_Colour?>: <img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer;" onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockColor.html', 'color3','newWin,left=600,width=340,top=250,height=250,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label>
+                       <br />
+			<select id="back_stock_colour" name="back_stock_colour" style="width:125px">
+				<?loop back_stock.colour ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop back_stock.colour ?>
+				
+			</select>
+            
+		</td>
+         <td width="150px">
+			<label for="back_stock_finish" style="width: auto; margin-top: -3ex; padding: 0;">Finish:<img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer;" onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockFinish.html', 'Finish3','newWin,left=600,width=340,top=250,height=250,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label><br />
+			<select id="back_stock_finish" name="back_stock_finish" style="width:125px">
+				<?loop back_stock.finish ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop back_stock.finish ?>
+				
+			</select>
+            
+		</td>
+                 <td width="150px">
+                 <label for="back_stock_weight" style="width: auto; margin-top: -3ex; padding: 0;">Weight: <img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer;" onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockWeight.html', 'weight3','newWin,left=600,width=585,top=250,height=285,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label><br />
+			<select id="back_stock_weight" name="back_stock_weight" style="width:125px">
+				<?loop back_stock.weight ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop back_stock.weight ?>
+				
+			</select>
+           
+           </td>
+           <td width="150px">
+            <label for="back_stock_name" style="width: auto; margin-top: -3ex; padding: 0;">Name:<img src="/images/main/products/question.jpg" width="18" height="18" style="float:none; cursor: pointer; " onmouseover="" onclick="window.open('/includes/main/products/tooltip/StockName.html','Name3','newWin,left=600,width=340,top=250,height=250,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/></label><br />
+			<select id="back_stock_name" name="back_stock_name" style="width:125px">
+				<?loop back_stock.name ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop back_stock.name ?>
+				
+			</select>
+            
+                 </td>   
+       
+        </tr>
+                    
+        <? endif service.Bindery ?>
+                    <? if service.Bundle ?> <!--#include virtual="/includes/main/products/Bundle.html" --><? endif service.Bundle ?>
+                    <? if service.Padding ?> <!--#include virtual="/includes/main/products/Padding.html" --><? endif service.Padding ?>
+                     <? if service.Scanning ?> <!--#include virtual="/includes/main/products/Scanning.html" --><? endif service.Scanning ?>
+                    <? if service.PlainCartons ?> <!--#include virtual="/includes/main/products/PlainCartons.html" --><? endif service.PlainCartons ?>
+                    <? if service.Drilling ?> <!--#include virtual="/includes/main/products/Drilling.html" --><? endif service.Drilling ?>
+                     <? if service.3HolePunchSing ?> <!--#include virtual="/includes/main/products/3HolePunchSing.html" --><? endif service.3HolePunchSing ?>
+                    <? if service.ShrinkWrap ?> <!--#include virtual="/includes/main/products/ShrinkWrap.html" --><? endif service.ShrinkWrap ?>
+                   <? if service.Bindery ?> <? else service.Bindery ?>  <? if service.SlipSheets ?> <!--#include virtual="/includes/main/products/SlipSheets.html" --><? endif service.SlipSheets ?> <? endif service.Bindery ?>
+                    <? if service.HandAssembly ?> <!--#include virtual="/includes/main/products/HandAssembly.html" --><? endif service.HandAssembly ?>
+                    <? if service.Laminating ?><!--#include virtual="/includes/main/products/Laminate.html" --><? endif service.Laminating ?>
+                    <? if service.Mounting ?><!--#include virtual="/includes/main/products/Mounting.html" --><? endif service.Mounting ?>
+					
+<tr>
+<td>Delivery Date *:</td>
+<td colspan="4">   
+                            
+					<select name="ddmDueDateMonth1" id="ddmDueDateMonth1" size="1">
+				<option value=""> Month </option>
+                <option value="01">January</option>
+                <option value="02">February</option>
+                <option value="03">March</option>
+                <option value="04">April</option>
+                <option value="05">May</option>
+                <option value="06">June</option>
+                <option value="07">July</option>
+                <option value="08">August</option>
+                <option value="09">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+					</select>
+					<select name="ddmDueDateDay1" id="ddmDueDateDay1" size="1">
+						<option value=""> Day </option>
+                <option value="01">01</option>
+                <option value="02">02</option>
+                <option value="03">03</option>
+                <option value="04">04</option>
+                <option value="05">05</option>
+                <option value="06">06</option>
+                <option value="07">07</option>
+                <option value="08">08</option>
+                <option value="09">09</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+                <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="26">26</option>
+                <option value="27">27</option>
+                <option value="28">28</option>
+                <option value="29">29</option>
+                <option value="30">30</option>
+                <option value="31">31</option>
+					</select>
+					<select name="ddmDueDateYear1" id="ddmDueDateYear1" size="1">
+                    <option value=""> Year </option>
+					<?loop YEARS?>
+                    	<option value="<?year?>"> <?year?> </option>
+					<?endloop YEARS?>
+					</select>
+                    <select name="ddmDueDateTime" id="ddmDueDateTime" size="1">
+                    <option value=""> Time </option>
+                <option value="7:00 am">7:00 am</option>
+                <option value="8:00 am">8:00 am</option>
+                <option value="9:00 am">9:00 am</option>
+                <option value="10:00 am">10:00 am</option>
+                <option value="11:00 am">11:00 am</option>
+                <option value="12:00 pm">12:00 pm</option>
+                <option value="1:00 pm">1:00 pm</option>
+                <option value="2:00 pm">2:00 pm</option>
+                <option value="3:00 pm">3:00 pm</option>
+                <option value="4:00 pm">4:00 pm</option>
+                <option value="5:00 pm">5:00 pm</option>
+					</select>
+                    <br />
+					<label></label><strong>*Delivery Date
+is subject to administrative approval. Orders after 4:30pm will be processed
+the next business day.</strong>
+                    </td>
+</tr>
+				<tr>
+					
+					<td style="height:23px !important;">
+						Upload Artwork File *:
+					</td>
+                     <td colspan="4" style="height:25px !important;">
+						<input onClick="no_upload()" name="filetypes" id="HardCopyOnly" value="Hard Copy Only" type="radio" />Hard Copy only</td>
+				</tr>
+                
+                <tr>
+					 <td style="height:23px !important;"></td>
+                     <td colspan="4" style="height:25px !important;">
+					<input onClick="open_upload()" name="filetypes" id="HardCopyPlusFile" value="HardCopy" type="radio" />Hard Copy and Uploading Files</td>
+                     
+				</tr>
+                <tr>
+					 <td style="height:23px !important;"></td>
+                     <td colspan="4" style="height:25px !important;">
+					<input onClick="open_upload();" name="filetypes" id="NoHardCopyPlusFile" value="No Hard Copy" type="radio" />Uploading Files Only</td>
+                     
+				</tr>
+               
+                </table>
+
+				<input type="hidden" name="format" value="PDF" id="fileformat" />
+                <table>
+                
+                <tr>
+                <td colspan="1" width="300"></td>
+                <td colspan="5" style="padding:0 0 0 0 !important"><input name="MakeQuote" class="button" type="submit" value="Request a Quote"  /> <img src="/images/misc/OR.png" />
+			<input class="button" name="MakeOrder" type="submit" value="Place an Order"  /></td>
+            </tr>
+                </table>
+</div>
+<!--
+			<input type="hidden" name="create_to_order" value="1" />  
+-->
+	</form>
+</div>
+</div>

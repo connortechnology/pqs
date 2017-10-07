@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/company_name.html"-->
+		- Order Invoice
+	<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<link href="/styles/pop-up.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/order.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/project.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/print_webpage.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/print.css" rel="stylesheet" type="text/css" media="print" />
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<STYLE type="text/css">
+@media print {
+}
+@media screen {
+   BODY {font-size: 10pt; line-height: 1em; background: silver;}
+}
+</STYLE>
+
+
+<body>
+<?if ship_address.chkBlindShipment?>
+<? if is_staff ?>
+<div class="no_print">
+<strong>To use this page:</strong><br />
+To Change the Ship From contact information select the text box in the top left (above "Ordered by") type or paste in the from information, then Select the "Actual Qty Shipped" text field and enter the quantity desired. When finished select "Save". To edit the Ship from or Actual Quantity select either **Click to edit** link and it will turn into a text box again. When finished select "Save". When you use print preview or print the page these fields will print as well.
+</div>
+<? endif is_staff ?>
+<?else ship_address.chkBlindShipment?>
+<? if is_staff ?>
+<?if edit_slip?>
+<div class="no_print">
+<strong>To use this page:</strong><br />
+Select the "Actual Qty Shipped" text field and enter the quantity desired. When you use print preview or print the page this field will print as well.
+</div>
+<?endif edit_slip?>
+<? endif is_staff ?>
+<?endif ship_address.chkBlindShipment?>
+<br/>
+<?if edit_slip?>
+<p style="font-size:36px !important; width:600 !important;  text-align: center !important;"><strong>PACKING SLIP </strong></p>
+<?endif edit_slip?>
+<form action="order_invoice_printer_friendly.html" name="packing_slip" />
+<?if ship_address.chkBlindShipment?>
+	<!--#include virtual="/includes/forms/blind_packing_slip.html"-->
+<?else ship_address.chkBlindShipment?>
+	<!--#include virtual="/includes/forms/order.html"-->
+
+<?endif ship_address.chkBlindShipment?>
+
+
+	<!-- Project Description -->
+	<!--#include virtual="/includes/forms/project.html"-->
+    <div class="category">
+
+
+<br />
+
+<? if ( $variable->{HidePricing} ) ?>
+
+<? if ( $variable->{ship_address} ) ?>
+<div id="shipping_info" style="margin-left: 1em; font-size: 8pt">
+
+<?if edit_slip?>
+
+<span class="label">Ship Via: <?ship_address.hdnShipVia1?> </span><br /><br/>
+<span class="label" >Pieces to fit per Carton: <?itemsper?> </span><br/><br/>
+<!--
+<span class="label" >Cartons for this Location: <?cartons?> </span><br/><br/>
+<span class="label" >Weight for this Location: <?weight?> </span><br/><br/>
+-->
+	Cartons Shipped: <input name="actual_shipped" value="<?ship_address.actual_shipped?>" /><br/>
+	Weight Shipped: <input name="actual_weight"  value="<?ship_address.actual_weight?>" /><br/>
+<!--
+	<input type="submit" name="submit" value="Save" />
+-->
+
+<?else edit_slip?>
+
+<div onClick="packing_slip.edit_slip.value=1;packing_slip.submit();">
+	<span class="no_print" style="cursor:pointer"> **Click to edit** </span><br/>
+
+	<span class="label">Ship Via: <?ship_address.hdnShipVia1?> </span><br /><br/>
+	<span class="label" >Pieces to fit per Carton: <?itemsper?> </span><br/><br/>
+<!--
+	<span class="label" >Cartons for this Location: <?cartons?> </span><br/><br/>
+	<span class="label" >Weight for this Location: <?weight?> </span><br/><br/>
+-->
+	Cartons Shipped: <?ship_address.actual_shipped?>
+	<br/>
+	Weight Shipped: <?ship_address.actual_weight?><br/>
+</div>
+
+<?endif edit_slip?>
+
+	<input type="hidden" name="order_Id" value="<?order_id?>" />
+	<input type="hidden" name="PackingSlip" value="1" />
+	<input type="hidden" name="ship_sid" value="<?ship_sid?>" />
+	<input type="hidden" name="edit_slip" value=""  />
+	<input type="hidden" name="shipid" value="<?shipid?>"  />
+</form>
+<br/>
+<br/>
+
+<!--
+<span class="label" >Ship To: </span><br/><br/>
+
+    <? if ship_address.txtShippingContact ?>
+       <?ship_address.txtShippingContact?>
+    <? endif ship_address.txtShippingContact ?>
+<br/>
+<br/>
+<div id="shipping_address" style="font-weight: bold;">
+    <?ship_address.txtShippingCompany?>
+<br/>
+    <?ship_address.txtShippingAddress1?>
+    <?ship_address.txtShippingAddress2?>
+
+<br/>
+
+    <?ship_address.txtShippingCity?>,
+    <?ship_address.ddmShippingStateProvince?>,
+    <?ship_address.ddmShippingCountry?>
+<br/>
+    <?ship_address.txtShippingPostalCode?>
+</div>
+<br/>
+
+
+    <?ship_address.txtShippingPhone?><br/>
+    <?ship_address.txtShippingEmail?><br/>
+</div>
+
+
+<? if additionalOrderInformation ?>
+<div style="margin-top: 1em; margin-left: 1em;">
+Additional Order Information:
+<br/>
+<?additionalOrderInformation?>
+</div>
+<? endif additionalOrderInformation ?>
+
+<? endif ( $variable->{ship_address} ) ?>
+
+
+    
+    <div id="number_of_boxes" style="margin-top: 2em; margin-left: 1em;">
+        Number of Cartons : _______________
+    </div>
+-->
+
+    <div id="signature" style="margin-top: 5em; margin-left: 1em;">
+        Recieved By: __________________________________________
+        Date: ____________________________
+    </div>
+<? endif ( $variable->{HidePricing} ) ?>
+
+
+	<? if ( ! $variable->{HidePricing} ) ?>
+	<!-- Standard disclaimer -->
+	<div id="disclaimer">
+		<!--#include virtual="/includes/order_disclaimer.html"-->
+	</div>
+	<div id="repcomment">
+		<em> Representative: </em>
+		<?AdministratorName?>
+
+		<p>
+			<em> Comments: </em>
+			<?AdministratorComments?>
+		</p>
+
+		<p>
+			<a href="#" onclick="window.close();">Close Window</a>
+		</p>
+	<? endif ( ! $variable->{HidePricing} ) ?>
+	</div>
+</body>
+</html>

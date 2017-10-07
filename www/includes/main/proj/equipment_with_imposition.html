@@ -1,0 +1,88 @@
+<fieldset>
+	<legend>
+		Imposition &amp; Equipment
+	</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<? if project.qty.0 ?>
+		<h5>Quantity of <?txtQuantity1?></h5>
+		
+		<label for="txtImposition1" class="tip" title="Refers to the arrangement of projects or pages on a press sheet or piece of film.">Imposition:</label>
+		<input id="txtImposition1" name="txtImposition1" size="9" class="smbox" />
+		<label for="txtImposition1" class="post-input">Out</label>
+		<label for="chkOverrideImposition1" class="checkbox override-post-label"><input type="checkbox" id="chkOverrideImposition1" name="chkOverrideImposition1" class="override" value="Y" />Override</label>
+		<br />
+		
+		<label for="txtImageWidth1">Width x Height:</label>
+		<input id="txtImageWidth1" name="txtImageWidth1" readonly="readonly" size="9" class="smbox" />
+		<input id="txtImageHeight1" name="txtImageHeight1" readonly="readonly" size="9" class="smbox" />
+		<label class="post-input">inches</label>
+		<br />
+		
+		<label for="ddmEquipment1">Equipment:</label>
+		<div>
+			<select id="ddmEquipment1" name="ddmEquipment1" size="1">
+				<option value="" >Equipment Options</option>
+				<?ddmEquipmentOptions1?>
+			</select>
+			<label for="chkOverrideEquipment1" class="checkbox override"><input type="checkbox" id="chkOverrideEquipment1" name="chkOverrideEquipment1" class="override" value="Y" />Override</label>
+		</div>
+	<? endif project.qty.0 ?>
+	
+	<? if project.qty.1 ?>
+		<br />
+
+		<h5>Quantity of <?txtQuantity2?></h5>
+		
+		<label for="txtImposition2" class="tip" title="Refers to the arrangement of projects or pages on a press sheet or piece of film.">Imposition:</label>
+		<input id="txtImposition2" name="txtImposition2" size="9" class="smbox" />
+		<label for="txtImposition2" class="post-input">Out</label>
+		<label for="chkOverrideImposition2" class="checkbox override-post-label"><input type="checkbox" id="chkOverrideImposition2" name="chkOverrideImposition2" class="override" value="Y" />Override</label>
+		<br />
+		
+		<label for="txtImageWidth2">Width x Height:</label>
+		<input id="txtImageWidth2" name="txtImageWidth2" readonly="readonly" size="9" class="smbox" />
+		<input id="txtImageHeight2" name="txtImageHeight2" readonly="readonly" size="9" class="smbox" />
+		<label class="post-input">inches</label>
+		<br />
+		
+		<label for="ddmEquipment2">Equipment:</label>
+		<div>
+			<select id="ddmEquipment2" name="ddmEquipment2" size="1">
+				<option value="" >Equipment Options</option>
+				<?ddmEquipmentOptions2?>
+			</select>
+			<label for="chkOverrideEquipment2" class="checkbox override"><input type="checkbox" id="chkOverrideEquipment2" name="chkOverrideEquipment2" class="override" value="Y" />Override</label>
+		</div>
+	<? endif project.qty.1 ?>
+	
+	<? if project.qty.2 ?>
+		<br />
+		
+		<h5>Quantity of <?txtQuantity3?></h5>
+		
+		<label for="txtImposition3" class="tip" title="Refers to the arrangement of projects or pages on a press sheet or piece of film.">Imposition:</label>
+		<input id="txtImposition3" name="txtImposition3" size="9" class="smbox" />
+		<label for="txtImposition3" class="post-input">Out</label>
+		<label for="chkOverrideImposition3" class="checkbox override-post-label"><input type="checkbox" id="chkOverrideImposition3" name="chkOverrideImposition3" class="override" value="Y" />Override</label>
+		<br />
+		
+		<label for="txtImageWidth3">Width x Height:</label>
+		<input id="txtImageWidth3" name="txtImageWidth3" readonly="readonly" size="9" class="smbox" />
+		<input id="txtImageHeight3" name="txtImageHeight3" readonly="readonly" size="9" class="smbox" />
+		<label class="post-input">inches</label>
+		<br />
+
+		<label for="ddmEquipment3">Equipment:</label>
+		<div>
+			<select id="ddmEquipment3" name="ddmEquipment3" size="1">
+				<option value="" >Equipment Options</option>
+				<?ddmEquipmentOptions3?>
+			</select>
+			<label for="chkOverrideEquipment3" class="checkbox override"><input type="checkbox" id="chkOverrideEquipment3" name="chkOverrideEquipment3" class="override" value="Y" />Override</label>
+		</div>
+	<? endif project.qty.2 ?>
+
+	<br />
+</fieldset>

@@ -1,0 +1,38 @@
+<fieldset id="templates">
+	<legend>Template Selection</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<div>
+		<label for="template-LF-Banner">
+			<img src="/images/main/project_templates/large_format/banner_landscape.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-LF-Banner" value="LF-Banner" <?templateLF-Banner?> />
+			Banner
+		</label>
+	</div>
+
+	<div>
+		<label for="template-LF-BannerGrommets">
+			<img src="/images/main/project_templates/large_format/banner_grommeted.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-LF-BannerGrommets" value="LF-BannerGrommets" <?templateLF-BannerGrommets?> />
+			Grommeted Banner
+		</label>
+	</div>
+
+	<div>
+		<label for="template-LF-BannerRoped">
+			<img src="/images/main/project_templates/large_format/banner_roped.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-LF-BannerRoped" value="LF-BannerRoped" <?templateLF-BannerRoped?> />
+			Roped Banner
+		</label>
+	</div>
+
+	<div>
+		<label for="template-LF-BannerStitched">
+			<img src="/images/main/project_templates/large_format/banner_landscape_with_hem.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-LF-BannerStitched" value="LF-BannerStitched" onclick="project_template(this.form); stitchorweld = 'Stitch'; check_for_merge();" <?templateLF-BannerStitched?> />
+			Stitched Banner
+		</label>
+	</div>
+	<br />
+</fieldset>

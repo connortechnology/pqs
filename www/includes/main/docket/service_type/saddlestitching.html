@@ -1,0 +1,22 @@
+<? if ( $$variable{'rdbCover'} )?>
+<?rdbCover?>
+<? endif ( $$variable{'rdbCover'} )?>
+<span class="label">Pockets </span>
+<?Pockets?>
+<? if ( $$variable{'txtInsertQuantity'} )?>
+<span class="label">Inserts </span><?txtInsertQuantity?>
+<? endif ( $$variable{'txtInsertQuantity'} )?>
+<? if ($$variable{'Page1'} && $$variable{'Page2'})?>
+<span class="label">Between <?Page1?></span>&amp;<?Page2?>
+<? endif ($$variable{'Page1'} && $$variable{'Page2'})?>
+<? if ($$variable{'Width'} && $$variable{'Height'})?>
+<span class="label">Size </span><?Width?>x<?Height?>
+<? endif ($$variable{'Width'} && $$variable{'Height'})?>
+<? if ($$variable{'rdbGateFoldFit'}) ?>
+<span class="label">GF </span>
+<?rdbGateFoldFit?>
+<? endif ($$variable{'rdbGateFoldFit'}) ?>
+<span class="label">Equipment</span>
+<?txtEquipment1?>
+<Strong>Staples:<?UseStaples?></Strong>
+<br />

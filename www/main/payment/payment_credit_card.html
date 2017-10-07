@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title><!--#include virtual="/includes/web_page_title.html" -->Order - Credit Card Payment<!--#include virtual="/includes/web_page_title_end.html" --></title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-main-link.html" -->
+<!--#include virtual="/includes/h3-js.html" -->
+<script language="javascript" type="text/javascript" src="/javascripts/detect.js"></script>
+<script language="javascript" type="text/javascript" src="/javascripts/other.js"></script>
+
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+<h1>Order Credit Card Payment</h1>
+<span class="colTitle2">
+Step 6: Submit Order
+Information
+</span>
+<br />
+Please complete the form below, and press the continue button.
+<form method="post" name="f1" action="/main/payment/payment_verification.html">
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+<tr>
+<td width="150" height="20">
+</td>
+<td width="450" height="20">
+</td>
+</tr>
+<tr>
+<td colspan="2" height="30">
+<strong>
+Credit Card Information:
+</strong>
+</td>
+</tr>
+<tr>
+<td colspan="2" height="15">&nbsp;
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;Credit Card Type:
+</td>
+<td height="30">
+<select name="ddmCreditCardType" onchange="off(this.options[this.selectedIndex])" onfocus="on(this.options[this.selectedIndex]);on(this)" onblur="off(this.options[this.selectedIndex]);off(this)">
+<option value="">
+Select
+</option>
+<option value="Visa">
+Visa
+</option>
+<option value="American Express">
+American Express
+</option>
+</select>
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;Credit Card #:
+</td>
+<td height="30">
+<input type="text" name="txtCreditCardNumber" size="30"  class="input-text" onfocus="on(this)" onblur="off(this)">
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;Expire Date:
+</td>
+<td height="30">
+<select name="ddmExpiryMonth" onchange="off(this.options[this.selectedIndex])" onfocus="on(this.options[this.selectedIndex]);on(this)" onblur="off(this.options[this.selectedIndex]);off(this)">
+<option value="">
+Select
+</option>
+<?ddmExpiryMonth?>
+</select>
+<select name="ddmExpiryYear" onchange="off(this.options[this.selectedIndex])" onfocus="on(this.options[this.selectedIndex]);on(this)" onblur="off(this.options[this.selectedIndex]);off(this)">
+<option value="">
+Select
+</option>
+<?ddmExpiryYear?>
+</select>
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;Card Holder:
+</td>
+<td height="30">
+<input type="text" name="txtCardHolder" size="30"  class="input-text" onfocus="on(this)" onblur="off(this)">
+</td>
+</tr>
+<tr>
+<td colspan="2" height="15">&nbsp;
+</td>
+</tr>
+</table>
+<!--
+<table border="0" cellspacing="0" cellpadding="0" class="tableAuto">
+<tr>
+<td width="150">
+</td>
+<td><a href="#" onclick="btnOff('b1');f1.btnSubmitOrder.value='Continue';f1.submit();return false;" onmouseover="btnOn('b1');" onmouseout="btnOff('b1');"><img src="/images/buttons/off/continue.gif" width="56" height="19" border="0" name="b1" /></a></td>
+</tr>
+</table>
+<input type="hidden" name="btnSubmitOrder"/>
+-->
+<div class="button-bar">
+<input class="button" type="submit" name="btnSubmitOrder" value="Continue" />
+	<br class="clear" />
+</div>
+<input type="hidden" name="PaymentIndex" value="<?PaymentIndex?>"/>
+<input type="hidden" name="order_id" value="<?order_id?>"/>
+</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/payment.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

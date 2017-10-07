@@ -1,0 +1,23 @@
+<fieldset>
+	<legend>
+		Insert(s)
+	</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<? while ( @$variable{'Num','Page1','Page2','Width','Height'} = splice @{$$variable{'INSERTS'}},0,5; ) ?>
+		<p>Specify the pages in which the insert falls between.</p>
+		<label for="txtInsertPage1<?Num?>">Insert Between Pages:</label>
+		<input id="txtInsertPage1<?Num?>" name="txtInsertPage1<?Num?>" size="9" value="<?Page1?>" class="smbox" />
+		<label for="txtInsertPage2<?Num?>" class="post-input">&amp;</label>
+		<input id="txtInsertPage2<?Num?>" name="txtInsertPage2<?Num?>" size="9" value="<?Page2?>" class="smbox" />
+		<br />
+	
+		<p>What are the finished dimensions of the inserts? Must include 3 inches for bindery if under final spread size.</p>
+		<label for="final_width<?Num?>">Finished Dimensions:</label>
+		<input id="final_width<?Num?>" name="final_width<?Num?>" size="9" value="<?Width?>" class="smbox" />
+		<input id="final_height<?Num?>" name="final_height<?Num?>" size="9" value="<?Height?>" class="smbox" />
+		<label for="final_height<?Num?>" class="post-input">(W&#8243; &#215; H&#8243;)</label>
+		<br />
+	<? endwhile ( @$variable{'Num','Page1','Page2','Width','Height'} = splice @{$$variable{'INSERTS'}},0,5; ) ?>
+</fieldset>

@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Quotes - Information
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" media="screen" />
+	
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript">
+		function fill_user(form) {
+			var name = form.ddmQuoteForUsers.options[form.ddmQuoteForUsers.selectedIndex].text.split(' ' );
+			var email = form.ddmQuoteForUsers.options[form.ddmQuoteForUsers.selectedIndex].value;
+	
+			if ( name[0] == 'Select' ) {
+				form.ForFirstName.value = '';
+				form.ForLastName.value = '';
+				form.ForEmail.value = '';
+			} else {
+				form.ForFirstName.value = name[0];
+				form.ForLastName.value = name[1];
+				form.ForEmail.value = email;
+			} // end if
+		} // end function
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Quotes &#187;</span> Information</h1>
+
+	<? if ( $$variable{'Reseller'} eq 'Y' or $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+		<? if ( $$variable{'user_id'} ne '0' ) ?>
+			<p>
+				If you would like to send a copy of this quotation to someone on your behalf
+				please fill in the necessary information below. This quote will be stored in
+				your quote history for future reference. If it is for your own personal reference
+				leave the &quot;Prepared For&quot; fields blank.
+			</p>
+		<? endif ( $$variable{'user_id'} ne '0' ) ?>
+	<? endif ( $$variable{'Reseller'} eq 'Y' or $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+
+	<form method="post" name="f1" action="/main/quote/quote_submit.html">
+		<fieldset>
+			<legend>
+				Prepared By
+			</legend>
+			
+			<p class="none">&nbsp;</p>
+			
+			<label for="ByCompanyName">Company Name:</label>
+			<input type="text" id="ByCompanyName" name="ByCompanyName" size="30"  class="input-text" value="<?ByCompanyName?>" />
+			<br />
+			
+			<label for="ByTitle">Title:</label>
+			<input type="text" id="ByTitle" name="ByTitle" size="30"  class="input-text" value="<?ByTitle?>" />
+			<br />
+			
+			<label>Salutation:</label>
+			
+			<label for="BySalutationMr" class="radio"><input type="radio" id="BySalutationMr" name="BySalutation" value="Mr." <?BySalutationMr.?> />Mr.</label>
+			
+			<label for="BySalutationMrs" class="radio"><input type="radio" id="BySalutationMrs" name="BySalutation" value="Mrs" <?BySalutationMrs.?> />Mrs.</label>
+			
+			<label for="BySalutationMs" class="radio"><input type="radio" id="BySalutationMs" name="BySalutation" value="Ms." <?BySalutationMs.?> />Ms.</label>
+			
+			<label for="BySalutationMiss" class="radio"><input type="radio" id="BySalutationMiss" name="BySalutation" value="Miss" <?BySalutationMiss?> />Miss</label>
+			
+			<br />
+			
+			<label for="ByFirstName">First Name:</label>
+			<input type="text" id="ByFirstName" name="ByFirstName" size="30"  class="input-text" value="<?ByFirstName?>" />
+			<br />
+			
+			<label for="ByLastName">Last Name:</label>
+			<input type="text" id="ByLastName" name="ByLastName" size="30"  class="input-text" value="<?ByLastName?>" />
+			<br />
+			
+			<label for="ByAddress1">Address:</label>
+			<input type="text" id="ByAddress1" name="ByAddress1" size="30"  class="input-text" value="<?ByAddress1?>" />
+			<br />
+			
+			<label>&nbsp;</label>
+			<input type="text" id="ByAddress2" name="ByAddress2" size="30"  class="input-text" value="<?ByAddress2?>" />
+			<br />
+			
+			<label for="ByCity">City:</label>
+			<input type="text" id="ByCity" name="ByCity" size="30"  class="input-text" value="<?ByCity?>" />
+			<br />
+			
+			<label for="ByStateProvince">Province/State:</label>
+			<select id="ByStateProvince" name="ByStateProvince">
+				<option value=""> Select </option>
+				<?ByStateProvince?>
+			</select>
+			<br />
+			
+			<label for="ByPostalCode">Postal Code/Zip:</label>
+			<input type="text" id="ByPostalCode" name="ByPostalCode" size="30"  class="input-text" value="<?ByPostalCode?>" />
+			<br />
+			
+			<label for="ByCountry">Country:</label>
+			<select id="ByCountry" name="ByCountry">
+				<option value=""> Select </option>
+				<?ByCountry?>
+			</select>
+			<br />
+			
+			<label for="ByPhone">Phone:</label>
+			<input type="text" id="ByPhone" name="ByPhone" size="30"  class="input-text" value="<?ByPhone?>" />
+			<br />
+			
+			<label for="ByExtension">Extension:</label>
+			<input type="text" id="ByExtension" name="ByExtension" size="30"  class="input-text" value="<?ByExtension?>" maxlength="4" />
+			<br />
+			
+			<label for="ByFax">Fax:</label>
+			<input type="text" id="ByFax" name="ByFax" size="30"  class="input-text" value="<?ByFax?>" />
+			<br />
+			
+			<label for="ByEmail">E-mail Address:</label>
+			<input type="text" id="ByEmail" name="ByEmail" size="30"  class="input-text" value="<?ByEmail?>" />
+			<br />
+		</fieldset>
+
+		<? if ( $$variable{'Reseller'} eq 'Y' or $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+			<? if ( $$variable{'user_id'} ne '0' ) ?>
+				
+				<fieldset>
+					<legend>
+						Prepared For
+					</legend>
+					
+					<p class="none">&nbsp;</p>
+					
+					<? if ($$variable{'ddmQuoteForUsers'} ne '') ?>
+						<label for="ddmQuoteForUsers">Users:</label>
+						<select id="ddmQuoteForUsers" name="ddmQuoteForUsers" onchange="fill_user(f1)";>
+							<option value=""> Select </option>
+							<?ddmQuoteForUsers?>
+						</select>
+						<br />
+					<? endif ($$variable{'ddmQuoteForUsers'} ne '') ?>
+
+					<label for="ForCompanyName">Company Name:</label>
+					<input type="text" id="ForCompanyName" name="ForCompanyName" value="<?ForCompanyName?>" size="30"  class="input-text" />
+					<br />
+					
+					<label for="ForTitle">Title:</label>
+					<input type="text" id="ForTitle" name="ForTitle" value="<?ForTitle?>" size="30"  class="input-text" />
+					<br />
+					
+					<label>Salutation:</label>
+					
+					<label for="ForSalutationMr" class="radio"><input type="radio" id="ForSalutationMr" name="ForSalutation" value="Mr." <?ForSalutationMr.?> />Mr.</label>
+
+					<label for="ForSalutationMrs" class="radio"><input type="radio" id="ForSalutationMrs" name="ForSalutation" value="Mrs." <?ForSalutationMrs.?> />Mrs.</label>
+
+					<label for="ForSalutationMs" class="radio"><input type="radio" id="ForSalutationMs" name="ForSalutation" value="Ms." <?ForSalutationMs.?> />Ms.</label>
+
+					<label for="ForSalutationMiss" class="radio"><input type="radio" id="ForSalutationMiss" name="ForSalutation" value="Miss" <?ForSalutationMiss?> />Miss													</label>
+
+					<br />
+					
+					<label for="ForFirstName"><span class="required">*</span>First Name:</label>
+					<input type="text" id="ForFirstName" name="ForFirstName" value="<?ForFirstName?>" size="30"  class="input-text" />
+					<br />
+					
+					<label for="ForLastName"><span class="required">*</span>Last Name:</label>
+					<input type="text" id="ForLastName" name="ForLastName" value="<?ForLastName?>" size="30" class="input-text" />
+					<br />
+					
+					<label for="ForAddress1"><span class="required">*</span>Address:</label>
+					<input type="text" id="ForAddress1" name="ForAddress1" value="<?ForAddress1?>" size="30"  class="input-text" />
+					<br />
+					
+					<label>&nbsp;</label>
+					<input type="text" id="ForAddress2" name="ForAddress2" value="<?ForAddress2?>" size="30"  class="input-text" />
+					<br />
+					
+					<label for="ForCity"><span class="required">*</span>City:</label>
+					<input type="text" id="ForCity" name="ForCity" value="<?ForCity?>" size="30"  class="input-text" />
+					<br />
+					
+					<label for="ForStateProvince"><span class="required">*</span>Province/State:</label>
+					<select id="ForStateProvince" name="ForStateProvince">
+						<option value=""> Select </option>
+						<?ForStateProvince?>
+					</select>
+					<br />
+					
+					<label for="ForPostalCode"><span class="required">*</span>Postal Code/Zip:</label>
+					<input type="text" size="30"  class="input-text" id="ForPostalCode" name="ForPostalCode" value="<?ForPostalCode?>" />
+					<br />
+					
+					<label for="ForCountry"><span class="required">*</span>Country:</label>
+					<select id="ForCountry" name="ForCountry">
+						<option value=""> Select </option>
+						<?ForCountry?>
+					</select>
+					<br />
+					
+					<label for="ForPhone"><span class="required">*</span>Phone:</label>
+					<input type="text" id="ForPhone" name="ForPhone" value="<?ForPhone?>" size="30"  class="input-text" />
+					<br />
+					
+					<label for="ForExtension">Extension:</label>
+					<input type="text" id="ForExtension" name="ForExtension" value="<?ForExtension?>" size="30" class="input-text" maxlength="4" />
+					<br />
+					
+					<label for="ForFax">Fax:</label>
+					<input type="text" id="ForFax" name="ForFax" value="<?ForFax?>" size="30"  class="input-text" />
+					<br />
+					
+					<label for="ForEmail"><span class="required">*</span>E-mail Address:</label>
+					<input type="text" id="ForEmail" name="ForEmail" value="<?ForEmail?>" size="30"  class="input-text" />
+					<br />
+				</fieldset>
+
+			<? endif ( $$variable{'user_id'} ne '0' ) ?>
+		<? endif ( $$variable{'Reseller'} eq 'Y' or $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+
+		<div class="button-bar">
+			<input type="button" class="button right" value="Save and Continue" onclick="f1.btnFunction.value='Continue';f1.submit();return false;" />
+			<br class="clear" />
+		</div>
+
+		<input type="hidden" name="btnFunction" />
+	</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/quote.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

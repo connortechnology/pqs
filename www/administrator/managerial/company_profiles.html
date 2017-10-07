@@ -1,0 +1,684 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Mangerial - Company Profile
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Managerial &#187;</span> Company Profiles</h1>
+
+	<p>Were you looking for the <a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">User Profile Page</a>?</p>
+	<p>
+	All fields marked with an Asterisk (*) are required. Blank or Null values are
+not acceptable, however "0" is valid.
+	</p>
+
+	<form id="f1" name="f1" method="post" onsubmit="return fmCheck(f1);" action="/administrator/managerial/company_profiles.html">
+
+		<fieldset>
+			<legend>
+				Company
+			</legend>
+	
+			<p class="none">&nbsp;</p>
+	
+			<label for="ddmCustomer">Company Name:</label>
+			<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
+				<option value=""> Select a Company </option>
+				<option value=""> ----------------- </option>
+				<?ddmCustomer?>
+			</select>
+			<br />
+	
+			<label for="txtSearchAccountNum">Account Number:</label>
+			<input type="text" id="txtSearchAccountNum" name="txtSearchAccountNum" class="smBox" size="13" />
+			<input class="button smGo" type="submit" name="btnFunction" value="Go" />
+			<br />
+			
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="&lt;&lt;" />
+				<input class="button" type="submit" name="btnFunction" value="&gt;&gt;" />
+				<input class="button" type="button" name="btnFunction" value="New" onclick="addCheck(f1);" />
+				<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=4;" />
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Account Information
+			</legend>
+
+			<p><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">User Profile Page</a></p>
+
+			<label for="txtCompanyName">* Company Name:</label>
+			<input type="text" size="30" class="input-text" id="txtCompanyName" name="txtCompanyName" value="<?txtCompanyName?>" />
+			<br />
+
+			<label for="txtAccountNum">Account Number:</label>
+			<input type="text" size="30" class="smBox" id="txtAccountNum" name="txtAccountNum" value="<?txtAccountNum?>" />
+			<br />
+
+			<label>* Reseller:</label>
+			<label for="rdbResellerYes" class="radio"><input type="radio" id="rdbResellerYes" name="rdbReseller" value="Y" <?rdbResellerY?> />Yes</label>
+			<label for="rdbResellerNo" class="radio"><input type="radio" id="rdbResellerNo" name="rdbReseller" value="N" <?rdbResellerN?> />No</label>
+			<br />
+
+			<label for="ddmSalesPerson">* Representative:</label>
+			<select id="ddmSalesPerson" name="ddmSalesPerson" onchange="fmChange=1;">
+				<option value=""> Select a sales person </option>
+				<?ddmSalesPeople?>
+			</select>
+			<br />
+            
+            <label>* Activated Account:</label>
+			<label for="rdbAccountActivationYes" class="radio"><input type="radio" id="rdbAccountActivationYes" name="rdbAccountActivation" value="Y" <?rdbAccountActivationY?> />Yes</label>
+			<label for="rdbAccountActivationNo" class="radio"><input type="radio" id="rdbAccountActivationNo" name="rdbAccountActivation" value="N" <?rdbAccountActivationN?> />No</label>
+			<br />
+            
+            <label for="txtNotificationEmail">Notification E-mail:</label>
+			<input type="text" size="30" class="input-text" id="txtNotificationEmail" name="txtNotificationEmail" value="<?txtNotificationEmail?>" />
+			<br />
+			<label>* Division: </label>
+			<select id="ddmDivision" name="ddmDivision" onchange="fmChange=1;">
+				<option value=""> Select a Division</option>
+				<?ddmDivision?>
+			</select>
+
+			<br />
+
+            
+            
+            
+		</fieldset>
+        
+		<fieldset>
+			<legend>
+				Supplier Information
+			</legend>
+            
+            <p>Is this company also a supplier for outsorced services and materials?</p>
+            
+            <label>* Supplier:</label>
+			<label for="rdbSupplierYes" class="radio"><input type="radio" id="rdbSupplierYes" name="rdbSupplier" value="Y" <?rdbSupplierY?> />Yes</label>
+			<label for="rdbSupplierNo" class="radio"><input type="radio" id="rdbSupplierNo" name="rdbSupplier" value="N" <?rdbSupplierN?> />No</label>
+			<br />
+           
+       	</fieldset>
+
+		<fieldset>
+			<legend>
+				Pricing Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+			<label for="ddmCountyTax">County Tax:</label>
+			<select id="ddmCountyTax" name="ddmCountyTax" onchange="fmChange=1;">
+				<option value="NULL"> Select a County Tax </option>
+				<option value=""> -------------------------- </option>
+				<?ddmCountyTax?>
+			</select>
+			<br />
+            
+			<label for="ddmPriceList">* Price List:</label>
+			<select id="ddmPriceList" name="ddmPriceList" onchange="fmChange=1;">
+				<option value=""> Select a Price list </option>
+				<option value=""> -------------------------- </option>
+				<?ddmPriceList?>
+			</select>
+			<br />
+
+			<label for="txtPricingLevel">* Markup/Discount:</label>
+			<input type="text" size="9" class="smBox" id="txtPricingLevel" name="txtPricingLevel" value="<?txtPricingLevel?>" />
+			<br />
+
+			<span class="label">Federal/GST Tax Exempt:</span>
+			<label for="rdbGSTExemptYes" class="radio"><input type="radio"	id="rdbGSTExemptYes" name="rdbGSTExempt" value="Y" <?rdbGSTExemptY?> />Yes</label>
+			<label for="rdbGSTExemptNo" class="radio"><input type="radio"	id="rdbGSTExemptNo" name="rdbGSTExempt" value="N" <?rdbGSTExemptN?> />No</label>
+			<br />
+
+			<span class="label">Provincial/State Tax Exempt:</span>
+			<label for="rdbPSTExemptYes" class="radio"><input type="radio"	id="rdbPSTExemptYes" name="rdbPSTExempt" value="Y" <?rdbPSTExemptY?> />Yes</label>
+			<label for="rdbPSTExemptNo" class="radio"><input type="radio"	id="rdbPSTExemptNo" name="rdbPSTExempt" value="N" <?rdbPSTExemptN?> />No</label>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Project/Service View Flags
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="ysnpricingprojectview" title="Display only the service and materials totals. If 'Separate Stock' is false only a final total is shown.">Display sub-totals only?</label>
+			<input type="checkbox" id="ysnpricingprojectview" name="ysnpricingprojectview" value="1" <?ysnpricingprojectview?> />
+			<br />
+
+			<label for="ysnpricingservice" class="sub tip" title="Display individual service pricing on service pages and project view pages. If set to no service prices are sub-totaled per category. Note: Has no effect if 'Totals Only' is true.">&#8226; Show pricing per service?</label>
+			<input type="checkbox" id="ysnpricingservice" name="ysnpricingservice" value="1" <?ysnpricingservice?> />
+			<br />
+
+			<label for="ysnseparatestock" title="Diplay stock as a seperate cost to the service (on both services pages and project view)."> Separate Stock Price?</label>
+			<input type="checkbox" id="ysnseparatestock" name="ysnseparatestock" value="1" <?ysnseparatestock?> />
+			<br />
+
+			<label for="ysnpricingquotes">Quotes and Orders:</label>
+			<input type="checkbox" id="ysnpricingquotes" name="ysnpricingquotes" value="1" <?ysnpricingquotes?> />
+			<br />
+
+			<label for="products_only" title="The customer can only use predefined projects, they can&#8217;t create custom projects or edit project services.">Products Only?</label>
+			<input type="checkbox" id="products_only" name="ysnproductsonly" value="1" <?ysnproductsonly?> />
+			<br />
+			<label for="disabled_services" title="The customer can not edit the selected service types">Disabled Services:</label>
+			<select id="selectCustomerServiceType" name="selectCustomerServiceType" size="10" multiple="multiple">
+				<?selectCustomerServiceType?>
+			</select>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Credit Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtTerms">* Terms:</label>
+			<input type="text" size="30" class="smBox" id="txtTerms" name="txtTerms" value="<?txtTerms?>" />
+			<label for="" class="label">&nbsp;Days</label>
+			<br />
+
+			<label for="txtCreditLimit">Credit Account Limit:</label>
+			<input type="text" size="30" class="smBox" id="txtCreditLimit" name="txtCreditLimit" value="<?txtCreditLimit?>" />
+			<br />
+
+			<label>Current Credit Balance:</label>
+			<?CreditBalance?>
+			<br />
+
+			<label>Remaining Credit:</label>
+			<?CreditRemaining?>
+			<br />
+
+			<label>* Credit Hold:</label>
+			<label for="rdbCreditHoldYes" class="radio"><input type="radio" id="rdbCreditHoldYes" name="rdbCreditHold" value="Y" <?rdbCreditHoldY?> />Yes</label>
+			<label for="rdbCreditHoldNo" class="radio"><input type="radio" id="rdbCreditHoldNo" name="rdbCreditHold" value="N" <?rdbCreditHoldN?> />No</label>
+			<br />
+
+			<label for="txtDownpayment">* Required Downpayment:</label>
+			<input type="text" size="30" class="smBox" id="txtDownpayment" name="txtDownpayment" value="<?txtDownpayment?>" />
+			<label for="" class="label">&nbsp;%</label>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Marketing Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="selectCustomerCategories">Customer Category:</label>
+			<select id="selectCustomerCategories" name="selectCustomerCategories" size="4" multiple="multiple">
+				<?selectCustomerCategories?>
+			</select>
+			<br />
+
+			<label>&nbsp;</label>
+			<label class="label">Ctrl+click to select multiple values</label>
+			<br />
+
+			<label for="txtCustomGreeting">Greeting Message:</label>
+			<textarea id="txtCustomGreeting" name="txtCustomGreeting"><?txtCustomGreeting?></textarea>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Contact Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtAddress1">Address:</label>
+			<input type="text" size="30" class="input-text" id="txtAddress1" name="txtAddress1" value="<?txtAddress1?>" />
+			<br />
+
+			<label>&nbsp;</label>
+			<input type="text" size="30" class="input-text" id="txtAddress2" name="txtAddress2" value="<?txtAddress2?>" />
+			<br />
+
+			<label for="txtCity">City:</label>
+			<input type="text" size="30" class="input-text" id="txtCity" name="txtCity" value="<?txtCity?>" />
+			<br />
+			
+			<label for="ddmStateProvince">Province/State:</label>
+			<select id="ddmStateProvince" name="ddmStateProvince" onchange="fmChange=1;">
+				<option value=""> Select </option>
+				<?ddmStateProvince?>
+			</select>
+			<br />
+			
+			<label for="txtPostalCode">Postal/Zip Code:</label>
+			<input type="text" id="txtPostalCode" name="txtPostalCode" size="30" class="input-text" value="<?txtPostalCode?>" />
+			<br />
+			
+			<label for="ddmCountry">Country:</label>
+			<select id="ddmCountry" name="ddmCountry" onchange="fmChange=1;">
+				<option value=""> Select </option>
+				<?ddmCountry?>
+			</select>
+			<br />
+
+			<label for="txtPhone">Phone:</label>
+			<input type="text" size="30" class="input-text" id="txtPhone" name="txtPhone" value="<?txtPhone?>" />
+			<br />
+
+			<label for="txtExtension">Extension:</label>
+			<input type="text" size="30" class="input-text" id="txtExtension" name="txtExtension" value="<?txtExtension?>" maxlength="4" />
+			<br />
+
+			<label for="txtFax">Fax:</label>
+			<input type="text" size="30" class="input-text" id="txtFax" name="txtFax" value="<?txtFax?>" />
+			<br />
+		</fieldset>
+		
+		<fieldset>
+			<legend>
+				Business Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtLegalBusinessName">Legal Name:</label>
+			<input type="text" size="30" class="input-text" id="txtLegalBusinessName" name="txtLegalBusinessName" value="<?txtLegalBusinessName?>" />
+			<br />
+
+			<label>Legal Form:</label>
+			<div>
+				<label for="rdbLegalFormCorporation" class="radio"><input type="radio" id="rdbLegalFormCorporation" name="rdbLegalForm" value="Corporation" <?rdbLegalFormCorporation?> />Corporation</label><br />
+				<label for="rdbLegalFormSoleProprietor" class="radio"><input type="radio" id="rdbLegalFormSoleProprietor" name="rdbLegalForm" value="SoleProprietor" <?rdbLegalFormSoleProprietor?> />Sole Proprietor</label><br />
+				<label for="rdbLegalFormPartnership" class="radio"><input type="radio" id="rdbLegalFormPartnership" name="rdbLegalForm" value="Partnership" <?rdbLegalFormPartnership?> />Partnership</label><br />
+			</div>
+			<br />
+
+			<label for="txtBusinessType">Business Type:</label>
+			<input type="text" size="30" class="input-text" id="txtBusinessType" name="txtBusinessType" value="<?txtBusinessType?>" />
+			<br />
+
+			<label for="ddmStartMonth">Date Established:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth" class="marg-bot" onchange="fmChange=1;">
+				<option value=""> Select </option>
+				<?ddmStartMonth?>
+			</select>
+			<input type="text" id="txtStartYear" name="txtStartYear" value="<?txtStartYear?>" class="smBox marg-bot" size="6" />
+			<br />
+
+			<label for="txtPresidentOwner">President/Owner/CEO:</label>
+			<input type="text" size="30" class="input-text" id="txtPresidentOwner" name="txtPresidentOwner" value="<?txtPresidentOwner?>" />
+			<br />
+
+			<label for="ddmEmployees">Employees:</label>
+			<select id="ddmEmployees" name="ddmEmployees" onchange="fmChange=1;">
+				<option value=""> Select </option>
+				<?ddmEmployees?>
+			</select>
+			<br />
+
+			<label for="ddmAnnualSales">Annual Sales:</label>
+			<select id="ddmAnnualSales" name="ddmAnnualSales" onchange="fmChange=1;">
+				<option value=""> Select </option>
+				<?ddmAnnualSales?>
+			</select>
+			<br />
+
+			<label for="txtPSTNumber">Province/State #:</label>
+			<input type="text" size="30" class="input-text" id="txtPSTNumber" name="txtPSTNumber" value="<?txtPSTNumber?>" />
+			<br />
+
+			<label for="txtGSTNumber">Federal/GST #:</label>
+			<input type="text" size="30" class="input-text" id="txtGSTNumber" name="txtGSTNumber" value="<?txtGSTNumber?>" />
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Bank Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtBankName">Bank Name:</label>
+			<input type="text" size="30" class="input-text" id="txtBankName" name="txtBankName" value="<?txtBankName?>" />
+			<br />
+
+			<label for="txtBankBranch">Branch #:</label>
+			<input type="text" size="30" class="input-text" id="txtBankBranch" name="txtBankBranch" value="<?txtBankBranch?>" />
+			<br />
+
+			<label for="txtBankAccountNo">Bank Account #:</label>
+			<input type="text" size="30" class="input-text" id="txtBankAccountNo" name="txtBankAccountNo" value="<?txtBankAccountNo?>" />
+			<br />
+
+			<label for="txtBankAccountManager">Account Manager:</label>
+			<input type="text" size="30" class="input-text" id="txtBankAccountManager" name="txtBankAccountManager" value="<?txtBankAccountManager?>" />
+			<br />
+
+			<label for="txtBankPhone">Bank Phone:</label>
+			<input type="text" size="30" class="input-text" id="txtBankPhone" name="txtBankPhone" value="<?txtBankPhone?>" />
+			<br />
+
+			<label for="txtBankFax">Bank Fax:</label>
+			<input type="text" size="30" class="input-text" id="txtBankFax" name="txtBankFax" value="<?txtBankFax?>" />
+			<br />
+
+			<label for="txtBankEmail">Bank E-mail:</label>
+			<input type="text" size="30" class="input-text" id="txtBankEmail" name="txtBankEmail" value="<?txtBankEmail?>" />
+			<br />
+		</fieldset>
+
+		<?loop SHIPPING_ADDRESSES?>
+		<fieldset>
+			<legend>
+				Shipping Information
+			</legend>
+			
+			<p class="none">&nbsp;</p>
+
+			<label for="txtShippingCompanyName">Company Name:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingCompanyName" name="txtShippingCompanyName-<?shipid?>" value="<?strcompanyname?>" />
+			<br />
+
+			<label>Salutation:</label>
+
+			<label for="rdbShippingSalutationMr" class="radio">
+				<input type="radio" id="rdbShippingSalutationMr" name="rdbShippingSalutation-<?shipid?>" value="Mr." <?rdbSalutationMr.?> />Mr.
+			</label>
+
+			<label for="rdbShippingSalutationMrs" class="radio">
+				<input type="radio" id="rdbShippingSalutationMrs" name="rdbShippingSalutation-<?shipid?>" value="Mrs." <?rdbSalutationMrs.?> />Mrs.
+			</label>
+			<label for="rdbShippingSalutationMs" class="radio">
+				<input type="radio" id="rdbShippingSalutationMs" name="rdbShippingSalutation-<?shipid?>" value="Ms." <?rdbSalutationMs.?> />Ms.
+			</label>
+			<label for="rdbShippingSalutationMiss" class="radio">
+				<input type="radio" id="rdbShippingSalutationMiss" name="rdbShippingSalutation-<?shipid?>" value="Miss" <?rdbSalutationMiss?> />Miss
+			</label>
+			<br />
+
+			<label for="txtShippingFirstName">First Name:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingFirstName" name="txtShippingFirstName-<?shipid?>" value="<?strfirstname?>" />
+			<br />
+
+			<label for="txtShippingLastName">Last Name:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingLastName" name="txtShippingLastName-<?shipid?>" value="<?strlastname?>" />
+			<br />
+
+			<label for="txtShippingAddress1">Address:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingAddress1" name="txtShippingAddress1-<?shipid?>" value="<?straddress1?>" />
+			<br />
+
+			<label>Address 2 & Mail Stop:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingAddress2" name="txtShippingAddress2-<?shipid?>" value="<?straddress2?>" />
+			<br />
+            
+			<label for="txtShippingCubicle">Building &amp; Cubicle:</label>
+			<input	type="text" id="txtShippingCubicle" name="txtShippingCubicle-<?shipid?>" size="30" class="input-text" value="<?strcubicle?>" />
+            <br />
+
+			<label for="txtShippingCity">City:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingCity" name="txtShippingCity-<?shipid?>" value="<?strcity?>" />
+			<br />
+
+			<label for="ddmShippingStateProvince">Province/State:</label>
+			<select id="ddmShippingStateProvince" name="ddmShippingStateProvince-<?shipid?>" onchange="fmChange=1;">
+				<option value=""> Select </option>
+				<?ddmShippingStateProvince?>
+			</select>
+			<br />
+
+			<label for="txtShippingPostalCode">Postal/Zip Code:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingPostalCode" name="txtShippingPostalCode-<?shipid?>" value="<?strpostalcode?>" />
+			<br />
+
+			<label for="ddmShippingCountry">Country:</label>
+			<select id="ddmShippingCountry" name="ddmShippingCountry-<?shipid?>" onchange="fmChange=1;">
+				<option value=""> Select </option>
+				<?ddmShippingCountry?>
+			</select>
+			<br />
+
+			<label for="txtShippingPhone">Phone:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingPhone" name="txtShippingPhone-<?shipid?>" value="<?strphone?>" />
+			<br />
+
+			<label for="txtShippingExtension">Extension:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingExtension" name="txtShippingExtension-<?shipid?>" value="<?strextension?>" maxlength="4" />
+			<br />
+
+			<label for="txtShippingFax">Fax:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingFax" name="txtShippingFax-<?shipid?>" value="<?strfax?>" />
+			<br />
+
+			<label for="txtShippingEmail">Email:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingEmail" name="txtShippingEmail-<?shipid?>" value="<?stremail?>" />
+			<br />
+			<input type="hidden" name="ShippingID" value="<?shipid?>" />
+            
+            <div class="button-bar indent-regular">
+				<input class="button" type="submit" name="deleteshipaddress" value="Delete Shipping Address" onClick="f1.deleteship.value='<?shipid?>'"/>
+				<br />
+			</div>
+		</fieldset>
+		<?endloop SHIPPING_ADDRESSES?>
+		<input type="hidden" name="deleteship" />
+
+		<fieldset>
+			<legend>
+				Shipping Information - Add New Address 
+			</legend>
+			
+			<p class="none">&nbsp;</p>
+
+			<label for="txtShippingCompanyName">Company Name:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingCompanyName-New" name="txtShippingCompanyName-New" value="" />
+			<br />
+
+			<label>Salutation:</label>
+			<label for="rdbShippingSalutationMr-New" class="radio">
+				<input type="radio" id="rdbShippingSalutationMr-New" name="rdbShippingSalutation-New" value="Mr." />Mr.
+			</label>
+			<label for="rdbShippingSalutationMrs-New" class="radio">
+				<input type="radio" id="rdbShippingSalutationMrs-New" name="rdbShippingSalutation-New" value="Mrs." />Mrs.
+			</label>
+
+			<label for="rdbShippingSalutationMs-New" class="radio">
+				<input type="radio" id="rdbShippingSalutationMs-New" name="rdbShippingSalutation-New" value="Ms." />Ms.
+			</label>
+			<label for="rdbShippingSalutationMiss-New" class="radio">
+				<input type="radio" id="rdbShippingSalutationMiss-New" name="rdbShippingSalutation-New" value="Miss"/>Miss
+			</label>
+			<br />
+
+			<label for="txtShippingFirstName-New">First Name:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingFirstName-New" name="txtShippingFirstName-New"/>
+			<br />
+
+			<label for="txtShippingLastName-New">Last Name:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingLastName-New" name="txtShippingLastName-New" />
+			<br />
+
+			<label for="txtShippingAddress1-New">Address:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingAddress1-New" name="txtShippingAddress1-New"/>
+			<br />
+
+			<label>Address 2 & Mail Stop:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingAddress2-New" name="txtShippingAddress2-New"/>
+			<br />
+
+			<label>Building &amp; Cubicle:</label>
+			<input	type="text" id="txtShippingCubicle-New" name="txtShippingCubicle-New" size="30" class="input-text" />
+            <br />
+
+			<label for="txtShippingCity-New">City:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingCity-New" name="txtShippingCity-New"/>
+			<br />
+
+			<label for="ddmShippingStateProvince-New">Province/State:</label>
+			<select id="ddmShippingStateProvince-New" name="ddmShippingStateProvince-New" onchange="fmChange=1;">
+				<option value=""> Select </option>
+				<?ddmStateProvince?>
+			</select>
+			<br />
+
+			<label for="txtShippingPostalCode">Postal/Zip Code:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingPostalCode-New" name="txtShippingPostalCode-New"/>
+			<br />
+
+			<label for="ddmShippingCountry-New">Country:</label>
+			<select id="ddmShippingCountry-New" name="ddmShippingCountry-New" onchange="fmChange=1;">
+				<option value=""> Select </option>
+				<?ddmCountry?>
+			</select>
+			<br />
+
+			<label for="txtShippingPhone-New">Phone:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingPhone-New" name="txtShippingPhone-New"/>
+			<br />
+
+			<label for="txtShippingExtension-New">Extension:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingExtension-New" name="txtShippingExtension-New" maxlength="4" />
+			<br />
+
+			<label for="txtShippingFax-New">Fax:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingFax-New" name="txtShippingFax-New"/>
+			<br />
+
+			<label for="txtShippingEmail-New">Email:</label>
+			<input type="text" size="30" class="input-text" id="txtShippingEmail-New" name="txtShippingEmail-New"/>
+			<br />
+            
+<!--
+            <div class="button-bar indent-regular">
+				<input class="button" type="submit" name="AddAdditionalShipToAddress" value="Add Additional Ship To Address" onclick="" />
+				<br />
+			</div>
+-->
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Trade References
+			</legend>
+			
+			<p class="none">&nbsp;</p>
+
+			<h5>Reference 1</h5>
+
+			<label for="txtTradeReferenceCompanyName1">Company Name:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceCompanyName1" name="txtTradeReferenceCompanyName1" value="<?txtTradeReferenceCompanyName1?>" />
+			<br />
+
+			<label for="txtTradeReferenceContact1">Contact:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceContact1" name="txtTradeReferenceContact1" value="<?txtTradeReferenceContact1?>" />
+			<br />
+
+			<label for="txtTradeReferencePhone1">Phone:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferencePhone1" name="txtTradeReferencePhone1" value="<?txtTradeReferencePhone1?>" />
+			<br />
+
+			<label for="txtTradeReferenceExt1">Extension:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceExt1" name="txtTradeReferenceExt1" value="<?txtTradeReferenceExt1?>" />
+			<br />
+
+			<label for="txtTradeReferenceFax1">Fax:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceFax1" name="txtTradeReferenceFax1" value="<?txtTradeReferenceFax1?>" />
+			<br />
+
+			<label for="txtTradeReferenceEmail1">E-mail Address:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceEmail1" name="txtTradeReferenceEmail1" value="<?txtTradeReferenceEmail1?>" />
+			<br />
+
+			<h5>Reference 2</h5>
+
+			<label for="txtTradeReferenceCompanyName2">Company Name:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceCompanyName2" name="txtTradeReferenceCompanyName2" value="<?txtTradeReferenceCompanyName2?>" />
+			<br />
+
+			<label for="txtTradeReferenceContact2">Contact:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceContact2" name="txtTradeReferenceContact2" value="<?txtTradeReferenceContact2?>" />
+			<br />
+
+			<label for="txtTradeReferencePhone2">Phone:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferencePhone2" name="txtTradeReferencePhone2" value="<?txtTradeReferencePhone2?>" />
+			<br />
+
+			<label for="txtTradeReferenceExt2">Extension:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceExt2" name="txtTradeReferenceExt2" value="<?txtTradeReferenceExt2?>" />
+			<br />
+
+			<label for="txtTradeReferenceFax2">Fax:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceFax2" name="txtTradeReferenceFax2" value="<?txtTradeReferenceFax2?>" />
+			<br />
+
+			<label for="txtTradeReferenceEmail2">E-mail Address:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceEmail2" name="txtTradeReferenceEmail2" value="<?txtTradeReferenceEmail2?>" />
+			<br />
+
+			<h5>Reference 3</h5>
+
+			<label for="txtTradeReferenceCompanyName3">Company Name:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceCompanyName3" name="txtTradeReferenceCompanyName3" value="<?txtTradeReferenceCompanyName3?>" />
+			<br />
+
+			<label for="txtTradeReferenceContact3">Contact:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceContact3" name="txtTradeReferenceContact3" value="<?txtTradeReferenceContact3?>" />
+			<br />
+
+			<label for="txtTradeReferencePhone3">Phone:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferencePhone3" name="txtTradeReferencePhone3" value="<?txtTradeReferencePhone3?>" />
+			<br />
+
+			<label for="txtTradeReferenceExt3">Extension:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceExt3" name="txtTradeReferenceExt3" value="<?txtTradeReferenceExt3?>" />
+			<br />
+
+			<label for="txtTradeReferenceFax3">Fax:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceFax3" name="txtTradeReferenceFax3" value="<?txtTradeReferenceFax3?>" />
+			<br />
+
+			<label for="txtTradeReferenceEmail3">E-mail Address:</label>
+			<input type="text" size="30" class="input-text" id="txtTradeReferenceEmail3" name="txtTradeReferenceEmail3" value="<?txtTradeReferenceEmail3?>" />
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

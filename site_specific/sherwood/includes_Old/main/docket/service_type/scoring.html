@@ -1,0 +1,37 @@
+<? loop signature?>
+<div style=" padding-left: 2em; ">
+<table class="no-formatting no-padding" style="margin: 0; " cellspacing="0" cellpadding="0" border="0" width="90%">
+  <? if ($$variable{'multipage'} == 1) ?>
+  <tr>
+    <td width="50%"><span class="label">Signature Group - </span>
+		<?Reference?></td>
+    <td width="50%"></td>
+  </tr>
+  <? endif ($$variable{'multipage'} == 1) ?>
+  <tr>
+    <td width="50%"><span class="label">Equipment:&nbsp;&nbsp;</span>
+	<?equipment?></td>
+    <td width="50%"><span class="label">Imposition:&nbsp;&nbsp;</span>
+<?txtImposition?>
+&nbsp;Out</td>
+  </tr>
+  <tr>
+    <? if ( $$variable{'txtScoreQty'} )?>
+    <td>
+		<span class="label">Scores:&nbsp;&nbsp;</span>
+		<?txtScoreQty?>
+	</td>
+    <? endif ( $$variable{'txtScoreQty'} )?>
+    <? if ( $$variable{'txtPerfQty'} )?>
+    <td>
+		<span class="label">Perfs:&nbsp;&nbsp;</span>
+		<?txtPerfQty?>
+	</td>
+    <? endif ( $$variable{'txtPerfQty'} )?>
+  </tr>
+ 
+</table>
+
+</div>
+
+<? endloop signature?>

@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+        <!--#include virtual="/includes/web_page_title.html" -->
+        Projects - <?service.category?> - <?service.name?>
+        <!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+    <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+	<script type="text/javascript" src="/javascripts/proj/service/drilling.js"></script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+
+		<fieldset>
+			<legend>
+				Drilling
+			</legend>
+		
+			<p>What is the number of holes per item?</p>
+			<label for="txtHoleQty">Holes:</label>
+			<input id="txtHoleQty" name="txtHoleQty" value="<?txtHoleQty?>" type="text" size="9" class="smBox" />
+			<br />
+		
+			<p>What is the size of the hole(s)? (Use <span class="tip" title="<!--#include virtual="/includes/fraction_to_decimal_dimensions.html" -->">decimals</span> ex. 0.25)</p>
+			<label for="txtHoleSize">Hole Size:</label>
+			<input id="txtHoleSize" name="txtHoleSize" value="<?txtHoleSize?>" type="text" size="9" class="smBox" />
+			<label for="txtHoleSize" class="post-input">inches</label>
+			<br />
+		
+			<p>What is the <span class="tip" title="Paper thickness in thousandths of an inch. Also the name of the tool used to make the measurement.">calliper</span> of the project?</p>
+			<label for="txtFinishedCalliper">Calliper:</label>
+			<input id="txtFinishedCalliper" name="txtFinishedCalliper" value="<?txtFinishedCalliper?>" size="9" class="smBox" />
+			<br />
+		</fieldset>
+
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+
+		<!--#include virtual="/includes/main/proj/service_combo_quantity.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_bindery.html"-->
+
+		<input type="hidden" name="txtPockets" value="<?txtPockets?>" />
+		<input type="hidden" name="txtHoleItemQty" value="<?txtHoleItemQty?>" />
+		<input type="hidden" name="hdnBookSheetQty" value="<?hdnBookSheetQty?>" />
+		<input type="hidden" name="STITCHING_SERVICE_INDEX" value="<?STITCHING_SERVICE_INDEX?>" />
+	</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

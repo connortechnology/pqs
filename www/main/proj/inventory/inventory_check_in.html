@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.category?> - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<form id="f1" name="f1" method="POST" action="/service/<?lc:service.ref?>">
+
+		<fieldset>
+			<legend>Inventory Check-In</legend>
+		
+			<p>What is the Item ID that you would like to have inventoried?</p>
+		
+			<h5>Item ID:</h5>
+			<label for="SelectItem">Select Item ID:</label>
+
+			<select name='ItemID' id="ItemID">
+				<option value ="">New Item</option>
+				<?OPTIONS_ItemID?>
+			</select>
+			<br />
+
+
+
+			<label for="BillonRelease">Bill on Release:</label>
+			<input id="BillOnRelease" type="checkbox" name="BillOnRelease" value="1" type="text" size="25" class="smBox" />
+			<br />
+            
+            <p>How many items do you require inventoried?</p><br />
+            
+            <label for="InvPieceCase">Pieces per Case:</label>
+				<input id="InvPieceCase" name="piece_case" value="<?piece_case?>" type="text" size="9" class="smBox" />
+				<br />
+		
+			<h5>Quantity of <?QUANTITY1?></h5>
+			<label for="txtInventoryQty1">Check In:</label>
+			<input id="txtInventoryQty1" name="txtInventoryQty1" value="<?txtInventoryQty1?>" type="text" size="9" class="smBox" />
+			<br />
+			
+			<? if project.qty.1 ?>
+				<h5>Quantity of <?QUANTITY2?></h5>
+				<label for="txtInventoryQty2">Check In:</label>
+				<input id="txtInventoryQty2" name="txtInventoryQty2" value="<?txtInventoryQty2?>" type="text" size="9" class="smBox" />
+				<br />
+			<? endif project.qty.1 ?>
+		
+			<? if project.qty.2 ?>
+				<h5>Quantity of <?QUANTITY3?></h5>
+				<label for="txtInventoryQty3">Check In:</label>
+				<input id="txtInventoryQty3" name="txtInventoryQty3" value="<?txtInventoryQty3?>" type="text" size="9" class="smBox" />
+				<br />
+			<? endif project.qty.2 ?>
+		</fieldset>
+
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+	
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_bindery.html"-->
+		<input type="hidden" name="txtProjectWeight" value="<?txtProjectWeight?>" />
+		<input type="hidden" name="CheckIn" value="Y" />
+	</form>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

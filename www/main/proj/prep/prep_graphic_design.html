@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+        <!--#include virtual="/includes/web_page_title.html" -->
+        Projects - <?service.category?> - <?service.name?>
+        <!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+    <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js" />
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+
+		<fieldset>
+			<legend>
+				Graphic Design
+			</legend>
+		
+			<p>The following quantity of graphic design hours have been automatically allocated to your project. If you feel the graphic design of your project will require more or less time, please input the total amount of hours that you wish us to allocate to your project.</p>
+			
+			<label for="GraphicDesign">Design and Layout:</label>
+			<input id="GraphicDesign" name="GraphicDesign" value="<?GraphicDesign?>" type="text" size="12" class="smBox" <? if ($$variable{Override_GraphicDesign} != 1) ?>disabled="true"<?endif ($$variable{Override_GraphicDesign} != 1) ?> />
+			<label class="label">Hours</label>
+			<input id="Override_GraphicDesign" name="Override_GraphicDesign" type="checkbox" value="1" <?if Override_GraphicDesign ?>checked<?endif Override_GraphicDesign?> /> Override graphic design hours
+			<br />
+		
+			<p>If your project requires any creative services in addition to the graphic design and layout, please input the quantity of hours that you wish us to allocate to your project.</p>
+			
+			<label for="Logos">Logo Design:</label>
+			<input id="Logos" name="Logos" value="<?Logos?>" type="text" size="12" class="smBox" />
+			<label class="label">Hours</label>
+			<br />
+		
+			<label for="Illustrations">Illustration Design:</label>
+			<input id="Illustrations" name="Illustrations" value="<?Illustrations?>" type="text" size="12" class="smBox" />
+			<label class="label">Hours</label>
+			<br />
+		
+			<label for="ProductPhotos">Product Photography:</label>
+			<input id="ProductPhotos" name="ProductPhotos" value="<?ProductPhotos?>" type="text" size="12" class="smBox" />
+			<label class="label">Hours</label>
+			<br />
+		
+			<label for="CopyWriting">Copy Writing:</label>
+			<input id="CopyWriting" name="CopyWriting" value="<?CopyWriting?>" type="text" size="12" class="smBox" />
+			<label class="label">Hours</label>
+			<br />
+		</fieldset>
+
+		<!--#include virtual="/includes/main/proj/prices_design.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+
+		<!--the difference between the book prices include and ALL the other includes is that the prices for books are
+		created by server and NEED a substitution variable for the values on the input boxes, which just happens to mess things up
+		for all the other pages, hence the two different files-->
+
+		<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+	</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+<script type="text/javascript">
+  //Handle the override checkbox
+  $j = jQuery.noConflict();
+  var default_hours = '<? Default_GraphicDesign ?>';
+  $j("#Override_GraphicDesign").change(function () {
+    if (this.checked) {
+      default_hours = $j("#GraphicDesign").val();
+      $j("#GraphicDesign").removeAttr("disabled");
+    } else {
+      $j("#GraphicDesign").val(default_hours);
+      $j("#GraphicDesign").attr("disabled", "disabled");
+    }
+  });
+  $j('#f1').bind('submit', function() {
+    $j('#GraphicDesign').removeAttr('disabled');
+  });
+</script>
+</body>
+</html>

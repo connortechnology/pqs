@@ -1,0 +1,30 @@
+<span class="label">Type </span>
+<?if ($$variable{'rdbPerforated'} eq 'Y')?>
+Perforated
+<?else($$variable{'rdbPerforated'} eq 'Y')?>
+Non-Peforated
+<?endif ($$variable{'rdbPerforated'} eq 'Y')?>
+<? if ($$variable{'txtSealsQtyTop'}) ?>
+<span class="label">Top </span>
+<?txtSealsQtyTop?>
+<? endif ($$variable{'txtSealsQtyTop'}) ?>
+<? if ($$variable{'txtSealsQtyBottom'}) ?>
+<span class="label">Bottom </span>
+<?txtSealsQtyBottom?>
+<? endif ($$variable{'txtSealsQtyBottom'}) ?>
+<? if ($$variable{'txtSealsQtyLeft'}) ?>
+<span class="label">Left </span>
+ <?txtSealsQtyLeft?>
+<? endif ($$variable{'txtSealsQtyLeft'}) ?>
+<?if ($$variable{'txtSealsQtyRight'}) ?>
+<span class="label">Right </span>
+	<?txtSealsQtyRight?>
+<?endif ($$variable{'txtSealsQtyRight'}) ?>
+<?if ($$variable{'txtSealsQtyFront'}) ?>
+<td><span class="label">Front </span>
+	<?txtSealsQtyFront?></td>
+<?endif ($$variable{'txtSealsQtyFront'}) ?>
+<?if ($$variable{'txtSealsQtyBack'}) ?>
+<span class="label">Back </span>
+	<?txtSealsQtyBack?>
+<?endif ($$variable{'txtSealsQtyBack'}) ?>

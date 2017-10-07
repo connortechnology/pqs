@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Project - Files Comments
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+
+	<link href="/styles/forms.css"         rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/project_files.css" rel="stylesheet" type="text/css" media="screen" />
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Project &#187;</span> Files Comments</h1>
+
+	<!-- File listing. -->
+
+		<p>To comment or approve files, click the button to perform your desired action.</p>
+
+		<!-- #include virtual="/includes/main/docket/basic_header.html" -->
+
+		<form name="files" method="post" enctype="multipart/form-data" action="">
+			<input type="hidden" name="pid" value="<?pid?>" />
+
+			<div class="button-bar" style="overflow: hidden;">
+				<input id="window.open" type="submit" class="button r" name="Insert Comment" value="Insert Comment" onclick="window.open('/main/proj/comment-box.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" />
+			</div>
+
+			<table id="files" class="common">
+				<colgroup class="approvals">
+					<col style="width: 3em;" />
+					<col style="width: 3em;" />
+				</colgroup>
+				<col style="width: 12em;" />
+                <col style="width: 40em;" />
+				<col style="width: 12em;" />
+
+				<thead>
+					<tr>
+						<th colspan="2">Approval</th>
+						<th rowspan="2">User</th>
+						<th rowspan="2">Notes</th>
+                        <th rowspan="2">Last Modified</th>
+					</tr>
+					<tr>
+						<th title="Prepress Approval">Prep.</th>
+						<th title="Final Production Approval">Prod.</th>
+					</tr>
+				</thead>
+
+
+					<tr class="r<?_even?>">
+						<td style="vertical-align: middle;">Y</td>
+						<td></td>
+						<td class="c" style="vertical-align: middle;">Chris Lasso</td>
+						<td class="l">The design looks great! However, I think we could actually print it on 12PT instead of 10PT.</td>
+						<td class="c" style="vertical-align: middle;">2009-08-26 17:52</td>
+					</tr>
+                    
+                    <tr><td colspan="5"><hr /></td></tr>
+
+					<tr class="r<?_even?>">
+						<td style="vertical-align: middle;">Y</td>
+						<td></td>
+						<td class="c" style="vertical-align: middle;">Mark Alioto</td>
+						<td class="l">The design looks great! However, I agree we should print it on 12Pt instead of 10PT. It will make the emboss stand out more.</td>
+						<td class="c" style="vertical-align: middle;">2009-08-27 17:52</td>
+					</tr>
+                    
+					<tr><td colspan="5"><hr /></td></tr>
+                    
+					<tr class="r<?_even?>">
+						<td style="vertical-align: middle;">Y</td>
+						<td></td>
+						<td class="c" style="vertical-align: middle;">Account Manager</td>
+						<td class="l">What about using a foil inconjuction with the emboss for even more impact?</td>
+						<td class="c" style="vertical-align: middle;">2009-08-28 17:52</td>
+					</tr>
+                    
+                    <tr><td colspan="5"><hr /></td></tr>
+                    
+					<tr class="r<?_even?>">
+						<td style="vertical-align: middle;">Y</td>
+						<td></td>
+						<td class="c" style="vertical-align: middle;">Client Buyer</td>
+						<td class="l">The design looks great! Lets go with it as is on the 12PT so we keep the costs inline with our budget.</td>
+						<td class="c" style="vertical-align: middle;">2009-08-26 17:52</td>
+					</tr>
+
+				<!--
+				<tfoot>
+					<tr>
+						<th rowspan="2" colspan="2" style="text-align: left;"></th>
+						<th title="Prepress Approval">Prep.</th>
+						<th title="Final Production Approval">Prod.</th>
+						<th rowspan="2">Owner</th>
+						<th rowspan="2">Last Modified</th>
+						<th rowspan="2" class="r">Size</th>
+					</tr>
+					<tr>
+						<th colspan="2">Approval</th>
+					</tr>
+				</tfoot>
+				-->
+
+			</table>
+
+			<?if not:is_staff ?>
+				<!-- File approval confirmation for end-users. -->
+				<fieldset id="approval">
+					<legend>Approval</legend>
+
+					<p>I, <?user.name?>, hereby confirm that the selected files are free
+					of all defects and I have checked all textual information, including
+					spelling and grammar; all graphical image, designs, and <?ws_colour?>s; the
+					overall layout and format; and all other aspects of the files.</p>
+
+					<p>The selected files are approved for 
+						<select name="approve_for">
+							<option value="prepress">prepress</option>
+							<option value="production">production</option>
+						</select> 
+						use.
+					</p> 
+
+					<br />
+					Signed, <br />
+					<input class="button" type="submit" style="float: right; margin: 0;" name="approve" value="Approve" />
+					<input type="text" name="initials" maxlength="2" style="width: 3em; margin-left: 4em;" /> <em>Please enter your initials (<?user.initials?>).</em>
+
+				</fieldset>
+				</form>
+			<?endif not:is_staff?>
+
+			<?if is_staff?>
+				<fieldset>
+					<legend>Approval</legend>
+
+					<p>To approve files on behalf of the customer; select the files above, choose the approval type, and click the “Approve” button. To adjust who notifications are sent to, expand this section.</p>
+
+					<fieldset class="hidden-details">
+						<!--#include virtual="/includes/main/proj/notification_contacts.html" -->
+					</fieldset>
+
+					<span class="label">Approve for:</span>
+					<label style="float: none;">Prepress   <input type="radio" name="approve_for" value="prepress" checked="checked"></label>
+					<label style="float: none;">Production <input type="radio" name="approve_for" value="production"></label>
+
+					<input type="submit" class="button" name="approve" value="Approve" style="float: right;" />
+				</fieldset>
+			<?endif is_staff?>
+
+
+
+	<?if ($variable->{has_pdf_template} && $variable->{is_staff}) ?>
+		<!-- Template generation/download (staff only). -->
+		<form name="template" method="post" action="file_action.html">
+			<input type="hidden" name="pid" value="<?pid?>" />
+			
+			<fieldset>
+				<legend>PDF Template</legend>
+
+
+				<?if is_generated?>
+					<p>If changes have been made click below to re-generate the output archive.</p>
+				<?else is_generated?>
+					<p>Due to their potentially very large size and processing time,
+					final print output PDFs are only generated on demand. To generate a
+					compressed archive of PDFs please click the button below.</p> 
+				<?endif is_generated?>
+
+				<?if is_generated?>
+					<input type="submit" class="button" name="delete_archive"  value="Remove" style="float: left;" />
+				<?endif is_generated?>
+				<input type="submit" name="generate" class="button" style="margin-left: 2ex;" value="<?if is_generated?>Re-<?endif is_generated?>Generate" />
+			</fieldset>
+
+		</form>
+	<?endif ($variable->{has_pdf_template} && $variable->{is_staff}) ?>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<a href="/main/proj/proj_view.html?pid=<?pid?>">Project</a>
+	<ul style="margin-bottom: 2ex">
+		<li><a href="/main/proj/proj_view.html?pid=<?pid?>">View</a></li>
+		<li><a href="/main/proj/upload.html?pid=<?pid?>">Upload Files</a></li>
+	</ul>
+
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

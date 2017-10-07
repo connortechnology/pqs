@@ -1,0 +1,134 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html"-->
+		Managerial - Credit Applications
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Accounting &#187;</span> Credit Applications</h1>
+
+	<form id="f1" name="f1" method="post">
+
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="ddmCompany">Company:</label>
+			<select id="ddmCompany" name="ddmCompany">
+				<option value=""> All Companies </option>
+				<?ddmCompany?>
+			</select>
+			<br />
+
+			<label for="ddmStatus">Status:</label>
+			<select id="ddmStatus" name="ddmStatus">
+				<option value="">All</option>
+				<option value="Approved" <?Approved?> > Approved </option>
+				<option value="Declined" <?Declined?> > Declined </option>
+				<option value="Reviewed" <?Reviewed?> > Reviewed </option>
+				<option value="Non-Reviewed" <?Non-Reviewed?> > Non-Reviewed </option>
+			</select>
+			<br />
+
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?startmonths?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?startdays?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?startyears?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?endmonths?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?enddays?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?endyears?>
+			</select>
+			<br />
+	
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Show Results" />
+				<br />
+			</div>
+			<input type="hidden" name="btnFunction" />
+			<br />
+		</fieldset>
+	</form>
+
+
+	<fieldset>
+		<legend>
+			Results
+		</legend>
+
+		<p class="none">&nbsp;</p>
+
+		<? if ( @{$$variable{'CreditApps'}} ) ?>
+			<p>The following credit applications matched your criteria:</p>
+	
+			<table border="0" cellpadding="0" cellspacing="0">
+				<tr>
+					<th>Submitted By</th>
+					<th>Date</th>
+					<th>Company</th>
+					<th>Status</th>
+				</tr>
+	
+				<? while ( @$variable{'index','signature','date','company','status'} = splice @{$$variable{'CreditApps'}},0,5; ) ?>
+					<tr>
+						<td style="text-align: left;"><a href="credit_application.html?credit_index=<?index?>"><?signature?></a></td>
+						<td style="text-align: center;"><a href="credit_application.html?credit_index=<?index?>"><?date?></a></td>
+						<td style="text-align: left;"><a href="credit_application.html?credit_index=<?index?>"><?company?></a></td>
+						<td style="text-align: right;"><a href="credit_application.html?credit_index=<?index?>"><?status?></a></td>
+					</tr>
+	
+					<? if ( @$variable{'index','signature','date','company','status'} = splice @{$$variable{'CreditApps'}},0,5; ) ?>
+						<tr class="colRow">
+							<td style="text-align: left;"><a href="credit_application.html?credit_index=<?index?>"><?signature?></a></td>
+							<td style="text-align: center;"><a href="credit_application.html?credit_index=<?index?>"><?date?></a></td>
+							<td style="text-align: left;"><a href="credit_application.html?credit_index=<?index?>"><?company?></a></td>
+							<td style="text-align: right;"><a href="credit_application.html?credit_index=<?index?>"><?status?></a></td>
+						</tr>
+					<? endif ( @$variable{'index','signature','date','company','status'} = splice @{$$variable{'CreditApps'}},0,5; ) ?>
+	
+				<? endwhile ( @$variable{'index','signature','date','company','status'} = splice @{$$variable{'CreditApps'}},0,5; ) ?>
+			</table>
+	
+		<? else ( @{$$variable{'CreditApps'}} ) ?>
+			<p>There are no credit applications matching your criteria.</p>
+		<? endif ( @{$$variable{'CreditApps'}} ) ?>
+		<br />
+	</fieldset>
+</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

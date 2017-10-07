@@ -1,0 +1,35 @@
+<fieldset id="side1" class="colours-coatings">
+	<legend>Colours &amp; Coatings</legend>
+
+	<p>Please specify the <span class="tip" title="The abbreviated name or number from the Pantone color Matching System. (ie: 320 or reflex blue)">PMS Name or Number</span>, and percentage of ink coverage for all <span class="tip" title="The ink colours used on a printed piece.">colour(s)</span> on this surface, if they are known.</p>
+
+	<p>If your project requires UV inks, please append the PMS with &quot;UV&quot;. (Ex. 320, Reflex Blue or 320UV one per box).</p>
+
+	<p>If the <span class="tip" title="The ink colours used on a printed piece.">colour(s)</span> for side one of your project require a second pass, please append the PMS with a &quot;WW&quot; for Wet on Wet, or &quot;WD&quot; for Wet on Dry screening of the second pass. (Ex. 320WW, Reflex BlueWD ).</p>
+
+	<!-- SET THE NUMBER OF PMS COLOURS TO DISPLAY -->
+	<? eval( map { push @{$variable->{PMS_COLOURS}},  { id => $_} } (1..6) ) ?>
+
+	<fieldset class="pms half left">
+		<legend>Spot Colours - Side 1</legend>
+
+				<? loop PMS_COLOURS ?>
+					<input name="s0_pms_<?id?>_name" type="text" value="" class="pms-colour" />
+					<input name="s0_pms_<?id?>_coverage" type="text" class="pms-percent" />%<br />
+				<? endloop PMS_COLOURS ?>
+
+		<p class="none">&nbsp;</p>
+
+	</fieldset>
+	
+	<fieldset class="pms half right">
+		<legend>Spot Colours - Side 2</legend>
+				<? loop PMS_COLOURS ?>
+					<input name="s1_pms_<?id?>_name" type="text" value="" class="pms-colour" />
+					<input name="s1_pms_<?id?>_coverage" type="text" class="pms-percent" />%<br />
+				<? endloop PMS_COLOURS ?>
+		<p class="none">&nbsp;</p>
+
+	</fieldset>
+	<br />
+</fieldset>

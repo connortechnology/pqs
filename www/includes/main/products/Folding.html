@@ -1,0 +1,56 @@
+                <tr id="foldrow"><td>Fold:</td>
+                <td colspan="4">
+						<script type="text/javascript">
+							function fold_type () {
+								var x = $('FoldType').options[$('FoldType').selectedIndex].value;
+								if ( x == "" ) {
+									$('fold-service').value = '';
+								} else {
+									$('fold-service').value = 'Folding';
+								}
+							}
+						</script>
+						<select name="FoldType" id="FoldType" style="width:400px;" onChange="fold_type(); foldnolam(); foldtypepersize();">
+							<option id="none" value="">None</option>
+							<option id="txt2PanelFoldQty"     value="txt2PanelFoldQty"    >2 Panel Half Fold</option>
+                            <option id="txt3PanelRollFoldQty" value="txt3PanelRollFoldQty">3 Panel Roll Fold</option>
+                            <option id="txt3PanelZFoldQty"    value="txt3PanelZFoldQty"  >3 Panel Z Fold (Accordian)</option>
+ 							<option id="txt4PanelRollFoldQty" value="txt4PanelRollFoldQty">4 Panel Double Parallel Fold</option>
+							<option id="txtDoubleGateFolded" value="txtDoubleGateFolded">Double Gate Fold</option>
+				</select>
+                       
+						<input type="hidden" name="service" value="" id="fold-service" />
+
+                         <img src="/images/main/products/question.jpg" width="18" height="18" style="float:right; cursor: pointer; padding-top:7px; padding-right:185px" onmouseover="" onclick="window.open('/includes/main/products/tooltip/Folding Types.html','Folding Types','newWin,left=600,width=340,top=250,height=400,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/>
+                        </td>
+                       
+                       
+				
+                </tr>
+<script type="text/javascript">
+ function foldnolam() {
+	 var fold = $('FoldType').options[$('FoldType').selectedIndex].value;
+	
+//	 var op = document.getElementById("IndexCoverClear").getElementsByTagName("option");
+//for (var i = 0; i < op.length; i++) {
+//   lowercase comparison for case-insensitivity
+//    op[i].disabled = false;
+//}
+if ( fold == "" ){
+//	$('CoversRow').style.display="table-row";
+//	$('BackRow').style.display="table-row";
+	$('laminate').style.display="table-row";
+
+}
+
+else {
+//	$('CoversRow').style.display="none";
+//	$('BackRow').style.display="none";
+	$('laminate').style.display="none";
+	
+}
+
+
+
+ }
+</script>  

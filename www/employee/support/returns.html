@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html"-->
+		Support - Returns
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">Managerial &#187;</span> Returns</h1>
+
+	<fieldset>
+		<legend>
+			Search
+		</legend>
+
+		<p>Choose report criteria and click submit.</p>
+
+		<form id="f1" name="f1" method="post" action="returns.html">
+			<label for="ddmCustomers">Customers:</label>
+			<select id="ddmCustomers" name="ddmCustomers" size="1">
+				<option value=""> All Customers </option>
+				<?ddmCustomers?>
+			</select>
+			<br />
+
+			<label for="ddmReviewed">Review Status:</label>
+			<select id="ddmReviewed" name="ddmReviewed" size="1">
+				<option value=""> All </option>
+				<option value="Y" <?ddmReviewedY?>> Only Reviewed </option>
+				<option value="N" <?ddmReviewedN?>> Only Non-Reviewed </option>
+			</select>
+			<br />
+
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?startmonths?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?startdays?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?startyears?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?endmonths?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?enddays?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?endyears?>
+			</select>
+			<br />
+
+			<!--#include virtual="/includes/reset-submit.html" -->
+		</form>
+		<br />
+	</fieldset>
+
+	<fieldset>
+		<legend>
+			Results
+		</legend>
+	
+		<p class="none">&nbsp;</p>
+	
+		<? if ( @{$$variable{'RMAS'}} ) ?>
+		<table cellspacing="0" cellpadding="0" border="0">
+			<tr>
+				<th>Company</th>
+				<th>Order ID</th>
+				<th>Date</th>
+				<th>Status</th>
+			</tr>
+
+			<? while ( @$variable{'index','name','order_id','date','status'} = splice @{$$variable{'RMAS'}},0,5; ) ?>
+				<tr>
+					<td style="text-align: left;"><a href="return.html?rma_id=<?index?>"><?name?></a></td>
+					<td style="text-align: center;"><a href="return.html?rma_id=<?index?>"><?rev:order_id?></a></td>
+					<td style="text-align: center;"><a href="return.html?rma_id=<?index?>"><?date?></a></td>
+					<td style="text-align: right;"><a href="return.html?rma_id=<?index?>">
+						<? if ( $$variable{'status'} eq 'Y' ) ?>
+							Approved
+						<? endif ( $$variable{'status'} eq 'Y' ) ?>
+						<? if ( $$variable{'status'} eq 'N' ) ?>
+							Declined
+						<? endif ( $$variable{'status'} eq 'N' ) ?>
+						<? if ( $$variable{'status'} ne 'N' and $$variable{'status'} ne 'Y' ) ?>
+							Non-Reviewed
+						<? endif ( $$variable{'status'} ne 'N' and $$variable{'status'} ne 'Y' ) ?>
+						</a>
+					</td>
+				</tr>
+
+				<? if ( @$variable{'index','name','order_id','date','status'} = splice @{$$variable{'RMAS'}},0,5; ) ?>
+					<tr class="colRow">
+						<td style="text-align: left;"><a href="return.html?rma_id=<?index?>"><?name?></a></td>
+						<td style="text-align: center;"><a href="return.html?rma_id=<?index?>"><?rev:order_id?></a></td>
+						<td style="text-align: center;"><a href="return.html?rma_id=<?index?>"><?date?></a></td>
+						<td style="text-align: right;"><a href="return.html?rma_id=<?index?>">
+							<? if ( $$variable{'status'} eq 'Y' ) ?>
+								Approved
+							<? endif ( $$variable{'status'} eq 'Y' ) ?>
+							<? if ( $$variable{'status'} eq 'N' ) ?>
+								Declined
+							<? endif ( $$variable{'status'} eq 'N' ) ?>
+							<? if ( $$variable{'status'} ne 'N' and $$variable{'status'} ne 'Y' ) ?>
+								Non-Reviewed
+							<? endif ( $$variable{'status'} ne 'N' and $$variable{'status'} ne 'Y' ) ?>
+							</a>
+						</td>
+					</tr>
+				<? endif ( @$variable{'index','name','order_id','date','status'} = splice @{$$variable{'RMAS'}},0,5; ) ?>
+			<? endwhile ( @$variable{'index','name','order_id','date','status'} = splice @{$$variable{'RMAS'}},0,5; ) ?>
+		</table>
+
+		<? else ( @{$$variable{'RMAS'}} ) ?>
+			<p>There were no results matching your criteria.</p>
+		<? endif ( @{$$variable{'RMAS'}} ) ?>
+		<br />
+	</fieldset>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

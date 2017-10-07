@@ -1,0 +1,20 @@
+<div style=" padding-left: 2em; ">
+<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"><span class="label">Check In Qty</span>
+<? if ($$variable{'qtyIndex'} == 1) ?>
+<span class="label">1:</span>&nbsp;&nbsp;<?txtInventoryQty1?>
+<? endif ($$variable{'qtyIndex'} == 1) ?>
+<? if ($$variable{'qtyIndex'} == 2) ?>
+<span class="label">2:</span>&nbsp;&nbsp;<?txtInventoryQty2?>
+<? endif ($$variable{'qtyIndex'} == 2) ?>
+<? if ($$variable{'qtyIndex'} == 3) ?>
+<span class="label">3:</span>&nbsp;&nbsp;<?txtInventoryQty3?>
+<? endif ($$variable{'qtyIndex'} == 3) ?></td>
+    <td width="50%"><? if ($$variable{'txtCheckOutQty'})?>
+<span class="label">Check Out Qty:&nbsp;&nbsp; </span>
+<?txtCheckOutQty?>
+<? endif ($$variable{'txtCheckOutQty'})?></td>
+  </tr>
+</table>
+</div>

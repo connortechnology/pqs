@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>
+			<!--#include virtual="/includes/company_name.html"-->
+			- Order
+		</title>
+
+		<style type="text/css"><!--#include virtual="/styles/email.css"--></style>
+		<style type="text/css"><!--#include virtual="/styles/order.css"--></style>
+		<style type="text/css"><!--#include virtual="/styles/project.css"--></style>
+		<style type="text/css"><!--#include virtual="/styles/pricing.css"--></style>
+		<style type="text/css" media="print"><!--#include virtual="/styles/print.css"--></style>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		
+		<base href="<?siteURL?>" />
+	</head>
+	<body>
+		
+		<div id="email-wrapper">	
+			<div id="email-border">
+			<? if ( $$variable{'ORDER_STATUS'} eq 'Pending Date Approval' ) ?>
+            <? else ( $$variable{'ORDER_STATUS'} eq 'Pending Date Approval' ) ?>
+            <h1>Your Order has been approved. Please see the details of your order below:</h1>
+            <? endif ( $$variable{'ORDER_STATUS'} eq 'Pending Date Approval' ) ?>
+            
+			<!--#include virtual="/includes/forms/order.html"-->
+			<!-- Project Description -->
+			<!--#include virtual="/includes/forms/project.html"-->
+            <div id="additionalOrderInformation">
+                <p><?additionalOrderInformation?></p>
+            </div>
+			<div id="repcomment">
+				<p>
+					<em>Representative:</em> <?AdministratorName?><br />
+					<em>Comments:</em> <?AdministratorComments?>
+				</p>
+			</div>
+			<!-- Standard disclaimer -->
+			<div id="disclaimer">
+				<!--#include virtual="/includes/invoice_disclaimer.html"-->
+			</div>
+			
+		</div>
+	</div>			
+			
+ 	</body>
+</html>

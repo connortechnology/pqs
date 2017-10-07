@@ -1,0 +1,454 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title tal:content="title">Print-Quotes Title</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+
+		<script type="text/javascript" src="/javascripts/admin/form.js"></script>
+
+		<!-- TEMPORARY: Header menus. -->
+		<script type="text/javascript" src="/javascripts/other.js"></script>
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+	</head>
+	<body>
+		<!-- TEMPORARY: Old header. -->
+		<xi:include href="/includes/c1-tal.html" />
+		
+		<!-- We might want to consider flowing the page differently so the sidebar gets displayed under the info pane if no CSS is used. Not too hard if we put the sidebar div inside the content div, after an info div, and then take it out of the flow with postiion: fixed; -->
+
+		<!-- Sidebar -->
+		<div id="sidebar">
+			<div class="option">
+				<a class="back" href="/admin/equipment/list.html" tal:attributes="href string:/admin/equipment#$equip/type"><span class="symbol">&#8656;</span> Equipment</a>
+			</div>
+			<div class="option">
+				<a class="back" href="/admin/equipment/specifications.html" tal:attributes="href string:/admin/specifications?equipment=$equip/eid"><span class="symbol">&#8658;</span> Specs.</a>
+			</div>
+
+			<div class="option">
+				<table class="no-formatting">
+					<thead>
+						<tr>
+							<th>Service Types</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="disabled" tal:repeat="t types" tal:attributes="class decode:t/exists 0 'disabled' nothing">
+							<td tal:define="selected eq:t/id type/id" tal:attributes="class decode:selected 1 'selected' nothing"><a href="#Trapping" tal:omit-tag="true:selected" tal:attributes="href string:pricing?equipment=${equip/eid}&pricelist=${list/id}&servicetype=${t/id}" tal:content="t/name">Trapping</a></td>
+						</tr>
+						<tr tal:replace="nothing">
+							<td><a href="#ImpositionLayout">Imposition Layout</a></td>
+						</tr>
+						<tr class="selected" tal:replace="nothing">
+							<td><a href="#Printing">&#9830; Printing</a></td>
+						</tr>
+						<tr tal:replace="nothing">
+							<td><a href="#Scoring">Scoring / Perforating</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="option" tal:condition="true:sub_types/1">
+				<table class="no-formatting">
+					<thead>
+						<tr>
+							<th>Service Sub-Types</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						<tr class="disabled" tal:repeat="t sub_types" tal:attributes="class decode:t/exists 0 'disabled' nothing">
+							<td tal:define="selected eq:t/id sub_type/id" tal:attributes="class decode:selected 1 'selected' nothing"><a href="#Trapping" tal:omit-tag="true:selected" tal:attributes="href string:pricing?equipment=${equip/eid}&pricelist=${list/id}&servicetype=${type/id}&sub_type=${t/id}" tal:content="t/name">A</a></td>
+						</tr>
+						<tr tal:replace="nothing">
+							<td><a href="#B">B</a></td>
+						</tr>
+						<tr class="selected" tal:replace="nothing">
+							<td><a href="#C">&#9830; C</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="option">
+				<table class="no-formatting">
+					<thead>
+						<tr>
+							<th colspan="3">Price Lists</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						<tr class="selected" tal:repeat="l lists" tal:attributes="class decode:l/exists 0 'disabled' nothing">
+							<td tal:define="selected eq:l/id list/id" tal:attributes="class decode:selected 1 'selected' nothing"><a href="#Default" tal:omit-tag="true:selected" tal:attributes="href string:pricing?equipment=${equip/eid}&pricelist=${l/id}&servicetype=${type/id}&sub_type=${sub_type/id}" tal:content="l/name">Defualt</a></td>
+							<td tal:content="l/currency">CAD</td>
+							<td tal:content="l/symbol">$</td>
+						</tr>
+						<tr class="disabled" tal:replace="nothing">
+							<td><a href="#Trade">Trade</a></td>
+							<td>CAD</td>
+							<td>$</td>
+						</tr>
+						<tr tal:replace="nothing">
+							<td><a href="#Default">Defualt</a></td>
+							<td>USD</td>
+							<td>$</td>
+						</tr>
+						<tr class="disabled" tal:replace="nothing">
+							<td><a href="#Export">Export</a></td>
+							<td>CHN</td>
+							<td>&yen;</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<!-- Leave off for now as this might be confusing especially given the wrapping that will occur due to the length of service names. Though we may want to consider a CSS driven (w/ some JS help for IE?) dropdown menu/bar so
+			<hr style="margin-bottom: 2ex;" />
+			<div class="option">
+				<table>
+					<thead>
+						<tr>
+							<th>Services</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><a href="#Trapping">One Colour Impression</a></td>
+						</tr>
+						<tr>
+							<td><a href="#ImpositionLayout">Two Colour Impression</a></td>
+						</tr>
+						<tr>
+							<td><a href="#Printing">Foo</a></td>
+						</tr>
+						<tr>
+							<td><a href="#Scoring">Bar</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			-->
+			<!-- Audit log for the current page. -->
+			<div class="option">
+				<a class="back" href="/admin/audit_log.html" tal:attributes="href string:/admin/audit_log?page=${uri_escape: r/uri}&query=${uri_escape: r/args}">History</a>
+			</div>
+		</div>
+
+		<div id="content">
+			<h1><span class="title-section">System &#187; Production &#187;</span> Equipment &#187; Pricing : <span tal:replace="equip/name">Heidelberg Speedmaster SM 74</span></h1>
+			
+			<form name="pricing" method="POST" action="pricing?equipment=$equip/eid&pricelist=$list/id&servicetype=$type/id&sub_type=$sub_type/id" tal:condition="true:types">
+				<!-- We really shouldn't be posting here, instead we should post elsewhere and redirect internally. (So we're back to a GET) -->
+				<input type="hidden" name="equipment"   value="$equip/id" />
+				<input type="hidden" name="pricelist"   value="$list/id" />
+				<input type="hidden" name="servicetype" value="$type/id" /> <!-- ${r/param servicetype} -->
+				<input type="hidden" name="servicetype" value="$sub_type/id" />
+				<!-- Button bar. -->
+				
+				<!-- Equipment information -->
+				<fieldset><legend title="Name and other identifying details.">	Basic Information</legend>
+					<label><span>Name:</span><input type="text" value="Heidelberg SM 52" disabled="true" tal:attributes="value equip/name" /></label>
+					<label title="Internal identification number"><span>ID:</span><input id="id" type="text" value="438" disabled="true" tal:attributes="value equip/eid" /></label>
+					<label><span>Reference:</span><input type="text" value="SM-52-4C-20-1" disabled="true" tal:attributes="value equip/id" /></label>
+					<label><span>Description:</span><textarea disabled="true" tal:content="equip/description">4-Colour - 14" x 20"</textarea></label>
+					<br />
+				</fieldset>
+
+				<!-- <pre tal:content="dump: ranged">REMOVE ME IF YOU SEE ME</pre>
+
+				<div class="nav">
+					<a href="#P" id="prev" accesskey="p" title="Heidelberg QM4">&#8592; Prev</a>					<a href="#N" id="next" accesskey="n" title="Heidelberg SM 102">Next	&#8594;</a>					<hr />
+				</div>
+				 -->
+
+				<fieldset>
+					<legend tal:content="type/name">
+						Printing
+					</legend>
+					<p tal:condition="false:type/exists">The currently selected service type is not currently provided by &#8220;$equip/name&#8221;. If you wish to enable this service <em>for all price lists</em> please provide pricing below and click <span class="ui-tip">Create</span>.</p>
+					<!-- Non-ranged pricing is displayed and edited in a simple table. -->
+					<table class="single" tal:condition="true:price/unranged">
+						<colgroup class="name" />
+						<colgroup style="text-align: right;" class="pricing">
+							<col class="cost" />
+							<col class="markup" />
+							<col class="price" />
+						</colgroup>
+						<colgroup class="discountable" />
+						<colgroup class="unit" />
+						<thead>
+							<tr>
+								<th>Service</th>
+								<th>Cost (<span tal:content="list/symbol">$</span>)</th>
+								<th>Markup (%)</th>
+								<th>Price (<span tal:content="list/symbol">$</span>)</th>
+								<th title="Discountable">D</th>
+								<th>Unit</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="even" tal:repeat="service price/unranged" tal:attributes="class decode:repeat/even 0 'even' 'odd'">
+								<td class="fixed" tal:content="service/name" tal:attr="title service/description">Envelope Make Ready</td>
+								<td><input type="text" value="90.00"  tal:attributes="id string:$service/id-0-cost;name string:$service/id-0-cost;value service/cost" /></td>
+								<td><input type="text" value="15.00"  tal:attributes="id string:$service/id-0-markup;name string:$service/id-0-markup;value service/markup" /></td>
+								<td><input type="text" value="103.50" tal:attributes="id string:$service/id-0-price;name string:$service/id-0-price;value service/price" /></td>
+								<td class="chk"><input type="checkbox" value="1" checked="true" tal:attributes="id string:$service/id-0-discountable;name string:$service/id-0-discountable;checked decode:service/discountable 1 'true' nothing" /></td>
+								<td class="fixed">
+									<select name="unit" tal:condition="true:service/units/multiple" tal:attributes="id string:$service/id-0-unit;name string:$service/id-0-unit">
+										<option tal:repeat="u service/units/price" tal:content="u" tal:attributes="value u;selected decode:u service/unit 'selected' nothing">Per 1000</option>
+									</select>
+									<span  tal:condition="false:service/units/multiple" tal:replace="service/units/price/0">&nbsp;</span>
+									<input tal:condition="false:service/units/multiple" type="hidden" value="$service/units/price/0" tal:attributes="id string:$service/id-0-unit;name string:$service/id-0-unit" />
+								</td>
+							</tr>
+							<tr class="odd" tal:replace="nothing">
+								<td class="fixed">Press Unit Load</td>
+								<td><input type="text" value="90.00" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="103.50" /></td>
+								<td class="chk"><input type="checkbox" value="1" checked="true" /></td>
+								<td class="fixed">&nbsp;</td>
+							</tr>
+							<tr class="even" tal:replace="nothing">
+								<td class="fixed">Press Run Minimum Charge</td>
+								<td><input type="text" value="90.00" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="103.50" /></td>
+								<td class="chk"><input type="checkbox" value="1" checked="true" /></td>
+								<td class="fixed">&nbsp;</td>
+							</tr>
+							<tr class="odd" tal:replace="nothing">
+								<td class="fixed">Work &amp; Turn / Work &amp; Tumble Drying</td>
+								<td><input type="text" value="90.00" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="103.50" /></td>
+								<td class="chk"><input type="checkbox" value="1" checked="true" /></td>
+								<td class="fixed">Per Hour</td>
+							</tr>
+							<tr class="even" tal:replace="nothing">
+								<td class="fixed">Wash Up</td>
+								<td><input type="text" value="90.00" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="103.50" /></td>
+								<td class="chk"><input type="checkbox" value="1" checked="true" /></td>
+								<td class="fixed">Per Press Unit</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<!-- Ranged services each get their own table. -->
+					<table tal:repeat="service price/ranged" class="multi">
+						<colgroup>
+							<col class="min" />
+							<col class="max" />
+						</colgroup>
+						<colgroup>
+							<col class="cost" />
+							<col class="markup" />
+							<col class="price" />
+						</colgroup>
+						<thead>
+							<tr class="service">
+								<th colspan="4" tal:content="service/name">One Colour Impression</th>
+								<th colspan="1" class="top"><a href="#content">^</a></th>
+							</tr>
+							<tr class="units">
+								<th colspan="2" tal:content="service/units/ranged">Unit</th>
+								<th colspan="3">
+									<select name="unit" tal:condition="true:service/units/multiple" tal:attributes="id string:$service/id-0-unit;name string:$service/id-0-unit">
+										<option tal:repeat="u service/units/price" tal:content="u" tal:attributes="value u;selected decode:u service/ranges/0/unit 'selected' nothing">Per 1000</option>
+									</select>
+									<span  tal:condition="false:service/units/multiple" tal:replace="service/units/price/0">&nbsp;</span>
+									<input tal:condition="false:service/units/multiple" type="hidden" value="$service/units/price/0" tal:attributes="id string:$service/id-0-unit;name string:$service/id-0-unit" />
+								</th>
+							</tr>
+							<tr class="per-service">
+								<th class="min">Min.</th>
+								<th class="max">Max.</th>
+								<th class="cost">Cost (<span tal:content="list/symbol">$</span>)</th>
+								<th class="markup">Markup (%)</th>
+								<th class="price">Price (<span tal:content="list/symbol">$</span>)</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="even" tal:repeat="range service/ranges" tal:attributes="class decode:repeat/even 0 'even' 'odd'">
+								<td><input type="text" value="0"      tal:attributes="id string:$service/id-$repeat/index-min;name string:$service/id-$repeat/index-min;value range/min" /></td>
+								<td><input type="text" value="1000"   tal:attributes="id string:$service/id-$repeat/index-max;name string:$service/id-$repeat/index-max;value range/max" /></td>
+								<td><input type="text" value="100.00" tal:attributes="id string:$service/id-$repeat/index-cost;name string:$service/id-$repeat/index-cost;value range/cost" /></td>
+								<td><input type="text" value="15.00"  tal:attributes="id string:$service/id-$repeat/index-markup;name string:$service/id-$repeat/index-markup;value range/markup" /></td>
+								<td><input type="text" value="115.00" tal:attributes="id string:$service/id-$repeat/index-price;name string:$service/id-$repeat/index-price;value range/price" /></td>
+							</tr>
+							<tr class="odd" tal:replace="nothing">
+								<td><input type="text" value="1000" /></td>
+								<td><input type="text" value="2000" /></td>
+								<td><input type="text" value="90.00" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="103.50" /></td>
+							</tr>
+							<tr class="even" tal:replace="nothing">
+								<td><input type="text" value="2000" /></td>
+								<td><input type="text" value="3000" /></td>
+								<td><input type="text" value="87.00" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="100.05" /></td>
+							</tr>
+							<tr class="odd" tal:replace="nothing">
+								<td><input type="text" value="3000" /></td>
+								<td><input type="text" value="10000" /></td>
+								<td><input type="text" value="84.50" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="97.12" /></td>
+							</tr>
+							<tr class="even" tal:replace="nothing">
+								<td><input type="text" value="10000" /></td>
+								<td><input type="text" value="&#8734;" /></td>
+								<td><input type="text" value="82.00" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="94.30" /></td>
+							</tr>
+							<tr class="odd" tal:replace="nothing">
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+							</tr>
+							<tr class="even" tal:replace="nothing">
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+							</tr>
+							<tr class="odd" tal:replace="nothing">
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+							</tr>
+						</tbody>
+						<tfoot>
+							<tr>
+								<th colspan="3"></th>
+								<td colspan="2" class="discountable"><label>Discountable?<input type="checkbox" value="1" checked="true" tal:attributes="id string:$service/id-0-discountable;name string:$service/id-0-discountable;checked decode:service/discountable 1 'true' nothing" /></label></td>
+							</tr>
+						</tfoot>
+					</table>
+					
+					<br />
+					
+					<table tal:replace="nothing" class="multi">
+						<colgroup>
+							<col class="min" />
+							<col class="max" />
+						</colgroup>
+						<colgroup>
+							<col class="cost" />
+							<col class="markup" />
+							<col class="price" />
+						</colgroup>
+						<thead>
+							<tr class="service">
+								<th colspan="4">Two Colour Impression</th>
+								<th colspan="1" class="top"><a href="#content">^</a></th>
+							</tr>
+							<tr class="units">
+								<th colspan="2">Impression</th>
+								<th colspan="3">Per 1000 Impressions</th>
+							</tr>
+							<tr class="per-service">
+								<th class="min">Min.</th>
+								<th class="max">Max.</th>
+								<th class="cost">Cost ($)</th>
+								<th class="markup">Markup (%)</th>
+								<th class="price">Price ($)</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="even">
+								<td><input type="text" value="0" /></td>
+								<td><input type="text" value="1000" /></td>
+								<td><input type="text" value="100.00" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="115.00" /></td>
+							</tr>
+							<tr class="odd">
+								<td><input type="text" value="1000" /></td>
+								<td><input type="text" value="2000" /></td>
+								<td><input type="text" value="90.00" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="103.50" /></td>
+							</tr>
+							<tr class="even">
+								<td><input type="text" value="2000" /></td>
+								<td><input type="text" value="3000" /></td>
+								<td><input type="text" value="87.00" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="100.05" /></td>
+							</tr>
+							<tr class="odd">
+								<td><input type="text" value="3000" /></td>
+								<td><input type="text" value="10000" /></td>
+								<td><input type="text" value="84.50" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="97.12" /></td>
+							</tr>
+							<tr class="even">
+								<td><input type="text" value="10000" /></td>
+								<td><input type="text" value="&#8734;" /></td>
+								<td><input type="text" value="82.00" /></td>
+								<td><input type="text" value="15.00" /></td>
+								<td><input type="text" value="94.30" /></td>
+							</tr>
+							<tr class="odd">
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+							</tr>
+							<tr class="even">
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+							</tr>
+							<tr class="odd">
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+								<td><input type="text" value="" /></td>
+							</tr>
+						</tbody>
+						<tfoot>
+							<tr>
+								<th colspan="3"></th>
+								<td colspan="2" class="discountable"><label>Discountable?<input type="checkbox" value="1" checked="true" /></label></td>
+							</tr>
+						</tfoot>
+					</table>
+					<br />
+
+					<div class="button-bar">
+						<input name="save" type="submit" class="button right" value="Save" tal:attributes="value decode:$type/exists 1 string:Save string:Create" />
+						<input id="reset" name="reset" type="reset" class="button right" value="Reset" />
+						<br />
+					</div>
+					
+					<br />
+				</fieldset>
+			</form>
+			<p tal:condition="false:types">There are currently no services which may be performed on this equipment.</p>
+
+		</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

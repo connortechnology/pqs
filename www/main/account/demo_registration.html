@@ -1,0 +1,131 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Account - Demo Registration
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+		<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+    <!--#include virtual="/includes/h2-js.html" -->
+
+	<script language="JavaScript" type="text/javascript" src="/javascripts/detect.js"></script>
+  <script language="JavaScript" type="text/javascript" src="/javascripts/other.js"></script>
+	<script language="javasript" type="text/javascript">
+	function addCountryInfo(country){
+		if (country == "CA") {
+			document.forms['f1'].elements["ddmStateProvince"].value = "ON";
+			document.forms['f1'].elements["txtPostalCode"].value = "N2E3G4";
+		}else{
+			document.forms['f1'].elements["ddmStateProvince"].value = "DC";
+			document.forms['f1'].elements["txtPostalCode"].value = "20001-2114";
+		}
+	}
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Account &#187;</span> Demo Registration</h1>
+	<p>Fill in the information below and click submit to register for our demo.
+	<p>If you would like to return to our demo at a later date, you will be asked to supply your password which will be &quot;print&quot; along with your email address. Once logged into our demo you may change your account information including password at anytime by accessing the &quot;Profile&quot; link located under the &quot;My Account&quot; menu.</p>
+	<p>Imagine yourself as a customer or employee accessing your own print management and procurement center, fully customized with your own company's identity, information, equipment, services, materials and pricelists.</p>
+		<form method="post" action="/main/account/confirmation_login_application.html" name="f1">
+		
+		<fieldset>
+			<legend>User Information</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtCompanyName"><span class="required">*</span>Company:</label>
+			<input type="text" id="txtCompanyName" name="txtCompanyName" value="<?txtCompanyName?>" class="input-text" />
+			<br />
+			
+			<span class="label"><span class="required">*</span>Salutation:</span>
+
+			<label class="radio">
+				<input type="radio" id="rdbSalutation" name="rdbSalutation" value="Mr." />
+				Mr.
+			</label>
+			
+			<label class="radio">
+				<input type="radio" id="rdbSalutation" name="rdbSalutation" value="Mrs." />
+				Mrs.
+			</label>
+
+			<label class="radio">
+				<input type="radio" id="rdbSalutation" name="rdbSalutation" value="Ms." />
+				Ms.
+			</label>
+
+			<label class="radio">
+				<input type="radio" id="rdbSalutation" name="rdbSalutation" value="Miss" />
+				Miss
+			</label>
+			
+			<br />
+			
+			<label for="txtFirstName"><span class="required">*</span>Contact First Name:</label>
+			<input type="text" id="txtFirstName" name="txtFirstName" value="<?txtFirstName?>" class="input-text" />
+			<br />
+			<label for="txtLastName"><span class="required">*</span>Contact Last Name:</label>
+			<input type="text" id="txtLastName" name="txtLastName" value="<?txtLastName?>" class="input-text" />
+			<br />
+
+			<label for="txtPhone"><span class="required">*</span>Phone:</label>
+			<input type="text" id="txtPhone" name="txtPhone" value="<?txtPhone?>" class="input-text" />
+			<br />
+			
+			<span class="label"><span class="required">*</span>Country:</span>
+			<label class="radio">
+				<input type="radio" name="ddmCountry" value="CA"  onclick="addCountryInfo(this.value)" >
+				Canada
+			</label>
+			<label class="radio">
+				<input type="radio" name="ddmCountry"  value="US" onclick="addCountryInfo(this.value)" >
+				United States
+			</label>
+			<br />
+			
+			<label for="txtEmail"><span class="required">*</span>
+			E-mail Address:
+			</label>
+				<input type="text" id="txtEmail" name="txtEmail" value="<?txtEmail?>" class="input-text" />
+			<br />					
+		
+		<div class="button-bar indent-regular">
+			<input type="reset" id="button-space" class="button" value="Reset" />
+			<input type="submit" class="button" value="Submit" />
+		</div>
+		<br />
+		
+		</fieldset>
+		
+			<input type="hidden" name="txtTitle" value="Software Tester">
+			<input type="hidden" name="txtAddress1" value="11 Tester Way">
+			<input type="hidden" name="txtCity" value="Test Town">
+			<input type="hidden" name="ddmStateProvince" >
+			<input type="hidden" name="txtPostalCode" >
+			<input type="hidden" name="rdbAccountType" value="EndUser">
+			<input type="hidden" name="rdb_HTMLEmails" value="Y">
+			<input type="hidden" name="txtPassword" value="print">
+			<input type="hidden" name="txtVerifyPassword" value="print">
+			
+		</form>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/account.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+        
+    <script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+    </script>
+    <script type="text/javascript">
+    _uacct = "UA-2241953-1";
+    urchinTracker();
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Managerial - Taxes
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">System &#187; Configuration &#187;</span> Taxes</h1>
+
+	<form method="post" action="/administrator/managerial/county_taxes.html" name="f1">
+		<fieldset>
+			<legend>
+				Details
+			</legend>
+
+			<table class="no-center no-formatting" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+					<th style="width: 20em; text-align: left;">Region</th>
+					<th style="width: 10em;">Tax Amount (%)</th>
+				</tr>
+	
+				<? loop TAXES ?>
+					<tr>
+						<td><label for="txtFST<?id?>" class="label"><?name?></label></td>
+						<td style="text-align: center;">
+							<input type="text" id="tax-<?id?>" name="tax-<?id?>" class="smBox" size="9" value="<?amount?>" />
+						</td>
+					</tr>
+	
+				<? endloop TAXES ?>
+	
+				<tr>
+					<td>&nbsp;</td>
+					
+					<td colspan="3">
+						<div class="button-bar">
+							<input class="button" type="reset" />
+							<input class="button" type="submit" name="btnFunction" value="Submit" />
+							<br />
+						</div>
+					</td>
+				</tr>
+			</table>
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+<head>
+	<title tal:content="title">Print-Quotes Title</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<xi:include href="/includes/h1-admin-css.html" />
+
+	<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+</head>
+<body>
+	<h1>Predefined Projects</h1>
+
+	<form method="get">
+		<label>Name: <input type="text" name="name" /></label>
+		<input type="submit" value="Filter" />
+	</form>
+
+	<table>
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr tal:repeat="projects p">
+				<td tal:content="p/id">00001</td>
+				<td tal:content="p/name">Project name</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<a href="#" onclick="window.close();">[ X ]</a>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title tal:content="title">Print-Quotes Title</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+
+		<script type="text/javascript" src="/javascripts/admin/form.js"></script>
+
+		<!-- TEMPORARY: Header menus. -->
+		<script type="text/javascript" src="/javascripts/other.js"></script>
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+	</head>
+	<body>
+		<!-- TEMPORARY: Old header. -->
+		<xi:include href="/includes/c1-tal.html" />
+		<!-- Sidebar -->
+		<div id="sidebar">
+			<!-- Audit log for the current page. -->
+			<div class="option">
+				<a class="back" href="/admin/audit_log.html" tal:attributes="href string:/admin/audit_log?page=${uri_escape: r/uri}&query=${uri_escape: r/args}">History</a>			</div>
+		</div>
+
+		<div id="content">
+			<h1><span class="title-section">System &#187; Production &#187;</span> Sub-Service Types</h1>
+
+			<form name="sub_service_type" method="post" action="update_sub_service_type">
+				<fieldset tal:repeat="t service_types">
+					<legend tal:content="t/name">
+						Service Type
+					</legend>
+
+					<div class="sub_type" tal:repeat="s t/sub_types">
+						<label><span>Name:</span><input name="name" type="text" value="" tal:attr="name string:name-$t/id-$s/id;value s/name;" /></label>
+						<label><span>Description:</span><textarea name="description" tal:content="s/description" tal:attr="name string:description-$t/id-$s/id;"></textarea></label>
+					</div>
+
+					<!-- Instead of growing the inputs at need, we'll just supply four extra slots. -->
+					<div class="sub_type">
+						<label><span>Name:</span><input name="name" type="text" value="" tal:attr="name string:name-$t/id-0-1" /></label>
+						<label><span>Description:</span><textarea name="description" tal:attr="name string:description-$t/id-0-1"></textarea></label>
+					</div>
+
+					<div>
+						<label><span>Name:</span><input name="name" type="text" value="" tal:attr="name string:name-$t/id-0-2" /></label>
+						<label><span>Description:</span><textarea name="description" tal:attr="name string:description-$t/id-0-2"></textarea></label>
+					</div>
+
+					<br />
+
+					<div class="button-bar indent-regular">
+						<input name="save"  type="submit" class="button" value="Save" />
+						<input name="reset" type="reset"  class="button reset" value="Reset" />
+						<br />
+					</div>
+					
+					<br />
+				</fieldset>
+			</form>
+
+		</div>
+	<xi:include href="/includes/f1-tal.html" />
+	</body>
+</html>

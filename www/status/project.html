@@ -1,0 +1,294 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title>Project Status</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" type="text/css" href="/styles/status/style.css" />
+
+		<script type="text/javascript">
+			pid       = '$proj/id';
+			timestamp = '$timestamp';
+		</script>
+
+		<script type="text/javascript" src="/javascripts/JSAN.js"></script>
+		<script type="text/javascript" src="/javascripts/status/project.js"></script>
+
+		<script type="text/javascript">
+			var states = ['none', 'open', 'wait', 'wait', 'wait', 'done'];
+			var labels = ['  ', 'Started', 'Paused', 'Waiting on Customer', 'Waiting for Approval', 'Completed'];
+		</script>
+
+		<!-- TEMPORARY: Old menu interface. -->
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+		<script type="text/javascript" src="/javascripts/employee_content.js"></script>
+	</head>
+	<body>
+
+		<xi:include href="/includes/c1-tal.html" />
+
+		<div id="sidebar">
+			<a href="/search.html" tal:attr="href string:search" tal:content="string:&lt;&lt; Search">&lt;&lt; Search Results</a>
+			<div id="project_info" class="side-panel">
+				<h2>Project Info.</h2>
+
+				<table class="columnar no-formatting">
+					<tr>
+						<th>Order ID:</th>
+						<td><a href="/main/order/order_history_details.html" tal:attr="href string:/main/order/order_history_details.html?order_id=$proj/order_id" tal:content="proj/order_id">20050045</a></td>
+					</tr>
+					<tr>
+						<th>Quantity:</th><td tal:content="proj/order_qty">5000</td>
+					</tr>
+					<tr>
+						<th>Created on:</th><td tal:content="proj/createdate">2005-07-01</td>
+					</tr>
+					<tr>
+						<th>Due by:</th><td tal:content="proj/duedate">2005-08-03</td>
+					</tr>
+				</table>
+			</div>
+
+			<div id="contact_info" class="side-panel" tal:define="p proj">
+				<h2>Customer Contact</h2>
+
+				<div class="contact">
+					<strong tal:content="string:$p/user_proname $p/user_surname">Matthew Grierson</strong><br />
+					<div class="phone" tal:condition="p/user_phone"><abbr title="Phone">p.</abbr>&nbsp;<span tal:replace="p/user_phone">519-894-6514</span> <span tal:condition="p/user_ext"><abbr title="Extension">ext.</abbr> <span tal:replace="p/user_ext">224</span></span></div>
+					<div class="fax"   tal:condition="p/user_fax"><abbr title="Facsimile">f.</abbr>&nbsp;<span tal:replace="p/user_fax">519-894-6515</span></div>
+				</div>
+				<address>
+					<strong tal:content="p/company_name">Print-Quotes Software Inc.</strong><br />
+					<span tal:replace="p/company_address">88 Shoemaker Street</span><br />
+					<span tal:replace="p/company_city">Kitchener</span>, <span tal:replace="p/company_province">Ontario</span><br />
+					<span tal:replace="p/company_country">Canada</span>&nbsp; <span tal:replace="p/company_postalcode">N2E 3G4</span><br />
+				</address>
+				<a style="display: block; text-align: right; margin-top: 1.5ex;" href="mailto:mgrierson@print-quotes-software.com" tal:attr="href string:mailto:$p/user_email?Subject=Order: $p/order_id Project: ($p/id) $p/name">+ Send Email +</a>			</div>
+			<div id="comments" class="side-panel" tal:condition="true:proj/changelog">
+				<h2 title="Last five comments on project service status changes.">Status Changes</h2>
+				<!-- DISABLED: Hover status changes not fully supported yet.
+				<script type="text/javascript">
+					var changes = new Object;
+					changes['sc1034'] = [ 4, ['2411-Prepress-16097'] ];
+					changes['sc1033'] = [ 1, ['2411-Prepress-16097'] ];
+					changes['sc1030'] = [ 3, ['2411-Prepress-16097'] ];
+					changes['sc1015'] = [ 2, [
+							'2411-Printing-16096',
+							'2411-Printing-16111',
+							'2411-Printing-16112',
+							'2411-Printing-16114',
+							'2411-Printing-16115',
+							'2411-Bindery-16104',
+							'2411-Bindery-16105',
+							'2411-Bindery-16107',
+							'2411-Bindery-16118',
+							'2411-Bindery-16120',
+							'2411-Bindery-16121',
+							'2411-Packaging-16099'
+					]];
+					changes['sc1001'] = [ 5, ['2411-Shipping-16101'] ];
+				</script>
+				-->
+				<div id="changelog">
+					<p id="sc1034" tal:repeat="c proj/changelog" tal:attr="id c/xid"><span class="date" tal:content="c/mtime" tal:attr="title string:Modified by $c/name.">2005-08-08 16:12</span> <span tal:replace="substr:c/comment 0 125 1">New layout completed, waiting for customer approval.</span></p>
+					<p id="sc1033" tal:replace="nothing"><span class="date">2005-08-08 14:02</span> Redoing the layout with the new data.</p>
+					<p id="sc1030" tal:replace="nothing"><span class="date">2005-08-08 13:48</span> Waiting for new data.</p>
+					<p id="sc1015" tal:replace="nothing"><span class="date">2005-08-08 13:47</span> Customer had supplied last years sales data, had to stop the presses. The customer realises it's their <a href="" title="Click to read full comment.">&#8230;</a></p>
+					<p id="sc1001" tal:replace="nothing"><span class="date">2005-08-06 12:20</span> Shipped samples via Fedex Express.</p>
+				</div>
+				<!-- TODO: That entire page
+				<a style="display: block; text-align: right" href="/audit_log.html">Complete Log &gt;&gt;</a>				-->
+			</div>
+		</div>
+		<div id="content">
+			<h1><span class="title-section">Production &#187;</span> Status &#187; Project: <span tal:replace="proj/id">1431</span> &#8211; <span tal:replace="proj/name">Widget Catalogue</span></h1>
+			<p tal:condition="proj/comments" tal:content="proj/comments"></p>
+			<p id="foo"></p>
+
+			<table id="project" class="main" summary="Project service statuses.">
+				<col class="name" />
+				<col class="mtime" />
+				<col class="status" />
+				<col class="supplied" />
+				<thead>
+					<tr class="main">
+						<th class="vert-border">Project Service</th>
+						<th class="vert-border" title="last modified time">Modified</th>
+						<th class="vert-border">Status</th>
+						<th title="Customer Supplied">CS</th>
+					</tr>
+				</thead>
+				<tbody tal:repeat="cat proj/services">
+					<tr class="group">
+						<th class="category" colspan="4">
+							<div class="status done" tal:attr="id string:cat-$cat/group;class string:status"></div><!-- class string:status $cat/state -->
+							<span tal:replace="cat/group">Prepress</span>
+						</th>
+					</tr>
+					<tr tal:repeat="item cat/data" tal:attr="id item/id;class decode:repeat/even 0 'even' 'odd'">
+						<td>
+							<input name="sid" type="checkbox" tal:attr="id string:c$item/id;value item/id" />
+							<a href="service.html" tal:content="item/name" tal:attr="href string:service?pid=$proj/id\;sid=$item/id">CD Burning</a>						</td>
+						<td tal:content="item/mtime">2 days ago</td>
+						<td class="done" tal:content="item/state/name" tal:attr="class item/state/type">Done</td>
+						<td tal:content="decode:item/supplied 1 'Y' nothing"></td>
+					</tr>
+				</tbody>
+				<tbody tal:replace="nothing">
+					<!-- This is for mockup only, it has no bearing on the template. -->
+					<tr class="odd">
+						<td><a href="service.html">Graphic Design</a></td>
+						<td>1 week ago</td>
+						<td class="done">Done</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<td><a href="service.html">Type Setting</a></td>
+						<td>1 week ago</td>
+						<td class="done">Done</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="odd">
+						<td><a href="service.html">Imposition Layout</a></td>
+						<td>4 days ago</td>
+						<td class="done">Done</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<th class="category" colspan="4"><div class="status done"></div>Proofs</th>
+					</tr>
+					<tr>
+						<td><a href="service.html">Proofs</a></td>
+						<td>3 days ago</td>
+						<td class="done">Done</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<th class="category" colspan="4"><div class="status wait"></div>Printing</th>
+					</tr>
+					<tr>
+						<td><a href="service.html">Cover Spreads</a></td>
+						<td>1 days ago</td>
+						<td class="done">Done</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="odd">
+						<td><a href="service.html">Interior Spreads - 1</a></td>
+						<td>45 minutes ago</td>
+						<td class="wait">Waiting for Approval</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<td><a href="service.html">Interior Spreads - 2</a></td>
+						<td>2 hours ago</td>
+						<td class="wait">Waiting for Approval</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="odd">
+						<td><a href="service.html">Interior Spreads - 3</a></td>
+						<td>10 minutes ago</td>
+						<td class="open">Opened</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<td><a href="service.html">Interior Spreads - 4</a></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="odd">
+						<td><a href="service.html">Gate Folded Spreads - 1</a></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<td><a href="service.html">Gate Folded Spreads - 2</a></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<th class="category" colspan="4"><div class="status open"></div>Bindery</th>
+					</tr>
+					<tr>
+						<td><a href="service.html">Cutting</a></td>
+						<td>1 days ago</td>
+						<td class="open">Opened</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="odd">
+						<td><a href="service.html">Folding</a></td>
+						<td>3 hours ago</td>
+						<td class="open">Opened</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<td><a href="service.html">Spiral Binding</a></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="odd">
+						<td><a href="service.html">Round Cornering</a></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>Y</td>
+					</tr>
+					<tr>
+						<th class="category" colspan="4"><div class="status"></div>Packing</th>
+					</tr>
+					<tr>
+						<td><a href="service.html">Packing</a></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<th class="category" colspan="4"><div class="status open"></div>Shipping</th>
+					</tr>
+					<tr>
+						<td><a href="service.html">Shipping - Proofs</a></td>
+						<td>2 days ago</td>
+						<td class="done">Done</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="odd">
+						<td><a href="service.html">Shipping - Project</a></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+					</tr>
+				</tbody>
+			</table>
+			<div >
+				<!--
+				<form method="POST">
+					<input type="hidden" name="pid" tal::attr="value proj/id" />
+					<input id="cancel" type="submit" value="Cancel Project" />
+				</form>
+				-->
+				<form action="complete_project" method="POST">
+					<input type="hidden" name="pid" tal:attr="value proj/id" />
+					<input id="complete" class="button-bar" type="submit" value="Complete Project" />
+				</form>
+				<br class="clear" />
+				<form action="update_tech" method="POST">
+					<input type="hidden" name="pid" tal:attr="value proj/id" />
+					<input name="tech" type="text" value="" />
+					<input id="complete" class="button-bar" type="submit" value="Update Tech" />
+				</form>
+				</div>
+		</div>
+		<!-- State control context menu. -->
+		<xi:include href="/status/state_menu.xml" />
+		<!-- DISABLE: Not sure if we'll ever do this.
+		<div id="loggedin">
+			<a href="logout.html">Logout</a> <span class="label">Logged in as: </span><span class="name" tal:content="user/name">John Smith</span>
+		</div>
+		-->
+		<xi:include href="/includes/f1-tal.html" />
+	</body>
+</html>

@@ -1,0 +1,26 @@
+<fieldset>
+	<legend>Dimensions</legend>
+	
+	<p>What are the dimensions of the screen printed image on <?SurfaceNumber?>? (Use <span class="tip" title="<!--#include virtual="/includes/fraction_to_decimal_dimensions.html" -->">decimals</span>.)</p>
+
+	<label for="flat_width">Dimensions:</label>
+	<input id="flat_width" name="flat_width" size="9" value="<?flat_width?>"	class="smbox" />
+	<input id="flat_height" name="flat_height" size="9" value="<?flat_height?>" class="smbox" />
+	<label for="flat_height" class="post-input">(W x H)</label>
+	<br />
+</fieldset>
+
+<fieldset>
+	<legend>Custom Jig</legend>
+	
+	<p>Will your item(s) require a custom jig to support it throughout the screen printing of this surface? If your item(s) require a jig for this surface please select whether  you will be supplying it or not.</p>
+	
+	<label>Jig:</label>
+	<div>
+		<label for="jig_requiredsupplied" class="radio"><input type="radio" id="jig_requiredsupplied" name="jig_required" value="supplied" />Jig Supplied</label><br />
+		<label for="jig_requiredcustom" class="radio"><input type="radio" id="jig_requiredcustom" name="jig_required" value="custom" />Custom Jig Required</label><br />
+		<label for="jig_requiredno" class="radio"><input type="radio" id="jig_requiredno" name="jig_required" value="no" />No Jig</label>
+	</div>
+	<br />
+</fieldset>
+

@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+        <!--#include virtual="/includes/web_page_title.html" -->
+        Projects - <?service.category?> - <?service.name?>
+        <!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+    <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+	
+	<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+		<fieldset>
+			<legend>
+				Film
+			</legend>
+		
+			<p class="none">&nbsp;</p>
+		
+			<? while ( @$variable{'SignatureGroupIndex','Reference','FilmQuantity','FilmWidth','FilmHeight','LineScreen','FilmType','Emulsion'} = splice @{$$variable{'SignatureGroupsFilm'}},0,8; ) ?>
+		
+				<? if ( $$variable{'Reference'} ne '' ) ?>
+				
+					<h4>Information for <?Reference?></h4>
+				
+				<? endif ( $$variable{'Reference'} ne '' ) ?>
+			
+				<br />
+			
+			
+				<p>What type of film is required?</p>
+				
+				<label>Film Type:</label>
+				<div>
+					<label for="rdbFilmTypeNegative<?SignatureGroupIndex?>" class="radio tip" title="Film containing an image in which the values of the original are reversed so that the dark areas appear light and vice versa."><input type="radio" id="rdbFilmTypeNegative<?SignatureGroupIndex?>" name="rdbFilmType-<?SignatureGroupIndex?>" <? if ( $$variable{'FilmType'} eq 'Negative' ) ?>checked<? endif ( $$variable{'FilmType'} eq 'Negative' ) ?> value="Negative" />Negative</label><br />
+					<label for="rdbFilmTypePositive<?SignatureGroupIndex?>" class="radio tip" title="In photography, film containing the same light and dark values as the original. The reverse of negative."><input type="radio" id="rdbFilmTypePositive<?SignatureGroupIndex?>" name="rdbFilmType-<?SignatureGroupIndex?>" <? if ( $$variable{'FilmType'} eq 'Positive' ) ?>checked<? endif ( $$variable{'FilmType'} eq 'Positive' ) ?> value="Positive" />Postive</label>
+				</div>
+				<br />
+		
+				<label>Emulsion:</label>
+				<div>
+					<label for="rdbEmulsionDown<?SignatureGroupIndex?>" class="radio tip" title="Emulsion Down is when the side of the film that the image is on is facing down."><input type="radio" id="rdbEmulsionDown<?SignatureGroupIndex?>" name="rdbEmulsion-<?SignatureGroupIndex?>" <? if ( $$variable{'emulsion'} eq 'down' ) ?>checked="checked"<? endif ( $$variable{'Emulsion'} eq 'Down' ) ?> value="Down" />Emulsion Down</label><br />
+					<label for="rdbEmulsionUp<?SignatureGroupIndex?>" class="radio tip" title="Emulsion Up is when the side of the film that the image is on is facing up."><input type="radio" id="rdbEmulsionUp<?SignatureGroupIndex?>" name="rdbEmulsion-<?SignatureGroupIndex?>" <? if ( $$variable{'emulsion'} eq 'up' ) ?>checked="checked"<? endif ( $$variable{'Emulsion'} eq 'Up' ) ?> value="Up" />Emulsion Up</label>
+				</div>
+				<br />
+		
+				<label for="txtFilmQuantity<?SignatureGroupIndex?>">Quantity:</label>
+				<input type="text" id="txtFilmQuantity<?SignatureGroupIndex?>" name="txtFilmQuantity-<?SignatureGroupIndex?>" value="<?FilmQuantity?>" size="9" class="smBox" />
+				<br />
+				
+				<label for="txtFilmWidth-<?SignatureGroupIndex?>">Size of the Film:</label>
+				<input type="text" id="txtFilmWidth-<?SignatureGroupIndex?>" name="txtFilmWidth-<?SignatureGroupIndex?>" value="<?FilmWidth?>" size="9" class="smBox" />
+				<input type="text" id="txtFilmHeight-<?SignatureGroupIndex?>" name="txtFilmHeight-<?SignatureGroupIndex?>" value="<?FilmHeight?>" size="9" class="smBox" />
+				<label for="txtFilmHeight-<?SignatureGroupIndex?>" class="post-input">(W x H)</label>
+				<br />
+				
+				<label for="txtLineScreen-<?SignatureGroupIndex?>">Line screen:</label>
+				<input type="text" id="txtLineScreen-<?SignatureGroupIndex?>" name="txtLineScreen-<?SignatureGroupIndex?>" value="<?LineScreen?>" size="9" class="smBox" />
+				<br />
+				
+				<span class="label">Unit Price:</span>
+				<span class="currency">$</span>
+				<span id="txtFilmUnitPrice-<?SignatureGroupIndex?>" class="price"></span>
+		
+			<? endwhile ( @$variable{'SignatureGroupIndex','Reference','FilmQuantity','FilmWidth','FilmHeight','LineScreen','FilmType','Emulsion'} = splice @{$$variable{'SignatureGroupsFilm'}},0,8; ) ?>
+			<br />
+		</fieldset>
+		
+		
+		<div id="pricing">
+			<h2>Pricing</h2>
+		
+			<span class="label">Total Service Price:</span>
+		
+			<span class="currency">$</span>
+			<span id="txtPrice1"><?txtPrice1?></span>
+			<br />
+		</div>
+		
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+		<input type="hidden" name="FinishCount" value="<?FinishCount?>" />
+	</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

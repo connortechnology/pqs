@@ -1,0 +1,10 @@
+<p><?first_name?> <?last_name?> has made a helpdesk submission.</p>
+<p>Click <a href="/employee/support/helpdesk.html?Issue_Cookie=true&helpdesk_id=<?HelpDeskIndex?>">here</a> to see details.</p>
+
+<p>Company Name: <?company_name?><br />
+Name: <?first_name?> <?last_name?><br />
+Phone: <?phone?> <?if extension?>Ext. <?extension?><?endif extension?><br />
+Email Address: <?email?><br />
+Question: <?txtQuestion-Quote?><br />
+
+Response Format:<? if ( $$variable{'rdbMethod'} eq 'E' ) ?> Email<? else ( $$variable{'rdbMethod'} eq 'E' ) ?> Phone<? endif ( $$variable{'rdbMethod'} eq 'E' ) ?></p>

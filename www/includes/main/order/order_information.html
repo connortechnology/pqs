@@ -1,0 +1,31 @@
+<table width="600" border="0" cellspacing="0" cellpadding="0">
+	<tr style="vertical-align: top; text-align: left;">
+		<td width="295"><strong>Ordered by:</strong><br />
+			<? if ( $$variable{'txtFirstName'} ne '' or $$variable{'txtLastName'} ne '' ) ?>
+				<?txtSalutation?> <?txtFirstName?> <?txtLastName?><br />
+			<? endif ( $$variable{'txtFirstName'} ne '' or $$variable{'txtLastName'} ne '' ) ?>
+
+			<? if ( $$variable{'txtCompanyName'} ne '' ) ?>
+				<?txtCompanyName?><br />
+			<? endif ( $$variable{'txtCompanyName'} ne '' ) ?>
+
+			<?txtAddress1?><br />
+
+			<? if ( $$variable{'txtAddress2'} ne '' ) ?>
+				<?txtAddress2?><br />
+			<? endif ( $$variable{'txtAddress2'} ne '' ) ?>
+
+			<?CCITYPROVCOUNTRY?><br />
+			<?txtPostalCode?><br />
+
+			<? if ( $$variable{'txtPhone'} ne '' ) ?>
+				<?txtPhone?><? if ( $$variable{'txtExtension'} ne '' ) ?> &nbsp;Ext. <?txtExtension?><? endif ( $$variable{'txtExtension'} ne '' ) ?><br />
+			<? endif ( $$variable{'txtPhone'} ne '' ) ?>
+
+			<? if ( $$variable{'txtFax'} ne '' ) ?><?txtFax?><br /><? endif ( $$variable{'txtFax'} ne '' ) ?>
+			<?txtEmail?><br /></td>
+
+		<td width="10">&nbsp;</td>
+		<td width="295">&nbsp;</td>
+	</tr>
+</table>

@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>Data Set</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" media="screen" />
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1>Data Set</h1>
+
+	<p>Datasets may be uploaded for bulk setting or downloaded for editing or archival purposes.</p>
+
+	<div style="padding: 2ex;">
+		<h3>Upload</h3>
+		<p>For large datasets, bulk uploading of information may be preferable over inputing individual records. Files must be provided in <acronym title="Comma Separated Values">CSV</acronym> format with the first line consisting of the header with field names matching that of the template.</p>
+
+		<form action="upload.html" method="post" enctype="multipart/form-data">
+			<input type="hidden" name="pid" value="<?pid?>">
+
+			<?if create_to_order?>
+				<input type="hidden" name="create_to_order" value="1" />
+			<?endif create_to_order?>
+
+			<span title="Choose to merge the uploaded data with the existing data (records with the same ID will be updated, others inserted), or replace existing with the newly uploaded data">
+				<label>Merge   <input type="radio" name="replace" value="0"></label>
+				<label>Replace <input type="radio" name="replace" value="1" checked="checked"></label>
+			</span>
+
+			<input type="file"   name="data" size="45" style="margin-left: 2ex;" accept="text/comma-separated-values, text/csv, text/plain" />
+			<input type="submit" value="Upload" />
+		</form>
+	</div>
+
+	<div style="padding: 2ex;">
+		<h3>Download</h3>
+		<p>You can download your currently entered dataset in common formats; for editing in any text based editor or spreadsheet application (Microsoft Excel™, Gnumeric, etc.).</p>
+
+		<div style="margin-left: 2ex; margin-top: 2ex;">
+			Formats: 
+			    <a href="/template/download.html?pid=<?pid?>;type=CSV"><acronym title="Comma Separated Values">CSV</acronym></a> 
+				| <a href="/template/download.html?pid=<?pid?>;type=TSV"><acronym title="Tab Separated Values">TSV</acronym></a>
+		</div>
+	</div>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<ul>
+		<li><a href="main.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">Overview</a></li>
+		<li><a href="assets.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">Assets</a></li>
+		<li><a href="record.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">Records</a></li>
+	</ul>
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

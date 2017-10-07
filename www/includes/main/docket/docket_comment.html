@@ -1,0 +1,23 @@
+<form name='f2' method="POST" action="/main/proj/docket_comment.html?ProjectIndex=<?ProjectIndex?>&ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>&CommentType=<?CommentType?>">
+	<p>Please insert your comments or instructions below:</p>
+
+	<textarea name="Comment" rows="9" cols="60" class="formTxt" id="Comment"><?Comment?></textarea>
+    <br/>
+	
+	<? if is_shipping ?>
+		<p>Tracking Number:</p>
+		<input type="text" name="trackingnumber" id="trackingnumber" value="<?trackingnumber?>" />
+	<? endif is_shipping ?>
+
+	<div class="button-bar">
+		<input type="reset" id="button-space" class="button" value="Reset" />
+		<input type="submit" onclick="f2.submit();Event.observe(window.opener, 'unload', function () {window.close();});window.opener.location.reload(true);" class="button" value="Save" />
+        
+        <? if order_id ?><input type="checkbox" id="change_notfication" name="change_notification" value=1 checked="checked" >
+        <? else order_id ?><input type="checkbox" id="change_notfication" name="change_notification" value=1 >
+        <? endif order_id ?>
+        
+        <label for="change_notification">Change Notification</label>
+		<br class="clear" />
+	</div>
+</form>

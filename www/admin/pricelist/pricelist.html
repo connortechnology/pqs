@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title tal:content="title">Print-Quotes Title</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+
+		<style type="text/css" media="screen">
+			* html div.indent-regular {padding-left: 18.2em;}
+		</style>
+
+		<script type="text/javascript" src="/javascripts/admin/form.js"></script>
+
+		<!-- TEMPORARY: Header menus. -->
+		<script type="text/javascript" src="/javascripts/other.js"></script>
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+	</head>
+	<body>
+		<!-- TEMPORARY: Old header. -->
+		<xi:include href="/includes/c1-tal.html" />
+		<!-- Sidebar -->
+		<div id="sidebar">
+			<div class="option">
+				<table class="no-formatting">
+					<col class="currency" />
+					<col class="name" />
+					<thead>
+						<tr>
+							<th colspan="2">Price Lists</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="selected" tal:repeat="l lists">
+							<td tal:content="l/currency">CAD</td>
+							<td><a href="#Default" tal:omit-tag="true:selected" tal:attributes="href string:pricelist?id=${l/id}" tal:content="l/name">Defualt</a></td>
+						</tr>
+						<tr class="disabled" tal:replace="nothing">
+							<td>CAD</td>
+							<td><a href="#Trade">Trade</a></td>
+						</tr>
+						<tr tal:replace="nothing">
+							<td>USD</td>
+							<td><a href="#Default">Defualt</a></td>
+						</tr>
+						<tr tal:replace="nothing">
+							<td>CHN</td>
+							<td><a href="#Export">Export</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<!-- Audit log for the current page. -->
+			<div class="option">
+				<a class="back" href="/admin/audit_log.html" tal:attributes="href string:/admin/audit_log?page=${uri_escape: r/uri}&query=${uri_escape: r/args}">History</a>
+			</div>
+		</div>
+
+		<div id="content">
+			<div class="group">
+				<form name="list" method="POST" action="pricelist?id=$list/id">
+
+					<h1 tal:content="string:$list/currency &#8211; $list/name Pricelist">CAD - Default Pricelist</h1>
+
+					<!-- General information. -->
+					<fieldset>
+						<legend title="Name and other identifying details.">
+							Basic Information
+						</legend>
+
+						<label><span>Name:</span><input name="name" type="text" value="Preferred" /></label>
+						<label title="Internal identification number"><span>ID:</span><input id="id" name="id" type="text" value="1" disabled="true" /></label>
+						<label><span>Description:</span><textarea name="description"></textarea></label>
+						<label title="The currency the price list is in. Controls symbols and notification of pricing currency to clients. This also has an effect on default customer price list assignment."><span>Currency:</span>
+							<select name="currency">
+								<option value="CAD" tal:repeat="c currency" tal:attributes="value c/code" tal:content="c/name">Canadian Dollars</option>
+								<option value="USD" tal:replace="nothing">US Dollars</option>
+							</select>
+						</label>
+						<br />
+					</fieldset>
+
+
+					<fieldset>
+						<legend>
+							Pricing
+						</legend>
+						
+						<label title="The default discount to apply to all customers in this list."><span>Default Discount:</span><input name="discount" class="numeric" type="text" value="0" /> %</label>
+						<label title="The length of time a quote is guaranteed for. ie. A customer must recalculate $list/month months and $list/day days after last modifying their project."><span>Expire Quotes in:</span>
+							<input name="month" class="numeric" type="text" value="1" /> Months
+							<input name="day"   class="numeric" type="text" value="0" /> Days
+						</label>
+						<br />
+					</fieldset>
+	
+					<!-- Button bar. -->
+					<div class="button-bar">
+						<input id="reset" name="reset"  type="reset"  class="button" value="Reset" style="float: left" />
+						<!-- <input name="new"    type="submit" class="button" value="New" /> -->
+						<input name="copy"   type="submit" class="button" value="Copy" />
+						<input name="delete" type="submit" class="button" value="Delete" />
+						<input name="save"   type="submit" class="button" value="Save" />
+						<br />
+					</div>
+					<br class="clear" />
+				</form>
+
+				<form name="customer" method="POST" action="pricelist?id=$list/id">
+					<fieldset><legend title="Customers in the current price list.">	Customers</legend>
+						<input name="from" type="hidden" tal:attributes="value $list/id" />
+						<label><span>Customer:</span>
+							<select name="customers" multiple="multiple">
+								<option value="134" tal:repeat="c customer" tal:attributes="value c/id" tal:content="c/name">Widget Corp.</option>
+								<option value="415" tal:replace="nothing">Acme Co.</option>
+							</select>
+						</label>
+						<label tal:condition="true:reassign"><span>Reassign:</span>
+							<select name="to">
+								<option value="1" tal:repeat="l reassign" tal:attributes="value l/id" tal:content="string:$l/currency - $l/name">CAD - Default</option>
+								<option value="2" tal:replace="nothing">CAD - Preferred</option>
+								<option value="3" tal:replace="nothing">CAD - Trade</option>
+								<option value="4" tal:replace="nothing">USD - Default</option>
+							</select>
+							<div class="button-bar indent-regular">
+								<input tal:condition="true:reassign" name="reassign" type="submit" class="button" value="Reassign" />
+							</div>
+						</label>
+						<br />
+					</fieldset>
+				</form>
+			</div>
+
+			<br />
+
+			<form method="POST" action="pricelist_action" onsubmit="return pricelist_action(this)">
+				<fieldset id="action">
+					<legend title="Modify either the cost or markup across the entire price list. Price will be recalculated based on cost or markup change.">
+						Actions
+					</legend>
+					<input name="id" type="hidden" tal:attribute="value $list/id" />
+					<label><input name="field" type="radio" value="cost" class="check" /> Cost ($)</label>
+					<label><input name="field" type="radio" value="markup" class="check" /> Markup (%)</label>
+
+					<label><select name="op" style="width: 4.2em;">
+						<option value="+">+</option>
+						<option value="*">&#215;</option>
+						<option value="=">=</option>
+					</select></label>
+					<label><input name="value" type="text" class="numeric" /><br /></label>
+
+					<label><input name="table" type="checkbox" value="service" class="check" /> Service </label>
+					<label><input name="table" type="checkbox" value="material" class="check" /> Material </label>
+					<label><input name="table" type="checkbox" value="paper" class="check" /> Paper   </label>
+					<label><input name="table" type="checkbox" value="shipping" class="check" /> Shipping </label>
+					
+					<div class="button-bar">
+						<input type="button" class="button" onclick="check_elements(this.form.table)" value="Check All" />
+						<br />
+						
+						<input type="submit" class="button" value="Apply" style="position: relative; top: 5px; float: left" onclick="return confirm('This change will effect all pricing in the selected sections. Are you sure you want to continue?')" />
+						<br />
+					</div>
+
+					<br />
+				</fieldset>
+			</form>
+		</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

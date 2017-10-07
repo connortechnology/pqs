@@ -1,0 +1,83 @@
+<fieldset id="templates">
+	<legend>Template Selection</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<input type="hidden" name="hdnBinderyType" value="" />
+
+	<div>
+		<label for="template-SaddleStitching">
+			<img src="/images/main/project_templates/multipage/multipage_saddle_stitch.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-SaddleStitching" value="SaddleStitching" onclick="f1.hdnBinderyType.value='SaddleStitching';project_template(this.form);" />
+			Saddle Stitching<br />
+			(Stapled)
+		</label>
+	</div>
+
+	<div>
+		<label for="template-LoopStitching">
+			<img src="/images/main/project_templates/multipage/multipage_loop_stitch.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-LoopStitching" value="LoopStitching" onclick="f1.hdnBinderyType.value='LoopStitching';project_template(this.form);" />
+			Loop Stitching<br />
+			(For 3-Hole Binders)
+			<!--
+				<input type="radio" name="template" id="template-" value="PerfectBound" onclick="f1.hdnBinderyType.value='PerfectBound';project_template(this.form);" />
+			-->
+		</label>
+	</div>
+
+	<div>
+		<label for="template-PerfectBound">
+			<img src="/images/main/project_templates/multipage/multipage_perfect_bound.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-PerfectBound" value="PerfectBound" onclick="f1.hdnBinderyType.value='PerfectBound';project_template(this.form);" />
+			<!--      Perfect Bound #DEPRECATED -->
+			Perfect Binding
+		</label>
+	</div>
+
+	<div>
+		<label for="template-PlasticComb">
+			<img src="/images/main/project_templates/multipage/multipage_plastic_comb.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-PlasticComb" value="PlasticComb" onclick="f1.hdnBinderyType.value='Sprial';project_template(this.form);" />
+			Plastic Comb<br />
+			(Cerlox)
+		</label>
+	</div>
+
+	<div>
+		<label for="template-PlasticCoil">
+			<img src="/images/main/project_templates/multipage/multipage_plastic_coil.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-PlasticCoil" value="PlasticCoil" onclick="f1.hdnBinderyType.value='Sprial';project_template(this.form);" />
+			Plastic Coil <br />
+			(Spiral or Plastikoil)
+		</label>
+	</div>
+
+	<div>
+		<label for="template-MetalCoil">
+			<img src="/images/main/project_templates/multipage/multipage_metal_coil.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-MetalCoil" value="MetalCoil" onclick="f1.hdnBinderyType.value='Sprial';project_template(this.form);" />
+			Metal Coil<br />
+			(Spiral)
+		</label>
+	</div>
+
+	<div>
+		<label for="template-DoubleLoopWire">
+			<img src="/images/main/project_templates/multipage/multipage_double_loop_wire.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-DoubleLoopWire" value="DoubleLoopWire" onclick="f1.hdnBinderyType.value='Spiral';project_template(this.form);" />
+			Double Loop Wire<br />
+			(Wire-O)
+		</label>
+	</div>
+
+	<div>
+		<label for="template-NoBindery">
+			<img src="/images/main/project_templates/brochures/8.5x11_no_fold.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-NoBindery" value="NoBindery" />
+			No Bindery<br />
+			(Press Sheets Only)
+		</label>
+	</div>
+	<br />
+</fieldset>

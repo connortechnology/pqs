@@ -1,0 +1,27 @@
+<div style=" padding-left: 2em; ">
+
+<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"><span class="label">Equipment:&nbsp;&nbsp;</span>
+<? if ($$variable{'qtyIndex'} == 1 ) ?>
+	<?ddmEquipment1?>
+<? endif ($$variable{'qtyIndex'} == 1 ) ?>
+<? if ($$variable{'qtyIndex'} == 2 ) ?>
+	<?ddmEquipment2?>
+<? endif ($$variable{'qtyIndex'} == 2 ) ?>
+<? if ($$variable{'qtyIndex'} == 3 ) ?>
+	<?ddmEquipment3?>
+<? endif ($$variable{'qtyIndex'} == 3 ) ?></td>
+    <td width="50%"><span class="label">Sets:&nbsp;&nbsp;</span>
+<?rdbSetsOfNumbers?></td>
+  </tr>
+  <tr>
+    <td><? if ($$variable{'txtStartNumber'}) ?>
+<span class="label">Starting Number:&nbsp;&nbsp;</span>
+	<?txtStartNumber?>
+<? if ($$variable{'txtStartNumber'}) ?></td>
+    <td></td>
+  </tr>
+ 
+</table>
+</div>

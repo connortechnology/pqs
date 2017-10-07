@@ -1,0 +1,16 @@
+<table>
+  <tr>
+    <th>Id</th>
+    <th>Name</th>
+  </tr>
+  <?loop shopping_lists?>
+    <tr>
+      <td><a href="shopping_list.html?id=<?id?>"><?id?></a></td>
+      <td><?name?></td>
+      <td><a href="shopping_lists.html?delete=<?id?>">delete</a></td>
+    </tr>
+  <?endloop shopping_lists?>
+</table>
+<form method="POST">
+<input name="list_name" /><input type="submit" />
+</form>

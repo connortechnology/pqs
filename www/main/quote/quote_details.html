@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Quotes - Details
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/quote.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript">
+		var focusObject;
+	</script>
+
+	<script  type="text/javascript">
+		function do_decimals( number ) {
+			var myStr = new String(Math.round(number*100)/100);
+			var decPos = myStr.indexOf(".");
+
+			// test for no decimals
+			if (decPos==-1) {
+				myStr += ".00";
+			} else if (decPos==myStr.length-2) {
+				// test for one decimal
+				myStr += "0";
+			} // end if
+
+			return myStr;
+		}
+
+		function get_element_index( form, elem ) {
+			for ( var i=0; i < form.elements.length; i+= 1 ) {
+				if ( form.elements[i] == elem ) {
+					return i;
+				} /* end if */
+			} /* end for */
+
+			return -1;
+		} /* end function get_element_index( form, elem ) */
+
+		function calc_from_markup( form, elem ) {
+			var index = get_element_index( form, elem );
+			var newprice = form.elements[index+1].value * ((elem.value/100)+1);
+	
+			form.elements[index+2].value = do_decimals( newprice );
+			//calc_subtotal( form );
+		} /* end function calc_from_markup( elem ) */
+
+		function calc_from_price( form, elem ) {
+			var index = get_element_index( form, elem );
+			var markup = ( elem.value*100 / form.elements[index-1].value ) - 100;
+	
+			form.elements[index-2].value = do_decimals( markup );
+			//calc_subtotal( form );
+		} /* end function calc_from_price( elem ) */
+
+		function calc_subtotal(form) {
+			var subTotals = new Array();
+
+			for ( var i=0; i < form.elements.length-4; i += 1 ) {
+				name = form.elements[i].name.substr(0,11);
+
+				if ( name == "txtNewPrice" ) {
+					var priceIndex = parseInt(form.elements[i].name.substr(11,1));
+	
+					if ( null == subTotals[priceIndex-1] ) {
+						subTotals[priceIndex-1] = parseFloat(form.elements[i].value);
+					} else {
+						subTotals[priceIndex-1] += parseFloat(form.elements[i].value);
+					} // end if
+				} // end if
+			} // end for
+
+			for ( var i = 0; i < subTotals.length ; i ++ ) {
+				eval( "form.subTotal" + (i+1) + ".value = do_decimals( subTotals[i] )" );
+			} // end for
+		} // end function recalculate_quote(form)
+
+		function keyhandler(e) {
+			if ( focusObject.name.substr(3,6) == "Markup" ) {
+				calc_from_markup( focusObject.form, focusObject );
+			} else if ( focusObject.name.substr(3,8) == "NewPrice" ) {
+				calc_from_price( focusObject.form, focusObject );
+			} // end if
+		} // end function keyhandler
+	</script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Quotes &#187;</span> Details</h1>
+
+	<? if ( @{$$variable{'projects'}} == 0 ) ?>
+
+		<p>Your quote is empty.</p>
+
+	<? else ( @{$$variable{'projects'}} == 0 ) ?>
+		<form method="post" action="/main/quote/quote_info.html" name="f1">
+
+				<fieldset>
+					<legend>
+						Quote Details
+					</legend>
+	
+					<table class="no-formatting" cellpadding="0" cellspacing="0" border="0">
+						<tr>
+							<th style="text-align: left;"> Project </th>
+							<th style="text-align: right;"> Qty </th>
+							<th style="text-align: right; white-space: nowrap;">Price <?CurrencySymbol?></th>
+							<th style="text-align: right;">Changes</th>
+						</tr>
+	
+						<?loop projects?>
+	
+							<tr>
+								<td><a href="/main/proj/proj_view.html?ProjectIndex=<?project_index?>">
+									<?reference?>
+									&nbsp;</a></td>
+								<td style="text-align: right;"><?qty?></td>
+								<td style="text-align: right;"><input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
+									<?CurrencySymbol?>
+									<?stdprice?>
+								</td>
+								<td style="text-align: right;"><a href="/main/proj/proj_view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="/main/quote/quote_details.html?remove=<?project_index?>">Remove</a></td>
+							</tr>
+	
+						<?endloop projects?>
+						
+						<tr>
+							<td colspan="6">&nbsp;</td>
+						</tr>
+	
+						<?loop totals?>
+							<!--
+								<tr>
+								<td colspan="6" style="text-align: right;">
+								Total Quantity
+								<?index?>
+								:
+								<?CurrencySymbol?>
+								<input readonly class="smBox" type="text" size="9" name="subTotal<?index?>" value="<?total?>" onfocus="blur()" />
+								</td>
+								</tr>
+							-->
+						<?endloop totals?>
+	
+						<tr>
+							<td colspan="6" class="no-formatting align-right">
+								All prices listed in <?CurrencyName?> and subject to applicable taxes.
+							</td>
+						</tr>
+	
+						<? if ( $$variable{'user_id'} eq '0' ) ?>
+							<tr>
+								<td colspan="6" style="text-align: right;"><strong>Note:</strong><br />
+									If you would like to store this quote in history for future reference, you must be logged in. <br />
+									If you are a registered user already and would like to login, click <a href="/main/account/account_login.html"><strong>here</strong></a>.<br />
+									If you would like to register, click <a href="/main/account/registration.html"><strong>here</strong></a>. <br />
+								</td>
+							</tr>
+						<? endif ( $$variable{'user_id'} eq '0' ) ?>
+					</table>
+				</fieldset>
+		
+			<div class="button-bar">
+				<input type="button" class="button" onclick="window.location='/main/proj/proj_hist.html'"     value="Add Project From History" />
+				<input type="button" class="button" onclick="window.location='/main/proj/create.html'" value="Add New Project" />
+				<!-- The above should be links not buttons. -->
+				<?if ($$variable{quote_id} ) ?>
+				<input type="submit" name="btnFunction" class="button right" value="Save and Continue" />
+				<input type="hidden" name="btnGenerateQuote" />
+				<?endif ($$variable{quote_id} ) ?>
+				<br class="clear" />
+				</div>
+		</form>
+	<? endif ( @{$$variable{'projects'}} == 0 ) ?>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/quote.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

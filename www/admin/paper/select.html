@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title tal:content="title">Print-Quotes Title</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+		<link rel="stylesheet" href="/styles/forms.css" type="text/css" />
+
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+	</head>
+	<body>
+		<!-- TEMPORARY: Old menu interface. -->
+		<xi:include href="/includes/c1-tal.html" />
+
+		<div id="content">
+			<h1><span class="title-section">System &#187; Stock &#187;</span> Recommendations</h1>
+
+			<form method="get" action="recommendations">
+				<fieldset>
+					<legend>Paper Selection</legend>
+
+					<p>Please select the papers you want to modify the recommendations of:</p>
+
+					<select id="paper" name="p" multiple="multiple">
+						<optgroup tal:repeat="class paper" tal:attr="label class/group">
+							<option tal:repeat="p class/data"
+											tal:attr="value p/id"
+											tal:content="printf:'%-60s %15s | %-20s | %s' $p/name $p/weight $p/finish $p/colour" >
+								Paper
+							</option>
+						</optgroup>
+					</select>
+					<br />
+					
+					<div class="button-bar">
+						<input type="submit" class="button right" value="Next" />
+						<br />
+					</div>
+				</fieldset>
+			</form>
+		</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

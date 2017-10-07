@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Supplier - Purchase Order
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+    
+    <link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+    <link href="/styles/docket.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/datepickercontrol.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/content.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+    
+    <script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/rfq.js"></script>
+	<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+	<script type="text/javascript" src="/javascripts/datepickercontrol.js"></script>
+<script  type="text/javascript">
+		function open_printer_friendly_version(summaryPage) {
+			window.open('/main/supplier/purchase_order_printer_friendly.html?rid=<?rid?>&sup_id=<?sup_id?>&pid=<?pid?>','printerfriendlyprojectview','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+		
+		function project_files(summaryPage2) {
+			window.open('/main/proj/files.html?Issue_Cookie=true&pid=<?pid?>','projectfiles', 'newWin,top=50,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+	
+	</script>
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Production &#187;</span> Purchase Order</h1>
+    
+		<form name="f1" id="f1" method="POST" action="send_po.html?pid=<?ProjectIndex?>&order_id=<?order_id?>&Services=<?serviceIDs?>" />
+			<!--#include virtual="/includes/forms/rfq.html" -->
+
+
+			<? if show_rid ?>
+			 <div id="suppliercomments"  >
+    <p><label for="RFQSupplierComments"><strong>Supplier Comments:</strong></label></p>
+    <p><textarea id="RFQSupplierComments" name="RFQSupplierComments" cols="1" style="width:93%;"><?RFQ_Header.scomments?></textarea></p>
+     <p style="font-weight:bold; color:#FF0000">Will you be supplying the exact same stock as requested in the RFQ Specifications above?<br />
+  <input name="stock" id="yesstock" type="radio" value="2" disabled="disabled" />Yes
+  <input name="stock" id="nostock"  type="radio" value="1" disabled="disabled" />No
+  </p>
+	</div>
+			<? endif show_rid ?>
+     
+		<?if spo?>
+		<?else spo?>
+            <table width="100%" border="0" >
+              <tr>
+                <td style="vertical-align: top; border: none; background-color: #FFFFFF; text-align: left;">
+				<p><label for="users"><strong>Contact:</strong></label></p>
+                <p>
+                <select name="users" id="users" multiple="multiple" />
+					<?loop user_select ?>
+						<option value="<?stremail?>"><?name?></option>
+					<?endloop user_select ?>
+                </select>
+                </p></td>
+              </tr>
+            </table>
+	
+    		
+    		<input class="button" type="submit" name="btnFunction" value="Send PO"/>
+		<?endif spo?>
+
+    	<input type="hidden" name="rid" value="<?rid?>" />
+    	<input type="hidden" name="sup_id" value="<?sup_id?>" />
+    	<input type="hidden" name="pid" value="<?pid?>" />
+        
+        <input type="button" class="button" onclick="open_printer_friendly_version();" value="Printer Friendly" />
+        <input type="button" class="button" onclick="project_files();" value="Download Project Files" />
+    </form>
+	<br class="clear" />
+	</div>
+    
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/account.html" -->
+    <!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

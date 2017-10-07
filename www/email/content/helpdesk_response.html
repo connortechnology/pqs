@@ -1,0 +1,32 @@
+<p>You submitted a helpdesk question on <?RequestDate?>.</p>
+
+<? loop DATA?>
+   
+		<strong>Title of Request: <?projectname?></strong><br />
+         
+        <? if ($variable->{rdbrequesttype} eq 'Pads') ?>
+         Number of Pads: <?qtypads?><br />
+		Number of Sheets Per Pad: <?sheetsperpad?><br />
+         <? else ($variable->{rdbrequesttype} eq 'Pads') ?>
+         Quantity: <?txtquantity1?><br />
+        <? endif ($variable->{rdbrequesttype} eq 'Pads') ?>
+        
+
+        Size: <?size?><br />
+        Paper Type: <?stock?><br />
+        Color: <?colour?><br />
+        Black and White: <?bw?><br />
+        Double Sided: <?doublesided?><br />
+        Date Needed: <?date?><br />
+        Delivery Location Info: <?shiptoaddress?><br />
+        Phone Number/Location:<?phonenumber?><br />
+        Cost Center: <?costcenter?><br />
+        Request Instructions: <?txtQuestion-Quote?><br />
+        Response Format: <? if ($variable->{rdbMethod} eq 'P') ?>Phone<? endif ($variable->{rdbMethod} eq 'P') ?> <? if ($variable->{rdbMethod} eq 'E') ?>Email<? endif ($variable->{rdbMethod} eq 'E') ?>
+
+
+		<br />
+        <?if not:_last?><hr /><?endif not:_last?>
+	<? endloop DATA?>
+<strong><p style="font-size:14px">Reponse:</p>
+<p style="font-size:14px"><?Response?></p></strong>

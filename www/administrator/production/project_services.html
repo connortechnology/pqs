@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production - Project Services
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">System &#187; Projects &#187;</span> Services</h1>
+
+	<form name="f1" method="post" action="project_services.html" enctype="multipart/form-data">
+
+		<fieldset>
+			<legend>
+				Import / Export
+			</legend>
+
+			<p>Project Services files <strong> must </strong> be in a comma separated values (CSV) format. All columns <strong> must </strong> have titles as the first row of data will be treated as column titles, and hence will be ignored. The columns <strong> must </strong> be in the following order:</p>
+
+			<p>Project Type, Template Type, Service ID, Field Name, Field Value</p>
+
+			<p>To Import a Project Services file: </strong> select &quot;Browse&quot; and select the file containing your new database. Click &quot;Open&quot;, then click on &quot;Import Services&quot;.</p>
+
+			<p><strong> To Export a Project Services file: </strong> select &quot;Export Services&quot; and select &quot;Open&quot; this will download the Project Services file to your &quot;Temporary Internet Files&quot; folder and automatically open the file for you. You can then make any necessary changes and then import the file back in. You can then open this in a spreadsheet program such as Microsoft Excel&trade;.</p>
+
+
+			<label for="fileServices">Project Services:</label>
+			<input type="file" class="file" id="fileServices" name="fileServices" />
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="Import Services" />
+				<input class="button" type="submit" name="btnFunction" value="Export Services" />
+				<br />
+				</div>
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

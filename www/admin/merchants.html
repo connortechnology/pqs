@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:tal="http://purl.org/petal/1.0/"
+    xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title tal:content="title">Print-Quotes Title</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/forms.css" type="text/css" />
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+
+		<script type="text/javascript" src="/javascripts/admin/form.js"></script>
+
+		<!-- TEMPORARY: Header menus. -->
+		<script type="text/javascript" src="/javascripts/other.js"></script>
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+	</head>
+	<body>
+		<!-- TEMPORARY: Old header. -->
+		<xi:include href="/includes/c1-tal.html" />
+
+        <div id="content">
+            <h1><span class="title-section">System &#187; Configuration &#187;</span> Merchant Accounts</h1>
+
+            <form method='post' tal:attr='action: r/uri'>
+                <p>&nbsp;</p>
+
+
+				<div class="button-bar">
+					<a class="button" tal:attr='href string:${r/uri}?new=1'>Add Merchant</a>
+					<br class="clear" />
+					</div>
+
+				<fieldset>
+					<legend>
+						Current Merchants
+					</legend>
+
+					<table>
+						<tr>
+							<th>ID</th>
+							<th>Name</th>
+							<th>Module</th>
+							<th>Account Number</th>
+							<th>Pricelist</th>
+							<th>&nbsp;</th>
+						</tr>
+	
+						<tr tal:repeat="class merchants">
+							<td style="text-align: center;" tal:content="class/id">id</td>
+							<td tal:content="class/name">name</td>
+							<td tal:content="class/module">module</td>
+							<td style="text-align: center;" tal:content="class/account_number">
+								account #
+							</td>
+							<td tal:content="class/pricelist">pricelist</td>
+							<td>
+								<a tal:attr='href string:${r/uri}?id=${class/id}'>
+									edit
+								</a> /
+								<a tal:attr='href string:${r/uri}?d=${class/id}' onclick="return confirm('Are you sure you '
+									+ 'wish to delete this merchant?');">
+									del
+								</a>
+							</td>
+						</tr>
+					</table>
+				</fieldset>
+
+                <div tal:condition='true:display_fields'>
+
+					<fieldset>
+						<legend>
+							New Merchant
+						</legend>
+
+						<p class="none">&nbsp;</p>
+
+						<input type='hidden' name='id' tal:attr='value current_merchant/id' />
+	
+						<label>Name:</label>
+						<input type='text' name='name' tal:attr='value current_merchant/name' />
+						<br />
+
+                        <label>Account Number:</label>
+                        <input type='text' name='account_number' tal:attr='value current_merchant/account_number' />
+                        <br />
+
+                        <label>Password:</label>
+                        <input type='text' name='password' tal:attr='value current_merchant/password' />
+                        <br />
+
+                        <label>Module:</label>
+                        <select name='module'>
+							<option tal:repeat='module modules'
+									tal:content='module'
+									tal:attributes="value module;selected decode:module current_merchant/module 'selected' nothing">
+								module name
+							</option>
+						</select>
+                        <br />
+						
+						<label>Pricelist(s):</label>
+						<select size='5' name='pricelists' multiple='multiple'>
+							<option tal:repeat='list pricelists' tal:content='list/name' tal:attributes='value list/id; selected in_list:list/id current_merchant/id' />
+						</select>
+						<br />
+						
+						<div class="button-bar indent-regular">
+							<input type='submit' class='button' name='action' value='Save' />
+							<input class='button' type='reset' value='Reset' />
+							<br />
+						</div>
+					</fieldset>
+
+                </div>
+            </form>
+        </div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

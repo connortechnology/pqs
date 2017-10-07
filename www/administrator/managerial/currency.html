@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Managerial - Currency
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript">
+		function delete_confirm(form) {
+			var number_of_deleted_projects = 0;
+	
+			for ( var index = 0; index < form.elements.length; index += 1 ) {
+				if ( form.elements[index].name == 'delete' && form.elements[index].checked ) {
+					number_of_deleted_projects += 1;
+				} // end if
+			} // end for
+	
+			if ( number_of_deleted_projects == 0 ) {
+				alert("To Delete Projects, click the checkbox beside the project.");
+			} else {
+				if ( confirm("Are you sure you wish to delete these " + number_of_deleted_projects + " rows?\n") ) {
+					return true;
+				} // end if
+			} // end if
+	
+			return false;
+		}
+	</script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">System &#187; Configuration &#187;</span> Currency</h1>
+
+	<form name="f1">
+
+		<fieldset>
+			<legend>
+				Currencies
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<table class="no-center no-formatting" border="0" cellspacing="0" cellpadding="0">
+				<tr>
+					<th style="text-align: left;">Add a Currency:</td>
+					<th>Code</td>
+					<th>Symbol</td>
+					<th>&nbsp;</td>
+				</tr>
+
+				<tr>
+					<td><input type="text" class="input-text" name="name" size="23" />
+					</td>
+					<td style="text-align: center;"><input type="text" class="smBox" name="code" size="9" />
+					</td>
+					<td style="text-align: center;"><input type="text" class="smBox" name="symbol" size="9" />
+					</td>
+					<td style="text-align: center;"></td>
+				</tr>
+
+				<tr>
+					<td colspan="3">&nbsp;</td>
+				</tr>
+
+				<tr>
+					<th style="text-align: left;">Currencies Entered:</th>
+					<th>Code</th>
+					<th>Symbol</th>
+					<th>Delete</th>
+				</tr>
+
+				<? loop currency ?>
+					<tr>
+						<td><input type="text" class="input-text" name="name<?code?>" value="<?name?>" size="23" /></td>
+						<td style="text-align: center;"><input type="text" class="smBox" name="code<?code?>" value="<?code?>" size="9" /></td>
+						<td style="text-align: center;"><input type="text" class="smBox" name="symbol<?code?>" value="<?symbol?>" size="9" /></td>
+						<td style="text-align: center;"><input type="checkbox" name="delete" value="<?code?>" /></td>
+					</tr>
+				<? endloop currency ?>
+
+				<tr>
+					<td colspan="4">&nbsp;</td>
+				</tr>
+
+				<tr>
+					<td colspan="3">
+						<div class="button-bar">
+							<input class="button" type="reset" />
+							<input class="button" type="submit" name="btnFunction" value="Save" />
+							<br />
+						</div>
+					</td>
+					<td style="text-align: center;">
+						<div class="button-bar">
+							<input class="button right" type="submit" name="btnFunction" value="Delete" onclick="return delete_confirm(f1);" />
+							<br />
+						</div>
+					</td>
+				</tr>
+			</table>
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

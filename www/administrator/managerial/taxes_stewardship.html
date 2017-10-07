@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Managerial - Stewardship Taxes
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+    <style>
+	th {width:84px;	text-align:center !important;}
+	</style>
+    
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">System &#187; Configuration &#187;</span> Stewardship Taxes</h1>
+
+	<form method="post" action="/administrator/managerial/taxes_stewardship.html" name="f1">
+		<fieldset>
+			<legend>
+				Details
+			</legend>
+
+			<table class="no-center no-formatting" cellspacing="0" cellpadding="0" width="1500px">
+				<tr>
+                <th style="text-align: left;"></th>
+					<th colspan="4">Prices below need to be entered per kilogram</th>
+					
+                    </tr>
+                <tr>
+                
+					<th>Stock Tax ID<br />(strbaseprice)</th>
+					<th>AB</th>
+					<th>BC</th>
+					<th>MB</th>
+					<th>NB</th>
+					<th>NL</th>
+					<th>NT</th>
+					<th>NS</th>
+					<th>NU</th>
+					<th>ON</th>
+					<th>PE</th>
+					<th>QC</th>
+					<th>SK</th>
+					<th>YT</th>
+				</tr>
+	
+				<?loop TAXES?>
+					<tr>
+						<td><?id?> - <?name?> </td>
+						<td style="text-align: center;"><input type="text" id="AB-<?id?>" name="AB-<?id?>"  size="6" value="<?abrate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="BC-<?id?>" name="BC-<?id?>"  size="6" value="<?bcrate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="MB-<?id?>" name="MB-<?id?>"  size="6" value="<?mbrate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="NB-<?id?>" name="NB-<?id?>"  size="6" value="<?nbrate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="NF-<?id?>" name="NF-<?id?>"  size="6" value="<?nfrate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="NT-<?id?>" name="NT-<?id?>"  size="6" value="<?ntrate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="NS-<?id?>" name="NS-<?id?>"  size="6" value="<?nsrate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="NU-<?id?>" name="NU-<?id?>"  size="6" value="<?nurate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="ON-<?id?>" name="ON-<?id?>"  size="6" value="<?onrate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="PE-<?id?>" name="PE-<?id?>"  size="6" value="<?perate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="QC-<?id?>" name="QC-<?id?>"  size="6" value="<?qcrate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="SK-<?id?>" name="SK-<?id?>"  size="6" value="<?skrate?>" />/kg</td>
+						<td style="text-align: center;"><input type="text" id="YT-<?id?>" name="YT-<?id?>"  size="6" value="<?ytrate?>" />/kg</td>
+					</tr>
+                    <input type="hidden" name="taxid" id="taxid-<?id?>" />
+				<?endloop TAXES?>
+	
+				<tr>
+					<td>&nbsp;</td>
+					
+					<td colspan="3">
+						<div class="button-bar">
+							<input class="button" type="reset" />
+							<input class="button" type="submit" name="btnFunction" value="Submit" />
+							<br />
+						</div>
+					</td>
+				</tr>
+			</table>
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

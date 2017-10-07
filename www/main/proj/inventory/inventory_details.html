@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title><!--#include virtual="/includes/web_page_title.html" -->Account - My Inventory Details<!--#include virtual="/includes/web_page_title_end.html" --></title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+    <script type="text/javascript" src="/javascripts/other.js"></script>
+    <script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+    <script  type="text/javascript">
+		function open_printer_friendly_version(summaryPage) {
+			window.open('/main/order/reorder_notice_printer_friendly.html?id=<?id?>','printerfriendlyreordernotice','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+	</script>
+    <script  type="text/javascript">
+		function split_proj(x) {
+			var f = x.form;
+			var id =  x.value;
+
+			var qty = document.getElementById('qty_' + id).value;
+			
+			document.getElementById('location_qty').innerHTML = qty;
+
+//			document.getElementById('split_pid').innerHTML = id;
+			//alert(f.splitid.innerHTML);
+		}
+
+	</script>
+
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Account &#187;</span> My Inventory Details</h1>
+	<a href="/main/proj/inventory/inventory_history.html"> ← Back to Inventory List</a>
+		<form action="" method="post" name="f1" id="f1">
+			<fieldset>
+				<legend>
+					Item
+				</legend>
+
+				<p class="none">&nbsp;</p>
+                <p>Note: All fields marked with an * are mandatory</p>
+
+				<label for="ddmInventoryID">Inventory ID:</label>
+				<select id="ddmInventoryID" name="ddmInventoryID" size="1">
+					<?ddmInventoryID?>
+				</select>
+				<br />
+                
+                <label for="ItemID">* Item ID:</label>
+                <input id="ItemID" name="ItemID" value="<?itemid?>" type="text" size="40"  />
+
+				<br />
+				
+                <label for="InvNotificationQty">Minimum Cases:</label>
+				<input id="InvNotificationQty" name="reorder_notify" value="<?reorder_notify?>" type="text" size="9" class="smBox" />
+
+				<br />
+                <label for="InvNotificationQtyMax">Maximum Cases:</label>
+				<input id="InvNotificationQtyMax" name="reorder_notify_max" value="<?reorder_notify_max?>" type="text" size="9" class="smBox" />
+
+				<br />
+
+                <label for="InvUnitPrice">Case Price:</label>
+				<input id="InvUnitPrice" name="unit_price" value="<?unit_price?>" type="text" size="9" class="smBox" />
+ 
+ 				<br />
+  				
+				<label for="notes">Notes:</label>
+				<input id="notes" name="notes" value="<?notes?>" type="text" size="40" />
+ 
+ 				<br />
+				<div class="button-bar indent-regular">
+					<input class="button" type="reset" value="Reset" />
+					<input class="button" type="submit" value="Submit" />
+					<br />
+				</div>
+				<br />
+				<input type="hidden" name="OldID" value="<?id?>">
+			</fieldset>
+		</form>
+			
+		<form action="" method="post" name="f2" id="f2">
+			<fieldset>
+				<legend>
+					Inventory
+				</legend>
+
+				<p class="none">&nbsp;</p>
+
+					<p>Split Locations / Mark as Obsolete</a></p>
+
+					<table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
+						<tr>
+							<th>Split</th>
+                            <th>Project ID</th>
+							<th>Location Name  </th>
+							<th>Location ID</th>
+							<th>Qty Remaining</th>
+							<th>Unit Price</th>
+							<th>Obsolete</th>
+                            <th>Revised</th>
+						</tr>
+
+						<?loop INVENTORY?>
+							<tr>
+                            	<td class="select c"><input type="radio" name="split_id" value="<?id?>" onClick="split_proj(this);" /></td>
+								<td style="text-align: center;"><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>"><?pid?></a></td>
+                                <td style="text-align: left;"><?name?> </td>
+								<td style="text-align: center;"><?locationid?></td>
+								<td style="text-align: right;">
+									<a href="/main/proj/inventory/check_out_history.html?InventoryIndex=<?id?>"><?qty?></a>
+									<input type="hidden" name="qty_<?id?>" id="qty_<?id?>" value="<?qty?>">
+								</td>
+								<td style="text-align: center;"><input type="text" name="unit_price-<?id?>" value="<?unit_price?>" class="smbox" /></td>
+								<td class="select c" style="text-align: center;"><input type="checkbox" name="obsolete" value="<?id?>" /></td>
+								<td class="select c" style="text-align: center;"><input type="checkbox" name="revised"  value="<?id?>" /></td>
+								</td>
+							</tr>
+						<?endloop INVENTORY?>
+							
+							<tr>
+								<td colspan=4>Total</td>
+                                <td style="text-align: right;"><?qty_total?> </td>
+								<td colspan=3>&nbsp;</td>
+							</tr>
+
+					</table>
+				<br />
+					<table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
+						<tr>
+							<th>New Location</th>
+							<th>Qty Remaining</th>
+							<th>New Location Qty</th>
+						</tr>
+
+							<tr>
+                                <td style="text-align: left;">
+									<select id="split_location" name="split_location" size="1">
+										<?locations?>
+									</select></td>
+								<td style="text-align: right;" id="location_qty"></td>
+                                <td style="text-align: center;"><input type="tetbox" name="split_qty" value="" /></td>
+								</td>
+							</tr>
+
+					</table>
+
+				<br />
+
+				<div class="button-bar indent-regular">
+					<input class="button" type="submit" value="Submit" name="btnFunction" />
+                    <input type="button" class="button" onclick="open_printer_friendly_version();" value="Reorder Form" />
+					<br />
+				</div>
+				<br />
+			</fieldset>
+		</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

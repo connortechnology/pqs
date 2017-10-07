@@ -1,0 +1,9 @@
+<?ForSalutation?> <?ForFirstName?> <?ForLastName?><br />
+<?ForCompanyName?><br />
+<? if ( $$variable{'ForAddress1'} ) ?><?ForAddress1?><br /><? endif ( $$variable{'ForAddress1'} ) ?>
+<? if ( $$variable{'ForAddress2'} ne '' ) ?><?ForAddress2?><br /><? endif ( $$variable{'ForAddress2'} ne '' ) ?>
+<?FCITYPROV?><br />
+<?ForPostalCode?><br />
+<?ForPhone?><? if ( $$variable{'ForExtension'} ) ?> &nbsp;Ext. <?ForExtension?><? endif ( $$variable{'ForExtension'} ) ?><br />
+<?ForFax?><br />
+<?ForEmail?><br />

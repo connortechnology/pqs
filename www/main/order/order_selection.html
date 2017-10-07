@@ -1,0 +1,276 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Orders - Quantity Selection
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/process.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+
+	<script  type="text/javascript">
+		/* added this function on Nov.29, 2004 by Yang for Bug249.
+		it checks the delivery date of an order,
+		it's invalid if the delivery date is prior to the current date.*/
+
+		function check_order_date(formName, projIndex) {
+			/* get the selected delivery date from the drop down menu
+			of the order marked by projIndex. */
+
+			var form = getFormObj(formName);
+			due_month = get_ddm_value(form.elements["ddmDueDateMonth"+projIndex]);
+			due_year = get_ddm_value(form.elements["ddmDueDateYear"+projIndex]);
+			due_day = get_ddm_value(form.elements["ddmDueDateDay"+projIndex]);
+
+			/* get today's date */
+
+			cur_date = new Date();
+			cur_year = cur_date.getFullYear();
+			cur_month = cur_date.getMonth() + 1;
+			cur_day = cur_date.getDate();
+
+			/* compare the selected delivery date with today's date.
+			set the corresponding validityFlag marked by the same projIndex
+			to false if the selected date is prior to today's date,
+			otherwise set to true. */
+
+			var short_months = ['04','06','09','11'];
+
+			if ( (due_year < cur_year) ||
+				(due_year == cur_year && due_month < cur_month ) ||
+				(due_year == cur_year && due_month == cur_month && due_day < cur_day) ) {
+				form.elements["validityFlag"+projIndex].value = "stale";
+			} else if (
+				(due_day == '31' && isin(short_months,due_month))
+				|| (due_day >  '29' && due_month == '02')
+				|| (due_day == '29' && due_month == '02') && (due_year % 4 != 0)
+				) {
+
+				form.elements["validityFlag"+projIndex].value = "invalid";
+			}else {
+				form.elements["validityFlag"+projIndex].value = "valid";
+			} //	end if
+		} //	end function
+
+		/* changed this function on Nov.29, 2004 by Yang for Bug249.
+		submit the form only if all orders delivery dates are valid. */
+
+		function submit_handler(form) {
+
+			// Add a quick check to make sure there's at least project in the order.
+			if (!$A(form.elements).any(function (elem) { if (elem.name) return elem.name.match(/^rdbQuantity/) })) {
+				alert('Please add at least one project to the order.');
+				return false;
+			}
+
+			/* loop through all the validityFlag,
+			set allValid to false if any of the flags is false. */
+
+			allValid = true;
+
+			for ( i=0; i < form.elements.length; i++) {
+				if ( form.elements[i].type == "hidden" &&
+					form.elements[i].name.substring(0,12) == "validityFlag" &&
+					form.elements[i].value == "stale" ) {
+					allValid = "stale";
+				} else if ( form.elements[i].type == "hidden" &&
+					form.elements[i].name.substring(0,12) == "validityFlag" &&
+					form.elements[i].value == "invalid" ) {
+					allValid = "invalid";
+				}
+			} //	end for
+
+			/* alert user if not all dates are valid,
+			otherwise submit the form. */
+
+			if (allValid == "stale") {
+				alert("The delivery date has already passed. Please choose a later date.");
+			} else if (allValid == "invalid") {
+				alert("This is not a valid date. Please correct the date and try again.");
+			} else {
+				return true;
+			} //	end if
+			return false;
+		} //	end function
+	</script>
+	
+	<!-- FROM order_info.html -->	
+	<script  type="text/javascript">
+		function fill_user(form) {
+			var name = form.ddmOrderForUsers.options[form.ddmOrderForUsers.selectedIndex].text.split(' ' );
+			var email = form.ddmOrderForUsers.options[form.ddmOrderForUsers.selectedIndex].value;
+
+			if ( name[0] == 'Select' ) {
+				form.txtFirstName.value = '';
+				form.txtLastName.value = '';
+				form.txtEmail.value = '';
+			} else {
+				form.txtFirstName.value = name[0];
+				form.txtLastName.value = name[1];
+				form.txtEmail.value = email;
+			} // end if
+		} // end function
+		
+		function open_page(summaryPage) {
+			
+
+			window.open('/main/proj/upload.html?pid=<?index?>','Confirm','newWin,left=140,width=520,top=50,height=800,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+	</script>
+   
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Orders &#187;</span> Quantity Selection</h1>
+
+	<? if ( @{$$variable{'PROJECTSINFO'}} ) ?>
+
+	<form action="/main/order/order_submit.html" method="post" id="f1" name="f1" onsubmit="return submit_handler(this)">
+		<fieldset>
+			<legend>
+				Project(s)
+			</legend>
+	
+			<p>
+				Please select the quantity you would like to order for each project.
+				
+			</p>
+			
+			<? loop PROJECTSINFO ?>
+				<fieldset>
+					<legend>
+						Project: <?index?> - <?reference?> 
+					</legend>
+					
+					<p class="none">&nbsp;</p>
+
+					<a class="button right" href="/main/order/order_selection.html?remove=<?index?>">Remove</a>
+					<a class="button right" href="/main/proj/proj_view.html?ProjectIndex=<?index?>">Edit</a>
+                    <? if has_pdf_template ?><? else has_pdf_template ?>
+                    <input type="button" class="button right" value="Attach Artwork" onClick="window.open('/main/proj/upload.html?pid=<?index?>','Confirm','newWin,left=140,width=1000,top=50,height=800,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');" />
+                   <? endif has_pdf_template ?>
+					
+					
+					<select name="ddmDueDateMonth<?index?>" style="visibility:hidden" size="1" onchange="check_order_date('f1',<?index?>);">
+						<?months?>
+					</select>
+					<select name="ddmDueDateDay<?index?>"  style="visibility:hidden" size="1" onchange="check_order_date('f1',<?index?>);">
+						<?days?>
+					</select>
+					<select name="ddmDueDateYear<?index?>"  style="visibility:hidden" size="1" onchange="check_order_date('f1',<?index?>);">
+						<?years?>
+					</select>
+					<input type="hidden" name="validityFlag<?index?>" value="true">
+					<br />
+
+					<table class="selection no-formatting margin-top td-right th-right">
+						<col id="rbd"/>
+						<col id="qty" />
+						<col id="unit" />
+						<col id="price" />
+		
+						<tr>
+							<th style="text-align: center;">Select</th>
+							<th>Quantity</th>
+							<th>Unit Price</th>
+							<th>Price</th>
+						</tr>
+		
+						<? loop PROJECTS ?>
+							<? if ( $$variable{'qty'} ) ?>
+								<tr>
+									<td style="text-align: center;"><input type="radio" name="rdbQuantity<?project_index?>" <?selected?> value="<?index?>"/></td>
+									<td><?qty?></td>
+									<td><?CurrencySymbol?> <?unitprice?></td>
+									<td><?CurrencySymbol?> <?price?></td>
+								</tr>
+							<? endif ( $$variable{'qty'} ) ?>
+						<? endloop PROJECTS ?>
+						<tr>
+						<td>
+<!--
+						<? loop SHIPPING ?>
+							My Shipping Service
+							<?loop ADDRESSES?>
+	
+
+
+								<span class="label">Contact </span>
+								<?strfirstname?>
+
+								<span class="label">Phone </span>
+								<?strphone?>
+
+								<span class="label">Email </span>
+								<?stremail?>
+
+								<br />
+
+								<span class="label">Ship Address </span>
+								<?straddress1?>
+
+								<? if ( $$variable{'txtShippingAddress2'} ) ?>
+									<?straddress2?>
+								<? endif ( $$variable{'txtShippingAddress2'} ) ?>,
+
+								<?strcity?>,
+								<?strstateprovince?>,
+								<?strpostalcode?>,
+								<?strcountry?>
+
+								<span class="label">Qty 1 </span>
+								<?add_qty1?>
+
+								<?endloop ADDRESSES?>
+
+
+						<? endloop SHIPPING ?>
+-->
+						</td>
+						</tr>
+					</table>
+					
+					<br />
+				</fieldset>
+			
+            <? endloop PROJECTSINFO ?>
+            
+           
+			<? if is_staff ?>
+                <a class="button" href="/main/proj/proj_hist.html">Add Project From History</a>
+                <a class="button" href="/main/proj/create.html">Add New Project</a>
+			<? endif is_staff ?>
+			<br />
+		</fieldset>
+
+
+		<div class="button-bar">
+			<? if has_pdf_template ?>
+            <input type="submit" class="button right" value="Save and Continue"  />
+            <? else has_pdf_template ?>
+            <input type="submit" class="button right" value="Save and Continue"  />
+			<? endif has_pdf_template ?>
+        <!--
+			<input type="button" class="button" value="Preview Order" />
+		-->
+			<input type="hidden" name="btnFunction" value="Process Order" />
+			<br class="clear" />
+		</div>
+	</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/order.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

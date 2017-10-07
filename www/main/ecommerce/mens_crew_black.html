@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>
+<!--#include virtual="/includes/web_page_title.html" -->
+<?category?> - <?subcategory?> 
+<!--#include virtual="/includes/web_page_title_end.html" -->
+</title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-main-css.html" -->
+<!--#include virtual="/includes/h2-js.html" -->
+<script type="text/javascript" src="/javascripts/other.js"></script>
+<script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
+<script type="text/javascript" src="/javascripts/JSAN.js"></script>
+<link rel="Stylesheet" href="/styles/DPZSiteStyles.css"  />
+<link href="/styles/products-v2.css" rel="stylesheet" type="text/css" />
+<style>
+div.styled { 
+    overflow:hidden; /* this hides the select's drop button */
+    padding:0; 
+    margin:0; 
+    background: white url(formelements-select.png) no-repeat bottom right; 
+    /* this is the new drop button, in image form */
+    width:22em; 
+	height:3em;
+	border-radius:2px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2); 
+    border: solid 1px #ccc; 
+	text-align:center;
+	
+}
+div.styled select { 
+    width:110% /* this percentage effectively extends the drop down button out of view */; 
+    background-color:transparent /* this hides the select's background making any styling visible from the div */; 
+    background-image:none; 
+    -webkit-appearance: none /* this is required for Webkit browsers */; 
+    border:none; 
+    box-shadow:none; 
+	text-align:center;
+    padding:0.5em 0.5em; /* padding should be added to the select, not the div */
+	
+}
+</style>
+</head>
+
+<body style="min-width:990px">
+<div id="sizer">
+		<div id="expander">
+
+				<div id="header">
+			<!--#include virtual="/includes/main/main-header.html" -->
+				</div>
+
+				<div id="wrapper1" style="top:150px">
+						<div id="wrapper2">
+								<div class="outer" style="margin:0 0 0 0px !important; min-height:550px !important;">
+
+										<div class="float-wrap">
+												<div class="center">
+														<div class="centerbox">
+
+																<div>
+
+ <form name="f1" method="POST" action="/main/proj/dispatch.html" >	
+     <input type="hidden" name="create_to_order" value="1" />
+     <input type="hidden" name="action" value="create_multiple" />	
+  
+<div style="width:100%;">
+<div style="display:none" >
+    <?minimum_qty?>
+    <?maximum_qty?>
+    <?increments?>
+    <?vendor?>
+    <?weight?> 
+    <?mediawideid?>
+</div>
+
+                           			
+        <img src="/images/persona/<?id?>.jpg" align="left" style="max-height:600px; max-width:600px; padding-bottom:30px;" />
+        
+        <p style="font-size:26px; padding-left:20px; text-align:center"><strong><?name?></strong><br /></p>
+        <p style="font-size:20px; padding-left:20px; text-align:center">$<?price?> / <?units?><br /></p>
+        <p style="font-size:12px; padding-left:20px; text-align:center"><?description?><br /><br /><br /></p>
+        <div>Part Number: <?part_number?><br />
+        <?details?></div>
+        
+       <div style="margin-left:665px">
+       <div class="styled"> 
+           <?loop groupoptions?>
+          	  <select name="groupoption"> 
+            <option>Please select</option> 
+            <?groupoptions?>
+            </select> 
+            <?endloop groupoptions?>
+        </div>
+        </div>
+        
+         <p style="font-size:14px; padding-left:20px; text-align:center"><br />QUANTITY <input type="text" name="txtQuantity1" id="txtQuantity1" size="2"  /><br /><br /></p>
+        <input type="submit" class="button" value="ADD TO CART" style="height:40px; width:247px; font-size:14px; left:6.5%;  margin-bottom:10px;" />
+	<input type="hidden" name="id"	id="id" value="<?id?>"  />
+    <input type="hidden" name="project"	id="project" value="<?project?>"  />
+         
+</div>
+ 
+
+  
+    <div style="width:900px; float:left" >
+   </div>
+
+           
+		</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<div id="" style="margin-left:-280px">
+<!--#include virtual="/includes/ecomm_leftmenu.html" -->
+
+</div>
+
+<!--#include virtual="/includes/f2-main.html" -->
+
+</body>
+</html>

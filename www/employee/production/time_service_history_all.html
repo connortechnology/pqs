@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production > Time Collection > Service History  - All
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Time Collection &#187;</span> Service History - All</h1>
+ <fieldset>
+            <legend>
+                Instructions
+          </legend>
+    <p> The List at the bottom of the page has been populated with the history of all the services you have been assigned and entered time against.
+<? if ( $$variable{'UserType'} eq 'A' ) ?>
+If you would like to see the service history for other assigned users please use the User Name drop down below.
+<? endif ( $$variable{'UserType'} eq 'A' ) ?>
+ To view the individual History of the Service for this user select the Service Name below.</p>
+ </fieldset>
+    <form action="" method="post" name="f2" id="f2">
+        <fieldset>
+            <legend>
+                Search
+          </legend>
+			
+           <table  border="0" cellspacing="0" cellpadding="0" style="border:none !important;" width="97%">         
+            <tr><td width="16%" style="border:none !important;">User Name:</td>
+            <td style="border:none !important;">
+			<select id="ddmUser" name="ddmUser" >
+				<option value=""> Select a User </option>
+				<option value=""> ----------------- </option>
+				<?FILL_STAFF_LIST?>
+			</select>
+			</td>
+            </tr>
+           
+                       <? if ( $$variable{'UserType'} eq 'A' ) ?>
+					   <? endif ( $$variable{'UserType'} eq 'A' ) ?>
+                       <tr><td style="border:none !important;">Start Date:</td>
+			<td style="border:none !important;"><select id="ddmStartMonth" name="ddmStartMonth">
+				<?startmonths?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?startdays?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?startyears?>
+			</select>
+			</td>
+            </tr>
+			
+            <tr>
+            <td style="border:none !important;">End Date:</td>
+			<td style="border:none !important;"><select id="ddmEndMonth" name="ddmEndMonth">
+				<?endmonths?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?enddays?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?endyears?>
+			</select>
+			</td>
+            </tr>
+            <tr>
+            <td style="border:none !important;"></td>
+            <td style="border:none !important;"><input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Download in CSV Format" />
+				<input class="button" type="submit" name="btnFunction" value="Show Results" />
+            </td>
+            </tr>
+            </table>
+			</fieldset>
+            <fieldset>
+            <legend>Service History - All</legend>
+                <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
+                    <tr>
+                      <th>Project ID</th>
+                        <th>Service Name</th>
+                        <th>Equipment</th>
+                        <th>Start</th>
+                        <th>Stop</th>
+                        <th>Duration</th>
+                        <th>Notes</th>
+                    </tr>
+
+						<?loop PROJECTS ?>
+                        <tr>
+                          <td style="text-align: left;"><?projectid?></td>
+                            <td style="text-align: left;"><a href="/employee/production/time_service_history.html"><?servicename?></a></td>
+                            <td style="text-align: left;"><?equipment?></td>
+                            <td class="select c" style="text-align: center;"><?starttime?></td>
+                            <td class="select c" style="text-align: center;"><?endtime?></td>
+                            <td class="select c" style="text-align: center;"><?duration?></td>
+                            <td class="select c" style="text-align: center;"><?notes?></td>
+                        </tr>
+						<?endloop PROJECTS ?>
+                         
+                </table>
+            <br />
+            
+        </fieldset>
+    </form>
+
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

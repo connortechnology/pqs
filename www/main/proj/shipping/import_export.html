@@ -1,0 +1,41 @@
+<html> 
+    <head>
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+    <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+    </head>  
+    <title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Import/Export - Shipping Addresses
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+<body style="float:left; padding-left: 20px;">
+ <fieldset style="width: 770px; float:left" >
+            <legend>
+                Import
+            </legend>
+                   <p align="left">
+                    To Export the shipping records currently entered for this project select "Export".<br />
+                    To Import shipping records Export the existing records, make your changes and save your file as a CSV (for Windows) then "Browse" to your file and select "Import". Note: This will replace the existing address data.<br />
+                    Once complete close the import window and select the "Refresh" button on your shipping service page (beside the "Import or Export Address(es)" button).</p>
+				<form action="/main/proj/shipping/import_export.html?sid=<?sid?>" enctype="multipart/form-data" name="upload" id="upload" method="post">
+				<table>
+				
+                    <tr>
+                    	<td>
+                    	<input class="button" type='submit' name='Export' value='Export' />
+                        </td>
+                        <td>
+						<input  type="file" id="fileAddress" name="fileAddress" class="file" />
+                        </td>
+                        <td>
+                        <input class="button" type='submit' name='Import' value='Import' />
+                        </td>
+					
+					</tr>
+				</table>
+				</form>
+        </fieldset>
+</body>
+</html>

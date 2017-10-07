@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Account - Credit Application
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+									<h1><span class="title-section">Account &#187;</span> Credit Application</h1>
+
+									<? if ( $$variable{'cust_id'} == 0 ) ?>
+										<p>You must register for an account, and be logged in before you can apply for credit.</p>
+
+										<p><strong>*</strong> If you are a registered user and would like to login click <a href="/main/account/account_login.html"><strong>here</strong></a>.</p>
+
+										<p><strong>*</strong> If you would like to register for an account, click <a href="/main/account/registration.html"><strong>here</strong></a>.</p>
+									<? else ( $$variable{'cust_id'} == 0 ) ?>
+										<p>Please complete the form below. Fields marked with an * are required.</p>
+
+										<form id="credit_application" method="post" action="/main/account/confirmation_credit_application.html" name="f1">
+											<fieldset>
+												<legend>
+													Customer Information
+												</legend>
+
+												<p class="none">&nbsp;</p>
+
+												<label for="txtLegalBusinessName"><span class="required">*</span>Legal Name:</label>
+												<input type="text" id="txtLegalBusinessName" name="txtLegalBusinessName" value="<?txtLegalBusinessName?>" class="input-text" />
+												<br />
+
+												<span class="label"><span class="required">*</span>Legal Form:</span>
+
+												<div>
+													<label for="rdbLegalFormCorporation" class="radio"><input type="radio" id="rdbLegalFormCorporation" name="rdbLegalForm" value="Corporation" />Corporation</label>
+
+													<br />
+
+													<label for="rdbLegalFormSoleProprietor" class="radio"><input type="radio" id="rdbLegalFormSoleProprietor" name="rdbLegalForm" value="SoleProprietor" />Sole Proprietor</label>
+
+													<br />
+
+													<label for="rdbLegalFormPartnership" class="radio"><input type="radio" id="rdbLegalFormPartnership" name="rdbLegalForm" value="Partnership" />Partnership</label>
+												</div>
+
+												<br />
+
+												<label for="txtBusinessType"><span class="required">*</span>Business Type:</label>
+												<input type="text" id="txtBusinessType" name="txtBusinessType" value="<?txtBusinessType?>" class="input-text" />
+												<br />
+
+												<label for="txtStartYear"><span class="required">*</span>Year Established:</label>
+												<input type="text" id="txtStartYear" name="txtStartYear" value="<?txtStartYear?>" class="input-text" />
+												<br />
+
+												<label for="txtPresidentOwner"><span class="required">*</span>President/CEO/Owner:</label>
+												<input type="text" id="txtPresidentOwner" name="txtPresidentOwner" value="<?txtPresidentOwner?>" class="input-text" />
+												<br />
+
+												<label for="ddmEmployees" ><span class="required">*</span>Number of Employees:</label>
+												<select id="ddmEmployees" name="ddmEmployees">
+													<option value="">- Please select one. -</option>
+													<?ddmEmployees?>
+												</select>
+												<br />
+
+												<label for="ddmAnnualSales" ><span class="required">*</span>Annual Sales:</label>
+												<select id="ddmAnnualSales" name="ddmAnnualSales">
+													<option value="">- Please select one. -</option>
+													<?ddmAnnualSales?>
+												</select>
+												<br />
+
+												<label for="txtPSTNumber"><span class="required">*</span>PST # or State Tax # :</label>
+												<input type="text" id="txtPSTNumber" name="txtPSTNumber" value="<?txtPSTNumber?>" class="input-text" />
+												<br />
+
+												<label for="txtGSTNumber"><span class="required">*</span>GST # or Fed.ID #/SSN # :</label>
+												<input type="text" id="txtGSTNumber" name="txtGSTNumber" value="<?txtGSTNumber?>" class="input-text" />
+												<br />
+											</fieldset>
+
+
+											<fieldset>
+												<legend>
+													Bank Information
+												</legend>
+
+												<p class="none">&nbsp;</p>
+
+												<label for="txtBankName"><span class="required">*</span>Bank Name:</label>
+												<input type="text" id="txtBankName" name="txtBankName" value="<?txtBankName?>" class="input-text" />
+												<br />
+
+												<label for="txtBankBranch"><span class="required">*</span>Bank Branch # :</label>
+												<input type="text" id="txtBankBranch" name="txtBankBranch" value="<?txtBankBranch?>" class="input-text" />
+												<br />
+
+												<label for="txtBankAccountNo"><span class="required">*</span>Bank Account # :</label>
+												<input type="text" id="txtBankAccountNo" name="txtBankAccountNo" value="<?txtBankAccountNo?>" class="input-text" />
+												<br />
+
+												<label for="txtBankAccountManager"><span class="required">*</span>Account Manager:</label>
+												<input type="text" id="txtBankAccountManager" name="txtBankAccountManager" value="<?txtBankAccountManager?>" class="input-text" />
+												<br />
+
+												<label for="txtBankPhone"><span class="required">*</span>Bank Phone:</label>
+												<input type="text" id="txtBankPhone" name="txtBankPhone" value="<?txtBankPhone?>" class="input-text" />
+												<br />
+
+												<label for="txtBankFax">&nbsp;Bank Fax:</label>
+												<input type="text" id="txtBankFax" name="txtBankFax" value="<?txtBankFax?>" class="input-text" />
+												<br />
+
+												<label for="txtBankEmail">&nbsp;Bank E-mail:</label>
+												<input type="text" id="txtBankEmail" name="txtBankEmail" value="<?txtBankEmail?>" class="input-text" />
+												<br />
+											</fieldset>
+
+
+											<fieldset>
+												<legend>
+													Trade References
+												</legend>
+
+												<p>Please provide 3 trade references:</p>
+
+												<h5>Trade Reference 1</h5>
+
+												<label for="txtTradeReferenceCompanyName1"><span class="required">*</span>Company Name:</label>
+												<input type="text" id="txtTradeReferenceCompanyName1" name="txtTradeReferenceCompanyName1" value="<?txtTradeReferenceCompanyName1?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceContact1"><span class="required">*</span>Contact:</label>
+												<input type="text" id="txtTradeReferenceContact1" name="txtTradeReferenceContact1" value="<?txtTradeReferenceContact1?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferencePhone1"><span class="required">*</span>Phone:</label>
+												<input type="text" id="txtTradeReferencePhone1" name="txtTradeReferencePhone1" value="<?txtTradeReferencePhone1?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceExt1">Extension:</label>
+												<input type="text" id="txtTradeReferenceExt1" name="txtTradeReferenceExt1" value="<?txtTradeReferenceExt1?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceFax1">Fax:</label>
+												<input type="text" id="txtTradeReferenceFax1" name="txtTradeReferenceFax1" value="<?txtTradeReferenceFax1?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceEmail1">E-mail:</label>
+												<input type="text" id="txtTradeReferenceEmail1" name="txtTradeReferenceEmail1" value="<?txtTradeReferenceEmail1?>" class="input-text" />
+												<br />
+
+												<h5>Trade Reference 2</h5>
+
+												<label for="txtTradeReferenceCompanyName2"><span class="required">*</span>Company Name:</label>
+												<input type="text" id="txtTradeReferenceCompanyName2" name="txtTradeReferenceCompanyName2" value="<?txtTradeReferenceCompanyName2?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceContact2"><span class="required">*</span>Contact:</label>
+												<input type="text" id="txtTradeReferenceContact2" name="txtTradeReferenceContact2" value="<?txtTradeReferenceContact2?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferencePhone2"><span class="required">*</span>Phone:</label>
+												<input type="text" id="txtTradeReferencePhone2" name="txtTradeReferencePhone2" value="<?txtTradeReferencePhone2?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceExt2">Extension:</label>
+												<input type="text" id="txtTradeReferenceExt2" name="txtTradeReferenceExt2" value="<?txtTradeReferenceExt2?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceFax2">Fax:</label>
+												<input type="text" id="txtTradeReferenceFax2" name="txtTradeReferenceFax2" value="<?txtTradeReferenceFax2?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceEmail2">E-mail:</label>
+												<input type="text" id="txtTradeReferenceEmail2" name="txtTradeReferenceEmail2" value="<?txtTradeReferenceEmail2?>" class="input-text" />
+												<br />
+
+												<h5>Trade Reference 3</h5>
+
+												<label for="txtTradeReferenceCompanyName3"><span class="required">*</span>Company Name:</label>
+												<input type="text" id="txtTradeReferenceCompanyName3" name="txtTradeReferenceCompanyName3" value="<?txtTradeReferenceCompanyName3?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceContact3"><span class="required">*</span>Contact:</label>
+												<input type="text" id="txtTradeReferenceContact3" name="txtTradeReferenceContact3" value="<?txtTradeReferenceContact3?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferencePhone3"><span class="required">*</span>Phone:</label>
+												<input type="text" id="txtTradeReferencePhone3" name="txtTradeReferencePhone3" value="<?txtTradeReferencePhone3?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceExt3">Extension:</label>
+												<input type="text" id="txtTradeReferenceExt3" name="txtTradeReferenceExt3" value="<?txtTradeReferenceExt3?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceFax3">Fax:</label>
+												<input type="text" id="txtTradeReferenceFax3" name="txtTradeReferenceFax3" value="<?txtTradeReferenceFax3?>" class="input-text" />
+												<br />
+
+												<label for="txtTradeReferenceEmail3">E-mail:</label>
+												<input type="text" id="txtTradeReferenceEmail3" name="txtTradeReferenceEmail3" value="<?txtTradeReferenceEmail3?>" class="input-text" />
+												<br />
+											</fieldset>
+											
+											
+											<fieldset>
+												<legend>
+													Authorization
+												</legend>
+
+												<p>
+													I/We do hereby authorize
+													<!--#include virtual="/includes/company_name.html" -->
+													to verify all or part of the above listed confidential disclosures,
+													and to verify the credit status of existing lines of credit as listed
+													on this application. Further I/we agree to pay according to terms printed on any
+													invoices for any purchase(s) including discounts, net price and late charges.
+												</p>
+
+												<br />
+
+												<label for="txtFirstOrderValue">Value of First Order (est.):</label>
+												<input type="text" id="txtFirstOrderValue" name="txtFirstOrderValue" class="input-text" />
+												<br />
+
+												<label for="txtAnnualPurchases">Annual Purchases (est.):</label>
+												<input type="text" id="txtAnnualPurchases" name="txtAnnualPurchases" class="input-text" />
+												<br />
+
+												<label for="txtDesiredCreditLimit">Credit Limit Desired:</label>
+												<input type="text" id="txtDesiredCreditLimit" name="txtDesiredCreditLimit" class="input-text" />
+												<br />
+
+												<label for="ddmDesiredTerms" ><span class="required">*</span>Terms Desired:</label>
+												<select id="ddmDesiredTerms" name="ddmDesiredTerms">
+													<option value="">- Please select one. -</option>
+													<option value="15">15 Days</option>
+													<option value="30">30 Days</option>
+													<option value="60">60 Days</option>
+													<option value="90">90 Days</option>
+												</select>
+												<br />
+
+												<label for="txtAccountsPayableContact"><span class="required">*</span>Accounts Payable Contact:</label>
+												<input type="text" id="txtAccountsPayableContact" name="txtAccountsPayableContact" class="input-text" />
+												<br />
+
+												<span class="label">Financial Statement Available?:</span>
+
+												<label for="rdbFinancialStatementAvailableYes" class="radio"><input type="radio" id="rdbFinancialStatementAvailableYes" name="rdbFinancialStatementAvailable" value="Y" />Yes</label>
+
+												<label for="rdbFinancialStatementAvailableNo" class="radio"><input type="radio" id="rdbFinancialStatementAvailableNo" name="rdbFinancialStatementAvailable" value="N" />No</label>
+
+												<br />
+
+												<p>
+													<!--#include virtual="/includes/company_name.html" -->
+													reserves the right to revoke/cancel credit status at their
+													own discretion without prior notification. By submitting this application
+													I/we confirm that the above information is correct and I/we are authorized
+													on behalf of the company to disclose the submitted information.
+												</p>
+
+												<br />
+
+												<label for="txtSignature"><span class="required">*</span>Name: First/Last</label>
+												<input type="text" id="txtSignature" name="txtSignature" class="input-text" />
+												<br />
+
+												<!--#include virtual="/includes/reset-submit.html" -->
+
+												<br />
+											</fieldset>
+										</form>
+									<? endif ( $$variable{'cust_id'} == 0 ) ?>
+									<!--#include virtual="/includes/f1-main.html" -->
+										<!--#include virtual="/includes/main/account.html" -->
+										<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

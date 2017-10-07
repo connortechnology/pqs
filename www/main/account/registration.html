@@ -1,0 +1,261 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Account - Registration
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+		
+	</title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	
+    <!--#include virtual="/includes/h2-js.html" -->
+
+    <script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Account &#187;</span> Registration</h1>
+
+	<p>Please fill in the appropriate information. Fields marked with a * are required.</p>
+
+	<form id="registration" method="post" action="/main/account/confirmation_login_application.html" name="f1">
+
+		<fieldset>
+			<legend>
+				Personal Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtCompanyName"><span class="required">*</span>New Company:</label>
+			<input type="text" id="txtCompanyName" name="txtCompanyName" value="<?txtCompanyName?>" class="input-text" />
+			<br />
+
+			<span class="label"><span class="required">*</span>Salutation:</span>
+
+			<label for="rdbSalutationMr" class="radio"><input type="radio" id="rdbSalutationMr" name="rdbSalutation" value="Mr." />Mr.</label>
+			
+			<label for="rdbSalutationMrs" class="radio"><input type="radio" id="rdbSalutationMrs" name="rdbSalutation" value="Mrs." />Mrs.</label>
+
+			<label for="rdbSalutationMs" class="radio"><input type="radio" id="rdbSalutationMs" name="rdbSalutation" value="Ms." />Ms.</label>
+
+			<label for="rdbSalutationMiss" class="radio"><input type="radio" id="rdbSalutationMiss" name="rdbSalutation" value="Miss" />Miss</label>
+			
+			<br />
+
+			<label for="txtFirstName"><span class="required">*</span>Contact First Name:</label>
+			<input type="text" id="txtFirstName" name="txtFirstName" value="<?txtFirstName?>" class="input-text" />
+			<br />
+			
+			<label for="txtLastName"><span class="required">*</span>Contact Last Name:</label>
+			<input type="text" id="txtLastName" name="txtLastName" value="<?txtLastName?>" class="input-text" />
+			<br />
+
+			<label for="txtTitle"><span class="required">*</span>Position:</label>
+			<input type="text" id="txtTitle" name="txtTitle" value="<?txtTitle?>" class="input-text" />
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Contact Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtAddress1"><span class="required">*</span>Address:</label>
+			<input type="text" id="txtAddress1" name="txtAddress1" value="<?txtAddress1?>" class="input-text" />
+			<br />
+
+			<label for="txtAddress2">Address 2 &amp; Mail Stop:</label>
+			<input type="text" id="txtAddress2" name="txtAddress2" value="<?txtAddress2?>" class="input-text" />
+			<br />
+
+			<label for="txtCity"><span class="required">*</span>City:</label>
+			<input type="text" id="txtCity" name="txtCity" value="<?txtCity?>" class="input-text" />
+			<br />
+
+			<label for="ddmStateProvince" ><span class="required">*</span>Province/State:</label>
+			<select id="ddmStateProvince" name="ddmStateProvince">
+				<option value="">- Please select one. -</option>
+				<?ddmStateProvince?>
+			</select>
+			<br />
+
+			<label for="ddmCountry"><span class="required">*</span>Country:</label>
+			<select id="ddmCountry" name="ddmCountry">
+				<option value="">- Please select one. -</option>
+				<?ddmCountry?>
+			</select>
+			<br />
+
+			<label for="txtPostalCode"><span class="required">*</span>Postal Code/Zip:</label>
+			<input type="text" id="txtPostalCode" name="txtPostalCode" value="<?txtPostalCode?>" class="input-text" />
+			<br />
+
+			<label for="txtPhone"><span class="required">*</span>Phone:</label>
+			<input type="text" id="txtPhone" name="txtPhone" value="<?txtPhone?>" class="input-text" />
+			<br />
+
+			<label for="txtExtension">Extension:</label>
+			<input type="text" id="txtExtension" name="txtExtension" value="<?txtExtension?>" class="input-text" maxlength="4" />
+			<br />
+
+			<label for="txtFax">Fax:</label>
+			<input type="text" id="txtFax" name="txtFax" value="<?txtFax?>" class="input-text" />
+			<br />
+		</fieldset>
+		
+
+		<fieldset>
+			<legend>
+				Business Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtURL">Website URL:</label>
+			<input type="text" id="txtURL" name="txtURL" value="<?txtURL?>" class="input-text" />
+			<br />
+
+			<label for="txtBusinessType">Business Type:</label>
+			<input type="text" id="txtBusinessType" name="txtBusinessType" value="<?txtBusinessType?>" class="input-text" />
+			<br />
+
+			<label for="ddmPrintExpenditure">Annual Print Expenditure:</label>
+			<select id="ddmPrintExpenditure" name="ddmPrintExpenditure">
+				<option value="">Please Select</option>
+				<option value="$0-$20000"> $0-$20000 </option>
+				<option value="$20000-$50000"> $20000-$50000 </option>
+				<option value="$50000-$100000"> $50000-$100000 </option>
+				<option value="$100000-$500000"> $100000-$500000 </option>
+				<option value="$500000-$1000000"> $500000-$1000000 </option>
+				<option value="$1000000-$2000000"> $1000000-$2000000 </option>
+				<option value="$2000000+"> $2000000+ </option>
+				<?ddmPrintExpenditure?>
+			</select>
+			<br />
+
+			<span class="label">Reason For Purchase:</span>
+			
+			<div>
+				<label for="rdbAccountTypeEndUser" class="radio"><input type="radio" id="rdbAccountTypeEndUser" name="rdbAccountType" value="<?rdbAccountTypeEndUser?>" />End User</label>
+				
+				<br />
+
+				<label for="rdbAccountTypeReseller" class="radio"><input type="radio" id="rdbAccountTypeReseller" name="rdbAccountType" value="<?rdbAccountTypeReseller?>" />Reseller (Agencies, Brokers, Printers etc.)</label>
+			</div>
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				General Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<span class="label">Add to our mailing list:</span>
+
+			<label for="rdbMailingListYes" class="radio"><input type="radio" id="rdbMailingListYes" name="rdbMailingList" value="<?rdbMailingListY?>" />Yes</label>
+
+			<label for="rdbMailingListNo" class="radio"><input type="radio" id="rdbMailingListNo" name="rdbMailingList" value="<?rdbMailingListN?>" />No</label>
+
+			<br />
+
+			<span class="label">Preferred E-mail Format:</span>
+
+			<div>
+				<label for="rdbHTMLEmailsHTML" class="radio"><input type="radio" id="rdbHTMLEmailsHTML" name="rdb_HTMLEmails" value="<?rdb_HTMLEmailsHtml?>" />HTML</label>
+
+				<br />
+
+				<label for="rdbHTMLEmailsPlain" class="radio"><input type="radio" id="rdbHTMLEmailsPlain" name="rdb_HTMLEmails" value="<?rdb_HTMLEmailsPlain?>" />Plain Text</label>
+			</div>
+
+			<br />
+
+			<label for="ddmPromoType">How did you find us?:</label>
+			<select id="ddmPromoType" name="ddmPromoType">
+				<option value="">Please Select</option>
+				<option value="Fax">Fax</option>
+				<option value="Email">Email</option>
+				<option value="Promo Card">Promo Card</option>
+				<option value="Phone Call">Phone Call</option>
+				<option value="Direct Mail">Direct Mail</option>
+				<option value="Classified Ad">Classified Ad</option>
+				<option value="Display Ad">Display Ad</option>
+				<option value="Banner Ad">Banner Ad</option>
+				<option value="Search Engine">Search Engine</option>
+				<option value="Trade Show">Trade Show</option>
+				<option value="Referral">Referral</option>
+				<option value="Other">Other</option>
+				<?ddmPromoType?>
+			</select>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Tax Information
+			</legend>
+
+			<p>
+				If your company is from Ontario, Canada and your orders require PST exemption due to resale, then please provide your PST # in the text field below and fax a PST exemption form to <!--#include virtual="/includes/company_fax_number.html"-->. If you would like to download a PST exemption form in PDF format <a href="/pdfs/Ontario_PST_Exempt.pdf" target="_blank">click here</a>.
+			</p>
+
+			<label for="txtPSTNumber">PST # or State Tax #:</label>
+			<input type="text" id="txtPSTNumber" name="txtPSTNumber" value="<?txtPSTNumber?>" class="input-text" />
+			<br />
+
+			<label for="txtGSTNumber">GST # or Fed.ID #/SSN #:</label>
+			<input type="text" id="txtGSTNumber" name="txtGSTNumber" value="<?txtGSTNumber?>" class="input-text" />
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Login Information
+			</legend>
+
+			<p>The following information will be used to create your login:</p>
+			
+			<label for="txtEmail"><span class="required">*</span>E-mail Address:</label>
+			<input type="text" id="txtEmail" name="txtEmail" value="<?txtEmail?>" class="input-text" />
+			<br />
+
+			<label for="txtPassword"><span class="required">*</span>Password:</label>
+			<input type="password" id="txtPassword" name="txtPassword" class="input-text" />
+			<br />
+
+			<label for="txtVefifyPassword"><span class="required">*</span>Verify Password:</label>
+			<input type="password" id="txtVefifyPassword" name="txtVerifyPassword" class="input-text" />
+			<br />
+
+			<label for="txtComments">Questions or Comments:</label>
+			<textarea name="txtComments" class="formTxt marg-bot" id="txtComments" rows="6"></textarea>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input type="reset" id="button-space" class="button" value="Reset" />
+				<input type="submit" class="button" value="Submit" />
+				<br />
+			</div>
+
+			<br />
+		</fieldset>
+	</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

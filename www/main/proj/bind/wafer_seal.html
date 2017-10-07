@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+        <!--#include virtual="/includes/web_page_title.html" -->
+        Projects - <?service.category?> - <?service.name?>
+        <!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+    <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+	
+	<!--#include virtual="/includes/main/proj/required_fields.html"-->
+	
+	<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+		<fieldset>
+			<legend>
+				<?service.name?>
+			</legend>
+		
+			<p>How many <?service.name?>(s) do you require on each side?</p>
+		
+			<div class="pad-right">
+				<label class="small" for="txtSealsQtyTop">Top:</label>
+				<input type="text" id="txtSealsQtyTop" name="txtSealsQtyTop" size="9" value="<?txtSealsQtyTop?>" class="smBox" />
+			</div>
+			<div>
+				<label class="small" for="txtSealsQtyBottom">Bottom:</label>
+				<input type="text" id="txtSealsQtyBottom" name="txtSealsQtyBottom" size="9" value="<?txtSealsQtyBottom?>" class="smBox" />
+			</div>
+			<br />
+		
+			<div class="pad-right">
+				<label class="small" for="txtSealsQtyLeft">Left:</label>
+				<input type="text" id="txtSealsQtyLeft" name="txtSealsQtyLeft" size="9" value="<?txtSealsQtyLeft?>" class="smBox" />
+			</div>
+			<div>
+				<label class="small" for="txtSealsQtyRight">Right:</label>
+				<input type="text" id="txtSealsQtyRight" name="txtSealsQtyRight" size="9" value="<?txtSealsQtyRight?>" class="smBox" />
+			</div>
+			<br />
+		
+			<div class="pad-right">
+				<label class="small" for="txtSealsQtyFront">Front:</label>
+				<input type="text" id="txtSealsQtyFront" name="txtSealsQtyFront" size="9" value="<?txtSealsQtyFront?>" class="smBox" />
+			</div>
+			<div>
+				<label class="small" for="txtSealsQtyBack">Back:</label>
+				<input type="text" id="txtSealsQtyBack" name="txtSealsQtyBack" size="9" value="<?txtSealsQtyBack?>" class="smBox" />
+			</div>
+			<br />
+		
+			<p>Does your project require perforated <?service.name?>(s)?</p>
+			<label class="checkbox indent-label"><input type="checkbox" name="rdbPerforated" value="Y" <?rdbPerforatedY?> />Yes, my project requires perforated <?service.name?>(s).</label>
+			<br />
+		</fieldset>
+	
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_bindery.html"-->
+	</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

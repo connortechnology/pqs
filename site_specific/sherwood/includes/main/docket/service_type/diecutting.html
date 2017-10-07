@@ -1,0 +1,100 @@
+<div style=" padding-left: 2em; ">
+	<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"> <span class="label">Equipment:&nbsp;&nbsp;</span>
+	<?ddmEquipment1?>
+	<?ddmEquipment2?>
+	<?ddmEquipment3?></td>
+    <td width="50%"><span class="label">Imposition</span>
+	<? if ($$variable{'qtyIndex'} == 1 ) ?>
+		<?txtImposition1?>
+	<? endif ($$variable{'qtyIndex'} == 1 ) ?>
+	<? if ($$variable{'qtyIndex'} == 2 ) ?>
+		<?txtImposition2?>
+	<? endif ($$variable{'qtyIndex'} == 2 ) ?>
+	<? if ($$variable{'qtyIndex'} == 3 ) ?>
+		<?txtImposition3?>
+	<? endif ($$variable{'qtyIndex'} == 3 ) ?>
+	&nbsp;Out</td>
+  </tr>
+  <tr>
+    <td><span class="label">Die Supplied:&nbsp;&nbsp;</span>
+	<?rdbSuppliedDie?></td>
+    <td><span class="label">Gluing:&nbsp;&nbsp;</span>
+	<?rdbGlued?></td>
+  </tr>
+ </table>
+    
+    <? if ( $$variable{'template'} =~ /PresentationFolder/ ) ?>
+   <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"><span class="label">Number of Pockets:&nbsp;&nbsp;</span>
+		<? if ( $variable->{pockets} == 1 ) ?>
+			Standard 1
+		<? endif ( $variable->{pockets} == 1 ) ?>
+		<? if ( $variable->{pockets} == 2 ) ?>
+			Standard 2
+		<? endif ( $variable->{pockets} == 2 ) ?>
+		<? if ( $variable->{pockets} == 0 ) ?>
+			Custom
+		<? endif ( $variable->{pockets} == 0 ) ?></td>
+    <td width="50%"><span class="label">Pocket Size:&nbsp;&nbsp;</span>
+		<? if ( $variable->{rdbPocketSize} ) ?>
+			<?rdbPocketSize?>"
+		<? else ( $variable->{rdbPocketSize} ) ?>
+			Custom
+		<? endif ( $variable->{rdbPocketSize} ) ?></td>
+  </tr>
+  <tr>
+    <td><? if ( $$variable{'rdbBusinessCardSlot'} ne 'None' ) ?>
+			<span class="label">Business Card Holders:&nbsp;&nbsp;</span>
+			<?rdbBusinessCardSlot?>&nbsp;
+			<?rdbBusinessCardStyle?>
+		<? endif ( $$variable{'rdbBusinessCardSlot'} ne 'None' ) ?></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+	<? else ( $$variable{'template'} =~ /PresentationFolder/ ) ?>
+    
+    <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <? if ($$variable{'rdbSuppliedDie'} ne 'Yes') ?>
+  <tr>
+    <td width="50%">
+			<span class="label">Image Size:&nbsp;&nbsp;</span>
+			<?txtDieWidth?>&nbsp;x&nbsp;<?txtDieHeight?></td>
+    <td width="50%"><span class="label">Die Rule:&nbsp;&nbsp;</span>
+			<?rdbDieCutting?>&nbsp;-&nbsp;<?txtSteelRuleLength?>"</td>
+  </tr>
+  <tr>
+    <td><? if ($$variable{'txtDieCutBends'}) ?>
+				<span class="label">Die Bends:&nbsp;&nbsp;</span>
+				<?txtDieCutBends?>
+			<? endif ($$variable{'txtDieCutBends'}) ?></td>
+    <td><? if ($$variable{'txtDieCutPunches'}) ?>
+			<span class="label">Die Punches:&nbsp;&nbsp;</span>
+				<?txtDieCutPunches?>
+			<? endif ($$variable{'txtDieCutPunches'}) ?></td>
+  </tr>
+  <? endif ($$variable{'rdbSuppliedDie'} ne 'Y') ?>
+  <tr>
+  <td><? if ($$variable{'rdbHoleClearing'}) ?>
+			<span class="label">Hole Clearing:&nbsp;&nbsp;</span>
+			<?rdbHoleClearing?>
+		<? endif ($$variable{'rdbHoleClearing'}) ?></td>
+  <td><? if ($$variable{'txtHoleClearingHoles'}) ?>
+			<span class="label">Hole Qty:&nbsp;&nbsp;</span>
+			<?txtHoleClearingHoles?>
+		<? endif ($$variable{'txtHoleClearingHoles'}) ?></td>
+
+  </tr>
+  </table>
+	
+    <? endif ( $$variable{'template'} =~ /PresentationFolder/ ) ?>
+
+	
+</div>

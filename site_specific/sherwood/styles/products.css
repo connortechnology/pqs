@@ -1,0 +1,184 @@
+/* products.css is used for product pages with common elements */
+
+	/* Product Overview Pages */
+
+div.product-overview {
+	float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	width: 25%;
+	margin: 0 0 2ex 0;
+	padding: 0;
+	
+	border: 0;
+
+	vertical-align: middle;
+	text-align: center;
+}
+
+div.product-overview img {margin: auto;}
+
+
+	/* Specific Product Pages */
+
+fieldset {
+	overflow: visible;
+
+	margin: 0 0 1ex 0;
+	padding: 0 1.5em 2.5ex 1.5em;
+
+	border: 2px solid #0B0D60;
+}
+
+/* Holly Hack \*/
+* html fieldset {padding-top: 2.5em;}
+/* */
+
+fieldset legend {
+	margin: 0;
+	padding: 1ex 0.5ex;
+
+	font-size: 1.3em;
+	font-weight: bold;
+}
+
+fieldset br,
+div.product br {
+	display: block;
+	clear: both;
+	height: 0;
+	margin: 0;
+	line-height: 0;
+	font-size: 1px;
+	visibility: hidden;
+}
+
+
+fieldset input,
+fieldset select,
+div.product input,
+div.product select {
+	float: left;
+	clear: none;
+	display: inline;
+	
+	margin: 3px 4px 3px 0;
+	font-size: 0.8em;
+}
+
+
+fieldset .smGo,
+div.product .smGo {
+	width: auto;
+    padding: 0.5px;
+
+    background-color: #1D23F4;
+    border: 1px solid #0B0D60;
+
+    color: #FFFFFF;
+	font-size: 0.85em;
+	font-weight: normal;
+}
+
+
+fieldset .smGo:hover {
+	background-color: #0B0D60;
+	border-color: #0B0D60;
+	color: #FFFFFF;
+}
+
+
+
+div.product {
+	clear: both;
+	margin: 0 0 2.5ex 0;
+	padding: 0;
+	border: 1px solid #0B0D60;
+}
+
+
+h2.navH2 {
+	margin: 0;
+	padding: 0;
+	color: #FFFFFF;
+	font-size: 0.9em;
+}
+
+ul.navUl {}
+
+li.navLi {
+	list-style-type: none;
+	list-style-position: outside;
+
+	margin: -1px 0 0 -10px;
+	padding: 0px;
+
+	line-height: 1.2em;
+	white-space: nowrap;
+
+	font-size: 0.8em;
+}
+
+
+form h2 {
+	clear: both;
+	
+	margin: 0;
+	padding: 0.25ex 0 0.25ex 0.75ex;
+	
+	background-color: #1D23F4;
+	border-bottom: 1px solid #0B0D60;
+	
+	color: #FFFFFF;
+	font-size: 1.2em;
+}
+
+
+/* Holly Hack \*/
+* html div.product {height: 1%;}
+/* */
+
+div.product img {
+	overflow: hidden;
+
+	float: left;
+	display: inline;
+	position: relative;
+
+	width: 130px;
+	height: 130px;
+	margin: 2px 0;
+	border: none;
+}
+
+div.product div.bar { margin-left: 136px; }
+
+div.product h3 {
+	margin-top: 2px;
+	margin-bottom: 0.4ex;
+	font-size: 1.1em;
+}
+
+div.description {
+	overflow: auto;
+	height: 15.2ex;
+	margin: 12px 12px 0 0;
+	padding: 3px 0.5em;
+	border: 1px dotted #0B0D60;
+	_border-style: solid;
+	background-color: #AACCFF;
+}
+
+div.product p { position: static; }
+
+label {display: inline; width: auto; }
+
+
+div.product select optgroup {font-style: normal;}
+
+div.product input.button {
+	margin-left: -0.5em;
+	_margin-left: 0;
+}

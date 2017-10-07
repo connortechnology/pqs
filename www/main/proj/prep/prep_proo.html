@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.category?> - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+	<script type="text/javascript" src="/javascripts/proj/service/proofs.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+	<script type="text/javascript">
+	function add_proof(sig) {
+		var form = $('f1');
+		var table =  $('sig-'+sig);
+		var row = table.rows[table.rows.length-1];
+
+		growTable(row);
+		row = table.rows[table.rows.length-1];
+
+		var pattern = /[0-9]+$/;
+		var inputs = row.getElementsByTagName('select');
+
+		for (var i=0; i < inputs.length; i++) {
+       		var input = inputs[i];
+			var n = parseInt(input.name.match(pattern));
+			input.name = input.name.replace(pattern, ++n);
+			input.id = input.id.replace(pattern, n);
+		}
+
+		// Rename/Blank Unit Price for new row.
+		input = row.cells[3];
+		var n = parseInt(input.id.match(pattern));
+		input.id = input.id.replace(pattern, ++n);
+		input.innerHTML = '';
+
+}
+</script>
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<!--#include virtual="/includes/main/proj/required_fields.html"-->
+
+	<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+		<fieldset>
+			<legend>Proofing</legend>
+
+			<p class="none">&nbsp;</p>
+		
+			<?if ProofsChangedFlag ?>
+				<p class="error">Additional <?PlateOrScreen?>s have been added to your printing service, please confirm and/or correct the quantity and type of additional proofs required for your new<?PlateOrScreen?>s.</p>
+			<?endif ProofsChangedFlag ?>
+		
+			<? loop signatures ?>
+		
+				<? if description ?>
+					<h5><?description?></h5>
+				<? endif description ?>
+		
+				<table class="no-formatting" border="0" cellspacing="0" cellpadding="0" id="sig-<?sig?>">
+					<tr>
+						<th>Quantity</th>
+						<th>Height x Width</th>
+						<th>Proof Type</th>
+						<th>Unit Price</th>
+					</tr>
+			
+					<?loop proofs?>
+			
+						<input type="hidden" name="hdnProofWidth-<?sig?>-<?id?>" value="<?width?>" />
+						<input type="hidden" name="hdnProofHeight-<?sig?>-<?id?>" value="<?height?>" />
+				
+						<tr>
+							<td style="text-align: center;"><input type="text" name="txtProofQuantity-<?sig?>-<?id?>" value="<?qty?>" size="9" class="smBox" /></td>
+							<!-- Do Not Line-Break the Following TD - IE6 Fix -->
+							<td style="text-align: center; white-space: nowrap;">
+								<input type="text" id="txtProofHeight-<?sig?>-<?id?>" name="txtProofHeight-<?sig?>-<?id?>" value="<?height?>" size="9" class="smBox" style="margin-top: 0.5ex;" />
+								<label class="post-input">x</label>
+								<input type="text" id="txtProofWidth-<?sig?>-<?id?>" name="txtProofWidth-<?sig?>-<?id?>" value="<?width?>" size="9" class="smBox" style="margin-top: 0.5ex;" />
+							</td>
+							<td style="text-align: center;">
+								<select name="ddmProofType-<?sig?>-<?id?>">
+									<option value="">Select a Proof Type</option>
+									<?options?>
+								</select>
+							</td>
+							<td class="price" id="txtProofUnitPrice-<?sig?>-<?id?>"><?money:price?></td>
+						</tr>
+		
+					<?endloop proofs?>
+				</table>
+		
+		
+				<label>Additional Proofs:</label>
+				<input type="button"  id="additional-<?sig?>" onclick="add_proof(<?sig?>);" value = 'Additional Proof' >
+				<br />
+		
+			<? endloop signatures ?>
+			<br />
+		</fieldset>
+
+
+		<!--#include virtual="/includes/main/proj/prices_proofs.html"-->
+		
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+		
+		<input type="hidden" name="hdnPriorProof" value="1" />
+	</form>
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

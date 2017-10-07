@@ -1,0 +1,133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Marketing - Mailing Database
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+</head>
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Marketing &#187;</span> Mailing Database</h1>
+
+
+		<fieldset>
+			<legend>
+				Instructions
+			</legend>
+	
+			<p>
+             To set-up as Administrator:<br />
+             Steps 1-5 are optional.
+            <ul>
+            <li>Step 1: Update your scrubbing data information into the rules.csv file in the mail_data directory.</li>
+            <li>Step 2: Save your File as rules.csv (for Windows Comma Delimited) and replace the file in the mail_data directoy.</li>
+            <li>Step 3: Add your mailing database .csv (for Windows Comma Delimited) file to the FTP under the mail_data directory in the dirty_in folder. This file CAN contain column headers, and will be stripped out during Pre-Scrub. <a href="/mailing/Dirty_in.csv">Click to view a sample of a working Dirty In file.</a></li>
+             <li>Step 4: Push this button to clean the file. <br /><a class="button" href="/employee/marketing/mailing_database.html?dirty_in=1">Pre-Scrub Data File</a><br /></li>
+             <li>Step 5: Go to your FTP under the mail_data directory in the dirty_out folder to retrieve your file. <a href="/mailing/Dirty_out.csv">Click to view a sample of a working Dirty Out file.</a></li><br />
+
+             <li>Step 6: Run your file in your Streetsweeper program.</li>
+            <li>Step 7: Add your Clean File from Streetsweeper as a .csv (for Windows Comma Delimited) to the FTP under the mail_data directory in the clean_in folder. This file CANNOT contain column headers. Data must be sorted with columns in this order: 
+              <table cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="64">Location</td>
+                  <td width="64">Name</td>
+                  <td width="64">CustomerCode</td>
+                  <td width="64">(No column name)</td>
+                  <td width="64">suite</td>
+                  <td width="64">CityName</td>
+                  <td width="64">Province</td>
+                  <td width="64">PostalCode</td>
+                  <td width="64">Phone</td>
+                  <td width="64">Recency</td>
+                  <td width="64">MostRecentOrderDate</td>
+                  <td width="64">DeliveryMinutes</td>
+                </tr>
+              </table>
+              Records will be categorized based on &quot;Recency&quot; for new, late, lapse30, lapse60 and lapsed. These are not case sensitive but must contain an exact match for letters. <a href="/mailing/Clean_in.csv">Click to view a sample of a working Clean In file.</a></li>
+             <li>Step 8: Push this button to add those records to the mailing Database. <br /><a class="button" href="/employee/marketing/mailing_database.html?clean_in=1">Add Records to Database</a><br />To see what's in the mailing Database go to <a href="/administrator/reports/reports_custom.html">Custom Reports</a> and select "Marketing Data" then Show Results.</li>
+            <li>Step 9: Create a PDF Template and Upload into the software <a href="/templating/list">here</a>. Template must contain the following Block Names: AddressLineA1, AddressLineB1, AddressLineC1, Locater. It may also contain any other optional blocked Fields but it must contain those 4 blocks.</li>
+            <li>Step 10: Make a predefined project in the system that contains "Mailing Flyer" in the project name.</li>
+             <li>Step 11: Attach your template to your predefined project to create a new project where the template is attached as data file</li>
+             <li>Step 12: Add a link to your Local Store Marketing to the Mailing Database to go to: /customers/products/local/mailing/start.html?asr=mailing;record_count=1<br />
+             Edit your HTML for your mailing to update the new Project ID and any corresponding artwork jpg images.<br />
+             Pages:<br />
+             /customers/products/local/mailing/start.html<br />
+             /customers/products/local/mailing/late.html<br />
+             /customers/products/local/mailing/late1.html<br />
+             /customers/products/local/mailing/late2.html<br />
+             /customers/products/local/mailing/late3.html<br />
+             /customers/products/local/mailing/late4.html<br />
+             /customers/products/local/mailing/new.html<br />
+             /customers/products/local/mailing/new1.html<br />
+             /customers/products/local/mailing/new2.html<br />
+             /customers/products/local/mailing/new3.html<br />
+             /customers/products/local/mailing/new4.html<br />
+             /customers/products/local/mailing/lapsed.html<br />
+             /customers/products/local/mailing/lapsed_1.html<br />
+             /customers/products/local/mailing/lapsed_2.html<br />
+             /customers/products/local/mailing/lapsed_3.html<br />
+             /customers/products/local/mailing/lapsed_4.html<br />
+             /customers/products/local/mailing/lapse30.html<br />
+			 /customers/products/local/mailing/lapse30_1.html<br />
+			 /customers/products/local/mailing/lapse30_2.html<br />
+			 /customers/products/local/mailing/lapse30_3.html<br />
+			 /customers/products/local/mailing/lapse30_4.html<br />
+             /customers/products/local/mailing/lapse60.html<br />
+			 /customers/products/local/mailing/lapse60_1.html<br />
+			 /customers/products/local/mailing/lapse60_2.html<br />
+			 /customers/products/local/mailing/lapse60_3.html<br />
+			 /customers/products/local/mailing/lapse60_4.html<br />
+             </li>
+            </ul>
+            </p>
+            <p>
+            To use as a customer:<br />
+            <ul>
+            <li>Step 1: Login as the Company you want</li>
+            <li>Step 2: Go To Local Store Marketing</li>
+            <li>Step 3: Select Mailing</li>
+            <li>Step 4: Select Late, New or Lapsed</li>
+            <li>Step 5: Select Artwork 1-4</li>
+            <li>Step 6: Enter Quantity and Select "Click Here to Order"</li>
+            <li>Step 7: On the Template Record Page, Fill in all Fields Except the Address Lines and Select Locater, then select Save and Continue.</li> 
+            <li>Step 8: Add initials and Select Approve and Continue.</li>
+            <li>Step 9: Select Save and Continue</li>
+            <li>Step 10: Reply Yes or No to the Pop-up</li>
+            <li>Step 11: If No: Confirm Order Information, If Yes: Repeat steps 2-10</li>
+            <li>Step 12: Submit your Order</li>
+            <li>Step 13: Pay for your order if necessary</li>
+            <li>Step 14: Receive your Order Confirmation by Email</li>
+            </ul>
+            
+            
+            To use as a Admin:<br />
+            <ul>
+            <li>Step 1: Receive your Order Confirmation by Email</li>
+            <li>Step 2: Go To your FTP &quot;ftp_mail_data&quot; to retrieve the PDF and CSV Files</li>
+            
+            </ul>
+               
+            </p>
+
+			
+		</fieldset>
+
+		
+</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

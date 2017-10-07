@@ -1,0 +1,10 @@
+<p>Dear <?rdbSalutation?> <?txtFirstName?> <?txtLastName?>,</p>
+<p>Thank-you for registering. Please use your e-mail address and the password: <?password?> to login.</p>
+
+<? if ( configuration::get_value( $log, $dbh, 'NewCustomerAccountActivation') eq 'Y' and configuration::get_value( $log, $dbh, 'NewFirstUserAccountActivation' ) eq 'Y' ) ?>
+	<p>As the initial user, you are the administrator for your company account. From the ACCOUNT menu, the PROFILE option will allow you to create and modify additional logins for the other users within your company.</p>
+<? else ( configuration::get_value( $log, $dbh, 'NewCustomerAccountActivation') eq 'Y' and configuration::get_value( $log, $dbh, 'NewFirstUserAccountActivation' ) eq 'Y' ) ?>
+	<p>You will be notified when your account is activated. Once your account is active you will be the administrator for your company account. From the ACCOUNT menu, the PROFILE option will allow you to create and modify additional logins for other users within your company.</p>
+<? endif ( configuration::get_value( $log, $dbh, 'NewCustomerAccountActivation') eq 'Y' and configuration::get_value( $log, $dbh, 'NewFirstUserAccountActivation' ) eq 'Y' ) ?>
+
+<p>If you have any questions, please contact our <a href="/main/support/support_help_desk.html?Issue_Cookie=true">helpdesk</a>.</p>

@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:tal="http://purl.org/petal/1.0/"
+		xmlns:xi="http://www.w3.org/2001/XInclude">
+<head>
+	<title>Upload Template</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<xi:include href="/includes/h1-admin-css.html" />
+
+	<link rel="stylesheet" href="/styles/forms.css" type="text/css" />
+	<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<script language="javascript" type="text/javascript" src="/javascripts/detect.js"></script>
+	<script language="javascript" type="text/javascript" src="/javascripts/other.js"></script>
+	<script language="javascript" type="text/javascript" src="/javascripts/menu.js"></script>
+</head>
+<body>
+	<xi:include href="/includes/c1-tal.html" />
+
+	<div id="content">
+		<h1><span class="title-section">Template &#187; </span> Upload</h1>
+
+		<form method="post" enctype="multipart/form-data" action="/templating/upload">
+			<fieldset style="padding-top: 2em;">
+
+				<input tal:condition="template/id" type="hidden" name="id" tal:attr="value template/id" />
+
+				<label for="name" title="A label for later reference.">Name:</label>
+				<input id="name" name="name" type="text" tal:attr="value template/name" />
+				<br />
+		
+				<label for="template">Template Filename:</label>
+				<input id="template" name="template" type="file" />
+				<br />
+				
+				<label for="defaults">Defaults Filename:</label>
+				<input id="defaults" name="defaults" type="file" />
+
+
+				<div class="button-bar indent-regular">
+					<input type="submit" value="Submit"  />
+					<br />
+				</div>
+
+			</fieldset>
+		</form>
+
+		<form method="post" enctype="multipart/form-data" action="/templating/create/">
+
+		<fieldset style="padding-top: 2em;">
+				<input tal:condition="template/id" type="hidden" name="id" tal:attr="value template/id" />
+				<input id="name" name="name"  	   type="hidden" tal:attr="value template/name" />
+				<input type="submit" name="Export" value="Export" />
+				<br />
+		</fieldset>
+
+		<fieldset style="padding-top: 2em;">
+			PID:	<input id="pid" name="pid"  type="text"  />
+			<input type="submit" name="TemplatePID" value="Init Project" />
+		</fieldset>
+
+		</form>
+	</div>
+
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

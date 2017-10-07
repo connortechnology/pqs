@@ -1,0 +1,17 @@
+	<li id="home"><a href="/index.html">Home</a>
+		<? if ($$variable{user_type} eq 'E' ) ?>
+			<ul id="homeEmployee">
+				<li><a href="/employee/">Employee</a></li>
+			</ul>			
+		<? endif ($$variable{user_type} eq 'E' ) ?>
+
+		<? if ( $$variable{user_type} eq 'A' ) ?>
+			<ul id="homeAdmin">
+				<li><a href="/administrator/">Administrator</a></li>
+			</ul>
+		<? endif ( $$variable{user_type} eq 'A' ) ?>
+	</li>
+	<li><!--#include virtual="/includes/main/products.html" --></li>
+	<li><!--#include virtual="/includes/main/proj.html" --></li>
+	<li><!--#include virtual="/includes/main/support.html" --></li>
+	<li><!--#include virtual="/includes/main/account.html" --></li>

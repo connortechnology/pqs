@@ -1,0 +1,37 @@
+<fieldset>
+	<legend>
+		Credit Card Information
+	</legend>
+    
+	<p>Note: The full order amount will be charged to your credit card once you confirm the information and submit the order on the next page.</p>
+
+	<input type='hidden' name='ccrequired' value='<?ccrequired?>' />
+
+	<label>Card Type:</label>
+	<select name='card_type' class="input-text">
+		<option value='Mastercard'>Mastercard</option>
+		<option value='Visa'>VISA</option>
+	</select>
+	<br />
+	
+	<label>Card Number:</label>
+	<input type="text" name="card_number" size="30"	class="input-text" />
+	<br />
+	<label>First Name:</label>
+	<input type="text" name="card_firstname" size="30"	class="input-text" />
+    <br />
+    <label>Last Name:</label>
+	<input type="text" name="card_lastname" size="30"	class="input-text" />
+	<br />
+	
+	<label>Expiry:</label>
+	<select name='expiry_month'>
+		<?ddmMonths?>
+	</select>
+	<select name='expiry_year'>
+		<?ddmYear?>
+	</select>
+
+	<br />
+
+</fieldset>

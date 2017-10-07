@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.category?> - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+	<? if not:is_presentationfolder ?>
+		<script type="text/javascript" src="/javascripts/proj/service/diecutting.js"></script>
+	<? else not:is_presentationfolder ?>
+		<script type="text/javascript" src="/javascripts/proj/service/diecutting_pf.js"></script>
+	<? endif not:is_presentationfolder ?>
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<form id="f1" name="f1" method="POST" action="/service/<?lc:service.ref?>">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		
+		<? if is_presentationfolder ?>
+	
+			<!--#include virtual="/includes/main/proj/dimensions_hidden.html"-->
+
+			<fieldset>
+				<legend>
+					Presentation Folder
+				</legend>
+			
+				<p class="tip" title="This can be modified in the printing service.">The chosen pocket size of the presentation folder:</p>
+				
+				<label>Pocket Size:</label>
+				<span><? pocket_size ?>"</span>
+				<br />
+			
+				<p>Does your presentation folder require business card slits? If yes please specify pockets and card style.</p>
+				<label>Slot:</label>
+				<div>
+					<label for="rdbBusinessCardSlotLeft" class="radio"><input type="radio" id="rdbBusinessCardSlotLeft" name="rdbBusinessCardSlot" value="LeftPocket" />Left </label><br />
+					<label for="rdbBusinessCardSlotRight" class="radio"><input type="radio" id="rdbBusinessCardSlotRight" name="rdbBusinessCardSlot" value="RightPocket" />Right </label>
+				</div>
+				<div>
+					<label for="rdbBusinessCardSlotBoth" class="radio"><input type="radio" id="rdbBusinessCardSlotBoth" name="rdbBusinessCardSlot" value="BothPockets" />Both </label><br /><label for="rdbBusinessCardSlotNone" class="radio"><input type="radio" id="rdbBusinessCardSlotNone" name="rdbBusinessCardSlot" value="None" />None</label>
+				</div>
+				<br />
+			
+				<label>Style:</label>
+				<label for="rdbBusinessCardStylePortrait" class="radio"><input type="radio" id="rdbBusinessCardStylePortrait" name="rdbBusinessCardStyle" value="Portrait" />Portrait</label>
+				<label for="rdbBusinessCardStyleLandscape" class="radio"><input type="radio" id="rdbBusinessCardStyleLandscape" name="rdbBusinessCardStyle" value="Landscape"/>Landscape</label>
+				<br />
+			
+				<input type="hidden" name="Glued" value="<?Glued?>" />
+			</fieldset>
+	
+		<? else is_presentationfolder ?>
+
+			<!--#include virtual="/includes/main/proj/dimensions_boxes_only.html"-->
+
+			<fieldset>
+				<legend>
+					Die Cutting
+				</legend>
+			
+				<p>Will you be supplying a <span class="tip" title="A custom image or shape formed on a hardened engraving stamp used in die cutting, foil stamping and embossing.">custom die</span>?</p>
+				
+				<label>Custom Die:</label>
+				<label class="radio" for="rdbSuppliedDieYes"><input type="radio" id="rdbSuppliedDieYes" name="rdbSuppliedDie" value="Y" <?rdbSuppliedDieY?> />Yes</label>
+				<label class="radio" for="rdbSuppliedDieNo"><input type="radio" id="rdbSuppliedDieNo" name="rdbSuppliedDie" value="N" <?rdbSuppliedDieN?> />No</label>
+				<br />
+			
+				<p>Does you project require Hard Tooling?  </p>
+				<label>Hard Tooling</label>
+				<label class="radio" for="rdbHardToolingYes"> <input type="radio" id="rdbHardToolingYes" name="rdbHardTooling" value="1" <?rdbHardToolingYes?>/>Yes </label> 
+				<label class="radio"for="rdbHardToolingNo"> <input type="radio" id="rdbHardToolingNo" name="rdbHardTooling" value="0" <?rdbHardToolingNo?> />No </label> 
+				<br />
+			
+
+				<p>What are the dimensions of the die cut image?</p>
+				<label for="txtDieWidth">Die Cut Image Dimensions:</label>
+				<input id="txtDieWidth" name="txtDieWidth" size="9" value="<?txtDieWidth?>" class="smBox" /> 
+				<input id="txtDieHeight" name="txtDieHeight" size="9" value="<?txtDieHeight?>" class="smBox" /> 
+				<span class="post-input">(W&#8243; &#215; H&#8243;)</span>
+				<br />
+			
+				<p>What type of die is required for the project? If known, please input the amount of steel rule that will be required to create the die.</p>
+				<label for="rdbDieCuttingSimple">
+					<input type="radio" id="rdbDieCuttingSimple" name="rdbDieCutting" value="Simple" />
+					Simple
+				</label>
+				<input id="txtSteelRuleLengthSimple" name="txtSteelRuleLengthSimple" size="9" value="<?txtSteelRuleLengthSimple?>" class="smbox" /> 
+				<label class="post-input" for="txtSteelRuleLengthSimple">linear inches</label>
+				<br />
+				
+				<label for="rdbDieCuttingAverage">
+					<input type="radio" id="rdbDieCuttingAverage" name="rdbDieCutting" value="Average" />
+					Average
+				</label>
+				<input id="txtSteelRuleLengthAverage" name="txtSteelRuleLengthAverage" size="9" value="<?txtSteelRuleLengthAverage?>" class="smbox" /> 
+				<label class="post-input" for="txtSteelRuleLengthAverage">linear inches</label>
+				<br />
+				
+				<label for="rdbDieCuttingComplex">
+					<input type="radio" id="rdbDieCuttingComplex" name="rdbDieCutting" value="Complex"  />
+					Complex
+				</label>
+				<input id="txtSteelRuleLengthComplex" name="txtSteelRuleLengthComplex" size="9" value="<?txtSteelRuleLengthComplex?>" class="smbox" /> 
+				<label class="post-input" for="txtSteelRuleLengthComplex">linear inches</label>
+				<br />
+				
+				<p>How many bends are included in your die cut image? (ie. Circles - 4 Bends, Half Moon - 2 Bends, Five Point Star Burst - 10 bends.)</p>
+				<label for="txtDieCutBends">Quantity of Die Rule Bends:</label>
+				<input id="txtDieCutBends" name="txtDieCutBends" size="9" value="<?txtDieCutBends?>" class="smBox" />
+				<br />
+				
+				<p>Does your die cut image require any die cut areas smaller than 1&quot; in diameter? If yes, please specifiy how many areas need to be die cut punched to a diameter of 1&quot; or less.</p>
+				<label for="txtDieCutPunches">Quantity of Die Cut Punches:</label>
+				<input id="txtDieCutPunches" name="txtDieCutPunches" size="9" value="<?txtDieCutPunches?>" class="smBox" />
+				<br />
+				
+				<p>Does your project require hole clearing? If yes, please specify the amount of holes to be cleared on each project.</p>
+				<label>Hole Clearing:</label>
+				<label class="radio" for="rdbHoleClearingYes"><input type="radio" id="rdbHoleClearingYes" name="rdbHoleClearing" value="Y" />Yes</label>
+				<label class="radio" for="rdbHoleClearingNo"><input type="radio" id="rdbHoleClearingNo" name="rdbHoleClearing" value="N"  />No </label>
+				<br />
+				
+				<label for="txtHoleClearingHoles">Holes to Clear:</label>
+				<input id="txtHoleClearingHoles" name="txtHoleClearingHoles" size="9" value="<?txtHoleClearingHoles?>" class="smBox" />
+				<br />
+				
+				<p>Does your project require gluing?</p>
+				<label>Gluing:</label>
+				<label class="radio" for="rdbGluedYes"><input type="radio" id="rdbGluedYes" name="rdbGlued" value="Y" />Yes</label>
+				<label class="radio" for="rdbGluedNo"><input type="radio" id="rdbGluedNo" name="rdbGlued" value="N" />No</label>
+				<br />
+			</fieldset>
+	
+			<? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+				<!--#include virtual="/includes/main/proj/equipment_with_imposition.html"-->
+				<!--#include virtual="/includes/main/proj/die_prices.html"-->
+			<? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+
+		<? endif is_presentationfolder ?>
+	
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_bindery.html"-->
+	</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

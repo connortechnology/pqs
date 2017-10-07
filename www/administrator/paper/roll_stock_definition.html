@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Paper - View Roll Stock Definition
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">Fields &#187;</span> definition for roll stock</h1>
+
+	<table class="no-td">
+		<tr>
+			<th>Field Name </th>
+			<th>Description </th>
+			<th>Data Type </th>
+			<th>Example </th>
+		</tr>
+		<tr>
+			<td> strCategory * </td>
+			<td> Category of the stock </td>
+			<td> text </td>
+			<td> Gloss </td>
+		</tr>
+		<tr>
+			<td> strId * </td>
+			<td> Stock ID </td>
+			<td> text </td>
+			<td> House-G-C2S-W-100-35-ROLL </td>
+		</tr>
+		<tr>
+			<td> strName * </td>
+			<td> Name of the stock </td>
+			<td> text </td>
+			<td> Gloss - House Stock </td>
+		</tr>
+		<tr>
+			<td> strDetails </td>
+			<td> Details of the stock </td>
+			<td> text </td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td> strFinish * </td>
+			<td> Finish coating </td>
+			<td> text </td>
+			<td> Coated 2 Sides </td>
+		</tr>
+		<tr>
+			<td> strColour * </td>
+			<td> <?ws_Colour?> of the stock </td>
+			<td> text </td>
+			<td> White </td>
+		</tr>
+		<tr>
+			<td> strMweight * </td>
+			<td> Weight of the stock per 1000 sheet </td>
+			<td> text </td>
+			<td> 65 </td>
+		</tr>
+		<tr>
+			<td> strWeight * </td>
+			<td> Thickness name </td>
+			<td> text </td>
+			<td> 100 lb - Text </td>
+		</tr>
+		<tr>
+			<td> strCalliper * </td>
+			<td> Thickness of 1 sheet </td>
+			<td> text </td>
+			<td> 0.0039 </td>
+		</tr>
+		<tr>
+			<td> dblWidth * </td>
+			<td> Width of sheet </td>
+			<td> numeric </td>
+			<td> 35.000 </td>
+		</tr>
+		<tr>
+			<td> dblRollWeight * </td>
+			<td> Weight of a roll </td>
+			<td> numeric </td>
+			<td> 600 </td>
+		</tr>
+		<tr>
+			<td> dblPurchaseunit * </td>
+			<td> The persentage of a roll can be baught as a unit </td>
+			<td> numeric </td>
+			<td> 0 </td>
+		</tr>
+		<tr>
+			<td> strSupplier * </td>
+			<td> Supplier of the stock </td>
+			<td> text </td>
+			<td> APP </td>
+		</tr>
+		<tr>
+			<td> Recommendations * </td>
+			<td> Project types the stock is recommended for </td>
+			<td> text </td>
+			<td> Booklets, Books, Brochures, BusinessCards, Calendars, Cards, Catalogues, Covers, Custom, Envelopes, Flyers, Forms, InkjetOutputs, Inserts, Labels, Letterhead, Magazines, Manuals, Maps, MultiVersion, NewsLetters, Packaging, Pamphlets/Leaflets, Posters, PresentationFolders, PressSheetCombination, Reports, Scratch/WritingPads, Screen, Tags/Tickets </td>
+		</tr>
+	</table>
+
+	<p>Fields marked with an * are required in CSV import files, otherwise the fields are optional.</p>
+
+	<div class="button-bar">
+		<a href="/administrator/paper/import_export.html" class="button">Back to Stock Import / Export</a>
+		<br class="clear" />
+	</div>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Reports - Projects
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Reports &#187;</span> Projects</h1>
+
+	<form id="f1" name="f1" method="get" action="/administrator/reports/reports_projects.html">
+
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p>Choose report criteria and click show results. You may download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.</p>
+
+			<label for="search">Search:</label>
+			<input name="search" id="search" value="<?search?>" />
+			<br />
+
+			<label for="ddmCustomers">Customers:</label>
+			<select id="ddmCustomers" name="ddmCustomers" size="1">
+				<option value=""> All Customers </option>
+				<?ddmCustomers?>
+			</select>
+			<br />
+
+			<label for="ddmEstimator">Estimator:</label>
+			<select id="ddmEstimator" name="ddmEstimator" size="1">
+				<option value=""> All Estimators </option>
+				<?ddmEstimator?>
+			</select>
+			<br />
+
+			<label for="ddmStatus">Status:</label>
+			<select id="ddmStatus" name="ddmStatus" size="1">
+				<option value=""> All </option>
+				<option value="Unordered" <?ddmStatusUnordered?> > Unordered </option>
+				<option value="uncalculated" <?ddmStatusuncalculated?> > uncalculated </option>
+				<option value="Complete" <?ddmStatuscomplete?> > complete </option>
+				<option value="Pending Deposit" <?ddmStatusPending Deposit?> > Pending Deposit </option>
+				<option value="In Production" <?ddmStatusIn Production?> > In Production </option>
+			</select>
+			<br />
+
+			<label for="ddmEmployees">Sales Reps:</label>
+			<select id="ddmEmployees" name="ddmEmployees" size="1">
+				<option value=""> All Employees </option>
+				<?ddmEmployees?>
+			</select>
+			<br />
+
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?startmonths?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?startdays?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?startyears?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?endmonths?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?enddays?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?endyears?>
+			</select>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Download in CSV Format" />
+				<input class="button" type="submit" name="btnFunction" value="Show Results" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Results
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<? if ( @{ $variable->{projects} } ) ?>
+				<table cellspacing="0" border="0" cellpadding="0">
+					<tr>
+					  <th>Order ID</th>
+						<th>Project ID</th>
+						<th>Customer</th>
+						<th>Project Name</th>
+						<th>Project Creation Date</th>
+						<th>Status</th>
+					</tr>
+	
+					<? loop projects ?>
+						<tr<? if ($variable->{_even}) ?> class='colRow'<? endif ($variable->{_even}) ?>>
+						  <td><a href="/main/order/order_history_details.html?order_id=<?order_id?>"><?rev:order_id?></a></td>
+							<td><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>"><?pid?></a></td>
+							<td style="text-align: left;"><a href="/administrator/managerial/company_profiles.html?ddmCustomer=<?customer?>"><?company?></a></td>
+							<td style="text-align: left;"><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>"><?reference?></a></td>
+							<td style="text-align: center;"><?creationdate?></td>
+							<td style="text-align: right;"><?status?></td>
+						</tr>
+					<? endloop projects ?>
+				</table>
+
+			<? else ( @{ $variable->{projects} } ) ?>
+		  <p>There were no results matching your criteria.</p>
+			<? endif ( @{ $variable->{projects} } ) ?>
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Managerial - Accounting Search
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Accounting &#187;</span>  Receivables</h1>
+
+	<p>Choose criteria and click show results.  </p>
+
+	<form id="f1" name="f1" method="post" action="accounting_search.html">
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+		
+			<p class="none">&nbsp;</p>
+		
+			<label for="ddmCustomers">Customers:</label>
+			<select id="ddmCustomers" name="ddmCustomers" size="1">
+				<option value=""> All Customers </option>
+				<?ddmCustomers?>
+			</select>
+			<br />
+
+			<label for="ddmBalance">Balance:</label>
+			<select id="ddmBalance" name="ddmBalance" size="1">
+				<option value="All"   > All </option>
+				<option value="Owing" > Orders Owing </option>
+				<option value="Paid"  > Orders Paid </option>
+			</select>
+			<br />
+
+			<label for="ddmStatus">Status:</label>
+			<select id="ddmStatus" name="ddmStatus" size="1">
+				<option value="" > All </option>
+				<?ddmStatus?>
+			</select>
+			<br />
+<!--
+			<label for="ddmCategories">Category:</label>
+			<select id="ddmCategories" name="ddmCategories" size="1">
+				<option value=""> All Categories </option>
+				<?ddmCategories?>
+			</select>
+			<br />
+			<label for="ddmEmployees">Sales Reps:</label>
+			<select id="ddmEmployees" name="ddmEmployees" size="1">
+				<option value=""> All Employees </option>
+				<?ddmEmployees?>
+			</select>
+			<br />
+-->
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?startmonths?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?startdays?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?startyears?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?endmonths?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?enddays?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?endyears?>
+			</select>
+			<br />
+
+			<label for="dblTotal1">Total Price Range:</label>
+			<input type="text" id="dblTotal1" name="dblTotal1" size="9" class="smBox" value="<?dblTotal1?>" />
+			<label for="dblTotal2" class="value">&nbsp;to&nbsp;</label>
+			<input type="text" id="dblTotal2" name="dblTotal2" size="9" class="smBox" value="<?dblTotal2?>" />
+			<br />
+	
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Show Results" onclick="f1.action='accounting_search.html';" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Results
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<table class="tbl" cellspacing="0" cellpadding="0" border="0">
+				<? loop ACCOUNTS ?>
+					<tr>
+						<td class="no-formatting no-padding" style="text-align: center; font-weight: bold;">Company:</td>
+						<td colspan="5" class="no-formatting no-padding" style="text-align: left; font-weight: bold;"><a href="accounting_payments.html?ddmCustomers=<?cust_id?>"><?name?></a></td>
+					</tr>
+					
+					<tr class="no-formatting">
+						<td colspan="6" style="font-size: 0.3em;">&nbsp;</td>
+					</tr>
+
+					<tr>
+						<th>Order ID</th>
+						<th>Date</th>
+						<th>Status</th>
+						<th>P.O. #</th>
+						<th>Total</th>
+						<th>Amount Owing</th>
+						<th>Billing Date</th>
+					</tr>
+	
+					<?loop orders?>
+						<tr>
+							<td><a href="accounting_details.html?order_id=<?order_id?>"><?rev:order_id?></a></td>
+							<td style="text-align: center;"><?date?></td>
+							<td style="text-align: center;"><?status?></td>
+							<td style="text-align: center;"><?ponum?><? if ( ! $$variable{ponum} ) ?><? endif ( ! $$variable{ponum} ) ?></td>
+							<td style="text-align: right;">$<?total?></td>
+							<td style="text-align: right;"> 
+							<? if ( $variable->{balance} ) ?>
+								$<?balance?>
+							<? else ( $variable->{balance} ) ?>
+								-
+							<? endif ( $variable->{balance} ) ?>
+							</td>
+							<td>
+								<?if bill_date?>
+								<?bill_date?>
+								<?else bill_date?>
+									<button type="submit" name="mark_billed" id="mark_billed-<?order_id?>" value="<?order_id?>" />Mark as Billed</button>
+								<?endif bill_date?>
+							</td>
+						</tr>
+					<? endloop orders?>
+
+					<tr class="no-formatting">
+						<td colspan="6" style="font-size: 0.25em;">&nbsp;</td>
+					</tr>
+		
+					<tr class="no-formatting">
+						<td colspan="4" style="text-align: right;"><strong> Account Total: </strong> </td>
+						<td style="text-align: right; border-top: 3px double black;">$<?cust_total?></td>
+						<td style="text-align: right; border-top: 3px double black;">$<?cust_bal?></td>
+					</tr>
+					
+					<tr class="no-formatting">
+						<td colspan="6" style="font-size: 1.5em;">&nbsp;</td>
+					</tr>
+				<? endloop ACCOUNTS ?>
+			
+				<tr class="no-formatting">
+					<td colspan="6" style="font-size: 0.5em;">&nbsp;</td>
+				</tr>
+	
+				<tr class="no-formatting">
+					<td colspan="4" style="text-align: right;"><strong> Grand Total: </strong> </td>
+					<td style="text-align: right; border-top: 3px double black;">$<?TOTAL_SALES?></td>
+					<td style="text-align: right; border-top: 3px double black;">$<?BALANCE?></td>
+				</tr>
+			</table>
+	
+			<? if (  $$variable{'ACCOUNTS'} == 0 ) ?>
+				<p>There were no results matching your criteria.</p>
+			<? endif (  $$variable{'ACCOUNTS'} == 0 ) ?>
+	
+			<input type="hidden" name="btnFunction" />
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

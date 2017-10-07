@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+              "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>
+			<!--#include virtual="/includes/company_name.html"-->
+			- Award Job
+		</title>
+
+		<style type="text/css"><!--#include virtual="/styles/email.css"--></style>
+		<base href="<?siteURL?>" />
+		
+	</head>
+	<body>
+	
+		<div id="email-wrapper">	
+			<div id="email-border">
+            				<div id="email-header">
+					<a href="/" target="_blank"><img src="<?siteURL?>/images/e-mail/email_header.gif" /></a>
+				</div>
+
+			<div id="email-content">
+			<p>You have been awarded a job from the <!--#include virtual="/includes/company_name.html"--> Print Center. Please log into <!--#include virtual="/includes/web_site_URL.html"--> and log in then hit the click here button below to view the Purchase Order information for Project Number <?pid?>. </p>
+            <p><a href="<?siteURL?>/main/supplier/purchase_order.html?rid=<?rid?>&sup_id=<?sup_id?>&pid=<?pid?>"><strong>CLICK HERE</strong></a> to view your Purchase Order for Project Number <?pid?>.</p>
+            
+             <p><a href="<?siteURL?>/main/supplier/purchase_order.html?rid=<?rid?>&sup_id=<?sup_id?>&pid=<?pid?>"><strong>CLICK HERE</strong></a> to mark your Purchase Order as Read.</p>
+            </div>
+            
+            <div id="email-footer">
+			<p><!--#include virtual="/includes/company_tag_line.html"-->,</p>
+			<p><!--#include virtual="/includes/company_contact_info.html"--></p>
+			<p>Tel: <!--#include virtual="/includes/company_telephone_number.html"--><br />
+			Fax: <!--#include virtual="/includes/company_fax_number.html"--></p>
+			<p><!--#include virtual="/includes/company_contact_e-mail.html"--><br />
+			<!--#include virtual="/includes/web_site_URL.html"--></p>
+			</div>
+		</div>
+	</div>
+	
+	</body>
+</html>

@@ -1,0 +1,9 @@
+/* pop-up.css is used for pop-up pages */
+body {
+	background-image: none !important;
+	background-color: white !important;
+	width: 640px !important;
+	margin: 2ex !important;
+	padding: 0;
+	text-align: left !important;
+}

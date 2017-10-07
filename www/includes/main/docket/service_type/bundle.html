@@ -1,0 +1,18 @@
+<? eval ( ($$variable{'txtQuantity1'} , $$variable{'txtQuantity2'}, $$variable{'txtQuantity3'}) = split /,/ , $$variable{'txtQuantity'} )?>
+<? if ($$variable{'qtyIndex'} == 1) ?>
+	<?txtQuantity1?>
+<? endif ($$variable{'qtyIndex'} == 1) ?>
+
+<? if ($$variable{'qtyIndex'} == 2) ?>
+	<?txtQuantity2?>
+<? endif ($$variable{'qtyIndex'} == 2) ?>
+
+<? if ($$variable{'qtyIndex'} == 3) ?>
+	<?txtQuantity3?>
+<? endif ($$variable{'qtyIndex'} == 3) ?>
+
+<span class="label">Qty per Bundle </span>
+<?txtWrapQuantity?>
+
+<span class="label">Type </span>
+<?rdbBundleType?>

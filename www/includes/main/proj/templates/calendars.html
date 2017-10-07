@@ -1,0 +1,44 @@
+<fieldset id="templates">
+	<legend>Template Selection</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<input type="hidden" name="hdnBinderyType" value="" />
+
+	<div>
+		<label for="template-SaddleStitching">
+			<img src="/images/main/project_templates/calendars/calendar_saddle_stitched.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-SaddleStitching" value="SaddleStitching" onclick="f1.hdnBinderyType.value='SaddleStitching';project_template(this.form);" />
+			Saddle Stitching<br />
+			(Stapled)
+		</label>
+	</div>
+
+	<div>
+		<label for="template-DoubleLoopWire">
+			<img src="/images/main/project_templates/calendars/calendar_hanger.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-DoubleLoopWire" value="DoubleLoopWire" onclick="f1.hdnBinderyType.value='DoubleLoopWire';project_template(this.form);" />
+			Double Loop Wire<br />
+			(Wire-O)
+		</label>
+	</div>
+
+	<div>
+		<label for="template-PlasticComb">
+			<img src="/images/main/project_templates/calendars/calendar_plastic_comb.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-PlasticComb" value="PlasticComb" onclick="f1.hdnBinderyType.value='PlasticComb';project_template(this.form);" />
+			Plastic Comb<br />
+			(Cerlox)
+		</label>
+	</div>
+
+	<div>
+		<label for="template-NoBindery">
+			<img src="/images/main/project_templates/brochures/8.5x11_no_fold.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-NoBindery" value="NoBindery" onclick="f1.hdnBinderyType.value='NoBindery';project_template(this.form);" />
+			No Bindery<br />
+			(Press Sheets Only)
+		</label>
+	</div>
+	<br />
+</fieldset>

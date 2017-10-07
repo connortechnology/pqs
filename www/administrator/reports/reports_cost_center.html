@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Reports - Cost Center Billing
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Reports &#187;</span> Projects</h1>
+
+	<form id="f1" name="f1" method="get" action="/administrator/reports/reports_cost_center.html">
+
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p>Choose report criteria and click show results. You may download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.</p>
+
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?startmonths?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?startdays?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?startyears?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?endmonths?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?enddays?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?endyears?>
+			</select>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Download in CSV Format" />
+				<input class="button" type="submit" name="btnFunction" value="Show Results" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Results
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<? if ( @{ $variable->{projects} } ) ?>
+				<table cellspacing="0" border="0" cellpadding="0">
+					<tr>
+						<th>Post Date</th>
+						<th>Job Name</th>
+						<th>Cost Center Number	</th>
+						<th>Account Number</th>
+						<th>Invoice Amount</th>
+					</tr>
+	
+					<? loop projects ?>
+						<tr<? if ($variable->{_even}) ?> class='colRow'<? endif ($variable->{_even}) ?>>
+							<td><?date?></td>
+							<td><?job?></td>
+							<td><?cost_center?></td>
+							<td><?account_number?></td>
+							<td><?cost?></td>
+						</tr>
+					<? endloop projects ?>
+				</table>
+
+			<? else ( @{ $variable->{projects} } ) ?>
+				<p>There were no results matching your criteria.</p>
+			<? endif ( @{ $variable->{projects} } ) ?>
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

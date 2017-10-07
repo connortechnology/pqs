@@ -1,0 +1,25 @@
+<fieldset>
+	<legend>
+		Copy Dot
+	</legend>
+
+	<p>What is the quantity of scan(s) required?</p>
+	
+	<label for="txtQuantity">Quantity of Scans:</label>
+	<input id="txtQuantity" name="txtQuantity" type="text" size="9" class="smBox" onblur="focusObject=this;" onchange="calc_copydot('f1');" />
+	<br />
+
+	<p>Do you require <span class="tip" title="A copy prepared prior to printing which allows the client to check how color, photos, type, art and so on, will register and print on the press. Approval of a proof is always necessary before commencement of printing.">proof(s)</span> of the scanned images?</p>
+	
+	<label>Proof(s):</label>
+	<label class="radio" for="rdbRandomProofYes"><input type="radio" id="rdbRandomProofYes" name="rdbRandomProof" value="Yes" onclick="random_proof('f1');" />Yes</label>
+	<label class="radio" for="rdbRandomProofNo"><input type="radio" id="rdbRandomProofNo" name="rdbRandomProof" value="No" onclick="random_proof('f1');" />No</label>
+	<br />
+
+	<p>Do you require any additional scans for the current project?</p>
+	
+	<label>Additional Scans:</label>
+	<label class="radio" for="rdbAdditionalYes"><input type="radio" id="rdbAdditionalYes" name="rdbAdditional" value="Yes" />Yes</label>
+	<label class="radio" for="rdbAdditionalNo"><input type="radio" id="rdbAdditionalNo" name="rdbAdditional" value="No" checked />No</label>
+	<br />
+</fieldset>

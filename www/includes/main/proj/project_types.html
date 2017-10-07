@@ -1,0 +1,111 @@
+<? if ( $variable->{project}{type}{ref} eq 'Brochures' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Brochures' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Custom' ) ?>
+	<!--#include virtual="/includes/main/proj/dimensions_boxes_only.html"-->
+<? endif ( $variable->{project}{type}{ref} eq 'Custom' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Flyers' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/flyers.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Flyers' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Cards' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/cards.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Cards' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Posters' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/posters.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Posters' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Pamphlets/Leaflets' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/pamphlets_leaflets.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Pamphlets/Leaflets' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'NewsLetters' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/newsletters.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'NewsLetters' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'BusinessCards' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/business_cards.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'BusinessCards' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Letterhead' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/letterhead.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Letterhead' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Tags/Tickets' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/tags_tickets.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Tags/Tickets' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Maps' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/maps.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Maps' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Inserts' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/inserts.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Inserts' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Forms' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/forms.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Forms' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Covers' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/covers.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Covers' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Scratch/WritingPads' or $$variable{'ProjectType'} eq 'ScratchPads' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/scratch_pads.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Scratch/WritingPads' or $$variable{'ProjectType'} eq 'ScratchPads' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'PressSheetCombination' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/presssheetcombination.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'PressSheetCombination' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'PresentationFolders' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/presentation_folders.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'PresentationFolders' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Packaging' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/packaging.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Packaging' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Labels' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/labels.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Labels' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Cheques' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/cheques.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Cheques' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'PostCards' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/postcards.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'PostCards' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'PointofSale' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/pointofsale.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'PointofSale' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'PlasticPrinting' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/plastic_printing.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'PlasticPrinting' ) ?>
+<? if ( $variable->{project}{type}{ref} eq 'Envelopes' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/envelopes.html" -->
+<? endif ( $variable->{project}{type}{ref} eq 'Envelopes' ) ?>
+
+
+<? if ( $$variable{spec}{txtSignatureType} eq 'Cover Spreads' or $$variable{spec}{txtSignatureType} eq 'GateFolded Spreads' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/signatures.html"-->
+<? endif ( $$variable{spec}{txtSignatureType} eq 'Cover Spreads' or $$variable{spec}{txtSignatureType} eq 'GateFolded Spreads' ) ?>
+
+
+<? if ($variable->{project}{press_type}{ref} eq 'inkjetprinter' ) ?>
+	<!--#include virtual="<? templateurl ?>" -->
+	<!--#include virtual="/includes/main/proj/dimensions.html"-->
+<? endif ($variable->{project}{press_type}{ref} eq 'inkjetprinter' ) ?>
+
+<? if ($variable->{project}{press_type}{ref} eq 'screen' && $variable->{project}{type}{ref} ne 'ScreenItem') ?>
+	<!--#include virtual="<? templateurl ?>" -->
+
+	<? if ($variable->{project}{type}{ref} ne 'Screen') ?>
+		<!--#include virtual="/includes/main/proj/dimensions_flat.html"-->
+	<? else ($variable->{project}{type}{ref} ne 'Screen') ?>
+		<!--#include virtual="/includes/main/proj/dimensions.html"-->
+	<? endif ($variable->{project}{type}{ref} ne 'Screen') ?>
+
+<? endif ($variable->{project}{press_type}{ref} eq 'screen' && $variable->{project}{type}{ref} ne 'ScreenItem') ?>
+
+
+<? if ($variable->{project}{press_type}{ref} eq 'screen' && $variable->{project}{type}{ref} eq 'ScreenItem') ?>
+	<!--#include virtual="/includes/main/proj/screen_item.html" -->
+<? endif ($variable->{project}{press_type}{ref} eq 'screen' && $variable->{project}{type}{ref} eq 'ScreenItem') ?>
+
+<!-- Multi-version selection for single page projects (in project_types include). Note: Really it shouldn't be here but it has to be included in around 10 other pages for no reason if it's not here. -->
+<? if ($variable->{multiversion_allowed}) ?>
+	<!--#include virtual="/includes/main/proj/version_quantity.html"-->	
+<? endif ($variable->{multiversion_allowed}) ?>
+
+<!-- For Most Deployments this include will only have comments in it.
+	 But it is optional to have a site_specific version of this include that
+	 will have the print_quality controls so they can be displayed at the top 
+	 of the page instead of with the other overrides
+-->
+<!--#include virtual="/includes/main/proj/print_quality.html"-->	

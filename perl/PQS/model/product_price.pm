@@ -1,0 +1,77 @@
+package PQS::model::product_price;
+
+use strict;
+use warnings;
+no warnings qw(uninitialized);
+
+use session;
+use Data::Dumper;
+#use PQS::model::foreign_reference;
+
+sub delete_all {
+  my $id = shift;
+  my $dbh = session::dbh;
+  
+  return $dbh->do("delete from tbl_products");
+}
+
+sub get {
+  my ($id) = @_;
+  my $dbh = session::dbh;
+
+  my $product = $dbh->selectall_hashref("select * from tbl_products where id = ?", $id);
+}
+
+sub get_id_from_str {
+  my ($str) = @_;
+  my $dbh = session::dbh;
+
+  my $id = $dbh->selectrow_array("select id from tbl_products where strid = ?", undef, $str);
+  print STDERR "FOUND ID: $id FROM $str \n";
+  return $id;
+}
+
+sub insert {
+  my ($str) = @_;
+  my $dbh = session::dbh;
+
+  my $product = $dbh->do("insert into tbl_products ( name ) values ( ? )" , undef, $str);
+  my  $id = $dbh->last_insert_id('', 'public', 'tbl_products', 'id');
+ print STDERR "HAVE ID FOR INSERT: $id -- $str \n";
+ return $id;
+  
+}
+
+sub update_category {
+  my ($id, $cat) = @_;
+  my $dbh = session::dbh;
+  my $product = $dbh->do("UPDATE tbl_products set category  = ? WHERE id = ?" , undef, $cat, $id);
+ }
+
+
+sub update {
+  my ($id, $data) = @_;
+  my $dbh = session::dbh;
+
+  my @names;
+  my @values;
+  map { push @names, $_->{name}; push @values, $_->{value} } @{$data};
+  my $columns = join ',', @names;
+  
+  my $placeholders = join ',', ('?') x keys @names;
+  
+  print STDERR "DO UPDATE" , Dumper($columns, @values, $placeholders );
+  
+  my $product = $dbh->do("UPDATE tbl_products set ( $columns ) = ( $placeholders) WHERE id = ?" , undef, @values, $id);
+
+
+}
+
+
+
+sub add_foreign_ref {
+  my ($id, $ref_id, $ref_name) = @_;
+#  PQS::model::foreign_reference::add($id, 'products', $ref_id, $ref_name);
+}
+
+1;

@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - Docket Summary
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<link href="/styles/pop-up.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/docket.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+    <link href="/styles/print_webpage.css" rel="stylesheet" type="text/css" media="screen" />
+    <link href="/styles/print.css" rel="stylesheet" type="text/css" media="print" />
+
+</head>
+<body>
+<div id="content">
+	<? if ( $$variable{'ProjectIndex'} eq '' ) ?>
+		<p>There is no current project.</p>
+	<? else ( $$variable{'ProjectIndex'} eq '' ) ?>
+		<!--#include virtual="/includes/main/docket/docket_menu.html" -->
+		<!--#include virtual="/includes/forms/docket.html" -->
+	<? endif ( $$variable{'ProjectIndex'} eq '' ) ?>
+	<br />
+	<p><a href="#" onclick="window.close();">Close Window</a></p>
+</div>
+</body>
+</html>

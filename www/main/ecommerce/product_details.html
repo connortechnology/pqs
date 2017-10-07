@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>
+<!--#include virtual="/includes/web_page_title.html" -->
+<?category?> - <?subcategory?> 
+<!--#include virtual="/includes/web_page_title_end.html" -->
+</title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-main-css.html" -->
+<!--#include virtual="/includes/h2-js.html" -->
+<script type="text/javascript" src="/javascripts/other.js"></script>
+<script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
+<script type="text/javascript" src="/javascripts/JSAN.js"></script>
+<link rel="Stylesheet" href="/styles/DPZSiteStyles.css"  />
+<link href="/styles/products-v2.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript">
+
+function check_qty(f,inc,min,max) {
+	var qty = f.value;
+	var regExp = /^\d*$/;
+	
+//alert (inc + ' = ' + min + ',' + qty);
+
+	if (!regExp.test(qty)) {
+		alert('Invalid Entry. Please enter whole numbers only. Cannot contain Commas or Decimals.');
+		return false;
+	}
+
+	var mod = qty % inc;
+	if (( qty < min || qty > max || mod )&& qty > 0) {
+		
+//	if ( qty < min || qty > max ) {
+		alert('Invalid Quantity. Please Order in increments of ' + inc + ' with a minimum order of ' + min + ' and a maximum quantity of ' + max + '.');
+		return false;
+	}
+	return true;
+}
+</script>
+
+<style>
+div.styled { 
+    overflow:hidden; /* this hides the select's drop button */
+    padding:0; 
+    margin:0; 
+    background: white url(formelements-select.png) no-repeat bottom right; 
+    /* this is the new drop button, in image form */
+    width:22em; 
+	height:3em;
+	border-radius:2px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2); 
+    border: solid 1px #ccc; 
+	text-align:center;
+	
+}
+div.styled select { 
+    width:110% /* this percentage effectively extends the drop down button out of view */; 
+    background-color:transparent /* this hides the select's background making any styling visible from the div */; 
+    background-image:none; 
+    -webkit-appearance: none /* this is required for Webkit browsers */; 
+    border:none; 
+    box-shadow:none; 
+	text-align:center;
+    padding:0.5em 0.5em; /* padding should be added to the select, not the div */
+	
+}
+.image { 
+   position: relative; 
+   width: 100%; /* for IE 6 */
+   padding-bottom:10%;
+}
+
+h2 { 
+   position: absolute; 
+   top: 27px; 
+   left: 36px; 
+   width: 100%;
+   font-size:18px;
+   text-align:left;
+   }
+#checkout {position: absolute; 
+   top: 55px; 
+   left: 6px; 
+   width: 100%;
+   font-size:13px;
+   text-align:left;
+   }
+   
+td tr th table{
+	border:none !important;
+}
+</style>
+</head>
+
+<body>
+<div id="sizer">
+		<div id="expander">
+
+				<div id="header">
+			<!--#include virtual="/includes/main/main-header.html" -->
+				</div>
+
+				<div id="wrapper1" style="top:150px">
+						<div id="wrapper2">
+								<div class="outer" style="margin:0 0 0 0px !important; min-height:550px !important;">
+
+										<div class="float-wrap">
+												<div class="center">
+														<div class="centerbox">
+<div>
+<form name="f1" method="POST" action="/main/proj/dispatch.html" >	
+    <input type="hidden" name="action" value="add_product_to_order" />
+    <input type="hidden" name="product"	id="product" value="<?product.id?>"  />																
+<table>
+    <tr >
+        <td style="width:55% !important;border:none !important; min-width:100px;">
+        <img src="/images/main/products/<?product.strid?>.jpg"  style="height:auto; width:100%;	;padding-bottom:3%" />
+        </td>
+    
+        <td style="width:45% !important;border:none !important;">
+            <table width="100%">
+                <tr  style="height:80%; "><td colspan="2" style="border:none !important;"> <p style="font-size:26px; padding-left:2%; text-align:center; text-transform:uppercase"><strong><?product.name?></strong></p></td></tr>
+                <tr  style="height:80%; "><td colspan="2" style="border:none !important;"> <p style="font-size:20px; padding-left:2%; text-align:center">$<?product.price?> / <?product.units?></p></td></tr>
+                <tr  style="height:80%; "><td colspan="2" style="border:none !important;"> <p style="font-size:12px; padding-left:2%; text-align:center"><?product.description?></p></td></tr>
+                <tr  style="height:80%; "><td colspan="2" style="border:none !important;"> <p style="font-size:12px; padding-left:2%; text-align:center"> <?product.details?></p></td></tr>
+                <tr  style="height:80%; "><td colspan="2" style="border:none !important;"> <p style="font-size:12px; padding-left:2%; text-align:center"> <?product.lead_time?></p></td></tr>
+                <tr><td colspan="2" style="border:none !important;"> <p style="font-size:14px; padding-left:2%; text-align:center">QUANTITY <input type="text" name="txtQuantity1" id="txtQuantity1" size="2" value="<?product.minimum_qty?>" onBlur="return check_qty(this, <?product.increment?>,<?product.minimum_qty?>,<?product.maximum_qty?>)" /></p></td></tr>
+                 <tr><td colspan="2" style="border:none !important;"><div style="margin:auto !important; width:247px;"><input type="submit" class="button" value="ADD TO CART" style="height:40px; width:247px; font-size:14px; margin:auto !important" /></div></td></tr>
+                 <tr>
+                     <td width="50%" style="border:none !important;" ><a href="/main/ecommerce/products.html?category=<?product.category_id?>" class="button" style="height:18px; width:70px; font-size:14px; text-align:center; vertical-align:middle; padding-top:4px; padding-right:14px; float:right; margin-right:0">< &nbsp;BACK</a></td>
+                     <td width="50%" style="border:none !important;"><a href="/main/order/order_submit.html"><div class="image">
+
+      <?if order_count?><img src="/images/main/products/cart.jpg" alt="" style="max-height:65px; max-width:65px; min-height:65px; min-width:65px; margin-left:7px" align="left" />
+      
+      <h2><?order_count?></h2><br />
+<span id="checkout" style="z-index:105">CHECKOUT</span>
+<?else order_count?>
+<div style="height:65px"></div>
+<?endif order_count?>
+
+</div></a>
+
+</td>
+                 </tr>
+             </table>
+         </td>
+    </tr>
+</table>
+</form>
+</div>
+ 
+<div style="display:none" >
+    <?product.minimum_qty?>
+    <?product.maximum_qty?>
+    <?product.increments?>
+    <?product.vendor?>
+    <?product.weight?> 
+    <?product.mediawideid?>
+    <?product.part_number?>
+</div>
+  
+    
+
+           
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/side-bar-ads.html" -->
+										<!-- Do Not UnBreak Line-Break in Alt Attribute Value - Fix for IE -->
+									
+                                
+                                <!-- end .textpadder -->
+
+                            </div>
+                            <!-- end .container-left -->
+                        </div>
+                        <!-- end .left -->
+                        <br class="clear" />
+                    </div>
+                    <!-- end .float-wrap -->
+
+                    <br class="clear" />
+                </div>
+                <!-- end .outer -->
+            </div>
+            <!-- end #wrapper2 -->
+        </div>
+
+        <!-- end #wrapper1 -->
+        <div id="footer" style="top:0px !important">
+			<!--#include virtual="/includes/main/main-footer.html" -->
+		</div>
+		
+    </div>
+    <!-- end #expander -->
+</div>
+<!-- end #sizer --></body>
+</html>

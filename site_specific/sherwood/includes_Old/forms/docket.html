@@ -1,0 +1,79 @@
+<div id="project-view">
+	<!-- Standard project header (shared between project view, quotes, orders, docket, etc.) -->
+
+	<!--#include virtual="/includes/main/docket/header.html" -->
+
+	<!-- Sevice Type Summaries. -->
+	<? if ($$variable{Category} != -1) ?>
+		<?loop categories?>
+			<div class="category">
+				<h5><?name?> Information </h5>
+
+				<?loop service_type?>
+					<div class="group">
+						<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+							<? if ( $variable->{sid} ) ?>
+							<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
+							<? endif ( $variable->{sid} ) ?>
+						<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+
+						<h4 style="font-size:14px"><?name?></h4>
+						<?html?>
+
+						<?if ($$variable{comment}) ?>
+							<p class="comment"><strong>Comment: </strong>&nbsp;<?comment?></p>
+						<?endif ($$variable{comment}) ?>
+					</div>
+				<?endloop service_type?>
+
+				<?if (@{$$variable{supplied_service_type}} )?>
+					<div <? ($$variable{categorymenu} != 0)?>class="supplied"<? ($$variable{CategoryMenu} != 0)?>>
+						<h5>Supplied</h5>
+					</div>
+					<?loop supplied_service_type?>
+						<div class="group">
+							<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+								<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
+							<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+
+							<h4 style="font-size:14px"><?name?></h4>
+							<?html?>
+
+							<?if ($$variable{comment}) ?>
+								<p class="comment"><strong>Comment: </strong>&nbsp;<?comment?></p>
+							<?endif ($$variable{comment}) ?>
+						</div>
+					<?endloop supplied_service_type?>
+				
+				<?endif (@{$$variable{supplied_service_type}} )?>
+			</div>
+		<?endloop categories?>
+	<? endif ($$variable{Category} != -1) ?>
+
+	<? if ((! $$variable{Category}) || ($$variable{Category} == -1)) ?>
+		<div class="category">
+			<h5>Materials Information</h5>
+			<?loop materials?>
+				<div class="group">
+					<strong><?category?></strong>
+					<? if ($$variable{stock_supplied}) ?><strong> - Customer Supplied Stock</strong> <?stock_custom?><? endif ($$variable{stock_supplied}) ?>
+					<?loop subMaterials?>
+						<div style=" padding-left: 2em; ">
+							<? if ($$variable{'category'} eq 'Inks')?><strong>Colour:&nbsp;&nbsp;</strong><?endif ($$variable{'category'} eq 'Inks')?>
+							
+                           <? if ($$variable{stock_supplied}) ?><strong>Estimated Value:&nbsp;&nbsp;</strong><? endif ($$variable{stock_supplied}) ?> <?name?> <?value?>	<br />
+							<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+                              <tr>
+                                <td width="50%"><strong>Estimated Press Sheet Qty:&nbsp;&nbsp;</strong><?qty?></td>
+                                <td width="50%"><strong>Actual Qty:&nbsp;&nbsp;______________</strong></td>
+                              </tr>
+                              
+                            </table>
+                           
+						</div>
+					<?endloop subMaterials?>
+				</div>
+			<?endloop materials?>
+		</div>
+	<? endif ((! $$variable{Category}) || ($$variable{Category} == -1)) ?>
+</div>

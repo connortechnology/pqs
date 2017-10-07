@@ -1,0 +1,29 @@
+<!-- Project design file format/media type. Legacy compatible. -->
+	<p>What format will you be providing the design in?</p>
+
+	<label for="ddmFormat">Design Format:</label>
+	<select id="ddmFormat" name="format">
+		<optgroup label="Computer File">
+			<option value="PDF"         <?format.pdf?> >         Portable Document Format (PDF)</option>
+			<option value="QuarkXPress" <?format.quarkxpress?> > QuarkXPress&reg;</option>
+			<option value="InDesign"    <?format.indesign?> >    Adobe&reg; InDesign&reg;</option>
+			<option value="PageMaker"   <?format.pagemaker?> >   Adobe&reg; PageMaker&reg;</option>				
+			<option value="Illustrator" <?format.illustrator?> > Adobe&reg; Illustrator&reg;</option>
+			<option value="Photoshop"   <?format.photoshop?> >   Adobe&reg; Photoshop&reg;</option>
+			<option value="CorelDRAW"   <?format.coreldraw?> >   CorelDRAW&reg;</option>
+			<option value="FreeHand"    <?format.freehand?> >    Macromedia&reg; FreeHand&reg;</option>
+			<option value="Publisher"   <?format.publisher?> >   Microsoft&reg; Publisher</option>
+			<option value="Other"       <?format.other?> >       Other</option>
+		</optgroup>
+		<optgroup label="Physical Media">
+			<option value="FinalFilm"      <?format.finalfilm?>      >Film</option>
+			<option value="PlatesSupplied" <?format.platessupplied?> >Pre-imaged Plates</option>
+		</optgroup>
+	</select>
+	<br />
+
+	<div id="other_program" style="margin: 0;">
+		<label for="otherProgram">Other? Please Specify:</label>
+		<input id="otherProgram" name="other_program" type="text" style="margin: 0;" />
+	</div>
+	<br />

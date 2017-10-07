@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Orders - Submit
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/order.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<style>
+		.overln {text-decoration:overline}
+	</style>
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script  type="text/javascript">
+	function loadwithpage() {
+	needhelp();
+}
+
+    window.onload=loadwithpage;
+	
+		function open_printer_friendly_version() {
+		window.open('/main/order/order_invoice_printer_friendly.html?order_id=<?order_id?>','printerfriendlyorder','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+		
+		function helpmsg() {
+		alert("If you require assistance with your project please call us at <!--#include virtual="/includes/company_telephone_number.html"-->.");
+	}
+	
+	function needhelp() {
+    window.onload = function () {
+        setTimeout(helpmsg, 300000); //Then set it to run again after ten minutes
+    }
+	}
+	</script>
+
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Orders &#187;</span> Submit</h1>
+    <div style="max-width:740px !important; max-height:54px !important; margin-left:auto; margin-right:auto"><img src="/images/main/progress/step3-order.png"  /></div>
+    
+	<form method="post" name="f1" action="/main/order/confirmation_make_order.html">
+		<!--#include virtual="/includes/forms/order.html"-->
+		<? if ($variable->{card_number}) ?>
+		<!--#include virtual="/includes/forms/payment_info.html"-->
+		<? endif ($variable->{card_number}) ?>
+
+		
+		<fieldset id="additionalorderinformation">
+        <legend>Additional Order Information</legend>
+		Additional Order Information:<? if additionalOrderInformation ?><br/>
+			<?additionalOrderInformation?> <? else additionalOrderInformation ?>
+            None
+             <? endif additionalOrderInformation ?>
+			<p/>
+		</fieldset>
+       
+
+
+		<div id="disclaimer">
+			<!--#include virtual="/includes/order_disclaimer.html"-->
+		</div>
+
+		<? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+			<div id="repcomment">
+				<!--#include virtual="/includes/main/proj/comments.html"-->
+			</div>
+		<? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+		<div class="button-bar">
+			<input type="hidden" name="hiddenOrderID" value="<?hiddenOrderID?>" />
+            
+			<input type="submit" name="f1.submit();return false;" class="button right" value="Submit Order" />
+            <a class="button right" href="/main/account/product_select.html" >Add Another Item to My Order</a>
+
+			<br class="clear" />
+		</div>
+
+		<? if ($variable->{card_number}) ?>
+			<input type='hidden' name='card_number'  value='<?card_number?>' />
+			<input type='hidden' name='amount'       value='<?amount?>' />
+			<input type='hidden' name='card_type'    value='<?card_type?>' />
+			<input type='hidden' name='expiry_month' value='<?expiry_month?>' />
+			<input type='hidden' name='expiry_year'  value='<?expiry_year?>' />
+		<? endif ($variable->{card_number}) ?>
+	</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/order.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

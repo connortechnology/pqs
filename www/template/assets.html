@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>Project Assets</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" media="screen" />
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1>Assets</h1>
+
+	<?if not:fields?>
+		<p>The chosen template does not contain any image or PDF fields, no assets are required</p>
+	<?endif not:fields?>
+
+	<?if fields?>
+		<p>Manage the uploads for each asset.</p>
+	<?endif fields?>
+
+	<form method="post" enctype="multipart/form-data" action="assets.html">
+	<?loop fields?>
+				<input type="hidden" name="field" value="<?name?>">
+	<?endloop fields?>
+				<input type="hidden" name="pid" value="<?pid?>">
+	<input class="button" style="float: none" type="submit" value="Sync" name="sync" />
+	</form>
+
+
+	<?loop fields?>
+		<h3><?label?></h3>
+
+		<?if not:empty:assets?>
+
+		<form action="asset_delete.html" method="post" />
+			<input type="hidden" name="pid"   value="<?pid?>" />
+			<input type="hidden" name="field" value="<?name?>" />
+			
+			<ul style="list-style-type: none;">
+				<?loop assets?>
+					<li><input name="id" type="checkbox" value=<?id?> /> <?id?> - <?name?></li>
+				<?endloop assets?>
+			</ul>
+
+				<!--
+				<table class="asset" style="width: 100%">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Filename</th>
+							<th>Size</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?loop assets?>
+							<tr>
+								<td><?name?></td>
+								<td><?filename?></td>
+								<td><?size?></td>
+								<td><input name="asset" type="checkbox" value="id" value=<?id?> /></td>
+							</tr>
+						<?endloop assets?>
+					</tbody>
+				</table>
+				-->
+				<input class="button" style="float: none" type="submit" name="delete" value="Delete" />
+			</form>
+
+			<br />
+		<?endif not:empty:assets?>
+
+		<form method="post" enctype="multipart/form-data" action="asset_upload.html">
+			<fieldset>
+				<legend>Upload</legend>
+				<input type="hidden" name="pid"   value="<?pid?>">
+				<?if create_to_order?>
+					<input type="hidden" name="create_to_order" value="1" />
+				<?endif create_to_order?>
+
+				<input type="hidden" name="field" value="<?name?>">
+				<label for="<?name?>-name">Name: </label><input id="<?name?>-name" type="text" name="name" /><br />
+				<label for="<?name?>-file">Filename: </label><input id="<?name?>-file" type="file" name="file" /><br />
+				<input class="button" style="float: none" type="submit" value="Submit" />
+			</fieldset>
+		</form>
+	<?endloop fields?>
+				
+
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<ul>
+		<li><a href="main.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">Overview</a></li>
+		<li><a href="data.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">Bulk Data</a></li>
+		<li><a href="record.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">Records</a></li>
+	</ul>
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

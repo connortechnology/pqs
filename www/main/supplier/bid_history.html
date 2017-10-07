@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Supplier - Project History
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script type="text/javascript">
+		function delete_confirm(form) {
+			var count = 0;
+			var len = form['delete'].length;
+
+			for (var i=0; i < len; i++) {
+				if (form['delete'][i].checked) { count++; }
+			}
+
+			if (count) {
+				return confirm("Are you sure you wish to delete these " + count + " projects from history?");
+			}
+			
+			alert("To Delete Projects, click the checkbox beside the project.");
+			return false;
+		}
+	</script>
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Supplier &#187;</span> RFQ Bid History</h1>
+
+		<fieldset>
+			<legend>Bid History</legend>
+			<table border="0" cellspacing="0" cellpadding="0" style="width: 100%">
+				<tr>
+					<th style="text-align: left;"  >Service</th>
+					<th style="text-align: center;">Price 1</th>
+					<th style="text-align: center;">Price 2</th>
+					<th style="text-align: center;">Price 3</th>
+                    <th style="text-align: center;">User</th>
+                    <th style="text-align: center;">Date</th>
+
+				<? loop bids ?>
+					<tr class="r<?_even?>">
+						<td style="text-align: left;">  <?service?> </td>
+						<td style="text-align: center;"><?price1?></td>
+						<td style="text-align: center;"><?price2?></td>
+						<td style="text-align: center;"><?price3?></td>
+						<td style="text-align: center;"><?user_name?></td>
+						<td style="text-align: center;"><?date?></td>
+					</tr>
+				<? endloop bids ?>
+			</table>
+		</fieldset>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/account.html" -->
+    <!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

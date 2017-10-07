@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title><!--#include virtual="/includes/web_page_title.html" -->Order - Payment Verification<!--#include virtual="/includes/web_page_title_end.html" --></title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-main-link.html" -->
+<!--#include virtual="/includes/h3-js.html" -->
+<script language="javascript" type="text/javascript" src="/javascripts/detect.js"></script>
+<script language="javascript" type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+<style>
+.overln {text-decoration:overline}
+</style>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+<h1>Order Payment Verification</h1>
+<span class="colTitle2">
+Payment Verification
+</span>
+<br />
+Verify all information and submit payment via the button below.
+<br />
+<br />
+Order ID: <?rev:order_id?>
+<br />
+Date Ordered: <?OrderDate?><br />
+Total Cost: <?CurrencySymbol?> <?OrderTotal?><br />
+Previous Balance: <?CurrencySymbol?> <?AmountOutstanding?><br />
+<br />
+Amount of this payment: <?CurrencySymbol?> <?PaymentAmount?><br />
+Outstanding Balance: <?CurrencySymbol?> <?RemainderOutstanding?><br />
+Payment Method: <?PaymentMethod?><br />
+<br />
+<span>
+All prices listed in <?CurrencyName?>.
+</span>
+<form method="post" name="f1" action="/main/payment/payment_confirmation.html">
+<? if ( $$variable{'PaymentMethod'} eq 'Credit Card' ) ?>
+<br />
+<span class="colTitle">
+Please be patient!
+</span>
+ Credit card authorization
+may take up to 2 minutes.
+<br />
+<br />
+<? endif ( $$variable{'PaymentMethod'} eq 'Credit Card' ) ?>
+<? if ( $$variable{'PaymentMethod'} eq 'Digital Cheque' ) ?>
+<br />
+<span>
+<strong>
+Return Check Fee by State:
+</strong>
+<br />
+Alaska, $25; Alabama, $25**; Arkansas, $20; Arizona, $25; California, $25;
+Colorado, $20**; Connecticut, $20; District of Columbia, $25; Delaware, $30;
+Florida, $25**; Georgia, $25*; Guam, $20; Hawaii, $20; Iowa, $20*; Idaho,
+$20; Illinois, $25**; Indiana, $20*; Kansas, $30; Kentucky, $25*; Louisiana,
+$25*; Massachusetts, $25; Maryland, $25; Maine, $25; Michigan, $25; Minnesota,
+$20**; Missouri, $20; Mississippi, $30; Montana, $30; North Carolina, $25;
+North Dakota, $20; Nebraska, $35; New Hampshire, $25; New Jersey, $30; New
+Mexico, $30; Nevada, $25; New York, $20; Ohio, $30*; Oklahoma, $30; Oregon,
+$25; Pennsylvania, $30; Puerto Rico, $10; Rhode Island, $30; South Carolina,
+$25; South Dakota, $30; Tennessee, $20; Texas, $25**; Utah, $20; Virginia,
+$25; Virgin Islands, $20; Vermont, $25; Washington, $25**; Wisconsin, $25**;
+West Virginia, $15; Wyoming, $30*.
+<br />
+<br />
+* Fee shown or the maximum amount permitted by law.
+<br />
+** Check writer also responsible for all other costs of collection.
+<br />
+</span>
+<br />
+<strong>
+Please read the following information, then click on the authorization
+button below to submit your check
+</strong>
+<br />
+<br />
+<strong>
+Transaction Authorization:
+</strong>
+<br />
+<span>
+ By typing in my driver's license or identification number
+above and clicking the "I Authorize This Transaction" button below, I confirm
+that I am the owner of the account identified by the MICR numbers entered
+in the Internet check above and authorize this merchant and/or TeleCheck to
+convert my account information entered above into a paper draft drawn on,
+or an electronic debit to, my account for the amount of this transaction.
+In the event that my paper draft or electronic debit is returned unpaid, I
+agree that a returned item fee also may be debited from my account electronically
+or drafted via paper draft. The amount of the fee will be determined by the
+state where my billing address is located. (See the list above for the fee
+for your billing address.) Further, by submitting a transaction, I expressly
+authorize this merchant to obtain a report of my check-writing history from
+TeleCheck to prevent fraud and for other authentication purposes. For more
+information on TeleCheck's process and privacy policy, see<a href="http://www.telecheck.com/ica/ica-reqverb.html">
+Internet
+Check FAQ
+</a>and<a href="http://www.telecheck.com/ica/ica-reqverb.html">
+TeleCheck
+Privacy Policy
+</a>.
+</span>
+<br />
+<br />
+<? endif ( $$variable{'PaymentMethod'} eq 'Digital Cheque' ) ?>
+<br />
+<!--
+<table width="600" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td><a href="#" onclick="btnOff('b1');f1.btnFunction.value='I Authorize This Transaction';f1.submit();return false;" onmouseover="btnOn('b1');" onmouseout="btnOff('b1');"><img src="/images/buttons/off/authorizeTrans.gif" width="149" height="19" border="0" name="b1" /></a></td>
+</tr>
+</table>
+-->
+<div class="button-bar">
+<input class="button" type="submit" name="btnFunction" value="I Authorize This Transaction" />
+	<br class="clear" />
+</div>
+<input type="hidden" name="order_id" value="<?order_id?>">
+<!--<input type="hidden" name="btnFunction"/>
+-->
+</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/payment.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

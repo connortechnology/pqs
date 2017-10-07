@@ -1,0 +1,55 @@
+<fieldset>
+	<legend>
+		Multi-Version
+	</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<p>Do you require multiple versions?</p>
+	
+	<label for="is_mv" class="checkbox indent-label"><input id="is_mv" name="is_mv" type="checkbox" value="1" />My Project Requires Multiple Versions</label>
+
+	<br />
+
+	<div class="section multiversion" style="width: auto; min-width: 93%;">
+		<p>Please provide a short name and quantity for each version. (Based on the first quantity requested).</p>
+	
+		<table id="multiversion" class="no-formatting indent-label">
+			<thead>
+				<tr> 
+					<th style="text-align: left;">Name</th>
+					<th>Qty 1</th>
+					<th>Qty 2</th>
+					<th>Qty 3</th>
+					<th>%</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				<?loop versions?>
+				<tr>
+					<td><input name="mv_name" value="<?name?>" type="text" /></td>
+					<td><input name="mv_qty" value="<?q1?>" type="text" class="numeric" onkeyup="update_version_quantity(this);" /></td>
+					<td><?q2?></td>
+					<td><?q3?></td>
+					<td class="percent"><?percent?></td>
+				</tr>
+				<?endloop versions?>
+				<tr>
+					<td><input name="mv_name" value="" type="text" onkeypress="growTable(this)" /></td>
+					<td><input name="mv_qty" value="" type="text" class="numeric" onkeyup="update_version_quantity(this);" /></td>
+					<td></td>
+					<td></td>
+					<td class="percent"></td>
+				</tr>
+			</tbody>
+
+			<tfoot>
+				<td>Remaining:</td>
+				<td id="version_quantity_remaining"><?remaining?></td>
+				<td colspan="3"></td>
+			</tfoot>
+		</table>
+	</div>
+	<br />
+</fieldset>

@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Managerial - Accounting Details
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript">
+		function open_printer_friendly_version() {
+			window.open('/administrator/managerial/accounting_details_printer_friendly.html?order_id=<?ORDER_ID?>','printerfriendlyaccountingdetails','newWin,left=140,width=640,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+
+		function calc_total(form) {
+			var total  = parseFloat(document.getElementById('SUB_TOTAL').innerHTML);
+			    total += parseFloat(document.getElementById('SHIPPING').innerHTML);
+				total += parseFloat(form.GST.value);
+				total += parseFloat(form.PST.value);
+				if (form.HST.value)
+				total += parseFloat(form.HST.value);
+				form.TOTAL.value = do_decimals(total);
+		} // end function
+
+		function do_decimals( number ) {
+			if ( isNaN(number) ) {
+				return '0.00';
+			} else {
+				var myStr = new String(Math.round(number*100)/100);
+				var decPos = myStr.indexOf(".");
+				// test for no decimals
+				if (decPos==-1) {
+					myStr += ".00";
+				} else if (decPos==myStr.length-2) {
+				// test for one decimal
+					myStr += "0";
+				} // end if
+			} // end if
+			return myStr;
+		} // end do_decimals
+
+		function cancel_order(form) {
+			if (confirm("Are you sure you want to cancel this order?")) {
+				return true;
+			} //end if
+		    	return false;
+		} // end function
+	</script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+
+	<h1><span class="title-section">Accounting &#187;</span> Receivables &#187; Details</h1>
+
+	<form name="f1" method="post" action="accounting_details.html" >
+		
+		<fieldset>
+			<legend>
+				Order Information
+			</legend>	
+			
+			<p class="none">&nbsp;</p>
+			
+			<span class="label">Order ID:</span>
+			<span><a href="/main/order/order_history_details.html?Issue_Cookie=true&order_id=<?ORDER_ID?>"><?ORDER_ID?></a></span>
+			<br />
+
+			<label>Customer:</label>
+			<div class="text">
+				<?txtSalutation?> <?txtFirstName?> <?txtLastName?><br />
+				<?txtCompanyName?><br />
+				<?txtAddress1?><br />
+				<? if ( $$variable{'txtAddress2'} ) ?><?txtAddress2?><br /><? endif ( $$variable{'txtAddress2'} ) ?>
+				<?CCITYPROVCOUNTRY?><br />
+				<?txtPostalCode?><br />
+				<? if ( $$variable{'txtPhone'} ne '' ) ?>
+				<?txtPhone?><? if ( $$variable{'txtExtension'} ) ?> &nbsp;Ext. <?txtExtension?><? endif ( $$variable{'txtExtension'} ) ?><br />
+				<? endif ( $$variable{'txtPhone'} ne '' ) ?>
+				<? if ( $$variable{'txtFax'} ne '' ) ?>
+				<?txtFax?><br />
+				<? endif ( $$variable{'txtFax'} ne '' ) ?>
+				<?txtEmail?><br />
+			</div>
+			<br />
+			
+			<span class="label">PO Number:</span>
+			<span><?PONUM?></span>
+			<br />
+			
+			<span class="label">Terms:</span>
+			<span><? if ($$variable{'Terms'}) ?>Net <?Terms?> days<? else ($$variable{'Terms'}) ?>C.O.D.<? endif ($$variable{'Terms'}) ?></span>
+			<br />
+		</fieldset>
+		
+	
+		<fieldset>
+			<legend>
+				Ordered Projects
+			</legend>
+	
+			<p class="none">&nbsp;</p>
+	
+			<table class="no-center">
+				<tr>
+					<th style="text-align: left;">Projects</th>
+					<th style="text-align: left;">Status</th>
+					<th style="text-align: center;">Required Date</th>
+					<th style="text-align: right;">Qty</th>
+					<th style="text-align: right;">Price</th>
+				</tr>
+	
+				<?loop PROJECTS?>
+					<tr>
+						<td>
+							<? if (!$$variable{pid}) ?>
+								<label><input type="checkbox" name="delete" value="<?id?>" /><?name?></label>
+							<? else (!$$variable{pid}) ?>
+								<a href="/main/proj/proj_view.html?ProjectIndex=<?index?>&Issue_Cookie=true"><?name?></a>
+							<? endif (!$$variable{pid}) ?>
+						</td>
+						<td style="text-align: left;">&nbsp;<?status?></td>
+						<td style="text-align: center;">&nbsp;<?date?></td>
+						<td style="text-align: right;">&nbsp;<?qty?></td>
+						<td style="text-align: right;">&nbsp;<?CurrencySymbol?><?price?></td>
+					</tr>
+				<?endloop PROJECTS?>
+			</table>
+<!--	
+			<div class="button-bar" style="margin-top: 1ex;">
+				<input class="button" type="submit" name="btnFunction" value="Delete" />
+				<br />
+			</div>
+-->
+	
+			<br />
+		</fieldset>
+	
+		
+		<fieldset>		
+			<legend>		
+				Order Total		
+			</legend>
+	
+			<p class="none">&nbsp;</p>
+
+		<table class="no-border">
+	
+			<tr>
+				<td width="20">
+					<label for="sub-total">Sub Total:</label>
+				</td>
+				<td align="right" id="SUB_TOTAL">
+					<?SUB_TOTAL?>
+				</td>
+			</tr>
+
+
+			<tr>
+			<td>
+				<label for="shipping">Shipping & Handling:</label>
+			</td>
+			<td align="right" id="SHIPPING">
+				<?SHIPPING?>
+			</td>
+			</tr>
+		
+			<tr>
+				<td>
+					<label for="GST">Federal Tax:</label>
+				</td>
+				<td>
+					<input name='GST' id='GST' value='<?GST?>' class='smBox' onkeyup='calc_total(f1);' />
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label for="PST">Provincial/State Tax:</label>
+				</td>
+				<td>
+					<input name='PST' id='PST' value='<?PST?>' class='smBox' onkeyup='calc_total(f1);' />
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label>Harmonized Tax:</label>
+				</td>
+				<td>
+					<input name='HST' value='<?HST?>' class='smBox' onkeyup='calc_total(f1);' />
+				</td>
+			</tr>
+	
+			<tr>
+				<td>
+					<label style="font-weight: bold;">TOTAL:</label>
+				</td>
+				<td>
+					<input name="TOTAL" value="<?TOTAL?>" class="smBox" readonly="readonly" />
+				</td>
+			</tr>
+			<tr>
+
+				<td>
+					<span class="label" style="font-weight: bold;">Amount Paid:</span>
+				</td>
+				<td align="right">
+					<?CurrencySymbol?><?AmountPaid?>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<span class="label">Deposit Due:</span>
+				</td>
+				<td align="right">
+					<?CurrencySymbol?>
+					<?if DepositDue?>
+						<?DepositDue?>
+					<?else DepositDue?>
+						0.00
+					<?endif DepositDue?>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<span class="label">Amount Owing:</span>
+				</td>
+				<td align="right">
+					<?CurrencySymbol?><?AmountOutstanding?>
+				</td>
+			</tr>
+		</table>
+		<p class="indent-regular" style="width: auto;">All prices listed in <?CurrencyName?>.</p>
+			<div class="button-bar" style="margin-top: 1ex;">
+				<input class="button" type="submit" name="btnFunction" value="Update" />
+				<br />
+			</div>
+		</fieldset>
+	
+	
+		<fieldset>
+			<legend>
+				Order Payments
+			</legend>
+	
+			<p class="none">&nbsp;</p>
+	
+			<table class="no-center">
+				<tr>
+					<th style="text-align: left;"> Ref # </th>
+					<th style="text-align: center;"> Date </th>
+					<th style="text-align: left;"> Type </th>
+					<th style="text-align: left;"> Description </th>
+					<th style="text-align: right;"> Amount </th>
+					<th class="no-formatting">&nbsp;</th>
+				</tr>
+				<? if ( @{$$variable{'PAYMENTS'}} ) ?>
+					<? while ( @$variable{'payment_index','date','type','description','amount','CurrencyName','CurrencySymbol'} = splice @{$$variable{'PAYMENTS'}},0,7; ) ?>
+						<tr>
+							<td><?payment_index?></td>
+							<td style="text-align: center;"><?date?></td>
+							<td>&nbsp;<?type?></td>
+							<td>&nbsp;<?description?></td>
+							<td style="text-align: right;"><?CurrencySymbol?><?amount?></td>
+							<td class="no-formatting">&nbsp;</td>
+						</tr>
+	
+						<? if ( @$variable{'payment_index','date','type','description','amount','CurrencyName','CurrencySymbol'} = splice @{$$variable{'PAYMENTS'}},0,7; ) ?>
+							<tr class="colRow">
+								<td><?payment_index?></td>
+								<td style="text-align: center;"><?date?></td>
+								<td>&nbsp;<?type?></td>
+								<td>&nbsp;<?description?></td>
+								<td style="text-align: right;"><?CurrencySymbol?><?amount?></td>
+								<td class="no-formatting" style="background-color: transparent;">&nbsp;</td>
+							</tr>
+						<? endif ( @$variable{'payment_index','date','type','description','amount','CurrencyName','CurrencySymbol'} = splice @{$$variable{'PAYMENTS'}},0,7; ) ?>
+					<? endwhile ( @$variable{'payment_index','date','type','description','amount','CurrencyName','CurrencySymbol'} = splice @{$$variable{'PAYMENTS'}},0,7; ) ?>
+				<? endif ( @{$$variable{'PAYMENTS'}} ) ?>
+			</table>
+
+			<br />
+			
+			<p style="margin-top: 2ex; font-weight: bold;">Add New Payment</p>
+	
+			<label>Description:</label>
+			<input type="text" name="Description" class="input-text" size="30" />
+			<br />
+	
+			<label>Amount:</label>
+			<label class="dollar"><?CurrencySymbol?></label>
+			<input type="text" name="Amount" class="smBox" size="10" />
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="Add Payment" />
+				<br />
+			</div>
+
+			<br />
+		</fieldset>
+		
+	<!--	<fieldset>
+			<legend>
+				Add to Order
+			</legend>
+	
+			<p class="none">&nbsp;</p>
+
+			<label>Description:</label>
+			<input type="text" name="txtAddToOrderDescription" class="input-text" size="30" />
+			<br />
+
+			<label>Price:</label>
+			<label class="dollar"><?CurrencySymbol?></label>
+			<input type="text" name="txtAddToOrderAmount" class="smBox" size="10" onkeyup='calc_total(f1);' />
+			<br />
+	
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="Add to Order" />
+				<br />
+			</div>
+
+			<br />
+		</fieldset> -->
+	
+		<div class="button-bar" style="margin-bottom: 50px;">
+			<input class="button" type="submit" name="btnFunction" value="Cancel" onclick="return cancel_order(f1);" />
+			<input class="button" type="button" value="Printer Friendly" onclick="open_printer_friendly_version();" />
+			<input class="button" type="submit" name="btnFunction" value="Send Email Invoice" />
+			<br class="clear" />
+		</div>
+	
+		<input type="hidden" name="order_id" value="<?ORDER_ID?>" />
+		<input type="hidden" name="hdnSUB_TOTAL" value="<?SUB_TOTAL?>" />
+	</form>
+
+</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

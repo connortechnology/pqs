@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production - Project Types
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">System &#187;</span> Shipping</h1>
+
+	<form id="f1" name="f1" method="post" onsubmit="return fmCheck(f1);" action="shipping.html" enctype="multipart/form-data">
+
+		<fieldset>
+			<legend>
+				Shipping Method
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="ddmShipVia">Shipping Method:</label>
+			
+			<select id="ddmShipVia" name="ddmShipVia" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
+				<option value=""> - Select - </option>
+				<?ddmShipVia?>
+			</select>
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Details
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="button" name="btnFunction" value="New" onclick="addCheck(f1);" />
+				<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=2;" />
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<br />
+			</div>
+
+			<br />
+
+			<label for="strID">ID:</label>
+			<input type="text" id="strID" name="strID" value="<?strID?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strName">Name:</label>
+			<input type="text" id="strName" name="strName" value="<?strName?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strDescription">Description:</label>
+			<textarea id="strDescription" name="strDescription" rows="2"><?strDescription?></textarea>
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Import / Export - Shipping Zones
+			</legend>
+
+			<p>Shipping Zones files <strong> must </strong> be in a comma separated values (CSV) format. All columns <strong> must </strong> have titles as the first row of data will be treated as column titles, and hence will be ignored. The columns <strong> must </strong> be in the following order:</p>
+
+			<p>Zone #, ID, Name, Description, Country</p>
+
+			<p><strong> To Import a Shipping Zones file: </strong> select &quot;Browse&quot; and select the file containing your new database. Click &quot;Open&quot;, then click on &quot;Import Zones&quot;.</p>
+
+			<p><strong> To Export a Shipping Zones file: </strong> select &quot;Export Zones &quot; and select &quot;Open&quot; this will download the Shipping Zones file to your &quot;Temporary Internet Files&quot; folder and automatically open the file for you. You can then make any necessary changes and then import the file back in. You can then open this in a spreadsheet program such as Microsoft Excel&trade;.</p>
+
+			<label for="fileZones">Shipping Zones:</label>
+			<input type="file" class="file" id="fileZones" name="fileZones" />
+			<br />
+
+			<label>&nbsp;</label>
+			<label for="chkDeleteZones" class="checkbox"><input type="checkbox" id="chkDeleteZones" name="chkDeleteZones" value="Y" />Delete current values</label>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="Import Zones" />
+				<input class="button" type="submit" name="btnFunction" value="Export Zones" />
+				<br />
+			</div>
+
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Import/Export - Zone Lookup Reference
+			</legend>
+
+			<p>Zone Lookup Reference files <strong> must </strong> be in a comma separated values (CSV) format. All columns <strong> must </strong> have titles as the first row of data will be treated as column titles, and hence will be ignored. The columns <strong> must </strong> be in the following order:</p>
+
+			<p>Zone ID, Start Range, End Range</p>
+
+			<p><strong> To Import a Zone Lookup Reference file: </strong> select &quot;Browse&quot; and select the file containing your new database. Click &quot;Open&quot;, then click on &quot;Import Lookup &quot;.</p>
+
+			<p><strong> To Export a Zone Lookup Reference file: </strong> select &quot;Export Lookup &quot; and select &quot;Open&quot; this will download the Zone Lookup Reference file to your &quot;Temporary Internet Files&quot; folder and automatically open the file for you. You can then make any necessary changes and then import the file back in. You can then open this in a spreadsheet program such as Microsoft Excel&trade;. </p>
+
+			<label for="fileZoneLookup">Zone Lookup Reference:</label>
+			<input type="file" class="file" id="fileZoneLookup" name="fileZoneLookup" />
+			<br />
+			
+			<label>&nbsp;</label>
+			<label for="chkDeleteZoneLookup" class="checkbox"><input type="checkbox" id="chkDeleteZoneLookup" name="chkDeleteZoneLookup" value = "Y" />Delete current values</label>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="Import Lookup" />
+				<input class="button" type="submit" name="btnFunction" value="Export Lookup" />
+				<br />
+				</div>
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Import / Export - Shipping Prices
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="ddmPriceList">Shipping Prices:</label>
+			<select id="ddmPriceList" name="ddmPriceList">
+				<option value=""> - Select - </option>
+				<?ddmPriceList?>
+			</select>
+			<br />
+
+			<p>Shipping Prices files <strong> must </strong> be in a comma separated values (CSV) format. All columns <strong> must </strong> have titles as the first row of data will be treated as column titles, and hence will be ignored. The columns <strong> must </strong> be in the following order:</p>
+
+			<p>From Zone, Destination Zone, Minimum Weight, Maximum Weight, Units, Cost, Markup</p>
+
+			<p><strong> To Import a Shipping Prices file: </strong> select &quot;Browse&quot; and select the file containing your new database. Click &quot;Open&quot;, then click on &quot;Import Prices&quot;.</p>
+
+			<p><strong> To Export a Shipping Prices file: </strong> select &quot;Export Prices &quot; and select &quot;Open&quot; this will download the Shipping Prices file to your &quot;Temporary Internet Files&quot; folder and automatically open the file for you. You can then make any necessary changes and then import the file back in. You can then open this in a spreadsheet program such as Microsoft Excel&trade;.</p>
+
+
+			<label for="fileImportPrices">Shipping Prices:</label>
+			<input type="file" class="file" id="fileImportPrices" name="fileImportPrices" />
+			<br />
+
+			<label>&nbsp;</label>
+			<label for="chkDeletePrices" class="checkbox"><input type="checkbox" id="chkDeletePrices" name="chkDeletePrices" value = "Y" />Delete current values</label>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="Import Prices" />
+				<input class="button" type="submit" name="btnFunction" value="Export Prices" />
+				<br />
+			</div>
+
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

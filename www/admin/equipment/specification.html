@@ -1,0 +1,290 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title tal:content="title">Print-Quotes Title</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+
+		<script type="text/javascript" src="/javascripts/admin/form.js"></script>
+
+		<!-- TEMPORARY: Header menus. -->
+		<script type="text/javascript" src="/javascripts/other.js"></script>
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+	</head>
+	<body>
+		<!-- TEMPORARY: Old header. -->
+		<xi:include href="/includes/c1-tal.html" />
+		<!-- Sidebar -->
+		<div id="sidebar">
+			<div class="option">
+				<a class="back" href="/admin/equipment/list.html" tal:attributes="href string:/admin/equipment#$equip/type"><span class="symbol">&#8656;</span> Equipment</a>
+			</div>
+			<div class="option">
+				<a class="back" href="/admin/pricing/pricing.html" tal:attributes="href string:/admin/pricing?equipment=$equip/eid"><span class="symbol">&#8658;</span> Pricing</a>
+			</div>
+			<div class="option" tal:condition="true:$is_press">
+				<a class="back" href="/admin/paper/equipment.html" tal:attributes="href string:/admin/equipment_paper?equipment=$equip/eid"><span class="symbol">&#8658;</span> Stock</a>
+			</div>
+			<!-- Audit log for the current page. -->
+			<div class="option">
+				<a class="back" href="/admin/audit_log.html" tal:attributes="href string:/admin/audit_log?page=${uri_escape: r/uri}&query=${uri_escape: r/args}">History</a>
+			</div>
+		</div>
+
+		<div id="content">
+			<form name="equipment" method="POST" action="/admin/specifications?equipment=$equip/eid">
+				<div id="equipment" class="group">
+
+					<h1><span class="title-section">System &#187; Production &#187;</span> Equipment &#187; Specifications : <span tal:replace="equip/name">Heidelberg SM 52M</span></h1>
+
+					<!-- General equipment information. -->
+					<fieldset><legend title="Name and other identifying details.">	Basic Information</legend>
+						<label><span>Name:</span><input name="name" type="text" value="Heidelberg SM 52" tal:attributes="value equip/name" /></label>
+						<label title="Internal identification number"><span>ID:</span><input id="id" name="equipment" type="text" value="438" disabled="true" tal:attributes="value equip/eid" /></label>
+						<label><span>Reference:</span><input name="id" type="text" value="SM-53-4C-20-1"  tal:attributes="value equip/id" /></label>
+						<label><span>Description:</span> <textarea name="description" tal:content="equip/description">4-Colour - 14" x 20"</textarea></label>
+						<br />
+					</fieldset>
+
+					<fieldset><legend title="Supplier defines who is providing the equipment and where it is located.">	Supplier</legend>
+						<label><span>Supplier:</span>
+							<select name="supplier">
+								<!-- Until we get a proper supplier table we'll handle only these two options. -->
+								<option value="House"     tal:attributes="selected decode:equip/supplier 'House'     'true' nothing">In House</option>
+								<option value="Outsource" tal:attributes="selected decode:equip/supplier 'Outsource' 'true' nothing">Outsouce</option>
+								<option tal:repeat="s supplier" tal:content="s" tal:attributes="value s;selected decode:s equip/supplier 'selected' nothing">Supplier A</option>
+							</select>
+						</label>
+						<br />
+					</fieldset>
+
+					<!-- Neither the type nor the category (which is dependent on type) should be modifiable (for now) as it changes everything about the equipment. -->
+					<fieldset><legend title="The type and category of the equipment are linked and currently only set at create time">	Classification</legend>
+						<!-- <label><span>Category</span><input type="text" disabled="true" value="Printing" tal:attributes="value equip/category" /></label> -->
+						<label><span>Type:</span>
+							<input type="text" disabled="true" value="Press" tal:attributes="value equip/type" />
+							<input name="type" type="hidden" tal:attributes="value equip/type" />
+							<!-- If we ever allow selection of this on this page we should use below, but for now we'll use a textbox.
+							<select disabled="true">
+								<option value="">Please select...</option>
+								<option value="1" tal:repeat="type types" tal:content="type/name" tal:attributes="value type/id">Cutter</option>
+								<option value="2" tal:replace="nothing">Drill</option>
+								<option value="3" tal:replace="nothing">Folder</option>
+								<option value="4" tal:replace="nothing" selected="true">Press</option>
+								<option value="5" tal:replace="nothing">Stitcher</option>
+							</select>
+							-->
+						</label>
+						<br />
+					</fieldset>
+				</div>
+				<!-- Equipment specifications. -->
+				<fieldset>
+					<legend title="Specifications define what the equipment does and how it operates">
+						Specifications
+					</legend>
+						<table class="single" tal:condition="true:specifications/unranged">
+							<colgroup class="name" />
+							<colgroup class="value" />
+							<colgroup class="unit" />
+							<thead>
+								<tr>
+									<th>Specification</th>
+									<th>Value </th>
+									<th>Unit</th>
+								</tr>
+							</thead>
+							<tbody class="specs">
+								<tr class="even" tal:repeat="spec specifications/unranged" tal:attributes="class decode:repeat/even 0 'even' 'odd'">
+									<td class="fixed" tal:content="spec/name" tal:attributes="title spec/description">Wash Up Time Per Colour</td>
+									<td><input type="text" value="7" tal:attributes="id string:$spec/id-0-value;name string:$spec/id-0-value;value spec/value" /></td>
+									<td class="fixed">
+										<select name="unit" tal:condition="true:spec/units/multiple" tal:attributes="id string:$spec/id-0-unit;name string:$spec/id-0-unit">
+											<option tal:repeat="u spec/units/value" tal:content="u" tal:attributes="value u;selected decode:u spec/unit 'selected' nothing">Minutes</option>
+										</select>
+										<span  tal:condition="false:spec/units/multiple" tal:replace="spec/units/value/0">Minutes</span>
+										<input tal:condition="false:spec/units/multiple" type="hidden" value="$spec/units/value/0" tal:attributes="id string:$spec/id-0-unit;name string:$spec/id-0-unit" />
+									</td>
+								</tr>
+								<tr class="odd" tal:replace="nothing">
+									<td class="fixed">Colour Bar Size</td>
+									<td><input type="text" value="0.375" /></td>
+									<td class="fixed">Inches</td>
+								</tr>
+								<tr class="even" tal:replace="nothing">
+									<td class="fixed">Metallic Ink Coverage</td>
+									<td><input type="text" value="0.1" /></td>
+									<td class="fixed">Percent</td>
+								</tr>
+								<tr class="odd" tal:replace="nothing">
+									<td class="fixed">PMS Ink Coverage</td>
+									<td><input type="text" value="0.1" /></td>
+									<td class="fixed">Percent</td>
+								</tr>
+								<tr class="even" tal:replace="nothing">
+									<td class="fixed">Minimum Calliper</td>
+									<td><input type="text" value="0.0023" /></td>
+									<td class="fixed">Inches</td>
+								</tr>
+							</tbody>
+						</table>
+						<!-- Ranged equipment specifications. -->
+						<table tal:repeat="spec specifications/ranged" class="multi" summary="">
+							<colgroup class="range">
+								<col class="min" />
+								<col class="max" />
+							</colgroup>
+							<colgroup class="value" />
+							<thead>
+								<tr class="service">
+								<th colspan="2" class="name" tal:content="spec/name" tal:attributes="title spec/description">Press Additional Run Speed</th>
+									<th colspan="1" class="top"><a href="#content">^</a></th>
+								</tr>
+								<tr class="units">
+									<th colspan="2" tal:content="spec/units/ranged">Calliper</th>
+									<th colspan="2">
+										<select name="unit" tal:condition="true:spec/units/multiple" tal:attributes="id string:$spec/id-0-unit;name string:$spec/id-0-unit">
+											<option tal:repeat="u spec/units/value" tal:content="u" tal:attributes="value u;selected decode:u spec/ranges/0/unit 'selected' nothing">Per 1000</option>
+										</select>
+										<span  tal:condition="false:spec/units/multiple" tal:replace="spec/units/value/0">Units Per Hour</span>
+										<input tal:condition="false:spec/units/multiple" type="hidden" value="$spec/units/value/0" tal:attributes="id string:$spec/id-0-unit;name string:$spec/id-0-unit" />
+									</th>
+								</tr>
+								<tr class="per-service">
+									<th class="min">Min.</th>
+									<th class="max">Max.</th>
+									<th class="value">Value</th>
+								</tr>
+							</thead>
+							<tbody class="specs">
+								<tr class="even" tal:repeat="range spec/ranges"  tal:attributes="class decode:repeat/even 0 'even' 'odd'">
+									<td><input type="text" value="0.0023"	tal:attributes="id string:$spec/id-$repeat/index-min;name string:$spec/id-$repeat/index-min;value range/min" /></td>
+									<td><input type="text" value="0.0027" tal:attributes="id string:$spec/id-$repeat/index-max;name string:$spec/id-$repeat/index-max;value range/max" /></td>
+									<td><input type="text" value="8000"   tal:attributes="id string:$spec/id-$repeat/index-value;name string:$spec/id-$repeat/index-value;value range/value" /></td>
+								</tr>
+								<tr class="odd" tal:replace="nothing">
+									<td><input type="text" value="0.0023" /></td>
+									<td><input type="text" value="0.0030" /></td>
+									<td><input type="text" value="7500" /></td>
+								</tr>
+								<tr class="even" tal:replace="nothing">
+									<td><input type="text" value="0.0121" /></td>
+									<td><input type="text" value="0.0140" /></td>
+									<td><input type="text" value="7000" /></td>
+								</tr>
+								<tr class="odd" tal:replace="nothing">
+									<td><input type="text" value="0.0141" /></td>
+									<td><input type="text" value="0.0180" /></td>
+									<td><input type="text" value="6000" /></td>
+								</tr>
+								<tr class="even" tal:replace="nothing">
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+								<tr class="odd" tal:replace="nothing">
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+								<tr class="even" tal:replace="nothing">
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+							</tbody>
+							<tfoot>
+								<tr>
+									<th colspan="3"></th>
+								</tr>
+							</tfoot>
+						</table>
+						<table tal:replace="nothing" class="multi" summary="">
+							<colgroup>
+								<col class="min" />
+								<col class="max" />
+							</colgroup>
+							<colgroup>
+								<col class="Value" />
+							</colgroup>
+							<thead>
+									<tr class="service">
+									<th colspan="2" class="name">Press Run Overs</th>
+									<th colspan="1" class="top"><a href="#content">^</a></th>
+								</tr>
+									<tr class="units">
+									<th colspan="2">Press Run Overs</th>
+									<th colspan="2"></th>
+								</tr>
+								<tr class="per-service">
+									<th class="min">Min.</th>
+									<th class="max">Max.</th>
+									<th class="value">Value</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="even">
+									<td><input type="text" value="0.0000" /></td>
+									<td><input type="text" value="10000.0000" /></td>
+									<td><input type="text" value="0.1" /></td>
+								</tr>
+								<tr class="odd">
+									<td><input type="text" value="10001.0000" /></td>
+									<td><input type="text" value="20000.0000" /></td>
+									<td><input type="text" value="0.095" /></td>
+								</tr>
+								<tr class="even">
+									<td><input type="text" value="30001.0000" /></td>
+									<td><input type="text" value="40000.0000" /></td>
+									<td><input type="text" value="0.085" /></td>
+								</tr>
+								<tr class="odd">
+									<td><input type="text" value="40001.0000" /></td>
+									<td><input type="text" value="50000.0000" /></td>
+									<td><input type="text" value="0.08" /></td>
+								</tr>
+								<tr class="even">
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+								<tr class="odd">
+									<td><input type="text" value="" /></td>
+										<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+								<tr class="even">
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+									<td><input type="text" value="" /></td>
+								</tr>
+							</tbody>
+						<tfoot>
+							<tr>
+								<th colspan="3"></th>
+							</tr>
+						</tfoot>
+					</table>
+			  	<br />
+
+				<div class="button-bar">
+					<input name="save"   type="submit" class="button right" value="Save" />
+					<input name="copy"   type="submit" class="button right" value="Copy" />
+					<input name="delete" type="submit" class="button right" value="Delete" />
+
+					<input name="reset"  type="reset"  class="button" value="Reset" />
+					<!-- <input name="new" type="submit" class="button" value="New" /> -->
+
+					<br />
+				</div>
+				
+				<br />
+			  </fieldset>
+			</form>
+		</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

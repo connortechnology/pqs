@@ -1,0 +1,467 @@
+
+/* __________ Layout __________ */
+
+
+#content table {
+	width: auto;
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+#sidebar h2 {
+	margin-top: 2px;
+	margin-bottom: 1ex;
+}
+
+
+/* __________ Input Elements __________ */
+
+input, select, textarea {
+    margin: 0;
+    padding: 0;
+
+    font-family: Verdana, "MS Sans Serif", Arial, Helvetica, sans-serif;
+}
+
+input, select, textarea {font-size: inherit;} /* IE ignores this */
+
+
+/* __________ General Form Controls __________ */
+
+input.numeric { width: 4em; }
+
+form c fieldset {border: 1px solid #0B0D60;}
+
+/* NON IE!! */
+form > fieldset > legend {font-weight: bold;}
+form > fieldset + fieldset {margin-top: 2ex;}
+
+
+/* __________ Search Form __________ */
+
+form.search h3 {
+	margin-bottom: 0.5ex;
+	font-size: medium;
+}
+
+form.search #customer input { width: 8em; }
+form.search input.numeric   { width: 6em; }
+
+form.search label {
+	overflow: hidden;
+
+	float: left;
+	display: inline;
+	position: relative;
+
+	width: 6.6em;
+	height: 1.9em;
+	padding-right: 0.5em;
+
+	line-height: 1.9em;
+	vertical-align: baseline;
+	text-align: right;
+}
+
+form.search br { clear: both; }
+
+form.search input.button {
+    float: right;
+	display: inline;
+	position: relative;
+
+    margin: 2ex 0.5ex;
+}
+
+fieldset#ids {margin-top: 0ex;}
+fieldset#customer {margin-top: 2ex;}
+
+
+/* __________ Main Table Class __________ */
+
+table.main td {
+	background-color: transparent;
+    line-height: 1.9em;
+}
+
+tr.odd td {background-color: #AACCFF;}
+
+tr.main { vertical-align: middle; }
+
+th.vert-border { border-right: 1px solid white !important; }
+th.horiz-border { border-bottom: 1px solid white !important; }
+
+
+/* __________ Results Table __________ */
+
+table#results {
+	margin-bottom: 8ex;
+}
+
+table#results th,
+table#results td {
+	padding: 0 0.5em;
+	border: 0;
+}
+
+
+table#results caption {
+    caption-side: bottom;
+    padding-top: 4ex;
+}
+
+table#results > caption {
+    padding-top: 2px;
+    margin-top: -4ex;
+}
+
+table#results > thead > tr.main > th {text-align: left;}
+table#results > thead > tr.main > th.status {text-align: center;}
+table#results > thead > tr.main > th.id {text-align: right;}
+
+
+/* __________ Temp (This ~Temp~ seems purdy permanent) __________ */
+/* __________ Application (Maybe?!) __________ */
+
+
+table#results td.none,
+table#results td.open,
+table#results td.wait,
+table#results td.done,
+table#results td.none-inverse,
+table#results td.open-inverse,
+table#results td.wait-inverse,
+table#results td.done-inverse {
+    cursor: pointer;
+    cursor: hand;
+    text-align: center;
+}
+
+table#results td.none-inverse {
+    background-color:    #222222;
+}
+
+table#results td.x {
+    cursor: default;
+    background-color:    #aaaaaa;
+    border-top-color:    #aaaaaa;
+    border-bottom-color: #aaaaaa;
+}
+
+table#results col.company,
+table#results col.customer,
+table#results col.project {text-align: left;}
+
+table#results col.customer,
+table#results col.project {
+	width: auto;
+	white-space: nowrap;
+}
+
+table#results col.id {width: auto; text-align: right;}
+table#results col.status {width: 4.2em; text-align: center;}
+
+
+/* __________ Project Table __________ */
+
+col.mtime {width: 12em;}
+table#project col.status {width: 14em; text-align: center;}
+col.supplied {width: 2em; text-align: center;}
+table#project .over {background-color: #BFEBFD;}
+table#project .selected {background-color: #BFEBFE;}
+
+table#project tbody th {
+	height: 6ex;
+	border-bottom: 1px solid black;
+	vertical-align: bottom;
+	text-align: left;
+	color: #0B0D60;
+}
+
+table#project tbody th,
+table#project tbody td {
+	background-color: transparent;
+	border-right: 0;
+	border-left: 0;
+}
+
+th.category {padding-left: 2.2em;}
+
+th.category div.status {
+	position: relative;
+
+	top: 1.5em;
+	left: -2.2em;
+
+	height: 1.5em;
+	width: 1.5em;
+
+	border: 1px solid #0B0D60;
+}
+
+
+/* __________ Temp (More TEMP?!) __________ */
+
+table#project td + td + td {cursor: pointer;}
+
+
+/* __________ Side Tables __________ */
+
+table.columnar {width: 100%;}
+
+table.columnar th,
+table.columnar td {
+	background-color: transparent;
+	border: 0;
+
+	text-align: left;
+}
+
+table.columnar th {
+	text-align: right;
+	color: #0B0D60;
+}
+
+#sidebar #contact_info address {font-style: normal;}
+
+#sidebar #contact_info div.contact { margin-bottom: 2ex; }
+
+#sidebar #contact_info div.contact div {
+	width: 94%;
+	overflow: hidden;
+	margin-left: 1em;
+}
+
+#contact_info abbr {font-style: italic;}
+
+input:hover {background-color: #fafafa;}
+input:focus {background-color: #f4f4f4;}
+
+
+/* __________ States __________ */
+
+.done { background-color: #ddffdd !important; color: #225522; }
+.open { background-color: #ddddff !important; color: #222255; }
+.wait { background-color: #ffdddd !important; color: #552222; }
+.none { background-color: inherit;            color: #222222; }
+
+/* The inverse class names are deprecated and should eventually be removed. */
+tr.selected td.done, tr.over td.done, .done-inverse { color: #ddffdd !important; background-color: #225522 !important; }
+tr.selected td.open, tr.over td.open, .open-inverse { color: #ddddff !important; background-color: #222255 !important; }
+tr.selected td.wait, tr.over td.wait, .wait-inverse { color: #ffdddd !important; background-color: #552222 !important; }
+
+.show { color: white; background-color: black; }
+
+
+/* __________ State Controls __________ */
+
+#controls {
+    position: absolute;
+    display: none;
+
+    padding: 0;
+    background-color: white;
+    border: 1px solid #0B0D60;
+	font-size: 0.8em;
+}
+
+#controls form {
+	margin: 0;
+	padding: 0;
+}
+
+#controls h4 {
+    margin: 0;
+    padding: 4px;
+    background-color: black;
+    color: white;
+}
+
+#controls label {
+    padding: 2px 1ex;
+    display: block;
+    border-bottom: 1px solid black;
+}
+
+#controls label[for] {
+    text-align: center;
+}
+
+#controls textarea {
+    width: 15em;
+    height: 6em;
+
+    background-color: #fafafa;
+    border: 0;
+}
+
+#controls input { display: none; }
+
+#controls label.none-inverse { color: #ffffff; background-color: #222222; }
+
+
+/* __________ Panel: Current State __________ */
+
+div#sidebar div#current_state {
+	width: 198px;
+    margin-top: 1.25ex;
+    margin-right: 2ex;
+    padding: 0;
+
+    border: 1px solid #0B0D60;
+
+    line-height: 250%;
+    text-align: center;
+
+    font-size: 120%;
+    font-weight: bold;
+}
+
+
+/* __________ Bump Form __________ */
+
+form#bump {
+    margin-top: 2ex;
+    text-align: right;
+}
+
+form#bump textarea{
+    height: 1.4em;
+    text-align: right;
+}
+
+form#bump textarea{
+    height: 1.4em;
+    text-align: right;
+}
+
+#bump_pid, #bump_reason { margin-right: 1em; }
+
+
+	/* BUTTON BAR */
+
+div.button-bar {
+    margin: 2ex 0;
+    text-align: right;
+    width: 100%;
+}
+
+div.button-bar > input,
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+    color: #FFFFFF;
+    background-color: #1D23F4;
+    border: 2px solid #0B0D60;
+}
+
+input[type="submit"]:hover,
+input[type="reset"]:hover {
+    background-color: #0B0D60;
+    border: 2px solid #0B0D60;
+}
+
+div.button-bar > input[disabled] {background-color: #959595;}
+
+div.button-bar form {display: inline;}
+
+input[type="submit"]#complete:hover {
+    background-color: #0B0D60;
+    color: #FFFFFF;
+}
+
+input#cancel {margin-right: 2ex;}
+
+input[type="submit"]#cancel:hover {
+    background-color: #0B0D60;
+    color: #FFFFFF;
+}
+
+h1 + p {margin-bottom: 4ex;}
+
+div#sidebar div.side-panel h3 {
+    margin: 0.5ex 0 0.4ex 0.5em;
+    position: relative;
+    font-size: medium;
+}
+
+div#sidebar div.side-panel {
+	width: 200px;
+	padding: 0 0 1ex 0;
+	margin: 2ex 0 4ex 0;
+	border-top: 1px dashed #aeaeae;
+}
+
+div#sidebar div#comments p {
+    margin: 0;
+    padding: 1ex 0;
+}
+
+div#sidebar div#comments span.date {
+    font-style: italic;
+    color: #777777;
+}
+
+
+	/* PROJECT SERVICE COMMENT LOG */
+
+div#log {
+	width: auto;
+	margin: 0 0 0 2ex;
+}
+
+div#log div.header {
+    overflow: hidden;
+    width: 100%;
+
+    background-color: #F3FCFF;
+    border: 1px solid #BFEBFF;
+}
+
+div#log div.header div {padding: 3px;}
+
+div#log div.header div.name {float: left; display: inline; position: relative;}
+div#log div.header div.date {float: right; display: inline; margin-left: 2em; position: relative;}
+div#log div.header div.status {
+	float: right;
+	display: inline;
+	position: relative;
+
+	width: 14em;
+	margin-left: 10%;
+
+    text-align: center;
+}
+
+div#log div.header div.status strong {display: none;}
+
+div#log p {
+    padding: 3px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    clear: both;
+    max-height: 20em;
+    overflow: auto;
+}
+
+div#log form#state_change div.controls {
+    padding: 3px;
+    margin-bottom: 40px;
+}
+
+div#log form#state_change select {width: 14em;}
+
+div#log form#state_change textarea {
+    height: 10em;
+    width: 100%;
+}
+
+div#log form#state_change input {
+    left: 3px;
+
+    float: right;
+	display: inline;
+	position: relative;
+
+    margin-top: 1ex;
+}

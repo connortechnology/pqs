@@ -1,0 +1,39 @@
+<table width="600" border="0" cellspacing="0" cellpadding="0">
+	<tr style="vertical-align: top; text-align: left;">
+		<td width="295">
+			<strong>Prepared by:</strong><br />
+			<?BySalutation?> <?ByFirstName?> <?ByLastName?><br />
+			<?ByCompanyName?><br />
+			<?ByAddress1?><br />
+			<? if ( $$variable{'ByAddress2'} ne '' ) ?>
+			<?ByAddress2?><br />
+			<? endif ( $$variable{'ByAddress2'} ne '' ) ?>
+			<?CCITYPROV?><br />
+			<?ByPostalCode?><br />
+			<? if ( $$variable{'ByPhone'} ne '' ) ?>
+				<?ByPhone?><? if ( $$variable{'ByExtension'} ne '' ) ?> &nbsp;Ext. <?ByExtension?><? endif ( $$variable{'ByExtension'} ne '' ) ?><br />
+			<? endif ( $$variable{'ByPhone'} ne '' ) ?>
+			<? if ( $$variable{'ByFax'} ne '' ) ?><?ByFax?><br /><? endif ( $$variable{'ByFax'} ne '' ) ?>
+			<?ByEmail?> <br />
+			<br />
+		</td>
+		<td width="10">&nbsp;</td>
+		<td width="295" style="vertical-align: top;">
+			<strong>Prepared for:</strong><br />
+			<?ForSalutation?> <?ForFirstName?> <?ForLastName?><br />
+			<?ForCompanyName?><br />
+			<?ForAddress1?><br />
+			<? if ( $$variable{'ForAddress2'} ne '' ) ?>
+			<?ForAddress2?><br />
+			<? endif ( $$variable{'ForAddress2'} ne '' ) ?>
+			<?FCITYPROV?><br />
+			<?ForPostalCode?><br />
+			<? if ( $$variable{'ForPhone'} ne '' ) ?>
+				<?ForPhone?><? if ( $$variable{'ForExtension'} ne '' ) ?> &nbsp;Ext. <?ForExtension?><? endif ( $$variable{'ForExtension'} ne '' ) ?><br />
+			<? endif ( $$variable{'ForPhone'} ne '' ) ?>
+			<? if ( $$variable{'ForFax'} ne '' ) ?><?ForFax?><br /><? endif ( $$variable{'ForFax'} ne '' ) ?>
+			<?ForEmail?><br />
+			<br />
+		</td>
+	</tr>
+</table>

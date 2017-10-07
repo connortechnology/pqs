@@ -1,0 +1,327 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Paper
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+    <link href="/styles/SpryValidationTextField.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script src="/javascripts/SpryValidationTextField.js" type="text/javascript"></script>
+
+
+	<script  type="text/javascript" >
+var focusObject;
+
+		function do_decimals( number ) {
+			var myStr = new String(Math.round(number*100)/100);
+			var decPos = myStr.indexOf(".");
+	
+			// test for no decimals
+			if (decPos==-1) {
+				myStr += ".00";
+			} else if (decPos==myStr.length-2) {
+			// test for one decimal
+				myStr += "0";
+			} // end if
+
+			return myStr;
+		}
+
+		function get_element_index( form, elem ) {
+			for ( var i=0; i < form.elements.length; i+= 1 ) {
+				if ( form.elements[i] == elem ) {
+					return i;
+				} /* end if */
+			} /* end for */
+
+			return -1;
+		} /* end function get_element_index( form, elem ) */
+
+
+		function unselect ( ddm ) {
+			for ( var index = 0; index < ddm.options.length; index += 1 ) {
+				ddm.options[index].selected = false;
+			}
+		}
+			
+		function calc_from_markup( form, elem ) {
+			var index = get_element_index( form, elem );
+			var cost = parseFloat( 1*form.elements[index-1].value );
+
+			if ( cost != '' ) {
+				var markup = parseFloat(1*elem.value);
+				var newvalue = (cost*markup)/100 + cost;
+				form.elements[index+1].value = do_decimals( newvalue );
+			} // end if
+		}
+
+		function calc_from_price( form, elem ) {
+			var index = get_element_index( form, elem );
+			var cost = parseFloat( 1*form.elements[index-2].value );
+
+			if ( cost != '' ) {
+				form.elements[index-1].value = do_decimals( (((1*elem.value) / cost)-1)*100 );
+			} // end if
+		}
+
+		function calc_from_cost( form, elem ) {
+			var index = get_element_index( form, elem );
+			var markup = parseFloat( 1*form.elements[index+1].value );
+			var cost = parseFloat( 1*elem.value );
+
+			if ( markup != '' ) {
+				var newvalue = (cost*markup)/100 + cost;
+				form.elements[index+2].value = do_decimals( newvalue );
+			} // end if
+		}
+
+		function keyhandler(e) {
+			if ( focusObject.name.substr(3,6) == "Markup" ) {
+				calc_from_markup( focusObject.form, focusObject );
+			} else if ( focusObject.name.substr(3,4) == "Cost" ) {
+				calc_from_cost( focusObject.form, focusObject );
+			} else if ( focusObject.name.substr(3,5) == "Price" ) {
+				calc_from_price( focusObject.form, focusObject );
+			} // end if
+		}
+
+</script>
+
+
+    
+</head>
+<body>
+
+
+<div id="content">
+	<h1><span class="title-section">Stock &#187;</span> Add, Edit, Delete</h1>
+<p>    To Add a new stock Select the stock from the Search List below that most closely resembles the stock you will be adding. Select the Copy Button. Make the necessary changes in the Paper Information and Paper Pricing fields and select the Save button.<br />
+Note: Adding a new stock will only recommend this stock for the current Project type. In order to recommend this stock for additional project types this must be done in the Administrator section Stock > Recommendations.</p>
+<p> To Edit an existing stock Select the stock from the Search List below. Make the necessary changes in the Paper Information and Paper Pricing fields and select the Save button. </p>
+<p> To Delete an existing stock Select the stock from the Search List below. Select the Delete Button. <br />Note: any previous projects or products that have this stock used will no longer work and will require a replacement stock to be selected.</p>
+
+	<form id="f1" name="f1" method="post" action="paper_edit.html" />    
+
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+
+			<label for="ddmPaperName">Paper Name:</label>
+			<select id="ddmPaperName" name="ddmPaperName" onchange="unselect(f1.ddmPaper);f1.submit();">
+				<option value=""> All Paper </option>
+				<option value=""> --------------------- </option>
+				<?ddmPaperName?>
+			</select>
+			<br />
+
+			<label for="ddmFinish">Finish:</label>
+			<select id="ddmFinish" name="ddmFinish" onchange="f1.submit();">
+				<option value=""> All Finishes </option>
+				<?ddmFinish?>
+			</select>
+			<br />
+
+			<label for="ddmColour">Colour:</label>
+			<select id="ddmColour" name="ddmColour" onchange="f1.submit();">
+				<option value=""> All Colours </option>
+				<?ddmColour?>
+			</select>
+			<br />
+
+			<label for="ddmWeight">Weight:</label>
+			<select id="ddmWeight" name="ddmWeight" onchange="f1.submit();">
+				<option value=""> All Weights </option>
+				<?ddmWeight?>
+			</select>
+			<br />
+            
+            <label for="ddmPaper">Paper ID:</label>
+			<select id="ddmPaper" name="ddmPaper" onchange="f1.submit();">
+				<option value=""> All Paper IDs </option>
+				<option value=""> --------------------- </option>
+				<?ddmPaper?>
+			</select>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Paper Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="Copy" onclick="fmChange=0;" />
+				<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=2;" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<input class="button" type="reset" />
+				<br />
+			</div>
+			<br />
+
+			<label for="strID">Paper ID:</label>
+			<input type="text" id="strID" name="strID" value="<?strID?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strName">Paper Name:</label>
+			<input type="text" id="strName" name="strName" value="<?strName?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strCategory">Paper Category:</label>
+			<input type="text" id="strCategory" name="strCategory" value="<?strCategory?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strDetails">Paper Details:</label>
+			<input type="text" id="strDetails" name="strDetails" value="<?strDetails?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strFinish">Finish:</label>
+			<input type="text" id="strFinish" name="strFinish" value="<?strFinish?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strColour">Colour:</label>
+			<input type="text" id="strColour" name="strColour" value="<?strColour?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strMWeight">M Weight:</label>
+			<input type="text" id="strMWeight" name="strMWeight" value="<?strMWeight?>" size="12" class="smBox" />
+			<br />
+
+			<label for="strWeight">Weight:</label>
+			<input type="text" id="strWeight" name="strWeight" value="<?strWeight?>" size="12" class="smBox" />
+			<br />
+
+			<label for="strCalliper">Calliper:</label>
+			<input type="text" id="strCalliper" name="strCalliper" value="<?strCalliper?>" size="12" class="smBox" />
+			<br />
+
+			<label for="dblHeight">Sheet Height:</label>
+			<input type="text" id="dblHeight" name="dblHeight" value="<?dblHeight?>" size="12" class="smBox" />
+			<br />
+
+			<label for="dblWidth">Sheet Width:</label>
+			<input type="text" id="dblWidth" name="dblWidth" value="<?dblWidth?>" size="12" class="smBox" />
+			<br />
+            
+            <label for="ddmSupplier">Supplier:</label>
+			<select name="lngpaperlistindex">
+            <option value=""> 
+            </option>
+            <?ddmSupplier?>
+            </select>
+           	<br />
+</fieldset>
+	<fieldset>
+			<legend>
+				Paper Pricing
+			</legend>
+<!-- *** PRICING STARTS HERE -->
+
+		<? loop PRICELISTS ?>
+		<label>Price List: <?value.name?></label><br/>
+
+		<? loop value.prices ?>
+
+        <div style="margin-top: 3ex; padding-right: 1em;">
+		<input type="checkbox" name="chk-<?value.id?>-<?paper?>-1" checked /> <br/>
+		<input type="hidden"   name="txtMin-<?value.id?>-<?paper?>-1" value='' /> <br/>
+		<input type="hidden"   name="txtMax-<?value.id?>-<?paper?>-1" value='' /> <br/>
+		<input type="hidden"   name="rdbIncluded-<?value.id?>-<?paper?>" value='Y' />
+		</div>
+        <div style="margin-top: 3ex; padding-right: 1em;">
+          <label for="label5" style="width: auto; margin-top: -3ex; padding: 0;">&nbsp;&nbsp;Units:</label>
+		  <br /> 
+		  <span></span>
+		
+        <select name="txtUnits-<?value.id?>-<?paper?>-1">
+          <option value="1000 Sheets">1000 Sheets </option>
+          <option value="100 lbs"
+			<? if ( $variable->{units} eq '100 lbs' ) ?>
+			selected
+			<? endif ( $variable->{units} eq '100 lbs' ) ?>
+			>100 lbs
+		</option>
+        </select>
+        <br/>
+		</div>
+        <div style="margin-top: 2.5ex; padding-right: 1em;">
+          <label for="label5" style="width: auto; margin-top: -3ex; padding: 0;">&nbsp;&nbsp;Cost:</label>
+		  <br /> 
+		  <span>$</span>
+          <span id="sprytextfield1" onfocus="MM_validateForm('txtCost-<?value.id?>-<?paper?>-1','','R');return document.MM_returnValue">
+          <input name="txtCost-<?value.id?>-<?paper?>-1" type="text" class="smBox" id="txtCost-<?value.id?>-<?paper?>-1" onkeyup="calc_from_cost(f1, this);" value="<?float:dblcost?>" size="8"  />
+          <span class="textfieldRequiredMsg">A Cost value is required.</span>
+          <span class="textfieldInvalidFormatMsg">Invalid Cost format.</span>
+          <span class="textfieldMinValueMsg">Cost Must be Greater than $0.00.</span>
+          </span>
+    </div>
+    
+<div style="margin-top: 3ex; padding-right: 1em;">
+          <label for="label5" style="width: auto; margin-top: -3ex; padding: 0;">Markup:</label>
+		  <br />
+		  <input type="text" name="txtMarkup-<?value.id?>-<?paper?>-1" size="8" 
+			class="smBox" value="<?float:dblmarkup?>" onkeyup="calc_from_markup(f1, this);" />
+			<span>%</span>
+		</div>
+
+        <div style="margin-top: 3ex; padding-right: 1em;">
+          <label for="label5" style="width: auto; margin-top: -3ex; padding: 0;">&nbsp;&nbsp;Price:</label>
+		  <br />
+		  <span>$</span>
+			<input type="text" name="txtPrice-<?value.id?>-<?paper?>-1" size="8" class="smBox" 
+			value="<?float:dblprice?>" onkeyup="calc_from_price(f1, this);" />
+		</div>
+
+        <div style="margin-top: 3ex; padding-right: 1em;">
+          <label for="label5" style="width: auto; margin-top: -3ex; padding: 0;">Discount:</label>
+          <br />
+		  <label for="rdbDiscount-<?value.id?>-Yes" class="radio">
+          <input type="radio" id="rdbDiscount-<?value.id?>-Yes" 
+		   name="rdbDiscount-<?value.id?>-<?paper?>-1" value='Y' 
+				<? if ( $$variable{'discount'} eq 'Y' ) ?> 
+					checked="checked" 
+				<? endif ( $$variable{'discount'} eq 'Y' ) ?> 
+		  onchange="fmChange=1;" /> Yes
+          </label>
+          <br />
+		  <label for="rdbDiscount-<?value.id?>-No" class="radio">
+          <input type="radio" id="rdbDiscount-<?value.id?>-No" 
+		   name="rdbDiscount-<?value.id?>-<?paper?>-1" value='N' 
+				<? if ( $$variable{'discount'} eq 'N' ) ?> 
+					checked="checked" 
+				<? endif ( $$variable{'discount'} eq 'N' ) ?> 
+		  onchange="fmChange=1;" /> No
+          </label>
+        </div>
+		<br/>
+		<? endloop value.prices ?>
+		<? endloop PRICELISTS ?>
+			
+
+		</fieldset>
+
+		<input type="hidden" name="Save_Prices" value="1" >	
+		<input type="hidden" name="pid" value="<?pid?>" >	
+	</form>
+</div>
+<script type="text/javascript">
+<!--
+var sprytextfield1 = new Spry.Widget.ValidationTextField("sprytextfield1", "currency", {validateOn:["blur"], minValue:0.01});
+//-->
+</script>
+</body>
+</html>

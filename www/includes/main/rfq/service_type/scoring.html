@@ -1,0 +1,13 @@
+<div style="font-size:1em">
+<? loop signature?>
+	<? if ( $$variable{'txtScoreQty'} )?>
+		<span class="label">Scores </span>
+		<?txtScoreQty?>
+	<? endif ( $$variable{'txtScoreQty'} )?>
+
+	<? if ( $$variable{'txtPerfQty'} )?>
+		<span class="label">Perfs </span>
+		<?txtPerfQty?>
+	<? endif ( $$variable{'txtPerfQty'} )?>
+<? endloop signature?>
+</div>

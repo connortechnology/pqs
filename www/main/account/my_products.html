@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+		<!--#include virtual="/includes/company_name.html" -->Account - My Products</title>
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+    <!--#include virtual="/includes/h2-js.html" -->
+    <script  type="text/javascript" src="/javascripts/other.js"></script>
+	<link href="/styles/products-v2.css" rel="stylesheet" type="text/css" media="screen" />
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Account &#187;</span> My Products</h1>
+	
+	<?if ($variable->{has_products}) ?>
+		<!--#include virtual="<?include?>" -->
+	<?else ($variable->{has_products}) ?>
+
+
+
+	<div class="product">
+		<img src="/images/main/products/sample/abc-realty-business_card.png" width="130" height="130" />	
+		<form name="f1" method="GET" action="/main/proj/dispatch.html" >	
+			<h3>Business Cards - 3.5&quot; x 2&quot; - W2P Example 1</h3>
+			<p>ABC Realty Business Cards (3.5&quot; x 2&quot;) printed full <?ws_colour?> on one side of 12PT cover stock.</p>
+			<p>Web-To-Print template available.</p>
+			<p>*Assets Required - 0.625&quot; x 0.625&quot; Sales Representative photos required.</p>
+            <input type="hidden" name="predefined" value="5014" />
+           	<input type="hidden" name="action" value="create" />
+			<input type="hidden" name="txtQuantity1" value="1000" />
+            <input type="hidden" name="txtProjectReference" value="ABC Realty Business Card" />
+			<input type="submit" class="button" value="Select" />
+		</form>
+	</div>
+	
+	<hr />
+	
+	<div class="product">
+		<img src="/images/main/products/sample/abc-realty-post_card_just_listed.png" width="130" height="130" />	
+		<form name="f1" method="GET" action="/main/proj/dispatch.html" >
+			<h3>Post Cards - Just Listed - 4&quot; x 6&quot; - W2P Example 2</h3>
+			<p>ABC Realty &quot;Just Listed&quot; Post Cards (4&quot; x 6&quot;) printed full <?ws_colour?> on both sides of 12PT cover stock.</p>
+			<p>Web-To-Print template available with 1000 records previously uploaded.</p>
+			<p>*Assets Required - 6&quot; x 4&quot; Property Photos and 1.5&quot; x 1.5&quot; Sales Representative photos required.</p>
+			<input type="hidden" name="predefined" value="5026" />
+			<input type="hidden" name="action" value="create" />
+            <input type="hidden" name="template" value="5" />
+			<input type="hidden" name="txtProjectReference" value="ABC Realty Post Card" />
+			<input type="hidden" name="txtQuantity1" value="10000" />		
+			<input type="submit" class="button" value="Select" />
+		</form>
+	</div>
+	
+	<hr />
+	
+	<div class="product">
+		<img src="/images/main/products/sample/abc-realty-envelope.png" width="130" height="130" />	
+		<form name="f1" method="GET" action="/main/proj/dispatch.html" >	
+			<h3>Envelopes - No. 10</h3>
+			<p>ABC Realty Envelopes printed 2 <?ws_colour?> on one side of 24lb Number 10 envelope. Available 1000 at a time with or without window.</p>
+				<label>
+					<input name="predefined" type="radio" value="10634">
+					No. 10 Plain Envelope
+				</label>
+				<label>
+					<input name="predefined" type="radio" value="10635">
+					No. 10 Window Envelope
+				</label>					
+			<input type="hidden" name="action" value="create" />
+			<br />
+            <input type="submit" class="button" value="Select" style="margin-top: 10px;" />
+		</form>
+	</div>
+		
+	<hr />
+	
+	<div class="product">
+		<img src="/images/main/products/sample/abc-realty-letterhead.png" width="130" height="130" />	
+		<form name="f1" method="GET" action="/main/proj/dispatch.html" >	
+			<h3>Letterhead - 8.5&quot; x 11&quot;</h3>
+			<p>ABC Realty Letterhead (3.5&quot; x 2&quot;) printed 2 <?ws_colour?> on one side of 70lb offset stock.</p>
+            <select name="txtQuantity1">
+				<option value="1000">1000</option>
+				<option value="2000">2000</option>
+				<option value="3000">3000</option>
+				<option value="4000">4000</option>
+				<option value="5000">5000</option>
+			</select>
+			<input type="hidden" name="predefined" value="10636" />
+			<input type="hidden" name="action" value="create" />
+			<input type="hidden" name="txtProjectReference" value="ABC Realty Letterhead" />
+            <input type="hidden" name="create_to_order" value="1" />
+			<br />
+            <input type="submit" class="button" value="Select" />
+		</form>
+	</div>
+
+	<hr />
+	
+	<div class="product">
+		<img src="/images/main/products/sample/abc-realty-presentation-folder.png" width="130" height="130" />	
+		<form name="f1" method="GET" action="/main/proj/create.html" >	
+			<h3>Presentation Folder - 10&quot; x 13&quot;</h3>
+			<p>ABC Realty 10&quot; x 13&quot; Presentation Folder printed in full <?ws_colour?> on one side of 12PT cover stock with 2 pockets and business card slits.</p>
+			<input type="hidden" name="predefined" value="10637" />
+			<input type="hidden" name="action" value="create" />
+			<input type="hidden" name="txtProjectReference" value="ABC Realty Presentation Folder" />
+			<input type="submit" class="button" value="Select" />
+		</form>
+	</div>
+ 
+
+
+
+
+	<?endif ($variable->{has_products}) ?>
+
+	<hr />
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

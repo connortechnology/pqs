@@ -1,0 +1,140 @@
+<?if is_staff?>
+<fieldset class="hidden-details">
+	<legend>Price Overrides</legend>
+
+
+<label for="chargefor">Charge For:</label>
+			<select id="chargefor" name="chargefor" size="1" >
+				<option value="">Full Price (Stock + Printing)</option>
+				<option value="StockOnly">Stock Only (No Printing)</option>
+				<option value="PrintingOnly">Printing Only (No Stock)</option>
+				<option value="Free">Free (No Stock or Printing)</option>
+			</select>
+
+</fieldset>
+<?endif is_staff?>
+
+<fieldset class="hidden-details">
+	<legend>Production Overrides</legend>
+
+	<p style="margin-bottom: 3ex;">The most cost effective options have been automatically selected. If you would like to override the production select an option those presented. The overridden option may not result in a valid production method.</p>
+
+	<? if (! ($variable->{project}{press_type}{ref} eq 'screen' || $variable->{project}{press_type}{ref} eq 'web')) ?>
+			<label for="substrate">Press Sheet Size:</label>
+			<select id="substrate" name="substrate" size="1" onchange="overrides.apply(this);">
+				<option value="">Auto-select</option>
+				<?substrate?>
+			</select>
+			<label for="override_substrate" class="checkbox override"><input type="checkbox" id="override_substrate" name="override_substrate" onclick="overrides_chkbox.apply(this);" class="override" value="Y" />Override</label>
+			<br />
+	<? endif (! ($variable->{project}{press_type}{ref} eq 'screen' || $variable->{project}{press_type}{ref} eq 'web')) ?>
+
+	<label for="press">Press:</label>
+	<select id="press" name="press" size="1" onchange="overrides.apply(this);">
+		<option value="">Auto-select</option>
+		<? loop presses ?>
+			<option value="<?key?>"><?value?></option>
+		<? endloop presses ?>
+	</select>
+	<label for="override_press" class="checkbox override">
+	<input type="checkbox" name="override_press" id="override_press" onclick="overrides_chkbox.apply(this);" value="1" />Override</label>
+	<br />
+
+	<? if ($$variable{project}{press_type}{ref} ne 'web') ?>
+		<label for="runstyle" title="Run style is the style in which a press sheet runs through the printing press. It can be either Work and Turn, Work and Tumble, or Sheet Work.">Run Style:</label>
+		<select id="runstyle" name="runstyle" size="1" class="form" onchange="overrides.apply(this);">
+			<option value="">Auto-select</option>
+			<option value="SW">Sheet Work</option>
+			<option value="WT">Work &amp; Turn</option>
+			<option value="WF">Work &amp; Flop (Tumble)</option>
+			<? if ($$variable{project}{press_type}{ref} ne 'digital') ?>
+				<option value="PF">Perfecting</option>
+			<? if ($$variable{project}{press_type}{ref} ne 'digital') ?>
+		</select>
+		<label for="override_runstyle" class="checkbox override">
+		<input type="checkbox" id="override_runstyle" name="override_runstyle" onclick="overrides_chkbox.apply(this);" size="1" value="1" />Override</label>
+		<br />
+	<? endif ($$variable{project}{press_type}{ref} ne 'web') ?>
+
+	<? if ($$variable{project}{press_type}{ref} ne 'screen') ?>
+
+		<? if project.is_multipage ?>
+			<?if not:is_cover ?>
+			<fieldset>
+				<legend>Spreads</legend>
+				
+				<p>To split the remaining <?number:spreads_remaining?> spread<?if multiple:spreads_remaining?>s<?endif multiple:spreads_remaining?> into different groups, enter the desired number of spreads on a press form and the number of forms to print with that layout.</p>
+			
+				<label for="spreads">Spreads per form: </label>
+				<input id="spreads" name="spreads" type="text" size="9" class="numeric" /> ×
+				<br />
+			
+				<label for="forms">Forms: </label>
+				<input id="forms" name="forms" type="text" size="9" class="numeric" /> = <span id="used_spreads"><?used_spreads?></span>
+				<br />
+
+				<input id="spreads_remaining" type="hidden" disabled="disabled" value="<?spreads_remaining?>" />
+			</fieldset>
+			<?endif not:is_cover ?>
+		<? endif project.is_multipage ?>
+
+		<? if ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' ) ?>
+			<fieldset>
+				<legend class="tip" title="Here you can change the number of press sheets that will be wasted in producing the job.">
+					Setup and Running Overs Overrides
+				</legend>
+	
+				<p class="none">&nbsp;</p>
+	
+				<label for="override_overs_unit">Unit Overs:</label>
+				<input id="override_overs_unit" name="override_overs_unit" size="12" class="smbox" />
+				<br />
+	
+				<label for="override_overs_run">Run Overs:</label>
+				<input id="override_overs_run" name="override_overs_run" size="12" class="smbox" />
+				<label for="txtRunOversOverride" class="post-input">%</label>
+				<br />
+			</fieldset>
+		<? endif ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' ) ?>
+	<? endif ($$variable{project}{press_type}{ref} ne 'screen') ?>
+
+	<? if ($$variable{project}{press_type}{ref} eq 'screen') ?>
+		<label for="txtPlateQuantity">Total Screen Quantity:</label>
+		<input id="txtPlateQuantity" name="txtPlateQuantity" type="text" size="9" class="smBox" />
+		<br />
+		
+		<p>Does your project require any additional screen changes? If yes please specify the quantity.</p>
+		
+		<label for="add_plates">Additional Screen Changes:</label>
+		<input id="add_plates" name="add_plates" type="text" size="9" class="smBox" />
+		<label for="add_plates" class="post-input">Additional Quantity</label>
+		<br />
+	<? endif ($$variable{project}{press_type}{ref} eq 'screen') ?>
+
+
+	<? if ($variable->{project}{press_type}{ref} eq 'digital' && $variable->{press_quality} ) ?>
+	<!-- 	# We Now have Optional Quality Ratings for Digital Presses.
+	        # If there is more than 1 rating in the system then display the override. -->
+
+		<label for="quality" title="Quality Selection">Quality Rating:</label>
+		<select id="quality" name="quality" size="1" class="form" onchange="overrides.apply(this);">
+			<option value="">Auto-select</option>
+			<? loop press_quality ?>
+				<option value="<?strvalue?>"><?strvalue?></option>
+			<? endloop press_quality ?>
+		</select>
+		<label for="override_quality" class="checkbox override"><input type="checkbox" id="override_quality" name="override_quality" onclick="overrides_chkbox.apply(this);" size="1" />Override</label>
+		<br />
+	<? endif ($variable->{project}{press_type}{ref} eq 'digital' && $variable->{press_quality} ) ?>
+
+	<? if ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' ) ?>
+		<? if ( $$variable{project}{press_type}{ref} ne 'digital' && $$variable{project}{press_type}{ref} ne 'screen') ?>
+			<? if project.is_multipage ?>
+				<label for="add_plates" class="tip" title="Plates are the carriers of the images that are to be printed on paper. One printing plate is required for each ink <?ws_colour?> printed. Metal plates are currently the only way to produce high quality close-register printed images. Plates can also be made out of plastic and paper.">Additional Plates:</label>
+				<input id="add_plates" name="add_plates" type="text" size="9" class="smBox" />
+				<br />
+			<? endif project.is_multipage ?>
+		<? endif ( $$variable{project}{press_type}{ref} ne 'digital' && $$variable{project}{press_type}{ref} ne 'screen') ?>
+	<? endif ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' ) ?>
+
+</fieldset>

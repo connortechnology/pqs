@@ -1,0 +1,26 @@
+ <html>
+<head>
+<title><!--#include virtual="/includes/company_name.html" --> File Upload Complete</title>
+<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+<link href="/styles/site.css" rel="stylesheet" type="text/css" media="screen, print" />
+</head>
+<!--<body onbeforeunload="return false;" >
+-->
+<body onLoad="open_upload();">
+<div id="email-header">
+					<img src="/images/e-mail/email_header.gif" />
+				</div>
+<div style="padding-left:15px !important;">
+<br>
+<h2>Your Files have been uploaded to your project.<br /> You may now close this window.</h2></div>
+    </body>
+</html>
+
+
+
+<script type="text/javascript">
+	function open_upload() {
+	var win = (window.open('/main/products/upload_complete_pop.html','','newWin,left=600,width=645,top=250,height=401,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no'  ));
+    self.close();
+	}
+</script>

@@ -1,0 +1,11 @@
+<p>Dear <?rdbSalutation?> <?txtFirstName?> <?txtLastName?>,</p>
+
+<p>Thank-you for registering. </p>
+
+<? if ( configuration::get_value( $log, $dbh, 'NewNonFirstUserAccountActivation' ) eq 'Y' ) ?>
+	<p>Your account has been activated and you have been automatically logged in.</p>
+<? else ( configuration::get_value( $log, $dbh, 'NewNonFirstUserAccountActivation' ) eq 'Y' ) ?>
+	<p>Someone from your company has already registered as your company appointed administrator. You will need to have them activate your account.  You will be automatically notified when your account is activated.</p>
+<? endif ( configuration::get_value( $log, $dbh, 'NewNonFirstUserAccountActivation' ) eq 'Y' ) ?>
+
+<p>If you have any questions, please contact our <a href="/main/support/support_help_desk.html?Issue_Cookie=true">helpdesk</a>.</p>

@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.category?> - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<form id="f1" name="f1" method="POST" action="/service/<?lc:service.ref?>">
+
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+
+		<fieldset>
+			<legend>Collating</legend>
+
+			<p>The following signatures will be collated and slip sheeted.</p>
+	
+			<table class="no-center" style="margin-left: 3em;" summary="The number and type of signatures needing collation">
+				<tr>
+					<th>Quantity</th>
+					<th>Signature Type</th>
+					<th>Layout</th>
+				</tr>
+				<? loop pockets ?>
+					<tr class="no-formatting">
+						<td style="text-align: center"><?qty?></td>
+						<td><?type?></td>
+						<td><? if ($variable->{layout}) ?>
+							<? if ($variable->{type} eq 'Interior Spreads')?>
+							<?layout?>
+							Page Signature
+							<? else ($variable->{type} eq 'Interior Spreads')?>
+							<?layout?>
+							Gate Fold
+							<? endif ($variable->{type} eq 'Interior Spreads')?>
+							<? endif ($variable->{layout}) ?>
+						</td>
+					</tr>
+				<? endloop pockets ?>
+			</table>
+		</fieldset>
+
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_bindery.html"-->
+	</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

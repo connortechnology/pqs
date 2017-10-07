@@ -1,0 +1,307 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Managerial - User Profiles
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript">
+		function keepCompany ( what ) {
+			var Company = what.ddmCustomer.selectedIndex;
+			var CompanyName = what.CompanyName.value;
+
+			clearForm(what);
+
+			what.CompanyName.value = CompanyName;
+			what.ddmCustomer.selectedIndex = Company;
+		}
+	</script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Managerial &#187;</span> User Profiles</h1>
+
+	<p>Were you looking for the <a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Company Profile Page</a>?</p>
+
+	<p>Please select a company or user to obtain login information.</p>
+	<p>All fields marked with an Asterisk (*) are required.</p>
+<form name="f1" id="f1" method="post" action="user_profiles.html" autocomplete="off" onsubmit="return fmCheck(f1);">
+		<input type="hidden" id="hiddenSubmit" name="hiddenSubmit" />
+
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="ddmCustomer">Company Name:</label>
+			<select id="ddmCustomer" name="ddmCustomer" onchange="f1.submit();">
+				<option value=""> All Companies </option>
+				<?FILL_CUSTOMER_NAME?>
+			</select>
+			<br />
+
+			<label for="ddmUserRole">User Type:</label>
+			<select id="ddmUserRole" name="ddmUserRole" onchange="f1.submit();">
+				<option value=""> Select a User Type </option>
+				<option value=""> ------------------ </option>
+				<?FILL_USER_TYPE?>
+			</select>
+			<br />
+
+			<label for="ddmUser">User Name:</label>
+			<select id="ddmUser" name="ddmUser" onchange="f1.submit();">
+				<option value=""> Select a User </option>
+				<option value=""> ----------------- </option>
+				<?FILL_USER_NAME?>
+			</select>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				User Profiles
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<span class="label">User Profile:</span>
+			<label class="value"><?EDIT_USER_NUM?> of <?NUM_USERS?></label>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="&lt;&lt;" />
+				<input class="button" type="submit" name="btnFunction" value="&gt;&gt;" />
+				<input class="button" type="button" value="New" onclick="keepCompany(f1);" />
+				<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=2;" />
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				User Information
+			</legend>
+
+			<p><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Company Profile Page</a></p>
+
+			<label for="CompanyName">Company Name *:</label>
+			<input type="text" id="CompanyName" name="CompanyName" size="30" class="input-text" readonly="readonly"  value="<?CompanyName?>" />
+			<br />
+
+			<label for="txtTitle">Title:</label>
+			<input type="text" id="txtTitle" name="txtTitle" size="30" class="input-text" value="<?txtTitle?>" />
+			<br />
+
+			<label>Salutation:</label>
+			<label for="rdbSalutationMr" class="radio"><input type="radio" id="rdbSalutationMr" name="rdbSalutation" value="Mr." <?rdbSalutationMr.?> />Mr.</label>
+			<label for="rdbSalutationMrs" class="radio"><input type="radio" id="rdbSalutationMrs" name="rdbSalutation" value="Mrs." <?rdbSalutationMrs.?> />Mrs.</label>
+			<label for="rdbSalutationMs" class="radio"><input type="radio" id="rdbSalutationMs" name="rdbSalutation" value="Ms." <?rdbSalutationMs.?> />Ms.</label>
+			<label for="rdbSalutationMiss" class="radio"><input type="radio" id="rdbSalutationMiss" name="rdbSalutation" value="Miss" <?rdbSalutationMiss?> />Miss</label>
+			<br />
+
+			<label for="txtFirstName">First Name *:</label>
+			<input type="text" id="txtFirstName" name="txtFirstName" size="30" class="input-text" value="<?txtFirstName?>" />
+			<br />
+
+			<label for="txtLastName">Last Name *:</label>
+			<input	type="text" id="txtLastName" name="txtLastName" size="30" class="input-text" value="<?txtLastName?>" />
+			<br />
+
+			<label for="txtPhone">Phone *:</label>
+			<input	type="text" id="txtPhone" name="txtPhone" size="30" class="input-text" value="<?txtPhone?>" />
+			<br />
+
+			<label for="txtExtension">Extension:</label>
+			<input type="text" id="txtExtension" name="txtExtension" size="30" class="input-text" value="<?txtExtension?>" maxlength="4" />
+			<br />
+
+			<label for="txtFax">Fax:</label>
+			<input	type="text" id="txtFax" name="txtFax" size="30" class="input-text" value="<?txtFax?>" />
+			<br />
+			<label for="address1">Address *:</label>
+			<input	type="text" id="address1" name="address1" size="30" class="input-text" value="<?address1?>" />
+			<br />
+			<label for="address2">Address 2:</label>
+			<input	type="text" id="address2" name="address2" size="30" class="input-text" value="<?address2?>" />
+			<br />
+			<!--<label for="cubicle">Building &amp; Cubicle *:</label>
+			<input	type="text" id="cubicle" name="cubicle" size="30" class="input-text" value="<?cubicle?>" />
+			<br />-->
+			<label for="city">City *:</label>
+			<input	type="text" id="city" name="city" size="30" class="input-text" value="<?city?>" />
+			<br />
+			<label for="state">Prov/State *:</label>
+            <select id="state" name="state" >
+				<option value=""> Select </option>
+				<?state?>
+			</select>
+			
+			<br />
+			<label for="country">Country *:</label>
+			<select id="country" name="country" >
+				<option value=""> Select </option>
+				<?country?>
+			</select>
+			<br />
+			<label for="postalcode">Postal Code *:</label>
+			<input	type="text" id="postalcode" name="postalcode" size="30" class="input-text" value="<?postalcode?>" />
+			<br />
+		</fieldset>
+		
+		
+		<fieldset>
+			<legend>
+				Account Details
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<? if ( $$variable{'UserType'} eq 'E' ) ?>
+				<label for="txtCommission">Commission Rate:</label>
+				<input type='Text' id="txtCommission" name="txtCommission" size='30' class="input-text" value='<?txtCommission?>' />
+				<br />
+			<? endif ( $$variable{'UserType'} eq 'E' ) ?>
+
+			<label>Add to our Mailing List:</label>
+			<label for="rdbMailingListYes" class="radio"><input type="radio" id="rdbMailingListYes" name="rdbMailingList" <?rdbMailingListY?> value="Y" onchange="fmChange=1;" />Yes</label>
+			<label for="rdbMailingListNo" class="radio"><input type="radio" id="rdbMailingListNo" name="rdbMailingList" <?rdbMailingListN?> value="N" onchange="fmChange=1;" />No</label>
+			<br />
+
+			<label>Company Administrator:</label>
+			<label for="rdbAdministratorYes" class="radio"><input type="radio" id="rdbAdministratorYes" name="rdbAdministrator" <?rdbAdministratorY?> value="Y" onchange="fmChange=1;" />Yes</label>
+			<label for="rdbAdministratorNo" class="radio"><input type="radio" id="rdbAdministratorNo" name="rdbAdministrator" <?rdbAdministratorN?> value="N" onchange="fmChange=1;" />No</label>
+			<br />
+
+			<label>Is this account active?</label>
+			<label for="rdbAccountActivationYes" class="radio"><input type="radio" id="rdbAccountActivationYes" name="rdbAccountActivation" <?rdbAccountActivationY?> value="Y" onchange="fmChange=1;" />Yes</label>
+			<label for="rdbAccountActivationNo" class="radio"><input type="radio" id="rdbAccountActivationNo" name="rdbAccountActivation" <?rdbAccountActivationN?> value="N" onchange="fmChange=1;" />No</label>
+			<br />
+
+			<label for="txtCustomGreeting">Custom Greeting:</label>
+			<input type="text" id="txtCustomGreeting" name="txtCustomGreeting" value="<?txtCustomGreeting?>" size="30" class="input-text" />
+			<br />
+
+			<label for="ddmUserType">User Type:</label>
+			<select id="ddmUserType" name="ddmUserType" onchange="fmChange=1;" />
+				<?ddmUserType?>
+			</select>
+			<br />
+
+			<label for="selectUserCategories">User Category *:</label>
+			<select id="selectUserCategories" name="selectUserCategories" size="4" multiple="multiple">
+				<?selectUserCategories?>
+			</select>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Managerial Notifications
+			</legend>
+
+			<label for="selectApproval">Manager:</label>
+			<select id="selectApproval" name="selectApproval" size="6" multiple="multiple">
+				<?selectApproval?>
+			</select>
+			<br />
+			<label>&nbsp;</label> <!-- TODO set margin properly -->
+			<span><tt>&lt;Ctrl&gt;</tt>+click to select multiple values</span>
+			<br />
+
+			<label for="notify_manager_order" title="Notify the selected manager(s) when the user orders a product.">Notify on order?</label>
+			<input id="notify_manager_order" name="notify_manager_order" type="checkbox" <?if notify_manager_order?>checked="checked"<?endif notify_manager_order?> value="1" />
+			<br />
+
+			<label for="notify_manager_file" title="Notify the selected manager(s) when the user uploads artwork or fills a PDF template.">Notify on file submission?</label>
+			<input id="notify_manager_file" name="notify_manager_file" type="checkbox" <?if notify_manager_file?>checked="checked"<?endif notify_manager_file?> value="1" />
+			<br />
+
+		</fieldset>
+<!--		<fieldset>
+			<legend>
+				Cost Center	Selection
+			</legend>
+			<label for="CostCenter">Cost Center:</label>
+			<select id="CostCenter" name="CostCenter" size="10" multiple="multiple">
+				<?CostCenter?>
+			</select>
+			<br />
+			<label>&nbsp;</label>--> <!-- TODO set margin properly -->
+			<!--<span><tt>&lt;Ctrl&gt;</tt>+click to select multiple values</span>
+			<br />
+		</fieldset>-->
+
+
+		<fieldset>
+			<legend>
+				Login Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="email">E-mail Address *:</label>
+			<input	type="text" id="email" name="email" size="30" class="input-text" value="<?txtEmail?>" />
+			<br />
+
+			<label for="password">Password *:</label>
+			<input	type="password" id="password" name="password" value="<?txtPassword?>" size="30" class="input-text" />
+			<br />
+
+			<label for="verify">Verify Password *:</label>
+			<input	type="password" id="verify" name="verify" value="<?txtPassword?>" size="30" class="input-text" />
+			<br />
+
+			<p>Must the user change their password on their next login?</p>
+
+			<label>Change Password on Next Login:</label>
+			<label for="rdbChangePasswordYes" class="radio"><input type="radio" id="rdbChangePasswordYes" name="rdbChangePassword" <?rdbChangePasswordY?> value="Y" onchange="fmChange=1;" />Yes</label>
+			<label for="rdbChangePasswordNo" class="radio"><input type="radio" id="rdbChangePasswordNo" name="rdbChangePassword" <?rdbChangePasswordN?> value="N" onchange="fmChange=1;" />No</label>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				User Profiles
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label>User Profile:</label>
+			<label class="value"><?EDIT_USER_NUM?> of <?NUM_USERS?></label>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="&lt;&lt;" />
+				<input class="button" type="submit" name="btnFunction" value="&gt;&gt;" />
+				<input class="button" type="button" value="New" onclick="keepCompany(f1);" />
+				<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=2;" />
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

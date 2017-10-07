@@ -1,0 +1,77 @@
+<script type="text/javascript">
+
+function update_quantity () {
+
+	var form = document.getElementsByName("f1")[0];
+    var names      = form.mv_name;
+    var quantities = form.mv_qty;
+    var sum = 0;
+
+    for (var i=0; i < quantities.length; i++) {
+		var name = names[i].value;
+        var value = parseInt(quantities[i].value);
+
+		if (!name)  {
+			quantities[i].disabled = 1;
+			quantities[i].value    = '';
+		} else { 
+			quantities[i].disabled = 0;
+		}
+
+        if (isNaN(value) || !name) continue;
+
+        sum += value;
+    }
+	document.getElementById('txtQuantity1').value = sum;
+
+}
+
+function mv () {
+	var version = document.getElementById("is_mv");
+	if (version.checked==true) {
+//		alert  ('mv is true');
+			$('mv').style.display="table-row";
+			$('rowmv').style.display="table-row";
+		}
+		else {
+//			alert  ('mv is not true');
+			$('mv').style.display="none";
+			$('rowmv').style.display="none";
+}
+}
+</script>
+
+	<tr><td>Versions:</td>
+	<td colspan="2">
+	<label for="is_mv" class="checkbox indent-label">
+		<input id="is_mv" name="is_mv" type="checkbox" onchange="mv();" value="1" />My Project Requires Multiple Versions
+	</label>
+
+	<br />
+
+<div id="mv" style="display:none">
+		<p>Please provide a short name and quantity for each version. (Based on the quantity requested above).</p> </div>
+	</td>
+    </tr>
+    
+    <tr id="rowmv" style="display:none">
+    <td></td>
+    <td colspan="2">
+		<table id="multiversion" class="no-formatting indent-label">
+			<thead>
+				<tr> 
+					<th style="text-align: left;">Name</th>
+					<th>Qty 1</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				<tr>
+					<td><input name="mv_name" value="" type="text" onkeypress="growTable(this);" onkeyup="update_quantity();" /></td>
+					<td><input name="mv_qty" value="" type="text" class="numeric" onkeyup="update_quantity();" /></td>
+				</tr>
+			</tbody>
+		</table>
+       
+	</td>
+    </tr>

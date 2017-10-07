@@ -1,0 +1,34 @@
+<fieldset>
+	<legend>
+		Lamination
+	</legend>
+	
+	<p>What type of <span class="tip" title="Applying a thin transparent plastic coating to paper or board to provide protection and give it a glossy or matte finish.">laminating</span> is required for side one of the project(s)?</p>
+	
+	<label for="ddmSideOneLamination">Lamination - Side One:</label>
+	<select id="ddmSideOneLamination" name="ddmSideOneLamination" size="1" onchange="calc('f1');">
+		<option value="">Please select one</option>
+		<?ddmSideOneLamination?>
+	</select>
+	<br />
+
+
+	<p>What type of <span class="tip" title="Applying a thin transparent plastic coating to paper or board to provide protection and give it a glossy or matte finish.">laminating</span> is required for side two of the project(s)?</p>
+	
+	<label for="ddmSideTwoLamination">Lamination - Side Two:</label>
+	<select id="ddmSideTwoLamination" name="ddmSideTwoLamination" size="1" onchange="calc('f1');">
+		<option value="">Please select one</option>
+		<?ddmSideTwoLamination?>
+	</select>
+	<br />
+	
+	
+	<p>Will the item(s) require mounting? If so, select mounting material.</p>
+	
+	<label for="ddmMounting">Mounting:</label>
+	<select id="ddmMounting" name="ddmMounting" size="1" onchange="calc('f1');">
+		<option value="">No Mounting</option>
+		<?ddmMounting?>
+	</select>
+	<br />
+</fieldset>

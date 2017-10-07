@@ -1,0 +1,40 @@
+<!-- ************ dimensions_packaging.html ************ -->
+
+
+<fieldset>
+	<legend>Dimensions</legend>
+	
+	<p>Please select the dimensions for your project. If you require a custom size, please input the <span class="tip" title="The dimensions of a printed piece after it has been cut or folded up.">Finished</span></a> and <span class="tip" title="The dimensions of a printed piece before it has been cut or folded.">Flat</span></a> dimensions in the text boxes below. (Use <span class="tip" title="<!--#include virtual="/includes/fraction_to_decimal_dimensions.html" -->">decimals</span>)</p>
+
+	<?if (@{$variable->{templates}}) ?>
+		<label for="project_size">Dimensions:</label>
+		<select id="project_size" name="project_size" size="1">
+			<option value="">Custom</option>
+			<?loop templates ?>
+				<optgroup label="<?name?>">
+					<?loop sizes?>
+						<option value="<?value?>"><?name?></option>
+					<?endloop sizes?>
+				</optgroup>
+			<?endloop templates ?>
+		</select>
+		<br />
+	<?endif (@{$variable->{templates}}) ?>
+
+	<label class="tip" title="The dimensions of a printed piece after it has been cut or folded up." for="final_width">Finished:</label>
+	<input type="text" id="final_width"  name="final_width" size="9" class="smbox" /> 
+	<input type="text" id="final_height" name="final_height" size="9" class="smbox" /> 
+<!-- ************ This is not the standard dimensions.html include. This is includes/main/prjo/dimensions_packaging.html ** 
+     ************ Depth was added for info only purposes which has been removed******************
+--><span>(W&#8243; &#215; H&#8243;)</span>
+<br />
+
+	<label class="tip" title="The dimensions of a printed piece before it has been cut or folded." for="flat_width">Flat:</label>
+	<input id="flat_width"  name="flat_width" size="9" class="smbox" /> 	    
+	<input id="flat_height" name="flat_height" size="9" class="smbox" />
+	<span>(W&#8243; &#215; H&#8243;)</span>
+	<br />
+
+</fieldset>
+
+<!-- ************ dimensions_packaging.html ************ -->

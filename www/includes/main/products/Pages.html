@@ -1,0 +1,13 @@
+<script type="text/javascript">
+function isEven(value) {
+	var value = $('txtPageQuantity').value;
+if (value%2 > 0) {
+	alert ('Only Even numbers are allowed. Please count blank pages as well.')
+	}
+}          
+</script>   
+  <tr id="pagesrow">
+               <td>Number of Pages *:</td>
+                      <td colspan="4"><input type="text" name="txtTotalPageQuantity" id="txtPageQuantity" onblur="isEven();binderymaxpages();sspagesmin();" size="16" title="Total Number of pages including Blank Pages"/>
+                      <img src="/images/main/products/question.jpg" width="18" height="18" style="float:right; cursor: pointer; padding-top:1px; padding-right:487px" onmouseover="" onclick="window.open('/includes/main/products/tooltip/Pages.html','Pages','newWin ,left=600,width=340,top=250,height=300,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/> </td>
+                      </tr>

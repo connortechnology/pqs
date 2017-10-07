@@ -1,0 +1,34 @@
+<div style=" padding-left: 2em; ">
+	
+<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"><span class="label">Equipment:&nbsp;&nbsp;</span>
+<?txtEquipment1?></td>
+    <td width="50%"><span class="label">Pockets:&nbsp;&nbsp;</span>
+	<?Pockets?></td>
+  </tr>
+  <tr>
+    <td><? if ( $$variable{'txtInsertQuantity'} )?>
+	<span class="label">Inserts:&nbsp;&nbsp;</span><?txtInsertQuantity?>
+	<? endif ( $$variable{'txtInsertQuantity'} )?></td>
+    <td><? if ($$variable{'Page1'} && $$variable{'Page2'})?>
+	<span class="label">Between:&nbsp;&nbsp;<?Page1?></span>&amp;<?Page2?>
+	<? endif ($$variable{'Page1'} && $$variable{'Page2'})?></td>
+  </tr>
+  <tr>
+    <td><? if ($$variable{'Width'} && $$variable{'Height'})?>
+	<span class="label">Size:&nbsp;&nbsp;</span><?Width?>x<?Height?>
+	<? endif ($$variable{'Width'} && $$variable{'Height'})?></td>
+    <td><? if ($$variable{'rdbGateFoldFit'}) ?>
+	<span class="label">GF:&nbsp;&nbsp;</span>
+	<?rdbGateFoldFit?>
+	<? endif ($$variable{'rdbGateFoldFit'}) ?></td>
+  </tr>
+  <tr>
+  <td><? if ( $$variable{'rdbCover'} )?>
+	<span class="label">Cover Type:&nbsp;&nbsp;</span><?rdbCover?>
+	<? endif ( $$variable{'rdbCover'} )?></td>
+  <td></td>
+  </tr>
+</table>
+</div>

@@ -1,0 +1,33 @@
+<div style=" padding-left: 2em; ">
+
+<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"><? if equipment ?><span class="label">Equipment:&nbsp;&nbsp;</span> <?equipment?>
+	<? endif equipment ?></td>
+    <td width="50%"><span class="label">Pages:&nbsp;&nbsp;</span>
+	<?pad_sheets?></td>
+  </tr>
+  <tr>
+    <? if txtPaddingImposition ?>
+    <td>
+	<span class="label">Pads Per Sheet:&nbsp;&nbsp;</span><?txtPaddingImposition?>
+	</td>
+    <? endif txtPaddingImposition ?>
+    
+    <? if ($$variable{'rdbCardboardBacking'}) ?><td>
+	<span class="label">Backing Board:&nbsp;&nbsp;</span>
+	Yes
+	</td>
+    <? endif ($$variable{'rdbCardboardBacking'}) ?>
+  </tr>
+  <? if ($$variable{'txtPartQty'}) ?>
+  <tr>
+    <td>
+	<span class="label">Parts:&nbsp;&nbsp;</span>
+	<?txtPartQty?>
+	</td>
+    <td></td>
+  </tr>
+  <? endif ($$variable{'txtPartQty'}) ?>
+</table>
+</div>

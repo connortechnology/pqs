@@ -1,0 +1,23 @@
+<div id="docket-nav">
+	<ul>
+		<li class="first">
+			<a href="<?site?>?ProjectIndex=<?ProjectIndex?>&QuantityIndex=<?QtyIndex?>"
+				<?if (not $variable->{Category})?>
+					class="selected"
+				<?endif (not $variable->{Category})?>
+			>
+				All
+			</a>		</li>
+		<?loop CategoryMenu?>
+			<li>
+				<a href="<?site?>?ProjectIndex=<?ProjectIndex?>&QuantityIndex=<?QtyIndex?>&Category=<?id?>"
+					<?if ($variable->{Category} == $variable->{id}) ?>
+						class="selected"
+					<?endif ($variable->{Category} == $variable->{id}) ?>
+				>
+					<?name?>
+				</a>
+			</li>
+		<?endloop CategoryMenu?>
+	</ul>
+</div>

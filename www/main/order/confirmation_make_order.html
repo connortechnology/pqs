@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Orders - Confirmation
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script  type="text/javascript">
+		function open_printer_friendly_version(p,q) {
+			window.open('/main/order/order_invoice_printer_friendly.html?order_id=<?order_id?>',
+				'printerfriendlyorder','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+	</script>
+    <script  type="text/javascript">
+		function open_project_docket(p,q) {
+			window.open('/employee/production/proj_docket.html?ProjectIndex=' + p + '&QuantityIndex=' + q,
+				'projectdocket','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+	</script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Orders &#187;</span> Request Received</h1>
+            <div style="max-width:740px !important; max-height:54px !important; margin-left:auto; margin-right:auto"><img src="/images/main/progress/step4-order.png"  /></div>
+
+	<p>Thank you. Your order has been received. Our print center staff will review the delivery date and time selected. You will receive an email to confirm your delivery date.  If we cannot meet your delivery date you will receive a phone call and an email. Orders after 4:30pm will be processed the next business day. </p>
+    <p><strong>If your order requires any changes or edits or needs to be cancelled please call us at <!--#include virtual="/includes/company_telephone_number.html"--> and we will make the changes for you.</strong></p>
+
+	
+
+
+<?if is_staff ?>
+<table>
+<? loop projects ?>
+<tr>
+<td  style="border:none !important">
+<label style="width:20em" ><?name?></a></label></td>
+<td style="border:none !important">
+<input class="button" type="button" value="Print Docket" onclick="open_project_docket(<?pid?>,<?qtyindex?>);" />
+</td>
+</tr>	
+<? endloop projects ?>
+</table>
+<?endif is_staff ?>
+
+<p>If you would like to view a printer friendly version of your order please click on the button below:</p>
+	<div class="button-bar">
+		<input type="button" class="button" onclick="open_printer_friendly_version();return false;" value="Printer Friendly" />
+		<br class="clear" />
+	</div>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/order.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

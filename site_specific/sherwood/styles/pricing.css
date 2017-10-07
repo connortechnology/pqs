@@ -1,0 +1,49 @@
+/* Used for Common Design Elements in Dockets, Projects, Quotes & Orders */
+
+table.invoice thead th,
+table.project-current-view thead th,
+div#quote-box table.quote_reseller thead th,
+div.category h5 {
+    padding: 0px 0.4em 1px 0.4em !important;
+    margin: 0;
+
+	background-color: #0B0D60;
+	border: 1px solid #0B0D60;
+
+	color: #FFFFFF;
+}
+
+
+
+div.category h5 {
+	margin-top: 5px;
+}
+
+
+#primary_info {
+	float: right;
+	clear: right;
+	display: inline;
+	position: relative;
+
+	margin-top: 0.5ex;
+	border: 1px solid black;
+}
+
+
+table.docket th {text-align: left; color: #000000;}
+
+
+
+/* Top Right Details Box */
+table#primary_info {
+	float: right;
+  	display: inline; 
+	position: relative;
+
+	margin: 2px 4px;
+
+	border: 1px solid #0B0D60;
+	background-color: #BFEBF0;
+}
+

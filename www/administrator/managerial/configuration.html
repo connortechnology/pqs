@@ -1,0 +1,223 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Managerial - Configuration
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	
+	<style type="text/css">
+		#urls input, input.long { width: 34em; }
+	</style>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">System &#187; Configuration &#187;</span> Settings</h1>
+
+	<form id="f1" name="f1" method="post" action="configuration.html" enctype="multipart/form-data">
+
+		<fieldset>
+			<legend>Primary</legend>
+
+			<label for="txtCompanyName">Company Name:</label>
+			<input type="text" size="30" class="input-text" id="txtCompanyName" name="txtCompanyName" value="<?txtCompanyName?>" />
+			<br />
+
+			<label for="txtDomain">Domain:</label>
+			<input type="text" size="30" class="input-text long" id="txtDomain" name="txtDomain" value="<?txtDomain?>" />
+			<br />
+
+			<label for="txtCookieDomain">Cookie Domain:</label>
+			<input type="text" size="30" class="input-text long" id="txtCookieDomain" name="txtCookieDomain" value="<?txtCookieDomain?>" />
+			<br />
+
+			<label for="txtMailServer">Mail Server:</label>
+			<input type="text" size="30" class="input-text long" id="txtMailServer" name="txtMailServer" value="<?txtMailServer?>" />
+			<br />
+		</fieldset>
+
+	
+		<fieldset id="urls">
+			<legend>URLs</legend>
+			
+			<label for="txtSiteURL">Site URL:</label>
+			<input type="text" size="30" class="input-text" id="txtSiteURL" name="txtSiteURL" value="<?txtSiteURL?>" />
+			<br />
+
+			<label for="txtSecureSiteURL">Secure Site URL:</label>
+			<input type="text" size="30" class="input-text" id="txtSecureSiteURL" name="txtSecureSiteURL" value="<?txtSecureSiteURL?>" />
+			<br />
+
+			<label for="txtPublicURIs">Public URLs:</label>
+			<input type="text" size="30" class="input-text" id="txtPublicURIs" name="txtPublicURIs" value="<?txtPublicURIs?>" />
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>Customer Settings</legend>
+
+			<label for="txtDefaultDownpayment">Default Downpayment:</label>
+			<input type="text" size="30" class="input-text numeric" id="txtDefaultDownpayment" name="txtDefaultDownpayment" value="<?txtDefaultDownpayment?>" />
+			<label style="width: auto; margin-left: 0;">%</label>
+			<br />
+
+			<label for="txtIdleTime">Allowable User Idle Time:</label>
+			<input type="text" size="30" class="input-text numeric" id="txtIdleTime" name="txtIdleTime" value="<?txtIdleTime?>" /> milliseconds
+			<br />
+
+			<fieldset>
+				<legend>Account Activation</legend>
+
+				<label>Activate New Companies:</label>
+				<label for="rdbNewCustomerAccountActivationYes" class="radio"><input type="radio" id="rdbNewCustomerAccountActivationYes" name="rdbNewCustomerAccountActivation" value="Y" <?rdbNewCustomerAccountActivationY?> />Yes</label>
+				<label for="rdbNewCustomerAccountActivationNo" class="radio"><input type="radio" id="rdbNewCustomerAccountActivationNo" name="rdbNewCustomerAccountActivation" value="N" <?rdbNewCustomerAccountActivationN?> />No</label>
+				<br />
+
+				<label>Activate First New Users:</label>
+				<label for="rdbFirstNewUserAccountActivationYes" class="radio"><input type="radio" id="rdbFirstNewUserAccountActivationYes" name="rdbFirstNewUserAccountActivation" value="Y" <?rdbFirstNewUserAccountActivationY?> />Yes</label>
+				<label for="rdbFirstNewUserAccountActivationNo" class="radio"><input type="radio" id="rdbFirstNewUserAccountActivationNo" name="rdbFirstNewUserAccountActivation" value="N" <?rdbFirstNewUserAccountActivationN?> />No</label>
+				<br />
+
+
+				<label>Activate Non-First New Users:</label>
+				<label for="rdbNonFirstNewUserAccountActivationYes" class="radio"><input type="radio" id="rdbNonFirstNewUserAccountActivationYes" name="rdbNonFirstNewUserAccountActivation" value="Y" <?rdbNonFirstNewUserAccountActivationY?> />Yes</label>
+				<label for="rdbNonFirstNewUserAccountActivationNo" class="radio"><input type="radio" id="rdbNonFirstNewUserAccountActivationNo" name="rdbNonFirstNewUserAccountActivation" value="N" <?rdbNonFirstNewUserAccountActivationN?> />No</label>
+				<br />
+			</fieldset>
+
+			<fieldset>
+				<legend>Default Price Lists</legend>
+
+				<label for="ddmDefaultUSPricelist">US Customer Price list:</label>
+				<select id="ddmDefaultUSPricelist" name="ddmDefaultUSPricelist">
+					<option value=""> Please select one </option>
+					<?ddmDefaultUSPricelist?>
+				</select>
+				<br />
+
+				<label for="ddmDefaultCAPricelist">Canadian Customer Price list:</label>
+				<select id="ddmDefaultCAPricelist" name="ddmDefaultCAPricelist">
+					<option value=""> Please select one </option>
+					<?ddmDefaultCAPricelist?>
+				</select>
+				<br />
+
+				<label for="ddmDefaultOtherPricelist">Other Customer Price list:</label>
+				<select id="ddmDefaultOtherPricelist" name="ddmDefaultOtherPricelist">
+					<option value=""> Please select one </option>
+					<?ddmDefaultOtherPricelist?>
+				</select>
+				<br />
+			</fieldset>
+
+		</fieldset>
+
+		<fieldset>
+			<legend>Projects, Quotes, and Orders</legend>
+
+			<span class="label">Default Press Type:</span>
+			<div class="radio">
+				<?loop press_types ?>
+				<label><input type="radio" name="txtDefaultPressType" value="<?id?>" <?if selected?>checked="checked"<?endif selected?>> <?name?> </label><br />
+				<?endloop press_types ?>
+			</div>
+			<br />
+
+			<label>Order Lead Time:</label>
+			<input type="text" size="30" class="input-text" name="OrderLeadTime" value="<?OrderLeadTime?>" />
+			<br />
+
+			<label for="txtStdErrorMsg">Standard Error Message:</label>
+			<textarea id="txtStdErrorMsg" name="txtStdErrorMsg" class="marg-bot" style="width: 34em; height: 12em;"><?txtStdErrorMsg?></textarea>
+			<br />
+
+			<!--
+			<label for="txtSSRMsg">Suggested Service Removal Message:</label>
+			<textarea id="txtSSRMsg" name="txtSSRMsg" class="marg-bot"><?txtSSRMsg?></textarea>
+			<br />
+			-->
+
+			<label for="predefined_allowed_services">Services for Predefined Projects:</label>
+			<select id="predefined_allowed_services" name="predefined_allowed_services" multiple="multiple" class="marg-bot" style="height: 12em;">
+				<?loop categories ?>
+					<optgroup label="<?name?>">
+						<?loop services ?>
+							<option value="<?id?>" <?if selected?>selected="selected"<?endif selected?>><?name?></option>
+						<?endloop services ?>
+					</optgroup>
+				<?endloop categories ?>
+			</select>
+			<br class="clear" />
+
+			<fieldset>
+				<legend>Shipping Type Overrides</legend>
+
+				<label for="ddmProofShippingOverride">Proofs:</label>
+				<select id="ddmProofShippingOverride" name="ddmProofShippingOverride">
+					<option value=""> Please select one </option>
+					<?ddmProofShippingOverride?>
+				</select>
+				<br />
+
+				<label for="ddmSampleShippingOverride">Samples:</label>
+				<select id="ddmSampleShippingOverride" name="ddmSampleShippingOverride">
+					<option value=""> Please select one </option>
+					<?ddmSampleShippingOverride?>
+				</select>
+				<br />
+
+				<label for="ddmProjectShippingOverride">Projects:</label>
+				<select id="ddmProjectShippingOverride" name="ddmProjectShippingOverride">
+					<option value=""> Please select one </option>
+					<?ddmProjectShippingOverride?>
+				</select>
+				<br />
+
+			</fieldset>
+
+		</fieldset>
+
+		<fieldset>
+			<legend>QuickBooks™ Accounting Export</legend>
+
+			<label>Account Name for Services:</label>
+			<input type="text" size="30" class="input-text" name="txtExportAccountService" value="<?txtExportAccountService?>" />
+			<br />
+
+			<label>Account Name for Stock:</label>
+			<input type="text" size="30" class="input-text" name="txtExportAccountStock" value="<?txtExportAccountStock?>" />
+			<br />
+
+			<label>Account Name for Materials:</label>
+			<input type="text" size="30" class="input-text" name="txtExportAccountMaterial" value="<?txtExportAccountMaterial?>" />
+			<br />
+
+			<label>Calendar Profile:</label>
+			<input type="text" size="30" class="input-text" name="OrderCalendarProfile" value="<?OrderCalendarProfile?>" />
+			<br />
+		</fieldset>
+
+		<div style="float: right;" class="button-bar">
+			<input class="button" type="reset" />
+			<input class="button" type="submit" name="btnFunction" value="Save" />
+			<br />
+		</div>
+
+		<br class="clear" />
+
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

@@ -1,0 +1,9 @@
+<p>Your Print-Quotes Software license has expired.</p>
+
+<? if ( $$variable{'DaysLeft'} > 0 ) ?>
+	<p>You have <?DaysLeft?> days to correct this problem before your Print-Quotes Software solution will become inactive!</p>
+<? else ( $$variable{'DaysLeft'} > 0 ) ?>
+	<p>You have exceeded the grace period.  Your Print-Quotes Software solution has become inactive.</p>
+<? endif ( $$variable{'DaysLeft'} > 0 ) ?>
+
+<p>Your license expired on <?ExpiryDate?>.</p>

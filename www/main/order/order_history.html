@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title><!--#include virtual="/includes/web_page_title.html" -->Account - Order History<!--#include virtual="/includes/web_page_title_end.html" --></title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+    <script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Account &#187;</span> Order History</h1>
+
+	<? if ( $$variable{'user_id'} eq '0' ) ?>
+		<p>Only logged in customers have an order history.</p>
+	<? else ( $$variable{'user_id'} eq '0' ) ?>
+
+		<form action="order_history.html" method="post" name="f1" id="f1">
+			<fieldset>
+				<legend>
+					Search
+				</legend>
+
+				<p class="none">&nbsp;</p>
+				<label for="search">Search:</label>
+				<input name="search" id="search" value="<?search?>" />
+				<br />
+
+				<label for="ddmOrderedBy">Ordered by:</label>
+				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1">
+					<option value=""> Ordered By </option>
+					<?ddmOrderedBy?>
+				</select>
+				<br />
+
+				<label for="ddmStartMonth">Start Date:</label>
+				<select id="ddmStartMonth" name="ddmStartMonth">
+					<?ddmStartMonth?>
+				</select>
+				<select name="ddmStartDay">
+					<?ddmStartDay?>
+				</select>
+				<select name="ddmStartYear">
+					<?ddmStartYear?>
+				</select>
+				<br />
+
+				<label for="ddmEndMonth">End Date:</label>
+				<select id="ddmEndMonth" name="ddmEndMonth">
+					<?ddmEndMonth?>
+				</select>
+				<select name="ddmEndDay">
+					<?ddmEndDay?>
+				</select>
+				<select name="ddmEndYear">
+					<?ddmEndYear?>
+				</select>
+
+				<br />
+
+				<div class="button-bar indent-regular">
+					<input type="reset" class="button" value="Reset" />
+					<input type="submit" class="button" value="Show Results" />
+					<br />
+					</div>
+
+				<br />
+			</fieldset>
+
+
+			<fieldset>
+				<legend>
+					Order History
+				</legend>
+
+				<p class="none">&nbsp;</p>
+
+				<? if ( @{$$variable{'ORDERS'}} == 0 ) ?>
+					<p>There are no orders which match your search criteria.</p>
+				<? else ( @{$$variable{'ORDERS'}} == 0 ) ?>
+
+					<p>Please click on an <strong>Order ID #</strong> to view an order's details.</p>
+
+					<table cellpadding="0" cellspacing="0" border="0">
+						<tr>
+							<!--<th>PO</th>-->
+							<th>Order ID</th>
+							<th>Project</th>
+							<th>Ordered Date</th>
+							<th>Ordered By</th>
+							<th>Status</th>
+							<th>Total</th>
+							<th>Balance</th>
+						</tr>
+
+						<? while ( @$variable{'id','date','name','status','total','balance','projects'} = splice @{$$variable{'ORDERS'}},0,7; ) ?>
+							<tr>
+								<td style="text-align: left;"><a href="/main/order/order_history_details.html?order_id=<?id?>"><?rev:id?></a></td>
+								<td style="text-align: left;"><? loop projects ?><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>"><?pid?> - <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
+								<td style="text-align: center;"><?date?></td>
+								<td style="text-align: left;"><?name?></td>
+								<td style="text-align: center;"><?status?></td>
+								<td style="text-align: right;"><?CurrencySymbol?><?total?></td>
+								<td style="text-align: right;"><?CurrencySymbol?><?balance?></td>
+							</tr>
+
+							<? if ( @$variable{'id','date','name','status','total','balance','projects'} = splice @{$$variable{'ORDERS'}},0,7; ) ?>
+								<tr class="colRow">
+									<td style="text-align: left;"><a href="/main/order/order_history_details.html?order_id=<?id?>"><?rev:id?></a></td>
+									<td style="text-align: left;"><? loop projects ?><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>"><?pid?> - <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
+									<td style="text-align: center;"><?date?></td>
+									<td style="text-align: left;"><?name?></td>
+									<td style="text-align: center;"><?status?></td>
+									<td style="text-align: right;"><?CurrencySymbol?><?total?></td>
+									<td style="text-align: right;"><?CurrencySymbol?><?balance?></td>
+								</tr>
+							<? endif ( @$variable{'id','date','name','status','total','balance','projects'} = splice @{$$variable{'ORDERS'}},0,7; ) ?>
+						<? endwhile ( @$variable{'id','date','name','status','total','balance','projects'} = splice @{$$variable{'ORDERS'}},0,7; ) ?>
+
+						<tr class="no-border no-background">
+							<td colspan="7" style="text-align: right;">&nbsp;</td>
+						</tr>
+
+						<tr class="no-border no-background">
+							<td colspan="5" style="text-align: right;"><strong> Report Total: </strong> </td>
+							<td style="text-align: right; border-style: double none none none; border-width: 3px; border-color: black;"><?CurrencySymbol?><?ReportTotal?></td>
+							<td style="text-align: right; border-style: double none none none; border-width: 3px; border-color: black;"><?CurrencySymbol?><?ReportBalance?></td>
+						</tr>
+						
+						<tr class="no-border no-background">
+							<td colspan="7" style="text-align: right;">&nbsp;</td>
+						</tr>
+						
+						<tr class="no-border no-background">
+							<td colspan="7" class="note-table">All prices listed in <?CurrencyName?>.</td>
+						</tr>
+					</table>
+
+					<div style="width: 100%;text-align: right;"></div>
+
+				<? endif ( @{$$variable{'ORDERS'}} == 0 ) ?>
+
+				<input type="hidden" name="btnFunction" />
+				<br />
+			</fieldset>
+		</form>
+	<? endif ( $$variable{'user_id'} eq '0' ) ?>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

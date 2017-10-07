@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.category?> - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<div style="margin: 2em 2em 1em 2em">
+
+		<p>The following is a list of signatures that require cutting and the operations performed on them.</p>
+
+		<div class="standout">
+			<?loop signatures?>
+				<? if ($$variable{'name'} ne "") ?>
+					<h5 style="padding-top: 0;"><?name?></h5>
+				<? endif ($$variable{'name'} ne "") ?>
+
+				<ul style="margin-top: 0;">
+					<?loop notes?>
+						<li><?operation?>	</li>
+					<?endloop notes?>
+				</ul>
+
+			<?endloop signatures?>
+		</div>
+		<br />
+	</div>
+
+	<h2 id="pricing_title">Pricing</h2>
+	<br class="clear" />
+
+	<div id="pricing">
+	
+		<table class="no-formatting">
+			<col style="width: 55%;" />
+			<col style="width: 15%;" />
+			<col style="width: 10%;" />
+			<col style="width: 15%;" />
+			<col style="width: 5%;" />
+
+			<thead>
+				<tr>
+					<th style="width: 55%; text-align: left;">Quantity</th>
+					<th style="width: 15%;">Unit</th>
+					<th style="width: 10%;">&nbsp;</th>
+					<th style="width: 15%;">Total</th>
+					<th style="width: 5%;">&nbsp;</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				<?loop qty?>
+					<tr>
+						<td class="quantity"><?quantity?></td>
+						<td class="price">$&nbsp;<?unit?></td>
+						<td>&nbsp;</td>
+						<td class="price">$&nbsp;<?total?></td>
+						<td>&nbsp;</td>
+					</tr>
+				<?endloop qty?>
+			</tbody>
+		</table>
+	</div>
+
+	<div id="service-controls" class="button-bar">
+		<form method="get" action="/main/proj/proj_view.html">
+			<input type="hidden" name="pid" value="<?pid?>" />
+			<input id="back" type="submit" class="button right" value="Continue" />
+		</form>
+		<br class="clear" />
+	</div>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

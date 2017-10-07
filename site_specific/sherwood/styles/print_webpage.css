@@ -1,0 +1,8 @@
+/* For Printer Friendly WebPages */
+
+body {
+	background-color: white;
+	margin: 10px;
+	padding: 0;
+	text-align: left;
+}

@@ -1,0 +1,9 @@
+<?loop attachedProjects?>
+	<div id="project-view">
+		<!--#include virtual="/includes/main/docket/header.html" -->
+
+		<?eval ($$variable{flags}{can_edit} = 0) ?>
+
+		<!--#include virtual="/includes/main/proj/project.html" -->
+	</div>
+<?endloop attachedProjects?>

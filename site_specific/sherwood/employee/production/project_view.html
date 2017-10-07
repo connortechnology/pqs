@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production - Project View
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/employee.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/project.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript">
+		function open_project_docket() {
+			window.open('/employee/production/proj_docket.html?ProjectIndex=<?ProjectIndex?>&QuantityIndex=<?qtyIndex?>','projectdocket','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+	</script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">Production &#187;</span> Schedule &#187; Project View</h1>
+	<div id="project-view">
+		<!-- Standard project header. -->
+		<!--#include virtual="/includes/main/docket/header.html" -->
+		<?eval ($$variable{flags}{can_edit} = 0) ?>
+		<!-- Services and materials. -->
+		<!--#include virtual="/includes/employee/proj/project.html" -->
+	</div>
+	<div class="button-bar">
+		<input class="button" type="button" value="Project Docket" onclick="open_project_docket();" />
+		<form name="f1" method="post" action="project_view.html">
+			<input class="button" type="submit" name="btnFunction" value="Complete" />
+			<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+			<input type="hidden" name="order_id" value="<?Order_Id?>" />
+		</form>
+		<br class="clear" />
+	</div>
+	<br />
+	<p>
+		<a href="/employee/production/projects.html">Back to Projects</a>
+	</p>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

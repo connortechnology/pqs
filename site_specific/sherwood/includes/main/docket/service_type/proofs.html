@@ -1,0 +1,16 @@
+<? loop signature ?>
+	<div style=" padding-left: 2em;  ">
+	<table class="no-formatting no-padding" style="margin: 0; " cellspacing="0" cellpadding="0" border="0" width="90%">
+ 
+    <tr>
+ 
+    <? if ($$variable{'multipage'} ==1) ?><td width="50%"  valign="top"><span class="label">Signature Group - </span><?Reference?></td><? endif ($$variable{'multipage'} ==1) ?>
+    <td width="50%"><? loop proofs ?>
+		<span class="label">Qty:&nbsp;&nbsp;</span> <?ProofQuantity?> - <?ProofHeight?>x<?ProofWidth?> <?ProofType?> <? if ($$variable{'multipage'} ==0) ?><? endif ($$variable{'multipage'} ==0) ?><br />
+	<? endloop proofs ?></td>
+  </tr>
+  
+</table>
+  	
+    </div>
+<? endloop signature ?>

@@ -1,0 +1,145 @@
+<? eval( $variable->{OrderSubmit}    = 1 ) ?>
+
+<?loop ADDRESSES?>
+<table style="text-align:left !important; ">
+<tr>
+<td style="border:none">
+<strong>Contact Name: </strong><?strfirstname?><br />
+<strong>Shipping Address: </strong><br />
+<?if ($$variable{'deliverymethod'} ne 'Standard') ?>
+<?deliverymethod?>
+<?endif ($$variable{'deliverymethod'} ne 'Standard') ?>
+
+<?if straddress1 ?>
+	<?straddress1?>,<br />
+<?endif straddress1 ?>
+
+<? if straddress2 ?>
+	<?straddress2?>,<br />
+<? endif straddress2 ?>
+
+<?if strcubicle?>
+<?strcubicle?><br />
+<?endif strcubicle?>
+
+<? if strcity ?>
+	<?strcity?>,
+<? endif strcity ?>
+
+<? if strstateprovince ?>
+	<?strstateprovince?>,
+<? endif strstateprovince ?>
+<? if strpostalcode?>
+	<?strpostalcode?>,
+<? endif strpostalcode?>
+<? if strcountry ?>
+	<?strcountry?>
+<? endif strcountry ?>
+
+<br />
+<? if strphone ?><strong>T: </strong><?strphone?><? endif strphone ?>
+</td>
+<td style="border:none; vertical-align:text-top">
+ <strong>Delivery Date: 
+<?ddmDueDateMonth1?>/<?ddmDueDateDay1?>/<?ddmDueDateYear1?>/<?ddmDueDateTime?> </strong><br />
+
+<!-- <strong>Cost Center: </strong><?cost_center?><br /> -->
+
+<!--<?if accountnumber?><strong>Accounting Line: </strong><?accountnumber?><br /><?endif accountnumber?> -->
+
+<!-- <?if department?><strong>Department: </strong><?department?><br /><?endif department?> -->
+
+<!-- <?if projectnumber?><strong>Project Number or other Distinction: </strong><?projectnumber?> <br /><?endif projectnumber?> -->
+
+ <?if ($$variable{'deliverymethod'} eq 'Standard' or $$variable{'deliverymethod'} eq '') ?>
+<strong>Ship Via: </strong><?hdnShipVia1?>
+<?else ($$variable{'deliverymethod'} eq 'Standard' or $$variable{'deliverymethod'} eq '') ?>
+<strong>Delivery Method: </strong><?deliverymethod?>
+ <?if ($$variable{'deliverymethod'} eq 'Store Mail - Norcal' || $$variable{'Store Mail - Norcal+Hawaii'} eq '' || $$variable{'Store Mail - All Stores'} eq '') ?>
+<?if storemailinstructions ?><br /><Strong>Store Mail Instructions: </Strong><?storemailinstructions?><?endif storemailinstructions ?>
+ <?endif ($$variable{'deliverymethod'} eq 'Store Mail - Norcal' || $$variable{'Store Mail - Norcal+Hawaii'} eq '' || $$variable{'Store Mail - All Stores'} eq '') ?>
+<?endif ($$variable{'deliverymethod'} eq 'Standard' or $$variable{'deliverymethod'} eq '') ?> <br />
+
+  
+    <? if ($$variable{'qtyIndex'} == 1) ?>
+    <strong>Quantity 1: </strong>
+    <?add_qty1?>
+  <? endif ($$variable{'qtyIndex'} == 1) ?>
+  <? if ($$variable{'qtyIndex'} == 2) ?>
+    <strong>Quantity 2: </strong>
+    <?add_qty2?>
+  <? endif ($$variable{'qtyIndex'} == 2) ?>
+  <? if ($$variable{'qtyIndex'} == 3) ?>
+    <strong>Quantity 3: </strong>
+    <?add_qty3?>
+  <? endif ($$variable{'qtyIndex'} == 3) ?> <br />
+  
+  <?if is_docket?>
+ <strong>Shipping Type: </strong>
+<? if ($$variable{'rdbShippingContents'} ne 'Other') ?>
+	<?rdbShippingContents?>
+<? else ($$variable{'rdbShippingContents'} ne 'Other') ?>
+	Samples
+<? endif ($$variable{'rdbShippingContents'} ne 'Other') ?><br />
+<strong>Shipping ID: </strong><?shipid?> <br />
+
+<strong>Blind Shipment: </strong>
+<? if chkBlindShipment ?>
+<?chkBlindShipment?>
+<? else chkBlindShipment ?>
+No
+<? endif chkBlindShipment ?> <br />
+
+<strong>Total Weight: </strong>
+<? eval ( ($$variable{'weight1'} , $$variable{'weight2'}, $$variable{'weight3'}) = split /,/ , $$variable{'txtShipmentWeight'} )?>
+
+<? if ($$variable{'qtyIndex'} == 1) ?>
+	<?weight1?> lbs
+<? endif ($$variable{'qtyIndex'} == 1) ?>
+<? if ($$variable{'qtyIndex'} == 2) ?>
+	<?weight2?> lbs
+<? endif ($$variable{'qtyIndex'} == 2) ?>
+<? if ($$variable{'qtyIndex'} == 3) ?>
+	<?weight3?> lbs
+<? endif ($$variable{'qtyIndex'} == 3) ?> <br />
+<?endif is_docket?>
+
+</td>
+<?if not:is_docket?>
+<td style="border:none">
+
+
+<? if ($$variable{'qtyIndex'} == 1) ?>$<?add_price1?><? endif ($$variable{'qtyIndex'} == 1) ?>
+<? if ($$variable{'qtyIndex'} == 2) ?>$<?add_price2?><? endif ($$variable{'qtyIndex'} == 2) ?>
+<? if ($$variable{'qtyIndex'} == 3) ?>$<?add_price3?><? endif ($$variable{'qtyIndex'} == 3) ?>
+
+
+</td>
+<?endif not:is_docket?>
+</tr>
+
+<tr>
+<td style="border:none">
+<? if (($$variable{UserType} eq 'E') or ($$variable{UserType} eq 'A')) ?>
+	&nbsp; <a href="/main/proj/shipping_labels.html?ServiceIndex=<?sid?>"><strong>Print Shipping Labels</strong></a>
+    <br />
+<? endif (($$variable{UserType} eq 'E') or ($$variable{UserType} eq 'A')) ?>
+
+<? if (($$variable{UserType} eq 'E') or ($$variable{UserType} eq 'A')) ?>
+<? if order_id ?>
+
+	&nbsp; <a onClick="window.open('/main/order/order_invoice_printer_friendly.html?order_id=<?order_id?>;ship_sid=<?sid?>;PackingSlip=1;edit_slip=1;shipid=<?shipid?>;pid=<?pid?>','pop','newWin,left=140,width=680,top=50,height=1000,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes')"><strong>Packing Slip</strong></a>
+<br />
+<? endif order_id ?>
+<? endif (($$variable{UserType} eq 'E') or ($$variable{UserType} eq 'A')) ?>
+</td>
+
+<td style="border:none"></td><td style="border:none"></td>
+<tr>
+<td style="border:none">
+
+
+</td>
+</tr>
+</table>
+<?endloop ADDRESSES?>

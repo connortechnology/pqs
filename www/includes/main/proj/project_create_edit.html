@@ -1,0 +1,100 @@
+<fieldset>
+	<legend class="tip" title="Please specify the project name, and any special comments or instructions.">
+		Project Name and Instructions
+	</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<label for="txtProjectReference">Project Name:</label>
+	<input maxlength="255" id="txtProjectReference" name="txtProjectReference" value="<?txtProjectReference?>" class="max" />
+	<br />
+	
+
+	<label for="txtComments">
+    <?if predefined?>
+        Description
+    <?else predefined?>
+        Special Comments or Instructions:
+    <?endif predefined?>
+    </label>
+	<textarea id="txtComments" name="txtComments" cols="26" rows="5"
+        <?if predefined ?>
+            readonly
+        <?endif predefined ?>
+    >
+    <?txtComments?></textarea>
+	<br />
+
+	<!--#include virtual="/includes/main/proj/project_create_pms_labels.html" -->
+
+	<?if not:has_locked_quantity ?>
+		<p>What quantities would you like to calculate pricing for? If you require multiple versions please input the total quantity for all versions.</p>
+
+		<label for="txtQuantity1">Quantities:</label>
+		<input id="txtQuantity1" name="txtQuantity1" value="<?txtQuantity1?>" type="text" size="9" class="smBox" onchange='this.value = Math.round(this.value);' />
+		<span class="post-label">(1)</span>
+		<input id="txtQuantity2" name="txtQuantity2" value="<?txtQuantity2?>" style="margin-left: 4em;" type="text" size="9" class="smBox" onchange='this.value = Math.round(this.value);' />
+		<span class="post-label">(2)</span>
+		<input id="txtQuantity3" name="txtQuantity3" value="<?txtQuantity3?>" style="margin-left: 4em;" type="text" size="9" class="smBox" onchange='this.value = Math.round(this.value);' />
+		<span class="post-label">(3)</span>
+		<br />
+	<?endif not:has_locked_quantity ?>
+
+	<!--#include virtual="/includes/main/proj/design_format.html" -->
+	<label for="rfq_only"> RFQ Only:</label>
+	<input type="checkbox" name="rfq_only" value="1" />
+</fieldset>
+
+
+<fieldset class="tab-container">
+	<legend>Additional Services</legend>
+	
+	<p class="none">&nbsp;</p>
+	
+	<div class="tab-instructions">
+		<h5>Additional Services<br /></h5>
+
+		<p>To browse additional services for your project, click the tabs listed above. Related services will be displayed in this area.</p>
+		<br />
+	</div>
+
+	<? loop categories ?>
+		<fieldset id="c<?id?>" class="tab-group">
+			<legend><?name?></legend>
+
+			<p>What <?lc:name?> services are required for the project? Please select all that apply.</p>
+
+			<div class="width thirds checkbox">
+				<? loop services ?>
+					<label for="s<?id?>">
+						<input type="checkbox" id="s<?id?>" name="project_service" value="<?ref?>" 
+							<? if ( grep { $$variable{id} eq $_ }  @{$$variable{'SelectedServices'}} ) ?> checked="checked"   <? endif ( grep { $$variable{id} eq $_ }  @{$$variable{'SelectedServices'}} ) ?>
+							<? if ( grep { $$variable{id} eq $_ }  @{$$variable{'DisabledServices'}} ) ?> disabled="disabled" <? endif ( grep { $$variable{id} eq $_ }  @{$$variable{'DisabledServices'}} ) ?>
+						/>
+						<?name?>
+					</label>
+				<? endloop services ?>
+			</div>
+			<br />
+		</fieldset>
+	<? endloop categories ?>
+	
+	<? if display_shipping ?>
+		<fieldset class="tab-group">
+			<legend>Shipping</legend>
+			
+			<p>What shipping services are required for the project? Please select all that apply.</p>
+
+			<div class="width thirds checkbox">
+				<label for="chkShippingProofs"><input type="checkbox" name="project_service" id="chkShippingProofs" value="Shipping_Proofs" />Proofs</label>
+				<label for="chkShippingSamples"><input type="checkbox" name="project_service" id="chkShippingSamples" value="Shipping_Samples" />Samples</label>
+				<label for="chkShippingProject"><input type="checkbox" name="project_service" id="chkShippingProject" value="Shipping_Project" />Project</label>
+				<br />
+			</div>
+			<br />
+		</fieldset>
+	<? endif display_shipping ?>
+	<br />
+
+</fieldset>
+<br />

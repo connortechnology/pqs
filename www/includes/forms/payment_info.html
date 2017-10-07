@@ -1,0 +1,23 @@
+		<fieldset style="border-width:thin;">
+        	<legend>
+            Payment Information
+            </legend>
+        
+                <table class="invoice no-formatting">
+    
+                        <tr>
+                            <th style="text-align: left;">Card Type</th>
+                            <th style="text-align: right;">Expiry Date</th>
+                            <th style="text-align: right;">Card Number</th>
+                            <th> Payment Amount <?CurrencySymbol?> </th>
+                        </tr>
+    
+                        <tr>
+                            <td><?card_type?> </td>
+                            <td style="text-align: right;"><?expiry_month?>/<?expiry_year?> </td>
+                            <td style="text-align: right;"><?card_number?></td>
+                            <td style="text-align: right;"><?amount?></td>
+                        </tr>
+    
+                </table>
+			</fieldset>

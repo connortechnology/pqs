@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.category?> - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+	
+		<!--#include virtual="/includes/main/proj/dimensions_hidden.html"-->
+	
+		<fieldset>
+			<legend>
+				Postage and Presorting
+			</legend>
+		
+			<p><label for="ddmPostage" class="label">What type of postage services do you require for your project?</label></p>
+			
+			<select id="ddmPostage" name="ddmPostage" class="first marg-bot-half" size="1" >
+				<option value="">Please Select One</option>
+				<?ddmPostage?>
+			</select>
+			<br />
+			
+			<textarea name="txtPostageDetails" class="first" style="width: 84%;" readonly="readonly" ><?txtPostageDetails?></textarea>
+			<br />
+			
+			<p class="marg-top">Do you require your projects presorted and bundled as per the postage specifications selected above?</p>
+		
+			<label>Presort &amp; Bundle per Postage Spec:</label>	
+			<label for="rdbPreSortYes" class="radio"><input type="radio" id="rdbPreSortYes" name="rdbPreSort" value="Yes" <?rdbPreSortYes?> />Yes</label>
+			<label for="rdbPreSortNo" class="radio"><input type="radio" id="rdbPreSortNo" name="rdbPreSort" value="No" <?rdbPreSortNo?> />No</label>
+			<br />
+		
+			<p>Do you require any additional postage services for the current project?</p>
+		
+			<label>Additional Postage:</label>
+			<label for="rdbAdditionalYes" class="radio"><input type="radio" id="rdbAdditionalYes" name="rdbAdditional" value="Yes" />Yes</label>
+			<label for="rdbAdditionalNo" class="radio"><input type="radio" id="rdbAdditionalNo" name="rdbAdditional" value="No" checked />No</label>
+			<br />
+		</fieldset>
+	
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<input type="hidden" name="pid" value="<?pid?>" />
+		<input type="hidden" name="sid" value="<?sid?>" />
+	</form>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

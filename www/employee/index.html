@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Employee Login
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body onload="document.f1.txtEmail.focus();">
+<!--#include virtual="/includes/c1-admin-no_nav.html" -->
+
+	<div id="content">
+		<h1><span class="title-section">Employee &#187;</span> Login</h1>
+	
+		<form name="f1" method="post" action="/employee/employee/login_confirmation.html">
+			<fieldset>
+				<legend>
+					Login
+				</legend>
+	
+				<p class="none">&nbsp;</p>
+	
+				<label>E-mail:</label>
+				<input type="text" name="txtEmail" size="30" class="input-text" />
+				<br />
+				
+				<label>Password:</label>
+				<input type="password" name="txtPassword" size="30" class="input-text" />
+				<br />
+	
+				<div class="button-bar indent-regular">
+					<input class="button" type="reset" />
+					<input class="button" type="submit" value="Submit" />
+					<br />
+					</div>
+				
+				<br />
+			</fieldset>
+		</form>
+	
+	
+		<form name="f2" method="post" action="/employee/employee/password_confirmation.html">
+			<fieldset>
+				<legend>
+					Password Retrieval
+				</legend>
+				
+				<p>Forget your Password? To have your password e-mailed to you, please submit your e-mail address below.</p>
+				
+				<label>E-mail:</label>
+				<input type="text" name="txtEmail2" size="30" class="input-text" />
+				<br />
+	
+				<div class="button-bar indent-regular">
+					<input class="button" type="reset" />
+					<input class="button" type="submit" value="Submit" />
+					<br />
+				</div>
+				
+				<br />
+			</fieldset>
+		</form>
+	</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

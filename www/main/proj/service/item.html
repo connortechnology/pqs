@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+	
+	<!--#include virtual="/includes/h2-js.html" -->
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+		var service = new Service('<?service.ref?>');
+	</script>
+	<script type="text/javascript">
+		service.validate = function (e) {
+		    var form = this.form;
+		    var text    = '';
+		    var is_auto = !e || e.type == 'load'; // Interactive only on user events.
+
+		    if ( form.txtItemWidth.value == '' || form.txtItemHeight.value == '' || form.txtItemDepth.value == '')
+		        text += "Please enter the width, height, and depth of your customer supplied item.\n";
+
+		    if ( form.txtScreenPrintingItemWeight.value == '' )
+		        text += "Please enter the weight of your customer supplied item.\n";
+
+		    if ( ! form.txtScreenPrintingSurfaces.value > 0 )
+		        text += "Please enter the total quantity of surfaces to be printed.\n";
+
+		    if (text) {
+		        if (!is_auto) {
+		            alert('Your form is incomplete:\n\n' + text);
+		        }
+		        return false;
+		    }
+
+		    return true;
+		}
+	</script>
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Projects &#187;</span> <?service.name?></h1>
+
+	<form name="f1" id="f1" method="POST" action="/service/<?lc:service.ref?>" onsubmit="validate_data(this)">
+		<input type="hidden" name="pid" value="<?pid?>" />
+		<input type="hidden" name="sid" value="<?sid?>" />
+
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+
+		<fieldset>
+			<legend>Specifications</legend>
+			
+			<p>What are the dimensions of the item(s) being screen printed? (Use <span class="tip" title="<!--#include virtual="/includes/fraction_to_decimal_dimensions.html" -->">decimals</span>.)</p>
+		
+			<label for="txtItemWidth">Item(s) Dimensions:</label>
+			<input id="txtItemWidth" name="txtItemWidth" size="9" value="<?txtItemWidth?>"	class="smbox" />
+			<input id="txtItemHeight" name="txtItemHeight" size="9" value="<?txtItemHeight?>" class="smbox" />
+			<input id="txtItemDepth" name="txtItemDepth" size="9" value="<?txtItemDepth?>" class="smbox" />
+			<label for="txtItemDepth" class="post-input">(WxHxD)</label>
+			<br />
+			
+			<p>What is the individual weight of each supplied item?</p>
+		
+			<label for="txtScreenPrintingItemWeight">Individual Item Weight:</label>
+			<input id="txtScreenPrintingItemWeight" name="txtScreenPrintingItemWeight" type="text" class="smBox" value="<?txtScreenPrintingItemWeight?>" size="9" />
+			<label for="txtScreenPrintingItemWeight" class="post-input">lbs</label>
+			<br />
+		
+			<p>How many surfaces on your item(s) will require screen printing?</p>
+		
+			<label for="txtScreenPrintingSurfaces">Surfaces Requiring Screen Printing:</label>
+			<input type="text" id="txtScreenPrintingSurfaces" name="txtScreenPrintingSurfaces" size="9" value="<?txtScreenPrintingSurfaces?>" class="smbox" />
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Handling and Packing
+			</legend>
+			
+			<p>If your project requires special handling or preparation prior to screen printing? Please input the amount of time required for each item.</p>
+			
+			<label for="txtSpecialHandling">Special Handling or Preparation:</label>
+			<input id="txtSpecialHandling" name="txtSpecialHandling" size="9" value="<?txtSpecialHandling?>" class="smbox" />
+			<label for="txtSpecialHandling" class="post-input">seconds</label>
+			<br />
+			
+			<p>If your project requires special packing after it has been screen printed? Please input the amount of time required for each item.</p>
+			
+			<label for="txtSpecialPacking">Special Packing:</label>
+			<input id="txtSpecialPacking" name="txtSpecialPacking" class="smbox" value="<?txtSpecialPacking?>" size="9" />
+			<label for="txtSpecialPacking" class="post-input">seconds</label>
+			<br />
+		</fieldset>
+
+		<!--#include virtual="/includes/main/proj/prin_add_to_project.html"-->
+	</form>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

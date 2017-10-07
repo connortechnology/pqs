@@ -1,0 +1,23 @@
+<a
+	<? if ( $$variable{user_type} ) ?>
+		href="/main/account/account_select_customer.html"
+	<? else ( $$variable{user_type} ) ?>
+		href="/main/account/registration.html"
+	<? endif ( $$variable{user_type} ) ?>
+
+	>My Account</a>
+<ul>
+	<? if ( $$variable{user_type} )?>
+		<li><a href="/main/account/my_products.html">My Products</a></li>
+		<li><a href="/main/proj/inventory/inventory_history.html">My Inventory</a></li>
+		<li><a href="/main/proj/proj_hist.html">Project History</a></li>
+		<li><a href="/main/quote/quote_history.html">Quote History</a></li>
+		<li><a href="/main/order/order_history.html">Order History</a></li>
+		<li><a href="/main/account/user_profile.html">My Profile</a></li>
+		<li><a href="/main/account/credit_application.html">Credit App</a></li>
+		<li><a href="/main/account/account_log_out.html">Logout</a></li>
+	<? else ( $$variable{user_type} )?>
+		<li><a href="/main/account/registration.html">Registration</a></li>
+		<li><a href="/main/account/account_login.html">Login</a></li>
+	<? endif ( $$variable{user_type} )?>
+</ul>

@@ -1,0 +1,28 @@
+<script  type="text/javascript">
+	function project_size_onChange( form ) {
+		if ( form.project_size && form.project_size.options[form.project_size.selectedIndex].value != 'Custom' ) {
+			var dimensions = form.project_size.options[form.project_size.selectedIndex].value.split(',');
+			var finished = dimensions[0].split('x');
+			var flat = dimensions[1].split('x');
+			form.final_width.value = finished[0];
+			form.final_height.value = finished[1];
+			form.flat_width.value = flat[0];
+			form.flat_height.value = flat[1];
+		} // end if
+	} // end function project_size_onChange();
+</script>
+
+
+<fieldset>
+	<legend>
+		Pre-defined Projects
+	</legend>
+
+	<p>Please select a pre-defined project.</p>
+	
+	<label for="ddmPredefinedProject">Pre-defined Project:</label>
+	<select id="ddmPredefinedProject" name="ddmPredefinedProject" size="1"  onchange="project_size_onChange(f1);">
+		<option value="<?ddmPredefinedProject?>"><?ddmPredefinedProject?></option>
+	</select>
+	<br />
+</fieldset>

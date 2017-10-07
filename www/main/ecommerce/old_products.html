@@ -1,0 +1,198 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>
+<!--#include virtual="/includes/web_page_title.html" -->
+Products
+<!--#include virtual="/includes/web_page_title_end.html" -->
+</title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-main-css.html" -->
+<!--#include virtual="/includes/h2-js.html" -->
+<script type="text/javascript" src="/javascripts/other.js"></script>
+<script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
+<script type="text/javascript" src="/javascripts/JSAN.js"></script>
+<link rel="Stylesheet" href="/styles/DPZSiteStyles.css"  />
+<link href="/styles/products-v2.css" rel="stylesheet" type="text/css" />
+</head>
+<script type="text/javascript">
+
+function check_qty(f,inc,min,max) {
+	var qty = f.value;
+	var regExp = /^\d*$/;
+	
+//alert (inc + ' = ' + min + ',' + qty);
+
+	if (!regExp.test(qty)) {
+		alert('Invalid Entry. Please enter whole numbers only. Cannot contain Commas or Decimals.');
+		return false;
+	}
+
+	var mod = qty % inc;
+	if (( qty < min || qty > max || mod )&& qty > 0) {
+		
+//	if ( qty < min || qty > max ) {
+		alert('Invalid Quantity. Please Order in increments of ' + inc + ' with a minimum order of ' + min + ' and a maximum quantity of ' + max + '.');
+		return false;
+	}
+	return true;
+}
+</script>
+
+<body>
+<div id="sizer" style="width:100%">
+		<div id="expander" style="width:100%">
+
+				<div id="header">
+			<!--#include virtual="/includes/main/main-header.html" -->
+				</div>
+
+				<div id="wrapper1" style="top:150px; width:100%">
+						<div id="wrapper2" style="width:100%">
+								<div class="outer" style="min-height:50% !important; width:100%">
+
+										<div class="float-wrap">
+												<div class="center">
+														<div class="centerbox">
+
+																<div style="width:100%">
+
+<?loop products?> 
+
+<?if mediawide?>
+<div id="main2">
+
+        <form name="f1" method="post" action="/main/ecommerce/design.html" >	
+            <input type="hidden" name="action" value="add_product_to_order" />
+            <input type="hidden" name="product"	id="product" value="<?id?>"  /> 
+             <input type="hidden" name="mediawide"	id="mediawide" value="<?mediawide?>"  />           
+                    
+                <div id="image" >                    			
+                    <img src="/images/main/products/<?strid?>.jpg" alt="<?strid?>" />
+                </div>
+                    
+                <div id="productname" style="text-transform:uppercase; height:60px;">
+                    <strong><?name?></strong><br />
+                    <?category?> <?subcategory?> <br />
+                    <strong>$<?price?> / <?units?></strong><br />
+                </div>
+            
+                <div style="display:none">
+                    <?id?>
+                    <?description?>
+                    <?details?>
+                    <?part_number?>
+                    <?minimum_qty?>
+                    <?maximum_qty?>
+                    <?increments?>
+                    <?notes?> 
+                    <?project?> 
+                    <?mediawideid?>
+                    <?groupoptions?>
+                    <?productgroup?>
+                    <?image?>
+                </div>
+                <div style="margin-left:auto; margin-right:auto; width:100px; "><input type="text" name="txtQuantity1" id="txtQuantity1" size="2" style="vertical-align:bottom; float:left;  " value="<?minimum_qty?>" onBlur="return check_qty(this, <?increment?>,<?minimum_qty?>,<?maximum_qty?>)" /><input class="button" value="DESIGN" type="submit" align="right" style="float:left; vertical-align:bottom; height:22px" /></div>
+        </form>
+</div>
+
+
+<?else mediawide?>
+
+<div id="main2">
+
+        <form name="f1" method="post" action="/main/proj/dispatch.html" >	
+            <input type="hidden" name="action" value="add_product_to_order" />
+            <input type="hidden" name="product"	id="product" value="<?id?>"  />           
+                   
+                
+         
+         
+             <a href="product_details.html?id=<?id?>"> 
+                <div id="image" >                    			
+                    <img src="/images/main/products/<?strid?>.jpg" alt="<?strid?>" />
+                </div>
+                    
+                <div id="productname" style="text-transform:uppercase; height:60px;">
+                    <strong><?name?></strong><br />
+                    <?category?> <?subcategory?> <br />
+                    <strong>$<?price?> / <?units?></strong><br />
+                </div>
+             </a>
+        
+        
+        
+                <div style="display:none">
+                    <?id?>
+                    <?description?>
+                    <?details?>
+                    <?part_number?>
+                    <?minimum_qty?>
+                    <?maximum_qty?>
+                    <?increments?>
+                    <?notes?> 
+                    <?project?> 
+                    <?mediawideid?>
+                    <?groupoptions?>
+                    <?productgroup?>
+                    <?image?>
+                </div>
+                <div style="margin-left:auto; margin-right:auto; width:85px; "><input type="text" name="txtQuantity1" id="txtQuantity1" size="2" style="vertical-align:bottom; float:left;" value="<?minimum_qty?>" onBlur="return check_qty(this, <?increment?>,<?minimum_qty?>,<?maximum_qty?>)" /><input class="button" value="ADD" type="submit" align="right" style="float:left; vertical-align:bottom; height:22px" /></div>
+        </form>
+</div>
+<?endif mediawide?>
+
+<?endloop products?>
+    <br />
+
+    
+</div> <!-- end noname width 130% -->
+		
+	</div>
+	<!-- end .centerbox -->
+</div>
+<!-- end .center -->
+
+<div class="left">
+	<div class="container-left">
+
+		<div class="textpadder">
+			<div id='sidebar' style="height:100%; position:relative">
+
+                <div id="leftmenu" style="margin-left:-175px">
+                <!--#include virtual="/includes/ecomm_leftmenu.html" -->
+                </div>
+
+				<!--#include virtual="/includes/main/side-bar-ads.html" -->
+                <!-- Do Not UnBreak Line-Break in Alt Attribute Value - Fix for IE -->
+            </div>
+        </div>
+        <!-- end .textpadder -->
+
+    </div>
+    <!-- end .container-left -->
+</div>
+<!-- end .left -->
+<br class="clear" />
+                    </div>
+                    <!-- end .float-wrap -->
+
+                    <br class="clear" />
+                </div>
+                <!-- end .outer -->
+            </div>
+            <!-- end #wrapper2 -->
+        </div>
+
+        <!-- end #wrapper1 -->
+        <div id="footer">
+			<!--#include virtual="/includes/main/main-footer.html" -->
+		</div>
+		
+    </div>
+    <!-- end #expander -->
+</div>
+<!-- end #sizer -->
+
+</body>
+</html>

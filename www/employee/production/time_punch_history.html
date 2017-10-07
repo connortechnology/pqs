@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production > Time Collection > Punch History
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Time Collection &#187;</span> Punch History</h1>
+ <fieldset>
+            <legend>
+                Instructions
+          </legend>
+    <p> The List at the bottom of the page has been populated with your punch history.
+ <? if ( $$variable{'user_type'} eq 'A' ) ?>
+If you would like to see the punch history for another user please use the User Name drop down below. If you would like to add additonal manual time entries for this user you can do so in the last row of the table below by entering a punchin/out start and stop date and time and selecting the save button.
+ <? endif ( $$variable{'user_type'} eq 'A' ) ?>
+    </p>
+ </fieldset>
+    <form action="" method="post" name="f2" id="f2">
+        <fieldset>
+            <legend>
+                Search
+          </legend>
+			
+           <table  border="0" cellspacing="0" cellpadding="0" style="border:none !important;" width="97%">         
+             <? if ( $$variable{'user_type'} eq 'A' ) ?>
+				<tr><td width="16%" style="border:none !important;">User Name:</td>
+            <td style="border:none !important;">
+			<select id="ddmUser" name="ddmUser" >
+				<option value=""> Select a User </option>
+				<option value=""> ----------------- </option>
+				<?USERS?>
+			</select>
+			</td>
+            </tr> 
+			<? else ( $$variable{'user_type'} eq 'A' ) ?>
+				<input type="hidden" name="ddmUser" value="<?user_id?>" />
+			<? endif ( $$variable{'user_type'} eq 'A' ) ?>
+           
+                       
+                       <tr><td style="border:none !important;">Start Date:</td>
+			<td style="border:none !important;"><select id="ddmStartMonth" name="ddmStartMonth">
+				<?startmonths?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?startdays?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?startyears?>
+			</select>
+			</td>
+            </tr>
+			
+            <tr>
+            <td style="border:none !important;">End Date:</td>
+			<td style="border:none !important;"><select id="ddmEndMonth" name="ddmEndMonth">
+				<?endmonths?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?enddays?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?endyears?>
+			</select>
+			</td>
+            </tr>
+            <tr>
+            <td style="border:none !important;"></td>
+            <td style="border:none !important;"><input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Download in CSV Format" />
+				<input class="button" type="submit" name="btnFunction" value="Show Results" />
+            </td>
+            </tr>
+            </table>
+			</fieldset>
+            <fieldset>
+            <legend>
+              Punch History</legend>
+                <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
+                    <tr>
+                      <th>Employee</th>
+                        <th>Punch In</th>
+                        <th>Punch Out</th>
+                        <th>Duration</th>
+                    </tr>
+
+						<?loop PUNCH ?>
+                        <tr>
+                          <td style="text-align: left;"><?user?></td>
+                            <td class="select c" style="text-align: center;"><?punch_in?></td>
+                            <td class="select c" style="text-align: center;"><?punch_out?></td>
+                            <td class="select c" style="text-align: center;"><?duration?></td>
+                        </tr>
+						<?endloop PUNCH ?>
+                        
+                        
+                </table>
+            <br />
+            
+        </fieldset>
+    </form>
+
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

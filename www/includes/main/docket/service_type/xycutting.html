@@ -1,0 +1,27 @@
+<strong>Equipment: </strong>
+
+<?if ($variable->{qtyIndex} eq 1)?>
+	<?ddmEquipment1?>
+<?endif ($variable->{qtyIndex} eq 1)?>
+
+<?if ($variable->{qtyIndex} eq 2)?>
+	<?ddmEquipment2?>
+<?endif ($variable->{qtyIndex} eq 2)?>
+
+<?if ($variable->{qtyIndex} eq 3)?>
+	<?ddmEquipment3?>
+<?endif ($variable->{qtyIndex} eq 3)?>
+
+
+<?if ($variable->{qtyIndex} eq 1 && $variable->{rotated1})?>
+	<strong>Orientation: </strong> Rotated
+<?endif ($variable->{qtyIndex} eq 1 && $variable->{rotated1})?>
+
+<?if ($variable->{qtyIndex} eq 2 && $variable->{rotated2})?>
+	<strong>Orientation: </strong> Rotated
+<?endif ($variable->{qtyIndex} eq 2 && $variable->{rotated2})?>
+
+<?if ($variable->{qtyIndex} eq 3 && $variable->{rotated3})?>
+	<strong>Orientation: </strong> Rotated
+<?endif ($variable->{qtyIndex} eq 3 && $variable->{rotated3})?>
+

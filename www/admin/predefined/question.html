@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+<head>
+	<title tal:content="title">Print-Quotes Title</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<xi:include href="/includes/h1-admin-css.html" />
+
+	<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+	<script type="text/javascript" src="/javascripts/menu.js"></script>
+	<script type="text/javascript" src="/javascripts/prototype.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+
+	<style type="text/css">
+		/* <![CDATA[ */
+
+		#answers th:first-child { text-align: left; }
+		#answers label { display: inline; }
+		#answers input { margin-bottom: 0; }
+
+		#answers td { border: none; }
+
+		#answers tr.new { border-top: 1px dashed black;  }
+		#answers tr.new td { padding-top: 2px; }
+
+
+		/* ]]> */
+	</style>
+
+</head>
+<body>
+	<xi:include href="/includes/c1-tal.html" />
+
+	<!-- Sidebar -->
+	<div id="sidebar">
+			<div class="option">
+				<a class="back" href="item?id=$item/id">Item</a>
+				<a class="back" href="categories">Categories</a>
+			</div>
+	</div>
+
+	<div id="content">
+		<h1><span class="title-section">Marketing &#187; </span> Predefined Products &#187; Question</h1>
+
+		<form method="post" action="modify_question">
+			<fieldset>
+				<legend>Question &amp; Answers</legend>
+
+				<input name="item" type="hidden" tal:attributes="value item/id" />
+				<input name="id"   type="hidden" tal:attributes="value question/id" />
+
+				<label><span>Question:</span> <input name="question" type="text" value="" tal:attributes="value question/label" /></label>
+				<p>Key words for Questions are "Colors:", "Color:", "Size:" and "Sizes:". If your question matches it will automatically classify your question and pass over the Color and Size specifications to the project.</p>
+				<table id="answers" class="common" tal:condition="question/answers">
+					<col />
+					<col style="width: 6em;" />
+					<col style="width: 2em;" />
+					<thead>
+						<tr>
+							<th>Answer</th>
+                            <th>Specification Value</th>
+							<th>Sort Order</th>
+							<th title="Delete">Delete</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr tal:repeat="a question/answers" tal:attributes="class decode:repeat/even 0 'even' 'odd'">
+							<td><input type="hidden" name="answer" value="$a/id" /><input type="text" name="label-$a/id" value="$a/label" /></td>
+                            <td><input type="text" name="value-$a/id" value="$a/value" /></td>
+							<td><input class="numeric" type="text" name="sort-$a/id" tal:attributes="value a/sort" /></td>
+							<td><input name="del-$a/id" type="checkbox" value="1" /></td>
+						</tr>
+						<tr class="new">
+							<td><input type="text" name="label" value="" onfocus="growTable(this)" /></td>
+                            <td><input type="text" name="value" value=""  /></td>
+							<td><input type="text" name="sort"  value="" class="numeric" /></td>
+						</tr>
+					</tbody>
+				</table>
+
+			</fieldset>
+
+			<div class="button-bar">
+				<input name="save"   type="submit" class="button right" tal:attributes="value decode:question/id question/id 'Save Question' 'Create Question'" value="Save" />
+				<input name="delete" type="submit" class="button" value="Delete Question" tal:condition="question/id" />
+				<br />
+			</div>
+
+		</form>
+
+	</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Account - Project History
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Account &#187;</span> API History</h1>
+
+	<? if ( $$variable{'user_id'} eq '0' ) ?>
+		<p>Only logged in customers have a project history.</p>
+	<? else ( $$variable{'user_id'} eq '0' ) ?>
+
+	<p>Please input a project ID and click &quot;Go&quot;or select a search criteria and click &quot;Show Results&quot;. You may then click on an <strong> Project ID </strong> or <strong> Project Name </strong> to view project details. To delete projects from history check the appropriate project(s) and click delete.</p>
+
+
+	<form action="/main/proj/api_hist.html" method="get" name="f1" id="f1">
+		<fieldset>
+			<legend>Project Search</legend>
+		
+			<p class="none">&nbsp;</p>
+		
+			<label for="ddmStatus">Status:</label>
+			<select id="ddmStatus" name="ddmStatus" size="1">
+				<option value="NEW"> New </option>
+				<option value="ALL"> All </option>
+				<?ddmStatus?>
+			</select>
+			<br />
+
+<!--
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?ddmStartMonth?>
+			</select>
+			<select name="ddmStartDay">
+				<?ddmStartDay?>
+			</select>
+			<select name="ddmStartYear">
+				<?ddmStartYear?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?ddmEndMonth?>
+			</select>
+			<select name="ddmEndDay">
+				<?ddmEndDay?>
+			</select>
+			<select name="ddmEndYear">
+				<?ddmEndYear?>
+			</select>
+			<br />
+
+-->
+			<div class="button-bar indent-regular">
+				<input type="reset" class="button" value="Reset" />
+				<input type="submit" class="button" value="Show Results" />
+				<br />
+				</div>
+			<br />
+		</fieldset>
+	</form>
+	
+	<form action="/main/proj/api_hist.html" method="post" name="f1" id="f1" >
+		<? if not:reqs ?>
+			<p>There are no projects which match your search criteria.</p>
+		<? else not:reqs ?>
+			<table border="0" cellspacing="0" cellpadding="0" style="width: 100%">
+				<tr>
+					<th style="text-align: left;">ID</th>
+					<th style="text-align: left;">SRC ID</th>
+					<th style="text-align: center;">Customer</th>
+                    <th style="text-align: center;">Form</th>
+					<th style="text-align: center;">Qty 1</th>
+					<th style="text-align: center;">Qty 2</th>
+					<th style="text-align: center;">Qty 3</th>
+					<th style="text-align: center;">Files</th>
+					<th style="text-align: center;">PID</th>
+				</tr>
+
+				<? loop reqs ?>
+					<tr class="r<?_even?>">
+						<td style="text-align: left;"><?id?></a></td>
+						<td style="text-align: center;"><?srcid?></td>
+						<td style="text-align: center;"><?customer?></td>
+                        <td style="text-align: center;"><?formno?></td>
+						<td style="text-align: center;"><?qty1?></td>
+						<td style="text-align: center;"><?qty2?></td>
+						<td style="text-align: center;"><?qty3?></td>
+						<td style="text-align: center;">
+							<a href="/main/proj/req.html?id=<?id?>" title="XML">XML</a>
+						</td>
+						<td style="text-align: center;">
+							<input type="text" name="pid_<?id?>" value="<?pid?>" class=smBox />
+							<input type="submit" class="button" value="Save" />
+
+					
+						</td>
+					</tr>
+				<? endloop reqs ?>
+			</table>
+		<? endif not:reqs ?>
+		<br />
+	</form>
+	<? endif ( $$variable{'user_id'} eq '0' ) ?>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/account.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

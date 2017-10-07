@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Quotes - Submit
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/quote.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+	
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script  type="text/javascript">
+		function loadwithpage() {
+	needhelp();
+}
+
+    window.onload=loadwithpage;
+
+		function open_printer_friendly_version() {
+			window.open('/main/quote/quote_printer_friendly.html?quote_id=<?quote_id?>','printerfriendlyquote','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+		
+		function helpmsg() {
+		alert("If you require assistance with your project please call us at <!--#include virtual="/includes/company_telephone_number.html"-->.");
+	}
+	
+	function needhelp() {
+    window.onload = function () {
+        setTimeout(helpmsg, 300000); //Then set it to run again after ten minutes
+    }
+	}
+	</script>
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Quotes &#187;</span> Submit</h1>
+        <div style="max-width:740px !important; max-height:54px !important; margin-left:auto; margin-right:auto"><img src="/images/main/progress/step3-quote.png"  /></div>
+
+
+	<form name="f1" method="post" action="/main/quote/confirmation_make_quote.html">
+		<!--#include virtual="/includes/forms/quote.html"-->
+
+		<div id="disclaimer">
+			<!--#include virtual="/includes/quote_disclaimer.html"-->
+		</div>
+
+		<? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+			<div id="repcomment">
+				<!--#include virtual="/includes/main/proj/comments.html"-->
+			</div>
+		<? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+
+		<div class="button-bar">
+			<input type="submit" name="btnFunction" class="button right" value="Submit Quote" />
+             <a class="button right" href="/main/account/product_select.html" >Add Another Item to my Quote</a>
+			<input type="hidden" name="quote_id" value="<?quote_id?>" />
+			<br class="clear" />
+			</div>
+	</form>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/quote.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

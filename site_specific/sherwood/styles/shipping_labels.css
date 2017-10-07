@@ -1,0 +1,56 @@
+div.page {
+	margin: 0;
+	padding: 0;
+}
+
+address.label {
+	width: 2.49in;
+	height: 1.125in;
+	margin: 0;
+	padding: 0.1875in 0.27in;
+
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+	font-style: normal;
+}
+
+.col1,
+.col2 {
+	float: left;
+	display: inline;
+	position: relative;
+}
+
+.col1 {
+	clear: left;
+}
+
+.col2 {
+	clear: right;
+}
+
+.extra {
+	display: none;
+	_display: block;
+}
+
+
+input.print-chk {
+	position: absolute;
+	top: 0.03in;
+	left: -0.25in;
+	z-index: 44;
+	
+	width: auto;
+	height: auto;
+	margin: 0;
+	padding: 0;
+}
+
+div.page label {
+	float: none;
+	display: inline;
+	width: auto;
+	margin: 0;
+	padding: 0;
+}

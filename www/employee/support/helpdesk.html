@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html"-->
+		Support - Help Desk
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<link href="/styles/employee.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Managerial &#187;</span> Help Desk &#187; Details</h1>
+
+	<form name="f1" method="post" action="helpdesk_search.html" >
+
+		<input type="hidden" name="HelpdeskIndex" value="<?HelpdeskIndex?>" />
+
+		<fieldset>
+			<legend>
+				Customer Info
+			</legend>
+
+			<p class="none">&nbsp;</p>
+			<span class="label">Company Name:</span>
+			<label class="value"><?company_name?></label>
+			<br />
+
+			<span class="label">Name:</span>
+			<label class="value"><?first_name?> <?last_name?></label>
+			<br />
+
+			<span class="label">Phone:</span>
+			<label class="value"><?phone?> <?if extension?>Ext. <?extension?><?endif extension?><br /></label>
+			<br />
+
+			<span class="label">E-mail Address:</span>
+			<label class="value"><?email?></label>
+			<br />
+		</fieldset>
+        <fieldset>
+            <legend>
+                Uploads
+            </legend>
+            <? loop uploaded_files ?>
+
+            Delete <br/>
+            <input type="checkbox" name="del_<?name?>"/>
+            <a href="/customers/uploads/<?index?>/<?name?>" > 
+                <?name?> 
+            </a> <br/>
+            <? endloop uploaded_files ?>
+        </fieldset>
+
+		<fieldset>
+			<legend>
+				Inquiry
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<span class="label">Question or Comment:</span>
+			<label class="value"><?question?></label>
+			<br />
+
+			<label for="txtQuestion-Quote">Customer Service Response:</label>
+			<textarea id="txtQuestion-Quote" name="txtQuestion-Quote" class="marg-bot" rows="10"><?response?></textarea>
+			<br />
+			
+			<label>Reply FROM:</label>
+			<select name="reply-email">
+			<!--#include virtual="/includes/employee/helpdesk_reply.html" -->   
+			</select>
+			<br />
+			<span class="label">Mark as reviewed:</span>
+			<label for="rdbReviewedYes" class="radio"><input id="rdbReviewedYes" name="rdbReviewed" type="radio" value="Y" <?rdbReviewedY?> />Yes</label>
+			<label for="rdbReviewedNo" class="radio"><input id="rdbReviewedNo" name="rdbReviewed" type="radio" value="N" <?rdbReviewedN?> />No</label>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Submit" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

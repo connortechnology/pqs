@@ -1,0 +1,17 @@
+<span class="label">Pages </span>
+<?pad_sheets?>
+<? if ($$variable{'txtPartQty'}) ?>
+<span class="label">Parts </span>
+<?txtPartQty?>
+<? endif ($$variable{'txtPartQty'}) ?>
+<? if ($$variable{'rdbCardboardBacking'}) ?>
+<span class="label">Backing Board </span>
+Y
+<? endif ($$variable{'rdbCardboardBacking'}) ?>
+
+<? if txtPaddingImposition ?>
+<span class="label">Pads Per Sheet</span> <?txtPaddingImposition?>
+<? endif txtPaddingImposition ?>
+<? if equipment ?>
+	<span class="label">Equipment</span> <?equipment?>
+<? endif equipment ?>

@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+		Welcome to
+		<!--#include virtual="/includes/company_name.html" -->
+	</title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+    <!--#include virtual="/includes/h2-js.html" -->
+
+	<script language="JavaScript" type="text/javascript" src="/javascripts/detect.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/javascripts/other.js"></script>
+
+	<link href="/styles/products.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<style type="text/css">
+		#registration { float: right; display: inline; width: 200px; border: 1px solid #757575; margin: 0 0 10px 15px; padding: 0; }
+		#registration img { border: 0; }
+		#registration form { display: block; margin: 0; padding: 1em; font-size: 0.8em; }
+		#registration a { display: block; clear: both; }
+		#registration input { font-size: 1em; width: auto; }
+		#registration .button-bar input { font-size: 1em; width: auto; }
+		#registration label { width: auto; margin: auto; padding: auto; line-height: normal;}
+		#registration br { clear: both; height: 0; line-height: 0; margin: 0; padding: 0; }
+
+		/* Holly Hack \*/
+		* html #registration label { margin-top: -12px; }
+		* html #registration .button-bar {
+			height: 1%;
+			margin-top: -10px;
+		}
+		/* */
+
+		#nav #home a { visibility: hidden; }
+		#nav #home:hover, #nav #home.sfhover { background-color: #7D7D7D; }
+		#homeAdmin, #accountTab, #projectTab { display: none; }
+	</style>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+									<div id="registration">
+                                        <a href="/main/account/registration.html"><img style="border-bottom: 1px solid #757575;" src="/images/main/intro/account_registration.gif" alt="Account Registration" /></a>
+										<img src="/images/main/intro/user_login.gif" alt="Account Registration" />
+
+                                        <form action="/main/account/confirmation_login.html" method="post" name="f1" id="f1">
+                                            <label for="txtEmail">
+												E-mail:<br />
+                                            	<input type="text" id="txtEmail" name="txtEmail" class="input-text" />
+											</label>
+
+											<label for="txtPassword">
+												Password:<br />
+                                            	<input type="password" id="txtPassword" name="txtPassword" class="input-text" />
+											</label>
+
+                                            <div class="button-bar">
+                                                <input type="reset" class="button" value="Reset" />
+                                                <input type="submit" class="button" value="Login" />
+                                            	<br class="clear" />
+                                                </div>
+
+                                            <a href="/main/account/account_login.html">Forgot your Password?</a>
+                                        </form>
+                                    </div>
+
+                                    <p style="text-align: justify;">
+                                        Urna at turpis ac, pellentesque at ornare ullamcorper faucibus, semper consectetuer euismod arcu erat. Dictum neque sit aliquam vel, cursus placerat pellentesque commodo, ipsum wisi luctus interdum nullam, pharetra nibh diam et class. Vitae nam rutrum iaculis, ligula lorem iaculis magnis consectetuer, odio volutpat sit ipsum odio.
+                                    </p>
+                                    <!--#include virtual="/includes/f1-main.html" -->
+                                        <!--#include virtual="/includes/main/products.html" -->
+                                        <img src="images/main/intro/pqs_logo.gif" alt="Print-Quotes
+Software" style="padding-top: 10px;" /><!-- Do Not UnBreak Line-Break in Alt Attribute Value - Fix for IE -->
+                                        <!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

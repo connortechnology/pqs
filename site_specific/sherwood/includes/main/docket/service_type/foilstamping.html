@@ -1,0 +1,51 @@
+<div style=" padding-left: 2em; ">
+  <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"> <span class="label">Equipment:&nbsp;&nbsp;</span>
+  <? if ($$variable{'qtyIndex'} == 1 ) ?>
+  	<?ddmEquipment1?>
+  <? endif ($$variable{'qtyIndex'} == 1 ) ?>
+  <? if ($$variable{'qtyIndex'} == 2 ) ?>
+  	<?ddmEquipment2?>
+  <? endif ($$variable{'qtyIndex'} == 2 ) ?>
+  <? if ($$variable{'qtyIndex'} == 3 ) ?>
+  	<?ddmEquipment3?>
+  <? endif ($$variable{'qtyIndex'} == 3 ) ?></td>
+    <td width="50%"><span class="label">Imposition:&nbsp;&nbsp;</span>
+  <? if ($$variable{'qtyIndex'} == 1 ) ?>
+  	<?txtImposition1?>
+  <? endif ($$variable{'qtyIndex'} == 1 ) ?>
+  <? if ($$variable{'qtyIndex'} == 2 ) ?>
+  	<?txtImposition2?>
+  <? endif ($$variable{'qtyIndex'} == 2 ) ?>
+  <? if ($$variable{'qtyIndex'} == 3 ) ?>
+  	<?txtImposition3?>
+  <? endif ($$variable{'qtyIndex'} == 3 ) ?>
+  Out</td>
+  </tr>
+  <tr>
+    <td><span class="label">Die Supplied:&nbsp;&nbsp;</span>
+  <? if ( $$variable{'rdbSuppliedDie'} eq 'No' ) ?>
+  	No
+  <? else ( $$variable{'rdbSuppliedDie'} eq 'No' ) ?>
+  	Yes
+  <? endif ( $$variable{'rdbSuppliedDie'} eq 'No' ) ?></td>
+    <td><span class="label">Image Size:&nbsp;&nbsp;</span>
+  <?txtDieWidth?>&nbsp;x&nbsp;<?txtDieHeight?></td>
+  </tr>
+  <tr>
+    <td><span class="label">Die Type:&nbsp;&nbsp;</span>
+  <?rdbDieType?></td>
+    <td><span class="label">Foil:&nbsp;&nbsp;</span>
+  <?rdbMaterialType?></td>
+  </tr>
+  <? if ($$variable{'txtFoilColour'}) ?>
+  <tr>
+  <td><span class="label">Colour:&nbsp;&nbsp;</span>
+  	<?txtFoilColour?></td>
+  <td></td>
+  </tr>
+  <? endif ($$variable{'txtFoilColour'}) ?>
+</table>
+
+</div>

@@ -1,0 +1,187 @@
+		<div id="quote-box">
+<p style="font-size:36px !important; width:600 !important;  text-align: center !important;"><strong>QUOTATION</strong></p>
+			<!-- Header. -->
+			<div id="quote-header">
+				<? if (( $$variable{'ResellerForEndUser'} eq 'Y') && ($$variable{'user_type'} eq 'C')) ?>
+					<h2><?ByCompanyName?></h2>
+
+				<? else  (( $$variable{'ResellerForEndUser'} eq 'Y') && ($$variable{'user_type'} eq 'C')) ?>
+
+					<img src="/images/e-mail/email_logo.gif" alt="<? company ?>" />
+					<address><!--#include virtual="/includes/company_contact_email_content_info.html"--></address>
+				<? endif (( $$variable{'ResellerForEndUser'} eq 'Y') && ($$variable{'user_type'} eq 'C')) ?>
+
+				<table id="primary_info" class="no-formatting">
+					<tr>
+						<th>Quote ID:</th>
+
+						<td>
+							<? if ( $$variable{'ResellerForEndUser'} ne 'Y')?>
+								<a href="<?siteURL?>/main/quote/quote_history_details.html?Issue_Cookie=true&quote_id=<?QUOTE_ID?>">
+							<? endif ( $$variable{'ResellerForEndUser'} ne 'Y')?>
+
+							<?QUOTE_ID?>
+
+							<? if ( $$variable{'ResellerForEndUser'} ne 'Y')?>
+								</a>
+							<? endif ( $$variable{'ResellerForEndUser'} ne 'Y')?>
+						</td>
+					</tr>
+
+					<tr>
+						<th>Date:</th>
+						<td><?DATE?></td>
+					</tr>
+				</table>
+				<br class="clear" />
+			</div>
+
+			<table class="customer no-formatting">
+				<thead>
+					<tr>
+						<th>Prepared By:</th>
+						<th>Prepared For:</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><address><?BySalutation?> <?ByFirstName?> <?ByLastName?><br />
+								<?ByCompanyName?><br />
+								<? if ( $$variable{'ByAddress1'} ) ?><?ByAddress1?><? endif ( $$variable{'ByAddress1'} ) ?>,
+								<? if ( $$variable{'ByAddress2'} ) ?> <?ByAddress2?><? endif ( $$variable{'ByAddress2'} ) ?>,
+                                <?ByCubicle?><br />
+								<?CCITYPROV?><br/>
+                                <?ByPostalCode?><br />
+								<? if ( $$variable{'ByPhone'} ) ?>T:<?ByPhone?><? if ( $$variable{'ByExtension'} ) ?> &nbsp;Ext. <?ByExtension?><? endif ( $$variable{'ByExtension'} ) ?><br /><? endif ( $$variable{'ByPhone'} ) ?>
+								<? if ( $$variable{'ByFax'} ) ?>F:<?ByFax?><br /><? endif ( $$variable{'ByFax'} ) ?>
+								<?ByEmail?><br />
+								</address>
+						</td>
+						<td><address><?ForSalutation?> <?ForFirstName?> <?ForLastName?><br />
+								<?ForCompanyName?><br />
+								<? if ( $$variable{'ForAddress1'} ) ?><?ForAddress1?>, <? endif ( $$variable{'ForAddress1'} ) ?>
+								<? if ( $$variable{'ForAddress2'} ne '' ) ?><?ForAddress2?>, <? endif ( $$variable{'ForAddress2'} ne '' ) ?>
+                                <?ForCubicle?><br />
+                                <?FCITYPROV?> <br />
+                                <?ForPostalCode?><br />
+								<? if ( $$variable{'ForPhone'} ) ?>T: <?ForPhone?><? if ( $$variable{'ForExtension'} ) ?> &nbsp;Ext. <?ForExtension?><? endif ( $$variable{'ForExtension'} ) ?><br /><? endif ( $$variable{'ForPhone'} ) ?>
+								<? if ( $$variable{'ForFax'} ) ?>F: <?ForFax?><br /><? endif ( $$variable{'ForFax'} ) ?>
+								<?ForEmail?><br />
+								</address>
+					</td>
+					</tr>
+				</tbody>
+			</table>
+
+				<table width="100%" class="quote_enduser">
+					<col id="project_name" />
+					<col id="qty" />
+					<col id="price" />
+
+					<thead>
+						<tr style="color:#FFFFFF !important; background-color:#000 !important;">
+							<th style="color:#FFFFFF !important; background-color:#000 !important;">Project</th>
+							<th style="color:#FFFFFF !important; background-color:#000 !important;">Quantity</th>
+						  <th style="color:#FFFFFF !important; background-color:#000 !important;">Price ($)</th>
+					  </tr>
+					</thead>
+					<tbody>
+						
+                         
+                         <?loop attachedProjects?>
+							<tr>
+								<!-- <? if (($$variable{index} == $$variable{lastindex}) && (! ($$variable{_last})))?>class="project"<?endif (($$variable{index} == $$variable{lastindex}) && (! ($$variable{_last})))?>>  -->
+								
+                                <td>
+                                
+									<table>
+        	<tr><td style="text-align:left !important;border:none !important;" width="600px">
+                                    
+                                    <? if ( $$variable{'ResellerForEndUser'} ne 'Y')?>
+										 <a href="<?siteURL?>/main/proj/proj_view.html?Issue_Cookie=true&ProjectIndex=<?HeaderInfo.id?>">
+									<? endif ( $$variable{'ResellerForEndUser'} ne 'Y')?>
+                                    
+          <em><Strong><?HeaderInfo.id?> - <?HeaderInfo.reference?></Strong></em> <? if ( $$variable{'ResellerForEndUser'} ne 'Y')?> </a><? endif ( $$variable{'ResellerForEndUser'} ne 'Y')?>
+		<?if ( $variable->{status} ne 'Complete' ) ?>
+           <a class="button right" style="float:right !important;" href="<?siteURL?>/main/quote/quote_submit.html?Delete=<?HeaderInfo.id?>">Remove</a>
+		<?endif ( $variable->{status} ne 'Complete' ) ?>
+          </td></tr>
+          <?if HeaderInfo.comments?>
+          <tr><td style="text-align:left !important;border:none !important;"><strong>Comments: </strong>
+          <?HeaderInfo.comments?></td></tr>
+          <?endif HeaderInfo.comments?>
+          
+          <?if not:is_invoice?>
+         
+          
+          <!--<strong>Colors:</strong> 
+							<?loop HeaderInfo.colours?>
+								<?colour1?><?side1_info?> / <?colour2?><?side2_info?>
+								<?if (! $$variable{_last})?>,<?endif (! $$variable{_last})?>
+							<?endloop HeaderInfo.colours?>-->
+          
+          <?if HeaderInfo.txtTotalPageQuantity?>
+			<tr><td style="text-align:left !important;border:none !important;"><strong>Pages:</strong>
+          <?HeaderInfo.txtTotalPageQuantity?>
+          </td></tr>
+          
+          <?endif HeaderInfo.txtTotalPageQuantity?>
+           <tr><td style="text-align:left !important;border:none !important;">
+          <strong>Finished Size: </strong>
+          <?HeaderInfo.final_width?>" x <?HeaderInfo.final_height?>"
+          </td></tr>
+          
+          <tr><td style="text-align:left !important;border:none !important;">
+          <? if ($$variable{Category} != -1) ?>
+          <?loop categories?>
+          <?loop service_type?>
+          <? if ( $variable->{name} eq 'Printing' ) ?>
+          <?html?>
+          <? else ( $variable->{name} eq 'Printing' ) ?>
+          <strong>
+          <?name?>: </strong>Yes<br />
+          <? endif ( $variable->{name} eq 'Printing' ) ?>
+          <?endloop service_type?>
+          
+          
+          
+          <?loop supplied_service_type?>
+          <?name?>: <?html?>
+          <?endloop supplied_service_type?>
+          <?endloop categories?>
+          
+          <? endif ($$variable{Category} != -1) ?>
+          </td></tr>
+           <?endif not:is_invoice?>
+           
+         
+           
+           
+         <tr><td style="text-align:left !important;border:none !important;">
+          <?dockethash.Shipping.html?>
+          </td></tr>
+          </table>
+										
+									
+								</td>
+								<?eval( my $id = 'PROJECT_PRICES_' . $variable->{pid}; $variable->{proj} = $variable->{$id} ) ?>
+
+								<td valign="top"><?proj.1?> <br />
+                                <?if proj.6?>    <?proj.6?> <br /> <?endif proj.6?>
+                                <?if proj.11?>   <?proj.11?><br /> <?endif proj.11?>
+
+								<td valign="top">$<?proj.3?> <br/>
+                                <?if proj.6?>     $<?proj.8?> <br /> <?endif proj.6?>
+                                <?if proj.11?>    $<?proj.13?><br /> <?endif proj.11?>
+                              
+							</tr>
+						<?endloop attachedProjects?>
+					</tbody>
+					<tfoot>
+						<tr>
+							<td colspan="5">All prices in
+					  <?CurrencyName?> and subject to applicable taxes.</td>
+						</tr>
+					</tfoot>
+				</table>
+		</div>

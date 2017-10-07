@@ -1,0 +1,112 @@
+<? if isServicePricing ?>
+
+	<h2 id="pricing_title">Pricing</h2>
+	<br class="clear" />
+
+	<div id="pricing">
+
+		<table class="no-formatting">
+			<col style="width: 30%;" />
+			<col style="width: 15%;" />
+			<col style="width: 10%;" />
+			<col style="width: 15%;" />
+			<col style="width: 10%;" />
+			<col style="width: 15%;" />
+			<col style="width: 5%;" />
+
+			<thead>
+				<tr>
+					<th style="width: 30%; text-align: left;">Quantity</th>
+					<th style="width: 15%;">Printing</th>
+					<th style="width: 10%;">&nbsp;</th>
+					<th style="width: 15%;">Stock</th>
+					<th style="width: 10%;">&nbsp;</th>
+					<th style="width: 15%;">Total</th>
+					<th style="width: 5%;">&nbsp;</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				<? if project.quantity.0 ?>
+					<tr>
+						<td rowspan="2" class="quantity" id="txtQuantity1"><?project.quantity.0?></td>
+						<td id="txtPrice1"><?money:spec.txtPrice1?></td>
+						<td>&nbsp;</td>
+
+						<td><span id="txtStockPrice1"><?money:spec.txtStockPrice1?></span></td>
+						<td>&nbsp;</td>
+						<? eval ($variable->{total_price} = $variable->{spec}{txtPrice1} + $variable->{spec}{txtStockPrice1} )?>
+						<td class="total" id="total_price1"><?money:total_price?></td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="each">
+						<td id="txtUnitPrice1"><?spec.txtUnitPrice1?></span></td>
+						<td class="each">ea.</td>
+
+						<td id="txtStockUnitPrice1"><?spec.txtStockUnitPrice1?></span></td>
+						<td class="each">ea.</td>
+
+						<td class="total" id="total_unit1"><?float:spec.total_unit1?></span></td>
+						<td class="each">ea.</td>
+					</tr>
+				<? endif project.quantity.0 ?>
+
+				<? if project.quantity.1 ?>
+					<tr>
+						<td rowspan="2" class="quantity" id="txtQuantity2"><?project.quantity.1?></td>
+						<td id="txtPrice2"><?money:spec.txtPrice2?></td>
+						<td>&nbsp;</td>
+
+						<td><span id="txtStockPrice2"><?money:spec.txtStockPrice2?></span></td>
+						<td>&nbsp;</td>
+						<? eval ($variable->{total_price} = $variable->{spec}{txtPrice2} + $variable->{spec}{txtStockPrice2} )?>
+						<td class="total" id="total_price2"><?money:total_price?></td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="each">
+						<td id="txtUnitPrice2"><?spec.txtUnitPrice2?></span></td>
+						<td class="each">ea.</td>
+
+						<td id="txtStockUnitPrice2"><?spec.txtStockUnitPrice2?></span></td>
+						<td class="each">ea.</td>
+
+						<td class="total" id="total_unit2"><?float:spec.total_unit2?></span></td>
+						<td class="each">ea.</td>
+					</tr>
+				<? endif project.quantity.1 ?>
+
+				<? if project.quantity.2 ?>
+					<tr>
+						<td rowspan="2" class="quantity" id="txtQuantity3"><?project.quantity.2?></td>
+						<td id="txtPrice3"><?money:spec.txtPrice3?></td>
+						<td>&nbsp;</td>
+
+						<td><span id="txtStockPrice3"><?money:spec.txtStockPrice3?></span></td>
+						<td>&nbsp;</td>
+						<? eval ($variable->{total_price} = $variable->{spec}{txtPrice3} + $variable->{spec}{txtStockPrice3} )?>
+						<td class="total" id="total_price3"><?money:total_price?></td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="each">
+						<td id="txtUnitPrice3"><?spec.txtUnitPrice3?></span></td>
+						<td class="each">ea.</td>
+
+						<td id="txtStockUnitPrice3"><?spec.txtStockUnitPrice3?></span></td>
+						<td class="each">ea.</td>
+
+						<td class="total" id="total_unit3"><?float:spec.total_unit3?></span></td>
+						<td class="each">ea.</td>
+					</tr>
+				<? endif project.quantity.2 ?>
+
+
+			</tbody>
+		</table>
+		<br class="clear" />
+	</div>
+	<br class="clear" />
+<? else isServicePricing ?>
+	<input type="hidden" name="txtQuantity1" id="txtQuantity1" value="<?project.quantity.0?>" />
+	<input type="hidden" name="txtQuantity2" id="txtQuantity2" value="<?project.quantity.1?>" />
+	<input type="hidden" name="txtQuantity3" id="txtQuantity3" value="<?project.quantity.2?>" />
+<? endif isServicePricing ?>

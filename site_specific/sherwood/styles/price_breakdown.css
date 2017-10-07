@@ -1,0 +1,130 @@
+/* Printing Price Breakdown */
+.l { text-align: left !important; }
+.m { text-align: center !important; }
+
+table.breakdown {
+    width: 720px;
+    font-size: 0.85em;
+    border: 1px solid #0B0D60;
+}
+table.breakdown col.service { width: 300px; text-align: left;  }
+table.breakdown col.qty1    { width: 100px; text-align: right; }
+table.breakdown col.qty2    { width: 100px; text-align: right; }
+table.breakdown col.qty3    { width: 100px; text-align: right; }
+table.breakdown th {
+    color: #FFFFFF;
+    background-color: #0B0D60;
+    padding: 0.25ex 0.5em 0.25ex 0.5em;
+}
+table.breakdown td       { padding: 0.25ex 0.3em; }
+table.breakdown td.left  { text-align: left; }
+table.breakdown tfoot td { border-top: 3px double #0B0D60; font-weight: bold; height: 30px; }
+
+#versions {
+    width: 100%;
+    margin-bottom: 20px;
+    
+    border: 1px solid #0B0D60;
+}
+#versions > col.final { border-left: 3px double #0B0D60; }
+
+
+#versions div.mv {
+    overflow: hidden;
+
+    float: left;
+    display: inline;
+    position: relative;
+
+    width: 1.4ex;
+    height: 1.4ex;
+    margin: 0.55ex 1px 0 -1px;
+
+    border: 1px solid #E2E2E2;
+}
+
+#versions > tbody > tr > td > div.mv {
+    margin: 0.34ex 4px 0 -2px;
+}
+
+#versions th,
+#versions td { border: 0; text-align: right; }
+
+
+table#versions tr.layout_form {
+    border-bottom: 1px solid #0B0D60;
+}
+
+table#versions tr.layout_form th {
+    background-color: white;
+    text-align: left;
+    color: #0B0D60;
+}
+
+
+
+#impositions {
+    position: absolute;
+    top: 52px;
+    left: 760px;
+    width: 200px;
+}
+
+#impositions h2 {
+    font-size: 0.85em;
+    color: white;
+    width: auto;
+    background-color: #0B0D60;
+    margin: 0;
+    padding: 0 3px;
+    line-height: 1.5em;
+}
+
+#impositions embed {
+    display: block;
+    margin: 0 auto;
+    width: 190px;
+}
+
+#comparisons {
+    table-layout: fixed;
+    width: 720px;
+    margin-bottom: 0;
+    border: 1px solid #0B0D60 !important;
+}
+#comparisons thead { vertical-align: bottom; }
+#comparisons thead .m,
+#comparisons thead .c { border-left: 1px solid white !important; }
+
+#comparisons > tbody { height: 30em; overflow: auto; overflow: -moz-scrollbars-vertical;} 
+
+#comparisons th,
+#comparisons td { text-align: right;  }
+#comparisons th:last-child { width: 85px; padding-right: 20px; }
+#comparisons td:last-child { width: 85px; padding-right: 20px; }
+
+#run_style  { width: 30px; }
+#geometry   { width: 36px; }
+#layouts    { width: 18px; }
+#wastage    { width: 45px; }
+#plates     { width: 20px; }
+#size       { width: 10em; }
+#orig       { width: 10em; }
+#sheets     { width: 5em; }
+#printing   { width: 7em !important; }
+#stock      { width: 7em !important; }
+#comparison { width: 9em !important; }
+* html #comparison { width: 7em !important; }
+
+/* Highlight the price comparison winner. (woohoo!) */
+#chosen td { background-color: #626262 !important; color: white !important; }
+
+.r0 td { background-color: transparent !important; }
+.r1 td { background-color: #AACCFF !important; color: #0B0D60 !important; }
+
+
+a#return-proj-view { margin-bottom: 0; margin-left: 750px; }
+
+/* \*/
+* html a#return-proj-view { margin-left: 720px; }
+/* */

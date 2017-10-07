@@ -1,0 +1,160 @@
+<?if not:flags.can_edit ?>
+	<!-- This is not a good way to add this CSS. -->
+	<style type="text/css">.control { display: none; }</style>
+<?endif not:flags.can_edit ?>
+
+<table id="service-pricing" class="project-current-view no-formatting">
+	<col id="service" />
+	<col id="qty1" />
+	<col id="status" />
+	<col id="changes" class="control" />
+
+	<!-- SERVICES -->
+	<thead>
+		<tr class="title">
+			<th style="border-left-width: 1px;">Services</th>
+			<th style="text-align: right; padding-right:20px !important; width:120px !important;"><?qty.1?></th>
+			<th style="text-align: right;">Status</th>
+<!--			<th class="control print-right-border" style="text-align: right; border-right-width: 1px;">Changes</th> -->
+			<th class="control print-right-border" style="text-align: center; border-right-width: 1px;">Info &nbsp;&nbsp;   Pricing</th>
+	  </tr>
+	</thead>
+
+	<!-- Service pricing by category. -->
+	<tbody>
+		<?loop categories?>
+			<tr class="category <?name?>">
+				<td style="font-weight: bold;">
+					<?if ($$variable{url} and $$variable{flags}{can_edit}) ?>
+						<a href="/service/<?url?>?pid=<?pid?>;sid=<?id?>"><?name?></a> 
+					<?else ($$variable{url} and $$variable{flags}{can_edit}) ?>
+						<?name?> 		
+					<?endif ($$variable{url} and $$variable{flags}{can_edit}) ?>
+				</td>
+
+				<td style="padding-right:20px !important; "><?money:sub_total1?></td>
+				
+				<td colspan="2"></td>
+			</tr>
+
+			<!-- Services in <?category?>. -->				
+			<?loop services?>
+				<tr class="service <?ref?>">
+					<td> &#183; 
+						<?if ($$variable{url} and $$variable{flags}{can_edit}) ?>
+							<a href="/service/<?lc:ref?>?pid=<?pid?>;sid=<?id?>"><?name?></a>
+						<?else ($$variable{url} and $$variable{flags}{can_edit}) ?>
+							<?name?>		
+						<?endif ($$variable{url} and $$variable{flags}{can_edit}) ?>
+						<?if ($$variable{removed}) ?>
+							<span class="supplied">(Customer Supplied)</span>
+						<?endif ($$variable{removed}) ?>	
+					</td>
+
+					<td style="text-align: right; padding-right:20px !important; "><?money:price1?></td>
+					
+					<td class="<?status?>" style="text-align: right;">
+						<?if ($$variable{status} eq 'error') ?>
+							Call for Quote
+						<?else ($$variable{status} eq 'error') ?>
+							<?ucfirst:status?>
+						<?endif ($$variable{status} eq 'error') ?>
+					</td>
+
+					<td class="control" style="text-align: center;">
+						<?if flags.can_edit ?>
+							<?loop controls?>
+								<?if html ?>
+									<?html?>
+								<?else html ?>
+									<a href="<?url?>"><?name?></a>
+									<?if not:_last?> / <?endif not:_last?>
+								<?endif html ?>
+							<?endloop controls?>
+						<?endif flags.can_edit ?>
+					</td>
+				
+				</tr>
+			<?endloop services?>
+		<?endloop categories?>
+
+
+		<!-- Admin/Employee "Add Line Item" Contols. -->
+		<? if ( $$variable{flags}{can_edit} && $$variable{is_staff} && !$$variable{is_quoted_or_ordered} ) ?>
+			<form name="additem" method="post" action="/main/proj/dispatch.html">
+				<tr class="control">
+					<td><input name="item_name" size="20" class="smbox" /></td>
+					<td style="text-align: right;"><input name="price-1" size="9"  class="smbox" /></td>
+					<td colspan="2"><p align="right">
+							<input type="submit" class="button" id="add-line-item" value="Add Line Item" />                            Hide Docket:<input type="checkbox" name="hide_docket" value="1" id="hide_docket" />
+
+							<input type="hidden" name="pid" value="<?pid?>" />
+							<input type="hidden" name="action" value="add_line_item" />
+							</p>
+					</td>
+				</tr>
+			</form>
+            <form name="additem" method="post" action="/main/proj/dispatch.html">
+				<tr class="control">
+				  <td>
+					  <label>
+					  <select name="item_name">
+					    <option value="Setup">Setup</option>
+					    <option value="Discount">Discount</option>
+                      </select>
+				    </label></td>
+					<td style="text-align: right;"><input name="price-1" size="9"  class="smbox" /></td>
+					<td colspan="2"><p align="right">
+							<input type="submit" class="button" id="add-line-item" value="Add Line Item" />                            Hide Docket:<input name="hide_docket" type="checkbox" id="hide_docket" value="1" checked="checked" />
+
+							<input type="hidden" name="pid" value="<?pid?>" />
+							<input type="hidden" name="action" value="add_line_item" />
+							</p>
+					</td>
+				</tr>
+			</form>
+		<? endif ( $$variable{flags}{can_edit} && $$variable{is_staff} && !$$variable{is_quoted_or_ordered} ) ?>
+	
+		<!-- MATERIALS -->
+		<tr class="title">
+			<th colspan="6" style="border-width: 1px;">Materials</th>
+		</tr>
+
+		<? if ( $$variable{'ProjectTypeID'} ne 'ScreenItem' and not $$variable{checkout} ) ?>
+
+			<?if ($$variable{flags}{stock_separate} && ! $$variable{flags}{hide_project_total}) ?>
+				<!-- Stock pricing seperated from the form it belongs to (if the flag was set) -->
+				<tr class="total">
+					<th>Stock</th>
+					<td style="padding-right:20px !important; "><?money:stock_price1?></td>
+				</tr>
+			<?endif ($$variable{flags}{stock_separate} && ! $$variable{flags}{hide_project_total}) ?>
+
+			<!-- Stock information. -->
+			<?loop PaperInfo?>
+				<tr>
+					<td style="text-align: left; padding-left: 2em;"><?name?> - <?finish?> <?colour?> <?weight?> (<?height?>&#8243; &#215; <?width?>&#8243;)<?if ($variable->{is_supplied})?> [Customer Supplied]<?endif ($variable->{is_supplied})?></td>
+					<?loop qty?>
+						<td style="text-align: right; padding-right:20px !important; "><?if n?><?n?><?endif n?></td>
+					<?endloop qty?> 
+				</tr>
+			<?endloop PaperInfo?>
+		
+		<? endif ( $$variable{'ProjectTypeID'} ne 'ScreenItem' and not $$variable{checkout} ) ?>
+
+
+		<!-- TOTALS -->
+		<? if not:flags.hide_project_total ?>
+			<tr class="total unit">
+				<th>Project Unit Price:</th>
+				<td style="padding-right:20px !important; "><?money:unit_price.1?></td>
+			</tr>
+			<tr class="total grand">
+				<th>Project Total:</th>
+				<td style="padding-right:20px !important; "><?money:total_price.1?></td>
+			</tr>
+		<? endif not:flags.hide_project_total ?>
+	</tbody>
+</table>
+
+<p class="memo">All prices in <?CurrencyName?> and subject to applicable taxes.</p>

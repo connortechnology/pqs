@@ -1,0 +1,15 @@
+<div id="fixedHeader">
+	<div id="headNav">
+		<ul id="nav">
+			<!--#include virtual="/includes/administrator/admin-nav.html" -->
+			
+			<? if ( $$variable{user_type} eq 'A' ) ?>
+				<li><a href="/administrator/administrator/logout.html" style="width: auto; padding-right: 0.85em;">Logout</a></li>
+			<? endif ( $$variable{user_type} eq 'A' ) ?>
+
+			<? if ($$variable{user_type} eq 'E' ) ?>
+				<li><a href="/employee/employee/logout.html" style="width: auto; padding-right: 0.85em;">Logout</a></li>
+			<? endif ($$variable{user_type} eq 'E' ) ?>
+		</ul>
+	</div>
+</div>

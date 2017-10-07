@@ -1,0 +1,18 @@
+<?loop pockets?>
+<?if ($$variable{'type'} ne 'Slip Sheet')?>
+<div class="signature">
+<span class="label">Type:</span>
+<?type?>
+<span class="label">Qty:</span>
+<?qty?>
+<? if ($variable->{layout})?>
+<span class="label">Layout:</span>
+	<?if ($variable->{type} eq 'Interior Spreads')?>
+<?layout?> Page Signature
+	<?else ($variable->{type} eq 'Interior Spreads')?>
+	<?layout?> Gate Fold
+	<?endif ($variable->{type} eq 'Interior Spreads')?>
+<? endif ($variable->{layout})?>
+</div>
+<?endif ($$variable{'type'} ne 'Slip Sheet')?>
+<?endloop pockets?>

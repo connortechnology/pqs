@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>
+			<!--#include virtual="/includes/company_name.html"-->
+			- Project Requires Special Attention
+		</title>
+
+		<style type="text/css"><!--#include virtual="/styles/email.css"--></style>
+		<style type="text/css"><!--#include virtual="/styles/order.css"--></style>
+		<style type="text/css"><!--#include virtual="/styles/project.css"--></style>
+		<style type="text/css"><!--#include virtual="/styles/pricing.css"--></style>
+		<style type="text/css" media="print"><!--#include virtual="/styles/print.css"--></style>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		
+		<base href="<?siteURL?>" />
+	</head>
+	<body>
+		
+		<div id="email-wrapper">	
+			<div id="email-border">
+	
+			<p>The following project requires special attention. Please contact the user below to help them process their quote or order.</p>
+            
+		<div style="display:none"> <?debug?></div>
+ <table>
+ <tr><td>Error Reason:</td><td><? if ($variable->{error_code} eq '1101-UC') ?>Project Uncalculated<? else($variable->{error_code} eq '1101-UC') ?>No Predefined Project Matches Found<? endif ($variable->{error_code} eq '1101-UC') ?></td></tr>
+ <tr><td>Website URL:</td><td><?siteURL?></td></tr>
+ <tr><td>Created by:</td><td><?strfirstname?> <?strlastname?></td></tr>
+ <tr><td>Company:</td><td><?strcompanyname?></td></tr>
+ <tr><td>Email:</td><td><?stremail?></td></tr>
+ <tr><td>Phone:</td><td><?strphone?></td></tr>
+ <tr><td>Created For User:</td><td><?ddmUser?></td></tr>
+<? if ($variable->{error_code} eq '1101-UC') ?><tr><td>Project ID:</td><td><a href="<?siteURL?>/main/proj/proj_hist.html?pid=<?pid?>"><?pid?></a></td></tr><tr><td>Project Files:</td><td><a href="<?siteURL?>/main/proj/files.html?pid=<?pid?>">View Project Files</a></td></tr><? else($variable->{error_code} eq '1101-UC') ?><tr><td>Project Files:</td><td><a href="<?siteURL?>/main/proj/files.html?pid=<?pid?>">View Project Files</a></td></tr><? endif ($variable->{error_code} eq '1101-UC') ?> 
+ <tr><td>Predefined Project ID:</td><td><?predefined?></td></tr>
+ <tr><td>Product Name:</td><td><?item?></td></tr>
+ <tr><td>Project Name:</td><td><?txtProjectReference?></td></tr>
+ <tr><td>Comments:</td><td><?txtComments?></td></tr>
+ <tr><td>Quantity:</td><td><?txtQuantity1?></td></tr>
+ <?if Bindery?><tr><td>Number of Pages:</td><td><?txtTotalPageQuantity?></td></tr>
+ <tr><td>Bindery:</td><td><?Bindery?></td></tr>
+ <tr><td>Front Cover:</td><td><? if ($variable->{CoverType} eq 'IndexCover') ?>Card Stock<? endif ($variable->{CoverType} eq 'IndexCover') ?>
+ <? if ($variable->{CoverType} eq 'IndexCoverClear') ?>Card Stock with a Clear Cover<? endif ($variable->{CoverType} eq 'IndexCoverClear') ?>
+  <? if ($variable->{CoverType} eq 'SelfCover') ?>Same as inside Pages<? endif ($variable->{CoverType} eq 'SelfCover') ?>
+  <? if ($variable->{CoverType} eq 'SelfCoverClear') ?>Same as inside Pages with a Clear Cover<? endif ($variable->{CoverType} eq 'SelfCoverClear') ?>
+</td></tr>
+ <tr><td>Back Cover:</td><td><? if ($variable->{BackCoverType} eq 'BackIndexCover') ?>Card Stock<? endif ($variable->{BackCoverType} eq 'BackIndexCover') ?>
+ <? if ($variable->{BackCoverType} eq 'BackIndexCoverBlack') ?>Card Stock with Black Back<? endif ($variable->{BackCoverType} eq 'BackIndexCoverBlack') ?>
+  <? if ($variable->{BackCoverType} eq 'BackSelfCover') ?>Same as inside Pages<? endif ($variable->{BackCoverType} eq 'BackSelfCover') ?>
+   <? if ($variable->{BackCoverType} eq 'BackSelfCoverBlack') ?>Same as inside Pages with a Black Back<? endif ($variable->{BackCoverType} eq 'BackSelfCoverBlack') ?>
+ </td></tr>
+ <?endif Bindery?>
+ <tr><td>Size:</td><td><?size?></td></tr>
+ 
+ <tr><td><?if Bindery?>Inside <?endif Bindery?>Print Colors:</td><td><?colour?></td></tr>
+ <tr><td><?if Bindery?>Inside <?endif Bindery?>Paper Color:</td><td><?stock_colour?></td></tr>
+ <tr><td><?if Bindery?>Inside <?endif Bindery?>Paper Finish:</td><td><?stock_finish?></td></tr>
+ <tr><td><?if Bindery?>Inside <?endif Bindery?>Paper Weight:</td><td><?stock_weight?></td></tr>
+ <tr><td><?if Bindery?>Inside <?endif Bindery?>Paper Name:</td><td><?stock_name?></td></tr>
+
+<? if ($variable->{CoverType} eq 'IndexCover' || $variable->{CoverType} eq 'IndexCoverClear') ?>
+ <tr><td>Front Cover Print Colors:</td><td><?cover_colour?></td></tr>
+ <tr><td>Front Cover Paper Color:</td><td><?cover_stock_colour?></td></tr>
+ <tr><td>Front Cover Paper Finish:</td><td><?cover_stock_finish?></td></tr>
+ <tr><td>Front Cover Paper Weight:</td><td><?cover_stock_weight?></td></tr>
+ <tr><td>Front Cover Paper Name:</td><td><?cover_stock_name?></td></tr>
+<? endif ($variable->{CoverType} eq 'IndexCover' || $variable->{CoverType} eq 'IndexCoverClear') ?>
+
+<? if ($variable->{BackCoverType} eq 'BackIndexCover' || $variable->{BackCoverType} eq 'BackIndexCoverBlack' ) ?>
+ <tr><td>Back Cover Print Colors:</td><td><?back_colour?></td></tr>
+ <tr><td>Back Cover Paper Color:</td><td><?back_stock_colour?></td></tr>
+ <tr><td>Back Cover Paper Finish:</td><td><?back_stock_finish?></td></tr>
+ <tr><td>Back Cover Paper Weight:</td><td><?back_stock_weight?></td></tr>
+ <tr><td>Back Cover Paper Name:</td><td><?back_stock_name?></td></tr>
+<? endif ($variable->{BackCoverType} eq 'BackIndexCover' || $variable->{BackCoverType} eq 'BackIndexCoverBlack' ) ?>
+
+ <tr><td>Folding:</td><td><? if ($variable->{FoldType} eq 'txt2PanelFoldQty') ?>2 Panel Half Fold<? endif ($variable->{FoldType} eq 'txt2PanelFoldQty') ?>
+ <? if ($variable->{FoldType} eq 'txt3PanelRollFoldQty') ?>3 Panel Roll Fold<? endif ($variable->{FoldType} eq 'txt3PanelRollFoldQty') ?>
+  <? if ($variable->{FoldType} eq 'txt3PanelZFoldQty') ?>3 Panel Z Fold (Accordian)<? endif ($variable->{FoldType} eq 'txt3PanelZFoldQty') ?>
+  <? if ($variable->{FoldType} eq 'txt4PanelRollFoldQty') ?>4 Panel Double Parallel Fold<? endif ($variable->{FoldType} eq 'txt4PanelRollFoldQty') ?>
+  <? if ($variable->{FoldType} eq 'txtDoubleGateFolded') ?>Double Gate Fold<? endif ($variable->{FoldType} eq 'txtDoubleGateFolded') ?>
+    <? if ($variable->{FoldType} eq '') ?>None<? endif ($variable->{FoldType} eq '') ?>
+</td></tr>
+ 
+ <tr><td>Rubber Banding:</td><td> <? if Bundle ?>Items per Rubber Band: <?txtWrapQuantity?><? else Bundle ?>None<? endif Bundle ?></td></tr>
+ 
+  <tr><td>Padding:</td><td><? if ($variable->{pad_sheets} eq '') ?>None<? else ($variable->{pad_sheets} eq '') ?>Sheets per Pad: <?pad_sheets?> <?if rdbCardboardBacking?>Backing: Yes<?endif rdbCardboardBacking?><? endif ($variable->{pad_sheets} eq '') ?></td></tr>
+  
+<tr><td>Laminate:</td><td><?if Laminating?>Yes - <?LamType?><?else Laminating?>None<?endif Laminating?></td></tr> 
+
+<tr><td>Mounting:</td><td><?if Mounting?>Yes<?else Mounting?>None<?endif Mounting?></td></tr> 
+
+<tr><td>Scanning:</td><td><?if Scanning?>Yes - <?txtQuantity?><?else Scanning?>None<?endif Scanning?></td></tr> 
+
+ <tr><td>Cartons:</td><td> <?if PlainCartons?>Yes<?else PlainCartons?>None<?endif PlainCartons?></td></tr>
+ 
+ <tr><td>Delivery Date:</td><td><?ddmDueDateMonth1?>, <?ddmDueDateDay1?>, <?ddmDueDateYear1?>, <?ddmDueDateTime?> (MM/DD/YYYY/TIME)</td></tr>
+
+ <tr><td>Upload Artwork File:</td><td><? if ($variable->{filetypes} eq 'HardCopy') ?>Hard Copy and Uploading Files<? endif ($variable->{filetypes} eq 'HardCopy') ?>
+ <? if ($variable->{filetypes} eq 'No Hard Copy') ?>Uploading Files Only<? endif ($variable->{filetypes} eq 'No Hard Copy') ?>
+  <? if ($variable->{filetypes} eq 'Hard Copy Only') ?>Hard Copy Only<? endif ($variable->{filetypes} eq 'Hard Copy Only') ?>
+ </td></tr>
+  
+ <tr><td>Quote or Order:</td><td><?MakeQuote?><?MakeOrder?></td></tr>
+
+</table>
+
+ 		</div>
+	</div>			
+			
+ 	</body>
+</html>

@@ -1,0 +1,7 @@
+<div style="font-size:1em">
+	<span class="label">Image Size</span>
+	<?txtDieWidth?>x<?txtDieHeight?>&quot;
+	<? if ($$variable{'txtDieCutBends'}) ?><span class="label">Die Bends </span><?txtDieCutBends?><? endif ($$variable{'txtDieCutBends'}) ?>
+	<? if ($$variable{'txtDieCutPunches'}) ?><span class="label">Die Punchs </span><?txtDieCutPunches?><? endif ($$variable{'txtDieCutPunches'}) ?>
+<? endif($$variable{'rdbSuppliedDie'} ne 'Y') ?>
+</div>

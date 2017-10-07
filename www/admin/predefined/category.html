@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+<head>
+	<title tal:content="title">Print-Quotes Title</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<xi:include href="/includes/h1-admin-css.html" />
+
+	<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+	<script type="text/javascript" src="/javascripts/menu.js"></script>
+
+	<style type="text/css">
+		/* <![CDATA[ */
+
+		#items th:first-child { text-align: left; }
+		#items label { display: inline; }
+		#items input { margin-bottom: 0; }
+
+		/* ]]> */
+	</style>
+
+</head>
+<body>
+	<xi:include href="/includes/c1-tal.html" />
+
+	<!-- Sidebar -->
+	<div id="sidebar">
+			<div class="option">
+				<a class="back" href="items">Items</a>
+				<a class="back" href="categories">Categories</a>
+			</div>
+	</div>
+
+	<div id="content">
+		<h1><span class="title-section">Marketing &#187; </span> Predefined Product Category</h1>
+
+		<form method="post" action="modify_category">
+			<fieldset>
+				<legend>Category</legend>
+
+				<input name="id" type="hidden" tal:attributes="value category/id" />
+
+				<label><span>Name:</span> <input name="name" type="text" value="" tal:attributes="value category/name" /></label>
+
+				<p tal:condition="false:category/has_products">There are no products currently assigned to this category.</p>
+
+				<table id="items" class="common" tal:condition="category/has_products">
+					<col />
+					<col style="width: 18em;"/>
+					<col style="width: 6em;" />
+
+					<thead>
+						<tr>
+							<th>Product Name</th>
+							<th>Initial View</th>
+							<th>Sort Order</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr tal:repeat="item category/products" tal:attributes="class decode:repeat/even 0 'even' 'odd'">
+							<td><input type="hidden" name="items" value="$item/id" /><a href="item?id=$item/id">$item/name</a></td>
+							<td>
+								<label>Matrix    <input type="radio" name="view-$item/id" value="M" tal:attributes="checked decode:item/initial_view 'M' 'checked' nothing" /></label>
+								<label>Questions <input type="radio" name="view-$item/id" value="Q" tal:attributes="checked decode:item/initial_view 'Q' 'checked' nothing" /></label>
+							</td>
+							<td><input class="numeric" type="text" name="sort-$item/id" tal:attributes="value item/sort" /></td>
+						</tr>
+					</tbody>
+				</table>
+
+			</fieldset>
+
+			<div class="button-bar">
+				<input name="save"   type="submit" class="button right" tal:attributes="value decode:category/id category/id 'Save' 'Create'" value="Save" />
+				<input name="delete" type="submit" class="button" value="Delete" tal:condition="category/id" />
+				<br />
+			</div>
+
+		</form>
+
+	</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

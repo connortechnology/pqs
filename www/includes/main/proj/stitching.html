@@ -1,0 +1,52 @@
+<div style="padding: 1em">
+	<p>The following signatures will be bound:</p>
+
+	<ul>
+		<?if has_cover ?>
+			<li>1 - cover</li>
+		<?endif has_cover ?>
+		<?loop signatures?>
+			<li><?qty?> - <?n?> page signature<?if ($variable->{qty} > 1)?>s<?endif ($variable->{qty} > 1)?></li>
+		<?endloop signatures?>
+		<? if insert_qty ?>
+			<li><?insert_qty?> - insert<?if ($variable->{insert_qty} > 1)?>s<?endif ($variable->{insert_qty} > 1)?></li>
+		<? endif insert_qty ?>	
+	</ul>
+
+	<label for="UseStaples">Would you like your project stapled</label>
+	<select id="UseStaples" name="UseStaples">
+          <option value="y">Yes</option>
+          <option value="n">No</option>
+	</select>
+
+	<? if gatefolded_qty ?>
+		<fieldset style="margin: 1.5em -1em 0 -1em">
+			<legend>Gate Folded Spreads</legend>
+			<p>Do<?if ($variable->{gatefolded_qty} == 1)?>es<?endif ($variable->{gatefolded_qty} == 1)?> your <span class="tip" title="Oversize page(s) that fold into the gutter in overlapping layers creating a spread in excess of four pages">gate folded</span> spread<?if ($variable->{gatefolded_qty} > 1)?>s<?endif ($variable->{gatefolded_qty} > 1)?> require an exact fit? Choosing short will be more cost-effective, however the gate folded page will be approximately 1/16&quot; short of the finished size.</p>
+
+			<label>Gate Folded Page(s) Fit:</label>
+			<div>
+				<label for="rdbGateFoldFitExact" class="radio"><input type="radio" id="rdbGateFoldFitExact" name="rdbGateFoldFit" value="Exact" />Exact </label><br />
+				<label for="rdbGateFoldFitShort" class="radio"><input type="radio" id="rdbGateFoldFitShort" name="rdbGateFoldFit" value="Short" />Short</label>
+			</div>
+			<br />
+		</fieldset>
+	<? endif gatefolded_qty ?>	
+	<!-- 
+	<? while ( @$variable{'Num','Page1','Page2','Width','Height'} = splice @{$$variable{'INSERTS'}},0,5; ) ?>
+		<p>Specify the pages in which the insert falls between?</p>
+		<label for="txtInsertPage1">Insert between Pages:</label>
+		<input id="txtInsertPage1" name="txtInsertPage1<?Num?>" size="9" value="<?Page1?>" class="smbox" />
+		<label for="txtInsertPage2" class="post-input">&amp;</label>
+		<input id="txtInsertPage2" name="txtInsertPage2<?Num?>" size="9" value="<?Page2?>" class="smbox" />
+		<br />
+
+		<p>What are the finished dimensions of the inserts? Must include 3 inch <span class="tip" title="Excess paper needed to bind an insert.">folio lip</span> for bindery.</p>
+		<label for="final_width">Finished Dimensions:</label>
+		<input id="final_width" name="final_width<?Num?>" size="9" value="<?Width?>" class="smbox" />
+		<input id="final_height" name="final_height<?Num?>" size="9" value="<?Height?>" class="smbox" />
+		<label for="final_height" class="post-input">(W&#8243; &#215; H&#8243;)</label>
+		<br />
+	<? endwhile ( @$variable{'Num','Page1','Page2','Width','Height'} = splice @{$$variable{'INSERTS'}},0,5; ) ?>
+ -->
+</div>

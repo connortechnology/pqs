@@ -1,0 +1,92 @@
+<script type="text/javascript">
+<!--
+function addstock(page) {
+OpenWin = this.open(page,"CtrlWindow","top=80,left=100,screenX=100,screenY=80,width=1000,height=900,toolbar=no,menubar=no,location=yes, scrollbars=yes,resizable=yes");
+        }
+//-->
+</script>
+
+<fieldset id="stock">
+	<legend>Stock</legend>
+<?if user.is_staff?>
+		<p>If you're adding a new stock or modifying an existing stock, please select the button below.</p>
+		
+		  <label for="label" class="checkbox" style="padding-left: 3em;">
+		  <input id="label" name="stock_supplied2" type="button" value="Add, Modify and Delete" class="button" onClick="addstock('/main/proj/paper_edit.html?pid=<?pid?>')" />
+		  </label><p></p><p></p>
+	<?endif user.is_staff?>
+
+
+    
+    
+	<p style="margin-bottom: 0;">Please choose a stock family, coated sides, colour, and weight.</p>
+
+	<div style="margin-top: 1ex; padding-left: 3em; vertical-align: bottom;"> 
+		<div style="margin-top: 3ex; padding-right: 1em;">
+			<label for="stock_name" style="width: auto; margin-top: -3ex; padding: 0;">Family:</label><br />
+			<select id="stock_name" name="stock_name" style="min-width: 10em;">
+				<?loop stock.name ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop stock.name ?>
+				<option value="">Clear</option>
+			</select>
+		</div>
+	
+		<div style="margin-top: 3ex; padding-right: 1em;">
+			<label for="stock_finish" style="width: auto; margin-top: -3ex; padding: 0;">Finish:</label><br />
+			<select id="stock_finish" name="stock_finish" style="min-width: 10em;">
+				<?loop stock.finish ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop stock.finish ?>
+				<option value="">Clear</option>
+			</select>
+		</div>
+	
+		<div style="margin-top: 3ex; padding-right: 1em;">
+			<label for="stock_colour" style="width: auto; margin-top: -3ex; padding: 0;">Colour:</label><br />
+			<select id="stock_colour" name="stock_colour" style="min-width: 6em;">
+				<?loop stock.colour ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop stock.colour ?>
+				<option value="">Clear</option>
+			</select>
+		</div>
+	
+		<div style="margin-top: 3ex; padding-right: 0.7em;">
+			<label for="stock_weight" style="width: auto; margin-top: -3ex; padding: 0;">Weight:</label><br />
+			<select id="stock_weight" name="stock_weight" style="min-width: 9em;">
+				<?loop stock.weight ?>
+				<option value="<?key?>"><?value?></option>
+				<?endloop stock.weight ?>
+				<option value="">Clear</option>
+			</select>
+		</div>
+	
+		<div style="margin-top: 4.4ex; margin-bottom: -1px;">
+			<input type="button" id="stock_unbind_all" value="Clear Stock" class="button" />
+		</div>
+	</div>
+	<br />
+
+	<? if ( $variable->{project}{type}{name} eq 'Envelopes') ?>
+	<p id="stock_details" style="padding-left: 3em;">Details: <span style="padding-left: 2em;"></span></p>
+	<br />
+	<? endif ( $variable->{project}{type}{name} eq 'Envelopes') ?>
+
+	
+        
+    <? if can_supply_stock ?>
+		<br />
+        <p>If you&#8216;re supplying your own stock, choose the stock above that most closely resembles the stock you&#8216;ll be providing.</p>
+		<label for="stock_supplied" class="checkbox" style="padding-left: 3em;">
+        <input id="stock_supplied" name="stock_supplied" type="checkbox" value="1" />
+        I wish to supply my own stock.</label><br />
+		<div style="width: auto; padding: 0; margin: 0;">
+			<label for="stock_custom">Custom Stock Details:</label>
+			<textarea id="stock_custom" name="stock_custom"></textarea>
+			<br />
+		</div>
+	<? endif can_supply_stock ?>
+
+	<br />
+</fieldset>

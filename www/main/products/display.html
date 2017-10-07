@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Project - <?category.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+
+	<script type="text/javascript" src="/javascripts/proj/prod_paper.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/prod_cover_paper.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/prod_back_cover_paper.js"></script>
+
+	<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+    <script type="text/javascript">
+	function loadwithpage() {
+	needhelp();
+}
+	
+	
+    window.onload=loadwithpage;
+	
+    function helpmsg() {
+		alert("If you require assistance with your project please call us at <!--#include virtual="/includes/company_telephone_number.html" -->.");
+	}
+	
+	function needhelp() {
+    window.onload = function () {
+        setTimeout(helpmsg, 300000); //Then set it to run again after ten minutes
+    }
+	}
+</script>
+	<link rel="stylesheet" type="text/css" href="/styles/products-v2.css" />
+<!--	<script type="text/javascript" src="/javascripts/products.js"></script>
+--></head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Project &#187;</span> <?category.name?></h1>
+    
+    <div><img src="/images/main/progress/step1.png" /></div>
+<p>Need Help with your project? <a href="/main/support/support_help_desk.html">Click here</a>.</p>
+	<?if include?>
+		<!--#include virtual="<?include?>" -->
+	<?endif include?>
+
+	<?loop items?>
+		<!--#include virtual="/includes/main/products/item.html" -->
+
+		<?if not:_last?>
+			<hr />
+		<?endif not:_last?>
+	<?endloop items?>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/products_left_nav.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

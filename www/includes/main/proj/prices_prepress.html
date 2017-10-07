@@ -1,0 +1,39 @@
+<? if isServicePricing ?>
+
+	<h2 id="pricing_title">Pricing</h2>
+	<br class="clear" />
+
+	<div id="pricing">
+	
+		<table class="no-formatting">
+			<col style="width: 55%;" />
+			<col style="width: 15%;" />
+			<col style="width: 10%;" />
+			<col style="width: 15%;" />
+			<col style="width: 5%;" />
+
+			<thead>
+				<tr>
+					<th style="width: 55%; text-align: left;">Service</th>
+					<th style="width: 15%;">Unit Price</th>
+					<th style="width: 10%;">&nbsp;</th>
+					<th style="width: 15%;">Total</th>
+					<th style="width: 5%;">&nbsp;</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				<tr>
+					<td class="service"><?service.name?></td>
+					<td class="price">$&nbsp;<span id="txtUnitPrice1"><?spec.txtUnitPrice1?></span></td>
+					<td>&nbsp;</td>
+					<td class="price total">$&nbsp;<span id="txtPrice1"><?spec.txtPrice1?></span></td>
+					<td>&nbsp;</td>
+				</tr>
+			</tbody>
+		</table>
+		<br class="clear" />
+	</div>
+	<br class="clear" />
+
+<? endif isServicePricing ?>

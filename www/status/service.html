@@ -1,0 +1,198 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title>Project Service</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" type="text/css" href="/styles/status/style.css" />
+
+		<script type="text/javascript">
+			pid       = $proj/id;
+			sid       = $service/id;
+			timestamp = '$timestamp';
+		</script>
+		<script type="text/javascript" src="/javascripts/JSAN.js"></script>
+		<script type="text/javascript" src="/javascripts/status/service.js"></script>
+		<!-- TEMPORARY: Old menu interface. -->
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+		<script type="text/javascript" src="/javascripts/employee_content.js"></script>
+	</head>
+	<body>
+
+		<xi:include href="/includes/c1-tal.html" />
+
+		<div id="sidebar" class="side-panel">
+			<div id="current_state" class="side-panel wait" tal:attr="class string:side-panel $service/class" tal:content="service/state">
+				Waiting for Approval
+			</div>
+			<a href="/project.html" tal:attr="href string:project?pid=$proj/id">&lt;&lt; Project</a>			<!-- TODO: Docket information should go here at some point.
+			<div id="service_info" class="side-panel">
+				<h2>Service Info.</h2>
+				<table class="columnar">
+					<tr>
+						<th>File Format:</th><td>Quark XPress</td>
+					</tr>
+					<tr>
+						<th>Due Date:</th><td>2005-08-05</td>
+					</tr>
+					<tr>
+						<th>Approval?</th><td>Yes</td>
+					</tr>
+				</table>
+			</div>
+			-->
+			<div id="project_info" class="side-panel">
+				<h2>Project Info.</h2>
+				<table class="columnar no-formatting">
+					<tr>
+						<th>Order ID:</th>
+						<td><a href="/main/order/order_history_details.html" tal:attr="href string:/main/order/order_history_details.html?order_id=$proj/order_id" tal:content="proj/order_id">20050045</a></td>
+					</tr>
+					<tr>
+						<th>Quantity:</th><td tal:content="proj/order_qty">5000</td>
+					</tr>
+					<tr>
+						<th>Created on:</th><td tal:content="proj/createdate">2005-07-01</td>
+					</tr>
+					<tr>
+						<th>Due by:</th><td tal:content="proj/duedate">2005-08-03</td>
+					</tr>
+				</table>
+			</div>
+			<div id="contact_info" class="side-panel" tal:define="p proj">
+				<h2>Customer Contact</h2>
+
+				<div class="contact">
+					<strong tal:content="string:$p/user_proname $p/user_surname">Matthew Grierson</strong><br />
+					<div class="phone" tal:condition="p/user_phone"><abbr title="Phone">p.</abbr>&nbsp;<span tal:replace="p/user_phone">519-894-6514</span> <span tal:condition="p/user_ext"><abbr title="Extension">ext.</abbr> <span tal:replace="p/user_ext">224</span></span></div>
+					<div class="fax"   tal:condition="p/user_fax"><abbr title="Facsimile">f.</abbr>&nbsp;<span tal:replace="p/user_fax">519-894-6515</span></div>
+				</div>
+				<address>
+					<strong tal:content="p/company_name">Print-Quotes Software Inc.</strong><br />
+					<span tal:replace="p/company_address">88 Shoemaker Street</span><br />
+					<span tal:replace="p/company_city">Kitchener</span>, <span tal:replace="p/company_province">Ontario</span><br />
+					<span tal:replace="p/company_country">Canada</span>&nbsp; <span tal:replace="p/company_postalcode">N2E 3G4</span><br />
+				</address>
+				<a style="display: block; text-align: right; margin-top: 1.5ex;" href="mailto:mgrierson@print-quotes-software.com" tal:attr="href string:mailto:$p/user_email?Subject=Order: $p/order_id Project: ($p/id) $p/name">+ Send Email +</a>			</div>
+		</div>
+
+		<div id="content">
+			<h1><span class="title-section">Production &#187;</span> Status &#187; Project: <span tal:replace="proj/id">1431</span> &#187; <span tal:replace="service/name">Graphic Design</span></h1>
+			<h2>Comments</h2>
+			<div id="log">
+				<div tal:repeat="c service/comments" tal:condition="service/comments" tal:attr="id c/xid">
+					<div class="header">
+						<div class="name"><strong>Employee:</strong> <span tal:replace="c/name">Jane Johnson</span></div>
+						<div class="status open" tal:attributes="class string:status $c/state/type"><strong>Status:</strong> <span tal:replace="c/state/name">Started</span></div>
+						<div class="date"><strong>Date:</strong> <span tal:replace="c/mtime">2005-08-03 09:14</span></div>
+					</div>
+					<p tal:condition="c/comment" tal:content="structure prewrap:c/comment">Initial design and layout.</p>
+				</div>
+				<div tal:replace="nothing">
+					<div class="header">
+						<div class="name"><strong>Employee:</strong> Jane Johnson</div>
+						<div class="status wait"><strong>Status:</strong> Waiting on Customer</div>
+						<div class="date"><strong>Date:</strong> 2005-08-03 14:00</div>
+					</div>
+				</div>
+				<div tal:replace="nothing">
+					<div class="header">
+						<div class="name"><strong>Employee:</strong> Jane Johnson</div>
+						<div class="status open"><strong>Status:</strong> Started</div>
+						<div class="date"><strong>Date:</strong> 2005-08-03 16:40</div>
+					</div>
+					<p>Artwork recieved.</p>
+				</div>
+				<div tal:replace="nothing">
+					<div class="header">
+						<div class="name"><strong>Employee:</strong> Jane Johnson</div>
+						<div class="status"></div>
+						<div class="date"><strong>Date:</strong> 2005-08-03 18:02</div>
+					</div>
+					<p>Computer UPS didn't save it from a power failure, this will take a bit longer than we thought.</p>
+				</div>
+				<div tal:replace="nothing">
+					<div class="header">
+						<div class="name"><strong>Employee:</strong> Jane Johnson</div>
+						<div class="status wait"><strong>Status:</strong> Waiting for Approval</div>
+						<div class="date"><strong>Date:</strong> 2005-08-04 15:47</div>
+					</div>
+					<p>Contacted Jim at Acme Co. to review project PDFs.</p>
+				</div>
+				<div tal:replace="nothing">
+					<div class="header">
+						<div class="name"><strong>Employee:</strong> Jane Johnson</div>
+						<div class="status done"><strong>Status:</strong> Completed</div>
+						<div class="date"><strong>Date:</strong> 2005-08-04 17:01</div>
+					</div>
+					<p>Completed Layout.</p>
+				</div>
+				<div tal:replace="nothing">
+					<div class="header">
+						<div class="name"><strong>Employee:</strong> John Smith</div>
+						<div class="status wait"><strong>Status:</strong> Paused</div>
+						<div class="date"><strong>Date:</strong> 2005-08-08 13:48</div>
+					</div>
+					<p>Customer had supplied last years sales data, had to stop the presses. The customer realises it's their error and will be signing off on a new quote once it's generated. Some signatures can be saved but we'll have to change the layout slightly to save them. Larry at Acme Co. is double checking the new data and will send it on soon.</p>
+				</div>
+				<div tal:replace="nothing">
+					<div class="header">
+						<div class="name"><strong>Employee:</strong> Jane Johnson</div>
+						<div class="status open"><strong>Status:</strong> Started</div>
+						<div class="date"><strong>Date:</strong> 2005-08-08 14:02</div>
+					</div>
+					<p>Redoing the layout with the new data.</p>
+				</div>
+				<div tal:replace="nothing">
+					<div class="header">
+						<div class="name"><strong>Employee:</strong> Jane Johnson</div>
+						<div class="status wait"><strong>Status:</strong> Waiting for Approval</div>
+						<div class="date"><strong>Date:</strong> 2005-08-08 16:12</div>
+					</div>
+					<p>New layout completed, waiting for customer approval.</p>
+				</div>
+
+				<form id="state_change" method="POST" action="project_service_state">
+					<div>
+						<div class="header">
+							<div class="name"><strong>Employee:</strong> <span tal:replace="user/name">John Smith</span></div>
+							<div class="status">
+								<strong><label for="state">Status:</label></strong>
+								<select id="state" name="state">
+									<!-- TODO: Allow comments that don't change the state.
+									<option class="none" value="">&#8211; No Change &#8211;</option>
+									-->
+									<option class="none" value="0">Not Started</option>
+									<option class="open" value="1">Started</option>
+									<option class="wait" value="2">Paused</option>
+									<option class="wait" value="3">Waiting on Customer</option>
+									<option class="wait" value="4">Waiting for Approval</option>
+									<option class="done" value="5">Completed</option>
+								</select>
+							</div>
+						</div>
+						<div class="controls">
+							<input type="hidden" name="pid" tal:attributes="value proj/id" />
+							<input type="hidden" name="sid" tal:attributes="value service/id" />
+							<!-- Temporary way to distinguish between JS update and this post. -->
+							<input type="hidden" name="location" tal:attributes="value string:service?pid=$proj/id\;sid=$service/id" />
+
+							<textarea id="comment" name="comment"></textarea>
+							<input type="submit" value="Submit" />
+						</div>
+					</div>
+				</form>
+
+			</div>
+
+		</div>
+		<!--
+		<div id="loggedin">
+			<a href="logout.html">Logout</a> <span class="label">Logged in as: </span><span class="name" tal:content="user/name">John Smith</span>
+		</div>
+		-->
+		<xi:include href="/includes/f1-tal.html" />
+	</body>
+</html>

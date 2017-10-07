@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Marketing - Banners
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">Marketing &#187;</span> Banners</h1>
+
+	<form id="f1" name="f1" method="post"  enctype="multipart/form-data" onsubmit="return fmCheck(f1);">
+
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p>To begin this section, please use the dropdown menu below, to search for a banner.</p>
+
+			<label for="ddmBanner">Banner:</label>
+			<select id="ddmBanner" name="ddmBanner" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value=""> Select a Banner </option>
+				<option value=""> ----------------- </option>
+				<?FILL_BANNER_NAME?>
+			</select>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="&lt;&lt;" />
+				<input class="button" type="submit" name="btnFunction" value="&gt;&gt;" />
+				<input class="button" type="button" name="btnFunction" value="New" onclick="addCheck(f1);" />
+				<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=2;" />
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Details
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtBannerName">Name:</label>
+			<input type="text" id="txtBannerName" name="txtBannerName" value="<?BANNER_NAME?>" size="30" class="input-text" />
+			<br />
+
+			<label for="txtBannerURL">Banner Link:</label>
+			<input type="text" id="txtBannerURL" name="txtBannerURL" size="30" class="input-text" value="<?BANNER_URL?>" />
+			<br />
+
+			<label for="selectCategories">Apply to Category:</label>
+			<select id="selectCategories" name="selectCategories" size="4" multiple>
+				<?FILL_CUSTOMER_CATEGORIES?>
+			</select>
+			<br />
+
+			<p class="indent-regular">Ctrl+Click to select multiple values</p>
+	
+			<label for="fileBannerImage">Upload Image:</label>
+			<input type="file" class="file" size="22" id="fileBannerImage" name="fileBannerImage" enctype="multipart/form-data" />
+			<br />
+	
+			<span class="label">Note: Banner Size:</span>
+			<label class="value">770W x 60H pixels</label>
+			<br />
+	
+			<label>Current Image:</label>
+			<? if ( $$variable{'BANNER_IMAGE'} ) ?>
+				<img src="/images/banners/<?BANNER_IMAGE?>" />
+			<? else ( $$variable{'BANNER_IMAGE'} ) ?>
+				<label class="value">No image uploaded yet.</label>
+			<? endif ( $$variable{'BANNER_IMAGE'} ) ?>
+			<br />
+		</fieldset>
+	</form>
+</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

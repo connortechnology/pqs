@@ -1,0 +1,60 @@
+<html>
+<head>
+<title><!--#include virtual="/includes/company_name.html" --> File Upload</title>
+<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+<link href="/styles/site.css" rel="stylesheet" type="text/css" media="screen, print" />
+
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+<link rel="stylesheet" href="/resources/demos/style.css" />
+<script>
+function stuff (){
+$(function() {
+$( "#dialog-confirm" ).dialog({
+resizable: false,
+height:140,
+modal: true,
+buttons: {
+"Yes Cancel all Uploads": function() {
+self.close();
+return false;
+},
+"No Continue Uploading": function() {
+$( this ).dialog( "close" );
+return true;
+}
+}
+});
+});
+}
+</script>
+</head>
+<body>
+
+<div id="email-header">
+					<img src="/images/e-mail/email_header.gif" />
+				</div>
+<div id="dialog-confirm" title="Cancel your file uploads?">
+</div>
+<div style="position:absolute;top:0;left:0; width:100%;height:15px"><span style="float:right; width:200;height:50;" onMouseOver="stuff();"></span></div>
+<div style="padding-left:15px !important;">
+<h2><ul style="padding-left: 5px;">
+<li>Please browse to the file you wish to upload below.</li>
+<li>To Upload multiple files at once use your SHIFT or CTRL keys to select additional files.</li>
+<li style="color:#FF0000">When you are finished selecting your files minimize this window.</li>
+<li>DO NOT CLOSE this window.</li>
+<li>Your files will be uploaded in the background while you finish your quote or order.</li>
+<li>This window will notify you when the upload is finished and it's safe to close.</li>
+</ul></h2></div>
+	<form id="upload" name="upload" method="post" enctype="multipart/form-data" action="upload_complete.html">
+			<table>
+                <tr>
+                <td style="height:30px !important; border:none !important;">
+                <input type="file" class="file" size="51" name="filename-1" multiple onChange="growTable(this)"/>
+				</td>
+                </tr>
+            </table>
+	</form>
+    </body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production > Time Collection > Service Allocation
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Time Collection &#187;</span> Service Allocation</h1>
+
+	<p> <? if ( $$variable{'user_type'} eq 'A' ) ?>If you would like to assign services to another user please use the User Name drop down below. <? endif ( $$variable{'user_type'} eq 'A' ) ?> To assign a service check off the services you would like to assign in the Assign column and select the Save button at the bottom of the page.</p>
+    <form action="" method="post" name="f2" id="f2">
+        <fieldset>
+            <legend>
+                Service Allocation
+          </legend>
+			
+            
+           <!-- <label for="ddmUser">Service:</label>
+			<select id="ddmService" name="ddmService" >
+				<option value=""> Select a Service </option>
+				<option value=""> ----------------- </option>
+				<?SERVICE_LIST?>
+			</select><input type="button" name="btnFunction" class="button" value="Go" />
+			<br />-->
+            
+            <? if ( $$variable{'user_type'} eq 'A' ) ?>
+            <label for="ddmUser">User Name:</label>
+			<select id="ddmUser" name="ddmUser" onChange='form.submit()' >
+				<option value=""> Select a User </option>
+				<option value=""> ----------------- </option>
+				<?USERS?>
+			</select>
+           
+			<br />
+            <? endif ( $$variable{'user_type'} eq 'A' ) ?>
+
+			
+                <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
+                    <tr>
+                      <th>Due Date</th>
+                      <th>Order ID</th>
+                      <th>Project ID</th>
+                        <th>Service Name</th>
+                        <th>Status</th>
+                        <th>Assigned To</th>
+                        <th>Assign</th>
+                    </tr>
+
+						<?loop SERVICES ?>
+                        <tr>
+                          <td style="text-align: left;"> <?lngserviceindex ?> - <?daterequired?></td>
+                          <td style="text-align: left;"><?lngorderid?></td>
+                          <td style="text-align: left;"><?lngprojectindex?></td>
+                            <td style="text-align: left;"><?strservicetype?></td>
+                            <td style="text-align: left;"><?strstatus?></td>
+                            <td style="text-align: left;"><?assigned_to?></td>
+                            <td class="select c" style="text-align: center;">
+								<input type="checkbox" name="assign" value="<?lngserviceindex?>" 
+											<? if a?>checked<?endif a?> /> 
+								<input type="hidden" name="uncheck" value="<?lngserviceindex?>" />
+							</td>
+					
+                        </tr>
+						<?endloop SERVICES ?>
+                </table>
+            <br />
+           
+            <input type="submit" name="Update" class="button" value="Save" />
+        </fieldset>
+    </form>
+
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

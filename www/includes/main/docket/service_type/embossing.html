@@ -1,0 +1,35 @@
+  
+<div class="indent">
+  <span class="label">Equipment</span>
+  <? if ($$variable{'qtyIndex'} == 1 ) ?>
+  	<?ddmEquipment1?>
+  <? endif ($$variable{'qtyIndex'} == 1 ) ?>
+  <? if ($$variable{'qtyIndex'} == 2 ) ?>
+  	<?ddmEquipment2?>
+  <? endif ($$variable{'qtyIndex'} == 2 ) ?>
+  <? if ($$variable{'qtyIndex'} == 3 ) ?>
+  	<?ddmEquipment3?>
+  <? endif ($$variable{'qtyIndex'} == 3 ) ?>
+  <span class="label">Image Size</span>
+
+  <?txtDieWidth?>x<?txtDieHeight?>"
+  
+  <span class="label">Supplied Die</span>
+  <?rdbSuppliedDie?>
+  
+  <span class="label">Type</span>
+  <?rdbDieType?>
+  
+  
+  <span class="label">Imposition</span>
+  <? if ($$variable{'qtyIndex'} == 1 ) ?>
+  	<?txtImposition1?>
+  <? endif ($$variable{'qtyIndex'} == 1 ) ?>
+  <? if ($$variable{'qtyIndex'} == 2 ) ?>
+  	<?txtImposition2?>
+  <? endif ($$variable{'qtyIndex'} == 2 ) ?>
+  <? if ($$variable{'qtyIndex'} == 3 ) ?>
+  	<?txtImposition3?>
+  <? endif ($$variable{'qtyIndex'} == 3 ) ?>
+  out
+</div>

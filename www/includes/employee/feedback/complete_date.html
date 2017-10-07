@@ -1,0 +1,19 @@
+<table width="600" border="0" cellspacing="0" cellpadding="0">
+	<tr>
+		<td width="320" height="10">&nbsp;</td>
+		<td width="20" height="10">&nbsp;</td>
+		<td width="260" colspan="2" height="10">&nbsp;</td>
+	</tr>
+	<tr>
+		<td>Completion Date:</td>
+		<td>&nbsp;</td>
+		<td colspan="2">
+<? eval ( $$variable{'months'} = ssi::getmonths($$variable{'ddmCompletionDateMonth'}?$$variable{'ddmCompletionDateMonth'}:((localtime(time))[4]+1)); ) ?>
+<? eval ( $$variable{'days'} = ssi::getdays($$variable{'ddmCompletionDateDay'}?$$variable{'ddmCompletionDateDay'}:(localtime(time))[3]); ) ?>
+<? eval ( $$variable{'years'} = ssi::getyears(undef,undef,$$variable{'ddmCompletionDateYear'}?$$variable{'ddmCompletionDateYear'}:(localtime(time))[5]-101); ) ?>
+			<select name="ddmCompletionDateMonth" size="1"> <?months?> </select>
+			<select name="ddmCompletionDateDay" size="1"> <?days?> </select>
+			<select name="ddmCompletionDateYear" size="1"> <?years?> </select>
+		</td>
+	</tr>
+</table>

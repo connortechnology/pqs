@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+        <!--#include virtual="/includes/web_page_title.html" -->
+        Projects - <?service.category?> - <?service.name?>
+        <!--#include virtual="/includes/web_page_title_end.html" -->
+    </title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+    <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+
+		<fieldset>
+			<legend><?service.name?></legend>
+		
+			<p>What is the quantity of project per <?lc:service.name?>?</p>
+			
+			<label for="txtItemsPerPackage">Projects per <?service.name?>:</label>
+			<input id="txtItemsPerPackage" name="txtItemsPerPackage" value="<?txtItemsPerPackage?>" type="text" size="9" class="smBox" />
+			<label for="chkOverrideItemsPerPackage" class="checkbox override"><input type="checkbox" id="chkOverrideItemsPerPackage" name="chkOverrideItemsPerPackage" class="override" <?chkOverrideItemsPerPackage?> value="Y" />Override</label>
+			<br />
+
+			<span class="label">Number of <?service.name?>:</span>
+			<span id="txtPackageQuantity"><?spec.txtPackageQuantity?></span>
+			<br />
+		
+			<? if ( $$variable{'ddmPackageType'} ne '' ) ?>
+				<label for="ddmPackageType"><?service.name?> Size:</label>
+				<select id="ddmPackageType" name="ddmPackageType" >
+					<?ddmPackageType?>
+				</select>
+				<br />
+			<? endif ( $$variable{'ddmPackageType'} ne '' ) ?>
+
+			<span class="label">Unit Weight:</span>
+			<span id="txtPackageWeight"><?spec.txtPackageWeight?></span> lbs.
+			<br />
+		
+			<span class="label">Total Weight:</span>
+			<div>
+				<?if spec.txtTotalProjectWeight1 ?>
+					<span id="txtTotalProjectWeight1"><?ceil:spec.txtTotalProjectWeight1?></span> lbs.
+					<br />
+				<?endif spec.txtTotalProjectWeight1 ?>
+				<?if spec.txtTotalProjectWeight2 ?>
+					<span id="txtTotalProjectWeight2"><?spec.txtTotalProjectWeight2?></span> lbs.
+					<br />
+				<?endif spec.txtTotalProjectWeight2 ?>
+				<?if spec.txtTotalProjectWeight3 ?>
+					<span id="txtTotalProjectWeight3"><?spec.txtTotalProjectWeight3?></span> lbs.
+					<br />
+				<?endif spec.txtTotalProjectWeight3 ?>
+			</div>
+			<br />
+		</fieldset>
+
+		<!--#include virtual="/includes/main/proj/service_combo_quantity.html"-->
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+	
+
+		<input type="hidden" name="pid" value="<?pid?>" />
+		<input type="hidden" name="sid" value="<?sid?>" />
+
+		<input type="hidden" name="hdnSkidQuantity1" value="<?hdnSkidQuantity1?>" />
+		<input type="hidden" name="hdnSkidQuantity2" value="<?hdnSkidQuantity2?>" />
+		<input type="hidden" name="hdnSkidQuantity3" value="<?hdnSkidQuantity3?>" />
+		<input type="hidden" name="txtCartonWeight1" />
+		<input type="hidden" name="txtCartonWeight2" />
+		<input type="hidden" name="txtCartonWeight3" />
+	</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

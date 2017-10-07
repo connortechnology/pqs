@@ -1,0 +1,165 @@
+
+			<p style="font-size:36px !important; width:600 !important;  text-align: center !important;"><strong>PACKING SLIP </strong></p>
+
+		<div id="order-box">
+			<!-- Header. -->
+			<div id="order-header">
+
+<address>
+<?if edit_slip?>
+<textarea name="blind_address"><?ship_address.blind_address?></textarea>
+<input type="submit" class="button" value="Save" style="float:right"/>
+<?else edit_slip?>
+<div onClick="packing_slip.edit_slip.value=1;packing_slip.submit();">
+<?ship_address.blind_address?>
+<span class="no_print" style="cursor:pointer"> **Click to edit** </span>
+</div>
+<?endif edit_slip?>
+
+</address>
+
+				<table id="primary_info" class="no-formatting">
+						<tr>
+							<th>Order ID:</th>
+							<td><a href="/main/order/order_history_details.html?Issue_Cookie=true&order_id=<?ORDER_ID?>"><?rev:ORDER_ID?></a>
+							</td>
+						</tr>
+						<tr>
+							<th>PO Number:</th>
+							<td><?PONUM?></td>
+						</tr>
+						<? if ( ! $variable->{HidePricing} ) ?>
+						<tr>
+							<th>Terms:</th>
+							<td><? if ($$variable{'Terms'}) ?>Net <?Terms?> days<? else ($$variable{'Terms'}) ?>C.O.D.<? endif ($$variable{'Terms'}) ?></td>
+						</tr>
+						<? endif ( ! $variable->{HidePricing} ) ?>
+				</table>
+
+			</div>
+
+			<table class="customer no-formatting">
+				<thead>
+					<tr>
+						<th style="text-align: left;">Ordered By:</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><address><?txtSalutation?> <?txtFirstName?> <?txtLastName?><br />
+								<?txtCompanyName?><br />
+								<?txtAddress1?><br />
+								<? if ( $$variable{'txtAddress2'} ) ?><?txtAddress2?><br /><? endif ( $$variable{'txtAddress2'} ) ?>
+								<?CCITYPROVCOUNTRY?><br />
+								<?txtPostalCode?><br />
+								<? if ( $$variable{'txtPhone'} ne '' ) ?>
+									<?txtPhone?><? if ( $$variable{'txtExtension'} ) ?> &nbsp;Ext. <?txtExtension?><? endif ( $$variable{'txtExtension'} ) ?><br />
+								<? endif ( $$variable{'txtPhone'} ne '' ) ?>
+								<? if ( $$variable{'txtFax'} ne '' ) ?>
+									<?txtFax?><br />
+								<? endif ( $$variable{'txtFax'} ne '' ) ?>
+								<?txtEmail?><br /></address>
+						</td>
+						<td></td>
+					</tr>
+				</tbody>
+			</table>
+
+			<table class="invoice no-formatting">
+				<col id="project_name" />
+				<col id="date" />
+				<col id="qty" />
+				<col id="total" />
+				<thead>
+					<tr>
+						<th style="text-align: left;">Project</th>
+						<th style="text-align: center;">Files</th>
+						<th style="text-align: center;">Required Date</th>
+						<th>Quantity</th>
+						<th>
+						<? if ( ! $variable->{HidePricing} ) ?>
+						Total <?CurrencySymbol?>
+						<? endif ( ! $variable->{HidePricing} ) ?>						</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					<?loop PROJECTS ?>
+					<tr class="project no-background">
+						<td>
+							<? if ( $$variable{'index'} ne "" ) ?>
+								<a href="/main/proj/proj_view.html?Issue_Cookie=true&ProjectIndex=<?index?>"><?name?></a>
+								<? if trackingnumber ?>
+									<br/>
+                                	Shipment Tracking ID: <?trackingnumber?>
+								<? endif trackingnumber ?>
+							<? else ( $$variable{'index'} ne "" ) ?>
+								<?name?>
+							<? endif ( $$variable{'index'} ne "" ) ?>						</td>
+						<td style="text-align: center;"><a href="/main/proj/proj_upld.html?Issue_Cookie=true&ProjectIndex=<?pid?>" title="Upload / Approve">U/A</a></td>
+
+						<td><?date?></td>
+						<td><?qty?></td>
+						<td <? if ( $$variable{'expired'} ) ?> class = "error" <? endif ( $$variable{'expired'} ) ?> >
+						<? if ( ! $variable->{HidePricing} ) ?>
+						<?price?>
+						<? endif ( ! $variable->{HidePricing} ) ?>						</td>
+					</tr>
+					<?endloop PROJECTS?>
+				</tbody>
+
+	<? if ( ! $variable->{HidePricing} ) ?>
+				<tfoot>
+					<tr>
+						<th colspan="4">Sub-Total:</th>
+						<td class="sub-total"><?SUB_TOTAL?></td>
+					</tr>
+					<tr>
+						<th colspan="4">Shipping & Handling:</th>
+						<td><?SHIPPING?></td>
+					</tr>
+	    		<? if ( $$variable{'GST'} ne '' ) ?>
+					<tr>
+						<th colspan="4">Federal Sales Tax:</th>
+						<td><?GST?></td>
+					</tr>
+    			<? endif ( $$variable{'GST'} ne '' ) ?>
+			    <? if ( $$variable{'PST'} ne '' ) ?>
+					<tr>
+						<th colspan="4">Provincial/State Sales Tax:</th>
+						<td><?PST?></td>
+					</tr>
+			    <? endif ( $$variable{'PST'} ne '' ) ?>
+			    <? if (( $$variable{'HST'} ne '' ) && ( $$variable{'HST'} ne  '0.00')) ?>
+					<tr>
+						<th colspan="4">Harmonized Sales Tax:</th>
+						<td><?HST?></td>
+					</tr>
+			    <? endif (( $$variable{'HST'} ne '' ) && ( $$variable{'HST'} ne  '0.00')) ?>
+					<tr>
+						<th colspan="4">Total:</th>
+						<td class="total"><?TOTAL?></td>
+					</tr>
+			    <? if ( $$variable{'DepositDue'} ) ?>
+					<tr>
+						<th colspan="4">Deposit Due:</th>
+						<td><?DepositDue?></td>
+					</tr>
+			    <? else ( $$variable{'DepositDue'} ) ?>
+					<tr>
+						<th colspan="4">Amount Paid:</th>
+						<td><?AmountPaid?></td>
+					</tr>
+    			<? if ( $$variable{'AmountOutstanding'} > 0 and $$variable{'ORDER_STATUS'} eq 'Complete' ) ?>
+					<tr>
+						<td colspan="3">Please remit payments to the name and address above.</td>
+						<th>Balance Owing:</th>
+						<td><?AmountOutstanding?></td>
+					</tr>
+					<? endif ( $$variable{'AmountOutstanding'} > 0 and $$variable{'ORDER_STATUS'} eq 'Complete' ) ?>
+					<? endif ( $$variable{'DepositDue'} ) ?>
+				</tfoot>
+	<? endif ( ! $variable->{HidePricing} ) ?>
+			</table>
+		</div>

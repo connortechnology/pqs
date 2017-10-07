@@ -1,0 +1,394 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html"-->
+		Managerial - Credit Applications
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+	
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript">
+		function approve( form ) {
+			form.txtTerms.value = form.AccountTermsDesired.value;
+			form.CreditLimit.value = form.AccountLimitDesired.value;
+			form.txtDownpayment.value = '0';
+		} // end function approve( form )
+
+		function decline( form ) {
+			form.txtTerms.value = '0';
+			form.CreditLimit.value = '0';
+			form.txtDownpayment.value = form.CurrentDownpayment.value;
+		} // end function decline( form )
+
+		function submit_check( form ) {
+			if ( ! ( form.verdict[0].checked || form.verdict[1].checked ) ) {
+				alert( "You must either approve or decline the credit application." );
+				return false;
+			} else {
+				return true;
+			} // end if
+		} // end function submit_check( form )
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+
+	<h1><span class="title-section">Accounting &#187;</span> Credit Applications &#187; Details</h1>
+
+	<? if ( $$variable{'credit_index'} ) ?>
+
+		<form name="f1" onsubmit="return submit_check(f1);" method="post" action="credit_applications.html">
+
+			<fieldset>
+				<legend>
+					Terms &amp; Approval
+				</legend>
+
+				<p class="none">&nbsp;</p>
+
+				<? if ( $$variable{'hiddenCustomerID'} ) ?>
+	
+					<p>Select whether to approve or decline the credit application, edit as neccessary, and click Save.</p>
+	
+					<input type="hidden" name="credit_index" value="<?credit_index?>" />
+					
+					<label>Approval:</label>
+					<div>
+						<label class="radio"><input type="radio" name="verdict" value="Approved" onclick="approve(f1);" <?verdictApproved?> />Approved</label><br />
+						<label class="radio"><input type="radio" name="verdict" value="Declined" onclick="decline(f1);" <?verdictDeclined?> />Declined</label><br />
+					</div>
+					<br />
+
+					<label>Terms:</label>
+					<input type="text" class="input-text" name="txtTerms" value="<?GrantedTerms?>" />
+					<label class="value">&nbsp;Days</label>
+					<br />
+
+					<label>Credit Limit:</label>
+					<input type="text" name="CreditLimit" value="<?GrantedCreditLimit?>" class="input-text" />
+					<br />
+
+					<label>Required Downpayment Amount:</label>
+					<input type="text" class="input-text" name="txtDownpayment" value="<?GrantedDownpayment?>" />
+					<label class="value">&nbsp;%</label>
+					<br />
+
+					<div class="button-bar indent-regular">
+						<input class="button" type="submit" name="btnFunction" value="Save" />
+						<br />
+						</div>
+					<br />
+				</fieldset>
+
+				
+				<fieldset>
+					<legend>
+						Requested Credit Options
+					</legend>
+
+					<p class="none">&nbsp;</p>
+
+					<span class="label">First Order Value:</span>
+					<label class="value"><?FirstOrderValue?></label>
+					<br />
+
+					<span class="label">Annual Purchases:</span>
+					<label class="value"><?AnnualPurchases?></label>
+					<br />
+
+					<span class="label">Accounts Payable Contact:</span>
+					<label class="value"><?AccountsPayableContact?></label>
+					<br />
+
+					<label>Account Limit:</label>
+					<input type="hidden" name="AccountLimitDesired" value="<?AccountLimitDesired?>" />
+					<label class="value"><?AccountLimitDesired?></label>
+					<br />
+
+					<label>Terms:</label>
+					<input type="hidden" name="AccountTermsDesired" value="<?AccountTermsDesired?>" />
+					<label class="value"><?AccountTermsDesired?></label>
+					<br />
+
+					<label>Financial Statement Available?:</label>
+
+					<label class="value"><?FinancialStatementAvailable?></label>
+
+					<br />
+
+						<label>Signed By:</label>
+						<label class="value"><?Signature?></label>
+
+					<br />
+
+					<label>Submitted On:</label>
+
+					<label class="value"><?SubmissionDate?></label>
+					<br />
+				</fieldset>
+
+
+				<fieldset>
+					<legend>
+						Current Credit Information
+					</legend>
+
+					<p class="none">&nbsp;</p>
+
+					<span class="label">Terms:</span>
+					<label class="value"><?txtTerms?> Days</label>
+					<br />
+
+					<span class="label">Credit Limit:</span>
+					<label class="value"><?CreditLimit?></label>
+					<br />
+
+					<label>Required Downpayment Amount:</label>
+					<input type="hidden" name="CurrentDownpayment" value="<?txtDownpayment?>" />
+					<label class="value"><?txtDownpayment?> %</label>
+					<br />
+				</fieldset>
+
+
+				<fieldset>
+					<legend>
+						Customer Information
+					</legend>
+
+					<p class="none">&nbsp;</p>
+
+					<label>Company Name:</label>
+					<label class="value"><?txtCompanyName?></label>
+					<br />
+
+					<label>Address:</label>
+					<label class="value"><?txtAddress1?></label>
+					<br />
+
+					<? if ( $$variable{'txtAddress2'} ) ?>
+						<label>&nbsp;</label>
+						<label class="value"><?txtAddress2?></label>
+						<br />
+					<? endif ( $$variable{'txtAddress2'} ) ?>
+
+					<label>City:</label>
+					<label class="value"><?txtCity?></label>
+					<br />
+
+					<label>Province/State:</label>
+					<label class="value"><?txtStateProvince?></label>
+					<br />
+
+					<label>Postal/Zip Code:</label>
+					<label class="value"><?txtPostalCode?></label>
+					<br />
+
+					<label>Country:</label>
+					<label class="value"><?txtCountry?></label>
+					<br />
+
+					<label>Phone:</label>
+					<label class="value"><?txtPhone?></label>
+					<br />
+
+					<label>Extension:</label>
+					<label class="value"><?txtExtension?></label>
+					<br />
+
+					<label>Fax:</label>
+					<label class="value"><?txtFax?></label>
+					<br />
+				</fieldset>
+
+
+				<fieldset>
+					<legend>
+						Business Information
+					</legend>
+
+					<p class="none">&nbsp;</p>
+
+					<label>Legal Name:</label>
+					<label class="value"><?txtLegalBusinessName?></label>
+					<br />
+
+					<label>Legal Form:</label>
+					<label class="value"><?rdbLegalForm?></label>
+					<br />
+
+					<label>Business Type:</label>
+					<label class="value"><?txtBusinessType?></label>
+					<br />
+
+					<label>Year Established:</label>
+					<label class="value"><?txtStartYear?></label>
+					<br />
+
+					<label>President/Owner/CEO:</label>
+					<label class="value"><?txtPresidentOwner?></label>
+					<br />
+
+					<label>Number of Employees:</label>
+					<label class="value"><?txtEmployees?></label>
+					<br />
+
+					<label>Annual Sales:</label>
+					<label class="value"><?txtAnnualSales?></label>
+					<br />
+
+					<label>Federal ID #/SSN # or GST #:</label>
+					<label class="value"><?txtGSTNumber?></label>
+					<br />
+
+					<label>Provincial/State Tax #:</label>
+					<label class="value"><?txtPSTNumber?></label>
+					<br />
+				</fieldset>
+
+
+				<fieldset>
+					<legend>
+						Bank Information
+					</legend>
+
+					<p class="none">&nbsp;</p>
+
+					<label>Bank Name:</label>
+					<label class="value"><?txtBankName?></label>
+					<br />
+
+					<label>Bank Branch #:</label>
+					<label class="value"><?txtBankBranch?></label>
+					<br />
+
+					<label>Bank Account #:</label>
+					<label class="value"><?txtBankAccountNumber?></label>
+					<br />
+
+					<label>Bank Account Manager:</label>
+					<label class="value"><?txtBankAccountManager?></label>
+					<br />
+
+					<label>Bank Phone:</label>
+					<label class="value"><?txtBankPhone?></label>
+					<br />
+
+					<label>Bank Fax:</label>
+					<label class="value"><?txtBankFax?></label>
+					<br />
+
+					<label>Bank E-mail:</label>
+					<label class="value"><?txtBankEmail?></label>
+					<br />
+				</fieldset>
+
+
+				<fieldset>
+					<legend>
+						Trade References
+					</legend>
+					
+					<p class="none">&nbsp;</p>
+					
+					<h5>Reference 1</h5>
+
+					<label>Company Name:</label>
+					<label class="value"><?txtTradeReferenceCompanyName1?></label>
+					<br />
+
+					<label>Contact:</label>
+					<label class="value"><?txtTradeReferenceContact1?></label>
+					<br />
+
+					<label>Phone:</label>
+					<label class="value"><?txtTradeReferencePhone1?></label>
+					<br />
+
+					<label>Extension:</label>
+					<label class="value"><?txtTradeReferenceExt1?></label>
+					<br />
+
+					<label>Fax:</label>
+					<label class="value"><?txtTradeReferenceFax1?></label>
+					<br />
+
+					<label>E-mail Address:</label>
+					<label class="value"><?txtTradeReferenceEmail1?></label>
+					<br />
+
+					<h5>Reference 2</h5>
+
+					<label>Company Name:</label>
+					<label class="value"><?txtTradeReferenceCompanyName2?></label>
+					<br />
+
+					<label>Contact:</label>
+					<label class="value"><?txtTradeReferenceContact2?></label>
+					<br />
+
+					<label>Phone:</label>
+					<label class="value"><?txtTradeReferencePhone2?></label>
+					<br />
+
+					<label>Extension:</label>
+					<label class="value"><?txtTradeReferenceExt2?></label>
+					<br />
+
+					<label>Fax:</label>
+					<label class="value"><?txtTradeReferenceFax2?></label>
+					<br />
+
+					<label>E-mail Address:</label>
+					<label class="value"><?txtTradeReferenceEmail2?></label>
+					<br />
+
+					<h5>Reference 3</h5>
+
+					<label>Company Name:</label>
+					<label class="value"><?txtTradeReferenceCompanyName3?></label>
+					<br />
+
+					<label>Contact:</label>
+					<label class="value"><?txtTradeReferenceContact3?></label>
+					<br />
+
+					<label>Phone:</label>
+					<label class="value"><?txtTradeReferencePhone3?></label>
+					<br />
+
+					<label>Extension:</label>
+					<label class="value"><?txtTradeReferenceExt3?></label>
+					<br />
+
+					<label>Fax:</label>
+					<label class="value"><?txtTradeReferenceFax3?></label>
+					<br />
+
+					<label>E-mail Address:</label>
+					<label class="value"><?txtTradeReferenceEmail3?></label>
+					<br />
+				</fieldset>
+			<? endif ( $$variable{'hiddenCustomerID'} ) ?>
+
+			<input type="hidden" name="btnFunction" />
+		</form>
+
+	<? else ( $$variable{'credit_index'} ) ?>
+		<p>No Credit Application specified.</p>
+	<? endif ( $$variable{'credit_index'} ) ?>
+</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

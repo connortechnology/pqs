@@ -1,0 +1,131 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Managerial - Accounting Search
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/prototype.js"></script>
+	<script type="text/javascript" src="accounting_payments.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Accounting &#187;</span> Payments</h1>
+
+	<p>Choose criteria and click show results. You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.</p>
+
+	<form id="f1" name="f1" method="post" action="accounting_payments.html">
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+		
+			<p class="none">&nbsp;</p>
+		
+			<label for="ddmCustomers">Customer:</label>
+			<select id="ddmCustomers" name="ddmCustomers" size="1" onchange="form.submit();">
+				<option value=""> All Customers </option>
+				<?ddmCustomers?>
+			</select>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Payments
+			</legend>
+			
+			<p class="none">&nbsp;</p>
+			
+			<label>Amount:</label>
+			<input type="text" name="add_payment" id="add_payment" value="" />
+			<br />
+			
+			<label>Description:</label>
+			<input type="text" name="Description" size="30" />
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Results
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<? loop ACCOUNTS ?>
+				<label>Company:</label>
+				<label class="value" style="font-weight: bold;"><?name?></label>
+				<br />
+
+				<label>Account:</label>
+				<label class="value" style="font-weight: bold;">#<?cust_id?></label>
+				<br />
+
+				<table class="tbl" cellspacing="0" cellpadding="0" border="0">
+					<tr>
+						<th>Order ID</th>
+						<th>Date</th>
+						<th>Status</th>
+						<th>P.O. #</th>
+						<th>Total</th>
+						<th>Balance</th>
+						<th>Payment</th>
+						<th style="font-size: 0.85em;">Payments<br />Applied</th>
+					</tr>
+	
+					<?loop orders?>
+						<tr>
+							<td><a href="accounting_details.html?order_id=<?order_id?>"><?rev:order_id?></a><input type="hidden" name="order_ids" disabled="disabled" value="<?order_id?>" /></td>
+							<td style="text-align: center;"><?date?></td>
+							<td style="text-align: center;"><?status?></td>
+							<td style="text-align: center;"><?ponum?><? if ( ! $$variable{ponum} ) ?>&nbsp;<? endif ( ! $$variable{ponum} ) ?></td>
+							<td style="text-align: right;">$<?total?><input type="hidden" id="total_<?order_id?>" value="<?balance?>" /></td>
+							<td id="balance_<?order_id?>" style="text-align: right;">$<?balance?></td>
+							<td><input type="text" name="payment_<?order_id?>" id="payment_<?order_id?>" value="" class="smBox" /></td>
+							<td style="text-align: center;"><input type="checkbox" name="applied_<?order_id?>" id="applied_<?order_id?>" /></td>
+						</tr>
+					<? endloop orders?>
+		
+					<tr class="no-formatting">
+						<td colspan="6" style="font-size: 0.25em;">&nbsp;</td>
+					</tr>
+		
+					<tr class="no-formatting">
+						<td colspan="4" style="text-align: right;"><strong> Account Total: </strong> </td>
+						<td style="text-align: right; border-top: 3px double black;">$<?cust_total?></td>
+						<td style="text-align: right; border-top: 3px double black;">$<?cust_bal?></td>
+					</tr>
+				</table>
+			<? endloop ACCOUNTS ?>
+
+			<? if (  $$variable{'ACCOUNTS'} == 0 ) ?>
+				<p>There were no results matching your criteria.</p>
+			<? endif (  $$variable{'ACCOUNTS'} == 0 ) ?>
+	
+			<input type="hidden" id="total_balance" value="<?BALANCE?>" />
+			<input type="hidden" name="btnFunction" />
+			<br />
+		</fieldset>
+		
+		<input type="submit" class="button" value="Submit Payment" />
+		<br class="clear" />
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

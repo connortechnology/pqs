@@ -1,0 +1,39 @@
+<fieldset id="templates">
+	<legend>Template Selection</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<div>
+		<label for="template-NoService">
+			<img src="/images/main/project_templates/brochures/8.5x11_no_fold.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-NoService" value="NoService" />
+			Banner
+		</label>
+	</div>
+
+	<div>
+		<label for="template-Grommet">
+			<img src="/images/main/project_templates/brochures/8.5x11_half_fold.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-Grommet" value="Grommet" />
+			Grommeted Banner
+		</label>
+	</div>
+
+	<div>
+		<label for="template-Roped">
+			<img src="/images/main/project_templates/brochures/double_gatefolded.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-Roped" value="Roped" />
+			Roped Banner
+		</label>
+	</div>
+
+	<div>
+		<label for="template-Stitched">
+			<img src="/images/main/project_templates/brochures/3_fold.gif" width="130" height="130" /><br />
+			<input type="radio" name="template" id="template-Stitched" value="Stitched" onclick="project_template(this.form); stitchorweld = 'Stitch'; check_for_merge();" />
+			Stitched Banner
+		</label>
+	</div>
+
+	<br />
+</fieldset>

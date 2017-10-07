@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Supplier - Project History
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+    
+    <link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+    <link href="/styles/docket.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/datepickercontrol.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/content.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+    
+    <script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/rfq.js"></script>
+	<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+	<script type="text/javascript" src="/javascripts/datepickercontrol.js"></script>
+<script  type="text/javascript">
+		function project_files(summaryPage2) {
+			window.open('/main/proj/files.html?Issue_Cookie=true&pid=<?pid?>','projectfiles', 'newWin,top=50,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+		
+		function checkstock() {
+			if ( !$('nostock').checked && !$('yesstock').checked ){
+				alert ('Please indicate if you are supplying the exact same stock as requested');
+				return false;
+			}
+			if ( $('nostock').checked == true && $('RFQSupplierComments').value == '') {
+				alert ('Please use the Supplier Comments box to indicate your replacement stock specifications.');
+				return false;
+			}
+		}
+	
+</script>
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Production &#187;</span> RFQ</h1>
+    
+	<form name="f1" id="f1" method="POST" action="display_rfq.html?pid=<?ProjectIndex?>&order_id=<?order_id?>&Services=<?serviceIDs?>" />
+
+		<!--#include virtual="/includes/forms/rfq.html" -->
+    
+    <div id="suppliercomments"  >
+    <p><label for="RFQSupplierComments"><strong>Supplier Comments:</strong></label></p>
+    <p><textarea id="RFQSupplierComments" name="RFQSupplierComments" cols="1" style="width:93%;"><?RFQ_Header.scomments?></textarea></p>
+     <p style="font-weight:bold; color:#FF0000">Will you be supplying the exact same stock as requested in the RFQ Specifications above?<br />
+  <input name="stock" id="yesstock" type="radio" value="2" />Yes
+  <input name="stock" id="nostock"  type="radio" value="1"  onchange="nostockmatch()" />No
+  </p>
+	</div>
+    
+        
+        <hr />
+        
+        <div class="button-bar">
+            <br class="clear" />
+                <input type="button" class="button" onclick="project_files();" value="Download Project Files" />
+                <a href="/main/supplier/rfq_history.html?rid=<?rid?>" class="button">Return to RFQ History</a>
+                <a href="/main/supplier/bid_history.html?rid=<?rid?>&supplier=<?supplier?>" class="button">View Bid History</a>
+                <input class="button" type="submit" name="btnFunction" value="Save" onClick="return(checkstock())" />
+                 
+                <input type="hidden" name="rid" value="<?rid?>" />
+                <input type="hidden" name="save_rfq" value="<?rid?>" />
+            <br class="clear" />
+        </div>
+	</form>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/account.html" -->
+    <!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

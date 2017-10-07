@@ -1,0 +1,32 @@
+<table width="250" border="0" cellspacing="0" cellpadding="0">
+	<tr>
+		<td width="175" height="10"></td>
+		<td width="75" height="10"></td>
+	</tr>
+	<tr>
+		<td style="text-align: right;">Sub Total:</td>
+		<td style="text-align: right;"><input name='SUB_TOTAL' value='<?SUB_TOTAL?>' class='smBox' readonly="readonly" /> </td>
+	</tr>
+	<? if ( $$variable{'GST'} ne '' ) ?>
+	<tr>
+		<td style="text-align: right;">Federal Tax:</td>
+		<td style="text-align: right;"> <input name='GST' value='<?GST?>' class='smBox' onkeyup='calc_total(f1);' /></td>
+	</tr>
+	<? endif ( $$variable{'GST'} ne '' ) ?>
+	<? if ( $$variable{'PST'} ne '' ) ?>
+	<tr>
+		<td style="text-align: right;">Provincial/State Tax:</td>
+		<td style="text-align: right;"> <input name='PST' value='<?PST?>' class='smBox' onkeyup='calc_total(f1);' /></td>
+	</tr>
+	<? endif ( $$variable{'PST'} ne '' ) ?>
+	<? if ( $$variable{'HST'} ne '' ) ?>
+	<tr>
+		<td style="text-align: right;">Harmonized Tax:</td>
+		<td style="text-align: right;"> <input name='HST' value='<?HST?>' class='smBox' onkeyup='calc_total(f1);' /></td>
+	</tr>
+	<? endif ( $$variable{'HST'} ne '' ) ?>
+	<tr>
+		<td style="text-align: right;"><strong>TOTAL:</strong></td>
+		<td style="text-align: right;"> <input name='TOTAL' value='<?TOTAL?>' class='smBox' readonly="readonly" /></td>
+	</tr>
+</table>

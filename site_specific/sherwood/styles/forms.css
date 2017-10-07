@@ -1,0 +1,474 @@
+/* __________ Utilities __________ */
+
+.nobr { white-space: nowrap; }
+
+
+/* __________ Elements __________ */
+
+fieldset {
+	overflow: visible;
+
+	margin: 0 0 1ex 0;
+	padding: 0 1em 2ex 1em;
+
+	border: 2px solid #0B0D60;
+	background-color: #FFFFFF;
+	_background-color: transparent;
+}
+
+fieldset fieldset {
+	border: 1px solid #0B0D60;
+}
+
+
+fieldset legend {
+	margin: 0;
+	padding: 0.5ex 0.25em;
+
+	color: #000000;
+	font-weight: bold;
+}
+
+fieldset fieldset legend {color: #0B0D60;}
+
+* html fieldset fieldset legend,
+* html fieldset legend {
+	padding-right: 0;
+}
+
+
+fieldset table {margin: auto;}
+fieldset table.no-center {margin: auto 0;}
+
+
+fieldset p {
+	width: auto;
+	padding: 1ex 0.5em 0 0.25em;
+}
+
+
+fieldset label,
+fieldset span.label,
+fieldset span,
+fieldset div.text {
+	overflow: visible;
+
+    float: left;
+	display: inline;
+	position: relative;
+
+    width: 18em;
+	margin: 0 0 0 1em;
+	padding: 4px 0 8px 0;
+}
+
+fieldset span,
+fieldset div.text {
+	width: auto;
+	margin: 0 0 0 1px;
+}
+
+
+fieldset div {
+	float: left;
+	clear: none;
+	display: inline; 
+	position: relative;
+
+	width: auto;
+	margin: 0;
+	padding: 0 0 1.5ex 0;
+	
+	text-align: left;
+}
+
+
+	/* Input Elements */
+
+fieldset input,
+fieldset select,
+fieldset textarea {
+	margin: 0;
+	
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 1.1em;
+}
+
+fieldset select {
+	float: left;
+	display: inline;
+	
+	margin-top: 1px;
+	margin-right: 0.3em;
+}
+
+fieldset table td input {float: none;}
+
+
+/* Clears Floating Elements Completely, without creating any Extra Space */
+fieldset br {
+	display: block;
+	clear: both;
+	height: 0;
+	margin: 0;
+	line-height: 0;
+	font-size: 1px;
+	visibility: hidden;
+}
+
+
+/* __________ Element Specific Classes __________ */
+
+/* Paragraph */
+p.indent-regular { padding-left: 19em; }
+
+/* Table */
+fieldset table.indent-table {margin-left: 1.00em; }
+fieldset table.indent-minor {margin-left: 1.25em; }
+
+fieldset table.indent-regular {
+	margin-left: 19.10em !important;
+	margin-right: 0 !important;
+}
+
+* html div.ie-button-bar {
+	width: 55%;
+}
+
+/* Label */
+fieldset label.label {
+	float: none;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	width: auto;
+	margin: 0;
+	padding: 0;
+}
+
+fieldset label.post-input {
+	width: auto;
+	padding-left: 0.3em;
+	padding-right: 0;
+}
+
+fieldset label.sub {width: 17em; padding-left: 1em;}
+
+/* Holly Hack \*/
+* html fieldset label.sub {width: 16.95em;}
+/* */
+
+
+input.checkbox {
+	width: auto;
+	height: 13px; 
+
+	margin: 1px 0 0 0;
+	padding: 0;
+}
+* html input.checkbox {
+	height: 15px;
+	margin: 0;
+}
+
+/* The .checkbox class was initially written for checkbox inputs only. The .radio class was appended shotly after */
+
+fieldset label.checkbox,
+fieldset label.radio,
+fieldset div.checkbox label,
+fieldset div.radio label,
+fieldset label.checkbox-after-label {
+	overflow: visible;
+
+	float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	width: auto;
+	margin: -1px 0 0 0;
+	padding: 0 1em 0 0;
+
+	line-height: normal;
+}
+
+fieldset label.checkbox input,
+fieldset label.radio input,
+fieldset div.checkbox label input,
+fieldset div.radio label input,
+fieldset label.checkbox-after-label input {
+	width: auto;
+
+	margin: 0.25ex 0.5em 0.2ex 0;
+}
+/* Holly Hack \*/
+* html fieldset label.checkbox input,
+* html fieldset label.radio input,
+* html fieldset div.checkbox label input,
+* html fieldset div.radio label input,
+* html fieldset label.checkbox-after-label input {
+	height: 13px;
+	width: 13px;
+	margin-left: 3px;
+}
+/*  */
+
+fieldset label.checkbox-after-label input {
+	margin-top: 1.1ex;
+	margin-bottom: -0.1ex;
+}
+* html fieldset label.checkbox-after-label input {
+	margin-bottom: 0;
+}
+
+fieldset.half input.checkbox,
+fieldset.half input.radio { width: auto; }
+
+
+fieldset label.value {
+	width: auto;
+	margin-left: 0;
+}
+
+fieldset label.dollar {
+	width: auto;
+	padding: 0;
+	margin-left: -0.75em;
+	line-height: 3.25ex;
+}
+
+
+	/* Span */
+
+span.required {
+	float: left;
+	display: inline;
+	position: relative;
+
+	margin: 0;
+	margin-left: -1em;
+	padding: 0;
+}
+
+span.pre-label {
+	float: left;
+	display: inline;
+	position: relative;
+
+	margin: 0.95ex 0 0 -1.25em;
+	padding: 0;
+}
+
+span.post-label {
+	float: left;
+	display: inline;
+	position: relative;
+
+	margin: -0.5ex -3em -3ex 0;
+	padding: 0;
+	
+	font-size: 0.8em;
+}
+
+
+	/* Input */
+
+fieldset label.normal input {
+	float: none;
+
+	margin: 0.75ex 0em -0.15ex 0.8em;
+	padding: 0;
+}
+
+
+/* Sure wish I wrote why I used the + Symbol - considering I'm trying to stay away from this kinda thing */
+fieldset span + label.normal input,
+fieldset span + div label.normal input,
+fieldset label + div label.normal input,
+fieldset label:not(.normal) + label.normal input {
+	margin-left: 0.1em;
+}
+/* Holly Hack \*/
+* html fieldset label.normal input {
+	margin: 1px -0.5em 0 0.3em;
+}
+/* */
+
+
+fieldset label.normal input[type="checkbox"] {margin: 0;}
+
+
+
+
+/* __________ Regular Form Elements  __________ */
+
+fieldset .indent-label {
+	float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	margin-left: 3.1em !important;
+	_margin-left: 2.9em !important;
+}
+
+fieldset fieldset .indent-label,
+fieldset fieldset select.indent {
+	margin-left: 2em !important;
+	_margin-left: 1.8em !important;
+}
+
+.marg-bot {margin-bottom: 1ex !important;}
+
+.pad-top {padding-top: 1ex !important;}
+
+
+
+/* Regular Form Input Element */
+fieldset .input-text {float: left; display: inline; position: relative; width: 14em;}
+fieldset .input-ddm {float: left; display: inline; position: relative;}
+
+fieldset textarea {
+	overflow: auto;
+
+	width: 24em;
+	height: 12ex;
+}
+
+/* Holly Hack \*/
+* html input.file,
+* html textarea {
+	position: relative;
+	margin-left: -3px;
+}
+
+* html select.sel-multi {
+	position: relative;
+	margin-left: -2px;
+}
+/* */
+
+fieldset textarea.large {width: 50em; height: 24ex;}
+fieldset textarea.medium {width: 30em;}
+
+/*Font-Size Verified*/
+fieldset textarea.fixed {font-family: "Courier New", Courier, monospace; font-size: 0.85em;}
+
+.numeric input, input.numeric {
+    width: 6em;
+    text-align: right;
+}
+
+.smBox, .smBoxLeft, .smbox {
+	float: left;
+	display: inline;
+	position: relative;
+
+	width: 6em;
+}
+
+.smBox {text-align: right;}
+.smBoxLeft {text-align: left;}
+
+
+
+/* __________ Specifc Form Elements  __________ */
+
+fieldset input.phone {width: 100px;}
+fieldset input.ext {width: 30px;}
+
+fieldset input#AdministratorName,
+fieldset textarea#AdministratorComments {width: 28em;}
+
+textarea#strSQLCommand {
+	width: 39em;
+	height: 61ex;
+	font-size: 1.2em;
+}
+
+
+/* __________ Specifc Form Elements  __________ */
+
+/* Small Go Buttons */
+.smGo {
+	float: left;
+	display: inline;
+	position: relative;
+
+	width: auto;
+	margin: 0 0 0 2px;
+}
+
+
+/* __________ Half Width Fieldsets __________ */
+
+fieldset.half,
+fieldset fieldset.half {
+	position: relative;
+	clear: none;
+	width: 45%;
+	margin: 0;
+	margin-bottom: 1.2ex !important;
+}
+
+fieldset.left {float: left; display: inline; position: relative;}
+fieldset.right {float: right; display: inline; position: relative;}
+
+fieldset.half input,
+fieldset.half select {
+	width: 11em;
+	margin-bottom: 4px;
+}
+
+fieldset.half .checkbox,
+fieldset.half .radio {width: auto;}
+
+fieldset.half div.input-width {
+	width: 17em;
+	margin-bottom: 0;
+	padding-bottom: 0;
+}
+
+fieldset.half label {
+	width: 11em;
+}
+
+fieldset.half p {
+	width: auto;
+}
+
+
+/* __________ Icons (Help, Details) __________ */
+
+fieldset div.icon {
+	position: absolute;
+	display: block;
+	float: none;
+
+	top: 0;
+
+	padding: 0;
+
+	background-color: #FFFFFF;
+
+	letter-spacing: -0.1em;
+	text-align: center;
+
+	color: #0B0D60;
+	font-weight: bold;
+}
+
+fieldset fieldset div.icon {
+	color: #00AEF1;
+}
+
+fieldset.dnd-fieldset {
+	border: 0;
+	margin-top: 0;
+	margin-bottom: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+fieldset.dnd-fieldset legend { display: none; }

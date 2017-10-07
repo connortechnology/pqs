@@ -1,0 +1,71 @@
+<? if isServicePricing ?>
+	<h2 id="pricing_title">Pricing</h2>
+	<br class="clear" />
+
+	<div id="pricing">
+
+		<table class="no-formatting">
+			<col style="width: 55%;" />
+			<col style="width: 15%;" />
+			<col style="width: 10%;" />
+			<col style="width: 15%;" />
+			<col style="width: 5%;" />
+
+			<thead>
+				<tr>
+					<th style="width: 55%; text-align: left;">Quantity</th>
+					<th style="width: 15%;">Unit Price</th>
+					<th style="width: 10%;">&nbsp;</th>
+					<th style="width: 15%;">Total</th>
+					<th style="width: 5%;">&nbsp;</th>
+				</tr>
+			</thead>
+
+			<tbody>
+
+				<? if project.qty.0 ?>
+					<tr class="new-quantity">
+						<td class="quantity"><input type="text" class="numeric" id="txtQuantity1" name="txtQuantity1" value="<?project.qty.0?>" /></td>
+						<td id="txtUnitPrice1"><?float:spec.txtUnitPrice1?></td>
+						<td>&nbsp;</td>
+
+						<td class="total" id="txtPrice1"><?money:spec.txtPrice1?></span></td>
+						<td>&nbsp;</td>
+					</tr>
+				<? endif project.qty.0 ?>
+
+				<? if project.qty.1 ?>
+					<tr class="new-quantity">
+						<td class="quantity"><input type="text" class="numeric" id="txtQuantity2" name="txtQuantity2" value="<?project.qty.1?>" /></td>
+						<td id="txtUnitPrice2"><?float:spec.txtUnitPrice2?></td>
+						<td>&nbsp;</td>
+
+						<td class="total" id="txtPrice2"><?money:spec.txtPrice2?></span></td>
+						<td>&nbsp;</td>
+					</tr>
+				<? endif project.qty.1 ?>
+
+				<? if project.qty.2 ?>
+					<tr class="new-quantity">
+						<td class="quantity"><input type="text" class="numeric" id="txtQuantity3" name="txtQuantity3" value="<?project.qty.2?>" /></td>
+						<td id="txtUnitPrice3"><?float:spec.txtUnitPrice3?></td>
+						<td>&nbsp;</td>
+
+						<td class="total" id="txtPrice3"><?money:spec.txtPrice3?></span></td>
+						<td>&nbsp;</td>
+					</tr>
+				<? endif project.qty.2 ?>
+
+
+			</tbody>
+		</table>
+		<br class="clear" />
+	</div>
+	<br class="clear" />
+<? else isServicePricing ?>
+	<input type="hidden" name="txtQuantity1" id="txtQuantity1" value="<?project.quantity.0?>" />
+	<input type="hidden" name="txtQuantity2" id="txtQuantity2" value="<?project.quantity.1?>" />
+	<input type="hidden" name="txtQuantity3" id="txtQuantity3" value="<?project.quantity.2?>" />
+<? endif isServicePricing ?>
+
+<!-- THIS IS MY STUFF -->

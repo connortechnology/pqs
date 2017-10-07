@@ -1,0 +1,219 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.category?> - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript">
+
+		function do_decimals( number ) {
+			var myStr = new String(Math.round(number*100)/100);
+			var decPos = myStr.indexOf(".");
+	
+			// test for no decimals
+			if (decPos==-1) {
+				myStr += ".00";
+			} else if (decPos==myStr.length-2) {
+			// test for one decimal
+				myStr += "0";
+			} // end if
+
+			return myStr;
+		}
+
+		function calc_price () {
+			var selection = document.getElementsByName('rid');
+			var rid;
+
+			for (i=0; i<selection.length; i++) 
+
+  			if (selection[i].checked == true)
+  				rid = selection[i].value;
+
+			var p1 = parseFloat($('price1-'+rid).value); 
+			var m1 = parseFloat($('markup1').value); 
+			var s1 = $('sale1-'+rid); 
+			var c1 = $('c-USD-1');
+
+	
+			s1.value =  do_decimals((p1 *  m1 /100) + p1);
+			c1.value =  do_decimals((p1 *  m1 /100) + p1);
+
+			<?if qty.2?>
+			var p2 = parseFloat($('price2-'+rid).value); 
+			var m2 = parseFloat($('markup2').value); 
+			var s2 = $('sale2-'+rid); 
+			var c2 = $('c-USD-2');
+
+			if ( m2 > 0 ) 
+			c2.value =  do_decimals((p2 *  m2 /100) + p2);
+			<?endif qty.2?>
+
+			<?if qty.3?>
+			var p3 = parseFloat($('price3-'+rid).value); 
+			var m3 = parseFloat($('markup3').value); 
+			var s3 = $('sale3-'+rid); 
+			var c3 = $('c-USD-3');
+
+			if ( m3 > 0 ) 
+			c3.value =  do_decimals((p3 *  m3 /100) + p3);
+			<?endif qty.3?>
+
+			
+			
+		}
+	
+
+		// <![CDATA[
+		Event.observe(window, 'load', function () {
+		    var check       = $('expires');
+		    var expire_date = $('expiry_date');
+
+		    Event.observe(check, 'click', function (e) {
+		        expire_date.display(check.checked);
+		    });
+
+        expire_date.display(check.checked);
+		});
+		// ]]>
+	</script>
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<form id="f1" name="f1" method="POST" action="/service/<?lc:service.ref?>">
+		<input name="pid" type="hidden" value="<?pid?>" />
+		<input name="sid" type="hidden" value="<?sid?>" />
+		<?if rfq?>
+		<fieldset>
+			<legend>RFQ Price Mark-up</legend>
+			<table style="width: 90%; margin-top: 1em; margin-bottom: 1em;">
+				<col />
+				<colgroup>
+					<col style="width: 20%;"/>
+					<col style="width: 20%;"/>
+					<col style="width: 20%;"/>
+				</colgroup>
+				<thead>
+					<tr>
+						<td></td>
+						<th colspan="3">Quantity</th>
+					</tr>
+                    <tr>
+						<td></td>
+						<th class="numeric" style="border-left: 1px solid white; padding-right:27px;"><?qty.1?>
+						  </th>
+						<th class="numeric" style="border-left: 1px solid white; padding-right:27px;"><?if qty.2 ?><?qty.2?><?endif qty.2 ?>
+						 </th>
+						<th class="numeric" style="border-left: 1px solid white; padding-right:26px;"><?if qty.3 ?><?qty.3?><?endif qty.3 ?>
+						 </th>
+					</tr>
+					<tr>
+						<th style="text-align: left">Supplier</th>
+						<th class="numeric" style="border-left: 1px solid white;">
+						  <input name="markup1" id="markup1" value="" size=6 onChange="calc_price()">%
+                         </th>
+						<th class="numeric" style="border-left: 1px solid white;">
+						 <?if qty.2 ?> <input name="markup2"  id="markup2" onChange="calc_price()" value="" size=6>% <?endif qty.2 ?>
+						</th>
+						<th class="numeric" style="border-left: 1px solid white;">
+						  <?if qty.3 ?><input name="markup3"  id="markup3" onChange="calc_price()" value="" size=6>% <?endif qty.3 ?>
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+			<?loop rfq_supplier?>
+
+				<tr>
+					<td>
+						<input type='radio' name="rid" value="<?rid?>-<?sup?>" onChange="calc_price()" />
+						<?sup?> - <?name?>
+					</td>
+					<td class="numeric" style="padding-right:27px;"> 	
+						$ <input name="price1-<?rid?>-<?sup?>" id="price1-<?rid?>-<?sup?>"  value="<?price1?>" size=6 readonly> 
+						<input type="hidden" name="sale1-<?rid?>-<?sup?>" id="sale1-<?rid?>-<?sup?>"   value="" size=6> 
+					</td>
+					<td class="numeric" style="padding-right:27px;"> 	
+						<?if qty.2 ?>$ <input name="price2-<?rid?>-<?sup?>"  id="price2-<?rid?>-<?sup?>" value="<?price2?>" size=6 readonly> 
+						<input type="hidden" name="sale2-<?rid?>-<?sup?>"    id="sale2-<?rid?>-<?sup?>"value="" size=6> <?endif qty.2 ?>
+					</td>
+					<td class="numeric" style="padding-right:26px;"> 	
+						<?if qty.3 ?>$ <input name="price3-<?rid?>-<?sup?>"   id="price3-<?rid?>-<?sup?>"value="<?price3?>" size=6 readonly> 
+						<input type="hidden" name="sale3-<?rid?>-<?sup?>"    id="sale3-<?rid?>-<?sup?>"value="" size=6> <?endif qty.3 ?>
+					</td>
+					
+				</tr>
+					
+			<?endloop rfq_supplier?>
+				</tbody>
+			</table>
+
+		</fieldset>
+
+		<?endif rfq?>
+
+		<fieldset>
+			<legend>Pricing</legend>
+
+			<p>Enter a final project price for each currency. Any customer creating
+			this project will have their project calculated as normal but this
+			service will appear as a discount item bringing the price to the total
+			below; excluding whatever services you allow in the 
+			<a href="#services">service</a> section.</p>
+
+			<table style="width: 90%; margin-top: 1em; margin-bottom: 1em;">
+				<col />
+				<colgroup>
+					<col style="width: 20%;"/>
+					<col style="width: 20%;"/>
+					<col style="width: 20%;"/>
+				</colgroup>
+				<thead>
+					<tr>
+						<td></td>
+						<th colspan="3">Quantity</th>
+					</tr>
+					<tr>
+						<th style="text-align: left">Currency</th>
+						<th class="numeric" style="border-left: 1px solid white; padding-right:27px;"><?qty.1?></th>
+						<th class="numeric" style="border-left: 1px solid white; padding-right:27px;"><?if qty.2 ?><?qty.2?><?endif qty.2 ?></th>
+						<th class="numeric" style="border-left: 1px solid white; padding-right:27px;"><?if qty.3 ?><?qty.3?><?endif qty.3 ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?loop currency ?>
+						<tr>
+							<th style="color: black; background-color: transparent; text-align: left;"><?name?></th>
+							<td class="numeric" style="padding-right:27px;"><?if qty.1 ?><?symbol?> <input name="c-<?code?>-1" id="c-<?code?>-1" type="text" /><?endif qty.1 ?></td>
+							<td class="numeric" style="padding-right:27px;"><?if qty.2 ?><?symbol?> <input name="c-<?code?>-2" id="c-<?code?>-2" type="text" /><?endif qty.2 ?></td>
+							<td class="numeric" style="padding-right:27px;"><?if qty.3 ?><?symbol?> <input name="c-<?code?>-3" id="c-<?code?>-3" type="text" /><?endif qty.3 ?></td>
+						</tr>
+					<?endloop currency ?>
+				</tbody>
+			</table>
+
+		</fieldset>
+
+		<!--#include virtual="/includes/main/proj/discount_expiry.html"-->
+		<!--#include virtual="/includes/main/proj/allowed_services.html"-->
+
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+	</form>
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

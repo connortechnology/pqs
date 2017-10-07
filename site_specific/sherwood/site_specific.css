@@ -1,0 +1,11 @@
+/* SideBar Products */
+
+#sidebar li a.parent {
+	font-weight: bold !important;
+	color: #FFFFFF;
+	font-size: 0.9em;
+}
+#sidebar li a.parent:link {color: #FFFFFF;}
+#sidebar li a.parent:visited {color:#FFFFFF;}
+#sidebar li a.parent:hover {color: #FFFFFF;}
+#sidebar li a.parent:active {color:#FFFFFF;}

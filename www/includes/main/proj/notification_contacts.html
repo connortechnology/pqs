@@ -1,0 +1,15 @@
+<legend>Contacts</legend>
+<p>Please select the people you wish to notify of this action (via email). If no recipients are selected, no notifications will be sent.</p>
+
+<label for="notify_users">Customer contacts:</label>
+<select id="notify_users" name="notify_users" multiple="multiple" style="margin-bottom: 2ex">
+	<?loop contacts?>
+	<option value="<?id?>" <?if selected?>selected="selected"<?endif selected?>><?name?></option>
+	<?endloop contacts?>
+</select>
+
+<br />
+
+<label for="notify_self">Send me an email:</label><input type="checkbox" id="notify_self" name="notify_self" value="1" /><br />
+<label for="notify_staff">Send staff email:</label><input type="checkbox"id="notify_staff" name="notify_staff" value="1" checked="checked" /><br />
+

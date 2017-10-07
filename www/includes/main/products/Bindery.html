@@ -1,0 +1,153 @@
+                <tr><td>Bindery *:</td>
+                <td colspan="3"><select name="Bindery" id="Bindery" style="width:400px;" onchange="coveroption(); " onblur="binderymaxpages(); checkcovertype(); " >
+                			   
+								<? if ($variable->{category}{name} ne '330 and 331' && $variable->{category}{name} ne 'Emerging Leader Series Books' && $variable->{category}{name} ne 'New Hire Packets'  && $variable->{category}{name} ne 'Order Guides' && $variable->{category}{name} ne 'Synthetic Multi Sheet Projects') ?>
+							<option id="NoBindery" value="NoBindery">No bindery</option>
+							<option id="NoBinderySlipSheet" value="NoBinderySlipSheet">No bindery With Slip Sheet</option>
+							<option id="3HolePunchBinder" value="3HolePunchBinder">3 Hole Punch With Binders</option>
+								<? endif ($variable->{category}{name} ne '330 and 331' && $variable->{category}{name} ne 'Emerging Leader Series Books' && $variable->{category}{name} ne 'New Hire Packets'  && $variable->{category}{name} ne 'Order Guides' && $variable->{category}{name} ne 'Synthetic Multi Sheet Projects') ?>
+							<? if service.3HolePunch ?><option id="3HolePunch" value="3HolePunch">3 Hole Punch (unbound)</option><? endif service.3HolePunch ?>
+                            <? if ($variable->{category}{name} ne 'Order Guides') ?><? if service.CornerStitching ?><option id="CornerStitching" value="CornerStitching">Corner Staple</option><? endif service.CornerStitching ?><? endif ($variable->{category}{name} ne 'Order Guides') ?>
+                          <? if ($variable->{category}{name} ne 'New Hire Packets') ?>  <? if service.CornerStitching ?><option id="CornerStitch3Punch" value="CornerStitch3Punch">Corner Staple With 3 Hole Punch</option>
+<? endif service.CornerStitching ?><? endif ($variable->{category}{name} ne 'New Hire Packets') ?>
+                            <? if service.DoubleLoopWire ?><option id="DoubleLoopWire" value="DoubleLoopWire">Double Loop Wire</option><? endif service.DoubleLoopWire ?>
+                            <? if service.FastBack ?><option id="FastBack" value="FastBack">Tape Binding</option><? endif service.FastBack ?>
+                            <? if service.MetalCoil ?><option id="MetalCoil" value="MetalCoil">Metal Coil</option><? endif service.MetalCoil ?>
+                            <? if service.PerfectBinding ?><option id="PerfectBinding" value="PerfectBinding">Perfect Binding</option><? endif service.PerfectBinding ?>
+                            <? if service.PlasticCoil ?><option id="PlasticCoil" value="PlasticCoil">Plastic Coil</option><? endif service.PlasticCoil ?>
+                            <? if service.Cerlox ?><option id="Cerlox" value="Cerlox">Plastic Comb (Cerlox)</option><? endif service.Cerlox ?>
+                            <? if service.Proclick ?><option id="Proclick" value="Proclick">Proclick</option><? endif service.Proclick ?>
+                            <? if service.SaddleStitching ?><option id="SaddleStitching" value="SaddleStitching">Saddle Stitching</option><? endif service.SaddleStitching ?>
+                             <? if service.SingleHole ?><option id="SingleHole" value="SingleHole">Single Hole Punch</option><? endif service.SingleHole ?>
+                            
+						</select>
+                        <img src="/images/main/products/question.jpg" width="18" height="18" style="float:right; cursor: pointer; padding-top:7px; padding-right:45px;" onmouseover="" onclick="window.open('/includes/main/products/tooltip/BinderyTypes.html','Bindery','newWin,left=600,width=425,top=20,height=950,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/>
+                       </td>
+                       <td></td>
+                </tr>
+				 <tr id="tabs"><td>Tabs:</td>
+                  <td><select name="Tabs" id="Tabs" style="width:124px;">
+							<option id="none" value="">None</option>
+							<option id="TabsYes" value="1">Yes</option>
+						</select>
+                        <img src="/images/main/products/question.jpg" width="18" height="18" style="float:right; cursor: pointer; padding-top:7px; padding-right:0px;" onmouseover="" onclick="window.open('/includes/main/products/tooltip/Tabs.html','Tabs','newWin,left=600,width=340,top=20,height=625,resizable=no,scrollbars=yes,menubar=no,toolbar=no,location=no,directories=yes,status=no')"/>
+                       </td>
+                        <td style="text-align:right">Number of Tabs:</td>
+                       <td colspan="2"> <input id="txtTabsQuantity" name="txtTabsQuantity" value="" type="text" size="5" class="smbox" onChange="alert ('Your tabs will be automatically added to your Number of Pages for you when you add your project to quote or order.');" /></td>
+                </tr>
+ <script type="text/javascript">
+ function coveroption() {
+	 var bind = $('Bindery').options[$('Bindery').selectedIndex].value;
+	
+//	 var op = document.getElementById("IndexCoverClear").getElementsByTagName("option");
+//for (var i = 0; i < op.length; i++) {
+//   lowercase comparison for case-insensitivity
+//    op[i].disabled = false;
+//}
+if (bind=="Cerlox" || bind=="Proclick"){
+//	$('CoversRow').style.display="table-row";
+//	$('BackRow').style.display="table-row";
+	$('CoverType').options[1].disabled = false;
+	$('CoverType').options[3].disabled = false;
+	$('CoverType').options[0].disabled = false;
+	$('CoverType').options[2].disabled = false;
+
+	$('BackCoverType').options[1].disabled = false;
+	$('BackCoverType').options[3].disabled = false;
+	$('BackCoverType').options[0].disabled = false;
+	$('BackCoverType').options[2].disabled = false;
+}
+ 
+
+ 
+else {
+//	$('CoversRow').style.display="none";
+//	$('BackRow').style.display="none";
+	$('CoverType').options[1].disabled = true;
+	$('CoverType').options[3].disabled = true;
+	$('BackCoverType').options[1].disabled = true;
+	$('BackCoverType').options[3].disabled = true;
+		if (bind=="PerfectBinding"){
+		$('CoverType').options[2].disabled = true;
+		$('CoverType').selectedIndex = 0;
+		$('BackCoverType').options[2].disabled = false;
+		$('BackCoverType').options[0].disabled = true;
+		$('BackCoverType').selectedIndex = 2;
+		backcovertype(); 
+		covertype();
+		}
+		else {
+			$('CoverType').options[0].disabled = false;
+			$('CoverType').options[2].disabled = false;
+			$('BackCoverType').options[0].disabled = false;
+			$('BackCoverType').options[2].disabled = false;
+		}
+	
+}
+
+if (bind=="Cerlox" || bind=="Proclick" || bind=="PerfectBinding" || bind=="3HolePunchBinder"){
+	<? if ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	$('a55').disabled = true;
+	$('a58').disabled = true;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	 <? if ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+	$('a289').disabled = true;
+	$('a290').disabled = true;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+}
+else {
+	<? if ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	$('a55').disabled = false;
+	$('a58').disabled = false;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	<? if ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+	$('a289').disabled = false;
+	$('a290').disabled = false;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+}
+
+if (bind=="PerfectBinding"){
+	<? if ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	$('a61').disabled = true;
+	$('a62').disabled = true;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	<? if ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+	$('a321').disabled = true;
+	$('a322').disabled = true;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+	$('BackCoverRow').style.display="none";
+
+}
+else {
+	<? if ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	$('a61').disabled = false;
+	$('a62').disabled = false;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	<? if ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+	$('a321').disabled = false;
+	$('a322').disabled = false;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+	$('BackCoverRow').style.display="table-row";
+  }
+
+ 
+ if (bind=="3HolePunchBinder"){
+	<? if ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	$('a56').disabled = true;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	<? if ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+	$('a287').disabled = true;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+}
+else {
+	<? if ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	$('a56').disabled = false;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects') ?>
+	<? if ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+	$('a287').disabled = false;
+	<? endif ($variable->{category}{name} eq 'Multi-Sheet Projects Advanced') ?>
+	}
+}
+
+
+</script>  

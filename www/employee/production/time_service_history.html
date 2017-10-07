@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production > Time Collection > Service History
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Time Collection &#187;</span> Service History</h1>
+ <fieldset>
+            <legend>
+                Instructions
+          </legend>
+    <p> The List at the bottom of the page has been populated with the history of the services you have been assigned.
+<? if ( $$variable{'user_type'} eq 'A' ) ?>
+If you would like to see the service time allocation for other assigned users please use the User Name drop down below.
+<? endif ( $$variable{'user_type'} eq 'A' ) ?>
+ </p>
+ </fieldset>
+    <form action="" method="post" name="f2" id="f2">
+        <? if ( $$variable{'UserType'} eq 'A' ) ?>
+        <fieldset>
+            <legend>
+                Switch Users
+          </legend>
+			
+           <table  border="0" cellspacing="0" cellpadding="0" style="border:none !important;" width="97%">         
+            <tr><td width="16%" style="border:none !important;">User Name:</td>
+            <td style="border:none !important;">
+			<select id="ddmUser" name="ddmUser" >
+				<option value=""> Select a User </option>
+				<option value=""> ----------------- </option>
+				<?USERS?>
+			</select><input type="submit" name="btnFunction" class="button" value="Go" />
+			</td>
+            </tr>
+           
+                      
+					   
+            </table>
+			</fieldset>
+            <? endif ( $$variable{'UserType'} eq 'A' ) ?>
+
+            <fieldset>
+            <legend>
+               <a href="/employee/production/time_service_history.html">
+               <?servicename?>
+              </a>Service History </legend>
+                <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
+                    <tr>
+                      <th>Project ID</th>
+                        <th>User</th>
+                        <th>Service Name</th>
+                        <th>Equipment</th>
+                        <th>Start</th>
+                        <th>Stop</th>
+                        <th>Duration</th>
+                        
+                    </tr>
+
+						<?loop SERVICES ?>
+						<tr><td><?pid?></td><td><?strservicetype?></td><td><?service_time?></td> </tr>
+						<?loop HISTORY ?>	
+                        <tr>
+						<td></td>
+                      <!--    <td style="text-align: left;"><?pid?></td> -->
+
+                          <td style="text-align: left;"><?user?></td>
+
+                        <td style="text-align: left;"><a href="/employee/production/time_service_history.html"><?strservicetype?></a></td>
+                            <td style="text-align: left;"><?equipment?></td>
+                            <td class="select c" style="text-align: center;"><?tstart?></td>
+                            <td class="select c" style="text-align: center;"><?tstop?></td>
+                            <td class="select c" style="text-align: center;"><?duration?></td>
+                            
+                        </tr>
+						<?endloop HISTORY ?>	
+						<?endloop SERVICES ?>
+                        
+                         
+                </table>
+            <br />
+            
+        </fieldset>
+    </form>
+
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

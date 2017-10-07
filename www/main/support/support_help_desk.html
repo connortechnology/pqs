@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title><!--#include virtual="/includes/web_page_title.html" -->Support - Help Desk<!--#include virtual="/includes/web_page_title_end.html" --></title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+    <script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Support &#187;</span> Help Desk</h1>
+<form id="helpdesk" name="f1" method="post" action="/main/support/confirmation_help_desk.html">
+<p>If you need help you can call our support line at <!--#include virtual="/includes/company_telephone_number.html"--> or fill in the form below.</p>
+		<p>Please fill in the appropriate information. Fields marked with an * are required.</p>
+
+		<fieldset>
+			<legend>
+				Personal Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtCompanyName">Company Name:</label>
+			<input type="text" id="txtCompanyName" name="txtCompanyName" value="<?company_name?>" class="input-text" />
+			<br />
+
+			<label for="txtTitle">Title:</label>
+			<input type="text" id="txtTitle" name="txtTitle" value="<?title?>" class="input-text" />
+			<br />
+
+			<label for="txtFirstName"><span class="required">*</span>First Name:</label>
+			<input type="text" id="txtFirstName" name="txtFirstName" value="<?first_name?>" class="input-text" />
+			<br />
+
+			<label for="txtLastName"><span class="required">*</span>Last Name:</label>
+			<input type="text" id="txtLastName" name="txtLastName" value="<?last_name?>" class="input-text" />
+			<br />
+
+			<span class="label"><span class="required">*</span>Salutation:</span>
+			<label for="rdbSalutationMr" class="radio"><input type="radio" id="rdbSalutationMr" name="rdbSalutation" value="Mr" <?Mr.?> class="rdbSalutation" />Mr.</label>
+			<label for="rdbSalutationMrs" class="radio"><input type="radio" id="rdbSalutationMrs" name="rdbSalutation" value="Mrs" <?Mrs.?> class="rdbSalutation" />Mrs.</label>
+			<label for="rdbSalutationMs" class="radio"><input type="radio" id="rdbSalutationMs" name="rdbSalutation" value="Ms" <?Ms.?> class="rdbSalutation" />Ms.</label>
+			<label for="rdbSalutationMiss" class="radio"><input type="radio" id="rdbSalutationMiss" name="rdbSalutation" value="Miss" <?Miss?> class="rdbSalutation" />Miss</label>
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Contact Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtAddress1"><span class="required">*</span>Address:</label>
+			<input type="text" id="txtAddress1" name="txtAddress1" value="<?address?>" class="input-text" style="margin-bottom: 0;" />
+			<br />
+			<span class="label">&nbsp;<!-- IE6 Fix --></span>
+			<input type="text" id="txtAddress2" name="txtAddress2" value="<?address_two?>" class="input-text" />
+			<br />
+
+			<label for="txtCity"><span class="required">*</span>City:</label>
+			<input type="text" id="txtCity" name="txtCity" value="<?city?>" class="input-text" />
+			<br />
+
+			<label for="ddmStateProvince" ><span class="required">*</span>Province/State:</label>
+			<select id="ddmStateProvince" name="ddmStateProvince">
+				<option value="">- Please select one. -</option>
+				<?state?>
+			</select>
+			<br />
+
+			<label for="txtOtherStateProv">Other:</label>
+			<input type="text" id="txtOtherStateProv" name="txtOtherStateProv" value="<?otherprov?>" class="input-text" />
+			<br />
+
+			<label for="txtPostalCode"><span class="required">*</span>Postal Code/Zip:</label>
+			<input type="text" id="txtPostalCode" name="txtPostalCode" value="<?postal_code?>" class="input-text" />
+			<br />
+
+			<label for="ddmCountry"><span class="required">*</span>Country:</label>
+			<select id="ddmCountry" name="ddmCountry">
+				<option value="">- Please select one. -</option>
+				<?country?>
+			</select>
+			<br />
+
+			<label for="txtOtherCountry">Other:</label>
+			<input type="text" id="txtOtherCountry" name="txtOtherCountry" value="<?othercountry?>" class="input-text" />
+			<br />
+
+			<label for="txtPhone"><span class="required">*</span>Phone:</label>
+			<input type="text" id="txtPhone" name="txtPhone" value="<?phone?>" class="input-text" />
+			<br />
+			
+			<label for="txtExtension">Ext.:</label>
+			<input type="text" id="txtExtension" name="txtExtension" value="<?extension?>" class="input-text" maxlength="4" />
+			<br />
+
+			<label for="txtEmail"><span class="required">*</span>E-mail Address:</label>
+			<input type="text" id="txtEmail" name="txtEmail" value="<?email?>" class="input-text" />
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Inquiry
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtQuestion-Quote"><span class="required">*</span>Questions:</label>
+			<textarea id="txtQuestion-Quote" name="txtQuestion-Quote" rows="6" class="formTxt marg-bot"></textarea>
+			<br />
+
+			<label for="rdbMethod">Response Format:</label>
+			<label for="rdbMethodPhone" class="radio"><input type="radio" id="rdbMethodPhone" name="rdbMethod" value="P" <?P?> />Phone</label>
+			<label for="rdbMethodEmail" class="radio"><input type="radio" id="rdbMethodEmail" name="rdbMethod" value="E" <?E?> />Email</label>
+			<br />
+      <? if ( $$variable{user_type} )?>  <? else ( $$variable{user_type} )?><!--#include virtual="/includes/recaptcha_site_key.html" --> <? endif ( $$variable{user_type} )?>
+      <br />
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" id="btnSubmit" name="btnSubmit" value="Submit" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+	</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/support.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

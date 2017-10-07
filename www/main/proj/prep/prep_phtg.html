@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+        <!--#include virtual="/includes/web_page_title.html" -->
+        Projects - <?service.category?> - <?service.name?>
+        <!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+    <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<!--#include virtual="/includes/main/proj/required_fields.html"-->
+
+	<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+		<fieldset>
+			<legend><?service.name?></legend>
+		
+			<p>What is the original dimensions of the item(s) being photographed? (Use <span class="tip" title="<!--#include virtual="/includes/fraction_to_decimal_dimensions.html" -->">decimals</span>.)</p>
+			<label for="txtScanWidth">Original Dimensions:</label>
+			<input id="txtScanWidth" name="txtScanWidth" size="9" value="<?txtScanWidth?>"	class="smBox" />
+			<input id="txtScanHeight" name="txtScanHeight" size="9" value="<?txtScanHeight?>" class="smBox" />
+			<label for="txtScanHeight" class="post-input">(W&#8243; &#215; H&#8243;)</label>
+			<br />
+			
+			<p>Please select the % of enlargement or the final dimensions of the photograph(s).</p>
+			<label for="txtPercent">Enlargement %:</label>
+			<input id="txtPercent" name="txtPercent" value="<?txtPercent?>" class="smBox" size="9" />
+			<label for="txtPercent" class="post-input">% or</label>
+			<br />
+			
+			<label for="txtScanWidthFinal">Enlarged Width x Height:</label>
+			<input id="txtScanWidthFinal" name="txtScanWidthFinal" size="9" value="<?txtScanWidthFinal?>" class="smBox" />
+			<input id="txtScanHeightFinal" name="txtScanHeightFinal" size="9" value="<?txtScanHeightFinal?>" class="smBox" />
+			<label for="txtScanHeight" class="post-input">(W&#8243; &#215; H&#8243;)</label>
+			<br />
+			
+			<p>What is the quantity of photographs required as per the above specifications?</p>
+			<label for="txtQuantity">Number of Photographs:</label>
+			<input id="txtQuantity" name="txtQuantity" value="<?txtQuantity?>" type="text" size="9" class="smBox" />
+			<br />
+			
+			<p>Do you require any additional photographs for the current project?</p>
+			<span class="label">Additional Photographs:</span>
+			<label for="rdbAdditionalYes" class="radio"><input type="radio" id="rdbAdditionalYes" name="rdbAdditional" value="Yes" />Yes </label>
+			<label for="rdbAdditionalNo" class="radio"><input type="radio" id="rdbAdditionalNo" name="rdbAdditional" value="No" checked="checked" />No</label>
+			<br />
+		</fieldset>
+
+		<!--#include virtual="/includes/main/proj/prices_prepress.html"-->
+
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+	</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

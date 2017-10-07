@@ -1,0 +1,34 @@
+<fieldset>
+	<legend>
+		Die Price(s)
+	</legend>
+	
+	<p class="none">&nbsp;</p>
+	
+	<? if project.qty.0 ?>
+		<label for="txtCustomDiePrice1">Custom Die Price for Quantity 1:</label>
+		<label class="dollar" for="txtCustomDiePrice1">$</label>
+		<input id="txtCustomDiePrice1" name="txtCustomDiePrice1" size="9" class="smBox" />
+		<label class="checkbox override" for="chkOverrideDiePrice1"><input type="checkbox" id="chkOverrideDiePrice1" name="chkOverrideDiePrice1" value="Y" />Override</label>
+	<? endif project.qty.0 ?>
+
+	<? if project.qty.1 ?>
+		<br />
+		
+		<label for="txtCustomDiePrice2">Custom Die Price for Quantity 2:</label>
+		<label class="dollar" for="txtCustomDiePrice2">$</label>
+		<input id="txtCustomDiePrice2" name="txtCustomDiePrice2" size="9" class="smBox" />
+		<label class="checkbox override" for="chkOverrideDiePrice2"><input type="checkbox" id="chkOverrideDiePrice2" name="chkOverrideDiePrice2" class="override" value="Y" />Override</label>
+	<? endif project.qty.1 ?>
+
+	<? if project.qty.2 ?>
+		<br />
+		
+		<label for="txtCustomDiePrice3">Custom Die Price for Quantity 3:</label>
+		<label class="dollar" for="txtCustomDiePrice3">$</label>
+		<input id="txtCustomDiePrice3" name="txtCustomDiePrice3" size="9" class="smBox" />
+		<label class="checkbox override" for="chkOverrideDiePrice3"><input type="checkbox" id="chkOverrideDiePrice3" name="chkOverrideDiePrice3" class="override" value="Y" />Override</label>
+	<? endif project.qty.2 ?>
+
+	<br />
+</fieldset>

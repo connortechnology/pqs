@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Reports - Internal Billing
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+    <script  type="text/javascript">
+		//	/me says: Moved From Inside Body Tag, f00!
+		function check_all (theBoxes, value)
+		{
+			var numChecks = theBoxes.length;
+			for (var cnt = 0; cnt < numChecks; cnt++) { theBoxes[cnt].checked = value; }
+		}
+	</script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Reports &#187;</span> Internal Billing</h1>
+
+	<form id="f1" name="f1" method="post" action="/administrator/reports/reports_internal_billing.html">
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p>Choose the period start and end dates and click show results.</p>
+			<label for="division">Division:</label>
+			<select id="division" name="division">
+				<?division?>
+			</select>
+			<br/>
+
+			<label for="department">Department:</label>
+           <select name="department" id="department" >
+				<option value="" >All</option>
+				<option value="Empty" >No Department Selected</option>
+				<option value="Floral" >Floral</option>
+				<option value="Deli" >Deli</option>
+				<option value="Pharmacy" >Pharmacy</option>
+				<option value="Starbucks" >Starbucks</option>
+				<option value="Meat" >Meat</option>
+			</select>
+			<br />
+
+			<label for="division">Cost Center:</label>
+			<select id="cost_center" name="cost_center">
+				<option value="">All</option>
+				<option value="99">Corporate</option>
+				<option value="Non99">Divisional</option>
+				<option value="0000">0000</option>
+				<option value="BOR">Bill on Release</option>
+			</select>
+			<br/>
+
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?startmonths?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?startdays?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?startyears?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?endmonths?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?enddays?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?endyears?>
+			</select>
+			<br />
+			<label for="show_all">Show:</label>
+			<input type="radio" name="bill_filter" value="UnBilled"  /> Not Billed &nbsp; &nbsp;
+			<input type="radio" name="bill_filter" value="Billed"    /> Billed &nbsp; &nbsp;
+			<input type="radio" name="bill_filter" value="All"      /> All
+			<br />
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="Show Results" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+<!--	</form>
+
+	<form id="f1" name="f1" method="get" action="/administrator/reports/reports_internal_billing.html">
+-->
+            <fieldset>
+            <legend>Create Invoice</legend>
+            <p>Check off the items you want to include on your invoice in the Results Section Below then select your Period Number and enter the Email Addresses for the invoice recipients and then select Send Selected Invoices.</p>
+            <label for="period">Period Number:</label>
+                <select id="period" name="period">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                </select>
+                <br />
+               <label for="email">Email to:</label><input name="email" type="text" id="email" size="95"/>
+               <br /><label for="email2"></label>To enter multiple recipients please separate the email addresses with a comma (,).
+               <p></p>
+               <div class="button-bar indent-regular">
+			   <input class="button" type="submit" name="btnFunction" value="Send Selected Invoices" />
+				<br />
+				</div>
+           </fieldset>
+		<fieldset>
+			<legend>
+				Results
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<? if ( @{ $variable->{projects} } ) ?>
+				<table cellspacing="0" border="0" cellpadding="0">
+					<tr>
+						<th width="50%">Select<br />Check all <input type="checkbox" name="checkAllEntry" id="checkAllEntry" onclick="check_all (f1.export_entry, this.checked);" /></th>
+                        <th>Billed from Division</th>
+                        <th>Customer Name</th>
+						<th>Order Id</th>
+                        <th>Project ID - Ship ID</th>
+                        <th>Date</th>
+                        <th>Quantity</th>
+						<th>Description</th>
+						<th>Billed<br /> Cost Center</th>
+						<th>Amount</th>
+                        <th>Billed Account<br />Number</th>
+                        <!--<th>Ordered By</th> -->
+                        <th>Bill To</th>
+                        <th>Credited<br />Cost Center</th>
+                        <th>Deparment</th>
+					</tr>
+	
+					
+					<? loop projects ?>
+						<tr<? if ($variable->{_even}) ?> class='colRow'<? endif ($variable->{_even}) ?>>
+							<td>
+								<?if bill_date?>
+									<?bill_date?>
+								<?else bill_date?>
+								<input type="checkbox" name="export_entry" id="export_entry-<?id?>" 
+								 value="<?id?>" onclick="if (!this.checked) {checkAllEntry.checked = 0}" />
+								<?endif bill_date?>
+							</td>
+                            <td><? loop divs ?>Change Billing Division:<br />
+									<input type="radio" name="division_<?pid?>" value="<?id?>" onClick="form.submit();" >
+									<?name?>
+								<? endloop divs ?>
+                                </td>
+                            <td><?customername?></td>
+                            <td><?order_id?></td>
+                            <td><?pid?> - <?id?></td>
+                            <td><?date?></td>
+                            <td><?qty?></td>
+							<td><?job?></td>
+							<td><?cost_center?></td>
+							<td>$<?cost?></td>
+                            <td>
+								<input name="acc-<?id?>" value="<?account_number?>" />
+							</td>
+                            <!--<td><?ordered_by?></td>-->
+                            <td><!--#include virtual="/includes/company_name.html" --></td>
+                            <td> <?credit_cost_center?> </td>
+                            <td> <?department?> </td>
+
+                            
+						</tr>
+					<? endloop projects ?>
+				</table>
+				<br />
+				<input type="submit" class="button" style="float:right" value="Save Accounting Numbers" name="Save" />
+
+			<? else ( @{ $variable->{projects} } ) ?>
+				<?if email_data?>
+					<?email_data?>
+				<?else email_data?>
+					<?if over_limit?>
+						<p>Your search returned over 400 results. Please Try again.</p>
+					<?else over_limit?>
+						<p>There were no results matching your criteria.</p>
+					<?endif over_limit?>
+				<?endif email_data?>
+			<? endif ( @{ $variable->{projects} } ) ?>
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

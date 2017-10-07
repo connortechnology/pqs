@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title tal:content="title">Print-Quotes Title</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+
+		<script type="text/javascript" src="/javascripts/JSAN.js"></script>
+		<script type="text/javascript" src="/javascripts/admin/recommendations.js"></script>
+		<!-- TEMPORARY: Old menu interface. -->
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+	</head>
+
+	<body>
+		<!-- TEMPORARY: Old menu interface. -->
+		<xi:include href="/includes/c1-tal.html" />
+		<!-- Sidebar -->
+		<div id="sidebar">
+			<div class="option">
+				<a class="back" href="/admin/recommendations">Paper Selection</a>
+			</div>
+
+			<!-- Audit log for the current page. -->
+			<div class="option">
+				<a class="back" href="/admin/audit_log.html" tal:attributes="href string:/admin/audit_log?page=${uri_escape: r/uri}&query=${uri_escape: r/args}">History</a>
+			</div>
+		</div>
+
+		<div id="content">
+			<h1><span class="title-section">System &#187; Stock &#187;</span> Recommendations &#187; Details</h1>
+
+			<form method="post" action="recommendations?$r/args">
+				<fieldset>
+					<legend>
+						Recommendations
+					</legend>
+					<div id="legend">
+						<h2>Legend</h2>
+						<div>
+							<span>-</span> Not Available<br />
+							<span class="default">?</span> Partial<br />
+							<span class="recommended">Y</span> Recommended<br />
+						</div>
+					</div>
+					<p>Using the matrix, select	which project types and press types the paper (selected from last page) will be available for. The recommendations here will effect the paper options displayed to the customer on the printing page for project type/press type combination.</p>
+					
+					<br />
+					
+					<table id="recommendations" class="no-formatting">
+						<col id="project_type" />
+						<col tal:repeat="t press_types" class="press_type" tal:attr="id t/id" />
+						<col tal:replace="nothing" />
+						<col tal:replace="nothing" />
+						<col tal:replace="nothing" />
+						<thead>
+							<th>&nbsp;</th>
+							<th tal:repeat="t press_types" tal:content="t/ref" tal:attr="title t/name">Offset</th>
+							<th tal:replace="nothing">Digital</th>
+							<th tal:replace="nothing">Screen</th>
+							<th tal:replace="nothing">Large Format</th>
+						</thead>
+						<tbody>
+							<tr tal:repeat="p project_types">
+								<th tal:content="substr:p/name 0 36 1" tal:attr="title p/name">Brochures</th>
+								<td tal:repeat="t press_types" tal:attr="id string:$p/id-$t/id">
+									<select tal:attr="name string:$p/id-$t/id">
+										<option value="2" selected="selected">-</option>
+										<option value="0">?</option>
+										<option value="1">Y</option>
+									</select>
+								</td>
+								<td tal:replace="nothing"><input name="r" type="checkbox" /></td>
+								<td tal:replace="nothing"><input name="r" type="checkbox" /></td>
+								<td tal:replace="nothing"><input name="r" type="checkbox" /></td>
+							</tr>
+						</tbody>
+					</table>
+
+					<br />
+
+					<div class="button-bar">
+						<input name="save"   type="submit" class="button right" value="Save" />
+						<input name="reset"  type="reset"  class="button right" value="Reset" style="float: left" />
+						<br />
+					</div>
+
+					<br />
+				</fieldset>
+
+			</form>
+		</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

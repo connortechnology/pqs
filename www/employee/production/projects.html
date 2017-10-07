@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production - Projects
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Production &#187;</span> Schedule &#187; Projects</h1>
+
+	<p>Please input a project ID and click &quot;Go&quot;or select a search criteria and click &quot;Show Results&quot;. You may then click on a <strong> Project ID </strong> to view project details.</p>
+
+	<fieldset>
+		<legend>
+			Project ID
+		</legend>
+
+		<p class="none">&nbsp;</p>
+
+		<form id="ProjectIndex-form" name="ProjectIndex" method="GET" action="/employee/production/project_view.html">
+			<label for="ProjectIndex">Project ID:</label>
+			<input id="ProjectIndex" name="ProjectIndex" size="9" class="smBox" onkeyup="calc('f1');" />
+			<input class="button smGo" type="submit" value="Go" />
+		</form>
+		<br />
+	</fieldset>
+
+	<form id="f1" name="f1" method="POST" action="projects.html">
+
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="ddmStatus">Project Status:</label>
+			<select id="ddmStatus" name="ddmStatus" size="1">
+				<option value="All"> All </option>
+				<option value="Complete" > Complete </option>
+				<option value="In Production" > In Production </option>
+			</select>
+			<br />
+			
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?ddmStartMonth?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?ddmStartDay?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?ddmStartYear?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?ddmEndMonth?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?ddmEndDay?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?ddmEndYear?>
+			</select>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" value="Show Results" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Results
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<? if ( @{$$variable{'PROJECTS'}} ) ?>
+				<table border="0" cellspacing="0" cellpadding="0" style="width: 900px;">
+					<tr>
+                    	<th>Complete</th>
+                        <th>Customer</th>
+                        <th>Order ID</th>
+						<th>Project ID</th>
+						<th>Project Name</th>
+						<th>Delivery Date</th>
+						<th>Status</th>
+						<th>Priority</th>
+					</tr>
+
+					<? while ( @$variable{'order_id','index', 'name', 'cust', 'date', 'status','priority','ddmPriority', 'comp_date' } = splice @{$$variable{'PROJECTS'}},0,9; ) ?>
+						<tr>
+                       		<td style="text-align: center;">
+								<?if ($$variable{status} ne 'Complete') ?>
+                                <input type="checkbox" name="complete" id="complete_<?index?>" value="<?index?>" />
+                                <?else ($$variable{status} ne 'Complete') ?>
+                                <?comp_date?>
+                                <?endif ($$variable{status} ne 'Complete') ?>
+							</td>
+                            <td style="text-align: left;"><?cust?></td>
+                            <td style="text-align: left;"><?order_id?></td>
+							<td style="text-align: left;"><a href="/employee/production/project_view.html?order_id=<?order_id?>&ProjectIndex=<?index?>"><?index?></a></td>
+							<td style="text-align: left;"><a href="/employee/production/project_view.html?order_id=<?order_id?>&ProjectIndex=<?index?>"><?name?></a></td>
+							<td style="text-align: center; padding:0px 0px 0px 0px !important; width:140px;">
+			<?date?>
+							</td>
+							<td style="text-align: center; width:80px;"><?status?></td>
+
+							<? if ($$variable{user_type} ne 'A') ?>
+								<td style="text-align: center;"><?priority?></td>
+							<? else ($$variable{user_type} ne 'A') ?>
+								<td style="text-align: center;">
+									<select name = "ddmPriority<?index?>">
+										<?ddmPriority?>
+									</select>
+								</td>
+							<? endif ($$variable{user_type} ne 'A') ?>
+						</tr>
+
+					<? endwhile ( @$variable{'order_id','index', 'name', 'cust', 'date', 'status','priority','ddmPriority', 'comp_date' } = splice @{$$variable{'PROJECTS'}},0,9; ) ?>
+
+
+					
+						<tr class="no-formatting">
+							<td colspan="7">&nbsp;</td>
+							<td style="text-align: center;">
+								<input class="button" type="submit" name="btnFunction" value="Submit" />
+							</td>
+						</tr>
+					
+				</table>
+
+			<? else ( @{$$variable{'PROJECTS'}} ) ?>
+				<p>There were no results matching your criteria.</p>
+			<? endif ( @{$$variable{'PROJECTS'}} ) ?>
+			<br />
+		</fieldset>
+	</form>
+</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

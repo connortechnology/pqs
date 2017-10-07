@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Mangerial - Company Profile
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Managerial &#187;</span> Inventory Locations</h1>
+
+    <form action="" method="post" name="f2" id="f2">
+        <fieldset>
+            <legend>
+                Inventory Locations
+            </legend>
+
+            <p class="none">&nbsp;</p>
+
+                <p>There are no projects which match your search criteria.</p>
+
+                <p>Split Locations / Mark as Obsolete</a></p>
+
+                <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
+                    <tr>
+                        <th>Location ID</th>
+                        <th>Location Name</th>
+                        <th>Notification Email</th>
+                        <th>Delete</th>
+                    </tr>
+
+						<?loop LOCATIONS ?>
+                        <tr>
+                            <td style="text-align: left;"><input type="textbox" name="id" value="<?id?>" size=5 readonly /></td>
+                            <td style="text-align: left;"><input type="textbox" name="location-<?id?>" value="<?name?>" /></td>
+                            <td style="text-align: left;"><input type="textbox" name="notification-<?id?>" value="<?notification?>" /></td>
+                            <td class="select c" style="text-align: center;"><input type="checkbox" name="delete" value="<?id?>" /></td>
+                        </tr>
+						<?endloop LOCATIONS ?>
+
+                        <tr class="colRow">
+                            <td style="text-align: center;"><?id?></td>
+                            <td style="text-align: left;"><input type="textbox" name="location-new" value="" /></td>
+                            <td style="text-align: left;"><input type="textbox" name="notification-new" value="" /></td>
+<!--
+                            <td class="select c" style="text-align: center;"><input type="checkbox" name="InvDelete" value="<?InvDelete?>" /></td>
+-->
+							<td></td>
+                        </tr>
+                </table>
+            <br />
+            <div class="button-bar indent-regular">
+				<input type="reset" id="button-space" class="button" value="Reset" />
+				<input type="submit" name="btnFunction" class="button" value="Save" />
+				<br />
+			</div>
+            <br />
+        </fieldset>
+    </form>
+
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production - RFQ
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+    <link href="/styles/docket.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/datepickercontrol.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/content.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/rfq.js"></script>
+	<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+	<script type="text/javascript" src="/javascripts/datepickercontrol.js"></script>
+
+	<script  type="text/javascript">
+		function openWindow(rfqEmail) {
+			window.open(rfqEmail,'pop','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">Production &#187;</span> Purchase Order</h1>
+		<form name="f1" id="f1" method="POST" action="send_po.html?pid=<?ProjectIndex?>&order_id=<?order_id?>&Services=<?serviceIDs?>" />
+
+			<!--#include virtual="/includes/forms/rfq.html" -->
+
+
+			<? if show_rid ?>
+			<p><label for="RFQSupplierComments"><strong>Supplier Comments:</strong></label></p>
+			<p><textarea name="RFQSupplierComments" cols="1" style="width: 775px;"><?RFQ_Header.scomments?></textarea></p>
+			<? endif show_rid ?>
+     
+            <table width="100%" border="0" >
+              <tr>
+                <td style="vertical-align: top; border: none; background-color: #FFFFFF; text-align: left;">
+				<p><label for="users"><strong>Contact:</strong></label></p>
+                <p>
+                <select name="users" id="users" multiple="multiple" />
+					<?loop user_select ?>
+						<option value="<?stremail?>"><?name?></option>
+					<?endloop user_select ?>
+                </select>
+                </p></td>
+              </tr>
+            </table>
+	
+    
+    	<input class="button" type="submit" name="btnFunction" value="Send PO"/>
+
+    	<input type="hidden" name="rid" value="<?rid?>" />
+    	<input type="hidden" name="sup_id" value="<?sup_id?>" />
+    	<input type="hidden" name="pid" value="<?pid?>" />
+    </form>
+	<br class="clear" />
+	</div>
+
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

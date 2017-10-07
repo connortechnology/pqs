@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title tal:content="title">Print-Quotes Title</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+
+		<!-- TEMPORARY: Header menus. -->
+		<script type="text/javascript" src="/javascripts/other.js"></script>
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+	</head>
+	<body>
+		<!-- TEMPORARY: Old header. -->
+		<xi:include href="/includes/c1-tal.html" />
+
+		<!-- Sidebar -->
+		<div id="sidebar">
+		</div>
+
+		<div id="content">
+			<h1><span class="title-section">Reports &#187;</span> Audit Log</h1>
+			<!-- Search field to go here when developed. -->
+			<p tal:condition="false:log">No records found.</p>
+
+			<table class="common no-formatting" tal:condition="true:log">
+				<col id="date" />
+				<col id="user" />
+				<col id="login" />
+				<col id="ip" />
+				<col id="page" />
+				<col id="hits" />
+				<thead>
+					<tr>
+						<th>Date</th>
+						<th title="If the user still exists in the database, the name of the user linking to additional details.">User</th>
+						<th title="The login name (normally email) of the user at the time they modified the data">Login</th>
+						<th title="The IP address the POST originated from. This may be incorrect for some firewalls.">IP</th>
+						<th title="The page modified, including the query string.">Page</th>
+						<th title="The number of times the data has been modified. NOT the number of records changed.">Updates</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr tal:repeat="line log">
+						<td tal:content="line/date">2005-03-20</td>
+						<td><a href="#" tal:condition="line/user" tal:attributes="href string:/administrator/managerial/user_profiles.html?ddmUser=$line/user" tal:content="string:$line/proname $line/surname">John Smith</a></td>
+						<td tal:content="line/login">jsmith@example.com</td>
+						<td tal:content="line/ip">10.0.0.1</td>
+						<td><a href="#" tal:attributes="href string:$line/page?$line/query" tal:content="string:$line/page?$line/query">?id=42</a></td>
+						<td tal:content="line/hits">3</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

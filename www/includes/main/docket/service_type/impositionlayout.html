@@ -1,0 +1,45 @@
+<? if ( $$variable{pressType} eq 'digital') ?>
+<? else ( $$variable{pressType} eq 'digital') ?>
+    <?loop signature?>
+        <div class="indent">
+            <? if ($$variable{'txtServiceDescription'}) ?>
+                <span class="label">Signature Group - </span><?txtServiceDescription?>
+            <? endif ($$variable{'txtServiceDescription'}) ?>
+            
+            <span class="label">Sig Qty </span>
+            <?txtSignatureQuantity?>
+            
+            <span class="label">Spreads per Sig </span>
+            <?spreads_in_group?>
+            
+            <span class="label">Imposition </span>
+            <?hdnImposition?>Out 
+            
+            <span class="label">Trap </span>
+            <?hdnTrap?>
+            
+            <? if ( $$variable{'txtServiceSpreads'} ne '' ) ?>
+                <span class="label">Spread Qty </span>
+                <?txtServiceSpreads?>
+            <? endif ( $$variable{'txtServiceSpreads'} ne '' ) ?>
+    
+            <span class="label">Bleed</span>
+            <?bleed_size?>
+            <? if ( $$variable{'bleed_size'} ne 0 ) ?>
+                -
+            <? endif ( $$variable{'bleed_size'} ne 0 ) ?>
+            <? if ( $$variable{'bleed_sides'} =~ m/3/ ) ?>
+                L,
+            <? endif ( $$variable{'bleed_sides'} =~ m/3/ ) ?>
+            <? if ( $$variable{'bleed_sides'} =~ m/1/ ) ?>
+                R,
+            <? endif ( $$variable{'bleed_sides'} =~ m/1/ ) ?>
+            <? if ( $$variable{'bleed_sides'} =~ m/0/ ) ?>
+                T,
+            <? endif ( $$variable{'bleed_sides'} =~ m/0/ ) ?>
+            <? if ( $$variable{'bleed_sides'} =~ m/2/ ) ?>
+                B,
+            <? endif ( $$variable{'bleed_sides'} =~ m/2/ ) ?>
+        </div>
+	<?endloop signature?>
+<? endif ( $$variable{pressType} eq 'digital') ?> 

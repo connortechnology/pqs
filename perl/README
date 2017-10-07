@@ -1,0 +1,3 @@
+Code contained in this directory is shared by the code in each subdirectory.
+Typically, each subdirectory contains the code for a client or project.
+If you change code in this directory, you have to make sure you havn't messed up anything in the subdirs.  But you can change code in the subdirs at will, they should not affect each other.

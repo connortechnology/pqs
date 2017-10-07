@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:tal="http://purl.org/petal/1.0/">
+    <head>
+        <script  type="text/javascript">
+        <!--
+            function runJSRS(contextID) {
+                alert(document.forms[0].payload.value);
+                if (jsrsContextPool) {
+                    jsrsContextPool[contextID].busy     = false;
+                    jsrsContextPool[contextID].callback = null;
+                }
+                return false;
+            }
+        -->
+        </script>
+    </head>
+    <body tal:attributes="onload string:runJSRS('${C}');">
+        <form>
+            <textarea name="payload">
+                $error
+            </textarea>
+        </form>
+    </body>
+</html>

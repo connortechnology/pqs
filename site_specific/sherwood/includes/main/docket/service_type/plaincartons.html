@@ -1,0 +1,35 @@
+<div style=" padding-left: 2em; ">
+	
+    <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"><span class="label">Total:&nbsp;&nbsp;</span>
+	<? if ($$variable{'qtyIndex'} == 1) ?>
+		<?hdnSkidQuantity1?>
+	<? endif ($$variable{'qtyIndex'} == 1) ?>
+	<? if ($$variable{'qtyIndex'} == 2) ?>
+		<?hdnSkidQuantity2?>
+	<? endif ($$variable{'qtyIndex'} == 2) ?>
+	<? if ($$variable{'qtyIndex'} == 3) ?>
+		<?hdnSkidQuantity3?>
+	<? endif ($$variable{'qtyIndex'} == 3) ?></td>
+    <td width="50%"><span class="label">Carton Weight:&nbsp;&nbsp;</span>
+	<? if ($$variable{'qtyIndex'} == 1) ?>
+		<?txtCartonWeight1?>
+	<? endif ($$variable{'qtyIndex'} == 1) ?>
+	<? if ($$variable{'qtyIndex'} == 2) ?>
+		<?txtCartonWeight2?>
+	<? endif ($$variable{'qtyIndex'} == 2) ?>
+	<? if ($$variable{'qtyIndex'} == 3) ?>
+		<?txtCartonWeight3?>
+	<? endif ($$variable{'qtyIndex'} == 3) ?>
+	lbs</td>
+  </tr>
+  <tr>
+    <td><span class="label">Carton Size:&nbsp;&nbsp;</span>
+	<?ddmPackageType?></td>
+    <td><span class="label">Projects per Carton:&nbsp;&nbsp;</span>
+	<?txtItemsPerPackage?></td>
+  </tr>
+  
+</table>
+</div>

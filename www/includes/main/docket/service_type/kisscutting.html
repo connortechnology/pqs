@@ -1,0 +1,36 @@
+<span class="label">Die Supplied</span>
+<? if($$variable{'rdbSuppliedDie'} eq 'Y') ?>
+	Yes
+<? else ($$variable{'rdbSuppliedDie'} eq 'Y') ?>
+	No
+<? endif($$variable{'rdbSuppliedDie'} eq 'Y') ?>
+
+<? if($$variable{'rdbSuppliedDie'} ne 'Y') ?>
+	<span class="label">Image Size</span>
+	<?txtDieWidth?>x<?txtDieHeight?>&quot;
+
+	<span class="label">Die Rule </span>
+	<? if ( $$variable{'rdbDieCutting'} eq 'Simple' ) ?>Simple-<?txtSteelRuleLengthSimple?>"<? endif ( $$variable{'rdbDieCutting'} eq 'Simple' ) ?>
+	<? if ( $$variable{'rdbDieCutting'} eq 'Average' ) ?>Average-<?txtSteelRuleLengthAverage?>"<? endif ( $$variable{'rdbDieCutting'} eq 'Average' ) ?>
+	<? if ( $$variable{'rdbDieCutting'} eq 'Complex' ) ?>Complex-<?txtSteelRuleLengthComplex?>"<? endif ( $$variable{'rdbDieCutting'} eq 'Complex' ) ?>
+
+	<? if ($$variable{'txtDieCutBends'}) ?><span class="label">Die Bends </span><?txtDieCutBends?><? endif ($$variable{'txtDieCutBends'}) ?>
+	<? if ($$variable{'txtDieCutPunches'}) ?><span class="label">Die Punchs </span><?txtDieCutPunches?><? endif ($$variable{'txtDieCutPunches'}) ?>
+<? endif($$variable{'rdbSuppliedDie'} ne 'Y') ?>
+
+<span class="label">Equipment</span>
+<?ddmEquipment1?>
+<?ddmEquipment2?>
+<?ddmEquipment3?>
+
+<span class="label">Imposition</span>
+<? if ($$variable{'qtyIndex'} == 1 ) ?>
+	<?txtImposition1?>
+<? endif ($$variable{'qtyIndex'} == 1 ) ?>
+<? if ($$variable{'qtyIndex'} == 2 ) ?>
+	<?txtImposition2?>
+<? endif ($$variable{'qtyIndex'} == 2 ) ?>
+<? if ($$variable{'qtyIndex'} == 3 ) ?>
+	<?txtImposition3?>
+<? endif ($$variable{'qtyIndex'} == 3 ) ?>
+out

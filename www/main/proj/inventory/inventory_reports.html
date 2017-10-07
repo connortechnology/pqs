@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title><!--#include virtual="/includes/web_page_title.html" -->Account - My Inventory Reports<!--#include virtual="/includes/web_page_title_end.html" --></title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+    <script type="text/javascript" src="/javascripts/other.js"></script>
+    <script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Account &#187;</span> My Inventory Reports</h1>
+	<? if ( $$variable{'user_id'} eq '0' ) ?>
+		<p>Only logged in customers have a project inventory history.
+	<? else ( $$variable{'user_id'} eq '0' ) ?>
+
+		<form action="" method="post" name="f1" id="f1">
+			<fieldset>
+				<legend>
+					Monthly Usage
+				</legend>
+
+				<p>Monthly Usage Analysis Report</p>
+                
+                <div class="button-bar indent-regular">
+                    <input class="button" type="submit" name="MonthlyUsage" value="Download in CSV Format" />
+                    <br />
+                </div>
+
+			</fieldset>
+		</form>
+
+		<form action="" method="post" name="f2" id="f2">
+			<fieldset>
+				<legend>
+					Obsolescence
+				</legend>
+
+				<p>Obsolescence Report</p>
+				<table width="385" border="0" align="left" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" bordercolor="#FFFFFF">
+                  <tr>
+                   <td width="217">Start Date:</td>
+                   <td width="168"><input type="text" name="start_date" value="<?start_date?>" /></td>
+                  </tr>
+                  <tr>
+                    <td>End Date:</td>
+                    <td><input type="text" name="end_date"   value="<?end_date?>" /></td>
+                  </tr>
+                </table>
+                <br />
+				   
+                
+                <div class="button-bar indent-regular">
+                    <input class="button" type="submit" name="ObsoleteReport" value="Download in CSV Format" />
+                    <br />
+                </div>
+
+			</fieldset>
+		</form>
+			
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

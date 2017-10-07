@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Account - Project History
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+
+	<form action="/main/proj/template_data.html" method="get" name="f1" id="f1">
+		<fieldset>
+			<legend>Project Search</legend>
+		
+			<p class="none">&nbsp;</p>
+		
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?ddmStartMonth?>
+			</select>
+			<select name="ddmStartDay">
+				<?ddmStartDay?>
+			</select>
+			<select name="ddmStartYear">
+				<?ddmStartYear?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?ddmEndMonth?>
+			</select>
+			<select name="ddmEndDay">
+				<?ddmEndDay?>
+			</select>
+			<select name="ddmEndYear">
+				<?ddmEndYear?>
+			</select>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input type="reset" class="button" value="Reset" />
+				<input type="submit" class="button" value="Download" name="Download" />
+				<br />
+				</div>
+			<br />
+		</fieldset>
+	</form>
+	
+	<form action="/main/proj/proj_hist.html" method="post" name="f1" id="f1" onsubmit="return delete_confirm(this);" >
+		<? if not:projects ?>
+			<p>There are no projects which match your search criteria.</p>
+		<? else not:projects ?>
+			<table border="0" cellspacing="0" cellpadding="0" style="width: 100%">
+				<tr>
+					<th style="text-align: left;">Project ID</th>
+					<th style="text-align: left;">Project Name</th>
+					<th style="text-align: center;">Status</th>
+					<th style="text-align: center;">Creation Date</th>
+					<th style="text-align: center;">Files</th>
+					<th style="text-align: center; padding-bottom: 0;"><input class="button" type="submit" name="action" value="Delete" /></th>
+				</tr>
+
+				<? loop projects ?>
+					<tr class="r<?_even?>">
+						<td style="text-align: left;"><a href="/main/proj/proj_view.html?pid=<?pid?>"><?pid?></a></td>
+						<td style="text-align: left;"><a href="/main/proj/proj_view.html?pid=<?pid?>"><?reference?></a></td>
+						<td style="text-align: center;"><?status?></td>
+						<td style="text-align: center;" <? if expired ?> class="error" <? endif expired ?> ><?create_date?></td>
+						<td style="text-align: center;">
+							<? if ($variable->{is_ordered} || $variable->{is_staff}) ?>
+											<a href="/main/proj/files.html?pid=<?pid?>" title="Upload / Approve">Upload / Approve</a>
+							<? endif ($variable->{is_ordered} || $variable->{is_staff}) ?>
+						<td style="text-align: center;"><input type="checkbox" name="delete" value="<?pid?>" class="checkbox" /></td>
+					</tr>
+				<? endloop projects ?>
+			</table>
+		<? endif not:projects ?>
+		<br />
+	</form>
+	<? endif ( $$variable{'user_id'} eq '0' ) ?>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/account.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

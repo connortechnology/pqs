@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Marketing - Categories
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Marketing &#187;</span> Categories</h1>
+
+	<form id="f1" name="f1" method="post" onsubmit="return fmCheck(f1);">
+
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+	
+			<p>To begin this section, please use the dropdown menu below, to search for a customer category: </p>
+
+			<label for="ddmCategory">Category:</label>
+			<select id="ddmCategory" name="ddmCategory" onchange="if(this.options[this.selectedIndex].value != '') fmCheck(f1);">
+				<option value=""> Select a Category </option>
+				<option value=""> ----------------- </option>
+				<?ddmCategory?>
+			</select>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="&lt;&lt;" />
+				<input class="button" type="submit" name="btnFunction" value="&gt;&gt;" />
+				<input class="button" type="button" name="btnFunction" value="New" onclick="addCheck(f1);" />
+				<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=2;" />
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Category
+			</legend>	
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtName">Category Name:</label>
+			<input type="text" id="txtName" name="txtName" value="<?txtName?>" size="30" class="input-text" />
+			<br />
+
+			<label for="txtDescription">Description:</label>
+			<textarea id="txtDescription" name="txtDescription" class="marg-bot" rows="5"><?txtDescription?></textarea>
+			<br />
+
+			<label for="txtGreeting">Greeting:</label>
+			<textarea id="txtGreeting" name="txtGreeting" rows="5"><?txtGreeting?></textarea>
+			<br />
+		</fieldset>
+	</form>
+</div>
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+
+</body>
+</html>

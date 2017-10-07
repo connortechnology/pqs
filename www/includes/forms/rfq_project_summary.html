@@ -1,0 +1,262 @@
+<!-- Generic Project Information. -->
+<div >
+	<!-- Basic Info. -->
+	<div class="category">
+		<!-- Company/Docket ID -->
+
+        <div style="width:100%; text-align:left !important; height:50px; vertical-align:bottom">
+<img src="/images/e-mail/email_header.gif" style="padding-bottom:10px; max-width:600px" align="left"/>
+<h2 style="padding-top:30px; border:none !important">REQUEST FOR QUOTE</h2>
+</div>
+	<!-- Basic Info. -->
+	<div class="category">
+    <br />
+<hr color="#999999" />
+		<!-- Company/Docket ID -->
+        
+		<table style="border:none !important;">
+        <tr>
+        <td style="border:none !important;">
+        <div class="category" style="margin-top: 10px; min-height:210px">
+
+        <h2>PROJECT INFORMATION</h2>
+	<table class="docket" >
+		<colgroup class="column" >
+			<col class="header" />
+			<col class="data" />
+		</colgroup>
+		<colgroup class="column">
+			<col class="header" />
+			<col class="data" />
+		</colgroup>
+		<tbody>
+        <tr>
+        <th>QUANTITY:</th>
+        <td colspan="3"><?if qtys.1?><?qtys.1?><?endif qtys.1?><?if qtys.2?>, <?qtys.2?><?endif qtys.2?><?if qtys.3?>, <?qtys.3?><?endif qtys.3?></td>
+        </tr>
+        	<tr rowspan="2">
+				<th style="text-align:left !important;">PROJECT ID:</th>
+				<td colspan="3"><span id="id"><?HeaderInfo.id?></span></td>
+			</tr>
+        	<tr rowspan="2">
+				<th>PROJECT NAME:</th>
+				<td colspan="3"><?HeaderInfo.reference?></td>
+			</tr>
+            
+			<tr>
+				<th>PROJECT TYPE:</th>
+                <td colspan="3"><?HeaderInfo.ProjectType?></td>
+			</tr>
+            <tr>
+            <th>COLORS:</th>
+					<td colspan="3">
+						<?loop HeaderInfo.colours?>
+							<?colour1?><?side1_info?> / <?colour2?><?side2_info?>
+
+							<?if (! $$variable{_last})?>,<?endif (! $$variable{_last})?>
+						<?endloop HeaderInfo.colours?>
+					</td>
+            </tr>
+			<tr>
+				<th>FINISHED SIZE:</th>
+                <td colspan="3"><?HeaderInfo.final_width?> x <?HeaderInfo.final_height?> (W x H)</td>
+			</tr>
+            <tr>
+            <th>FLAT SIZE:</th>
+            <td colspan="3"><?HeaderInfo.flat_width?> x <?HeaderInfo.flat_height?> (W x H)</td>
+            </tr>
+            <tr>
+            	<th>FILE FORMAT:</th>
+				<td colspan="3"><?HeaderInfo.design?></td>
+            </tr>
+            <tr>
+            <th>FILE TYPE:</th>
+				<td colspan="3"><?HeaderInfo.software?></td>
+            </tr>
+            <tr>
+            <th>LAMINATE:</th>
+            <td colspan="3"><?HeaderInfo.s0_laminate?>, <?HeaderInfo.s1_laminate?></td>
+            </tr>
+            
+			<tr>
+				<th>VERSIONS:</th>
+				<td>
+				<?HeaderInfo.txtNameQuantity?></td>
+				<th>&nbsp;</th>
+				<td>&nbsp;</td>
+			</tr>
+			<? if ($variable->{HeaderInfo}{multipage})?>
+            	<tr>
+					<th>COVER:</th>
+					<td colspan="3"><?HeaderInfo.rdbCover?></td>
+				</tr>
+				<tr>
+					<th>PAGES:</th>
+					<td><?HeaderInfo.txtTotalPageQuantity?></td>
+					<th>Inserts:</th>
+					<td><?HeaderInfo.txtInsertQuantity?></td>
+				</tr>
+				<tr>
+					<th>SPREADS:</th>
+					<td><?HeaderInfo.txtTotalSpreadQuantity?></td>
+					<th>GF SPREADS: </th>
+					<td><?HeaderInfo.txtGateFoldedSpreadQuantity?></td>
+				</tr>
+			<? endif ($variable->{HeaderInfo}{multipage})?>
+            
+		</tbody>
+	</table>
+    </div>
+    </td>
+    <td style="border:none !important; vertical-align:text-top; width:330px">
+		
+		<!-- Primary Info Call-Out. -->
+		<div  class="no-formatting" style="margin-top: 10px; border:none !important; ">
+			<h2 style="text-align:left; padding-top:10px; border:none !important;">RFQ INFORMATION</h2>
+            <table class="no-formatting" >
+				<? if ($variable->{HeaderInfo}{'date_required'}) ?>
+<!--
+			<tr>
+        	<th>Required by:</th>
+        	<td><?HeaderInfo.date_required?></td>
+				</tr>
+-->
+				<? endif ($variable->{HeaderInfo}{'date_required'}) ?>
+				<?if is_po?>
+				<tr>
+					<th style="text-align:left !important;">PO:</th><td><?RFQ_Header.po_id?></td>
+				</tr>
+				<tr>
+					<th style="text-align:left !important;">PO READ:</th>
+					<td><?RFQ_Header.read_date?></td>
+				</tr>
+				<?endif is_po?>
+				<?if OrderedQuantity?>
+                <tr>
+					<th style="text-align:left !important;">QUANTITY ORDERED:</th>
+					<td><?OrderedQuantity?></td>
+				</tr>
+                <?endif OrderedQuantity?>
+				<? if ($variable->{HeaderInfo}{'date_required'}) ?>
+				<tr>
+        	<th style="text-align:left !important;">ORDER ID:</th>
+        	<td><span id="id">
+        		<?HeaderInfo.order_id?>
+        		</span></td>
+				</tr>
+			<? endif ($variable->{HeaderInfo}{'date_required'}) ?>
+			
+			<tr>
+				<th style="text-align:left !important;">RFQ ID:</th>
+				<td><span id="id"><?rid?></span></td>
+			</tr>
+            <tr>
+            <th style="text-align:left !important;">RFQ CREATOR:</th>
+				<td><?administrator?></td>
+                </tr>
+                <tr>
+                <th style="text-align:left !important;">RFQ STATUS:</th>
+				<td><?RFQ_Header.status?><? if ($variable->{RFQ_Header}{status} eq 'Awarded')?><a href="/main/supplier/purchase_order.html?rid=<?rid?>&pid=<?pid?>&sup_id=<?supplier?>">View PO</a><? endif ($variable->{RFQ_Header}{status} eq 'Awarded')?>
+                </td>
+                </tr>
+                
+                <? if is_po ?>
+            	<tr>
+                <th style="text-align:left !important;">PO DATE:</th>
+			    <td style="text-align:left !important;">
+					<?RFQ_Header.po_date?>
+                </td>
+                </tr>
+				<? else is_po ?>
+            	<tr>
+                <th style="text-align:left !important;">RFQ CLOSING:</th>
+			    <td style="text-align:left !important;">
+					<? if is_staff ?>
+                    <input type="text" id="DPC_closing" name="DPC_closing" size="10"
+                        value="<?RFQ_Header.closing_date?>" <?if spo?>readonly<?endif spo?> />
+                        
+                  <select id="DPC_closing_time" name="closing_time">
+                    <option value="00:00">12:00 AM</option>
+                    <option value="01:00">01:00 AM</option>
+                    <option value="02:00">02:00 AM</option>
+                    <option value="03:00">03:00 AM</option>
+                    <option value="04:00">04:00 AM</option>
+                    <option value="05:00">05:00 AM</option>
+                    <option value="06:00">06:00 AM</option>
+                    <option value="07:00">07:00 AM</option>
+                    <option value="08:00">08:00 AM</option>
+                    <option value="09:00">09:00 AM</option>
+                    <option value="10:00">10:00 AM</option>
+                    <option value="11:00">11:00 AM</option>
+                    <option value="12:00">12:00 PM</option>
+                    <option value="13:00">01:00 PM</option>
+                    <option value="14:00">02:00 PM</option>
+                    <option value="15:00">03:00 PM</option>
+                    <option value="16:00">04:00 PM</option>
+                    <option value="17:00">05:00 PM</option>
+                    <option value="18:00">06:00 PM</option>
+                    <option value="19:00">07:00 PM</option>
+                    <option value="20:00">08:00 PM</option>
+                    <option value="21:00">09:00 PM</option>
+                    <option value="22:00">10:00 PM</option>
+                    <option value="23:00">11:00 PM</option>
+
+                    </select>
+					<? else is_staff ?>
+                        <?RFQ_Header.closing_date?>
+					<? endif is_staff ?>
+                </td>
+                </tr>
+				<? endif is_po ?>
+                
+                <tr>
+                <th style="text-align:left !important;">DELIVERY DUE:</th>
+				<td >
+					<? if is_staff ?>
+                  <input type="text" id="DPC_supply" name="DPC_supply" size="10"
+                    value="<?RFQ_Header.supply_date?>" <?if spo?>readonly<?endif spo?> />
+					<? else is_staff ?>
+                    	<?RFQ_Header.supply_date?>
+					<? endif is_staff ?>
+                </td>
+                </tr>
+				<tr>
+                
+				<? if is_po ?>
+				<? else is_po ?>
+                <th style="text-align:left !important;">RFQ SENT:</th>
+				<td>
+					<? if is_staff ?>
+                  <input type="text" id="DPC_send" name="DPC_send" size="10" <?if spo?>readonly<?endif spo?>
+                           value="<?RFQ_Header.send_date?>" />
+					<? else is_staff ?>
+                           <?RFQ_Header.send_date?> 
+					<? endif is_staff ?>
+                </td>
+				<? endif is_po ?>
+            </tr>
+            
+            <? if is_po ?><tr>
+                <th style="text-align:left !important;">AWARDED TO:</th>
+				<td><?RFQ_Header.supplier_name?></td>
+            </tr>
+            <? endif is_po ?>
+			</table>
+           
+
+		</div>
+	</div>
+</td>
+</tr>
+				<tr>
+				<td colspan="2" style="border:none !important;"><strong>COMMENTS:</strong>
+				<?HeaderInfo.comments?></td>
+			</tr>
+</table>
+        
+        
+        
+        </div>
+        
+		</div>
+

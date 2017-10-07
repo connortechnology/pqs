@@ -1,0 +1,25 @@
+<div style=" padding-left: 2em; ">
+
+<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"><span class="label">Qty:&nbsp;&nbsp;</span>
+	<?qty?></td>
+    <td width="50%"><span class="label">Height:&nbsp;&nbsp;</span>
+	<?height?></td>
+  </tr>
+  <tr>
+    <td><span class="label">Project Calliper:&nbsp;&nbsp;</span>
+	<?calliper?></td>
+    <td><span class="label">Material Qty:&nbsp;&nbsp;</span>
+	<?mqty?></td>
+  </tr>
+  <? if ( $$variable{'rdbCover'} )?>
+  <tr>
+    <td>
+	<span class="label">Cover Type:&nbsp;&nbsp;</span><?rdbCover?>
+	</td>
+    <td></td>
+  </tr>
+  <? endif ( $$variable{'rdbCover'} )?>
+</table>
+</div>

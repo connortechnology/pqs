@@ -1,0 +1,25 @@
+<? if ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' or $$variable{'Reseller'} eq 'Y' ) ?>
+	<br class="clear" />
+
+	<form action="/main/account/confirmation_select_customer.html" name="f1" id="f1">
+
+	<fieldset>
+		<legend>
+			Account Selection
+		</legend>
+
+		<p>As an employee or administrator you may now select an account. Any projects,  quotes or orders that you create will be recorded in the selected Company's account history.</p>
+
+		<label for="ddmCustomer">Select an Account:</label>
+		<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+			<option value=""> Select an Account </option>
+			<?ddmCustomer?>
+		</select>
+		<input type="submit" value="Go" class="button" />
+		
+		<br />
+	</fieldset>
+
+	</form>
+
+<? endif ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' or $$variable{'Reseller'} eq 'Y' ) ?>

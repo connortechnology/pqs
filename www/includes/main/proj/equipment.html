@@ -1,0 +1,37 @@
+<fieldset>
+	<legend>Equipment</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<? if project.quantity.0 ?>
+		<label for="ddmEquipment1">Equipment for <?txtQuantity1?>:</label>
+		<select id="ddmEquipment1" name="ddmEquipment1" size="1" >
+			<option value="" >Equipment Options</option>
+			<?ddmEquipmentOptions1?>
+		</select>
+		<label for="chkOverrideEquipment1" class="checkbox override"><input type="checkbox" id="chkOverrideEquipment1" name="chkOverrideEquipment1" class="override" value="Y" />Override</label>
+	<? endif project.quantity.0 ?>
+	
+	<? if project.quantity.1 ?>
+		<br />
+		
+		<label for="ddmEquipment2">Equipment for <?txtQuantity2?>:</label>
+		<select id="ddmEquipment2" name="ddmEquipment2" size="1" >
+			<option value="" >Equipment Options</option>
+			<?ddmEquipmentOptions2?>
+		</select>
+		<label for="chkOverrideEquipment2" class="checkbox override"><input type="checkbox" id="chkOverrideEquipment2" name="chkOverrideEquipment2" class="override" value="Y" />Override</label>
+	<? endif project.quantity.1 ?>
+	<? if project.quantity.2 ?>
+		<br />
+		
+		<label for="ddmEquipment3">Equipment for <?txtQuantity3?>:</label>
+		<select id="ddmEquipment3" name="ddmEquipment3" size="1" >
+			<option value="" >Equipment Options</option>
+			<?ddmEquipmentOptions3?>
+		</select>
+		<label for="chkOverrideEquipment3" class="checkbox override"><input type="checkbox" id="chkOverrideEquipment3" name="chkOverrideEquipment3" class="override" value="Y" />Override</label>
+	<? endif project.quantity.2 ?>
+
+	<br />
+</fieldset>

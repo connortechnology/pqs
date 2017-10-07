@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Reports - Orders
+	</title>
+	
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+    
+    <style>
+	th { border-color:#FFFFFF;
+	}
+	
+	th, tr, td {
+		padding:3px 3px 3px 3px !important;
+	}
+	</style>
+</head>
+
+<body style="margin-left: 10px; background-image:none !important;">
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Reports &#187;</span> Orders</h1>
+
+
+
+<form method="POST" action="products.html" enctype="multipart/form-data">
+  <table>
+  <th></th>
+  <th>IMPORT</th>
+  <th>EXPORT</th>
+  <th>SAVE</th>
+  	
+  	<tr>
+    <td>Products</td>
+  		<td><input type="file" name="import" id="import" /><br />
+ <input type="submit" class="button" value="Upload Product List" style="float:left"/></td>
+        <td><input type="submit" name="export" class="button" value="Export Products" /></td>
+        <td><input type="submit" class="button" value="Save Page" name="Save" style="float:left"/></td>
+     </tr>
+     <tr>
+     <td>Pricelist</td>
+  		<td>List:<select name="pricelist" id="pricelist">
+  				<option value="1">Default</option>
+                </select><br /><br/>
+
+   <input type="file" name="price_import" id="price_import" /><br />
+<input type="submit" class="button" value="Upload Price List" style="float:left"/></td>
+        <td>	<input type="submit" name="export" class="button" value="Export Prices" /></td>
+        <td></td>
+     </tr>
+     <tr>
+     <td>Images</td>
+     <td><input type="file" name="image_import" id="image_import" /><br />
+ <input type="submit" class="button" value="Upload Images" style="float:left"/></td>
+     <td></td>
+     <td></td>
+  </table>
+
+  <table>
+    <tr>
+    <th>Delete</th>
+		<th>Internal Id</th>
+		<?loop fields?>
+        	<th><?desc?></th>
+		<?endloop fields?>
+
+<!--
+        <th>Id</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Details</th>
+        <th>Category</th>
+        <th>Part Number</th>
+		<th>Vendor</th>       
+        <th>Minimum Qty</th>
+         <th>Increment</th>
+        <th>Maximum Qty</th>
+        <th>Weight (lbs)</th>
+        <th>Notes</th>
+        <th>Mediawide<br />Template</th>
+        <th>Proj ID</th>
+        <th width="40px">Active<br />1/0</th>
+        <th>Expiry Date <br />
+		MM/DD/YYYY</th>
+        <th>Group Option</th>
+        <th>Product Group</th>
+       <th>Units</th>
+       <th>Lead Time</th>
+      <th>Price</th>
+-->
+      
+      
+      
+     
+    </tr>
+    <?loop products?>
+			<tr>
+             <td><a href="products.html?delete=<?id?>">delete</a></td>
+			<td><?id?> <input type="hidden" name="productid" value="<?id?>" /> </td>
+		<?loop fields?>
+			<?eval( $variable->{value} = $variable->{$variable->{fname}} ) ?>
+
+			<td>
+				<input name="<?fname?>[<?id?>]" value="<?value?>" />
+			</td>
+		<?endloop fields?>
+        
+			</tr>
+<!--
+      <tr>
+        <td> <input type="hidden" name="productid" value=<?id?> /><?id?></td>
+        <td><input name="name[<?id?>]" value="<?name?>" style="width:100px" /></td>
+        <td><input name="description[<?id?>]" value="<?description?>" style="width:100px" /></td>
+        <td><input name="details[<?id?>]" value="<?details?>" style="width:100px" /></td>
+        <td><input name="category[<?id?>]" value="<?category?>" style="width:30px" /></td>
+        <td><input name="part_number[<?id?>]" value="<?part_number?>" style="width:60px"/></td>
+        <td><input name="vendor[<?id?>]" value="<?vendor?>" style="width:30px"/></td>
+        <td><input name="minimum_qty[<?id?>]" value="<?minimum_qty?>" style="width:60px"/></td>
+		<td><input name="increment[<?id?>]" value="<?increment?>" style="width:60px" /></td>
+        <td><input name="maximum_qty[<?id?>]" value="<?maximum_qty?>" style="width:60px"/></td>
+        <td><input name="weight[<?id?>]" value="<?weight?>" style="width:60px"/></td>
+        <td><input name="notes[<?id?>]" value="<?notes?>" style="width:100px" /></td>
+        <td><input name="mediawide[<?id?>]" value="<?mediawide?>"  style="width:50px"/></td>
+        <td><input name="project[<?id?>]" value="<?project?>"  style="width:50px"/></td>
+        <td><input name="active[<?id?>]" value="<?active?>" style="width:15px" /></td>
+        <td><input name="expiry[<?id?>]" value="<?expiry?>" style="width:75px"/></td>
+        <td><input name="group_option[<?id?>]" value="<?group_option?>" style="width:75px" /></td>
+        <td><input name="product_group[<?id?>]" value="<?product_group?>" style="width:75px" /></td>
+        <td><input name="units[<?id?>]" value="<?units?>" style="width:75px"/></td>
+        <td><input name="leadtime[<?id?>]" value="<?leadtime?>" style="width:75px"/></td>
+        <td><input name="price[<?id?>]" value="<?price?>" style="width:40px" /></td>
+        <td><a href="products.html?delete=<?id?>">delete</a></td>
+        
+      </tr>
+-->
+    <?endloop products?>
+    <tr>
+	<td></td>
+    <td></td>
+	<td>	<input name="strid" id="strid"	style="width:100px"/></td>
+     <td>    <input name="category" style="width:30px" /></td>
+    <td>	<input name="name" 	style="width:100px"/></td> 
+  	<td>	<input name="description" style="width:100px" /></td>
+    <td>    <input name="details" style="width:100px" /></td>
+     <td>   <input name="part_number"  style="width:100px"/></td>
+     <td>   <input name="vendor"  style="width:100px"/></td>
+     <td>   <input name="minimum_qty"  style="width:60px"/></td>
+     <td>   <input name="increment"  style="width:60px" /></td>
+     <td>   <input name="maximum_qty" style="width:60px"/></td>
+     <td>   <input name="weight"  style="width:60px"/></td>
+     <td>   <input name="notes" style="width:100px" /></td>
+     <td>   <input name="mediawide" style="width:100px" /></td>
+     <td>   <input name="project"  style="width:50px"/></td>
+     <td>   <input name="active"  style="width:30px" /></td>
+     <td>   <input name="expiry"  style="width:75px"/></td>
+     <td>   <input name="product_group" style="width:80px" /></td>
+     <td>   <input name="group_option" style="width:80px" /></td>
+     <td>   <input name="units"  style="width:75px"/></td>
+     <td>   <input name="tax_exempt3"  style="width:75px"/></td>
+     <td>   <input name="lead_time"  style="width:75px"/></td>
+
+<!--     <td>   <input name="price" style="width:40px" /></td>
+-->     
+     </tr>
+     
+     <tr>
+    <th>Delete</th>
+		<th>Internal Id</th>
+		<?loop fields?>
+        	<th><?desc?></th>
+		<?endloop fields?>
+        
+    </tr>
+  </table>
+  <br />
+
+<input type="submit" class="button" value="Save Page" name="Save" style="float:left"/><br />
+<br />
+
+ 
+  </form>
+ </div>
+
+<div  style="float:bottom">
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</div>
+</body>
+</html>

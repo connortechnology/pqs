@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Account - My Inventory - Check Out
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+	
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+		var service = new Service('<?service.ref?>');
+	</script>
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Account &#187;</span> My Inventory &#187; Check Out</h1>
+
+	<form id="f1" name="f1" method="POST" action="/service/inventorycheckout">
+		<fieldset>
+			<legend>Inventory Check-out</legend>
+		
+			<p>How many items would you like to order from inventory?</p>
+			
+			<label for="txtCheckOutQty">Check Out:</label>
+			<input id="txtCheckOutQty" name="txtCheckOutQty" type="text" size="9" class="smBox" />
+			<label for="txtCheckOutQty" class="post-input">items</label>
+			<br />
+			
+			<p>Do you require any shipping for the current project?</p>
+			
+			<label>Shipping:</label>
+			<div>
+				<label for="rdbAdditionalShippingYes" class="radio"><input type="radio" id="rdbAdditionalShippingYes" name="rdbAdditionalShipping" value="Y" />Yes</label><br />
+				<label for="rdbAdditionalShippingNo" class="radio"><input type="radio" id="rdbAdditionalShippingNo" name="rdbAdditionalShipping" value="N" checked="checked" />No</label>
+			</div>
+			<br />
+		</fieldset>
+		
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_bindery.html"-->
+
+		<input type="hidden" name="InventoryIndex" value="<?InventoryIndex?>" />
+		<input type="hidden" name="CheckOutIndex" value="<?CheckOutIndex?>" />
+		<input type="hidden" name="InventoryID" value="<?InventoryID?>" />
+		<input type="hidden" name="InventoryLocation" value="<?InventoryLocation?>" />
+		<input type="hidden" name="txtProjectWeight" value="<?txtProjectWeight?>" />
+	</form>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/account.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

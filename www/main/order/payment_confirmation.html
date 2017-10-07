@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Orders - Payment Confirmation
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	
+</head>
+<body>
+<div id="sizer">
+		<div id="expander">
+
+				<div id="header">
+			<div id="banner">
+	<?BANNER_AD?>
+</div>
+				</div>
+            </div>
+            </div>    
+
+	<br />
+    <h1><span class="title-section">Orders &#187;</span> Payment Confirmation</h1>
+
+<?if approved?>
+<br />
+Thank You. Your Payment has been approved. Please select Submit Order button below to complete your order.
+<br />
+<p>
+<input type="button" class="button" style="float:none !important;" name="OK" value="Submit Order" onClick="window.opener.document.f1.submit(); window.close();" />
+</p>
+
+<?else approved?>
+<br/>
+Unfortunately your payment was declined. To re-try please select the Re-try Payment Button Below. 
+<br />
+<p>
+<a href="https://www.beanstream.com/scripts/payment/payment.asp?merchant_id=117583734&trnLanguage=eng&trnAmount=<?payment_amount?>&trnOrderNumber=<?ORDER_ID?>" class="button">Re-try Payment</a>
+</p>
+<?endif approved?>
+
+
+
+
+
+
+</body>
+</html>
+

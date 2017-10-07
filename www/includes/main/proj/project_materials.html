@@ -1,0 +1,20 @@
+<div class="category">
+	<h2>Project Materials</h2>
+
+	<?loop materials?>
+
+	<div class="group">
+		<span class="label"><?category?></span>
+
+		<?loop subMaterials?>
+
+			<div class="indent">
+				<? if ($$variable{'category'} eq 'Inks')?><span class="label"><?ws_Colour?> </span><?endif ($$variable{'category'} eq 'Inks')?>
+				<?name?> <?value?> 
+			</div>
+
+		<?endloop subMaterials?>
+	</div>
+
+	<?endloop materials?>
+</div>

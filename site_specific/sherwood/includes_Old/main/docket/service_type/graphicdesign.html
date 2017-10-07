@@ -1,0 +1,48 @@
+<div style=" padding-left: 2em; ">
+	<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"><span class="label">Graphic Design and Layout Hrs:&nbsp;&nbsp;</span>  
+    <? if($$variable{'GraphicDesign'})?>
+		<?GraphicDesign?>
+    <? else($$variable{'GraphicDesign'})?> 
+    	0   
+	<? endif($$variable{'GraphicDesign'})?>
+    </td>
+    <td width="50%"><span class="label">Photography Hrs:&nbsp;&nbsp;</span>
+    <? if($$variable{'ProductPhotos'})?>
+		<?ProductPhotos?>
+    <? else($$variable{'ProductPhotos'})?>
+    	0  
+	<? endif($$variable{'ProductPhotos'})?>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="label">Logo Hrs:&nbsp;&nbsp;</span>
+    <? if($$variable{'Logos'})?>
+		<?Logos?>
+    <? else($$variable{'Logos'})?>
+    	0
+	<? endif($$variable{'Logos'})?>
+    </td>
+    <td><span class="label">Illustration Hrs:&nbsp;&nbsp;</span>
+    <? if($$variable{'Illustrations'})?>
+		<?Illustrations?>
+    <? else($$variable{'Illustrations'})?>
+    	0
+	<? endif($$variable{'Illustrations'})?>
+    </td>
+  </tr>
+  <tr>
+    <td><span class="label">Copy Writing Hrs:&nbsp;&nbsp;</span>
+    <? if($$variable{'CopyWriting'})?>
+		<?CopyWriting?>
+    <? else($$variable{'CopyWriting'})?>
+    	0
+	<? endif($$variable{'CopyWriting'})?>
+    </td>
+    <td><span class="label">Actual Hrs:&nbsp;&nbsp;______________</span></td>
+  </tr>
+</table>
+    
+   
+</div>

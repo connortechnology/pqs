@@ -1,0 +1,55 @@
+<div id="order-box" style="width: 600px;">
+	<!-- Header. -->
+	<div id="order-header">
+		<img src="/images/e-mail/email_logo.gif" alt="<? company ?>" />
+
+		<address><!--#include virtual="/includes/company_contact_email_content_info.html"--></address>
+
+			<table id="primary_info" class="no-formatting">
+					<tr>
+						<th>Order ID:</th>
+						<td><a href="/main/order/order_history_details.html?Issue_Cookie=true&order_id=<?ORDER_ID?>"><?rev:ORDER_ID?></a></td>
+					</tr>
+
+					<tr>
+						<th>PO Number:</th>
+						<td><?PONUM?></td>
+					</tr>
+
+					<tr>
+						<th>Terms:</th>
+						<td><? if ($$variable{'Terms'}) ?>Net <?Terms?> days<? else ($$variable{'Terms'}) ?>C.O.D.<? endif ($$variable{'Terms'}) ?></td>
+					</tr>
+			</table>
+
+	</div>
+
+	<table class="customer no-formatting th-left">
+		<thead>
+			<tr>
+				<th>Ordered By:</th>
+				<th></th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr>
+				<td><address><?txtSalutation?> <?txtFirstName?> <?txtLastName?><br />
+						<?txtCompanyName?><br />
+						<?txtAddress1?><br />
+						<? if ( $$variable{'txtAddress2'} ) ?><?txtAddress2?><br /><? endif ( $$variable{'txtAddress2'} ) ?>
+						<?CCITYPROVCOUNTRY?><br />
+						<?txtPostalCode?><br />
+						<? if ( $$variable{'txtPhone'} ne '' ) ?>
+						<?txtPhone?><? if ( $$variable{'txtExtension'} ) ?> &nbsp;Ext. <?txtExtension?><? endif ( $$variable{'txtExtension'} ) ?><br />
+						<? endif ( $$variable{'txtPhone'} ne '' ) ?>
+						<? if ( $$variable{'txtFax'} ne '' ) ?>
+						<?txtFax?><br />
+						<? endif ( $$variable{'txtFax'} ne '' ) ?>
+						<?txtEmail?><br /></address>
+				</td>
+				<td></td>
+			</tr>
+		</tbody>
+	</table>
+</div>

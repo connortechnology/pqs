@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title><!--#include virtual="/includes/web_page_title.html" -->Support - Returns<!--#include virtual="/includes/web_page_title_end.html" --></title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+    <script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Support &#187;</span> Returns</h1>
+
+	<form action="/main/support/confirmation_returns.html" method="post" name="f1" id="f1">
+		<input type="hidden" name="error" value="You have an error in field: <?details?>" />
+
+		<p>Please fill out the return authorization form and verify the information below. Fields marked with an * are required.</p>
+
+		<fieldset>
+			<legend>
+				Return Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="txtProductID"><span class="required">*</span>Project ID:</label>
+			<input type="text" id="txtProductID" name="txtProductID" size="30"  class="input-text" />
+			<br />
+
+			<label for="txtOrderID"><span class="required">*</span>Order ID:</label>
+			<input type="text" id="txtOrderID" name="txtOrderID" size="30"  class="input-text" />
+			<br />
+
+			<label><span class="required">*</span>Type:</label>
+			<div>
+				<label for="rdbRMATypeCredit" class="radio"><input type="radio" id="rdbRMATypeCredit" name="rdbRMAType" value="C" checked="checked" />Credit</label><br />
+				<label for="rdbRMATypeReproduction" class="radio"><input type="radio" id="rdbRMATypeReproduction" name="rdbRMAType" value="R" />Re-production</label>
+			</div>
+			<br />
+
+			<label for="txtDescription"><span class="required">*</span>Description of Problem:</label>
+			<textarea id="txtDescription" name="txtDescription" class="marg-bot" rows="6" class="formTxt"></textarea>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnSubmitRMA" value="Submit" />
+				<br />
+			</div>
+
+			<br />
+		</fieldset>
+	</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/support.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

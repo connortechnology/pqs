@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+        <!--#include virtual="/includes/web_page_title.html" -->
+        Projects - <?service.category?> - <?service.name?>
+        <!--#include virtual="/includes/web_page_title_end.html" -->
+    </title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+    <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+	
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+	
+	<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<!--#include virtual="/includes/main/proj/dimensions_boxes_only.html"-->
+		
+		<fieldset>
+			<legend>
+				<?service.name?>
+			</legend>
+		
+			<p>What are the dimensions of the <span class="tip" title="Pressing an image into paper so that it will create a raised relief."><?service.name?></span> image? </p>
+			<label for="txtDieWidth"><?service.name?> Image Dimensions:</label>
+			<input id="txtDieWidth" name="txtDieWidth" size="9" value="<?txtDieWidth?>" class="smBox" /> 
+			<input id="txtDieHeight" name="txtDieHeight" size="9" value="<?txtDieHeight?>" class="smBox" />
+			<label class="post-input">(W&#8243; &#215; H&#8243;)</label>
+			<br />
+			
+			<p>Will you be supplying a <span class="tip" title="A custom image or shape formed on a hardened engraving stamp used in die cutting, foil stamping and embossing.">custom die</span> for the <?service.name?>?</p>
+			<label>Will You Supply Custom Die:</label>
+			<label for="rdbSuppliedDieYes" class="radio"><input type="radio" id="rdbSuppliedDieYes" name="rdbSuppliedDie" value="Yes" <?rdbSuppliedDieYes?> />Yes</label>
+			<label for="rdbSuppliedDieNo" class="radio"><input type="radio" id="rdbSuppliedDieNo" name="rdbSuppliedDie" value="No" <?rdbSuppliedDieNo?> <? if ( ! $$variable{'rdbsupplieddieyes'} ) ?>checked="checked"<? endif ( ! $$variable{'rdbSuppliedDieYes'} ) ?> />No</label>
+			<br />
+		
+			<p>What type of die is required for the project?</p>
+			<label>Die Complexity:</label>
+			<div>
+				<label for="rdbDieTypeSimple" class="radio"><input type="radio" id="rdbDieTypeSimple" name="rdbDieType" value="Simple" <?rdbDieTypeSimple?> />Simple</label><br />
+				<label for="rdbDieTypeAverage" class="radio"><input type="radio" id="rdbDieTypeAverage" name="rdbDieType" value="Average" <?rdbDieTypeAverage?> />Average</label><br />
+				<label for="rdbDieTypeComplex" class="radio"><input type="radio" id="rdbDieTypeComplex" name="rdbDieType" value="Complex" <?rdbDieTypeComplex?> />Complex</label>
+			</div>
+			<br />
+		</fieldset>
+		
+		<? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+			<!--#include virtual="/includes/main/proj/equipment_with_imposition.html"-->
+			<!--#include virtual="/includes/main/proj/die_prices.html"-->
+		<? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+		
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_bindery.html"-->
+	</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

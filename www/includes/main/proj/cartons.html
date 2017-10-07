@@ -1,0 +1,40 @@
+<fieldset>
+	<legend>
+		Cartons
+	</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<? if ( $$variable{'ProjectTypeID'} eq 'PressSheetCombination' ) ?>
+		<p>What is the folding type for this project?</p>
+
+		<label for="ddmFoldType">Folding Type:</label>
+		<select id="ddmFoldType" name="ddmFoldType" size="1" onchange="calc_calliper('f1');calc('f1');">
+			<option value="1">None</option>
+			<option value="2" <?ddmFoldType2?> > 2 Panel</option>
+			<option value="3" <?ddmFoldType3?> > 3 Panel</option>
+			<option value="4" <?ddmFoldType4?> > 4 Panel</option>
+			<option value="5" <?ddmFoldType5?> > 5 Panel</option>
+			<option value="6" <?ddmFoldType6?> > 6 Panel</option>
+			<option value="8" <?ddmFoldType8?> > Difficult Fold</option>
+		</select>
+		<br />
+	<? endif ( $$variable{'ProjectTypeID'} eq 'PressSheetCombination' ) ?>
+
+	<p>What is the quantity of items per carton?</p>
+
+	<label for="txtCartonQuantity">Items per Carton:</label>
+	<input id="txtCartonQuantity" name="txtCartonQuantity" type="text" size="9" class="smBox" onkeyup="calc('f1');" />
+	<br />
+
+	<label for="txtQuantity">Quantity of cartons required:</label>
+	<input id="txtQuantity" name="txtQuantity" type="text" size="9" class="smBox" onkeyup="calc('f1');" />
+	<br />
+
+	<p>What is the total <span class="tip" title="Paper thickness in thousandths of an inch. Also the name of the tool used to make the measurement.">calliper</span> of the finished project?</p>
+	
+	<label for="txtFinishedCalliper">Calliper of Finished Project:</label>
+	<input id="txtFinishedCalliper" name="txtFinishedCalliper" size="9" class="smBox" onkeyup="calc('f1');" />
+	<label class="post-input">(Thousandths of an Inch)</label>
+	<br />
+</fieldset>

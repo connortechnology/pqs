@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Error
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body onload="document.f1.txtEmail.focus();">
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Error &#187;</span> Idled too Long</h1>
+
+	<p>This server enforces an idle limit of <?idletime?> seconds. You have exceeded this limit, and have been automatically logged out.</p>
+	
+	<p>Please enter your e-mail address and password to login.</p>
+	
+	<form name="f1" method="post" action="/administrator/administrator/login_confirmation.html">
+		<fieldset>
+			<legend>
+				Login
+			</legend>
+			
+			<p class="none">&nbsp;</p>
+			
+			<label for="txtEmail">E-mail:</label>
+			<input type="text" name="txtEmail" id="txtEmail" size="30" class="input-text" />
+			<br />
+			
+			<label for="txtPassword">Password:</label>
+			<input type="password" name="txtPassword" id="txtPassword" size="30" class="input-text" />
+			<br />
+			
+			<!--#include virtual="/includes/reset-submit.html" -->
+			
+			<br />
+		</fieldset>
+
+		<input type="hidden" name="Destination" value="<?Destination?>" />
+	</form>
+
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

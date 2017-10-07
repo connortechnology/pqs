@@ -1,0 +1,24 @@
+<? loop signature?>
+	<? if ($$variable{'multipage'} == 1) ?>
+		<span class="label">Signature Group </span>
+		<?Reference?>
+	<? endif ($$variable{'multipage'} == 1) ?>
+
+	<span class="label">Equipment</span>
+	<?equipment?>
+
+	<? if ( $$variable{'txtScoreQty'} )?>
+		<span class="label">Scores </span>
+		<?txtScoreQty?>
+	<? endif ( $$variable{'txtScoreQty'} )?>
+
+	<? if ( $$variable{'txtPerfQty'} )?>
+		<span class="label">Perfs </span>
+		<?txtPerfQty?>
+	<? endif ( $$variable{'txtPerfQty'} )?>
+
+<span class="label">Imposition</span>
+<?txtImposition?>
+out
+
+<? endloop signature?>

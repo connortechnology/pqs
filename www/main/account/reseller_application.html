@@ -1,0 +1,338 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title><!--#include virtual="/includes/web_page_title.html"-->Account - Reseller Application<!--#include virtual="/includes/web_page_title_end.html" --></title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-main-css.html" -->
+<!--#include virtual="/includes/h2-js.html" -->
+<script type="text/javascript" src="/javascripts/other.js"></script>
+<script  type="text/javascript">
+function openPDF ( url ) {
+window.open( url, 'largeimage', 'width=680,height=480' );
+}
+</script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+<h1><span class="title-section">Account &#187;</span> Reseller App</h1>
+<br />
+<? if ( $$variable{'CustomerIndex'} == 0 ) ?>
+You must register for an account, and be logged in before you can apply to become
+a reseller.
+<br />
+<br />
+<strong>
+*
+</strong>
+If you are a registered user and would like to login click<a href="/main/account/account_login.html">
+<strong>
+here
+</strong>
+</a>.
+<br />
+<strong>
+*
+</strong>
+If you would like to register for an account, click<a href="/main/account/registration.html">
+<strong>
+here
+</strong>
+</a>.
+<br />
+<? else ( $$variable{'CustomerIndex'} == 0 ) ?>
+Please complete the form below. ( *
+<span>
+denotes required information
+</span>
+)
+<br />
+<br />
+<form name="f1" method="post" action="/main/account/confirmation_reseller_application.html">
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+<tr>
+<td width="185" height="30">
+*Legal Name:
+</td>
+<td width="415" height="30">
+<input type="text" name="txtLegalBusinessName" value="<?txtLegalBusinessName?>" size="30"	class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+*Legal Form:
+</td>
+<td height="30">
+<input type="radio" name="rdbLegalForm" value="Corporation" <?rdbLegalFormCorporation?> />
+ Corporation
+<input type="radio" name="rdbLegalForm" value="SoleProprietor" <?rdbLegalFormSoleProprietor?> />
+ Sole Proprietor
+<input type="radio" name="rdbLegalForm" value="Partnership" <?rdbLegalFormPartnership?> />
+ Partnership
+</td>
+</tr>
+<tr>
+<td height="30">
+*Type of Business:
+</td>
+<td height="30">
+<input type="text" name="txtBusinessType" value="<?txtBusinessType?>" size="30"	class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+*Year Established:
+</td>
+<td height="30">
+<input type="text" name="txtStartYear" value="<?txtStartYear?>" class="input-text" size="6" maxlength="4" />
+</td>
+</tr>
+<tr>
+<td height="30">
+*President/CEO/Owner:
+</td>
+<td height="30">
+<input type="text" name="txtPresidentOwner" value="<?txtPresidentOwner?>" size="30"	class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+*Number of Employees:
+</td>
+<td height="30">
+<select size="1" name="ddmEmployees">
+<option value="">
+Select
+</option>
+<?ddmEmployees?>
+</select>
+</td>
+</tr>
+<tr>
+<td height="30">
+*Annual Sales:
+</td>
+<td height="30">
+<select size="1" name="ddmAnnualSales">
+<option value="">
+Select
+</option>
+<?ddmAnnualSales?>
+</select>
+</td>
+</tr>
+<tr>
+<td height="30">
+<? if ( $$variable{'Country'} eq 'US' or $$variable{'Country'} ne 'CA' ) ?>Federal ID #/SSN #<? endif ( $$variable{'Country'} eq 'US' or $$variable{'Country'} ne 'CA' ) ?>
+<? if ( $$variable{'Country'} eq 'CA' ) ?>GST #<? endif ( $$variable{'Country'} eq 'CA' ) ?>
+</td>
+<td height="30">
+<input type="text" name="txtGSTNumber" value="<?txtGSTNumber?>" size="30"	class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+<? if ( $$variable{'Country'} eq 'US' or $$variable{'Country'} ne 'CA' ) ?>State Tax #<? endif ( $$variable{'Country'} eq 'US' or $$variable{'Country'} ne 'CA' ) ?>
+<? if ( $$variable{'Country'} eq 'CA' ) ?>Provincial Tax #<? endif ( $$variable{'Country'} eq 'CA' ) ?>
+</td>
+<td height="30">
+<input type="text" name="txtPSTNumber" value="<?txtPSTNumber?>" size="30"	class="input-text" />
+</td>
+<? if ( $$variable{'StateProvince'} eq 'ON' ) ?>
+</tr>
+<tr>
+<td height="30" colspan="2">
+<br />
+To receive reseller status and PST exemption you must fill out and fax a tax form.  Please <a href="#" alt="Ontario_PST_Exempt.pdf" onclick="openPDF('/pdfs/Ontario_PST_Exempt.pdf'); return false;">click here</a> to download the form in PDF format. Fax forms to
+<!--#include virtual="/includes/company_fax_number.html"-->
+.
+</td>
+<? endif ( $$variable{'StateProvince'} eq 'ON' ) ?>
+</tr>
+</table>
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+<tr>
+<td width="185" height="30">&nbsp;
+</td>
+<td width="415"  height="30">&nbsp;
+</td>
+</tr>
+<tr>
+<td colspan="2" height="30">
+<strong>
+Please provide three trade references:
+</strong>
+</td>
+</tr>
+<tr>
+<td colspan="2" height="10">&nbsp;
+</td>
+</tr>
+<tr>
+<td height="30">
+*Company Name:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceCompanyName1" value="<?txtTradeReferenceCompanyName1?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+*Contact:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceContact1" value="<?txtTradeReferenceContact1?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+*Phone:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferencePhone1" value="<?txtTradeReferencePhone1?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;Extension:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceExt1" value="<?txtTradeReferenceExt1?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;Fax:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceFax1" value="<?txtTradeReferenceFax1?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;E-mail Address:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceEmail1" value="<?txtTradeReferenceEmail1?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td colspan="2" height="30">
+</td>
+</tr>
+<tr>
+<td height="30">
+*Company Name:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceCompanyName2" value="<?txtTradeReferenceCompanyName2?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+*Contact:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceContact2" value="<?txtTradeReferenceContact2?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+*Phone:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferencePhone2" value="<?txtTradeReferencePhone2?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;Extension:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceExt2" value="<?txtTradeReferenceExt2?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;Fax:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceFax2" value="<?txtTradeReferenceFax2?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;E-mail Address:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceEmail2" value="<?txtTradeReferenceEmail2?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td colspan="2" height="30">&nbsp;
+</td>
+</tr>
+<tr>
+<td height="30">
+*Company Name:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceCompanyName3" value="<?txtTradeReferenceCompanyName3?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+*Contact:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceContact3" value="<?txtTradeReferenceContact3?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+*Phone:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferencePhone3" value="<?txtTradeReferencePhone3?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;Extension:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceExt3" value="<?txtTradeReferenceExt3?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;Fax:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceFax3" value="<?txtTradeReferenceFax3?>" size="30"  class="input-text" />
+</td>
+</tr>
+<tr>
+<td height="30">
+&nbsp;E-mail Address:
+</td>
+<td height="30">
+<input type="text" name="txtTradeReferenceEmail3" value="<?txtTradeReferenceEmail3?>" size="30"  class="input-text" />
+</td>
+</tr>
+</table>
+<br />
+<div class="button-bar">
+<input class="button" type="reset" />
+<input class="button" type="submit" value="Submit" />
+	<br class="clear" />
+</div>
+<p><a href="#top">top</a></p>
+<input type="hidden" name="CustomerIndex" value="<?CustomerIndex?>" />
+<input type="hidden" name="UserIndex" value="<?UserIndex?>" />
+</form>
+<? endif ( $$variable{'CustomerIndex'} == 0 ) ?>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

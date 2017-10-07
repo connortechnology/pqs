@@ -1,0 +1,25 @@
+<form name='f1' method="GET" action="<?site?>">
+	<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+	<input type="hidden" name="Category"     value="<?Category?>" />
+
+<p>Please select a category below to view project information.</p>
+	<table id="docket-quantity" class="no-formatting">
+		<tr>
+			<td style="text-align: middle;">
+				Quantity:
+				<? if ( $$variable{HeaderInfo}{qty1} ne '0' ) ?>
+					<label for="QuantityIndex1"><?HeaderInfo.qty1?></label>
+				<? endif ( $$variable{HeaderInfo}{qty1} ne '0' ) ?>
+				
+			</td>
+
+			<td style="text-align: right;">
+				<div class="button-bar">
+					<input type="button" class="button right" onclick="openWindow('/main/proj/proj_docket_printer_friendly.html?ProjectIndex=<?ProjectIndex?>&QuantityIndex=<?QtyIndex?>&Category=<?Category?>&NoPriceBreakDown=1');return false;" value="Printer Friendly" />
+					<a href="/main/proj/proj_view.html?ProjectIndex=<?ProjectIndex?>" class="button right">Return to Project View Page</a>
+					<br class="clear" />
+				</div>
+			</td>
+		</tr>
+	</table>
+</form>

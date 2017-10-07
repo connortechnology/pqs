@@ -1,0 +1,166 @@
+
+
+			<!-- Header. -->
+			<table width="100%">
+            	<tr>
+                	<td style="background-color: #FFFFFF; vertical-align: top; border-style: none; width: 25em;"><h2>REORDER NOTICE</h2></td>			
+					<td style="background-color: #FFFFFF; vertical-align: top; border-style: none;">
+                        <table id="primary_info" class="no-formatting" style="border-style: none;">
+                                <tr>
+                                    <th style="text-align: left;">Date:</th>
+                                    <td style="text-align: left;"><?date?></td>
+                                </tr>
+                                <tr>
+                                    <th style="text-align: left;">Order ID:</th>
+                                    <td style="text-align: left;"><a href="/main/order/order_history_details.html?Issue_Cookie=true&order_id=<?ORDER_ID?>"><?rev:order_id?></a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th style="text-align: left;">Inventory ID:</th>
+                                    <td style="text-align: left;"><?id?></td>
+                                </tr>
+                                <tr>
+                                    <th style="text-align: left;">Item ID:</th>
+                                    <td style="text-align: left;"><?itemid?></td>
+                                </tr>
+                                <tr>
+                                	<td>&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <th style="text-align: left;">Prepared For:</th>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: left;"><address><?strsalutation?> <?strfirstname?> <?strlastname?><br />
+                                        <?strcompanyname?><br />
+                                        <?straddress1?><br />
+                                        <? if ( $$variable{'straddress2'} ne '' ) ?>
+											<?straddress2?><br />
+										<? endif ( $$variable{'straddress2'} ne '' ) ?>
+
+                                        <?strcity?><br />
+                                        <?strstate?> <?strcountry?><br />
+                                        <?strpostalcode?><br />
+                                        <?strphone?><? if ( $$variable{'strext'} ) ?> &nbsp;Ext. <?strext?><? endif ( $$variable{'strext'} ) ?><br />
+                                        <?strfax?><br />
+                                        <?stremail?><br />
+                                        </address>
+                                </td>
+                                </tr>
+                        </table>
+					</td>
+				</tr>                   
+            </table>
+
+            <p style="text-align: center">Please review this item for reorder.</p>
+            <p style="text-align: center">Return this form and sample to the Document Control Coordinator.</p>
+
+			<hr />
+                    
+            <table width="100%" class="no-formatting">
+                <tr>
+                    <th style="border-style: none; text-align: center;">Type</th>
+                    <th style="border-style: none; text-align: center;">Size</th>
+                    <th style="border-style: none; text-align: center;">Plies</th>
+                    <th style="border-style: none; text-align: center;">Unit</th>
+                    <th style="border-style: none; text-align: center;">Quantity</th>
+                    <th style="border-style: none; text-align: center;">Monthly Usage</th>
+                    <th style="border-style: none; text-align: center;">Yr.Usage</th>
+                    <th style="border-style: none; text-align: center;">Qty</th>
+                    <th style="border-style: none; text-align: center;">Date</th>
+                </tr>
+                <tr>
+                    <td style="border-style: none; text-align: center;"><?type?></td>
+                    <td style="border-style: none; text-align: center;"><?flat_width?>x<?flat_height?></td>
+                    <td style="border-style: none; text-align: center;"><?plies?></td>
+                    <td style="border-style: none; text-align: center;">EA&frasl;1</td>
+                    <td style="border-style: none; text-align: center;"><?quantity?></td>
+                    <td style="border-style: none; text-align: center;"><?monthly_usage?></td>
+                    <td style="border-style: none; text-align: center;"><?yearly_usage?></td>
+                    <td style="border-style: none; text-align: center;"><?order_qty?></td>
+                    <td style="border-style: none; text-align: center;"><?order_date?></td>
+                </tr>
+			</table>  
+
+			<hr />
+            
+            <table width="100%" class="no-formatting">
+              <tr>
+                <td style="font-weight:bold;">Please Reorder:</td>
+                <td><input name="" type="checkbox" value="" /> With NO CHANGES</td>
+                <td><input name="" type="checkbox" value="" /> With CHANGES INDICATED</td>
+                <td><input name="" type="checkbox" value="" /> DO NOT REORDER</td>
+              </tr>
+              <tr>
+                <td style="font-weight:bold;">Delivery</td>
+                <td><input name="input" type="checkbox" value="" />
+                  Normal Delivery</td>
+                <td><input name="input4" type="checkbox" value="" />
+                  Required delivery</td>
+                <td style="border-bottom: 1px solid #000000;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="font-weight:bold;">Usage</td>
+                <td><input name="input2" type="checkbox" value="" />
+                Constant</td>
+                <td><input name="input5" type="checkbox" value="" />
+                Will Increase<span style="border-style: none; text-align: center;">&frasl;</span>Decrease to Qty per Month</td>
+                <td style="border-bottom: 1px solid #000000;">&nbsp;</td>
+              </tr>
+              <tr>
+                <td style="font-weight:bold;">Obsolete</td>
+                <td><input name="input3" type="checkbox" value="" />
+                Destroy Existing Stock</td>
+                <td><input name="input6" type="checkbox" value="" />
+                Charge to Cost Center</td>
+                <td style="border-bottom: 1px solid #000000;">&nbsp;</td>
+              </tr>
+            </table>
+            
+			<hr />
+            <br />
+            
+            <p style="text-align: center">COMMENTS OR CHANGES:Please make ALL CHANGES on the sample attached.</p>
+            
+            <div style="border: 1px solid #000000; height: 30ex;"></div>
+            
+            <br />
+            
+            <table width="100%" class="no-formatting" >
+              <tr>
+                <th colspan="6" style="text-align: left;">REVIEWED BY</th>
+              </tr>
+              <tr>
+              	<td colspan="6">&nbsp;</td>
+              </tr>
+              <tr>
+                <td>Name</td>
+                <td style="border-bottom: 1px solid #000000; width: 40%;">&nbsp;</td>
+                <td>Department</td>
+                <td style="border-bottom: 1px solid #000000; width: 35%;">&nbsp;</td>
+                <td>Date</td>
+                <td style="border-bottom: 1px solid #000000; width: 25%;">&nbsp;</td>
+              </tr>
+              <tr>
+              	<td colspan="6">&nbsp;</td>
+              </tr>
+              <tr>
+                <th colspan="6" style="text-align: left;">DOCUMENT COORDINATOR</th>
+              </tr>
+              <tr>
+              	<td colspan="6">&nbsp;</td>
+              </tr>
+              <tr>
+                <td>Name</td>
+                <td style="border-bottom: 1px solid #000000; width: 40%;">&nbsp;</td>
+                <td>Telephone</td>
+                <td style="border-bottom: 1px solid #000000; width: 35%;">&nbsp;</td>
+                <td>Fax</td>
+                <td style="border-bottom: 1px solid #000000; width: 25%;">&nbsp;</td>
+              </tr>
+            </table>
+
+            
+            
+            
+            
+            

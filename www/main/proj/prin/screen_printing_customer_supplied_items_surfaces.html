@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - Printing - <?ProjectTypeName?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/service/printing.js"></script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Projects &#187;</span> Printing &#187; <?ProjectTypeName?></h1>
+
+	<form name="f1" id="f1" method="POST" action="/main/proj/prin/screen_printing_customer_supplied_items_surfaces.html">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+
+		<fieldset>
+			<legend>
+				Dimensions
+			</legend>
+			
+			<p>What are the dimensions of the screen printed image on <?SurfaceNumber?>? (Use <span class="tip" title="<!--#include virtual="/includes/fraction_to_decimal_dimensions.html" -->">decimals</span>.)</p>
+		
+			<label for="flat_width">Dimensions:</label>
+			<input id="flat_width" name="flat_width" size="9" value="<?flat_width?>"	class="smbox" />
+			<input id="flat_height" name="flat_height" size="9" value="<?flat_height?>" class="smbox" />
+			<label for="flat_height" class="post-input">(W x H)</label>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Custom Jig
+			</legend>
+			
+			<p>Will your item(s) require a custom jig to support it throughout the screen printing of this surface? If your item(s) require a jig for this surface please select whether  you will be supplying it or not.</p>
+			
+			<label>Jig:</label>
+			<div>
+				<label for="jig_requiredsupplied" class="radio"><input type="radio" id="jig_requiredsupplied" name="jig_required" value="supplied" />Jig Supplied</label><br />
+				<label for="jig_requiredcustom" class="radio"><input type="radio" id="jig_requiredcustom" name="jig_required" value="custom" />Custom Jig Required</label><br />
+				<label for="jig_requiredno" class="radio"><input type="radio" id="jig_requiredno" name="jig_required" value="no" />No Jig</label>
+			</div>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				<?ws_Colour?>s &amp; Coatings
+			</legend>
+		
+			<p>What are the <span class="tip" title="The ink <?ws_colour?>s used on a printed piece.">colour(s)</span> for surface <?SurfaceNumber?> of your project? Please select all that apply.</p>
+				
+			<p>Please input <span class="tip" title="The abbreviated name or number from the Pantone <?ws_colour?> Matching System. (ie: 320 or reflex blue)">PMS Name or Number</span> and percentage of ink coverage for all special <span class="tip" title="The ink <?ws_colour?>s used on a printed piece.">colour(s)</span> on surface <?SurfaceNumber?> if they are known. If your project requires  UV inks? Please append the PMS with &quot;UV&quot;. (ex. 320, Reflex Blue or 320UV one per box).</span></p>
+				
+			<p>If your <span class="tip" title="The ink <?ws_colour?>s used on a printed piece.">colour(s)</span> for surface <?SurfaceNumber?> of your project require a second pass? Please append the PMS with a &quot;WW&quot; for Wet on Wet or &quot;WD&quot; for Wet on Dry screening of the second pass. (ex. 320WW, Reflex BlueWD ).</p>
+		
+			<fieldset class="pms">
+				<legend>
+					Spot <?ws_Colour?>s
+				</legend>
+				
+				<p class="none">&nbsp;</p>
+				
+				<input name="s0_pms_1_name" type="text" value="" class="pms-colour" /><input name="s0_pms_1_coverage" type="text" class="pms-percent" />%<br />
+				<input name="s0_pms_2_name" type="text" value="" class="pms-colour" /><input name="s0_pms_2_coverage" type="text" class="pms-percent" />%<br />
+				<input name="s0_pms_3_name" type="text" value="" class="pms-colour" /><input name="s0_pms_3_coverage" type="text" class="pms-percent" />%<br />
+				<input name="s0_pms_4_name" type="text" value="" class="pms-colour" /><input name="s0_pms_4_coverage" type="text" class="pms-percent" />%<br />
+				<input name="s0_pms_5_name" type="text" value="" class="pms-colour" /><input name="s0_pms_5_coverage" type="text" class="pms-percent" />%<br />
+				<input name="s0_pms_6_name" type="text" value="" class="pms-colour" /><input name="s0_pms_6_coverage" type="text" class="pms-percent" />%<br />
+			</fieldset>
+		
+			<br />
+		</fieldset>
+
+		<fieldset class="hidden-details">
+			<legend>
+				<?ws_Colour?> Bars
+			</legend>
+
+			<!--#include virtual="/includes/main/proj/colour_bars.html"-->
+		</fieldset>
+
+		<!--#include virtual="/includes/main/proj/overrides.html"-->
+
+		<!--#include virtual="/includes/main/proj/press_approval.html"-->
+		<!--#include virtual="/includes/main/proj/prices_no_stock.html"-->
+		<!--#include virtual="/includes/main/proj/prin_add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
+	</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

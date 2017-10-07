@@ -1,0 +1,25 @@
+<div style="font-size:1em">
+<?loop signature?>
+	<div class="indent">
+
+
+		<span class="label">Bleed</span>
+		<?bleed_size?>
+		<? if ( $$variable{'bleed_size'} ne 0 ) ?>
+			-
+		<? endif ( $$variable{'bleed_size'} ne 0 ) ?>
+		<? if ( $$variable{'bleed_sides'} =~ m/3/ ) ?>
+			L,
+		<? endif ( $$variable{'bleed_sides'} =~ m/3/ ) ?>
+		<? if ( $$variable{'bleed_sides'} =~ m/1/ ) ?>
+			R,
+		<? endif ( $$variable{'bleed_sides'} =~ m/1/ ) ?>
+		<? if ( $$variable{'bleed_sides'} =~ m/0/ ) ?>
+			T,
+		<? endif ( $$variable{'bleed_sides'} =~ m/0/ ) ?>
+		<? if ( $$variable{'bleed_sides'} =~ m/2/ ) ?>
+			B,
+		<? endif ( $$variable{'bleed_sides'} =~ m/2/ ) ?>
+	</div>
+<?endloop signature?>
+</div>

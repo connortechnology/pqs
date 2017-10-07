@@ -1,0 +1,327 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production - Materials Pricing
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript" >
+		var focusObject;
+
+		function do_decimals( number ) {
+			var myStr = new String(Math.round(number*100)/100);
+			var decPos = myStr.indexOf(".");
+	
+			// test for no decimals
+			if (decPos==-1) {
+				myStr += ".00";
+			} else if (decPos==myStr.length-2) {
+			// test for one decimal
+				myStr += "0";
+			} // end if
+
+			return myStr;
+		}
+
+		function get_element_index( form, elem ) {
+			for ( var i=0; i < form.elements.length; i+= 1 ) {
+				if ( form.elements[i] == elem ) {
+					return i;
+				} /* end if */
+			} /* end for */
+
+			return -1;
+		} /* end function get_element_index( form, elem ) */
+
+		function calc_from_markup( form, elem ) {
+			var index = get_element_index( form, elem );
+			var cost = parseFloat( 1*form.elements[index-1].value );
+
+			if ( cost != '' ) {
+				var markup = parseFloat(1*elem.value);
+				var newvalue = (cost*markup)/100 + cost;
+				form.elements[index+1].value = do_decimals( newvalue );
+			} // end if
+		}
+
+		function calc_from_price( form, elem ) {
+			var index = get_element_index( form, elem );
+			var cost = parseFloat( 1*form.elements[index-2].value );
+
+			if ( cost != '' ) {
+				form.elements[index-1].value = do_decimals( (((1*elem.value) / cost)-1)*100 );
+			} // end if
+		}
+
+		function calc_from_cost( form, elem ) {
+			var index = get_element_index( form, elem );
+			var markup = parseFloat( 1*form.elements[index+1].value );
+			var cost = parseFloat( 1*elem.value );
+
+			if ( markup != '' ) {
+				var newvalue = (cost*markup)/100 + cost;
+				form.elements[index+2].value = do_decimals( newvalue );
+			} // end if
+		}
+
+		function keyhandler(e) {
+			if ( focusObject.name.substr(3,6) == "Markup" ) {
+				calc_from_markup( focusObject.form, focusObject );
+			} else if ( focusObject.name.substr(3,4) == "Cost" ) {
+				calc_from_cost( focusObject.form, focusObject );
+			} else if ( focusObject.name.substr(3,5) == "Price" ) {
+				calc_from_price( focusObject.form, focusObject );
+			} // end if
+		}
+	</script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">System &#187; Stock &#187;</span> Pricing</h1>
+	<form id="f1" name="f1" method="post" onsubmit="return fmCheck(f1);" enctype="multipart/form-data" action="paper_prices.html">
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p class="none">&nbsp;</p>
+			<label for="ddmPaperType">Type:</label>
+			<input type="radio" name="rdbType" value="sheet" onchange="f1.submit();"> Sheet </input>
+			<input type="radio" name="rdbType" value="roll" onchange="f1.submit();"> Roll </input>
+			<br />
+
+			<label for="ddmPaperList">Supplier:</label>
+			<select id="ddmPaperList" name="ddmPaperList" onchange="f1.submit();">
+				<option value=""> All Paper Lists </option>
+				<?ddmPaperList?>
+			</select>
+			<br />
+
+			<label for="ddmCategory">Category:</label>
+			<select id="ddmCategory" name="ddmCategory" onchange="f1.submit();">
+				<option value=""> All Categories </option>
+				<?ddmCategory?>
+			</select>
+			<br />
+
+			<label for="ddmPaperName">Paper Name:</label>
+			<select id="ddmPaperName" name="ddmPaperName" onchange="f1.submit();">
+				<option value=""> All Paper </option>
+				<option value=""> --------------------- </option>
+				<?ddmPaperName?>
+			</select>
+			<br />
+
+			<label for="ddmFinish">Finish:</label>
+			<select id="ddmFinish" name="ddmFinish" onchange="f1.submit();">
+				<option value=""> All Finishes </option>
+				<?ddmFinish?>
+			</select>
+			<br />
+
+			<label for="ddmColour"><?ws_Colour?>:</label>
+			<select id="ddmColour" name="ddmColour" onchange="f1.submit();">
+				<option value=""> All <?ws_Colour?>s </option>
+				<?ddmColour?>
+			</select>
+			<br />
+
+
+			<label for="ddmWeight">Weight:</label>
+			<select id="ddmWeight" name="ddmWeight" onchange="f1.submit();">
+				<option value=""> All Weights </option>
+				<?ddmWeight?>
+			</select>
+			<br />
+
+			<label for="ddmSheetSize">Sheet Size:</label>
+			<select id="ddmSheetSize" name="ddmSheetSize" onchange="f1.submit();">
+				<option value=""> All Sizes </option>
+				<?ddmSheetSize?>
+			</select>
+			<br />
+
+			<label for="ddmPaper">Paper ID:</label>
+			<select id="ddmPaper" name="ddmPaper" onchange="f1.btnFunction.value='Display';f1.submit();">
+				<option value=""> All Paper IDs </option>
+				<option value=""> Sheet Stocks </option>
+				<option value=""> --------------------- </option>
+				<?ddmPaper?>
+			</select>
+			<br />
+		</fieldset>
+
+		<? if ( @{$$variable{'Prices'}} > 0 ) ?>
+
+			<fieldset>
+				<legend>
+					Pricing
+				</legend>
+		
+				<p class="none">&nbsp;</p>
+		
+				<div class="button-bar indent-regular" style="margin-bottom: 1ex;">
+					<input class="button" type="submit" name="btnFunction" value="&lt;&lt;" />
+					<input class="button" type="submit" name="btnFunction" value="&gt;&gt;" />
+					<input class="button" type="button" value="New" onclick="addCheck(f1);" />
+					<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=2;" />
+					<input class="button" type="reset" />
+					<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+					<br />
+					</div>
+		
+				<br />
+		
+		
+				<label>Paper Name:</label>
+		
+				<?strPaperName?>
+		
+				<br />
+				
+				
+				<label>Paper ID:</label>
+		
+				<?strPaperID?>
+		
+				<br />
+		
+				<table class="tighter-td no-center no-formatting">
+		
+					<? eval( my $x = @{$$variable{'Prices'}}; $log->debug("START XTA: = $x PI: $$variable{'priceIndex'} ");) ?>
+		
+					<? while( @$variable{'listid','listindex','paperid','paperindex','min','max','units','cost','markup','price','discount'} = splice @{$$variable{'Prices'}},0,11; ) ?>
+		
+					<? if ( $$variable{'oldpaperindex'} ne $$variable{'paperindex'} or $$variable{'oldlistindex'} ne $$variable{'listindex'} ) ?>
+		
+					<? if ( $$variable{'oldpaperindex'} ne '' ) ?>
+						<!-- paragraph has endded, add set of blank Add New fields -->
+		
+						<tr>
+							<td colspan="7"> Add New </td>
+						</tr>
+						<tr>
+							<td><input type="checkbox" name="chk-<?oldlistindex?>-<?oldpaperindex?>-<?priceIndex?>" /></td>
+							<td><input type="text" name="txtMin-<?oldlistindex?>-<?oldpaperindex?>-<?priceIndex?>" size="8" class="smBox" value="" /><span>-</span><input type="text" name="txtMax-<?oldlistindex?>-<?oldpaperindex?>-<?priceIndex?>" size="8" class="smBox" value="" /><span><!-- Stupid IE Fix - Don't Remove this Label without Double Checking this TD --></span></td>
+							<td><input type="text" name="txtUnits-<?oldlistindex?>-<?oldpaperindex?>-<?priceIndex?>" size="8" class="smBox" value="" /></td>
+							<td><span>$</span><input type="text" name="txtCost-<?oldlistindex?>-<?oldpaperindex?>-<?priceIndex?>" size="8" class="smBox" value="" onkeyup="calc_from_cost(f1, this);" /></td>
+							<td><input type="text" name="txtMarkup-<?oldlistindex?>-<?oldpaperindex?>-<?priceIndex?>" size="8" class="smBox" value="" onkeyup="calc_from_markup(f1, this);" /><span>%</span></td>
+							<td><span>$</span><input type="text" name="txtPrice-<?oldlistindex?>-<?oldpaperindex?>-<?priceIndex?>" size="6" class="smBox" value="" onkeyup="calc_from_price(f1, this);" /></td>
+							<td>
+								<label for="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-Yes" class="radio"><input type="radio" id="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-Yes" name="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>" value='Y' <? if ( $$variable{'olddiscount'} ne 'N' ) ?> checked="checked" <? endif ( $$variable{'olddiscount'} ne 'N' ) ?> onchange="fmChange=1;" />Yes</label><br />
+								<label for="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-No" class="radio"><input type="radio" id="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-No" name="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>" value='N' <? if ( $$variable{'olddiscount'} eq 'N' ) ?> checked="checked" <? endif ( $$variable{'olddiscount'} eq 'N' ) ?> onchange="fmChange=1;" />No</label>
+							</td>
+						</tr>
+			
+						<!-- paragraph has endded, add set of blank Add New fields -->
+						<? eval( $$variable{'priceIndex'}++ ) ?>
+		
+					<? endif ( $$variable{'oldpaperindex'} ne '' ) ?>
+					<!-- Begining of new Paragraph add header -->
+		
+					<tr>
+						<td colspan="7">&nbsp;<input type="hidden" name="DeleteIndex-<?listindex?>-<?paperindex?>" value="Y" /></td>
+					</tr>
+		
+					<tr>
+						<td colspan='7'><h4> Pricing for Paper:
+							<?paperid?>
+							&nbsp;&nbsp;Price List:
+							<?listid?>
+							</h4> </td>
+					</tr>
+					<tr>
+						<td colspan="7">&nbsp;</td>
+					</tr>
+					<tr>
+						<td colspan="2" style="vertical-align: top;">Material is included in this price list?</td>
+						<td colspan="5">
+							<label for="rdbIncluded-<?listindex?>-<?paperindex?>-Yes" class="radio"><input type="radio" id="rdbIncluded-<?listindex?>-<?paperindex?>-Yes" name="rdbIncluded-<?listindex?>-<?paperindex?>" value="Y" <?enabled?> checked="checked" />Yes</label><br />
+							<label for="rdbIncluded-<?listindex?>-<?paperindex?>-No" class="radio"><input type="radio" id="rdbIncluded-<?listindex?>-<?paperindex?>-No" name="rdbIncluded-<?listindex?>-<?paperindex?>" value="N" <?disabled?> />No</label>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="7">&nbsp;</td>
+					</tr>
+					<tr>
+						<td colspan="7"> Please enter prices: </td>
+					</tr>
+					<tr>
+						<td colspan="7">&nbsp;</td>
+					</tr>
+					<tr>
+						<th>&nbsp;</th>
+						<th>Quantity Range</th>
+						<th>Units</th>
+						<th>Cost</th>
+						<th>Markup</th>
+						<th>Price</th>
+						<th>Discount</th>
+					</tr>
+					<!-- Begining of new Paragraph andd header -->
+					<? endif ( $$variable{'oldpaperindex'} ne $$variable{'paperindex'} or $$variable{'oldlistindex'} ne $$variable{'listindex'} ) ?>
+					<!-- Body Section for standard record -->
+					<tr>
+						<td style="text-align: center;"><input type="checkbox" name="chk-<?listindex?>-<?paperindex?>-<?priceIndex?>" checked="checked" /></td>
+						<td style="text-align: center;"><input type="text" name="txtMin-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="<?min?>" /><span>-</span><input type="text" name="txtMax-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="<?max?>" /><span><!-- Stupid IE Fix - Don't Remove this Label without Double Checking this TD --></span></td>
+						<td style="text-align: center;"><input type="text" name="txtUnits-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="<?units?>" /></td>
+						<td style="text-align: center;"><span>$</span><input type="text" name="txtCost-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="<?cost?>" onkeyup="calc_from_cost(f1, this);" /></td>
+						<td style="text-align: center;"><input type="text" name="txtMarkup-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="<?markup?>" onkeyup="calc_from_markup(f1, this);" /><span>%</span></td>
+						<td style="text-align: center;"><span>$</span><input type="text" name="txtPrice-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="<?price?>" onkeyup="calc_from_price(f1, this);" /></td>
+						<td style="text-align: left;">
+							<label for="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-Yes" class="radio"><input type="radio" id="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-Yes" name="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>" value='Y' <? if ( $$variable{'discount'} ne 'N' ) ?> checked="checked" <? endif ( $$variable{'discount'} ne 'N' ) ?> onchange="fmChange=1;" />Yes</label><br />
+							<label for="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-No" class="radio"><input type="radio" id="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-No" name="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>" value='N' <? if ( $$variable{'discount'} eq 'N' ) ?> checked="checked" <? endif ( $$variable{'discount'} eq 'N' ) ?> onchange="fmChange=1;" />No</label>
+						</td>
+					</tr>
+
+						<!-- End Body Section for standard record -->
+						<? eval ($$variable{'priceIndex'}++ ) ?>
+						<? eval( my $x = @{$$variable{'Prices'}}; $log->debug("XTA: = $x PI: $$variable{'priceIndex'} ");) ?>
+						<? if ( @{$$variable{'Prices'}} == 0 ) ?>
+						<!-- Data array is emtpy, add last set of Add New fields -->
+
+					<tr>
+						<td colspan="7"> Add New </td>
+					</tr>
+					<tr>
+						<td><input type="checkbox" name="chk-<?listindex?>-<?paperindex?>-<?priceIndex?>" /></td>
+						<td><input type="text" name="txtMin-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="" /><span>-</span><input type="text" name="txtMax-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="" /><span><!-- Stupid IE Fix - Don't Remove this Label without Double Checking this TD --></span></td>
+						<td><input type="text" name="txtUnits-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="" /></td>
+						<td><span>$</span><input type="text" name="txtCost-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="" onkeyup="calc_from_cost(f1, this);" /></td>
+						<td><input type="text" name="txtMarkup-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="" onkeyup="calc_from_markup(f1, this);" /><span>%</span></td>
+						<td><span>$</span><input type="text" name="txtPrice-<?listindex?>-<?paperindex?>-<?priceIndex?>" size="8" class="smBox" value="" onkeyup="calc_from_price(f1, this);" /></td>
+						<td style="text-align: left;">
+							<label for="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-Yes" class="radio"><input type="radio" id="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-Yes" name="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>" value='Y' <? if ( $$variable{'discount'} ne 'N' ) ?> checked="checked" <? endif ( $$variable{'discount'} ne 'N' ) ?> onchange="fmChange=1;" />Yes</label><br />
+							<label for="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-No" class="radio"><input type="radio" id="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>-No"name="rdbDiscount-<?listindex?>-<?paperindex?>-<?priceIndex?>" value='N' <? if ( $$variable{'discount'} eq 'N' ) ?>>checked="checked"<? endif ( $$variable{'discount'} eq 'N' ) ?> onchange="fmChange=1;" />No</label>
+						</td>
+					</tr>
+
+					<!-- Data array is emtpy, add last set of Add New fields -->
+					<? endif ( @{$$variable{'Prices'}} == 0 ) ?>
+					<!-- Data array is NOT empty, store the current ids for Add New fields ( if we start a new paragraph at the top of our loop) -->
+					<? eval( my $x = @{$$variable{'Prices'}}; $log->debug("XTA: = $x "); $$variable{'oldpaperindex'} = $$variable{'paperindex'};$$variable{'oldlistindex'} = $$variable{'listindex'}; $$variable{'olddiscount'} = $$variable{'discount'}  ) ?>
+					<? endwhile( @$variable{'listid','listindex','paperid','paperindex','min','max','units','cost','markup','price','discount'} = splice @{$$variable{'Prices'}},0,11; ) ?>
+				</table>
+				<br />
+			</fieldset>
+		<? endif ( @{$$variable{'Prices'}} > 0 ) ?>
+
+		<input type="hidden" name="btnFunction" />
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

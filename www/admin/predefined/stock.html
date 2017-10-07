@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title tal:content="title">Print-Quotes Title</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+		<link rel="stylesheet" href="/styles/forms.css" type="text/css" />
+
+		<script type="text/javascript" src="/javascripts/JSAN.js"></script>
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+        <script type='text/javascript' src='/javascripts/administrator_selectmove.js'></script>
+	</head>
+	<body>
+		<!-- TEMPORARY: Old menu interface. -->
+		<xi:include href="/includes/c1-tal.html" />
+		<!-- SIdebar -->
+		<div id="sidebar">
+			<div class="option">
+				
+			</div>
+		</div>
+
+		<div id="content">
+			<h1><span class="title-section">Marketing &#187; </span> Predefined Products &#187; Stock</h1>
+		
+			<form method="POST" action="item_paper?item=$eid">
+				<fieldset>
+					<legend>Product Stock List</legend>
+					
+					<p>Use the up and down arrows to add/remove stock from your product's stock availibility list.</p>
+
+					<h3 style="margin-bottom: 0;">Unavailable:</h3>
+
+					<br />
+
+					<select id="paper" name="v" multiple="multiple">
+						<optgroup tal:repeat="class visible" tal:attr="label class/group">
+							<option tal:repeat="v class/data"
+											tal:attr="value v/id"
+											tal:content="printf:'%-60s %15s | %-20s | %s' $v/name $v/weight $v/finish $v/colour" >
+								Paper
+							</option>
+						</optgroup>
+					</select>
+
+					<br />
+
+					<div class="button-bar">
+						<input style='width: 25px;' type='button' class="button" onclick='add()' value='^' />
+						<input style='width: 25px;' type='button' class="button" onclick='remove1()' value='v' />
+						<br />
+					</div>
+					
+					<br />
+
+					<h3 style="margin-bottom: 0;">Available:</h3>
+
+					<br />
+
+					<select id="paper" name="i" style='white-space: pre' multiple="multiple">
+						<optgroup tal:repeat="class invisible" tal:attr="label class/group">
+							<option tal:repeat="i class/data"
+											tal:attr="value i/id"
+											tal:content="printf:'%-60s %15s | %-20s | %s' $i/name $i/weight $i/finish $i/colour" >
+								Paper
+							</option>
+						</optgroup>
+					</select>
+
+					<br />
+
+					<div class="button-bar" style="text-align: center;">
+                    	<input type="hidden" name="type" value="$type" />
+						<input type='submit' name='action' value='Save' class="button right" />
+						<br />
+					</div>
+					
+					<br />
+				</fieldset>
+			</form>
+		</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

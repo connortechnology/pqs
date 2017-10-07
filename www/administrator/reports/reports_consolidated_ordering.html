@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Reports - Consolidated Ordering
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+    <script  type="text/javascript">
+		//	/me says: Moved From Inside Body Tag, f00!
+		function check_all (theBoxes, value)
+		{
+			var numChecks = theBoxes.length;
+			for (var cnt = 0; cnt < numChecks; cnt++) { theBoxes[cnt].checked = value; }
+		}
+	</script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Reports &#187;</span> Consolidated Ordering</h1>
+
+	<form id="f1" name="f1" method="post" action="/administrator/reports/reports_consolidated_ordering.html">
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p>Choose the period start and end dates and click show results.</p>
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?startmonths?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?startdays?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?startyears?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?endmonths?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?enddays?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?endyears?>
+			</select>
+			<br />
+			<label for="show_all">Show:</label>
+			<input type="radio" name="order_filter" value="Not Ordered"  /> 
+			Not Ordered &nbsp; &nbsp;
+			<input type="radio" name="order_filter" value="Ordered"    /> 
+			Ordered&nbsp; &nbsp;
+			<input type="radio" name="order_filter" value="All"      /> All
+			<br />
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="Show Results" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+            <fieldset>
+            <legend>Update
+            </legend>
+            <p>Check off the items you want to make changes to in the items table below, then fill in these fields and push Save</p>
+            <p>
+            <label for="vendororderid">Supplier Order ID: </label>
+              <input name="vendororderid" type="text" id="vendororderid" size="30"/>
+              <br />
+              <label for="shipid">Shipping Tracking Number: </label>
+              <input name="shipid" type="text" id="shipid" size="30"/>
+              <br />
+               <label for="shiptype">Shipping Carrier: </label>
+              <input name="shiptype" type="text" id="shiptype" size="30"/>
+               <br />
+               <label for="status">Status: </label>
+               <select id="status">
+               <option value="Complete" selected="selected">Complete</option>
+               <option value="Open">Open</option>
+               </select>
+             </p>
+               <div class="button-bar indent-regular">
+			   <br />
+				<input class="button" type="submit" name="btnFunction" value="Save" />
+				<br />
+				</div>
+           </fieldset>
+		<fieldset>
+			<legend>
+				Items
+		  </legend>
+
+			<p class="none">&nbsp;</p>
+
+			<? if ( @{ $variable->{projects} } ) ?>
+				<table cellspacing="0" border="0" cellpadding="0">
+					<tr>
+						<th>Select<br />Check all <input type="checkbox" name="checkAllEntry" id="checkAllEntry" onclick="check_all (f1.export_entry, this.checked);" /></th>
+                        <th>Status</th>
+                        <th>Customer Name</th>
+						<th>Order ID</th>
+                        <th>Project ID</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Cost</th>
+                        <th>Price</th>
+                        <th>Supplier</th>
+                        <th>Supplier Order ID</th>
+                        <th>Shipping Tracking ID</th>
+                        <th>Shipping Carrier</th>
+					</tr>
+	
+					
+					<? loop projects ?>
+						<tr<? if ($variable->{_even}) ?> class='colRow'<? endif ($variable->{_even}) ?>>
+							<td>
+								<input type="checkbox" name="export_entry" id="export_entry-<?id?>" 
+								 value="<?id?>" onclick="if (!this.checked) {checkAllEntry.checked = 0}" />
+							</td>
+                            <td><?status?></td>
+                            <td><?customername?></td>
+                            <td><a href="/main/order/order_history_details.html?order_id=<?id?>" target="_new"><?order_id?></a></td>
+                            <td><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>" target="_new"><?pid?></a></td>
+                            <td><?order_date?></td>
+                            <td><?name?></td>
+                            <td><?qty?></td>
+                            <td>$<?cost?></td>
+                            <td>$<?sell?></td>
+                            <td>
+                                <?if pid?> 
+                                <a href="/administrator/production/rfq_project_summary.html?pid=<?pid?>" target="_new"><?vendor?> - RFQ</a>
+                                <?else pid?>
+                                <a href="<?vendoritemURL?>" target="_new"><?vendor?> - <?part_number?></a>
+                                <?endif pid?>
+                            </td> 
+                            <td><?vendororderid?></td>
+                            <td><?shipid?></td>
+                            <td><?shiptype?></td>
+						</tr>
+					<? endloop projects ?>
+				</table>
+			<? else ( @{ $variable->{projects} } ) ?>
+				<?if email_data?>
+					<?email_data?>
+				<?else email_data?>
+					<?if over_limit?>
+						<p>Your search returned over 400 results. Please Try again.</p>
+					<?else over_limit?>
+						<p>There were no results matching your criteria.</p>
+					<?endif over_limit?>
+				<?endif email_data?>
+			<? endif ( @{ $variable->{projects} } ) ?>
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

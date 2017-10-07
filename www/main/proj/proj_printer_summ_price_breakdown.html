@@ -1,0 +1,487 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - Printing Price Details
+	<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/price_breakdown.css" rel="stylesheet" type="text/css" />
+	<link href="/base-css/imposition.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/print_webpage.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<style type="text/css">
+		table,
+		table th,
+		table td { border: 0 !important; }
+
+		tr.total td { border-top-width: 3px !important; border-top-style: double !important; }
+
+		/* Firefox correctly supports visibility: collapse, but IE only supports
+		display: none which is incorrect but works similarly enough for this.
+		Safari and Opera don't support either. */
+
+		<?if (! $$variable{txtQuantity1}) ?>
+			col.qty1        { visibility: collapse; } /* CSS 2.1 */
+			* html col.qty1 { display:    none;     } /* IE */
+		<?endif (! $$variable{txtQuantity1}) ?>
+
+		<?if (! $$variable{txtQuantity2}) ?>
+			col.qty2        { visibility: collapse; border: 0;}
+			* html col.qty2 { display:    none;     }
+		<?endif (! $$variable{txtQuantity2}) ?>
+
+		<?if (! $$variable{txtQuantity3}) ?>
+			col.qty3        { visibility: collapse; }
+			* html col.qty3 { display:    none;     }
+		<?endif (! $$variable{txtQuantity3}) ?>
+	</style>
+</head>
+<body style="background-image: none; margin: 2ex 2em;">
+
+<a href="/main/proj/proj_view.html?ProjectIndex=<?ProjectIndex?>" class="button" id="return-proj-view">Return to Project View Page</a><br class="clear" />
+
+	<h1>Project's Printing Price Details</h1>
+
+	<!-- Printing price breakdown. -->
+	<table class="breakdown no-background" summary="Paper pricing by use.">
+		<col class="service" />
+		<col class="qty1" />
+		<col class="qty2" />
+		<col class="qty3" />
+		<thead>
+			<tr>
+				<th style="text-align: left;"> Paper </th>
+				<th> Qty 1 </th>
+				<th> Qty 2 </th>
+				<th> Qty 3 </th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>
+					<?if($variable->{substrateType} ne 'roll')?>
+						Press Sheets Size:
+					<?else ($variable->{substrateType} ne 'roll')?>
+						Piece Height:
+					<?endif($variable->{substrateType} ne 'roll')?>
+				</td>
+				<td><?if ($variable->{cutOff}) ?>
+						<?cutOff?>&quot;
+					<?else ($variable->{cutOff}) ?>
+						<?hdnSheetSizeHeight?>
+						&#215;
+						<?hdnSheetSizeWidth?>
+					<?endif ($variable->{cutOff}) ?>
+				</td>
+				<td><?if ($variable->{cutOff}) ?>
+						<?cutOff?>&quot;
+					<?else ($variable->{cutOff}) ?>
+						<?hdnSheetSizeHeight?>
+						&#215;
+						<?hdnSheetSizeWidth?>
+					<?endif ($variable->{cutOff}) ?>
+				</td>
+				<td><?if ($variable->{cutOff}) ?>
+						<?cutOff?>&quot;
+					<?else ($variable->{cutOff}) ?>
+						<?hdnSheetSizeHeight?>
+						&#215;
+						<?hdnSheetSizeWidth?>
+					<?endif ($variable->{cutOff}) ?>
+				</td>
+			</tr>
+
+			<?if ($variable->{PressType} ne 'inkjetprinter') ?>
+				<tr>
+					<td> Net
+						<?if ($variable->{substrateType} ne 'roll')?>
+							Press Sheet
+						<?else ($variable->{substrateType} ne 'roll')?>
+							Cuttoff
+						<?endif ($variable->{substrateType} ne 'roll')?>
+						Quantity: </td>
+					<td><?hdnNetSheetCount1?></td>
+					<td><?hdnNetSheetCount2?></td>
+					<td><?hdnNetSheetCount3?></td>
+				</tr>
+				<tr>
+					<td>
+						<?if ($variable->{substrateType} ne 'roll')?>
+							Press Sheet
+						<?else ($variable->{substrateType} ne 'roll')?>
+							Cuttoff
+						<?endif ($variable->{substrateType} ne 'roll')?>
+						Overs:
+					</td>
+					<td><?hdnPressSheetsOvers1?></td>
+					<td><?hdnPressSheetsOvers2?></td>
+					<td><?hdnPressSheetsOvers3?></td>
+				</tr>
+			<?endif ($variable->{PressType} ne 'inkjetprinter') ?>
+
+			<tr>
+				<td>
+					<?if ($variable->{substrateType} ne 'roll')?>
+						Gross Press Sheet
+					<?else ($variable->{substrateType} ne 'roll')?>
+						Piece
+					<?endif ($variable->{substrateType} ne 'roll')?>
+					Quantity:
+				</td>
+				<td><?hdnGrossSheetCount1?></td>
+				<td><?hdnGrossSheetCount2?></td>
+				<td><?hdnGrossSheetCount3?></td>
+			</tr>
+			<tr>
+				<td><?if ($variable->{substrateType} ne 'roll')?>
+						Stock Sheet Purchase Quantity:
+					<?else ($variable->{substrateType} ne 'roll')?>
+						<?if ($variable->{PressType} eq 'inkjetprinter') ?>
+							Square Feet to Buy:
+						<?else ($variable->{PressType} eq 'inkjetprinter') ?>
+							Pounds of Paper to Buy:
+						<?endif ($variable->{PressType} eq 'inkjetprinter') ?>
+					<?endif ($variable->{substrateType} ne 'roll')?>
+				</td>
+				<td><?hdnPaperBuyQuantity1?></td>
+				<td><?hdnPaperBuyQuantity2?></td>
+				<td><?hdnPaperBuyQuantity3?></td>
+			</tr>
+			<tr>
+				<td>
+					<? if($variable->{substrateType} ne 'roll')?>
+						Stock Sheet Price:
+					<?else($variable->{substrateType} ne 'roll')?>
+						<?if ($variable->{PressType} eq 'inkjetprinter') ?>
+							Price per Square Foot:
+						<?else ($variable->{PressType} eq 'inkjetprinter') ?>
+							Price Per Pound:
+						<?endif ($variable->{PressType} eq 'inkjetprinter') ?>
+					<?endif($variable->{substrateType} ne 'roll')?>
+				</td>
+				<td><?hdnSheetPrice1?></td>
+				<td><?hdnSheetPrice2?></td>
+				<td><?hdnSheetPrice3?></td>
+			</tr>
+		</tbody>
+
+		<tfoot>
+			<tr class="total">
+				<td>
+					Total
+					<?if ($variable->{substrateType} ne 'roll')?>
+						Press Sheet
+					<?else($variable->{substrateType} ne 'roll')?>
+						Paper
+					<?endif($variable->{substrateType} ne 'roll')?>
+					Purchase Price:
+				</td>
+				<td><?money:hdnPaperTotal1?></td>
+				<td><?money:hdnPaperTotal2?></td>
+				<td><?money:hdnPaperTotal3?></td>
+			</tr>
+		</tfoot>
+	</table>
+
+	<table class="breakdown no-background" summary="Components of run price.">
+		<col class="service" />
+		<col class="qty1" />
+		<col class="qty2" />
+		<col class="qty3" />
+
+		<thead>
+			<tr>
+				<th style="text-align: left;"> Production (Price Per 1000 Impressions) </th>
+				<th><?hdnImpressionQuantity1?></th>
+				<th><?hdnImpressionQuantity2?></th>
+				<th><?hdnImpressionQuantity3?></th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr>
+				<td> Impressions (Including CMYK Inks): </td>
+				<td><?money:hdnStandardRunningPrice1?></td>
+				<td><?money:hdnStandardRunningPrice2?></td>
+				<td><?money:hdnStandardRunningPrice3?></td>
+			</tr>
+			<tr>
+				<td> PMS Ink: </td>
+				<td><?money:hdnSpecialRunningPrice1?></td>
+				<td><?money:hdnSpecialRunningPrice2?></td>
+				<td><?money:hdnSpecialRunningPrice3?></td>
+			</tr>
+			<tr>
+				<td> Varnish: </td>
+				<td><?money:hdnVarnishRunningPrice1?></td>
+				<td><?money:hdnVarnishRunningPrice2?></td>
+				<td><?money:hdnVarnishRunningPrice3?></td>
+			</tr>
+			<tr>
+				<td> Aqueous: </td>
+				<td><?money:hdnAqueousRunningPrice1?></td>
+				<td><?money:hdnAqueousRunningPrice2?></td>
+				<td><?money:hdnAqueousRunningPrice3?></td>
+			</tr>
+			<tr>
+				<td> UV: </td>
+				<td><?money:hdnUVRunningPrice1?></td>
+				<td><?money:hdnUVRunningPrice2?></td>
+				<td><?money:hdnUVRunningPrice3?></td>
+			</tr>
+			<tr>
+                    <td> Soft Touch: </td>
+                    <td><?money:hdnSoftTouchRunningPrice1?></td>
+                    <td><?money:hdnSoftTouchRunningPrice2?></td>
+                    <td><?money:hdnSoftTouchRunningPrice3?></td>
+               </tr>
+		</tbody>
+
+		<tfoot>
+			<tr class="total">
+				<td> Total Production Price: </td>
+				<td><?money:hdnTotalRunCost1?></td>
+				<td><?money:hdnTotalRunCost2?></td>
+				<td><?money:hdnTotalRunCost3?></td>
+			</tr>
+		</tfoot>
+	</table>
+
+	<table class="breakdown no-background" summary="Components of the setup price.">
+		<col class="service" />
+		<col class="qty1" />
+		<col class="qty2" />
+		<col class="qty3" />
+
+		<thead>
+			<tr>
+				<th  style="text-align: left;"> Setup </th>
+				<th> Qty 1 </th>
+				<th> Qty 2 </th>
+				<th> Qty 3 </th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr>
+				<td> Press &amp; Press Unit Make Ready: </td>
+				<td><?money:hdnPressCost?></td>
+				<td><?money:hdnPressCost?></td>
+				<td><?money:hdnPressCost?></td>
+			</tr>
+			<tr>
+				<td><?if ($$variable{'PressType'} ne 'screen')?>
+					Plates:
+					<?else ($$variable{'PressType'} ne 'screen')?>
+					Screens:
+					<?endif ($$variable{'PressType'} ne 'screen')?></td>
+				<td><?money:hdnPlateCost?></td>
+				<td><?money:hdnPlateCost?></td>
+				<td><?money:hdnPlateCost?></td>
+			</tr>
+			<tr>
+				<td> Imposition and Trapping: </td>
+				<td><?money:hdnImpositionCharge?></td>
+				<td><?money:hdnImpositionCharge?></td>
+				<td><?money:hdnImpositionCharge?></td>
+			</tr>
+			<tr>
+				<td> PMS Ink Mix Make Ready: </td>
+				<td><?money:hdnInkMixCost?></td>
+				<td><?money:hdnInkMixCost?></td>
+				<td><?money:hdnInkMixCost?></td>
+			</tr>
+			<tr>
+				<td> Aqueous Make Ready: </td>
+				<td><?money:hdnAqueousSetupCost?></td>
+				<td><?money:hdnAqueousSetupCost?></td>
+				<td><?money:hdnAqueousSetupCost?></td>
+			</tr>
+			<tr>
+				<td> UV Make Ready: </td>
+				<td><?money:hdnUVSetupCost?></td>
+				<td><?money:hdnUVSetupCost?></td>
+				<td><?money:hdnUVSetupCost?></td>
+			</tr>
+			<tr>
+                    <td> Soft Touch Make Ready: </td>
+                    <td><?money:hdnSoftTouchSetupCost?></td>
+                    <td><?money:hdnSoftTouchSetupCost?></td>
+                    <td><?money:hdnSoftTouchSetupCost?></td>
+               </tr>
+			<tr>
+				<td> Work &amp; Turn Dry: </td>
+				<td><?money:hdnWorkTurnDryCharge?></td>
+				<td><?money:hdnWorkTurnDryCharge?></td>
+				<td><?money:hdnWorkTurnDryCharge?></td>
+			</tr>
+			<tr>
+				<td> Wash: </td>
+				<td><?money:hdnWashUpCost?></td>
+				<td><?money:hdnWashUpCost?></td>
+				<td><?money:hdnWashUpCost?></td>
+			</tr>
+		</tbody>
+
+		<tfoot>
+			<tr class="total">
+				<td> Total Setup Price: </td>
+				<td><?money:hdnTotalSetupCost?></td>
+				<td><?money:hdnTotalSetupCost?></td>
+				<td><?money:hdnTotalSetupCost?></td>
+			</tr>
+		</tfoot>
+	</table>
+
+
+	<?if ($variable->{PressType} ne 'inkjetprinter') ?>
+		<div id="impositions">
+
+			<!-- Multi-version form/version listing. -->
+			<?if ($variable->{versions} && !$variable->{is_multipage}) ?>
+				<table id="versions" class="breakdown no-background">
+					<col class="name" />
+					<col class="requested" />
+					<col class="over" />
+					<col class="final" />
+
+					<thead>
+						<th class="l"> Version </th>
+						<th title="Requested percentage."> R% </th>
+						<th title="Over-production % (due to imposition)."> O% </th>
+						<th title="Final production percentage."> F% </th>
+					</thead>
+
+					<tbody>
+						<?loop forms?>
+							<tr class="layout_form">
+								<th colspan="4">&nbsp;</th> <!-- Kludge to supply a distinction between forms. -->
+							</tr>
+							<?loop versions?>
+								<tr>
+									<td class="l"><div class="mv" style="background-color: <?colour?>">
+										</div>
+										<?label?>
+									</td>
+									<td><?requested?></td>
+									<td><?over?></td>
+									<td><?final?></td>
+								</tr>
+							<?endloop versions?>
+						<?endloop forms?>
+					</tbody>
+				</table>
+			<?endif ($variable->{versions} && !$variable->{is_multipage}) ?>
+	
+			<!-- Imposition images. -->
+			<?if ($variable->{layout}) ?>
+				<h2>Impostion</h2>
+				<?loop layout?>
+
+					<object data="/images/imposition.svgz?sid=<?sid?>;n=<?n?>" type="image/svg+xml" width="190px" height="190px">
+						<a href="/images/imposition.png?sid=<?sid?>;n=<?n?>">
+							<img width="190px" height="190px" src="/images/imposition.png?sid=<?sid?>;n=<?n?>;preview=1" />
+						</a>
+					</object>
+
+				<?endloop layout?>
+			<?endif ($variable->{layout}) ?>
+
+			<!-- Cutting tree. -->			
+			<?if ($variable->{layout}) ?>
+				<h2 style="margin-bottom: 5px">Cutting Tree</h2>
+				<a href="/images/tree.png?sid=<?sid?>">
+					<img width="190px" src="/images/tree.png?sid=<?sid?>;preview=1" />
+				</a>
+			<?endif ($variable->{layout}) ?>
+
+		</div>
+	<?endif ($variable->{PressType} ne 'inkjetprinter') ?>
+
+	<h1>Comparison Prices</h1>
+
+	<!-- Comparisons. -->
+	<table id="comparisons" class="breakdown no-background" summary="Comparison costs.">
+		<col id="press" />
+		<col id="run_style" />
+		<col id="plates" />
+
+		<colgroup id="imposition">
+			<col id="geometry" />
+			<col id="layouts" />
+			<col id="wastage" />
+		</colgroup>
+
+		<colgroup id="paper">
+			<col id="size" />
+			<col id="orig" />
+			<col id="sheets" />
+		</colgroup>
+
+		<colgroup id="pricing">
+			<col id="printing" />
+			<col id="stock" />
+			<col id="comparison" />
+		</colgroup>
+
+		<thead>
+			<tr>
+				<th rowspan="2" class="l"> Press </th>
+				<th rowspan="2" title="Run Style" class="l"> RS </th>
+				<th rowspan="2" title="Plate count."> P </th>
+				<th colspan="3" class="m"> Imposition </th>
+				<th colspan="3" class="m"> Stock </th>
+				<th colspan="3" class="m"> Pricing ($) </th>
+			</tr>
+
+			<tr class="second">
+				<th class="m" title="Number of images in the imposition."> n </th>
+				<th title="Number of forms."> f </th>
+				<th title="Percent version image wastage."> %w </th>
+				<th class="m" title="Sheet dimensions (height &#215; width)."> (h&#215;w) </th>
+				<th style="text-align: center;" title="Original stock dimensions if it&#8216;s been cut (height &#215; width)."> (h&#215;w) </th>
+				<th title="Gross stock quantity."> Gross </th>
+				<th class="c"> Printing </th>
+				<th> Stock </th>
+				<th> Compare </th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<?loop comparisons?>
+				<tr class="r<?_even?> no-border"<?if ($$variable{chosen})?> id="chosen" title="Winning comparison price."<?endif ($$variable{chosen})?>>
+					<td class="l"><?press?></td>
+					<td class="l"><?run_style?></td>
+					<td><?plates?></td>
+					<td class="m"><?card?></td>
+					<td><?layouts?></td>
+					<td><?paper.wastage?></td>
+					<td class="c"><?float:paper.height?>
+						&#215;
+						<?float:paper.width?>
+					</td>
+					<td class="c"><?if ($variable->{cuts}) ?>
+						<?paper.height_original?>
+						&#215;
+						<?paper.width_original?>
+						<?endif ($variable->{cuts}) ?>
+					</td>
+					<td><?paper.gross?></td>
+					<td><?price.printing?></td>
+					<td><?price.stock?></td>
+					<td><?price.comparison?></td>
+				</tr>
+			<?endloop comparisons?>
+		</tbody>
+	</table>
+</body>
+</html>

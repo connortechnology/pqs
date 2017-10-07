@@ -1,0 +1,86 @@
+
+<?loop ADDRESSES?>
+<table width="100%" style="text-align:left !important; ">
+
+<tr>
+<td style="border:none">
+<strong>Contact Name: </strong><?strfirstname?><br />
+<strong>Shipping Address: </strong><br />
+<?if ($$variable{'deliverymethod'} ne 'Standard') ?>
+<?deliverymethod?>
+<?endif ($$variable{'deliverymethod'} ne 'Standard') ?>
+
+<?if straddress1 ?>
+	<?straddress1?>,<br />
+<?endif straddress1 ?>
+
+<? if straddress2 ?>
+	<?straddress2?>,<br />
+<? endif straddress2 ?>
+
+<?if strcubicle?>
+<?strcubicle?><br />
+<?endif strcubicle?>
+
+<? if strcity ?>
+	<?strcity?>,
+<? endif strcity ?>
+
+<? if strstateprovince ?>
+	<?strstateprovince?>,
+<? endif strstateprovince ?>
+<? if strpostalcode?>
+	<?strpostalcode?>,
+<? endif strpostalcode?>
+<? if strcountry ?>
+	<?strcountry?>
+<? endif strcountry ?>
+
+<br />
+
+<? if strphone ?><strong>T: </strong><?strphone?><? endif strphone ?>
+</td>
+<td style="border:none; vertical-align:text-top">
+
+
+ <?if ($$variable{'deliverymethod'} eq 'Standard' or $$variable{'deliverymethod'} eq '') ?>
+<strong>Ship Via: </strong><?hdnShipVia1?>
+<?else ($$variable{'deliverymethod'} eq 'Standard' or $$variable{'deliverymethod'} eq '') ?>
+<strong>Delivery Method: </strong><?deliverymethod?>
+<?if ($$variable{'deliverymethod'} eq 'Store Mail - Norcal' || $$variable{'Store Mail - Norcal+Hawaii'} eq '' || $$variable{'Store Mail - All Stores'} eq '') ?>
+<?if storemailinstructions ?><br /><Strong>Store Mail Instructions: </Strong><?storemailinstructions?><?endif storemailinstructions ?>
+ <?endif ($$variable{'deliverymethod'} eq 'Store Mail - Norcal' || $$variable{'Store Mail - Norcal+Hawaii'} eq '' || $$variable{'Store Mail - All Stores'} eq '') ?>
+<?endif ($$variable{'deliverymethod'} eq 'Standard' or $$variable{'deliverymethod'} eq '') ?> <br />
+
+  
+    
+    <strong>Quantity: </strong><?add_qty1?><?if add_qty2?>, <?add_qty2?><?endif add_qty2?><?if add_qty3?>, <?add_qty3?><?endif add_qty3?>
+<br />
+  
+ <strong>Shipping Type: </strong>
+<? if ($$variable{'rdbShippingContents'} ne 'Other') ?>
+	<?rdbShippingContents?>
+<? else ($$variable{'rdbShippingContents'} ne 'Other') ?>
+	Samples
+<? endif ($$variable{'rdbShippingContents'} ne 'Other') ?><br />
+
+<strong>Blind Shipment: </strong>
+<? if chkBlindShipment ?>
+<?chkBlindShipment?>
+<? else chkBlindShipment ?>
+No
+<? endif chkBlindShipment ?> <br />
+
+<strong>Total Weight: </strong>
+<? eval ( ($$variable{'weight1'} , $$variable{'weight2'}, $$variable{'weight3'}) = split /,/ , $$variable{'txtShipmentWeight'} )?>
+
+
+	<?weight1?> lbs<?if weight2?>, <?weight2?> lbs<?endif weight2?><?if weight3?>, <?weight3?> lbs<?endif weight3?>
+ <br />
+
+</td>
+</tr>
+
+
+</table>
+<?endloop ADDRESSES?>

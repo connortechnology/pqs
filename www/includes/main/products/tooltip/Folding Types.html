@@ -1,0 +1,83 @@
+<title><!--#include virtual="/includes/company_name.html" --> Fold Types</title>
+<table style="margin: 0 auto;" border="0" cellspacing="0" cellpadding="0" cols="2" class="no-formatting" width="300px">
+
+					<tr>
+
+					<td><label for="txt2PanelFoldQty" class="label"><img src="/images/main/project_templates/folding/2_panel.gif" width="75" height="75" /></label></td>
+				
+					<td><label for="txt2PanelFoldQty" class="label"><input name="FoldTypePop" id="txt2PanelFoldQty" value="txt2PanelFoldQty" type="radio" onClick="Set2pan();" />2 Panel Half Fold<br class="right" /></label></td>
+					
+                    </tr>
+		
+        			<tr>
+					<td><label for="txt3PanelRollFoldQty" class="label"><img src="/images/main/project_templates/folding/3_panel_roll.gif" width="75" height="75" /></label></td>
+					
+					<td><label for="txt3PanelRollFoldQty" class="label"><input name="FoldTypePop" id="txt3PanelRollFoldQty" value="txt3PanelRollFoldQty" type="radio" onClick="Set3panr();"/>3 Panel Roll Fold<br class="right" /></label></td>
+					
+					</tr>
+		
+				<tr>
+					<td><img src="/images/main/project_templates/folding/3_panel_accordian.gif" width="75" height="75" /></td>
+					
+					<td><label for="txt3PanelZFoldQty" class="label"><input name="FoldTypePop" id="txt3PanelZFoldQty" value="txt3PanelZFoldQty" type="radio" onClick="Set3panz();"/>3 Panel Z Fold (Accordian)<br class="right" /></label></td>
+					
+				</tr>
+                <tr>
+					<td><img src="/images/main/project_templates/folding/4_panel_roll.gif" width="75" height="75" /></td>
+					
+					<td><label for="txt4PanelRollFoldQty" class="label"><input name="FoldTypePop" id="txt4PanelRollFoldQty" value="txt4PanelRollFoldQty" type="radio" onClick="Set4pan();" />4 Panel Double Parallel Fold<br class="right" /></label></td>
+					
+				</tr>
+                <tr>
+					<td><img src="/images/main/project_templates/folding/double_gate.gif" width="75" height="75" /></td>
+					
+					<td><label for="txtDoubleGateFolded" class="label"><input name="FoldTypePop" id="txtDoubleGateFolded" value="txtDoubleGateFolded" type="radio" onClick="SetDG();"/>Double Gate Fold<br class="right" /></label></td>
+					
+				</tr>
+		
+				
+			   
+
+			</table>
+            
+            <script language="javascript">
+			 function Set2pan() 
+   			 { 
+      		  window.opener.document.getElementById("FoldType").value = 
+                            document.getElementById("txt2PanelFoldQty").value; 
+			  window.opener.foldtypepersize();
+      		  return false; 
+    } 
+		  	function Set3panr() 
+   			 { 
+      		  window.opener.document.getElementById("FoldType").value = 
+                            document.getElementById("txt3PanelRollFoldQty").value; 
+										  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+			function Set3panz() 
+   			 { 
+      		  window.opener.document.getElementById("FoldType").value = 
+                            document.getElementById("txt3PanelZFoldQty").value; 
+										  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+			function Set4pan() 
+   			 { 
+      		  window.opener.document.getElementById("FoldType").value = 
+                            document.getElementById("txt4PanelRollFoldQty").value; 
+										  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+			function SetDG() 
+   			 { 
+      		  window.opener.document.getElementById("FoldType").value = 
+                            document.getElementById("txtDoubleGateFolded").value; 
+										  window.opener.foldtypepersize();
+
+      		  return false; 
+    } 
+			</script>

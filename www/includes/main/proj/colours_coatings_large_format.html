@@ -1,0 +1,116 @@
+<fieldset>
+	<legend>Outdoor Printing</legend>
+
+	<p>Will your project require Outdoor Printing?</p>
+
+	<label class="checkbox indent-label" for="outdoor_printing"><input type="checkbox" id="outdoor_printing" name="outdoor_printing" class="checkbox" onclick="stock_unbind_all(document.forms['f1']);" value="Outdoor" />Outdoor Printing</label><br />
+</fieldset>
+
+<br class="clear" />
+
+<div class="link-outer" id="cc_link">
+	<div class="link-inner">
+		<label for="side_link" class="linkage" title="Link Side One &amp; Side Two"><img src="/images/misc/link.png" /><input type="checkbox" id="side_link" name="side_link" value="1" /><img src="/images/misc/link.png" /></label>
+	</div>
+</div>
+
+<br class="clear" />
+
+<fieldset id="side1" class="colours-coatings half left">
+	<legend>Side One</legend>
+
+	<p class="none">&nbsp;</p>
+
+	<fieldset>
+		<legend class="tip" title="What are the colour(s) for side one of your project?">
+			<?ws_Colour?>s:
+		</legend>
+
+		<p class="none">&nbsp;</p>
+
+		<label class="checkbox indent-label tip" for="s0_black" title="Black as a spot ink colour."><input name="s0_black" id="s0_black"   type="checkbox" value="1" />Black</label><br />
+		<label class="checkbox indent-label tip" for="s0_process" title="Cyan, Magenta, Yellow and Black. The four basic colors of ink used in process <?ws_colour?> printing to allow the full spectrum of colors to be produced on a printing press."><input name="s0_process" id="s0_process" type="checkbox" value="1" />Four <?ws_Colour?> Process (<acronym title="Cyan, Magenta, Yellow, blacK">CMYK</acronym>)</label><br />
+	</fieldset>
+
+
+	<fieldset>
+		<legend class="tip" title="What is the required ink coverage for side one of your project?">
+			Ink Coverage
+		</legend>
+
+		<p class="none">&nbsp;</p>
+
+		<label class="radio indent-label" for="s0_ink_coveragephoto" style="width: 5em; padding-right: 0 !important;"><input type="radio" id="s0_ink_coveragephoto" name="s0_ink_coverage" value="1" />100%</label>
+		<label class="radio indent-label" for="s0_ink_coveragebanner" style="width: 6em; padding-right: 0 !important;"><input type="radio" id="s0_ink_coveragebanner" name="s0_ink_coverage" value="0.60" />60%</label>
+		<label class="radio indent-label" for="s0_ink_coverage_text" style="width: auto; padding-right: 0 !important;"><input type="radio" id="s0_ink_coverage_text" name="s0_ink_coverage"  value="0.35" />35%</label><br />
+	</fieldset>
+
+
+	<fieldset>
+		<legend class="tip" title="What is the required print quality for side one of your project?">
+			Print Quality
+		</legend>
+
+		<p class="none">&nbsp;</p>
+
+		<label class="radio indent-label" for="s0_qualityhigh" style="width: 5em; padding-right: 0 !important;"><input type="radio" id="s0_qualityhigh" name="s0_quality" value="high" />High</label>
+		<label class="radio indent-label" for="s0_qualitymedium" style="width: 6em; padding-right: 0 !important;"><input type="radio" id="s0_qualitymedium" name="s0_quality" value="medium" />Medium</label>
+		<label class="radio indent-label" for="s0_qualitylow" style="width: auto; padding-right: 0 !important;"><input type="radio" id="s0_qualitylow" name="s0_quality" value="low" />Low</label><br />
+	</fieldset>
+
+	<br />
+</fieldset>
+
+
+<fieldset id="side2" class="colours-coatings half right">
+	<legend>Side Two</legend>
+
+	<div id="side2_linked">
+		This side shares the same specifications as side one.<br />
+		Click the chain / checkbox above to unlink them.
+	</div>
+
+	<p class="none">&nbsp;</p>
+
+	<fieldset>
+		<legend class="tip" title="What are the for side two of your project?">
+			<?ws_Colour?>s
+		</legend>
+
+		<p class="none">&nbsp;</p>
+
+		<label class="checkbox indent-label tip" title="Black as a spot ink colour." for="s1_black"><input name="s1_black" id="s1_black" class="colour"  type="checkbox" value="1" />Black</label><br />
+		<label class="checkbox indent-label tip" title="Cyan, Magenta, Yellow and Black. The four basic colors of ink used in process <?ws_colour?> printing to allow the full spectrum of colors to be produced on a printing press." for="s1_process"><input name="s1_process" id="s1_process" type="checkbox" value="1" />Four <?ws_Colour?> Process (<acronym title="Cyan, Magenta, Yellow, blacK">CMYK</acronym>)</label><br />
+	</fieldset>
+
+
+	<fieldset>
+		<legend class="tip" title="What is the required ink coverage for side two of your project?">
+			Ink Coverage
+		</legend>
+
+		<p class="none">&nbsp;</p>
+
+		<label class="radio indent-label" for="s1_ink_coveragephoto" style="width: 5em; padding-right: 0 !important;"><input type="radio" id="s1_ink_coveragephoto" name="s1_ink_coverage" value="1" />100%</label>
+		<label class="radio indent-label" for="s1_ink_coveragebanner" style="width: 6em; padding-right: 0 !important;"><input type="radio" id="s1_ink_coveragebanner" name="s1_ink_coverage" value="0.60" />60%</label>
+		<label class="radio indent-label" for="s1_ink_coverage_text" style="width: auto; padding-right: 0 !important;"><input type="radio" id="s1_ink_coverage_text" name="s1_ink_coverage"  value="0.35" />35%</label><br />
+	</fieldset>
+
+
+	<fieldset>
+		<legend class="tip" title="What is the required print quality for side two of your project?">
+			Print Quality
+		</legend>
+
+		<p class="none">&nbsp;</p>
+
+		<label class="radio indent-label" for="s1_qualityhigh" style="width: 5em; padding-right: 0 !important;"><input type="radio" id="s1_qualityhigh" name="s1_quality" value="high" />High</label>
+		<label class="radio indent-label" for="s1_qualitymedium" style="width: 6em; padding-right: 0 !important;"><input type="radio" id="s1_qualitymedium" name="s1_quality" value="medium" />Medium</label>
+		<label class="radio indent-label" for="s1_qualitylow" style="width: auto; padding-right: 0 !important;"><input type="radio" id="s1_qualitylow" name="s1_quality" value="low" />Low</label><br />
+	</fieldset>
+
+
+	<br />
+</fieldset>
+
+<br class="clear" />

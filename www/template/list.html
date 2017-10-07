@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude"><head>
+		<title tal:content="title">PDF Templates</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+		<script language="javascript" type="text/javascript" src="/javascripts/menu.js"></script>
+
+		<!-- TEMPORARY: Header menus. -->
+		<script language="javascript" type="text/javascript" src="/javascripts/detect.js"></script>
+		<script language="javascript" type="text/javascript" src="/javascripts/other.js"></script>
+	</head>
+	<body>
+
+		<xi:include href="/includes/c1-tal.html" />
+
+		<!-- Sidebar -->
+		<div id="sidebar">
+			<div class="option">
+				<a class="back" href="/templating/create">New Template</a>
+			</div>
+		</div>
+
+		<div id="content">
+			<h1><span class="title-section">Template &#187; </span> List</h1>
+
+			<form action="/templating/delete" method="post">
+				<table class="common">
+					<colgroup class="id" style="width: 3em;" />
+					<colgroup class="name" style="width: 50em;"/>
+					<colgroup class="controls" style="width: 10px;" />
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Name</th>
+							<th title="select"><input type="submit" class="button" value="Delete" /></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="even" tal:repeat="t templates" tal:attributes="class decode:repeat/even 0 'even' 'odd'">
+							<td><a href="/templating/create?id=${t/id}" tal:content="t/id">1</a></td>
+							<td><a href="/templating/download?id=${t/id}" tal:content="t/name">Acme Motors Co. Business Card</a></td>
+							<td><input type="checkbox" value="$t/id" name="id" /></td>
+						</tr>
+					</tbody>
+				</table>
+				<input type="submit" class="button" value="Delete" />
+			</form>
+
+		</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

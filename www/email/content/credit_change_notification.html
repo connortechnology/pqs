@@ -1,0 +1,9 @@
+<p>Dear <?txtSignature?>,</p>
+
+<? if ( $$variable{'Terms'} > 0 and  $$variable{'CreditLimit'} > 0 ) ?>
+	<p>You have been granted Net <?Terms?> Day terms, with a credit limit of $<?CreditLimit?>.</p>
+<? else ( $$variable{'Terms'} > 0 and  $$variable{'CreditLimit'} > 0 ) ?>
+	<p>Your company has not been approved for credit terms at this time therefore we will require a downpayment of <?Downpayment?>% before we will initiate production of your orders. The balance will be due upon pick-up or delivery.</p>
+<? endif ( $$variable{'Terms'} > 0 and  $$variable{'CreditLimit'} > 0 ) ?>
+
+<p>If you have any questions, please contact our <a href="/main/support/support_help_desk.html?Issue_Cookie=true">helpdesk</a>.</p>

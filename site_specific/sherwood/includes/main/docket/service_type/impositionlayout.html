@@ -1,0 +1,53 @@
+<?loop signature?>
+<div style=" padding-left: 2em; ">
+
+<table class="no-formatting no-padding" style="margin: 0; " cellspacing="0" cellpadding="0" border="0" width="90%">
+  
+  <tr>
+   
+    <? if ($$variable{'txtServiceDescription'}) ?>
+    <td width="50%">
+		<span class="label">Signature Group - </span><?txtServiceDescription?>
+	</td>
+    <? endif ($$variable{'txtServiceDescription'}) ?>
+   <? if ( $$variable{'txtServiceSpreads'} ne '' ) ?>
+    <td width="50%"><span class="label">Spread Qty </span>
+			<?txtServiceSpreads?></td>
+   <? endif ( $$variable{'txtServiceSpreads'} ne '' ) ?>
+  </tr>
+  <tr>
+    <td width="50%"><span class="label">Signature Qty:&nbsp;&nbsp;</span>
+		<?txtSignatureQuantity?></td>
+    <td width="50%"><span class="label">Spreads per Signature:&nbsp;&nbsp;</span>
+		<?spreads_in_group?></td>
+  </tr>
+  <tr>
+    <td><span class="label">Imposition:&nbsp;&nbsp;</span>
+		<?hdnImposition?>&nbsp;Out </td>
+    <td><span class="label">Trap:&nbsp;&nbsp;</span>
+		<?hdnTrap?></td>
+  </tr>
+  <tr>
+  <td><span class="label">Bleed:&nbsp;&nbsp;</span>
+		<?bleed_size?>
+		<? if ( $$variable{'bleed_size'} ne 0 ) ?>
+			-
+		<? endif ( $$variable{'bleed_size'} ne 0 ) ?>
+		<? if ( $$variable{'bleed_sides'} =~ m/3/ ) ?>
+			L,
+		<? endif ( $$variable{'bleed_sides'} =~ m/3/ ) ?>
+		<? if ( $$variable{'bleed_sides'} =~ m/1/ ) ?>
+			R,
+		<? endif ( $$variable{'bleed_sides'} =~ m/1/ ) ?>
+		<? if ( $$variable{'bleed_sides'} =~ m/0/ ) ?>
+			T,
+		<? endif ( $$variable{'bleed_sides'} =~ m/0/ ) ?>
+		<? if ( $$variable{'bleed_sides'} =~ m/2/ ) ?>
+			B
+		<? endif ( $$variable{'bleed_sides'} =~ m/2/ ) ?></td>
+  <td></td>
+  </tr>
+</table>
+</div>
+
+<?endloop signature?>

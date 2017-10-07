@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<? eval( $variable->{ddmFormat} = 'QuickBooks' ) ?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Reports - Quotes
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript">
+		//	/me says: Moved From Inside Body Tag, f00!
+		function check_all (theBoxes, value)
+		{
+			var numChecks = theBoxes.length;
+			for (var cnt = 0; cnt < numChecks; cnt++) { theBoxes[cnt].checked = value; }
+		}
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">Accounting &#187;</span> Export</h1>
+
+	<form id="f1" name="f1" method="post" action="reports_accounting.html">
+
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="ddmCustomers">Customers:</label>
+			<select id="ddmCustomers" name="ddmCustomers" size="1">
+				<option value=""> All Customers </option>
+				<?ddmCustomers?>
+			</select>
+			<br />
+
+			<label for="ddmStatus">Status:</label>
+			<select id="ddmStatus" name="ddmStatus" size="1">
+				<option value="" <?ddmStatus?> > All </option>
+				<option value="Incomplete" <?ddmStatusIncomplete?> > Incomplete </option>
+				<option value="Pending Deposit" <?ddmStatusPendingDeposit?> > Pending Deposit </option>
+				<option value="In Production" <?ddmStatusInProduction?> > In Production </option>
+				<option value="Complete" <?ddmStatusComplete?> > Complete </option>
+				<option value="Paid" <?ddmStatusPaid?> > Paid </option>
+				<option value="Re-Opened" <?ddmStatusRe-Opened?> > Re-Opened </option>
+				<option value="Cancelled" <?ddmStatusCancelled?> > Cancelled </option>
+			</select>
+			<br />
+
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?startmonths?>
+			</select>
+			<select id="ddmStartDay" name="ddmStartDay">
+				<?startdays?>
+			</select>
+			<select id="ddmStartYear" name="ddmStartYear">
+				<?startyears?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?endmonths?>
+			</select>
+			<select id="ddmEndDay" name="ddmEndDay">
+				<?enddays?>
+			</select>
+			<select id="ddmEndYear" name="ddmEndYear">
+				<?endyears?>
+			</select>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" value="Show Results" name="ShowResults" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Export
+			</legend>
+
+            <input type="hidden" id="ddmFormat" name="ddmFormat" value="<?ddmFormat?>" />
+
+			<br />
+
+			<label for="ddmExport">Export Payment/Invoices:</label>
+			<select id="ddmExport" name="ddmExport" size="1">
+				<option value="Invoices" <?ddmExportInvoices?> > Invoices </option>
+            <? if ( $variable->{ddmFormat} eq 'QuickBooks' ) ?>
+				<option value="InvoicesSimple" <?ddmExportInvoicesSimple?> > Invoices (Simple) </option>
+				<option value="Estimates" <?ddmExportEstimates?> > Estimates </option>
+				<option value="Payments" <?ddmExportPayments?> > Payments </option>
+            <? endif ( $variable->{ddmFormat} eq 'QuickBooks' ) ?>
+			</select>
+			<br />
+
+			<label for="ddmExportOptions">Export Options:</label>
+			<select id="ddmExportOptions" name="ddmExportOptions" size="1">
+				<option value="SelAll" <?ddmExportOptionsSelAll?>> Selected records </option>
+				<option value="SelNever" <?ddmExportOptionsSelNever?> > Selected records not yet exported </option>
+				<option value="SelLater" <?ddmExportOptionsSelLater?> > Selected records with modified date later than export date </option>
+				<option value="All" <?ddmExportOptionsAll?> > All records </option>
+				<option value="Never" <?ddmExportOptionsNever?> > All records not yet exported </option>
+				<option value="Later" <?ddmExportOptionsLater?> > All records with modified date later than export date </option>
+			</select>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" value="Export" name="Export" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Results
+			</legend>
+		
+			<p class="none">&nbsp;</p>
+		
+			<? if ( $$variable{ArrayOfCompanies} ) ?>
+			
+				<table cellspacing="0" cellpadding="0" border="0">
+					<tr>
+						<? loop ArrayOfEntries ?>
+							<th><? entry ?></th>
+						<? endloop ArrayOfEntries ?>
+						<th>Export?</th>
+					</tr>
+		
+					<tr class="no-formatting">
+						<td colspan="6">&nbsp;</td>
+						<td style="text-align: center; font-size: 0.8em;">Check All:</td>
+						<td style="text-align: center;"><input type="checkbox" name="checkAllEntry" id="checkAllEntry" onclick="check_all (f1.export_entry, this.checked);" /></td>
+					</tr>
+		
+					<? loop ArrayOfCompanies ?>
+						<tr>
+							<td><? value2 ?></td>
+							<td style="text-align: right;">$<? value3 ?></td>
+							<td style="text-align: center;"><? value4 ?></td>
+							<td><? value5 ?></td>
+							<td style="text-align: center;"><? value6 ?></td>
+							<td style="text-align: center;"><? value7 ?></td>
+							<td style="text-align: center;"><? value8 ?><? if ( ! $$variable{value8} ) ?>&nbsp;<? endif( ! $$variable{value8} ) ?></td>
+							<td style="text-align: center;"><input type="checkbox" name="export_entry" id="export_entry-<? value1 ?>" value="<? value1 ?>" onclick="if (!this.checked) {checkAllEntry.checked = 0}" />
+							</td>
+						</tr>
+					<? endloop ArrayOfCompanies ?>
+				</table>
+	
+			<? else ( $$variable{ArrayOfCompanies} ) ?>
+				<p>There were no results matching your criteria.</p>
+			<? endif ( $$variable{ArrayOfCompanies} ) ?>
+			<br />
+		</fieldset>
+
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

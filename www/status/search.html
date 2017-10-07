@@ -1,0 +1,274 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title>Project Search</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<xi:include href="/includes/h1-admin-css.html" />
+
+		<link rel="stylesheet" type="text/css" href="/styles/status/style.css" />
+
+		<script type="text/javascript" src="/javascripts/JSAN.js"></script>
+		<script type="text/javascript" src="/javascripts/status/search.js"></script>
+		<script type="text/javascript">
+			timestamp = '$timestamp';
+		</script>
+
+		<!-- TEMPORARY: Old menu interface. -->
+		<script type="text/javascript" src="/javascripts/menu.js"></script>
+		<script type="text/javascript" src="/javascripts/employee_content.js"></script>
+	</head>
+	<body>
+
+		<xi:include href="/includes/c1-tal.html" />
+
+		<div id="sidebar">
+			<div class="side-panel" style="border-top: none;">
+				<form class="search" method="GET" action="search.html" tal:attributes="action string:search">
+					<h2>Search</h2>
+
+					<fieldset id="ids"><legend>	By ID</legend>
+						<label for="pid">Project ID:</label>
+						<input type="text" id="pid" name="pid" class="numeric" />
+						<br />
+						<label for="oid">Order ID:</label>
+						<input type="text" id="oid" name="oid" class="numeric" />
+						<br />
+						<!--
+							<label for="uid">User ID:</label>
+							<input type="text" id="uid" name="uid" class="numeric" />
+							<br />
+						-->
+						<br />
+					</fieldset>
+
+					<input class="button" type="submit" value="Find" />
+
+				</form>
+
+				<br class="clear" />
+				
+				<form id="search" class="search" method="GET" action="search.html" tal:attributes="action string:search">
+
+					<fieldset id="customer"><legend>	By Customer</legend>
+						<label for="company">Company:</label>
+						<input type="text" id="company" name="company" value="" />
+						<br />
+
+						<label for="surname">Last Name:</label>
+						<input type="text" id="surname" name="surname" />
+						<br />
+
+						<label for="proname">First Name:</label>
+						<input type="text" id="proname" name="proname" />
+						<br />
+
+						<label for="email">Email:</label>
+						<input type="text" id="email" name="email" />
+						<br />
+					</fieldset>
+
+					<fieldset id="project_state"><legend>	By State</legend>
+						<label for="state_y">Production</label>
+						<input type="radio" id="state_y" name="state" value="prod" checked="checked" />
+						<br />
+						
+						<label for="state_n">Complete</label>
+						<input type="radio" id="state_n" name="state" value="done" />
+						<br />
+						
+						<label for="state_e">Either</label>
+						<input type="radio" id="state_e" name="state" value="both" />
+						<br />
+					</fieldset>
+
+					<input id="clear" class="button" type="button" style="float: left;" value="Clear" />
+					<input class="button" type="Reset" style="float: left;" value="Reset" />
+					<input class="button" type="submit" value="Find" />
+				</form>
+			</div>
+		</div>
+
+		<div id="content">
+			<h1><span class="title-section">Production &#187;</span> Status &#187; Projects</h1>
+
+			<p tal:condition="false:projects">No projects were found matching your criteria.</p>
+
+			<table id="results" class="main" summary="Project search results." tal:condition="true:projects" style="width: 1350px;">
+
+				<caption style="margin-top: 1ex; text-align: bottom;">
+					<!-- TODO: Paging. -->
+					Displaying <span tal:replace="records">7</span> of <span tal:replace="records">7</span> projects found matching your criteria.
+				</caption>
+
+				<col class="customer" />
+                <col class="duedate" />
+				<col class="id" />
+				<col class="project" />
+				<col class="status" span="7" />
+
+				<thead>
+					<tr class="main">
+						<th class="vert-border" rowspan="2">Customer</th>
+                        <th class="vert-border" rowspan="2">Due Date</th>
+						<th class="id vert-border" rowspan="2">ID</th>
+						<th class="vert-border" rowspan="2">Project</th>
+                        <th class="vert-border" rowspan="2" width="70px">Tech</th>
+						<th class="status horiz-border" colspan="9">Status</th>
+					</tr>
+
+					<tr class="sub">
+						<th class="vert-border" title="Design">Design&nbsp;&nbsp;&nbsp;&nbsp;</th>
+						<th class="vert-border" title="Prepress">Prepress&nbsp;&nbsp;</th>
+						<th class="vert-border" title="Printing">Printing&nbsp;&nbsp;</th>
+						<th class="vert-border" title="Bindery">Bindery&nbsp;&nbsp;&nbsp;</th>
+						<th class="vert-border" title="Finishing">Finishing&nbsp;</th>
+						<th class="vert-border" title="Packaging">Packaging&nbsp;</th>
+						<th class="vert-border" title="Shipping">Shipping&nbsp;&nbsp;</th>
+						<th class="vert-border" title="Inventory">Inventory&nbsp;</th>
+						<th title="Custom">Custom&nbsp;&nbsp;&nbsp;&nbsp;</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					<tr tal:replace="nothing">
+						<td class="customer">Grierson, Matthew</td>
+						<td class="proj-duedate">Due Date</td>
+                        <td class="proj-id">1431</td>
+						<td class="proj-name"><a href="project.html">Widget Catalogue</a></td>
+                        <td class="proj-tech">Tech</td>
+						<td class="done" title="Completed 2005-07-23">C</td>
+						<td class="wait" title="Complete(1), Waiting(2), Open(1), Not started(3). Last modified 45 min. ago.">W</td>
+						<td class="open" title="Open(2), Not started(2). Last modified 3 hours ago.">S</td>
+						<td class="x"></td>
+						<td class="none">&nbsp;</td>
+						<td class="open" title="Complete(1), Not started(1). Last modified 2 days ago.">S</td>
+						<td class="x"></td>
+						<td class="none"></td>
+					</tr>
+
+					<tr tal:replace="nothing" class="odd">
+						<td class="customer">Grierson, Matthew</td>
+                        <td class="proj-duedate">Due Date</td>
+						<td class="proj-id">1432</td>
+						<td class="proj-name"><a href="project.html">Widget Flyers</a></td>
+                        <td class="proj-tech">Tech</td>
+						<td class="x">&nbsp;</td>
+						<td class="done">C</td>
+						<td class="open">S</td>
+						<td class="none"></td>
+						<td class="x">&nbsp;</td>
+						<td class="none">&nbsp;</td>
+						<td class="x"></td>
+						<td class="x"></td>
+					</tr>
+
+					<tr tal:replace="nothing">
+						<td class="customer">Grierson, Matthew</td>
+                        <td class="proj-duedate">Due Date</td>
+						<td class="proj-id">1654</td>
+						<td class="proj-name"><a href="project.html">Acme Booklet</a></td>
+                        <td class="proj-tech">Tech</td>
+						<td class="none"></td>
+						<td class="none"></td>
+						<td class="none"></td>
+						<td class="x"></td>
+						<td class="x">&nbsp;</td>
+						<td class="none"></td>
+						<td class="none"></td>
+						<td class="none"></td>
+					</tr>
+
+					<tr tal:replace="nothing" class="odd">
+						<td class="customer">Barkhouse, Raymond</td>
+                        <td class="proj-duedate">Due Date</td>
+						<td class="proj-id">1732</td>
+						<td class="proj-name"><a href="project.html">Manual Addendum</a></td>
+                        <td class="proj-tech">Tech</td>
+						<td class="open">S</td>
+						<td class="wait">W</td>
+						<td class="none"></td>
+						<td class="none"></td>
+						<td class="none"></td>
+						<td class="x">&nbsp;</td>
+						<td class="x">&nbsp;</td>
+						<td class="x"></td>
+					</tr>
+
+					<tr tal:replace="nothing" class="odd">
+						<td class="customer">Barkhouse, Raymond</td>
+                        <td class="proj-duedate">Due Date</td>
+						<td class="proj-id">1732</td>
+						<td class="proj-name"><a href="project.html">IPC Manual</a></td>
+                        <td class="proj-tech">Tech</td>
+						<td class="none"></td>
+						<td class="none"></td>
+						<td class="none"></td>
+						<td class="none"></td>
+						<td class="none"></td>
+						<td class="none">&nbsp;</td>
+						<td class="none">&nbsp;</td>
+						<td class="none"></td>
+					</tr>
+
+					<tr class="odd" tal:replace="nothing">
+						<td class="customer">Lasso, Chris</td>
+                        <td class="proj-duedate">Due Date</td>
+						<td class="proj-id">1925</td>
+						<td class="proj-name"><a href="project.html">Tradeshow Posters</a></td>
+                        <td class="proj-tech">Tech</td>
+						<td class="done">C</td>
+						<td class="wait">W</td>
+						<td class="x"></td>
+						<td class="x"></td>
+						<td class="none"></td>
+						<td class="none"></td>
+						<td class="x"></td>
+						<td class="x"></td>
+					</tr>
+
+					<!-- TODO: Loop over an outer join of the project services and the categories instead of this hand population of status fields. -->
+
+					<tr tal:repeat="p projects" tal:attributes="id p/id;class decode:repeat/even 0 'even' 'odd'" style="border-bottom:1px solid #CCCCCC;">
+						<td class="customer" class="customer" tal:content="p/company">Print-Quotes Software</td>
+                        <td class="proj-duedate" tal:content="p/duedate">08/24/2004</td>
+						<td class="proj-id" tal:define="s p/status" tal:content="p/id">1440</td>
+						<td class="proj-name"><a href="project.html" tal:attributes="href string:project?pid=$p/id;title p/name" tal:content="substr:p/name 0 1000 1">Brochures</a></td>
+                        <td class="proj-tech"  tal:content="p/tech"><input type="text" name="tech" id="tech" value="" size="10" /></td>
+						<td tal:attributes="id string:$p/id-$s/design/id;class string:$s/design/class" tal:content="s/design/label"></td>
+						<td tal:attributes="id string:$p/id-$s/prepress/id;class string:$s/prepress/class" tal:content="s/prepress/label"></td>
+						<td tal:attributes="id string:$p/id-$s/printing/id;class string:$s/printing/class" tal:content="s/printing/label"></td>
+						<td tal:attributes="id string:$p/id-$s/bindery/id;class string:$s/bindery/class" tal:content="s/bindery/label"></td>
+						<td tal:attributes="id string:$p/id-$s/finishing/id;class string:$s/finishing/class" tal:content="s/finishing/label"></td>
+						<td tal:attributes="id string:$p/id-$s/packaging/id;class string:$s/packaging/class" tal:content="s/packaging/label"></td>
+						<td tal:attributes="id string:$p/id-$s/shipping/id;class string:$s/shipping/class" tal:content="s/shipping/label"></td>
+						<td tal:attributes="id string:$p/id-$s/inventory/id;class string:$s/inventory/class" tal:content="s/inventory/label"></td>
+						<td tal:attributes="id string:$p/id-$s/custom/id;class string:$s/custom/class" tal:content="s/custom/label"></td>
+					</tr>
+				</tbody>
+			</table>
+
+			<!--
+				DISABLE: Feature may never be supported.
+
+				<hr />
+
+				<form id="bump" method="POST">
+					<label for="bump_pid">Project ID:</label>
+					<input id="bump_pid" name="pid" type="text" class="numeric" />
+					<label for="bump_reason">Reason:</label>
+					<input id="bump_reason" name="pid" type="text" />
+	
+					<input type="submit" value="Complete Current Category" />
+				</form>
+			-->
+
+		</div>
+
+		<!-- State control context menu. -->
+		<xi:include href="/status/state_menu.xml" />
+
+		<xi:include href="/includes/f1-tal.html" />
+        
+	</body>
+</html>

@@ -1,0 +1,305 @@
+<?if  ( $variable->{parent_change_order} || $variable->{change_order})?>
+
+ <!-- Change Order Info. -->
+<div class="category" style="background-color:#FFB3B3 !important">
+	<h5 style="background-color:#F00">Change Order Information</h5>
+
+   <table class="docket no-formatting" width="600px" >
+	   <tbody>
+<!--      old pid = <?change_order.pid_to?> parent pid = <?parent_change_order.pid_from?> new pid= <?param.pid?>
+		<? if ($variable->{parent_change_order}{'pid_from'} != param.pid) ?>
+        pids do not match
+        <? else ($variable->{parent_change_order}{'pid_from'} != param.pid) ?>
+        pids do match
+        <? endif ($variable->{parent_change_order}{'pid_from'} != param.pid) ?>
+-->        
+         
+           <!-- Start Change Order Info - if you are on the original project this should show the new project number if there is a new project number (spec changes). -->
+          <?if change_order.pid_to?>
+          <tr>
+			<th>Project has changed to:</th><td><a href="/main/proj/proj_view.html?Issue_Cookie=true&ProjectIndex=<?change_order.pid_to?>"><?change_order.pid_to?></a></td>
+		 </tr>
+          <?endif change_order.pid_to?>
+          <!-- END Change Order Info - if you are on the original project this should show the new project number if there is a new project number (spec changes). -->
+          
+          
+          <!-- Start Change Order Info - if you are on the new change order project this should show the old project number if there is a old project number (spec changes). -->
+          <?if ($variable->{parent_change_order} && ($variable->{HeaderInfo}{id} ne $variable->{parent_change_order}{pid_from}))?>
+          <tr>
+			<th>Original Project:</th><td><a href="/main/proj/proj_view.html?Issue_Cookie=true&ProjectIndex=<?parent_change_order.pid_from?>"><?parent_change_order.pid_from?></a></td>
+		 </tr>
+         <?endif ($variable->{parent_change_order} && ($variable->{HeaderInfo}{id} ne $variable->{parent_change_order}{pid_from}))?>
+          <!-- END Change Order Info - if you are on the new change order project this should show the old project number if there is a old project number (spec changes). -->
+         
+		<tr>
+			<th style="vertical-align:text-top">Comments:</th><td><?change_order.comment?><?parent_change_order.comment?> </td>
+		 </tr>
+         
+	   </tbody>
+   </table>
+</div>
+<?endif  ( $variable->{parent_change_order} || $variable->{change_order})?>
+
+<!-- Basic Info. -->
+<div class="category">
+	<!-- Company/Docket ID -->
+	<h5>
+		<? if (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
+			<span class="id">Docket ID: <?HeaderInfo.docket_id?></span>
+		<? endif (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
+
+		Project Information
+	</h5>
+
+	<!-- Primary info call-out. -->
+	<table id="primary_info" class="no-formatting">
+		<? if ($variable->{HeaderInfo}{'date_required'}) ?>
+			<!--<tr>
+				<th>Required by:</th>
+				<td><?HeaderInfo.date_required?></td>
+			</tr>-->
+		<? endif ($variable->{HeaderInfo}{'date_required'}) ?>
+		<? if ($variable->{HeaderInfo}{'order_id'}) ?>
+            <tr>
+				<th>Quantity:</th>
+				<td style="font-weight: bold;"><?HeaderInfo.OrderedQuantity?></td>
+			</tr>
+
+			<tr>
+				<th>Order ID:</th>
+				<td><span class="id"><a href="/main/order/order_history_details.html?order_id=<?HeaderInfo.order_id?>"><?HeaderInfo.order_id?></a></span></td>
+			</tr>
+		<? endif ($variable->{HeaderInfo}{'order_id'}) ?>
+
+		<tr>
+			<th>Project ID:</th>
+			<td><span class="id"><?HeaderInfo.id?></span></td>
+		</tr>
+		<?if ( $variable->{HeaderInfo}{copy_pid} ) ?>
+		<tr>
+			<th>Copied From:</th>
+			<td><span class="id"><a href="/main/proj/proj_view.html?Issue_Cookie=true&ProjectIndex=<?HeaderInfo.copy_pid?>"><?HeaderInfo.copy_pid?></a></span></td>
+		</tr>
+		<?endif ( $variable->{HeaderInfo}{copy_pid} ) ?>
+
+ <? if ( ($$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' )) ?>
+     <? if ( $variable->{docket} ) ?>
+        <tr>
+            <th>Internal ID:</th>
+            <td>
+
+                <form name='iid' id='iid' action='/main/proj/proj_docket.html?Projectindex=<?HeaderInfo.id?>' method="post" />
+                <input type="text" name="InternalID" value="<?InternalID?>" size='4' />
+                </form>
+            </td>
+        </tr>
+     <? else ( $variable->{docket} ) ?>
+     	<? if ( $variable->{HeaderInfo}{InternalID} ) ?>
+        <tr>
+            <th>Internal ID:</th>
+            <td>
+                <?HeaderInfo.InternalID?>
+            </td>
+        </tr>
+     	<? endif ( $variable->{HeaderInfo}{InternalID} ) ?>
+
+     <? endif ( $variable->{docket} ) ?>
+<? endif ( ($$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' )) ?>
+
+		<? if ($$variable{checkout}) ?>
+			<tr>
+				<th>Check-In ID:</th>
+				<td><a href="/main/proj/proj_view.html?ProjectIndex=<?checkin_pid?>"><?checkin_pid?></a></td>
+			</tr>
+		<? endif ($$variable{checkout}) ?>
+	</table>
+
+
+	<table class="docket no-formatting">
+		<colgroup class="column" >
+			<col class="header" />
+			<col class="data" />
+		</colgroup>
+		<colgroup class="column">
+			<col class="header" />
+			<col class="data" />
+		</colgroup>
+		<tbody>
+			<tr>
+				<th>Reference:</th>
+				<td colspan="3"><?HeaderInfo.reference?></td>
+			</tr>
+			<tr>
+				<th>Type:</th>
+				<td><?HeaderInfo.ProjectType?></td>
+
+				<th>Status:</th>
+				<td><?ucfirst:HeaderInfo.status?></td>
+			</tr>
+			<tr>
+				<th>Created on:</th>
+				<td><?HeaderInfo.date_created?></td>
+
+				<th>Created by:</th>
+				<td><?HeaderInfo.user?></td>
+			</tr>
+			<tr rowspan="2">
+				<th>Comments:</th>
+				<td colspan="3"><?HeaderInfo.comments?></td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+<!-- Contact Info. -->
+<div class="category">
+	<h5>Contact Information</h5>
+
+	<table class="docket no-formatting">
+		<colgroup class="column" >
+			<col class="header" />
+			<col class="data" />
+		</colgroup>
+		<colgroup class="column">
+			<col class="header" />
+			<col class="data" />
+		</colgroup>
+		<tbody>
+		<tr>
+			<th>Company:</th><td><?HeaderInfo.company?></td>
+			<th>Phone:</th><td><?HeaderInfo.phoneNumber?><? if ( $$variable{'OrderExtension'} ne '' ) ?>&nbsp;Ext:&nbsp;<?OrderExtension?><? endif ( $$variable{'OrderExtension'} ne '' ) ?></td>
+		</tr>
+			<? if ($variable->{HeaderInfo}{OrderLastName}) ?>
+		<tr>
+			<th>Contact:</th><td><?HeaderInfo.OrderSalutation?> <?HeaderInfo.OrderFirstName?>	<?HeaderInfo.OrderLastName?></td>
+			<th>Ordered By:</th><td><?HeaderInfo.OrderSalutation?> <?HeaderInfo.OrderFirstName?>	<?HeaderInfo.OrderLastName?></td>
+		</tr>
+			<? endif ($variable->{HeaderInfo}{OrderLastName}) ?>
+		
+ 		 <? if ( ($$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' )) ?>
+
+        <tr>
+			<th>Supplier Contact:</th><td>
+				<?if ($variable->{HeaderInfo}{RFQAwardedSupplier}) ?><?HeaderInfo.RFQAwardedSupplier?>
+				<?else ($variable->{HeaderInfo}{RFQAwardedSupplier}) ?>
+				<form action="proj_view.html" name="f-supplier" method="post" id="f-supplier" >
+				<select name="supplier" onChange="form.submit();">
+				 	<option value="">- Please select one. -</option>
+                    <?SUPPLIERS?>
+				</select>
+				<input type="hidden" name="pid" value="<?pid?>" />
+				</form>
+				<?endif ($variable->{HeaderInfo}{RFQAwardedSupplier}) ?></td>
+			<th></th><td></td>
+		</tr>
+         <? endif ( ($$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' )) ?>
+
+		
+		</tbody>
+	</table>
+</div>
+
+<!-- Format and Software. -->
+<? if (not $$variable{checkout}) ?>
+	<div class="category">
+		<h5>Project Summary</h5>
+		<table class="docket no-formatting">
+			<colgroup class="column" >
+				<col class="header" />
+				<col class="data" />
+			</colgroup>
+			<colgroup class="column">
+				<col class="header" />
+				<col class="data" />
+			</colgroup>
+			<tbody>
+				<tr>
+					<th>Format:</th>
+					<td><?HeaderInfo.design?></td>
+					<? if ($variable->{HeaderInfo}{design} eq 'ElectronicFile') ?>
+						<th>File Type:</th>
+						<td><?HeaderInfo.software?></td>
+					<? else ($variable->{HeaderInfo}{design} eq 'ElectronicFile') ?>
+						<td colspan="2"></td>
+					<? endif ($variable->{HeaderInfo}{design} eq 'ElectronicFile') ?>
+				</tr>
+				<tr>
+					<? if ($variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
+							<th>Finished:</th><td>
+							<? if ( $variable->{HeaderInfo}{final_height} ) ?>
+								<?HeaderInfo.final_height?> x <?HeaderInfo.final_width?> 
+								<? if ( $variable->{HeaderInfo}{final_depth} ) ?>
+									x <?HeaderInfo.final_depth?> (H x W x D)
+								<? else ( $variable->{HeaderInfo}{final_depth} ) ?>
+									(H x W)
+								<? endif ( $variable->{HeaderInfo}{final_depth} ) ?>
+							<? endif ( $variable->{HeaderInfo}{final_height} ) ?>
+							</td>
+							<th>Flat:</th><td><?HeaderInfo.flat_height?> x <?HeaderInfo.flat_width?> (H x W)</td>
+					<? else ($variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
+						<th>Height:</th><td><?HeaderInfo.txtItemHeight?></td>
+						<th>Width:</th><td><?HeaderInfo.txtItemWidth?></td>
+					</tr>
+					<tr>
+						<th>Depth:</th><td><?HeaderInfo.txtItemDepth?></td>
+						<th>Surfaces Printed On:</th><td><?HeaderInfo.txtScreenPrintingSurfaces?></td>
+					<? endif ($variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
+				</tr>
+				<tr>
+					<th><?ws_Colour?>s:</th>
+					<td>
+						<?loop HeaderInfo.colours?>
+							<?colour1?><?side1_info?> / <?colour2?><?side2_info?>
+
+							<?if (! $$variable{_last})?>,<?endif (! $$variable{_last})?>
+						<?endloop HeaderInfo.colours?>
+					</td>
+
+					<? if ($variable->{HeaderInfo}{ptype} ne 'PressSheetCombination')?>
+						<th>Versions:</th>
+						<td><?HeaderInfo.txtNameQuantity?></td>
+					<? else ($variable->{HeaderInfo}{ptype} ne 'PressSheetCombination')?>
+						<th>Items Cut:</th>
+						<td><?HeaderInfo.txtPressSheetComboItems?></td>
+					<? endif ($variable->{HeaderInfo}{ptype} ne 'PressSheetCombination')?>
+				</tr>
+				<? if ($variable->{HeaderInfo}{multipage} and $variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
+					<tr>
+						<th>Pages:</th>
+						<td><?HeaderInfo.txtTotalPageQuantity?></td>
+						<th>Cover:</th>
+						<td><?HeaderInfo.rdbCover?></td>
+					</tr>
+					
+					<? if ($variable->{PressType} eq 'press' || $variable->{pressType} eq 'press')?> 
+                    <tr>
+						<th>Spreads:</th>
+						<td><?HeaderInfo.interior_spreads?></td>
+						<th>GF Spreads: </th>
+						<td><?HeaderInfo.gatefolded_spreads?></td>
+					</tr>
+                    
+					<tr>
+						<th>Signature Groups:</th>
+						<td><?HeaderInfo.txtSignatureQuantity?></td>
+						<th>Inserts or APs:</th>
+						<td><?HeaderInfo.txtInsertQuantity?></td>
+					</tr>
+                     
+					<? endif ($variable->{PressType} eq 'press' || $variable->{pressType} eq 'press')?> 
+				<? endif ($variable->{HeaderInfo}{multipage} and $variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
+		 		<? if ( $variable->{HeaderInfo}{mounting_type} or $variable->{HeaderInfo}{s0_laminate} or $variable->{HeaderInfo}{s1_laminate} ) ?>
+					<tr>
+						<th>Mounting Type:</th>
+						<td><?HeaderInfo.mounting_type?> 
+							<?if ($variable->{HeaderInfo}{double_sided} )?> 
+								Double Sided 
+							<?endif ($variable->{HeaderInfo}{double_sided} )?> 
+						<th>Laminate:</th>
+						<td><?HeaderInfo.s0_laminate?>, <?HeaderInfo.s1_laminate?> </td>
+					</tr>
+		 		<? endif ( $variable->{HeaderInfo}{mounting_type} or $variable->{HeaderInfo}{s0_laminate} or $variable->{HeaderInfo}{s1_laminate} ) ?>
+			</tbody>
+		</table>
+	</div>
+<? endif (not $$variable{checkout}) ?>

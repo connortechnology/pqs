@@ -1,0 +1,27 @@
+<div style=" padding-left: 2em; ">
+<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+  <tr>
+    <td width="50%"><span class="label">Total:&nbsp;&nbsp;</span>
+	<? eval ( ($$variable{'txtQuantity1'} , $$variable{'txtQuantity2'}, $$variable{'txtQuantity3'}) = split /,/ , $$variable{'txtQuantity'} )?>
+	<? if ($$variable{'qtyIndex'} == 1) ?>
+		<?txtQuantity1?>
+	<? endif ($$variable{'qtyIndex'} == 1) ?>
+	
+	<? if ($$variable{'qtyIndex'} == 2) ?>
+		<?txtQuantity2?>
+	<? endif ($$variable{'qtyIndex'} == 2) ?>
+	
+	<? if ($$variable{'qtyIndex'} == 3) ?>
+		<?txtQuantity3?>
+	<? endif ($$variable{'qtyIndex'} == 3) ?></td>
+    <td width="50%"><span class="label">Qty per Bundle:&nbsp;&nbsp;</span>
+	<?txtWrapQuantity?></td>
+  </tr>
+  <tr>
+    <td><span class="label">Type:&nbsp;&nbsp;</span>
+	<?rdbBundleType?></td>
+    <td></td>
+  </tr>
+  
+</table>
+</div>

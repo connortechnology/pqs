@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.category?> - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+	<script type="text/javascript" src="/javascripts/admin/form.js"></script>
+	<script type="text/javascript">
+		// <![CDATA[
+		Event.observe(window, 'load', function () {
+		    var check       = $('expires');
+		    var expire_date = $('expiry_date');
+
+		    Event.observe(check, 'click', function (e) {
+		        expire_date.display(check.checked);
+		    });
+
+        expire_date.display(check.checked);
+		});
+		// ]]>
+
+	function calc_markup(element) {
+	// Because the elements name is formated #-#-name we split out the id #-#-
+	// and the name.
+	var index  = element.name.indexOf("-");
+	var index2 = element.name.lastIndexOf("-");
+
+	var field  = element.name.substring(0,index);
+	var cur    = element.name.substring(index+1, index2);
+	var id     = element.name.substring(index2+1);
+
+	var buy  = $('buy'    + '-' + cur + '-' + id); 
+	var sell = $('price'  + '-' + cur + '-' + id); 
+	var mark = $('markup' + '-' + cur + '-' + id); 
+
+		if ( field == 'buy' || field == 'markup' ) {
+				sell.value = round(buy.value *  (1 + (mark.value / 100)), 5); 
+		} else { 
+				mark.value = round((sell.value / buy.value - 1) * 100, 5); 
+
+		}
+
+	}
+
+	</script>
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<form id="f1" name="f1" method="POST" action="/service/<?lc:service.ref?>">
+		<input name="pid" type="hidden" value="<?pid?>" />
+		<input name="sid" type="hidden" value="<?sid?>" />
+
+		<fieldset>
+			<legend>Pricing</legend>
+
+			<p>Enter a final price per item; one per currency per quantity range. Any
+			customer creating this project will have their project calculated as
+			normal but this service will appear as a discount item bringing the price
+			to the total below; excluding whatever services you allow in the 
+			<a href="#services">service</a> section.</p>
+
+			<table style="margin-top: 1em; margin-bottom: 1em;">
+				<col style="width: 8em;" />
+				<col style="width: 8em;" />
+				<colgroup>
+					<?loop currency ?>
+					<col style="width: 10em;" />
+					<?endloop currency ?>
+				</colgroup>
+				<thead>
+					<tr>
+						<th colspan="2">Quantity</th>
+							<!--<th colspan="<?size:currency?>">Currencies</th>-->
+							<th colspan="6">Currencies</th>
+					</tr>
+					<tr>
+						<th>Min.</th>
+						<th>Max.</th>
+						<?loop currency ?>
+							<th>Buy/<?code?></th>
+							<th>Markup %</th>
+							<th>Sell/<?code?></th>
+						<?endloop currency ?>
+					</tr>
+				</thead>
+				<tbody>
+					<?loop ranges?>
+						<tr>
+							<td><input type="text" name="min-<?i?>" class="numeric" <?if _last?>onkeypress="growTable(this)"<?endif _last?> /></td>
+							<td><input type="text" name="max-<?i?>" class="numeric" <?if _last?>onkeypress="growTable(this)"<?endif _last?> /></td>
+							<?loop currency ?>
+								<td class="numeric"><?symbol?> 
+										<input name="buy-<?code?>-<?i?>"    id="buy-<?code?>-<?i?>"     onkeyup="calc_markup(this);" type="text" /></td>
+								<td class="numeric">%
+										<input name="markup-<?code?>-<?i?>" id="markup-<?code?>-<?i?>"  onkeyup="calc_markup(this);" type="text" /></td>
+								<td class="numeric"><?symbol?> 
+										<input name="price-<?code?>-<?i?>"  id="price-<?code?>-<?i?>"   onkeyup="calc_markup(this);" type="text" /></td>
+							<?endloop currency ?>
+						</tr>
+					<?endloop ranges?>
+				</tbody>
+			</table>
+
+		</fieldset>
+<fieldset>
+<legend>Auto Create RFQ</legend>
+	<label for="RFQ"></label>
+    <p>Would you like to automatically create an RFQ for this project when ordered?
+	<input id="rfq" name="rfq" type="checkbox" /></p>
+</fieldset>
+
+		<!--#include virtual="/includes/main/proj/discount_expiry.html"-->
+		<!--#include virtual="/includes/main/proj/allowed_services.html"-->
+
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+	</form>
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

@@ -1,0 +1,13 @@
+<div id="controls">
+	<h4>Set Status</h4>
+	<form>
+		<label class="none"><input name="status" type="radio" value="0" />Not started</label>
+		<label class="open"><input name="status" type="radio" value="1" />Started</label>
+		<label class="wait"><input name="status" type="radio" value="2" />Paused</label>
+		<label class="wait"><input name="status" type="radio" value="3" />Waiting on Customer</label>
+		<label class="wait"><input name="status" type="radio" value="4" />Waiting for Approval</label>
+		<label class="done"><input name="status" type="radio" value="5" />Completed</label>
+		<label id="c_reason_label" for="c_reason">Reason:</label>
+		<textarea id="c_reason" name="comment"></textarea>
+	</form>
+</div>

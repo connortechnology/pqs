@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.category?> - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+  <!--#include virtual="/includes/web_page_meta.html" -->
+  <!--#include virtual="/includes/h1-main-css.html" -->
+
+  <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+  <!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+		<input type="hidden" name="pid" value="<?pid?>" />
+		<input type="hidden" name="sid" value="<?sid?>" />
+
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+
+		<fieldset>
+			<legend>Padding</legend>
+		
+			<?if ($$variable{project}{type}{ref} eq 'Forms' ) ?>
+				<p>How many form sets pages do you require in each pad?</p>
+			<?else ($$variable{project}{type}{ref} eq 'Forms' ) ?>
+				<?if ($$variable{project}{type}{ref} ne 'Scratch/WritingPads' ) ?>
+					<p>How many pages do you require in each pad?<br />
+					Note: "pages" = number of projects to be padded together.</p>
+				<?endif ($$variable{project}{type}{ref} ne 'Scratch/WritingPads' ) ?>
+			<?endif ($$variable{project}{type}{ref} eq 'Forms' ) ?>
+
+			<label for="pad_sheets">Pages per pad:</label>
+			<?if ($$variable{project}{type}{ref} eq 'Scratch/WritingPads' ) ?>
+				<span id="pad_sheets"><?spec.pad_sheets?></span>
+			<?else ($$variable{project}{type}{ref} eq 'Scratch/WritingPads' ) ?>
+				<input type="text" class="smbox" id="pad_sheets" name="pad_sheets" size="5" />
+			<?endif ($$variable{project}{type}{ref} eq 'Scratch/WritingPads' ) ?>
+			<br />
+		
+			<label for="txtPaddingImposition">Pads per press sheet:</label>
+			<span id="txtPaddingImposition"><?spec.txtPaddingImposition?></span>
+
+			<br />
+
+
+			<p style="margin-top: 2ex">Do your pads require a cardboard backing?</p>
+
+			<label>Cardboard backing:</label>
+			<input name="rdbCardboardBacking" type="checkbox" id="rdbCardboardBacking" value="1" checked="checked" />
+			<br />
+
+		</fieldset>
+
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+	</form>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

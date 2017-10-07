@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Production - RFQ
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+  <link href="/styles/docket.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/datepickercontrol.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/content.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/rfq.js"></script>
+	<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+	<script type="text/javascript" src="/javascripts/datepickercontrol.js"></script>
+
+	<script  type="text/javascript">
+		function openWindow(rfqEmail) {
+			window.open(rfqEmail,'pop','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+		function nostockmatch() {
+			
+			if ($('nostock').checked == true) {
+				alert ('Please use the Supplier Comments box to indicate your replacement stock specifications.');
+				return false;
+			}
+		}
+		
+		function checkstock() {
+			if ( !$('nostock').checked && !$('yesstock').checked ){
+				alert ('Please indicate if you are supplying the exact same stock as requested');
+				return false;
+			}
+			if ( $('nostock').checked == true && $('RFQSupplierComments').value == '') {
+				alert ('Please use the Supplier Comments box to indicate your replacement stock specifications.');
+				return false;
+			}
+		}
+		
+		
+
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+	<h1><span class="title-section">Production &#187;</span> RFQ</h1>
+		<form name="f1" id="f1" method="POST" action="email_sent.html?pid=<?ProjectIndex?>&order_id=<?order_id?>&Services=<?serviceIDs?>" />
+
+	<!--#include virtual="/includes/forms/rfq.html" -->
+
+	<div id="suppliercomments"  >
+	<? if show_rid ?>
+    <p><label for="RFQSupplierComments"><strong>Supplier Comments:</strong></label></p>
+    <p><textarea id="RFQSupplierComments" name="RFQSupplierComments" cols="1" style="width:93%;"><?RFQ_Header.scomments?></textarea></p>
+     <p style="font-weight:bold; color:#FF0000">Will you be supplying the exact same stock as requested in the RFQ Specifications above?<br />
+  <input name="stock" id="yesstock" type="radio" value="2" />Yes
+  <input name="stock" id="nostock"  type="radio" value="1"  onchange="nostockmatch()" />No
+  </p>
+	<? endif show_rid ?>
+	</div>
+
+	<div id="cancelpocomments" <? if is_cancelled?><? else is_cancelled?>style="display:none" <? endif is_cancelled?> >
+	<p><label for="RFQCancelPOComments"><strong>Cancel PO Comments:</strong></label></p>
+    <p><textarea name="RFQCancelPOComments" cols="1" style="width:93%;"><?RFQ_Header.cancel_comments?></textarea></p>
+	</div>
+    <hr />
+    
+	<? if show_rid ?>
+    <p>
+	  <? if bid_accepted ?> 
+    <? if is_cancelled?><? else is_cancelled?><div>  <input class="button" type="button" name="btnFunction" value="Cancel PO" id="hidecancelpobutton" onclick="alert('Please fill in your comments for why you are cancelling the PO and then select the Cancel button to send the cancellation notice.'); $('suppliercomments').style.display = 'none'; $('rfqcomments').style.display = 'none'; $('cancelpocomments').style.display = 'inline';$('hidebuttons').style.display = 'none';$('hidecancelpobutton').style.display = 'none'; $('cancelbutton').style.display = 'inline';"/></div>
+    <? endif is_cancelled?>
+     <a href="javascript:void(0);" id="cancelbutton" style="height:50px; width:200px; font-size:45px; padding-bottom:10px; display:none; float:right; text-align:center" class="button" onclick="theVar=confirm('Are you Sure you want to Cancel this Purchase order? Cancelling a Purchase Order cannot be undone.');
+	setTimeout('if(theVar){$(\'CancelPO\').value=1;document.f1.action=\'/administrator/production/rfq.html\'}; document.f1.submit();', 0);">CANCEL</a>
+     
+
+  
+	  <? else bid_accepted ?> 
+	  <div><a href="/administrator/production/rfq.html?rid=<?rid?>&pid=<?pid?>&sup_id=<?sup_id?>&AwardRfq=D&ShowAll=1" class="button">Decline BID </a>
+      <?if OrderedQuantity?><a href="/administrator/production/po.html?rid=<?rid?>&pid=<?pid?>&sup_id=<?sup_id?>&MakePO=A&ShowAll=1" class="button">Award Order</a><?endif OrderedQuantity?></div>
+	  <? endif bid_accepted ?> 
+      <div id="hidebuttons"> 
+      <a href="/administrator/production/bid_history.html?rid=<?rid?>&supplier=<?sup_id?>" class="button">View Bid History</a>
+      <? if ($variable->{RFQ_Header}{status} ne 'Closed')?><input class="button" type="submit" name="btnFunction" value="Save" onClick="form.action='rfq.html';return(checkstock())" /><? endif ($variable->{RFQ_Header}{status} ne 'Closed')?>
+      
+ 		  <input class="button"type="submit" name="btnFunction" value="Copy RFQ" />
+          <input type="hidden" name="rid" value="<?rid?>" />
+          <input type="hidden" name="sup_id" value="<?sup_id?>" />
+          <input type="hidden" name="pid" value="<?pid?>" />
+          <input type="hidden" name="CancelPO" id="CancelPO" value="" />
+          
+          </div>
+          		<? if api_url ?>
+       		<a href="<?api_url?>" class="button">View API Project</a>
+		<? endif api_url ?>
+	<? endif show_rid ?>
+<br />	
+<br />	
+</p>
+	<?if ( ! $variable->{show_rid} ) ?>
+    <h4>Send RFQ Information</h4>
+    
+	<div class="button-bar">
+    <br class="clear" />
+        
+            <table width="100%" border="0" >
+              <tr>
+                <td style="vertical-align: top; border: none; background-color: #FFFFFF; text-align: left;"><p><label for="selectCompany"><strong>Company:</strong></label></p>
+                <p>
+                <select multiple="multiple" id="suppliers" name="suppliers" size="5" class="marg-bot sel-multi" onchange="create_second_ddm('f1');" />
+                    <?Suppliers?>
+                </select>
+                </p></td>
+                <td style="vertical-align: top; border: none; background-color: #FFFFFF; text-align: left;"><p><label for="users"><strong>Contact:</strong></label></p>
+                <p>
+                <select name="users" id="users" multiple="multiple" />
+                </select>
+                </p></td>
+              </tr>
+            </table>
+
+            <input class="button" type="submit" name="SendRFQ" value="Send RFQ Email" />
+            <input class="button" type="submit" name="StoreRFQ" value="Store RFQ" />
+	    <!--
+            <input class="button" type="button" value="View Email" onclick="openWindow('rfq_preview.html?ProjectIndex=<?ProjectIndex?>&Services=<?serviceIDs?>&order_id=<?order_id?>');" />
+	    -->
+            <a href="/administrator/production/project_view.html?ProjectIndex=<?ProjectIndex?>" class="button">Return to Project View Page</a>
+	<?endif ( ! $variable->{show_rid} ) ?>
+		 
+        </form>
+		<br class="clear" />
+	</div>
+
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

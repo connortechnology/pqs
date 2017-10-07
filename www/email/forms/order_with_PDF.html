@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>
+			<!--#include virtual="/includes/company_name.html"-->
+			- Order
+		</title>
+
+		<style type="text/css"><!--#include virtual="/styles/email.css"--></style>
+		<style type="text/css"><!--#include virtual="/styles/order.css"--></style>
+		<style type="text/css"><!--#include virtual="/styles/project.css"--></style>
+		<style type="text/css"><!--#include virtual="/styles/pricing.css"--></style>
+		<style type="text/css" media="print"><!--#include virtual="/styles/print.css"--></style>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		
+		<base href="<?siteURL?>" />
+	</head>
+	<body>
+		
+		<div id="email-wrapper">	
+			<div id="email-border">
+			<p>Thank you  for your order!</p>
+    <p><strong>If your  order requires any changes or edits please call us at <!--#include virtual="/includes/company_telephone_number.html"--> and we  will make the changes for you.</strong></p>
+            
+			
+			<div id="repcomment">
+				<p>
+					<em>Representative:</em> <?AdministratorName?><br />
+					<em>Comments:</em> <?AdministratorComments?>
+				</p>
+			</div>
+			
+			
+		</div>
+	</div>			
+			
+ 	</body>
+</html>

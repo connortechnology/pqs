@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title><!--#include virtual="/includes/web_page_title.html" -->Employee - Projects</title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-admin-css.html" -->
+<!--#include virtual="/includes/h2-js.html" -->
+<script type="text/javascript" src="/javascripts/other.js"></script>
+
+<script  type="text/javascript">
+function openWindow(summaryPage) {
+window.open(summaryPage,'pop','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+}
+</script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+<h1><span class="title-section">Projects &#187;</span> Printing</h1>
+<div class="group">
+<h3><span class="name">
+<?EmployeeDocket.name?></span>
+&nbsp;<?EmployeeDocket.equipment?></h3>
+<?EmployeeDocket.html?>
+<?if ($$variable{EmployeeDocket}{type} eq 'order') ?>
+<table width="600" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td width="320" style="vertical-align: top;">
+<strong>
+Production Feedback
+</strong>
+</td>
+<td width="20">&nbsp;
+
+</td>
+<td width="260" colspan="2">
+</td>
+</tr>
+<tr>
+<td colspan="4" height="10">
+</td>
+</tr>
+<tr>
+<td style="vertical-align: top;">
+Employee:
+</td>
+<td>&nbsp;
+
+</td>
+<td colspan="2">
+<?txtEmployeeName?>
+</td>
+</tr>
+</table>
+<table width="600" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td width="320" height="10">&nbsp;
+
+</td>
+<td width="20" height="10">&nbsp;
+
+</td>
+<td width="260" height="10">&nbsp;
+
+</td>
+</tr>
+<tr>
+<td>
+Order Status:
+</td>
+<td>&nbsp;
+
+</td>
+<td>
+<?EmployeeDocket.status?></td>
+</tr>
+</table>
+<table width="600" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td width="320" height="10">&nbsp;
+
+</td>
+<td width="20" height="10">&nbsp;
+
+</td>
+<td width="260" height="10">&nbsp;
+
+</td>
+</tr>
+<tr>
+<td>
+Service Completion Date:
+</td>
+<td>&nbsp;
+
+</td>
+<td>
+<?EmployeeDocket.requiredDate?></td>
+</tr>
+</table>
+<?endif ($$variable{EmployeeDocket}{type} eq 'order') ?>
+</div><a href="<?url?>" class="button">Return to Project View Page</a></div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

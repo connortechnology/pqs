@@ -1,0 +1,244 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title><!--#include virtual="/includes/web_page_title.html" --> Account - User Registration
+	<!--#include virtual="/includes/web_page_title_end.html" --></title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+    <script type="text/javascript" src="/javascripts/other.js"></script>
+     <script type="text/javascript">
+   function check_text (f,n) {
+	  
+		var cc =  document.getElementById(f);
+		if ( cc.value == '' ) {
+			return 'Please Enter a ' + n + '\n';
+		}
+		return '';
+}
+    function check_information () {
+		
+		var msg = '';;
+		msg += check_text('txtFirstName','First Name');
+		msg += check_text('txtLastName','Last Name');
+		msg += check_text('txtAddres1','Address Line 1');
+		msg += check_text('cubicle','Cubicle & Building Number');
+		msg += check_text('txtCity','City');
+		msg += check_text('txtPostalCode','Zip or Postal Code');
+		msg += check_text('txtPhone','Phone Number');
+		msg += check_text('txtEmail','Email');
+		msg += check_text('txtPassword','Password');
+		msg += check_text('txtVerifyPassword','Verify Password');
+
+		var x = $('ddmCompany').selectedIndex;
+//		if (x == 0){
+//			msg += 'Please Select a Company Name' + '\n';
+//		}
+		var y = $('ddmStateProvince').selectedIndex;
+		if (y == 0){
+			msg += 'Please Select a State/Province' + '\n';
+		}
+		var z = $('ddmCountry').selectedIndex;
+		if (z == 0){
+			msg += 'Please Select a Country' + '\n';
+		}
+
+return msg;
+		
+}
+
+function check_contact () {
+		var msg = '';
+		msg += check_information();
+		if (msg != '' ) {
+			
+			alert(msg);
+			return false;
+		} 
+		else {
+			
+		
+		}
+}
+    </script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Account &#187;</span> User Registration</h1>
+
+	
+
+		<form id="user_registration" method="post" action="/main/account/confirmation_login_application.html" onsubmit="return fmCheck(f1);" name="f1">
+
+		
+				
+	
+					<p>To add a new <strong>user</strong>, complete the form below. <? if ( $$variable{user_type} )?>To edit an existing <strong>user</strong> profile(s), click <a href="/main/account/user_profile.html"><strong>here</strong></a>.<? endif ( $$variable{user_type} )?></p>
+ 
+			<input type="hidden" name='txtCompanyName' value="Pleasanton" />
+       
+
+			<fieldset>
+				<legend>
+					User Information
+				</legend>
+
+				<p class="none">&nbsp;</p>
+				<br />
+
+				<label for="txtFirstName"><span class="required">*</span>First Name:</label>
+				<input type="text" id="txtFirstName" name="txtFirstName" value="<?txtFirstName?>" class="input-text" />
+				<br />
+
+				<label for="txtLastName"><span class="required">*</span>Last Name:</label>
+				<input type="text" id="txtLastName" name="txtLastName" value="<?txtLastName?>" class="input-text" />
+				<br />
+
+				<label for="txtTitle">Position:</label>
+				<input type="text" id="txtTitle" name="txtTitle" value="<?txtTitle?>" class="input-text" />
+				<br />
+
+				<label for="txtPhone"><span class="required">*</span>Phone:</label>
+				<input type="text" id="txtPhone" name="txtPhone" value="<?txtPhone?>" class="input-text" />
+				<br />
+
+				<label for="txtExtension">Extension:</label>
+				<input type="text" id="txtExtension" name="txtExtension" value="<?txtExtension?>" class="input-text" maxlength="4" />
+				<br />
+
+				<label for="txtFax">Fax:</label>
+				<input type="text" id="txtFax" name="txtFax" value="<?txtFax?>" class="input-text" />
+				<br />
+                <label for="txtAddress1"><span class="required">*</span>Address:</label>
+			<input	type="text" id="txtAddres1" name="txtAddress1" size="30" class="input-text" value="<?txtAddres1?>" />
+			<br />
+			<label for="txtAddress2">Address 2 &amp; Mail Stop:</label>
+			<input	type="text" id="txtAddress2" name="txtAddress2" size="30" class="input-text" value="<?txtAddress2?>" />
+			<br />
+			<label for="cubicle"><span class="required">*</span>Building &amp; Cubicle:</label>
+			<input	type="text" id="cubicle" name="cubicle" size="30" class="input-text" value="<?cubicle?>" />
+			<br />
+			<label for="txtCity"><span class="required">*</span>City:</label>
+			<input	type="text" id="txtCity" name="txtCity" size="30" class="input-text" value="<?city?>" />
+			<br />
+			<label for="ddmStateProvince"><span class="required">*</span>State/Province:</label>
+            <select id="ddmStateProvince" name="ddmStateProvince">
+				<option value="CA">California</option>
+				<?ddmStateProvince?>
+			</select>
+			
+			<br />
+			<label for="ddmCountry"><span class="required">*</span>Country:</label>
+            <select id="ddmCountry" name="ddmCountry" >
+				<?ddmCountry?>
+			</select>
+			
+			<br />
+			<label for="txtPostalCode"><span class="required">*</span>Zip/Postal Code:</label>
+			<input	type="text" id="txtPostalCode" name="txtPostalCode" size="30" class="input-text" value="<?postalcode?>" />
+			<br />
+				
+				
+				<? if ( $$variable{'isAdmin'} eq 'Y' ) ?>
+
+					<label>Is this account active?</label>
+
+					<label for="rdbAccountActivationYes" class="radio"><input type="radio" id="rdbAccountActivationYes" name="rdbAccountActivation" <?rdbAccountActivationY?> value="Y"	onchange="fmChange=1" />Yes</label>
+
+					<label for="rdbAccountActivationNo" class="radio"><input type="radio" id="rdbAccountActivationNo" name="rdbAccountActivation" <?rdbAccountActivationN?> value="N"	onchange="fmChange=1" />No</label>
+
+					<br />
+
+					<label>Is this account a company administrator?</label>
+
+					<label for="rdbAdministratorYes" class="radio"><input type="radio" id="rdbAdministratorYes" name="rdbAdministrator" <?rdbAdministratorY?> value="Y" onchange="fmChange=1;" />Yes</label>
+
+					<label for="rdbAdministratorNo" class="radio"><input type="radio" id="rdbAdministratorNo" name="rdbAdministrator" <?rdbAdministratorN?> value="N" onchange="fmChange=1;" />No</label>
+
+					<br />
+
+				<? endif ( $$variable{'isAdmin'} eq 'Y' ) ?>
+                </fieldset>
+                
+                <fieldset>
+                <legend>Gift</legend>
+                <p>Please Select your free gift for Registering. Your gift should arrive in about 1-2 weeks by interoffice mail.</p>
+                <table  style="border:none !important; border-color:#FFFFFF !important;" align="left">
+                <tr>
+                 <td style="border:none !important; border-color:#FFFFFF !important;"><input name="gift" type="radio" value="Totebag" /></td>
+                  <td style="border:none !important; border-color:#FFFFFF !important;"><img src="/images/main/registration/ToteBag.jpg" width="100" height="100"/></td>
+                <td style="border:none !important; border-color:#FFFFFF !important;">Fabric Totebag.</td>
+                 <td style="border:none !important; border-color:#FFFFFF !important;padding-left:125px;"><input name="gift" type="radio" value="Notebook" /></td>
+                  <td style="border:none !important; border-color:#FFFFFF !important;"><img src="/images/main/registration/KP2437R_A2.jpg" width="100" height="100"/></td>
+                <td style="border:none !important; border-color:#FFFFFF !important;">Notebook with pen.</td>
+                
+               
+                </tr>
+                
+                
+                </table>
+                
+                </fieldset>
+                
+                
+                <fieldset>
+                <legend>Login Information</legend>
+
+				<p>The following information will be used for future logins.</p>
+
+				<label for="txtEmail"><span class="required">*</span>E-mail Address:</label>
+				<input type="text" id="txtEmail" name="txtEmail" value="<?txtEmail?>" size="30" class="input-text" />
+				<br />
+
+				<label for="txtPassword"><span class="required">*</span>Password:</label>
+				<input type="password" id="txtPassword" name="txtPassword" value="<?txtPassword?>" size="30" class="input-text" />
+				<br />
+
+				<label for="txtVerifyPassword"><span class="required">*</span>Verify Password:</label>
+				<input type="password" id="txtVerifyPassword" name="txtVerifyPassword" value="<?txtPassword?>" size="30" class="input-text" />
+				<br />
+
+
+
+ <? if ( !$$variable{user_type} )?>
+            <label for="Captcha"><span class="required">*</span>Captcha Requirement:</label>
+                <script type="text/javascript"
+             src="http://www.google.com/recaptcha/api/challenge?k=6Lf0zu0SAAAAACKrqNj2w45TbsPHwzRlifw3pkpS">
+          </script>
+          <noscript>
+             <iframe src="http://www.google.com/recaptcha/api/noscript?k=6Lf0zu0SAAAAACKrqNj2w45TbsPHwzRlifw3pkpS"
+                 height="300" width="500" frameborder="0"></iframe><br>
+             <textarea name="recaptcha_challenge_field" rows="3" cols="40">
+             </textarea>
+             <input type="hidden" name="recaptcha_response_field"
+                 value="manual_challenge">
+          </noscript>
+        <br /><br />
+        <? endif ( !$$variable{user_type} )?>
+				<div class="button-bar indent-regular">
+					<input class="button" type="reset" />
+					<input class="button" type="submit" name="btnFunction" value="Save" onClick="return check_contact();fmChange=3;" />
+					<br />
+				</div>
+
+				<br />
+			</fieldset>
+
+			<input type="hidden" name="btnFunction" />
+			<input type="hidden" name="AddUser" value = "1" />
+		</form>
+
+	
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

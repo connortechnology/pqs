@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title><!--#include virtual="/includes/web_page_title.html" -->Account - My Inventory<!--#include virtual="/includes/web_page_title_end.html" --></title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+    <script type="text/javascript" src="/javascripts/other.js"></script>
+    <script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+
+    <script type="text/javascript">
+		Event.observe(window, 'load', function () {
+			var checkout_quantity = document.getElementById('CheckOutQty');
+			var projects = document.getElementsByName('InventoryIndex');
+			
+			if (projects.length == 0) return;
+			
+			var checkout_form = checkout_quantity.form;
+
+
+			Event.observe(checkout_quantity, 'keyup', function (e) {
+				keypress_int(e);
+			});
+			
+			Event.observe(checkout_form, 'submit', function (e) {
+				var error = '';
+				var project;
+
+				for (var i=0; i < projects.length; i++) {
+					if (projects[i].checked) {
+						project = projects[i];
+						break;
+					}
+				}
+				
+				if (!project) {
+					error += '\n - No Project Selected';
+				}
+				
+				if (!validate_int(checkout_quantity.value) || parseInt(checkout_quantity.value) == 0) {
+					error += '\n - No Quantity Specified';
+				}
+				
+				if (error != '') {
+					alert('The follow problems have been detected:\n' + error + '\n\nPlease correct this before proceeding.');
+					Event.stop(e);
+					return false;
+				}
+			});
+		});
+	</script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Account &#187;</span> My Inventory</h1>
+	<? if user_type ?>
+   		<form action="inventory_history.html" method="post" name="f1" id="f1">
+			<fieldset>
+				<legend>
+					Search
+				</legend>
+
+				<p class="none">&nbsp;</p>
+
+				<label for="ddmStatus">Status:</label>
+				<select id="ddmStatus" name="ddmStatus" size="1">
+						<option value="Open"   <?OpenSelected?>   >Open</option>
+						<option value="Closed" <?ClosedSelected?> >Closed</option>
+				</select>
+				<br />
+
+				<label for="ddmStartMonth">Start Date:</label>
+				<select id="ddmStartMonth" name="ddmStartMonth">
+					<?ddmStartMonth?>
+				</select>
+				<select name="ddmStartDay">
+					<?ddmStartDay?>
+				</select>
+				<select name="ddmStartYear">
+					<?ddmStartYear?>
+				</select>
+				<br />
+
+				<label for="ddmEndMonth">End Date:</label>
+				<select id="ddmEndMonth" name="ddmEndMonth">
+					<?ddmEndMonth?>
+				</select>
+				<select name="ddmEndDay">
+					<?ddmEndDay?>
+				</select>
+				<select name="ddmEndYear">
+					<?ddmEndYear?>
+				</select>
+				<br />
+
+				<div class="button-bar indent-regular">
+					<input class="button" type="submit" value="Submit" />
+					<br />
+				</div>
+				<br />
+			</fieldset>
+		</form>
+			
+		<form action="/main/proj/dispatch.html?InventoryCheckOut=1" method="post" name="f2" id="f2">
+			<fieldset>
+				<legend>
+					Inventory
+				</legend>
+
+				<p class="none">&nbsp;</p>
+
+					<p>
+						Select which project you would like to check out from under the <strong>Check Out</strong> column, specify a quantity under <strong>Check Out Amount</strong>, and click the Check Out button to proceed.<br />
+
+						Click on <strong>Quantities</strong> to view  inventory stock and previous check outs.<br />
+						Click on <strong>Project IDs</strong> or <strong>Project Names</strong> to view project details.<br />
+                        
+                        <? if ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' ) ?>
+                        Click on <strong>Inventory IDs</strong> to view inventory details.<br />
+                        <? endif ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' ) ?>
+						To access the <a href="/main/proj/inventory/inventory_reports.html">inventory reports</a> page click <a href="/main/proj/inventory/inventory_reports.html">here.</a>
+                    </p>
+
+					<label for="CheckOutQty">Check Out Amount:</label>
+					<input type="text" name="CheckOutQty" id="CheckOutQty" value="" />
+					<br />
+					
+					<div class="button-bar indent-regular">
+						<input class="button" type="submit" value="Check Out" />
+						<br />
+					</div>
+
+					<table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
+						<tr>
+							<th>Inventory ID</th>
+							<th>Location</th>
+                            <th>Project ID</th>
+							<th>Project Name</th>
+							<th>Quantity</th>
+							<th>Check In Date</th>
+							<th>Check Out</th>
+						</tr>
+							<?loop INVENTORY?>
+							<tr><td style="background-color:#CCCCCC !important;" colspan="7"><b><?itemid?></b> TOTAL QTY: <?total?> </td></tr>
+								<?loop checkins?>
+							<tr>
+                            	<? if ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' ) ?>
+                                <td style="text-align: left;"><a href="/main/proj/inventory/inventory_details.html?ID=<?lnginventoryindex?>"><?lnginventoryindex?></a></td>
+                                <? else ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' ) ?>
+                                <td style="text-align: left;"><?lnginventoryindex?></td>
+                                <? endif ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' ) ?>
+                                
+                                <td style="text-align: left;"><?name?></td>
+								<td style="text-align: left;"><a href="/main/proj/proj_view.html?ProjectIndex=<?lngprojectindex?>"><?lngprojectindex?></a></td>
+								<td style="text-align: left;"><a href="/main/proj/proj_view.html?ProjectIndex=<?lngprojectindex?>"><?strdescription?></a></td>
+								<td style="text-align: right;"><a href="/main/proj/inventory/check_out_history.html?InventoryIndex=<?index?>"><?lngremainingquantity?></a></td>
+								<td style="text-align: center;"><?date?></td>
+								<td style="text-align: center;">
+									<input type="radio" id="inventory_index-<?index?>" name="InventoryIndex" value="<?index?>" />
+								</td>
+							</tr>
+								<?endloop checkins?>
+							<?endloop INVENTORY?>
+					</table>
+				<br />
+			</fieldset>
+			<input type="hidden" name="action" id="action" value="create_checkout" />
+		</form>
+	<? else user_type ?>
+    <p>Only logged in customers have a project inventory history.
+	<? endif user_type ?>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

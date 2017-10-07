@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Paper
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript" >
+		function unselect ( ddm ) {
+			for ( var index = 0; index < ddm.options.length; index += 1 ) {
+				ddm.options[index].selected = false;
+			}
+		}
+	</script>
+</head>
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">System &#187; Stock &#187;</span> Information</h1>
+
+	<form id="f1" name="f1" onsubmit="return fmCheck(f1);" method="post" action="paper.html">
+
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<label for="ddmCategory">Category:</label>
+			<select id="ddmCategory" name="ddmCategory" onchange="f1.submit();">
+				<option value=""> All Categories </option>
+				<?ddmCategory?>
+			</select>
+			<br />
+
+			<label for="ddmPaperName">Paper Name:</label>
+			<select id="ddmPaperName" name="ddmPaperName" onchange="unselect(f1.ddmPaper);f1.submit();">
+				<option value=""> All Paper </option>
+				<option value=""> --------------------- </option>
+				<?ddmPaperName?>
+			</select>
+			<br />
+
+			<label for="ddmFinish">Finish:</label>
+			<select id="ddmFinish" name="ddmFinish" onchange="f1.submit();">
+				<option value=""> All Finishes </option>
+				<?ddmFinish?>
+			</select>
+			<br />
+
+			<label for="ddmColour"><?ws_Colour?>:</label>
+			<select id="ddmColour" name="ddmColour" onchange="f1.submit();">
+				<option value=""> All <?ws_Colour?>s </option>
+				<?ddmColour?>
+			</select>
+			<br />
+
+			<label for="ddmWeight">Weight:</label>
+			<select id="ddmWeight" name="ddmWeight" onchange="f1.submit();">
+				<option value=""> All Weights </option>
+				<?ddmWeight?>
+			</select>
+			<br />
+
+			<label for="ddmSheetSize">Sheet Size:</label>
+			<select id="ddmSheetSize" name="ddmSheetSize" onchange="f1.submit();">
+				<option value=""> All Sheet Sizes </option>
+				<?ddmSheetSize?>
+			</select>
+			<br />
+
+			<label for="ddmPaper">Paper ID:</label>
+			<select id="ddmPaper" name="ddmPaper" onchange="unselect(f1.ddmPaperName);f1.submit();">
+				<option value=""> All Paper IDs </option>
+				<option value=""> --------------------- </option>
+				<?ddmPaper?>
+			</select>
+			<br />
+
+			<label for="txtGoPaperID">Paper ID:</label>
+			<input type="text" id="txtGoPaperID" name="txtGoPaperID" class="input-text" size="13" />
+			<input class="button smGo" type="submit" name="btnFunction" value="Go" />
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Paper Information
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<div class="button-bar indent-regular">
+				<input class="button" type="submit" name="btnFunction" value="&lt;&lt;" />
+				<input class="button" type="submit" name="btnFunction" value="&gt;&gt;" />
+				<input class="button" type="button" name="btnFunction" value="New" onclick="addCheck(f1);" />
+				<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=2;" />
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<br />
+			</div>
+			<br />
+
+			<label for="strID">Paper ID:</label>
+			<input type="text" id="strID" name="strID" value="<?strID?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strName">Paper Name:</label>
+			<input type="text" id="strName" name="strName" value="<?strName?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strCategory">Paper Category:</label>
+			<input type="text" id="strCategory" name="strCategory" value="<?strCategory?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strDetails">Paper Details:</label>
+			<input type="text" id="strDetails" name="strDetails" value="<?strDetails?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strFinish">Finish:</label>
+			<input type="text" id="strFinish" name="strFinish" value="<?strFinish?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strColour"><?ws_Colour?>:</label>
+			<input type="text" id="strColour" name="strColour" value="<?strColour?>" size="30" class="input-text" />
+			<br />
+
+			<label for="strMWeight">M Weight:</label>
+			<input type="text" id="strMWeight" name="strMWeight" value="<?strMWeight?>" size="12" class="smBox" />
+			<br />
+
+			<label for="strWeight">Weight:</label>
+			<input type="text" id="strWeight" name="strWeight" value="<?strWeight?>" size="12" class="smBox" />
+			<br />
+
+			<label for="strCalliper">Calliper:</label>
+			<input type="text" id="strCalliper" name="strCalliper" value="<?strCalliper?>" size="12" class="smBox" />
+			<br />
+
+			<label for="dblHeight">Sheet Height:</label>
+			<input type="text" id="dblHeight" name="dblHeight" value="<?dblHeight?>" size="12" class="smBox" />
+			<br />
+
+			<label for="dblWidth">Sheet Width:</label>
+			<input type="text" id="dblWidth" name="dblWidth" value="<?dblWidth?>" size="12" class="smBox" />
+			<br />
+
+			<label for="dblPackageQuantity">Package Quantity:</label>
+			<input type="text" id="dblPackageQuantity" name="dblPackageQuantity" value="<?dblPackageQuantity?>" size="12" class="smBox" />
+			<br />
+
+			<span class="label">Perfecting?</span>
+			<label for="rdbPerfectingYes" class="radio"><input type="radio" id="rdbPerfectingYes" name="rdbPerfecting" value="Y" <?rdbPerfectingY?> />Yes</label>
+			<label for="rdbPerfectingNo" class="radio"><input type="radio" id="rdbPerfectingNo" name="rdbPerfecting" value="N" <?rdbPerfectingN?> />No</label>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Paper Prices
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<span class="label">Broken Carton Price:</span>
+			<label class="value">$<?dblBrokenCartonPrice?> per 100 lbs. or Package Sheet Qty</label>
+			<br />
+
+			<span class="label">End Bracket Price:</span>
+			<label class="value">$<?dblEndBracketPrice?> per 100 lbs. or Package Sheet Qty</label>
+			<br />
+
+			<span class="label">1 Ton Price:</span>
+			<label class="value">$<?dbl1TonPrice?> per 100 lbs. or Package Sheet Qty</label>
+			<br />
+
+			<span class="label">5 Ton Price:</span>
+			<label class="value">$<?dbl5TonPrice?> per 100 lbs. or Package Sheet Qty</label>
+			<br />
+
+			<span class="label">20 Ton Price:</span>
+			<label class="value">$<?dbl20TonPrice?> per 100 lbs. or Package Sheet Qty</label>
+			<br />
+
+			<span class="label">Other Price:</span>
+			<label class="value">$<?dblOtherPrice?> per 100 lbs. or Package Sheet Qty</label>
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

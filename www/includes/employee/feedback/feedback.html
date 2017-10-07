@@ -1,0 +1,22 @@
+<form method="POST" name="f1" action="/employee/production/project_view.html">
+	<table width="600" border="0" cellspacing="0" cellpadding="0">
+		<tr>
+			<td width="320" style="vertical-align: top;"><strong>Production Feedback</strong></td>
+			<td width="20">&nbsp;</td>
+			<td colspan="2"></td>
+		</tr>
+		<tr>
+			<td colspan="4" height="10"></td>
+		</tr>
+		<tr>
+			<td style="vertical-align: top;">Employee:</td>
+			<td>&nbsp;</td>
+			<td colspan="2"> <?txtEmployeeName?> <input type="hidden" name="txtEmployeeName" value="<?txtEmployeeName?>" /></td>
+		</tr>
+    </table>
+
+	<!--#include virtual="/includes/employee/feedback/complete.html"-->
+	<!--#include virtual="/includes/employee/feedback/complete_date.html"-->
+	<!--#include virtual="/includes/employee/feedback/buttons_feedback.html"-->
+	<!--#include virtual="/includes/employee/feedback/hidden_fields.html"-->
+</form>

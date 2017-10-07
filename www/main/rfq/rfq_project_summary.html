@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>
+<!--#include virtual="/includes/company_name.html" -->
+Account - My Products</title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-main-css.html" -->
+<!--#include virtual="/includes/h2-js.html" -->
+<script type="text/javascript" src="/javascripts/other.js"></script>
+<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+                  <h1><span class="title-section">Account &#187;</span> RFQ Projects</h1>
+                  <p>Please  input a project ID and click &quot;Go&quot; or select a search criteria  and click &quot;Show Results&quot;. You may then click on a <strong> Project ID </strong> to view project details.</p>
+                  <form id="ProjectIndex-form" name="ProjectIndex" method="GET" action="/main/rfq/project_view.html">
+                    <fieldset>
+                      <legend> Project ID </legend>
+                      <p class="none">&nbsp;</p>
+                      <label for="ProjectIndex">Project ID:</label>
+                      <input id="ProjectIndex" name="ProjectIndex" size="9" class="smBox" onkeyup="calc('f1');" />
+                      <input class="button smGo" type="submit" value="Go" />
+                      <br />
+                    </fieldset>
+                  </form>
+                  <form id="f1" name="f1" method="post" action="rfq_project_summary.html">
+                    <fieldset>
+                      <legend> Search </legend>
+                      <p class="none">&nbsp;</p>
+                      <label for="ddmRFQStatus">Status:</label>
+                      <select id="ddmRFQStatus" name="ddmRFQStatus" size="1">
+                        <option value="Open" <?ddmRFQStatusOpen?> > Open </option>
+                        <option value="Closed" <?ddmRFQStatusClosed?> > Closed </option>
+                        <option value="Awarded" <?ddmRFQStatusAwarded?> > Awarded </option>
+                        <option value="Received" <?ddmRFQStatusReceived?> > Received </option>
+                        <option value="All" <?ddmRFQStatusAll?> > All </option>
+                      </select>
+                      <br />
+                      <label for="ddmStartMonth">Start Date:</label>
+                      <select id="ddmStartMonth" name="ddmStartMonth">
+                        <?ddmStartMonth?>
+                      </select>
+                      <select id="ddmStartDay" name="ddmStartDay">
+                        <?ddmStartDay?>
+                      </select>
+                      <select id="ddmStartYear" name="ddmStartYear">
+                        <?ddmStartYear?>
+                      </select>
+                      <br />
+                      <label for="ddmEndMonth">End Date:</label>
+                      <select id="ddmEndMonth" name="ddmEndMonth">
+                        <?ddmEndMonth?>
+                      </select>
+                      <select id="ddmEndDay" name="ddmEndDay">
+                        <?ddmEndDay?>
+                      </select>
+                      <select id="ddmEndYear" name="ddmEndYear">
+                        <?ddmEndYear?>
+                      </select>
+                      <br />
+                      <div class="button-bar indent-regular">
+                        <input class="button" type="reset" />
+                        <input class="button" type="submit" value="Show Results" />
+                        <br />
+                      </div>
+                      <br />
+                    </fieldset>
+                    <fieldset>
+                      <legend> Results </legend>
+                      <p class="none">&nbsp;</p>
+                      <table border="0" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <th style="text-align: center;">RFQ ID</th>
+                          <th style="text-align: center;">RFQ Status</th>
+                          <th style="text-align: center;">Project ID</th>
+                          <th style="text-align: center;">Supplier</th>
+                          <!--
+<th style="text-align: center;">Spot Price</th>
+-->
+                          <th style="text-align: center;">RFQ Closing Date</th>
+                          <th style="text-align: right; padding-bottom: 0;">Qty 1</th>
+                          <th style="text-align: right; padding-bottom: 0;">Qty 2</th>
+                          <th style="text-align: right; padding-bottom: 0;">Qty 3</th>
+                          <th style="text-align: center; padding-bottom: 0;"><input class="button" type="submit" name="action" value="Delete" /></th>
+                        </tr>
+                        <? loop rfqs ?>
+                        <tr>
+                          <td style="text-align: center;"><a href="/main/rfq/rfq.html?rid=<?id?>&pid=<?pid?>&sup_id=<?supplier?>">
+                            <?id?>
+                            </a></td>
+                          <td style="text-align: center;"><a href="/main/rfq/rfq.html?rid=<?id?>&pid=<?pid?>&sup_id=<?supplier?>">
+                            <?status?>
+                            </a></td>
+                          <td style="text-align: center;"><? if is_staff ?><a href="/main/rfq/project_view.html?order_id=<?order_id?>&ProjectIndex=<?pid?>"><? endif is_staff ?>
+                            <?pid?>
+                            <? if is_staff ?></a><? endif is_staff ?></td>
+                          <td style="text-align: center;"><?supplier_name?></td>
+                          <!--
+<td style="text-align: center;"><?RFQ_spot_price?></td>
+-->
+                          <td style="text-align: center;"><?closing_date?></td>
+                          <td style="text-align: right;"><?price1?></td>
+                          <td style="text-align: right;"><?price2?></td>
+                          <td style="text-align: right;"><?price3?></td>
+                          <td style="text-align: center;"><input type="checkbox" name="delete" value="<?id?>-<?supplier?>" class="checkbox" /></td>
+                        </tr>
+                        <? endloop rfqs ?>
+                      </table>
+                      <br />
+                    </fieldset>
+                    <input type="hidden" name="pid" value="<?pid?>" />
+                  </form>
+                  <!--#include virtual="/includes/f1-main.html" -->
+                    <!--#include virtual="/includes/main/account.html" -->
+                    <!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

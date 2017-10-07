@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Orders - Information
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" media="screen" />
+	
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script  type="text/javascript">
+		function fill_user(form) {
+			var name = form.ddmOrderForUsers.options[form.ddmOrderForUsers.selectedIndex].text.split(' ' );
+			var email = form.ddmOrderForUsers.options[form.ddmOrderForUsers.selectedIndex].value;
+
+			if ( name[0] == 'Select' ) {
+				form.txtFirstName.value = '';
+				form.txtLastName.value = '';
+				form.txtEmail.value = '';
+			} else {
+				form.txtFirstName.value = name[0];
+				form.txtLastName.value = name[1];
+				form.txtEmail.value = email;
+			} // end if
+		} // end function
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Orders &#187;</span> Information</h1>
+
+	<form method="post" name="f1" action="/main/order/order_submit.html">
+		<fieldset>
+			<legend>
+				Purchase Order
+			</legend>
+			
+			<p>If you have a purchase order number please enter it below.</p>
+			
+			<label for="txtPurchaseOrder">Purchase Order:</label>
+			<input type="text" id="txtPurchaseOrder" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" size="30" class="input-text" />
+			<br />
+		</fieldset>
+        
+        <!--#include virtual="/includes/main/proj/additional_order_information.html"-->
+
+		<fieldset>
+			<legend>
+				Customer Information
+			</legend>
+			
+			<p>Fields marked with an * are required.</p>
+			
+			<? if ($$variable{'ddmOrderForUsers'} ne '') ?>
+				<label for="ddmOrderForUsers">Users:</label>
+				<select id="ddmOrderForUsers" name="ddmOrderForUsers" onchange="fill_user(f1)";>
+					<option value=""> Select </option>
+					<?ddmOrderForUsers?>
+				</select>
+				<br />
+			<? endif ($$variable{'ddmOrderForUsers'} ne '') ?>
+			
+			<label for="txtCompanyName"><span class="required">*</span>Company Name:</label>
+			<input type="text" id="txtCompanyName" name="txtCompanyName" size="30"	class="input-text" value="<?txtCompanyName?>" />
+			<br />
+			
+			<label for="txtFirstName">First Name:</label>
+			<input type="text" id="txtFirstName" name="txtFirstName" size="30"	class="input-text" value="<?txtFirstName?>" />
+			<br />
+			
+			<label for="txtLastName">Last Name:</label>
+			<input type="text" id="txtLastName" name="txtLastName" size="30"	class="input-text" value="<?txtLastName?>" />
+			<br />
+			
+			<label>Salutation:</label>
+
+			<label for="rdbSalutationMr" class="radio"><input type="radio" id="rdbSalutationMr" name="rdbSalutation" value="Mr." <?rdbSalutationMr.?> />Mr.</label>
+
+			<label for="rdbSalutationMrs" class="radio"><input type="radio" id="rdbSalutationMrs" name="rdbSalutation" value="Mrs" <?rdbSalutationMrs.?> />Mrs.</label>
+
+			<label for="rdbSalutationMs" class="radio"><input type="radio" id="rdbSalutationMs" name="rdbSalutation" value="Ms." <?rdbSalutationMs.?> />Ms.</label>
+
+			<label for="rdbSalutationMiss" class="radio"><input type="radio" id="rdbSalutationMiss" name="rdbSalutation" value="Miss" <?rdbSalutationMiss?> />Miss</label>
+
+			<br />
+			
+			<label for="txtAddress1"><span class="required">*</span>Address:</label>
+			
+			<div>
+				<input type="text" id="txtAddress1" name="txtAddress1" size="30"	class="input-text marg-bot" value="<?txtAddress1?>" />
+				
+				<br />
+				
+				<input type="text" id="txtAddress2" name="txtAddress2" size="30"	class="input-text" value="<?txtAddress2?>" />
+			</div>
+
+			<br />
+			
+			<label for="txtCity"><span class="required">*</span>City:</label>
+			<input type="text" id="txtCity" name="txtCity" size="30"	class="input-text" value="<?txtCity?>" />
+			<br />
+			
+			<label for="ddmStateProvince"><span class="required">*</span>Province/State:</label>
+			<select id="ddmStateProvince" name="ddmStateProvince">
+				<option value=""> Select </option>
+				<?ddmStateProvince?>
+			</select>
+			<br />
+			
+			<label for="txtOtherStateProv">Other:</label>
+			<input type="text" id="txtOtherStateProv" name="txtOtherStateProv" value="<?txtOtherStateProv?>" size="30"	class="input-text" />
+			<br />
+			
+			<label for="txtPostalCode"><span class="required">*</span>Postal Code/Zip:</label>
+			<input type="text" id="txtPostalCode" name="txtPostalCode" size="30"	class="input-text" value="<?txtPostalCode?>" />
+			<br />
+			
+			<label for="ddmCountry"><span class="required">*</span>Country:</label>
+			<select id="ddmCountry" name="ddmCountry">
+				<option value=""> Select </option>
+				<?ddmCountry?>
+			</select>
+			<br />
+			
+			<label for="txtOtherCountry">Other:</label>
+			<input type="text" id="txtOtherCountry" name="txtOtherCountry" size="30"	class="input-text" value="<?txtOtherCountry?>" />
+			<br />
+			
+			<label for="txtPhone">Phone:</label>
+			<input type="text" id="txtPhone" name="txtPhone" size="30"	class="input-text" value="<?txtPhone?>" />
+			<br />
+			
+			<label for="txtExtension">Extension:</label>
+			<input type="text" id="txtExtension" name="txtExtension" size="30"	class="input-text" value="<?txtExtension?>" maxlength="4" />
+			<br />
+			
+			<label for="txtFax">Fax:</label>
+			<input type="text" id="txtFax" name="txtFax" size="30"	class="input-text" value="<?txtFax?>" />
+			<br />
+			
+			<label for="txtEmail"><span class="required">*</span>E-mail Address:</label>
+			<input type="text" id="txtEmail" name="txtEmail" size="30" class="input-text" value="<?txtEmail?>" />
+			<br />
+			
+			<p><? message ?></p>
+
+			<br />
+
+			<label for="ddmStateTax"><span class="required">*</span>Province/State Tax:</label>
+			<select id="ddmStateTax" name="ddmStateTax">
+				<option value=""> Select </option>
+				<?ddmStateProvince?>
+			</select>
+			<br />
+
+			<label for="ddmCountyTax"><span class="required">*</span>County Tax:</label>
+			<select id="ddmCountyTax" name="ddmCountyTax">
+				<option value=""> Select </option>
+				<?ddmCountyTax?>
+			</select>
+
+		</fieldset>
+
+
+		<? if ($variable->{credit_card_payment} == 1) ?>
+			<!--#include virtual="/includes/main/order/cardpayment.html"-->
+		<? endif ($variable->{credit_card_payment} == 1) ?>
+
+
+		<div class="button-bar">
+			<input type="button" class="button right" value="Save and Continue" onclick="f1.btnFunction.value='Continue';f1.submit();return false;" />
+			<br class="clear" />
+		</div>
+		<input type="hidden" name="btnFunction" value="Continue" />
+	</form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/order.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

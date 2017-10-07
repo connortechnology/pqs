@@ -1,0 +1,24 @@
+<fieldset class="hidden-details">
+	<legend>
+		Production Approval
+	</legend>
+
+	<p>What are the <?ws_colour?> matching requirements for your project?</p>
+
+	<label for="ddmColourMatch"><?ws_Colour?> Matching Requirements:</label>
+	<select id="ddmColourMatch" name="ddmColourMatch" size="1">
+		<option value="Printer Supplied Proof">Printer Supplied Proof</option>
+		<option value="Pleasing Colour">Pleasing <?ws_Colour?></option>
+		<option value="Sample">Match to Sample</option>
+		<option value="Customer Supplied Proof">Customer Supplied Proof</option>
+	</select>
+	<br />
+	
+	<p>Does the printing of your project require someone to be present for a press approval?</p>
+
+	<label for="needs_approval" class="width">
+		<input type="checkbox" id="needs_approval" name="needs_approval" value="1" />
+		Yes, someone needs to be present for a press approval.
+	</label>
+	<br />
+</fieldset>

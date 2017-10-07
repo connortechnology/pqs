@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - Copy Project
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" media="screen" />
+	
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> Copy Project</h1>
+	<form name="f1" method="POST" action="/main/proj/dispatch.html" onsubmit="validate_data(this)">
+		<input type="hidden" name="pid"    value="<?ProjectIndex?>" />
+		<input type="hidden" name="action" value="copy" />
+
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+
+		<fieldset>
+			<legend class="tip" title="Please specify the project name, and any special comments or instructions.">
+				Project Name and Instructions
+			</legend>
+			
+			<p class="none">&nbsp;</p>
+			
+			<label for="name">Project name:</label>
+			<input maxlength="255" id="name" name="name" value="<?escape_html:name?>" class="form" />
+			<br />
+
+			<label for="comments">Special comments or instructions:</label>
+			<textarea id="comments" name="comments" class="form" rows="5" wrap="virtual"><?escape_html:comments?></textarea>
+			<br />
+
+			<label for="copy_assets">Preserve (copy) project files?</label>
+			<input id="copy_assets" name="copy_assets" type="checkbox" value="1" checked="checked" />
+			<br />
+		</fieldset>
+		
+		<? if is_staff ?>
+		
+			<fieldset>
+				<legend>Customer Selection</legend>
+				
+				<p>As an employee or administrator you may now copy this project to a different customer account by selecting it from the pull down below. Any projects, quotes or orders that you create will be recorded in the selected customer's account history. To change customer accounts please use the &quot;Select Customer&quot; link located under the &quot;Account&quot; menu.</p>
+				
+				<label for="ddmCustomer">Customer account:</label>
+				<select id="ddmCustomer" name="ddmCustomer">
+					<option value="">- use current account -</option>
+					<?ddmCustomer?>
+				</select>
+				<br />
+			</fieldset>
+		
+		<? endif is_staff ?>
+		
+		<div class="button-bar">
+			<!--#include virtual="/includes/main/proj/buttons.html" -->
+			<br class="clear" />
+			</div>	
+	</form>	
+	
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

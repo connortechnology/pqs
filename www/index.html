@@ -1,0 +1,246 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+		Persona Pizzeria
+	</title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/site_specific.css" rel="stylesheet" type="text/css" media="screen" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+  	<script language="JavaScript" type="text/javascript" src="/javascripts/other.js"></script>
+ 
+
+	<style type="text/css">
+		/* Nav & Tabs */
+		.tab { display: none; }
+
+		#nav #home:hover, #nav #home.sfhover {background-color: transparent;}
+		#homeAdmin, #accountTab, #projectTab {display: none;}	
+
+		/* Panels */
+
+		#main-panel .one-third .panel {padding-bottom: 3ex;}
+		
+		#main-panel .two-thirds .panel {border: 0;}
+		#main-panel .two-thirds .panel p {text-align: left;}
+
+		#main-panel .one-third .panel form {
+			display: block;
+			width: 80%;
+			margin: auto;
+			text-align: left;
+		}
+
+		#main-panel .one-third .panel input {width: 100%;}
+		#main-panel .one-third .panel .button-bar input {width: auto;}
+		
+		#registration h3 { }
+		
+		#registration h3 a:link {}
+		#registration h3 a:visited {}
+		#registration h3 a:hover {}
+		#registration h3 a:active {}
+
+		#pqs-logo { display: block; }
+		
+#login-form {
+	margin: 50px auto;
+	width: 300px;
+	font: 100%/1.5em sans-serif;
+}
+
+#login-form h3 {
+	background-color: #ad0a0a;
+	border-radius: 5px 5px 0 0;
+	color: #fff;
+	font-size: 14px;
+	padding: 20px;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+#login-form fieldset {
+	background: #fff;
+	border-radius: 0 0 5px 5px;
+	padding: 20px;
+	position: relative;
+}
+
+#login-form fieldset:before {
+	background-color: #fff;
+	content: "";
+	height: 8px;
+	left: 50%;
+	margin: -4px 0 0 -4px;
+	position: absolute;
+	top: 0;
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	transform: rotate(45deg);
+	width: 8px;
+}
+
+#login-form input {
+	font-size: 14px;
+}
+
+#login-form input[type="email"],
+#login-form input[type="password"] {
+	border: 1px solid #dcdcdc;
+	padding: 12px 10px;
+	width: 238px;
+}
+
+#login-form input[type="email"] {
+	border-radius: 3px 3px 0 0;
+}
+
+#login-form input[type="password"] {
+	border-top: none;
+	border-radius: 0px 0px 3px 3px;
+}
+
+#login-form input[type="submit"] {
+	background: #ad0a0a;
+	border-radius: 3px;
+	color: #fff;
+	float: right;
+	font-weight: bold;
+	margin-top: 20px;
+	padding: 12px 20px;
+}
+
+#login-form input[type="submit"]:hover { background: #000000; }
+
+#login-form footer {
+	font-size: 12px;
+	margin-top: 16px;
+}
+
+fieldset {
+	border: none;
+	margin: 0;
+}
+
+input {
+	border: none;
+	font-family: inherit;
+	font-size: inherit;
+	margin: 0;
+	-webkit-appearance: none;
+}
+
+input:focus {
+  outline: none;
+}
+
+input[type="submit"] { cursor: pointer; }
+
+.clearfix { *zoom: 1; }
+.clearfix:before, .clearfix:after {
+	content: "";
+	display: table;	
+}
+.clearfix:after { clear: both; }
+
+
+.info {
+	background: #e5e5e5;
+	border-radius: 50%;
+	display: inline-block;
+	height: 20px;
+	line-height: 20px;
+	margin: 0 10px 0 0;
+	text-align: center;
+	width: 20px;
+}
+
+	</style>
+</head>
+
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<div id="intro">
+
+		<div id="main-panel" class="panel-set invisible-panel">
+		
+			<div class="two-thirds" style="padding-left:150px; background-color:transparent; margin-top:50px;">
+				<div class="panel" id="registration" style=" background-color:transparent">
+					
+
+					
+					
+					
+						
+                        <div id="login-form">
+
+      					  <h3>Login</h3>
+
+                         <fieldset>
+                
+                            <form action="/main/account/confirmation_login.html" method="post" name="f1" id="f1">
+                				<input type="email" id="txtEmail" name="txtEmail" placeholder="Email"/>
+                				<input type="password" id="txtPassword" name="txtPassword" placeholder="Password" />
+                                              
+                                <input type="submit" value="Login">
+                
+                                <footer class="clearfix">
+                
+                                    <p><span class="info">?</span><a href="/main/account/account_login.html">Forgot Password</a></p>
+                
+                                </footer>
+                
+                            </form>
+                
+                        </fieldset>
+                
+                    </div> <!-- end login-form -->
+                        
+                        
+                        <!--<table align="center" style="width:630px; border-radius:10px;">
+                        <tr ><td style="border:none !important;">E-mail:</td>
+                        <td style="border:none !important;"><input type="text" id="txtEmail" name="txtEmail" class="subscribe_input" size="50" /></td>
+                        </tr>
+                        <tr>
+                        <td style="border:none !important;">Password:</td>
+                        <td style="border:none !important;"><input type="password" id="txtPassword" name="txtPassword" class="subscribe_input" size="50" /></td>
+                        </tr>
+                        <tr>
+                        <td colspan="2" style="border:none !important;"><input type="submit" class="button" value="Login" style="margin-left:245px" /></td>
+                        </tr>
+                        <tr>
+                        <td colspan="2" style="border:none !important;"><a href="/main/account/account_login.html">Forgot your Password?</a></td>
+                        </tr>
+                        </table>-->
+												
+						
+						
+					</form>
+				</div>
+                <br />
+			</div>
+	
+			<br class="clear" />
+			
+		</div>
+	</div>
+
+    <br class="clear" />
+
+    
+    <!--#include virtual="/includes/f1-main.html" -->
+	 
+
+    <!--#include virtual="/includes/f2-main.html" -->
+	</body>
+</html>

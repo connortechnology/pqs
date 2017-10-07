@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+              "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>
+			<!--#include virtual="/includes/company_name.html"-->
+			- RFQ
+		</title>
+
+		<style type="text/css"><!--#include virtual="/styles/email.css"--></style>
+		<style type="text/css"><!--#include virtual="/styles/docket.css"--></style>
+		<style type="text/css"><!--#include virtual="/styles/pricing.css"--></style>
+		<style type="text/css" media="print"><!--#include virtual="/styles/print.css"--></style>
+		
+		<base href="<?siteURL?>" />
+	</head>
+	<body>
+	
+		<div id="email-wrapper" style="text-align:left !important;">	
+			<div id="email-border">
+			
+			<p><a href="<?siteURL?>/main/supplier/display_rfq.html?rid=<?rid?>" style="font-size:36px; color:#FF0000">Click Here to reply to the Request for Quote below ASAP.</a></p>
+            
+            <!--#include virtual="/includes/forms/rfq_project_summary.html" -->
+            <hr color="#999999" />
+            <div class="category" style="margin-top: 10px;">
+	
+
+    <table class="project-current-view no-formatting">
+        <col id="service" />
+        <col id="qty1" />
+        <col id="qty2" />
+        <col id="qty3" />
+        <tr>
+        <th style="text-align: left; width: 100%;"><h2>PROJECT DETAILS</h2></th>
+        <th style="text-align: right;"><?if qtys.1?>QUANTITY 1<?endif qtys.1?></th>
+        <th style="text-align: right;"><?if qtys.2?>QUANTITY 2<?endif qtys.2?></th>
+        <th style="text-align: right;"><?if qtys.3?>QUANTITY 3<?endif qtys.3?></th>
+        </tr>
+        <tr class="title">
+            <th style="width: 100%; text-align: left;"></th>
+            <th style="text-align: right;"><?if qtys.1?><?qtys.1?><?endif qtys.1?></th>
+            <th style="text-align: right;"><?if qtys.2?><?qtys.2?><?endif qtys.2?></th>
+            <th style="text-align: right;"><?if qtys.3?><?qtys.3?><?endif qtys.3?></th>
+        </tr>
+        <?loop RFQ?>
+        <tr class="category" style="border-bottom:2px solid !important; border-color:#999999 !important; ">
+            <td><strong style="text-transform: uppercase;"><?name?></strong><?if html?><p style="padding-left:13px"><?html?></p><?endif html?></td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+           <br />
+			<hr />
+      </tr>
+	   <input type="hidden" name='price_input-<?sid?>' />
+       
+    <?endloop RFQ?>
+            <tr><td></td><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td></tr>
+
+    <?loop materials?>
+        <tr class="title">
+            <th style="text-align: left; text-transform: uppercase;"><strong><?category?></strong></th>
+        </tr>
+        <?loop subMaterials?>
+        <tr class="category">
+            <td style="width: 100%;"><? if ($$variable{'category'} eq 'Inks')?><strong><?ws_Colour?> </strong><?endif ($$variable{'category'} eq 'Inks')?>
+                <?alt_name?> 
+                <? if show_rid ?>
+            </td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+      </tr>
+      <input type="hidden" name='price_input-12' />
+       <? endif show_rid ?>
+	   <?endloop subMaterials?>
+	   <?endloop materials?>
+
+       
+	  
+    </table>
+</div>
+            <div style="font-size:24px">
+            <p><label for="RFQComments" style="margin-top: 20px;"><strong>RFQ SPECIAL COMMENTS:</strong></label><?RFQ_Header.comments?></p>
+			</div>
+            
+<p><a href="<?siteURL?>/main/supplier/display_rfq.html?rid=<?rid?>" style="font-size:36px; color:#FF0000">Click Here to reply to the Request for Quote above ASAP.</a></p>
+
+
+            <br />
+			<p><!--#include virtual="/includes/company_tag_line.html"-->,</p>
+			<p><!--#include virtual="/includes/company_contact_info.html"--></p>
+			<p>Tel: <!--#include virtual="/includes/company_telephone_number.html"--><br />
+			Fax: <!--#include virtual="/includes/company_fax_number.html"--></p>
+			<p><!--#include virtual="/includes/company_contact_e-mail.html"--><br />
+			<!--#include virtual="/includes/web_site_URL.html"--></p>
+			
+		</div>
+	</div>
+	
+	</body>
+</html>

@@ -1,0 +1,22 @@
+<p>The following files have been added/changed for project <a href="">#<?pid?></a> by <?if user.is_staff?>our staff<?else user.is_staff?><?user.firstname?> <?user.lastname?><?endif user.is_staff?>.<br />
+<br />
+Please click below to view the files.</p>
+
+
+
+<table cellpadding="0" cellspacing="0" border="0" class="no-fomatting">
+	<tr>
+			<th style="text-align: left;">Filename</th>
+			<th style="text-align: left;">Description</th>
+			<th style="text-align: left;">View Files</th>
+	</tr>
+
+	<?loop files?>
+		<tr>
+			<td><?filename?></td>
+			<td><?description?></td>
+			<td><a href="/main/proj/files.html?pid=<?pid?>">View project files</a></td>
+		</tr>
+	<?endloop files?>
+    
+</table>

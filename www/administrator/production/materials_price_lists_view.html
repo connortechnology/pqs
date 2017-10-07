@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title><!--#include virtual="/includes/web_page_title.html" -->Production - View Materials Price Lists</title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-admin-css.html" -->
+<!--#include virtual="/includes/h2-js.html" -->
+<script type="text/javascript" src="/javascripts/other.js"></script>
+
+</head>
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+<h1><span class="title-section">Production &#187;</span> View Materials Price Lists</h1>
+ Product prices for price list:
+<?PriceListName?>
+<br />
+<br />
+Click on a
+<strong>
+Material ID
+</strong>
+to edit its pricing.
+<br />
+<form name="f1" method="post" enctype="multipart/form-data">
+<table class="tableAuto" width="600" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td width="150">
+&nbsp;
+</td>
+<td width="75">
+&nbsp;
+</td>
+<td width="160">
+&nbsp;
+</td>
+<td width="65">
+&nbsp;
+</td>
+<td width="50">
+&nbsp;
+</td>
+<td width="50">
+&nbsp;
+</td>
+<td width="50">
+&nbsp;
+</td>
+</tr>
+<tr>
+<th colspan="1" style="text-align: left;">
+Material ID
+</th>
+<th colspan="3" style="text-align: left;">
+Material Name
+</th>
+<th colspan="3">
+&nbsp;
+</th>
+</tr>
+<? while ( @$variable{'prod_index','prod_name','prod_id'} = splice @{$$variable{'PRODUCTS'}},0,3; ) ?>
+<tr class="colRow">
+<td colspan="1"><a href="/administrator/production/materials_prices.html?ddmPriceList=<?list_id?>&ddmMaterial=<?prod_index?>">&nbsp;<?prod_id?>&nbsp;</a></td>
+<td colspan="3">
+<?prod_name?>&nbsp;
+</td>
+<td colspan="3" style="text-align: right;">
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+&nbsp;
+</td>
+<td style="text-align: left;">
+&nbsp;Equipment
+</td>
+<td style="text-align: center;">
+&nbsp;Range
+</td>
+<td style="text-align: left;">
+&nbsp;Units
+</td>
+<td style="text-align: right;">
+&nbsp;Cost
+</td>
+<td style="text-align: right;">
+&nbsp;Markup
+</td>
+<td style="text-align: right;">
+&nbsp;Price
+</td>
+</tr>
+<? while ( @$variable{'equipment','min','max','units','cost','markup','price'} = splice @{$$variable{"PRICES_$$variable{'prod_index'}"}},0,7; ) ?>
+<tr>
+<td>
+&nbsp;
+</td>
+<td>
+<?equipment?></td>
+<td style="text-align: center;">
+<?min?>&nbsp;-&nbsp;<?max?></td>
+<td>
+<?units?></td>
+<td style="text-align: right;">
+&nbsp;<?cost?></td>
+<td style="text-align: right;">
+&nbsp;<?markup?></td>
+<td style="text-align: right;">
+&nbsp;<?price?></td>
+</tr>
+<? endwhile ( @$variable{'equipment','min','max','units','cost','markup','price'} = splice @{$$variable{"PRICES_$$variable{'prod_index'}"}},0,7; ) ?>
+<? endwhile ( @$variable{'prod_index','prod_name','prod_id'} = splice @{$$variable{'PRODUCTS'}},0,3; ) ?>
+</table>
+</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

@@ -1,0 +1,8 @@
+<? loop signature ?>
+<div class="indent">
+<? if ($$variable{'multipage'} ==1) ?><span class="label">Signature Group - </span><?Reference?> - <? endif ($$variable{'multipage'} ==1) ?>
+<? loop proofs ?>
+<strong>Qty </strong> <?ProofQuantity?> - <?ProofHeight?>x<?ProofWidth?> <?ProofType?> <? if ($$variable{'multipage'} ==0) ?><? endif ($$variable{'multipage'} ==0) ?>
+<? endloop proofs ?>
+</div>
+<? endloop signature ?>

@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>
+<!--#include virtual="/includes/company_name.html" -->
+Account - My Products</title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-main-css.html" -->
+<!--#include virtual="/includes/h2-js.html" -->
+<script type="text/javascript" src="/javascripts/other.js"></script>
+<script type="text/javascript" src="/javascripts/proj/rfq.js"></script>
+<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+<script type="text/javascript" src="/javascripts/datepickercontrol.js"></script>
+<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+<link href="/styles/docket.css" rel="stylesheet" type="text/css" />
+<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+<link href="/styles/datepickercontrol.css" rel="stylesheet" type="text/css" media="screen" />
+<link href="/styles/content.css" rel="stylesheet" type="text/css" media="screen" />
+<script  type="text/javascript">
+function openWindow(rfqEmail) {
+window.open(rfqEmail,'pop','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+}
+</script>
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+  <h1><span class="title-section">Account &#187;</span> RFQ Bid History</h1>
+
+			<table border="0" cellspacing="0" cellpadding="0" style="width: 100%">
+				<tr>
+					<th style="text-align: left;"  >Service</th>
+					<th style="text-align: center;">Price 1</th>
+					<th style="text-align: center;">Price 2</th>
+					<th style="text-align: center;">Price 3</th>
+                    <th style="text-align: center;">User</th>
+                    <th style="text-align: center;">Date</th>
+
+				<? loop bids ?>
+					<tr class="r<?_even?>">
+						<td style="text-align: left;">  <?service?> </td>
+						<td style="text-align: center;"><?price1?></td>
+						<td style="text-align: center;"><?price2?></td>
+						<td style="text-align: center;"><?price3?></td>
+						<td style="text-align: center;"><?user_name?></td>
+						<td style="text-align: center;"><?date?></td>
+					</tr>
+				<? endloop bids ?>
+			</table>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

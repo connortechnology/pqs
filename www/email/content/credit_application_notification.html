@@ -1,0 +1,69 @@
+		<p><?txtSignature?> has submitted a new credit application.  Click <a href="/administrator/managerial/credit_application.html?Issue_Cookie=true&credit_index=<?CreditAppIndex?>">here</a> to view it.</p>
+		
+		<p><strong>Company Information</strong></p>
+		<p>Company Name: <?txtCompanyName?><br />
+		Address: <?txtAddress1?><br />
+						 <?txtAddress2?><br />
+		City: <?txtCity?><br />
+		Province/State: <?ddmStateProvince?><br />
+		Country: <?ddmCountry?><br />
+		Postal/Zip Code: <?txtPostalCode?><br />
+		Phone: <?txtPhone?><br />
+		Extension: <?txtExtension?><br />
+		Fax: <?txtFax?><br />
+		Date of application: <?date?></p>
+		
+		<p><strong>Business Information</strong></p>
+		<p>Legal Name: <?txtLegalBusinessName?><br />
+		Legal Form: <?rdbLegalForm?><br />
+		Business Type: <?txtBusinessType?><br />
+		Year Established: <?txtStartYear?><br />
+		President/CEO/Owner: <?txtPresidentOwner?><br />
+		Number of Employees: <?txtEmployees?><br />
+		Annual Sales: <?txtAnnualSales?><br />
+		Federal Tax#: <?txtGSTNumber?><br />
+		Provincial/State Tax #: <?txtPSTNumber?><br /></p>
+		
+		<p><strong>Bank Information</strong></p>
+		<p>Bank Name: <?txtBankName?><br />
+		Bank Branch #: <?txtBankBranch?><br />
+		Bank Account #: <?txtBankAccountNo?><br />
+		Account Manager: <?txtBankAccountManager?><br />
+		Bank Phone: <?txtBankPhone?><br />
+		Bank Fax: <?txtBankFax?><br />
+		Bank E-mail: <?txtBankEmail?></p>
+		
+		<p><strong>Trade References</strong></p>
+		
+		<p>Company Name: <?txtTradeReferenceCompanyName1?><br />
+		Contact: <?txtTradeReferenceContact1?><br />
+		Phone: <?txtTradeReferencePhone1?><br />
+		Extension: <?txtTradeReferenceExt1?><br />
+		Fax: <?txtTradeReferenceFax1?><br />
+		E-mail Address: <?txtTradeReferenceEmail1?><br /></p>
+		
+		<p>Company Name: <?txtTradeReferenceCompanyName2?><br />
+		Contact: <?txtTradeReferenceContact2?><br />
+		Phone: <?txtTradeReferencePhone2?><br />
+		Extension: <?txtTradeReferenceExt2?><br />
+		Fax: <?txtTradeReferenceFax2?><br />
+		E-mail Address: <?txtTradeReferenceEmail2?><br /></p>
+		
+		<p>Company Name: <?txtTradeReferenceCompanyName3?><br />
+		Contact: <?txtTradeReferenceContact3?><br />
+		Phone: <?txtTradeReferencePhone3?><br />
+		Extension: <?txtTradeReferenceExt3?><br />
+		Fax: <?txtTradeReferenceFax3?><br />
+		E-mail Address: <?txtTradeReferenceEmail3?><br /></p>
+		
+		<p><strong>Credit Information </strong></p>
+		
+		<p>Value of first order (est): <?txtFirstOrderValue?><br />
+		Annual Purchases (est): <?txtAnnualPurchases?><br />
+		Credit Limit Desired: <?txtDesiredCreditLimit?><br />
+		Terms Desired: <?ddmDesiredTerms?><br />
+		Accounts Payable Contact: <?txtAccountsPayableContact?><br />
+		Financial Statement Available?: <? if ( $$variable{'rdbFinancialStatementAvailable'} eq 'Y' ) ?>Yes<? else ( $$variable{'rdbFinancialStatementAvailable'} eq 'Y' ) ?>No<? endif ( $$variable{'rdbFinancialStatementAvailable'} eq 'Y' ) ?></p>
+
+
+

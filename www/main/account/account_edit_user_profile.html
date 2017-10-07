@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Account - Edit User Profile
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+		
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Account &#187;</span> Edit User Profile</h1>
+
+	<p>To edit <strong>user</strong> profile(s), complete the form below. To edit the profile of your <strong>company</strong>, click <a href="/main/account/account_edit_company_profile.html"><strong>here</strong></a>.</p>
+
+	<form id= "account_edit_user_profile" method="post" onsubmit="return fmCheck(f1);" name"f1" >
+	    <p>Fields marked with an * are required.</p>
+
+		<input type="hidden" name="hiddenID" value="<?hidden_ID?>" />
+
+		<strong>User Information:</strong>
+
+		<br />
+		<br />
+
+		<label for="txtSalutation">*Salutation:</label>
+		<input type="text" id="txtSalutation" name="txtSalutation" value="<?txtSalutation?>" class="input-text" />
+		<br />
+		<label for="txtFirstName">*First Name:</label>
+		<input type="text" id="txtFirstName" name="txtFirstName" value="<?txtFirstName?>" class="input-text" />
+		<br />
+		<label for="txtLastName">*Last Name:</label>
+		<input type="text" id="txtLastName" name="txtLastName" value="<?txtLastName?>" class="input-text" />
+		<br />
+		<label for="txtTitle">&nbsp;Position:</label>
+		<input type="text" id="txtTitle" name="txtTitle" value="<?txtTitle?>" class="input-text" />
+		<br />
+		<label for="txtPhone">*Phone:</label>
+		<input type="text" id="txtPhone" name="txtPhone" value="<?txtPhone?>" class="input-text" />
+		<br />
+		<label for="txtExtension">&nbsp;Extension:</label>
+		<input type="text" id="txtExtension" name="txtExtension" value="<?txtExtension?>" class="input-text" maxlength="4" />
+		<br />
+		<label for="txtFax">&nbsp;Fax:</label>
+		<input type="text" id="txtFax" name="txtFax" value="<?txtFax?>" class="input-text" />
+		<br />
+
+		<span class="label">&nbsp;Add to our Mailing List:</span>
+		<label class="radio"><input type="radio" id="rdbMailingList" name="rdbMailingList" value="<?rdbMailingListY?>" />Yes </label>
+		<label class="radio"><input type="radio" id="rdbMailingList" name="rdbMailingList" value="<?rdbMailingListN?>" />No </label>
+		<br />
+
+		<span class="label">&nbsp;Is this account active?</span>
+		<label class="radio"><input type="radio" id="rdbAccountActivation" name="rdbAccountActivation" value="<?rdbAccountActivationY?>" />Yes </label>
+		<label class="radio"><input type="radio" id="rdbAccountActivation" name="rdbAccountActivation" value="<?rdbAccountActivationN?>" />No </label>
+		<br />
+		<br /><br />
+
+		<p>The following information will be used for future logins.</p>
+		<label for="txtEmail">*E-mail Address:</label>
+		<input type="text" id="txtEmail" name="txtEmail" value="<?txtEmail?>" class="input-text" />
+		<br />
+		<label for="txtPassword">*Password:</label>
+		<input type="password" id="txtPassword" name="txtPassword" class="input-text" />
+		<br />
+		<label for="txtVerifyPassword">*Verify Password:</label>
+		<input type="password" id="txtVerifyPassword" name="txtVerifyPassword" class="input-text" />
+		<br />
+
+		<div class="button-bar">
+			<input class="button" type="submit" name="btnFunction" value="&lt;&lt;" />
+			<input class="button" type="submit" name="btnFunction" value="&gt;&gt;" />
+			<input class="button" type="button" name="btnFunction" value="New" onclick="addCheck(f1);" />
+			<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=2;" />
+			<input class="button" type="reset" />
+			<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+			<br class="clear" />
+			</div>
+
+		<input type="hidden" name="btnFunction" />
+  </form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

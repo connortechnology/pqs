@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>
+        <!--#include virtual="/includes/web_page_title.html" -->
+        Projects - <?service.name?>
+        <!--#include virtual="/includes/web_page_title_end.html" -->
+    </title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+    <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+	
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.name?></h1>
+
+	<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+	
+		<!--#include virtual="/includes/main/proj/dimensions_hidden.html"-->
+	
+		<fieldset>
+			<legend>
+				Variable Data Printing
+			</legend>
+		
+			<p>What type of variable data  printing do you require for your project? Please input the quantity of streams for each variable data type.</p>
+		
+			<label for="txtVariableBWTextStreamQty">B &amp; W Text Stream Quantity:</label>
+			<input id="txtVariableBWTextStreamQty" name="txtVariableBWTextStreamQty" value="<?txtVariableBWTextStreamQty?>" type="text" size="9" class="smBox" />
+			<br />
+			
+			<label for="txtVariableColourTextStreamQty"><?ws_Colour?> Text Stream Quantity:</label>
+			<input id="txtVariableColourTextStreamQty" name="txtVariableColourTextStreamQty" value="<?txtVariableColourTextStreamQty?>" type="text" size="9" class="smBox" />
+			<br />
+		
+			
+			
+			<p>If any of your variable data contain address information and you would like them verified as per our current mailing address database, please input the quantity of text streams that require verification.</p>
+			
+			<label for="txtTextStreamVerificationQty">Verified Text Stream Quantity:</label>
+			<input id="txtTextStreamVerificationQty" name="txtTextStreamVerificationQty" value="<?txtTextStreamVerificationQty?>" type="text" size="9" class="smBox" />
+			<br />
+		</fieldset>
+	
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+	
+		<input type="hidden" name="pid" value="<?pid?>" />
+		<input type="hidden" name="sid" value="<?sid?>" />
+	</form>
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+<head>
+	<title tal:content="title">Print-Quotes Title</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<xi:include href="/includes/h1-admin-css.html" />
+
+	<link rel="stylesheet" href="/styles/admin/style.css" type="text/css" />
+	<script type="text/javascript" src="/javascripts/menu.js"></script>
+
+	<style type="text/css">
+		/* <![CDATA[ */
+
+		#content table.matrix { width: 100% !important;  } 
+		table.matrix input    { width:   4em; }
+
+		/* ]]> */
+	</style>
+</head>
+<body>
+	<xi:include href="/includes/c1-tal.html" />
+
+	<!-- Sidebar -->
+	<div id="sidebar">
+			<div class="option">
+				<a class="back" href="items">Items</a>
+				<a class="back" href="categories">Categories</a>
+			</div>
+
+			<!--
+			<div class="option" tal:condition="item/id">
+				<a class="back" href="/admin/predefined/questions.html" tal:attributes="href string:define?id=$item/id"><span class="symbol">&#8658;</span> Define Questions</a>
+			</div>
+			-->
+	</div>
+
+	<div id="content">
+		<h1><span class="title-section">Marketing &#187; </span> Predefined Projects</h1>
+
+		<form action="modify_item" method="post" encoding="multipart/form-data">
+			<fieldset>
+				<legend>Primary Attributes</legend>
+				<input name="id" type="hidden" tal:attributes="value item/id" />
+
+				<label><span>Name:</span>        <input name="name" type="text" value="" tal:attributes="value item/name" /></label>
+				<label><span>Description:</span> <textarea name="description" tal:content="item/description"></textarea></label>
+
+				<label><span>Categories:</span>
+					<select name="category" multiple="multiple" style="height: 6em;">
+						<option tal:repeat="cat item.categories" tal:attributes="value cat/id;selected cat/selected">$cat/name</option>
+					</select>
+				</label>
+
+				<label>
+					<span>Image Path:</span>  <input name="image" type="text" value="" tal:attributes="value item/image" />
+				</label>
+				<label>
+					<span>Image:</span>	<img tal:condition="item/image" tal:attributes="src item/image" width="130px" height="130px" /><br />
+				</label>
+                <label><span>Base Project ID:</span>        <input name="pid" type="text" value="" tal:attributes="value item/pid" size="8" /></label>
+                <label><span>Sheet Stock Availability:</span>        <a class="button" href="" tal:attributes="href item/stock_url" style="width:130px">Sheet Stock List</a></label>
+                 <label><span>Cover Sheet Stock Availability:</span>        <a class="button" href="" tal:attributes="href item/cover_stock_url" style="width:130px">Cover Sheet Stock List</a></label>
+                <label><span>Roll Stock Availability:</span>        <a class="button" href="" tal:attributes="href item/roll_url" style="width:130px">Roll Stock List</a></label>
+                <label><span>Service Availability:</span>        <a class="button" href="" tal:attributes="href item/service_url" style="width:130px" >Service List</a></label>
+			</fieldset>
+
+
+			<fieldset tal:condition="item/id">
+				<legend>Questions &amp; Answers</legend>
+
+				<p tal:condition="false:item/questions">No questions are currently defined for this product. Click <a href="question?item=$item/id">here</a> to create a new question.</p>
+
+				<div tal:condition="true:item/questions">
+					<p>Click on a question to edit it, or click <a href="question?item=$item/id">here</a> to create a new question. <a class="button right" href="question?item=$item/id" style="width:110px" >Add a New Question</a><br /></p>
+
+					<ul>
+						<li tal:repeat="q item/questions">
+							<a href="question?item=$item/id;id=$q/id">Edit Question: "$q/label"</a>
+							<ul tal:condition="q/answers">
+								<li tal:repeat="a q/answers">$a/label</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+
+			</fieldset>
+            <div class="button-bar">
+				<input name="save"   type="submit" class="button right" tal:attributes="value decode:item/id item/id 'Save Item' 'Create Item'" value="Save" />
+                <input name="copy"   type="submit" class="button right" tal:condition="item/id" value="Copy Item" />
+				<input name="delete" type="submit" class="button" value="Delete Item" tal:condition="item/id" />
+				<br />
+			</div>
+
+			<table style="visibility:hidden" class="matrix common" tal:condition="matrix">
+				<thead>
+					<tr>
+						<th tal:repeat="r matrix/headers" tal:content="r/name" rowspan="2">Header</th>
+						<th tal:content="matrix/pivot_name" tal:attributes="colspan matrix/pivot_size">Pivot Header</th>
+					</tr>
+					<tr>
+						<th tal:repeat="r matrix/pivot_cols" tal:content="r/name">Pivot Data</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					<tr tal:repeat="r matrix/rows" tal:attributes="class decode:repeat/even 0 'even' 'odd'">
+						<td tal:repeat="d r/data" tal:attributes="rowspan if: d/span then: d/span else: string:1">
+
+							<span tal:condition="true:d/pivot" tal:omit-tag="true:d/pivot">
+								<input title="QTY"              type="text" tal:attributes="name string:qty_${d/set};value d/qty" />
+								<input title="Project ID"       type="text" tal:attributes="name string:pid_${d/set};value d/pid" />
+								<input title="Label (optional)" type="text" tal:attributes="name string:label_${d/set};value d/label" />
+							</span>
+
+							<span tal:condition="false:d/pivot" tal:replace="d/label"></span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
+			
+
+		</form>
+
+	</div>
+	<xi:include href="/includes/f1-tal.html" />
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - <?service.category?> - <?service.name?>
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+	<link href="/styles/project_create.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
+	<script type="text/javascript">
+			var service = new Service('<?service.ref?>');
+	</script>
+	<script type="text/javascript" src="/javascripts/proj/service/folding.js"></script>
+</head>
+
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+
+	<form action="/service/<?lc:service.ref?>" method="post" name="f1" id="f1">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+	
+		<fieldset>
+			<legend><?service.name?></legend>
+		
+			<p>The folding style and quantity of signatures has been automatically selected. If you require a custom fold style, please input the quantity of signatures and folding style.</p>
+		
+			<table style="margin: 0 auto;" border="0" cellspacing="0" cellpadding="0" cols="4" class="no-formatting">
+				<col style="width: auto;" />
+				<col style="width: 2em;" />
+				<col style="width: auto;" />
+				<col style="width: 30%;" />
+				<col style="width: auto;" />
+				<col style="width: 2em;" />
+				<col style="width: auto;" />
+				<col style="width: 2em;" />
+
+<? if ( $variable->{project}{type}{ref} eq 'ScreenTShirts' ) ?>
+				<tr>
+					<td><label for="txtTShirtFoldQty" class="label">T-Shirt Fold:<br class="right" /></td>
+					<td>
+						<input id="txtTShirtFoldQty" name="txtTShirtFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+		
+				</tr>
+<? else ( $variable->{project}{type}{ref} eq 'ScreenTShirts' ) ?>
+				<tr>
+					<td><label for="txt2PanelFoldQty" class="label"><img src="/images/main/project_templates/folding/2_panel.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt2PanelFoldQty" class="label">2 Panel:<br class="right" />
+						<input id="txt2PanelFoldQty" name="txt2PanelFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+		
+					<td><label for="txt4PageSignatureFoldQty" class="label"><img src="/images/main/project_templates/folding/4pg_signature.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt4PageSignatureFoldQty" class="label">4 Page Signature:<br class="right" />
+						<input id="txt4PageSignatureFoldQty" name="txt4PageSignatureFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+				</tr>
+		
+				<tr>
+					<td><label for="txt3PanelRollFoldQty" class="label"><img src="/images/main/project_templates/folding/3_panel_roll.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt3PanelRollFoldQty" class="label">3 Panel Roll:<br class="right" />
+						<input id="txt3PanelRollFoldQty" name="txt3PanelRollFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+		
+					<td><label for="txt8PageSignatureFoldQty" class="label"><img src="/images/main/project_templates/folding/8pg_signature.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt8PageSignatureFoldQty" class="label">8 Page Signature:<br class="right" />
+						<input id="txt8PageSignatureFoldQty" name="txt8PageSignatureFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+				</tr>
+		
+				<tr>
+					<td><label for="txt3PanelZFoldQty" class="label"><img src="/images/main/project_templates/folding/3_panel_accordian.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt3PanelZFoldQty" class="label">3 Panel Z:<br class="right" />
+						<input id="txt3PanelZFoldQty" name="txt3PanelZFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+		
+					<td><label for="txt12PageSignatureFoldQty" class="label"><img src="/images/main/project_templates/folding/12pg_signature.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt12PageSignatureFoldQty" class="label">12 Page Signature:<br class="right" />
+						<input id="txt12PageSignatureFoldQty" name="txt12PageSignatureFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+				</tr>
+		
+				<tr>
+					<td><label for="txt4PanelRollFoldQty" class="label"><img src="/images/main/project_templates/folding/4_panel_roll.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt4PanelRollFoldQty" class="label">4 Panel Roll:<br class="right" />
+						<input id="txt4PanelRollFoldQty" name="txt4PanelRollFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+		
+					<td><label for="txt16PageSignatureFoldQty" class="label"><img src="/images/main/project_templates/folding/16pg_signature.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt16PageSignatureFoldQty" class="label">16 Page Signature:<br class="right" />
+						<input id="txt16PageSignatureFoldQty" name="txt16PageSignatureFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+				</tr>
+		
+				<tr>
+					<td><label for="txt4PanelZFoldQty" class="label"><img src="/images/main/project_templates/folding/4_panel_accordian.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt4PanelZFoldQty" class="label">4 Panel Z:<br class="right" />
+						<input id="txt4PanelZFoldQty" name="txt4PanelZFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+		
+					<td><label for="txt20PageSignatureFoldQty" class="label"><img src="/images/main/project_templates/folding/20pg_signature.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt20PageSignatureFoldQty" class="label">20 Page Signature:<br class="right" />
+						<input id="txt20PageSignatureFoldQty" name="txt20PageSignatureFoldQty" type="text" size="9" class="smbox" /></labe></td>
+					<td>&nbsp;</td>
+				</tr>
+		
+				<tr>
+					<td><label for="txt5PanelRollFoldQty" class="label"><img src="/images/main/project_templates/folding/5_panel_roll.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt5PanelRollFoldQty" class="label">5 Panel Roll:<br class="right" />
+						<input id="txt5PanelRollFoldQty" name="txt5PanelRollFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+		
+					<td><label for="txt24PageSignatureFoldQty" class="label"><img src="/images/main/project_templates/folding/24pg_signature.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt24PageSignatureFoldQty" class="label">24 Page Signature:<br class="right" />
+						<input id="txt24PageSignatureFoldQty" name="txt24PageSignatureFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+				</tr>
+		
+				<tr>
+					<td><label for="txt5PanelZFoldQty" class="label"><img src="/images/main/project_templates/folding/5_panel_accordian.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt5PanelZFoldQty" class="label">5 Panel Z:<br class="right" />
+						<input id="txt5PanelZFoldQty" name="txt5PanelZFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+		
+					<td><label for="txt32PageSignatureFoldQty" class="label"><img src="/images/main/project_templates/folding/32pg_signature.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt32PageSignatureFoldQty" class="label">32 Page Signature:<br class="right" />
+						<input id="txt32PageSignatureFoldQty" name="txt32PageSignatureFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+				</tr>
+		
+				<tr>
+					<td><label for="txt6PanelRollFoldQty" class="label"><img src="/images/main/project_templates/folding/6_panel_roll.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt6PanelRollFoldQty" class="label">6 Panel Roll:<br class="right" />
+						<input id="txt6PanelRollFoldQty" name="txt6PanelRollFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+		
+					<td><label for="txtPerpendicularSoftFoldQty" class="label"><img src="/images/main/project_templates/folding/soft_fold_perp.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txtPerpendicularSoftFoldQty" class="label">Soft Fold (Perp):<br class="right" />
+						<input id="txtPerpendicularSoftFoldQty" name="txtPerpendicularSoftFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+				</tr>
+		
+				<tr>
+					<td><label for="txt6PanelZFoldQty" class="label"><img src="/images/main/project_templates/folding/6_panel_accordian.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txt6PanelZFoldQty" class="label">6 Panel Z:<br class="right" />
+						<input id="txt6PanelZFoldQty" name="txt6PanelZFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+		
+					<td><label for="txtParallelSoftFoldQty" class="label"><img src="/images/main/project_templates/folding/soft_fold_para.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txtParallelSoftFoldQty" class="label">Soft Fold (Parallel):<br class="right" />
+						<input id="txtParallelSoftFoldQty" name="txtParallelSoftFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+				</tr>
+		 
+				<tr>
+					<td><label for="txtSingleGateFolded" class="label"><img src="/images/main/project_templates/folding/single_gate.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txtSingleGateFolded" class="label">Single Gate:<br class="right" />
+						<input id="txtSingleGateFolded" name="txtSingleGateFolded" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+		
+					<td><label for="txtDifficultFoldQty" class="label"><img src="/images/main/project_templates/folding/difficult_map.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txtDifficultFoldQty" class="label">Difficult (Map):<br class="right" />
+						<input id="txtDifficultFoldQty" name="txtDifficultFoldQty" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+				</tr>
+		
+				<tr>
+					<td><label for="txtDoubleGateFolded" class="label"><img src="/images/main/project_templates/folding/double_gate.gif" width="75" height="75" /></label></td>
+					<td>&nbsp;</td>
+					<td><label for="txtDoubleGateFolded" class="label">Double Gate:<br class="right" />
+						<input id="txtDoubleGateFolded" name="txtDoubleGateFolded" type="text" size="9" class="smbox" /></label></td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+			   </tr>
+<? endif ( $variable->{project}{type}{ref} eq 'ScreenTShirts' ) ?>
+			</table>
+			<br />
+		</fieldset>
+			
+		<? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+			<!--#include virtual="/includes/main/proj/equipment.html"-->
+		<? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+	
+		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<!--#include virtual="/includes/main/proj/service_combo_quantity.html"-->
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<!--#include virtual="/includes/main/proj/hdn_fields_bindery.html"-->
+	</form>
+	
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/proj.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title><!--#include virtual="/includes/web_page_title.html" -->Reports - Inventory<!--#include virtual="/includes/web_page_title_end.html" --></title>
+
+    <!--#include virtual="/includes/web_page_meta.html" -->
+    <!--#include virtual="/includes/h1-main-css.html" -->
+
+        <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+    <!--#include virtual="/includes/h2-js.html" -->
+
+    <script type="text/javascript" src="/javascripts/other.js"></script>
+    <script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+
+</head>
+<body>
+<!--#include virtual="/includes/c1-main-nav.html" -->
+        <h1><span class="title-section">Reports &#187;</span> Inventory</h1>
+
+                <form action="inventory_reports.html" method="post" name="f1" id="f1">
+                        <fieldset>
+                                <legend>
+                                        Search
+                                </legend>
+
+                                <p>Choose report criteria and click show results. You may download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.</p>
+
+                <label for="ddmCustomers">Customers:</label>
+                <select id="ddmCustomers" name="ddmCustomers" size="1">
+                    <option value=""> All Customers </option>
+                    <?ddmCustomers?>
+                </select>
+                <br />
+
+                                <label for="ddmStartMonth">Start Date:</label>
+                                <select id="ddmStartMonth" name="ddmStartMonth">
+                                        <?ddmStartMonth?>
+                                </select>
+                                <select name="ddmStartDay">
+                                        <?ddmStartDay?>
+                                </select>
+                                <select name="ddmStartYear">
+                                        <?ddmStartYear?>
+                                </select>
+                                <br />
+
+                                <label for="ddmEndMonth">End Date:</label>
+                                <select id="ddmEndMonth" name="ddmEndMonth">
+                                        <?ddmEndMonth?>
+                                </select>
+                                <select name="ddmEndDay">
+                                        <?ddmEndDay?>
+                                </select>
+                                <select name="ddmEndYear">
+                                        <?ddmEndYear?>
+                                </select>
+                                <br />
+
+                                <div class="button-bar indent-regular">
+                                        <input class="button" type="submit" value="Submit" />
+                                        <input class="button" type="submit" name="btnFunction" value="Download in CSV Format" />
+                                        <br />
+                                </div>
+                                <br />
+                        </fieldset>
+                </form>
+
+                <form action="" method="post" name="f2" id="f2">
+                        <fieldset>
+                                <legend>
+                                        Inventory
+                                </legend>
+
+                                <p class="none">&nbsp;</p>
+
+                                        <p>There are no projects which match your search criteria.</p>
+
+                                        <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
+                                                <tr style="height:50px; font-size:10px">
+                                                        <th>Inventory<br />ID</th>
+                                                        <th>Project<br />ID</th>
+                                                        <th class="tbl">Company</th>
+                                                        <th>Location</th>
+                                                        <th>Project Name</th>
+                                                        <th>Quantity<br />Checked In</th>
+                                                        <th>Quantity<br />Remaining</th>
+                                                        <th>Case $ x<br />Qty Cases<br />Remaining</th>
+                                                        <th>Obsolete</th>
+                            <th>Revised</th>
+                                                </tr>
+
+                                                <?loop inventory?>
+                        <tr>
+                            <td style="text-align: left;"><a href="/main/proj/inventory/inventory_details.html?ID=<?id?>"><?id?></a></td>
+                            <td style="text-align: center;"><a href="/main/proj/proj_view.html?ProjectIndex=<?lngprojectindex?>"><?lngprojectindex?></a></td>
+                            <td style="text-align: left;"><?strcompanyname?></td>
+                            <td style="text-align: left;"><?name?></td>
+                            <td class="colRow" style="text-align: left;"><a href="/main/proj/proj_view.html?ProjectIndex=<?lngprojectindex?>&amp;AutoLogin=A&amp;SelectCustomer=<?customer?>"><?strdescription?></a></td>
+                            <td style="text-align: right;"><?lngcheckinquantity?></td>
+                            <td style="text-align: right;"><?lngremainingquantity?></td>
+                            <td style="text-align: right;"><?value?></td>
+                            <td class="select c" style="text-align: center;"><?obsolete?></td>
+                            <td class="select c" style="text-align: center;"><?revised?></td>
+                            </td>
+                        </tr>
+                                                <?endloop inventory?>
+
+                                        </table>
+                                <br />
+                                <div class="button-bar indent-regular">
+                                        <input class="button" type="submit" value="Submit" />
+                    <input type="button" class="button" onclick="open_printer_friendly_version();" value="Reorder Form" />
+                                        <br />
+                                </div>
+                                <br />
+                        </fieldset>
+                </form>
+
+<!--#include virtual="/includes/f1-main.html" -->
+<!--#include virtual="/includes/main/account.html" -->
+<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

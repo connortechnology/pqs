@@ -1,0 +1,218 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - Project Details
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/project.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<style media="screen" type="text/css">
+		#add-line-item {
+			margin-top: 6px;
+			font-size: 1em;
+		}
+		
+		* html #add-line-item {margin-top: 0px;}
+	</style>
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script  type="text/javascript">
+		function delete_confirm(form) {
+			return confirm("Are you sure you want to delete this project?");
+		}
+
+		function project_defined_confirm(form) {
+			return confirm("Are you sure you want to make this a pre-defined project?")
+		}
+
+		function open_printer_friendly_version(summaryPage) {
+			window.open('/main/proj/proj_view_printer_friendly.html?ProjectIndex=<?pid?>&Category=-1','printerfriendlyprojectview','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+		function mail_to(user) {
+			var email = user.options[user.selectedIndex].value;
+			window.open('mailto:'+email+'?subject=Project <?pid?> - <?HeaderInfo.reference?>');
+		}
+	</script>
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+	<h1><span class="title-section">Projects &#187;</span> Project Details</h1>
+	
+	<? if not:pid ?>
+
+		<p>The project does not exist or there is no current project.</p>
+	
+	<? else not:pid ?>
+	
+		<p>Please confirm services, prices and quantities before selecting &#8220;Add to Quote&#8221; or &#8220;Add to Order&#8220;. If changes are required, please use the &#8220;Edit&#8221; or &#8220;Remove&#8221; service links. If any services associated with this project are uncalculated, please click  &#8220;Continue Project&#8221; to complete any uncalculated services.</p>
+<p style="color:#0000CC;" >To View additional project quantities select the associated project ID from the Project ID selection box in the top right corner below.</p>
+		<? if ($variable->{is_staff}) ?>
+        <p align="right"><label for="CustEmail"><strong>Customer Email:</strong></label>
+                <select name="email_to" id="email_to" onChange="mail_to(this)">
+				<option value="" >Send Customer Email</option>
+				<?email_to?>
+                </select>
+        </p>
+        <? endif ($variable->{is_staff}) ?>
+        
+		<div class="button-bar">
+			<input type="button" class="button" onclick="open_printer_friendly_version();" value="Printer Friendly" />
+
+			<? if not:checkout ?>
+
+				<?if is_staff ?>
+					<? if ( ! grep { $$variable{HeaderInfo}{status} eq $_ } qw(predefined uncalculated) ) ?>
+						<form name="define" action="/main/proj/dispatch.html" method="post" onsubmit="return project_defined_confirm(this.form);">
+							<input type="hidden" name="pid"     value="<?pid?>" />
+							<input type="hidden" name="action"  value="make_predefined" />
+							<input type="submit" class="button" value="Make Predefined Product" />
+						</form>
+					<? endif ( ! grep { $$variable{HeaderInfo}{status} eq $_ } qw(predefined uncalculated) ) ?>
+
+					<? if ( $$variable{HeaderInfo}{status} eq 'predefined' && !$$variable{is_fixed_price} && $$variable{can_discount} ) ?>
+						<form name="discount" action="/main/proj/dispatch.html" method="post">
+							<input type="hidden" name="pid"     value="<?pid?>" />
+							<input type="hidden" name="action"  value="add_discount" />
+							<input type="submit" class="button" value="Add Discount" />
+						</form>
+
+						<form name="discount" action="/main/proj/dispatch.html" method="post">
+							<input type="hidden" name="pid"     value="<?pid?>" />
+							<input type="hidden" name="action"  value="add_per_item_discount" />
+							<input type="submit" class="button" value="Add Per Item Discount" />
+						</form>
+					<? endif ( $$variable{HeaderInfo}{status} eq 'predefined' && !$$variable{is_fixed_price} && $$variable{can_discount} ) ?>
+				<?endif is_staff ?>
+
+				
+                
+				
+					<input type="button" value="Project Files" class="button right" onclick="window.location='/main/proj/files.html?pid=<?pid?>';" />
+				
+				<? if has_pdf_template ?>
+					<input type="button" value="Edit Data" class="button right" onclick="window.location='/template/main.html?pid=<?pid?>';" />
+				<? endif has_pdf_template ?>
+                
+               
+
+			<? endif not:checkout ?>
+
+			<br class="clear" />
+		</div>
+
+		<br class="clear" />
+
+		<div id="project-view">
+			<!-- Standard project header (shared between project view, quotes, orders, docket, etc.) -->
+			<!--#include virtual="/includes/main/docket/header.html" -->
+
+			<!-- Services and materials. -->
+			<!--#include virtual="/includes/main/proj/project.html" -->
+		</div>
+
+		<div class="button-bar">
+			<form action="/main/proj/proj_docket.html?ProjectIndex=<?pid?>&amp;QuantityIndex=1&amp;Summary=1" method="post" name="f3" id="f3">
+				<input type="hidden" name="ProjectIndex" value="<?pid?>" />
+				<input type="submit" class="button" value="Project Docket" />
+			</form>
+
+			<? if not:disabled ?>
+
+				<? if ( ! $$variable{is_ordered_or_quoted} && ! $$variable{checkout} ) ?>
+					<form action="/main/proj/edit.html" method="get" name="f10" id="f10">
+						<input type="hidden" name="pid" value="<?pid?>" />
+						<input class="button" type="submit" value="Edit Project" />
+					</form>
+				<? endif ( ! $$variable{is_ordered_or_quoted} && ! $$variable{checkout} ) ?>
+		
+				<? if not:checkout ?>
+					<form action="/main/proj/proj_crea_reuse.html" method="post" >
+						<input type="hidden" name="btnFunction" value="Reuse Project" />
+						<input type="hidden" name="ProjectIndex" value="<?pid?>" />
+						<input type="submit" class="button" value="Copy Project" />
+					</form>
+				<? endif not:checkout ?>
+		
+				<? if not:is_ordered_or_quoted ?>
+					<form action="/main/proj/proj_hist.html" method="post" name="f7" id="f7" onsubmit="return(delete_confirm(f7));">
+						<input type="hidden" name="action" value="Delete" />
+						<input type="hidden" name="delete" value="<?pid?>" />
+						<input type="submit" name="DeleteProject" class="button" value="Delete Project" />
+					</form>
+				<? endif not:is_ordered_or_quoted ?>
+
+
+				<? if ( $$variable{HeaderInfo}{status} eq 'uncalculated' ) ?>
+					<form action="/build" method="get">
+						<input type="hidden" name="pid" value="<?pid?>" />
+						<input type="submit" class="button right" value="Continue Project" />
+					</form>
+				<? endif ( $$variable{HeaderInfo}{status} eq 'uncalculated' ) ?>
+
+				<? if ( $$variable{HeaderInfo}{status} eq 'Unordered' ) ?>
+					<? if is_expired ?>
+
+							<form action="/build" method="get">
+								<input type="hidden" name="pid"   value="<?pid?>" />
+								<input type="hidden" name="level" value="0" />
+								<input type="submit" class="button right" value="Update Prices" />
+							</form>
+			
+					<? else is_expired ?>
+
+						<? if not:is_quoted_or_ordered ?>
+
+							<form action="/main/order/order_selection.html" method="post">
+								<input type="hidden" name="btnFunction" value="Process Order" />
+								<input type="hidden" name="ProjectIndex" value="<?pid?>" />
+								<input type="submit" class="button right" value="Add to Order" />
+							</form>
+
+							<form action="/main/quote/quote_details.html" method="post">
+								<input type="hidden" name="btnFunction" value="Process Quote" />
+								<input type="hidden" name="ProjectIndex" value="<?pid?>" />
+								<input type="submit" class="button right" value="Add to Quote" />
+							</form>
+
+						<? endif not:is_quoted_or_ordered ?>
+
+					<? endif is_expired ?>
+				<? endif ( $$variable{HeaderInfo}{status} eq 'Unordered' ) ?>
+
+			<? endif not:disabled ?>
+
+			<br class="clear" />
+		</div>
+		
+		<br class="clear" />
+		
+<br />
+
+		<!--#include virtual="/includes/main/proj/project_comments.html" -->
+	
+		<? if is_ordered_or_quoted ?>
+			<p class="margin-top">
+				This project has been ordered and cannot be modified or re-ordered. If you would like to modify or re-order the project again, please copy the project by clicking on the &quot;Copy Project&quot; button. If you have any questions please click on our <a href="/main/support/support_help_desk.html">helpdesk</a>.
+			</p>
+		<? endif is_ordered_or_quoted ?>
+
+	
+		<div id="disclaimer" class="margin-top">
+			<!--#include virtual="/includes/project_view_disclaimer.html" -->
+		</div>
+	<? endif not:pid ?>
+	
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/proj.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

@@ -1,0 +1,22 @@
+<fieldset>
+	<legend>Services</legend>
+
+	<p>Extra services may be allowed on a fixed price project, these services
+	will not be included when totalling the project price to determine the
+	discount. Care should be taken as services that effect the production of
+	the project can be allowed.</p>
+	
+	<p>Eg. You may want to allow graphic design so that customers can
+	purchase it as an add-on to a special price for 500 business cards.</p>
+
+	<label for="services">Allowed Services:</label>
+	<select id="services" name="services" multiple="multiple" style="width: 20em; height: 14.4em;">
+		<?loop categories ?>
+			<optgroup label="<?name?>">
+				<?loop services ?>
+					<option value="<?id?>"><?name?></option>
+				<?endloop services ?>
+			</optgroup>
+		<?endloop categories ?>
+	</select>
+</fieldset>

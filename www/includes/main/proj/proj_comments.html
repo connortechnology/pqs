@@ -1,0 +1,40 @@
+
+<? if ($variable->{is_staff}) ?>
+<br />
+ <fieldset style="border:1px solid #000000;">
+            <legend>
+               Employee/Administrator Comments and Assigning:
+            </legend>
+<p><!-- Insert Comments Here -->
+
+
+<? loop COMMENTS ?>
+
+<p> <strong>Modified By:<?value.username?> - Modified On:<?value.mtime?><br />
+Assigned to:<?value.assignusername?><br />
+Comments:<?value.comment?> </strong></p>
+
+
+<? endloop COMMENTS ?>
+<? if not:assignusernamecurr ?>
+<p><strong>This Project is Currently not assigned to a user.</strong></p>
+<? else not:assignusernamecurr ?>
+<p><strong>Currently Assigned to:<?value.assignusernamecurr?></strong></p>
+<? endif not:assignusernamecurr ?>
+
+<p><strong>Comments:
+<form name='add_comment' action="proj_view.html">
+	<textarea name="comment" cols="98" rows="5" id="comment"></textarea><br />
+<strong>Assign Project to: </strong><select id="ddmUser" name="ddmUser" >
+				<option value=""> Select a User </option>
+				<option value=""> ----------------- </option>
+				<?FILL_USER_NAME?>
+			</select><br /><br />
+<input class="button" type="submit" value="Save and Send" />
+	<input type="hidden" name="pid" value="<?pid?>" />
+</form></p>
+<br /><br />
+</strong>
+</p>
+</fieldset>
+<? endif ($variable->{is_staff}) ?>

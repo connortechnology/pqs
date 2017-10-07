@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:tal="http://purl.org/petal/1.0/" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<head>
+		<title>Error</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<link rel="stylesheet" href="/styles/debug.css" type="text/css" />
+	</head>
+	<body>
+		<h1>Server Error</h1>
+		<div id="content">
+			<h2  tal:condition="error">Error Message</h2>
+			<pre tal:condition="error" id="error" tal:content="error">Died at line 452.</pre>
+			<h2>Stack Trace</h2>
+			<p>Stack frames are listed from initial caller down trough to last executed frame.</p>
+			<table id="trace" summary="Stack trace shown from first caller to last.">
+				<col id="line"      class="numeric" />
+				<col id="caller"    class="name" />
+				<col id="called"    class="name" />
+				<col id="function"  class="name" />
+				<col id="context"   class="name" />
+				<col id="arguments" class="text" />
+				<thead>
+					<tr>
+						<th>Line</th>
+						<th>Calling Package</th>
+						<th>Called Package</th>
+						<th>Function</th>
+						<th>Context</th>
+						<th>Arguments</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr tal:repeat="frame stack">
+						<td tal:content="frame/line">405</td>
+						<td tal:content="frame/caller">CGI</td>
+						<td tal:content="frame/called">DBI</td>
+						<td tal:content="frame/function">prepare</td>
+						<td tal:content="frame/context">scalar</td>
+						<td>
+							<ol>
+								<li tal:repeat="arg frame/args"><a href="#" tal:content="arg/type" tal:attributes="href string:#${frame/called}::${frame/function}-${repeat/index}">1</a></li>
+							</ol>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<h2>Arguments</h2>
+			<table class="arguments" summary="" tal:repeat="frame stack" tal:attributes="summary string:Arguments for ${frame/called}::${frame/function}">
+				<caption>Arguments passed to ${frame/called}::${frame/function}()</caption>
+				<col class="numeric" />
+				<col class="name" />
+				<col class="text" />
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Type</th>
+						<th>Value</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr tal:repeat="arg frame/args" tal:attributes="id string:${frame/called}::${frame/function}-${repeat/index}">
+						<td tal:content="repeat/index">0</td>
+						<td tal:content="arg/type">SCALAR</td>
+						<td><pre tal:content="arg/value">42</pre></td>
+					</tr>
+				</tbody>
+			</table>
+			<!--
+			<h2>Apache Environment</h2>
+			<pre>$r->method : GET</pre>
+			-->
+		</div>
+	</body>
+</html>

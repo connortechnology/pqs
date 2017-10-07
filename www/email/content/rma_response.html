@@ -1,0 +1,71 @@
+<p>Dear <?UserName?>,</p>
+<p>Your RMA request has been reviewed, and
+
+<? if ( $$variable{'Verdict'} eq 'Y' ) ?>
+	approved. An RMA # has been assigned. Please make sure that it is visible on
+the outside of all packages being returned.
+<? else ( $$variable{'Verdict'} eq 'Y' ) ?>
+	declined.</p>
+<? endif ( $$variable{'Verdict'} eq 'Y' ) ?>
+
+<table cellpadding="0" cellspacing="0" border="0">
+	<tr>
+		<td>Submission Date:</td>
+		<td><?RequestDate?></td>
+	</tr>
+	<tr>
+		<td colspan="2"></td>
+	</tr>
+	<tr>
+		<td>Order ID #: (click to view)</td>
+		<td><a href="/main/order/order_history_details.html?Issue_Cookie=true&order_id=<?OrderID?>"><?OrderID?></a></td>
+	</tr>
+	<tr>
+		<td>Order Date:</td>
+		<td><?OrderDate?></td>
+	</tr>
+	<tr>
+		<td>Project Reference: (click to view)</td>
+		<td><a href="/main/proj/proj_view.html?Issue_Cookie=true&ProjectIndex=<?ProjectIndex?>"><?ProjectReference?></a></td>
+	</tr>
+	<tr>
+		<td>Company:</td>
+		<td><?CompanyName?></td>
+	</tr>
+	<tr>
+		<td style="vertical-align: top;">Description of problem:</td>
+		<td><?Problem?></td>
+	</tr>
+	<tr>
+		<td>Type of Request:</td>
+		<td>
+
+<? if ( $$variable{'RMAType'} eq 'C' ) ?>
+	Credit
+<? endif ( $$variable{'RMAType'} eq 'C' ) ?>
+
+<? if ( $$variable{'RMAType'} eq 'R' ) ?>
+	Replacement
+<? endif ( $$variable{'RMAType'} eq 'R' ) ?>
+
+<? if ( $$variable{'RMAType'} eq 'S' ) ?>
+	Service
+<? endif ( $$variable{'RMAType'} eq 'S' ) ?>
+
+		</td>
+	</tr>
+	<tr>
+		<td style="vertical-align: top;">Comments:</td>
+		<td><?txtAdminComments?></td>
+	</tr>
+
+<? if ( $$variable{'Verdict'} eq 'Y' ) ?>
+	<tr>
+		<td>RMA #:</td>
+		<td><?RMANumber?></td>
+	</tr>
+<? endif ( $$variable{'Verdict'} eq 'Y' ) ?>
+
+</table>
+
+<p>If you have any questions, please contact our <a href="/main/support/support_help_desk.html?Issue_Cookie=true">helpdesk</a>.</p>

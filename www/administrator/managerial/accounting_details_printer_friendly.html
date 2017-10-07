@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title><!--#include virtual="/includes/web_page_title.html" -->Managerial - Accounting Details</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<link href="/styles/pop-up.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/order.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/project.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/print_webpage.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="/styles/print.css" rel="stylesheet" type="text/css" media="print" />
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+<body>
+<p style="font-size:36px !important; width:600 !important;  text-align: center !important; padding-left:140px"><strong>INVOICE</strong></p>
+<div id="content">
+
+	<!--#include virtual="/includes/forms/order.html" -->
+	<br />
+	
+	<table width="600" class="no-background no-border th-td" style="border-bottom: 1px solid black;" cellpadding="0" cellspacing="0" border="0">
+		<tr>
+			<th width="50" style="border-bottom: 1px solid black; text-align: left;">Ref #</th>
+			<th width="70" style="border-bottom: 1px solid black;text-align: center;">Date</th>
+			<th width="100" style="border-bottom: 1px solid black; text-align: left;">Type</th>
+			<th width="260" style="border-bottom: 1px solid black; text-align: left;">Description</th>
+			<th width="120" style="border-bottom: 1px solid black; text-align: right;">Amount</th>
+		</tr>
+	
+		<? if ( @{$$variable{'PAYMENTS'}} ) ?>
+			<? while ( @$variable{'payment_index','date','type','description','amount','CurrencyName','CurrencySymbol'} = splice @{$$variable{'PAYMENTS'}},0,7; ) ?>
+				<tr>
+					<td><?payment_index?></td>
+					<td style="text-align: center;"><?date?></td>
+					<td>&nbsp;<?type?></td>
+					<td>&nbsp;<?description?></td>
+					<td style="text-align: right;"><?CurrencySymbol?><?amount?></td>
+				</tr>
+	
+				<? if ( @$variable{'payment_index','date','type','description','amount','CurrencyName','CurrencySymbol'} = splice @{$$variable{'PAYMENTS'}},0,7; ) ?>
+					<tr class="colRow">
+						<td><?payment_index?></td>
+						<td style="text-align: center;"><?date?></td>
+						<td>&nbsp;<?type?></td>
+						<td>&nbsp;<?description?></td>
+						<td style="text-align: right;"><?CurrencySymbol?><?amount?></td>
+					</tr>
+				<? endif ( @$variable{'payment_index','date','type','description','amount','CurrencyName','CurrencySymbol'} = splice @{$$variable{'PAYMENTS'}},0,7; ) ?>
+			<? endwhile ( @$variable{'payment_index','date','type','description','amount','CurrencyName','CurrencySymbol'} = splice @{$$variable{'PAYMENTS'}},0,7; ) ?>
+		<? endif ( @{$$variable{'PAYMENTS'}} ) ?>
+	</table>
+</div>
+
+</body>
+</html>

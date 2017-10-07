@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html"-->
+		Support - Returns
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" type="text/css" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script  type="text/javascript">
+		function submit_handler(form) {
+			if ( document.forms[form].rdbVerdict[0].checked && document.forms[form].RMANumber.value == '' ) {
+				alert( "Please enter an RMA Number." );
+				return false;
+			}
+
+			return true;
+		} // end function
+	</script>
+</head>
+
+<body>
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Managerial &#187;</span> Returns &#187; Details</h1>
+
+	<form name="f1" method="post" action="returns.html">
+		<fieldset>
+			<legend>
+				Order Details
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<span class="label">Submission Date:</span>
+			<label class="value"><?RequestDate?></label>
+			<br />
+
+			<span class="label">Order ID #:</span>
+			<a href="/main/order/order_history_details.html?order_id=<?OrderID?>"><?OrderID?></a>
+			<br />
+
+			<span class="label">Order Date:</span>
+			<label class="value"><?OrderDate?></label>
+			<br />
+
+			<span class="label">Project ID: (click to view)</span>
+			<a href="/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>&order_id=<?OrderID?>"><?ProjectReference?></a>
+			<br />
+
+			<span class="label">Company Name:</span>
+			<label class="value"><?CompanyName?></label>
+			<br />
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Return Details
+			</legend>
+
+			<p class="none">&nbsp;</p>
+
+			<span class="label">Description of Problem:</span>
+			<label class="value"><?Problem?></label>
+			<br />
+
+			<span class="label">Type of Request:</span>
+			<label class="value"><?rmatype?></label>
+			<br />
+
+			<label for="txtAdminComments">Comments:</label>
+			<textarea id="txtAdminComments" name="txtAdminComments" class="marg-bot" rows="6" onfocus="on('txtAdminComments')" onblur="off('txtAdminComments')"><?txtAdminComments?></textarea>
+			<br />
+
+			<label>Status:</label>
+			<div>
+				<label for="rdbVerdictApprove" class="radio"><input type="radio" id="rdbVerdictApprove" name="rdbVerdict" value="Y" <?rdbVerdictY?> />Approve</label>
+				<br />
+				<label for="rdbVerdictDecline" class="radio"><input type="radio" id="rdbVerdictDecline" name="rdbVerdict" value="N" <?rdbVerdictN?> />Decline</label>
+			</div>
+			<br />
+
+			<label for="RMANumber">RMA #:</label>
+			<input type="text" id="RMANumber" name="RMANumber" value="<?RMANumber?>" class="input-text" />
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input type="reset" name= "btnFunction" class="button" value="Reset" />
+				<input type="submit" name="btnFunction" class="button" value="Send" onclick="return submit_handler('f1');" />
+				<br />
+			</div>
+
+			<input type="hidden" name="rma_id" value="<?RMAIndex?>" />
+			<br />
+		</fieldset>
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>
