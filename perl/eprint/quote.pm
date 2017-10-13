@@ -123,10 +123,17 @@ sub generate_quote {
 	#get_user_for_info( $log, $dbh, $variable, $quote_id );
 	get_misc_info( $log, $dbh, $variable, $quote_id );
 	get_unfinished_quote_contents( $log, $dbh, $variable, $quote_id );
+
 	# get all items in the quote
-	@{ $variable->{PRODUCTINFO}} = @{ $dbh->selectall_arrayref(q{
-        select s.id, s.name, sum(c.quantity * p.price) as cost from tbl_quote_details as o left join tbl_shopping_lists as s on o.lngProjectIndex = s.id left join tbl_shopping_lists_contents as c on s.id = c.shopping_list_id left join tbl_products as p on p.id = c.product_id where o.lngQuoteId = ? group by s.id, s.name
-    }, {Slice => {}}, $quote_id) };
+#Comment this out for now.
+#	@{ $variable->{PRODUCTINFO}} = @{ $dbh->selectall_arrayref(q{
+#        select s.id, s.name, sum(c.quantity * p.price) as cost 
+#		from tbl_quote_details as o 
+#		left join tbl_shopping_lists as s on o.lngProjectIndex = s.id 
+#		left join tbl_shopping_lists_contents as c on s.id = c.shopping_list_id 
+#		left join tbl_products as p on p.id = c.product_id 
+#		where o.lngQuoteId = ? group by s.id, s.name
+#    }, {Slice => {}}, $quote_id) };
 
 	return OK;
 } # end sub generate_quote
