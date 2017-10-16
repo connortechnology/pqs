@@ -1,34 +1,4 @@
 <br class="clear" />
-<fieldset class="critical">
-    <script type="text/javascript">
-<!--
-    function toggle_visibility(id) {
-       var e = document.getElementById(id);
-       if(e.style.display == 'none')
-          e.style.display = 'block';
-       else
-          e.style.display = 'none';
-    }
-//-->
-</script>
-		<legend><?ws_Colour?> Critical</legend>
-    <label for="colourcritical_enabled" class="checkbox indent-label"><input name="colourcritical_enabled" type="checkbox" value="1" id="colourcritical_enabled"  onclick="toggle_visibility('colourcritical_options');" />Project is <?ws_Colour?> Critical</label><br />
-    <div id="colourcritical_options" style="display:none;">
-    <label class="" title="" for="extra_waste">Extra Waste:</label>
-    <input value="" name="colourcritical_extra_waste" class="" id="colourcritical_extra_waste" size="9" />
-    <br />
-    <label class="" title="" for="extra_waste">Make Ready (%):</label>
-    <input value="" name="colourcritical_make_ready" class="" id="colourcritical_make_ready" size="9" />
-    </div>
-    <script type="text/javascript">
-    <!--
-        var ccen = document.getElementById('colourcritical_enabled');
-        if (ccen.checked) {
-          toggle_visibility('colourcritical_options');
-        }
-    -->
-    </script>
-   </fieldset>
 <div class="link-outer" id="cc_link">
 	<div class="link-inner">
 		<label for="side_link" class="linkage" title="Link Side One &amp; Side Two"><img src="/images/misc/link.png" /><input type="checkbox" id="side_link" name="side_link" value="1" /><img src="/images/misc/link.png" /></label>
