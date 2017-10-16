@@ -722,8 +722,12 @@ print STDERR "HAVE TOTAL IMPS: $total_imp \n";
       my $plate_price_qty = $best_price->{hdnPlateCount};
 
       $mat = PQS::model::materials::material_by_strid($plate_id);
-      die "Plate mat id not found" unless $mat->{lngindex};
-      PQS::model::service::set_material_estimate($plate_price_qty, undef, $sid, $mat->{lngindex}, $i);
+
+  	  if ($mat->{lngindex}) {
+        PQS::model::service::set_material_estimate($plate_price_qty, undef, $sid, $mat->{lngindex}, $i);
+	  } else { 
+        warn "Plate material id not found for type: *$plate_id* FRO PRESS: $press";
+	  }
 
     }
 

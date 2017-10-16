@@ -286,16 +286,22 @@ sub valid_equipment {
 	
 	$sql .= q{ AND eq.strsupplier <> 'RFQ Required'} unless $rfq_only;
 
-	my $product_only =  $pid ? $dbh->selectrow_array(q{
-			SELECT product FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid)
-	: undef;
 
-	my $p = $product_only ? '' : 'NOT';
+	my $product_only = '';
 
-	$sql .= " AND eq.lngindex $p IN ( SELECT lngequipmentindex FROM tbl_equipment_specifications
-								  WHERE strname = 'product_only' AND strvalue = 'Y')" if $pid;
+#Disable product only functions.
+#	my $product_only =  $pid ? $dbh->selectrow_array(q{
+#			SELECT product FROM tbl_projects WHERE lngprojectindex = ?
+#	}, undef, $pid)
+#	: undef;
+#
+#	my $p = $product_only ? '' : 'NOT';
+#
+#	$sql .= " AND eq.lngindex $p IN ( SELECT lngequipmentindex FROM tbl_equipment_specifications
+#								  WHERE strname = 'product_only' AND strvalue = 'Y')" if $pid;
 	
+
+print STDERR "VALID EQUIPEMNT SQL: $sql \n";
 
 	
     # As this query will potentially be run for every single service for every
