@@ -20,9 +20,9 @@ sub get_children_from_id {
 
   my $list;
   if ( $id ) {
-  	$list = $dbh->selectcol_arrayref("select id from categories where parent = ? ORDER BY name ", undef, $id);
+  	$list = $dbh->selectcol_arrayref("select id from categories where parent = ? AND active ORDER BY name ", undef, $id);
    } else {
-  	$list = $dbh->selectcol_arrayref("select id from categories where parent is NULL ORDER BY name ");
+  	$list = $dbh->selectcol_arrayref("select id from categories where parent is NULL AND Active ORDER BY name ");
   }
 }
 
@@ -49,7 +49,7 @@ sub get_name_from_id {
 sub get_all {
   my $dbh = session::dbh;
 
-  my $all = $dbh->selectall_hashref("select * from categories",'id');
+  my $all = $dbh->selectall_hashref("select * from categories where active",'id');
   
   my $cats;
   my $subcats;
@@ -84,6 +84,13 @@ sub get_all {
 sub products_in_tree {
   	my $dbh = session::dbh;
 	my $cat = shift;
+
+
+	unless ($cat) {
+		return $dbh->selectall_arrayref(q{
+			SELECT * from tbl_products WHERE active order by name
+		}, {Slice => {}});
+	}
 
 	my $path =  $dbh->selectall_arrayref(q{
 	WITH RECURSIVE tree AS (
