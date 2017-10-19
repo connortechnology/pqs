@@ -800,6 +800,7 @@ sub store_order_info {
 sub get_invoice_to {
     my ( $log, $dbh, $variable, $order_id ) = @_;
 
+
     my $sth = $dbh->prepare(q{
         SELECT strCompanyName, strSalutation, strFirstName, strLastName, 
                strAddress1,    strAddress2,   strCity,      strState, 
@@ -1086,73 +1087,27 @@ die("Can't find pid for $ocid.") unless ($pid);
         return misc::error( $log, $dbh, $variable, 'Error', $error );
     }
 
-    my @pids = @{ $dbh->selectcol_arrayref(q{
-        SELECT lngprojectindex
-        FROM tbl_order_contents
-        WHERE lngorderid = ? and type = 'print'
-        }, undef, $order_id
-    ) };
 
-print STDERR "CONTINUE VERIFY ORDER @pids FOR ORDER: $order_id \n";
-
-
-
-    for my $pid (@pids) {
-        my $hash = { cust_id => $variable->{cust_id} };
-
-        eprint::docket::summary_display(
-            $r, $log, $dbh, $hash, $pid, undef, 1
-        );
-
-        push @{ $variable->{projects} }, $hash;
-		$variable->{supplier_chino} = is_chino($dbh, $pid);
-    }
-
-    my $totals = get_order_totals($dbh, $variable->{cust_id}, $order_id);
-
-    $variable->{PROJECTS} = $totals->{projects};
-    $variable->{products} = $totals->{products};
-    
-    get_misc( $log, $dbh, $variable, $order_id );
-
-    @$variable{qw( SUB_TOTAL SHIPPING POSTAGE GST PST HST CountyTAX TOTAL )}
-        = map { sprintf('%.2f', $_) }
-            @$totals{qw(sub_total shipping_total postage_total 
-						gst_total pst_total hst_total county_total total)};
 
     $variable->{hiddenOrderID} = $order_id;
 
-    get_invoice_to( $log, $dbh, $variable, $order_id );
-    get_ship_to( $log, $dbh, $variable, $order_id );
+	display_order($variable, $order_id);
 
-    $variable->{CCITYPROVCOUNTRY} = misc::build_city_prov_country(
-        @$variable{qw( txtCity txtStateProvince txtCountry )}
-    );
 
-    $variable->{FCITYPROVCOUNTRY} = misc::build_city_prov_country(
-        @$variable{qw(
-            txtShippingCity txtShippingStateProvince txtShippingCountry
-        )}
-    );
 
-    $variable->{ORDER_ID} = $order_id;
 
 	$variable->{additionalOrderInformation} =~ s/\r/<br>/g;
 	
-    if ( $variable->{user_type} eq 'A' || $variable->{user_type} eq 'E' ) {
-        ($variable->{AdministratorName}) = @{ $dbh->selectcol_arrayref(q{
-            SELECT strFirstName || ' ' || strLastName
-            FROM tbl_Customer_Users
-            WHERE lngUserID = ?
-            }, undef, $variable->{user_id}
-        ) };
-    }
 
     if ($card_number) {
 		$variable->{card_number} = '**** **** **** ' . substr($variable->{card_number},12);
 		$variable->{amount} = $variable->{TOTAL};
         $variable->{AmountPaid} = $variable->{amount};
 	}
+
+print STDERR "HAVE PROJECT DATA ", Dumper($variable->{projects});
+
+print STDERR "HAVE QTYS IN VAR", Dumper($variable->{qty});
 
 
     return OK;
@@ -1973,24 +1928,8 @@ sub send_sales_order {
     my %order;
 
 print STDERR "SEND SALES ORDER: $order_id \n";
-    get_invoice_to( $log, $dbh, \%order, $order_id );
-    get_ship_to( $log, $dbh, \%order, $order_id );
-    get_misc( $log, $dbh, \%order, $order_id );
-    get_projects( $log, $dbh, \%order, $order_id );
-    get_products( \%order, $order_id );
 
-    $order{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'txtCity','txtStateProvince','txtCountry'} );
-    $order{'FCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'txtShippingCity','txtShippingStateProvince','txtShippingCountry'} );
-    $order{'ORDER_ID'} = $order_id;
-        $order{'Terms'} = scalar $dbh->selectrow_array(q{
-        SELECT lngTerms 
-        FROM tbl_Customer_Credit
-        WHERE lngCustomerindex = 
-            ( SELECT lngCustomerID
-        FROM tbl_orders where 
-        lngorderID = ?
-        )
-    },undef, $order_id);
+	display_order( \%order, $order_id);
 
     $order{'siteURL'} = configuration::get_value( $log, $dbh, 'siteURL' );
 
@@ -2455,7 +2394,7 @@ print STDERR "START HISTORY DETAILS \n", Dumper($variable, $order_id, $r->param(
 		send_sales_order( $r, $log, $dbh, $order_id, undef );
 	}
 
-    display_order( $log, $dbh, $variable, $order_id );
+    display_order($variable, $order_id );
 
 	eprint::login::display_select_customer( $r, $log, $dbh, $variable, $variable->{cust_id} ); 
 
@@ -2475,18 +2414,9 @@ print STDERR "START HISTORY DETAILS \n", Dumper($variable, $order_id, $r->param(
 			}, undef, $r->param('ddmCustomer'), $pid)
 		}
 
-        my $hash;
-        $hash->{cust_id} = $r->param('ddmCustomer') || $variable->{cust_id};
-
-        eprint::docket::summary_display(
-            $r, $log, $dbh, $hash, $pid, undef, undef 
-        );
-
-        push @{ $variable->{projects} }, $hash;
-		
-		$variable->{supplier_chino} = is_chino($dbh, $pid);
 
     }
+
 	if ( $r->param('ddmCustomer') ) {
 		$dbh->do(q{
 			UPDATE tbl_orders SET lngcustomerid = ? WHERE lngorderid = ?
@@ -2627,34 +2557,64 @@ print STDERR "HAVE PRODUCTS: ", Dumper($data);
 
 
 sub display_order {
-    my ( $log, $dbh, $variable, $order_id ) = @_;
+    my ( $variable, $order_id ) = @_;
 
-    if ( $order_id ne '' ) {
-    	get_invoice_to( $log, $dbh, $variable, $order_id );
-    	get_ship_to( $log, $dbh, $variable, $order_id );
-    	get_misc( $log, $dbh, $variable, $order_id );
-    	get_projects( $log, $dbh, $variable, $order_id );
-	get_products($variable, $order_id);
+	my $r = session::r;
+	my $log = session::log;
+	my $dbh = session::dbh;
 
-        $variable->{CCITYPROVCOUNTRY} = misc::build_city_prov_country(
-            @$variable{qw( txtCity txtStateProvince txtCountry )}
-        );
-        $variable->{FCITYPROVCOUNTRY} = misc::build_city_prov_country(
-            @$variable{qw(
-                txtShippingCity txtShippingStateProvince txtShippingCountry
-            )}
-        );
-        $variable->{ORDER_ID} = $order_id;
-        $variable->{Terms} = scalar $dbh->selectrow_array(q{
-            SELECT lngTerms
-            FROM tbl_Customer_Credit
-            WHERE lngCustomerindex = ( SELECT lngCustomerID
-                                       FROM tbl_orders
-                                       WHERE lngorderID = ? )
-            }, undef, $order_id
-        );
+
+print STDERR "HAVE VARS: $r, $log, $dbh \n";
+
+	get_invoice_to( $log, $dbh, $variable, $order_id );
+	get_ship_to( $log, $dbh, $variable, $order_id );
+	get_misc( $log, $dbh, $variable, $order_id );
+
+
+    my $totals = get_order_totals($dbh, $variable->{cust_id}, $order_id);
+
+    $variable->{projects} = $totals->{projects};
+
+
+    @$variable{qw( SUB_TOTAL SHIPPING POSTAGE GST PST HST CountyTAX TOTAL )}
+        = map { sprintf('%.2f', $_) }
+            @$totals{qw(sub_total shipping_total postage_total 
+						gst_total pst_total hst_total county_total total)};
+
+
+	$variable->{CCITYPROVCOUNTRY} = misc::build_city_prov_country(
+		@$variable{qw( txtCity txtStateProvince txtCountry )}
+	);
+	$variable->{FCITYPROVCOUNTRY} = misc::build_city_prov_country(
+		@$variable{qw(
+			txtShippingCity txtShippingStateProvince txtShippingCountry
+		)}
+	);
+	$variable->{ORDER_ID} = $order_id;
+
+	$variable->{Terms} = scalar $dbh->selectrow_array(q{
+		SELECT lngTerms
+		FROM tbl_Customer_Credit
+		WHERE lngCustomerindex = ( SELECT lngCustomerID
+								   FROM tbl_orders
+								   WHERE lngorderID = ? )
+		}, undef, $order_id
+	);
+
+    if ( $variable->{user_type} eq 'A' || $variable->{user_type} eq 'E' ) {
+        ($variable->{AdministratorName}) = @{ $dbh->selectcol_arrayref(q{
+            SELECT strFirstName || ' ' || strLastName
+            FROM tbl_Customer_Users
+            WHERE lngUserID = ?
+            }, undef, $variable->{user_id}
+        ) };
     }
+
+
+print STDERR "HAVE QTYS IN VAR", Dumper($variable->{qty});
+
 }
+
 
 sub quantity_select_display {
     my ($r, $log, $dbh, $cookie, $variable) = @_;
@@ -3038,7 +2998,7 @@ print STDERR "HAVE TAXES: " , Dumper($taxes);
 print STDERR "TAX INFO: $tax Rate: $$rate, Amount: $$amount \n";
         }
 
-        push @{ $return_ref->{projects} }, {
+		my $line = {
             'index'       => $pid || $product,
             name          => $desc,
             status        => $status,
@@ -3050,31 +3010,25 @@ print STDERR "TAX INFO: $tax Rate: $$rate, Amount: $$amount \n";
             pst_amount    => $pst_amount,
             hst_amount    => $hst_amount,
             county_amount => $county_amount,
-	    shipping      => $shipping,
-	    postage       => $postage,
-	    content_index => $ci,
-        };
-	
-	$subgroup->{$sub} += $price;
-	push @{ $return_ref->{products} }, {
-            'index'       => $pid || $product,
-            name          => $desc,
-            status        => $status,
-            date          => $date,
-            qty           => $qty,
-            price         => $sub ? '0.00' : $price,
-            project_price => $price,
-            gst_amount    => $gst_amount,
-            pst_amount    => $pst_amount,
-            hst_amount    => $hst_amount,
-            county_amount => $county_amount,
 	    	shipping      => $shipping,
 	    	postage       => $postage,
 	    	content_index => $ci,
-			lead_time	  => PQS::model::products::lead_time($product),
-			subgroup	  => $sub
-			
-        } if $product;
+	    	product 	  => $product,
+        };
+
+		if ( $product) { 
+			$line->{lead_time} =  PQS::model::products::lead_time($product);
+			$line->{subgropu} =  $sub;
+		} else { 
+			project_details($dbh, $customer_id, $line, $pid);
+		}
+		
+
+		push @{ $return_ref->{projects} }, $line;
+
+		push @{ $return_ref->{products} }, $line if $product;
+
+		$subgroup->{$sub} += $price;
 
         
         $sub_total   += $price;
@@ -3105,6 +3059,34 @@ print STDERR "ORDER TOTALS: ", Dumper($return_ref);
 
     return $return_ref;
 }
+
+
+
+sub project_details { 
+
+	my ($dbh, $cust_id, $line, $pid ) = @_;
+
+	my $log = session::log;
+	my $r   = session::r;
+
+	$line->{expired}       = eprint::project::validate_project_price($log, $dbh, $pid);
+
+	my $tn = 'SELECT trackingnumber FROM tbl_project_contents WHERE lngprojectindex = ?';
+	$line->{trackingnumber} = join(',',grep {$_} @{$dbh->selectcol_arrayref($tn, undef, $pid)});
+
+	$line->{txtInvoiceComments} = $dbh->selectrow_array(q{
+		SELECT strInvoiceComments FROM tbl_projects WHERE lngprojectindex = ?
+	}, undef, $pid);
+
+	my $hash = { cust_id => $cust_id };
+	eprint::docket::summary_display( $r, $log, $dbh, $hash, $pid, undef, 1);
+	
+	#docket overwrites qty variable with array of qty's
+	map { $line->{$_} = $hash->{$_} unless $_ eq 'qty' } keys %{$hash};
+
+}
+
+
 
 sub get_gateway_info {
     my ($log, $dbh, $cust_id) = @_;

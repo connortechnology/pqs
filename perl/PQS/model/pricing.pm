@@ -7,6 +7,7 @@ use Data::Dumper;
 
 use session;
 
+
 sub get_list_index {
   my ($id) = @_;
   my $dbh = session::dbh;
@@ -16,6 +17,29 @@ sub get_list_index {
   return $index;
 
 }
+
+sub price_array_for_item {
+	my $pricelist = shift;
+	my $id = shift;
+	my $dbh = session::dbh;
+
+	my $data = $dbh->selectall_arrayref(q{
+		SELECT * from pricing_matrix WHERE item = ? AND pricelist = ? ORDER by min nulls first
+	}, {Slice => {}}, $id, $pricelist);
+	
+	return $data;
+
+}
+
+sub items {
+	my $pricelist = shift;
+  	my $dbh = session::dbh;
+	my $data = $dbh->selectcol_arrayref(q{
+		SELECT distinct(item) from pricing_matrix WHERE pricelist = ?
+	}, undef, $pricelist);
+	return $data;
+}
+	
 
 
 sub get_by_id {
@@ -44,6 +68,13 @@ sub add_price_index {
   my $sql = "insert into pricing_indexes (name, min, max, units, pricelist) values (?, ?, ?, ?, ?)";
   my $sth = $dbh->prepare($sql);
   $sth->execute($name, $min, $max, $units, $pricelist);
+}
+
+sub clear_item {
+ my $dbh = session::dbh;
+ my $item = shift;
+ my $pricelist = shift;
+ $dbh->do('delete from pricing_matrix where item = ? AND pricelist = ?', undef, $item, $pricelist);
 }
 
 sub clear_list {

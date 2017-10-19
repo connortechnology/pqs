@@ -144,7 +144,8 @@ p {
 
 .image { 
    position: relative; 
-   width: 100%; /* for IE 6 */
+   width: 100px; /* for IE 6 */
+   width: 100px; /* for IE 6 */
    padding-bottom:10%;
    right:0px;
    left:15%;
@@ -153,15 +154,15 @@ p {
 
 #ordercount { 
    position: absolute; 
-   top: 33%; 
-   right: 20%; 
+   top: 19%; 
+   right: 5%; 
    width: 100%;
    font-size:18px;
 	color: brown;
    }
 #checkout {position: absolute; 
-   top: 70px; 
-   left: -22px;
+   top: 70%; 
+   right: 10%;
    width: 100%;
    font-size:13px;
 	color: black;
@@ -189,7 +190,7 @@ p {
  
   <?if order_count?>
          <a href="/main/order/order_submit.html">
-             <div class="image">
+             <div class="image" style="width: 70px; height: 100px;">
                   <img src="/images/main/products/cart.jpg" alt="" style="max-height:65px; max-width:65px; min-height:65px; min-width:65px;" />
                   <h2 id="ordercount"><?order_count?></h2><br />
             	<span id="checkout" style="z-index:105">CHECKOUT</span>

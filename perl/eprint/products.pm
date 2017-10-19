@@ -14,18 +14,23 @@ use SOAP::Lite;
 use eprint::project qw(project_allowed get_path has_pdf_template);
 use File::Path;
 use HTML::Entities;
+use ssi;
 
 #List all products
 sub list {
   my ($r, $dbh, $variable) = @_;
 
+
+print STDERR "START PRODUCT LIST \n";
   update($r, $dbh, $variable) if $r->param('Save');
 
   PQS::model::products::remove($r->param('delete')) if $r->param('delete');
   
   importcsv($r, $dbh, $variable) if $r->upload("import");
+  exportcsv($r, $dbh, $variable) if $r->param("export");
   
   price_import($r, $dbh, $variable) if $r->upload("price_import");
+  price_export($r, $dbh, $variable) if $r->param("price_export");
   
   $variable->{products} = $dbh->selectall_arrayref("select * from tbl_products order by name", {Slice => {}});
 
@@ -295,6 +300,13 @@ sub display {
 	} else { 
     	$p->{price} = PQS::model::pricing::price_item($cid, $list, $p->{id}, 1);
 	}
+
+	my $img = "/images/main/products/$p->{strid}.jpg";
+	my $path = ssi::get_file_path($r, $img);
+
+	print STDERR "HAVE PATH: $path \n";
+
+	$p->{image}  = -e $path ? $img : " /images/main/products/default.jpg";
   
   }
 
@@ -316,6 +328,28 @@ sub get {
 }
 
 
+sub exportcsv {
+  my ($r,  $dbh, $variable) = @_;
+  
+	my $list = PQS::model::products::list();
+
+	my $h = new PQS::Object::product();
+	my @data = [$h->import_fields];
+
+	foreach my $product ( @{$list} ) {
+		my $p = new PQS::Object::product($product->{id});
+
+		push @data, $p->csv_export;
+	
+	}
+
+	print STDERR "HAVE EXPORT DATA" , Dumper(\@data);
+	my $log = session::log;
+	misc::export_csv( $r, $variable, 'products.csv',  \@data );
+
+}
+
+
 #import a CSV of products
 sub importcsv {
   my ($r, $dbh, $variable) = @_;
@@ -326,10 +360,10 @@ sub importcsv {
   
   while (my $row = $csv->getline($fh)) {
 
-print STDERR "HAVE NEW ROW \n";
 	my $p = new PQS::Object::product();
 
-	$p->csv_import($row);
+	$p->csv_import($header, $row);
+
 	print STDERR "HAVE SPECS: " , Dumper($p->{specs});
 
 	my $valid = $p->validate();
@@ -339,6 +373,43 @@ print STDERR "HAVE NEW ROW \n";
   close $fh;
 }
 
+#import a CSV of products
+sub price_export {
+	my ($r, $dbh, $variable) = @_;
+	
+	my @data  = [qw(strid min max cost sell)];
+
+	my $pricelist = $r->param('pricelist');
+
+
+	my $products = PQS::model::pricing::items($pricelist);
+
+
+	foreach my $id (@{$products}) { 
+		my $p = new PQS::Object::product($id);
+
+
+		my $prices = $p->price_export($pricelist);
+
+
+		map {	push @data,  
+
+			[ $p->spec('strid'), $_->{min}, $_->{max}, $_->{cost}, $_->{sell} ]
+			 
+			 
+		} @{$prices};
+
+	}
+	
+	my $log = session::log;
+
+	misc::export_csv( $r,  $variable, 'pricing.csv', \@data );
+
+
+}
+
+
+  
 
 
 #import a CSV of products
@@ -354,21 +425,35 @@ sub price_import {
 
   my $pricelist = $r->param('pricelist');
   
-  PQS::model::pricing::clear_list($list);
-  
   my $header = $csv->getline($fh);
   
   my $discountable = undef;
+  my $data;
   
   while (my $row = $csv->getline($fh)) {
 	
-    $row->[0] = PQS::model::products::get_id_from_str($row->[0]);
-# print STDERR "HAVE ID: $id FROM STRID: $row->[0] \n";
-    ( $row->[3] ) = $row->[3] =~ m{(\d+\.\d+)};
-    ( $row->[4] ) = $row->[4] =~ m{(\d+\.\d+)};
-    PQS::model::pricing::add_price($list, @{$row}, $discountable, $pricelist);
+    $row->[0] = PQS::model::products::get_id_from_str($row->[0]) if $header->[0] eq 'strid';
+
+    #( $row->[3] ) = $row->[3] =~ m{(\d+\.\d+)};
+    #( $row->[4] ) = $row->[4] =~ m{(\d+\.\d+)};
+
+	push @{$data->{$row->[0]}}, [$list, @{$row}, $discountable, $pricelist];
+
   
   }
+
+print STDERR "INSERTING PRICE: ", Dumper($data);
+
+  	map { 
+		my $id = $_;
+  		PQS::model::pricing::clear_item($id, $pricelist);
+		foreach my $price ( @{$data->{$id}} ) {
+    		PQS::model::pricing::add_price(@{$price});
+		}
+		
+	} keys %{$data};
+
+
   close $fh;
 }
 

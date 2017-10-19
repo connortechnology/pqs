@@ -10,7 +10,7 @@ use Data::Dumper;
 
 sub list {
   my $dbh = session::dbh;
-  return $dbh->selectall_arrayref("select * from tbl_products order by kit.sort", {Slice => {}});
+  return $dbh->selectall_arrayref("select * from tbl_products order by name", {Slice => {}});
 }
 
 sub kit_list {

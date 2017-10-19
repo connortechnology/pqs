@@ -38,6 +38,12 @@ function check_qty(f,inc,min,max) {
 	return true;
 }
 </script>
+<style>
+h2 {
+	font-size: 10px;
+	margin: 10px 0 10px 0;
+}
+</style>
 
 <body>
 <div id="sizer" style="width:100%">
@@ -56,7 +62,7 @@ function check_qty(f,inc,min,max) {
 					
 
 
-						<div id="wrapper2" style="top:50px; width:100%">
+						<div id="wrapper2" style="top:30px; width:100%">
 
 								<div class="outer" style="min-height:50% !important; width:100%">
 
@@ -72,21 +78,25 @@ function check_qty(f,inc,min,max) {
 					<a href="/main/ecommerce/products.html"> Products </a>
 
 					<?loop cat_chain?>
+						<?if name?>
 						<a href="/main/ecommerce/products.html?category=<?id?>"> &#187;	<?name?> </a>
+						<?endif name?>
 			  		<?endloop cat_chain?>
 					
 					</span>
+					</h1>
+					<h2>
 
 					<br/>
-					<span class="title-section">
+					<span class="title-section"> Filter by Category: <br/>
 
 					<?loop cat_children?>
 						<a href="/main/ecommerce/products.html?category=<?id?>"> &#187;	<?name?> </a>
 			  		<?endloop cat_children?>
 					
 					</span>
+					</h2>
 
-					</h1>
 
 
 <?loop products?> 
@@ -141,9 +151,7 @@ function check_qty(f,inc,min,max) {
          
          
              <a href="product_details.html?id=<?id?>"> 
-                <div id="image" >                    			
-                    <img src="/images/main/products/<?strid?>.jpg" alt="<?strid?>" />
-                </div>
+                <div id="image" >                    			<img src="<?image?>" alt="<?strid?>" /> </div>
                     
                 <div id="productname" style="text-transform:uppercase; height:60px;">
                     <strong><?name?></strong><br />
@@ -167,7 +175,7 @@ function check_qty(f,inc,min,max) {
                     <?mediawideid?>
                     <?groupoptions?>
                     <?productgroup?>
-                    <?image?>
+                    Image -- <?image?>
                 </div>
                 <div style="margin-left:auto; margin-right:auto; width:85px; "><input type="text" name="txtQuantity1" id="txtQuantity1" size="2" style="vertical-align:bottom; float:left;" value="<?minimum_qty?>" onBlur="return check_qty(this, <?increment?>,<?minimum_qty?>,<?maximum_qty?>)" /><input class="button" value="ADD" type="submit" align="right" style="float:left; vertical-align:bottom; height:22px" /></div>
         </form>
@@ -185,7 +193,7 @@ function check_qty(f,inc,min,max) {
 </div>
 <!-- end .center -->
 
-<div class="left">
+<div class="left" style="margin-top: 30px">
 	<div class="container-left">
 
 		<div class="textpadder">

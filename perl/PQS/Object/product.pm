@@ -128,21 +128,60 @@ sub load {
   
 }
 
+sub import_fields {
+	return @import_fields;
+}
 
-sub csv_import {
+sub price_export {
+	my $self 		= shift;
+	my $pricelist 	= shift;
+
+
+	my $id = $self->{id};
+
+print STDERR "HAVE PRICE EXPORT FOR ITEM: $id - $pricelist \n";
+
+	my $data = PQS::model::pricing::price_array_for_item($pricelist, $self->{id});
+
+print STDERR "HAVE PRICE EXPORT FOR ITEM: $id \n", Dumper($data);
+	
+	return $data;
+}
+
+sub csv_export {
 	my $self = shift;
 	my $rec	 = shift;
 
 	my $i = 0;
 
+	my $line;
+	my @data;
+	map { push @data, $self->get($_) } @import_fields;
+	
+	return \@data;
+
+}
+
+sub csv_import {
+	my $self   = shift;
+	my $header = shift;
+	my $rec	   = shift;
+
+	my $i = 0;
+
 	map { 
+
+		my $val =  $rec->[$i];
+print STDERR "SET FIELD: $_  = $val \n ";
+
 		$self->set($_, $rec->[$i]);
 		$i++;	
-	} @import_fields;
+	} @{$header};
+	#} @import_fields;
 
-	my $cat_id = PQS::model::categories::get_id_from_name($self->{specs}{subcategory});
+	my $cat_id = PQS::model::categories::get_id_from_name($self->{specs}{category});
 	
-	die("Cateeory mising: " . $self->{specs}{subcategory} ) unless $cat_id;
+	die("Cateeory mising: " . $self->{specs}{category} ) unless $cat_id;
 
 	$self->{id} = PQS::model::products::get_id_from_str($self->get('strid') );
 	

@@ -80,22 +80,37 @@
         </th>
       </tr>
     </thead>
-    <? eval ( map { $variable->{$_->{pid} ? $_->{pid} : $_->{index}} = $_ } @{$variable->{PROJECTS}} ) ?>
     <tbody style="border-top: 2px solid black;">
-      <?loop projects ?>
-      <? eval( $variable->{price}    = $variable->{$variable->{pid}}{price} ) ?>
-      <? eval( $variable->{quantity} = $variable->{qty}[$variable->{QtyIndex}] ) ?>
+      <?loop projects?>
+<!-- start project PID: <?pid?> -- PRODUCT: <?product?> -->
+
+
       <tr class="project no-background" >
+		<?if ($variable->{product}) ?>
+		
+		<td>
+		 	<?name?>
+		</td>
+		<td></td>
+		<td></td>
+
+		<?else ($variable->{product}) ?>
+
         <td style="text-align: left; padding: 0.5em 0.5em 0.5em 0.5em;" colspan="3">
         	<table>
-        	<tr><td style="text-align:left !important;border:none !important;">
+        	<tr>
+
+			
+
+		<td style="text-align:left !important;border:none !important;">
         <em><Strong> <a href="<?siteURL?>/main/proj/proj_view.html?Issue_Cookie=true&ProjectIndex=<?HeaderInfo.id?>">
           <?HeaderInfo.id?> - <?HeaderInfo.reference?></a>
           <? if ( $$variable{'ORDER_STATUS'} eq 'Incomplete' ) ?>
           <a class="button right" style="margin-left:400px" href="<?siteURL?>/main/order/order_submit.html?remove=<?HeaderInfo.id?>">Remove</a>
           <? endif ( $$variable{'ORDER_STATUS'} eq 'Incomplete' ) ?>
            </Strong></em> 
-           </td></tr>
+           </td>
+		  </tr>
            
           <?if HeaderInfo.comments?>
           <tr><td style="text-align:left !important;border:none !important;"><strong>Comments: </strong>
@@ -156,14 +171,20 @@
           </table>
           
           </td>
+		<?endif ($variable->{product}) ?>
           
           
-        <td><?quantity?></td>
+        <td><?qty?></td>
         <td <? if ( $$variable{'expired'} ) ?> class = "error" <? endif ( $$variable{'expired'} ) ?> ><? if ( ! $variable->{HidePricing} ) ?>
-          <?float:price?>
+          <?float:project_price?>
           <? endif ( ! $variable->{HidePricing} ) ?></td>
       </tr>
       <?endloop projects?>
+
+
+
+
+
     </tbody>
     <? if ( ! $variable->{HidePricing} ) ?>
     <tfoot>
