@@ -868,7 +868,15 @@ sub fill_contact {
 					SELECT lnguserid FROM tbl_orders WHERE lngorderid = ?
 				)
 			}, undef, $order_id);
+
+			($ship{txtFirstName}, $ship{txtLastName} )  = $dbh->selectrow_array(q{
+				SELECT strfirstname, strlastname FROM tbl_customer_users WHERE lnguserid = (
+					SELECT lnguserid FROM tbl_orders WHERE lngorderid = ?
+				)
+			}, undef, $order_id);
 		}
+
+print STDERR "FILL CONTACT: " , Dumper(\%ship);
 
 
         my %fix_map = (
@@ -2124,15 +2132,16 @@ sub order_history {
         $$variable{'ddmOrderedBy'} = ssi::fill_drop_down( $log, $dbh, $_, $ordered_by );
 
 
+		my $user = $r->param('ddmOrderedBy');
 
 # Start building SQL For Order History
-        $_ = "SELECT tbl_orders.lngOrderID, to_char(dtmOrderDate, 'MM/DD/YYYY'), 
-			  strFirstName || ' ' || strLastName, tbl_Orders.strStatus, curTotalSale,\n".
+        $_ = "SELECT o.lngOrderID, to_char(dtmOrderDate, 'MM/DD/YYYY'), 
+			  strFirstName || ' ' || strLastName, o.strStatus, curTotalSale,\n".
             "(SELECT SUM(curAmount) FROM tbl_Payments 
-			  WHERE tbl_Payments.lngOrderID=tbl_Orders.lngOrderID AND strSessionID IS NULL), 'projects'\n".
+			  WHERE tbl_Payments.lngOrderID=o.lngOrderID AND strSessionID IS NULL), 'projects'\n".
 
-            "FROM tbl_Orders
-			 WHERE tbl_Orders.lngCustomerID = '$$variable{'cust_id'}' AND tbl_Orders.strStatus != 'Incomplete'\n
+            "FROM tbl_Orders o 
+			 WHERE o.lngCustomerID = '$variable->{'cust_id'}' AND o.strStatus != 'Incomplete'\n
 			";
 
 
@@ -2144,6 +2153,8 @@ sub order_history {
 #					      		WHERE tbl_orders.lngorderid = oc.lngorderid AND oc.lngprojectindex = p.lngprojectindex
 #								AND p.lnguserindex = '$ordered_by' )\n"
 #         			if $ordered_by ne '';            
+
+		$_ .= " AND o.lnguserid = '$user' " if $user;
 
 
 		if ( $r->param('search') ) { 
@@ -2174,6 +2185,14 @@ print STDERR "have order sql: $_ \n";
 					SELECT o.lngprojectindex as pid, strprojectreference as reference FROM tbl_Order_contents o, tbl_projects p WHERE lngorderid = ?
 					AND o.lngprojectindex = p.lngprojectindex
 				}, {Slice=>{}}, $$variable{'ORDERS'}[$index] );
+
+                push @{$$variable{'ORDERS'}[$index+6]}, @{
+					$dbh->selectall_arrayref(q{
+						SELECT o.product as product, name as reference 
+						FROM tbl_Order_contents o, tbl_products p WHERE lngorderid = ?
+						AND o.product = p.id
+					}, {Slice=>{}}, $$variable{'ORDERS'}[$index] )
+				};
                 
 			
             }
@@ -2185,6 +2204,8 @@ print STDERR "have order sql: $_ \n";
             ( $$variable{'CurrencyName'}, $$variable{'CurrencySymbol'}, undef ) = eprint::customer::get_currency( $log, $dbh, $$variable{'cust_id'} );
         }
     }
+
+	print STDERR "HAVE VAARI", Dumper($variable);
     return OK;
 }
 
@@ -2360,8 +2381,6 @@ sub history_details {
 
     my $order_id = $r->param('order_id') || $r->param('pid');
 
-use Data::Dumper;
-print STDERR "START HISTORY DETAILS \n", Dumper($variable, $order_id, $r->param());
 
     $variable->{HidePricing} = 1 if $r->param('PackingSlip');
 

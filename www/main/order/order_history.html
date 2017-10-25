@@ -23,6 +23,7 @@
 
 		<form action="order_history.html" method="post" name="f1" id="f1">
 			<fieldset>
+<!--
 				<legend>
 					Search
 				</legend>
@@ -31,6 +32,7 @@
 				<label for="search">Search:</label>
 				<input name="search" id="search" value="<?search?>" />
 				<br />
+-->
 
 				<label for="ddmOrderedBy">Ordered by:</label>
 				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1">
@@ -102,7 +104,19 @@
 						<? while ( @$variable{'id','date','name','status','total','balance','projects'} = splice @{$$variable{'ORDERS'}},0,7; ) ?>
 							<tr>
 								<td style="text-align: left;"><a href="/main/order/order_history_details.html?order_id=<?id?>"><?rev:id?></a></td>
-								<td style="text-align: left;"><? loop projects ?><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>"><?pid?> - <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
+								<td style="text-align: left;">
+								<? loop projects ?>
+									<?if pid?>
+										<a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>">
+										<?pid?> - <?reference?></a><?if not:_last?><br /><?endif not:_last?
+									<?endif pid?>
+									<?if product?>
+										<a href="/main/ecommerce/product_details.html?id=<?product?>">
+										<?reference?></a>
+									<?endif product?>
+									<?if not:_last?><br /><?endif not:_last?>
+								<? endloop projects ?>
+								</td>
 								<td style="text-align: center;"><?date?></td>
 								<td style="text-align: left;"><?name?></td>
 								<td style="text-align: center;"><?status?></td>
@@ -110,17 +124,6 @@
 								<td style="text-align: right;"><?CurrencySymbol?><?balance?></td>
 							</tr>
 
-							<? if ( @$variable{'id','date','name','status','total','balance','projects'} = splice @{$$variable{'ORDERS'}},0,7; ) ?>
-								<tr class="colRow">
-									<td style="text-align: left;"><a href="/main/order/order_history_details.html?order_id=<?id?>"><?rev:id?></a></td>
-									<td style="text-align: left;"><? loop projects ?><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>"><?pid?> - <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
-									<td style="text-align: center;"><?date?></td>
-									<td style="text-align: left;"><?name?></td>
-									<td style="text-align: center;"><?status?></td>
-									<td style="text-align: right;"><?CurrencySymbol?><?total?></td>
-									<td style="text-align: right;"><?CurrencySymbol?><?balance?></td>
-								</tr>
-							<? endif ( @$variable{'id','date','name','status','total','balance','projects'} = splice @{$$variable{'ORDERS'}},0,7; ) ?>
 						<? endwhile ( @$variable{'id','date','name','status','total','balance','projects'} = splice @{$$variable{'ORDERS'}},0,7; ) ?>
 
 						<tr class="no-border no-background">

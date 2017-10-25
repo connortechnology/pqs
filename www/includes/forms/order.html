@@ -88,15 +88,19 @@
       <tr class="project no-background" >
 		<?if ($variable->{product}) ?>
 		
-		<td>
-		 	<?name?>
+        <td style="text-align: left; padding: 0.5em 0.5em 0.5em 1.5em;" colspan="2">
+			<em><Strong>
+		 	<a href="/main/ecommerce/product_details.html?id=<?product?>" > <?name?> </a>
+		</td><td>
+			  <? if ( $$variable{'ORDER_STATUS'} eq 'Incomplete' ) ?>
+			  <a class="button right"  href="<?siteURL?>/main/order/order_submit.html?remove_product=<?content_index?>">Remove</a>
+			  <? endif ( $$variable{'ORDER_STATUS'} eq 'Incomplete' ) ?>
+			</Strong></em>
 		</td>
-		<td></td>
-		<td></td>
 
 		<?else ($variable->{product}) ?>
 
-        <td style="text-align: left; padding: 0.5em 0.5em 0.5em 0.5em;" colspan="3">
+        <td style="text-align: left; padding: 0.5em 0.5em 0.5em 0.5em;" colspan="2">
         	<table>
         	<tr>
 
@@ -104,14 +108,11 @@
 
 		<td style="text-align:left !important;border:none !important;">
         <em><Strong> <a href="<?siteURL?>/main/proj/proj_view.html?Issue_Cookie=true&ProjectIndex=<?HeaderInfo.id?>">
-          <?HeaderInfo.id?> - <?HeaderInfo.reference?></a>
-          <? if ( $$variable{'ORDER_STATUS'} eq 'Incomplete' ) ?>
-          <a class="button right" style="margin-left:400px" href="<?siteURL?>/main/order/order_submit.html?remove=<?HeaderInfo.id?>">Remove</a>
-          <? endif ( $$variable{'ORDER_STATUS'} eq 'Incomplete' ) ?>
-           </Strong></em> 
-           </td>
+          <?HeaderInfo.id?> - <?HeaderInfo.reference?></a> 
+		<td style="text-align:left !important;border:none !important;">  </td> 
 		  </tr>
            
+
           <?if HeaderInfo.comments?>
           <tr><td style="text-align:left !important;border:none !important;"><strong>Comments: </strong>
           <?HeaderInfo.comments?>
@@ -133,7 +134,7 @@
           </td></tr>
           <?endif HeaderInfo.txtTotalPageQuantity?>
           
-          <tr><td style="text-align:left !important;;border-bottom:1px solid #000000 !important;">
+          <tr><td style="text-align:left !important;">
           <strong>Finished Size: </strong>
           <?HeaderInfo.final_width?>" x <?HeaderInfo.final_height?>"
           </td></tr>
@@ -171,6 +172,14 @@
           </table>
           
           </td>
+
+		  <td>
+          <? if ( $$variable{'ORDER_STATUS'} eq 'Incomplete' ) ?>
+          <a class="button right"  href="<?siteURL?>/main/order/order_submit.html?remove=<?HeaderInfo.id?>">Remove</a>
+          <? endif ( $$variable{'ORDER_STATUS'} eq 'Incomplete' ) ?>
+           </Strong></em> 
+           </td>
+
 		<?endif ($variable->{product}) ?>
           
           
