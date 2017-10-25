@@ -1068,7 +1068,14 @@ print STDERR "HAVE STUFF: $ref ; $is_num -- PID: $pid \n";
 					THEN 1 ELSE o.intquantityindex 
 					END 										AS order_qty,	
 			   (SELECT MAX(lngquoteid) FROM tbl_quote_details 
-				WHERE tbl_quote_details.lngprojectindex = p.lngprojectindex) AS quote_id
+				WHERE tbl_quote_details.lngprojectindex = p.lngprojectindex) AS quote_id,
+				p.intquantity1                                  AS qty,
+
+				(SELECT strname FROM tbl_equipment_type et
+					WHERE et.lngindex = p.lngpresstype)   		AS press_type
+
+
+
         FROM tbl_projects p LEFT JOIN tbl_order_contents o USING (lngprojectindex)
         WHERE p.lngcustomerid = ?
           AND p.strstatus != 'Deleted'
@@ -1081,6 +1088,11 @@ print STDERR "HAVE STUFF: $ref ; $is_num -- PID: $pid \n";
         $limit
     }, 
     { Slice => {} }, @data); 
+
+	map {
+        my @prices = eprint::project::project_price($log, $dbh, $_->{pid});
+        $_->{price} = $prices[0];
+	} @{$variable->{projects}};
 
 	$variable->{search} = $r->param('pid');
 
