@@ -24,7 +24,7 @@ sub price_array_for_item {
 	my $dbh = session::dbh;
 
 	my $data = $dbh->selectall_arrayref(q{
-		SELECT distinct  from pricing_matrix WHERE item = ? AND pricelist = ? ORDER by min nulls first
+		SELECT *  from pricing_matrix WHERE item = ? AND pricelist = ? ORDER by min nulls first
 	}, {Slice => {}}, $id, $pricelist);
 	
 	return $data;
