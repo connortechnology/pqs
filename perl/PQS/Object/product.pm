@@ -53,6 +53,27 @@ sub new {
 
     return $self;
 }
+sub prices {
+  my $self 		= shift;
+  my $cust_id 	= shift;
+  my $qty 		= shift;
+  
+  my $price;
+
+  if ( $self->spec('kit') ) {
+  	$price =  $self->kit_price($cust_id);
+  } else {
+  	$price =  PQS::model::pricing::sell_prices( $self->{list}, $self->{id});
+	map { 
+		$_->{min} = 1   unless $_->{min};
+		$_->{min} .= '+' unless $_->{max};
+	} @{$price};
+  }
+  
+  die("Price not found: $self->{id}") unless $price;
+  
+  return $price;
+}
 
 sub price {
   my $self 		= shift;

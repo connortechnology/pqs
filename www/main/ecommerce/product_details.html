@@ -126,8 +126,26 @@ td tr th table{
     
         <td style="width:45% !important;border:none !important;">
             <table width="100%">
-                <tr  style="height:80%; "><td colspan="2" style="border:none !important;"> <p style="font-size:26px; padding-left:2%; text-align:center; text-transform:uppercase"><strong><?product.name?></strong></p></td></tr>
-                <tr  style="height:80%; "><td colspan="2" style="border:none !important;"> <p style="font-size:20px; padding-left:2%; text-align:center">$<?product.price?> / <?product.units?></p></td></tr>
+                <tr  style="height:80%; "><td colspan="2" style="border:none !important;"> <p style="font-size:26px; padding-left:2%; text-align:center; text-transform:uppercase"><strong><?product.name?></strong></p></td>
+				</tr>
+
+                <tr  style="height:80%; ">
+				<td colspan="2" style="border:none;"> 
+					<table style="margin-left:auto; margin-right:auto; font-size:15px; padding: 0 0.5em 0 0.5em">
+					<?loop prices?>
+						<tr>
+						<td style="border:none; text-align:left"> <?min?> </td>
+						<td style="border:none; text-align: center;"> <?if max?> - <?endif max?> </td>
+						<td style="border:none; text-align: right;"><?max?> </td>
+						<td style="border:none">$<?sell?></td>
+						<td style="border:none"> / <?product.units?></td>
+						</tr>
+					<?endloop prices?>
+					</table>
+	
+				</td>
+				</tr>
+
                 <tr  style="height:80%; "><td colspan="2" style="border:none !important;"> <p style="font-size:12px; padding-left:2%; text-align:center"><?product.description?></p></td></tr>
                 <tr  style="height:80%; "><td colspan="2" style="border:none !important;"> <p style="font-size:12px; padding-left:2%; text-align:center"> <?product.details?></p></td></tr>
                 <tr  style="height:80%; "><td colspan="2" style="border:none !important;"> <p style="font-size:12px; padding-left:2%; text-align:center"> <?product.lead_time?></p></td></tr>

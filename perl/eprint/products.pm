@@ -94,13 +94,13 @@ sub details {
 	my $id = $r->param('id');
 	my $p = new PQS::Object::product($id);
 	$var->{product} = $p->specs();
-	$var->{product}{price} = $p->spec('kit') ? $p->kit_price($var->{cust_id}) : $p->price($var->{cust_id}, 1);
+	$var->{prices} = $p->prices();
+
 	$var->{kit_list} = $p->kit_list();
  
- print STDERR "HAVE PRODUCT DETAILS  FOR ID: $id ", Dumper($var->{product}, $p->{specs});
+ print STDERR "HAVE PRODUCT DETAILS  FOR ID: $id ", Dumper($var->{product});
 
 	
-#$var->{product}{price} = $p->kit_price($var->{cust_id});
 }
 
 sub preconfig {
