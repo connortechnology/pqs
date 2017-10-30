@@ -1825,7 +1825,7 @@ sub copy_project_assets {
 
 # Adds a cutstom line item.
 sub insert_custom_service {
-    my ( $log, $dbh, $pid, $desc, @prices ) = @_;
+    my ( $log, $dbh, $pid, $desc, $docket, @prices ) = @_;
 
     sql::insert( $log, $dbh, 'tbl_Project_Contents',
         lngProjectIndex => $pid,
@@ -1848,6 +1848,12 @@ sub insert_custom_service {
         lngServiceIndex => $sid,
         strName         => 'ServiceName',
         strValue        => $desc );
+
+    sql::insert( $log, $dbh, 'tbl_Service_Specifications',
+        lngProjectIndex => $pid,
+        lngServiceIndex => $sid,
+        strName         => 'hide_docket',
+        strValue        => $docket ); 
 
     # Insert pricing.
     for my $i (1..3) {
@@ -2344,6 +2350,7 @@ sub add_line_item {
     my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
 
     my $name   = $r->param('item_name');
+	my $docket = $r->param('hide_docket'); 
     my @prices = map { $r->param("price-$_") || 0 } 1..3;
 
 # Very basic garbage removal.
@@ -2353,7 +2360,7 @@ sub add_line_item {
 		$_ =~ /(\-?\d+\.?\d*)/; $_ = $1; 
 	} @prices;
 
-    insert_custom_service($log, $dbh, $pid, $name, @prices)
+    insert_custom_service($log, $dbh, $pid, $name, $docket, @prices)
         if @prices;
 
     return VIEW_PAGE . "?pid=$pid";
