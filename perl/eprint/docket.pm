@@ -2305,8 +2305,9 @@ sub setup_docket {
                     $data     = { name => $name, reason => $@, };
                 }
 
+
                 next if $ref eq 'inkmixing' and not @$material;
-                next if $ref eq 'custom'    and not $data->{hide_docket};
+                next if $ref eq 'custom'    and     $data->{hide_docket};
                 
                 my $template = ssi::insert_html($r, $filename);
 
