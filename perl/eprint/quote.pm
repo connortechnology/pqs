@@ -702,7 +702,7 @@ print STDERR "START SEND QUOTES HERE \n";
     for my $pid (@pids) {
         my %hash = (
             cust_id   => $variable->{cust_id},
-            user_type => $variable->{user_type},
+            user_type => 'C'
         );
 
         # The project header and service/material information.
@@ -710,7 +710,6 @@ print STDERR "START SEND QUOTES HERE \n";
             $r, $log, $dbh, \%hash, $pid, undef, 1
         );
 
-        eprint::print::display_project($log, $dbh, \%hash, $pid);
 
         push @{ $quote{attachedProjects} }, \%hash;
 
@@ -762,7 +761,6 @@ print STDERR "START SEND QUOTES HERE \n";
     # One email goes out to the admin.
     my $html  = misc::load_file($r, '/email/forms/quote.html');
 	$html = ssi::variable_substitution( $r, $log, $dbh, $html, \%quote);
-
 
 	use MIME::Base64;
 	use PDF::WebKit;
