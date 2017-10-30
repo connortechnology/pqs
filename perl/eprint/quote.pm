@@ -659,6 +659,9 @@ sub send_quote {
     my ( $r, $log, $dbh, $quote_id, $variable ) = @_;
     my ( $temp, %quote, $txt_template, $html_template );
 
+
+print STDERR "START SEND QUOTES HERE \n";
+
     get_user_by_info( $log, $dbh, \%quote, $quote_id );
     get_user_for_info( $log, $dbh, \%quote, $quote_id );
 
@@ -754,14 +757,18 @@ sub send_quote {
     my @body = ('', $email_content, 'text/html', 'quoted-printable' );
 	
 
+#print STDERR "HAVE QUOTE DATA" , Dumper(%quote);
+
     # One email goes out to the admin.
     my $html  = misc::load_file($r, '/email/forms/quote.html');
 	$html = ssi::variable_substitution( $r, $log, $dbh, $html, \%quote);
+
 
 	use MIME::Base64;
 	use PDF::WebKit;
   	my $kit = PDF::WebKit->new(\$html, page_size => 'Letter');
 	my $pdf = encode_base64($kit->to_pdf);
+
 
 	push @body, ("quote-$quote_id.pdf", $pdf,  'application/pdf', 'base64');
 
@@ -771,7 +778,6 @@ sub send_quote {
 		WHERE u.lnguserid = q.lnguserid
 		AND lngquoteid = ?
 	}, undef, $quote_id);
-
 
 
 
@@ -994,35 +1000,7 @@ sub show_quote {
 #    }, {Slice => {}}, $quote_id) };
 
 	if ( $r->param('btnFunction') eq 'Send Quote' ) {
-   	my $email_content = misc::load_file($r, '/email/email_template.html');
-
-   	$variable->{ReplacementText} = q{<!--#include virtual="/email/forms/quote_with_PDF.html"} . q{-->};
-	$email_content = encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, $variable ));
-
-    my @body = ('', $email_content, 'text/html', 'quoted-printable' );
-	
-
-    # One email goes out to the admin.
-    my $html  = misc::load_file($r, '/email/forms/quote.html');
-	$html = ssi::variable_substitution( $r, $log, $dbh, $html, $variable);
-
-	use MIME::Base64;
-	use PDF::WebKit;
-  	my $kit = PDF::WebKit->new(\$html, page_size => 'Letter');
-	my $pdf = encode_base64($kit->to_pdf);
-
-	push @body, ("quote-$quote_id.pdf", $pdf,  'application/pdf', 'base64');
-
-		my %mail = (
-			SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
-			FROM    => configuration::get_value( $log, $dbh, 'QuotingEmail'),
-			TO      => $variable->{ForEmail},
-			SUBJECT => "Quote $quote_id",
-		);
-
-		misc::send_email_with_attachment(
-			$r, $log, \%mail, @body 
-		);
+			send_quote( $r, $log, $dbh, $quote_id, $variable );
 	}
 
 } # end sub show_quote
