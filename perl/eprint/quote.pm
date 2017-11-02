@@ -710,6 +710,9 @@ print STDERR "START SEND QUOTES HERE \n";
             $r, $log, $dbh, \%hash, $pid, undef, 1
         );
 
+		#Override project settings to not show stock price on quotes.
+		$hash{flags}{stock_separate} = undef;
+
 
         push @{ $quote{attachedProjects} }, \%hash;
 
@@ -751,7 +754,11 @@ print STDERR "START SEND QUOTES HERE \n";
    	my $email_content = misc::load_file($r, '/email/email_template.html');
 
    	$quote{ReplacementText} = q{<!--#include virtual="/email/forms/quote_with_PDF.html"} . q{-->};
+
+
 	$email_content = encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%quote ));
+
+
 
     my @body = ('', $email_content, 'text/html', 'quoted-printable' );
 	

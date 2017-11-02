@@ -1939,74 +1939,25 @@ print STDERR "SEND SALES ORDER: $order_id \n";
 
 	display_order( \%order, $order_id);
 
+
     $order{'siteURL'} = configuration::get_value( $log, $dbh, 'siteURL' );
 
-    my @pids =  @{$dbh->selectcol_arrayref(q{
-    	SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ? and type = 'print'
-    }, undef, $order_id)};
 
     my $cust_id = scalar $dbh->selectrow_array(q{
         SELECT lngCustomerid FROM tbl_orders WHERE lngorderid = ?
     }, undef, $order_id);
 
 
-	my $suppliers;
-	my $cc == '';
-	my $inv_not;
-    for my $pid (@pids) {
-        my %hash;
-        $hash{cust_id} = $cust_id;
-        eprint::docket::summary_display($r, $log, $dbh, \%hash, $pid, undef, 1);
-        push @{$order{projects}}, \%hash;
-		my ($sid)  = eprint::project::get_signature_indices($r->log, $dbh, $pid);
-		my ($sup, $sup_id) = $dbh->selectrow_array(q{
-			SELECT notificationemail, lngcustomerid FROM tbl_customer c, tbl_equipment e
-			WHERE c.strcompanyname = e.strsupplier AND e.lngindex = 
-			( SELECT strvalue::int FROM tbl_service_specifications WHERE strname = 'press'
-			  AND lngserviceindex = ? LIMIT 1 )
-		}, undef, $sid);
+#	my $sup_email = join(',', keys %{$suppliers});
+#print STDERR "HAVE EMAIL: $sup_email  - INV NOT: $inv_not \n";
 
-		$order{supplier_chino} = is_chino($dbh, $pid);
-
-		$suppliers->{$sup} = 1;
-
-		my $email = $dbh->selectrow_array(q{
-			SELECT strvalue FROM tbl_service_specifications WHERE lngprojectindex = ? AND strname = 'txtEmailCC'
-		}, undef, $pid);
-		$cc .= $email;
-
-print STDERR "HAVE SUPPLIER: $sup SID: $sid PID: $pid CC: $cc  - $email \n";
-
-		$inv_not = $dbh->selectrow_array(q{
-			SELECT inv_not FROM tbl_projects WHERE lngprojectindex = ?
-		}, undef, $pid) unless $inv_not;
-	
-		
-		#Inventory locations now have a notification email for anything checked out from that location.
-		# Find email address and to list of email address for notificaiton
-		if ( $inv eq 'OUT' ) {
-
-			my $checkout = $dbh->selectrow_array(q{
-					SELECT notification FROM tbl_inventory i, inventory_locations l, tbl_inventory_checkout c
-					WHERE c.lngprojectindex = ?					 
-					 AND i.lnginventoryindex = c.lnginventoryindex
-					 AND i.locationid = l.id
-			}, undef, $pid);
-			
-			$suppliers->{$checkout} = 1;
-			
-		}
-
-	
-    }
-	my $sup_email = join(',', keys %{$suppliers});
-print STDERR "HAVE EMAIL: $sup_email  - INV NOT: $inv_not \n";
+	my $sup_email = '';
+	my $inv_not = '';
+	my $cc = '';
 
     my $email_template = misc::load_file($r, '/email/forms/order.html');
 
     my $html = ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order );
-
-	
 
 
     $_ = encode_qp($html);
@@ -2997,7 +2948,6 @@ print STDERR "ADD TO TOTAL- PID: $pid, PROD: $product QTY: $qty PRICE: $prod_pri
                      [ \$county_exempt, \$prod_tax3_exempt ]
                    ],
         };
-print STDERR "HAVE TAXES: " , Dumper($taxes);
 
         foreach my $tax ( keys %$taxes ) {
             my ($rate, $amount, $total, $exemption_ref) = @{ $taxes->{$tax} };
@@ -3073,8 +3023,6 @@ print STDERR "TAX INFO: $tax Rate: $$rate, Amount: $$amount \n";
         $pst_total, $gst_total, $hst_total, $county_total, $sub_total, $total, 
 		$shipping_total, $postage_total
     );
-use Data::Dumper;
-print STDERR "ORDER TOTALS: ", Dumper($return_ref);
 
     return $return_ref;
 }
