@@ -1162,25 +1162,11 @@ print STDERR "CHECK ORDER INFO \n";
         );
 
         my $inv;
+
 #print STDERR "ORDER TOTALS ", Dumper($order_info);
 
         foreach my $order (@{ $order_info->{projects} }) {
 
-			if ( $variable->{user}{company}{name} eq 'Pleasanton' ) {
-				$order_info->{total}   -= $order->{shipping};
-				$order->{shipping} 		= 0.00;
-				
-				my $pid = $order->{index};
-				my $sid = eprint::project::check_for_service(undef, $dbh, $pid, 'Shipping');
-
-				# we now also zero out the shipping price from the project 
-				# to make sure the billing report is correct.
-				$dbh->do(q{
-					UPDATE tbl_service_specifications SET strvalue = '0.00'
-					WHERE strname ~ 'txtPrice' AND lngserviceindex = ?
-				}, undef, $sid);
-
-			}
 
             sql::update(
                 $log, $dbh, 'tbl_Order_Contents',
@@ -1197,7 +1183,7 @@ print STDERR "CHECK ORDER INFO \n";
                 dblPostage     => $order->{postage}   || 'NULL',
             );
 
-			make_rfq($r, $dbh, $order->{index}, $order->{qty});
+			#make_rfq($r, $dbh, $order->{index}, $order->{qty});
         }
 
         $total = $order_info->{total};
@@ -1940,8 +1926,6 @@ print STDERR "SEND SALES ORDER: $order_id \n";
 	display_order( \%order, $order_id);
 
 
-    $order{'siteURL'} = configuration::get_value( $log, $dbh, 'siteURL' );
-
 
     my $cust_id = scalar $dbh->selectrow_array(q{
         SELECT lngCustomerid FROM tbl_orders WHERE lngorderid = ?
@@ -1955,46 +1939,31 @@ print STDERR "SEND SALES ORDER: $order_id \n";
 	my $inv_not = '';
 	my $cc = '';
 
-    my $email_template = misc::load_file($r, '/email/forms/order.html');
-
-    my $html = ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order );
 
 
-    $_ = encode_qp($html);
-
-    my @body = ('', $_, 'text/html', 'quoted-printable');
 
     my @project_summaries;
 
-    unless ( configuration::get_value($log, $dbh, 'SendOrderWithoutDocket') ) {
-        my $projects = $dbh->selectcol_arrayref(q{
-            SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ?
-        }, {}, $order_id);
-        foreach my $pid (@$projects) {
-            my $index = $dbh->selectrow_array(q{
-                SELECT intquantityindex FROM tbl_order_contents
-                WHERE lngorderid = ? AND lngprojectindex = ?
-            }, {}, $order_id, $pid);
-
-            my %variable;
-            eprint::docket::display($r, $log, $dbh, \%variable, $pid, undef, $index);
-
-            $_ = misc::load_file($r, '/email/forms/docket.html');
-            if ( $_ ) {
-                $_ = ssi::variable_substitution( $r, $log, $dbh, $_, \%variable );
-                $_ = encode_qp( $_ );
-                push @project_summaries, 
-                    "ProjectDocket#$order_id-$pid.html", $_, 'text/html', 'quoted-printable';
-                }
-            }
-    }
 
    	my $email_content = misc::load_file($r, '/email/email_template.html');
 
    	$order{ReplacementText} = q{<!--#include virtual="/email/forms/order_with_PDF.html"} . q{-->};
 	$email_content = encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
 
-	@body = ("", $email_content,  'text/html', 'quoted-printable');
+	my @body = ("", $email_content,  'text/html', 'quoted-printable');
+
+
+print STDERR "SALES ORDER SHOW PROJECTS \n";
+	map {
+		delete $_->{dockethash};
+		delete $_->{categories};
+		print STDERR "HAVE PROJECT: $_->{project_price} \n", Dumper($_);
+	} @{$order{projects}};
+
+
+    my $email_template = misc::load_file($r, '/email/forms/order.html');
+
+    my $html = ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order );
 
 	use MIME::Base64;
 	use PDF::WebKit;
@@ -2004,9 +1973,19 @@ print STDERR "SEND SALES ORDER: $order_id \n";
 	);
 
   	my $kit = PDF::WebKit->new(\$html, %opt);
-	my $pdf = encode_base64($kit->to_pdf);
+
+	my $pdf = $kit->to_pdf;
+
+#	open(my $fh, ">/tmp/test/$order_id.pdf") or die;
+#	print $fh $pdf;
+#	close $fh;
+
+
+
+	$pdf = encode_base64($pdf);
 
 	push @body, ("order-$order_id.pdf", $pdf,  'application/pdf', 'base64');
+
 
 print STDERR " CHECK ORDER IS PENDING\n";
 # Safeway does not want to send out order without date approval.
@@ -2034,15 +2013,29 @@ print STDERR "ORDER IS PENDING\n";
 		my %mail = (
 			SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
 			FROM    => configuration::get_value( $log, $dbh, 'OrderingEmail'),
-			TO        => configuration::get_value( $log, $dbh, 'OrderingEmail') 
-							. ',' . $sales_email . ',' . $notificationemail 
-							. ',' . $sup_email ,
 
 			SUBJECT => "${inv_not}$creator - Order " . order_rev($dbh, $order_id),
 			CC => $cc,
 		);
 
+		$mail{TO} = $sales_email;
+		$mail{SUBJECT} = "Sales: ${inv_not}$creator - Order " . order_rev($dbh, $order_id);
+		misc::send_email_with_attachment($r, $log, \%mail, @body, @project_summaries ) if $sales_email;
+		delete $mail{BODY};
+
+		$mail{TO} = configuration::get_value( $log, $dbh, 'OrderingEmail');
+		$mail{SUBJECT} = "Admin: ${inv_not}$creator - Order " . order_rev($dbh, $order_id);
 		misc::send_email_with_attachment($r, $log, \%mail, @body, @project_summaries );
+		delete $mail{BODY};
+
+		$mail{TO} = $notificationemail;
+		$mail{SUBJECT} = "Notification: ${inv_not}$creator - Order " . order_rev($dbh, $order_id);
+		misc::send_email_with_attachment($r, $log, \%mail, @body, @project_summaries ) if $notificationemail;
+		delete $mail{BODY};
+
+		#Add supplier here if needed.
+
+
 
 	} elsif ( $r->param('OrderDateApproved') ) {
 print STDERR "SEND DATE APPROVAL \n";
@@ -2823,6 +2816,8 @@ sub cancel_order {
 sub get_order_totals {
     my ( $dbh, $customer_id, $order_id ) = @_;
 
+print STDERR "\n\nwSTART ORDER TOTALS FOR PROJECTS \n";
+
     my ( $pst_rate, $hst_rate, $gst_rate ) = $dbh->selectrow_array(q{
         SELECT dblStatePercent, dblHarmonisedPercent, dblFederalPercent
         FROM tbl_Taxes
@@ -2875,7 +2870,7 @@ print STDERR "Have County Tax RATE: $county_rate FOR ORDER: $order_id \n";
 
     while ($sth->fetch()) {
 
-print STDERR "ADD TO TOTAL- PID: $pid, PROD: $product QTY: $qty PRICE: $prod_price \n";
+print STDERR "ADD TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PRICE: $prod_price \n";
 		my $status;
 		my $shipping;
 		my $postage;
@@ -2886,7 +2881,11 @@ print STDERR "ADD TO TOTAL- PID: $pid, PROD: $product QTY: $qty PRICE: $prod_pri
             Apache2::ServerUtil->server->log, $dbh, $pid
         );
 
-        my $price = $product ? $prod_price : $project_prices[$qtyIndex - 1];
+print STDERR "HAVE PROJECT PRICES: @project_prices FOR PID: $pid \n";
+
+        my $price = $prod_price > 0 ? $prod_price : $project_prices[$qtyIndex - 1];
+
+print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $prod_price PRICE: $price \n";
 
 		if ( $pid ) {
 
@@ -2967,6 +2966,8 @@ print STDERR "ADD TO TOTAL- PID: $pid, PROD: $product QTY: $qty PRICE: $prod_pri
 print STDERR "TAX INFO: $tax Rate: $$rate, Amount: $$amount \n";
         }
 
+print STDERR "HAVE ORDER TOTAL PROJECT PRICE: $price \n";
+
 		my $line = {
             'index'       => $pid || $product,
             name          => $desc,
@@ -2991,6 +2992,8 @@ print STDERR "TAX INFO: $tax Rate: $$rate, Amount: $$amount \n";
 		} else { 
 			project_details($dbh, $customer_id, $line, $pid);
 		}
+
+print STDERR "HAVE PROJECT DETAILS: $line->{project_price} FOR PID: $pid \n";
 		
 
 		push @{ $return_ref->{projects} }, $line;
