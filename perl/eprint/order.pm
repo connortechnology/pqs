@@ -1955,8 +1955,6 @@ print STDERR "SEND SALES ORDER: $order_id \n";
 
 print STDERR "SALES ORDER SHOW PROJECTS \n";
 	map {
-		delete $_->{dockethash};
-		delete $_->{categories};
 		print STDERR "HAVE PROJECT: $_->{project_price} \n", Dumper($_);
 	} @{$order{projects}};
 
