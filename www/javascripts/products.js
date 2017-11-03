@@ -28,13 +28,13 @@ Event.observe(window, 'load', function (e) {
 
 });
 
- Create the question/matrix view tab bar for a "product selector" item.
+// Create the question/matrix view tab bar for a "product selector" item.
 function create_tabs (item) {
     // Create the tabs.
     var tabs = new Element('div', { 'class' : 'tabs' });
 
     var tab_q = new Element('span').update('Questions');
-//    var tab_m = new Element('span').update('Matrix');
+    var tab_m = new Element('span').update('Matrix');
 
     tabs.appendChild(tab_q);
     tabs.appendChild(tab_m);
