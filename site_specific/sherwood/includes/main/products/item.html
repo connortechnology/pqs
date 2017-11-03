@@ -1,0 +1,103 @@
+<div class="product">
+        <img src="<?image?>" width="130" height="130" />
+
+        <form class="info" action="/main/products/select.html">
+                <input type="hidden" name="item" value="<?id?>" />
+                <h3><?name?></h3>
+                <p><?description?></p>
+
+                <div class="views">
+
+                        <!-- Question view. -->
+                        <div class="questions<?if ($variable->{view} eq 'Q')?> selected<?endif ($variable->{view} eq 'Q')?>" >
+                                <?loop questions?>
+                                <strong><?label?></strong>
+
+                                        <?if (@{ $variable->{answers} } > 5) ?>
+                                                <select name="q<?id?>">
+                                                        <?loop answers?>
+                                                        <option id="a<?n?>" value="<?n?>"><?label?></option>
+                                                        <?endloop answers?>
+                                                </select>
+                                        <?else  (@{ $variable->{answers} } > 5) ?>
+                                                <?loop answers?>
+                                                        <label>
+                                                                <input id="a<?n?>" name="q<?id?>" type="radio" value="<?n?>">
+                                                                <?label?>
+                                                        </label>
+                                                <?endloop answers?>
+                                        <?endif (@{ $variable->{answers} } > 5) ?>
+
+                                        <?if not:_last?><br /><?endif not:_last?>
+                                <?endloop questions?>
+                        </div>
+
+
+                        <!-- Matrix view. -->
+
+                        <table class="matrix <?if ($variable->{view} eq 'M')?> selected<?endif ($variable->{view} eq 'M')?>">
+                                <thead>
+                                        <tr>
+                                                <?loop matrix.headers?>
+                                                        <th rowspan="2"><?name?></th>
+                                                <?endloop matrix.headers?>
+                                                <th colspan="<?matrix.pivot_size?>"><?matrix.pivot_name?></th>
+                                        </tr>
+                                        <tr>
+                                                <?loop matrix.pivot_cols?>
+                                                        <th><?name?></th>
+                                                <?endloop matrix.pivot_cols?>
+                                        </tr>
+                                </thead>
+
+                                <tbody>
+                                        <?loop matrix.rows?>
+                                                <tr class="r<?_even?>" >
+                                                        <?loop data?>
+                                                                <td <?if span?>rowspan="<?span?>"<?endif span?>
+                                                                        <?if first?>class="first"<?endif first?>
+                                                                >
+
+                                                                        <?if pivot?>
+                                                                                <?if pid?>
+                                                                                        <?if label?>
+                                                                                                <label>
+                                                                                                        <input id="set<?set?>" type="radio" name="pid" value="<?pid?>" />
+                                                                                                        <?label?>
+                                                                                                </label>
+                                                                                        <?else label?>
+                                                                                                <input id="set<?set?>" type="radio" name="pid" value="<?pid?>" />
+                                                                                        <?endif label?>
+                                                                                <?endif pid?>
+                                                                        <?else pivot?>
+                                                                                <?label?>
+                                                                        <?endif pivot?>
+                                                                </td>
+                                                        <?endloop data?>
+
+                                                </tr>
+
+                                        <?endloop matrix.rows?>
+                                </tbody>
+               <thead>
+                                        <tr>
+                                                <?loop matrix.headers?>
+                                                        <th rowspan="2"><?name?></th>
+                                                <?endloop matrix.headers?>
+                                                <th colspan="<?matrix.pivot_size?>"><?matrix.pivot_name?></th>
+                                        </tr>
+                                        <tr>
+                                                <?loop matrix.pivot_cols?>
+                                                        <th><?name?></th>
+                                                <?endloop matrix.pivot_cols?>
+                                        </tr>
+                                </thead>
+                        </table>
+
+                        <input class="button" type="reset" value="Reset" />
+                        <input class="button" type="submit" value="Submit" />
+
+                </div>
+
+        </form>
+</div>
