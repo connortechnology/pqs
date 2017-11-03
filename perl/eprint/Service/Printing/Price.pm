@@ -96,10 +96,14 @@ sub calc {
         $ts_req = Time::HiRes::time(); # Debug/profiling timings;
     }
 
+
     my $pricing = get_project_price(
         $log, $dbh, $variable, 
         $pid, $sid, @$specs{qw(spread versions overrides)}
     );
+
+
+
 
 	# Keep Version information. Needed for auto-calc.
     delete $specs->{$_} for grep {! $_ =~ /mv/} keys %$specs;
@@ -358,6 +362,7 @@ print STDERR "PASS SPECS \n";
     # the client why.
     return ({ error => 'No valid impositions' }) unless scalar @$impositions;
 
+
     ## PRICING
     #
     $variable->{project_index} = $pid;
@@ -551,6 +556,7 @@ print STDERR "HAVE TOTAL IMPS: $total_imp \n";
         }
     }
 
+
     if ( $price_check == -1 || !keys %$best_price ) {
         return {error => 'Could not price project'};
     }
@@ -680,56 +686,58 @@ print STDERR "HAVE TOTAL IMPS: $total_imp \n";
 
     }
 
+
     #material usage estimate recording -- A lot of this is copies of other code where the price is calculated. There isn't time for something more elegant right now.
-    for my $i (1..3) {
-      my $qty = $qtys->[$i - 1];
-      my $mat;
-      next unless $qty > 0;
+#    for my $i (1..3) {
+#      my $qty = $qtys->[$i - 1];
+#      my $mat;
+#      next unless $qty > 0;
+#
+#      #paper usage
+#      PQS::model::service::set_material_estimate($best_price->{"hdnGrossSheetCount$i"}, undef, $sid, $best_price->{paper}{index}, $i);
+#
+#      #ink usage
+#      my %press_units = map { $_->{name} => $_ } @{$project->{wx_press_units}};
+#      foreach my $key (keys %pms_coverage) {
+#        my $sheets_per_ink_unit = SHEETS_PER_UNIT_PANTONE;
+#        $sheets_per_ink_unit = SHEETS_PER_UNIT_METALLIC if $special_colours{$key};
+#        my $ink_estimate = get_ink_coverage($project, $pms_coverage{key}, $sheets_per_ink_unit) / $print_sides;
+#        my $mat = PQS::model::materials::material_by_strid($press_units{$key});
+#        die "Ink mat id not found" unless $mat->{lngindex};
+#        PQS::model::service::set_material_estimate($ink_estimate, undef, $sid, $mat->{lngindex}, $i);
+#      }
+#
+#      #screen usage
+#      my $press = $best_price->{imp}->{press};
+#      if (eprint::equipment::get_type($log, $dbh, $press) eq 'screen') {
+#        my $area = (SCREEN_LAP + $project->{image_width}  + SCREEN_LAP)
+#                 * (SCREEN_LAP + $project->{image_height} + SCREEN_LAP);
+#        my $mat = PQS::model::materials::material_by_strid('Screen');
+#        die "Screen mat id not found" unless $mat->{lngindex};
+#        PQS::model::service::set_material_estimate($area, undef, $sid, $mat->{lngindex}, $i);
+#      }
+#
+#      #plate usage
+#      my ($plate_type) = eprint::equipment::get_specification($log, $dbh, 'Plate Type', '', $press);
+#      my ($plate_size) = eprint::equipment::get_specification($log, $dbh, 'Plate Size', '', $press);
+#      my $design = $dbh->selectrow_array(q{SELECT strdesign FROM tbl_projects WHERE lngprojectindex = ?}, {}, $pid);
+#
+#      $plate_size = 0 if $design eq 'PlatesSupplied';
+#
+#      my $plate_id = "$plate_size-${plate_type}Plate";
+#
+#      my $plate_price_qty = $best_price->{hdnPlateCount};
+#
+#      $mat = PQS::model::materials::material_by_strid($plate_id);
+#
+#  	  if ($mat->{lngindex}) {
+#        PQS::model::service::set_material_estimate($plate_price_qty, undef, $sid, $mat->{lngindex}, $i);
+#	  } else { 
+#        warn "Plate material id not found for type: *$plate_id* FRO PRESS: $press";
+#	  }
+#
+#    }
 
-      #paper usage
-      PQS::model::service::set_material_estimate($best_price->{"hdnGrossSheetCount$i"}, undef, $sid, $best_price->{paper}{index}, $i);
-
-      #ink usage
-      my %press_units = map { $_->{name} => $_ } @{$project->{wx_press_units}};
-      foreach my $key (keys %pms_coverage) {
-        my $sheets_per_ink_unit = SHEETS_PER_UNIT_PANTONE;
-        $sheets_per_ink_unit = SHEETS_PER_UNIT_METALLIC if $special_colours{$key};
-        my $ink_estimate = get_ink_coverage($project, $pms_coverage{key}, $sheets_per_ink_unit) / $print_sides;
-        my $mat = PQS::model::materials::material_by_strid($press_units{$key});
-        die "Ink mat id not found" unless $mat->{lngindex};
-        PQS::model::service::set_material_estimate($ink_estimate, undef, $sid, $mat->{lngindex}, $i);
-      }
-
-      #screen usage
-      my $press = $best_price->{imp}->{press};
-      if (eprint::equipment::get_type($log, $dbh, $press) eq 'screen') {
-        my $area = (SCREEN_LAP + $project->{image_width}  + SCREEN_LAP)
-                 * (SCREEN_LAP + $project->{image_height} + SCREEN_LAP);
-        my $mat = PQS::model::materials::material_by_strid('Screen');
-        die "Screen mat id not found" unless $mat->{lngindex};
-        PQS::model::service::set_material_estimate($area, undef, $sid, $mat->{lngindex}, $i);
-      }
-
-      #plate usage
-      my ($plate_type) = eprint::equipment::get_specification($log, $dbh, 'Plate Type', '', $press);
-      my ($plate_size) = eprint::equipment::get_specification($log, $dbh, 'Plate Size', '', $press);
-      my $design = $dbh->selectrow_array(q{SELECT strdesign FROM tbl_projects WHERE lngprojectindex = ?}, {}, $pid);
-
-      $plate_size = 0 if $design eq 'PlatesSupplied';
-
-      my $plate_id = "$plate_size-${plate_type}Plate";
-
-      my $plate_price_qty = $best_price->{hdnPlateCount};
-
-      $mat = PQS::model::materials::material_by_strid($plate_id);
-
-  	  if ($mat->{lngindex}) {
-        PQS::model::service::set_material_estimate($plate_price_qty, undef, $sid, $mat->{lngindex}, $i);
-	  } else { 
-        warn "Plate material id not found for type: *$plate_id* FRO PRESS: $press";
-	  }
-
-    }
 
     # SHEET SIZES (DROP-DOWN BOX)
     #
