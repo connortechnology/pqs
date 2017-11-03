@@ -27,6 +27,7 @@ use eprint::project          qw(:common :state reset_dependencies has_pdf_templa
 use PQS::Imposition::Colour  qw(:all);
 use PQS::model::change_order;
 use PQS::model::order;
+use eprint::Build			 ();
 
 require misc;
 require eprint::login;
@@ -1222,6 +1223,10 @@ sub edit_process {
         strProjectReference => $r->param('txtProjectReference')
 	) if $r->param('txtProjectReference');
 
+    update( $log, $dbh, 'tbl_Projects', "lngProjectIndex='$pid'", 
+        lngpresstype => $r->param('rdbPressType')
+    ) if $r->param('rdbPressType');
+
     # QUANTITIES
     #
     if (!has_locked_quantity($dbh, $pid) || $variable->{is_staff}) {
@@ -1887,6 +1892,7 @@ use constant TEMPLATE_PAGE => '/template/record.html';
         create_checkout   => \&inventory_checkout,
         edit              => \&edit_project,
         copy              => \&copy,
+		add_qty           => \&add_qty,
         change_order     =>   \&change_order,
         complete_change_order => \&complete_change_order,
         reorder           => \&reorder,
@@ -2489,6 +2495,89 @@ print STDERR "SENT PROJECT  NOTICE TO: $email \n";
     );
 
 	return;
+
+}
+
+sub add_qty {
+    my ($r, $log, $dbh, $cookie, $var) = @_;
+    my $pid = $r->param('pid');
+
+    my ($new, $changed) = copy_project($dbh, $var, $pid, {
+        name      => ($r->param('name')    || ''),
+        comments   => ($r->param('comments') || ''),
+        no_assets => !$r->param('copy_assets'),
+    });
+
+	$dbh->do(q{
+		UPDATE tbl_projects SET eid = ( 
+			SELECT eid FROM tbl_projects WHERE lngprojectindex = ? 
+		) WHERE lngprojectindex = ?
+	},undef, $pid, $new);
+
+	my $old_q1 = $dbh->selectrow_array(q{
+		SELECT intquantity1 FROM tbl_projects 
+		WHERE  lngprojectindex = ?
+	}, undef, $pid);
+print STDERR "Q1: PID: $pid \n ";
+
+	$pid = $new;
+
+	edit_process($r, $log, $dbh, $cookie, $var, $pid, 1);
+
+	my $new_q1 = $dbh->selectrow_array(q{
+		SELECT intquantity1 FROM tbl_projects 
+		WHERE  lngprojectindex = ?
+	}, undef, $pid);
+
+	my $mv = $dbh->selectrow_array(q{
+		SELECT strvalue FROM tbl_service_specifications
+		WHERE  lngprojectindex = ? AND strname = 'version_quantities'
+	}, undef, $pid);
+
+	my @data = split /,/,$mv;
+	my $new_mv;
+	my $count;
+	while (@data) {
+		my $name = shift @data;
+		my $qty  = shift @data;
+		my $new_qty = int(($qty / $old_q1) * $new_q1);
+		$new_mv .= scalar @data < 2 ? "$name,$new_qty" : "$name,$new_qty,";
+		$count += $new_qty;
+	}
+	$count = $new_q1 - $count;
+
+	@data = split /,/,$new_mv;
+	$new_mv = '';
+	while (@data) {
+		my $name = shift @data;
+		my $qty  = shift @data;
+		$qty++ if $count > 0;
+		$count--;
+		$new_mv .= scalar @data < 2 ? "$name,$qty" : "$name,$qty,";
+
+	}
+
+	$dbh->do(q{
+	    UPDATE tbl_service_specifications SET strvalue = $1
+	    WHERE lngprojectindex = $2 AND strname = 'version_quantities'
+	},undef,$new_mv,$pid);
+
+	$dbh->do(q{
+	    DELETE FROM tbl_service_specifications
+	    WHERE lngprojectindex = $1 AND strname ~ 'override'
+	},undef,$pid);
+
+	$dbh->do(q{
+	    DELETE FROM tbl_service_specifications
+	    WHERE lngprojectindex = $1 AND strname = 'press'
+	},undef,$pid);
+
+	
+
+	eprint::Build::build($log, $dbh, $pid, $var, 0);
+
+    # Recalculate the project if the customer has changed.
+    return '/main/proj/proj_hist.html';
 
 }
 

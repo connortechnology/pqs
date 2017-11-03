@@ -7,6 +7,7 @@ use Text::CSV_XS;
 use Data::Dumper;
 use PQS::Object::product;
 use PQS::model::pricing;
+use PQS::model::product_filter;
 
 use HTTP::Request::Common qw(POST);  
 use LWP::UserAgent; 
@@ -15,6 +16,124 @@ use eprint::project qw(project_allowed get_path has_pdf_template);
 use File::Path;
 use HTML::Entities;
 use ssi;
+
+
+sub save_categories {
+	my $r = shift;
+	map {  
+		if ( $_=~ /editname-(\d+)/ ) {
+			my $id = $1;
+			my $name = $r->param($_);
+			my $parent = $r->param("parent-$id");
+			print STDERR "SET NAME: $id = $name \n ";
+			PQS::model::categories::set_name($id, $name);	
+			PQS::model::categories::set_parent($id, $parent);	
+		}
+	} $r->param();
+	if ( $r->param('editname-new') ) {
+		my $parent = $r->param("parent-new");
+		my $name   = $r->param("editname-new");
+		PQS::model::categories::insert( $parent, $name);
+
+	print STDERR "INSERT NEW $name\n";
+	}
+
+
+}
+
+
+sub save_filters {
+	my $r = shift;
+	my $fid = $r->param('fid');
+
+	if ( $r->param('name-new') ) {
+		my $cat = $r->param("cat-new");
+		my $name   = $r->param("name-new");
+		PQS::model::product_filter::insert( $name, $cat);
+
+	print STDERR "INSERT NEW $name\n";
+	}
+
+
+	map {  
+		if ( $_=~ /option-(\d+)/ ) {
+			my $name = $r->param($_);
+			PQS::model::product_filter::insert_option( $name, $fid);
+		}
+	} $r->param();
+
+
+}
+
+sub builder { 
+	my ($r, $dbh, $var) = @_;
+
+	my $fid = $r->param('fid');
+
+	if ( $r->param('Delete') ) {
+	} elsif ( $r->param('Save')) {
+		save_filters($r);
+	}
+
+	$var->{filters} = PQS::model::product_filter::get_all();
+	$var->{parents} = ssi::make_drop_down(PQS::model::categories::select_list());
+	$var->{fid} = $fid;
+
+}
+
+
+sub category_admin {
+	my ($r, $dbh, $var) = @_;
+	
+print STDERR "START CATEGORY ADMIN \n";
+	if ( $r->param('Delete') ) {
+	} elsif ( $r->param('Save')) {
+		save_categories($r);
+	}
+
+
+
+
+	my $start =  PQS::model::categories::get_children_from_id();
+	my $list = _children($start, []);
+	my $level;
+
+	sub _children { 
+		my $childs = shift;
+		my $cat = shift;
+
+		$level++;
+
+		foreach my $id ( @{$childs}) {
+
+			my $co   = PQS::model::categories::get($id);
+			$co->{level} = $level;
+			$var->{__FillInForm}{"parent-". $co->{id}} = $co->{parent};
+
+			push @{$cat}, $co; 
+
+			my $next = PQS::model::categories::get_children_from_id($id);
+
+			_children( $next, $cat) if (@{$next} );
+			
+		}
+
+		$level--;
+
+		return $cat;
+
+	}
+
+	$var->{categories} = $list;
+
+	$var->{parents} = ssi::make_drop_down(PQS::model::categories::select_list());
+	
+
+print STDERR "HAVE CATEGORIES: " , Dumper($list);
+	return;
+
+
+}
 
 #List all products
 sub list {
