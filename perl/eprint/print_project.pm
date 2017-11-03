@@ -27,13 +27,13 @@ use eprint::project          qw(:common :state reset_dependencies has_pdf_templa
 use PQS::Imposition::Colour  qw(:all);
 use PQS::model::change_order;
 use PQS::model::order;
-use eprint::Build			 ();
 
 require misc;
 require eprint::login;
 require eprint::obj_customer;
 require eprint::inventory;
 require eprint::user;
+require eprint::Build;
 
 
 # Given a project ID and a string project type, insert the name and all
