@@ -65,6 +65,13 @@ sub calc {
     my $prices   = service_prices($dbh, $pid);
     my @material = stock_price($log, $dbh, $pid);
 
+	my $markup = category_markup($dbh, $pid, $variable->{cust_id});
+
+	map { 
+		$total->[$_] *= 1 + ($markup / 100) if $total->[$_] && $markup;
+	} (1..3);
+
+
     # Build a subtotal (excluding 'allowed' services) for each quantity.
     QTY:
     for my $i (1..3) {
@@ -91,6 +98,25 @@ sub calc {
     }
 
     return 'calculated';
+}
+sub category_markup {
+	my $dbh = shift;
+	my $pid = shift;
+	my $cust_id = shift;
+	
+	my $markup = $dbh->selectrow_array(q{
+		SELECT markup FROM product_markup pm, product.item_category ic, product.item i, 
+					  product.assignment a, tbl_projects pr
+
+		WHERE ic.item = i.id AND a.item = i.id AND pm.category = ic.category
+		AND pr.prod = a.project AND pr.lngprojectindex = ? AND pm.customer = ?
+	}, undef, $pid, $cust_id);
+
+	print STDERR "HAVE MARKUP: $markup \n";
+
+	return $markup;
+			 
+
 }
 
 # Accepts the year, month, day of the expiry date and return true if the

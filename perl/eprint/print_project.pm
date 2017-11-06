@@ -850,7 +850,8 @@ sub create_project_from_predefined {
     # Copy the project.
     my ($destination) = copy_project($dbh, $variable, $source, {
             name    => $name,
-            comment => ($r->param('txtComments')         || '')
+            comment => ($r->param('txtComments')         || ''),
+			prod => ($source)
         }
     ) or die "Error copying prefedined project ($source)";
 
@@ -1646,6 +1647,7 @@ print STDERR "STARRT COPY PID ", Dumper(@_);
     # We can change the account, name, comments, and quantity of the project.
     $copy{strprojectreference} = $args->{name}    if $args->{name};
     $copy{strcomments}         = $args->{comment} if $args->{comment};
+    $copy{prod}                = $args->{prod} if $args->{prod};
 		
 	#field on copy project page is named different.
     $copy{strcomments}         = $args->{comments} if $args->{comments};
