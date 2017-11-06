@@ -271,6 +271,17 @@ print STDERR  "HAVE LINE SCREEN: $ls \n";
             $params{$credit_fields{$field}} = $r->param($field) if defined $r->param($field);
         }
         $customer_credit->set( \%params );
+
+		$dbh->do(q{ DELETE from product_markup WHERE customer = ? }, undef, $index );
+		map { 
+			if ( $_ =~ /txtMarkup-(\d*)/ ){
+				print STDERR  "HAVE MARKUP $1 \n";
+				$dbh->do(q{INSERT INTO product_markup ( customer, category, markup) VALUES ( ?, ?, ? ) },
+					undef, $index, $1, $r->param($_) ) if $r->param($_);
+			}
+		} $r->param();
+	
+		
     }
 	if ( $r->param('deleteshipaddress') ) {
 			$dbh->do(qq{ DELETE FROM customer_ship_address WHERE shipid = } . $r->param('deleteship'));
@@ -420,6 +431,17 @@ print STDERR "HAVE DIVISION: $variable->{ddmDivision} \n";
 print STDERR "HAVE LINE SCRREN TO FILL: $variable->{linescreen} \n";
 
     $$variable{'CustomerIndex'} = $index;
+
+	$variable->{product_categories} = $dbh->selectall_arrayref(q{
+		SELECT * FROM product.category ORDER by name 
+	}, {Slice => {} } );
+
+	map { 
+		$_->{markup} = $dbh->selectrow_array(q{
+			SELECT markup from product_markup WHERE customer = ? and category = ?
+		}, undef, $index, $_->{id} );
+	} @{ $variable->{product_categories} };
+
     return OK;
 }
 

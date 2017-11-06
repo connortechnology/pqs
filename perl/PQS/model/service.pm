@@ -18,6 +18,8 @@ sub set_material_estimate {
   my ($estimate, $id, $sid, $mid, $qty_index) = @_;
   my $dbh = session::dbh;
 
+  return unless $mid;
+
   my $qry = "select id from service_materials where sid = ? and mid = ? and qty_index = ?";
   ($id) = $dbh->selectrow_array($qry, undef, $sid, $mid, $qty_index) if (!$id && $sid && $mid && $qty_index);
 

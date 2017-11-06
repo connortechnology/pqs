@@ -124,6 +124,17 @@ not acceptable, however "0" is valid.
 			<br />
            
        	</fieldset>
+                <fieldset>
+<legend>
+                                Product Category Mark-up/Discount
+                        </legend>
+                                <?loop product_categories?>
+                                        <label for="txtPricingLevel"><?name?>: </label>
+                                        <input type="text" size="9" class="smBox" id="txtMarkup-<?id?>" name="txtMarkup-<?id?>" value="<?markup?>" />%<br />
+
+                                <?endloop product_categories?>
+                </fieldset>
+
 
 		<fieldset>
 			<legend>

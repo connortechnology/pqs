@@ -50,7 +50,7 @@ sub display_category {
 
     # Get all the items in the current category.
     $variable->{items} = [ 
-        map { my $item = eval { item($dbh, $_->[0]) }; 
+        map { my $item = eval { item($dbh, $_->[0], $variable->{cust_id}) }; 
               if ($@) { () }                             # Invalid items are removed.
               else    { $item->{view} = $_->[1]; $item } 
             } 
@@ -137,7 +137,7 @@ sub select_project {
 
 # Gets a hash representing the the item.
 sub item {
-    my ($dbh, $id) = @_;
+    my ($dbh, $id, $cust_id) = @_;
 
     my $sth = $dbh->prepare_cached(q{
         SELECT name, description, image, pid FROM product.item WHERE id = ?
@@ -190,7 +190,7 @@ print STDERR "HAVE SERVICES Type: $type " , Dumper($services, $list);
         description => $description,
         image       => $image,
         questions => $questions,
-        matrix    => matrix_table($dbh, $id, $questions),
+        matrix    => matrix_table($dbh, $id, $questions, $cust_id),
 		stock_options => $opt,
 		service => $list,
 		press_type => $type
@@ -253,8 +253,9 @@ sub assigned_project {
 # possible projects (cartesian product of possible answers). TODO Pretty
 # sloppy, clean this up.
 sub matrix_table {
-    my ($dbh, $item, $questions) = @_;
+    my ($dbh, $item, $questions, $cust_id) = @_;
 
+	my $markup = modify_label($dbh, $item, $cust_id) || 0;
     # Define the labels for the headers of the non-pivot table section.
     my @headers =  map { { name => $_->{label} } } 
                    map { $questions->[$_] } 
@@ -278,6 +279,9 @@ sub matrix_table {
         my @cols;
         my @answers;
 
+
+
+
         # If there was more than one question, get the columns.
         if ($data) {
             @cols    = map { { label => $_->{label} } } @$data; # Answer labels.
@@ -286,9 +290,16 @@ sub matrix_table {
 
         # Get the projects that are assigned to this product.
         push @cols, map { 
-            my ($pid, $label, $qty) = assigned_project($dbh, $item, @answers, $_); 
+            my ($pid, $label) = assigned_project($dbh, $item, @answers, $_); 
+			$label =~ /\$(\d*\.*\d*)/;
+			if ( $1 ) {
+				$label = '$' . sprintf("%.2f", $1 * (1 + ( $markup / 100)));
+			}
+
+print STDERR "HAVE LABEL : $label \n";
+
             
-            { pivot => 1,     label => $label, qty => $qty,
+            { pivot => 1,     label => $label, 
               pid   => $pid,  set   => join('-', @answers, $_) }; 
         } @pivot;
 
@@ -326,6 +337,25 @@ sub matrix_table {
 
         rows => \@rows
     };
+}
+
+sub modify_label {
+	my $dbh = shift;
+	my $item = shift;
+	my $cust_id = shift;
+	
+
+	print STDERR "START MODIFY LABEL: $item,   $cust_id, \n";
+
+	my $markup = $dbh->selectrow_array(q{
+		SELECT markup from product_markup m, product.item_category ic WHERE customer = ? and ic.category = m.category AND ic.item  = ?
+	}, undef, $cust_id, $item);
+
+	print STDERR "MODIFY LABLE: $item,   $cust_id, $markup \n";
+
+	return $markup;
+
+
 }
 
 

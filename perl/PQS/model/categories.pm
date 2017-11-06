@@ -7,6 +7,20 @@ no warnings qw(uninitialized);
 use session;
 use Data::Dumper;
 
+sub set_name {
+  my ($id, $name) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{update categories set name = ? where id = ?},undef,  $name, $id);
+}
+
+
+sub insert {
+  my ($id, $name) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{insert into categories (name, parent) values ( ?, ? ) },undef,  $name, $id);
+}
+
+
 sub get {
   my ($id) = @_;
   my $dbh = session::dbh;
@@ -15,14 +29,14 @@ sub get {
 }
 
 sub get_children_from_id {
-  my ($id) = @_;
+  my ($id, $active) = @_;
   my $dbh = session::dbh;
 
   my $list;
   if ( $id ) {
-  	$list = $dbh->selectcol_arrayref("select id from categories where parent = ? AND active ORDER BY name ", undef, $id);
+  	$list = $dbh->selectcol_arrayref("select id from categories where parent = ?  ORDER BY name ", undef, $id);
    } else {
-  	$list = $dbh->selectcol_arrayref("select id from categories where parent is NULL AND Active ORDER BY name ");
+  	$list = $dbh->selectcol_arrayref("select id from categories where parent is NULL  ORDER BY name ");
   }
 }
 
@@ -112,6 +126,18 @@ sub products_in_tree {
 
 	}, {Slice => {}}, $cat);
 
+}
+
+sub select_list {
+  	my $dbh = session::dbh;
+
+    my $list = $dbh->selectcol_arrayref(q{
+        SELECT id, name
+        FROM categories 
+		ORDER by name;
+    }, { Columns => [1, 2] });
+
+	
 }
 
 
