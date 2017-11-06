@@ -2702,9 +2702,6 @@ sub cut_signatures {
 sub valid_price {
     my $price = shift; 
 
-# Allow 0 price projects.
-	return 1;
-# Allow 0 price projects.
 
     $$price{'Valid Price'} = 0;
 
