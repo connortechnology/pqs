@@ -12,7 +12,23 @@ sub set_name {
   my $dbh = session::dbh;
   $dbh->do(q{update categories set name = ? where id = ?},undef,  $name, $id);
 }
+sub set_active {
+  my ($id, $active) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{update categories set active = ? where id = ?},undef,  $active, $id);
+}
+sub set_parent {
+  my ($id, $parent) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{update categories set parent = ? where id = ?},undef, $parent, $id);
+}
 
+
+sub delete {
+  my ($id) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{Delete from categories where id = ? },undef, $id);
+}
 
 sub insert {
   my ($id, $name) = @_;

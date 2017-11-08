@@ -8,6 +8,8 @@ use Data::Dumper;
 use PQS::Object::product;
 use PQS::model::pricing;
 use PQS::model::product_filter;
+use PQS::model::product_defaults;
+use PQS::model::categories;
 
 use HTTP::Request::Common qw(POST);  
 use LWP::UserAgent; 
@@ -18,16 +20,20 @@ use HTML::Entities;
 use ssi;
 
 
+use Set::CrossProduct;
+
 sub save_categories {
 	my $r = shift;
 	map {  
 		if ( $_=~ /editname-(\d+)/ ) {
 			my $id = $1;
 			my $name = $r->param($_);
-			my $parent = $r->param("parent-$id");
+			my $parent = $r->param("parent-$id") || undef;
+			my $active = $r->param("active-$id") || undef;
 			print STDERR "SET NAME: $id = $name \n ";
 			PQS::model::categories::set_name($id, $name);	
 			PQS::model::categories::set_parent($id, $parent);	
+			PQS::model::categories::set_active($id, $active);	
 		}
 	} $r->param();
 	if ( $r->param('editname-new') ) {
@@ -44,23 +50,22 @@ sub save_categories {
 
 sub save_filters {
 	my $r = shift;
+
 	my $fid = $r->param('fid');
-
-	if ( $r->param('name-new') ) {
-		my $cat = $r->param("cat-new");
-		my $name   = $r->param("name-new");
-		PQS::model::product_filter::insert( $name, $cat);
-
-	print STDERR "INSERT NEW $name\n";
-	}
+	my $cat = $r->param("cat");
+	my $name   = $r->param("filtername");
 
 
-	map {  
-		if ( $_=~ /option-(\d+)/ ) {
-			my $name = $r->param($_);
-			PQS::model::product_filter::insert_option( $name, $fid);
-		}
-	} $r->param();
+	$fid = PQS::model::product_filter::set( { name => $name, cat => $cat, id => $fid });
+
+	my @opts =  $r->param('options');
+
+	PQS::model::product_filter::delete_options($fid) if $fid;
+
+	map { 
+print STDERR "INSERTING OPTOINS FOR : $fid -- $_ \n ";
+		PQS::model::product_filter::insert_option( $_, $fid) if $_;
+	} @opts;
 
 
 }
@@ -68,31 +73,173 @@ sub save_filters {
 sub builder { 
 	my ($r, $dbh, $var) = @_;
 
-	my $fid = $r->param('fid');
+print STDERR "START PRODUCT BUILDER \n";
+
+map { 
+	print STDERR "HAVE PARAM: $_ = " . $r->param($_) . " \n";
+} $r->param();
+
+
+
+	my $fid = $r->param('Edit') || $r->param('fid');
+	my $cat = $r->param('cat');
 
 	if ( $r->param('Delete') ) {
+		PQS::model::product_filter::delete($fid);
 	} elsif ( $r->param('Save')) {
 		save_filters($r);
+	} elsif ( $r->param('Edit') ) {
+		$var->{filter} = PQS::model::product_filter::get($fid);
+		$var->{filter}{options} = PQS::model::product_filter::get_options($fid);
+	print STDERR "FO StUFF: ", Dumper($var->{filter});
+	} elsif ( $r->param('New') ) {
+		$fid = undef;
+	}
+	
+
+	$var->{filters} = PQS::model::product_filter::get_category($cat);
+
+
+
+	my %all;
+	map { 
+		$_->{options} = PQS::model::product_filter::get_options($_->{id});
+		my @ol;
+		map { push @ol, $_->{name} } @{ $_->{options} };
+		$all{$_->{name}} = \@ol;
+		
+		
+	} @{$var->{filters}};
+
+
+	my $p = new PQS::Object::product;
+
+	$var->{fields} =  $p->update_fields;
+
+	if ( $r->param('Build') ) {
+		build_products($r, $var, \%all);
+		insert_products($var->{list});
+	} elsif ( $r->param('Preview') ) {
+		build_products($r, $var, \%all);
 	}
 
-	$var->{filters} = PQS::model::product_filter::get_all();
+	my $template = $dbh->selectcol_arrayref(q{Select name,id FROM tbl_products WHERE category = ?}, undef, $cat);
+	$var->{templates} = ssi::make_drop_down($template);
+
+
+	if ( $r->param('strid') && $r->param('name') ) { 
+		PQS::model::product_defaults::delete($cat);
+		#reload submitted values into var.
+		map { 
+			my $f = $_->{fname}; 
+			PQS::model::product_defaults::insert($cat, $f, $r->param($f));
+			$var->{$f} = $r->param($f) 
+		} @{$var->{fields}};
+	} else {
+		my $defs = PQS::model::product_defaults::get($cat);
+		map { 
+			my $f = $_->{name}; 
+			$var->{$f} = $_->{value};
+		} @{$defs};
+	}
+	
+
+	
 	$var->{parents} = ssi::make_drop_down(PQS::model::categories::select_list());
 	$var->{fid} = $fid;
+	$var->{__FillInForm}{cat} = $cat;
 
+#print STDERR "HAVE StUFF: ", Dumper($var->{list});
+
+}
+
+sub insert_products {
+	my $list = shift;
+
+	my $tmp = new PQS::Object::product;
+	my @field_list = @{$tmp->update_fields};
+	foreach my $new ( @{$list} ) {
+
+		my $p = new PQS::Object::product;
+
+		foreach my $f ( @field_list ) {
+			my $id = $f->{fname};
+			my $val = $new->{$id};
+			$p->set($id, $val);
+			print STDERR "SET ID: $id VAL: $val \n";
+		}
+		$p->set('category_id', $new->{category});
+
+		map {
+			my $oid = PQS::model::product_filter::get_option_id($new->{category}, $_, $new->{$_});
+			$p->add_option($oid);
+		} @{$new->{filters}};
+
+
+		$p->validate;
+		$p->save;
+
+
+		print STDERR "SAVE PRODUCT NEW RPODUCT $new->{key} \n", Dumper($new->{filters});
+	}
+
+
+
+}
+
+
+sub build_products {
+	my ($r, $var, $all) = @_;
+	
+
+		sub _sub {
+			my $field = shift;
+			my $p = shift;
+		
+			my $x   = $r->param($field);
+			my $val = $r->param($field);
+
+			while ( $x =~ /(\[(\w+)\])/g ) {;
+			 my $f = "\\\[$2\\\]";
+			 my $n = $p->{$2};
+			 $val =~ s/$f/$n/;
+			
+			}
+			$p->{$field} = $val;
+		}
+
+		
+		my $list =  Set::CrossProduct->new($all);
+
+		until ($list->done ) {
+			my %p = $list->get;
+
+
+			my $key;
+			map { $key .=  $key ? '-' . $p{$_} : $p{$_}  } sort keys %p;
+			$p{key} = $key;
+
+			map { _sub($_->{fname}, \%p) } @{$var->{fields}};
+
+			$p{category} = $r->param('cat');
+			$p{filters} = [keys %{$all}];
+
+#print STDERR "HAVE LIST ", Dumper(\%p);
+			push @{$var->{list}}, \%p;
+
+		}
 }
 
 
 sub category_admin {
 	my ($r, $dbh, $var) = @_;
 	
-print STDERR "START CATEGORY ADMIN \n";
+print STDERR "START CATEGORY ADMIN \n", Dumper($r->param());
 	if ( $r->param('Delete') ) {
+		PQS::model::categories::delete($r->param('Delete'));
 	} elsif ( $r->param('Save')) {
 		save_categories($r);
 	}
-
-
-
 
 	my $start =  PQS::model::categories::get_children_from_id();
 	my $list = _children($start, []);
@@ -402,9 +549,11 @@ sub display {
   } @{$childs};
 
 
-  #products of of current and all children cats.
-  #
-  $var->{products} =  PQS::model::categories::products_in_tree($cat);
+	#products of of current and all children cats.
+	$var->{products} =  PQS::model::categories::products_in_tree($cat);
+	
+	$var->{products} = filter_products($r, $var, $var->{products});
+	
   
   
 
@@ -428,13 +577,66 @@ sub display {
 	$p->{image}  = -e $path ? $img : " /images/main/products/default.jpg";
   
   }
+	
+	my $filters =  PQS::model::product_filter::get_category($cat);
 
+	foreach my $f (@{$filters}) {
+		$f->{options} = PQS::model::product_filter::get_options($f->{id});
+	}
 
+	print STDERR "HAVE FILTERS: ", Dumper($var->{__FillInForm});
+	$var->{filters} = $filters;
 
-  
-  
+	$var->{category} = $cat;
 
 }
+
+sub filter_products {
+	my ($r, $var, $prods) = @_;
+
+	my @valid;
+	my @list;
+	my $have_filter ;
+	map {
+		if ( $_ =~ /filter-(\d+)/ && $r->param($_) ) {
+			my $fid = $1;
+			my $oid = $r->param($_);
+			$have_filter = 1;
+
+			$var->{__FillInForm}{"filter-$fid"} = $oid;
+
+			my $match = PQS::model::product_filter::products_with_option($oid);
+			if ( @list ) {
+				my @newlist;
+				foreach my $m (@{$match}) {
+					my $valid = grep(/$m/, @list);
+					push @newlist, $m if $valid;
+				}
+				@list = @newlist;
+				
+			} else {
+				@list = @{$match};
+			}
+
+			print STDERR "HAVE FILTER: $oid \n", Dumper($match, \@list);
+		}
+	} $r->param();
+
+	my @plist;
+
+
+	foreach my $p (@{$prods} ) {
+		push @plist, $p if grep {$p->{id} eq $_} @list;
+	}
+
+print STDERR "HAE PRODUCTS: ", Dumper($have_filter, @plist, $prods);
+	
+	return $have_filter ? \@plist : $prods;
+	
+
+}
+
+
 
 
   

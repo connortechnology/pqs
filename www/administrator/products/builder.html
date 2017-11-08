@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Reports - Orders
+	</title>
+	
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+    
+    <style>
+	th { border-color:#FFFFFF;
+	}
+	
+	th, tr, td {
+		padding:3px 3px 3px 3px !important;
+	}
+	</style>
+</head>
+
+<body style="margin-left: 10px; background-image:none !important;">
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Products &#187;</span> Categories</h1>
+
+
+
+
+<form method="POST" action="builder.html" enctype="multipart/form-data">
+
+<fieldset style="float:left">
+<div>
+		<select name="cat" id="cat" width=5 onChange="submit()">
+				<option value="">None</option>
+				<?parents?>
+		</select><br/>
+</div><br/>
+
+</form>
+
+<form method="POST" action="builder.html" enctype="multipart/form-data">
+	<input type="hidden" name="cat" value="<?cat?>" />
+    <?loop filters?>
+		<div style="margin-left: 10px; margin-top:20px">
+
+
+			<?id?>	Filter: <?name?> 
+
+				<button type="submit" name="Edit" value="<?id?>">Edit</button>
+				<br/>
+			<div style="margin-left: 50px">
+				<?loop options?>
+					<?name?> <br/>
+				<?endloop options?>
+			</div>
+
+
+		</div>
+		<br/>
+    <?endloop filters?>
+
+
+		<div style="margin-left: 10px; margin-top:50px">
+            FILTER: <input type="text" name="filtername" value="<?filter.name?>" /><br/>
+
+			<?loop filter.options?>
+            	OPTION: <input type="text" name="options" value="<?name?>" /><br/>
+			<?endloop filter.options?>
+
+            	OPTION: <input type="text" name="options" value="" /><br/>
+            	OPTION: <input type="text" name="options" value="" /><br/>
+            	OPTION: <input type="text" name="options" value="" /><br/>
+            	OPTION: <input type="text" name="options" value="" /><br/>
+		</div>
+		<br/>
+            	<input type="text" name="fid" value="<?fid?>" /><br/>
+			<button type="submit" name="Save" value="1">Save</button>
+			<button type="submit" name="New" value="1">New</button>
+			<button type="submit" name="Delete" value="1">Delete</button>
+</fieldset>
+
+<fieldset>
+		<?loop fields?>
+		<?eval( $variable->{value} = $variable->{$variable->{fname}} ) ?>
+	
+			<div style="width: 150px"><?desc?></div>
+			 <?if big?>
+				<textarea name="<?fname?>"><?value?> </textarea>
+			 <?else big?>
+			 <input name="<?fname?>" value="<?value?>" style="" /> <br/>
+			 <?endif big?>
+
+		<?endloop fields?>
+			<button type="submit" name="Build" value="1">Build</button>
+			<button type="submit" name="Preview" value="1">Preview</button>
+</fieldset>
+
+<fieldset style="clear: both">
+		<?loop list?>
+			 <strong>ID:</strong> <?strid?> 
+			 <strong>Name:</strong> <?name?> 
+			 <br/>
+		<?endloop list?>
+</fieldset>
+   
+
+ 
+  </form>
+ </div>
+
+<div  style="float:bottom">
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</div>
+</body>
+</html>

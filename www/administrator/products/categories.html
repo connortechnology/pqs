@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Reports - Orders
+	</title>
+	
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+    
+    <style>
+	th { border-color:#FFFFFF;
+	}
+	
+	th, tr, td {
+		padding:3px 3px 3px 3px !important;
+	}
+	</style>
+</head>
+
+<body style="margin-left: 10px; background-image:none !important;">
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Products &#187;</span> Categories</h1>
+
+
+
+<form method="POST" action="categories.html" enctype="multipart/form-data">
+
+<input type="submit" class="button" value="Save Page" name="Save" style="float:left"/><br />
+<br />
+
+<fieldset>
+    <?loop categories?>
+		<? eval( $variable->{left} = $variable->{level} * 10) ?> 
+		<div style="margin-left: <?left?>px; margin-top:50px">
+		x
+            <input type="checkbox" name="active-<?id?>" value="1" <?if active?> checked <?endif active?> /> <?active?>
+
+			<select name="parent-<?id?>" id="parent-<?id?>" width=5>
+					<option value="">None</option>
+					<?parents?>
+			</select>
+
+            <input type="text" name="editname-<?id?>" value="<?name?>" />
+			<button type="submit" name="Delete" value="<?id?>">Delete</button>
+		</div>
+		<br/>
+    <?endloop categories?>
+		<div style="margin-left: 10px; margin-top:50px">
+			<select name="parent-new" id="parent-new" width=5>
+					<option value="">None</option>
+					<?parents?>
+			</select>
+            <input type="text" name="editname-new" value="" />
+		</div>
+		<br/>
+</fieldset>
+   
+
+ 
+  </form>
+ </div>
+
+<div  style="float:bottom">
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</div>
+</body>
+</html>

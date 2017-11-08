@@ -15,8 +15,8 @@ my @update_fields =  (
 			{fname => 'strid', 			type => 'text', 	desc => 'Id', 				sort_order => 100},
 			{fname => 'category', 		type => 'int', 		desc => 'Category', 		sort_order => 200},
 			{fname => 'name', 			type => 'text', 	desc => 'Name', 			sort_order => 300},
-			{fname => 'description', 	type => 'text', 	desc => 'Description', 		sort_order => 400},
-			{fname => 'details', 		type => 'text', 	desc => 'Details', 			sort_order => 500},
+			{fname => 'description', 	type => 'text', 	desc => 'Description', 		sort_order => 400, big=>1},
+			{fname => 'details', 		type => 'text', 	desc => 'Details', 			sort_order => 500, big=>1},
 			{fname => 'part_number', 	type=> 'text', 		desc => 'Part #', 			sort_order => 600},
 			{fname => 'vendor', 		type => 'int', 		desc => 'Vendor', 			sort_order => 700},
 			{fname => 'minimum_qty', 	type => 'int', 		desc => 'Min', 				sort_order => 800},
@@ -149,6 +149,12 @@ sub load {
   
 }
 
+sub add_option {
+	my $self = shift;
+	push @{$self->{options}}, shift;
+}
+
+
 sub import_fields {
 	return @import_fields;
 }
@@ -247,10 +253,16 @@ print STDERR "HAVE PRODUCT ID: $self->{id} FOR $self->{specs}{strid} \n";
 	  push @data, { name=> $_->{fname}, value=> $self->get($_->{fname}) } unless $_->{fname} eq 'category'; 
 	} @update_fields;
 
-print STDERR "TIME TO SEND DATA TO UPDATE ", Dumper(\@data);
+#print STDERR "TIME TO SEND DATA TO UPDATE ", Dumper(\@data);
 
 	PQS::model::products::update($self->{id}, \@data );
 	PQS::model::products::update_category($self->{id}, $self->get('category_id'));
+	map {
+		PQS::model::product_filter::insert_product_option($self->{id}, $_);
+	}  @{$self->{options}};
+#	PQS::model::products::update_category($self->{id}, $self->get('category_id'));
+		
+	
 
 
 }
