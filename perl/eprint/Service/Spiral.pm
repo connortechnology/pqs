@@ -165,8 +165,8 @@ sub calc {
             height   => $project->{height},
             calliper => $project->{calliper},
         };
-        my $mat = PQS::model::materials::material_by_strid($project->{bindary});
-        PQS::model::service::set_materials_estimate(get_material_usage($job, $project->{bindary}),undef, $sid, $mat->{lngindex}, $i);
+#        my $mat = PQS::model::materials::material_by_strid($project->{bindary});
+#        PQS::model::service::set_materials_estimate(get_material_usage($job, $project->{bindary}),undef, $sid, $mat->{lngindex}, $i);
 
         @$specs{"txtPrice$i", "txtUnitPrice$i"}
             = format_pricing($price[$i], $qty[$i]);
