@@ -1827,7 +1827,7 @@ sub copy_project_comments {
     my ($pid, $user, $assigned, $date, $comment);
     $files->bind_columns(\$pid, \$user, \$assigned, \$date, \$comment);
 
-    $insert->execute($pid, $user, $assigned, $date, $comment)
+    $insert->execute($dest, $user, $assigned, $date, $comment)
         while $files->fetch;
 
 
