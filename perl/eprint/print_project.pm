@@ -250,6 +250,10 @@ sub create_display {
             }, undef, $pid
         );
 
+		#FillInForm does a better job of encoding special characters than our standard ssi code.
+		$variable->{__FillInForm}{txtProjectReference} = $variable->{txtProjectReference};
+		delete $variable->{txtProjectReference};
+
         die "Predefined project ($pid) not found" 
             unless $pid && $variable->{type};
 
@@ -666,8 +670,8 @@ sub create_process {
         strComments         => $r->param('txtComments') . '' ,
         
         intQuantity1        => $qtys->[0],
-        intQuantity2        => $qtys->[1],
-        intQuantity3        => $qtys->[2],
+        q2        			=> $qtys->[1],
+        q3        			=> $qtys->[2],
 
         strStatus           => 'uncalculated',
         lngPressType        => $press_type,
@@ -679,7 +683,8 @@ sub create_process {
         strCreatedBy        => $user_name,
 		rfq_only			=> $r->param('rfq_only') ? $r->param('rfq_only') : 0,
         strInvoiceComments  => $r->param('txtInvoiceComments') || undef,
-		linescreen			=> $r->param('linescreen') || undef
+		linescreen			=> $r->param('linescreen') || undef,
+		digifed				=> ($r->param('DigiFed') || 0),
     );
 
     my $pid;
@@ -1205,7 +1210,7 @@ sub summary_header {
 }
 
 sub edit_process {
-    my ( $r, $log, $dbh, $cookie, $variable, $pid ) = @_;
+    my ( $r, $log, $dbh, $cookie, $variable, $pid, $add_qty, $qtys ) = @_;
 
     $pid =~ tr/0-9//cd;
 
@@ -1236,10 +1241,17 @@ sub edit_process {
 
         # Clean the new quantities and remove any blanks. None of this crap would
         # be necessary if we just used HTML elements properly.
-        my @new = grep { defined $_ and $_ > 0     }
-                  map  { $r->param("txtQuantity$_") =~ /(\d+)/; $1 } 
-                       1..3;
-        @new = (undef, map { $new[$_] || 0 } 0..2);
+        my @new;
+		if ( defined $qtys ) {
+print STDERR "USE NEW QTYS: @{$qtys} \n";
+			@new = (undef,@{$qtys});
+		} else {
+print STDERR "USE NEW QTYS FROM PARAM:  \n";
+			@new = grep { defined $_ and $_ > 0     }
+					  map  { $r->param("txtQuantity$_") =~ /(\d+)/; $1 } 
+						   1..3;
+			@new = (undef, map { $new[$_] || 0 } 0..2);
+		}
 
         # Compare the new and old quantities and update statuses if needed.
         for my $i (1..3) {
@@ -1319,7 +1331,7 @@ print STDERR "MY QTYS: $sq \n";
     # when changing between supplied media?
 
     my $services_modified
-        = modify_services($r, $log, $dbh, $cookie, $variable, $pid);
+        = modify_services($r, $log, $dbh, $cookie, $variable, $pid) if !$add_qty;;
 
     # The level of recalculation required.
     return $modified > $services_modified ? $modified : $services_modified;
@@ -1670,6 +1682,8 @@ print STDERR "STARRT COPY PID ", Dumper(@_);
     # Copy all the assets unless told not to.
     copy_project_assets($dbh, $pid, $new) unless $args->{no_assets};
 
+    copy_project_comments($dbh, $pid, $new);
+
     $dbh->commit;
 
 print STDERR "DONE COPY PROJECT NEW PID: $new \n";
@@ -1796,6 +1810,30 @@ sub copy_project_services {
 
     return 1;
 }
+
+sub copy_project_comments {
+    my ($dbh, $src, $dest) = @_;
+
+    my $files = $dbh->prepare(q{
+        SELECT *  FROM project_comments WHERE pid = ?
+    });
+
+    my $insert = $dbh->prepare(q{
+        INSERT INTO project_comments VALUES (?, ?, ?, ?, ?)
+    });
+
+    # Copy the file metadata in the DB from source to dest.
+    $files->execute($src);
+    my ($pid, $user, $assigned, $date, $comment);
+    $files->bind_columns(\$pid, \$user, \$assigned, \$date, \$comment);
+
+    $insert->execute($pid, $user, $assigned, $date, $comment)
+        while $files->fetch;
+
+
+    return;
+}
+
 
 # Copy the project files (and file metadata in DB) to the destination pid. All
 # approvals are cleared from the files.
@@ -2501,8 +2539,7 @@ print STDERR "SENT PROJECT  NOTICE TO: $email \n";
 }
 
 sub add_qty {
-    my ($r, $log, $dbh, $cookie, $var) = @_;
-    my $pid = $r->param('pid');
+    my ($r, $log, $dbh, $cookie, $var, $pid, $qtys, $press_type) = @_;
 
     my ($new, $changed) = copy_project($dbh, $var, $pid, {
         name      => ($r->param('name')    || ''),
@@ -2516,6 +2553,10 @@ sub add_qty {
 		) WHERE lngprojectindex = ?
 	},undef, $pid, $new);
 
+	$dbh->do(q{
+		UPDATE tbl_projects SET lngpresstype = ?  WHERE lngprojectindex = ?
+	},undef, $press_type, $new) if $press_type;
+
 	my $old_q1 = $dbh->selectrow_array(q{
 		SELECT intquantity1 FROM tbl_projects 
 		WHERE  lngprojectindex = ?
@@ -2524,7 +2565,7 @@ print STDERR "Q1: PID: $pid \n ";
 
 	$pid = $new;
 
-	edit_process($r, $log, $dbh, $cookie, $var, $pid, 1);
+	edit_process($r, $log, $dbh, $cookie, $var, $pid, 1, $qtys);
 
 	my $new_q1 = $dbh->selectrow_array(q{
 		SELECT intquantity1 FROM tbl_projects 

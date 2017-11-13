@@ -27,8 +27,86 @@ sub view_services {
            || continue_project($dbh, $variable->{user_id});
        $pid =~ tr/0-9//cd;
 
-#Do nothing if we dont have something that looks like a pid.
-	return unless $pid;
+
+
+print STDERR "START VIEW SERVICES : ************************* \n\n";
+	my $qtys = [0,0,0];
+
+
+#### CUSTOM CODE SECTION ***********
+	my ($q1, $q2, $q3, $digifed) = $dbh->selectrow_array(q{
+		SELECT intQuantity1, q2, q3, digifed FROM tbl_projects WHERE lngprojectindex = ?
+	}, undef, $pid);
+
+	if ( $q2 ) {
+		$dbh->do(q{
+			UPDATE tbl_projects set q2 = NULL WHERE lngprojectindex = ?
+		},undef,$pid);
+		$qtys->[0] = $q2;
+		eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys);
+	}
+	if ( $q3 ) {
+		$dbh->do(q{
+			UPDATE tbl_projects set q3 = NULL WHERE lngprojectindex = ?
+		},undef,$pid);
+		$qtys->[0] = $q3;
+		eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys);
+	}
+
+	my $pms = scalar $dbh->selectrow_array(q{
+		SELECT count(*) FROM tbl_service_specifications 
+		WHERE lngprojectindex = ? AND strname  LIKE  '%pms%name'
+	}, undef, $pid);
+
+
+print STDERR "HAVE DIGIFED: $digifed PMS: $pms ************\n";
+
+	$dbh->do(q{
+		UPDATE tbl_projects set digifed = false WHERE lngprojectindex = ?
+	},undef,$pid);
+
+	if ( $digifed && !$pms ) {
+		$qtys->[0] = $q1;
+
+		my $press_type = 41;
+
+		eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys, $press_type);
+		my ($sfpid, $status) = $dbh->selectrow_array(q{
+			SELECT lngprojectindex, strstatus FROM tbl_projects WHERE eid = (
+				SELECT eid FROM tbl_projects WHERE lngprojectindex = ?
+			) and lngprojectindex <> ?
+		},undef, $pid, $pid);
+
+      	my @dprice = project_price($log, $dbh, $pid);
+      	my @sprice = project_price($log, $dbh, $sfpid) ;
+		if  (  $sprice[0] < $dprice[0] && $status eq 'Unordered'
+		) {
+			$pid = $sfpid 
+		}
+		print STDERR "PRICE COMP, $dprice[0], $sprice[0], $pid \n";
+	}
+
+	$variable->{pqtys} = $dbh->selectall_arrayref(q{
+		SELECT lngprojectindex as id, intQuantity1 as qty FROM tbl_projects
+		WHERE eid = ( SELECT eid FROM tbl_projects WHERE lngprojectindex = ? )
+	    AND lngprojectindex <> ?
+		ORDER BY 1
+	},{ Slice => {} }, $pid, $pid); 
+
+
+####### CUSTOM CODE SECTION ***********
+
+
+
+
+
+
+
+
+
+
+
+
 
     # Is the user even allowed to view this project?
     return unless project_allowed($dbh, $pid, $variable);
