@@ -7,7 +7,7 @@ use Text::CSV_XS;
 use Data::Dumper;
 use PQS::Object::product;
 use PQS::model::pricing;
-use PQS::model::product_filter;
+#use PQS::model::product_filter;
 
 use HTTP::Request::Common qw(POST);  
 use LWP::UserAgent; 
