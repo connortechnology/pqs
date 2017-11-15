@@ -114,7 +114,10 @@ sub get_all {
 sub products_in_tree {
   	my $dbh = session::dbh;
 	my $cat = shift;
+	my $show_all = shift;
 
+	my $active;
+	$active = q{AND active} unless $show_all;
 
 	unless ($cat) {
 		return $dbh->selectall_arrayref(q{
@@ -122,7 +125,7 @@ sub products_in_tree {
 		}, {Slice => {}});
 	}
 
-	my $path =  $dbh->selectall_arrayref(q{
+	my $path =  $dbh->selectall_arrayref(qq{
 	WITH RECURSIVE tree AS (
     	SELECT cc.id as SubTreeRoot,
             cc.id 
@@ -138,7 +141,8 @@ sub products_in_tree {
 	FROM tree cst
 	WHERE cst.SubTreeRoot = ?
 	) 
-	AND active ORDER by name
+	$active
+	ORDER by name
 
 	}, {Slice => {}}, $cat);
 
@@ -148,7 +152,7 @@ sub select_list {
   	my $dbh = session::dbh;
 
     my $list = $dbh->selectcol_arrayref(q{
-        SELECT id, name
+        SELECT id, name || '  (' || id || ')'
         FROM categories 
 		ORDER by name;
     }, { Columns => [1, 2] });

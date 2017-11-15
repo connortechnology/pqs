@@ -25,11 +25,16 @@
 	</style>
 </head>
 
-<body style="margin-left: 10px; background-image:none !important;">
+<body>
 
 <!--#include virtual="/includes/c1-admin-nav.html" -->
 
-<div id="content">
+<div id="sidebar">
+		<div class="option">
+		</div>
+</div>
+
+<div id="content" style="width:1000px">
 	<h1><span class="title-section">Products &#187;</span> Categories</h1>
 
 
@@ -37,8 +42,10 @@
 
 <form method="POST" action="builder.html" enctype="multipart/form-data">
 
-<fieldset style="float:left">
+<fieldset style="float:left; min-height:700px">
+<legend>Category Filters</legend>
 <div>
+		<label>Category</label>
 		<select name="cat" id="cat" width=5 onChange="submit()">
 				<option value="">None</option>
 				<?parents?>
@@ -53,13 +60,13 @@
 		<div style="margin-left: 10px; margin-top:20px">
 
 
-			<?id?>	Filter: <?name?> 
+		<label>Filter: <strong><?name?></strong></label>
 
 				<button type="submit" name="Edit" value="<?id?>">Edit</button>
 				<br/>
-			<div style="margin-left: 50px">
+			<div style="margin-left: 30px">
 				<?loop options?>
-					<?name?> <br/>
+				<?name?> <br/>
 				<?endloop options?>
 			</div>
 
@@ -69,41 +76,49 @@
     <?endloop filters?>
 
 
+	<?if filter.name?>
 		<div style="margin-left: 10px; margin-top:50px">
             FILTER: <input type="text" name="filtername" value="<?filter.name?>" /><br/>
 
 			<?loop filter.options?>
-            	OPTION: <input type="text" name="options" value="<?name?>" /><br/>
+            <label>	OPTION: </label> <input type="text" name="options" value="<?name?>" /><br/>
 			<?endloop filter.options?>
 
-            	OPTION: <input type="text" name="options" value="" /><br/>
-            	OPTION: <input type="text" name="options" value="" /><br/>
-            	OPTION: <input type="text" name="options" value="" /><br/>
-            	OPTION: <input type="text" name="options" value="" /><br/>
 		</div>
+	<?endif filter.name?>
 		<br/>
-            	<input type="text" name="fid" value="<?fid?>" /><br/>
-			<button type="submit" name="Save" value="1">Save</button>
+<div class="button-bar" >
+           	<input type="hidden" name="fid" value="<?fid?>" /><br/>
 			<button type="submit" name="New" value="1">New</button>
-			<button type="submit" name="Delete" value="1">Delete</button>
+	<?if filter.name?>
+			<button type="submit" name="Save" value="1">Save</button>
+			<button type="submit" name="Delete" value="1" onClick="return confirm('Delete this Filter?')">Delete</button>
+	<?endif filter.name?>
+</div>
 </fieldset>
 
-<fieldset>
+<fieldset  style="min-height:700px">
+<legend>Product Builder</legend>
 		<?loop fields?>
 		<?eval( $variable->{value} = $variable->{$variable->{fname}} ) ?>
 	
-			<div style="width: 150px"><?desc?></div>
 			 <?if big?>
-				<textarea name="<?fname?>"><?value?> </textarea>
+				<label style="width:8em"><?desc?></label>
+				<textarea name="<?fname?>" style="width:250px; float:right" ><?value?> </textarea>
 			 <?else big?>
-			 <input name="<?fname?>" value="<?value?>" style="" /> <br/>
+				<label style="width:8em"><?desc?></label>
+			 	<input name="<?fname?>" value="<?value?>" style="width:250px; float:right" />
 			 <?endif big?>
+			<br/>
 
 		<?endloop fields?>
+<div class="button-bar" >
 			<button type="submit" name="Build" value="1">Build</button>
 			<button type="submit" name="Preview" value="1">Preview</button>
+</div>
 </fieldset>
 
+<?if list?>
 <fieldset style="clear: both">
 		<?loop list?>
 			 <strong>ID:</strong> <?strid?> 
@@ -111,6 +126,7 @@
 			 <br/>
 		<?endloop list?>
 </fieldset>
+<?endif list?>
    
 
  

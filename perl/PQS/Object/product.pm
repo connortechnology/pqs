@@ -7,14 +7,17 @@ use PQS::model::products;
 use eprint::customer; 
 use Data::Dumper;
 
-my @import_fields = qw( strid category subcategory name description details part_number vendor minimum_qty 
-				  	increment maximum_qty weight notes mediawide project active expiry product_group group_option units
-					tax_exempt3 lead_time );
+my @import_fields = qw( strid category name description details part_number vendor minimum_qty 
+				  	increment maximum_qty weight notes project active units lead_time );
+
+#my @import_fields = qw( strid category category name description details part_number vendor minimum_qty 
+#				  	increment maximum_qty weight notes mediawide project active expiry product_group group_option units
+#					tax_exempt3 lead_time );
 
 my @update_fields =  (  
 			{fname => 'strid', 			type => 'text', 	desc => 'Id', 				sort_order => 100},
 			{fname => 'category', 		type => 'int', 		desc => 'Category', 		sort_order => 200},
-			{fname => 'name', 			type => 'text', 	desc => 'Name', 			sort_order => 300},
+			{fname => 'name', 			type => 'text', 	desc => 'Name', 			sort_order => 300, big=>1},
 			{fname => 'description', 	type => 'text', 	desc => 'Description', 		sort_order => 400, big=>1},
 			{fname => 'details', 		type => 'text', 	desc => 'Details', 			sort_order => 500, big=>1},
 			{fname => 'part_number', 	type=> 'text', 		desc => 'Part #', 			sort_order => 600},
@@ -24,14 +27,14 @@ my @update_fields =  (
 			{fname => 'maximum_qty', 	type => 'int', 		desc => 'Max', 				sort_order => 1000},
 			{fname => 'weight', 		type => 'num', 		desc => 'Weight', 			sort_order => 1100},
 			{fname => 'notes', 			type => 'text', 	desc => 'Notes', 			sort_order => 1200},
-			{fname => 'mediawide', 		type => 'text', 	desc => 'Mediawide ID', 	sort_order => 1300},
+#			{fname => 'mediawide', 		type => 'text', 	desc => 'Mediawide ID', 	sort_order => 1300},
 			{fname => 'project', 		type => 'int', 		desc => 'Project', 			sort_order => 1400},
-			{fname => 'active', 		type => 'bool', 	desc => 'Active', 			sort_order => 1500},
-			{fname => 'expiry', 		type => 'date', 	desc => 'Expiry', 			sort_order => 1600},
-			{fname => 'product_group', 	type => 'text', 	desc => 'Product Group', 	sort_order => 1700},
-			{fname => 'group_option', 	type => 'text', 	desc => 'Prodctt Option', 	sort_order => 1800},
+			{fname => 'active', 		type => 'bool', 	desc => 'Active', 			sort_order => 0010},
+#			{fname => 'expiry', 		type => 'date', 	desc => 'Expiry', 			sort_order => 1600},
+#			{fname => 'product_group', 	type => 'text', 	desc => 'Product Group', 	sort_order => 1700},
+#			{fname => 'group_option', 	type => 'text', 	desc => 'Prodctt Option', 	sort_order => 1800},
 			{fname => 'units', 			type => 'text', 	desc => 'Units', 			sort_order => 1900},
-			{fname => 'tax_exempt3', 	type => 'bool', 	desc => 'County Tax Exempt', sort_order => 2000},
+#			{fname => 'tax_exempt3', 	type => 'bool', 	desc => 'County Tax Exempt', sort_order => 2000},
 			{fname => 'lead_time', 		type => 'text', 	desc => 'Lead time', 		sort_order => 2100},
 			);
 
@@ -225,7 +228,7 @@ sub set {
 
 }
 sub update_fields {
-	return \@update_fields;
+	return [ sort {$a->{sort_order} <=> $b->{sort_order}} @update_fields];
 }
 
 sub field_list {
@@ -253,7 +256,7 @@ print STDERR "HAVE PRODUCT ID: $self->{id} FOR $self->{specs}{strid} \n";
 	  push @data, { name=> $_->{fname}, value=> $self->get($_->{fname}) } unless $_->{fname} eq 'category'; 
 	} @update_fields;
 
-#print STDERR "TIME TO SEND DATA TO UPDATE ", Dumper(\@data);
+print STDERR "TIME TO SEND DATA TO UPDATE ", Dumper(\@data, $self->get('category_id'));
 
 	PQS::model::products::update($self->{id}, \@data );
 	PQS::model::products::update_category($self->{id}, $self->get('category_id'));

@@ -37,7 +37,7 @@ sub save_categories {
 		}
 	} $r->param();
 	if ( $r->param('editname-new') ) {
-		my $parent = $r->param("parent-new");
+		my $parent = $r->param("parent-new") || undef;
 		my $name   = $r->param("editname-new");
 		PQS::model::categories::insert( $parent, $name);
 
@@ -91,9 +91,13 @@ map {
 	} elsif ( $r->param('Edit') ) {
 		$var->{filter} = PQS::model::product_filter::get($fid);
 		$var->{filter}{options} = PQS::model::product_filter::get_options($fid);
-	print STDERR "FO StUFF: ", Dumper($var->{filter});
+
+		# Add blanks to add new options.
+		push @{$var->{filter}{options}}, ( {name => undef}, {name => undef}, {name => undef}); 
 	} elsif ( $r->param('New') ) {
 		$fid = undef;
+		$var->{filter}{name} = 'New';
+		$var->{filter}{options} =  [ {name => undef}, {name => undef}, {name => undef}]; 
 	}
 	
 
@@ -107,8 +111,6 @@ map {
 		my @ol;
 		map { push @ol, $_->{name} } @{ $_->{options} };
 		$all{$_->{name}} = \@ol;
-		
-		
 	} @{$var->{filters}};
 
 
@@ -245,11 +247,16 @@ print STDERR "START CATEGORY ADMIN \n", Dumper($r->param());
 	my $list = _children($start, []);
 	my $level;
 
+
+
 	sub _children { 
 		my $childs = shift;
 		my $cat = shift;
 
+print STDERR "GOT CHILDREN --  \n", Dumper($childs,$var->{__FillInForm} );
+
 		$level++;
+
 
 		foreach my $id ( @{$childs}) {
 
@@ -276,7 +283,7 @@ print STDERR "START CATEGORY ADMIN \n", Dumper($r->param());
 	$var->{parents} = ssi::make_drop_down(PQS::model::categories::select_list());
 	
 
-print STDERR "HAVE CATEGORIES: " , Dumper($list);
+print STDERR "HAVE CATEGORIES: " , Dumper($list, $var->{__FillInForm});
 	return;
 
 
@@ -284,34 +291,87 @@ print STDERR "HAVE CATEGORIES: " , Dumper($list);
 
 #List all products
 sub list {
-  my ($r, $dbh, $variable) = @_;
+  my ($r, $dbh, $var) = @_;
+
+
+	my $cat  = $r->param('category');
+	my $sort = $r->param('sort');
+	my $sort_desc = $r->param('sort_dir');
+	my $show_all = $r->param('show_all');
 
 
 print STDERR "START PRODUCT LIST \n";
-  update($r, $dbh, $variable) if $r->param('Save');
 
-  PQS::model::products::remove($r->param('delete')) if $r->param('delete');
-  
-  importcsv($r, $dbh, $variable) if $r->upload("import");
-  exportcsv($r, $dbh, $variable) if $r->param("export");
-  
-  price_import($r, $dbh, $variable) if $r->upload("price_import");
-  price_export($r, $dbh, $variable) if $r->param("price_export");
-  
-  $variable->{products} = $dbh->selectall_arrayref("select * from tbl_products order by name", {Slice => {}});
+	update($r, $dbh, $var) if $r->param('Save');
 
-  foreach my $p ( @{$variable->{products}} ) {
-	foreach my $f (keys %{$p} ) {
-		$p->{$f} = HTML::Entities::encode_entities($p->{$f});
+	PQS::model::products::remove($r->param('delete')) if $r->param('delete');
+
+	importcsv($r, $dbh, $var) 		if $r->upload("import");
+	price_import($r, $dbh, $var) 	if $r->upload("price_import");
+
+
+	$var->{products} = PQS::model::categories::products_in_tree($cat, $show_all) if $cat;
+
+	foreach my $p ( @{$var->{products}} ) {
+		foreach my $f (keys %{$p} ) {
+			$p->{$f} = HTML::Entities::encode_entities($p->{$f});
+		}
+	} 
+
+
+
+	my $p = new PQS::Object::product;
+
+	$var->{fields} =  $p->update_fields;
+
+	my @sort_list;
+	my $s;
+
+	map{ 
+		$s = $_ if $_->{fname} eq $sort;
+		push @sort_list, $_->{fname}, $_->{desc}; 
+	} @{$var->{fields}};
+
+	$var->{sort} =  ssi::make_drop_down(\@sort_list, $sort);
+
+	$var->{products} = sort_products($var->{products}, $s, $sort_desc);
+
+
+	exportcsv($r, $dbh, $var) 		if $r->param("export");
+	price_export($r, $dbh, $var) 	if $r->param("price_export");
+
+	$var->{categories} = ssi::make_drop_down(PQS::model::categories::select_list(), $cat);
+
+	$var->{__FillInForm}{sort_dir} = $sort_desc;
+	$var->{__FillInForm}{show_all} = $show_all;
+
+	print STDERR "HAVE PRODUCTS: ", Dumper($s, $sort_desc);
+
+  
+}
+
+sub sort_products {
+
+	my ($products, $s, $direction) = @_;
+
+	my $sort = $s->{fname};
+
+	if ( $s->{type} eq 'int' ) {
+		if ( $direction eq 'desc' ) {
+			$products = [ sort {$b->{$sort} <=> $a->{$sort} } @{$products} ];
+		} else {
+			$products = [ sort {$a->{$sort} <=> $b->{$sort} } @{$products} ];
+		}
+	} else { 
+		if ( $direction eq 'desc' ) {
+			$products = [ sort {$b->{$sort} cmp $a->{$sort} } @{$products} ];
+		} else {
+			$products = [ sort {$a->{$sort} cmp $b->{$sort} } @{$products} ];
+		}
 	}
-  }
 
-  my $p = new PQS::Object::product;
+	return $products;
 
-  my @x = sort {$a->{sort_order} <=> $b->{sort_order} } @{$p->update_fields};
-
-  $variable->{fields} = \@x;
-  
 }
 
 
@@ -343,8 +403,10 @@ sub update {
 		my $p = new PQS::Object::product();
 		foreach my $f ( @field_list ) {
 			my $val = $r->param("$f");
+			print STDERR "UPDATTE F: $f = $val \n";
 			$p->set($f, $val);
 		}
+		$p->set('category_id', $r->param('category'));
 
 		$p->validate;
 		$p->save;
@@ -553,7 +615,7 @@ sub display {
 	$var->{products} =  PQS::model::categories::products_in_tree($cat);
 	
 	$var->{products} = filter_products($r, $var, $var->{products});
-	
+
   
   
 
@@ -650,9 +712,9 @@ sub get {
 
 
 sub exportcsv {
-  my ($r,  $dbh, $variable) = @_;
+  my ($r,  $dbh, $var) = @_;
   
-	my $list = PQS::model::products::list();
+	my $list = $var->{products};
 
 	my $h = new PQS::Object::product();
 	my @data = [$h->import_fields];
@@ -666,7 +728,7 @@ sub exportcsv {
 
 	print STDERR "HAVE EXPORT DATA" , Dumper(\@data);
 	my $log = session::log;
-	misc::export_csv( $r, $variable, 'products.csv',  \@data );
+	misc::export_csv( $r, $var, 'products.csv',  \@data );
 
 }
 
@@ -696,35 +758,36 @@ sub importcsv {
 
 #import a CSV of products
 sub price_export {
-	my ($r, $dbh, $variable) = @_;
+	my ($r, $dbh, $var) = @_;
 	
 	my @data  = [qw(strid min max cost sell)];
 
 	my $pricelist = $r->param('pricelist');
 
 
-	my $products = PQS::model::pricing::items($pricelist);
+	my $products = $var->{products};
+
+print STDERR "START PRICE EXPORT: ", Dumper($products);
 
 
 	foreach my $id (@{$products}) { 
-		my $p = new PQS::Object::product($id);
+		my $p = new PQS::Object::product($id->{id});
 
 
 		my $prices = $p->price_export($pricelist);
 
+		$prices = [ {}] unless @{$prices};
+
 
 		map {	push @data,  
-
 			[ $p->spec('strid'), $_->{min}, $_->{max}, $_->{cost}, $_->{sell} ]
-			 
-			 
 		} @{$prices};
 
 	}
 	
 	my $log = session::log;
 
-	misc::export_csv( $r,  $variable, 'pricing.csv', \@data );
+	misc::export_csv( $r,  $var, 'pricing.csv', \@data );
 
 
 }
@@ -750,9 +813,12 @@ sub price_import {
   
   my $discountable = undef;
   my $data;
+  my $line;
   
   while (my $row = $csv->getline($fh)) {
-	
+	$line++;
+	my $id =  PQS::model::products::get_id_from_str($row->[0]);
+	die("Invalid Product ID: $row->[0] Row: $line");
     $row->[0] = PQS::model::products::get_id_from_str($row->[0]) if $header->[0] eq 'strid';
 
     #( $row->[3] ) = $row->[3] =~ m{(\d+\.\d+)};
