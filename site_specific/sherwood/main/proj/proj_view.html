@@ -38,8 +38,9 @@
 			window.open('/main/proj/proj_view_printer_friendly.html?ProjectIndex=<?pid?>&Category=-1','printerfriendlyprojectview','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 		}
 		function mail_to(user) {
+
 			var email = user.options[user.selectedIndex].value;
-			window.open('mailto:'+email+'?subject=Project <?pid?> - <?HeaderInfo.reference?>');
+			window.open('mailto:'+email+'?subject=Project <?pid?> ');
 		}
 	</script>
 </head>
