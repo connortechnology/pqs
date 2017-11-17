@@ -187,6 +187,23 @@ p {
       <section id="content<?name?>"> </section>
   <?endloop categories?>
   <hr />
+
+<div>
+	<form action="products.html" >
+	<?loop filters?>
+		<?name?>
+		<select name="filter-<?id?>" id="filter-<?id?>">
+			<option value="">Please Select</option>
+			<?loop options?>
+				<option value="<?id?>"><?name?></option>
+			<?endloop options?>
+		</select>
+	<?endloop filters?>
+	<br/>
+	<input type="submit" value="Search" name="Search" />
+	<input type="hidden" value="<?category?>" name="category" />
+	</form>
+</div>
  
   <?if order_count?>
          <a href="/main/order/order_submit.html">

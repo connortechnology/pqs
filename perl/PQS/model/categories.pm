@@ -12,7 +12,23 @@ sub set_name {
   my $dbh = session::dbh;
   $dbh->do(q{update categories set name = ? where id = ?},undef,  $name, $id);
 }
+sub set_active {
+  my ($id, $active) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{update categories set active = ? where id = ?},undef,  $active, $id);
+}
+sub set_parent {
+  my ($id, $parent) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{update categories set parent = ? where id = ?},undef, $parent, $id);
+}
 
+
+sub delete {
+  my ($id) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{Delete from categories where id = ? },undef, $id);
+}
 
 sub insert {
   my ($id, $name) = @_;
@@ -98,7 +114,10 @@ sub get_all {
 sub products_in_tree {
   	my $dbh = session::dbh;
 	my $cat = shift;
+	my $show_all = shift;
 
+	my $active;
+	$active = q{AND active} unless $show_all;
 
 	unless ($cat) {
 		return $dbh->selectall_arrayref(q{
@@ -106,7 +125,7 @@ sub products_in_tree {
 		}, {Slice => {}});
 	}
 
-	my $path =  $dbh->selectall_arrayref(q{
+	my $path =  $dbh->selectall_arrayref(qq{
 	WITH RECURSIVE tree AS (
     	SELECT cc.id as SubTreeRoot,
             cc.id 
@@ -122,7 +141,8 @@ sub products_in_tree {
 	FROM tree cst
 	WHERE cst.SubTreeRoot = ?
 	) 
-	AND active ORDER by name
+	$active
+	ORDER by name
 
 	}, {Slice => {}}, $cat);
 
@@ -132,7 +152,7 @@ sub select_list {
   	my $dbh = session::dbh;
 
     my $list = $dbh->selectcol_arrayref(q{
-        SELECT id, name
+        SELECT id, name || '  (' || id || ')'
         FROM categories 
 		ORDER by name;
     }, { Columns => [1, 2] });

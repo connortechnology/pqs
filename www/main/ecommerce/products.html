@@ -101,45 +101,7 @@ h2 {
 
 <?loop products?> 
 
-<?if mediawide?>
-<div id="main2">
 
-        <form name="f1" method="post" action="/main/ecommerce/design.html" >	
-            <input type="hidden" name="action" value="add_product_to_order" />
-            <input type="hidden" name="product"	id="product" value="<?id?>"  /> 
-             <input type="hidden" name="mediawide"	id="mediawide" value="<?mediawide?>"  />           
-                    
-                <div id="image" >                    			
-                    <img src="/images/main/products/<?strid?>.jpg" alt="<?strid?>" />
-                </div>
-                    
-                <div id="productname" style="text-transform:uppercase; height:60px;">
-                    <strong><?name?></strong><br />
-                    <?category?> <?subcategory?> <br />
-                    <strong>$<?price?> / <?units?></strong><br />
-                </div>
-            
-                <div style="display:none">
-                    <?id?>
-                    <?description?>
-                    <?details?>
-                    <?part_number?>
-                    <?minimum_qty?>
-                    <?maximum_qty?>
-                    <?increments?>
-                    <?notes?> 
-                    <?project?> 
-                    <?mediawideid?>
-                    <?groupoptions?>
-                    <?productgroup?>
-                    <?image?>
-                </div>
-                <div style="margin-left:auto; margin-right:auto; width:100px; "><input type="text" name="txtQuantity1" id="txtQuantity1" size="2" style="vertical-align:bottom; float:left;  " value="<?minimum_qty?>" onBlur="return check_qty(this, <?increment?>,<?minimum_qty?>,<?maximum_qty?>)" /><input class="button" value="DESIGN" type="submit" align="right" style="float:left; vertical-align:bottom; height:22px" /></div>
-        </form>
-</div>
-
-
-<?else mediawide?>
 
 <div id="main2">
 
@@ -180,7 +142,6 @@ h2 {
                 <div style="margin-left:auto; margin-right:auto; width:85px; "><input type="text" name="txtQuantity1" id="txtQuantity1" size="2" style="vertical-align:bottom; float:left;" value="<?minimum_qty?>" onBlur="return check_qty(this, <?increment?>,<?minimum_qty?>,<?maximum_qty?>)" /><input class="button" value="ADD" type="submit" align="right" style="float:left; vertical-align:bottom; height:22px" /></div>
         </form>
 </div>
-<?endif mediawide?>
 
 <?endloop products?>
     <br />

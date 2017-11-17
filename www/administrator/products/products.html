@@ -3,7 +3,7 @@
 <head>
 	<title>
 		<!--#include virtual="/includes/web_page_title.html" -->
-		Reports - Orders
+		Products
 	</title>
 	
 	<!--#include virtual="/includes/web_page_meta.html" -->
@@ -16,6 +16,9 @@
 	<script type="text/javascript" src="/javascripts/other.js"></script>
     
     <style>
+	button { 
+		width: 110px 
+	}
 	th { border-color:#FFFFFF;
 	}
 	
@@ -25,39 +28,73 @@
 	</style>
 </head>
 
-<body style="margin-left: 10px; background-image:none !important;">
+<body style="">
 
 <!--#include virtual="/includes/c1-admin-nav.html" -->
 
+
+		<div id="sidebar">
+			<div class="option">
+			<!--
+				<table class="no-formatting">
+					<col class="currency" />
+					<col class="name" />
+					<thead>
+						<tr>
+							<th colspan="2">Price Lists</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="selected">
+							<td>CAD</td>
+							<td><a href="pricelist?id=1">Default</a></td>
+						</tr>
+						
+						
+						
+					</tbody>
+				</table>
+				-->
+			</div>
+		</div>
+
 <div id="content">
-	<h1><span class="title-section">Reports &#187;</span> Orders</h1>
+	<h1><span class="title-section">Products</span></h1>
 
 
+<fieldset>
+  <legend>Upload/Download</legend>
 
 <form method="POST" action="products.html" enctype="multipart/form-data">
-  <table>
+  <table class="no-border" style="width:800px">
+  <!--
   <th></th>
-  <th>IMPORT</th>
+  <th width="500px">IMPORT</th>
   <th>EXPORT</th>
-  <th>SAVE</th>
+  -->
   	
   	<tr>
     <td>Products</td>
-  		<td><input type="file" name="import" id="import" /><br />
- <input type="submit" class="button" value="Upload Product List" style="float:left"/></td>
-        <td><input type="submit" name="export" class="button" value="Export Products" /></td>
-        <td><input type="submit" class="button" value="Save Page" name="Save" style="float:left"/></td>
+  		<td>
+			<input type="file" name="import" id="import" />
+			<button type="submit" class="button" value="Upload Product List" style="float:right"/>Upload Products</button>
+ 		</td>
+        <td><button type="submit" name="export" class="button" value="Export Products" style="float:right"/>Export Products</button></td>
      </tr>
      <tr>
      <td>Pricelist</td>
-  		<td>List:<select name="pricelist" id="pricelist">
-  				<option value="1">Default</option>
-                </select><br /><br/>
+  		<td>
+  				<input type="file" name="price_import" id="price_import" />
+				Prices:
+				<select name="pricelist" id="pricelist" style="float:none">
+  					<option value="1">Default</option>
+                </select>
 
-   <input type="file" name="price_import" id="price_import" /><br />
-<input type="submit" class="button" value="Upload Price List" style="float:left"/></td>
-        <td>	<input type="submit" name="price_export" class="button" value="Export Prices" /></td>
-        <td></td>
+				<button type="submit" class="button" value="Upload Price List" style="float:right"/>Upload Prices</button>
+				
+		</td>
+
+        <td>	<button type="submit" name="price_export" class="button" value="Export Prices" style="float:right" />Export Prices</button></td>
      </tr>
 <!--
      <tr>
@@ -69,7 +106,38 @@
 	</tr>
 -->
   </table>
+</fieldset>
 
+<fieldset>
+  <legend>Search</legend>
+
+  <table class="no-border" style="width:800px" >
+	<tr>
+		<td>Search Category:</td> 
+		<td colspan="3"> <select name="category" id="category"> <?categories?> </select> </td>
+		<td rowspan="2"><button type="submit" name="Search" value="Search" style="float:right">Search</button>
+	</tr>
+	<tr>
+		<td>Sort By:</td> 
+		<td>
+			 <select name="sort" id="sort"> <?sort?> </select> 
+		</td>
+		<td style="float:right" >
+			 <select name="sort_dir" id="sort_dir"> 
+				<option value="">Low to High</option>
+				<option value="desc">High to Low</option>
+			</select> 
+		</td>
+		<td >
+			<input type="checkbox" name="show_all" value="1" id="show_all"> Show InActive
+		</td>
+	</tr>
+  </table>
+</fieldset>
+
+<!--
+<input type="submit" class="button" value="Save Changes" name="Save" style="float:left"/><br />
+-->
   <table>
     <tr>
     <th>Delete</th>
@@ -78,104 +146,52 @@
         	<th><?desc?></th>
 		<?endloop fields?>
 
-<!--
-        <th>Id</th>
-        <th>Name</th>
-        <th>Description</th>
-        <th>Details</th>
-        <th>Category</th>
-        <th>Part Number</th>
-		<th>Vendor</th>       
-        <th>Minimum Qty</th>
-         <th>Increment</th>
-        <th>Maximum Qty</th>
-        <th>Weight (lbs)</th>
-        <th>Notes</th>
-        <th>Mediawide<br />Template</th>
-        <th>Proj ID</th>
-        <th width="40px">Active<br />1/0</th>
-        <th>Expiry Date <br />
-		MM/DD/YYYY</th>
-        <th>Group Option</th>
-        <th>Product Group</th>
-       <th>Units</th>
-       <th>Lead Time</th>
-      <th>Price</th>
--->
-      
-      
-      
      
     </tr>
     <?loop products?>
 			<tr>
-             <td><a href="products.html?delete=<?id?>">delete</a></td>
+             <td><button name="delete" value="<?id?>" onClick="return confirm('Are you sure you want to Delete this item?');" >Delete</button></td>
 			<td><?id?> <input type="hidden" name="productid" value="<?id?>" /> </td>
 		<?loop fields?>
 			<?eval( $variable->{value} = $variable->{$variable->{fname}} ) ?>
+			<?eval( $variable->{size}  = $variable->{type} eq 'int' || $variable->{type} eq 'bool' ? 5 : 51 ) ?>
 
 			<td>
-				<input name="<?fname?>[<?id?>]" value="<?value?>" />
-			</td>
+			 <?if big?>
+
+				<textarea name="<?fname?>[<?id?>]" cols=50><?value?> </textarea>
+			 <?else big?>
+			 
+			 	<?if ( $variable->{type} eq 'bool' ) ?>
+					<input type="checkbox" name="<?fname?>[<?id?>]" value="1" size="<?size?>" <?if value?>checked<?endif value?> />
+			 	<?else ( $variable->{type} eq 'bool' ) ?>
+					<input name="<?fname?>[<?id?>]" value="<?value?>" size="<?size?>" />
+			 	<?endif ( $variable->{type} eq 'bool' ) ?>
+			 <?endif big?>
+
+			</td>		
+	
 		<?endloop fields?>
         
 			</tr>
-<!--
-      <tr>
-        <td> <input type="hidden" name="productid" value=<?id?> /><?id?></td>
-        <td><input name="name[<?id?>]" value="<?name?>" style="width:100px" /></td>
-        <td><input name="description[<?id?>]" value="<?description?>" style="width:100px" /></td>
-        <td><input name="details[<?id?>]" value="<?details?>" style="width:100px" /></td>
-        <td><input name="category[<?id?>]" value="<?category?>" style="width:30px" /></td>
-        <td><input name="part_number[<?id?>]" value="<?part_number?>" style="width:60px"/></td>
-        <td><input name="vendor[<?id?>]" value="<?vendor?>" style="width:30px"/></td>
-        <td><input name="minimum_qty[<?id?>]" value="<?minimum_qty?>" style="width:60px"/></td>
-		<td><input name="increment[<?id?>]" value="<?increment?>" style="width:60px" /></td>
-        <td><input name="maximum_qty[<?id?>]" value="<?maximum_qty?>" style="width:60px"/></td>
-        <td><input name="weight[<?id?>]" value="<?weight?>" style="width:60px"/></td>
-        <td><input name="notes[<?id?>]" value="<?notes?>" style="width:100px" /></td>
-        <td><input name="mediawide[<?id?>]" value="<?mediawide?>"  style="width:50px"/></td>
-        <td><input name="project[<?id?>]" value="<?project?>"  style="width:50px"/></td>
-        <td><input name="active[<?id?>]" value="<?active?>" style="width:15px" /></td>
-        <td><input name="expiry[<?id?>]" value="<?expiry?>" style="width:75px"/></td>
-        <td><input name="group_option[<?id?>]" value="<?group_option?>" style="width:75px" /></td>
-        <td><input name="product_group[<?id?>]" value="<?product_group?>" style="width:75px" /></td>
-        <td><input name="units[<?id?>]" value="<?units?>" style="width:75px"/></td>
-        <td><input name="leadtime[<?id?>]" value="<?leadtime?>" style="width:75px"/></td>
-        <td><input name="price[<?id?>]" value="<?price?>" style="width:40px" /></td>
-        <td><a href="products.html?delete=<?id?>">delete</a></td>
-        
-      </tr>
--->
     <?endloop products?>
-    <tr>
-	<td></td>
-    <td></td>
-	<td>	<input name="strid" id="strid"	style="width:100px"/></td>
-     <td>    <input name="category" style="width:30px" /></td>
-    <td>	<input name="name" 	style="width:100px"/></td> 
-  	<td>	<input name="description" style="width:100px" /></td>
-    <td>    <input name="details" style="width:100px" /></td>
-     <td>   <input name="part_number"  style="width:100px"/></td>
-     <td>   <input name="vendor"  style="width:100px"/></td>
-     <td>   <input name="minimum_qty"  style="width:60px"/></td>
-     <td>   <input name="increment"  style="width:60px" /></td>
-     <td>   <input name="maximum_qty" style="width:60px"/></td>
-     <td>   <input name="weight"  style="width:60px"/></td>
-     <td>   <input name="notes" style="width:100px" /></td>
-     <td>   <input name="mediawide" style="width:100px" /></td>
-     <td>   <input name="project"  style="width:50px"/></td>
-     <td>   <input name="active"  style="width:30px" /></td>
-     <td>   <input name="expiry"  style="width:75px"/></td>
-     <td>   <input name="product_group" style="width:80px" /></td>
-     <td>   <input name="group_option" style="width:80px" /></td>
-     <td>   <input name="units"  style="width:75px"/></td>
-     <td>   <input name="tax_exempt3"  style="width:75px"/></td>
-     <td>   <input name="lead_time"  style="width:75px"/></td>
 
-<!--     <td>   <input name="price" style="width:40px" /></td>
--->     
-     </tr>
+	<tr>
+		<td></td>
+		<td>Add New</td>
+		<?loop fields?>
+			<?eval( $variable->{size}  = $variable->{type} eq 'int' || $variable->{type} eq 'bool' ? 5 : 51 ) ?>
+        	<td>
+			 <?if big?>
+				<textarea name="<?fname?>" cols=50 id="<?fname?>"></textarea>
+			 <?else big?>
+				<input name="<?fname?>" value="" size="<?size?>"  id="<?fname?>"/>
+			 <?endif big?>
+
+			</td>
+		<?endloop fields?>
+	</tr>
+
      
      <tr>
     <th>Delete</th>
@@ -183,12 +199,11 @@
 		<?loop fields?>
         	<th><?desc?></th>
 		<?endloop fields?>
-        
     </tr>
   </table>
   <br />
 
-<input type="submit" class="button" value="Save Page" name="Save" style="float:left"/><br />
+<button type="submit" class="button" value="Save Changes" name="Save" style="float:left"/>Save Changes</button><br />
 <br />
 
  

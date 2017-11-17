@@ -240,8 +240,10 @@ print STDERR "STEP BEST FIT: $w x $h \n";
 
             unless ($project->{override}{margin}) {
 
-		my $cb = $project->{colour_bar};
-		$cb = min($cb, $press->{colour_bar_size}) if $press->{type} eq 'digital' && defined $press->{colour_bar_size};
+				my $cb = $project->{colour_bar};
+				#$cb = min($cb, $press->{colour_bar_size}) if $press->{type} eq 'digital' && defined $press->{colour_bar_size};
+
+				$cb = 0 if  $press->{type} eq 'digital';
 		
                 # A flop (WF) trades head for tail, so we need to double up
                 # the grip. We can sneak (hopefully all of) the colour bar

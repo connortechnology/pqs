@@ -432,6 +432,8 @@ print STDERR "HAVE LINE SCRREN TO FILL: $variable->{linescreen} \n";
 
     $$variable{'CustomerIndex'} = $index;
 
+
+## Product Markup
 	$variable->{product_categories} = $dbh->selectall_arrayref(q{
 		SELECT * FROM product.category ORDER by name 
 	}, {Slice => {} } );
@@ -441,6 +443,18 @@ print STDERR "HAVE LINE SCRREN TO FILL: $variable->{linescreen} \n";
 			SELECT markup from product_markup WHERE customer = ? and category = ?
 		}, undef, $index, $_->{id} );
 	} @{ $variable->{product_categories} };
+
+
+## New Product Markup
+	$variable->{new_product_categories} = $dbh->selectall_arrayref(q{
+		SELECT * FROM categories ORDER by name 
+	}, {Slice => {} } );
+
+	map { 
+		$_->{markup} = $dbh->selectrow_array(q{
+			SELECT markup from product_markup WHERE customer = ? and category = ?
+		}, undef, $index, $_->{id} );
+	} @{ $variable->{new_product_categories} };
 
     return OK;
 }
