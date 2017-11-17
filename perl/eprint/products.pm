@@ -420,9 +420,11 @@ sub details {
 	my ($r, $dbh, $var) = @_;
 	 
 	my $id = $r->param('id');
+	my $cust_id = $var->{cust_id};
+
 	my $p = new PQS::Object::product($id);
 	$var->{product} = $p->specs();
-	$var->{prices} = $p->prices();
+	$var->{prices} = $p->prices($cust_id);
 
 	$var->{kit_list} = $p->kit_list();
  
@@ -623,20 +625,14 @@ sub display {
   my $list = 1;
   my $cid = 1;
   foreach my $p (@{$var->{products}} ) {
-    	$p->{category} = PQS::model::categories::get_name_from_id($p->{category});
-	if ( $p->{kit} ) {
-		my $kit = new PQS::Object::product($p->{id});
-		$p->{price} = $kit->kit_price($cid);
-	} else { 
-    	$p->{price} = PQS::model::pricing::price_item($cid, $list, $p->{id}, 1);
-	}
 
-	my $img = "/images/main/products/$p->{strid}.jpg";
-	my $path = ssi::get_file_path($r, $img);
+	$p->{category} = PQS::model::categories::get_name_from_id($p->{category});
 
-	print STDERR "HAVE PATH: $path \n";
+	my $prod = new PQS::Object::product($p->{id});
 
-	$p->{image}  = -e $path ? $img : " /images/main/products/default.jpg";
+	$p->{price} = $prod->price($cid, 1);
+
+	$p->{image}  = $prod->image(1);
   
   }
 	

@@ -4,6 +4,7 @@ use warnings;
 use session; 
 use PQS::model::categories; 
 use PQS::model::products; 
+use PQS::model::product_markup; 
 use eprint::customer; 
 use Data::Dumper;
 
@@ -61,17 +62,18 @@ sub prices {
   my $cust_id 	= shift;
   my $qty 		= shift;
   
-  my $price;
 
-  if ( $self->spec('kit') ) {
-  	$price =  $self->kit_price($cust_id);
-  } else {
+	my $markup = $self->markup($cust_id);
+	my $price;
+
   	$price =  PQS::model::pricing::sell_prices( $self->{list}, $self->{id});
 	map { 
 		$_->{min} = 1   unless $_->{min};
 		$_->{min} .= '+' unless $_->{max};
+		$_->{sell} *=  1 + ( $markup / 100);
 	} @{$price};
-  }
+
+
   
   die("Price not found: $self->{id}") unless $price;
   
@@ -90,11 +92,21 @@ sub price {
   } else {
   	$price =  PQS::model::pricing::price_item($cust_id, $self->{list}, $self->{id}, $qty);
   }
+	my $markup = $self->markup($cust_id);
+	$price = $price * (1 + ( $markup / 100));
   
   die("Price not found: $self->{id}") unless $price;
   
   return $price;
 }
+
+sub markup {
+	my $self 		= shift;
+	my $cust_id 	= shift;
+  	return PQS::model::product_markup::get($cust_id, $self->{specs}{category_id});
+
+}
+
 
 sub kit_price {
 	my $self 		= shift;
@@ -118,10 +130,37 @@ print STDERR "Have price for $_->{id} QTY: $_->{qty} Price: $price \n";
 
 }
 
+sub image {
+	my $self = shift;
+	my $small = shift;
+
+	my $r = session::r;
+
+	my $img;
+	my $path;
+
+	$img = "/images/main/products/$self->{specs}{strid}.jpg";
+
+	 $path = ssi::get_file_path($r, $img);
+
+	return $img if -e $path;
+
+	$img = "/images/main/products/category/$self->{specs}{category_id}.jpg";
+
+	$path = ssi::get_file_path($r, $img);
+
+
+	return $img if -e $path;
+
+
+	return "/images/main/products/default.jpg";
+}
+
 sub kit_list {
 	my $self = shift;
 	return PQS::model::products::kit_list($self->{id});
 }
+
 
 sub weight {
 	my $self = shift;
