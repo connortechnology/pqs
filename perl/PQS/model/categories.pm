@@ -93,7 +93,7 @@ sub get_all {
     }
   } keys $all;
   
-  foreach my $cat ( keys $cats ) {
+  foreach my $cat ( keys %{$cats} ) {
     
     my $children = $subcats->{$cats->{$cat}{id}};
     

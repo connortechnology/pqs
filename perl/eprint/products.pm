@@ -814,7 +814,7 @@ sub price_import {
   while (my $row = $csv->getline($fh)) {
 	$line++;
 	my $id =  PQS::model::products::get_id_from_str($row->[0]);
-	die("Invalid Product ID: $row->[0] Row: $line");
+	die("Invalid Product ID: $row->[0] Row: $line") unless $id;
     $row->[0] = PQS::model::products::get_id_from_str($row->[0]) if $header->[0] eq 'strid';
 
     #( $row->[3] ) = $row->[3] =~ m{(\d+\.\d+)};
