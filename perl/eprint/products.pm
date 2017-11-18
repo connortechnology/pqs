@@ -427,6 +427,8 @@ sub details {
 	$var->{prices} = $p->prices($cust_id);
 
 	$var->{kit_list} = $p->kit_list();
+
+	$var->{product}{image}  = $p->image(1);
  
  print STDERR "HAVE PRODUCT DETAILS  FOR ID: $id ", Dumper($var->{product});
 
