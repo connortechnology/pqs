@@ -92,6 +92,14 @@ sub add_foreign_ref {
   my ($id, $ref_id, $ref_name) = @_;
 #  PQS::model::foreign_reference::add($id, 'products', $ref_id, $ref_name);
 }
+
+sub delete_products_in_category {
+	my $cat = shift;
+	my $dbh = session::dbh;
+	$dbh->do("delete from tbl_products where category = ?", undef, $cat);	
+}
+	
+
 sub remove {
 	my $id = shift;
 	my $dbh = session::dbh;

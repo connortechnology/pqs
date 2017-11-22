@@ -16,6 +16,10 @@
 	<script type="text/javascript" src="/javascripts/other.js"></script>
     
     <style>
+	button { 
+		width: 110px; 
+		margin-left: 20px;
+	}
 	th { border-color:#FFFFFF;
 	}
 	
@@ -89,11 +93,11 @@
 		<br/>
 <div class="button-bar" >
            	<input type="hidden" name="fid" value="<?fid?>" /><br/>
-			<button type="submit" name="New" value="1">New</button>
 	<?if filter.name?>
 			<button type="submit" name="Save" value="1">Save</button>
 			<button type="submit" name="Delete" value="1" onClick="return confirm('Delete this Filter?')">Delete</button>
 	<?endif filter.name?>
+			<button type="submit" name="New" value="1" style="float: right">New</button>
 </div>
 </fieldset>
 
@@ -112,9 +116,11 @@
 			<br/>
 
 		<?endloop fields?>
-<div class="button-bar" >
-			<button type="submit" name="Build" value="1">Build</button>
-			<button type="submit" name="Preview" value="1">Preview</button>
+<div class="button-bar" style="margin-top: 20px" >
+			<button type="submit" name="Preview" value="1" style="margin-left: -10px;">Preview</button>
+			<button type="submit" name="Build" value="1" >Build</button>
+			<input type="checkbox" name="delete_category" value="1" style="margin-left: 10px; margin-top: 2px">
+			<label style="white-space:normal;margin-top: -2px; padding: 0 0 0 0">Delete current products from category during Build.</label>
 </div>
 </fieldset>
 

@@ -119,8 +119,11 @@ map {
 	$var->{fields} =  $p->update_fields;
 
 	if ( $r->param('Build') ) {
+		if ( $r->param('delete_category') ) {
+			PQS::model::products::delete_products_in_category($cat);
+		}
 		build_products($r, $var, \%all);
-		insert_products($var->{list});
+		insert_products($var->{list}, $cat);
 	} elsif ( $r->param('Preview') ) {
 		build_products($r, $var, \%all);
 	}
