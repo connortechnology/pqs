@@ -291,6 +291,57 @@ print STDERR "HAVE CATEGORIES: " , Dumper($list, $var->{__FillInForm});
 
 
 }
+sub kit_select {
+  my ($r, $dbh, $var) = @_;
+
+
+	my $cat  = $r->param('category');
+	my $show_all = $r->param('show_all');
+	my $kit = $r->param('kit_id');
+
+print STDERR "START KIT SELECT \n";
+
+#	update($r, $dbh, $var) if $r->param('Save');
+
+	my $p = new PQS::Object::product($kit);
+
+	my @items = $r->param('contents');
+
+	if ( $r->param('Save') ) {
+		$p->remove_kit_category($cat);
+		map { 
+			my $qty = $r->param("qty-".$_);
+			$p->add_kit_item($_, $qty) if $qty;
+		} @items;
+	}
+		
+
+	my $list = $p->kit_list();
+
+	map {
+		push @{$var->{__FillInForm}{contents}}, $_->{id};
+		push @{$var->{__FillInForm}{"qty-".$_->{id}}}, $_->{qty};
+	} @{$list};
+
+	$var->{kit_contents} = $list;
+
+	$var->{kit} = $p->{specs};
+
+
+	$var->{products} = PQS::model::categories::products_in_tree($cat, $show_all) if $cat;
+	$var->{categories} = ssi::make_drop_down(PQS::model::categories::select_list(), $cat);
+
+	$var->{__FillInForm}{show_all} = $show_all;
+	$var->{__FillInForm}{kit_id} = $kit;
+		
+	$var->{kit_id} = $kit;
+
+	
+
+	print STDERR "HAVE PRODUCTS: ", Dumper($var->{__FillInForm}, $var->{kit});
+
+  
+}
 
 #List all products
 sub list {

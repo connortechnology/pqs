@@ -31,6 +31,7 @@ my @update_fields =  (
 #			{fname => 'mediawide', 		type => 'text', 	desc => 'Mediawide ID', 	sort_order => 1300},
 			{fname => 'project', 		type => 'int', 		desc => 'Project', 			sort_order => 1400},
 			{fname => 'active', 		type => 'bool', 	desc => 'Active', 			sort_order => 0010},
+			{fname => 'kit', 			type => 'bool', 	desc => 'Kit', 				sort_order => 0015},
 #			{fname => 'expiry', 		type => 'date', 	desc => 'Expiry', 			sort_order => 1600},
 #			{fname => 'product_group', 	type => 'text', 	desc => 'Product Group', 	sort_order => 1700},
 #			{fname => 'group_option', 	type => 'text', 	desc => 'Prodctt Option', 	sort_order => 1800},
@@ -57,6 +58,7 @@ sub new {
 
     return $self;
 }
+
 sub prices {
   my $self 		= shift;
   my $cust_id 	= shift;
@@ -87,11 +89,12 @@ sub price {
   
   my $price;
 
-  if ( $self->spec('kit') ) {
-  	$price =  $self->kit_price($cust_id);
-  } else {
-  	$price =  PQS::model::pricing::price_item($cust_id, $self->{list}, $self->{id}, $qty);
-  }
+	$price =  PQS::model::pricing::price_item($cust_id, $self->{list}, $self->{id}, $qty);
+
+	if ( $self->spec('kit') ) {
+		$price =  $self->kit_price($cust_id) unless $price;
+	}
+
 	my $markup = $self->markup($cust_id);
 	$price = $price * (1 + ( $markup / 100));
   
@@ -105,6 +108,23 @@ sub markup {
 	my $cust_id 	= shift;
   	return PQS::model::product_markup::get($cust_id, $self->{specs}{category_id});
 
+}
+
+sub add_kit_item {
+	my $self 	= shift;
+	my $prod 	= shift;
+	my $qty 	= shift;
+
+#	PQS::model::products::remove_kit_item($self->{id}, $prod);
+	PQS::model::products::add_kit_item($self->{id}, $prod, $qty);
+
+}
+
+sub remove_kit_category {
+	my $self 	= shift;
+	my $cat 	= shift;
+
+	PQS::model::products::remove_kit_category($self->{id}, $cat);
 }
 
 
@@ -158,7 +178,13 @@ sub image {
 
 sub kit_list {
 	my $self = shift;
-	return PQS::model::products::kit_list($self->{id});
+	my $list =  PQS::model::products::kit_list($self->{id});
+	map {
+		my $p = new PQS::Object::product($_->{id});
+		$_->{image} = $p->image;
+	} @{$list};
+
+	return $list;
 }
 
 
@@ -325,7 +351,7 @@ sub specs {
 sub spec {
   my $self 	= shift;
   my $s 	= shift;
-  die("Spec $s is Invalid") unless defined $self->{specs}{$s};
+  die("Spec $s is Invalid" .  Dumper($self->{specs})) unless defined $self->{specs}{$s};
   return $self->{specs}{$s};
 }
 	

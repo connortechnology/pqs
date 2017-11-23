@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Products
+	</title>
+	
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+    
+    <style>
+	button { 
+		width: 110px 
+	}
+	th { border-color:#FFFFFF;
+	}
+	
+	th, tr, td {
+		padding:3px 3px 3px 3px !important;
+	}
+	</style>
+</head>
+
+<body style="">
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+
+		<div id="sidebar">
+			<div class="option">
+			</div>
+		</div>
+
+<div id="content">
+	<h1><span class="title-section">Kit Contents - <?kit.name?> </span></h1>
+
+
+<a href="products.html?category=<?kit.category_id?>" class="button" >Return to Product Page</a>
+<br/>
+
+<p/>
+
+<form method="POST" action="kit_select.html" enctype="multipart/form-data">
+<input type="hidden" name="kit_id" id="kit_id" />
+<fieldset style="width: 100%">
+  <legend>Kit Contents</legend>
+  <table>
+    <tr>
+    <th>Product</th>
+		<th>Qty</th>
+		<th>Category</th>
+		<th>Id</th>
+		<th>Name</th>
+
+     
+    </tr>
+    <?loop kit_contents?>
+			<tr>
+			<td> 
+			<a href="kit_select.html?category=<?category?>;kit_id=<?kit_id?>">
+			<?id?>  
+			</a>
+			</td>
+			<td> <?qty?> </td>
+			<td><?cat_name?> </td>
+			<td><?strid?> </td>
+			<td> <?name?></td>
+        
+			</a>
+			</tr>
+    <?endloop kit_contents?>
+
+  </table>
+</fieldset>
+
+<fieldset style="width: 100%">
+  <legend>Modify Contents</legend>
+
+  <table class="no-border" >
+	<tr>
+		<td>Search Category:</td> 
+		<td colspan="3"> <select name="category" id="category"> <?categories?> </select> </td>
+		<td rowspan="2"><button type="submit" name="Search" value="Search" >Search</button>
+	</tr>
+	<tr>
+		<td >
+			<input type="checkbox" name="show_all" value="1" id="show_all"> Show InActive
+		</td>
+	</tr>
+  </table>
+
+<?if products?>
+<button type="submit" class="button" value="Save Changes" name="Save" style="float:left"/>Save Changes</button><br />
+  <table>
+    <tr>
+    <th>Add Product</th>
+		<th>Qty</th>
+		<th>Id</th>
+		<th>Name</th>
+
+     
+    </tr>
+    <?loop products?>
+			<tr>
+			<td><input type="checkbox" name="contents" id="id-<?id?>" value="<?id?>"> <?id?> </td>
+			<td><input name="qty-<?id?>" id="qty-<?id?>" size="5" value=""></td>
+			<td><?strid?> </td>
+			<td> <?name?></td>
+			</tr>
+    <?endloop products?>
+
+  </table>
+  <br />
+
+<button type="submit" class="button" value="Save Changes" name="Save" style="float:left"/>Save Changes</button><br />
+<?endif products?>
+<br />
+</fieldset>
+
+ 
+  </form>
+ </div>
+
+<div  style="float:bottom">
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</div>
+</body>
+</html>

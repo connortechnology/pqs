@@ -180,7 +180,8 @@ sub add_product_to_order {
 
 	my $prod = new PQS::Object::product($product);
 
-	my $price = $prod->spec('kit') ? 0.00 : $prod->price($var->{cust_id}, $qty);
+	#my $price = $prod->spec('kit') ? 0.00 : $prod->price($var->{cust_id}, $qty);
+	my $price =  $prod->price($var->{cust_id}, $qty);
 
 	
 #die(Dumper($prod->kit_list()));
@@ -197,16 +198,16 @@ sub add_product_to_order {
 
 
 
-	if ( $prod->{specs}{kit} ) {
-		map { 
-			
-			my $price1 = PQS::model::pricing::price_item( $var->{cust_id}, $list_index, $_->{product}, $_->{qty});
-
-			my $sub = $prod->spec('showprice') ? undef : $ocid;
-			insert_prod($log, $dbh, $order_id, $_->{product}, $_->{qty}, $price1, $sub);
-		} @{$prod->kit_list()};
-			
-	}
+#	if ( $prod->{specs}{kit} ) {
+#		map { 
+#			
+#			my $price1 = PQS::model::pricing::price_item( $var->{cust_id}, $list_index, $_->{product}, $_->{qty});
+#
+#			my $sub = $prod->spec('showprice') ? undef : $ocid;
+#			insert_prod($log, $dbh, $order_id, $_->{product}, $_->{qty}, $price1, $sub);
+#		} @{$prod->kit_list()};
+#			
+#	}
 
 	return ($order_id, $ocid);
 

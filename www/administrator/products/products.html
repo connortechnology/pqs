@@ -140,7 +140,7 @@
 -->
   <table>
     <tr>
-    <th>Delete</th>
+    <th>Options</th>
 		<th>Internal Id</th>
 		<?loop fields?>
         	<th><?desc?></th>
@@ -150,7 +150,12 @@
     </tr>
     <?loop products?>
 			<tr>
-             <td><button name="delete" value="<?id?>" onClick="return confirm('Are you sure you want to Delete this item?');" >Delete</button></td>
+             <td>
+				<button name="delete" value="<?id?>" onClick="return confirm('Are you sure you want to Delete this item?');" >Delete</button>
+				<?if kit?>
+				<a href="kit_select.html?kit_id=<?id?>" class="button" style="width: 93px; text-align: center"> Kit Contents</a>
+				<?endif kit?>
+			</td>
 			<td><?id?> <input type="hidden" name="productid" value="<?id?>" /> </td>
 		<?loop fields?>
 			<?eval( $variable->{value} = $variable->{$variable->{fname}} ) ?>

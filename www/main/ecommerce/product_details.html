@@ -173,6 +173,30 @@ td tr th table{
          </td>
     </tr>
 </table>
+
+
+<?if product.kit?>
+
+<h1 style="width:50%; margin-left:auto; margin-right:auto; text-align:center; min-width:500px"><?product.name?> Contents</h1>
+<table style="width:50%; margin-left:auto; margin-right:auto; min-width:500px">
+	<tr>
+    	<th colspan="2">Item</th>
+        <th>Quantity</th>
+    </tr>
+    <?loop kit_list?>
+    <tr style="border-top:1px #000000 solid">
+    	<td style="width:75px !important; padding:0 0 0 0 !important; border:none"><img src="<?image?>"  style="height:auto; width:100%;" /></td>
+        <td style="border:none"><?if is_staff?><?id?> - <?strid?> - <?endif is_staff?><?name?> </td>
+        <td style="text-align:center; border:none"><?qty?> <!-- / <?units?> --></td>
+    </tr>
+     <?endloop kit_list?>
+</table>
+
+<?endif product.kit?>
+
+
+
+
 </form>
 </div>
  

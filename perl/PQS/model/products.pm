@@ -16,7 +16,33 @@ sub list {
 sub kit_list {
 	my $dbh 	= session::dbh;
 	my $id = shift;
-  	return $dbh->selectall_arrayref("select * from kit, tbl_products WHERE kit.id = ? AND tbl_products.id = kit.product ORDER by kit.sort",{Slice => {}}, $id);
+  	return $dbh->selectall_arrayref("select kit.*, tbl_products.*, categories.name as cat_name from kit, tbl_products, categories WHERE kit.id = ? AND tbl_products.id = kit.product 
+									AND tbl_products.category = categories.id ORDER by kit.sort",{Slice => {}}, $id);
+}
+
+sub add_kit_item {
+	my $dbh 	= session::dbh;
+	my $id  = shift;
+	my $prod = shift;
+	my $qty = shift;
+	$dbh->do(q{INSERT INTO kit ( id, product, qty ) values ( ?, ?, ?)}, undef, $id, $prod, $qty);
+}
+sub remove_kit_category {
+	my $dbh 	= session::dbh;
+	my $id  = shift;
+	my $cat  = shift;
+
+print STDERR Dumper("REMOVE KIT Category", $id, $cat);
+	$dbh->do(q{DELETE FROM kit WHERE id = ? and product  IN ( SELECT id from tbl_products Where category = ?)}, undef, $id, $cat);
+
+}
+
+sub remove_kit_item {
+	my $dbh 	= session::dbh;
+	my $id  = shift;
+	my $prod = shift;
+	$dbh->do(q{DELETE FROM kit WHERE id = ? and product = ?}, undef, $id, $prod);
+
 }
 
 sub lead_time {
