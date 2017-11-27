@@ -91,7 +91,9 @@ h2 {
 					<span class="title-section"> Filter by Category: <br/>
 
 					<?loop cat_children?>
-						<a href="/main/ecommerce/products.html?category=<?id?>"> &#187;	<?name?> </a>
+						<a href="/main/ecommerce/products.html?category=<?id?>">
+						<?if _first?><?else _first?> / <?endif _first?>
+						<?name?> </a>
 			  		<?endloop cat_children?>
 					
 					</span>

@@ -188,7 +188,7 @@ p {
   <?endloop categories?>
   <hr />
 
-<div>
+<div style="margin-top: 20px">
 	<form action="products.html" >
 	<?loop filters?>
 		<?name?>
@@ -198,10 +198,14 @@ p {
 				<option value="<?id?>"><?name?></option>
 			<?endloop options?>
 		</select>
+		</br>
 	<?endloop filters?>
+	<?if ( @{$variable->{filters}} )?>
+	<br/>
 	<br/>
 	<input type="submit" value="Search" name="Search" />
 	<input type="hidden" value="<?category?>" name="category" />
+	<?endif ( @{$variable->{filters}} )?>
 	</form>
 </div>
  
