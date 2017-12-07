@@ -1140,8 +1140,6 @@ print STDERR "MY ORDER ID: $order_id \n";
         return misc::error($log, $dbh, $variable, 'No order id!  Not processing!');
     }
 
-		make_product_dockets($order_id, $variable);
-		return;
 
 
 print STDERR "CHECK ORDER INFO \n";
@@ -1364,6 +1362,8 @@ print STDERR "CHECK ORDER INFO \n";
         # if ($variable->{Downpayment} > 0) {
         #     send_invoice( $r, $log, $dbh, $order_id );
         # }
+		
+		make_product_dockets($order_id, $variable);
 
     }
 # END if ( $check_order_id...)
