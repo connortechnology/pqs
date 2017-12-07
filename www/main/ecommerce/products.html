@@ -262,14 +262,14 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 	<?endif ( @{$variable->{filters}} ) ?>
 <!--
 	<button type="reload" value="Search" name="Search" style="margin-left: 350px" /> Reload</button>
-	</form>
 -->
+</form>
 
 <?eval ( $variable->{products} =  [shift @{$variable->{products}}] ) ?>
 <?loop products?> 
 
 	<div style="margin-bottom: 30px;" >
-		<label style="font-size: 0.9em">
+		<label style="font-size:">
                     Price: <strong>$<?price?></strong>
 		</label>
 
