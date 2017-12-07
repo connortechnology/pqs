@@ -1140,6 +1140,9 @@ print STDERR "MY ORDER ID: $order_id \n";
         return misc::error($log, $dbh, $variable, 'No order id!  Not processing!');
     }
 
+		make_product_dockets($order_id, $variable);
+		return;
+
 
 print STDERR "CHECK ORDER INFO \n";
     # get order information
@@ -1337,6 +1340,8 @@ print STDERR "CHECK ORDER INFO \n";
 		    
         }
 
+
+
 		$variable->{projects} = $plist;
 
 
@@ -1395,6 +1400,30 @@ print STDERR "CHECK ORDER INFO \n";
     $variable->{order_id} = $order_id;
 
     return OK;
+}
+
+sub make_product_dockets {
+	my $orderid = shift;
+	my $var = shift;
+	my $dbh = session::dbh;
+
+	
+	my $list = PQS::model::order::get_order_products($orderid);
+
+	foreach my $o ( @{$list} ) {
+print STDERR "HAVE ORDER LINE: " , Dumper($0, $list);
+		my $prod = new PQS::Object::product($o->{product});
+		my $ppid = $prod->{specs}{project};
+		next unless $ppid;
+		my $args = {
+			name => "Docket FOR: " . $prod->spec('name'),
+			qty  => $o->{intquantity},
+		};
+		my ($pid) = eprint::print_project::copy_project($dbh, $var, $ppid, $args);
+
+		
+  		PQS::model::order::set_spec_pid($o->{lngcontentindex}, $pid);
+	}
 }
 
 sub make_rfq {

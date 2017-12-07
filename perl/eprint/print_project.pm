@@ -1648,6 +1648,7 @@ print STDERR "STARRT COPY PID ", Dumper(@_);
     $copy{strprojectreference} = $args->{name}    if $args->{name};
     $copy{strcomments}         = $args->{comment} if $args->{comment};
     $copy{prod}                = $args->{prod} if $args->{prod};
+    $copy{intquantity1}        = $args->{qty} if $args->{qty};
 		
 	#field on copy project page is named different.
     $copy{strcomments}         = $args->{comments} if $args->{comments};

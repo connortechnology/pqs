@@ -577,6 +577,8 @@ sub display {
  my ($r, $dbh, $var) = @_;
  
  my $cat = $r->param('category');
+	my $qty = $r->param('quantity') || 500;
+
  
 
 
@@ -615,8 +617,13 @@ sub display {
 
 	#products of of current and all children cats.
 	$var->{products} =  PQS::model::categories::products_in_tree($cat);
+
+	
 	
 	$var->{products} = filter_products($r, $var, $var->{products});
+
+
+#	$var->{products} =  [shift @{$var->{products}}];
 
   
   
@@ -630,7 +637,14 @@ sub display {
 
 	my $prod = new PQS::Object::product($p->{id});
 
-	$p->{price} = $prod->price($cid, 1);
+	$p->{price} = $prod->price($cid, $qty);
+	if ( $prod->{specs}{units} eq 'Per 1000' ) {
+		$p->{price} /= 1000;
+	}
+	$p->{price} *= $qty; 
+
+print STDERR "HAVE SPECS" , Dumper($prod->{specs});
+	#$p->{price} = $qty;
 
 	$p->{image}  = $prod->image(1);
   
@@ -646,6 +660,7 @@ sub display {
 	$var->{filters} = $filters;
 
 	$var->{category} = $cat;
+	$var->{quantity} = $qty;
 
 }
 
