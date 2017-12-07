@@ -83,6 +83,7 @@ sub set_spec_pid {
   	my $dbh = session::dbh;
 
 	$dbh->do(q{update tbl_order_contents set spec_pid = ? where lngcontentindex= ?}, undef, $pid, $ocid);
+	$dbh->do(q{update tbl_order_contents set lngprojectindex = ? where lngcontentindex= ?}, undef, $pid, $ocid);
 }
 
 sub set_mw_session {

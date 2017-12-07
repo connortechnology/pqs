@@ -58,8 +58,11 @@ min-height:20%;
 	margin-left: 5px;
 	margin-right: 5px;
 	margin-bottom:25px;
+	display: inline-block;
+	vertical-align: top;
+/*	
 	float:left;
-	border:1px solid #cccccc;
+	border:1px solid #cccccc; */
 }
 #productname{ @import url(http://fonts.googleapis.com/css?family=Montserrat:400,700);
 		font-family: 'Montserrat', sans-serif;
@@ -188,23 +191,7 @@ p {
   <?endloop categories?>
   <hr />
 
-<div>
-	<form action="products.html" >
-	<?loop filters?>
-		<?name?>
-		<select name="filter-<?id?>" id="filter-<?id?>">
-			<option value="">Please Select</option>
-			<?loop options?>
-				<option value="<?id?>"><?name?></option>
-			<?endloop options?>
-		</select>
-	<?endloop filters?>
-	<br/>
-	<input type="submit" value="Search" name="Search" />
-	<input type="hidden" value="<?category?>" name="category" />
-	</form>
-</div>
- 
+<!-- 
   <?if order_count?>
          <a href="/main/order/order_submit.html">
              <div class="image" style="width: 70px; height: 100px;">
@@ -215,4 +202,5 @@ p {
         </a>
 	<p style="margin-bottom:30px"></p>
 <?endif order_count?>
+-->
 
