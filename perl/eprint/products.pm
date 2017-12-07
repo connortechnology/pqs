@@ -638,9 +638,9 @@ sub display {
 	my $prod = new PQS::Object::product($p->{id});
 
 	$p->{price} = $prod->price($cid, $qty);
-	if ( $prod->{specs}{units} eq 'Per 1000' ) {
-		$p->{price} /= 1000;
-	}
+	#if ( $prod->{specs}{units} eq 'Per 1000' ) {
+	#	$p->{price} /= 1000;
+	#}
 	$p->{price} *= $qty; 
 
 print STDERR "HAVE SPECS" , Dumper($prod->{specs});
