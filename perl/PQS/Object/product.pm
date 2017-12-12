@@ -101,7 +101,7 @@ sub price {
 		$price /= 1000;
 	}
   
-  die("Price not found: $self->{id}") unless $price;
+	#  die("Price not found: $self->{id}") unless $price;
   
   return $price;
 }
