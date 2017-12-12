@@ -576,11 +576,8 @@ sub get_highres_file {
 sub display {
  my ($r, $dbh, $var) = @_;
  
- my $cat = $r->param('category');
+	my $cat = $r->param('category');
 	my $qty = $r->param('quantity') || 500;
-
- 
-
 
   
   #Set categories for left nav.
@@ -659,7 +656,7 @@ print STDERR "HAVE SPECS" , Dumper($prod->{specs});
 	print STDERR "HAVE FILTERS: ", Dumper($var->{__FillInForm});
 	$var->{filters} = $filters;
 
-	$var->{category} = $cat;
+	$var->{cat} = $cat;
 	$var->{quantity} = $qty;
 
 }
