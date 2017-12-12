@@ -3,7 +3,7 @@ use strict;
 use warnings; 
 use session; 
 use PQS::model::categories; 
-use PQS::model::products; 
+use PQS::model::products;
 use PQS::model::product_markup; 
 use eprint::customer; 
 use Data::Dumper;
@@ -97,6 +97,9 @@ sub price {
 
 	my $markup = $self->markup($cust_id);
 	$price = $price * (1 + ( $markup / 100));
+	if ( $self->{specs}{units} eq 'Per 1000' ) {
+		$price /= 1000;
+	}
   
   die("Price not found: $self->{id}") unless $price;
   

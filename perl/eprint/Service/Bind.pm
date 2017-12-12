@@ -452,8 +452,8 @@ print STDERR "HAVE PRICE: ", Dumper($price, $mat_price, $mat);
 # We now allow zero pricing
             @$specs{"txtPrice$n", "txtUnitPrice$n"}
                 = format_pricing($best{price}, $qty);
-            $status = 'calculated';
-#		$status = 'uncalculated' unless $status eq 'error'; 
+				#    $status = 'calculated';
+			$status = 'uncalculated' unless $status eq 'error'; 
 		}
         
     }

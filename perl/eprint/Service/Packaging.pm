@@ -79,17 +79,17 @@ print STDERR "PACKAGING MR: $makeReady MAT: $materialCharge SP: $servicePrice Mi
             = format_pricing($price, $qty);
     }
     $$specs{"txtQuantity"} = join( ', ', @qtys );
-#    if (
-#        !(
-#               $$specs{'txtPrice1'} > 0
-#            || $$specs{'txtPrice2'} > 0
-#            || $$specs{'txtPrice3'} > 0
-#        )
-#      )
-#    {
-#        $log->debug("BUNDLES, WRAPS: setting status to uncalculated");
-#        $$specs{'status'} = 'uncalculated';
-#    }
+    if (
+        !(
+               $$specs{'txtPrice1'} > 0
+            || $$specs{'txtPrice2'} > 0
+            || $$specs{'txtPrice3'} > 0
+        )
+      )
+    {
+        $log->debug("BUNDLES, WRAPS: setting status to uncalculated");
+        $$specs{'status'} = 'uncalculated';
+    }
     return $$specs{'status'};
 }
 
