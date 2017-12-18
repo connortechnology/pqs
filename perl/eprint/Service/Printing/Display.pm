@@ -43,6 +43,8 @@ sub display {
     my $project_type = $project->{type}{ref};
     my $press_type   = get_press_type($log, $dbh, $pid, $sid);
 
+	$page{NoPrint} = 1 if $project_type eq 'NoPrint';
+
     # DETAILED MODE SIGNATURES
     #
     # Kludge to manually step through each signature in "detailed" mode. A

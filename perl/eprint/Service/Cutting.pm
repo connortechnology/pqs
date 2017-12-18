@@ -51,6 +51,8 @@ use callback;
 sub necessary {
     my ($log, $dbh, $pid) = @_;
 
+	return 0 if no_print($pid);
+
 	return 0 if has_no_bindery($log, $dbh, $pid);
     # Certain project eg. Envelopes never need to be cut. NOTE: This location
     # is redundant but it's worth it in speed and as a guard clause.

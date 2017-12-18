@@ -59,8 +59,11 @@
 
 		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 
-		<!--#include virtual="/includes/main/proj/project_types.html"-->
+<?if NoPrint?>
+		<!--#include virtual="/includes/main/proj/NoPrint.html"-->
+<?else NoPrint?>
 
+		<!--#include virtual="/includes/main/proj/project_types.html"-->
 
 		<?if project.is_multipage ?>
 			<fieldset>
@@ -135,6 +138,7 @@
 			<!--#include virtual="/includes/main/proj/prices_no_stock.html"-->
 		<? endif separate_stock ?>
 
+<?endif NoPrint?>
 		<!--#include virtual="/includes/main/proj/prin_add_to_project.html"-->
 	</form>
 

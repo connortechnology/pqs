@@ -118,7 +118,12 @@ sub calc {
 sub get_project_price {
     my ($log, $dbh, $variable, 
         $pid, $sid, $spread, $versions, $overrides) = @_;
-print STDERR "START GET PROJECT PRICE \n";
+
+	my $type = get_type($log, $dbh, $pid);
+
+	return if $type eq 'NoPrint';
+
+print STDERR "START GET PROJECT PRICE: $type \n";
 
 print STDERR "CHECK SPECS \n", Dumper(@{$spread->{side}});
 	return {error => 'Rquired Specs not found: colour'} 

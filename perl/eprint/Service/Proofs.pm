@@ -24,6 +24,11 @@ sub necessary {
 	my $project_type = eprint::project::get_type($log, $dbh, $pid);
 	return 0 if $project_type eq 'InventoryCheckOut';
 
+	$type = eprint::project::get_type($log, $dbh, $pid);
+	return 0 if $type eq 'NoPrint';
+
+
+
     return 1;
 }
 

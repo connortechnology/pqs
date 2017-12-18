@@ -167,6 +167,10 @@ sub fill_from_printing_service {
 sub validate_fold_calliper {
     my ($log, $dbh, $pid, $sid) = @_;
 
+	my $type = get_type($log, $dbh, $pid);
+
+	return if $type eq 'NoPrint';
+
     # We are going to use the Maximum of
     # All of the equipment in the database.
     # After Imposition is done then we can

@@ -11,6 +11,9 @@ use eprint::print     ();
 sub necessary {
 	my ($log, $dbh, $pid) = @_;
 	
+	my $type = eprint::project::get_type($log, $dbh, $pid);
+	return 0 if $type eq 'NoPrint';
+
     foreach my $sig ( eprint::project::get_signature_indices( $log, $dbh, $pid ) ) {
 		my ( $press ) = eprint::service::get_specifications( $log, $dbh, undef, $sig, 'hdnPress' );
 		my $plate_type = eprint::equipment::get_specification( $log, $dbh, 'Plate Type', '', $press );

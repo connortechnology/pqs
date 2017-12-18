@@ -53,6 +53,7 @@ our @EXPORT_OK = qw(
     project_info
     project_status
 	mp_versions
+	no_print
 );
 our %EXPORT_TAGS = ( 
     all      => \@EXPORT_OK,
@@ -63,6 +64,7 @@ our %EXPORT_TAGS = (
                       is_complete          get_path
 					  project_status
                       get_minimum_height    get_minimum_width
+					  no_print
                 )],
     multipage => [ qw( is_multipage          get_bindery_type
                        has_no_bindery        get_signature_indices
@@ -102,6 +104,15 @@ sub get_path {
             || Apache2::RequestRec->document_root.'/site_specific/';
     
     return "$path/customers/" . $customer->path . "/projects/$pid/";
+}
+
+
+sub no_print {
+
+	my $pid = shift;
+	my $dbh = session::dbh;
+	my $log = session::log;
+	return get_type($log, $dbh, $pid) eq 'NoPrint';
 }
 
 # Does the project have a PDF template?
