@@ -265,7 +265,7 @@ print STDERR "GOT CHILDREN --  \n", Dumper($childs,$var->{__FillInForm} );
 
 			my $co   = PQS::model::categories::get($id);
 			$co->{level} = $level;
-			$var->{__FillInForm}{"parent-". $co->{id}} = $co->{parent};
+			#$var->{__FillInForm}{"parent-". $co->{id}} = $co->{parent};
 
 			push @{$cat}, $co; 
 
@@ -280,6 +280,9 @@ print STDERR "GOT CHILDREN --  \n", Dumper($childs,$var->{__FillInForm} );
 		return $cat;
 
 	}
+	map {	
+		$var->{__FillInForm}{"parent-". $_->{id}} = $_->{parent};
+	} @{$list};
 
 	$var->{categories} = $list;
 

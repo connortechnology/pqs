@@ -48,11 +48,12 @@ sub get_children_from_id {
   my ($id, $active) = @_;
   my $dbh = session::dbh;
 
+  $active = 'AND active' if $active;
   my $list;
   if ( $id ) {
-  	$list = $dbh->selectcol_arrayref("select id from categories where parent = ? AND active  ORDER BY name ", undef, $id);
+  	$list = $dbh->selectcol_arrayref("select id from categories where parent = ?  $active  ORDER BY name ", undef, $id);
    } else {
-  	$list = $dbh->selectcol_arrayref("select id from categories where parent is NULL AND active  ORDER BY name ");
+  	$list = $dbh->selectcol_arrayref("select id from categories where parent is NULL $active  ORDER BY name ");
   }
 }
 
