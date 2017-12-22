@@ -246,7 +246,7 @@ print STDERR "START CATEGORY ADMIN \n", Dumper($r->param());
 		save_categories($r);
 	}
 
-	my $start =  PQS::model::categories::get_children_from_id();
+	my $start =  PQS::model::categories::get_children_from_id(undef, 'show');
 	my $list = _children($start, []);
 	my $level;
 
@@ -263,13 +263,13 @@ print STDERR "GOT CHILDREN --  \n", Dumper($childs,$var->{__FillInForm} );
 
 		foreach my $id ( @{$childs}) {
 
-			my $co   = PQS::model::categories::get($id);
+			my $co   = PQS::model::categories::get($id, 'showall1');
 			$co->{level} = $level;
 			#$var->{__FillInForm}{"parent-". $co->{id}} = $co->{parent};
 
 			push @{$cat}, $co; 
 
-			my $next = PQS::model::categories::get_children_from_id($id);
+			my $next = PQS::model::categories::get_children_from_id($id, 'showall2');
 
 			_children( $next, $cat) if (@{$next} );
 			
@@ -649,6 +649,9 @@ sub display {
   my $parent = $cat;
   my $name =  PQS::model::categories::get_name_from_id($parent);    
   push @{$var->{cat_chain}}, { id => $parent, name => $name};
+
+
+  print STDERR " CAT CHAIN " , Dumper($var->{cat_chain});
 
   while ( $parent ) {
   	$parent = PQS::model::categories::get_parent_from_id($parent);

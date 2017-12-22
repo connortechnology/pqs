@@ -501,6 +501,7 @@ sub get_weight {
     my $func = $type eq 'Proofs'  ? \&get_proof_weight
              : $type eq 'Project' ? \&get_signature_weight
              : $type eq 'Other'   ? \&get_signature_weight
+			 : $type  eq 'Product' ? \&get_product_weight
              :                       undef;
 
     die "Uknown weight type ($type)." unless $func;
@@ -512,6 +513,11 @@ sub get_weight {
     }
 
     return $weight;
+}
+
+sub get_product_weight {
+    my ($log, $dbh, $pid, $sid) = @_;
+	return 1;
 }
 
 # Get the weight of an individual signature.

@@ -38,17 +38,21 @@ sub insert {
 
 
 sub get {
-  my ($id) = @_;
+  my ($id, $showall) = @_;
   my $dbh = session::dbh;
 
-  my $id = $dbh->selectrow_hashref("select * from categories where id = ?", undef, $id);
+  my $active =  $showall ? '' : ' AND ACTIVE ';
+  print STDERR "Get ACTIVE: $active \n";
+  my $id = $dbh->selectrow_hashref("select * from categories where id = ? $active ", undef, $id);
 }
 
 sub get_children_from_id {
-  my ($id, $active) = @_;
+  my ($id, $showall) = @_;
   my $dbh = session::dbh;
 
-  $active = 'AND active' if $active;
+  my $active =  $showall ? '' : ' AND ACTIVE ';
+
+  print STDERR "GC ACTIVE: $active \n";
   my $list;
   if ( $id ) {
   	$list = $dbh->selectcol_arrayref("select id from categories where parent = ?  $active  ORDER BY name ", undef, $id);

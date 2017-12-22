@@ -38,7 +38,7 @@
     </thead>
     <tbody>
       <tr>
-        <td><address>
+		  <td><a href="/main/order/order_info.html"><address>
           <?txtSalutation?> <?txtFirstName?> <?txtLastName?><br />
           <?txtCompanyName?><br />
           <?txtAddress1?>,
@@ -59,7 +59,7 @@
           F: <?txtFax?><br />
           <? endif ( $$variable{'txtFax'} ne '' ) ?>
           <?txtEmail?><br />
-          </address></td>
+		  </address></a></td>
         <td></td>
       </tr>
     </tbody>
@@ -83,6 +83,7 @@
     <tbody style="border-top: 2px solid black;">
       <?loop projects?>
 <!-- start project PID: <?pid?> -- PRODUCT: <?product?> -->
+	 <? eval( next if $variable->{hide} ) ?>
 
 
       <tr class="project no-background" >

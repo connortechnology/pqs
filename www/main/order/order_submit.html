@@ -51,9 +51,22 @@
     
 	<form method="post" name="f1" action="/main/order/confirmation_make_order.html">
 		<!--#include virtual="/includes/forms/order.html"-->
-		<? if ($variable->{card_number}) ?>
-		<!--#include virtual="/includes/forms/payment_info.html"-->
-		<? endif ($variable->{card_number}) ?>
+	</form>
+
+        <form method="post" name="f2" action="/main/order/order_submit.html" id="f2">
+        <div>
+                <fieldset>
+                <legend>Shipping Method
+                </legend>
+                <label for="method">Shipping Via:</label>
+                <select class="form" id="ddmShipVia1" name="ddmShipVia1" onchange="form.submit();";
+					<?SHIP_OPTIONS?>
+                </select>
+
+                </fieldset>
+
+        </div>
+        </form>
 
 		
 		<fieldset id="additionalorderinformation">
@@ -64,6 +77,22 @@
              <? endif additionalOrderInformation ?>
 			<p/>
 		</fieldset>
+
+		     
+        <!--#include virtual="/main/order/payment.html" -->
+	    <form method="post" name="f3" action="/main/order/order_submit.html" id="f1">
+		<?if SECURETOKENID?>	<?else SECURETOKENID?>
+                    
+                        <input type="hidden" name="cmd" value="_s-xclick">
+                        <input type="hidden" name="hosted_button_id" value="ZGN3AZPRSUZ6S">
+                        <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" class="right" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+                        <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+           				<input type='hidden' name='CHECKOUT'  value='1' />
+            <a class="button right" href="/main/ecommerce/products.html" >Add Another Item to My Order</a><?endif SECURETOKENID?>
+		</form>
+
+	
+	
        
 
 
@@ -71,6 +100,7 @@
 			<!--#include virtual="/includes/order_disclaimer.html"-->
 		</div>
 
+	    <form method="post" name="f3" action="/main/order/confirmation_make_order.html" id="f1">
 		<? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
 			<div id="repcomment">
 				<!--#include virtual="/includes/main/proj/comments.html"-->
@@ -80,19 +110,13 @@
 			<input type="hidden" name="hiddenOrderID" value="<?hiddenOrderID?>" />
             
 			<input type="submit" name="f1.submit();return false;" class="button right" value="Submit Order" />
+			<!--
             <a class="button right" href="/main/ecommerce/products.html" >Add Another Item to My Order</a>
+			-->
 
 			<br class="clear" />
 		</div>
-
-		<? if ($variable->{card_number}) ?>
-			<input type='hidden' name='card_number'  value='<?card_number?>' />
-			<input type='hidden' name='amount'       value='<?amount?>' />
-			<input type='hidden' name='card_type'    value='<?card_type?>' />
-			<input type='hidden' name='expiry_month' value='<?expiry_month?>' />
-			<input type='hidden' name='expiry_year'  value='<?expiry_year?>' />
-		<? endif ($variable->{card_number}) ?>
-	</form>
+		</form>
 
 <!--#include virtual="/includes/f1-main.html" -->
 <!--#include virtual="/includes/main/order.html" -->

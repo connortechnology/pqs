@@ -17,6 +17,16 @@ Products
 </head>
 <script type="text/javascript">
 
+function form_validate() {
+	 var val = $('jobname').value;
+	 if ( val ) {
+		 return true;
+	 } else { 
+		alert('Please enter a Job Description');
+		return false;
+	 }
+}
+
 function check_qty(f,inc,min,max) {
 	//var qty = f.value;
 	var qty = $('quantity').value;
@@ -232,12 +242,15 @@ select.failed {
 					</h1>
 
 <div style="float:right; margin-top: -40px; width:300px">
+
+<?if ( @{$variable->{filters}} ) ?>
 <form action="/main/order/order_submit.html" name="fcheckout">
 <div style="text-align:center">
 <button name="checkout" type="submit" 
 style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; height: 30px; margin-top: 30px">Checkout <?order_count?> Item(s)</button>
 </div>
 </form>
+<?endif ( @{$variable->{filters}} ) ?>
 </div>
 
 					<h2>
@@ -300,11 +313,13 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 			Update 
 		</button>
 
+
+
+
+
 	</div>
-	<br/>
 
 	<input type="hidden" value="<?cat?>" name="category" />
-	<?endif ( @{$variable->{filters}} ) ?>
 <!--
 	<button type="reload" value="Search" name="Search" style="margin-left: 350px" /> Reload</button>
 -->
@@ -312,20 +327,27 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 
 
 	<div style="margin-bottom: 30px;" >
-		<label style="font-size:">
+
+        <form name="f1" method="post" action="/main/proj/dispatch.html" >	
+
+		<label>Job Description:</label> 
+		<textarea name="jobname" id="jobname" style="width: 270px;margin: 0 0 0 20px;"><?jobname?></textarea>
+
+		<label style="font-size: 2em; line-height: 70px">
                     Price: <strong><?money:price?></strong>
 		</label>
 
-        <form name="f1" method="post" action="/main/proj/dispatch.html" >	
             <input type="hidden" name="action" value="add_product_to_order" />
             <input type="hidden" name="product"	id="product" value="<?id?>"  />           
 
 				<input type="hidden" name="txtQuantity1" id="txtQuantity1" value="<?quantity?>"  />
 
-					<input class="button" value="Add To Cart" type="submit" align="right" style="float:inherit;  height:30px; border-radius: 5px;" />
+					<input class="button" value="Add To Cart" type="submit" align="right" style="float:inherit;  height:30px; border-radius: 5px; margin-top: -5px;" 
+				   	onClick="return form_validate();"	/>
 		</form>
 
 				</div>
+	<?endif ( @{$variable->{filters}} ) ?>
 </div>
 
 

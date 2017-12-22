@@ -15,6 +15,13 @@
 			window.open('/main/order/order_invoice_printer_friendly.html?order_id=<?order_id?>',
 				'printerfriendlyorder','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 		}
+
+		function file_upload(p,q) {
+			var myurl = "/main/proj/upload.html?pid=" + p;
+
+			window.open(myurl,
+				'printerfriendlyorder' + p,'newWin,left=140,width=1000,top=50,height=800,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
 	</script>
     <script  type="text/javascript">
 		function open_project_docket(p,q) {
@@ -49,6 +56,24 @@
 </table>
 <?endif is_staff ?>
 
+<?loop dockets?>
+<div style="border:blue solid; background-color:lemonchiffon; height:100px; 
+			font-size: 2em;
+			text-align: center;
+			vertical-align:middle;
+			margin: 0 0 10px 0;
+			"
+			onClick="file_upload(<?pid?>);">
+
+	<div style="top: 50%;
+			margin-top: 20px;
+		">
+		Click here to upload Project Files For:  <?jobname?>
+	</div>
+
+</div>
+<?endloop dockets?>
+
 <p>If you would like to view a printer friendly version of your order please click on the button below:</p>
 	<div class="button-bar">
 		<input type="button" class="button" onclick="open_printer_friendly_version();return false;" value="Printer Friendly" />
@@ -58,5 +83,16 @@
 <!--#include virtual="/includes/f1-main.html" -->
 <!--#include virtual="/includes/main/order.html" -->
 <!--#include virtual="/includes/f2-main.html" -->
+
+<!--
+<div style="margin: 200px 0 0 0;" >
+	<form action="/main/order/confirmation_make_order.html?hiddenOrderID=<?order_id?>" >
+		<INPUT TYPE="button" onClick="form.submit();" VALUE="Refresh" style="width: 500px; height:200px">a
+		<input type="hidden" name="hiddenOrderID" value="<?order_id?>" />
+		</form>
+</div>
+-->
+
+
 </body>
 </html>

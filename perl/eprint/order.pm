@@ -159,7 +159,7 @@ sub check_customer_account {
 }
 
 sub add_product_to_order {
-    my ( $cookie, $var, $product, $qty, $subgroup ) = @_;
+    my ( $cookie, $var, $product, $qty, $subgroup, $jobname ) = @_;
 
 	my $log = session::log;
 	my $dbh = session::dbh;
@@ -190,7 +190,7 @@ sub add_product_to_order {
 
 	
 
-	insert_prod($log, $dbh, $order_id, $product, $qty, $price, $subgroup);
+	insert_prod($log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname);
 
 
 	# Get the next insert id in the sequence.
@@ -215,7 +215,7 @@ sub add_product_to_order {
 }
 
 sub insert_prod {
-	my ( $log, $dbh, $order_id, $product, $qty, $price, $subgroup) = @_;
+	my ( $log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname) = @_;
     sql::insert(
         $log, $dbh, 'tbl_Order_Contents', 
         'lngOrderID'    	=> $order_id,
@@ -224,7 +224,8 @@ sub insert_prod {
 		'intquantityindex'	=> 1,
 		'cursalesprice'		=> $qty * $price,
         'type' 				=> 'product',
-		subgroup			=> $subgroup || undef
+		subgroup			=> $subgroup || undef,
+		jobname				=> $jobname
     );
 
 }
@@ -921,7 +922,10 @@ print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 
 	fill_contact($r, $dbh, $order_id);
 
-	my $ship_method = $r->param('ddmShipVia1') || 2;
+	my $ship_method = $r->param('ddmShipVia1') || 17;
+
+	$_ = "SELECT lngIndex, strName FROM tbl_Ship_Via";
+    $$variable{'SHIP_OPTIONS'} = ssi::fill_drop_down($log, $dbh, $_);
 
 	$variable->{__FillInForm}{ddmShipVia1} = $ship_method;
 	
@@ -1114,9 +1118,7 @@ die("Can't find pid for $ocid.") unless ($pid);
         $variable->{AmountPaid} = $variable->{amount};
 	}
 
-print STDERR "HAVE PROJECT DATA ", Dumper($variable->{projects});
-
-print STDERR "HAVE QTYS IN VAR", Dumper($variable->{qty});
+	#print STDERR "HAVE PROJECT DATA ", Dumper($variable->{projects});
 
 
     return OK;
@@ -1344,11 +1346,13 @@ print STDERR "CHECK ORDER INFO \n";
 		$variable->{projects} = $plist;
 
 
+		
+
 		# Safeway  orders are set to Pending Date Approval.
 		my $pending = 1;
 
         # Send notice of the order to the user and the solution owner.
-        send_sales_order($r, $log, $dbh, $order_id, $pending, $inv);
+####    send_sales_order($r, $log, $dbh, $order_id, $pending, $inv);
 
         # Send out a notice to the ordering user's manager (if applicable).
         eprint::user::notify_manager($r, $log, $dbh, $variable->{user_id}, 'order', {
@@ -1359,14 +1363,17 @@ print STDERR "CHECK ORDER INFO \n";
 
         # We are going to manually invoice for now. Now we are back to sending
         # invoice when order is submitted.  Nope, back to manual invoice
-        #
-        # if ($variable->{Downpayment} > 0) {
-        #     send_invoice( $r, $log, $dbh, $order_id );
-        # }
+        
+        if ($variable->{Downpayment} > 0) {
+             send_invoice( $r, $log, $dbh, $order_id );
+        }
 		
-		make_product_dockets($order_id, $variable);
+		$variable->{dockets} = make_product_dockets($order_id, $variable);
+
+		print STDERR "PROJECTS: ", Dumper($variable->{dockets});
 
     }
+
 # END if ( $check_order_id...)
 
     my $cust_id = $variable->{cust_id};
@@ -1409,6 +1416,7 @@ sub make_product_dockets {
 	my $dbh = session::dbh;
 
 	
+	my @pids;
 	my $list = PQS::model::order::get_order_products($orderid);
 
 	foreach my $o ( @{$list} ) {
@@ -1417,14 +1425,19 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list);
 		my $ppid = $prod->{specs}{project};
 		next unless $ppid;
 		my $args = {
-			name => "Docket FOR: " . $prod->spec('name'),
+			name => "Docket for: " . $o->{jobname},
 			qty  => $o->{intquantity},
+
 		};
 		my ($pid) = eprint::print_project::copy_project($dbh, $var, $ppid, $args);
 
 		
   		PQS::model::order::set_spec_pid($o->{lngcontentindex}, $pid);
+		push @pids, {pid 		=> $pid,
+					 jobname	=> $o->{jobname}
+				    };
 	}
+	return \@pids;
 }
 
 sub make_rfq {
@@ -1509,7 +1522,7 @@ print STDERR "HAVE OLD RID: $old_rid FROM PID: $old_pid \n";
          SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
          FROM    => configuration::get_value( $log, $dbh, 'AccountingEmail'),
          TO    	 => configuration::get_value( $log, $dbh, 'AccountingEmail'),
-         SUBJECT => "RFQ Created FOR Project $pid"
+         SUBJECT => "RFQ Created for Project $pid"
     );
 
 	misc::email_with_template($r, $log, $dbh, $file, \%mail, $info);
@@ -2874,9 +2887,9 @@ print STDERR "Have County Tax RATE: $county_rate FOR ORDER: $order_id \n";
                  FROM tbl_Projects p
                  WHERE p.lngProjectIndex = o.lngProjectIndex
                ), 
-               intQuantityIndex, date(dateRequired), lngcontentindex, subgroup
+               intQuantityIndex, date(dateRequired), lngcontentindex, subgroup, jobname
         FROM tbl_Order_Contents o
-        WHERE lngOrderID = ?
+        WHERE lngOrderID = ? ORDER BY product, lngprojectindex
     });
 
     $sth->execute($order_id);
@@ -2886,8 +2899,8 @@ print STDERR "Have County Tax RATE: $county_rate FOR ORDER: $order_id \n";
     my ($sub_total, $gst_total, $pst_total, $hst_total, $shipping_total, $total) = qw(0 0 0 0 0 0);
 	
 
-                   my ( $pid,  $product,  $qty,  $prod_price,  $desc,  $qtyIndex,  $date,   $ci, $sub);
-    $sth->bind_columns(\$pid, \$product, \$qty, \$prod_price,  \$desc, \$qtyIndex, \$date, \$ci, \$sub);
+                   my ( $pid,  $product,  $qty,  $prod_price,  $desc,  $qtyIndex,  $date,   $ci, $sub, $jobname);
+    $sth->bind_columns(\$pid, \$product, \$qty, \$prod_price,  \$desc, \$qtyIndex, \$date, \$ci, \$sub, \$jobname);
 
     # declaring the array ref isn't necessary, but I'm not entirely sure its
     # always (and always will be) that way, so better safe than sorry.
@@ -2948,6 +2961,7 @@ print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $pr
 			}, undef, $pid);
 		} else {
 		  $desc = PQS::model::products::get_name_from_id($product);
+		  $desc = $desc . ' ' . $jobname;
 		}
 
 
@@ -3013,10 +3027,13 @@ print STDERR "HAVE ORDER TOTAL PROJECT PRICE: $price \n";
 	    	content_index => $ci,
 	    	product 	  => $product,
         };
+		$line->{hide} = $dbh->selectrow_array(q{
+			SELECT hide FROM tbl_order_contents WHERE lngcontentindex = ?
+		}, undef, $ci);
 
 		if ( $product) { 
 			$line->{lead_time} =  PQS::model::products::lead_time($product);
-			$line->{subgropu} =  $sub;
+			$line->{subgroup} =  $sub;
 		} else { 
 			project_details($dbh, $customer_id, $line, $pid);
 		}

@@ -1945,8 +1945,8 @@ use constant TEMPLATE_PAGE => '/template/record.html';
         add_line_item          => \&add_line_item,         # Add a custom line item
         add_discount           => \&add_discount,          # Create fixed price project
         add_per_item_discount  => \&add_per_item_discount, # Create fixed price project
-		complete	   		   => \&complete_project,
-		add_product_to_order   => \&add_product_to_order,
+	complete	       => \&complete_project,
+	add_product_to_order   => \&add_product_to_order,
     );
 
     sub dispatch {
@@ -1978,13 +1978,18 @@ print STDERR "START DISPATCH: $cookie \n";
 
 sub add_product_to_order {
 	my ($r, $log, $dbh, $cookie, $var, $pid) = @_;
+
+
 	
 	my $product = $r->param('product');
-	my $qty 	= $r->param('txtQuantity1') ||  1;
+	my $qty     = $r->param('txtQuantity1') ||  1;
+	my $jobname = $r->param('jobname') ||  undef;
+
+print STDERR "PRODUCT: $jobname \n";
 
 	die("Invalid request. Product can not be added to order") unless $product && $qty;
 
-	my $order_id = eprint::order::add_product_to_order($cookie, $var, $product, $qty);
+	my $order_id = eprint::order::add_product_to_order($cookie, $var, $product, $qty, undef, $jobname);
 	
 	$ENV{HTTP_REFERER} =~ /.*(\/main\/ecommerce.*)/;
 	my $ref = $1;

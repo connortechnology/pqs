@@ -528,6 +528,12 @@ sub calc_price {
             WHERE lngprojectindex = ?
         )
     }, undef, $pid);
+
+	if ( $project_type eq 'NoPrint' ) {
+		$ship_contents = 'Product';
+		
+	}
+
     $_ =
       "select strvalue from tbl_service_specifications where strname='OriginalProjectIndex' and lngprojectindex='$pid'";
     my ($original_index) = sql::sql_statement($log, $dbh, $_);
@@ -735,6 +741,8 @@ sub price_service {
 	my ($weight, $ship_method, $price_list, $f_zone, $t_zone) = @_;
 	my $dbh = session::dbh;
 
+	print STDERR "PRICE SERVCIE:  ", Dumper(@_);
+
 
 	my $price;
 
@@ -751,7 +759,7 @@ sub price_service {
 			  $cost * (1 + ($markup / 100))
 		}
 		elsif ($units eq 'flat' ) {
-			if ( $weight >= $min && ($weight < $max || !$max) ) {
+			if ( $weight >= $min && ($weight <= $max || !$max) ) {
 				$price = $cost * (1 + ($markup / 100)) ;
 			}
 		}

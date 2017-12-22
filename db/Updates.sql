@@ -82,3 +82,8 @@ Alter table tbl_projects alter column eid SET DEFAULT nextval('eid_seq'::text);
 INSERT INTO tbl_projecttypes VALUES (100, 'NoPrint', 'No Printing', 'prin/prin_noprint.html', '', 1, false, 1, 0.0, 0.0);
 INSERT INTO project_type_by_press VALUES ( 41, 100);
 INSERT INTO project_type_by_press VALUES ( 14, 100);
+
+ALTER table tbl_order_contents ADD COLUMN hide bool;
+ALTER table tbl_order_contents ADD COLUMN jobname text;
+
+ALTER table tbl_orders ADD COLUMN paypal_token text;
