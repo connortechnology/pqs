@@ -328,9 +328,15 @@ print STDERR "TIME TO SEND DATA TO UPDATE ", Dumper(\@data, $self->get('category
 
 	PQS::model::products::update($self->{id}, \@data );
 	PQS::model::products::update_category($self->{id}, $self->get('category_id'));
+
+
+print STDERR "DELETE OPTIONS: $self->{id} \n";
+	PQS::model::product_filter::delete_product_options($self->{id});
+
 	map {
 		PQS::model::product_filter::insert_product_option($self->{id}, $_);
 	}  @{$self->{options}};
+
 #	PQS::model::products::update_category($self->{id}, $self->get('category_id'));
 		
 	

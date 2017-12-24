@@ -1155,7 +1155,7 @@ print STDERR "CHECK ORDER INFO \n";
         }, undef, $cookie, $order_id);
 
 	$check_order_id = $order_id;
-	$status = 'Incomplete';
+#	$status = 'Incomplete';
     if (   $check_order_id
         && $status eq 'Incomplete' || $status eq 'Re-Opened' ) {
 
@@ -1414,6 +1414,7 @@ sub make_product_dockets {
 	my $orderid = shift;
 	my $var = shift;
 	my $dbh = session::dbh;
+	my $log = session::log;
 
 	
 	my @pids;
@@ -1431,8 +1432,13 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list);
 		};
 		my ($pid) = eprint::print_project::copy_project($dbh, $var, $ppid, $args);
 
+		$dbh->do("UPDATE tbl_service_specifications set strvalue = ? where strname = 'c-CAD-1' and lngprojectindex = ?", undef, $o->{cursalesprice}, $pid);
+
+		eprint::Build::build($log, $dbh, $pid, $var, 0);
+
 		
   		PQS::model::order::set_spec_pid($o->{lngcontentindex}, $pid);
+
 		push @pids, {pid 		=> $pid,
 					 jobname	=> $o->{jobname}
 				    };

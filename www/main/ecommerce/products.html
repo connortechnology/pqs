@@ -27,6 +27,15 @@ function form_validate() {
 	 }
 }
 
+function order_checkout() {
+	<?if order_count?>
+	return true;
+	<?endif order_count?>
+	alert('Your Cart is empty');
+	return false;
+
+}
+
 function check_qty(f,inc,min,max) {
 	//var qty = f.value;
 	var qty = $('quantity').value;
@@ -246,7 +255,7 @@ select.failed {
 <?if ( @{$variable->{filters}} ) ?>
 <form action="/main/order/order_submit.html" name="fcheckout">
 <div style="text-align:center">
-<button name="checkout" type="submit" 
+<button name="checkout" type="submit" onClick="return order_checkout();"
 style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; height: 30px; margin-top: 30px">Checkout <?order_count?> Item(s)</button>
 </div>
 </form>
@@ -305,6 +314,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 	<div style="margin-bottom: 30px;">
 	<label> Quantity:</label> 
 		<input name="quantity" id="quantity" style="width: 60px; margin: 0 0 0 20px " 
+			onChange="$('addtocart').disabled = true"
 			value="<?quantity?>" />
 
 		<button id="btn-update"  onClick="return check_qty(this, <?increment?>,<?minimum_qty?>,<?maximum_qty?>)" 
@@ -342,7 +352,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 
 				<input type="hidden" name="txtQuantity1" id="txtQuantity1" value="<?quantity?>"  />
 
-					<input class="button" value="Add To Cart" type="submit" align="right" style="float:inherit;  height:30px; border-radius: 5px; margin-top: -5px;" 
+					<input class="button" id="addtocart" value="Add To Cart" type="submit" align="right" style="float:inherit;  height:30px; border-radius: 5px; margin-top: -5px;" 
 				   	onClick="return form_validate();"	/>
 		</form>
 

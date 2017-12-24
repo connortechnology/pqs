@@ -95,6 +95,16 @@ sub get_category {
 
 }
 
+sub options_for_product {
+  my $dbh = session::dbh;
+  my $id  = shift;
+
+  my $all = $dbh->selectall_arrayref("select opt, filter from product_options, options  Where product = ? AND product_options.opt = options.id "
+	,{Slice => {}}, $id);
+
+
+}
+
 sub get_option_id {
   my $dbh = session::dbh;
 print STDERR "OPTS ", Dumper(@_);
@@ -104,6 +114,13 @@ print STDERR "OPTS ", Dumper(@_);
   my $id = $dbh->selectrow_array(q{select o.id from options o, product_filter pf 
 		Where o.filter = pf.id AND pf.category = ?  AND o.name = ? AND pf.name = ?
 	},undef, $cat,$opt, $filter );
+}
+
+sub delete_product_options {
+  my $dbh = session::dbh;
+  my $prod  = shift;
+  $dbh->do("Delete from product_options where product =  ?", undef, $prod);
+  print STDERR "OPTS DEL: $prod \n";
 }
 
 

@@ -165,7 +165,10 @@ sub insert_products {
 	my @field_list = @{$tmp->update_fields};
 	foreach my $new ( @{$list} ) {
 
+
 		my $p = new PQS::Object::product;
+
+
 
 		foreach my $f ( @field_list ) {
 			my $id = $f->{fname};
@@ -174,6 +177,7 @@ sub insert_products {
 			print STDERR "SET ID: $id VAL: $val \n";
 		}
 		$p->set('category_id', $new->{category});
+
 
 		map {
 			my $oid = PQS::model::product_filter::get_option_id($new->{category}, $_, $new->{$_});
@@ -637,6 +641,17 @@ sub display {
  
 	my $cat = $r->param('category');
 	my $qty = $r->param('quantity') || 500;
+	my $log = session::log;
+
+	$cat = configuration::get_value($log, $dbh, 'Default Product Category') unless $cat;
+
+	my $product = $r->param('product');
+
+	if ( $product ) { 
+		my $p = new PQS::Object::product($product);
+		$cat = $p->spec('category_id');
+		print STDERR "LAOD PRODUCT: $product, CAT=$cat \n", Dumper($p->{specs});
+	}
 
   
   #Set categories for left nav.
@@ -672,19 +687,25 @@ sub display {
 	print STDERR "HAVE CAT: " , Dumper($c);
 	push @{$var->{cat_children}}, $c;
   } @{$childs};
+    
+
+   #Show products for first Child category if it exists.
+   #Parent Categorys should not have products under sherwood model.
+   $cat = @{$childs}[0] if  @{$childs};
 
 
-	#products of of current and all children cats.
-	$var->{products} =  PQS::model::categories::products_in_tree($cat);
+  	if ( $product ) {
+		#skip straight to the product we are looking for.
+		push	@{$var->{products}}, PQS::model::products::get($product);
+	} else { 
+		#products of of current and all children cats.
+		$var->{products} =  PQS::model::categories::products_in_tree($cat, $product);
+	}
 
 	
 	
 	$var->{products} = filter_products($r, $var, $var->{products});
 
-
-#	$var->{products} =  [shift @{$var->{products}}];
-
-  
   
 
   
@@ -714,6 +735,14 @@ print STDERR "HAVE SPECS" , Dumper($prod->{specs});
 	foreach my $f (@{$filters}) {
 		$f->{options} = PQS::model::product_filter::get_options($f->{id});
 	}
+	if ( $product ) {
+
+		my $list = PQS::model::product_filter::options_for_product($product);
+		print STDERR "HAVE OPTIONS ", Dumper($list);
+		map {
+			$var->{__FillInForm}{"filter-$_->{filter}"} = $_->{opt};
+		} @{$list};
+	}
 
 	print STDERR "HAVE FILTERS: ", Dumper($var->{__FillInForm});
 	$var->{filters} = $filters;
@@ -723,8 +752,9 @@ print STDERR "HAVE SPECS" , Dumper($prod->{specs});
 
 }
 
+
 sub filter_products {
-	my ($r, $var, $prods) = @_;
+	my ($r, $var, $prods ) = @_;
 
 	my @valid;
 	my @list;
