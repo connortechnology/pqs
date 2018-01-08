@@ -3262,8 +3262,14 @@ sub paypal_return {
 	my $amount 	= $r->param('AMT');
 
 	my $order_id = PQS::model::order::get_id_from_token($token);
+	my $payment  = PQS::model::order::get_payment_from_token($token);
 
-	print STDERR "HAVE ORDER: $order_id FROM token: $token \n";
+	if ( $payment ) {
+		print STDERR "ALREADY HAVE PAYMENT FOR TOKEN: $token \n";
+		return;
+	}
+
+	print STDERR "HAVE ORDER: $order_id FROM token: $token PAYMENT: $payment\n";
 
 	$var->{order_id} = $order_id;
 	

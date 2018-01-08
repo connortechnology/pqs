@@ -37,6 +37,13 @@ sub tax_exemptions {
 	return @data;
 }
 
+sub get_payment_from_token {
+  	my $dbh = session::dbh;
+	my $token = shift;
+	return $dbh->selectrow_array(q{select curamount from tbl_payments where strtransactionid = ?}, undef, $token);
+	
+}
+
 sub get_id_from_token {
   	my $dbh = session::dbh;
 	my $token = shift;
