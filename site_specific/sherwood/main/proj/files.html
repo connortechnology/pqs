@@ -15,6 +15,13 @@
 
 	<link href="/styles/forms.css"         rel="stylesheet" type="text/css" media="screen" />
 	<link href="/styles/project_files.css" rel="stylesheet" type="text/css" media="screen" />
+<style>
+.largebutton {
+	width: 400px;
+	height: 40px;
+}
+</style>
+
 </head>
 
 <body>
@@ -120,9 +127,16 @@
 				-->
 
 			</table>
-
+			<!--
+					<button onClick="realod();" style="top: 510px; width: 400px; height: 200px;">
+						Reload --<?done?>
+					</button>
+			-->
 			<?if not:is_staff ?>
-				<!-- File approval confirmation for end-users. -->
+
+				<!--
+
+
 				<fieldset id="approval">
 					<legend>Approval</legend>
 
@@ -146,7 +160,7 @@
 					<input type="text" name="initials" maxlength="2" style="width: 3em; margin-left: 4em;" /> <em>Please enter your initials (<?user.initials?>).</em>
 
 				</fieldset>
-				</form>
+				-->
 			<?endif not:is_staff?>
 
 			<?if is_staff?>
@@ -176,6 +190,37 @@
 				</fieldset>
 			<?endif is_staff?>
 
+				<!-- File approval confirmation for end-users. -->
+				<?if not:done?>
+				<fieldset id="approval" style="text-align:center">
+					<legend>Confirmation:</legend>
+
+
+					<button class="largebutton" type="submit" name="lastfile" value="1" id="btn-lastfile" style="float:unset">
+						I have uploaded All the files required for this project.
+					</button>
+					<br/>
+
+					<button class="largebutton" type=submit name="morefiles" value=1 style="float:unset">
+						I have more files to upload for this project.
+					</button>
+				</fieldset>
+				<?endif not:done?>
+
+				<?if done?>
+					<div style="text-align:center; margin: 20px 0 0 0 ">
+						<div style="margin: 20px 0 0 0" >Thank you for confirming you file uploads. Your order is now complete</div>
+						<br/>
+
+<!--
+						<div style="margin: 20px 0 0 0"><a href="/main/order/order_history.html" style="margin: 20px 0 20px 0">Click here to go to see your Order history </a> <br/></div>
+-->
+						<div style="margin: 20px 0 0 0"><strong>If your order requires any changes or edits or needs to be cancelled please call us at <!--#include virtual="/includes/company_telephone_number.html"--> and we will make the changes for you.</strong></div>
+
+					</div>
+				<?endif done?>
+
+				</form>
 	<? endif not:empty:files ?>
 
 	<?if ($variable->{has_pdf_template} && $variable->{is_staff}) ?>
@@ -203,6 +248,7 @@
 
 		</form>
 	<?endif ($variable->{has_pdf_template} && $variable->{is_staff}) ?>
+
 
 	<!--#include virtual="/includes/f1-main.html" -->
 	<a href="/main/proj/proj_view.html?pid=<?pid?>">Project</a>

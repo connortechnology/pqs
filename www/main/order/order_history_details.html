@@ -94,6 +94,15 @@
 	<br class="clear" />
 
 	<!--#include virtual="/includes/forms/order.html"-->
+	<form method="post" name="f3" action="/main/order/order_history_details.html?order_id=<?ORDER_ID?>" id="f1">
+		<?if SECURETOKENID?>	<?else SECURETOKENID?>
+                    
+                        <input type="hidden" name="cmd" value="_s-xclick">
+                        <input type="hidden" name="hosted_button_id" value="ZGN3AZPRSUZ6S">
+                        <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" class="right" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+                        <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+           				<input type='hidden' name='CHECKOUT'  value='1' />
+		</form>
 
 	 
     		<?if additionalOrderInformation?><div id="additionalorderinformation">
@@ -111,6 +120,9 @@
 			<?AdministratorComments?>
 		</p>
 	</div>
+
+   <!--#include virtual="/main/order/payment.html" -->
+
     
     <? if is_staff ?>
 	<? if ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>

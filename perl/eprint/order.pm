@@ -180,11 +180,8 @@ sub add_product_to_order {
 
 	my $prod = new PQS::Object::product($product);
 
-	#my $price = $prod->spec('kit') ? 0.00 : $prod->price($var->{cust_id}, $qty);
 	my $price =  $prod->price($var->{cust_id}, $qty);
 
-	
-#die(Dumper($prod->kit_list()));
 
 	die("No Price Found for product: $product ", Dumper($prod) ) unless $price or $prod->{specs}{kit};
 
@@ -195,6 +192,13 @@ sub add_product_to_order {
 
 	# Get the next insert id in the sequence.
     my $ocid = $dbh->last_insert_id('',qw(public tbl_order_contents lngcontentindex));
+
+	my $days = $prod->spec('delivery_days') || 7;
+	$days .= ' days';
+
+	$dbh->do(q{Update tbl_orders SET dtmrequireddate = now() + ?  WHERE lngorderid = ?}, undef, $days, $order_id);
+
+print STDERR "SET DELIVERY DATE: $days FOR $order_id \n";
 
 
 
@@ -391,6 +395,14 @@ sub delivery_date {
 		SELECT to_char(delivery_time(lngprojectindex)::timestamp, 'DD/MM/YYYY HH12:MI AM') 
 		FROM   tbl_order_contents WHERE lngorderid = ?  ORDER by 1 LIMIT 1
 	}, undef, $order_id);
+
+print STDERR "DELIVERY DATE: $date \n";
+	$date = $dbh->selectrow_array(q{ 
+		SELECT to_char(dtmrequireddate, 'DD/MM/YYYY' ) 
+		FROM tbl_orders WHERE lngorderid = ?
+	}, undef, $order_id) unless $date;
+
+print STDERR "DELIVERY DATE 2: $date \n";
 
 	return $date;
 }
@@ -922,7 +934,7 @@ print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 
 	fill_contact($r, $dbh, $order_id);
 
-	my $ship_method = $r->param('ddmShipVia1') || 17;
+	my $ship_method = $r->param('ddmShipVia1');
 
 	$_ = "SELECT lngIndex, strName FROM tbl_Ship_Via";
     $$variable{'SHIP_OPTIONS'} = ssi::fill_drop_down($log, $dbh, $_);
@@ -1048,35 +1060,6 @@ die("Can't find pid for $ocid.") unless ($pid);
 	return OK unless $order_id;
 
 
-    my ($card_type, $card_number, $card_month, $card_year) = (
-        $r->param('card_type'),    $r->param('card_number'),
-        $r->param('expiry_month'), $r->param('expiry_year')
-    );
-
-#    if ($card_number && !verify_cc($card_number)) {
-#        return misc::error(
-#            $log, $dbh, $variable,
-#            q{Invalid Credit Card Number},
-#            "The credit card number you provided is invalid!"
-#        );
-#    }
-
-
-#    if ($card_number && $r->param('amount') > 0) {
-    if ($card_number) {
-        $variable->{AmountPaid}
-            = $variable->{AmountPaid}
-            ? $variable->{AmountPaid} + $r->param('amount')
-            : $r->param('amount');
-
-        my @duplicate_fields
-            = qw(card_number card_type amount expiry_month expiry_year first_name last_name);
-
-        foreach my $field (@duplicate_fields) {
-            $variable->{$field} = $r->param($field);
-        }
-    }
-
     my $quantities = $dbh->selectcol_arrayref(q{
         SELECT intQuantityIndex
         FROM tbl_Order_Contents
@@ -1112,11 +1095,6 @@ die("Can't find pid for $ocid.") unless ($pid);
 	$variable->{additionalOrderInformation} =~ s/\r/<br>/g;
 	
 
-    if ($card_number) {
-		$variable->{card_number} = '**** **** **** ' . substr($variable->{card_number},12);
-		$variable->{amount} = $variable->{TOTAL};
-        $variable->{AmountPaid} = $variable->{amount};
-	}
 
 	#print STDERR "HAVE PROJECT DATA ", Dumper($variable->{projects});
 
@@ -1155,7 +1133,7 @@ print STDERR "CHECK ORDER INFO \n";
         }, undef, $cookie, $order_id);
 
 	$check_order_id = $order_id;
-#	$status = 'Incomplete';
+	$status = 'Incomplete';
     if (   $check_order_id
         && $status eq 'Incomplete' || $status eq 'Re-Opened' ) {
 
@@ -1201,7 +1179,10 @@ print STDERR "CHECK ORDER INFO \n";
         $downpayment = $total * ( $downpayment / 100 );
         $downpayment = sprintf( '%.2f', $downpayment );
 
+
         my $status        = 'In Production';
+        my $pstatus       = 'Waiting For Files';
+
         my ($amount_paid) = $dbh->selectrow_array(q{
             SELECT SUM(curAmount)
             FROM tbl_Payments
@@ -1211,7 +1192,7 @@ print STDERR "CHECK ORDER INFO \n";
         );
 
         if ( $downpayment - $amount_paid > 0 ) {
-            $status = 'Pending Deposit';
+            $status = 'Pending Deposit' if $downpayment > $customer_credit->available;
         }
 
 # All safeway orders require Date Approval.
@@ -1259,7 +1240,7 @@ print STDERR "CHECK ORDER INFO \n";
             sql::update(
                 $log, $dbh, 'tbl_Project_Contents',
                 "lngProjectIndex = $pid AND strStatus != 'Complete'",
-                strStatus => $status
+                strStatus => $pstatus
             );
 
             my @delete_columns = qw(
@@ -1346,13 +1327,11 @@ print STDERR "CHECK ORDER INFO \n";
 		$variable->{projects} = $plist;
 
 
-		
-
 		# Safeway  orders are set to Pending Date Approval.
 		my $pending = 1;
 
         # Send notice of the order to the user and the solution owner.
-####    send_sales_order($r, $log, $dbh, $order_id, $pending, $inv);
+        send_sales_order($r, $log, $dbh, $order_id, $pending, $inv);
 
         # Send out a notice to the ordering user's manager (if applicable).
         eprint::user::notify_manager($r, $log, $dbh, $variable->{user_id}, 'order', {
@@ -1365,7 +1344,7 @@ print STDERR "CHECK ORDER INFO \n";
         # invoice when order is submitted.  Nope, back to manual invoice
         
         if ($variable->{Downpayment} > 0) {
-             send_invoice( $r, $log, $dbh, $order_id );
+			##     send_invoice( $r, $log, $dbh, $order_id );
         }
 		
 		$variable->{dockets} = make_product_dockets($order_id, $variable);
@@ -1378,25 +1357,12 @@ print STDERR "CHECK ORDER INFO \n";
 
     my $cust_id = $variable->{cust_id};
 
-    my $debit = $dbh->selectrow_array(q{
-        SELECT SUM(curTotalSale)
-        FROM tbl_Orders
-        WHERE lngCustomerID = ?
-        AND strStatus IN
-                ('Pending Deposit', 'In Production', 'Complete', 'Paid')
-        }, undef, $cust_id
-    );
 
-    my $credit = $dbh->selectrow_array(q{
-        SELECT SUM(curAmount)
-        FROM tbl_Payments
-        WHERE lngCustomerIndex = ?
-        }, undef, $cust_id
-    );
+    my $credit = new eprint::customer_credit( $log, $dbh, $cust_id );
 
-    my $customer_credit = new eprint::customer_credit( $log, $dbh, $cust_id );
-    my $credit_limit    = $customer_credit->get('CreditLimit');
-    my $avail_credit    = $credit_limit - ( $debit - $credit );
+    my $avail_credit    = $credit->available;
+
+print STDERR "HAVE AVAIL CREDIT: $avail_credit \n";
 
     if ( $avail_credit < 0 ) {
         notify_overdraft( $r, $log, $dbh, $cust_id, $avail_credit );
@@ -1434,10 +1400,13 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list);
 
 		$dbh->do("UPDATE tbl_service_specifications set strvalue = ? where strname = 'c-CAD-1' and lngprojectindex = ?", undef, $o->{cursalesprice}, $pid);
 
-		eprint::Build::build($log, $dbh, $pid, $var, 0);
+#		eprint::Build::build($log, $dbh, $pid, $var, 0);
 
 		
   		PQS::model::order::set_spec_pid($o->{lngcontentindex}, $pid);
+
+		#eprint::project::project_status($dbh, $pid, 'Waiting For Files');
+		project_status($dbh, $pid, 'Waiting For Files');
 
 		push @pids, {pid 		=> $pid,
 					 jobname	=> $o->{jobname}
@@ -1970,9 +1939,12 @@ sub send_sales_order {
     my ( $r, $log, $dbh, $order_id, $pending, $inv ) = @_;
     my %order;
 
-print STDERR "SEND SALES ORDER: $order_id \n";
 
 	display_order( \%order, $order_id);
+
+print STDERR "SEND SALES ORDER: $order_id \n", Dumper(\%order);
+
+	
 
 
 
@@ -1997,6 +1969,9 @@ print STDERR "SEND SALES ORDER: $order_id \n";
    	my $email_content = misc::load_file($r, '/email/email_template.html');
 
    	$order{ReplacementText} = q{<!--#include virtual="/email/forms/order_with_PDF.html"} . q{-->};
+
+	$order{siteURL} =  'http://192.168.1.245/';
+
 	$email_content = encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
 
 	my @body = ("", $email_content,  'text/html', 'quoted-printable');
@@ -2542,6 +2517,12 @@ sub history_details {
 		SELECT name FROM county_taxes WHERE id =
 			( SELECT CountyTax FROM tbl_orders WHERE lngorderid = ?) 
 	}, undef, $order_id);
+
+	my $cookie = undef;
+
+	if ( $r->param('CHECKOUT') ) {
+		show_payflow($r, $log, $dbh, $cookie, $variable, $order_id );
+	}
 }
 
 sub get_products {
@@ -2967,7 +2948,11 @@ print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $pr
 			}, undef, $pid);
 		} else {
 		  $desc = PQS::model::products::get_name_from_id($product);
-		  $desc = $desc . ' ' . $jobname;
+
+		  #$desc = $desc . ' ' . $jobname;
+		  #Manoj asked for desc to be reversed, jobname first.
+		  
+		  $desc = $jobname . ' ' . $desc;
 		}
 
 
@@ -3302,14 +3287,18 @@ sub paypal_return {
 
 
 sub show_payflow {
-	my ($r, $log, $dbh, $cookie, $var ) = @_;
+	my ($r, $log, $dbh, $cookie, $var, $order_id ) = @_;
 	
-	my $order_id = get_unfinished_order(
+	$order_id = get_unfinished_order(
 		$log, $dbh, $cookie, $var->{cust_id}, $var->{user_id}
-	);
+	) unless $order_id;
 
 	my $totals = get_order_totals($dbh, $var->{cust_id}, $order_id);
 	my $amount = $totals->{total};
+
+print STDERR "HAVE PAYMENT AMOUNT: $amount \n";
+
+	die("No Payment Amount") unless $amount;
 
 	my $paypal_user 	= configuration::get_value($log, $dbh, 'paypal_user');
 	my $paypal_pass 	= configuration::get_value($log, $dbh, 'paypal_password');

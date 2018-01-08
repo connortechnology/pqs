@@ -9,7 +9,7 @@ use eprint::customer;
 use Data::Dumper;
 
 my @import_fields = qw( strid category name description details part_number vendor minimum_qty 
-				  	increment maximum_qty weight notes project active units lead_time );
+				  	increment maximum_qty weight notes project active units lead_time delivery_days );
 
 #my @import_fields = qw( strid category category name description details part_number vendor minimum_qty 
 #				  	increment maximum_qty weight notes mediawide project active expiry product_group group_option units
@@ -38,6 +38,8 @@ my @update_fields =  (
 			{fname => 'units', 			type => 'text', 	desc => 'Units', 			sort_order => 1900},
 #			{fname => 'tax_exempt3', 	type => 'bool', 	desc => 'County Tax Exempt', sort_order => 2000},
 			{fname => 'lead_time', 		type => 'text', 	desc => 'Lead time', 		sort_order => 2100},
+			{fname => 'delivery_days', 	type => 'int', 		desc => 'Delivery Days', 	sort_order => 2100},
+			{fname => 'qprice', 	 	type => 'num', 		desc => 'Price', 			sort_order => 0001},
 			);
 
 sub new {
@@ -320,18 +322,46 @@ print STDERR "HAVE PRODUCT ID: $self->{id} FOR $self->{specs}{strid} \n";
 
 	my @data;
 
-	map { 
-	  push @data, { name=> $_->{fname}, value=> $self->get($_->{fname}) } unless $_->{fname} eq 'category'; 
-	} @update_fields;
+	foreach my $f ( @update_fields )  { 
+		my $field = $f->{fname};
+
+		#next if $field eq 'category';
+		if ($field eq 'qprice') {
+			next;
+		}
+		
+	  push @data, { name=> $field, value=> $self->get($field) } unless $field eq 'category'; 
+	}
 
 print STDERR "TIME TO SEND DATA TO UPDATE ", Dumper(\@data, $self->get('category_id'));
 
+
 	PQS::model::products::update($self->{id}, \@data );
+
+
 	PQS::model::products::update_category($self->{id}, $self->get('category_id'));
 
 
 print STDERR "DELETE OPTIONS: $self->{id} \n";
 	PQS::model::product_filter::delete_product_options($self->{id});
+
+
+print STDERR "START SAVE ", Dumper($self->{specs});
+	if ( $self->{specs}{qprice}  ) {
+
+		my $qprice = $self->spec('qprice');
+		
+		my $pricelist = 1;
+
+		PQS::model::pricing::clear_item($self->{id}, $pricelist);
+		print STDERR "DELETE PRICE: $self->{id} \n";
+
+
+		my $price = [1, $self->{id}, undef,  undef, 0, $qprice, undef, $pricelist];
+
+		PQS::model::pricing::add_price(@{$price});
+
+	}
 
 	map {
 		PQS::model::product_filter::insert_product_option($self->{id}, $_);

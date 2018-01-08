@@ -23,6 +23,7 @@ sub new {
 	$self->{dbh} = $dbh;
 
 	$self->{customer_index} = $customer_index;
+	$self->{cust_id} = $customer_index;
 	$self->{supplier_index} = $supplier_index;
 
 	$_ = "SELECT lngCustomerIndex FROM tbl_Customer_Credit\n".
@@ -104,6 +105,34 @@ sub set {
 	} # end if
 
 } # end sub get
+
+
+sub available {
+	my $self = shift;
+	my $dbh = session::dbh;
+
+	my $credit_limit    = $self->get('CreditLimit');
+
+    my $debit = $dbh->selectrow_array(q{
+        SELECT SUM(curTotalSale)
+        FROM tbl_Orders
+        WHERE lngCustomerID = ?
+        AND strStatus IN
+                ('Pending Deposit', 'In Production', 'Complete', 'Paid')
+        }, undef, $self->{cust_id}
+    );
+
+    my $credit = $dbh->selectrow_array(q{
+        SELECT SUM(curAmount)
+        FROM tbl_Payments
+        WHERE lngCustomerIndex = ?
+        }, undef, $self->{cust_id}
+    );
+
+	my $avail_credit    = $credit_limit - ( $debit - $credit );
+
+	return $avail_credit;
+}
 
 1;
 

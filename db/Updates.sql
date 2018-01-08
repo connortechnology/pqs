@@ -77,6 +77,14 @@ Alter table tbl_projects alter column eid SET DEFAULT nextval('eid_seq'::text);
 
 
  alter table tbl_products add column show_price bool;
+ alter table tbl_products add column delivery_days int;
+
+
+
+
+
+
+
 
 --Bindery only projects;
 INSERT INTO tbl_projecttypes VALUES (100, 'NoPrint', 'No Printing', 'prin/prin_noprint.html', '', 1, false, 1, 0.0, 0.0);
@@ -87,3 +95,31 @@ ALTER table tbl_order_contents ADD COLUMN hide bool;
 ALTER table tbl_order_contents ADD COLUMN jobname text;
 
 ALTER table tbl_orders ADD COLUMN paypal_token text;
+
+INSERT INTO tbl_configuration VALUES ( 'Default Product Category', 102);
+
+ALTER table tbl_projects ADD column files bool;
+
+
+--Rest Product Prices
+INSERT INTO pricing_matrix (index, item, min, max, cost, sell, pricelist)  (
+        SELECT 1, id, NULL, NULL, 20, 30, 1 FROM tbl_products where strid ~ 'bc'
+);
+
+INSERT INTO pricing_matrix (index, item, min, max, cost, sell, pricelist)  (
+        SELECT 1, id, NULL, NULL, 2, 3, 1 FROM tbl_products where strid ~ 'Mug'
+);
+
+ delete from tbl_configuration where strconfigtitle ~ 'paypal';
+
+
+INSERT INTO tbl_configuration VALUES ('paypal_user', 'apitest');
+INSERT INTO tbl_configuration VALUES ('paypal_vendor', 'revshop');
+INSERT INTO tbl_configuration VALUES ('paypal_mode', 'TEST');
+INSERT INTO tbl_configuration VALUES ('paypal_password', 'thisnosp1');
+
+INSERT INTO tbl_configuration VALUES ('paypal_user', 'KYWYTN02TA');
+INSERT INTO tbl_configuration VALUES ('paypal_vendor', 'GY5MEIC0RQ');
+INSERT INTO tbl_configuration VALUES ('paypal_mode', 'TEST');
+INSERT INTO tbl_configuration VALUES ('paypal_password', 'CI3YOLP2Q2KFOY0V');
+

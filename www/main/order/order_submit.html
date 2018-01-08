@@ -59,7 +59,8 @@
                 <legend>Shipping Method
                 </legend>
                 <label for="method">Shipping Via:</label>
-                <select class="form" id="ddmShipVia1" name="ddmShipVia1" onchange="form.submit();";
+				<select class="form" id="ddmShipVia1" name="ddmShipVia1" onchange="form.submit();";>
+					<option value="">Customer Pick Up</option>
 					<?SHIP_OPTIONS?>
                 </select>
 
@@ -88,7 +89,7 @@
                         <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" class="right" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
                         <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
            				<input type='hidden' name='CHECKOUT'  value='1' />
-            <a class="button right" href="/main/ecommerce/products.html" >Add Another Item to My Order</a><?endif SECURETOKENID?>
+            	<a class="button right" href="/main/ecommerce/products.html" >Add Another Item to My Order</a><?endif SECURETOKENID?>
 		</form>
 
 	

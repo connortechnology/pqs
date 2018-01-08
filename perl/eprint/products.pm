@@ -239,6 +239,47 @@ sub build_products {
 		}
 }
 
+sub quick_price { 
+	my $prod = shift;
+
+
+}
+
+sub price_admin {
+	my ($r, $dbh, $var) = @_;
+
+  
+	my $id = $r->param('product');
+  
+	my $list = PQS::model::pricing::get_list_index('Products');
+
+	my $pricelist = $r->param('pricelist');
+
+	my $p = new PQS::Object::product($id);
+  
+	if ( $r->param('sell') ) {
+  		my $discountable = undef;
+		my $min = $r->param('min');
+		my $max = $r->param('min');
+		my $cost = $r->param('cost') || 0;
+		my $sell = $r->param('sell');
+
+		my $price = [$list, $id, $min, $max, $cost, $sell, $discountable, $pricelist];
+
+		PQS::model::pricing::add_price(@{$price});
+	} elsif ($r->param('delete') ) { 
+		PQS::model::pricing::delete_price($r->param('delete'));
+
+	}
+
+	my $prices = $p->price_export($pricelist);
+
+	$var->{data} = $prices;
+	$var->{product} = $id;
+	$var->{name} = $p->spec('name');
+
+
+}
 
 sub category_admin {
 	my ($r, $dbh, $var) = @_;
@@ -373,11 +414,24 @@ print STDERR "START PRODUCT LIST \n";
 
 	$var->{products} = PQS::model::categories::products_in_tree($cat, $show_all) if $cat;
 
+	my $pricelist = 1;
+
 	foreach my $p ( @{$var->{products}} ) {
 		foreach my $f (keys %{$p} ) {
 			$p->{$f} = HTML::Entities::encode_entities($p->{$f});
 		}
+		my $data = 	PQS::model::pricing::sell_prices( $pricelist, $p->{id});
+
+		if ( @{$data} <= 1 ) {
+			$p->{qprice} = $data->[0]{sell};
+		} else { 
+			$p->{qprice} = 'noshow';
+		}
+
+		print STDERR "HAVE DATA: ", Dumper($data);
 	} 
+
+print STDERR "HAVE LIST PRODUCTS: ", Dumper($var->{products});
 
 
 
@@ -406,7 +460,7 @@ print STDERR "START PRODUCT LIST \n";
 	$var->{__FillInForm}{sort_dir} = $sort_desc;
 	$var->{__FillInForm}{show_all} = $show_all;
 
-	print STDERR "HAVE PRODUCTS: ", Dumper($s, $sort_desc);
+	print STDERR "HAVE PRODUCTS 1: ", Dumper($s, $sort_desc);
 
   
 }
@@ -640,7 +694,12 @@ sub display {
  my ($r, $dbh, $var) = @_;
  
 	my $cat = $r->param('category');
-	my $qty = $r->param('quantity') || 500;
+	my $qty = $r->param('quantity');
+
+	my $versions = $r->param('versions') || 1;
+
+	$qty *= $versions if $versions > 1;
+
 	my $log = session::log;
 
 	$cat = configuration::get_value($log, $dbh, 'Default Product Category') unless $cat;
@@ -713,14 +772,20 @@ sub display {
   my $cid = 1;
   foreach my $p (@{$var->{products}} ) {
 
-	$p->{category} = PQS::model::categories::get_name_from_id($p->{category});
-
 	my $prod = new PQS::Object::product($p->{id});
 
+	unless ($qty ) {
+		if ( $prod->{specs}{units} eq 'Per 1000' ) {
+			$qty = 1000;
+		} else {
+			$qty = 1;
+		}
+	}
+
+	$p->{category} = PQS::model::categories::get_name_from_id($p->{category});
+
+
 	$p->{price} = $prod->price($cid, $qty);
-	#if ( $prod->{specs}{units} eq 'Per 1000' ) {
-	#	$p->{price} /= 1000;
-	#}
 	$p->{price} *= $qty; 
 
 print STDERR "HAVE SPECS" , Dumper($prod->{specs});
@@ -745,10 +810,12 @@ print STDERR "HAVE SPECS" , Dumper($prod->{specs});
 	}
 
 	print STDERR "HAVE FILTERS: ", Dumper($var->{__FillInForm});
-	$var->{filters} = $filters;
+	$var->{filters} 	= $filters;
 
-	$var->{cat} = $cat;
-	$var->{quantity} = $qty;
+	$var->{cat} 			=	 $cat;
+	$var->{quantity} 		= $r->param('quantity') || $qty;
+	$var->{total_quantity} 	= $qty;
+	$var->{versions} 		= $versions;
 
 }
 
@@ -876,7 +943,7 @@ print STDERR "START PRICE EXPORT: ", Dumper($products);
 
 		my $prices = $p->price_export($pricelist);
 
-		$prices = [ {}] unless @{$prices};
+		$prices = [{}] unless @{$prices};
 
 
 		map {	push @data,  

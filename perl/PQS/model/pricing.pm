@@ -81,6 +81,11 @@ sub add_price_index {
   my $sth = $dbh->prepare($sql);
   $sth->execute($name, $min, $max, $units, $pricelist);
 }
+sub delete_price {
+ my $dbh = session::dbh;
+ my $item = shift;
+ $dbh->do('delete from pricing_matrix where id = ?', undef, $item);
+}
 
 sub clear_item {
  my $dbh = session::dbh;

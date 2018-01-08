@@ -165,9 +165,11 @@ sub project_allowed {
     return ($variable->{user_type} =~ /^[AE]$/ || $id == $variable->{cust_id});
 }
 
+
 # Get the current project state.
 sub project_state {
     my ($dbh, $pid) = @_;
+
 
     return $dbh->selectrow_array(q{
         SELECT strstatus
@@ -178,7 +180,11 @@ sub project_state {
 
 # Returns the string project service status given the ID of one.
 sub project_status {
-    my ($dbh, $pid) = @_;
+    my ($dbh, $pid, $status) = @_;
+
+	if ( $status ) {
+		$dbh->do(q{UPDATE tbl_projects set strstatus = ? WHERE lngprojectindex = ?}, undef, $status, $pid);
+	}
 
     my $sth = $dbh->prepare_cached(q{
         SELECT strstatus 

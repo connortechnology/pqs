@@ -19,6 +19,10 @@
 		function file_upload(p,q) {
 			var myurl = "/main/proj/upload.html?pid=" + p;
 
+			window.location = myurl;
+
+			return true;
+
 			window.open(myurl,
 				'printerfriendlyorder' + p,'newWin,left=140,width=1000,top=50,height=800,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 		}
@@ -63,7 +67,11 @@
 			vertical-align:middle;
 			margin: 0 0 10px 0;
 			"
-			onClick="file_upload(<?pid?>);">
+			onClick="file_upload(<?pid?>);"
+			onmouseover="this.style.background='gray';" 
+   			onmouseout="this.style.background='lemonchiffon'"
+			>
+
 
 	<div style="top: 50%;
 			margin-top: 20px;

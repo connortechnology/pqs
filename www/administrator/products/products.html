@@ -155,6 +155,7 @@
 				<?if kit?>
 				<a href="kit_select.html?kit_id=<?id?>" class="button" style="width: 93px; text-align: center"> Kit Contents</a>
 				<?endif kit?>
+				<a href="price.html?product=<?id?>;pricelist=1" class="button" style="width: 93px; text-align: center">Volume Pricing</a>
 			</td>
 			<td><?id?> <input type="hidden" name="productid" value="<?id?>" /> </td>
 		<?loop fields?>
@@ -162,6 +163,7 @@
 			<?eval( $variable->{size}  = $variable->{type} eq 'int' || $variable->{type} eq 'bool' ? 5 : 51 ) ?>
 
 			<td>
+			 <?if ($variable->{value} ne 'noshow' )?>
 			 <?if big?>
 
 				<textarea name="<?fname?>[<?id?>]" cols=50><?value?> </textarea>
@@ -173,6 +175,11 @@
 					<input name="<?fname?>[<?id?>]" value="<?value?>" size="<?size?>" />
 			 	<?endif ( $variable->{type} eq 'bool' ) ?>
 			 <?endif big?>
+			 <?else ($variable->{value} ne 'noshow' )?>
+
+				<a href="price.html?product=<?id?>;pricelist=1" class="button" style="width: 93px; text-align: center">Volume Pricing</a>
+
+			 <?endif ($variable->{value} ne 'noshow' )?>
 
 			</td>		
 	

@@ -38,7 +38,8 @@
     </thead>
     <tbody>
       <tr>
-		  <td><a href="/main/order/order_info.html"><address>
+		  <td>
+		<address>
           <?txtSalutation?> <?txtFirstName?> <?txtLastName?><br />
           <?txtCompanyName?><br />
           <?txtAddress1?>,
@@ -59,9 +60,24 @@
           F: <?txtFax?><br />
           <? endif ( $$variable{'txtFax'} ne '' ) ?>
           <?txtEmail?><br />
-		  </address></a></td>
+		  </address></td>
         <td></td>
       </tr>
+	  <?if ( $variable->{ORDER_STATUS} eq 'Incomplete' ) ?>
+	  <tr>
+		  <td style="text-align: center">
+			  <a href="/main/order/order_info.html">
+			  <div>
+				  Your Order will be shipped to this Address
+			  </div>
+			  <div>
+				  Click Here to Edit
+			  </div>
+			  </a>
+			  
+		  </td>
+	  </tr>
+	  <?endif ( $variable->{ORDER_STATUS} eq 'Incomplete' ) ?>
     </tbody>
   </table>
   <table class="invoice no-formatting">
@@ -87,7 +103,11 @@
 
 
       <tr class="project no-background" >
+
+
+
 		<?if ($variable->{product}) ?>
+		<!-- includes\forms\order ** PRODUCT -->
 		
         <td style="text-align: left; padding: 0.5em 0.5em 0.5em 1.5em;" colspan="2">
 			<em><Strong>

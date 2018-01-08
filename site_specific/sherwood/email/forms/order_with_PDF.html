@@ -19,8 +19,29 @@
 		
 		<div id="email-wrapper">	
 			<div id="email-border">
+
 			<p>Thank you  for your order!</p>
+
+			<div style="margin-top: 50px">
+				Your order will not be processed until payment has been made. <br/> 
+				<a href="/main/order/order_history_details.html?order_id=<?ORDER_ID?>">
+				Click here to go to see order details and make payment
+				</a>
+			</div>
+
+			<div style="margin: 50px 0 50px 0">
+					Click link to upload files: 
+			<?loop projects?>
+				<br/>
+				<a href="/main/proj/files.html?pid=<?index?>">
+					<?name?>
+				</a>
+			<?endloop projects?>
+			</div>
+				
     <p><strong>If your  order requires any changes or edits please call us at <!--#include virtual="/includes/company_telephone_number.html"--> and we  will make the changes for you.</strong></p>
+
+			<?eval( use Data::Dumper; Dumper($variable); ) ?>
    
             
 			

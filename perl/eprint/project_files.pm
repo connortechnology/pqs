@@ -13,7 +13,7 @@ use MIME::QuotedPrint     qw(encode_qp);
 use POSIX                 qw(strftime);
 
 use configuration   ();
-use eprint::project qw(project_allowed get_path has_pdf_template);
+use eprint::project qw(project_allowed get_path has_pdf_template project_status);
 use eprint::user    ();
 use ssi             ();
 
@@ -53,12 +53,24 @@ sub display_upload {
 sub display_files {
     my ($r, $log, $dbh, $variable) = @_;
 
-    my $pid = $variable->{pid} = $r->param('pid') || $r->param('ProjectIndex');
+    $variable->{pid} = $r->param('pid') || $r->param('ProjectIndex') unless $variable->{pid};
+
+    my $pid = $variable->{pid};
 
     # Is the user even allowed to view this project?
     #return FORBIDDEN unless project_allowed($dbh, $pid, $variable);
+	
+
+	#print STDERR "GET FILES FOR PID: $pid - $variable->{pid} \n", Dumper($variable);
+
+	use Data::Dumper;
+	print STDERR Dumper($r->param());	
+	map {
+		print STDERR "HAVE PARAM $_ = " . $r->param($_) . "\n";
+	} $r->param();
 
     my $projdir    = get_path(undef, $dbh, $pid);
+
 
 	mkpath($projdir);
 
@@ -73,6 +85,8 @@ sub display_files {
          substr($variable->{user}{firstname}, 0, 1)
        . substr($variable->{user}{lastname},  0, 1)
     );
+
+
 
 
     # FILES
@@ -209,6 +223,9 @@ print STDERR "TEMPLATE: $generated GO \n";
 	}, undef, $pid);
 
 	$variable->{ordered} = $ordered;
+
+	$variable->{done} = $dbh->selectrow_array(q{
+		Select files FROM tbl_projects where lngprojectindex = ?}, undef, $pid);
 print STDERR "IS ORDERED : $ordered \n\n";
 
     return OK;
@@ -249,10 +266,32 @@ sub actions {
     my ($r, $log, $dbh, $variable) = @_;
 
 
+
     my $pid = $r->param('pid');
        $pid =~ tr/0-9//cd;
 
     die "Invalid project ID." unless $pid;
+
+    my $location =  "/main/proj/files.html?pid=$pid";
+
+	map {
+		print STDERR "ACTIONS HAVE PARAM $_ = " . $r->param($_) . "\n";
+	} $r->param();
+
+	print STDERR "DISPLAY FILES \n";
+	if ( $r->param('lastfile') ) {
+		print STDERR "LAST FILE \n";
+		$dbh->do(q{Update tbl_projects set files = true where lngprojectindex = ? }, undef, $pid);
+		project_status($dbh, $pid, 'In Production');
+		
+		send_notice($r, $log, $dbh, $variable, $pid);
+	}
+	elsif ( $r->param('morefiles') ) {
+		$dbh->do(q{Update tbl_projects set files = false where lngprojectindex = ? }, undef, $pid);
+		print STDERR "MORE FILE \n";
+    	$location =  "/main/proj/upload.html?pid=$pid";
+	}
+
 
     if ($r->param('upload') || $r->param('approve')) {
 
@@ -282,7 +321,7 @@ sub actions {
             approve_files($dbh, $pid, $variable->{user}, $approval, $r->param('filename'));
         }
 
-       	send_notice($r, $log, $dbh, $variable, $pid, $action, $approval, $files);
+		#send_notice($r, $log, $dbh, $variable, $pid, $action, $approval, $files);
     
     }
     elsif ($r->param('delete')) {
@@ -313,10 +352,10 @@ sub actions {
         }
     }
 
+
     my ($user, $pass, $host, $port) = $r->headers_in->{'Host'}
         =~ /(?:([^:]+):([^\@]+)\@)?([^\@:]+)(?::(\d+))?/;
 
-    my $location =  "/main/proj/files.html?pid=$pid";
 
     $location = "/main/order/order_submit.html" if $r->param('return_to_order');
     
@@ -490,10 +529,19 @@ sub save_upload {
 sub send_notice {
     my ($r, $log, $dbh, $variable, $pid, $action, $approval, $files) = @_;
 
-print STDERR "SEND NOTICE" , Dumper(@_);
+	
+	$variable->{pid} = $pid;
+
+print STDERR "HAVE SEND PID: $variable->{pid} \n";
+	display_files($r, $log, $dbh, $variable);
+	$files = $variable->{files};
+
+
 
     # Who's getting the notice?
     my ($to, $bcc) = recipients($r, $dbh, $variable, $pid);
+
+print STDERR "SEND NOTICE" , Dumper($pid, $to, $bcc, @_);
 
     # No 'To' is allowed by RFC2822 as RFC2821 'RCPT TO' will handle delivery,
     # but Mail::Sendmail doesn't seem to like it.
@@ -504,6 +552,7 @@ print STDERR "SEND NOTICE" , Dumper(@_);
 
     # There's nothing to do unless we have some recipients.
     return unless @$to;
+print STDERR "SEND TO: @$to \n";
    
     my %header = (
         SMTP       => configuration::get_value(undef, $dbh, 'Mail Server'),
@@ -541,6 +590,14 @@ print STDERR "SEND NOTICE" , Dumper(@_);
     my $body = misc::load_file($r, '/email/email_template.html');
        $body = ssi::variable_substitution($r, $log, $dbh, $body, \%info);
 
+
+	misc::save_file(undef, "/usr/local/share/pqs/www/test.html", ($body));
+
+
+
+	return 1;
+
+
     misc::send_email_with_attachment($r, $log, \%header, 
         ('', encode_qp($body), 'text/html', 'quoted-printable')
     );
@@ -574,6 +631,9 @@ sub recipients {
             FROM tbl_customer_users 
             WHERE lnguserid IN ($users)
         }) } if $users;
+
+		#Always send to notfication address;
+        push @bcc, $staff_email;
 
         push @bcc, $staff_email             if $r->param('notify_staff');
         push @bcc, $variable->{user}{email} if $r->param('notify_self');
