@@ -2013,7 +2013,7 @@ print STDERR " CHECK ORDER IS PENDING\n";
 # Safeway does not want to send out order without date approval.
 	if ( $pending ) {
 print STDERR "ORDER IS PENDING\n";
-		notify_pending_approval($r, $log, $dbh, $order{'txtEmail'}, $order_id);
+		#notify_pending_approval($r, $log, $dbh, $order{'txtEmail'}, $order_id);
 
 		my $sales_email = scalar $dbh->selectrow_array(q{
 			SELECT strEmail FROM tbl_customer_users WHERE lnguserid = 
@@ -2039,6 +2039,11 @@ print STDERR "ORDER IS PENDING\n";
 			SUBJECT => "${inv_not}$creator - Order " . order_rev($dbh, $order_id),
 			CC => $cc,
 		);
+
+		$mail{TO} = $order{'txtEmail'};
+		$mail{SUBJECT} = "Order " . order_rev($dbh, $order_id);
+		misc::send_email_with_attachment($r, $log, \%mail, @body, @project_summaries ) if $sales_email;
+		delete $mail{BODY};
 
 		$mail{TO} = $sales_email;
 		$mail{SUBJECT} = "Sales: ${inv_not}$creator - Order " . order_rev($dbh, $order_id);
