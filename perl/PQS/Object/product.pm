@@ -390,7 +390,8 @@ sub specs {
 sub spec {
   my $self 	= shift;
   my $s 	= shift;
-  die("Spec $s is Invalid" .  Dumper($self->{specs})) unless defined $self->{specs}{$s};
+
+  die("Spec $s is for sure Invalid \n" .  Dumper($self->{specs})) unless exists $self->{specs}{$s};
   return $self->{specs}{$s};
 }
 	
