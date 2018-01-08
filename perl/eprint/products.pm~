@@ -425,7 +425,7 @@ print STDERR "START PRODUCT LIST \n";
 		if ( @{$data} <= 1 ) {
 			$p->{qprice} = $data->[0]{sell};
 		} else { 
-			$p->{qprice} = 'nowshow';
+			$p->{qprice} = 'noshow';
 		}
 
 		print STDERR "HAVE DATA: ", Dumper($data);
