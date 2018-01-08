@@ -591,11 +591,11 @@ print STDERR "SEND TO: @$to \n";
        $body = ssi::variable_substitution($r, $log, $dbh, $body, \%info);
 
 
-	misc::save_file(undef, "/usr/local/share/pqs/www/test.html", ($body));
+#	misc::save_file(undef, "/usr/local/share/pqs/www/test.html", ($body));
 
 
 
-	return 1;
+#	return 1;
 
 
     misc::send_email_with_attachment($r, $log, \%header, 
