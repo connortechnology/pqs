@@ -788,7 +788,7 @@ sub display {
 	$p->{price} = $prod->price($cid, $qty);
 	$p->{price} *= $qty; 
 
-print STDERR "HAVE SPECS" , Dumper($prod->{specs});
+#print STDERR "HAVE SPECS" , Dumper($prod->{specs});
 	#$p->{price} = $qty;
 
 	$p->{image}  = $prod->image(1);
@@ -858,7 +858,7 @@ sub filter_products {
 		push @plist, $p if grep {$p->{id} eq $_} @list;
 	}
 
-print STDERR "HAE PRODUCTS: ", Dumper($have_filter, @plist, $prods);
+#print STDERR "HAE PRODUCTS: ", Dumper($have_filter, @plist, $prods);
 	
 	return $have_filter ? \@plist : $prods;
 	

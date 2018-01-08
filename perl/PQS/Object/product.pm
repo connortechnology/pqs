@@ -214,7 +214,7 @@ sub load {
   
   $self->{specs} = PQS::model::products::get($self->{id});
   
-  print STDERR "LOAD PRODUCT: $self->{id} HAVE PRODUCTS CAT: ", Dumper($self->{category_id}, $self->{specs} );
+#  print STDERR "LOAD PRODUCT: $self->{id} HAVE PRODUCTS CAT: ", Dumper($self->{category_id}, $self->{specs} );
   
   
   $self->{specs}{category_id} = $self->{specs}{category};

@@ -549,7 +549,6 @@ print STDERR "SUB: $sub_section F: $filename \n";
     elsif ($sub_section eq 'products') {
       eprint::products::list($r, $dbh, $variable) if $filename eq 'products.html';
       eprint::products::category_admin($r, $dbh, $variable) if $filename eq 'categories.html';
-      eprint::products::price_admin($r, $dbh, $variable) if $filename eq 'price.html';
       eprint::products::builder($r, $dbh, $variable) if $filename eq 'builder.html';
       eprint::products::kit_select($r, $dbh, $variable) if $filename eq 'kit_select.html';
       
@@ -663,8 +662,6 @@ print STDERR "SUB : $sub_section \n";
         eprint::order::show_payflow($r, $log, $dbh, $cookie, $variable)        		if $filename eq 'payment.html';
         eprint::order::paypal_error($r, $log, $dbh, $cookie, $variable)        		if $filename eq 'error.html';
         eprint::order::paypal_return($r, $log, $dbh, $cookie, $variable)        	if $filename eq 'paypal_return.html';
-
-        eprint::order::make_payment($r, $log, $dbh, $cookie, $variable)             if $filename eq 'make_payment.html';
 
     } 
     elsif ($sub_section eq 'quote') {

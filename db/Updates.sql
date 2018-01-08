@@ -124,3 +124,14 @@ INSERT INTO tbl_configuration VALUES ('paypal_vendor', 'GY5MEIC0RQ');
 INSERT INTO tbl_configuration VALUES ('paypal_mode', 'TEST');
 INSERT INTO tbl_configuration VALUES ('paypal_password', 'CI3YOLP2Q2KFOY0V');
 
+apiuser
+
+CJ3YOLP2Q
+
+INSERT INTO tbl_configuration VALUES ('paypal_user', 'apiuser');
+INSERT INTO tbl_configuration VALUES ('paypal_vendor', 'SherwoodPrinters');
+INSERT INTO tbl_configuration VALUES ('paypal_mode', 'TEST');
+INSERT INTO tbl_configuration VALUES ('paypal_password', 'NJ3YOLP2Q');
+INSERT INTO tbl_configuration VALUES ('paypal_partner', 'PayPalCA');
+
+

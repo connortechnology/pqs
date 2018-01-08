@@ -164,9 +164,9 @@ sub add_product_to_order {
 	my $log = session::log;
 	my $dbh = session::dbh;
 
-	my $error = check_customer_account( $log, $dbh, $cookie, $var);
+#	my $error = check_customer_account( $log, $dbh, $cookie, $var);
 
-	return ( 0, $error) if $error;
+#	return ( 0, $error) if $error;
 
 
 
@@ -1179,6 +1179,10 @@ print STDERR "CHECK ORDER INFO \n";
         $downpayment = $total * ( $downpayment / 100 );
         $downpayment = sprintf( '%.2f', $downpayment );
 
+		$downpayment = $total unless $downpayment > 0;
+
+	print STDERR "HAVE DP: $downpayment \n";
+
 
         my $status        = 'In Production';
         my $pstatus       = 'Waiting For Files';
@@ -1192,8 +1196,10 @@ print STDERR "CHECK ORDER INFO \n";
         );
 
         if ( $downpayment - $amount_paid > 0 ) {
+			print STDERR "CHECK FOR CREDIT DP: $downpayment \n";
             $status = 'Pending Deposit' if $downpayment > $customer_credit->available;
         }
+
 
 # All safeway orders require Date Approval.
 #		$status = 'Pending Date Approval';
@@ -1330,8 +1336,11 @@ print STDERR "CHECK ORDER INFO \n";
 		# Safeway  orders are set to Pending Date Approval.
 		my $pending = 1;
 
-        # Send notice of the order to the user and the solution owner.
-        send_sales_order($r, $log, $dbh, $order_id, $pending, $inv);
+
+		unless ( $status eq 'Pending Deposit' ) { 
+        	# Send notice of the order to the user and the solution owner.
+        	send_sales_order($r, $log, $dbh, $order_id, $pending, $inv);
+		}
 
         # Send out a notice to the ordering user's manager (if applicable).
         eprint::user::notify_manager($r, $log, $dbh, $variable->{user_id}, 'order', {
@@ -1364,9 +1373,9 @@ print STDERR "CHECK ORDER INFO \n";
 
 print STDERR "HAVE AVAIL CREDIT: $avail_credit \n";
 
-    if ( $avail_credit < 0 ) {
-        notify_overdraft( $r, $log, $dbh, $cust_id, $avail_credit );
-    }
+	if ( $avail_credit < 0 ) {
+       notify_overdraft( $r, $log, $dbh, $cust_id, $avail_credit );
+	}
 
     $variable->{order_total} = $dbh->selectrow_array(q{
         SELECT curtotalsale FROM tbl_orders where lngorderid = ?
@@ -1942,7 +1951,7 @@ sub send_sales_order {
 
 	display_order( \%order, $order_id);
 
-print STDERR "SEND SALES ORDER: $order_id \n", Dumper(\%order);
+#print STDERR "SEND SALES ORDER: $order_id \n", Dumper(\%order);
 
 	
 
@@ -1977,10 +1986,10 @@ print STDERR "SEND SALES ORDER: $order_id \n", Dumper(\%order);
 	my @body = ("", $email_content,  'text/html', 'quoted-printable');
 
 
-print STDERR "SALES ORDER SHOW PROJECTS \n";
-	map {
-		print STDERR "HAVE PROJECT: $_->{project_price} \n", Dumper($_);
-	} @{$order{projects}};
+#print STDERR "SALES ORDER SHOW PROJECTS \n";
+#	map {
+#		print STDERR "HAVE PROJECT: $_->{project_price} \n", Dumper($_);
+#	} @{$order{projects}};
 
 
     my $email_template = misc::load_file($r, '/email/forms/order.html');
@@ -3254,6 +3263,8 @@ sub paypal_return {
 
 	my $order_id = PQS::model::order::get_id_from_token($token);
 
+	print STDERR "HAVE ORDER: $order_id FROM token: $token \n";
+
 	$var->{order_id} = $order_id;
 	
     map { 
@@ -3273,15 +3284,22 @@ sub paypal_return {
 
 		my $session 	= undef;
 		my $method 		= 'PayPal';
-		my $currency 	= 'US';
+		my $currency 	= 'CA';
+
 		my ($user, $cust) = PQS::model::order::user_id($order_id);
 
 		PQS::model::payment::new_payment( 
 			$order_id, $user, $cust, $session, $method, $currency, 
 			$token, $results, $amount);
+
+		my $status = 'In Production';
+
+		PQS::model::order::set_status( $order_id, $status);
 	
-		print STDERR "TIME TO COMPLETE ORDER: $order_id \n";
-		finalise_order( $r, $log, $dbh, $cookie, $var, $order_id );
+		print STDERR "TIME TO COMPLETE Send Sales Order $order_id \n";
+		#finalise_order( $r, $log, $dbh, $cookie, $var, $order_id );
+		
+		send_sales_order( $r, $log, $dbh, $order_id, 1 );
 		
 	} else {
 		print STDERR "HAVE PAYAPL RESULT: $results \n";
@@ -3309,18 +3327,24 @@ print STDERR "HAVE PAYMENT AMOUNT: $amount \n";
 	my $paypal_pass 	= configuration::get_value($log, $dbh, 'paypal_password');
 	my $paypal_vendor 	= configuration::get_value($log, $dbh, 'paypal_vendor');
 	my $paypal_mode 	= configuration::get_value($log, $dbh, 'paypal_mode');
+	my $paypal_partner 	= configuration::get_value($log, $dbh, 'paypal_partner');
 
 	my $production = $paypal_mode eq 'LIVE' ? 1 : 0;
 
     use WebService::PayPal::PaymentsAdvanced;
-    my $payments = WebService::PayPal::PaymentsAdvanced->new(
+	my $args = 
         {
             user     		=> $paypal_user,
             password 		=> $paypal_pass,
             vendor   		=> $paypal_vendor,
 			production_mode => $production,
-        }
-    );
+			partner			=> $paypal_partner,
+        };
+
+	print STDERR "HAVE PAYAPAL ARGS ", Dumper($args);
+
+		
+    my $payments = WebService::PayPal::PaymentsAdvanced->new($args);
 
     my $response = $payments->create_secure_token(
         {

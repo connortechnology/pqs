@@ -52,6 +52,14 @@ print STDERR "SET AMDIN COMMENTS \n";
 	$dbh->do(q{update tbl_orders set stradministratorcomments = ? where lngorderid = ?}, undef, $comments, $order);
 }
 
+sub set_status {
+	my $order  = shift;
+    my $status  = shift;
+  	my $dbh = session::dbh;
+
+	$dbh->do(q{update tbl_orders set strstatus = ? where lngorderid = ?}, undef, $status, $order);
+}
+
 sub set_paypal_token {
 	my $order  = shift;
     my $token  = shift;

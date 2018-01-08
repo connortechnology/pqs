@@ -1955,7 +1955,7 @@ use constant TEMPLATE_PAGE => '/template/record.html';
         my $action = $r->param('action') or die "No action given to dispatch";
         my $func   = $DISPATCH{$action}  or die "Invalid action ($action)";
 
-print STDERR "START DISPATCH: $cookie \n";
+print STDERR "START DISPATCH: COOKIE: $cookie ACTION: $action FUNC: $func \n";
 
         # Project ID is required for everything but creation.
         my $pid;

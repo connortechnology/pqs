@@ -260,7 +260,7 @@ sub price_admin {
 	if ( $r->param('sell') ) {
   		my $discountable = undef;
 		my $min = $r->param('min');
-		my $max = $r->param('min');
+		my $max = $r->param('max');
 		my $cost = $r->param('cost') || 0;
 		my $sell = $r->param('sell');
 
@@ -788,7 +788,7 @@ sub display {
 	$p->{price} = $prod->price($cid, $qty);
 	$p->{price} *= $qty; 
 
-print STDERR "HAVE SPECS" , Dumper($prod->{specs});
+#print STDERR "HAVE SPECS" , Dumper($prod->{specs});
 	#$p->{price} = $qty;
 
 	$p->{image}  = $prod->image(1);

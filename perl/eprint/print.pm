@@ -684,6 +684,8 @@ sub display_project {
         $log, $dbh, $pid, $variable->{checkout}, 'OriginalProjectIndex'
     ) if $variable->{checkout};
 
+#print STDERR "HAVE PROJECT VAR ", Dumper($variable);
+
     return OK;
 }
 

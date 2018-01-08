@@ -844,7 +844,7 @@ sub sig_stock_prices {
         WHERE s.lngserviceindex = c.lngserviceindex
           AND s.lngprojectindex = c.lngprojectindex
           AND c.strservicetype = 'Printing'
-          AND c.strstatus IN ('calculated', 'In Production', 'Complete', 'Pending Date Approval')
+		  AND c.strstatus NOT IN ('uncalculated', 'Deleted')
           AND s.strvalue NOT IN ('N/A', 'n/a', '')
           AND c.ysnremoved = FALSE
           AND s.strname ~ '^txtStockPrice[1-3]$'
@@ -878,6 +878,9 @@ sub project_price {
 
     $total[$_] = $service[$_] + $material[$_] for 0..2; 
 
+	use Data::Dumper;
+	print STDERR "HAVE PROJECT PRICES: ", Dumper(\@material, \@service, \@total);
+
     return @total;
 }
 
@@ -896,7 +899,7 @@ sub service_prices {
         WHERE c.lngprojectindex = s.lngprojectindex
           AND c.lngserviceindex = s.lngserviceindex
           AND c.strservicetype  = t.strid
-          AND c.strstatus IN ('calculated', 'In Production', 'Complete' , 'Pending Date Approval')
+		  AND c.strstatus NOT IN ('uncalculated', 'Deleted')
           AND s.strvalue NOT IN ('N/A', 'n/a', '')
           AND c.ysnremoved = false
           AND s.strname   = 'txtPrice' || ?::char(1)
