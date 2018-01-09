@@ -1,14 +1,29 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<body>
 
-    
-   
-	<p style="margin-bottom:400px">Thank you for your payment of <?payment.amt?> <?payment.cc?> for Order <?payment.item_number?>. Your transaction has been completed, and a receipt for your purchase has been emailed to you. You may log into your account at www.paypal.com to view details of this transaction. You will also receive an order email with the details of your order.</p>
+<style>
+.button {background-color: #000000;
+border: 1px solid #000000;
+color: #ffffff;
+font-size: 0.85em;
+font-family: "Montserrat",sans-serif;
+margin: 0 1px 1ex;
+padding: 0.25ex 0.5em 0.5ex;
+}
 
-<!--    tx=<?payment.tx?>,st=<?payment.st?>,amt=<?payment.amt?>,cc=<?payment.cc?>,cm=<?payment.cm?>,item_number=<?payment.item_number?>
--->
+</style>
+<? if ( $$variable{RESPMSG} eq 'Approved' ) ?>
+<p style="font-family: "Montserrat",sans-serif;">Thank you for your payment it has been Approved!</p>
 
+        <form method="post" name="f1" action="/main/order/confirmation_make_order.html">
 
-</body>
-</html>
+    <input type="hidden" name="hiddenOrderID" value="<?hiddenOrderID?>" />
+
+<!--    <input type="button" name="f1.submit();return false;" class="button right" style="float:right" value="Submit Order" onClick="window.top.location='/main/order/confirmation_make_order.html?hiddenOrderID=<?order_id?>'" />
+-->    <script type="text/javascript">
+        window.top.location='/main/order/confirmation_make_order.html?hiddenOrderID=<?order_id?>'
+        </script>
+</form>
+<? else( $$variable{RESPMSG} eq 'Approved' ) ?>
+<p style="font-family: "Montserrat",sans-serif;">Your Payment has been declined. Please Push the button below to try again.</p>
+
+<a class="button right" style="margin-left:30%; " onClick="window.top.location='/main/order/order_submit.html?CHECKOUT=1'"><img src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" /></a>
+<? endif ( $$variable{RESPMSG} eq 'Approved' ) ?>
