@@ -84,6 +84,7 @@ ALTER table tbl_order_contents ADD COLUMN hide bool;
 ALTER table tbl_order_contents ADD COLUMN jobname text;
 
 ALTER table tbl_orders ADD COLUMN paypal_token text;
+ALTER table tbl_orders ADD COLUMN token_type text;
 
 
 

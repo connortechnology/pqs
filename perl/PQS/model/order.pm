@@ -50,6 +50,14 @@ sub get_id_from_token {
 	return $dbh->selectrow_array(q{select lngorderid from tbl_orders where paypal_token = ?}, undef, $token);
 	
 }
+
+sub token_type {
+  	my $dbh = session::dbh;
+	my $order = shift;
+	return $dbh->selectrow_array(q{select token_type from tbl_orders where lngorderid = ?}, undef, $order);
+	
+}
+
 sub set_admin_comments {
 print STDERR "SET AMDIN COMMENTS \n";
 	my $order  = shift;
@@ -70,9 +78,10 @@ sub set_status {
 sub set_paypal_token {
 	my $order  = shift;
     my $token  = shift;
+    my $type  = shift;
   	my $dbh = session::dbh;
 
-	$dbh->do(q{update tbl_orders set paypal_token = ? where lngorderid = ?}, undef, $token, $order);
+	$dbh->do(q{update tbl_orders set paypal_token = ?, token_type = ? where lngorderid = ?}, undef, $token, $type, $order);
 }
 
 sub get_pid_from_index {

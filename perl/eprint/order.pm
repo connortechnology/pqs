@@ -2535,7 +2535,7 @@ sub history_details {
 	my $cookie = undef;
 
 	if ( $r->param('CHECKOUT') ) {
-		show_payflow($r, $log, $dbh, $cookie, $variable, $order_id );
+		show_payflow($r, $log, $dbh, $cookie, $variable, $order_id, 'history' );
 	}
 }
 
@@ -3263,7 +3263,9 @@ sub paypal_return {
 
 	my $order_id = PQS::model::order::get_id_from_token($token);
 	my $payment  = PQS::model::order::get_payment_from_token($token);
+	my $token_type =  PQS::model::order::token_type($order_id);
 
+	$var->{HISTORY} = 1 if $token_type eq 'history';
 
 	print STDERR "HAVE ORDER: $order_id FROM token: $token PAYMENT: $payment\n";
 
@@ -3326,7 +3328,7 @@ sub paypal_return {
 
 
 sub show_payflow {
-	my ($r, $log, $dbh, $cookie, $var, $order_id ) = @_;
+	my ($r, $log, $dbh, $cookie, $var, $order_id, $type ) = @_;
 	
 	$order_id = get_unfinished_order(
 		$log, $dbh, $cookie, $var->{cust_id}, $var->{user_id}
@@ -3374,7 +3376,7 @@ print STDERR "HAVE PAYMENT AMOUNT: $amount \n";
 	$var->{SECURETOKEN} 	= $response->secure_token;
 	$var->{SECURETOKENID} 	= $response->secure_token_id;
 
-	PQS::model::order::set_paypal_token($order_id,  $response->secure_token_id);
+	PQS::model::order::set_paypal_token($order_id,  $response->secure_token_id, $type);
 
 
 }
