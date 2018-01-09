@@ -18,9 +18,12 @@ padding: 0.25ex 0.5em 0.5ex;
     <input type="hidden" name="hiddenOrderID" value="<?hiddenOrderID?>" />
 
 <!--    <input type="button" name="f1.submit();return false;" class="button right" style="float:right" value="Submit Order" onClick="window.top.location='/main/order/confirmation_make_order.html?hiddenOrderID=<?order_id?>'" />
--->    <script type="text/javascript">
+-->    
+	<?if CONFIRM?>
+		<script type="text/javascript">
         window.top.location='/main/order/confirmation_make_order.html?hiddenOrderID=<?order_id?>'
         </script>
+	<?endif CONFIRM?>
 </form>
 <? else( $$variable{RESPMSG} eq 'Approved' ) ?>
 <p style="font-family: "Montserrat",sans-serif;">Your Payment has been declined. Please Push the button below to try again.</p>

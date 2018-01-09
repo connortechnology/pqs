@@ -84,6 +84,15 @@ sub get_pid_from_index {
 }
 
 
+sub get_status {
+	my $dbh = session::dbh;
+	my $index = shift;
+
+	return $dbh->selectrow_array(q{select strstatus from tbl_orders where lngorderid = ?}, undef, $index);
+	
+}
+
+
 sub set_mediawide_id {
 	my $ocid  = shift;
   	my $mwid  = shift;

@@ -3299,7 +3299,16 @@ sub paypal_return {
 			$order_id, $user, $cust, $session, $method, $currency, 
 			$token, $results, $amount);
 
-		my $status = 'In Production';
+		my $status = PQS::model::order::get_status( $order_id);
+
+		print STDERR "HAVE STATUS: $status \n";
+
+		if ( $status eq 'Incomplete' ) {
+			$var->{CONFIRM} = 1;
+
+		}
+		
+		$status = 'In Production';
 
 		PQS::model::order::set_status( $order_id, $status);
 	
