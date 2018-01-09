@@ -3264,10 +3264,6 @@ sub paypal_return {
 	my $order_id = PQS::model::order::get_id_from_token($token);
 	my $payment  = PQS::model::order::get_payment_from_token($token);
 
-	if ( $payment ) {
-		print STDERR "ALREADY HAVE PAYMENT FOR TOKEN: $token \n";
-		return;
-	}
 
 	print STDERR "HAVE ORDER: $order_id FROM token: $token PAYMENT: $payment\n";
 
@@ -3278,6 +3274,11 @@ sub paypal_return {
    		$results .= "$_ = " . $r->param($_) . "<br>" ;
 		print STDERR "HAVE RESULTS: $_ = " . $r->param($_) . "\n";
     } $r->param();
+
+	if ( $payment ) {
+		print STDERR "ALREADY HAVE PAYMENT FOR TOKEN: $token \n";
+		return;
+	}
 
 	
 	$var->{results} = $results;
