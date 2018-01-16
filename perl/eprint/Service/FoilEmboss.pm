@@ -95,51 +95,30 @@ sub calc {
             else {
                 @equipment = @possible_equipment;
             }
+
+
             $log->debug("FOIL STAMPING Equipment: @equipment ");
+
             my %imposition;
-            @imposition{ 'Imposition', 'Rows', 'Cols' } =
-              @printing_specs{ 'hdnImposition', 'hdnImpositionRows',
-                'hdnImpositionColumns' };
             my @impositions = ();
 
-			if ( $printing_specs{hdnGrainDirection} eq 'Mixed' ) {
-				# For Our Dutch Impositions We only allow 1-up die cutting.
-				$imposition{Imposition} = 1;
-				$imposition{Rows} = 1;
-				$imposition{Cols} = 1;
-				push @impositions, \%imposition;
-			} else {
-            	while ( $imposition{Imposition} ) {
-               	if (   $specs->{"chkOverrideImposition$qty_index"} ne 'Y'
-                    	or $specs->{"txtImposition$qty_index"} ==
-                    	$imposition{Imposition} )
-                	{
-                    	my %copy = %imposition;
-                    	push @impositions, \%copy;
-                	}
-                	eprint::imposition::descrease_imposition( \%imposition );
-            	}
-			}
+			$imposition{Imposition} = 1;
+			$imposition{Rows} = 1;
+			$imposition{Cols} = 1;
+
+
+			push @impositions, \%imposition;
+
 
             foreach my $imposition (@impositions) {
-#                $specs->{hdnBreakdown} .=
-#                 "\tImposition: $$imposition{Imposition}\n";
+
                 my $imp_width  = 0;
                 my $imp_height = 0;
-                if ( $printing_specs{hdnImageOrientation} eq 'Vertical' ) {
-                    $log->debug("FOILSTAMPING: Imposing Vertical");
-                    $imp_width =
-                      $specs->{"flat_width"} * $$imposition{Cols};
-                    $imp_height =
-                      $specs->{"flat_height"} * $$imposition{Rows};
-                }
-                else {
-                    $log->debug("FOILSTAMPING: Imposing Horizontal");
-                    $imp_width =
-                      $specs->{"flat_width"} * $$imposition{Rows};
-                    $imp_height =
-                      $specs->{"flat_height"} * $$imposition{Cols};
-                }
+
+                $imp_width = $specs->{"flat_width"};
+                $imp_height = $specs->{"flat_height"};
+                
+
                 foreach my $equipment_index (@equipment) {
 
                     # First, find out if it fits

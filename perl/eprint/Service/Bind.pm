@@ -28,10 +28,12 @@ use PQS::model::service;
 sub necessary { 
     my ($log, $dbh, $pid, $service_type) = @_;
 
-    # We only handle multipage project.
-    return 0 unless is_multipage($log, $dbh, $pid);
 
-	return 0 if has_no_bindery($log, $dbh, $pid);
+    # We only handle multipage project.
+#    return 0 unless is_multipage($log, $dbh, $pid);
+
+#	return 0 if has_no_bindery($log, $dbh, $pid);
+
     
     # Bindery types are currently mutually exclusive (can't bind half the
     # project as one thing and half as another). We're only necessary if we're
@@ -42,6 +44,7 @@ sub necessary {
 
 print STDERR "BIND CHECK: $service_type \n";
     # Any other cases?
+
 
     return 0;
 }
@@ -203,7 +206,7 @@ print STDERR "Print Presses: @$print_presses \n";
     }
 print STDERR "HAVE EQUIPMENT: @eids : @s_eids : @o_eids \n";
 
-    @eids = @s_eids ? @s_eids : @o_eids;
+#    @eids = @s_eids ? @s_eids : @o_eids;
     
     # Default project quantities to use if custom ones aren't defined.
     my @qty = (undef, get_quantities($log, $dbh, $pid));

@@ -20,6 +20,15 @@
 		width: 110px; 
 		margin-left: 20px;
 	}
+
+	.discount {
+		width: 75px;
+		float: right;
+		margin-right:4px;
+		text-align: right;
+
+	}
+
 	th { border-color:#FFFFFF;
 	}
 	
@@ -116,6 +125,15 @@
 			<br/>
 
 		<?endloop fields?>
+
+		<?loop versions?>
+		<label style="width:25em">Version Discount Min/Max/Discount</label>
+		<input name="discount-<?v?>" value="<?discount?>" class="discount" />
+		<input name="max-<?v?>" value="<?max?>" class="discount" />
+		<input name="min-<?v?>" value="<?min?>" class="discount" />
+		<br/>
+		<?endloop versions?>
+			
 <div class="button-bar" style="margin-top: 20px" >
 			<button type="submit" name="Preview" value="1" style="margin-left: -10px;">Preview</button>
 			<button type="submit" name="Build" value="1" >Build</button>

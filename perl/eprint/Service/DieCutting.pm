@@ -143,41 +143,20 @@ sub calc {
                           ? ($specs->{"ddmEquipment$i"}) : @possible_equipment;
 
         my %imposition;
-        @imposition{ qw(Imposition Rows Cols) } 
-            = @printing_specs{qw(hdnImposition hdnImpositionRows hdnImpositionColumns)};
 
         my @impositions = ();
-        if ( $printing_specs{'hdnGrainDirection'} eq 'Mixed' ) {
             # For Our Dutch Impositions We only allow 1-up die cutting.
             $imposition{'Imposition'} = 1;
             $imposition{'Rows'} = 1;
             $imposition{'Cols'} = 1;
             push @impositions, \%imposition;
-        } else {
-            while ( $imposition{'Imposition'} ) {
-                if (    $$specs{"chkOverrideImposition$i"} ne 'Y'
-                     or $$specs{"txtImposition$i"} ==
-                          $imposition{'Imposition'} )
-                {
-                    my %copy = %imposition;
-                    push @impositions, \%copy;
-                }
-
-                decrease_imposition( \%imposition );
-            }
-        }
 
         foreach my $imposition (@impositions) {
             my $imp_width  = 0;
             my $imp_height = 0;
-            if ( $printing_specs{'hdnImageOrientation'} eq 'Vertical' ) {
-                $imp_width  = $$specs{"flat_width"} * $$imposition{'Cols'};
-                $imp_height = $$specs{"flat_height"} * $$imposition{'Rows'};
-            }
-            else {
-                $imp_width  = $$specs{"flat_width"} * $$imposition{'Rows'};
-                $imp_height = $$specs{"flat_height"} * $$imposition{'Cols'};
-            }
+
+            $imp_width  = $$specs{"flat_width"} * $$imposition{'Cols'};
+            $imp_height = $$specs{"flat_height"} * $$imposition{'Rows'};
 
             foreach my $equipment_index (@equipment) {
                 my $equipment_id =

@@ -10,6 +10,7 @@ use PQS::model::pricing;
 use PQS::model::product_filter;
 use PQS::model::product_defaults;
 use PQS::model::categories;
+use PQS::model::product_discount;
 
 use HTTP::Request::Common qw(POST);  
 use LWP::UserAgent; 
@@ -21,6 +22,8 @@ use ssi;
 
 
 use Set::CrossProduct;
+
+use constant MAX_DISCOUNT => 5;
 
 sub save_categories {
 	my $r = shift;
@@ -134,19 +137,50 @@ map {
 
 	if ( $r->param('strid') && $r->param('name') ) { 
 		PQS::model::product_defaults::delete($cat);
-		#reload submitted values into var.
+
+		#Save fields to db.
 		map { 
 			my $f = $_->{fname}; 
 			PQS::model::product_defaults::insert($cat, $f, $r->param($f));
-			$var->{$f} = $r->param($f) 
 		} @{$var->{fields}};
-	} else {
+
+		foreach my $f ( $r->param() ) {
+			if ( $f =~ /min-(.*)/  ) {
+				PQS::model::product_defaults::insert($cat, $f, $r->param($f)) if $r->param($f);
+			}
+			if ( $f =~ /max-(.*)/  ) {
+				PQS::model::product_defaults::insert($cat, $f, $r->param($f)) if $r->param($f);
+			}
+			if ( $f =~ /discount-(.*)/  ) {
+				PQS::model::product_defaults::insert($cat, $f, $r->param($f)) if $r->param($f);
+			}
+		}
+
+	}# else {
+
+
+	#Load defaults back from db.
+
 		my $defs = PQS::model::product_defaults::get($cat);
+		my $map;
+
 		map { 
 			my $f = $_->{name}; 
 			$var->{$f} = $_->{value};
+			$map->{$f} = $_->{value};
 		} @{$defs};
-	}
+
+		map { 
+			push @{$var->{versions}}, 
+			{ 	v => $_, 
+				min => $map->{"min-$_"}, 
+				max => $map->{"max-$_"}, 
+				discount => $map->{"discount-$_"}
+			}
+			
+		} (1..MAX_DISCOUNT);
+
+		#}
 	
 
 	
@@ -163,6 +197,30 @@ sub insert_products {
 
 	my $tmp = new PQS::Object::product;
 	my @field_list = @{$tmp->update_fields};
+
+
+	my @discounts;
+	my $r = session::r;
+
+	foreach my $f ( $r->param() ) {
+		if ( $f =~ /discount-(.*)/  ) {
+			print STDERR "AHVE DISCOUNT: $f - $1 \n";
+			my $row = [ 
+				$r->param("min-$1") || undef,
+				$r->param("max-$1") || undef,
+				$r->param("discount-$1") || undef,
+			];
+
+			push @discounts, $row if @{$row}[2];
+
+		}
+
+	}
+
+	print STDERR "HAVE DISCOUNTS: ", Dumper(\@discounts);
+
+
+
 	foreach my $new ( @{$list} ) {
 
 
@@ -188,9 +246,18 @@ sub insert_products {
 		$p->validate;
 		$p->save;
 
+		PQS::model::product_discount::clear_product($p->{id});
+		map { 
+			PQS::model::product_discount::insert($p->{id}, @{$_});
+		} @discounts;
+
+		next;
 
 		print STDERR "SAVE PRODUCT NEW RPODUCT $new->{key} \n", Dumper($new->{filters});
 	}
+
+
+	
 
 
 
@@ -693,60 +760,54 @@ sub get_highres_file {
 sub display {
  my ($r, $dbh, $var) = @_;
  
-	my $cat = $r->param('category');
-	my $qty = $r->param('quantity');
-
+	my $cat 	= $r->param('category');
+	my $qty 	= $r->param('quantity');
+	my $cid 	= $var->{cust_id} || 1;
+	my $log 	= session::log;
+	my $product = $r->param('product');
 	my $versions = $r->param('versions') || 1;
 
-	$qty *= $versions if $versions > 1;
-
-	my $log = session::log;
-
 	$cat = configuration::get_value($log, $dbh, 'Default Product Category') unless $cat;
-
-	my $product = $r->param('product');
 
 	if ( $product ) { 
 		my $p = new PQS::Object::product($product);
 		$cat = $p->spec('category_id');
 		print STDERR "LAOD PRODUCT: $product, CAT=$cat \n", Dumper($p->{specs});
 	}
-
   
-  #Set categories for left nav.
-  my $cats = PQS::model::categories::get_all();
-  
-  map { push @{$var->{categories}}, $cats->{$_}; } sort keys $cats;
+	#Set categories for left nav.
+	my $cats = PQS::model::categories::get_all();
+
+	map { push @{$var->{categories}}, $cats->{$_}; } sort keys $cats;
 
 
-  #Create category chain for parents of current category.
-  my $parent = $cat;
-  my $name =  PQS::model::categories::get_name_from_id($parent);    
-  push @{$var->{cat_chain}}, { id => $parent, name => $name};
+	#Create category chain for parents of current category.
+	my $parent = $cat;
+	my $name =  PQS::model::categories::get_name_from_id($parent);    
+	push @{$var->{cat_chain}}, { id => $parent, name => $name};
 
 
-  print STDERR " CAT CHAIN " , Dumper($var->{cat_chain});
+	print STDERR " CAT CHAIN " , Dumper($var->{cat_chain});
 
-  while ( $parent ) {
-  	$parent = PQS::model::categories::get_parent_from_id($parent);
+	while ( $parent ) {
+		$parent = PQS::model::categories::get_parent_from_id($parent);
 
-	next unless $parent;
-	$name =  PQS::model::categories::get_name_from_id($parent);    
+		next unless $parent;
+		$name =  PQS::model::categories::get_name_from_id($parent);    
 
-  	unshift @{$var->{cat_chain}}, { id => $parent, name => $name};
-  }
+		unshift @{$var->{cat_chain}}, { id => $parent, name => $name};
+	}
 
 
-  #Get children for current cat.
+	#Get children for current cat.
+	my $childs =  PQS::model::categories::get_children_from_id($cat);
 
-  my $childs =  PQS::model::categories::get_children_from_id($cat);
+	map {
+		my $c = PQS::model::categories::get($_);
+		print STDERR "HAVE CAT: " , Dumper($c);
+		push @{$var->{cat_children}}, $c;
+	} @{$childs};
 
-  map {
-  	my $c = PQS::model::categories::get($_);
-	print STDERR "HAVE CAT: " , Dumper($c);
-	push @{$var->{cat_children}}, $c;
-  } @{$childs};
-    
 
    #Show products for first Child category if it exists.
    #Parent Categorys should not have products under sherwood model.
@@ -765,56 +826,51 @@ sub display {
 	
 	$var->{products} = filter_products($r, $var, $var->{products});
 
-  
 
-  
-  my $list = 1;
-  my $cid = 1;
-  foreach my $p (@{$var->{products}} ) {
+	my $total_qty 	= $qty * $versions;
 
-	my $prod = new PQS::Object::product($p->{id});
+	foreach my $p (@{$var->{products}} ) {
 
-	unless ($qty ) {
-		if ( $prod->{specs}{units} eq 'Per 1000' ) {
-			$qty = 1000;
-		} else {
-			$qty = 1;
+		my $prod = new PQS::Object::product($p->{id});
+
+		unless ($qty ) {
+			if ( $prod->{specs}{units} eq 'Per 1000' ) {
+				$qty = 1000;
+			} else {
+				$qty = 1;
+			}
 		}
-	}
 
-	$p->{category} = PQS::model::categories::get_name_from_id($p->{category});
+		$p->{category} = PQS::model::categories::get_name_from_id($p->{category});
 
+		my $price 		= $prod->price($cid, $qty, $versions);
 
-	$p->{price} = $prod->price($cid, $qty);
-	$p->{price} *= $qty; 
+		$p->{price} = $price * $total_qty;
 
-#print STDERR "HAVE SPECS" , Dumper($prod->{specs});
-	#$p->{price} = $qty;
-
-	$p->{image}  = $prod->image(1);
+		$p->{image}  = $prod->image(1);
   
-  }
+  	}
 	
 	my $filters =  PQS::model::product_filter::get_category($cat);
 
 	foreach my $f (@{$filters}) {
 		$f->{options} = PQS::model::product_filter::get_options($f->{id});
 	}
+
+	#IF a product id is supplied, set the filter options to match that product.
 	if ( $product ) {
 
 		my $list = PQS::model::product_filter::options_for_product($product);
-		print STDERR "HAVE OPTIONS ", Dumper($list);
+
 		map {
 			$var->{__FillInForm}{"filter-$_->{filter}"} = $_->{opt};
 		} @{$list};
 	}
 
-	print STDERR "HAVE FILTERS: ", Dumper($var->{__FillInForm});
-	$var->{filters} 	= $filters;
-
-	$var->{cat} 			=	 $cat;
+	$var->{filters} 		= $filters;
+	$var->{cat} 			= $cat;
 	$var->{quantity} 		= $r->param('quantity') || $qty;
-	$var->{total_quantity} 	= $qty;
+	$var->{total_quantity} 	= $total_qty;
 	$var->{versions} 		= $versions;
 
 }

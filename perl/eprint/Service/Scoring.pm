@@ -223,29 +223,14 @@ sub calc {
             }
 
             my %imposition;
-            @imposition{ 'Imposition', 'Rows', 'Cols' } =
-              ( $imposition, $imp_rows, $imp_cols );
 
             my @impositions = ();
-            if ( $grain_direction eq 'Mixed' ) {
+
                 # For Our Dutch Impositions We only allow 1-up die cutting.
                 $imposition{'Imposition'} = 1;
                 $imposition{'Rows'} = 1;
                 $imposition{'Cols'} = 1;
                 push @impositions, \%imposition;
-            } else {
-                while ( $imposition{'Imposition'} ) {
-                    if ( $$specs{"chkOverrideImposition$qty_index-$sig"}
-                        ne 'Y'
-                        or $$specs{"txtImposition$qty_index-$sig"} ==
-                        $imposition{'Imposition'} )
-                    {
-                        my %copy = %imposition;
-                        push @impositions, \%copy;
-                    }
-                    eprint::imposition::descrease_imposition( \%imposition );
-                }
-            }
 
             foreach my $imposition (@impositions) {
 
@@ -260,8 +245,8 @@ sub calc {
                     $width  = $spread_height * $$imposition{'Cols'};
                     $height = $spread_width * $$imposition{'Rows'};
                 }
-                $width = $sheet_width;
-                $height = $sheet_height;
+				#$width = $sheet_width;
+				#$height = $sheet_height;
 
               EQUIPMENT:
                 foreach my $eid (@equipment) {

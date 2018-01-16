@@ -551,6 +551,7 @@ print STDERR "SUB: $sub_section F: $filename \n";
       eprint::products::category_admin($r, $dbh, $variable) if $filename eq 'categories.html';
       eprint::products::builder($r, $dbh, $variable) if $filename eq 'builder.html';
       eprint::products::kit_select($r, $dbh, $variable) if $filename eq 'kit_select.html';
+      eprint::products::price_admin($r, $dbh, $variable) if $filename eq 'price.html';
       
     }
 

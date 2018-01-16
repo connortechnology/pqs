@@ -380,7 +380,7 @@ print STDERR "PRODUCT QTY , $variable->{product_qty} \n";
 
     @{ $variable->{press_types} } = ();
 
-    foreach my $press (qw( press web screen inkjetprinter digital )) {
+    foreach my $press (qw( press web screen inkjetprinter digital NoPrinting )) {
         push @{ $variable->{press_types} }, $press_types{ $press }
             if $press_types{ $press }
     }
@@ -485,7 +485,7 @@ sub service_types_by_category {
         FROM tbl_service_types t JOIN 
              service_type_equipment e ON (lngindex = service_type)
         WHERE ysncreatevisible = 'Y'
-          AND strtype <> 'bind'
+       --   AND strtype <> 'bind'
           AND strcategory = ?
           $clause
         ORDER BY strname
@@ -738,7 +738,7 @@ sub modify_services {
                     FROM service_type_equipment ) s
         WHERE t.lngindex = s.service_type
           AND ysncreatevisible = 'Y'
-          AND strtype <> 'bind'
+        --  AND strtype <> 'bind'
           AND (p.lngneedlevel IS NULL OR p.lngneedlevel = 0)
         ORDER BY strname
     });

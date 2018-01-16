@@ -84,24 +84,52 @@ sub prices {
   return $price;
 }
 
+sub version_discount {
+  	my $self 		= shift;
+	my $versions = shift;
+ 	
+	return PQS::model::product_discount::get_discount($self->{id}, $versions);
+}
+
+
 sub price {
   my $self 		= shift;
   my $cust_id 	= shift;
   my $qty 		= shift;
+  my $versions 	= shift;
   
   my $price;
 
 	$price =  PQS::model::pricing::price_item($cust_id, $self->{list}, $self->{id}, $qty);
 
+
+	print STDERR "Volumne DISCOUNT Price: $price / $qty \n";
+
 	if ( $self->spec('kit') ) {
 		$price =  $self->kit_price($cust_id) unless $price;
 	}
 
+	print STDERR "Kit  Price: $price \n";
+
 	my $markup = $self->markup($cust_id);
 	$price = $price * (1 + ( $markup / 100));
+
+	print STDERR "Customer Discount Price: $price \n";
+
 	if ( $self->{specs}{units} eq 'Per 1000' ) {
 		$price /= 1000;
 	}
+
+	print STDERR "Per 1000 Adjustment Price: $price \n";
+
+	my $version_discount = $self->version_discount($versions);
+
+	print STDERR "PRICE BEFORE DISCOUNT: $price \n";
+
+	$price -= ($version_discount / 100) * $price; 
+
+	print STDERR "PRICE AFTER DISCOUNT: $price : $version_discount \n";
+
   
 	#  die("Price not found: $self->{id}") unless $price;
   

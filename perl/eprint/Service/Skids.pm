@@ -25,12 +25,17 @@ sub calc {
     # TODO this only considers the one piece of equipment
     my $eid = (valid_equipment($log, $dbh, $service_type,$pid))[0];
 
-    my $projectWeight = get_weight($log, $dbh, $pid, 'Project');
+	my $project_type = eprint::project::get_type($log,$dbh,$pid);
+
+#	die($project_type);
+
+    my $projectWeight = $project_type eq 'NoPrint' ? 1 : get_weight($log, $dbh, $pid, 'Project');
+
+print STDERR "HAVE PROJECT TYPE: $project_type \n";
     
     # Get the maximum weight for the current package type.
     my $maxWeight = 0;
     if ($service_type eq 'PlainCartons') {
-		my $project_type = eprint::project::get_type($log,$dbh,$pid);
 
         $specs->{ddmPackageType} ||= $project_type eq 'BusinessCards' ? 'BusinessCardCarton' : 'StandardCarton';
 

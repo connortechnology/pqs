@@ -86,10 +86,18 @@ ALTER table tbl_order_contents ADD COLUMN jobname text;
 ALTER table tbl_orders ADD COLUMN paypal_token text;
 ALTER table tbl_orders ADD COLUMN token_type text;
 
+INSERT into tbl_equipment_type VALUES  ( 51, 'NoPrinting', 'No Printing');
+INSERT into service_type_equipment VALUES ( 68, 1);
+INSERT into tbl_equipment VALUES  ( 1, 'NoPrint', 'No Printing', Null, Null, Null, 'NoPrinting');
+
+INSERT INTO project_type_by_press VALUES ( 51, 100);
+
+drop trigger press_type on tbl_projects;
+
+INSERT into project_type_group values ( 7, 'NoPrint');
 
 
-
-
+UPDATE tbl_projecttypes set lnggroup = 7 where lngindex = 100;
 
 
 
@@ -100,6 +108,19 @@ INSERT INTO project_type_by_press VALUES ( 14, 100);
 
 
 INSERT INTO tbl_configuration VALUES ( 'Default Product Category', 102);
+
+
+
+
+CREATE TABLE product_discount ( 
+	product int,
+	min int,
+	max int,
+	discount int
+
+);
+
+
 
 
 
