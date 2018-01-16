@@ -240,6 +240,8 @@ sub weight {
 sub load { 
   my $self = shift;
   
+  $self->{id} = PQS::model::products::get_id_from_str($self->get('strid')) unless $self->{id};
+
   $self->{specs} = PQS::model::products::get($self->{id});
   
 #  print STDERR "LOAD PRODUCT: $self->{id} HAVE PRODUCTS CAT: ", Dumper($self->{category_id}, $self->{specs} );

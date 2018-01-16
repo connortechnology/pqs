@@ -193,6 +193,11 @@ map {
 }
 
 sub insert_products {
+
+	#Load product from strid.
+	#Modify fields from product builder
+	#Then Save back to db.
+		
 	my $list = shift;
 
 	my $tmp = new PQS::Object::product;
@@ -223,15 +228,18 @@ sub insert_products {
 
 	foreach my $new ( @{$list} ) {
 
-
 		my $p = new PQS::Object::product;
+
+		$p->set('strid', $new->{strid});
+
+		$p->load();
 
 
 
 		foreach my $f ( @field_list ) {
 			my $id = $f->{fname};
 			my $val = $new->{$id};
-			$p->set($id, $val);
+			$p->set($id, $val) if $val;
 			print STDERR "SET ID: $id VAL: $val \n";
 		}
 		$p->set('category_id', $new->{category});
