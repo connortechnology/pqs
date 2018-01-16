@@ -835,12 +835,13 @@ sub display {
 	$var->{products} = filter_products($r, $var, $var->{products});
 
 
-	my $total_qty 	= $qty * $versions;
+	my $total_qty;
 
 	foreach my $p (@{$var->{products}} ) {
 
 		my $prod = new PQS::Object::product($p->{id});
 
+		#Set a defualt qty if one is not defined.
 		unless ($qty ) {
 			if ( $prod->{specs}{units} eq 'Per 1000' ) {
 				$qty = 1000;
@@ -848,6 +849,9 @@ sub display {
 				$qty = 1;
 			}
 		}
+
+		#Set total qty once we have a default or user entered qty.
+	 	$total_qty = $qty * $versions;
 
 		$p->{category} = PQS::model::categories::get_name_from_id($p->{category});
 
@@ -874,6 +878,8 @@ sub display {
 			$var->{__FillInForm}{"filter-$_->{filter}"} = $_->{opt};
 		} @{$list};
 	}
+
+	#print STDERR "HAVE PRODUCTS: ", Dumper($var->{products});
 
 	$var->{filters} 		= $filters;
 	$var->{cat} 			= $cat;
