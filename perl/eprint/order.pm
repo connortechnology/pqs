@@ -159,7 +159,7 @@ sub check_customer_account {
 }
 
 sub add_product_to_order {
-    my ( $cookie, $var, $product, $qty, $subgroup, $jobname ) = @_;
+    my ( $cookie, $var, $product, $qty, $subgroup, $jobname, $versions ) = @_;
 
 	my $log = session::log;
 	my $dbh = session::dbh;
@@ -168,7 +168,7 @@ sub add_product_to_order {
 
 #	return ( 0, $error) if $error;
 
-
+	
 
     my $order_id ||= get_unfinished_order(
         $log, $dbh, $cookie, $var->{cust_id}, $var->{user_id}
@@ -180,8 +180,12 @@ sub add_product_to_order {
 
 	my $prod = new PQS::Object::product($product);
 
-	my $price =  $prod->price($var->{cust_id}, $qty);
+	my $price =  $prod->price($var->{cust_id}, $qty, $versions);
 
+	$qty *= $versions;
+
+
+	print STDERR "ADDD PRODUCT: $product Q: $qty V: $versions PRICE: $price \n";
 
 	die("No Price Found for product: $product ", Dumper($prod) ) unless $price or $prod->{specs}{kit};
 
