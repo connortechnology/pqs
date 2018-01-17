@@ -320,6 +320,46 @@ sub quick_price {
 
 }
 
+sub discount_admin {
+	my ($r, $dbh, $var) = @_;
+
+  
+	my $id = $r->param('product');
+  
+	my $list = PQS::model::pricing::get_list_index('Products');
+
+	my $pricelist = $r->param('pricelist');
+
+	my $p = new PQS::Object::product($id);
+  
+	if ( $r->param('discount') ) {
+		my $min = $r->param('min') || undef;
+		my $max = $r->param('max') || undef;
+		my $discount = $r->param('discount');
+
+		my $price = [$id, $min, $max, $discount] ;
+
+		PQS::model::product_discount::insert(@{$price});
+	} elsif ($r->param('delete') ) { 
+		my $d = $r->param('delete');
+		$d =~ /(\d+)-(\d+)/;
+
+		print STDERR "DEL $1 $2 \n";
+
+		PQS::model::product_discount::delete($1, $2);
+
+	}
+
+	my $prices = $p->discount_export($pricelist);
+
+	$var->{data} = $prices;
+	$var->{product} = $id;
+	$var->{name} = $p->spec('name');
+
+
+}
+
+
 sub price_admin {
 	my ($r, $dbh, $var) = @_;
 

@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Products - Version Discount
+	</title>
+	
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+	
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+    
+    <style>
+	th { border-color:#FFFFFF;
+	}
+	
+	th, tr, td {
+		padding:3px 3px 3px 3px !important;
+		text-align:center;
+		border: none;
+	}
+	td { 
+		width: 100px;
+	}
+	button {
+		float:right;
+	}
+	</style>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="sidebar">
+		<div class="option">
+		</div>
+</div>
+<div id="content" style="width="1000px">
+	<h1><span class="title-section">Products &#187;</span> Version Discount</h1>
+
+
+
+<form method="POST" action="version_discount.html" enctype="multipart/form-data" autocomplete="off">
+
+	<input name="product" value="<?product?>" type="hidden" />
+
+<br />
+
+<fieldset>
+	<legend>Prices for <?name?> </legend>
+		<div style="margin-top: 50px">
+		<table>
+			<tr>
+				<th>Min</th>
+				<th>Max</th>
+				<th>Discount</th>
+			</tr>
+
+    <?loop data?>
+	
+		<tr>
+		<td> <?min?> </td>
+		<td> <?max?> </td>
+		<td> <?discount?> </td>
+		<td>
+			<button type="submit" name="Delete" value="<?product?>-<?discount?>" onClick="return confirm('Are you sure you want to delete this record?')" >Delete</button>
+		</td>
+		</tr>
+    <?endloop data?>
+
+
+		<tr>
+			<td> <input name="min" id="min" size=5 /> </td>
+			<td> <input name="max" id="max"  size=5/> </td>
+			<td> <input name="discount" id="min"  size=5/> </td>
+			<td><button type="submit"  value="Save" name="Save" style="">Add New</button></td>
+		</table>
+		</div>
+</fieldset>
+
+  </form>
+ </div>
+
+<div  style="float:bottom">
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</div>
+</body>
+</html>

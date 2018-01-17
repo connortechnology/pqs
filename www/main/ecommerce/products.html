@@ -23,6 +23,12 @@ function open_price_window( i ) {
 			'printerfriendlyorder','newWin,left=140,width=1000,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 }
 
+function open_discount_window( i ) {
+	window.open('/administrator/products/version_discount.html?pricelist=1;product=' + i,
+			'printerfriendlyorder','newWin,left=140,width=1000,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+}
+
+
 function form_validate() {
 	 var val = $('jobname').value;
 	 if ( val ) {
@@ -405,6 +411,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 
 	<?if is_staff?>
 	<button style="width: 50%; margin-left: 25%" onClick="open_price_window(<?id?>)" > Edit Prices</button>
+	<button style="width: 50%; margin-left: 25%" onClick="open_discount_window(<?id?>)" >Version Discount</button>
 	<!--
 	<a	href="/administrator/products/price.html?product=<?id?>;pricelist=1">
 		<button style="width: 100px"> Edit Prices</button>

@@ -262,6 +262,19 @@ sub import_fields {
 	return @import_fields;
 }
 
+sub discount_export {
+	my $self 		= shift;
+
+
+	my $id = $self->{id};
+
+
+	my $data = PQS::model::product_discount::array_for_item($self->{id});
+
+	
+	return $data;
+}
+
 sub price_export {
 	my $self 		= shift;
 	my $pricelist 	= shift;
@@ -269,11 +282,9 @@ sub price_export {
 
 	my $id = $self->{id};
 
-print STDERR "HAVE PRICE EXPORT FOR ITEM: $id - $pricelist \n";
 
 	my $data = PQS::model::pricing::price_array_for_item($pricelist, $self->{id});
 
-print STDERR "HAVE PRICE EXPORT FOR ITEM: $id \n", Dumper($data);
 	
 	return $data;
 }

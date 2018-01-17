@@ -12,9 +12,15 @@ use Data::Dumper;
 
 sub insert {
 	my @row = @_;
-
+print STDERR "HAVE ROW: ", Dumper(@row);
 	my $dbh = session::dbh;
 	$dbh->do(q{Insert INTO product_discount VALUES ( ?, ?, ?, ? ) }, undef, @row);
+}
+sub delete {
+	my @row = @_;
+
+	my $dbh = session::dbh;
+	$dbh->do(q{Delete From product_discount WHERE product = ? AND discount = ? }, undef, @row);
 }
 
 sub clear_product {
@@ -41,6 +47,16 @@ sub get_discount {
 
 	return $d;
 }
+sub array_for_item {
+	my $id = shift;
+	my $dbh = session::dbh;
 
+	my $data = $dbh->selectall_arrayref(q{
+		SELECT *  from product_discount WHERE product = ? ORDER by min nulls first
+	}, {Slice => {}}, $id);
+	
+	return $data;
+
+}
 
 1;
