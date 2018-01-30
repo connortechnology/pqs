@@ -120,8 +120,8 @@ CREATE TABLE product_discount (
 
 );
 
-
-
+Alter table tbl_quote_details add column product int;
+Alter table tbl_quote_details add column label text;
 
 
 --Rest Product Prices

@@ -413,6 +413,11 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 	<?if is_staff?>
 	<button style="width: 50%; margin-left: 25%" onClick="open_price_window(<?id?>)" > Edit Prices</button>
 	<button style="width: 50%; margin-left: 25%" onClick="open_discount_window(<?id?>)" >Version Discount</button>
+
+	<form  name="fquote" method="post" action="/main/quote/quote_info.html" >
+	<button style="width: 50%; margin-left: 25%" onClick="submit();"  >Make Quote</button>
+	<input type="hidden" name="action" value="Product Quote" />
+	</form>
 	<!--
 	<a	href="/administrator/products/price.html?product=<?id?>;pricelist=1">
 		<button style="width: 100px"> Edit Prices</button>

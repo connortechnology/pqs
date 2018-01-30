@@ -6,6 +6,7 @@ use MIME::QuotedPrint;
 use MIME::Base64;
 use Mail::Sendmail;
 use Data::Dumper;
+use session;
 
 use sql ();
 
@@ -75,8 +76,9 @@ sub get_unfinished_quote_id {
 
     $_ = "SELECT MAX(lngQuoteID) FROM tbl_Quotes WHERE strSessionID='$cookie' AND strStatus='Re-Opened'";
     my ( $quote_id ) = sql::sql_statement( $log, $dbh, $_ );
+
     if ( ! $quote_id ) {
-		$_ = "SELECT lngQuoteID, lngCustomerID, lngUserID FROM tbl_Quotes WHERE strSessionID = '$cookie' AND strStatus='Incomplete'";
+		$_ = "SELECT lngQuoteID, lngCustomerID, lngUserID FROM tbl_Quotes WHERE strSessionID = '$cookie' AND strStatus='Incomplete' ORDER BY 1 desc limit 1";
 		( $quote_id, my $cust_id, my $user_id ) = sql::sql_statement( $log, $dbh, $_ );
 
 #        die "SESSION: $cookie QUOTE ID: $quote_id";
@@ -235,7 +237,7 @@ sub commit_quote {
     my $subtotal2 = 0;
     my $subtotal3 = 0;
 
-    $_ = "SELECT lngProjectIndex FROM tbl_Quote_Details WHERE lngQuoteID='$quote_id'";
+    $_ = "SELECT lngProjectIndex FROM tbl_Quote_Details WHERE lngQuoteID='$quote_id' AND type='project'";
     foreach my $project_index ( sql::sql_statement( $log, $dbh, $_ ) ) {
         $_ = "SELECT dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE lngQuoteID='$quote_id' AND lngProjectIndex='$project_index'";
         my ( $markup1, $markup2, $markup3 ) = sql::sql_statement( $log, $dbh, $_ );
@@ -271,7 +273,36 @@ sub get_quote_id {
 sub user_quote_info {
 	my ( $r, $log, $dbh, $cookie, $variable ) = @_;
 
-	my $quote_id = get_unfinished_quote_id( $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'} );
+
+	my $action = $r->param('action');
+	my $quote_id;
+
+
+	print STDERR "ACTION IS: $action \n";
+
+	if ($action eq 'Product Quote') {
+		$quote_id = create_quote( $log, $dbh, $cookie,  $$variable{'cust_id'}, $$variable{'user_id'} );
+		my $order_id ||= eprint::order::get_unfinished_order( $log, $dbh, $cookie, $variable->{cust_id}, $variable->{user_id});
+		my $list = PQS::model::order::get_order_products($order_id);
+
+		print STDERR "HAVE LIST", Dumper($list);
+		foreach my $o ( @{$list} ) {
+
+				my $pname = PQS::model::products::get_name_from_id($o->{product});
+
+				$dbh->do(q{
+					INSERT into tbl_quote_details ( lngquoteid, lngprojectindex, intquantity1, dblprice1, type, product, label ) 
+					VALUES ( ?, ?, ?, ?, ?, ?, ? ) 
+					}, undef, $quote_id, 0, $o->{intquantity}, $o->{cursalesprice}, 'product',$o->{product},  $o->{jobname} . " - $pname"
+				);
+		}
+
+		$dbh->do(q{DELETE FROM tbl_order_contents WHERE lngorderid = ? }, undef, $order_id);
+
+	} else {
+		$quote_id = get_unfinished_quote_id( $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'} );
+	}
+
 	
 	if ( $r->param('GroupPricing') ) {
 		$dbh->do(qq{UPDATE tbl_quotes set ShowPricing = false WHERE lngquoteid = $quote_id});
@@ -473,6 +504,9 @@ sub submit_quote {
 	push @{$$variable{attachedProjects}}, \%hash;
 		$variable->{supplier_chino} = eprint::order::is_chino($dbh, $pid);
     }
+
+	$variable->{PRODUCTS} = get_products( $quote_id );
+
     if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) {
         $_ = "SELECT strFirstName || ' ' || strLastName FROM tbl_Customer_Users WHERE lngUserID='$$variable{'user_id'}'";
         @$variable{'AdministratorName'} = sql::sql_statement( $log, $dbh, $_ );
@@ -482,6 +516,21 @@ sub submit_quote {
 
 	return OK;
 } # end submit_quote
+
+
+sub get_products {
+
+	my $quote_id = shift;
+	my $dbh  = session::dbh;
+	my $data = $dbh->selectall_arrayref(q{
+			SELECT * FROM tbl_quote_details  WHERE type = 'product' AND lngquoteid = ?
+	}, {Slice => {}}, $quote_id);
+
+print STDERR "HAVE PRODUCTS: ", Dumper($data);
+	return $data;
+	
+}
+
 
 sub get_user_by_info {
 	my ( $log, $dbh, $variable, $quote_id ) = @_;
@@ -721,6 +770,8 @@ print STDERR "START SEND QUOTES HERE \n";
 		}, undef, $pid);
 		$cc .= $email;
     }
+		
+	$quote{PRODUCTS} = get_products( $quote_id );
 
     my $sales_email = scalar $dbh->selectrow_array(q{
     	SELECT
@@ -772,7 +823,11 @@ print STDERR "START SEND QUOTES HERE \n";
 	use MIME::Base64;
 	use PDF::WebKit;
   	my $kit = PDF::WebKit->new(\$html, page_size => 'Letter');
-	my $pdf = encode_base64($kit->to_pdf);
+	my $pdf = $kit->to_pdf;
+
+#	misc::save_file(undef, "/usr/local/share/pqs/test1.pdf", $pdf);
+
+	$pdf = encode_base64($pdf);
 
 
 	push @body, ("quote-$quote_id.pdf", $pdf,  'application/pdf', 'base64');
@@ -853,9 +908,12 @@ sub finalise_quote {
 
 	my $quote_id = get_unfinished_quote_id( $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'} );
 
+
 	if ( $quote_id ) {
 		$_ = "SELECT strStatus FROM tbl_Quotes WHERE lngQuoteID='$quote_id'";
 		( $_ ) = sql::sql_statement( $log, $dbh, $_ );
+
+
 		if ( $_ ne 'Complete' ) {
 			commit_quote( $log, $dbh, $quote_id );
 			sql::update( $log, $dbh, 'tbl_Quotes', "lngQuoteID = '$quote_id'", 'strStatus', 'Complete', 
@@ -948,14 +1006,28 @@ print STDERR "QUOTE SQL: \n $_ \n";
 	} # end if
 
 	for ( my $index = 0; $index < @{$$variable{'QUOTES'}}; $index += 7 ) {
-		$$variable{'QUOTES'}[$index+6] = $dbh->selectall_arrayref(q{
+
+		my $data = $dbh->selectall_arrayref(q{
 					SELECT q.lngprojectindex as pid, strprojectreference as reference 
 					FROM tbl_quote_details q, tbl_projects p 
 					WHERE lngquoteid = ?
 					AND q.lngprojectindex = p.lngprojectindex
 		}, {Slice=>{}}, $$variable{'QUOTES'}[$index] );
 
+		unless ( @{$data} > 0 ) {
+			print STDERR "GET DATA \n";
+			$data = $dbh->selectall_arrayref(q{
+				SELECT label as reference FROM tbl_quote_details WHERE lngquoteid = ?
+			},  {Slice=>{}}, $$variable{'QUOTES'}[$index] );
+
+		}
+		
+		$$variable{'QUOTES'}[$index+6] = $data;
+
+
 	}
+
+	print STDERR "HAVE QUOTES", Dumper($variable->{QUOTES});
  
 	( $$variable{'CurrencyName'}, $$variable{'CurrencySymbol'}, undef ) = eprint::customer::get_currency( $log, $dbh, $$variable{'cust_id'} );
 	return OK;
@@ -994,10 +1066,13 @@ sub show_quote {
 		$hash{'user_type'} = 'C';
 
     	eprint::docket::summary_display($r, $log, $dbh, \%hash, $pid, undef, -1);
-#    	eprint::print::display_project($log, $dbh, \%hash, $pid);
     	push @{$$variable{attachedProjects}}, \%hash;
 		$variable->{supplier_chino} = eprint::order::is_chino($dbh, $pid);
     }
+
+	$variable->{PRODUCTS} = get_products( $quote_id );
+
+
 	get_finished_quote_contents( $log, $dbh, $variable, $quote_id );
 	
 #	@{ $variable->{PRODUCTINFO}} = @{ $dbh->selectall_arrayref(q{
