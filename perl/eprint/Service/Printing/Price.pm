@@ -119,16 +119,19 @@ sub get_project_price {
     my ($log, $dbh, $variable, 
         $pid, $sid, $spread, $versions, $overrides) = @_;
 
+#HANDLE NEW No PRINT PROJECT TYPE
 	my $type = get_type($log, $dbh, $pid);
 
-	return if $type eq 'NoPrint';
+	my $s;
+	$s->{error} =  'Missing Specs' unless $spread->{flat}{width} and $spread->{flat}{height};
 
-print STDERR "START GET PROJECT PRICE: $type \n";
+	print STDERR "HAVE DEA", Dumper($spread);
 
-print STDERR "CHECK SPECS \n", Dumper(@{$spread->{side}});
+	return $s if $type eq 'NoPrint';
+# DONE NOPRINT
+
 	return {error => 'Rquired Specs not found: colour'} 
 		unless @{$spread->{side}[0]{colours}} || @{$spread->{side}[1]{colours}} ;
-print STDERR "PASS SPECS \n";
 
     ## MAPPINGS
     #

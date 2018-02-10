@@ -339,7 +339,7 @@ sub calc {
         $valid_price = 1 if $total > 0;
     }
 
-    return $valid_price == 1 ? 'calculated' : 'error';
+    return $valid_price == 1 ? 'calculated' : 'uncalculated';
 }
 
 sub get_fold_prices {

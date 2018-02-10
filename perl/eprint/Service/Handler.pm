@@ -61,6 +61,8 @@ sub handler {
 
     $dbh->disconnect and return NOT_FOUND unless $service;
 
+	#map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . " \n"; } $r->param();
+
     my $pid = $r->param('pid') or die "Invalid PID";
     my $sid = $r->param('sid') or die "Invalid SID";
 

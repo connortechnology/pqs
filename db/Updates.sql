@@ -123,6 +123,8 @@ CREATE TABLE product_discount (
 Alter table tbl_quote_details add column product int;
 Alter table tbl_quote_details add column label text;
 
+update tbl_service_types set ysncreatevisible = 'Y' where strid = 'Cutting';
+
 
 --Rest Product Prices
 INSERT INTO pricing_matrix (index, item, min, max, cost, sell, pricelist)  (

@@ -1,4 +1,9 @@
+<?if NoPrint?>
+No Printing
+<?else NoPrint?>
 <?if is_staff ?>
+
+OTHERE SIDE:
 	<a href="/main/proj/proj_printer_summ_price_breakdown.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>#chosen">
 		<?desc?> </a>
 <?else is_staff ?>
@@ -254,3 +259,4 @@
 </div>
 
 <!-- <?hdnPaperBuyQuantity1?> <?hdnPaperBuyQuantity2?> <?hdnPaperBuyQuantity3?> -->
+<?endif NoPrint?>

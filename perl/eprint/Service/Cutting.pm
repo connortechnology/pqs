@@ -45,6 +45,7 @@ use eprint::service      qw(:common);
 use eprint::Service::Spiral qw(SPIRAL);
 use eprint::Service::Printing::Constants qw(:press_types);
 use callback;
+use session;
 
 # DEPRECATED: The only way to really determine if cutting is necessary is to
 # see if any estimate quantity of the project needs _any_ jobs done. 
@@ -109,7 +110,7 @@ sub calc {
         next unless $qty[$i] > 0;
 
         # Get the project information for the current estimate quantity.
-        my $project = project($log, $dbh, $pid, $i);
+        my $project = project($log, $dbh, $pid, $i, $specs);
 
         # The jobs needed for the project.
         my @jobs = project_jobs($project);
@@ -127,8 +128,7 @@ sub calc {
     # A negative estimate indicates an error case, the service type status
     # should be uncalculated if this is present.
 
-# Allow products to be zero priced.
-#    return 'error' if grep {$_ eq 'NaN'} @price;
+    return 'uncalculated' if grep {$_ eq 'NaN'} @price;
 
     # Insert legacy pricing fields. Main price ceil()inged to nearest dollar.
     for my $i (1..3) {
@@ -137,6 +137,8 @@ sub calc {
         @{$specs}{"txtPrice$i", "txtUnitPrice$i"}
             = format_pricing($price[$i], $qty[$i]);
     }
+
+	print STDERR "HAVE SPECS", Dumper($specs);
 
     return 'calculated';
 }
@@ -409,6 +411,9 @@ sub project {
     my $dbh = shift;
     my $pid = shift; # Project ID
     my $i   = shift; # The 'Quantity Index' *sigh*
+    my $specs   = shift;
+
+	my $r = session::r;
 
     # PROJECT INFORMATION
     #
@@ -422,6 +427,10 @@ sub project {
     $project{type}       = get_type($log, $dbh, $pid); 
     $project{press_type} = get_press_type($log, $dbh, $pid); 
     $project{qty}        = (get_quantities($log, $dbh, $pid))[$i-1];
+
+	$project{CutsPerSheet} = $specs->{CutsPerSheet};
+	$project{SheetCount}   = $specs->{SheetCount};
+
 
     # The final flat project dimensions and bindery type.
     @project{ qw(width height bindery) } = get_specifications($log, $dbh, 
@@ -582,6 +591,9 @@ sub project_jobs {
     my $project    = shift; # Overall project details (and signatures).
     my @jobs;               # The stack of cutting jobs.
 
+
+	print STDERR "START PROJECT JOBS \n";
+
     # Some very, very basic assertions.
     die "Invalid project reference."   unless ref $project eq 'HASH';
     die "Need at least one signature." unless @{$project->{signatures}};
@@ -593,17 +605,21 @@ sub project_jobs {
     return (wantarray ? () : undef) if grep { $project->{type} eq $_ }
                        qw( Envelopes InkjetOutputs Product ScreenItem );
 
+	print STDERR "START PROJECT JOBS 2 \n";
+
     # SIGNATURES
     # 
     for my $sig (@{ $project->{signatures} }) {
         my $stock = $sig->{stock}; # Signature stock info.
 
+	print STDERR "START PROJECT JOBS SIG \n";
         # If a project has the same width and height as the press sheet it
 
         # shouldn't even be here.
         next if  $project->{width}  == $stock->{press}{width}
              and $project->{height} == $stock->{press}{height};
 
+	print STDERR "START PROJECT JOBS SIG 2 \n";
        
         # PRE-PRESS CUTTING
         #
@@ -691,6 +707,7 @@ sub project_jobs {
             calliper  => $stock->{calliper},
         );
 
+	print STDERR "START PROJECT JOBS SIG 5 \n";
         # When using a letterpress on a single page project we can do the trim
         # cutting using a die rule while we perform the other operations on
         # it. However we may need to do a few dead cuts first to get the sheet
@@ -710,6 +727,19 @@ sub project_jobs {
         # if ( folding and fold_impostion > 1 ) {
         #     next;
         # }
+
+		if ($project->{type} eq 'NoPrint') {
+			my $cuts   =  $project->{CutsPerSheet};
+			my $sheets =  $project->{SheetCount};
+
+			next unless $cuts && $sheets;
+
+            $job->note("Single sheet $n-up.");
+            $job->cuts($cuts);
+			$job->qty($sheets);
+            push @jobs, $job;
+			next;
+		}
         
         # All n-up non multi-sheet projects are now handled the same.
         if (my $cuts = cuts($sig->{imp})) {
@@ -755,6 +785,9 @@ sub project_jobs {
         #       spiral bound projects. If that wasn't the case we could cut
         #       before folding and/or collating. We don't consider that.
     }
+
+	use Data::Dumper;
+	print STDERR "HAVE JOBS: ", Dumper(@jobs);
 
     return wantarray ? @jobs : \@jobs;
 }
@@ -918,6 +951,11 @@ sub display {
 
     my %page;
 
+	my $type = eprint::project::get_type($log, $dbh, $pid);
+	
+	$page{NoPrint} = 1 if $type eq 'NoPrint';
+
+
     # If we're not calculated there's a problem. As we don't have a
     # standardised messaging system we'll co-opt our signature output.
     my $s = get_status($log, $dbh, $sid);
@@ -980,6 +1018,9 @@ sub display {
             total    => $total, 
         };
     }
+
+	 my @qty       = (get_quantities($log, $dbh, $pid));
+	 $page{project}{qty} = \@qty;
     
     return \%page;
 }
