@@ -2019,7 +2019,19 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
 
     $$variable{SUPPLIERS} = ssi::fill_drop_down($log, $dbh, $str, $s);
 
-    my $category = setup_categories($log, $dbh, $pid, $variable);
+    my $category = setup_categories($log, $dbh, $pid, $variable, 1);
+
+	my $custom = $dbh->selectrow_array(q{
+		SELECT max(custom_sort) from tbl_project_contents WHERE lngprojectindex = ?
+	}, undef, $pid);
+	
+	if ( $custom ) {
+		$category = $dbh->prepare(q{
+			SELECT distinct 1, 'Custom' WHERE ? > 0
+		});
+
+		$variable->{CategoryMenu} = [{ name => 'Custom', id => 1}];
+	}
 
     # Statement to get the service types in a categroy.
     my $service_type;
@@ -2028,17 +2040,26 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
         FROM tbl_service_types t, tbl_project_contents p
         WHERE ( t.strid = p.strservicetype OR (p.strservicetype is null AND (t.strid = 'Printing' OR t.strid='InkMixing' ) ))
         AND p.lngprojectindex = ?
-        AND t.strcategory = (SELECT strid FROM tbl_service_categories WHERE lngindex = ?) 
+        AND 
+		( t.strcategory = (SELECT strid FROM tbl_service_categories WHERE lngindex = ?) 
+ 		OR
+		p.custom_sort > 0 )
+		
+		ORDER by custom_sort
+
     });
 
     $category->execute($pid);
     my %services_by_category;
     my ($id, $name);
     $category->bind_columns(\$id, \$name);
+
     while ($category->fetch) {
         $services_by_category{$name} =
           $dbh->selectall_arrayref($service_type, { Slice => {} }, $pid, $id);
     }
+
+
     my $project_type = scalar $dbh->selectrow_array(q{
         SELECT strid
         FROM tbl_projecttypes
@@ -2113,7 +2134,9 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
         }
     }
 
-print STDERR "END DOCKET DISPLAY \n";
+
+	print STDERR "HAVE CAT SERVCIE", Dumper(\%services_by_category);
+print STDERR "END DOCKET DISPLAY \n", Dumper($variable->{CategoryMenu});
 
     setup_docket($r, $log, $dbh, $variable, $pid, $catID, $qtyIndex,
                  \%services_by_category);

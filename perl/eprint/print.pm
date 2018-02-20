@@ -28,6 +28,11 @@ sub view_services {
        $pid =~ tr/0-9//cd;
 
 
+	if ( $r->param('start') && $r->param('end') ) {
+		custom_sort( $dbh, $pid, $r->param('start') ,  $r->param('end') );
+
+	}
+
 
 print STDERR "START VIEW SERVICES : ************************* \n\n";
 	my $qtys = [0,0,0];
@@ -135,8 +140,17 @@ print STDERR "USER DUMPER" , Dumper($variable);
     # Render the service pricing section of the project view page.
     $variable->{HeaderInfo} = eprint::docket::header_info($log, $dbh, $pid);
     $variable->{SSRalert}   = configuration::get_value($log,$dbh, 'SuppliedServiceRemovalMessage');
+
+	if ( $r->param('remove_custom_sort') ) {
+		$dbh->do(q{ update tbl_project_contents set custom_sort = NUll where lngprojectindex = ? }, undef, $pid);
+	}
    
     display_project($log, $dbh, $variable, $pid);
+
+	if ( $r->param('add_custom_sort') )  {
+		add_custom_sort($dbh, $pid, $variable); 
+    	display_project($log, $dbh, $variable, $pid);
+	}
 
 	if ( $r->param('Add Comment') ) { 
 		my $comment = $r->param('comment');
@@ -190,7 +204,31 @@ print STDERR "USER DUMPER" , Dumper($variable);
 
 	print STDERR "Comments " , Dumper($variable->{COMMENTS});
 
+
     return OK;
+}
+sub add_custom_sort {
+	my $dbh = shift;
+	my $pid = shift;
+	my $variable = shift;
+
+	my $up = $dbh->prepare(q{
+		UPDATE tbl_project_contents set custom_sort = ? WHERE lngserviceindex = ?
+	});
+
+	my $count = 10000;
+	foreach my $c ( @{$variable->{categories}} ) {
+			my $list = $c->{services};
+		print STDERR "CUSTOM SORT CAT: $c->{name} \n";
+			
+			map {
+				print STDERR "HAVE S: ", Dumper($_->{id});
+				$up->execute($count, $_->{id});
+				$count += 1000;
+			} @{$list};
+
+	}
+
 }
 
 sub add_comment {
@@ -261,6 +299,21 @@ sub continue_project {
     }, undef, $user);
 }
 
+sub custom_sort {
+	my $dbh   = shift;
+	my $pid   = shift;
+	my $start = int(shift);
+	my $end   = int(shift);
+
+	$end += 1;
+	$dbh->do(q{ UPDATE tbl_project_contents SET custom_sort = ? 
+					where custom_sort = ? AND lngprojectindex = ?
+			}, undef, $end, $start, $pid);
+
+	print STDERR "START CUSTOM SORT $start, $end \n";
+
+}
+
 # Display all the services and pricing for the project.
 sub display_project {
     my ($log, $dbh, $variable, $pid) = @_;
@@ -272,6 +325,7 @@ sub display_project {
     #
     $variable->{PressType} = get_press_type($log, $dbh, $pid);
     $variable->{pid}       = $pid;
+
 
 	my $rfq_only = $dbh->selectrow_array(q{
 		SELECT rfq_only FROM tbl_projects WHERE lngprojectindex = ?
@@ -441,14 +495,21 @@ sub display_project {
     # grepping about.
     my $services = $dbh->prepare_cached(q{
         SELECT c.lngserviceindex AS id,          s.strid       AS ref, 
-               s.strname         AS name,        t.strname     AS category,
+               s.strname         AS name,        t.strname     AS category1,
                s.strurl          AS url,         c.strstatus   AS status,
                c.lngneedlevel    AS need_level,  c.ysnremoved  AS removed,
                t.lngsort         AS cat_sort,     s.lngindex    AS type,
+			   c.custom_sort,
                (CASE WHEN s.ysnviewvisible = 'Y' 
                      THEN true 
                      ELSE false
-                END)::BOOL       AS visible
+                END)::BOOL       AS visible,
+
+				(CASE WHEN custom_sort > 0
+					THEN 'Custom'
+					ELSE t.strname
+				 END) as category
+				
         FROM tbl_project_contents c, 
              tbl_service_types s,
              tbl_service_categories t
@@ -474,6 +535,12 @@ sub display_project {
         if (my $func = $handler_for{ $service->{ref} }) { 
             &{ $func }($service); 
         }
+		
+		if ( $service->{custom_sort} ) {
+			#$cat = $category{Custom};
+			#$service->{category} = 'Custom';
+
+		}
 
         # SERVICE TYPE CATEGORY
         #
@@ -482,8 +549,10 @@ sub display_project {
             unless exists $category{ $service->{category} };
         
         my $cat = $category{ $service->{category} };
+
         
         $cat->{services} = [] unless exists $cat->{services};
+
         
         # PRICING
         #
@@ -610,6 +679,9 @@ sub display_project {
         # Simple customers don't get any ability to control services.
         else { delete $service->{url}; }
       
+
+		#print STDERR "ADD TO CASTEGORTY: ", Dumper($cat);
+
         # SERVICE TYPE CATEGORY
         #
         # Add the service to it's category so it will display as a line item.
@@ -630,22 +702,35 @@ sub display_project {
             if $flags{can_edit};
     }
     
-    # A kludge to get everything in order. If any two services are of the same
-    # type we sort them by name. This is primary so signatures are sorted by
-    # their newly assigned names. TODO Cache this.
-    $variable->{categories} = [
-        # Sort categories by preset sort order.
-        sort { $a->{services}[0]{cat_sort} <=> $b->{services}[0]{cat_sort} }
+	# A kludge to get everything in order. If any two services are of the same
+	# type we sort them by name. This is primary so signatures are sorted by
+	# their newly assigned names. TODO Cache this.
+	$variable->{categories} = [
+		# Sort categories by preset sort order.
+		sort { $a->{services}[0]{cat_sort} <=> $b->{services}[0]{cat_sort} }
 
-        # Sort services by name.
-        map { $_->{services} = [
-          sort { $a->{name} cmp $b->{name} } @{$_->{services}}
-        ]; $_;                                                               }
+		# Sort services by name.
+		map { $_->{services} = [
+		  sort { $a->{name} cmp $b->{name} } @{$_->{services}}
+		]; $_;                                                               }
 
-        # Map the hash to an array of hashes.
-        map  { { name => $_, %{$category{$_}} }                              }
-             keys %category
-    ];
+		# Map the hash to an array of hashes.
+		map  { { name => $_, %{$category{$_}} }                              }
+			 keys %category
+	];
+
+
+	#Use custom sort order from project_contents table.
+	if ( $variable->{categories}[0]{name} eq 'Custom' ) {
+
+		my @a = sort { $a->{custom_sort} <=> $b->{custom_sort} } @{$variable->{categories}[0]{services}} ;
+
+		$variable->{categories}[0]{services} = \@a;
+		$variable->{custom_sort} = 1;
+	}
+
+
+	#print STDERR "HAVE SERVICES :", Dumper($variable->{categories});
 
     # Is there any customer supplied stock in the project?
     ($$variable{'stock_supplied'}) = sql::sql_statement(

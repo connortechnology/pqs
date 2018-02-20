@@ -117,10 +117,10 @@
 	
 			 <?if big?>
 				<label style="width:8em"><?desc?></label>
-				<textarea name="<?fname?>" style="width:250px; float:right" ><?value?> </textarea>
+				<textarea name="<?fname?>" style="width:250px; float:right" tabindex=1 ><?value?> </textarea>
 			 <?else big?>
 				<label style="width:8em"><?desc?></label>
-			 	<input name="<?fname?>" value="<?value?>" style="width:250px; float:right" />
+			 	<input name="<?fname?>" value="<?value?>" style="width:250px; float:right" tabindex=1 />
 			 <?endif big?>
 			<br/>
 
@@ -128,9 +128,9 @@
 
 		<?loop versions?>
 		<label style="width:25em">Version Discount Min/Max/Discount</label>
-		<input name="discount-<?v?>" value="<?discount?>" class="discount" />
-		<input name="max-<?v?>" value="<?max?>" class="discount" />
-		<input name="min-<?v?>" value="<?min?>" class="discount" />
+		<input name="discount-<?v?>" tabindex="<?v?>13 value="<?discount?>" class="discount" />
+		<input name="max-<?v?>" 	 tabindex="<?v?>12 value="<?max?>" class="discount" />
+		<input name="min-<?v?>" 	 tabindex="<?v?>11" value="<?min?>" class="discount" />
 		<br/>
 		<?endloop versions?>
 			

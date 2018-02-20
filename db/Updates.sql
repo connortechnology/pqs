@@ -101,6 +101,12 @@ UPDATE tbl_projecttypes set lnggroup = 7 where lngindex = 100;
 
 
 
+
+ALTER table tbl_project_contents ADD column custom_sort int;
+
+
+
+
 --Bindery only projects;
 INSERT INTO tbl_projecttypes VALUES (100, 'NoPrint', 'No Printing', 'prin/prin_noprint.html', '', 1, false, 1, 0.0, 0.0);
 INSERT INTO project_type_by_press VALUES ( 41, 100);
@@ -124,6 +130,9 @@ Alter table tbl_quote_details add column product int;
 Alter table tbl_quote_details add column label text;
 
 update tbl_service_types set ysncreatevisible = 'Y' where strid = 'Cutting';
+
+Alter table tbl_products alter column weight type numeric(10,4);
+
 
 
 --Rest Product Prices

@@ -1053,7 +1053,9 @@ print STDERR "HAVE STUFF: $ref ; $is_num -- PID: $pid \n";
     }, $status );
    
     my $clause = 'AND strstatus = ' . $dbh->quote($status) if $status;
-	my $user_clause = "AND lnguserindex = $variable->{user_id} " if $variable->{user_type} eq 'C' && $variable->{user_id} ne '293';
+
+	#my $user_clause = "AND lnguserindex = $variable->{user_id} " if $variable->{user_type} eq 'C' && $variable->{user_id} ne '293';
+	my $user_clause = " ";
 
     my $limit  = "LIMIT $max_records"                      if $max_records;
 

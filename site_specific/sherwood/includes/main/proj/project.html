@@ -4,6 +4,33 @@
 <?endif not:flags.can_edit ?>
 
 <script src="/javascripts/line_item_validation.js" type="text/javascript"></script>
+<script>
+
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id);
+	//alert("START " + ev.target.innerHTML);
+	start =  ev.target.innerHTML;
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("text");
+//    ev.target.appendChild(document.getElementById(data));
+	var id = ev.target.innerHTML;
+	end = ev.target.innerHTML;
+	//alert(start + " " + end);
+
+	window.location = 'proj_view.html?pid=100780&start=' + start + '&end=' + end;
+}
+var start;
+var end;
+
+</script>
+
 	<link href="/styles/line_item_validation.css" rel="stylesheet" type="text/css" />
 	<table id="service-pricing" class="project-current-view no-formatting">
 	<col id="service" />
@@ -42,8 +69,18 @@
 			<?loop services?>
 				<tr class="service <?ref?>">
 					<td> &#183; 
+						<span
+		  						draggable="true"
+								ondragover="allowDrop(event)"
+								ondrop="drop(event)"
+								ondragstart="drag(event)"
+							
+		><?custom_sort?>
+						</span>
 						<?if ($$variable{url} and $$variable{flags}{can_edit}) ?>
-							<a href="/service/<?lc:ref?>?pid=<?pid?>;sid=<?id?>"><?name?></a>
+							<a href="/service/<?lc:ref?>?pid=<?pid?>;sid=<?id?>" 
+								>
+							<?name?></a>
 						<?else ($$variable{url} and $$variable{flags}{can_edit}) ?>
 							<?name?>		
 						<?endif ($$variable{url} and $$variable{flags}{can_edit}) ?>

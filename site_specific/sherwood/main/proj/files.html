@@ -196,7 +196,7 @@
 					<legend>Confirmation:</legend>
 
 
-					<button class="largebutton" type="submit" name="lastfile" value="1" id="btn-lastfile" style="float:unset">
+					<button class="largebutton" type="submit" name="lastfile" value="1" id="btn-lastfile" style="float:unset"  >
 						I have uploaded All the files required for this project.
 					</button>
 					<br/>
@@ -207,7 +207,26 @@
 				</fieldset>
 				<?endif not:done?>
 
+
+
 				<?if done?>
+					<?if next_project?>
+
+					<fieldset id="nextproject" style="text-align:center">
+						<legend>Next Project:</legend>
+
+
+						<button class="largebutton" type="button" name="lastfile" value="1" id="btn-lastfile" style="float:unset"
+								 onClick="window.location='/main/proj/files.html?pid=<?next_project?>'"
+							>
+							Click Here to upload files for: <?jobname?>
+						</button>
+						<br/>
+
+					</fieldset>
+
+					<?else next_project?>
+					
 					<div style="text-align:center; margin: 20px 0 0 0 ">
 						<div style="margin: 20px 0 0 0" >Thank you for confirming you file uploads. Your order is now complete</div>
 						<br/>
@@ -218,6 +237,7 @@
 						<div style="margin: 20px 0 0 0"><strong>If your order requires any changes or edits or needs to be cancelled please call us at <!--#include virtual="/includes/company_telephone_number.html"--> and we will make the changes for you.</strong></div>
 
 					</div>
+					<?endif next_project?>
 				<?endif done?>
 
 				</form>

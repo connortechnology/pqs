@@ -224,8 +224,24 @@ print STDERR "TEMPLATE: $generated GO \n";
 
 	$variable->{ordered} = $ordered;
 
+
+	$variable->{next_project} = $dbh->selectrow_array(q{
+		Select p.lngprojectindex FROM tbl_projects p, tbl_order_contents oc 
+		where oc.lngorderid = ?
+		AND oc.lngprojectindex = p.lngprojectindex
+		AND files is null
+		Limit 1
+	}, undef, $ordered);
+
+
+	$variable->{jobname} = $dbh->selectrow_array(q{
+		SELECT jobname FROM tbl_order_contents WHERE lngprojectindex = ?
+	}, undef, $variable->{next_project});
+
+
 	$variable->{done} = $dbh->selectrow_array(q{
 		Select files FROM tbl_projects where lngprojectindex = ?}, undef, $pid);
+
 print STDERR "IS ORDERED : $ordered \n\n";
 
     return OK;
