@@ -1983,7 +1983,7 @@ sub send_sales_order {
 
    	$order{ReplacementText} = q{<!--#include virtual="/email/forms/order_with_PDF.html"} . q{-->};
 
-	$order{siteURL} =  'http://192.168.1.245/';
+    $order{'siteURL'} = configuration::get_value( $log, $dbh, 'siteURL' );
 
 	$email_content = encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
 
