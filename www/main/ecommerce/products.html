@@ -38,6 +38,15 @@ function form_validate() {
 		return false;
 	 }
 }
+function make_quote() {
+	<?if order_count?>
+	return true;
+	//submit();
+	<?endif order_count?>
+	alert('Please add at least 1 product to your cart before making a Quote');
+	return false;
+
+}
 
 function order_checkout() {
 	<?if order_count?>
@@ -415,7 +424,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 	<button style="width: 50%; margin-left: 25%" onClick="open_discount_window(<?id?>)" >Version Discount</button>
 
 	<form  name="fquote" method="post" action="/main/quote/quote_info.html" >
-	<button style="width: 50%; margin-left: 25%" onClick="submit();"  >Make Quote</button>
+	<button style="width: 50%; margin-left: 25%" onClick="return make_quote();"  >Make Quote</button>
 	<input type="hidden" name="action" value="Product Quote" />
 	</form>
 	<!--

@@ -1394,6 +1394,7 @@ sub make_product_dockets {
 	my $var = shift;
 	my $dbh = session::dbh;
 	my $log = session::log;
+	my $r   = session::r;
 
 	
 	my @pids;
@@ -1411,9 +1412,20 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list);
 		};
 		my ($pid) = eprint::print_project::copy_project($dbh, $var, $ppid, $args);
 
+
+    	my $sid = eprint::project::check_for_service( undef, $dbh, $pid, 'Discount');
+
+		unless ( $sid ) {
+	    	$sid = eprint::print_project::insert_service($r->log, $dbh, $pid, 'Discount') unless $sid;
+			eprint::service::insert_service_spec( $log, $dbh, $pid, $sid, 'c-CAD-1' , '1');
+			eprint::service::insert_service_spec( $log, $dbh, $pid, $sid, 'services' , '0');
+			eprint::service::insert_service_spec( $log, $dbh, $pid, $sid, 'txtPrice1' , '1');
+		}
+
+
 		$dbh->do("UPDATE tbl_service_specifications set strvalue = ? where strname = 'c-CAD-1' and lngprojectindex = ?", undef, $o->{cursalesprice}, $pid);
 
-#		eprint::Build::build($log, $dbh, $pid, $var, 0);
+		eprint::Build::build($log, $dbh, $pid, $var, 0);
 
 		
   		PQS::model::order::set_spec_pid($o->{lngcontentindex}, $pid);
