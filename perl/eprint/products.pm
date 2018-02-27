@@ -883,11 +883,12 @@ sub display {
 
 		#Set a defualt qty if one is not defined.
 		unless ($qty ) {
-			if ( $prod->{specs}{units} eq 'Per 1000' ) {
-				$qty = 1000;
+			if ( $prod->{specs}{minimum_qty} ) {
+				$qty = $prod->{specs}{minimum_qty};
 			} else {
 				$qty = 1;
 			}
+
 		}
 
 		#Set total qty once we have a default or user entered qty.

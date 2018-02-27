@@ -786,7 +786,9 @@ print STDER "MY FILENAME: $filename \n";
     	eprint::products::display($r, $dbh, $variable) if $filename eq 'products.html';
     	eprint::products::details($r, $dbh, $variable) if $filename eq 'product_details.html';
     	eprint::products::design($r, $dbh, $variable, $cookie) if $filename eq 'design.html';
-}
+	}
+
+	menu_options($dbh, $variable);
     
     
 print STDERR "CHECK ASR " . $r->param('run_asr') . "-- \n";
@@ -797,6 +799,18 @@ print STDERR "CHECK ASR " . $r->param('run_asr') . "-- \n";
 
     return $status;
 }
+
+sub menu_options {
+	my ( $dbh, $var) = @_;
+
+	my $cats = PQS::model::categories::get_all();
+
+	map { push @{$var->{prod_menu}}, $cats->{$_}; } sort keys $cats;
+
+	print STDERR "HAVE CATS: ", Dumper($var->{prod_menu}, $cats);
+}
+
+
 
 sub check_cart {
 	my ($r, $log, $dbh, $cookie, $var) = @_;

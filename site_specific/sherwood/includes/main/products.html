@@ -68,10 +68,24 @@
 					</ul>
 					<li><a href="/main/templates/templates.html">Templates</a>
 					</li>
+
 					<li>
- 					<a href="/main/ecommerce/products.html">New Products</a> 
+ 					<a href="/main/ecommerce/products.html" class="parent">New Products</a> 
 						<ul>
- 							<li><a href="/main/ecommerce/products.html?Category=102">Business Cards</a></li>
+
+							<?loop prod_menu?>
+							<?if active?>
+							<li><a href="/main/ecommerce/products.html?Category=<?id?>"><?name?></a></li>
+							<?endif active?>
+
+							<?loop children?>
+							<?if active?>
+							<li><a href="/main/ecommerce/products.html?Category=<?id?>"><?name?></a></li>
+							<?endif active?>
+							<?endloop children?>
+
+							<?endloop prod_menu?>
 						</ul>
 					</li>
+
 				</ul>
