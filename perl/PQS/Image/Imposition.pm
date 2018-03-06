@@ -263,6 +263,8 @@ sub generate {
     
     my $colours = slot_colours($imposition, $n);
 
+print STDERR "HAVE N: $n \n", Dumper($versions, $imposition);
+
     my $group = $define->group(id => 'imposition');
 
     # Draw each node in the layout starting with the root.
@@ -323,7 +325,7 @@ sub draw_sheet {
     $canvas->rect(
         id     => 'sheet', 
         x      => 0,  y      => 0, 
-        width  => $w, height => $h, 
+        width  => $w, height => $h + 0.5, 
         filter => 'url(#dropShadow)',
     );
 
@@ -378,7 +380,7 @@ sub draw_sheet {
 
         my $mirror = $group->svg(
             width  => $dim,
-            height => $imposition->{tree}->size->[H],
+            height => $imposition->{tree}->size->[H], 
             overflow => 'hidden',
             x => $dim,
             y => 0,
@@ -511,6 +513,7 @@ sub draw_node {
     my ($canvas, $node, $colour, $offset) = @_; 
 
     return unless $node; # Empty node.
+
     
     # Sinks (with cardinality) are images. Draw it where it stands.
     if ($node->is_sink && $node->card) {
@@ -520,14 +523,28 @@ sub draw_node {
 
         my ($w, $h) = @{ $node->size };
 
+		my ($fill, $label, $i ) = $colour->();
+
+
+		$canvas = $canvas->group();
+
         $canvas->rect(
             class  => 'image',
             x      => $offset->[W], 
             y      => $offset->[H],
             width  => $w,
             height => $h,
-            fill   => $colour->(),
-        );
+			#fill   => $colour->(),
+            fill   => $fill,
+        )->cdata($label . $i);
+
+		#$canvas->title()->cdata('hello');
+		
+		$canvas->text( 
+			x      		=> $offset->[W] + 2, 
+            y      		=> $offset->[H] + 5,
+			'font-size' => 1
+ 		)->cdata("$label");
 
     }
     # We're a cutting group. TODO Draw a dashed cutting line.
@@ -565,6 +582,8 @@ sub slot_colours {
     my @versions = map { ($_->{label}) x ($_->{slots}/$div) } 
                       @{$imp->{layout}[$n]};
 
+
+print STDERR "SLOT COLOURS", Dumper(\@versions);
     # Bump the colour generator until we get to our current layout (if we're
     # the 0th layout this will be skipped due to invalid range). Kludgy but
     # it works.
@@ -583,7 +602,7 @@ sub slot_colours {
 
         $i++;
 
-        return $c;
+        return $c, $versions[$i-1], $i-1;
     }
 }
 

@@ -108,6 +108,8 @@ sub calc {
 	# Keep Version information. Needed for auto-calc.
     delete $specs->{$_} for grep {! $_ =~ /mv/} keys %$specs;
 
+	print STDERR "HAVE IMP", Dumper($specs->{imp});
+
     $specs->{$_} = $pricing->{$_} for keys %$pricing;
 
     return exists $specs->{error} ? 'uncalculated' : 'calculated';
@@ -802,6 +804,9 @@ print STDERR "HAVE TOTAL IMPS: $total_imp \n";
         $te_req = Time::HiRes::time();
         _log_timings($log);
     }
+
+	insert_service_spec($log, $dbh, $pid, $sid, "imp", $best_price->{imp});
+	$dbh->commit();
 
     return post_process(
         $log, $dbh, $pid, $sid, 
