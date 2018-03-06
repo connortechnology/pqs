@@ -183,6 +183,16 @@ print STDERR "Have price for $_->{id} QTY: $_->{qty} Price: $price \n";
 
 }
 
+sub image_path {
+	my $self = shift;
+
+	my $id = $self->{specs}{category_id};
+	my $name = PQS::model::categories::get_name_from_id($id);
+
+	return "/images/main/product/$name-$id/";
+}
+
+
 sub image {
 	my $self = shift;
 	my $small = shift;
@@ -192,13 +202,17 @@ sub image {
 	my $img;
 	my $path;
 
-	$img = "/images/main/products/$self->{specs}{strid}.jpg";
+	$img = $self->image_path . "$self->{specs}{strid}.jpg";
 
-	 $path = ssi::get_file_path($r, $img);
+	
+	$path = ssi::get_file_path($r, $img);
+
+	print STDERR "HAVE CATEGORY PATH: $path IMG: $img \n";
+
 
 	return $img if -e $path;
 
-	$img = "/images/main/products/category/$self->{specs}{category_id}.jpg";
+	$img = "/images/main/product/category/$self->{specs}{category_id}.jpg";
 
 	$path = ssi::get_file_path($r, $img);
 
@@ -206,7 +220,7 @@ sub image {
 	return $img if -e $path;
 
 
-	return "/images/main/products/default.jpg";
+	return "/images/main/product/default.jpg";
 }
 
 sub kit_list {

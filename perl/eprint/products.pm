@@ -39,15 +39,30 @@ sub save_categories {
 			PQS::model::categories::set_active($id, $active);	
 		}
 	} $r->param();
+
 	if ( $r->param('editname-new') ) {
 		my $parent = $r->param("parent-new") || undef;
 		my $name   = $r->param("editname-new");
-		PQS::model::categories::insert( $parent, $name);
+		my $id = PQS::model::categories::insert( $parent, $name);
 
-	print STDERR "INSERT NEW $name\n";
+		my $d = category_path($id);
+
+		mkdir $d || die("Can't make dir $d");
+
 	}
 
 
+}
+
+sub category_path {
+	my $id = shift;
+	my $name = PQS::model::categories::get_name_from_id($id);
+
+	my $r = session::r;
+
+	my $path = $r->dir_config('site_specific') . "/images/main/product/$name-$id/";
+
+	return $path;
 }
 
 

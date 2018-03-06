@@ -237,7 +237,8 @@ sub commit_quote {
     my $subtotal2 = 0;
     my $subtotal3 = 0;
 
-    $_ = "SELECT lngProjectIndex FROM tbl_Quote_Details WHERE lngQuoteID='$quote_id' AND type='project'";
+    $_ = "SELECT lngProjectIndex FROM tbl_Quote_Details WHERE lngQuoteID='$quote_id' AND type='print'";
+
     foreach my $project_index ( sql::sql_statement( $log, $dbh, $_ ) ) {
         $_ = "SELECT dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE lngQuoteID='$quote_id' AND lngProjectIndex='$project_index'";
         my ( $markup1, $markup2, $markup3 ) = sql::sql_statement( $log, $dbh, $_ );
@@ -907,6 +908,7 @@ sub finalise_quote {
 	my ( $r, $log, $dbh, $cookie, $variable ) = @_;
 
 	my $quote_id = get_unfinished_quote_id( $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'} );
+
 
 
 	if ( $quote_id ) {
