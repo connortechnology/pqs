@@ -34,6 +34,7 @@ sub insert {
   my ($id, $name) = @_;
   my $dbh = session::dbh;
   $dbh->do(q{insert into categories (name, parent) values ( ?, ? ) },undef,  $name, $id);
+  return $dbh->last_insert_id('',qw(public categories id));
 }
 
 
