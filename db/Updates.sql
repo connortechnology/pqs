@@ -103,8 +103,8 @@ Alter table tbl_products alter column weight type numeric(10,4);
 
 
 -------UPDATES TO PQS-4.1 --------------
-Alter table pricing_matrix alter column cost type numeric(10,3);
-Alter table pricing_matrix alter column sell type numeric(10,3);
+Alter table pricing_matrix alter column cost type numeric(10,4);
+Alter table pricing_matrix alter column sell type numeric(10,4);
 
 
 
