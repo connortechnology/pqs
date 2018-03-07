@@ -102,6 +102,9 @@ Alter table tbl_quote_details add column label text;
 Alter table tbl_products alter column weight type numeric(10,4);
 
 
+-------UPDATES TO PQS-4.1 --------------
+Alter table pricing_matrix alter column cost type numeric(10,3);
+Alter table pricing_matrix alter column sell type numeric(10,3);
 
 
 
@@ -110,6 +113,33 @@ Alter table tbl_products alter column weight type numeric(10,4);
 
 -------- Start of No Bindery, Not Added to live db ----------
 
+<<<<<<< HEAD
+INSERT into tbl_equipment_type VALUES  ( 51, 'NoPrinting', 'No Printing');
+INSERT into service_type_equipment VALUES ( 68, 1);
+INSERT into tbl_equipment VALUES  ( 1, 'NoPrint', 'No Printing', Null, Null, Null, 'NoPrinting');
+=======
+>>>>>>> hotfix-4x
+
+INSERT INTO project_type_by_press VALUES ( 51, 100);
+
+<<<<<<< HEAD
+drop trigger press_type on tbl_projects;
+=======
+>>>>>>> hotfix-4x
+
+INSERT into project_type_group values ( 7, 'NoPrint');
+
+-------- Start of No Bindery, Not Added to live db ----------
+
+<<<<<<< HEAD
+UPDATE tbl_projecttypes set lnggroup = 7 where lngindex = 100;
+
+
+INSERT INTO tbl_projecttypes VALUES (100, 'NoPrint', 'No Printing', 'prin/prin_noprint.html', '', 1, false, 1, 0.0, 0.0);
+INSERT INTO project_type_by_press VALUES ( 41, 100);
+INSERT INTO project_type_by_press VALUES ( 14, 100);
+
+=======
 INSERT into tbl_equipment_type VALUES  ( 51, 'NoPrinting', 'No Printing');
 INSERT into service_type_equipment VALUES ( 68, 1);
 INSERT into tbl_equipment VALUES  ( 1, 'NoPrint', 'No Printing', Null, Null, Null, 'NoPrinting');
@@ -128,6 +158,7 @@ INSERT INTO tbl_projecttypes VALUES (100, 'NoPrint', 'No Printing', 'prin/prin_n
 INSERT INTO project_type_by_press VALUES ( 41, 100);
 INSERT INTO project_type_by_press VALUES ( 14, 100);
 
+>>>>>>> hotfix-4x
 
 INSERT INTO tbl_configuration VALUES ( 'Default Product Category', 102);
 

@@ -1988,6 +1988,7 @@ sub add_product_to_order {
 	my $jobname = $r->param('jobname') ||  undef;
 	my $versions = $r->param('versions1') ||  1;
 
+	$jobname .= " $versions Versions " if $versions > 1;
 print STDERR "PRODUCT: $jobname \n";
 
 	die("Invalid request. Product can not be added to order") unless $product && $qty;
