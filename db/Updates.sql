@@ -119,8 +119,9 @@ Alter table pricing_matrix alter column sell type numeric(10,4);
 -------- Start of No Bindery, Not Added to live db ----------
 
 INSERT into tbl_equipment_type VALUES  ( 51, 'NoPrinting', 'No Printing');
-INSERT into service_type_equipment VALUES ( 68, 1);
 INSERT into tbl_equipment VALUES  ( 1, 'NoPrint', 'No Printing', Null, Null, Null, 'NoPrinting');
+INSERT into service_type_equipment VALUES ( 68, 1);
+
 
 INSERT INTO project_type_by_press VALUES ( 51, 100);
 
