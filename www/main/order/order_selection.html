@@ -193,7 +193,7 @@
 									<td style="text-align: center;"><input type="radio" name="rdbQuantity<?project_index?>" <?selected?> value="<?index?>"/></td>
 									<td><?qty?></td>
 									<td><?CurrencySymbol?> <?unitprice?></td>
-									<td><?CurrencySymbol?> <?price?></td>
+									<td><?money:price?></td>
 								</tr>
 							<? endif ( $$variable{'qty'} ) ?>
 						<? endloop PROJECTS ?>
