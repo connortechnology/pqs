@@ -2876,13 +2876,15 @@ sub get_order_totals {
 
 print STDERR "\n\nwSTART ORDER TOTALS FOR PROJECTS \n";
 
-    my ( $pst_rate, $hst_rate, $gst_rate ) = $dbh->selectrow_array(q{
+
+	my $prov_state = $dbh->selectrow_array(q{SELECT strShippingState FROM tbl_Orders WHERE lngOrderID = ?}, undef, $order_id);
+	   $prov_state = $dbh->selectrow_array(q{SELECT strState FROM tbl_Orders WHERE lngOrderID = ?}, undef, $order_id) unless $prov_state;
+		
+	my ( $pst_rate, $hst_rate, $gst_rate ) = $dbh->selectrow_array(q{
         SELECT dblStatePercent, dblHarmonisedPercent, dblFederalPercent
         FROM tbl_Taxes
-        WHERE strStateID = ( SELECT strShippingState 
-                             FROM tbl_Orders
-                             WHERE lngOrderID = ? )
-    }, undef, $order_id);
+        WHERE strStateID = ?
+    }, undef, $prov_state);
 
     my $county_rate = $dbh->selectrow_array(q{
 		SELECT amount FROM county_taxes WHERE id = (

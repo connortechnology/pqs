@@ -212,6 +212,9 @@ sub add_custom_sort {
 	my $pid = shift;
 	my $variable = shift;
 
+	$dbh->do(q{Update tbl_project_contents set custom_sort = 1000 where lngprojectindex = ?}, undef, $pid);
+
+
 	my $up = $dbh->prepare(q{
 		UPDATE tbl_project_contents set custom_sort = ? WHERE lngserviceindex = ?
 	});
@@ -720,8 +723,11 @@ sub display_project {
 	];
 
 
+	print STDERR "CHECK CUSTOM SORT \n", Dumper($variable->{categories});
+
 	#Use custom sort order from project_contents table.
 	if ( $variable->{categories}[0]{name} eq 'Custom' ) {
+		print STDERR "USE CUSTOM SORT \n";
 
 		my @a = sort { $a->{custom_sort} <=> $b->{custom_sort} } @{$variable->{categories}[0]{services}} ;
 
