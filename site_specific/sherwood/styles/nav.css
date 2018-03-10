@@ -32,8 +32,7 @@
 
 #nav a {
 	display: block;
-	width: 8.5em;
-	w\idth: 8.5em; /* originally set to 4 smaller than width */
+	width: 8.3em; /* originally set to 4 smaller than width */
 	color: #FFFFFF;
 	text-decoration: none;
 	text-align: left;
