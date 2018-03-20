@@ -1275,27 +1275,11 @@ print STDERR "CHECK ORDER INFO \n";
 
             $dbh->do($query, undef, $pid);
 
-            my $array_ref = $dbh->selectcol_arrayref(q{
-                SELECT lngServiceIndex
-                FROM tbl_Project_Contents
-                WHERE lngProjectIndex = ?
-                AND strStatus NOT IN ('calculated', 'Complete')
-            }, undef, $pid);
-
-            if ( scalar @{ $array_ref } == 0 ) {
-                sql::update(
-                    $log, $dbh, 'tbl_Projects',
-                    "lngProjectIndex = '$pid'",
-                    strStatus => 'Complete'
-                );
-            }
-            else {
-                sql::update(
+            sql::update(
                     $log, $dbh, 'tbl_Projects',
                     "lngProjectIndex = $pid AND strStatus != 'Complete'",
-                    strStatus => $status
-                );
-            }
+                    strStatus => $pstatus
+            );
 
             # Send a notice to the user's manager if they're filled a PDF
             # template (as that's about the same as uploading a file).

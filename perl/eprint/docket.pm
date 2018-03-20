@@ -1174,7 +1174,8 @@ print STDERR "HAVE FORM COUNT: $$form_count \n";
 		};
 
 		$inks{side} = $s eq 's0' ? 1 : 2;
-		push @{ $results{SIDE}  }, \%inks;
+
+		push @{ $results{SIDE}  }, \%inks if ( $inks{std} || $inks{pms} );
 
 		if ( $specs->{side_link}{value} ) {
 			my %s1_inks = %inks;
@@ -1379,6 +1380,7 @@ print STDERR "HAVE FORM COUNT: $$form_count \n";
 					   $_ } @{$f} ];
 
 			$form{net_sheets} = ceil(@{$f}[0]->{final_qty} / @{$f}[0]->{slots});
+
 
 			push @{ $results{FORMS} }, \%form;
 

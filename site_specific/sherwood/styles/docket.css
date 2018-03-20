@@ -122,6 +122,10 @@ table#docket-quantity td {
 
 
 
+div.category {
+	font-size: 15px;
+}
+
 
 /* SERVICE TYPE CATEGORIES */
 
@@ -140,7 +144,7 @@ div.category h1 {
 
 
 div.category h5 {
-	margin-top: 5px;
+	margin: 5px 0 5px 0;
 
 	background-color: #0B0D60;
 	border: 1px solid #0B0D60;
@@ -167,16 +171,25 @@ div.supplied h3 {
 
 /* SERVICE TYPE GROUP */
 div.group {
-		padding: 0 4px 0 4px; /* Top, Right, Bottom, Left */
+	padding: 30px 4px 50px 4px; /* Top, Right, Bottom, Left */
     line-height: 1.6em;
     border-bottom: 1px solid #0B0D60;
 }
 
 div.group h4 {
-		display: inline;
+		display: inline-block;
 		font-size: 1em;
 		margin-right: 0.25em;
+		padding: 0 0 10px 0;
+
+		/*
+		background-color: cyan;
+		width: 100%;
+		text-align: center;
+		*/
+
 }
+
 
 div.group a.comment {
 	float: right;

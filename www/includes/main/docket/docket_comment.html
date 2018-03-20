@@ -11,7 +11,7 @@
 
 	<div class="button-bar">
 		<input type="reset" id="button-space" class="button" value="Reset" />
-		<input type="submit" onclick="f2.submit();Event.observe(window.opener, 'unload', function () {window.close();});window.opener.location.reload(true);" class="button" value="Save" />
+		<input type="submit" name="Save" onclick="Event.observe(window.opener, 'unload', function () {window.close();});window.opener.location.reload(true); f2.submit();" class="button" value="Save" />
         
         <? if order_id ?><input type="checkbox" id="change_notfication" name="change_notification" value=1 checked="checked" >
         <? else order_id ?><input type="checkbox" id="change_notfication" name="change_notification" value=1 >

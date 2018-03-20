@@ -1945,6 +1945,7 @@ use constant TEMPLATE_PAGE => '/template/record.html';
         remove            => \&remove_item,   # Remove a service
 
         add_line_item          => \&add_line_item,         # Add a custom line item
+        edit_line_item         => \&edit_line_item,         # Add a custom line item
         add_discount           => \&add_discount,          # Create fixed price project
         add_per_item_discount  => \&add_per_item_discount, # Create fixed price project
 	complete	       => \&complete_project,
@@ -2398,6 +2399,40 @@ sub remove_item {
 
     # See if we need to recalculate anything.
     return BUILD_PAGE . "?pid=$pid";
+}
+
+# Add a custom line item to the given project.
+sub edit_line_item {
+    my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
+
+	my $edit = $r->param('edit');
+	my $sid = $r->param('sid');
+	my $name = $r->param('name');
+	my $price = $r->param('price');
+	my $docket = $r->param('docket');
+	my $hide_docket = $r->param('hide_docket');
+
+	$price = int($price * 100) / 100;
+
+	my $data = { 
+					txtPrice1 => $price, 
+					ServiceName => $name, 
+					docket => $docket,
+					hide_docket => $hide_docket,
+				};
+
+	if ( $sid ) {
+    	insert_service_specs($log, $dbh, $pid, $sid, %$data);
+	}
+
+
+
+
+	print STDERR "HAVE EDIT LNIE", Dumper($edit, $name, $price, $sid);
+
+	#return BUILD_PAGE . "?pid=$pid;edit=11111";
+	#
+    return "/main/proj/proj_view.html?pid=$pid;edit=$edit";
 }
 
 

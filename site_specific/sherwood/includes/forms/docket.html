@@ -4,6 +4,7 @@
 	<!--#include virtual="/includes/main/docket/header.html" -->
 
 	<!-- Sevice Type Summaries. -->
+
 	<? if ($$variable{Category} != -1) ?>
 		<?loop categories?>
 			<div class="category">
@@ -11,13 +12,46 @@
 
 				<?loop service_type?>
 					<div class="group">
+
+						<h4 style="font-size:14px"><?name?></h4>
+
+							<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+							<? if ( $variable->{sid} ) ?>
+							<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
+							<br />
+                            
+                            <!-- If service is equal to shipping display below Add/Edit link and pop up comment window with new tracking ID-->
+                            
+							<? if ( $variable->{id} eq 'Shipping' ) ?>
+
+                            <a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Tracking ID Add/Edit</a>
+                           <br/> 
+                           
+							<? endif ( $variable->{id} eq 'Shipping' ) ?>
+                            
+                            <? endif ( $variable->{sid} ) ?>
+
+							<? if ( ! $variable->{sid} ) ?>
+							<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?CommentType=ImpComment&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
+							<br />
+							<? endif ( ! $variable->{sid} ) ?>
+                            
+						<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+
+
+						<!--
+
 						<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
 							<? if ( $variable->{sid} ) ?>
 							<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
 							<? endif ( $variable->{sid} ) ?>
 						<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+						-->
 
-						<h4 style="font-size:14px"><?name?></h4>
+
+
+
+
 						<?html?>
 
 						<?if ($$variable{comment}) ?>
@@ -49,6 +83,12 @@
 			</div>
 		<?endloop categories?>
 	<? endif ($$variable{Category} != -1) ?>
+	
+
+
+
+
+
 
 	<? if ((! $$variable{Category}) || ($$variable{Category} == -1)) ?>
 		<div class="category">
@@ -56,6 +96,14 @@
 			<?loop materials?>
 				<div class="group">
 					<strong><?category?></strong>
+
+	<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+								<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?CommentType=PaperComment&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
+			<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
+
+
+
+
 					<? if ($$variable{stock_supplied}) ?><strong> - Customer Supplied Stock</strong> <?stock_custom?><? endif ($$variable{stock_supplied}) ?>
 					<?loop subMaterials?>
 						<div style=" padding-left: 2em; ">
@@ -72,6 +120,11 @@
                            
 						</div>
 					<?endloop subMaterials?>
+
+					<?if ($$variable{matcomment}) ?>
+						<p class="comment"><strong>Comment: </strong>&nbsp;<?comment?></p>
+					<?endif ($$variable{matcomment}) ?>
+
 				</div>
 			<?endloop materials?>
 		</div>

@@ -1,14 +1,21 @@
 <!-- Basic Info. -->
+
+	<h2 style="font-size: 4em; text-align: center;">
+		<?HeaderInfo.id?>
+	</h2>
+
 <div class="category">
+
 	<!-- Company/Docket ID -->
 	<h5>
 		<? if (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
 			<span class="id">Docket ID: <?HeaderInfo.docket_id?></span>
 		<? endif (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
 
-		Project Information
+		Project Information 1
 	</h5>
 
+	<div style="float:right; margin: 0 10px 0 0;">
 	<!-- Primary info call-out. -->
 	<table id="primary_info" class="no-formatting">
 		<? if ($variable->{HeaderInfo}{'date_required'}) ?>
@@ -17,10 +24,12 @@
 				<td><?HeaderInfo.date_required?></td>
 			</tr>
 
+			<!--
 			<tr>
 				<th>Quantity:</th>
 				<td style="font-weight: bold;"><?HeaderInfo.OrderedQuantity?></td>
 			</tr>
+			-->
 
 			<tr>
 				<th>Order ID:</th>
@@ -28,6 +37,7 @@
 			</tr>
 		<? endif ($variable->{HeaderInfo}{'date_required'}) ?>
 
+		<!--
 		<tr>
 			<th>Project ID:</th>
 			<td><span class="id"><?HeaderInfo.id?></span>
@@ -37,6 +47,7 @@
 			<? endloop pqtys ?>
 			</td>
 		</tr>
+		-->
 
  <? if ( ($$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' )) ?>
      <? if ( $variable->{docket} ) ?>
@@ -69,6 +80,10 @@
 			</tr>
 		<? endif ($$variable{checkout}) ?>
 	</table>
+	<div style="margin: 0 10px 0 10px; font-size: 1.5em; font-weight: bold"> 
+			<label>Master Qty:</label> 
+			<span style="float: right;"> <?HeaderInfo.OrderedQuantity?></span></div>
+	</div>
 
 
 	<table class="docket no-formatting">
@@ -81,8 +96,8 @@
 			<col class="data" />
 		</colgroup>
 		<tbody>
-			<tr>
-				<th>Reference:</th>
+			<tr style="height: 50px;">
+				<th>Job Name:</th>
 				<td colspan="3"><h4 style="font-size:15px"><?HeaderInfo.reference?></h4></td>
 			</tr>
 			<tr>
@@ -91,6 +106,7 @@
 
 				<th>Status:</th>
 				<td><?ucfirst:HeaderInfo.status?></td>
+
 			</tr>
 			<tr>
 				<th>Created on:</th>
@@ -99,9 +115,14 @@
 				<th>Created by:</th>
 				<td><?HeaderInfo.user?></td>
 			</tr>
-			<tr rowspan="2">
+		</tbody>
+	</table>
+
+	<table class="docket no-formatting">
+		<tbody>
+			<tr rowspan="2" style="font-size: 1.2em; font-weight: bold; height: 50px; width:100%;">
 				<th>Comments:</th>
-				<td colspan="3"><?HeaderInfo.comments?></td>
+				<td ><?HeaderInfo.comments?></td>
 			</tr>
 		</tbody>
 	</table>
@@ -131,6 +152,9 @@
 			<th>Ordered By:</th><td><?HeaderInfo.OrderSalutation?> <?HeaderInfo.OrderFirstName?>	<?HeaderInfo.OrderLastName?></td>
 		</tr>
 			<? endif ($variable->{HeaderInfo}{OrderLastName}) ?>
+		<tr>
+			<th>Email:</th><td colspan=2><?HeaderInfo.order.stremail?></td>
+		<tr>
 		</tbody>
 	</table>
 </div>
@@ -163,10 +187,10 @@
 					<? if ($variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
 							<th>Finished:</th><td>
 							<? if ( $variable->{HeaderInfo}{final_height} ) ?>
-								<?HeaderInfo.final_height?> x <?HeaderInfo.final_width?> (H x W)
+								<?HeaderInfo.final_width?> x <?HeaderInfo.final_height?> (W x H)
 							<? endif ( $variable->{HeaderInfo}{final_height} ) ?>
 							</td>
-							<th>Flat:</th><td><?HeaderInfo.flat_height?> x <?HeaderInfo.flat_width?> (H x W)</td>
+							<th>Flat:</th><td><?HeaderInfo.flat_width?> x <?HeaderInfo.flat_height?> (W x H)</td>
 					<? else ($variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
 						<th>Height:</th><td><?HeaderInfo.txtItemHeight?></td>
 						<th>Width:</th><td><?HeaderInfo.txtItemWidth?></td>

@@ -32,9 +32,19 @@ sub view_services {
 		custom_sort( $dbh, $pid, $r->param('start') ,  $r->param('end') );
 
 	}
+	
+	#Custom Line Item Edit
+   	if ( $r->param('edit') ) {
+		my $sid =  $r->param('edit');
+		$variable->{edit} = $sid;
+
+		 my %specs = eprint::service::get_specifications_pairs($log, $dbh, $pid, $sid);
+		$variable->{custom_service} = \%specs;
+		$variable->{__FillInForm}{hide_docket} = $specs{hide_docket};
+	}
 
 
-print STDERR "START VIEW SERVICES : ************************* \n\n";
+print STDERR "START VIEW SERVICES :  $variable->{edit} ************************* \n\n";
 	my $qtys = [0,0,0];
 
 
@@ -116,7 +126,7 @@ print STDERR "HAVE DIGIFED: $digifed PMS: $pms ************\n";
     # Is the user even allowed to view this project?
     return unless project_allowed($dbh, $pid, $variable);
 
-print STDERR "USER DUMPER" , Dumper($variable);
+	#print STDERR "USER DUMPER" , Dumper($variable);
     # Determine if the project is currently in a quote or order and therefor
     # locked from certain actions (site override is possible for staff).
     if (   configuration::get_value($log, $dbh, 'ModifyOrderedProject')
@@ -222,7 +232,6 @@ sub add_custom_sort {
 	my $count = 10000;
 	foreach my $c ( @{$variable->{categories}} ) {
 			my $list = $c->{services};
-		print STDERR "CUSTOM SORT CAT: $c->{name} \n";
 			
 			map {
 				print STDERR "HAVE S: ", Dumper($_->{id});
@@ -313,7 +322,6 @@ sub custom_sort {
 					where custom_sort = ? AND lngprojectindex = ?
 			}, undef, $end, $start, $pid);
 
-	print STDERR "START CUSTOM SORT $start, $end \n";
 
 }
 
@@ -723,11 +731,8 @@ sub display_project {
 	];
 
 
-	print STDERR "CHECK CUSTOM SORT \n", Dumper($variable->{categories});
-
 	#Use custom sort order from project_contents table.
 	if ( $variable->{categories}[0]{name} eq 'Custom' ) {
-		print STDERR "USE CUSTOM SORT \n";
 
 		my @a = sort { $a->{custom_sort} <=> $b->{custom_sort} } @{$variable->{categories}[0]{services}} ;
 

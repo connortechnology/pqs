@@ -67,6 +67,7 @@ var end;
 
 			<!-- Services in <?category?>. -->				
 			<?loop services?>
+				<form action="/main/proj/dispatch.html" />
 				<tr class="service <?ref?>">
 					<td> &#183; 
 						<span
@@ -77,18 +78,46 @@ var end;
 							
 		><?custom_sort?>
 						</span>
+
 						<?if ($$variable{url} and $$variable{flags}{can_edit}) ?>
-							<a href="/service/<?lc:ref?>?pid=<?pid?>;sid=<?id?>" 
-								>
+							<a href="/service/<?lc:ref?>?pid=<?pid?>;sid=<?id?>" >
 							<?name?></a>
 						<?else ($$variable{url} and $$variable{flags}{can_edit}) ?>
-							<?name?>		
+
+								<?if ( $variable->{edit} == $variable->{id} ) ?>
+									<input name="name" value="<?name?>" id="edit_<?id?>"  />
+									<?if not:custom_service.hide_docket?>
+										<br />
+										<label style="margin-left: 20px">Docket:</label>
+										<br />
+										<textarea name="docket" 
+											style="margin-left: 20px; width: 300px; height: 70px"
+										><?custom_service.docket?></textarea>
+									<?else not:custom_service.hide_docket?>
+									<?endif not:custom_service.hide_docket?>
+										<input type="checkbox" name="hide_docket" value="1">Hide
+								<?else ( $variable->{edit} == $variable->{id} ) ?>
+									<?if ( $variable->{ref} eq 'Custom' ) ?>
+									<a href="/main/proj/dispatch.html?pid=<?pid?>;action=edit_line_item;edit=<?id?>"> 
+										<?name?> - <?edit?> <a>
+									<?else ( $variable->{ref} eq 'Custom' ) ?>
+										<?name?>
+									<?endif ( $variable->{ref} eq 'Custom' ) ?>
+								<?endif ( $variable->{edit} == $variable->{id} ) ?>
+
 						<?endif ($$variable{url} and $$variable{flags}{can_edit}) ?>
 						<?if ($$variable{removed}) ?>
 							<span class="supplied">(Customer Supplied)</span>
 						<?endif ($$variable{removed}) ?>					</td>
 
-					<td style="text-align: right; padding-right:20px !important; "><?money:price1?></td>
+					<td style="text-align: right; padding-right:20px !important; ">
+							<?if ( $variable->{edit} == $variable->{id} ) ?>
+								<input name="price" value="<?price1?>" id="price_<?id?>" size="6"  />
+								<input type="submit" value="Save" />
+							<?else ( $variable->{edit} == $variable->{id} ) ?>
+								<?money:price1?>
+							<?endif ( $variable->{edit} == $variable->{id} ) ?>
+					</td>
 					
 					<td class="<?status?>" style="text-align: right;">
 						<?if ($$variable{status} eq 'error') ?>
@@ -109,6 +138,11 @@ var end;
 							<?endloop controls?>
 						<?endif flags.can_edit ?>					</td>
 				</tr>
+
+					<input type="hidden" name="sid" value="<?id?>" />
+					<input type="hidden" name="action" value="edit_line_item" />
+					<input type="hidden" name="pid" value="<?pid?>" id="pid_<?id?" />
+				</form>
 			<?endloop services?>
 		<?endloop categories?>
 

@@ -2,8 +2,6 @@
 No Printing
 <?else NoPrint?>
 <?if is_staff ?>
-
-OTHERE SIDE:
 	<a href="/main/proj/proj_printer_summ_price_breakdown.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>#chosen">
 		<?desc?> </a>
 <?else is_staff ?>
@@ -30,7 +28,8 @@ OTHERE SIDE:
 <? if ( $$variable{pressType} ne 'inkjetprinter' ) ?>
 		<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
   <tr>
-    <td width="50%"><span class="label">Run Style: </span> &nbsp;<?runstyle?></td>
+    <td width="50%"><span class="label">Run Style: </span> &nbsp;
+		<?if SIDE.1?><?runstyle?> <?else SIDE.1?> One Sided<?endif SIDE.1?></td>
     <td width="50%"><span class="label">
     					<?if ($$variable{'pressType'} ne 'screen') ?>Plates:
 						<?else ($$variable{'pressType'} ne 'screen') ?>Screens:
@@ -65,6 +64,8 @@ OTHERE SIDE:
        
 	</div>	
 <br />
+
+<? eval ( use Data::Dumper; print STDERR "Printing Docket", Dumper($variable); ) ?>
 		<!-- Colour Information Per Side -->
 		<div style=" padding-left: 2em; ">
            <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
@@ -99,6 +100,7 @@ OTHERE SIDE:
 				&nbsp;<?SIDE.0.lf_quality?>
 			<? endif lf_quality ?></td>
             
+	<?if SIDE.1?>
     <td width="50%"><span class="label">SIDE <?SIDE.1.side?></span>
 			<span class="label" ><br />Inks: </span>
 			&nbsp;<?SIDE.1.std?>
@@ -128,6 +130,7 @@ OTHERE SIDE:
 				<span class="label"><br /> Quality: </span>
 				&nbsp;<?SIDE.1.lf_quality?>
 			<? endif lf_quality ?></td>
+	<?endif SIDE.1?>
   </tr>
   
 </table>  
@@ -158,9 +161,11 @@ OTHERE SIDE:
 		<!-- Version Information -->
 		<? if ( $$variable{FORMS} ) ?>
 		<span class="label"> <br />VERSION INFORMATION </span>
+		<? eval ( use Data::Dumper; print STDERR "Printing Docket VERSIONS", Dumper($variable->{FOMRS}); ) ?>
 		<br />
-		<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" >
 			<?loop FORMS?>
+
+		<table class="no-formatting no-padding" style="margin: 0 0 10px 0; border-bottom: 5px solid;" cellspacing="0" cellpadding="0" border="0" >
 				<tr>
 					<td colspan="4" style="padding-left: 1em;"><strong><?label?></strong> 
 				<tr>
@@ -178,11 +183,11 @@ OTHERE SIDE:
 					</tr>
 				<?endloop VERSIONS?>
 				<tr>
-					<td colspan="4" style="padding-left: 2em;">Net Sheets: &nbsp;&nbsp;<strong><?net_sheets?></strong></td>
+					<td colspan="4" style="padding: 1em 0 1em 2em; font-size: 30px;">Net Sheets: &nbsp;&nbsp;<strong><?net_sheets?></strong></td>
 				<tr>
 		
-			<?endloop FORMS?>
 		</table>
+			<?endloop FORMS?>
 		<? endif ( $$variable{FORMS} ) ?>
 		<!-- END Version Information -->
 
@@ -195,8 +200,23 @@ OTHERE SIDE:
 		<? endif ($$variable{stock_custom}) ?>	
 	<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
 
+
+
+	<!- ***** START PAPER INFO HERE ******** ->
 	<span class="label"><br />STOCK </span>
+
+
+
 	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
+		
+
+	
+		<br />
+		<?if ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
+		Cut From: <?hdnSuppliedStockWidth?> x <?hdnSuppliedStockHeight?> Parent Sheet Count: <?hdnPaperBuyQuantity1?>
+		<br />
+		<?endif ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
+
 		<br /><?hdnSheetSizeHeight?> x <?hdnSheetSizeWidth?>
 
 		<? if ($$variable{stock_custom}) ?>
@@ -205,9 +225,10 @@ OTHERE SIDE:
 		<? else ($$variable{stock_custom}) ?>
 			- <?stock_name?> , <?stock_finish?> , <?stock_colour?> , <?stock_weight?>, <?txtStockCalliper?>
 		<? endif ($$variable{stock_custom}) ?>
-		
 		<br />
 	<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
+
+	<!- ***** END PAPER INFO HERE ******** ->
 	
 	<? if ($variable->{pressType} ne 'inkjetprinter') ?>
     <div style=" padding-left: 2em; ">
