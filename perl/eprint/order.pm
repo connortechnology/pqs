@@ -1250,7 +1250,7 @@ print STDERR "CHECK ORDER INFO \n";
             sql::update(
                 $log, $dbh, 'tbl_Project_Contents',
                 "lngProjectIndex = $pid AND strStatus != 'Complete'",
-                strStatus => $pstatus
+                strStatus => $status
             );
 
             my @delete_columns = qw(
