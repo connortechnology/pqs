@@ -2424,107 +2424,7 @@ sub history_details {
 	
 
     if ( $r->param('PackingSlip') ) {
-		$variable->{order_id} = $order_id;
-
-        my ( $ssid, $spid ) =  $r->param('ship_sid') ?
-			$dbh->selectrow_array(q{
-            	SELECT lngserviceindex, lngprojectindex FROM tbl_project_contents
-           	 	WHERE lngserviceindex = ?
-        	}, undef, $r->param('ship_sid') ) 
-		:
-			$dbh->selectrow_array(q{
-            	SELECT lngserviceindex, lngprojectindex FROM tbl_project_contents
-            	WHERE strservicetype = 'Shipping' AND lngprojectindex IN (
-                	SELECT lngprojectindex from tbl_order_contents 
-                	WHERE lngorderid = ?
-            	) ORDER by 1 LIMIT 1
-        	}, undef, $order_id ); 
-
-		my $q = $dbh->selectrow_array(q{
-			SELECT intquantityindex FROM tbl_order_contents WHERE lngprojectindex = ?
-		}, undef, $spid);
-
-		my ($qid) = $dbh->selectrow_array(q{
-			SELECT intquantityindex FROM tbl_order_contents
-			WHERE lngprojectindex = ? 
-		}, undef, $spid);
-
-		$variable->{ship_sid} = $ssid;
-		my $shipid = $r->param('shipid');
-		my $carton_sid 	= eprint::project::check_for_service( $log, $dbh, $spid, 'PlainCartons');
-		my %cartons  	= $carton_sid ? eprint::service::get_specifications_pairs($log, $dbh, $spid, $carton_sid) : undef;
-		my %shipping 	= eprint::service::get_specifications_pairs($log, $dbh, $spid, $ssid);
-
-		my $ship_qty = $shipping{"add_qty${qid}-$shipid"};
-		my $per = $cartons{txtItemsPerPackage};
-
-		$variable->{cartons} = $carton_sid ? sprintf("%.0f",$ship_qty / $per) : '';
-		$variable->{weight}  = $carton_sid ? sprintf("%.1f",$ship_qty * $cartons{hdnProjectWeight}) : '';
-		$variable->{itemsper} = $per;
-
-		print STDERR "STUFF:  \n", Dumper(\%cartons, \%shipping, $shipid, $ship_qty);
-		
-
-
-		if ( $r->param('blind_address') ) {
-			$variable->{'blind_address'} = $r->param('blind_address');
-			$dbh->do(qq{
-				DELETE  FROM  tbl_service_specifications WHERE lngserviceindex = $ssid 
-				AND strname = 'blind_address'
-			}, $ssid);
-
-			$dbh->do(q{
-				INSERT into tbl_service_specifications VALUES ( ?, ? , ?, ?) 
-			}, {}, $spid, $ssid, 'blind_address', $r->param('blind_address'));
-
-		}
-		if ( $r->param('actual_cartons') ) {
-			$dbh->do(qq{
-				DELETE  FROM  tbl_service_specifications WHERE lngserviceindex = $ssid 
-				AND strname = 'actual_shipped'
-			}, $ssid);
-
-			$dbh->do(q{
-				INSERT into tbl_service_specifications VALUES ( ?, ? , ?, ?) 
-			}, {}, $spid, $ssid, 'actual_shipped', $r->param('actual_shipped'));
-		}
-
-
-		if ( $r->param('actual_shipped') ) {
-			$dbh->do(qq{
-				DELETE  FROM  tbl_service_specifications WHERE lngserviceindex = $ssid 
-				AND strname = 'actual_shipped'
-			}, $ssid);
-
-			$dbh->do(q{
-				INSERT into tbl_service_specifications VALUES ( ?, ? , ?, ?) 
-			}, {}, $spid, $ssid, 'actual_shipped', $r->param('actual_shipped'));
-		}
-		if ( $r->param('actual_weight') ) {
-			$dbh->do(qq{
-				DELETE  FROM  tbl_service_specifications WHERE lngserviceindex = $ssid 
-				AND strname = 'actual_weight'
-			}, $ssid);
-
-			$dbh->do(q{
-				INSERT into tbl_service_specifications VALUES ( ?, ? , ?, ?) 
-			}, {}, $spid, $ssid, 'actual_weight', $r->param('actual_weight'));
-		}
-
-		$variable->{is_blind} = 1;
-		$variable->{edit_slip} = $r->param('edit_slip');
-		$variable->{shipid} = $r->param('shipid');
-    	$variable->{ship_address} = eprint::docket::fill_info($r, $log, $dbh, $spid, $ssid)
-            if $ssid; 
-
-		$variable->{ship_address}{actual_shipped} = $variable->{cartons} 
-							unless $variable->{ship_address}{actual_shipped};
-
-		$variable->{ship_address}{actual_weight} = $variable->{weight} 
-							unless $variable->{ship_address}{actual_weight};
-
-
-
+		packing_slip($order_id, $variable);
     }
 
 	$variable->{CTNAME} = $dbh->selectrow_array(q{
@@ -2536,6 +2436,52 @@ sub history_details {
 
 	if ( $r->param('CHECKOUT') ) {
 		show_payflow($r, $log, $dbh, $cookie, $variable, $order_id, 'history' );
+	}
+}
+
+sub packing_slip {
+	my $r = session::r;
+	my $dbh = session::dbh;
+	my $log = session::log;
+
+	my $variable = shift;
+
+	my $shipid 	 = $r->param('shipid');
+
+
+
+
+	my $sid = $dbh->selectrow_array(q{SELECT sid FROM ship_address WHERE shipid = ?}, undef, $shipid);
+	my $pid = $dbh->selectrow_array(q{SELECT lngprojectindex FROM tbl_project_contents WHERE lngserviceindex = ?}, undef, $sid);
+	my $order_id = $dbh->selectrow_array(q{SELECT lngorderid FROM tbl_order_contents WHERE lngprojectindex = ?}, undef, $pid);
+
+	print STDERR "HAVE: $sid, $pid, $order_id -- $shipid \n";
+
+	$variable->{order_id} = $order_id;
+	$variable->{ship_sid} = $sid;
+
+
+	my $shipid = $r->param('shipid');
+
+	my %shipping;
+	   %shipping 	= eprint::service::get_specifications_pairs($log, $dbh, $pid, $sid) if $sid;
+	
+	$variable->{ship} = \%shipping;
+
+
+
+
+	if ( $r->param('blind_address') ) {
+		$variable->{'blind_address'} = $r->param('blind_address');
+		$dbh->do(qq{
+			DELETE  FROM  tbl_service_specifications WHERE lngserviceindex = $sid 
+			AND strname = 'blind_address'
+		}, $sid);
+
+	#$dbh->do(q{
+	#		INSERT into tbl_service_specifications VALUES ( ?, ? , ?, ?) 
+	#	}, {}, $spid, $sid, 'blind_address', $r->param('blind_address'));
+
 	}
 }
 

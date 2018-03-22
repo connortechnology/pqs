@@ -18,11 +18,14 @@
 
 #docket { padding: 2ex 2ex 2ex 2ex; }
 
+
 .id {
-	float: right; 
+	float: center; 
 	display: inline;
 	position: relative;
 	clear: none;
+	color: red;
+	font-size: 35pt;
 }
 
 /* PRIMARY INFORMATION CALLOUT */
@@ -123,7 +126,7 @@ table#docket-quantity td {
 
 
 div.category {
-	font-size: 15px;
+	font-size: 17px;
 }
 
 
@@ -211,7 +214,7 @@ div.indent {
 
 /* DOCKET TABLES */
 table.docket {
-    margin: 2px 0 2px 0; /* Top, Right, Bottom, Left */
+    margin: 10px 0 10px 0; /* Top, Right, Bottom, Left */
     width: auto;
 }
 
@@ -223,5 +226,6 @@ table.docket th {
 	border: 0;
 }
 
-table.docket col.header { width: 110px; }
-table.docket col.data   { width: 190px; }
+table.docket col.header  { width: 130px; }
+table.docket col.data    { width: 350px; }
+table.docket col.data2   { width: 200px; }

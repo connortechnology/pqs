@@ -17,7 +17,7 @@ body {
 
 #expander { /* Any % height here causes IE to lose the neg right margin */
 	position: relative; /* makes #expander visible outside #sizer in IEwin */
-	min-width: 770px; /* This prevents Safari from losing the negative margins in narrow windows */
+	min-width: 1100px; /* This prevents Safari from losing the negative margins in narrow windows */
 	margin: 0 -385px; /* neg side margin values should be < or = to side body padding */
 
 	background-color: #FFFFFF;

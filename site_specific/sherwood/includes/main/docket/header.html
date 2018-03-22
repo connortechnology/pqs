@@ -1,89 +1,29 @@
 <!-- Basic Info. -->
 
-	<h2 style="font-size: 4em; text-align: center;">
-		<?HeaderInfo.id?>
+	<h2 style="font-size: 4em; text-align: center; margin: 20px 0 30px 0">
+		<? if (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
+			<span class="id"> DOCKET ID: <?HeaderInfo.docket_id?></span>
+		<? else (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
+			<?HeaderInfo.id?>
+		<? endif (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
 	</h2>
 
 <div class="category">
 
 	<!-- Company/Docket ID -->
-	<h5>
-		<? if (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
-			<span class="id">Docket ID: <?HeaderInfo.docket_id?></span>
-		<? endif (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
+	<div>
+		<h5 style="width: 60%; display: inline-block"> Project Information 1 </h5>
 
-		Project Information 1
-	</h5>
-
-	<div style="float:right; margin: 0 10px 0 0;">
-	<!-- Primary info call-out. -->
-	<table id="primary_info" class="no-formatting">
-		<? if ($variable->{HeaderInfo}{'date_required'}) ?>
-			<tr>
-				<th>Required by:</th>
-				<td><?HeaderInfo.date_required?></td>
-			</tr>
-
-			<!--
-			<tr>
-				<th>Quantity:</th>
-				<td style="font-weight: bold;"><?HeaderInfo.OrderedQuantity?></td>
-			</tr>
-			-->
-
-			<tr>
-				<th>Order ID:</th>
-				<td><span class="id"><?HeaderInfo.order_id?></span></td>
-			</tr>
-		<? endif ($variable->{HeaderInfo}{'date_required'}) ?>
-
-		<!--
-		<tr>
-			<th>Project ID:</th>
-			<td><span class="id"><?HeaderInfo.id?></span>
-			<br>
-			<? loop pqtys ?>
-				<a href="/main/proj/proj_view.html?pid=<?id?>"><?id?></a><br>
-			<? endloop pqtys ?>
-			</td>
-		</tr>
-		-->
-
- <? if ( ($$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' )) ?>
-     <? if ( $variable->{docket} ) ?>
-        <tr>
-            <th>Internal ID:</th>
-            <td>
-
-                <form name='iid' id='iid' action='/main/proj/proj_docket.html?Projectindex=<?HeaderInfo.id?>' method="post" />
-                <input type="text" name="InternalID" value="<?InternalID?>" size='4' />
-                </form>
-            </td>
-        </tr>
-     <? else ( $variable->{docket} ) ?>
-     	<? if ( $variable->{HeaderInfo}{InternalID} ) ?>
-        <tr>
-            <th>Internal ID:</th>
-            <td>
-                <?HeaderInfo.InternalID?>
-            </td>
-        </tr>
-     	<? endif ( $variable->{HeaderInfo}{InternalID} ) ?>
-
-     <? endif ( $variable->{docket} ) ?>
-<? endif ( ($$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' )) ?>
-
-		<? if ($$variable{checkout}) ?>
-			<tr>
-				<th>Check-In ID:</th>
-				<td><a href="/main/proj/proj_view.html?ProjectIndex=<?checkin_pid?>"><?checkin_pid?></a></td>
-			</tr>
-		<? endif ($$variable{checkout}) ?>
-	</table>
-	<div style="margin: 0 10px 0 10px; font-size: 1.5em; font-weight: bold"> 
-			<label>Master Qty:</label> 
-			<span style="float: right;"> <?HeaderInfo.OrderedQuantity?></span></div>
+		<!--<div style="margin: 0 10px 0 10px; font-size: 1.5em; font-weight: bold"> -->
+			<span style="float: right; font-size: 1.5em; font-weight: bold "> Master QTY:  <?HeaderInfo.OrderedQuantity?></span>
 	</div>
+
+
+
+
+
+
+
 
 
 	<table class="docket no-formatting">
@@ -93,7 +33,7 @@
 		</colgroup>
 		<colgroup class="column">
 			<col class="header" />
-			<col class="data" />
+			<col class="data2" />
 		</colgroup>
 		<tbody>
 			<tr style="height: 50px;">
@@ -139,7 +79,7 @@
 		</colgroup>
 		<colgroup class="column">
 			<col class="header" />
-			<col class="data" />
+			<col class="data2" />
 		</colgroup>
 		<tbody>
 		<tr>
@@ -153,7 +93,7 @@
 		</tr>
 			<? endif ($variable->{HeaderInfo}{OrderLastName}) ?>
 		<tr>
-			<th>Email:</th><td colspan=2><?HeaderInfo.order.stremail?></td>
+			<th>Email:</th><td colspan=1><?HeaderInfo.order.stremail?></td>
 		<tr>
 		</tbody>
 	</table>
@@ -170,7 +110,7 @@
 			</colgroup>
 			<colgroup class="column">
 				<col class="header" />
-				<col class="data" />
+				<col class="data2" />
 			</colgroup>
 			<tbody>
 				<tr>

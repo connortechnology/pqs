@@ -76,6 +76,14 @@ function open_export(summaryPage) {
 window.open('/main/proj/shipping/import_export.html?sid=<?sid?>','shippingimport','newWin,left=160,width=840,top=140,height=155,resizable=no,scrollbars=no,menubar=no,toolbar=yes,location=no,directories=no,status=no');
 }
 
+function packing_slip(shipid) {
+	var page = "/main/order/packing_slip.html?order_id=<?order_id?>;packing_slip=1;shipid=" + shipid;
+	alert(page);
+	window.open(page, 
+			'newWin,left=160,width=840,top=140,height=155,resizable=no,scrollbars=no,menubar=no,toolbar=yes,location=no,directories=no,status=no');
+}
+
+
 function check_text (f,n) {
 //		alert('checktext start --' + f);
 		var cc =  document.getElementById(f);
@@ -923,11 +931,23 @@ the next business day.</strong>
             <p id="mult5">Please verify the following information is correct. When complete select Save and Continue in the bottom Right Corner of the page. To make a change check the address that is incorrect in the first column and select the Delete Address button.</p>
 				<table class="no-padding" style="width:100%">
                     <thead>
+					<tr>
+						<th colspan="4"></th>
+						<th colspan="4" style="border-left: 1px solid"> Packing Slip</th>
+					</tr>
                     <tr>
                     <th title="Delete Address" >Delete</th>
                     <th title="Address for the shipment" >Address</th>
                     <th title="Quantity to ship to location address" >Quantity to Ship</th>
-                    <? if ($$variable{isServicePricing}) ?> <? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?><th title="Calculated shipping price" >Shipping Price</th> <? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?><? endif ($$variable{isServicePricing}) ?>
+                    <? if ($$variable{isServicePricing}) ?> 
+					<? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+						<th title="Calculated shipping price"  >Shipping Price</th> 
+						<th title="Number of Boxes" style="border-left: 1px solid" >Boxes</th> 
+						<th title="Total Weight" >Weight</th> 
+						<th title="Box Size" >Size</th> 
+						<th title="Print" ></th> 
+					<? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+					<? endif ($$variable{isServicePricing}) ?>
                     
 					</tr>
                     
@@ -941,7 +961,8 @@ the next business day.</strong>
                           <?if straddress1?><?straddress1?>,<?endif straddress1?>
                           <? if ( $$variable{'straddress2'} ne '' )?><?straddress2?>,<? endif ( $$variable{'straddress2'} ne '' )?>
 <!--                          <?if txtShippingCubicle?><?txtShippingCubicle?><br /><?endif txtShippingCubicle?>
--->                          <?if strcity?><?strcity?>,<?endif strcity?> 
+-->                          
+i						 <br /><?if strcity?><?strcity?>,<?endif strcity?> 
                           <?if strstateprovince?> <?strstateprovince?>,<?endif strstateprovince?>
                           <?if strpostalcode?> <?strpostalcode?><br /><?endif strpostalcode?>
                           <?if strphone?><?strphone?><?endif strphone?>
@@ -951,28 +972,46 @@ the next business day.</strong>
 
 						<td><br/>
                           <br/>
-Quantity 1: <input name="add_qty1-<?shipid?>" id="add_qty1-<?shipid?>" onKeyup="total_qtys()" size="10" /><br/>
-<? if ( $$variable{'txtQuantity2'} > 0 ) ?>
-Quantity 2: <input name="add_qty2-<?shipid?>" id="add_qty2-<?shipid?>" onKeyup="total_qtys()" size="10" />
-<? endif ( $$variable{'txtQuantity2'} > 0 ) ?>
-<br/>
-<? if ( $$variable{'txtQuantity3'} > 0 ) ?>
-Quantity 3: <input name="add_qty3-<?shipid?>" id="add_qty3-<?shipid?>" onKeyup="total_qtys()" size="10" />
-<? endif ( $$variable{'txtQuantity3'} > 0 ) ?></td>
-						
-                       <? if ($$variable{isServicePricing}) ?> <? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?> <td><br/>
-$
-  <input name="add_price1-<?shipid?>" disabled="disabled" id="add_price1-<?shipid?>" size="10" readonly="readonly" />
-  <? if ( $$variable{'txtQuantity2'} > 0 ) ?>
-  <br/>
-$
-<input name="add_price2-<?shipid?>" readonlyadd_price2-<?shipid?>="readonlyadd_price2-<?shipid?>"" size="10"  />
-<? endif ( $$variable{'txtQuantity2'} > 0 ) ?>
-<? if ( $$variable{'txtQuantity3'} > 0 ) ?>
-<br/>
-$
-<input name="add_price3-<?shipid?>" readonlyadd_price3-<?shipid?>="readonlyadd_price3-<?shipid?>"" size="10" />
-<? endif ( $$variable{'txtQuantity3'} > 0 ) ?></td> <? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?><? endif ($$variable{isServicePricing}) ?>
+						Quantity 1: <input name="add_qty1-<?shipid?>" id="add_qty1-<?shipid?>" onKeyup="total_qtys()" size="10" /><br/>
+						<? if ( $$variable{'txtQuantity2'} > 0 ) ?>
+						Quantity 2: <input name="add_qty2-<?shipid?>" id="add_qty2-<?shipid?>" onKeyup="total_qtys()" size="10" />
+						<? endif ( $$variable{'txtQuantity2'} > 0 ) ?>
+						<br/>
+						<? if ( $$variable{'txtQuantity3'} > 0 ) ?>
+						Quantity 3: <input name="add_qty3-<?shipid?>" id="add_qty3-<?shipid?>" onKeyup="total_qtys()" size="10" />
+						<? endif ( $$variable{'txtQuantity3'} > 0 ) ?></td>
+												
+					   <? if ($$variable{isServicePricing}) ?> 
+						<? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?> 
+							<td>
+								<br/> $
+						 		<input name="add_price1-<?shipid?>" disabled="disabled" id="add_price1-<?shipid?>" size="10" readonly="readonly" />
+
+								<? if ( $$variable{'txtQuantity2'} > 0 ) ?>
+									<br/> $
+									<input name="add_price2-<?shipid?>" readonlyadd_price2-<?shipid?>="readonlyadd_price2-<?shipid?>"" size="10"  />
+								<? endif ( $$variable{'txtQuantity2'} > 0 ) ?>
+
+								<? if ( $$variable{'txtQuantity3'} > 0 ) ?>
+									<br/> $
+									<input name="add_price3-<?shipid?>" readonlyadd_price3-<?shipid?>="readonlyadd_price3-<?shipid?>"" size="10" />
+								<? endif ( $$variable{'txtQuantity3'} > 0 ) ?>
+
+							</td> 
+							<td> 
+								<input name="boxes-<?shipid?>" value="<?boxes?>" id="boxes-<?ship_id?>" size="10" />
+							</td>
+							<td>
+								<input name="weight-<?shipid?>" value="<?weight?>" id="weight-<?ship_id?>" size="10" />
+							</td>
+							<td>
+								<input name="size-<?shipid?>" value="<?size?>" id="size-<?ship_id?>" size="10" />
+							</td>
+							<td>
+								<button onClick="packing_slip(<?shipid?>); return false;">Print</button>
+							</td>
+						<? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+						<? endif ($$variable{isServicePricing}) ?>
                         
                         
 						
@@ -1035,8 +1074,14 @@ $
                     		<? endif ( $$variable{'txtQuantity3'} > 0 ) ?>
                         <tr>
                         <td colspan="2">
+
 						<input type='submit' name='Delete Address' value='Delete Address' 
-							onClick="f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';" class='button' />						</td>
+							onClick="f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';" class='button' />						
+
+						<input type='submit' name='Save Address' value='Save' 
+							onClick="f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';" class='button' />						
+
+						</td>
                         </tr>
                         
                     

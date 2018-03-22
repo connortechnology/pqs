@@ -211,11 +211,6 @@ No Printing
 		
 
 	
-		<br />
-		<?if ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
-		Cut From: <?hdnSuppliedStockWidth?> x <?hdnSuppliedStockHeight?> Parent Sheet Count: <?hdnPaperBuyQuantity1?>
-		<br />
-		<?endif ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
 
 		<br /><?hdnSheetSizeHeight?> x <?hdnSheetSizeWidth?>
 
@@ -226,6 +221,18 @@ No Printing
 			- <?stock_name?> , <?stock_finish?> , <?stock_colour?> , <?stock_weight?>, <?txtStockCalliper?>
 		<? endif ($$variable{stock_custom}) ?>
 		<br />
+
+		<?if ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
+
+		<span style="padding: 0 265px 0 0"> Cut From: <?hdnSuppliedStockWidth?> x <?hdnSuppliedStockHeight?></span> Parent Sheet Count: <?hdnPaperBuyQuantity1?>
+
+		<br />
+		<?endif ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
+
+		<br />
+
+
+
 	<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
 
 	<!- ***** END PAPER INFO HERE ******** ->
@@ -233,7 +240,7 @@ No Printing
 	<? if ($variable->{pressType} ne 'inkjetprinter') ?>
     <div style=" padding-left: 2em; ">
 <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
-  <tr>
+  <tr style="height:50px;">
     <td width="50%"><span class="label">Gross Qty: </span>
 		<? if ( $$variable{'QtyIndex'} == 1 ) ?>
 			&nbsp;<?hdnSheetQuantity1?><br />
@@ -244,18 +251,22 @@ No Printing
 		<? if ( $$variable{'QtyIndex'} == 3 ) ?>
 			&nbsp;<?hdnSheetQuantity3?><br />
 		<? endif ( $$variable{'QtyIndex'} == 3 ) ?></td>
-    <td width="50%"><span class="label">Net Qty: </span>
-		<? if ( $$variable{'QtyIndex'} == 1  ) ?>
-			&nbsp;<?hdnNetSheetCount1?><br />
-		<? endif ( $$variable{'QtyIndex'} == 1  ) ?>
-		<? if ( $$variable{'QtyIndex'} == 2  ) ?>
-			&nbsp;<?hdnNetSheetCount2?><br />
-		<? endif ( $$variable{'QtyIndex'} == 2  ) ?>
-		<? if ( $$variable{'QtyIndex'} == 3  ) ?>
-			&nbsp;<?hdnNetSheetCount3?><br />
-		<? endif ( $$variable{'QtyIndex'} == 3  ) ?></td>
+    <td width="50%">
+		<span class="label" style="font-size: 20pt;">Net Qty: 
+			<? if ( $$variable{'QtyIndex'} == 1  ) ?>
+				&nbsp;<?hdnNetSheetCount1?><br />
+			<? endif ( $$variable{'QtyIndex'} == 1  ) ?>
+			<? if ( $$variable{'QtyIndex'} == 2  ) ?>
+				&nbsp;<?hdnNetSheetCount2?><br />
+			<? endif ( $$variable{'QtyIndex'} == 2  ) ?>
+			<? if ( $$variable{'QtyIndex'} == 3  ) ?>
+				&nbsp;<?hdnNetSheetCount3?><br />
+			<? endif ( $$variable{'QtyIndex'} == 3  ) ?>
+
+		</span>
+	</td>
   </tr>
-  <tr>
+  <tr style="height: 50px;">
     <td><span class="label">Overs Qty:&nbsp;&nbsp;______________</span></td>
     <td><span class="label">Press Count:&nbsp;&nbsp;______________</span></td>
   </tr>

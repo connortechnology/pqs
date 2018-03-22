@@ -656,7 +656,10 @@ print STDERR "SUB : $sub_section \n";
         eprint::order::history_details($r, $log, $dbh, $variable)                   if $filename eq 'order_history_details.html';
         eprint::order::order_history($r, $log, $dbh, $variable)                     if $filename eq 'order_history.html';
         eprint::order::order_info($r, $log, $dbh, $cookie, $variable)               if $filename eq 'order_info.html';
+
         eprint::order::history_details($r, $log, $dbh, $variable)                   if $filename eq 'order_invoice_printer_friendly.html';
+        eprint::order::packing_slip($variable)                   					if $filename eq 'packing_slip.html';
+
         eprint::order::quantity_select_display($r, $log, $dbh, $cookie, $variable)  if $filename eq 'order_selection.html';
         eprint::order::verify_order($r, $log, $dbh, $cookie, $variable)             if $filename eq 'order_submit.html';
         eprint::order::reorder_notice($r, $log, $dbh, $cookie, $variable)           if $filename eq 'reorder_notice_printer_friendly.html';
@@ -735,6 +738,7 @@ print STDERR "SUB : $sub_section \n";
 
         eprint::print::view_services($r, $log, $dbh, $cookie, $variable)   if $filename eq 'proj_view_printer_friendly.html';
         eprint::print_project::price_breakdown($r, $log, $dbh, $variable)  if $filename eq 'proj_printer_summ_price_breakdown.html';
+        eprint::print_project::price_breakdown($r, $log, $dbh, $variable)  if $filename eq 'imposition.html';
 
         $status = eprint::project_files::display_files($r, $log, $dbh, $variable)    if $filename eq 'files.html';
         $status = eprint::project_files::display_upload($r, $log, $dbh, $variable)   if $filename eq 'upload.html';
