@@ -1,0 +1,452 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>
+<!--#include virtual="/includes/web_page_title.html" -->
+Products
+<!--#include virtual="/includes/web_page_title_end.html" -->
+</title>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-main-css.html" -->
+<!--#include virtual="/includes/h2-js.html" -->
+<script type="text/javascript" src="/javascripts/other.js"></script>
+<script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
+<script type="text/javascript" src="/javascripts/JSAN.js"></script>
+<link rel="Stylesheet" href="/styles/DPZSiteStyles.css"  />
+<link href="/styles/products-v2.css" rel="stylesheet" type="text/css" />
+</head>
+<script type="text/javascript">
+
+
+function open_price_window( i ) {
+	window.open('/administrator/products/price.html?pricelist=1;product=' + i,
+			'printerfriendlyorder','newWin,left=140,width=1000,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+}
+
+function open_discount_window( i ) {
+	window.open('/administrator/products/version_discount.html?pricelist=1;product=' + i,
+			'printerfriendlyorder','newWin,left=140,width=1000,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+}
+
+
+function form_validate() {
+	 var val = $('jobname').value;
+	 if ( val ) {
+		 return true;
+	 } else { 
+		alert('Please enter a Job Description');
+		return false;
+	 }
+}
+function make_quote() {
+	<?if order_count?>
+	return true;
+	//submit();
+	<?endif order_count?>
+	alert('Please add at least 1 product to your cart before making a Quote');
+	return false;
+
+}
+
+function order_checkout() {
+	<?if order_count?>
+	return true;
+	<?endif order_count?>
+	alert('Your Cart is empty');
+	return false;
+
+}
+
+function check_qty(f,inc,min,max) {
+	//var qty = f.value;
+	var qty = $('quantity').value;
+	var regExp = /^\d*$/;
+	
+//alert (inc + ' = ' + min + ',' + qty);
+
+	if (!regExp.test(qty)) {
+		alert('Invalid Entry. Please enter whole numbers only. Cannot contain Commas or Decimals.');
+		return false;
+	}
+
+	var mod = qty % inc;
+	if (( qty < min || qty > max || mod )) {
+		
+//	if ( qty < min || qty > max ) {
+		alert('Invalid Quantity. Please Order in increments of ' + inc + ' with a minimum order of ' + min + ' and a maximum quantity of ' + max + '.');
+
+		return false;
+	}
+	//$('btn-update').disabled=false; 
+	return true;
+}
+</script>
+<style>
+h2 {
+	font-size: 10px;
+	margin: 10px 0 10px 0;
+}
+
+/* 
+*******************************
+	Custom Select box Style 
+*/
+
+select {
+  margin: 3%;
+  vertical-align: top;
+}
+/* important to get firefox'S default outline removed
+ * MAKE SURE YOU ADD AN ALTERNATIVE OUTLINE HIGHLIGHT!
+ */
+select.styled:-moz-focusring,
+option.styled:-moz-focusring {
+  color: transparent !important;
+  text-shadow: 0 0 0 #000 !important;
+}
+
+select.styled::-ms-expand {
+  display: none;
+}
+
+.lt-ie10 select.styled {
+  background-image: none;
+}
+
+select.styled,
+select.styled option {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none; 
+  border: none;
+  padding-left: 5px;
+  border: 1px solid #fff;
+  background: #ffffff;
+}
+
+select.styled {
+  vertical-align: top;
+  text-overflow: ellipsis;
+  display: inline-block;
+  
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  
+  -webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  -moz-box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+select.styled:not([multiple='multiple']){
+  height: 30px;
+  padding-right: 35px;
+  background:
+    linear-gradient(45deg, transparent 50%, #AAA 50%),
+    linear-gradient(135deg, #AAA 50%, transparent 50%),
+    linear-gradient(to top, #ddd, #fff);
+  background-position:
+    calc(100% - 15px) calc(50%),
+    calc(100% - 10px) calc(50%),
+    100% 0;
+  background-size:
+    5px 5px,
+    5px 5px,
+    30px 100%;
+  background-repeat: no-repeat;
+}
+
+table tr td select.styled:not([multiple='multiple']){
+  height: 82% !important;
+}
+
+select.styled[multiple='multiple']{
+  padding-right: 5px;
+}
+
+select:focus.styled, option:focus.styled {
+  outline: 1px solid white;
+  border: 1px solid #ccc;
+  -webkit-box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+  -moz-box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+
+select.failed {
+  font-size: 1.4em;
+  width:100%;
+  border: 1px solid red;
+}
+
+/* 
+*******************************
+	End Custom Select box Style 
+*/
+
+
+.flash-button{
+	background:blue;
+	padding:5px 10px;
+	color:#fff;
+	border:none;
+	border-radius:5px;
+	
+	animation-name: flash;
+	animation-duration: 1s;
+	animation-timing-function: linear;
+	animation-iteration-count: infinite;
+
+	//Firefox 1+
+	-webkit-animation-name: flash;
+	-webkit-animation-duration: 1s;
+	-webkit-animation-timing-function: linear;
+	-webkit-animation-iteration-count: infinite;
+
+	//Safari 3-4
+	-moz-animation-name: flash;
+	-moz-animation-duration: 1s;
+	-moz-animation-timing-function: linear;
+	-moz-animation-iteration-count: infinite;
+}
+
+@keyframes flash {  
+    0% { opacity: 1.0; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1.0; }
+}
+
+
+
+
+</style>
+
+<body>
+<div id="sizer" style="width:100%">
+		<div id="expander" >
+
+				<div id="header">
+			<!--#include virtual="/includes/main/main-header.html" -->
+
+
+				</div>
+
+
+
+
+
+
+
+
+
+
+				<div id="wrapper1" style="top:5px; width:100%">
+
+					
+
+
+						<div id="wrapper2" style="top:30px; width:100%">
+
+
+								<div class="outer" style="min-height:50% !important; ">
+
+
+
+										<div class="float-wrap">
+												<div class="center">
+														<div class="centerbox">
+
+																<div style="width:100%">
+									<div id="headerTabs">
+
+											<? if ( $$variable{user_type} )?>
+												<div class="tab" style="margin-top:-35px">
+													<div id="accountLabel">
+														Account:&nbsp;<br />
+														User:&nbsp;</div><!-- &nbsp;'s for consistant white-space'ing -->
+													<div id="accountValue">
+														<a href="/main/account/account_select_customer.html"><?user.company.name?></a><br />
+														<?user.name?>
+													</div>
+												</div>
+											<? endif ( $$variable{user_type} )?>
+
+										</div>
+
+					<h1>
+					<span class="title-section" style="font-size: 1.5em">
+					<!--
+					<a href="/main/ecommerce/products.html"> Products </a>
+-->
+
+					<div style="margin-left: 5px;">
+					<?loop cat_chain?>
+						<?if name?>
+						<a href="/main/ecommerce/products.html?category=<?id?>">
+
+							<?if not:_first?>
+						   	&#187;	
+							<?endif not:_first?>
+
+						<?name?> </a>
+						<?endif name?>
+			  		<?endloop cat_chain?>
+				</div>
+					
+					</span>
+					</h1>
+
+<div style="float:right; margin-top: -40px; width:300px">
+
+<?if ( @{$variable->{filters}} ) ?>
+<form action="/main/order/order_info.html" name="fcheckout">
+<div style="text-align:center">
+<button name="checkout" type="submit" onClick="return order_checkout();"
+style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; height: 30px; margin-top: 30px">Checkout <?order_count?> Item(s)</button>
+</div>
+</form>
+<?endif ( @{$variable->{filters}} ) ?>
+</div>
+
+
+<div id="horizontal-spacer1" style="height: 50px; width=100%; "></div>
+
+
+
+
+<?loop cat_children?> 
+
+
+
+
+
+<div id="main2" style="width: 31%; height: 401px;" 
+	onClick='window.location="products.html?Category=<?id?>"'
+	onmouseover="this.style.background='lightgray';"
+	onmouseout="this.style.background='';"
+>
+                <div style="display:none">
+                    <?id?>
+                    <?description?>
+                    <?details?>
+                    <?part_number?>
+                    <?minimum_qty?>
+                    <?maximum_qty?>
+                    <?increments?>
+                    <?notes?> 
+                    <?project?> 
+                    <?mediawideid?>
+                    <?groupoptions?>
+                    <?productgroup?>
+                    Image -- <?image?>
+                </div>
+
+                   
+                
+         
+         
+			<!--
+             <a href="product_details.html?id=<?id?>"> 
+			 -->
+                    
+
+                <div id="p2name" style="margin: 0 0 0 0;  font-size: 1.5em; height: 250px; text-align: center; "  >
+					<!--
+                    <strong>
+                    <?category?>
+					</strong><br />
+					-->
+
+					<div id="name" style="margin: 10px 0 0 0; font-size: 1.5em; font-weight: bold;">
+					<?name?>
+					</div>
+					<br />
+					<div id="details" style="margin: 10px 0 0 0">
+						<?description?> 
+					</div>
+                </div>
+
+                <div id="image" style="width: 100px" >                    			
+					<img src="<?image?>" alt="<?strid?>" style="min-width:1%; min-height:1%;" /> 
+				</div>
+			<!--
+             </a>
+			 -->
+        
+        
+</div>
+
+<?endloop cat_children?>
+    <br />
+
+    
+</div> <!-- end noname width 130% -->
+
+		
+	</div>
+	<!-- end .centerbox -->
+
+
+
+
+</div>
+<!-- end .center -->
+
+<div class="left" style="margin-top: 30px">
+	<div class="container-left">
+
+		<div class="textpadder">
+			<div id='sidebar' style="height:100%; position:relative">
+
+                <div id="leftmenu" >
+                <!--#include virtual="/includes/ecomm_leftmenu.html" -->
+                </div>
+
+            </div>
+        </div>
+        <!-- end .textpadder -->
+
+    </div>
+    <!-- end .container-left -->
+</div>
+<!-- end .left -->
+
+<br class="clear" />
+                    </div> <!-- end .outer -->
+
+
+                    <!-- end .float-wrap -->
+
+                    <br class="clear" />
+                </div>
+
+        <!-- end #wrapper1 -->
+        <div id="footer" style="margin-top: 20px">
+			<!--#include virtual="/includes/main/main-footer.html" -->
+		</div>
+
+
+<!-- end #wrapper2 --> </div> 
+
+        </div>
+
+		
+    </div>
+    <!-- end #expander -->
+</div>
+<!-- end #sizer -->
+
+<form action="categories.html" style="font-size:1.8em;" >
+
+	<input type="hidden" value="<?cat?>" name="category" />
+	<button type="reload" value="Search" name="Search" style="margin-left: 850px; margin-bottom: -100px;" /> Reload</button>
+</form>
+
+</body>
+</html>
