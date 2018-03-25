@@ -1324,6 +1324,7 @@ print STDERR "CHECK ORDER INFO \n";
 		# Safeway  orders are set to Pending Date Approval.
 		my $pending = 1;
 
+		$variable->{dockets} = make_product_dockets($order_id, $variable);
 
 		unless ( $status eq 'Pending Deposit' ) { 
         	# Send notice of the order to the user and the solution owner.
@@ -1344,7 +1345,6 @@ print STDERR "CHECK ORDER INFO \n";
 			##     send_invoice( $r, $log, $dbh, $order_id );
         }
 		
-		$variable->{dockets} = make_product_dockets($order_id, $variable);
 
 		print STDERR "PROJECTS: ", Dumper($variable->{dockets});
 
@@ -1392,7 +1392,7 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list);
 		next unless $ppid;
 
 		my $args = {
-			name 		=> "Docket for: " . $o->{jobname},
+			name 		=> $o->{jobname},
 			qty  		=> $o->{intquantity},
 			comment 	=> $prod->{specs}{description},
 
@@ -2059,10 +2059,11 @@ print STDERR "ORDER IS PENDING\n";
 		misc::send_email_with_attachment($r, $log, \%mail, @body, @project_summaries ) if $sales_email;
 		delete $mail{BODY};
 
-		$mail{TO} = $sales_email;
-		$mail{SUBJECT} = "Sales: ${inv_not}$creator - Order " . order_rev($dbh, $order_id);
-		misc::send_email_with_attachment($r, $log, \%mail, @body, @project_summaries ) if $sales_email;
-		delete $mail{BODY};
+		
+		#$mail{TO} = $sales_email;
+		#$mail{SUBJECT} = "Sales: ${inv_not}$creator - Order " . order_rev($dbh, $order_id);
+		#misc::send_email_with_attachment($r, $log, \%mail, @body, @project_summaries ) if $sales_email;
+		#delete $mail{BODY};
 
 		$mail{TO} = configuration::get_value( $log, $dbh, 'OrderingEmail');
 		$mail{SUBJECT} = "Admin: ${inv_not}$creator - Order " . order_rev($dbh, $order_id);
