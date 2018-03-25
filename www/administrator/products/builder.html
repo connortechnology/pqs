@@ -47,7 +47,7 @@
 		</div>
 </div>
 
-<div id="content" style="width:1000px">
+<div id="content" style="width:1050px">
 	<h1><span class="title-section">Products &#187;</span> Categories</h1>
 
 
@@ -55,7 +55,7 @@
 
 <form method="POST" action="builder.html" enctype="multipart/form-data">
 
-<fieldset style="float:left; min-height:700px">
+<fieldset style="float:left; min-height:950px">
 <legend>Category Filters</legend>
 <div>
 		<label>Category</label>
@@ -106,11 +106,11 @@
 			<button type="submit" name="Save" value="1">Save</button>
 			<button type="submit" name="Delete" value="1" onClick="return confirm('Delete this Filter?')">Delete</button>
 	<?endif filter.name?>
-			<button type="submit" name="New" value="1" style="float: right">New</button>
+			<button type="submit" name="New" value="1" style="float: right; margin-right: -15px;">New</button>
 </div>
 </fieldset>
 
-<fieldset  style="min-height:700px">
+<fieldset  style="min-height:950px">
 <legend>Product Builder</legend>
 		<?loop fields?>
 		<?eval( $variable->{value} = $variable->{$variable->{fname}} ) ?>
@@ -135,10 +135,16 @@
 		<?endloop versions?>
 			
 <div class="button-bar" style="margin-top: 20px" >
-			<button type="submit" name="Preview" value="1" style="margin-left: -10px;">Preview</button>
+			<button type="submit" name="Preview" value="1" style="margin-left: -10px;">Save/Preview</button>
 			<button type="submit" name="Build" value="1" >Build</button>
 			<input type="checkbox" name="delete_category" value="1" style="margin-left: 10px; margin-top: 2px">
 			<label style="white-space:normal;margin-top: -2px; padding: 0 0 0 0">Delete current products from category during Build.</label>
+			<br />
+			<button type="submit" name="Copy" value="1" style="margin-left: -10px;">Copy</button>
+			<select name="cat-copy" id="cat-copy" width=5 style="margin-left: 20px;" >
+					<option value="">None</option>
+					<?parents?>
+			</select><br/>
 </div>
 </fieldset>
 

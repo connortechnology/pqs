@@ -70,6 +70,7 @@ our %MODIFIERS = (
     'lc'        => sub { lc(              $_[0] ) },
     escape_html => sub { encode_entities(     $_[0] ) },
     Dumper      => sub { Dumper(          $_[0] ) },
+    newline     => sub { $_[0] =~ s/\r/<br>/g;    return $_[0]; },
 
     # Formats a number as n.nn using sprintf's IEEE rounding. If the input
     # doesn't look like a number it returns an empty string. TODO: Get

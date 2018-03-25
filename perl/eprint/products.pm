@@ -33,10 +33,12 @@ sub save_categories {
 			my $name = $r->param($_);
 			my $parent = $r->param("parent-$id") || undef;
 			my $active = $r->param("active-$id") || undef;
+			my $dsc = $r->param("description-$id") || undef;
 			print STDERR "SET NAME: $id = $name \n ";
 			PQS::model::categories::set_name($id, $name);	
 			PQS::model::categories::set_parent($id, $parent);	
 			PQS::model::categories::set_active($id, $active);	
+			PQS::model::categories::set_description($id, $dsc);	
 		}
 	} $r->param();
 
@@ -44,6 +46,9 @@ sub save_categories {
 		my $parent = $r->param("parent-new") || undef;
 		my $name   = $r->param("editname-new");
 		my $id = PQS::model::categories::insert( $parent, $name);
+		my $dsc   = $r->param("description-new");
+
+		PQS::model::categories::set_description($id, $dsc);	
 
 		my $d = category_path($id);
 
@@ -119,7 +124,7 @@ map {
 	}
 	
 
-	$var->{filters} = PQS::model::product_filter::get_category($cat);
+	$var->{filters} = PQS::model::product_filter::get_category($cat) if $cat;
 
 
 
@@ -146,8 +151,8 @@ map {
 		build_products($r, $var, \%all);
 	}
 
-	my $template = $dbh->selectcol_arrayref(q{Select name,id FROM tbl_products WHERE category = ?}, undef, $cat);
-	$var->{templates} = ssi::make_drop_down($template);
+#	my $template = $dbh->selectcol_arrayref(q{Select name,id FROM tbl_products WHERE category = ?}, undef, $cat);
+#	$var->{templates} = ssi::make_drop_down($template);
 
 
 	if ( $r->param('strid') && $r->param('name') ) { 
@@ -171,31 +176,30 @@ map {
 			}
 		}
 
-	}# else {
+	}
 
 
+	my $catid = $r->param('Copy') ? $r->param('cat-copy') : $cat;
 	#Load defaults back from db.
+	my $defs = PQS::model::product_defaults::get($catid) if $catid;
+	my $map;
 
-		my $defs = PQS::model::product_defaults::get($cat);
-		my $map;
+	map { 
+		my $f = $_->{name}; 
+		$var->{$f} = $_->{value};
+		$map->{$f} = $_->{value};
+	} @{$defs};
 
-		map { 
-			my $f = $_->{name}; 
-			$var->{$f} = $_->{value};
-			$map->{$f} = $_->{value};
-		} @{$defs};
+	map { 
+		push @{$var->{versions}}, 
+		{ 	v => $_, 
+			min => $map->{"min-$_"}, 
+			max => $map->{"max-$_"}, 
+			discount => $map->{"discount-$_"}
+		}
+		
+	} (1..MAX_DISCOUNT);
 
-		map { 
-			push @{$var->{versions}}, 
-			{ 	v => $_, 
-				min => $map->{"min-$_"}, 
-				max => $map->{"max-$_"}, 
-				discount => $map->{"discount-$_"}
-			}
-			
-		} (1..MAX_DISCOUNT);
-
-		#}
 	
 
 	
@@ -309,6 +313,10 @@ sub build_products {
 
 		
 		my $list =  Set::CrossProduct->new($all);
+
+		return unless defined $list;
+
+	print STDERR "HAVE PRODUCTS: ", Dumper($list, defined $list);
 
 		until ($list->done ) {
 			my %p = $list->get;
@@ -818,9 +826,21 @@ sub get_highres_file {
 }
 
 
+sub cat_image {
+	my $id = shift;
 
+	my $r = session::r;
 
-sub display {
+	my $img = "/images/main/product/category/$id.jpg";
+
+	my $path = ssi::get_file_path($r, $img);
+
+	return $img if -e $path;
+
+	return "/images/main/product/category/default.jpg";
+}
+
+sub display_categories {
  my ($r, $dbh, $var) = @_;
  
 	my $cat 	= $r->param('category');
@@ -864,6 +884,77 @@ sub display {
 
 	#Get children for current cat.
 	my $childs =  PQS::model::categories::get_children_from_id($cat);
+
+	map {
+		my $c = PQS::model::categories::get($_);
+
+		$c->{image} = cat_image($c->{id});
+		$c->{description} =~ s/\r/<br \/>/g; 
+
+		push @{$var->{cat_children}}, $c;
+	} @{$childs};
+
+	$var->{cat} 			= $cat;
+
+	print STDERR "HAVE DATA", Dumper($var);
+
+}
+
+
+sub display {
+ my ($r, $dbh, $var) = @_;
+ 
+
+
+	my $cat 	= $r->param('category');
+	my $qty 	= $r->param('quantity');
+	my $cid 	= $var->{cust_id} || 1;
+	my $log 	= session::log;
+	my $product = $r->param('product');
+	my $versions = $r->param('versions') || 1;
+
+	$cat = configuration::get_value($log, $dbh, 'Default Product Category') unless $cat;
+
+	#Get children for current cat.
+	my $childs =  PQS::model::categories::get_children_from_id($cat);
+
+	if ( @{$childs} ) {
+		$var->{Redirect} = "/main/ecommerce/categories.html?category=$cat";
+
+		return;
+	}
+
+
+	if ( $product ) { 
+		my $p = new PQS::Object::product($product);
+		$cat = $p->spec('category_id');
+		print STDERR "LAOD PRODUCT: $product, CAT=$cat \n", Dumper($p->{specs});
+	}
+  
+	#Set categories for left nav.
+	my $cats = PQS::model::categories::get_all();
+
+	map { push @{$var->{categories}}, $cats->{$_}; } sort keys $cats;
+
+
+	#Create category chain for parents of current category.
+	my $parent = $cat;
+	my $name =  PQS::model::categories::get_name_from_id($parent);    
+	push @{$var->{cat_chain}}, { id => $parent, name => $name};
+
+
+	print STDERR " CAT CHAIN " , Dumper($var->{cat_chain});
+
+	while ( $parent ) {
+		$parent = PQS::model::categories::get_parent_from_id($parent);
+
+		next unless $parent;
+		$name =  PQS::model::categories::get_name_from_id($parent);    
+
+		unshift @{$var->{cat_chain}}, { id => $parent, name => $name};
+	}
+
+
 
 	map {
 		my $c = PQS::model::categories::get($_);

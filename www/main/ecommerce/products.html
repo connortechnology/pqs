@@ -285,17 +285,19 @@ select.failed {
 					<a href="/main/ecommerce/products.html"> Products </a>
 -->
 
-					<div style="margin-left:5%;">
+					<div style="margin-left:5px;">
 					<?loop cat_chain?>
 						<?if name?>
 						<a href="/main/ecommerce/products.html?category=<?id?>">
-							<!--
+
+							<?if not:_first?>
 						   	&#187;	
-							-->
+							<?endif not:_first?>
+
 						<?name?> </a>
 						<?endif name?>
 			  		<?endloop cat_chain?>
-				</div>
+					</div>
 					
 					</span>
 					</h1>

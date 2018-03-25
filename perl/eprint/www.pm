@@ -784,6 +784,7 @@ print STDER "MY FILENAME: $filename \n";
     }
     elsif ($sub_section eq 'ecommerce') {
     	eprint::products::display($r, $dbh, $variable) if $filename eq 'products.html';
+    	eprint::products::display_categories($r, $dbh, $variable) if $filename eq 'categories.html';
     	eprint::products::details($r, $dbh, $variable) if $filename eq 'product_details.html';
     	eprint::products::design($r, $dbh, $variable, $cookie) if $filename eq 'design.html';
 	}

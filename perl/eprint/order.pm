@@ -1388,12 +1388,17 @@ sub make_product_dockets {
 print STDERR "HAVE ORDER LINE: " , Dumper($0, $list);
 		my $prod = new PQS::Object::product($o->{product});
 		my $ppid = $prod->{specs}{project};
+
 		next unless $ppid;
+
 		my $args = {
-			name => "Docket for: " . $o->{jobname},
-			qty  => $o->{intquantity},
+			name 		=> "Docket for: " . $o->{jobname},
+			qty  		=> $o->{intquantity},
+			comment 	=> $prod->{specs}{description},
+
 
 		};
+
 		my ($pid) = eprint::print_project::copy_project($dbh, $var, $ppid, $args);
 
 
@@ -1418,7 +1423,7 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list);
 		project_status($dbh, $pid, 'Waiting For Files');
 
 		push @pids, {pid 		=> $pid,
-					 jobname	=> $o->{jobname}
+					 jobname	=> $o->{jobname},
 				    };
 	}
 	return \@pids;
