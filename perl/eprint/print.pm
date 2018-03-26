@@ -317,10 +317,32 @@ sub custom_sort {
 	my $start = int(shift);
 	my $end   = int(shift);
 
-	$end += 1;
-	$dbh->do(q{ UPDATE tbl_project_contents SET custom_sort = ? 
-					where custom_sort = ? AND lngprojectindex = ?
+	if ( $start < $end ) {
+		$end = $end + 10;
+	} else {
+		$end = $end - 10;
+	}
+
+	$dbh->do(q{ UPDATE tbl_project_contents SET custom_sort = ?  where custom_sort = ? AND lngprojectindex = ?
 			}, undef, $end, $start, $pid);
+
+
+	#Reset all custom ids in the new order.
+	my $ids = $dbh->selectall_arrayref(q{
+		SELECT lngserviceindex, custom_sort FROM tbl_project_contents WHERE lngprojectindex = ? ORDER by custom_sort
+	}, {Slice => {}}, $pid);
+
+	my $up = $dbh->prepare(q{
+		UPDATE tbl_project_contents set custom_sort = ? WHERE lngserviceindex = ?
+	});
+
+	my $id = 10000;
+	map { 
+		$up->execute($id, $_->{lngserviceindex});
+		$id += 1000;
+	} @{$ids};
+
+print STDERR "PIDS: ", Dumper($ids);
 
 
 }
