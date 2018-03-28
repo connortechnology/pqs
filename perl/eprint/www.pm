@@ -806,9 +806,10 @@ sub menu_options {
 
 	my $cats = PQS::model::categories::get_all();
 
+	@{$var->{prod_menu}} = undef;
+
 	map { push @{$var->{prod_menu}}, $cats->{$_}; } sort keys $cats;
 
-	print STDERR "HAVE CATS: ", Dumper($var->{prod_menu}, $cats);
 }
 
 
