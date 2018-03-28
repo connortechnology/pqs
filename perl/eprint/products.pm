@@ -34,11 +34,17 @@ sub save_categories {
 			my $parent = $r->param("parent-$id") || undef;
 			my $active = $r->param("active-$id") || undef;
 			my $dsc = $r->param("description-$id") || undef;
+			my $header = $r->param("header-$id") || undef;
+			my $footer = $r->param("footer-$id") || undef;
+
 			print STDERR "SET NAME: $id = $name \n ";
+
 			PQS::model::categories::set_name($id, $name);	
 			PQS::model::categories::set_parent($id, $parent);	
 			PQS::model::categories::set_active($id, $active);	
 			PQS::model::categories::set_description($id, $dsc);	
+			PQS::model::categories::set_header($id, $header);	
+			PQS::model::categories::set_footer($id, $footer);	
 		}
 	} $r->param();
 
@@ -47,8 +53,12 @@ sub save_categories {
 		my $name   = $r->param("editname-new");
 		my $id = PQS::model::categories::insert( $parent, $name);
 		my $dsc   = $r->param("description-new");
+		my $header   = $r->param("header-new");
+		my $footer   = $r->param("footer-new");
 
 		PQS::model::categories::set_description($id, $dsc);	
+		PQS::model::categories::set_header($id, $dsc);	
+		PQS::model::categories::set_footer($id, $dsc);	
 
 		my $d = category_path($id);
 
@@ -844,19 +854,10 @@ sub display_categories {
  my ($r, $dbh, $var) = @_;
  
 	my $cat 	= $r->param('category');
-	my $qty 	= $r->param('quantity');
-	my $cid 	= $var->{cust_id} || 1;
 	my $log 	= session::log;
-	my $product = $r->param('product');
-	my $versions = $r->param('versions') || 1;
 
 	$cat = configuration::get_value($log, $dbh, 'Default Product Category') unless $cat;
 
-	if ( $product ) { 
-		my $p = new PQS::Object::product($product);
-		$cat = $p->spec('category_id');
-		print STDERR "LAOD PRODUCT: $product, CAT=$cat \n", Dumper($p->{specs});
-	}
   
 	#Set categories for left nav.
 	my $cats = PQS::model::categories::get_all();
@@ -866,6 +867,7 @@ sub display_categories {
 
 	#Create category chain for parents of current category.
 	my $parent = $cat;
+
 	my $name =  PQS::model::categories::get_name_from_id($parent);    
 	push @{$var->{cat_chain}}, { id => $parent, name => $name};
 
@@ -895,8 +897,9 @@ sub display_categories {
 	} @{$childs};
 
 	$var->{cat} 			= $cat;
+	$var->{info} = PQS::model::categories::get($cat);
 
-	print STDERR "HAVE DATA", Dumper($var);
+	print STDERR "HAVE CAT DATA", Dumper($var->{info});
 
 }
 

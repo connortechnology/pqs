@@ -182,14 +182,40 @@ p {
   <?endloop children?>
 
 <?endloop categories?>-->
-
+<!--
   <?loop categories?>
   <hr />
     <input id="toggle<?name?>" type="radio" name="toggle" />
     <a href="/main/ecommerce/products.html?category=<?id?>"><?name?></a>
       <section id="content<?name?>"> </section>
   <?endloop categories?>
+
   <hr />
+-->
+
+
+
+
+
+  	<?loop prod_menu?>
+		<?if active?>
+			<a href="/main/ecommerce/products.html?Category=<?id?>" >
+			<?name?></a>
+		<?endif active?>
+		
+		<?loop children?>
+		<?if active?>
+		<li><a href="/main/ecommerce/products.html?Category=<?id?>"><?name?></a></li>
+		<?endif active?>
+
+		<?endloop children?>
+		<br />
+
+	<?endloop prod_menu?>
+
+
+
+
 
 <!-- 
   <?if order_count?>

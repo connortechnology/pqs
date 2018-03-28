@@ -110,6 +110,8 @@ Alter table pricing_matrix alter column sell type numeric(10,4);
 
 -------Hot Fix Updates 4.1 ------
 Alter table categories add column description text;
+Alter table categories add column header text;
+Alter table categories add column footer text;
 
 
 

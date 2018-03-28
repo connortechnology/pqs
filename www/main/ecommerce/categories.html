@@ -318,6 +318,11 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 <div id="horizontal-spacer1" style="height: 50px; width=100%; "></div>
 
 
+<div id="cat_header" style="width:100%"> 
+	<?info.header?>
+</div>
+
+<div id="parent">
 
 
 <?loop cat_children?> 
@@ -326,7 +331,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 
 
 
-<div id="main2" style="width: 31%; height: 401px;" 
+<div id="main2" style="width: 250px; height: 401px; border: 2px solid black;" 
 	onClick='window.location="products.html?Category=<?id?>"'
 	onmouseover="this.style.background='lightgray';"
 	onmouseout="this.style.background='';"
@@ -356,14 +361,14 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 			 -->
                     
 
-                <div id="p2name" style="margin: 0 0 0 0;  font-size: 1.5em; height: 250px; text-align: center; "  >
+                <div id="p2name" style="margin: 0 0 0 0;  font-size: 1em; height: 250px; text-align: center; "  >
 					<!--
                     <strong>
                     <?category?>
 					</strong><br />
 					-->
 
-					<div id="name" style="margin: 10px 0 0 0; font-size: 1.5em; font-weight: bold;">
+					<div id="name" style="margin: 0 0 0 0; font-size: 1.5em; color: white; background-color: blue;">
 					<?name?>
 					</div>
 					<br />
@@ -383,6 +388,12 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 </div>
 
 <?endloop cat_children?>
+</div>
+
+<div id="cat_footer" style="width:100%">
+	<?info.footer?>
+</div>	
+
     <br />
 
     
@@ -442,11 +453,13 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 </div>
 <!-- end #sizer -->
 
+<!--
 <form action="categories.html" style="font-size:1.8em;" >
 
 	<input type="hidden" value="<?cat?>" name="category" />
 	<button type="reload" value="Search" name="Search" style="margin-left: 850px; margin-bottom: -100px;" /> Reload</button>
 </form>
+-->
 
 </body>
 </html>
