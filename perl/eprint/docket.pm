@@ -1403,6 +1403,10 @@ print STDERR "HAVE FORM COUNT: $$form_count \n";
 		$results{VERSIONS} = \@versions;
 	}
 
+    $results{'NoPrint'} = $results{chargefor} eq 'Free' ? 1 : 0;
+
+    $results{'PaperOut'}     = ceil($results{'hdnSheetQuantity1'} / $results{hdnPaperBuyQuantity1});
+
     $results{'UserType'}     = $userType;
     $results{'ProjectIndex'} = $pid;
     $results{'ServiceIndex'} = $sid;
@@ -1811,7 +1815,10 @@ sub header_info {
 		AND lngprojectindex = ?
     }, undef, $hash{order_id}, $pid);
 
-    $hash{docket_id}       = $hash{order_id} . "-" . $pid;
+	my $id = $hash{order_id};
+	$id =~ /(\d\d\d\d)(\d\d\d\d)/;
+
+    $hash{docket_id}       = "$1  $2-$pid";
     $hash{OrderFirstName}  = $order->{strfirstname};
     $hash{OrderLastName}   = $order->{strlastname};
     $hash{OrderSalutation} = $order->{strsalutation};

@@ -20,6 +20,16 @@
 
 
 .id {
+	float: left; 
+	display: inline;
+	position: relative;
+	clear: none;
+	color: black;
+	font-size: 25pt;
+	line-height: 60px;
+	text-align: center;
+}
+.id1 {
 	float: center; 
 	display: inline;
 	position: relative;

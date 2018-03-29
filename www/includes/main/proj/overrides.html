@@ -54,6 +54,16 @@
 		<label for="override_runstyle" class="checkbox override">
 		<input type="checkbox" id="override_runstyle" name="override_runstyle" onclick="overrides_chkbox.apply(this);" size="1" value="1" />Override</label>
 		<br />
+		<label>Imposition</label> <button onClick="imp(); return false;">View Image</button> 
+		<br/>
+		
+
+	<script  type="text/javascript">
+		function imp() {
+			var link  = "/main/proj/imposition.html?ProjectIndex=<?pid?>;ServiceIndex=<?sid?>";
+			window.open(link,'newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+	</script>
 	<? endif ($$variable{project}{press_type}{ref} ne 'web') ?>
 
 	<? if ($$variable{project}{press_type}{ref} ne 'screen') ?>

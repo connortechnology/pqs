@@ -99,17 +99,30 @@ sub as_string {
 sub bake_form_hash {
 	my $self  = shift;
 	my $hash  = shift;
+	my $format  = shift;
 	
 
+	print STDERR "START BAKE  \n";
 	return unless $self->{index};
+
 	my $data  = $self->{dbh}->selectrow_hashref(q{
 		SELECT * FROM tbl_addresses WHERE lngindex = ?
 	}, {}, $self->{index} ); 
 
 	my $rev = {};
+
 	map { $rev->{$form_fields{$_}} = $_ } keys %form_fields;
 
-	map { my $fname = lc($fields{$_}); $hash->{$rev->{$_}} = $data->{$fname} } keys %fields;
+	map {
+		my $key = $rev->{$_};
+
+	  	$key =~ s/Shipping// if $format;
+
+		my $fname = lc($fields{$_}); 
+		  
+		$hash->{$key} = $data->{$fname};
+
+	} keys %fields;
 
 
 }

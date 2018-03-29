@@ -1,5 +1,6 @@
 <?if NoPrint?>
-No Printing
+<?desc?>
+No Printing <!-- <?chargefor?> -->
 <?else NoPrint?>
 <?if is_staff ?>
 	<a href="/main/proj/proj_printer_summ_price_breakdown.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>#chosen">
@@ -21,7 +22,7 @@ No Printing
 <div class="indent">
 
 	<span class="label">Press:&nbsp;&nbsp;</span>
-	<?hdnPress?>
+	<?hdnPress?> 
 	
     <div style=" padding-left: 2em; ">
 		
@@ -224,7 +225,10 @@ No Printing
 
 		<?if ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
 
-		<span style="padding: 0 265px 0 0"> Cut From: <?hdnSuppliedStockWidth?> x <?hdnSuppliedStockHeight?></span> Parent Sheet Count: <?hdnPaperBuyQuantity1?>
+		<span style="padding: 0 50px 0 0"> Cut From: <?hdnSuppliedStockWidth?> x <?hdnSuppliedStockHeight?></span>
+		<span style="padding: 0 50px 0 0"><?PaperOut?> Out</span> 
+		<span> Parent Sheet Count: <?hdnPaperBuyQuantity1?> </span>
+
 
 		<br />
 		<?endif ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
@@ -266,7 +270,7 @@ No Printing
 		</span>
 	</td>
   </tr>
-  <tr style="height: 50px;">
+  <tr>
     <td><span class="label">Overs Qty:&nbsp;&nbsp;______________</span></td>
     <td><span class="label">Press Count:&nbsp;&nbsp;______________</span></td>
   </tr>

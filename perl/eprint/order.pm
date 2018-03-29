@@ -2453,12 +2453,18 @@ sub packing_slip {
 
 	my $sid = $dbh->selectrow_array(q{SELECT sid FROM ship_address WHERE shipid = ?}, undef, $shipid);
 	my $pid = $dbh->selectrow_array(q{SELECT lngprojectindex FROM tbl_project_contents WHERE lngserviceindex = ?}, undef, $sid);
-	my $order_id = $dbh->selectrow_array(q{SELECT lngorderid FROM tbl_order_contents WHERE lngprojectindex = ?}, undef, $pid);
 
-	print STDERR "HAVE: $sid, $pid, $order_id -- $shipid \n";
+	my $order = $dbh->selectrow_hashref(q{SELECT * FROM tbl_order_contents, tbl_orders WHERE lngprojectindex = ?
+			AND tbl_order_contents.lngorderid = tbl_orders.lngorderid}, undef, $pid);
 
-	$variable->{order_id} = $order_id;
-	$variable->{ship_sid} = $sid;
+	my $order_id = $order->{lngorderid};
+
+
+	my $address = new eprint::address($log, $dbh, $shipid);
+	
+	$address->bake_form_hash($variable, 1);
+
+
 
 
 	my $shipid = $r->param('shipid');
@@ -2466,23 +2472,26 @@ sub packing_slip {
 	my %shipping;
 	   %shipping 	= eprint::service::get_specifications_pairs($log, $dbh, $pid, $sid) if $sid;
 	
+
+	   #print STDERR "HAVE: $sid, $pid, $order_id -- $shipid \n", Dumper($order, \%shipping, $variable);
+	   print STDERR "HAVE: $sid, $pid, $order_id -- $shipid \n", Dumper($variable);
+
 	$variable->{ship} = \%shipping;
 
 
 
+	print STDERR "HAVE ORDER ID: $variable->{order_id}, $order_id \n";
 
-	if ( $r->param('blind_address') ) {
-		$variable->{'blind_address'} = $r->param('blind_address');
-		$dbh->do(qq{
-			DELETE  FROM  tbl_service_specifications WHERE lngserviceindex = $sid 
-			AND strname = 'blind_address'
-		}, $sid);
+	$variable->{boxes}  = $shipping{"boxes-$shipid"};
+	$variable->{weight} = $shipping{"weight-$shipid"};
+	$variable->{size}   = $shipping{"size-$shipid"};
 
-	#$dbh->do(q{
-	#		INSERT into tbl_service_specifications VALUES ( ?, ? , ?, ?) 
-	#	}, {}, $spid, $sid, 'blind_address', $r->param('blind_address'));
+	$variable->{order_id} = $order_id;
+	$variable->{ship_sid} = $sid;
+	$variable->{ponumber} = $order->{strponumber};
 
-	}
+
+
 }
 
 sub get_products {
