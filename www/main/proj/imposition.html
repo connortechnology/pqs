@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Projects - Printing Price Details
+	<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/price_breakdown.css" rel="stylesheet" type="text/css" />
+	<link href="/base-css/imposition.css" rel="stylesheet" type="text/css" />
+	<link href="/styles/print_webpage.css" rel="stylesheet" type="text/css" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<style type="text/css">
+		table,
+		table th,
+		table td { border: 0 !important; }
+
+		tr.total td { border-top-width: 3px !important; border-top-style: double !important; }
+
+		/* Firefox correctly supports visibility: collapse, but IE only supports
+		display: none which is incorrect but works similarly enough for this.
+		Safari and Opera don't support either. */
+
+		<?if (! $$variable{txtQuantity1}) ?>
+			col.qty1        { visibility: collapse; } /* CSS 2.1 */
+			* html col.qty1 { display:    none;     } /* IE */
+		<?endif (! $$variable{txtQuantity1}) ?>
+
+		<?if (! $$variable{txtQuantity2}) ?>
+			col.qty2        { visibility: collapse; border: 0;}
+			* html col.qty2 { display:    none;     }
+		<?endif (! $$variable{txtQuantity2}) ?>
+
+		<?if (! $$variable{txtQuantity3}) ?>
+			col.qty3        { visibility: collapse; }
+			* html col.qty3 { display:    none;     }
+		<?endif (! $$variable{txtQuantity3}) ?>
+	</style>
+</head>
+
+
+		<div id="impositions" style="left: 40%;">
+
+			<!-- Multi-version form/version listing. -->
+			<?if ($variable->{versions} && !$variable->{is_multipage}) ?>
+				<table id="versions" class="breakdown no-background">
+					<col class="name" />
+					<col class="requested" />
+					<col class="over" />
+					<col class="final" />
+
+					<thead>
+						<th class="l"> Version </th>
+						<th title="Requested percentage."> R% </th>
+						<th title="Over-production % (due to imposition)."> O% </th>
+						<th title="Final production percentage."> F% </th>
+					</thead>
+
+					<tbody>
+						<?loop forms?>
+							<tr class="layout_form">
+								<th colspan="4">&nbsp;</th> <!-- Kludge to supply a distinction between forms. -->
+							</tr>
+							<?loop versions?>
+								<tr>
+									<td class="l"><div class="mv" style="background-color: <?colour?>">
+										</div>
+										<?label?>
+									</td>
+									<td><?requested?></td>
+									<td><?over?></td>
+									<td><?final?></td>
+								</tr>
+							<?endloop versions?>
+						<?endloop forms?>
+					</tbody>
+				</table>
+			<?endif ($variable->{versions} && !$variable->{is_multipage}) ?>
+	
+			<!-- Imposition images. -->
+			<?if ($variable->{layout}) ?>
+				<h2>Impostion</h2>
+				<?loop layout?>
+
+							<img src="/images/imposition.svgz?sid=<?sid?>;n=<?n?>;preview=0" onClick="window.location='/images/imposition.svgz?sid=<?sid?>;n=<?n?>;preview=0'" />
+
+				<?endloop layout?>
+			<?endif ($variable->{layout}) ?>
+
+			<!-- Cutting tree. -->			
+			<?if ($variable->{layout}) ?>
+				<h2 style="margin-bottom: 5px">Cutting Tree</h2>
+				<a href="/images/tree.png?sid=<?sid?>">
+					<img width="190px" src="/images/tree.png?sid=<?sid?>;preview=1" />
+				</a>
+			<?endif ($variable->{layout}) ?>
+
+		</div>
