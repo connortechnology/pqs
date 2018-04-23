@@ -184,16 +184,17 @@ div.supplied h3 {
 
 /* SERVICE TYPE GROUP */
 div.group {
-	padding: 30px 4px 50px 4px; /* Top, Right, Bottom, Left */
-    line-height: 1.6em;
-    border-bottom: 1px solid #0B0D60;
+/*	padding: 30px 4px 50px 4px; /* Top, Right, Bottom, Left */
+    border-bottom: 4px solid #0B0D60;
+
+/*    line-height: 1.6em; */
 }
 
 div.group h4 {
 		display: inline-block;
 		font-size: 1em;
 		margin-right: 0.25em;
-		padding: 0 0 10px 0;
+/*		padding: 0 0 10px 0; */
 
 		/*
 		background-color: cyan;
@@ -219,12 +220,12 @@ p.comment {
 
 div.indent {
    	padding: 0 0 0 4px; /* Top, Right, Bottom, Left */
-   	line-height: 1.5em;
+/*   	line-height: 1.5em; */
 }
 
 /* DOCKET TABLES */
 table.docket {
-    margin: 10px 0 10px 0; /* Top, Right, Bottom, Left */
+    margin: 0px 0 0px 0; /* Top, Right, Bottom, Left */
     width: auto;
 }
 

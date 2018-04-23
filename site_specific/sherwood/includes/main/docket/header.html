@@ -37,9 +37,9 @@
 			<col class="data2" />
 		</colgroup>
 		<tbody>
-			<tr style="height: 50px;">
+			<tr style="">
 				<th>Job Name:</th>
-				<td colspan="3"><h4 style="font-size:15px"><?HeaderInfo.reference?></h4></td>
+				<td colspan="3"><span style="font-size:15px"><?HeaderInfo.reference?></span></td>
 			</tr>
 			<tr>
 				<th>Type:</th>
@@ -59,14 +59,16 @@
 		</tbody>
 	</table>
 
+	<?if HeaderInfo.comments?>
 	<table class="docket no-formatting">
 		<tbody>
-			<tr rowspan="2" style="font-size: 1.2em; font-weight: bold; height: 50px; width:100%;">
+			<tr rowspan="2" style="font-size: 1.2em; font-weight: bold;  width:100%;">
 				<th>Comments:</th>
 				<td ><?HeaderInfo.comments?></td>
 			</tr>
 		</tbody>
 	</table>
+	<?endif HeaderInfo.comments?>
 </div>
 
 <!-- Contact Info. -->

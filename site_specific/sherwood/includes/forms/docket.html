@@ -90,9 +90,8 @@
 
 
 
-	<? if ((! $$variable{Category}) || ($$variable{Category} == -1)) ?>
+	<? if ($$variable{Category} == -1) ?>
 		<div class="category">
-		<!--
 			<h5>Materials Information</h5>
 			<?loop materials?>
 				<div class="group">
@@ -128,7 +127,6 @@
 
 				</div>
 			<?endloop materials?>
-			-->
 		</div>
-	<? endif ((! $$variable{Category}) || ($$variable{Category} == -1)) ?>
+	<? endif ($$variable{Category} == -1) ?>
 </div>
