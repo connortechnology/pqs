@@ -2459,6 +2459,9 @@ sub packing_slip {
 
 	my $order_id = $order->{lngorderid};
 
+	my $project = $dbh->selectrow_hashref(q{SELECT * from tbl_projects WHERE lngprojectindex = ? }, undef, $pid);
+	
+
 
 	my $address = new eprint::address($log, $dbh, $shipid);
 	
@@ -2474,7 +2477,6 @@ sub packing_slip {
 	
 
 	   #print STDERR "HAVE: $sid, $pid, $order_id -- $shipid \n", Dumper($order, \%shipping, $variable);
-	   print STDERR "HAVE: $sid, $pid, $order_id -- $shipid \n", Dumper($variable);
 
 	$variable->{ship} = \%shipping;
 
@@ -2485,11 +2487,41 @@ sub packing_slip {
 	$variable->{boxes}  = $shipping{"boxes-$shipid"};
 	$variable->{weight} = $shipping{"weight-$shipid"};
 	$variable->{size}   = $shipping{"size-$shipid"};
+	$variable->{ship_qty}   = $shipping{"add_qty1-$shipid"};
 
 	$variable->{order_id} = $order_id;
 	$variable->{ship_sid} = $sid;
-	$variable->{ponumber} = $order->{strponumber};
 
+	$variable->{order} 		= $order;
+	$variable->{project} 	= $project;
+	$variable->{docket}      = eprint::docket::header_info($log, $dbh, $pid);
+
+	use POSIX qw(strftime);
+
+	my $date = strftime "%m/%d/%Y", localtime;
+
+	$variable->{date} =  $date;
+
+	print STDERR "HAVE: $sid, $pid, $order_id -- $shipid \n", Dumper($variable);
+
+	my $r    = session::r;
+	my $log    = session::log;
+	my $dbh    = session::dbh;
+
+
+
+	my $name = $variable->{user}{company}{name};
+
+	my $img = "/images/packing_slip/$name.png";
+
+	my $path = ssi::get_file_path($r, $img);
+
+	
+	my $x = -e $path;
+
+	$variable->{logo} =  $x ? $img : "/images/packing_slip/default.png"; 
+
+	print STDERR "HAVE PATH:  $path, $x \n";
 
 
 }
