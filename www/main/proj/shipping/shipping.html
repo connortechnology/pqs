@@ -345,7 +345,8 @@ function singlemultiplesing() {
 	//	alert ('none checked');
 		$('single').checked = true;
 	}
-	var elements = new Array("mult1","mult2","mult3","mult4","mult5","mult6","mult7","mult8","mult9","calculate-service");
+	var elements = new Array("mult2","mult3","mult5","mult6","mult7","mult8","mult9","calculate-service");
+	//var elements = new Array("mult1","mult2","mult3","mult4","mult5","mult6","mult7","mult8","mult9","calculate-service");
 	var elements1 = new Array("sing1","sing2");
 
 	if(document.getElementById("multiple").checked == false) {
@@ -913,7 +914,7 @@ the next business day.</strong>
 </tr>
 <tr>
 <td style="border-bottom:2px solid #000000 !important; border-left:2px solid #000000 !important;border-right:2px solid #000000 !important"> </td>
-<td style="border-bottom:2px solid #000000 !important; border-left:2px solid #000000 !important;border-right:2px solid #000000 !important"><div id="mult1"><input type='submit' name='New Address' value='Save and Next' class='button' style="float:left"	onClick="return check_ship_to();"  /></div></td>
+<td style="border-bottom:2px solid #000000 !important; border-left:2px solid #000000 !important;border-right:2px solid #000000 !important"><div id="mult1"><input type='submit' name='New Address' value='Save Address' class='button' style="float:left"	onClick="return check_ship_to();"  /></div></td>
 </tr>
 
 </table>
@@ -941,7 +942,7 @@ the next business day.</strong>
                     <th title="Quantity to ship to location address" >Quantity to Ship</th>
                     <? if ($$variable{isServicePricing}) ?> 
 					<? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
-						<th title="Calculated shipping price"  >Shipping Price</th> 
+					<!--		<th title="Calculated shipping price"  >Shipping Price</th>  -->
 						<th title="Number of Boxes" style="border-left: 1px solid" >Boxes</th> 
 						<th title="Total Weight" >Weight</th> 
 						<th title="Box Size" >Size</th> 
@@ -983,6 +984,7 @@ i						 <br /><?if strcity?><?strcity?>,<?endif strcity?>
 												
 					   <? if ($$variable{isServicePricing}) ?> 
 						<? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?> 
+						<!--
 							<td>
 								<br/> $
 						 		<input name="add_price1-<?shipid?>" disabled="disabled" id="add_price1-<?shipid?>" size="10" readonly="readonly" />
@@ -998,6 +1000,7 @@ i						 <br /><?if strcity?><?strcity?>,<?endif strcity?>
 								<? endif ( $$variable{'txtQuantity3'} > 0 ) ?>
 
 							</td> 
+						-->
 							<td> 
 								<input name="boxes-<?shipid?>" value="<?boxes?>" id="boxes-<?ship_id?>" size="10" />
 							</td>

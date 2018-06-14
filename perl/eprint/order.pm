@@ -191,7 +191,7 @@ sub add_product_to_order {
 
 	
 
-	insert_prod($log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname);
+	
 
 
 	# Get the next insert id in the sequence.
@@ -1396,7 +1396,9 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
 		my $ppid = $prod->{specs}{project};
 		next unless $ppid;
 		my $args = {
-			name => "Docket for: " . $o->{jobname},
+			name => $o->{jobname},
+#			name => "Docket for: " . $o->{jobname},
+# remove 'Docket for' from job name, add it as a 'label' on order/project history
 			qty  => $o->{intquantity},
 
 		};

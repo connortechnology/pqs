@@ -332,8 +332,13 @@ print STDERR "INSERT NEW ADDRESS SID: $sid I: - $index \n";
 	my $qpb = $cartons{txtItemsPerPackage};
 	my $ship_qty = $specs->{add_qty1};
 
-	$specs->{"boxes-$index"} = $ship_qty % $qpb ? int($ship_qty / $qpb) + 1 : $ship_qty / $qpb,
-	$specs->{"weight-$index"} =  sprintf("%.1f",$ship_qty * $cartons{hdnProjectWeight}),
+	if ( $carton_sid ) {
+		$specs->{"boxes-$index"} = $ship_qty % $qpb ? int($ship_qty / $qpb) + 1 : $ship_qty / $qpb,
+		$specs->{"weight-$index"} =  sprintf("%.1f",$ship_qty * $cartons{hdnProjectWeight}),
+	} else {
+		$specs->{"boxes-$index"} = 1; 
+		$specs->{"weight-$index"} =  1;
+	}
 
 
 #print STDERR "INSERT ($pid, $sid, boxes-$index, 1 \n";
@@ -1207,8 +1212,8 @@ sub get_ship_info {
 				shipid 		=> $shipid,
 				item_qty 	=> $ship_qty,
 				per_box 	=> $qpb,
-				boxes		=> $ship_qty % $qpb ? int($ship_qty / $qpb) + 1 : $ship_qty / $qpb,
-				weight  	=> sprintf("%.1f",$ship_qty * $cartons{hdnProjectWeight}),
+				#boxes		=> $ship_qty % $qpb ? int($ship_qty / $qpb) + 1 : $ship_qty / $qpb,
+				#weight  	=> sprintf("%.1f",$ship_qty * $cartons{hdnProjectWeight}),
 				address 	=> $address 
 			};
 
