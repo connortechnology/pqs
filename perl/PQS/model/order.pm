@@ -7,10 +7,18 @@ use session;
 
 use Data::Dumper;
 
+sub get_order {
+	my $id = shift;
+  	my $dbh = session::dbh;
+
+	my $o = $dbh->selectrow_hashref(q{
+		SELECT * FROM tbl_orders WHERE lngorderid = ?
+	},undef, $id); 
+}
+
 sub get_order_products {
 	my $id = shift;
   	my $dbh = session::dbh;
-	my $prod;
 
 	my $prod = $dbh->selectall_arrayref(q{
 		select * from tbl_order_contents where lngorderid = ? AND product IS NOT Null

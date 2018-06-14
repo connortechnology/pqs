@@ -814,7 +814,7 @@ sub menu_options {
 	
 	
 
-	print STDERR "HAVE CATS: ", Dumper($var->{prod_menu}, $cats);
+#	print STDERR "HAVE CATS: ", Dumper($var->{prod_menu}, $cats);
 }
 
 

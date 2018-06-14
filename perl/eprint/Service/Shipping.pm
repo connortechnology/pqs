@@ -39,8 +39,8 @@ sub necessary {
 #	return 0 if $u ==2;
 	
 	#Make Shipping Not required for now.
-    return 0;
-#    return 1;
+#    return 0;
+    return 1;
 }
 
 sub action {
@@ -316,13 +316,36 @@ print STDERR "INSERT NEW ADDRESS SID: $sid I: - $index \n";
 		INSERT INTO tbl_service_specifications VALUES ( ?, ? ,?,?, true)
 	});
 
+#	$sth->execute($pid, $sid, "boxes-$index", 1);$specs->{cost_center};
+
+#	$dbh->commit();
+
+	#die();
+	#
+	#
+	my $carton_sid 	= eprint::project::check_for_service( $log, $dbh, $pid, 'PlainCartons');
+
+	my %cartons = $carton_sid 
+				? eprint::service::get_specifications_pairs($log, $dbh, $pid, $carton_sid)
+				: undef;
+
+	my $qpb = $cartons{txtItemsPerPackage};
+	my $ship_qty = $specs->{add_qty1};
+
+	$specs->{"boxes-$index"} = $ship_qty % $qpb ? int($ship_qty / $qpb) + 1 : $ship_qty / $qpb,
+	$specs->{"weight-$index"} =  sprintf("%.1f",$ship_qty * $cartons{hdnProjectWeight}),
+
+
+#print STDERR "INSERT ($pid, $sid, boxes-$index, 1 \n";
+
+
 	$specs->{"cost_center-$index"} 				= $specs->{cost_center};
 	$specs->{"manualcostcenter-$index"} 		= $specs->{manualcostcenter};
 	$specs->{"accountnumber-$index"} 			= $specs->{accountnumber};
 	$specs->{"department-$index"} 				= $specs->{department};
 	$specs->{"storemailinstructions-$index"} 	= $specs->{storemailinstructions};
 
-print STDERR "HAVE SPECS: ", Dumper($specs);
+#print STDERR "HAVE SPECS: ", Dumper($specs);
 
 	return $index;
 }
@@ -1181,6 +1204,7 @@ sub get_ship_info {
 			
 			push @data, {
 				sid 		=> $sid,
+				shipid 		=> $shipid,
 				item_qty 	=> $ship_qty,
 				per_box 	=> $qpb,
 				boxes		=> $ship_qty % $qpb ? int($ship_qty / $qpb) + 1 : $ship_qty / $qpb,

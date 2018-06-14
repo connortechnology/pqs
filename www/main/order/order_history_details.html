@@ -34,6 +34,17 @@
 		<? endif ( $$variable{'InvalidPrices'} ) ?>
 			return valid;
 		}
+
+		function packing_slip(shipid) {
+			var page = "/main/order/packing_slip.html?order_id=<?order_id?>;packing_slip=1;shipid=" + shipid;
+			window.open(page, 
+				'newWin,left=160,width=840,top=140,height=155,resizable=no,scrollbars=no,menubar=no,toolbar=yes,location=no,directories=no,status=no');
+		}
+		function shipping_service() {
+			var page = "/service/shipping?pid=<?spid?>;sid=<?ssid?>;";
+			window.open(page, 
+				'newWin,left=160,width=840,top=140,height=155,resizable=no,scrollbars=no,menubar=no,toolbar=yes,location=no,directories=no,status=no');
+		}
 	</script>
 </head>
 
@@ -63,6 +74,7 @@
 					<input type="hidden" name="btnFunction" value="Cancel" />
 				</form>
 			<? endif ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+
             	
 
 		<?if ($variable->{is_staff} || $variable->{user_id} eq '293')?>
@@ -89,8 +101,19 @@
            <? endif ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
 		<? endif ( ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) or ( $$variable{'ORDER_STATUS'} eq 'Pending Deposit' ) ) ?>
 		<br class="clear" />
-		</div>
+	</div>
 
+		<div style="margin-bottom: 10px">
+			<button style="float: right" onClick="shipping_service();"; return false;">Packing Slip 1</button>
+		</div>
+		<!--
+			<?loop ship_data?>
+				<div style="margin-bottom: 10px">
+				<button style="float: right" onClick="packing_slip(<?shipid?>); return false;">Packing Slip</button>
+				<br />
+				</div>
+			<?endloop ship_data?>
+		-->
 	<br class="clear" />
 
 	<!--#include virtual="/includes/forms/order.html"-->

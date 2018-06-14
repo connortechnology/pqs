@@ -1384,8 +1384,14 @@ sub make_product_dockets {
 	my @pids;
 	my $list = PQS::model::order::get_order_products($orderid);
 
+	my $order = PQS::model::order::get_order($orderid);
+
+print STDERR "HAVE ORDER LINE: " , Dumper( $order);
+
+
+
 	foreach my $o ( @{$list} ) {
-print STDERR "HAVE ORDER LINE: " , Dumper($0, $list);
+print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
 		my $prod = new PQS::Object::product($o->{product});
 		my $ppid = $prod->{specs}{project};
 		next unless $ppid;
@@ -1397,7 +1403,11 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list);
 		my ($pid) = eprint::print_project::copy_project($dbh, $var, $ppid, $args);
 
 
-    	my $sid = eprint::project::check_for_service( undef, $dbh, $pid, 'Discount');
+    	my $sid 	= eprint::project::check_for_service( undef, $dbh, $pid, 'Discount');
+    	my $ship 	= eprint::project::check_for_service( undef, $dbh, $pid, 'Shipping');
+
+	   	$ship = eprint::print_project::insert_service($r->log, $dbh, $pid, 'Shipping') unless $ship;
+
 
 		unless ( $sid ) {
 	    	$sid = eprint::print_project::insert_service($r->log, $dbh, $pid, 'Discount') unless $sid;
@@ -1405,6 +1415,27 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list);
 			eprint::service::insert_service_spec( $log, $dbh, $pid, $sid, 'services' , '0');
 			eprint::service::insert_service_spec( $log, $dbh, $pid, $sid, 'txtPrice1' , '1');
 		}
+
+
+	map { 
+		if ( $_ =~ /strshipping(.*)/ ) {
+			print STDERR "HAVE KEY : $_, $1  		-- $ship \n";
+			my $f = "txtShipping" . ucfirst($1);
+			my $v =  $order->{$_};
+
+			$f = 'txtShippingPostalCode' if  $1 eq  'postalcode';
+			if ($1 eq  'firstname' ) {
+				$f = 'txtShippingContact';
+				$v .= " $order->{strshippinglastname}";
+			}
+
+			eprint::service::insert_service_spec( $log, $dbh, $pid, $ship, $f, $v);
+		} else {
+			print STDERR "NO MATCH: $_ \n";
+		}
+	} keys %{$order};
+	 
+	#die();
 
 
 		$dbh->do("UPDATE tbl_service_specifications set strvalue = ? where strname = 'c-CAD-1' and lngprojectindex = ?", undef, $o->{cursalesprice}, $pid);
@@ -2437,6 +2468,17 @@ sub history_details {
 	if ( $r->param('CHECKOUT') ) {
 		show_payflow($r, $log, $dbh, $cookie, $variable, $order_id, 'history' );
 	}
+
+	map {
+	my $pid = $_;
+	my @data =  eprint::Service::Shipping::get_ship_info($r, $log, $dbh, $pid, 1);
+	$variable->{ship_data} = \@data;
+
+
+
+	print STDERR "HAVE SHIP DATA", Dumper($variable->{ship_data}, @data);
+	} @pids;
+
 }
 
 sub packing_slip {
@@ -2566,6 +2608,20 @@ print STDERR "HAVE VARS: $r, $log, $dbh \n";
     my $totals = get_order_totals($dbh, $variable->{cust_id}, $order_id);
 
     $variable->{projects} = $totals->{projects};
+
+	my ($spid, $ssid) = $dbh->selectrow_array(q{
+		SELECT pc.lngprojectindex, pc.lngserviceindex  
+		FROM tbl_orders o, tbl_project_contents pc, tbl_order_contents oc
+		WHERE o.lngorderid = oc.lngorderid AND oc.lngprojectindex = pc.lngprojectindex
+		AND strservicetype = 'Shipping'
+		AND o.lngorderid = ?
+	}, undef, $order_id );
+	print STDERR "HAVE PID: $spid \n";
+
+	my @data =  eprint::Service::Shipping::get_ship_info($r, $log, $dbh, $spid, 1);
+	$variable->{ship_data} = \@data;
+	$variable->{spid} = $spid;
+	$variable->{ssid} = $ssid;
 
 
     @$variable{qw( SUB_TOTAL SHIPPING POSTAGE GST PST HST CountyTAX TOTAL )}

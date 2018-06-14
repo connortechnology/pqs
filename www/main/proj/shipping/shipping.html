@@ -310,10 +310,10 @@ function check_qtys() {
 	var qty2 = document.f1.txtQuantity2 || document.f1.hdnQuantity2;
 	var qty3 = document.f1.txtQuantity3 || document.f1.hdnQuantity3;
 
-	if ( Number($('qty_total1').innerHTML) > Number(qty1.value) ) {
-		alert('Quantity 1 exceeded.');
-		return false;
-	}
+//	if ( Number($('qty_total1').innerHTML) > Number(qty1.value) ) {
+//		alert('Quantity 1 exceeded.');
+//		return false;
+//	}
 	<? endif ( $$variable{'txtQuantity2'} > 0 ) ?>
 	<? if ( $$variable{'txtQuantity2'} > 0 ) ?>
 	if ( Number($('qty_total2').innerHTML) > Number(qty2.value) ) {
