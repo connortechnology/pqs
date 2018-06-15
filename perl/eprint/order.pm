@@ -190,7 +190,7 @@ sub add_product_to_order {
 	die("No Price Found for product: $product ", Dumper($prod) ) unless $price or $prod->{specs}{kit};
 
 	
-
+	insert_prod($log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname);
 	
 
 
@@ -2539,6 +2539,8 @@ sub packing_slip {
 	$variable->{order} 		= $order;
 	$variable->{project} 	= $project;
 	$variable->{docket}      = eprint::docket::header_info($log, $dbh, $pid);
+
+	$variable->{shipnum} = $dbh->selectrow_array(q{SELECT shipnum FROM ship_address WHERE shipid = ? }, undef, $shipid);
 
 	use POSIX qw(strftime);
 

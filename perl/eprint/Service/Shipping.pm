@@ -297,6 +297,9 @@ print STDERR "INSERT NEW ADDRESS SID: $sid I: - $index \n";
 	$dbh->do(qq{
 		INSERT INTO ship_address values ( $sid, $index )
 	});
+
+	update_shipnum($sid);
+
 	my $fields = $add->form_fields();
 	map { $specs->{$_} = undef } keys %{$fields};
 	if ( $specs->{singlemultiple} eq '0' ) {
@@ -355,6 +358,23 @@ print STDERR "INSERT NEW ADDRESS SID: $sid I: - $index \n";
 	return $index;
 }
 
+sub update_shipnum { 
+	my $sid = shift;
+
+	my $dbh = session::dbh;
+	my $ids = $dbh->selectcol_arrayref(q{SELECT shipid FROM ship_address WHERE sid = ?}, undef, $sid);
+
+	print STDERR "UPDATE SHIPNUM \n";
+
+	map {
+		my $num = $dbh->selectrow_array(q{	SELECT count(*) FROM ship_address WHERE sid = ? AND shipid <= ? }, undef, $sid, $_);
+		$dbh->do(q{UPDATE ship_address SET shipnum = ? WHERE shipid = ?},undef,  $num, $_);
+		print STDERR "UPDATE: $_ -- $num \n";
+	} @{$ids};
+	$dbh->commit;
+
+}
+
 sub fill_testing_specs {
     my ($var, $log, $dbh, $specs) = @_;
 
@@ -401,6 +421,8 @@ sub preaction {
 
 	}
 
+	update_shipnum($sid);
+
 	$specs->{Location} = '';
 }
 
@@ -420,12 +442,12 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
   		 && $specs->{txtShippingContact} 
 	) {
 
-		map { my $add = new eprint::address( $log, $dbh, $_);
-			     $add->delete();
-		} @{$shipids};
+		#	map { my $add = new eprint::address( $log, $dbh, $_);
+		#	     $add->delete();
+		#} @{$shipids};
 
-		my $i = insert_address( $log, $dbh, $sid, $specs);
-		$shipids = [ $i ];
+		#	my $i = insert_address( $log, $dbh, $sid, $specs);
+		#  $shipids = [ $i ];
 	}
 
 	my $status;

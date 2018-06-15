@@ -78,7 +78,7 @@ window.open('/main/proj/shipping/import_export.html?sid=<?sid?>','shippingimport
 
 function packing_slip(shipid) {
 	var page = "/main/order/packing_slip.html?order_id=<?order_id?>;packing_slip=1;shipid=" + shipid;
-	alert(page);
+	//alert(page);
 	window.open(page, 
 			'newWin,left=160,width=840,top=140,height=155,resizable=no,scrollbars=no,menubar=no,toolbar=yes,location=no,directories=no,status=no');
 }
@@ -187,12 +187,15 @@ function check_ship_to () {
 			alert(msg);
 			return false;
 		}
-		if ( $('multiple').checked ) {
+
+      	document.f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';
+		// Always have the Save Address buttons return to shipping page
+		/*if ( $('multiple').checked ) {
       		document.f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';
 			$('ddmShippingCompany').selectedIndex = 0;
 		} else {
 			return true;
-		}
+		}*/
 
 }
 
