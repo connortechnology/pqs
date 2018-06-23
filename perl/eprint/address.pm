@@ -19,6 +19,7 @@ my %form_fields = (
 		'txtShippingFax'            =>  'Fax',
 		'txtShippingEmail'          =>  'Email',
 		'txtShippingCubicle'        =>  'Cubicle',
+		'txtShippingInstructions'   =>  'Instructions',
 );
 
 my %fields = (
@@ -37,6 +38,7 @@ my %fields = (
 		'Fax'           =>  'strFax',
 		'Email'			=>	'strEmail',
 		'Cubicle'		=>	'strCubicle',
+		'Instructions'		=>	'Instructions',
 		); # end %fields
 
 sub new {
@@ -139,9 +141,14 @@ sub form_set {
 
 
     foreach my $field ( keys %form_fields ) {
+
+		print STDERR "GET PARAM: $field \n";
     	#$params{$form_fields{$field}} = misc::trim($form->{$field}) if defined $form->{$field};
     	$params{$form_fields{$field}} = $form->{$field} if defined $form->{$field};
     }
+
+	use Data::Dumper;
+	print STDERR "FORM SET PARAMS ", Dumper(\%params, $form);
 	$self->set(\%params);
 
 }

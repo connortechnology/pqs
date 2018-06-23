@@ -35,7 +35,7 @@ sub connect {
         AutoCommit => 0,
         RaiseError => 1,
         ShowErrorStatement => 1,
-        HandleError => \&_handle_error, # Can't be anon.
+		#HandleError => \&_handle_error, # Can't be anon.
         pg_enable_utf8 => 1,
     );
 

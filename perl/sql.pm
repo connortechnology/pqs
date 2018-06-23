@@ -28,6 +28,9 @@ our %EXPORT_TAGS = ( all    => \@EXPORT_OK,
 sub sql_statement {
     my ($log, $dbh, $sql) = @_;
 
+
+	die("Bad dbh") unless $dbh;
+
     my $sth = $dbh->prepare($sql);
        $sth->execute;
 

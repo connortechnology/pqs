@@ -107,7 +107,8 @@ function check_shipping () {
 				msg += check_text('add_qty3','Quantity to Ship to this Address Quantity 3');
 				 <? endif ( $$variable{'txtQuantity3'} > 0 ) ?>
 		}
-		msg += check_text('txtShippingContact','Ship to Contact Person');
+		msg += check_text('txtShippingFirstName','Ship to First Name');
+		msg += check_text('txtShippingLastName','Ship to Last Name');
 		msg += check_text('txtShippingAddress1','Ship to Address Line 1');
 		msg += check_text('txtShippingCity','Ship to City');
 		msg += check_text('txtShippingPostalCode','Ship to Zip or Postal Code');
@@ -180,6 +181,8 @@ function check_contact () {
 }
 
 function check_ship_to () {
+
+      	document.f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';
 		var msg = '';
 		msg += check_shipping();
 		if (msg != '' ) {
@@ -460,7 +463,8 @@ function getmymethod() {
 
 function copy_address() {
 		$('txtShippingCompany').value  	= $('txtCompanyName').value;
-		$('txtShippingContact').value  	= $('txtFirstName').value + ' ' + $('txtLastName').value;
+		$('txtShippingFirstName').value  	= $('txtFirstName').value;
+		$('txtShippingLastName').value  	= $('txtLastName').value;
 		$('txtShippingAddress1').value 	= $('txtAddress1').value;
 		$('txtShippingAddress2').value 	= $('txtAddress2').value;
 		//$('txtShippingCubicle').value 	= $('txtCubicle').value;
@@ -528,7 +532,7 @@ function set_ddm (ddm, v) {
 <form action="/service/<?lc:service.ref?>" autocomplete="off" method="post" name="f1" id="f1">
   <fieldset>
   <legend style="font-size:14px !important; color:#F00 !important;">Single or Multiple Shipping Destinations</legend>
- <p><strong>Do you require shipment or pick-up to more then one location?
+ <p><strong>Do you require shipment or pick-up for more than one location?
  <input type="radio" name="singlemultiple" value="1" onchange="singlemultiplesing()" id="multiple" />Yes
 <input name="singlemultiple" type="radio" id="single"  onchange="singlemultiplesing()" value="0"  />No
 </strong></p>
@@ -539,11 +543,15 @@ function set_ddm (ddm, v) {
 <td valign="top" style="border-top:2px solid #000000 !important;border-right:2px solid #000000 !important;border-left:2px solid #000000 !important">
 		
         <table width="395px">
-        <tr valign="top">
+        <tr valign="top" style="height: 0px">
         <td colspan="2"><b>Contact Information</b>
         <p>Please input your contact address. When complete you can copy your contact address to your shipping address by selecting the copy button below.<br /><br /></p>
         </td>
         </tr>
+		<tr>
+			<td>Update my profile:</td>
+			<td><input type="checkbox" value="1" name="contact_default" <?contact_default?> />
+		</tr>
        
 			<? if ($$variable{'ddmOrderForUsers'} ne '') ?>
              <tr>
@@ -657,7 +665,7 @@ function set_ddm (ddm, v) {
       </td>
       <td valign="top" style="border-top:2px solid #000000 !important;border-right:2px solid #000000 !important;border-left:2px solid #000000 !important">
       <table width="400px">
-      <tr valign="top">
+      <tr valign="top" style="height: 180px">
       <td colspan="2">
       <input id="contactandshipsame" type="button" name="Contact and Ship Info Same" style="float:left" value="Same as Contact Information" class="button right"
        onClick="return check_contact();">
@@ -696,14 +704,39 @@ function set_ddm (ddm, v) {
             </select>
             </td>
             </tr>
+
+		<tr>
+			<td>Add to Profile:</td>
+			<td><input type="checkbox" value="1" name="Save_Ship_Address" <?Save_Ship_Address?> />
+		</tr>
             <tr>
-            <td valign="top"><input type="hidden" id="txtShippingCompany" name="txtShippingCompanyName" size="30"	class="form" value="<?txtShippingCompany?>" />
-			* Contact Person:</td>
+			<td valign="top">Location Name:</td>
+			<td>
+			<input type="text" id="txtShippingLocationName" name="txtShippingLocationName" size="30"	class="form" value="<?txtShippingLocationName?>" />
+			</td>
+			</tr>
+
+            <tr>
+			<td valign="top">*Company Name:</td>
+			<td>
+			<input type="text" id="txtShippingCompany" name="txtShippingCompanyName" size="30"	class="form" value="<?txtShippingCompany?>" />
+			</td>
+			</tr>
+
+			<tr>
+			<td> *First Name:</td>
             <td>
-			<input type="text" id="txtShippingContact" name="txtShippingContact" size="30"	class="form" value="<?txtShippingContact?>" />
+			<input type="text" id="txtShippingFirstName" name="txtShippingFirstName" size="30"	class="form" value="<?txtShippingFirstName?>" />
 			</td>
             </tr>
             
+			<tr>
+			<td> *Last Name:</td>
+            <td>
+			<input type="text" id="txtShippingLastName" name="txtShippingLastName" size="30"	class="form" value="<?txtShippingLastName?>" />
+			</td>
+            </tr>
+			
             <tr>
             <td valign="top">* Address:</td>
 			<td><input type="text" id="txtShippingAddress1" name="txtShippingAddress1" size="30"	class="form" value="<?txtShippingAddress1?>" /></td>
@@ -750,6 +783,10 @@ function set_ddm (ddm, v) {
             <td valign="top">* Phone:</td>
             <td><input type="text" size="30"	class="form" id="txtShippingPhone" name="txtShippingPhone" value="<?txtShippingPhone?>" /></td>
             </tr>
+            <tr>
+            <td valign="middle">Delivery Instructions:</td>
+			<td><textarea  size="30"	class="form" id="txtShippingInstructions" name="txtShippingInstructions" style="height: 7em;" /><?txtShippingInstructions?></textarea></td>
+            </tr>
       
                              <tr id="mult8">
                       <td valign="top">* Quantity to Ship to this address:</td>
@@ -772,11 +809,11 @@ function set_ddm (ddm, v) {
 </table>
 						</td>
                         </tr>
-                        
+<!--                        
                         <tr>
                         <td valign="top">* Delivery Date:</td>   
                         <td>    
-					<select name="ddmDueDateMonth1" id="ddmDueDateMonth1" size="1">
+					<select name="ddmDueDateMonth1" id="ddmDueDateMonth1" size="1" style="width: 5em;>
 				<option value=""> Month </option>
                 <option value="01">January</option>
                 <option value="02">February</option>
@@ -832,7 +869,7 @@ function set_ddm (ddm, v) {
 					<?endloop YEARS?>
 
 					</select>
-                    <select name="ddmDueDateTime" id="ddmDueDateTime" size="1">
+                    <select name="ddmDueDateTime" id="ddmDueDateTime" size="1" style="width: 5.2em;">
                     <option value=""> Time </option>
                 <option value="7:00 am">7:00 am</option>
                 <option value="8:00 am">8:00 am</option>
@@ -847,18 +884,15 @@ function set_ddm (ddm, v) {
                 <option value="5:00 pm">5:00 pm</option>
 					</select>
                     <br />
-					<strong>*Delivery Date
-is subject to administrative approval. Orders after 4:30pm will be processed
-the next business day.</strong>
                     </td>
-                    </tr>
-                    
+       </tr>
+-->                  
                     <? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
                            <tr id="shipvia_row2">
                            <td valign="top">Ship Via:</td>
                            <td>   
                             
-                 <select class="form" id="ddmShipVia1" name="ddmShipVia1" onchange="overrides(1);">
+                 <select class="form" id="ddmShipVia1" name="ddmShipVia1" onchange="overrides(1);" style="width:14em">
 			<option value="">- Select -</option>
 				<?SHIP_OPTIONS?>
 		</select>
@@ -870,19 +904,21 @@ the next business day.</strong>
                      
                  
            <? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
+		   <!--
           <tr id="mult9">
           <td valign="top">Blind Shipping:</td>
           <td>Yes&nbsp;&nbsp;&nbsp;<input type="checkbox" id="chkBlindShipment" name="chkBlindShipment" <?chkBlindShipment?> value="Y" /></td>
           </tr>
+		   -->
            <? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
            
             
             <? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>
 			<? if ($$variable{'checkout'}) ?>
 				<!-- keep the rdbname so that javascript will work, even though these are hidden in this case -->
-				<input type="hidden" name="rdbShippingContents" value="Project" <?rdbShippingContentsProject?> />
-				<input type="hidden" name="rdbShippingContents" value="Proofs" <?rdbShippingContentsProofs?> />
-				<input type="hidden" name="rdbShippingContents" value="Other" <?rdbShippingContentsOther?> />
+				<input type="hidde" name="rdbShippingContents" value="Project" <?rdbShippingContentsProject?> />
+				<input type="hidde" name="rdbShippingContents" value="Proofs" <?rdbShippingContentsProofs?> />
+				<input type="hidde" name="rdbShippingContents" value="Other" <?rdbShippingContentsOther?> />
 			<? else ($$variable{'checkout'}) ?>
 				<tr id="ship_contents_row">
                 <td valign="top">Shipment Contents:</td>

@@ -327,13 +327,17 @@ sub get_shipping_address {
 }
 
 sub save_shipping {
-    my ($self, $id, $params) = @_;
+    my ($self, $id, $params, $form) = @_;
 
 	$id = undef if $id eq 'New';
     my $address = $self->get_shipping_address($id);
 
 
-    $address->set( $params );
+	if ( $form) {
+   		$address->form_set( $params );
+	} else {
+   		$address->set( $params );
+	}
 	$self->{dbh}->do(qq{INSERT INTO customer_ship_address 
 						VALUES ( $self->{index}, $address->{index}) } ) if !$id;
 }

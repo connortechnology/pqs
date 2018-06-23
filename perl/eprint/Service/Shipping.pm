@@ -399,8 +399,24 @@ sub preaction {
     my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
 	use Data::Dumper;
 
+	my $r = session::r;
+	my $cid = $dbh->selectrow_array(q{SELECT lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
+
 
 	if ( $specs->{'New Address'} ) {
+		if ( $specs->{Save_Ship_Address} ) {
+
+			my $cust = new eprint::obj_customer( $log, $dbh, $cid);
+
+			print STDERR "SAVE ADDRESS New Ship \n";
+			$cust->save_shipping( 'New', $specs, 1 );
+
+		} else {
+
+			print STDERR " NO Save Address \n", Dumper($specs);
+
+		}
+
 		insert_address($log, $dbh, $sid, $specs);
 	}
 	elsif ( $specs->{'Delete Address'} ) {
