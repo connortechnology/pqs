@@ -20,6 +20,7 @@ my %form_fields = (
 		'txtShippingEmail'          =>  'Email',
 		'txtShippingCubicle'        =>  'Cubicle',
 		'txtShippingInstructions'   =>  'Instructions',
+		'txtShippingLocationName'    				=>  'shipname',
 );
 
 my %fields = (
@@ -39,6 +40,7 @@ my %fields = (
 		'Email'			=>	'strEmail',
 		'Cubicle'		=>	'strCubicle',
 		'Instructions'		=>	'Instructions',
+		'shipname'		=>	'shipname',
 		); # end %fields
 
 sub new {

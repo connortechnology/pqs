@@ -403,12 +403,11 @@ sub preaction {
 	my $cid = $dbh->selectrow_array(q{SELECT lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
 
 
+	my $cust = new eprint::obj_customer( $log, $dbh, $cid);
+
 	if ( $specs->{'New Address'} ) {
 		if ( $specs->{Save_Ship_Address} ) {
 
-			my $cust = new eprint::obj_customer( $log, $dbh, $cid);
-
-			print STDERR "SAVE ADDRESS New Ship \n";
 			$cust->save_shipping( 'New', $specs, 1 );
 
 		} else {
@@ -417,7 +416,26 @@ sub preaction {
 
 		}
 
+		if ( $specs->{contact_default} ) {
+			my @fields = qw{txtAddress1 txtAddress2 txtCity ddmStateProvince txtPostalCode ddmCountry txtPhone txtExtension txtFax};
+			
+			foreach my $f ( @fields )  {
+
+				my $val = $specs->{$f};
+				next unless $val;
+
+				$f =~ s/ddmStateProvince/strprovstate/;
+				$f =~ s/ddmCountry/strcountry/;
+				$f =~ s/txtPostalCode/strpostalcodezip/;
+				$f =~ s/txtExtension/strext/;
+				$f =~ s/txt/str/;
+
+				$dbh->do(qq{UPDATE tbl_customer SET $f = ? WHERE lngcustomerid = ?}, undef, $val, $cid);
+			}
+		}
+
 		insert_address($log, $dbh, $sid, $specs);
+
 	}
 	elsif ( $specs->{'Delete Address'} ) {
 
@@ -1073,7 +1091,7 @@ sub display {
     $$variable{'SHIP_OPTIONS'} = ssi::fill_drop_down($log, $dbh, $_);
 
 	my $sql = qq{
-		SELECT lngindex, strcompanyname FROM tbl_addresses WHERE lngindex IN (
+		SELECT lngindex, shipname FROM tbl_addresses WHERE lngindex IN (
 			SELECT shipid FROM customer_ship_address, tbl_projects 
 			WHERE customer_ship_address.customer = tbl_projects.lngcustomerid 
 			AND lngprojectindex = $pid )

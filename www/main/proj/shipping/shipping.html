@@ -16,23 +16,24 @@
 
     <!--#include virtual="/includes/h2-js.html" -->
 	<style type="text/css">
-	input[disabled]{
-  background: #D4D4D4;     
-}
+	input[disabled]{ background: #D4D4D4;     }
 
-th {
-	padding: 0.1ex 0.65em 0.25ex !important;
-}
+	.label { width: 12em; }
 
 
-td {
-background-color:#FFFFFF !important; 
-border:none !important;
-padding-top:7px !important;
-padding-right:3px !important;
-padding-left:3px !important;
-height:25px !important;
-}
+	th {
+		padding: 0.1ex 0.65em 0.25ex !important;
+	}
+
+
+	td {
+		background-color:#FFFFFF !important; 
+		border:none !important;
+		padding-top:7px !important;
+		padding-right:3px !important;
+		padding-left:3px !important;
+		height:25px !important;
+	}
 	</style>
     
 	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
@@ -98,6 +99,10 @@ function check_text (f,n) {
 function check_shipping () {
 		var msg = '';
 		
+// Ship field checking for now. Fields have been temp disabled.
+return msg;
+	
+
 		if(document.getElementById("multiple").checked == true){
 				msg += check_text('add_qty1','Quantity to Ship to this Address Quantity 1');
 				 <? if ( $$variable{'txtQuantity2'} > 0 ) ?>
@@ -399,64 +404,22 @@ function getmymethod() {
 		return;
 	}
 	
+
 	var method = delmethod.options[delmethod.selectedIndex].value;
-//	alert (method);
+
 	if (method != "Standard"){
-		if ($('shipvia_row2'))
-			$('shipvia_row2').style.display="none";
-			
-		if ($('ship_contents_row'))
-			$('ship_contents_row').style.display="none";
-		
-	//	alert ('Not Standard');
-		
-				if (method == "Customer Pick-up" || method == "Store Mail - Norcal" || method == "Store Mail - Norcal+Hawaii" || method == "Store Mail - All Stores"){
-					$('txtShippingAddress1').disabled=true;
-					$('txtShippingAddress2').disabled=true;
-					$('txtShippingCity').disabled=true;
-					$('ddmShippingStateProvince').disabled=true;
-					$('ddmShippingCountry').disabled=true;
-					$('txtShippingPostalCode').disabled=true;
-			//		$('txtShippingCubicle').disabled=true;
-					//	if (method != "Customer Pick-up"){
-					//	alert ('is a store mail option');
-						//$('storemail').style.display="table-row";
-						//}
-					//	else {
-//							$('storemail').style.display="none";
-//						}
-					
-				}
-				else {
-					$('txtShippingAddress1').disabled=false;
-					$('txtShippingAddress2').disabled=false;
-					$('txtShippingCity').disabled=false;
-					$('ddmShippingStateProvince').disabled=false;
-					$('ddmShippingCountry').disabled=false;
-					$('txtShippingPostalCode').disabled=false;
-			//		$('txtShippingCubicle').disabled=false;
-			//		$('storemail').style.display="none";
-					
-				}
-	
-						
+
+		var f = document.getElementsByClassName('ship')
+		for(i=0; i<f.length; i++) {
+			f[i].style.display =    'none';
 		}
+
+	}
 	else {
-	//	alert ($('shipvia_row2'));
-		if ($('shipvia_row2'))
-			$('shipvia_row2').style.display="table-row";
-			
-		if ($('ship_contents_row'))
-			$('ship_contents_row').style.display="table-row";
-			
-			$('txtShippingAddress1').disabled=false;
-			$('txtShippingAddress2').disabled=false;
-			$('txtShippingCity').disabled=false;
-			$('ddmShippingStateProvince').disabled=false;
-			$('ddmShippingCountry').disabled=false;
-			$('txtShippingPostalCode').disabled=false;
-		//	$('txtShippingCubicle').disabled=false;
-		//	$('storemail').style.display="none";
+		var f = document.getElementsByClassName('ship')
+		for(i=0; i<f.length; i++) {
+			f[i].style.display =    'table-row';
+		}
 
 	}
 }
@@ -538,7 +501,7 @@ function set_ddm (ddm, v) {
 </strong></p>
 </fieldset>  
    
-<table width="100%">
+<table width="100%" id="ShipInfo">
 <tr>
 <td valign="top" style="border-top:2px solid #000000 !important;border-right:2px solid #000000 !important;border-left:2px solid #000000 !important">
 		
@@ -549,7 +512,7 @@ function set_ddm (ddm, v) {
         </td>
         </tr>
 		<tr>
-			<td>Update my profile:</td>
+			<td class="label">Update my profile:</td>
 			<td><input type="checkbox" value="1" name="contact_default" <?contact_default?> />
 		</tr>
        
@@ -649,17 +612,6 @@ function set_ddm (ddm, v) {
 			</td>
             </tr>
 
-            <tr>
-            <td valign="top">CC E-mail Address:</td>
-            <td><input type="text" id="txtEmailCC" name="txtEmailCC" size="30" class="input-text" value="<?txtEmailCC?>" />
-			</td>
-            </tr>
-			
-            <tr>
-            <td></td>
-            <td>
-            </td>
-            </tr>
             </table>
 		
       </td>
@@ -682,7 +634,7 @@ function set_ddm (ddm, v) {
             
             
             <tr>
-            <td>Delivery Method:</td>
+            <td class="label">Delivery Method:</td>
  <td><select id="deliverymethod" name="deliverymethod" onchange="getmymethod()">
  <option value="Standard">Standard Shipping</option>
      <option value="Customer Pick-up">None - Customer Pick-up</option>
@@ -696,7 +648,7 @@ function set_ddm (ddm, v) {
     
 
             
-            <tr>
+            <tr class="ship">
             <td width="140px" valign="top">Select an Address:</td>
             <td><select id="ddmShippingCompany" name="ddmShippingCompany" onChange="f1.btnFunction.value='Get Address'; f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';f1.submit();" >
                 <option value="">- Select -</option>
@@ -705,18 +657,19 @@ function set_ddm (ddm, v) {
             </td>
             </tr>
 
-		<tr>
-			<td>Add to Profile:</td>
-			<td><input type="checkbox" value="1" name="Save_Ship_Address" <?Save_Ship_Address?> />
-		</tr>
-            <tr>
+			<tr class="ship">
+				<td>Add to Profile:</td>
+				<td><input type="checkbox" value="1" name="Save_Ship_Address" <?Save_Ship_Address?> />
+			</tr>
+
+            <tr class="ship">
 			<td valign="top">Location Name:</td>
 			<td>
 			<input type="text" id="txtShippingLocationName" name="txtShippingLocationName" size="30"	class="form" value="<?txtShippingLocationName?>" />
 			</td>
 			</tr>
 
-            <tr>
+            <tr class="ship">
 			<td valign="top">*Company Name:</td>
 			<td>
 			<input type="text" id="txtShippingCompany" name="txtShippingCompanyName" size="30"	class="form" value="<?txtShippingCompany?>" />
@@ -737,21 +690,21 @@ function set_ddm (ddm, v) {
 			</td>
             </tr>
 			
-            <tr>
+            <tr class="ship">
             <td valign="top">* Address:</td>
 			<td><input type="text" id="txtShippingAddress1" name="txtShippingAddress1" size="30"	class="form" value="<?txtShippingAddress1?>" /></td>
             </tr>
-            <tr>
+            <tr class="ship">
             <td valign="top">  Address 2:</td>
             <td><input type="text" id="txtShippingAddress2" name="txtShippingAddress2" size="30"	class="form" value="<?txtShippingAddress2?>" /></td>
             </tr>
             
-            <tr>
+            <tr class="ship">
             <td valign="top">* City:</td>
 			<td><input type="text" id="txtShippingCity" name="txtShippingCity" size="30"	class="form" value="<?txtShippingCity?>" /></td>
 			</tr>
             
-            <tr>
+            <tr class="ship">
             <td valign="top">* State/Province:</td>
             <td>
 			<select id="ddmShippingStateProvince" name="ddmShippingStateProvince">
@@ -761,12 +714,12 @@ function set_ddm (ddm, v) {
 			</td>
             </tr>
             
-            <tr>
+            <tr class="ship">
             <td valign="top">* Zip/Postal Code:</td>
             <td><input type="text" size="30"	class="form" id="txtShippingPostalCode" name="txtShippingPostalCode" value="<?txtShippingPostalCode?>" /></td>
             </tr>
             
-            <tr>
+            <tr class="ship">
             <td valign="top">* Country:</td>
             <td>
 			<select id="ddmShippingCountry" name="ddmShippingCountry" >
@@ -776,39 +729,20 @@ function set_ddm (ddm, v) {
 			</td>
             </tr>
             
-            
-			
-            
             <tr>
             <td valign="top">* Phone:</td>
             <td><input type="text" size="30"	class="form" id="txtShippingPhone" name="txtShippingPhone" value="<?txtShippingPhone?>" /></td>
             </tr>
+
             <tr>
             <td valign="middle">Delivery Instructions:</td>
 			<td><textarea  size="30"	class="form" id="txtShippingInstructions" name="txtShippingInstructions" style="height: 7em;" /><?txtShippingInstructions?></textarea></td>
             </tr>
       
-                             <tr id="mult8">
-                      <td valign="top">* Quantity to Ship to this address:</td>
-                      <td>
-                           <table width="100%" border="0" align="left" style="padding:0px 0px 0px 0px">
-  <tr>
-    <td style="padding:0px 0px 0px 0px" width="50%">Quantity 1 of <?QUANTITY1?>:</td>
-    <td style="padding:0px 0px 0px 0px" width="50%"><input name="add_qty1" id="add_qty1" onKeyup="total_qtys()" size="10" /></td>
-  </tr>
-  <? if ( $$variable{'txtQuantity2'} > 0 ) ?><tr>
-    <td style="padding:0px 0px 0px 0px">Quantity 2 of <?QUANTITY2?>:</td>
-    <td style="padding:0px 0px 0px 0px"><input name="add_qty2" id="add_qty2" onKeyup="total_qtys()" size="10"  /></td>
-  </tr>
-  <? endif ( $$variable{'txtQuantity2'} > 0 ) ?>
-  <? if ( $$variable{'txtQuantity3'} > 0 ) ?><tr>
-    <td style="padding:0px 0px 0px 0px">Quantity 3 of <?QUANTITY3?>:</td>
-    <td style="padding:0px 0px 0px 0px"><input name="add_qty3" id="add_qty3" onKeyup="total_qtys()" size="10"  /></td>
-  </tr>
-   <? endif ( $$variable{'txtQuantity3'} > 0 ) ?>	
-</table>
-						</td>
-                        </tr>
+			<tr id="mult8">
+			<td>* Quantity to Ship:</td>
+			<td><input name="add_qty1" id="add_qty1" onKeyup="total_qtys()" size="10" /></td>
+			</tr>
 <!--                        
                         <tr>
                         <td valign="top">* Delivery Date:</td>   
