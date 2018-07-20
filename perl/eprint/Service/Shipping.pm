@@ -336,7 +336,9 @@ print STDERR "INSERT NEW ADDRESS SID: $sid I: - $index \n";
 	my $ship_qty = $specs->{add_qty1};
 
 	if ( $carton_sid ) {
-		$specs->{"boxes-$index"} = $ship_qty % $qpb ? int($ship_qty / $qpb) + 1 : $ship_qty / $qpb,
+		my $boxes  = $ship_qty % $qpb ? int($ship_qty / $qpb) + 1 : $ship_qty / $qpb;
+		$boxes = 1 unless $boxes > 1;
+		$specs->{"boxes-$index"} = $boxes;
 		$specs->{"weight-$index"} =  sprintf("%.1f",$ship_qty * $cartons{hdnProjectWeight}),
 	} else {
 		$specs->{"boxes-$index"} = 1; 
@@ -497,7 +499,7 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 		
 		map { $$specs{"txtQuantity$_"} = $$specs{"add_qty${_}-$shipid"} } (1..3);
 
-		return 'uncalculated' unless $specs->{txtQuantity1};
+		#return 'uncalculated' unless $specs->{txtQuantity1};
 
     	$status = calc_price($log, $dbh, $variable, $pid, $sid, 
 							 	   $service_type, $specs, $shipid);
@@ -534,8 +536,11 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 	my $add = eprint::address->new($log, $dbh);
 	map { delete $specs->{$_} } keys %{$add->form_fields};
 
-	$status = 'uncalculated' unless $specs->{ddmDueDateDay1};
+	#override all errors for now.
+	$status = 'calculated';
+	$status = 'uncalculated' unless $specs->{deliverymethod};
 
+	print STDERR "HAVE STATUS: $status - $specs->{deliverymethod}  \n";
 	return $status eq 'calculated' ? $status : 'uncalculated';
 }
 
