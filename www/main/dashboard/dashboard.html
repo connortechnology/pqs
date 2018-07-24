@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Account - Project History
+		<!--#include virtual="/includes/web_page_title_end.html" -->
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-main-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script type="text/javascript">
+		function delete_confirm(form) {
+			var count = 0;
+			var len = form['delete'].length;
+
+			for (var i=0; i < len; i++) {
+				if (form['delete'][i].checked) { count++; }
+			}
+
+			if (count) {
+				return confirm("Are you sure you wish to delete these " + count + " projects from history?");
+			}
+			
+			alert("To Delete Projects, click the checkbox beside the project.");
+			return false;
+		}
+	</script>
+<?dumper?>
+    <script  type="text/javascript">
+		function open_project_docket(p,q) {
+			window.open('/employee/production/proj_docket.html?ProjectIndex=' + p + ';QuantityIndex=' + q ,'projectdocket','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
+	</script>
+	<style>
+		#expander { min-width: 1750px; }
+		#sizer {max-width: none; } 
+	</style>
+<style>
+	.rgfield {
+		width: 8em;
+		border: none;
+	}
+	.smfield {
+		width: 100%;
+		border: none;
+	}
+
+	th { white-space: normal; width: 1em; }
+	td { padding: 0.2em 0.2em 0.2em 0.5em; text-align: center }
+</style>
+</head>
+<body>
+	<!--#include virtual="/includes/c1-main-nav.html" -->
+
+	<h1><span class="title-section">Account &#187;</span> Project History</h1>
+
+	<? if ( $$variable{'user_id'} eq '0' ) ?>
+		<p>Only logged in customers have a project history.</p>
+	<? else ( $$variable{'user_id'} eq '0' ) ?>
+
+	<p>Please input a project ID and click &quot;Go&quot;or select a search criteria and click &quot;Show Results&quot;. You may then click on an <strong> Project ID </strong> or <strong> Project Name </strong> to view project details. To delete projects from history check the appropriate project(s) and click delete.</p>
+
+	<form action="/main/dashboard/dashboard.html" method="get" name="f1" id="f1">
+
+		<fieldset>
+			<legend>
+				Project Search
+			</legend>
+		
+			<p class="none">&nbsp;</p>
+		
+			<label for="pid">Search Keywords or ID:</label>
+			<input id="pid" name="pid" size="9" class="smBox" value="<?search?>" style="text-align:left" />
+<!--			<input type="submit" class="button smGo" value="Search" /><br />
+-->			<br />
+		
+		
+			<p class="none">&nbsp;</p>
+		
+			<label for="ddmStatus">Project Status:</label>
+			<select id="ddmStatus" name="ddmStatus" size="1">
+				<option value=""> All </option>
+				<?ddmStatus?>
+			</select>
+			<br />
+
+			<label for="ddmStartMonth">Start Date:</label>
+			<select id="ddmStartMonth" name="ddmStartMonth">
+				<?ddmStartMonth?>
+			</select>
+			<select name="ddmStartDay">
+				<?ddmStartDay?>
+			</select>
+			<select name="ddmStartYear">
+				<?ddmStartYear?>
+			</select>
+			<br />
+
+			<label for="ddmEndMonth">End Date:</label>
+			<select id="ddmEndMonth" name="ddmEndMonth">
+				<?ddmEndMonth?>
+			</select>
+			<select name="ddmEndDay">
+				<?ddmEndDay?>
+			</select>
+			<select name="ddmEndYear">
+				<?ddmEndYear?>
+			</select>
+			<br />
+
+			<div class="button-bar indent-regular">
+				<input type="reset" class="button" value="Reset" />
+				<input type="submit" class="button" value="Show Results" />
+				<br />
+				</div>
+			<br />
+		</fieldset>
+	</form>
+	
+	<form action="/main/dashboard/dashboard.html" method="post" name="f1" id="f1" onsubmit="" >
+
+<!-- ******************* START ****************************** -->
+ <table>
+    <tr>
+		<th><input type=checkbox /></th>
+		<?loop fields?>
+        	<th><?desc?></th>
+		<?endloop fields?>
+
+     
+    </tr>
+    <?loop data?>
+			<tr>
+             <td>
+				 <input type="checkbox" />
+			</td>
+		<?loop fields?>
+
+			<td>
+			<?if ro?>
+			<div class="<?class?>" ><?value?></div>
+			<?else ro?>
+			 <?if big?>
+				<textarea name="<?fname?>[<?id?>]" cols=50><?value?> </textarea>
+			 <?else big?>
+
+			 	<?if ( $variable->{type} eq 'bool' ) ?>
+					<input type="checkbox" name="<?fname?>[<?id?>]" value="1" size="<?size?>" <?if value?>checked<?endif value?> />
+			 	<?else ( $variable->{type} eq 'bool' ) ?>
+					<!-- ***** -->
+					<input name="<?fname?>[<?id?>]" value="<?value?>" class="<?class?>"  />
+			 	<?endif ( $variable->{type} eq 'bool' ) ?>
+
+			 <?endif big?>
+				
+			<?endif ro?>
+
+			</td>		
+	
+		<?endloop fields?>
+        
+			</tr>
+    <?endloop data?>
+
+  </table>
+<!-- ******************* END ****************************** -->
+
+<button onClick="window.realod" name="Reload" style="margin-top: 200px; width: 300px; height: 300px">Reload</button>
+	</form>
+	<? endif ( $$variable{'user_id'} eq '0' ) ?>
+
+	<!--#include virtual="/includes/f1-main.html" -->
+	<!--#include virtual="/includes/main/account.html" -->
+	<!--#include virtual="/includes/f2-main.html" -->
+</body>
+</html>

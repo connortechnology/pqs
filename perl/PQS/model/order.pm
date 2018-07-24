@@ -7,6 +7,16 @@ use session;
 
 use Data::Dumper;
 
+sub active_orders {
+  	my $dbh = session::dbh;
+
+	
+	my $orders = $dbh->selectall_arrayref(q{
+		SELECT * from tbl_orders LIMIT 10
+	}, undef );
+
+}
+
 sub get_order {
 	my $id = shift;
   	my $dbh = session::dbh;

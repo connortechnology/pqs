@@ -191,6 +191,7 @@ print STDERR "HAVE FILL IN FORM \n";
         print( $file_data );
     }
 
+print STDERR "END REQUEST \n\n\n\n\n";
 
     $dbh->disconnect;
     $gdb->disconnect;
@@ -628,7 +629,7 @@ sub section_main {
     require eprint::docket;
     require eprint::project_files;
     require eprint::shopping_list;
-print STDERR "SUB : $sub_section \n";
+print STDERR "MAIN -- SUB : $sub_section file: $filename \n";
    
     if ($sub_section eq 'account') {
         eprint::login::login_display($r, $log, $dbh, $cookie, $variable)                        if $filename eq 'account_login.html';
@@ -691,6 +692,11 @@ print STDERR "SUB : $sub_section \n";
         $status = eprint::ProductGroup::select_project($r, $dbh, $variable)   if $filename eq 'select.html';
 		eprint::qprice::upload($r, $dbh, $variable)							  if $filename eq 'upload_complete.html';
     }
+    elsif ($sub_section eq 'dashboard') {
+
+		use eprint::dashboard;
+        eprint::dashboard::display($variable) if $filename eq 'dashboard.html';
+	}
     elsif ($sub_section eq 'proj') {
 
         if ($filename eq 'dispatch.html') {
