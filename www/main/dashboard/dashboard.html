@@ -3,7 +3,7 @@
 <head>
 	<title>
 		<!--#include virtual="/includes/web_page_title.html" -->
-		Account - Project History
+		DASHBOARD
 		<!--#include virtual="/includes/web_page_title_end.html" -->
 	</title>
 
@@ -60,7 +60,7 @@
 <body>
 	<!--#include virtual="/includes/c1-main-nav.html" -->
 
-	<h1><span class="title-section">Account &#187;</span> Project History</h1>
+	<h1><span class="title-section">Dashboard</h1>
 
 	<? if ( $$variable{'user_id'} eq '0' ) ?>
 		<p>Only logged in customers have a project history.</p>
@@ -72,15 +72,15 @@
 
 		<fieldset>
 			<legend>
-				Project Search
+				Search Area
 			</legend>
 		
 			<p class="none">&nbsp;</p>
-		
+			<!--	
 			<label for="pid">Search Keywords or ID:</label>
 			<input id="pid" name="pid" size="9" class="smBox" value="<?search?>" style="text-align:left" />
-<!--			<input type="submit" class="button smGo" value="Search" /><br />
--->			<br />
+			<input type="submit" class="button smGo" value="Search" /><br />
+		<br />
 		
 		
 			<p class="none">&nbsp;</p>
@@ -122,6 +122,7 @@
 				<br />
 				</div>
 			<br />
+			-->
 		</fieldset>
 	</form>
 	
