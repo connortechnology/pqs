@@ -55,6 +55,8 @@
 
 	th { white-space: normal; width: 1em; }
 	td { padding: 0.2em 0.2em 0.2em 0.5em; text-align: center }
+	select { width: 18em; }
+	div.button-bar { margin-top: 3em;}
 </style>
 </head>
 <body>
@@ -75,55 +77,83 @@
 				Search Area
 			</legend>
 		
-			<p class="none">&nbsp;</p>
-			<!--	
-			<label for="pid">Search Keywords or ID:</label>
-			<input id="pid" name="pid" size="9" class="smBox" value="<?search?>" style="text-align:left" />
-			<input type="submit" class="button smGo" value="Search" /><br />
-		<br />
-		
-		
-			<p class="none">&nbsp;</p>
-		
-			<label for="ddmStatus">Project Status:</label>
-			<select id="ddmStatus" name="ddmStatus" size="1">
-				<option value=""> All </option>
-				<?ddmStatus?>
-			</select>
-			<br />
+			<div id="SearchOptions" style="border: 0px solid black">
 
-			<label for="ddmStartMonth">Start Date:</label>
-			<select id="ddmStartMonth" name="ddmStartMonth">
-				<?ddmStartMonth?>
+			<label>Text Search</label><br>
+			<input type="text" name="textsearch" id="textsearch" value="Text Search" />
+			<select name="search_type" id="search_type">
+				<option>Project Name</option>
+				<option>Project Id</option>
+				<option>Order Id</option>
+				<option>Quote Id</option>
 			</select>
-			<select name="ddmStartDay">
-				<?ddmStartDay?>
-			</select>
-			<select name="ddmStartYear">
-				<?ddmStartYear?>
-			</select>
-			<br />
 
-			<label for="ddmEndMonth">End Date:</label>
-			<select id="ddmEndMonth" name="ddmEndMonth">
-				<?ddmEndMonth?>
-			</select>
-			<select name="ddmEndDay">
-				<?ddmEndDay?>
-			</select>
-			<select name="ddmEndYear">
-				<?ddmEndYear?>
-			</select>
-			<br />
 
-			<div class="button-bar indent-regular">
+
+			<br>
+
+			<label>Date</label><br>
+			<input type="text" name="startdate" id="startdate" />
+			<input type="text" name="enddate" id="enddate" />
+
+			<br>
+
+			<label>Filters</label><br>
+			<select>
+				<option>CSR Name</option>
+			</select>
+
+			<select>
+				<option>Company Name</option>
+			</select>
+
+			<select>
+				<option>Quoted For</option>
+			</select>
+
+			<select>
+				<option>Ordred By</option>
+			</select>
+
+			<select>
+				<option>Project Status</option>
+			</select>
+
+			<select>
+				<option>Sales Rep</option>
+			</select>
+
+
+			</div>
+
+			<br/>
+
+
+
+			<div class="button-bar">
 				<input type="reset" class="button" value="Reset" />
-				<input type="submit" class="button" value="Show Results" />
+				<input type="submit" class="button" value="Search" />
 				<br />
 				</div>
 			<br />
-			-->
 		</fieldset>
+
+		<fieldset>
+		<div>
+		<legend> Actions </legend>
+			<select>
+				<option>Sales Rep</option>
+			</select>
+		</div>
+		<div>
+		<legend> Reports </legend>
+			<select>
+				<option>Sales Rep</option>
+			</select>
+		</div>
+		</fieldset>
+
+
 	</form>
 	
 	<form action="/main/dashboard/dashboard.html" method="post" name="f1" id="f1" onsubmit="" >
