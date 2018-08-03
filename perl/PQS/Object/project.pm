@@ -182,17 +182,20 @@ print STDERR "HAVE DELIV ", Dumper(\@specs, \%results);
 sub delivery_method {
 
 	my $self = shift;
+	my $pu = 'Pick-Up';
 
 	my $dbh = $self->{dbh};
 	my $log = $self->{log};
 
 	my $sid =  eprint::project::check_for_service($log, $dbh, $self->{id}, 'Shipping');
 
+	return $pu unless $sid; 
+
 	my @specs = qw( deliverymethod ddmShipVia1 );
 	
 	my %results = eprint::service::get_specifications_pairs(
             $log, $dbh, undef, $sid, @specs
-     );
+     	);
 
 	 my $ship;
 
@@ -202,7 +205,7 @@ sub delivery_method {
 			 SELECT strname FROM tbl_ship_via WHERE lngindex = ?
 		 }, undef, $results{ddmShipVia1});
 	 } else { 
-		 $ship = 'Pick-Up';
+		 $ship = $pu;
 	 }
 
 
@@ -224,7 +227,9 @@ sub due_date {
 
 	print STDERR "HAVE DATE: $date \n", Dumper( $i);
 
-	$date =~ /(\d*-\d*-\d*)/;
+	$date =~ /(\d\d-\d*-\d*)/;
+
+	#$date =~ s/\-//;
 
 	return $1;
 

@@ -16,24 +16,24 @@ sub display {
 	my $dbh = session::dbh;
 
 	my $cols = [
-		{ desc=>"Order", 	id=>"lngorderid", 			class=> "small", ro=>1 },
-		{ desc=>"Project", 	id=>"lngprojectindex", 	class=> "small", ro=>1 },
-		{ desc=>"Customer", id=>"strcompanyname", 	class=> "rgfield", ro=>1 },
-		{ desc=>"Contact", 	id=>"contact", 	class=> "rgfield", ro=>1 },
-		{ desc=>"Status", 	id=>"status", 	class=> "rgfield", ro=>1 },
-		{ desc=>"Project Type", id=>"ptype", 	class=> "smfield", ro=>1 },
-		{ desc=>"Quantity", id=>"intquantity1", 	class=> "smfield", ro=>1 },
-		{ desc=>"Inks", 	id=>"inks", 	class=> "smfield", ro=>1 },
-		{ desc=>"Job Name", id=>"strprojectreference", 	class=> "rgfield", ro=>1 },
-		{ desc=>"Equipment", id=>"equipment", 	class=> "smfield", ro=>1 },
-		{ desc=>"Finished Size", id=>"finished", 	class=> "smfield", ro=>1 },
-		{ desc=>"Time", 	id=>"time", 	class=> "smfield", ro=>1 },
-		{ desc=>"Due Date", 		id=>"duedate", 	class=> "rgfield", ro=>1 },
-		{ desc=>"Delivery Method", id=>"delivery", 	class=> "smfield", ro=>1 },
-		{ desc=>"Stock", 	id=>"stock", 	class=> "rgfield", ro=>1 },
-		{ desc=>"Sheets", 	id=>"sheets", 	class=> "smfield", ro=>1 },
-		{ desc=>"Sheet Size", id=>"sheet_size",	class=> "smfield", ro=>1 },
-		{ desc=>"Pulled", 	id=>"pulled", 	class=> "smfield", ro=>1 },
+	{ desc=>"Order", 		id=>"lngorderid", 	class=> "srfield", ro=>1 },
+	{ desc=>"Project", 		id=>"lngprojectindex", 	class=> "srfield", ro=>1 },
+	{ desc=>"Customer", 		id=>"strcompanyname", 	class=> "lgfield", ro=>1 },
+	{ desc=>"Contact", 		id=>"contact", 		class=> "rgfield", ro=>1 },
+	{ desc=>"Status", 		id=>"status", 		class=> "rgfield", ro=>1 },
+	{ desc=>"Project Type", 	id=>"ptype", 		class=> "smfield", ro=>1 },
+	{ desc=>"Qty", 			id=>"intquantity1", 	class=> "srfield", ro=>1 },
+	{ desc=>"Inks", 		id=>"inks", 		class=> "srfield", ro=>1 },
+	{ desc=>"Job Name", 		id=>"strprojectreference",class=> "lgfield", ro=>1 },
+	{ desc=>"Equipment", 		id=>"equipment", 	class=> "srfield", ro=>1 },
+	{ desc=>"Finished Size",	id=>"finished", 	class=> "srfield", ro=>1 },
+	{ desc=>"Time", 		id=>"time", 		class=> "smfield", ro=>1 },
+	{ desc=>"Due Date", 		id=>"duedate", 		class=> "srfield", ro=>1 },
+	{ desc=>"Delivery Method", 	id=>"delivery", 	class=> "smfield", ro=>1 },
+	{ desc=>"Stock", 		id=>"stock", 		class=> "lgfield", ro=>1 },
+	{ desc=>"Sheet Size", 		id=>"sheet_size",	class=> "smfield", ro=>1 },
+	{ desc=>"Sheets", 		id=>"sheets", 		class=> "smfield", ro=>1 },
+	{ desc=>"P", 			id=>"pulled", 		class=> "tifield", ro=>1 },
 	];
 
 	$var->{fields} = $cols;
@@ -49,7 +49,8 @@ sub display {
 		AND		strservicetype = 'Printing'
 		AND 	o.ysnfinished 
 		ORDER by o.lngorderid DESC
-		LIMIT 2
+		Offset 5
+		LIMIT 5 
 	}, {Slice => {}} );
 
 
@@ -96,11 +97,13 @@ sub display {
 		}
 		push @data, $d;
 	}
+	
+#	@data = grep { $_->{strprojectreference} } @data;
 
 
 
 
-	#	print STDERR "HAVE VAR: ", Dumper( \@data, $lines);
+		print STDERR "HAVE VAR: ", Dumper( \@data);
 
 	$var->{data} = \@data;
 

@@ -1035,7 +1035,6 @@ sub get_equipment {
 sub printing {
     my ($r, $log, $dbh, $pid, $sid, $qtyIndex, $form_count) = @_;
 
-print STDERR "HAVE FORM COUNT: $$form_count \n";
 
 	my $type = eprint::project::get_type($log, $dbh, $pid);
 
