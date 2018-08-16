@@ -13,7 +13,10 @@ our $dbh = session::dbh;
   
 sub display {
 	my $var = shift;
+	my $param = shift;
+
 	my $dbh = session::dbh;
+	my $r = session::r;
 
 	my $cols = [
 	{ desc=>"Order", 		id=>"lngorderid", 	class=> "srfield", ro=>1 },
@@ -41,7 +44,8 @@ sub display {
 	my $lines = $dbh->selectall_arrayref( q{
 		SELECT *, p.strstatus as status 
 		FROM 
-			tbl_orders o, tbl_order_contents oc, tbl_projects p, tbl_project_contents pc, tbl_customer c
+			tbl_orders o, tbl_order_contents oc, tbl_projects p, 
+			tbl_project_contents pc, tbl_customer c
 		WHERE 	o.lngorderid = oc.lngorderid
 		AND		oc.lngprojectindex = p.lngprojectindex
 		AND		p.lngprojectindex = pc.lngprojectindex
@@ -98,17 +102,57 @@ sub display {
 		push @data, $d;
 	}
 	
-#	@data = grep { $_->{strprojectreference} } @data;
+	#@data = grep { $_->{strprojectreference} } @data;
 
 
 
+	apply_filters($param, \@data);
+	
+	
 
-		print STDERR "HAVE VAR: ", Dumper( \@data);
 
 	$var->{data} = \@data;
 
+	map { $var->{__FillInForm}{$_} = $param->{$_} } keys %{$param};
+
 	return ;
 
+}
+
+
+sub apply_filters {
+    my $param = shift;
+    my $data = shift;
+
+	
+
+    my $searchstring = $param->{textsearch};
+
+    if ( $searchstring ) {
+
+	my $searchfield = $param->{search_type};
+
+	@{$data} = filter( $searchfield, $searchstring, $data);
+	
+    }
+
+    print STDERR "HAVE PARAMS", Dumper($param);
+
+}
+
+sub filter {
+	my $f = shift;
+	my $s = shift;
+	my $data = shift;
+
+	my @newdata;
+	foreach my $row ( @{$data} ) {
+		my @field = grep { $_->{id} eq $f } @{$row->{fields}};
+		print STDERR "HAVE FIELD: " , Dumper(\@field);
+		push @newdata, $row if $field[0]{value} =~ /$s/;
+	}
+
+	return @newdata;
 }
 
 1;

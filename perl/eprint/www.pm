@@ -694,8 +694,12 @@ print STDERR "MAIN -- SUB : $sub_section file: $filename \n";
     }
     elsif ($sub_section eq 'dashboard') {
 
-		use eprint::dashboard;
-        eprint::dashboard::display($variable) if $filename eq 'dashboard.html';
+	use eprint::dashboard;
+	my $param;
+       	map { $param->{$_} = $r->param($_) } $r->param();
+
+        eprint::dashboard::display($variable, $param) if $filename eq 'dashboard.html';
+
 	}
     elsif ($sub_section eq 'proj') {
 
