@@ -19,24 +19,24 @@ sub display {
 	my $r = session::r;
 
 	my $cols = [
-	{ desc=>"Order", 		id=>"lngorderid", 	class=> "srfield", ro=>1 },
-	{ desc=>"Project", 		id=>"lngprojectindex", 	class=> "srfield", ro=>1 },
-	{ desc=>"Customer", 		id=>"strcompanyname", 	class=> "lgfield", ro=>1 },
-	{ desc=>"Contact", 		id=>"contact", 		class=> "rgfield", ro=>1 },
-	{ desc=>"Status", 		id=>"status", 		class=> "rgfield", ro=>1 },
-	{ desc=>"Project Type", 	id=>"ptype", 		class=> "smfield", ro=>1 },
-	{ desc=>"Qty", 			id=>"intquantity1", 	class=> "srfield", ro=>1 },
-	{ desc=>"Inks", 		id=>"inks", 		class=> "srfield", ro=>1 },
-	{ desc=>"Job Name", 		id=>"strprojectreference",class=> "lgfield", ro=>1 },
-	{ desc=>"Equipment", 		id=>"equipment", 	class=> "srfield", ro=>1 },
-	{ desc=>"Finished Size",	id=>"finished", 	class=> "srfield", ro=>1 },
-	{ desc=>"Time", 		id=>"time", 		class=> "smfield", ro=>1 },
-	{ desc=>"Due Date", 		id=>"duedate", 		class=> "srfield", ro=>1 },
-	{ desc=>"Delivery Method", 	id=>"delivery", 	class=> "smfield", ro=>1 },
-	{ desc=>"Stock", 		id=>"stock", 		class=> "lgfield", ro=>1 },
-	{ desc=>"Sheet Size", 		id=>"sheet_size",	class=> "smfield", ro=>1 },
-	{ desc=>"Sheets", 		id=>"sheets", 		class=> "smfield", ro=>1 },
-	{ desc=>"P", 			id=>"pulled", 		class=> "tifield", ro=>1 },
+	{ desc=>"Order", 				id=>"lngorderid", 			class=> "srfield", ro=>1 },
+	{ desc=>"Project", 				id=>"lngprojectindex", 		class=> "srfield", ro=>1 },
+	{ desc=>"Customer", 			id=>"strcompanyname", 		class=> "lgfield", ro=>1 },
+	{ desc=>"Contact", 				id=>"contact", 				class=> "rgfield", ro=>1 },
+	{ desc=>"Status", 				id=>"status", 				class=> "rgfield", ro=>1 },
+	{ desc=>"Project Type", 		id=>"ptype", 				class=> "smfield", ro=>1 },
+	{ desc=>"Qty", 					id=>"intquantity1", 		class=> "srfield", ro=>1 },
+	{ desc=>"Inks", 				id=>"inks", 				class=> "srfield", ro=>1 },
+	{ desc=>"Job Name", 			id=>"strprojectreference",	class=> "lgfield", ro=>1 },
+	{ desc=>"Equipment", 			id=>"equipment", 			class=> "srfield", ro=>1 },
+	{ desc=>"Finished Size",		id=>"finished", 			class=> "srfield", ro=>1 },
+	{ desc=>"Time", 				id=>"time", 				class=> "smfield", ro=>1 },
+	{ desc=>"Due Date", 			id=>"duedate", 				class=> "srfield", ro=>1 },
+	{ desc=>"Delivery Method", 		id=>"delivery", 			class=> "smfield", ro=>1 },
+	{ desc=>"Stock", 				id=>"stock", 				class=> "lgfield", ro=>1 },
+	{ desc=>"Sheet Size", 			id=>"sheet_size",			class=> "smfield", ro=>1 },
+	{ desc=>"Sheets", 				id=>"sheets", 				class=> "smfield", ro=>1 },
+	{ desc=>"P", 					id=>"pulled", 				class=> "tifield", ro=>1 },
 	];
 
 	$var->{fields} = $cols;
@@ -109,6 +109,7 @@ sub display {
 	apply_filters($param, \@data);
 	
 	
+	page_options($var, $param);
 
 
 	$var->{data} = \@data;
@@ -119,10 +120,26 @@ sub display {
 
 }
 
+sub page_options {
+	my $var 	= shift;
+	my $param 	= shift;
+	my $dbh 	= session::dbh;
+
+	my $data = $dbh->selectall_arrayref(q{
+		SELECT lngcustomerid, strcompanyname FROM tbl_customer ORDER by 2 LIMIT 5
+	}, {});
+
+	$var->{Company_Name} = ssi::make_drop_down($data);
+
+	print STDERR "HAVE COMPANY" , Dumper($data, $var->{Company_Name});
+
+
+}
+
 
 sub apply_filters {
-    my $param = shift;
-    my $data = shift;
+    my $param 	= shift;
+    my $data 	= shift;
 
 	
 
@@ -130,9 +147,9 @@ sub apply_filters {
 
     if ( $searchstring ) {
 
-	my $searchfield = $param->{search_type};
+		my $searchfield = $param->{search_type};
 
-	@{$data} = filter( $searchfield, $searchstring, $data);
+		@{$data} = filter( $searchfield, $searchstring, $data);
 	
     }
 
