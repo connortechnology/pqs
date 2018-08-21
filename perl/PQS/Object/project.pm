@@ -30,7 +30,6 @@ sub type_name {
 	my $self = shift;
 
 	my @t = eprint::project::get_type( $self->{log}, $self->{dbh}, $self->{id});
-	print STDERR "HAVE T: ", Dumper(@t);
 	return $t[1];
 }
 
@@ -87,7 +86,6 @@ sub ink_sum {
 
 
 		}
-	print STDERR "HAVE SIDE: " , Dumper(\@specs, \%results, \@count, \@text);
 
 	my $sum = "$count[0]";
 
@@ -120,7 +118,6 @@ sub sheet_count {
      );
 
 
-print STDERR "HAVE DELIV ", Dumper(\@specs, \%results);
 
 	return $results{hdnGrossSheetCount1};
 
@@ -141,7 +138,6 @@ sub sheet_size {
      );
 
 
-print STDERR "HAVE DELIV ", Dumper(\@specs, \%results);
 	my $text = "$results{hdnSuppliedStockWidth} x $results{hdnSuppliedStockHeight} ";
 
 	return $text;
@@ -170,7 +166,6 @@ sub stock_name {
 	 $text .= " " . $results{stock_finish};
 	 $text .= " " . $results{stock_weight};
 
-print STDERR "HAVE DELIV ", Dumper(\@specs, \%results);
 
 	return $text;
 
@@ -210,7 +205,6 @@ sub delivery_method {
 
 
 
-	print STDERR "HAVE DELIV ", Dumper(\@specs, \%results);
 
 	return $ship;
 
@@ -225,7 +219,6 @@ sub due_date {
 
 	my $date = $i->{dtmrequireddate};
 
-	print STDERR "HAVE DATE: $date \n", Dumper( $i);
 
 	$date =~ /(\d\d-\d*-\d*)/;
 

@@ -8,8 +8,11 @@ use session;
 use Data::Dumper;
 
 use PQS::Object::project;
+use DateTime;
+use DateTime::Format::Strptime;
 
 our $dbh = session::dbh;
+
   
 sub display {
 	my $var = shift;
@@ -17,6 +20,7 @@ sub display {
 
 	my $dbh = session::dbh;
 	my $r = session::r;
+
 
 	my $cols = [
 	{ desc=>"Order", 				id=>"lngorderid", 			class=> "srfield", ro=>1 },
@@ -153,7 +157,61 @@ sub apply_filters {
 	
     }
 
+	@{$data} = filter_date($param, $data);
+
     print STDERR "HAVE PARAMS", Dumper($param);
+
+
+}
+
+sub filter_date { 
+	my $param = shift;
+	my $data = shift;
+
+
+	my $start = $param->{startdate};
+	my $end   = $param->{enddate};
+
+	print STDERR "HAVE DATE COMP  $start,  $end \n";
+
+	my $dp = '%y-%m-%d';
+
+
+	my $sd = DateTime::Format::Strptime->new( pattern=> '%D' )->parse_datetime($start);
+	my $ed = DateTime::Format::Strptime->new( pattern=> '%D' )->parse_datetime($end);
+
+
+	my @newdata;
+
+
+
+	foreach my $row ( @{$data} ) {
+
+
+		my @field = grep { $_->{id} eq 'duedate' } @{$row->{fields}};
+
+		my $dd = $field[0]{value};
+
+		my $duedate = DateTime::Format::Strptime->new( pattern=> $dp )->parse_datetime($dd);
+
+
+		my $startcmp = $duedate->compare($sd);
+		my $endcmp   = $duedate->compare($ed);
+
+		print STDERR "COMPARE START DATE DUE: $duedate -- $startcmp ** $endcmp SD: $sd ED: $ed \n";
+
+		if ( int($startcmp) >= 0 && int($endcmp) <= 0  ) {  
+			print STDERR "HAVE DATE  NOW:  \n";
+			push @newdata, $row;
+		}
+
+		print STDERR "\n";
+
+
+
+	}
+
+	return @newdata;
 
 }
 

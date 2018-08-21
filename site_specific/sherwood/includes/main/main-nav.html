@@ -11,6 +11,11 @@
 			</ul>
 		<? endif ( $$variable{user_type} eq 'A' ) ?>
 	</li>
+
+	<? if ( $$variable{user_type} eq 'A' ) ?>
+	<li><a href="/main/dashboard/dashboard.html">Dashboard </a></li>
+	<?endif ( $$variable{user_type} eq 'A' ) ?>
+
 	<li><!--#include virtual="/includes/main/aboutus.html" --></li>
 	<li><!--#include virtual="/includes/main/products.html" --></li>
         <li><a href="/main/templates/templates.html">Templates</a></li>
