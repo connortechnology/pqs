@@ -14,6 +14,16 @@ use DateTime::Format::Strptime;
 our $dbh = session::dbh;
 
   
+sub add_link {
+    my $x = shift;
+    my $l = shift;
+
+    $x->{link} = "/main/order/order_history_details.html?orderid=$x->{value}" if $x->{id} eq 'lngorderid';
+    $x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
+    $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'strcompanyname';
+}
+
+
 sub display {
 	my $var = shift;
 	my $param = shift;
@@ -57,12 +67,16 @@ sub display {
 		AND		strservicetype = 'Printing'
 		AND 	o.ysnfinished 
 		ORDER by o.lngorderid DESC
-		Offset 5
-		LIMIT 5 
+		-- Offset 5
+		LIMIT 10 
 	}, {Slice => {}} );
 
 
 	my @data;
+
+	my $sortfield = $r->param('sortfield');
+
+	print STDERR "HAVE SORT FIELD: $sortfield \n";
 
 	foreach my $l ( @{$lines} ) {
 
@@ -98,16 +112,19 @@ sub display {
 		foreach my $c ( @{$cols} )  {
 			my %x = %{$c};
 
+
 			$x{value} = $l->{$c->{id}};
+			
+			add_link(\%x, $l);
+
 
 			push @{$d->{fields}}, \%x; 
+			$d->{sortdata} = $l->{$sortfield};
 
 		}
 		push @data, $d;
 	}
 	
-	#@data = grep { $_->{strprojectreference} } @data;
-
 
 
 	apply_filters($param, \@data);
@@ -116,7 +133,19 @@ sub display {
 	page_options($var, $param);
 
 
+
+	my $x = int($data[0]->{sortdata});
+	my $y = $data[0]->{sortdata};
+	use Scalar::Util qw( looks_like_number );
+
+	if ( looks_like_number($data[0]->{sortdata}) ) {
+	    @data = sort { $a->{sortdata} <=> $b->{sortdata} } @data;
+	} else { 
+	    @data = sort { $a->{sortdata} cmp $b->{sortdata} } @data;
+	}
+
 	$var->{data} = \@data;
+
 
 	map { $var->{__FillInForm}{$_} = $param->{$_} } keys %{$param};
 
@@ -135,7 +164,7 @@ sub page_options {
 
 	$var->{Company_Name} = ssi::make_drop_down($data);
 
-	print STDERR "HAVE COMPANY" , Dumper($data, $var->{Company_Name});
+	#print STDERR "HAVE COMPANY" , Dumper($data, $var->{Company_Name});
 
 
 }
@@ -172,6 +201,8 @@ sub filter_date {
 	my $start = $param->{startdate};
 	my $end   = $param->{enddate};
 
+	return  @$data unless $start && $end;
+
 	print STDERR "HAVE DATE COMP  $start,  $end \n";
 
 	my $dp = '%y-%m-%d';
@@ -183,6 +214,8 @@ sub filter_date {
 
 	my @newdata;
 
+	#print STDERR "HAVE DATA" , Dumper($data);
+
 
 
 	foreach my $row ( @{$data} ) {
@@ -192,13 +225,17 @@ sub filter_date {
 
 		my $dd = $field[0]{value};
 
+		next unless $dd;
+
 		my $duedate = DateTime::Format::Strptime->new( pattern=> $dp )->parse_datetime($dd);
 
 
+		print STDERR "COMPARE START DATE DUE: $duedate --  $sd ED: $ed \n";
+
 		my $startcmp = $duedate->compare($sd);
 		my $endcmp   = $duedate->compare($ed);
-
 		print STDERR "COMPARE START DATE DUE: $duedate -- $startcmp ** $endcmp SD: $sd ED: $ed \n";
+
 
 		if ( int($startcmp) >= 0 && int($endcmp) <= 0  ) {  
 			print STDERR "HAVE DATE  NOW:  \n";

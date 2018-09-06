@@ -558,7 +558,6 @@ sub make_drop_down {
     elsif (ref $val eq 'ARRAY') 						 { @data = @$val }
     else                                                 { return;       }
 
-	print STDERR "START MAKE 2 \n";
     while (@data) {
 		if ( ref $data[0] eq 'ARRAY' ) {
 			my $row = shift @data;
@@ -569,7 +568,6 @@ sub make_drop_down {
 			$label = shift @data;
 		}
 
-		print STDERR "MAKE DDM $value - $label \n";
         # Should the current option be selected?
         $selected = defined $checkval && $checkval eq $value 
             ? 'selected="selected"' : '';
@@ -581,7 +579,6 @@ sub make_drop_down {
         # Output the option.
         $options .= qq|<option value="$value" $selected>$label</option>\n|;
     }
-print STDERR "HAVE OPTIOnS: $options \n";
     # Return an HTML text block of options.
     return $options;
 }

@@ -217,7 +217,11 @@ sub due_date {
 
 	my $i = $self->order_id();
 
-	my $date = $i->{dtmrequireddate};
+	my $date = PQS::model::order::duedate($self->{id});
+
+	print STDERR "HAVE DUE DATE: $date \n";
+
+	$date = $i->{dtmrequireddate} unless $date;
 
 
 	$date =~ /(\d\d-\d*-\d*)/;

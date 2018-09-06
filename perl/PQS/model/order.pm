@@ -255,6 +255,13 @@ sub get_ordered_project_info {
   return $proj;
 }
 
+sub duedate {
+	my $pid = shift;
+	my $dbh = session::dbh;
+	my $date = $dbh->selectrow_array(q{SELECT daterequired FROM tbl_order_contents WHERE lngprojectindex = ?}, undef, $pid);
+	return $date
+}
+
 #saves the details of an ordered project
 sub save_ordered_project_info {
   my ($proj) = @_;

@@ -105,8 +105,8 @@
 			<br>
 
 			<label>Date</label><br>
-			<input type="text" name="startdate" id="startdate" value="05/01/18" />
-			<input type="text" name="enddate" id="enddate" value="09/01/18" />
+			<input type="text" name="startdate" id="startdate" value="04/01/18" />
+			<input type="text" name="enddate" id="enddate" value="11/01/18" />
 
 			<br>
 
@@ -167,16 +167,15 @@
 		</fieldset>
 
 
-	</form>
 	
-	<form action="/main/dashboard/dashboard.html" method="post" name="f1" id="f1" onsubmit="" >
 
 <!-- ******************* START ****************************** -->
+<input type="hidde" name="sortfield" id="sortfield" value="aaa" />
  <table>
     <tr>
 		<th><input type=checkbox /></th>
 		<?loop fields?>
-        	<th><?desc?></th>
+		<th><a href="#" onClick="$('sortfield').value='<?id?>';$('f1').submit();" style="color: white;" ><?desc?></a></th>
 		<?endloop fields?>
 
      
@@ -190,7 +189,7 @@
 
 			<td>
 			<?if ro?>
-			<div class="<?class?>" ><?value?></div>
+			<div class="<?class?>" ><?if link?><a href="<?link?>"><?endif link?><?value?><?if link?></a><?endif link?></div>
 			<?else ro?>
 			 <?if big?>
 				<textarea name="<?fname?>[<?id?>]" cols=50><?value?> </textarea>
