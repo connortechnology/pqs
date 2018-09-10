@@ -127,7 +127,7 @@ sub get_project_price {
 	my $s;
 	$s->{error} =  'Missing Specs' unless $spread->{flat}{width} and $spread->{flat}{height};
 
-	print STDERR "HAVE DEA", Dumper($spread);
+	#	print STDERR "HAVE DEA", Dumper($spread);
 
 	return $s if $type eq 'NoPrint';
 # DONE NOPRINT
@@ -365,6 +365,8 @@ sub get_project_price {
         : $spreads_remaining;
 
     my $impositions = create_impositions($dbh, $project, $desired_size);
+
+	print STDERR "DONE IMPOSE 4 create_impositions \n";
 
     $te_impose = Time::HiRes::time() if TIMINGS;
 
@@ -821,12 +823,12 @@ sub _log_timings {
     my $t_price  = $te_price  - $ts_price;
     my $t_req    = $te_req    - $ts_req;
 
-    $log->notice(sprintf "PRINTING elapsed time: %6.3fs impose: %6.3fs (%2d%%) price: %6.3fs (%2d%%) impositions: %3d (p %1.3fs/imp)",
+    print STDERR sprintf "\nPRINTING IMPOSE elapsed time: %6.3fs impose: %6.3fs (%2d%%) price: %6.3fs (%2d%%) impositions: %3d (p %1.3fs/imp) \n\n\n",
         $t_req,
         $t_impose, ($t_impose / $t_req) * 100,  
         $t_price,  ($t_price  / $t_req) * 100,
         $total_imp, $t_price / $total_imp
-    );
+    ;
 }
 
 
@@ -945,16 +947,18 @@ sub create_impositions {
 
     my $start_time = Time::HiRes::time();
     # Get an iterator that generates imposition possibilities.
-    my $iter = impositions($dbh, $project);
     my $end =  Time::HiRes::time() - $start_time;
+    print STDERR "START IMPOSE $project->{id} :  elapsed $end (s)  \n";
+    my $iter = impositions($dbh, $project, $start_time);
 
+    $end =  Time::HiRes::time() - $start_time;
     print STDERR "DONE IMPOSE $project->{id} :  elapsed $end (s)  \n";
 
     my $func = $project->{press_type} eq 'inkjetprinter'
         ? \&lf_imposition : \&convert_to_old;
 
-    my $end =  Time::HiRes::time() - $start_time;
 
+    $end =  Time::HiRes::time() - $start_time;
     print STDERR "DONE IMPOSE 2 $project->{id} :  elapsed $end (s)  \n";
 
     # For now just flatten the iterator into a list of old 'impositionObjects'.
@@ -962,7 +966,7 @@ sub create_impositions {
         push @impositions, $func->($dbh, $project, @{ $iter->value });
     }
 
-    my $end =  Time::HiRes::time() - $start_time;
+     $end =  Time::HiRes::time() - $start_time;
 
     print STDERR "DONE IMPOSE 3 $project->{id} :  elapsed $end (s)  \n";
 
@@ -1251,7 +1255,7 @@ sub calc_print_price {
 
     #$plate_changes  *= $mp_versions if $mp_versions > 1;
 
-print STDERR "PRESS SETUP TIME: $press Plate Changes: $plate_changes : VERSIONS: $mp_versions \n";
+	#print STDERR "PRESS SETUP TIME: $press Plate Changes: $plate_changes : VERSIONS: $mp_versions \n";
 
     my %colour_setup = 
       press_setup_cost($log,            $dbh,         $jig_specifics,

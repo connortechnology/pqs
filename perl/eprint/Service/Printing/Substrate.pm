@@ -54,7 +54,9 @@ use Data::Dumper;
         my @substrates;
         for my $format (@$formats) {
             my @list = find_substrates($dbh, $project->{paper}, $format);
-			print STDERR "HAVE SUBSTRATE LIST: ", Dumper(\@list);
+
+#			print STDERR "HAVE SUBSTRATE LIST: ", Dumper(\@list);
+			
             push @substrates, 
                 grep { substrate_fits_project($_, $project)       }
                 map  { $_->{type} eq 'sheet' ? cut_sheet($_) : $_ }
@@ -116,7 +118,7 @@ use Data::Dumper;
         # Get the substrates from the database.
         my $substrates = 
             $dbh->selectall_arrayref($sql, {Slice => {}}, @{$find_by}{@fields});
-print STDERR "FOUND SUBSTRATES ", Dumper($sql, $substrates, $find_by);
+			#print STDERR "FOUND SUBSTRATES ", Dumper($sql, $substrates, $find_by);
 
         # TODO Perhaps this should just be a reference to the search?
         return map { @{$_}{ keys %$find_by } = values %$find_by; $_ } @$substrates;

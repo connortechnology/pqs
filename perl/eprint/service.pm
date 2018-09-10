@@ -301,7 +301,7 @@ sub valid_equipment {
 #								  WHERE strname = 'product_only' AND strvalue = 'Y')" if $pid;
 	
 
-print STDERR "VALID EQUIPEMNT SQL: $sql \n";
+	#print STDERR "VALID EQUIPEMNT SQL: $sql \n";
 
 	
     # As this query will potentially be run for every single service for every
@@ -790,8 +790,8 @@ sub get_service_full_price {
     require eprint::project;
 
     my @equipment = valid_equipment($log, $dbh, $names->{action});
- use Data::Dumper;
- print STDERR "VALID EQUIPMENT: ", Dumper(@equipment);
+#use Data::Dumper;
+ # print STDERR "VALID EQUIPMENT: ", Dumper(@equipment);
 
     my @specs;
 

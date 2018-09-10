@@ -33,10 +33,12 @@ use constant GRAIN => 4; # REMOVE
 
 
 sub _init :Init {
-    my ($self, $args_ref) = @_;
+    my ($self, $args_ref, ) = @_;
 
     # TODO Use the :InitArgs construct and do some type checking and
     # validation on these arguements.
+
+	my $start_time = $args_ref->{start};
 
     # Save a reference to the project for later use.
     $self->set(\@project, $args_ref->{project});
@@ -48,6 +50,9 @@ sub _init :Init {
     # refactor it.
     local @images = (); 
     local $cache  = {};
+
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 1: $end  \n";
 
     
     # Screen items surfaces are the size they are.
@@ -63,9 +68,15 @@ sub _init :Init {
         return $self;
     }
 
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 2: $end  \n";
+
     # Our file cache (shared between children).
     my $result_cache = Cache::FileCache->new({ namespace => 'imposition' })
         or die "Couldn't initialise cache: $!";
+
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 2a: $end  \n";
 
     # width x height - bleed size - trim size - multipage - bleed sides
     my $key = sprintf("%06.3fx%06.3f-%4.3f-%d-%s",
@@ -74,11 +85,23 @@ sub _init :Init {
         join(',', @{ $project->{bleed} })
     );
 
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 2b: $end KEY: *$key*  \n";
+
+	my $have_cache = $result_cache->get($key);
+
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 2c: $end HAVE CACHE: $have_cache  \n";
+
+
     # Retrieve cached results if we've seen this before.
-    if (my $impositions = $result_cache->get($key)) {
-        $lookup[$$self] = $impositions;
+    if ($have_cache) {
+        $lookup[$$self] = $have_cache;
         return $self;
     }
+
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 3: $end  \n";
 
     
     # A kludge to handle multi-page books the way they were previously. We do
@@ -91,12 +114,21 @@ sub _init :Init {
     IMPOSITION: {
         @images = $self->images($grain);
 
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 4: $end  \n";
+
         my $trees = fill_box(BOUNDS); # Impose.
         
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 5: $end  \n";
+
         # TEMP: The sub-node generation is currently generating impositions with
         # spacing and sub-optimal results. We'll do a simple post-processing prune
         # of the cache to remove the worst of these.
         push @valid, post_process($trees, $cache);
+
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 6: $end  \n";
 
         # If we're multipage, try the rotated image appending any results.
         if ($is_special && $grain != 1 ) {
@@ -106,9 +138,18 @@ sub _init :Init {
         }
     }
 
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 7: $end  \n";
 
     $lookup[$$self] = \@valid;           # Impositions
-    $result_cache->set($key => \@valid); # Store to cache.
+
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 8: $end  \n";
+
+	$result_cache->set($key => \@valid); # Store to cache.
+
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START PQS \ IMPOSE 9: $end  \n";
 
 
     return $self;
@@ -159,12 +200,12 @@ sub best_fit {
     my ($self, $press, $style, $sheet) = @_;
     my $project                        = $project[$$self];
 
-print STDERR "START BEST FIT: ", Dumper($press, $style, $sheet);
+	#print STDERR "START BEST FIT: ", Dumper($press, $style, $sheet);
 
     # Only one way to print a screen item.
     return ($style, $lookup[$$self][0]) if $project->{type} eq 'ScreenItem';
 
-print STDERR "SETP BEST FIT: $press->{name}, $style \n";
+	#print STDERR "SETP BEST FIT: $press->{name}, $style \n";
 
     my @possible;
     my $override = $project->{override}{runstyle};
@@ -176,7 +217,7 @@ print STDERR "SETP BEST FIT: $press->{name}, $style \n";
                : $override      ? ($override)
                :                  qw(WT WF);
    
-print STDERR "SETP BEST FIT: $press->{name}, $style \n";
+			   #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
     # Digital presses with inline bindery are currently overriden to HAVE to
     # use that bindery, so they must be 1-up impositions (a four page spread
     # for stitching is one 1-up). Non-cuttable paper (like multi-part premade
@@ -186,7 +227,7 @@ print STDERR "SETP BEST FIT: $press->{name}, $style \n";
              && grep { $_ eq $project->{bind_type} } @{ $press->{services} } )
         || ( !$sheet->{cut_paper} );
 
-print STDERR "SETP BEST FIT: $press->{name}, $style \n";
+		#print STDERR "SETP BEST FIT: $press->{name}, $style \n";
 #This is a Safeway only rule	
 	# Allow this one type of project to print multi out ( 17x5.5)
 	# and variants that are slightly smaller.
@@ -198,7 +239,7 @@ print STDERR "SETP BEST FIT: $press->{name}, $style \n";
 #	}
 
 
-print STDERR "CHECK IMPOSITION: ISONEUP: $is_one_up \n";
+	#print STDERR "CHECK IMPOSITION: ISONEUP: $is_one_up \n";
 
 	
     # TODO normalize this during printing page input validation.
@@ -206,7 +247,7 @@ print STDERR "CHECK IMPOSITION: ISONEUP: $is_one_up \n";
               : $project->{grain}       ? 1
               :                           0;
 
-print STDERR "SETP BEST FIT: $press->{name}, $style \n";
+			  #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
     for my $style (@styles) {
 
 		# Inline bindery can not be W/TF if one up.
@@ -225,7 +266,7 @@ print STDERR "SETP BEST FIT: $press->{name}, $style \n";
         {
             my ($w, $h) = @$sheet{@dims}; # Imagable area.
 
-print STDERR "STEP BEST FIT: $w x $h \n";
+			#print STDERR "STEP BEST FIT: $w x $h \n";
             # TODO move to substrate section (substrate section needs to pass
             # both rotated and unrotated sheets per press). Hrmm... though if
             # we do we lose the optimization where we determine the best
@@ -255,22 +296,22 @@ print STDERR "STEP BEST FIT: $w x $h \n";
 #                if ($style eq 'WF') { $h -= 2 * max($press->{grip} , $project->{colour_bar}) }
 #                else                { $h -=         $press->{grip} + $project->{colour_bar}  }
 
-print STDERR "STEP BEST FIT WF: $w x $h,  GRIP: $press->{grip}, CB: $cb \n";
+				#print STDERR "STEP BEST FIT WF: $w x $h,  GRIP: $press->{grip}, CB: $cb \n";
                 # Most presses can't print to the absolute edge of the sheet.
                 # A gutter applies to the two edges perpendicular to the feed.
                 $w -= $press->{gutter} if exists $press->{gutter};
 
-print STDERR "STEP BEST FIT GUTTER: $w x $h \n";
+				#print STDERR "STEP BEST FIT GUTTER: $w x $h \n";
 
 				#The available space is the smallest of maximum image area and the space available after the gutter and grab space
                 $w = min($w, $press->{maximum_image_area_width});
 
                 $h = min($h, $press->{maximum_image_area_length} - $cb);
 
-print STDERR "STEP BEST FIT IMAGE AREA: $w x $h \n";
+				#print STDERR "STEP BEST FIT IMAGE AREA: $w x $h \n";
             }
 
-print STDERR "STEP BEST FIT: $w x $h \n";
+			#print STDERR "STEP BEST FIT: $w x $h \n";
             $w /= 2 if $style eq 'WT'; # Mirrored edge to edge.
             $h /= 2 if $style eq 'WF'; # Mirrored head to tail.
 
@@ -286,13 +327,13 @@ print STDERR "STEP BEST FIT: $w x $h \n";
                 # rollers spaced somewhat evenly across the sheet.
             }
 
-print STDERR "TIME TO FIND FIT: $w x $h \n";
+			#print STDERR "TIME TO FIND FIT: $w x $h \n";
             my $node = $self->find_fit($w, $h, $grain, $rotated, $is_one_up);
                $node = $node->work_and(TURN) if $node && $style eq 'WT';
                $node = $node->work_and(FLOP) if $node && $style eq 'WF';
 
-print STDERR "STEP BEST FIT: $w x $h \n";
-print STDERR "ADD NODE TO POSSIBLE LIST \n";
+			   #print STDERR "STEP BEST FIT: $w x $h \n";
+			   #print STDERR "ADD NODE TO POSSIBLE LIST \n";
             push @possible, [ $style, $node, $rotated ];
             
             # Try the rotated version to see if feeding that way is better.
@@ -318,7 +359,7 @@ print STDERR "ADD NODE TO POSSIBLE LIST \n";
 
     no warnings qw(uninitialized);
 
-print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ", Dumper(@possible);
+	#print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ", Dumper(@possible);
 
     
     # TEMP: Simple call for now.
@@ -346,7 +387,7 @@ sub find_fit {
 
     # TODO Gang-run related stuff.
     
-print STDERR "FIND FIT:  $w, $h, $grain, $rotation, $is_one_up \n";
+	#print STDERR "FIND FIT:  $w, $h, $grain, $rotation, $is_one_up \n";
 
     # TODO Handle 1-up earlier so we don't have to do as much work.
     my @nodes = sort {    $b->card      <=> $a->card        # Max cardinality
@@ -375,9 +416,11 @@ sub fill_box :Private {
 
     my @forest;                  # Possible impositions for size.
 
+
     # If we've already been calculated just reference our table entry.
     return $cache->{$size} if exists $cache->{$size};
     
+
     IMAGE:
     for my $image (@images) {
         # Don't bother with this image if it can't fit.

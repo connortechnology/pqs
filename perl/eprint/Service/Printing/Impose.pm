@@ -33,7 +33,10 @@ use constant COATINGS => qw(aqueous uv softtouch);
 
 # Given project specs. generate the set of possible impositions.
 sub impositions {
-    my ($dbh, $project) = @_;
+    my ($dbh, $project, $start_time) = @_;
+
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START Printing \ IMPOSE: $end \n ";
 
     my $presses    = get_presses   ($dbh, $project); # Potential printers.
 
@@ -41,8 +44,8 @@ sub impositions {
 print STDERR "HAVE NO PAPER \n" unless @{$substrates};
     my $subs = @{$substrates};
     
-use Data::Dumper;
-print STDERR "HAVE PAPER: $subs PRESSES: $presses \n", Dumper($substrates);
+	#use Data::Dumper;
+	#print STDERR "HAVE PAPER: $subs PRESSES: $presses \n", Dumper($substrates);
 
     my @styles     = get_runstyles(       $project);
 
@@ -52,21 +55,27 @@ print STDERR "HAVE PAPER: $subs PRESSES: $presses \n", Dumper($substrates);
     # allowed) so currently need a number of special exceptions.
     my $is_inkjet = $project->{press_type} eq 'inkjetprinter';
 
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START Printing \ IMPOSE 2: $end  \n";
+
     # Generate all possible impositions for the project (except inkjet).
     my $impositions 
-        = !$is_inkjet ? PQS::Imposition->new(project => $project) : undef;
+        = !$is_inkjet ? PQS::Imposition->new(project => $project, start => $start_time) : undef;
+
+	my $end =  Time::HiRes::time() - $start_time;
+	print STDERR "START Printing \ IMPOSE 3: $end  \n";
 
     # A press run is the set of valid run styles X sheet sizes for that press.
     # Returns [press, sheet, style, node tree, is_rotated]
     my $run = sub {
         my ($press) = @_;
 
-print STDERR "HAVE PRESS: ", Dumper($press);
+		#print STDERR "HAVE PRESS: ", Dumper($press);
 
         # Get the run styles we can do and sheet sizes that fit on the press.
         my @r = grep { can_print_style($press, $_, $project) } @styles;
         my @s = map  { fit_to_press   ($_,     $press      ) } @$substrates;
-print STDERR "HAVE R: ", Dumper(@r), "S: ", Dumper(@s);
+		#print STDERR "HAVE R: ", Dumper(@r), "S: ", Dumper(@s);
 
         return $empty unless @r && @s;
 
