@@ -23,6 +23,29 @@ sub add_link {
     $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'strcompanyname';
 }
 
+sub sql_filters {
+
+	my $param = shift;
+
+	my $list = [
+		{ input => 'ddmCompanyName', 	col => 'o.lngcustomerid' },
+		{ input => 'ddmSalesRep',    	col => 'c.lngsalesperson' },
+		{ input => 'ddmOrderBy',     	col => 'o.lnguserid' },
+		{ input => 'ddmProjectStatus',  col => 'p.strstatus' },
+	];
+
+
+	my $text; 
+	foreach my $f ( @{$list} ) {
+		$text .= " AND $f->{col} = " . "'" .  "$param->{$f->{input}}" . "'" if $param->{$f->{input}};
+
+	}
+
+	print STDERR "HAVE TEXT: $text \n";
+	return $text;
+
+}
+
 
 sub display {
 	my $var = shift;
@@ -55,7 +78,10 @@ sub display {
 
 	$var->{fields} = $cols;
 
-	my $lines = $dbh->selectall_arrayref( q{
+
+	my $sql_filter = sql_filters($param);
+
+	my $sql = qq{
 		SELECT *, p.strstatus as status 
 		FROM 
 			tbl_orders o, tbl_order_contents oc, tbl_projects p, 
@@ -66,10 +92,17 @@ sub display {
 		AND 	p.lngcustomerid = c.lngcustomerid
 		AND		strservicetype = 'Printing'
 		AND 	o.ysnfinished 
+
+		$sql_filter
+
 		ORDER by o.lngorderid DESC
 		-- Offset 5
 		LIMIT 10 
-	}, {Slice => {}} );
+	};
+
+	my $lines = $dbh->selectall_arrayref( $sql, {Slice => {}} );
+
+print STDERR "HAVE SQL: $sql \n";
 
 
 	my @data;
@@ -79,6 +112,8 @@ sub display {
 	print STDERR "HAVE SORT FIELD: $sortfield \n";
 
 	foreach my $l ( @{$lines} ) {
+
+		print STDERR "HAVE LINE $l->{lngorderid} \n";
 
 		my $p = new PQS::Object::project($l->{lngprojectindex});
 
@@ -130,19 +165,13 @@ sub display {
 	apply_filters($param, \@data);
 	
 	
+
+
+	apply_sort(\@data);
+
+
+
 	page_options($var, $param);
-
-
-
-	my $x = int($data[0]->{sortdata});
-	my $y = $data[0]->{sortdata};
-	use Scalar::Util qw( looks_like_number );
-
-	if ( looks_like_number($data[0]->{sortdata}) ) {
-	    @data = sort { $a->{sortdata} <=> $b->{sortdata} } @data;
-	} else { 
-	    @data = sort { $a->{sortdata} cmp $b->{sortdata} } @data;
-	}
 
 	$var->{data} = \@data;
 
@@ -153,16 +182,53 @@ sub display {
 
 }
 
+
+sub apply_sort {
+	my $data = shift;
+
+
+	my $x = int($$data[0]->{sortdata});
+
+	my $y = $$data[0]->{sortdata};
+
+	use Scalar::Util qw( looks_like_number );
+
+	if ( looks_like_number($$data[0]->{sortdata}) ) {
+	    @{$data} = sort { $a->{sortdata} <=> $b->{sortdata} } @{$data};
+	} else { 
+	    @{$data} = sort { $a->{sortdata} cmp $b->{sortdata} } @{$data};
+	}
+}
+
 sub page_options {
 	my $var 	= shift;
 	my $param 	= shift;
 	my $dbh 	= session::dbh;
 
-	my $data = $dbh->selectall_arrayref(q{
-		SELECT lngcustomerid, strcompanyname FROM tbl_customer ORDER by 2 LIMIT 5
+	my $sql = $dbh->selectall_arrayref(q{ 
+		SELECT lngcustomerid, strcompanyname FROM tbl_customer ORDER by 2 LIMIT 5 
 	}, {});
 
-	$var->{Company_Name} = ssi::make_drop_down($data);
+	$var->{Company_Name} = ssi::make_drop_down($sql);
+
+	my $sql = $dbh->selectall_arrayref(q{ 
+		SELECT lnguserid, strfirstname || ' ' || strlastname FROM tbl_customer_users 
+		WHERE ( chrtype = 'A' or chrtype = 'E') ORDER by strlastname, strfirstname
+	   	--LIMIT 5 
+	}, {});
+
+	$var->{EmployeeList} 	= ssi::make_drop_down($sql);
+
+
+	my $sql = $dbh->selectall_arrayref(q{ 
+		SELECT Distinct  strStatus, strStatus  FROM tbl_projects ORDER by 1
+	}, {});
+
+	$var->{ProjectStatus} = ssi::make_drop_down($sql);
+
+
+
+
 
 	#print STDERR "HAVE COMPANY" , Dumper($data, $var->{Company_Name});
 
@@ -175,7 +241,7 @@ sub apply_filters {
     my $data 	= shift;
 
 	
-
+	#User Text Search
     my $searchstring = $param->{textsearch};
 
     if ( $searchstring ) {
@@ -186,7 +252,9 @@ sub apply_filters {
 	
     }
 
-	@{$data} = filter_date($param, $data);
+
+	#Date field search
+	#@{$data} = filter_date($param, $data);
 
     print STDERR "HAVE PARAMS", Dumper($param);
 
