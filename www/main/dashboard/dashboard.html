@@ -15,6 +15,28 @@
 	<!--#include virtual="/includes/h2-js.html" -->
 
 	<script type="text/javascript" src="/javascripts/other.js"></script>
+	
+	<!--
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	-->
+	<script>
+		/*
+		$( function() { 
+
+
+						$( "#startdate" ).datepicker(); 
+			            $( "#startdate" ).datepicker("option","dateFormat", "mm/dd/yy"); 
+						$( "#startdate" ).datepicker("setDate","<?startdate?>"); 
+		} );
+
+		$( function() { $( "#enddate" ).datepicker(); 
+			            $( "#enddate" ).datepicker("option","dateFormat", "mm/dd/yy"); 
+			$( "#enddate" ).datepicker("setDate","<?enddate?>"); 
+		} );
+		*/
+	</script>
 
 	<script type="text/javascript">
 		function delete_confirm(form) {
@@ -33,7 +55,6 @@
 			return false;
 		}
 	</script>
-<?dumper?>
     <script  type="text/javascript">
 		function open_project_docket(p,q) {
 			window.open('/employee/production/proj_docket.html?ProjectIndex=' + p + ';QuantityIndex=' + q ,'projectdocket','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
@@ -175,12 +196,12 @@
 	
 
 <!-- ******************* START ****************************** -->
-<input type="hidde" name="sortfield" id="sortfield" value="aaa" />
+<input type="hidden" name="sortfield" id="sortfield" value="aaa" />
  <table>
     <tr>
 		<th><input type=checkbox /></th>
 		<?loop fields?>
-		<th><a href="#" onClick="$('sortfield').value='<?id?>';$('f1').submit();" style="color: white;" ><?desc?></a></th>
+		<th><a href="#" onClick="$('sortfield').value='<?id?>'; $('f1').submit();" style="color: white;" ><?desc?></a></th>
 		<?endloop fields?>
 
      

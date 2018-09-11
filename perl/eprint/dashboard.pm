@@ -96,8 +96,7 @@ sub display {
 		$sql_filter
 
 		ORDER by o.lngorderid DESC
-		-- Offset 5
-		LIMIT 10 
+		LIMIT 30 
 	};
 
 	my $lines = $dbh->selectall_arrayref( $sql, {Slice => {}} );
@@ -175,6 +174,8 @@ print STDERR "HAVE SQL: $sql \n";
 
 	$var->{data} = \@data;
 
+	$var->{startdate} 	= $param->{startdate} || "06/01/2018";
+	$var->{enddate} 	= $param->{enddate} || "10/01/2018";
 
 	map { $var->{__FillInForm}{$_} = $param->{$_} } keys %{$param};
 
@@ -254,7 +255,7 @@ sub apply_filters {
 
 
 	#Date field search
-	#@{$data} = filter_date($param, $data);
+	@{$data} = filter_date($param, $data);
 
     print STDERR "HAVE PARAMS", Dumper($param);
 
@@ -271,13 +272,14 @@ sub filter_date {
 
 	return  @$data unless $start && $end;
 
-	print STDERR "HAVE DATE COMP  $start,  $end \n";
 
 	my $dp = '%y-%m-%d';
 
 
-	my $sd = DateTime::Format::Strptime->new( pattern=> '%D' )->parse_datetime($start);
-	my $ed = DateTime::Format::Strptime->new( pattern=> '%D' )->parse_datetime($end);
+	my $sd = DateTime::Format::Strptime->new( pattern=> '%m/%d/%Y' )->parse_datetime($start);
+	my $ed = DateTime::Format::Strptime->new( pattern=> '%m/%d/%Y' )->parse_datetime($end);
+
+	print STDERR "HAVE DATE COMP  START $start -> $sd, END   $end -> $ed \n";
 
 
 	my @newdata;
