@@ -207,7 +207,7 @@ sub page_options {
 	my $dbh 	= session::dbh;
 
 	my $sql = $dbh->selectall_arrayref(q{ 
-		SELECT lngcustomerid, strcompanyname FROM tbl_customer ORDER by 2 LIMIT 5 
+		SELECT lngcustomerid, strcompanyname FROM tbl_customer ORDER by 2
 	}, {});
 
 	$var->{Company_Name} = ssi::make_drop_down($sql);
