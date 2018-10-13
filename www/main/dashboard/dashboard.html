@@ -16,27 +16,8 @@
 
 	<script type="text/javascript" src="/javascripts/other.js"></script>
 	
-	<!--
-	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-	-->
-	<script>
-		/*
-		$( function() { 
+	<!--#include virtual="/includes/datepicker.html" -->
 
-
-						$( "#startdate" ).datepicker(); 
-			            $( "#startdate" ).datepicker("option","dateFormat", "mm/dd/yy"); 
-						$( "#startdate" ).datepicker("setDate","<?startdate?>"); 
-		} );
-
-		$( function() { $( "#enddate" ).datepicker(); 
-			            $( "#enddate" ).datepicker("option","dateFormat", "mm/dd/yy"); 
-			$( "#enddate" ).datepicker("setDate","<?enddate?>"); 
-		} );
-		*/
-	</script>
 
 	<script type="text/javascript">
 		function delete_confirm(form) {
@@ -55,11 +36,14 @@
 			return false;
 		}
 	</script>
+	<!--
     <script  type="text/javascript">
 		function open_project_docket(p,q) {
 			window.open('/employee/production/proj_docket.html?ProjectIndex=' + p + ';QuantityIndex=' + q ,'projectdocket','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 		}
 	</script>
+	-->
+
 	<style>
 		#expander { min-width: 1750px; }
 		#sizer {max-width: none; } 
@@ -86,6 +70,9 @@
 		border: none;
 	}
 
+	.paddingTop { 
+		padding-top: 2em;
+	}
 	th { white-space: normal; width: 1em; }
 	td { padding: 0.2em 0.2em 0.2em 0.5em; text-align: center }
 	select { width: 18em; }
@@ -105,7 +92,7 @@
 
 	<form action="/main/dashboard/dashboard.html" method="get" name="f1" id="f1">
 
-		<fieldset style="height: 20em;">
+		<fieldset style="height: 23em;">
 			<legend>
 				Search Area
 			</legend>
@@ -122,14 +109,14 @@
 			</select>
 
 
+			<br/>
 
-			<br>
 
-			<label>Date</label><br>
-			<input type="text" name="startdate" id="startdate" value="04/01/18" />
-			<input type="text" name="enddate" id="enddate" value="11/01/18" />
+			<label class="paddingTop" >Date</label><br/>
+			<input type="text" name="startdate" id="DPC_startdate"  value="<?startdate?>" />
+			<input type="text" name="enddate"   id="DPC_enddate"    value="<?enddate?>" />
 
-			<br>
+			<br/>
 
 			<label>Filters</label><br>
 			<select name="ddmCSR" id ="ddmCSR">
@@ -142,10 +129,12 @@
 				<?Company_Name?>
 			</select>
 
+			<!--
 			<select name="ddmQuotedFor" id="ddmQuotedFOr">
 				<option value="">Quoted For</option>
 				<?QuotedFor?>
 			</select>
+			-->
 
 			<select name="ddmOrderBy" id="ddmOrderBy">
 				<option value="">Ordred By</option>
@@ -180,8 +169,14 @@
 		<fieldset>
 		<div>
 		<legend> Actions </legend>
-			<select>
-				<option>Sales Rep</option>
+			<select name="action" id="action" onChange="$('f1').submit();">
+				<option>Please Select</option>
+				<optgroup label="Project Status">
+					<option value="status:In Production">In Production</option>
+				</optgroup>
+				<optgroup label="Order">
+				<option>Cancel Order</option>
+				</optgroup>
 			</select>
 		</div>
 		<div>
@@ -201,7 +196,7 @@
     <tr>
 		<th><input type=checkbox /></th>
 		<?loop fields?>
-		<th><a href="#" onClick="$('sortfield').value='<?id?>'; $('f1').submit();" style="color: white;" ><?desc?></a></th>
+		<th><a href="#" onClick=" $('sortfield').value='<?id?>'; $('f1').submit();" style="color: white;" ><?desc?></a></th>
 		<?endloop fields?>
 
      
@@ -209,7 +204,7 @@
     <?loop data?>
 			<tr>
              <td>
-				 <input type="checkbox" />
+				 <input type="checkbox" name="actionpid" value="<?pid?>" />
 			</td>
 		<?loop fields?>
 

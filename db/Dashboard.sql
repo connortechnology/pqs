@@ -7,3 +7,5 @@ create table page (
 	flink text
 );
 
+
+ALTER table tbl_customer ADD column csr int;

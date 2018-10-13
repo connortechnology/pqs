@@ -45,6 +45,7 @@ sub admin_customer_edit {
             ddmPriceList          =>  'PriceList',
             ddmCountyTax          =>  'CountyTax',
             ddmSalesPerson        =>  'SalesPerson',
+            ddmCSR        		  =>  'csr',
             txtBankBranch         =>  'BankBranch',
             txtBankName           =>  'BankName',
             txtBankAccountNo      =>  'BankAccountNumber',
@@ -389,7 +390,13 @@ print STDERR "HAVE DIVISION: $variable->{ddmDivision} \n";
 			FROM tbl_Customer_Users WHERE (chrType = 'E' or chrType = 'A') OR lngCustomerId IN (
 					SELECT lngCustomerId FROM tbl_customer where ysnReseller = 'Y') ORDER By strLastname ";
     $$variable{'ddmSalesPeople'} = ssi::fill_drop_down( $log, $dbh, $_, $$variable{'ddmSalesPerson'} );
+
+    $_ = "SELECT lngUserID, strLastName || ', ' || strFirstName 
+			FROM tbl_Customer_Users WHERE (chrType = 'E' or chrType = 'A') OR lngCustomerId IN (
+					SELECT lngCustomerId FROM tbl_customer where ysnReseller = 'Y') ORDER By strLastname ";
+    $$variable{'ddmCSR'} = ssi::fill_drop_down( $log, $dbh, $_, $$variable{'ddmCSR'} );
     
+
     $$variable{'ddmEmployees'} = ssi::getemployee_numbers( $r, $log, $dbh, $$variable{'ddmEmployees'} );
     $$variable{'ddmAnnualSales'} = ssi::getannual_sales( $r, $log, $dbh, $$variable{'ddmAnnualSales'} );
 

@@ -83,10 +83,17 @@ not acceptable, however "0" is valid.
 			<label for="rdbResellerNo" class="radio"><input type="radio" id="rdbResellerNo" name="rdbReseller" value="N" <?rdbResellerN?> />No</label>
 			<br />
 
-			<label for="ddmSalesPerson">* Representative:</label>
+			<label for="ddmSalesPerson">* Sales Representative:</label>
 			<select id="ddmSalesPerson" name="ddmSalesPerson" onchange="fmChange=1;">
 				<option value=""> Select a sales person </option>
 				<?ddmSalesPeople?>
+			</select>
+			<br />
+
+			<label for="ddmCSR">CSR:</label>
+			<select id="ddmCSR" name="ddmCSR" onchange="fmChange=1;">
+				<option value=""> Select a CSR </option>
+				<?ddmCSR?>
 			</select>
 			<br />
             

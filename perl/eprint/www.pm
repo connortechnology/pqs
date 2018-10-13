@@ -694,9 +694,19 @@ print STDERR "MAIN -- SUB : $sub_section file: $filename \n";
     }
     elsif ($sub_section eq 'dashboard') {
 
-	use eprint::dashboard;
-	my $param;
-       	map { $param->{$_} = $r->param($_) } $r->param();
+		use eprint::dashboard;
+		my $param;
+       	map { 
+			my @p = $r->param($_);
+
+			if (@p == 1 ) {
+				$param->{$_} = shift @p;
+			} else {
+				$param->{$_} = \@p;
+			}
+		} $r->param();
+
+		print STDERR "HAVE AP ", Dumper($r->param('actionpid'), scalar $r->param('actionpid') );
 
         eprint::dashboard::display($variable, $param) if $filename eq 'dashboard.html';
 

@@ -103,6 +103,10 @@ sub update {
     # biscuit.
     for my $k (keys %data) { $data{$k} = undef if $data{$k} eq 'NULL'; }
 
+	#Change empty strings to undefined, DBI will convert undefiend to NULL
+	#prevents sql errors for inserting empty strings into numeric fields
+    for my $k (keys %data) { $data{$k} = undef if $data{$k} eq ''; }
+
     my $sth = $dbh->prepare($sql);
        $sth->execute( values %data );
 

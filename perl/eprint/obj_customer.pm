@@ -16,6 +16,7 @@ my %fields = (
     Reseller             => 'ysnReseller',
     Supplier             => 'ysnSupplier',
     SalesPerson          => 'lngSalesPerson',
+    csr          		 => 'csr',
     NotificationEmail	 => 'notificationemail',
     linescreen	 		 => 'linescreen',
 
@@ -97,6 +98,7 @@ my %transforms = (
 my %defaults = (
     Discount    => 0,
     SalesPerson => 0,
+    csr 		=> 0,
 );
 
 sub new {

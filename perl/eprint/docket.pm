@@ -1404,7 +1404,7 @@ sub printing {
 
     $results{'NoPrint'} = $results{chargefor} eq 'Free' ? 1 : 0;
 
-    $results{'PaperOut'}     = ceil($results{'hdnSheetQuantity1'} / $results{hdnPaperBuyQuantity1});
+    $results{'PaperOut'}     = ceil($results{'hdnSheetQuantity1'} / $results{hdnPaperBuyQuantity1}) if  $results{hdnPaperBuyQuantity1} ;
 
     $results{'UserType'}     = $userType;
     $results{'ProjectIndex'} = $pid;

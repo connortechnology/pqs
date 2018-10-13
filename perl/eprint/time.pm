@@ -259,7 +259,7 @@ sub service_allocation {
 
 	$var->{SERVICES} = $list;
 
-	my $sql = q{ SELECT lnguserid, strfirstname || ' ' || strlastname FROM tbl_customer_users };
+	my $sql = q{ SELECT lnguserid, strfirstname || ' ' || strlastname FROM tbl_customer_users WHERE chrType = 'A'  };
 	$var->{USERS} = ssi::fill_drop_down( $r->log, $dbh, $sql, $r->param('ddmUser') );
 
 	$sql = q{ SELECT lngindex, strname FROM tbl_service_types WHERE active ORDER by strname };

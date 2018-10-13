@@ -13,49 +13,7 @@ use DateTime::Format::Strptime;
 
 our $dbh = session::dbh;
 
-  
-sub add_link {
-    my $x = shift;
-    my $l = shift;
-
-    $x->{link} = "/main/order/order_history_details.html?orderid=$x->{value}" if $x->{id} eq 'lngorderid';
-    $x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
-    $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'strcompanyname';
-}
-
-sub sql_filters {
-
-	my $param = shift;
-
-	my $list = [
-		{ input => 'ddmCompanyName', 	col => 'o.lngcustomerid' },
-		{ input => 'ddmSalesRep',    	col => 'c.lngsalesperson' },
-		{ input => 'ddmOrderBy',     	col => 'o.lnguserid' },
-		{ input => 'ddmProjectStatus',  col => 'p.strstatus' },
-	];
-
-
-	my $text; 
-	foreach my $f ( @{$list} ) {
-		$text .= " AND $f->{col} = " . "'" .  "$param->{$f->{input}}" . "'" if $param->{$f->{input}};
-
-	}
-
-	print STDERR "HAVE TEXT: $text \n";
-	return $text;
-
-}
-
-
-sub display {
-	my $var = shift;
-	my $param = shift;
-
-	my $dbh = session::dbh;
-	my $r = session::r;
-
-
-	my $cols = [
+	our $cols = [
 	{ desc=>"Order", 				id=>"lngorderid", 			class=> "srfield", ro=>1 },
 	{ desc=>"Project", 				id=>"lngprojectindex", 		class=> "srfield", ro=>1 },
 	{ desc=>"Customer", 			id=>"strcompanyname", 		class=> "lgfield", ro=>1 },
@@ -75,9 +33,63 @@ sub display {
 	{ desc=>"Sheets", 				id=>"sheets", 				class=> "smfield", ro=>1 },
 	{ desc=>"P", 					id=>"pulled", 				class=> "tifield", ro=>1 },
 	];
+  
+sub add_link {
+    my $x = shift;
+    my $l = shift;
 
-	$var->{fields} = $cols;
+    $x->{link} = "/main/order/order_history_details.html?orderid=$x->{value}" if $x->{id} eq 'lngorderid';
+    $x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
+    $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'strcompanyname';
+}
 
+sub sql_filters {
+
+	my $param = shift;
+
+	my $list = [
+		{ input => 'ddmCompanyName', 	col => 'o.lngcustomerid' },
+		{ input => 'ddmSalesRep',    	col => 'c.lngsalesperson' },
+		{ input => 'ddmOrderBy',     	col => 'o.lnguserid' },
+		{ input => 'ddmProjectStatus',  col => 'p.strstatus' },
+		{ input => 'ddmCSR',  			col => 'c.csr' },
+	];
+
+
+	my $text; 
+	foreach my $f ( @{$list} ) {
+		$text .= " AND $f->{col} = " . "'" .  "$param->{$f->{input}}" . "'" if $param->{$f->{input}};
+
+	}
+
+	print STDERR "HAVE TEXT: $text \n";
+	return $text;
+
+}
+
+sub dashboard_defaults {
+	my $param = shift;
+
+	my $today = DateTime->now->strftime('%m/%d/%Y');
+
+	my $strp = DateTime::Format::Strptime->new( pattern => '%m/%d/%Y');
+
+	my $dt =  $strp->parse_datetime($today);
+
+	my $s = 100;
+	my $e = 30;
+
+	$param->{startdate}   = $dt->add(days => -$s)->strftime('%m/%d/%Y') unless $param->{startdate};
+	$param->{enddate}     = $dt->add(days => $s + $e)->strftime('%m/%d/%Y') unless $param->{enddate};
+
+	return $param;
+	print STDERR "SET APRAMS: " ,Dumper($param);
+}
+
+sub get_data {
+	my $param = shift;
+
+	my $dbh = session::dbh;
 
 	my $sql_filter = sql_filters($param);
 
@@ -106,13 +118,13 @@ print STDERR "HAVE SQL: $sql \n";
 
 	my @data;
 
-	my $sortfield = $r->param('sortfield');
+	my $sortfield = $param->{sortfield};
 
 	print STDERR "HAVE SORT FIELD: $sortfield \n";
 
 	foreach my $l ( @{$lines} ) {
 
-		print STDERR "HAVE LINE $l->{lngorderid} \n";
+		#print STDERR "HAVE LINE $l->{lngorderid} \n";
 
 		my $p = new PQS::Object::project($l->{lngprojectindex});
 
@@ -154,30 +166,52 @@ print STDERR "HAVE SQL: $sql \n";
 
 			push @{$d->{fields}}, \%x; 
 			$d->{sortdata} = $l->{$sortfield};
+			$d->{pid} = $l->{lngprojectindex};
 
 		}
 		push @data, $d;
 	}
-	
+	return @data;
 
+}
+
+sub action {
+
+
+}
+
+sub display {
+	my $var = shift;
+	my $param = shift;
+
+
+	$param = dashboard_defaults($param);
+
+	
+	my @data = get_data($param);
 
 	apply_filters($param, \@data);
-	
-	
 
+
+
+
+	action($param, \@data) if $param->{action};
 
 	apply_sort(\@data);
 
-
-
 	page_options($var, $param);
+
+
+	$var->{fields} = $cols;
 
 	$var->{data} = \@data;
 
-	$var->{startdate} 	= $param->{startdate} || "06/01/2018";
-	$var->{enddate} 	= $param->{enddate} || "10/01/2018";
+	$var->{startdate} 	= $param->{startdate};
+	$var->{enddate} 	= $param->{enddate};
 
 	map { $var->{__FillInForm}{$_} = $param->{$_} } keys %{$param};
+
+	#print STDERR "HAVE DATA", Dumper($var->{data});
 
 	return ;
 
@@ -200,6 +234,7 @@ sub apply_sort {
 	    @{$data} = sort { $a->{sortdata} cmp $b->{sortdata} } @{$data};
 	}
 }
+
 
 sub page_options {
 	my $var 	= shift;
@@ -300,15 +335,14 @@ sub filter_date {
 		my $duedate = DateTime::Format::Strptime->new( pattern=> $dp )->parse_datetime($dd);
 
 
-		print STDERR "COMPARE START DATE DUE: $duedate --  $sd ED: $ed \n";
+		#		print STDERR "COMPARE START DATE DUE: $duedate --  $sd ED: $ed \n";
 
 		my $startcmp = $duedate->compare($sd);
 		my $endcmp   = $duedate->compare($ed);
-		print STDERR "COMPARE START DATE DUE: $duedate -- $startcmp ** $endcmp SD: $sd ED: $ed \n";
+		#print STDERR "COMPARE START DATE DUE: $duedate -- $startcmp ** $endcmp SD: $sd ED: $ed \n";
 
 
 		if ( int($startcmp) >= 0 && int($endcmp) <= 0  ) {  
-			print STDERR "HAVE DATE  NOW:  \n";
 			push @newdata, $row;
 		}
 
