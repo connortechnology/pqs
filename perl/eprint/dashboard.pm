@@ -253,8 +253,6 @@ sub display {
 	my $type = $param->{reportType};
 
 
-	splice @{$cols}, 1,1 if $type eq 'Order';; 
-	splice @{$cols}, 0,1 if $type eq 'Quote';; 
 
 
 	
@@ -271,6 +269,9 @@ sub display {
 
 
 	$var->{fields} = $cols;
+
+	splice @{$var->{fields}}, 1,1 if $type eq 'Order';; 
+	splice @{$var->{fields}}, 0,1 if $type eq 'Quote';; 
 
 	$var->{data} = \@data;
 
