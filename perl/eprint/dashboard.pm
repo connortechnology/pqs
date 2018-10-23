@@ -93,8 +93,9 @@ sub dashboard_defaults {
 	$param->{startdate}   = $dt->add(days => -$s)->strftime('%m/%d/%Y') unless $param->{startdate};
 	$param->{enddate}     = $dt->add(days => $s + $e)->strftime('%m/%d/%Y') unless $param->{enddate};
 
+	$param->{reportType} = 'Order' unless $param->{reportType} ;
+
 	return $param;
-	print STDERR "SET APRAMS: " ,Dumper($param);
 }
 
 sub get_data {
@@ -239,12 +240,8 @@ sub action {
 sub display {
 	my $var 	= shift;
 	my $param 	= shift;
-	my $type 	= $param->{reportType};
 
 	
-	splice @{$cols}, 1,1 if $type eq 'Order';; 
-	splice @{$cols}, 0,1 if $type eq 'Quote';; 
-
 
 	my ($action, $value )  =  split /:/,  $param->{action};
 	my $list = $param->{actionpid};
@@ -252,6 +249,13 @@ sub display {
 	action($action, $value, $list) if $action;
 
 	$param = dashboard_defaults($param);
+
+	my $type = $param->{reportType};
+
+
+	splice @{$cols}, 1,1 if $type eq 'Order';; 
+	splice @{$cols}, 0,1 if $type eq 'Quote';; 
+
 
 	
 	my @data = get_data($param, $type);
