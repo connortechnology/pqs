@@ -101,6 +101,7 @@ sub dashboard_defaults {
 sub get_data {
 	my $param = shift;
 	my $type = shift;
+	my $col_list = shift;
 
 	my $dbh = session::dbh;
 
@@ -188,7 +189,7 @@ print STDERR "HAVE SQL: $sql \n";
 
 
 		my $d = {};
-		foreach my $c ( @{$cols} )  {
+		foreach my $c ( @{$col_list} )  {
 			my %x = %{$c};
 
 
@@ -252,11 +253,14 @@ sub display {
 
 	my $type = $param->{reportType};
 
+	my @col_list = @{$cols};
 
+	splice @col_list, 1,1 if $type eq 'Order'; 
+	splice @col_list, 0,1 if $type eq 'Quote'; 
 
 
 	
-	my @data = get_data($param, $type);
+	my @data = get_data($param, $type, \@col_list);
 
 	apply_filters($param, \@data);
 
@@ -268,10 +272,8 @@ sub display {
 	page_options($var, $param);
 
 
-	$var->{fields} = $cols;
+	$var->{fields} = \@col_list;
 
-	splice @{$var->{fields}}, 1,1 if $type eq 'Order';; 
-	splice @{$var->{fields}}, 0,1 if $type eq 'Quote';; 
 
 	$var->{data} = \@data;
 
