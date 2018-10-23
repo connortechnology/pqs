@@ -10,11 +10,13 @@ use Data::Dumper;
 use PQS::Object::project;
 use DateTime;
 use DateTime::Format::Strptime;
+use eprint::project;
 
 our $dbh = session::dbh;
 
 	our $cols = [
 	{ desc=>"Order", 				id=>"lngorderid", 			class=> "srfield", ro=>1 },
+	{ desc=>"Quote", 				id=>"lngquoteid", 			class=> "srfield", ro=>1 },
 	{ desc=>"Project", 				id=>"lngprojectindex", 		class=> "srfield", ro=>1 },
 	{ desc=>"Customer", 			id=>"strcompanyname", 		class=> "lgfield", ro=>1 },
 	{ desc=>"Contact", 				id=>"contact", 				class=> "rgfield", ro=>1 },
@@ -23,6 +25,7 @@ our $dbh = session::dbh;
 	{ desc=>"Qty", 					id=>"intquantity1", 		class=> "srfield", ro=>1 },
 	{ desc=>"Inks", 				id=>"inks", 				class=> "srfield", ro=>1 },
 	{ desc=>"Job Name", 			id=>"strprojectreference",	class=> "lgfield", ro=>1 },
+	{ desc=>"Department", 			id=>"department", 			class=> "srfield", ro=>1 },
 	{ desc=>"Equipment", 			id=>"equipment", 			class=> "srfield", ro=>1 },
 	{ desc=>"Finished Size",		id=>"finished", 			class=> "srfield", ro=>1 },
 	{ desc=>"Time", 				id=>"time", 				class=> "smfield", ro=>1 },
@@ -41,6 +44,14 @@ sub add_link {
     $x->{link} = "/main/order/order_history_details.html?orderid=$x->{value}" if $x->{id} eq 'lngorderid';
     $x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
     $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'strcompanyname';
+    $x->{link} = "/administrator/managerial/user_profiles.html?ddmUser=$l->{lnguserid}" if $x->{id} eq 'contact';
+    $x->{link} = "/main/proj/edit.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'strprojectreference';
+    $x->{link} = "/main/proj/edit.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'intquantity1';
+    $x->{link} = "/service/shipping?pid=$l->{lngprojectindex};sid=$l->{shipid}" if $x->{id} eq 'delivery';
+    $x->{link} = "/service/printing?pid=$l->{lngprojectindex};sid=$l->{lngserviceindex}" if $x->{id} eq 'stock';
+    $x->{link} = "/main/quote/quote_history_details.html?quote_id=$l->{lngquoteid};" if $x->{id} eq 'lngquoteid';
+
+
 }
 
 sub sql_filters {
@@ -88,26 +99,46 @@ sub dashboard_defaults {
 
 sub get_data {
 	my $param = shift;
+	my $type = shift;
 
 	my $dbh = session::dbh;
 
 	my $sql_filter = sql_filters($param);
 
+
+	my $table;
+	if ( $type eq 'Quote' ) {
+		$table = q{
+			FROM 
+				tbl_quotes q, tbl_quote_details qd, tbl_projects p, 
+				tbl_project_contents pc, tbl_customer c
+			WHERE 	q.lngquoteid = qd.lngquoteid
+			AND		qd.lngprojectindex = p.lngprojectindex
+		}
+	} elsif ( $type eq 'Order' )  {
+		$table = q{
+			FROM 
+				tbl_orders o, tbl_order_contents oc, tbl_projects p, 
+				tbl_project_contents pc, tbl_customer c
+			WHERE 	o.lngorderid = oc.lngorderid
+			AND		oc.lngprojectindex = p.lngprojectindex
+			AND 	o.ysnfinished 
+		}
+
+	}
+
 	my $sql = qq{
 		SELECT *, p.strstatus as status 
-		FROM 
-			tbl_orders o, tbl_order_contents oc, tbl_projects p, 
-			tbl_project_contents pc, tbl_customer c
-		WHERE 	o.lngorderid = oc.lngorderid
-		AND		oc.lngprojectindex = p.lngprojectindex
+
+		$table
+
 		AND		p.lngprojectindex = pc.lngprojectindex
 		AND 	p.lngcustomerid = c.lngcustomerid
 		AND		strservicetype = 'Printing'
-		AND 	o.ysnfinished 
 
 		$sql_filter
 
-		ORDER by o.lngorderid DESC
+		ORDER by 1 DESC
 		LIMIT 30 
 	};
 
@@ -143,6 +174,7 @@ print STDERR "HAVE SQL: $sql \n";
 		$l->{stock} = $p->stock_name($l->{lngserviceindex});
 		$l->{sheets} = $p->sheet_count($l->{lngserviceindex});
 		$l->{sheet_size} = $p->sheet_size($l->{lngserviceindex});
+		$l->{shipid} = eprint::project::check_for_service(undef, $dbh, $l->{lngprojectindex}, 'Shipping');
 
 
 
@@ -169,6 +201,8 @@ print STDERR "HAVE SQL: $sql \n";
 			$d->{pid} = $l->{lngprojectindex};
 
 		}
+
+		#print STDERR "HAVE DATA: ",Dumper($l);
 		push @data, $d;
 	}
 	return @data;
@@ -176,26 +210,56 @@ print STDERR "HAVE SQL: $sql \n";
 }
 
 sub action {
+	my ( $action, $value, $list ) = @_;
 
+	my $dbh = session::dbh;
+
+	print STDERR "HAVE VALUES ", Dumper($action, $value, $list);
+
+	if ( $action eq 'PidStatus' ) {
+		print STDERR "UPDATE PID: $action \n";
+		foreach my $p ( @{$list} ) {
+			print STDERR "SET STATUS $p, $value \n";
+			eprint::project::project_status($dbh, $p, $value );
+		}
+	} elsif ( $action eq 'OrderStatus' ) {
+		print STDERR "UPDATE ORDER \n";
+		foreach my $p ( @{$list} ) {
+
+			my $order = PQS::model::order::get_order_by_pid($p);
+
+			print STDERR "SET ORDER STATUS $p, $value, $order \n";
+			PQS::model::order::set_status( $order->{lngorderid}, $value);
+		}
+	}
 
 }
 
-sub display {
-	my $var = shift;
-	my $param = shift;
 
+sub display {
+	my $var 	= shift;
+	my $param 	= shift;
+	my $type 	= $param->{reportType};
+
+	
+	splice @{$cols}, 1,1 if $type eq 'Order';; 
+	splice @{$cols}, 0,1 if $type eq 'Quote';; 
+
+
+	my ($action, $value )  =  split /:/,  $param->{action};
+	my $list = $param->{actionpid};
+
+	action($action, $value, $list) if $action;
 
 	$param = dashboard_defaults($param);
 
 	
-	my @data = get_data($param);
+	my @data = get_data($param, $type);
 
 	apply_filters($param, \@data);
 
 
 
-
-	action($param, \@data) if $param->{action};
 
 	apply_sort(\@data);
 
@@ -208,6 +272,9 @@ sub display {
 
 	$var->{startdate} 	= $param->{startdate};
 	$var->{enddate} 	= $param->{enddate};
+
+	#Always Reset action box before loading page
+	$param->{action} = undef;
 
 	map { $var->{__FillInForm}{$_} = $param->{$_} } keys %{$param};
 

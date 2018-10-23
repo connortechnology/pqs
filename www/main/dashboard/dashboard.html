@@ -71,10 +71,10 @@
 	}
 
 	.paddingTop { 
-		padding-top: 2em;
+		padding-top: 1em;
 	}
-	th { white-space: normal; width: 1em; }
-	td { padding: 0.2em 0.2em 0.2em 0.5em; text-align: center }
+	th { padding: 0.2em 0.2em 0.2em 0.2em; white-space: normal; min-width: 1em; }
+	td { padding: 0.2em 0.2em 0.2em 0.2em; text-align: center }
 	select { width: 18em; }
 	div.button-bar { margin-top: 3em;}
 </style>
@@ -113,8 +113,8 @@
 
 
 			<label class="paddingTop" >Date</label><br/>
-			<input type="text" name="startdate" id="DPC_startdate"  value="<?startdate?>" />
-			<input type="text" name="enddate"   id="DPC_enddate"    value="<?enddate?>" />
+			<input type="text" name="startdate" id="DPC_startdate"  value="<?startdate?>" style="margin: 0 0 0 -20px" />
+			<input type="text" name="enddate"   id="DPC_enddate"    value="<?enddate?>" style="margin-left: 10px"/>
 
 			<br/>
 
@@ -156,6 +156,10 @@
 
 			<br/>
 
+			<div>
+				<input type="radio" value="Order" name="reportType" id="SelectOrder">Orders</input>
+				<input type="radio" value="Quote" name="reportType" id="SelectQuote">Quotes</input>
+			</div>
 
 
 			<div class="button-bar">
@@ -172,10 +176,12 @@
 			<select name="action" id="action" onChange="$('f1').submit();">
 				<option>Please Select</option>
 				<optgroup label="Project Status">
-					<option value="status:In Production">In Production</option>
+					<option value="PidStatus:In Production">In Production</option>
+					<option value="PidStatus:Complete">Complete</option>
 				</optgroup>
 				<optgroup label="Order">
-				<option>Cancel Order</option>
+				<option value="OrderStatus:Cancel">Cancel Order</option>
+				<option value="OrderStatus:In Production">In Production</option>
 				</optgroup>
 			</select>
 		</div>
