@@ -22,25 +22,17 @@
 
 	<script type="text/javascript" src="/javascripts/other.js"></script>
 	<script  type="text/javascript">
-	function loadwithpage() {
-	needhelp();
-}
 
-    window.onload=loadwithpage;
-	
-		function open_printer_friendly_version() {
-		window.open('/main/order/order_invoice_printer_friendly.html?order_id=<?order_id?>','printerfriendlyorder','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
-		}
-		
-		function helpmsg() {
-		alert("If you require assistance with your project please call us at <!--#include virtual="/includes/company_telephone_number.html"-->.");
+	function check_submit() {
+		<?if ( @{$variable->{projects}} ) ?> 
+			return true;
+		<?else ( @{$variable->{projects}} ) ?> 
+			alert("Please add a product to your Order before Submitting");
+			return false;
+		<?endif ( @{$variable->{projects}} ) ?> 
+
 	}
-	
-	function needhelp() {
-    window.onload = function () {
-        setTimeout(helpmsg, 300000); //Then set it to run again after ten minutes
-    }
-	}
+
 	</script>
 
 </head>
@@ -110,7 +102,7 @@
 		<div class="button-bar">
 			<input type="hidden" name="hiddenOrderID" value="<?hiddenOrderID?>" />
             
-			<input type="submit" name="f1.submit();return false;" class="button right" value="Submit Order" />
+			<input type="submit" name="Submit" onClick="return( check_submit());" class="button right" value="Submit Order" />
 			<!--
             <a class="button right" href="/main/ecommerce/products.html" >Add Another Item to My Order</a>
 			-->

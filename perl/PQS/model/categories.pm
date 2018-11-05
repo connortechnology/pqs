@@ -12,6 +12,26 @@ sub set_name {
   my $dbh = session::dbh;
   $dbh->do(q{update categories set name = ? where id = ?},undef,  $name, $id);
 }
+
+sub set_description {
+  my ($id, $desc) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{update categories set description = ? where id = ?},undef,  $desc, $id);
+}
+sub set_header {
+  my ($id, $desc) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{update categories set header = ? where id = ?},undef,  $desc, $id);
+}
+sub set_footer {
+  my ($id, $desc) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{update categories set footer = ? where id = ?},undef,  $desc, $id);
+}
+
+
+
+
 sub set_active {
   my ($id, $active) = @_;
   my $dbh = session::dbh;

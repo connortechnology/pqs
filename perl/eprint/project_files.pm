@@ -298,7 +298,13 @@ sub actions {
 	if ( $r->param('lastfile') ) {
 		print STDERR "LAST FILE \n";
 		$dbh->do(q{Update tbl_projects set files = true where lngprojectindex = ? }, undef, $pid);
+
 		project_status($dbh, $pid, 'In Production');
+
+		my $sids = $dbh->selectcol_arrayref(q{
+			SELECT lngserviceindex FROM tbl_project_contents where lngprojectindex = ?}, undef, $pid);
+
+		eprint::service::set_status($log, $dbh, $pid, 'In Production', @{$sids});
 		
 		send_notice($r, $log, $dbh, $variable, $pid);
 	}

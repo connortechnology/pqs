@@ -808,6 +808,7 @@ print STDER "MY FILENAME: $filename \n";
     }
     elsif ($sub_section eq 'ecommerce') {
     	eprint::products::display($r, $dbh, $variable) if $filename eq 'products.html';
+    	eprint::products::display_categories($r, $dbh, $variable) if $filename eq 'categories.html';
     	eprint::products::details($r, $dbh, $variable) if $filename eq 'product_details.html';
     	eprint::products::design($r, $dbh, $variable, $cookie) if $filename eq 'design.html';
 	}
@@ -829,12 +830,20 @@ sub menu_options {
 
 	my $cats = PQS::model::categories::get_all();
 
+<<<<<<< HEAD
 	#map { push @{$var->{prod_menu}}, $cats->{$_}; } sort keys $cats;
+=======
+	@{$var->{prod_menu}} = undef;
+
+>>>>>>> hotfix-4x
 	map { push @{$var->{prod_menu}}, $cats->{$_}; } sort keys $cats;
 	
 	
 
+<<<<<<< HEAD
 #	print STDERR "HAVE CATS: ", Dumper($var->{prod_menu}, $cats);
+=======
+>>>>>>> hotfix-4x
 }
 
 

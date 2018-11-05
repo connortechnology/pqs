@@ -285,7 +285,7 @@ select.failed {
 					<a href="/main/ecommerce/products.html"> Products </a>
 -->
 
-					<div style="margin-left:5px;">
+					<div style="margin-left: 5px;">
 					<?loop cat_chain?>
 						<?if name?>
 						<a href="/main/ecommerce/products.html?category=<?id?>">
@@ -297,7 +297,7 @@ select.failed {
 						<?name?> </a>
 						<?endif name?>
 			  		<?endloop cat_chain?>
-					</div>
+				</div>
 					
 					</span>
 					</h1>
@@ -314,144 +314,28 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 <?endif ( @{$variable->{filters}} ) ?>
 </div>
 
-					<h2>
-
-					<br/>
-					<?if ( @{$variable->{cat_children}} ) ?>
-					<span class="title-section"> Filter by Category: <br/>
-					<?endif ( @{$variable->{cat_children}} ) ?>
-
-					<?loop cat_children?>
-						<a href="/main/ecommerce/products.html?category=<?id?>">
-						<?if _first?><?else _first?> / <?endif _first?>
-						<?name?> </a>
-			  		<?endloop cat_children?>
-					
-					</span>
-					</h2>
-
 
 <div id="horizontal-spacer1" style="height: 50px; width=100%; "></div>
 
 
-
-<div class="right" style="float:right; width:300px;   margin-top: -0px; min-height:550px" > 
-
-
-
-
-
-
-<div>
-	<form action="products.html" style="font-size:1.8em;" >
-	<?loop filters?>
-		<div style="margin-bottom: 30px;">
-		<label>
-		<?name?>:
-		</label>
-		<select name="filter-<?id?>" id="filter-<?id?>" style="width:180px; float: right;" class="styled" onChange="submit();">
-<!--			<option value="">Please Select</option> -->
-			<?loop options?>
-				<option value="<?id?>"><?name?></option>
-			<?endloop options?>
-		</select>
-		</div>
-	<?endloop filters?>
-
-<?eval ( $variable->{products} =  [shift @{$variable->{products}}] ) ?>
-<?loop products?> 
-
-	<?if ( @{$variable->{filters}} ) ?>
-
-	<div style="margin-bottom: 30px;">
-	<label> Quantity:</label> 
-		<!--	onChange="$('btn-update').setAttribute('class','flash-button')" -->
-		<input name="quantity" id="quantity" style="width: 60px; margin: 0 0 0 20px " 
-			onChange="submit(  check_qty(this, <?increment?>,<?minimum_qty?>,<?maximum_qty?>) );"
-
-			value="<?quantity?>" />
-
-		<button id="btn-update"  onClick="return check_qty(this, <?increment?>,<?minimum_qty?>,<?maximum_qty?>)" 
-			type="submit" value="Update" name="Update" 
-			style="font-size: 0.7em; float:none; width: 70px; border-radius: 5px; margin: 0 0 0 12px;" /> 
-			Update 
-		</button>
-
-
-
-
-
-	</div>
-
-	<div style="margin-bottom: 30px;">
-		<label>Versions:</label> 
-		<input name="versions" id="versions" style="width: 60px; margin: 0 0 0 20px " 
-			value="<?versions?>" 
-			onChange="submit();"
-			/>
-	</div>
-
-	<input type="hidden" value="<?cat?>" name="category" />
-<!--
-	<button type="reload" value="Search" name="Search" style="margin-left: 350px" /> Reload</button>
--->
-</form>
-
-
-	<div style="margin-bottom: 30px;" id="cartdiv" >
-
-        <form name="f1" method="post" action="/main/proj/dispatch.html" >	
-
-		<label>Job Description:</label> 
-		<textarea name="jobname" id="jobname" style="width: 270px;margin: 0 0 0 20px;"><?jobname?></textarea>
-
-		<label style="font-size: 2em; line-height: 70px">
-                    Price: <strong><?money:price?></strong>
-		</label>
-
-            <input type="hidden" name="action" value="add_product_to_order" />
-            <input type="hidden" name="product"	id="product" value="<?id?>"  />           
-
-			<input type="hidden" name="txtQuantity1" id="txtQuantity1" value="<?quantity?>"  />
-			<input type="hidden" name="versions1" id="versions1" value="<?versions?>"  />
-
-			<input class="button" id="addtocart" value="Add To Cart" type="submit" align="right" style="float:inherit;  height:30px; border-radius: 5px; margin-top: -5px;" 
-				   	onClick="return form_validate();"	/>
-		</form>
-
-				</div>
-
-	<?if is_staff?>
-	<button style="width: 50%; margin-left: 25%" onClick="open_price_window(<?id?>)" > Edit Prices</button>
-	<button style="width: 50%; margin-left: 25%" onClick="open_discount_window(<?id?>)" >Version Discount</button>
-
-	<form  name="fquote" method="post" action="/main/quote/quote_info.html" >
-	<button style="width: 50%; margin-left: 25%" onClick="return make_quote();"  >Make Quote</button>
-	<input type="hidden" name="action" value="Product Quote" />
-	</form>
-	<!--
-	<a	href="/administrator/products/price.html?product=<?id?>;pricelist=1">
-		<button style="width: 100px"> Edit Prices</button>
-	</a>
-	-->
-	<?endif is_staff?>
-
-	<?endif ( @{$variable->{filters}} ) ?>
+<div id="cat_header" style="width:100%; font-size: 14pt; margin: 0 0 40px 0"> 
+	<?info.header?>
 </div>
 
+<div id="parent">
+
+
+<?loop cat_children?> 
 
 
 
 
 
-
-
-
-</div>
-
-
-
-<div id="main2" style="width: 500px; height: 400px">
+<div id="main2" style="width: 250px; height: 250px; border: 2px solid black;" 
+	onClick='window.location="products.html?Category=<?id?>"'
+	onmouseover="this.style.background='lightgray';"
+	onmouseout="this.style.background='';"
+>
                 <div style="display:none">
                     <?id?>
                     <?description?>
@@ -475,28 +359,27 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 			<!--
              <a href="product_details.html?id=<?id?>"> 
 			 -->
-                <div id="image" style="width: 100px" >                    			
-					<img src="<?image?>" alt="<?strid?>" style="min-width:1%; min-height:1%;" /> 
-				</div>
                     
 
-                <div id="p2name" style="margin: -150px 0 0 0; height:60px; font-size: 1.5em ">
+                <div id="p2name" style="margin: 0 0 0 0;  font-size: 1em; height: 50%; text-align: center; "  >
 					<!--
                     <strong>
                     <?category?>
 					</strong><br />
 					-->
 
-					<div id="name" style="margin: 10px 0 0 0">
-					<?name?> <br />
+					<div id="name" style="margin: 0 0 0 0; font-size: 1.5em; color: white; background-color: blue; line-height:34px; font-weight:bold;">
+					<?name?>
 					</div>
+					<br />
 					<div id="details" style="margin: 10px 0 0 0">
-					<?details?> <br />
-					</div>
-					<div id="leadtime" style="margin: 10px 0 0 0">
-					<?lead_time?> <br />
+						<?description?> 
 					</div>
                 </div>
+
+                <div id="image" style="width: 100px" >                    			
+					<img src="<?image?>" alt="<?strid?>" style="min-width:1%; min-height:1%;" /> 
+				</div>
 			<!--
              </a>
 			 -->
@@ -504,7 +387,13 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
         
 </div>
 
-<?endloop products?>
+<?endloop cat_children?>
+</div>
+
+<div id="cat_footer" style="width:100%">
+	<?info.footer?>
+</div>	
+
     <br />
 
     
@@ -563,6 +452,14 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
     <!-- end #expander -->
 </div>
 <!-- end #sizer -->
+
+<!--
+<form action="categories.html" style="font-size:1.8em;" >
+
+	<input type="hidden" value="<?cat?>" name="category" />
+	<button type="reload" value="Search" name="Search" style="margin-left: 850px; margin-bottom: -100px;" /> Reload</button>
+</form>
+-->
 
 </body>
 </html>
