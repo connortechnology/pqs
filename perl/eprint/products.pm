@@ -36,6 +36,7 @@ sub save_categories {
 			my $dsc = $r->param("description-$id") || undef;
 			my $header = $r->param("header-$id") || undef;
 			my $footer = $r->param("footer-$id") || undef;
+			my $productinfo = $r->param("productinfo-$id") || undef;
 
 			print STDERR "SET NAME: $id = $name \n ";
 
@@ -45,6 +46,7 @@ sub save_categories {
 			PQS::model::categories::set_description($id, $dsc);	
 			PQS::model::categories::set_header($id, $header);	
 			PQS::model::categories::set_footer($id, $footer);	
+			PQS::model::categories::set_productinfo($id, $productinfo);	
 		}
 	} $r->param();
 
@@ -55,10 +57,12 @@ sub save_categories {
 		my $dsc   = $r->param("description-new");
 		my $header   = $r->param("header-new");
 		my $footer   = $r->param("footer-new");
+		my $productinfo   = $r->param("productinfo-new");
 
 		PQS::model::categories::set_description($id, $dsc);	
 		PQS::model::categories::set_header($id, $dsc);	
 		PQS::model::categories::set_footer($id, $dsc);	
+		PQS::model::categories::set_productinfo($id, $dsc);	
 
 		my $d = category_path($id);
 
@@ -87,9 +91,9 @@ sub save_filters {
 	my $fid = $r->param('fid');
 	my $cat = $r->param("cat");
 	my $name   = $r->param("filtername");
+	my $sortorder   = $r->param("sortorder");
 
-
-	$fid = PQS::model::product_filter::set( { name => $name, cat => $cat, id => $fid });
+	$fid = PQS::model::product_filter::set( { name => $name, cat => $cat, id => $fid, sortorder => $sortorder });
 
 	my @opts =  $r->param('options');
 
@@ -1029,13 +1033,21 @@ sub display {
 		} @{$list};
 	}
 
+
 	#print STDERR "HAVE PRODUCTS: ", Dumper($var->{products});
+	
+	my $category = PQS::model::categories::get($cat);
+	
 
 	$var->{filters} 		= $filters;
 	$var->{cat} 			= $cat;
 	$var->{quantity} 		= $r->param('quantity') || $qty;
 	$var->{total_quantity} 	= $total_qty;
 	$var->{versions} 		= $versions;
+	$var->{productinfo}  	= $category->{productinfo};
+
+	print STDERR "CSAT: " , Dumper($var->{category});
+
 
 }
 

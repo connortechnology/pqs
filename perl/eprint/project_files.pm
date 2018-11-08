@@ -94,6 +94,7 @@ sub display_files {
     my $files = $dbh->selectall_hashref(q{
         SELECT f.filename, 
                f.description,
+			   approval_info,
                approval_prepress,
                approval_production,
                u.strfirstname || ' ' || u.strlastname AS owner
@@ -326,8 +327,7 @@ sub actions {
 
         # Both uploads and approvals are initially approved for either
         # prepress or production.
-        my $approval = $r->param('approve_for') eq 'production' ? 'production'
-                                                                : 'prepress';
+		my $approval = $r->param('approve_for');
 
         my ($action, $files);
 
@@ -341,6 +341,7 @@ sub actions {
             $files  = [ map { { filename => $_ } } $r->param('filename') ];
 
             approve_files($dbh, $pid, $variable->{user}, $approval, $r->param('filename'));
+			die('Missing Approval Level') unless $approval;
         }
 
 		#send_notice($r, $log, $dbh, $variable, $pid, $action, $approval, $files);
@@ -434,8 +435,7 @@ sub delete_project_files {
 sub approve_files {
     my ($dbh, $pid, $user, $type, @filenames) = @_;
 
-    # Default to prepress approval unless otherwise stated.
-    $type = 'prepress' unless defined $type && $type eq 'production';
+	die('Missing Approval Level') unless $type;
 
     my $approve = $dbh->prepare(qq{
         UPDATE project_files 

@@ -159,7 +159,8 @@ sub check_customer_account {
 }
 
 sub add_product_to_order {
-    my ( $cookie, $var, $product, $qty, $subgroup, $jobname, $versions ) = @_;
+	my ( $cookie, $var, $product, $qty, $subgroup, $jobname, $versions, $quote_price, $order_id ) = @_;
+
 
 	my $log = session::log;
 	my $dbh = session::dbh;
@@ -167,12 +168,14 @@ sub add_product_to_order {
 #	my $error = check_customer_account( $log, $dbh, $cookie, $var);
 
 #	return ( 0, $error) if $error;
+	
+	$cookie = $var->{cookie} unless $cookie;
 
 	
 
-    my $order_id ||= get_unfinished_order(
+    $order_id ||= get_unfinished_order(
         $log, $dbh, $cookie, $var->{cust_id}, $var->{user_id}
-    );
+    ) unless $order_id;
     
     $order_id ||= create_order($log, $dbh, $cookie, $var);
 
@@ -180,14 +183,15 @@ sub add_product_to_order {
 
 	my $prod = new PQS::Object::product($product);
 
-	my $price =  $prod->price($var->{cust_id}, $qty, $versions);
+	my $price =  defined $quote_price ? $quote_price : $prod->price($var->{cust_id}, $qty, $versions);
 
 	$qty *= $versions;
 
 
 	print STDERR "ADDD PRODUCT: $product Q: $qty V: $versions PRICE: $price \n";
 
-	die("No Price Found for product: $product ", Dumper($prod) ) unless $price or $prod->{specs}{kit};
+	die("No Price Found for product: $product ", Dumper($prod) ) unless $price or $prod->{specs}{kit} or defined $quote_price;
+
 
 	
 	insert_prod($log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname);
@@ -1373,6 +1377,51 @@ print STDERR "HAVE AVAIL CREDIT: $avail_credit \n";
     return OK;
 }
 
+sub order_product_list {
+       my $oid = shift;
+       my $var = shift;
+
+       my $list = PQS::model::order::get_order_products($oid);
+
+       my @kit;
+
+       my $have;
+
+       map { $have->{$_->{product}} = 1} @{$list};
+
+       foreach my $o ( @{$list} ) {
+
+               my $product = PQS::model::products::get($o->{product});
+
+               print STDERR "HAVE PRODUcT " , Dumper($o, $product->{kit});
+
+               if ( $product->{kit} ) {
+
+                       print STDERR "HAVE KIT \n";
+                       my $klist = PQS::model::products::kit_list($o->{product});
+                       #print STDERR "HAVE KIT \n", Dumper($klist);
+                       foreach my $k ( @{$klist} ) {
+
+                               my $qty =  $k->{qty} * $o->{intquantity};
+                               my $jobname = $o->{jobname} . ' - ' . $k->{name};
+
+                               die("Missing Kit Qty for kit:  $o->{product} ") unless $qty;
+
+                               print STDERR "ADD PRODUCT: $k->{product}, QTY: $qty \n";
+                               add_product_to_order( undef, $var, $k->{product}, $k->{qty}, undef, $o->{jobname}, $o->{versions} || 1, 0, $oid )
+                               unless $have->{$k->{product}};
+
+
+                       }
+               }
+       }
+
+       my $list = PQS::model::order::get_order_products($oid);
+
+       return $list;
+
+}
+
 sub make_product_dockets {
 	my $orderid = shift;
 	my $var = shift;
@@ -1382,7 +1431,7 @@ sub make_product_dockets {
 
 	
 	my @pids;
-	my $list = PQS::model::order::get_order_products($orderid);
+	my $list = order_product_list($orderid, $var);
 
 	my $order = PQS::model::order::get_order($orderid);
 
@@ -1398,9 +1447,11 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
 		next unless $ppid;
 
 		my $args = {
-			name => $o->{jobname},
+			name => $o->{jobname} . ' - ' . $prod->{specs}{name},
+
 #			name => "Docket for: " . $o->{jobname},
 # remove 'Docket for' from job name, add it as a 'label' on order/project history
+			#
 			qty  		=> $o->{intquantity},
 			comment 	=> $prod->{specs}{description},
 
@@ -1412,7 +1463,7 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
     	my $sid 	= eprint::project::check_for_service( undef, $dbh, $pid, 'Discount');
     	my $ship 	= eprint::project::check_for_service( undef, $dbh, $pid, 'Shipping');
 
-	   	$ship = eprint::print_project::insert_service($r->log, $dbh, $pid, 'Shipping') unless $ship;
+	   	$ship = eprint::print_project::insert_service($log, $dbh, $pid, 'Shipping') unless $ship;
 
 
 		unless ( $sid ) {
@@ -1454,8 +1505,10 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
 		#eprint::project::project_status($dbh, $pid, 'Waiting For Files');
 		project_status($dbh, $pid, 'Waiting For Files');
 
-		push @pids, {pid 		=> $pid,
-					 jobname	=> $o->{jobname},
+		push @pids, {
+					 pid 		=> $pid,
+					 #jobname	=> $o->{jobname},
+					 jobname => $o->{jobname} . ' - ' . $prod->{specs}{name},
 				    };
 	}
 	return \@pids;

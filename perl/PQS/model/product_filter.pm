@@ -16,11 +16,14 @@ sub set {
   my $id = $filter->{id};
   my $cat = $filter->{cat};
   my $name = $filter->{name};
+  my $sortorder = $filter->{sortorder};
+
+  print STDERR "HAEV SORT ORDER: $sortorder - $id -- $name \n", Dumper($filter);
 
 	if ( $id ) {
-  		$dbh->do(q{update product_filter set name = ? where id = ?},undef,  $name, $id);
+  		$dbh->do(q{update product_filter set name = ?, sortorder = ? where id = ?},undef,  $name, $sortorder, $id);
 	} else { 
-  		$dbh->do(q{insert into product_filter (name, category) values ( ?, ? ) },undef,  $name, $cat);
+  		$dbh->do(q{insert into product_filter (name, category, sortorder) values ( ?, ?, ? ) },undef,  $name, $cat, $sortorder);
 		$id = $dbh->last_insert_id(undef, undef, 'product_filter', 'id');
 print STDERR "HAVE INERT ID: $id \n";
 		
@@ -74,7 +77,7 @@ sub get {
 sub get_all {
   my $dbh = session::dbh;
 
-  my $all = $dbh->selectall_arrayref("select * from product_filter",{Slice => {}});
+  my $all = $dbh->selectall_arrayref("select * from product_filter ORDER by sortorder",{Slice => {}});
 
 }
 sub products_with_option {
@@ -90,7 +93,7 @@ sub get_category {
   my $dbh = session::dbh;
   my $id  = shift;
 
-  my $all = $dbh->selectall_arrayref("select * from product_filter Where category = ? order by name"
+  my $all = $dbh->selectall_arrayref("select * from product_filter Where category = ? order by sortorder, name"
 	,{Slice => {}}, $id);
 
 }

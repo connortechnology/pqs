@@ -21,6 +21,13 @@
 		margin-left: 20px;
 	}
 
+	.sortorder {
+		width: 1em;
+		font-size: smaller;
+		padding: 4px 5px 0 0;
+		color: aqua;
+	}
+
 	.discount {
 		width: 75px;
 		float: right;
@@ -35,6 +42,13 @@
 	th, tr, td {
 		padding:3px 3px 3px 3px !important;
 	}
+
+	#edit input { margin: 5px 5px 5px 5px };
+
+	fieldset label {
+		font-size: 8pt;
+	}
+
 	</style>
 </head>
 
@@ -55,7 +69,7 @@
 
 <form method="POST" action="builder.html" enctype="multipart/form-data">
 
-<fieldset style="float:left; min-height:950px">
+<fieldset style="float:left; min-height:1120px">
 <legend>Category Filters</legend>
 <div>
 		<label>Category</label>
@@ -73,7 +87,7 @@
 		<div style="margin-left: 10px; margin-top:20px">
 
 
-		<label>Filter: <strong><?name?></strong></label>
+			<label class="sortorder" ><?sortorder?></label><label> Filter: <strong><?name?></strong></label>
 
 				<button type="submit" name="Edit" value="<?id?>">Edit</button>
 				<br/>
@@ -90,8 +104,11 @@
 
 
 	<?if filter.name?>
-		<div style="margin-left: 10px; margin-top:50px">
-            FILTER: <input type="text" name="filtername" value="<?filter.name?>" /><br/>
+		<div id="edit" style="margin-left: 10px; margin-top:50px">
+			Filter: <input type="text" name="filtername" value="<?filter.name?>" style="float: right; margin-right:150px" /> <br />
+			Sort Order: <input name="sortorder" name="sortorder" id="sortorder" value="<?sortorder?>"  style="float: right; margin-right:150px"/> 
+
+			<br/>
 
 			<?loop filter.options?>
             <label>	OPTION: </label> <input type="text" name="options" value="<?name?>" /><br/>
@@ -110,7 +127,7 @@
 </div>
 </fieldset>
 
-<fieldset  style="min-height:950px">
+<fieldset  style="min-height:1120px">
 <legend>Product Builder</legend>
 		<?loop fields?>
 		<?eval( $variable->{value} = $variable->{$variable->{fname}} ) ?>
@@ -126,19 +143,19 @@
 
 		<?endloop fields?>
 
+		<label style="width:25em">Version Discount Min/Max/Discount</label> <br/>
 		<?loop versions?>
-		<label style="width:25em">Version Discount Min/Max/Discount</label>
 		<input name="discount-<?v?>" tabindex="<?v?>13" value="<?discount?>" class="discount" />
 		<input name="max-<?v?>" 	 tabindex="<?v?>12" value="<?max?>" class="discount" />
 		<input name="min-<?v?>" 	 tabindex="<?v?>11" value="<?min?>" class="discount" />
 		<br/>
 		<?endloop versions?>
 			
-<div class="button-bar" style="margin-top: 20px" >
+<div class="button-bar" style="margin: 20px 0 0 0" >
 			<button type="submit" name="Preview" value="1" style="margin-left: -10px;">Save/Preview</button>
 			<button type="submit" name="Build" value="1" >Build</button>
 			<input type="checkbox" name="delete_category" value="1" style="margin-left: 10px; margin-top: 2px">
-			<label style="white-space:normal;margin-top: -2px; padding: 0 0 0 0">Delete current products from category during Build.</label>
+			<label style="white-space:normal;margin-top: -2px; padding: 0 0 0 0; font-size: 0.6em">Delete current products from category during Build.</label>
 			<br />
 			<button type="submit" name="Copy" value="1" style="margin-left: -10px;">Copy</button>
 			<select name="cat-copy" id="cat-copy" width=5 style="margin-left: 20px;" >

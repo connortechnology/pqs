@@ -28,6 +28,12 @@ sub set_footer {
   my $dbh = session::dbh;
   $dbh->do(q{update categories set footer = ? where id = ?},undef,  $desc, $id);
 }
+sub set_productinfo {
+  my ($id, $desc) = @_;
+  my $dbh = session::dbh;
+  $dbh->do(q{update categories set productinfo = ? where id = ?},undef,  $desc, $id);
+}
+
 
 
 
