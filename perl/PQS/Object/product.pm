@@ -212,9 +212,12 @@ sub image {
 
 	return $img if -e $path;
 
-	$img = "/images/main/product/category/$self->{specs}{category_id}.jpg";
+	$img = "/site_specific/images/main/product/category/$self->{specs}{category_id}.jpg";
+
 
 	$path = ssi::get_file_path($r, $img);
+
+	print STDERR "HAVE CATEGORY IMAGE: $img, $path \n";
 
 
 	return $img if -e $path;
