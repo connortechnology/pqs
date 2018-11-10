@@ -462,8 +462,8 @@ sub upload_files {
     # For new files.
     my $insert = $dbh->prepare(q{
         INSERT INTO project_files (pid, filename, description, owner, 
-                                   approval_prepress, approval_production)
-        VALUES (?, ?, ?, ?, ?, ?)
+                                   approval_prepress, approval_production, approval_info)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     });
 
     # When replacing existing.
@@ -471,9 +471,11 @@ sub upload_files {
         UPDATE project_files 
         SET pid               = $1, filename            = $2, 
             description       = $3, owner               = $4, 
-            approval_prepress = $5, approval_production = $6
-       WHERE pid      = $1
-         AND filename = $2
+            approval_prepress = $5, approval_production = $6,
+			approval_info = $7
+
+       		WHERE pid      = $1
+         	AND filename = $2
     });
 use Data::Dumper;
 print STDERR "HAVE FILES \n" , Dumper($r->upload);
@@ -499,10 +501,15 @@ print STDERR "HAVE FILES \n" , Dumper($r->upload);
 
         # Prepress approvals are implicit with uploading.
         #my $prepress = $variable->{user}{name};
-        my $prepress;
 
         # Uploads can be pre-approved for production.
         my $production = $r->param('approve_for') eq 'production'
+                ? $variable->{user}{name} 
+                : undef;
+        my $prepress = $r->param('approve_for') eq 'prepress'
+                ? $variable->{user}{name} 
+                : undef;
+        my $info = $r->param('approve_for') eq 'info'
                 ? $variable->{user}{name} 
                 : undef;
 
@@ -513,7 +520,7 @@ print STDERR "HAVE FILES \n" , Dumper($r->upload);
         my $sth = $exists ? $update : $insert;
 
         $sth->execute(
-            $pid, $filename, $description, $owner, $prepress, $production
+            $pid, $filename, $description, $owner, $prepress, $production, $info
         );
 
         push @files, { filename => $filename, description => $description};

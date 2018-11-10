@@ -25,7 +25,7 @@ our $dbh = session::dbh;
 	{ desc=>"Qty", 					id=>"intquantity1", 		class=> "srfield", ro=>1 },
 	{ desc=>"Inks", 				id=>"inks", 				class=> "srfield", ro=>1 },
 	{ desc=>"Job Name", 			id=>"strprojectreference",	class=> "lgfield", ro=>1 },
-	{ desc=>"Department", 			id=>"department", 			class=> "srfield", ro=>1 },
+#	{ desc=>"Department", 			id=>"department", 			class=> "srfield", ro=>1 },
 	{ desc=>"Equipment", 			id=>"equipment", 			class=> "srfield", ro=>1 },
 	{ desc=>"Finished Size",		id=>"finished", 			class=> "srfield", ro=>1 },
 	{ desc=>"Time", 				id=>"time", 				class=> "smfield", ro=>1 },

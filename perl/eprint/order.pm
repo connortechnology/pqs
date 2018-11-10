@@ -1465,6 +1465,17 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
 
 	   	$ship = eprint::print_project::insert_service($log, $dbh, $pid, 'Shipping') unless $ship;
 
+		my $type = $dbh->selectrow_array(q{SELECT shipping_type FROM tbl_orders WHERE lngorderid = ?}, undef, $orderid);
+		my $id   = $dbh->selectrow_array(q{SELECT lngindex  FROM tbl_ship_via WHERE strname = ?}, undef, $type);
+
+		my $dm = $type ? 'Standard' : 'Customer Pick-up';
+
+		map { print STDERR "PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
+
+
+		eprint::service::insert_service_spec( $log, $dbh, $pid, $ship, 'deliverymethod' , $dm);
+		eprint::service::insert_service_spec( $log, $dbh, $pid, $ship, 'ddmShipVia1' , $id) if $id;
+
 
 		unless ( $sid ) {
 	    	$sid = eprint::print_project::insert_service($r->log, $dbh, $pid, 'Discount') unless $sid;
