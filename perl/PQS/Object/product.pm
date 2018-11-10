@@ -400,8 +400,6 @@ print STDERR "TIME TO SEND DATA TO UPDATE ", Dumper(\@data, $self->get('category
 	PQS::model::products::update_category($self->{id}, $self->get('category_id'));
 
 
-print STDERR "DELETE OPTIONS: $self->{id} \n";
-	PQS::model::product_filter::delete_product_options($self->{id});
 
 
 print STDERR "START SAVE ", Dumper($self->{specs});
@@ -421,9 +419,17 @@ print STDERR "START SAVE ", Dumper($self->{specs});
 
 	}
 
-	map {
-		PQS::model::product_filter::insert_product_option($self->{id}, $_);
-	}  @{$self->{options}};
+	#check to make sure options have been loaded before removing	
+	if ( $self->{options} &&  @{$self->{options}} ) {
+
+		print STDERR "DELETE OPTIONS: $self->{id} \n";
+
+		PQS::model::product_filter::delete_product_options($self->{id});
+
+		map {
+			PQS::model::product_filter::insert_product_option($self->{id}, $_);
+		}  @{$self->{options}};
+	}
 
 #	PQS::model::products::update_category($self->{id}, $self->get('category_id'));
 		
