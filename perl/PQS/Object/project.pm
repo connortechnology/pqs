@@ -211,15 +211,23 @@ sub delivery_method {
 
 
 }
+
 sub due_date {
 	
 	my $self = shift;
 
-	my $i = $self->order_id();
+	my $date = shift;
+
+	if ( $date ) { 
+		PQS::model::order::set_duedate($self->{id}, $date);
+		return $date;
+	}
+
 
 	my $date = PQS::model::order::duedate($self->{id});
 
-	#print STDERR "HAVE DUE DATE: $date \n";
+	
+	my $i = $self->order_id();
 
 	$date = $i->{dtmrequireddate} unless $date;
 

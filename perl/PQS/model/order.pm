@@ -255,6 +255,14 @@ sub get_ordered_project_info {
   return $proj;
 }
 
+sub set_duedate {
+	my $pid = shift;
+	my $date = shift;
+	my $dbh = session::dbh;
+
+	$dbh->do(q{Update tbl_order_contents set daterequired = ? WHERE lngprojectindex = ?}, undef, $date, $pid);
+}
+
 sub duedate {
 	my $pid = shift;
 	my $dbh = session::dbh;

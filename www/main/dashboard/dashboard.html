@@ -35,14 +35,27 @@
 			alert("To Delete Projects, click the checkbox beside the project.");
 			return false;
 		}
+
 	</script>
-	<!--
-    <script  type="text/javascript">
-		function open_project_docket(p,q) {
-			window.open('/employee/production/proj_docket.html?ProjectIndex=' + p + ';QuantityIndex=' + q ,'projectdocket','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+	<script type="text/javascript">
+		function form_actions() {
+			var list = document.querySelectorAll('.confirm-action');
+			
+			for (var i = 0; i < list.length; i++) {
+				list[i].addEventListener('click', function(event) {
+				  event.preventDefault();
+
+				  var choice = confirm(this.getAttribute('data-confirm'));
+
+				  if (choice) {
+					$('f1').submit();
+				  }
+			  });
+			}
 		}
+		
 	</script>
-	-->
+
 
 	<style>
 		#expander { min-width: 1750px; }
@@ -79,16 +92,10 @@
 	div.button-bar { margin-top: 3em;}
 </style>
 </head>
-<body>
+<body onLoad="form_actions();">
 	<!--#include virtual="/includes/c1-main-nav.html" -->
 
 	<h1><span class="title-section">Dashboard</h1>
-
-	<? if ( $$variable{'user_id'} eq '0' ) ?>
-		<p>Only logged in customers have a project history.</p>
-	<? else ( $$variable{'user_id'} eq '0' ) ?>
-
-	<p>Please input a project ID and click &quot;Go&quot;or select a search criteria and click &quot;Show Results&quot;. You may then click on an <strong> Project ID </strong> or <strong> Project Name </strong> to view project details. To delete projects from history check the appropriate project(s) and click delete.</p>
 
 	<form action="/main/dashboard/dashboard.html" method="get" name="f1" id="f1">
 
@@ -113,8 +120,9 @@
 
 
 			<label class="paddingTop" >Date</label><br/>
-			<input type="text" name="startdate" id="DPC_startdate"  value="<?startdate?>" style="margin: 0 0 0 -20px" />
-			<input type="text" name="enddate"   id="DPC_enddate"    value="<?enddate?>" style="margin-left: 10px"/>
+			<input type="text" name="startdate" id="DPC_startdate"  value="<?startdate?>" style="float:left; margin-right: -10px" />
+			<span></span>
+			<input type="text" name="enddate"   id="DPC_enddate"    value="<?enddate?>" style="margin: 0 10px 0 10px"/>
 
 			<br/>
 
@@ -176,12 +184,17 @@
 			<select name="action" id="action" onChange="$('f1').submit();">
 				<option>Please Select</option>
 				<optgroup label="Project Status">
-					<option value="PidStatus:In Production">In Production</option>
+					<option value="PidStatus:Cancelled">Cancel Project</option>
 					<option value="PidStatus:Complete">Complete</option>
+					<option value="PidStatus:In Production">In Production</option>
+					<option value="PidStatus:Waiting For Files">Waiting For Files</option>
 				</optgroup>
 				<optgroup label="Order">
 				<option value="OrderStatus:Cancel">Cancel Order</option>
+				<option value="OrderStatus:Complete">Complete</option>
 				<option value="OrderStatus:In Production">In Production</option>
+				<option value="OrderStatus:Pedinig Deposit">Pedinig Deposit</option>
+				<option value="OrderStatus:Waiting For File">Waiting For Files</option>
 				</optgroup>
 			</select>
 		</div>
@@ -191,6 +204,15 @@
 				<option>Sales Rep</option>
 			</select>
 		</div>
+
+		<br/>
+		<div style="width:300px">
+		<input type="text" name="duedate"   id="DPC_duedate"    value="<?duedate?>" style="float:left"/>
+
+		<button name="change_duedate" value=1 style="float:right" class="confirm-action" 
+			data-confirm="Are you sure you want to update the Due Date for selected Project?" >Change Due Date</button>
+		</div>
+
 		</fieldset>
 
 
@@ -245,10 +267,10 @@
 
 <button onClick="window.realod" name="Reload" style="margin-top: 200px; width: 300px; height: 300px">Reload</button>
 	</form>
-	<? endif ( $$variable{'user_id'} eq '0' ) ?>
 
 	<!--#include virtual="/includes/f1-main.html" -->
 	<!--#include virtual="/includes/main/account.html" -->
 	<!--#include virtual="/includes/f2-main.html" -->
 </body>
+
 </html>

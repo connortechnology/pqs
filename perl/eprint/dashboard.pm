@@ -45,7 +45,7 @@ sub add_link {
     $x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
     $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'strcompanyname';
     $x->{link} = "/administrator/managerial/user_profiles.html?ddmUser=$l->{lnguserid}" if $x->{id} eq 'contact';
-    $x->{link} = "/main/proj/edit.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'strprojectreference';
+    $x->{link} = "/main/proj/proj_view.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'strprojectreference';
     $x->{link} = "/main/proj/edit.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'intquantity1';
     $x->{link} = "/service/shipping?pid=$l->{lngprojectindex};sid=$l->{shipid}" if $x->{id} eq 'delivery';
     $x->{link} = "/service/printing?pid=$l->{lngprojectindex};sid=$l->{lngserviceindex}" if $x->{id} eq 'stock';
@@ -218,6 +218,16 @@ sub action {
 
 	print STDERR "HAVE VALUES ", Dumper($action, $value, $list);
 
+	if ( $action eq 'DueDate' ) {
+		foreach my $p ( @{$list} ) {
+			my $proj = new PQS::Object::project($p);
+			$proj->due_date($value);
+		
+		}
+
+	}
+
+
 	if ( $action eq 'PidStatus' ) {
 		print STDERR "UPDATE PID: $action \n";
 		foreach my $p ( @{$list} ) {
@@ -245,7 +255,18 @@ sub display {
 	
 
 	my ($action, $value )  =  split /:/,  $param->{action};
+
+   	if ( $param->{duedate} ) {;
+		$action = 'DueDate';
+		$value  = $param->{duedate} if $param->{duedate};
+	}
+
 	my $list = $param->{actionpid};
+
+
+	#Convert List to arrary ref if only single item was selected.
+	$list = [$list] if ($list && ref $list ne 'ARRAY');
+
 
 	action($action, $value, $list) if $action;
 
