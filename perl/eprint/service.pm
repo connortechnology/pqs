@@ -8,7 +8,7 @@ use base qw(Exporter);
 
 # The canonical list of project service status codes.
 use constant COMPLETE => (
-    'In Production', 'Complete',  'calculated', 'Pending Deposit' );
+    'Waiting For Files', 'In Production', 'Complete',  'calculated', 'Pending Deposit' );
 
 use constant STATUSES => ( COMPLETE,
     'uncalculated',  'dependent', 'error',      );
