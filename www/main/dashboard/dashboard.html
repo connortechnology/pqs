@@ -43,7 +43,7 @@
 			var list = document.querySelectorAll('.confirm-action');
 			
 			for (var i = 0; i < list.length; i++) {
-				list[i].addEventListener('click', function(event) {
+				list[i].addEventListener('change', function(event) {
 				  event.preventDefault();
 
 				  var choice = confirm(this.getAttribute('data-confirm'));
@@ -215,7 +215,6 @@ function select_all(source) {
 
 				<option>Please Select</option>
 				<optgroup label="Project Status">
-					<option value="PidStatus:Cancelled">Cancel Project</option>
 					<option value="PidStatus:Complete">Complete</option>
 					<option value="PidStatus:In Production">In Production</option>
 					<option value="PidStatus:Waiting For Files">Waiting For Files</option>

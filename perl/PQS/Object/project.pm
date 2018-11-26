@@ -125,11 +125,12 @@ sub check_status {
 	my $order = new PQS::Object::order($oid);
 
 	if ( $oid ) {
+		return 'CN' if $order->{specs}{cancelled};
+
+		return 'CP' if  $self->{specs}{completion_date};
 
 		#IF peding deposit then go no futher
 		return 'PD' if $order->pending_deposit;
-		
-		return 'CP' if  $self->{specs}{completion_date};
 
 		return 'IP' if  $self->{specs}{files} && $self->have_production_file;
 

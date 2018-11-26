@@ -102,6 +102,13 @@ sub update_status {
 
 	my $status;
 
+	#IF cancelled then go no futher
+	if (  $self->{specs}{cancelled} ) {
+		$status = 'CN';
+		PQS::model::order::set_status($self->{id}, $status::order->{$status});
+		return $self->status;
+	}
+
 	#IF peding deposit then go no futher
 	if (  $self->pending_deposit ) {
 		$status = 'PD';

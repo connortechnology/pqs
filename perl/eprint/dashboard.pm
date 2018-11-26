@@ -254,8 +254,19 @@ sub action {
 
 			my $order = PQS::model::order::get_order_by_pid($p);
 
-			print STDERR "SET ORDER STATUS $p, $value, $order \n";
-			PQS::model::order::set_status( $order->{lngorderid}, $value);
+			if ( $value eq 'Cancel' ) {
+				my $r = session::r;
+				my $log = session::log;
+				my $dbh = session::dbh;
+
+				eprint::order::cancel_order($r, $log, $dbh, $order->{lngorderid});
+			} elsif ( $value eq 'Complete' ) {
+				eprint::employee_project::complete_project($r, $dbh, $p);
+			} else {
+				print STDERR "SET ORDER STATUS $p, $value, $order \n";
+				PQS::model::order::set_status( $order->{lngorderid}, $value);
+			}
+
 		}
 	}
 
@@ -265,11 +276,7 @@ sub action {
 sub display {
 	my $var 	= shift;
 	my $param 	= shift;
-
 	
-	my $p = new PQS::Object::project(100907);
-
-	$p->update_status();
 
 	my ($action, $value )  =  split /:/,  $param->{action};
 

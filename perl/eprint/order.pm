@@ -2936,6 +2936,12 @@ print STDERR "GO PROCESS ORDER \n";
 sub cancel_order {
     my ($r, $log, $dbh, $order_id) = @_;
 
+	
+    sql::update(
+        $log, $dbh, 'tbl_Orders', "lngOrderID='$order_id'",
+        cancelled => 1 
+    );
+
     sql::update(
         $log, $dbh, 'tbl_Orders', "lngOrderID='$order_id'",
         strStatus => 'Cancelled'
