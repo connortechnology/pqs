@@ -7,4 +7,3 @@ Update tbl_addresses SET shipname = strcompanyname;
 alter table categories add column productinfo text;
 alter table product_filter add column sortorder text;
 alter table project_files add column approval_info text;
-

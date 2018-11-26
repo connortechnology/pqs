@@ -1,5 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<?if is_staff?>
 <head>
 	<title>
 		<!--#include virtual="/includes/web_page_title.html" -->
@@ -54,6 +55,17 @@
 			}
 		}
 		
+	function do_sort(field) {
+			
+		if ( $('sortfield').value == field ) {
+			$('sortdirection').value *= -1; 
+		} else { 
+			$('sortdirection').value = 1; 
+		}
+
+		$('sortfield').value = field;
+	 	$('f1').submit();
+	}
 	</script>
 
 
@@ -91,13 +103,24 @@
 	select { width: 18em; }
 	div.button-bar { margin-top: 3em;}
 </style>
+
+<script language="JavaScript">
+function select_all(source) {
+  	var boxlist = document.getElementsByName('actionpid');
+
+	for (i = 0; i < boxlist.length; i++){
+        boxlist[i].checked = source.checked;
+    }
+
+}
+</script>
+
 </head>
 <body onLoad="form_actions();">
 	<!--#include virtual="/includes/c1-main-nav.html" -->
 
 	<h1><span class="title-section">Dashboard</h1>
 
-	<form action="/main/dashboard/dashboard.html" method="get" name="f1" id="f1">
 
 		<fieldset style="height: 23em;">
 			<legend>
@@ -106,16 +129,21 @@
 		
 			<div id="SearchOptions" style="border: 0px solid black">
 
+	<form action="/main/proj/proj_hist.html" method="get" name="f0" id="f0">
 			<label>Text Search</label><br>
-			<input type="text" name="textsearch" id="textsearch" value="" />
+			<input type="text" name="pid" id="quick-serach" value="" style="float:left" />
+			<!--
 			<select name="search_type" id="search_type">
 				<option value="strprojectreference">Project Name</option>
 				<option value="lngprojectindex">Project Id</option>
 				<option value="lngorderid">Order Id</option>
-				<!-- <option value="lngquoteid">Quote Id</option> -->
 			</select>
+			-->
+			<input type="submit" class="button" value="Go">
+	</form>
 
 
+	<form action="/main/dashboard/dashboard.html" method="get" name="f1" id="f1">
 			<br/>
 
 
@@ -181,7 +209,10 @@
 		<fieldset>
 		<div>
 		<legend> Actions </legend>
-			<select name="action" id="action" onChange="$('f1').submit();">
+			<select name="action" id="action" onChange="$('f1').submit();" 
+				class="confirm-action"
+				data-confirm="Are you sure you want to Update the selected Projects?" >
+
 				<option>Please Select</option>
 				<optgroup label="Project Status">
 					<option value="PidStatus:Cancelled">Cancel Project</option>
@@ -219,12 +250,14 @@
 	
 
 <!-- ******************* START ****************************** -->
-<input type="hidden" name="sortfield" id="sortfield" value="aaa" />
+<input type="hidden" name="sortfield" 		id="sortfield" value="aaa" />
+<input type="hidden" name="sortdirection" 	id="sortdirection" value="1" />
  <table>
     <tr>
-		<th><input type=checkbox /></th>
+		<th><input type="checkbox" id="selectall" name="selectall"  onClick="select_all(this);" /></th>
+
 		<?loop fields?>
-		<th><a href="#" onClick=" $('sortfield').value='<?id?>'; $('f1').submit();" style="color: white;" ><?desc?></a></th>
+		<th><a href="#" onClick="do_sort('<?id?>');" style="color: white;" ><?desc?></a></th>
 		<?endloop fields?>
 
      
@@ -232,7 +265,7 @@
     <?loop data?>
 			<tr>
              <td>
-				 <input type="checkbox" name="actionpid" value="<?pid?>" />
+				 <input type="checkbox" name="actionpid" value="<?pid?>" id="actionpid-<?pid?>" />
 			</td>
 		<?loop fields?>
 
@@ -272,5 +305,6 @@
 	<!--#include virtual="/includes/main/account.html" -->
 	<!--#include virtual="/includes/f2-main.html" -->
 </body>
+<?endif is_staff?>
 
 </html>

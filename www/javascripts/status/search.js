@@ -2,6 +2,7 @@ JSAN.use('DOM.Events', ':all');
 JSAN.use('DOM.Utils');
 JSAN.use('List.Utils');
 JSAN.use('State.Menu');  // PQS state change context menu.
+
 // Make the 'clear' form button actually clear the form.
 addListener(window, 'load', function () {
     $('clear').onclick = function (e) {
@@ -22,6 +23,7 @@ addListener(window, 'load', function () {
     for (var i=0; i < rs.length; i++)
         pids.push( rs[i].id );
 });
+
 // If the browser support XMLHttpRequests we'll set up the more advanced
 // interface elements.
 if (getRequest()) {
@@ -54,26 +56,40 @@ function autoUpdate () {
     req.open('GET', 'results_modified?'+query+';timestamp='+timestamp, true);
     req.send(null);
 }
+
 // Change the status of a single status cell (composite id of "$pid-$cat_id");
-function updateStatus (id, state) {
+function updateStatus (id, state, full) {
     var cell = $(id);
     cell.className = state;
-    setCellText(cell, state.substr(0,1).toUpperCase());
+
+	var text = state;
+
+	if ( !full ) 
+		state = state.substr(0,1).toUpperCase();
+
+    setCellText(cell, text);
 }
+
+
+
 
 
 // Bind the control panel to the search results table.
 addListener(window, 'load', setupControls);
 function setupControls (e) {
     var results = $('results'); if (!results) return;
+
+
     // Setup the state menu and bind it's controls to change the status.
-    State.Menu.init(changeStatus);
+	// Moved this to openControl.
+    //State.Menu.init(changeStatus, "controls");
+
     // Bind the panel to the results table.
     var data = results.getElementsByTagName('tbody')[0].getElementsByTagName('td');
     for (var i=0; i < data.length; i++) {
         var datum = data[i];
         // TODO: Safari doesn't support cellIndex.
-        if (datum.cellIndex > 2 && datum.className != 'x') {
+        if (datum.cellIndex > 2 && datum.className != 'x' ) {
             // Set pointer ('hand' in IE) cursor here.
 
             // Create a hover effect (IE only supports :hover on anchors).
@@ -82,30 +98,95 @@ function setupControls (e) {
             // when the control is clicked and the menu closes.
             datum.onmouseout = revert;
             datum.onclick    = revert;
-            // Display the control panel.
-            datum.oncontextmenu = function () { return false; } // No default.
-            addListener(datum, 'contextmenu', openControl);
-        }
+
+			datum.oncontextmenu = function () { return false; } // No default.
+			addListener(datum, 'contextmenu', openControl);
+
+		}
     }
 }
+
+
+function controlSet (e) {
+	var set; 
+	if ( e.getAttribute('controlset') == "priority" ) { 
+		set = "priority_controls";
+	} else { 
+		set = "controls";
+	}
+	return set;
+}
+
 // Invert and revert status elements.
 function invert () {
     this.oldClass = this.className;
     this.className = this.className + '-inverse';
 }
 function revert (e) { this.className = this.oldClass; }
+
+
 // Open the control and remember who opened us.
 function openControl (e) {
+
+	//Select control set based on current field
+	var set = controlSet(this);
+
+    State.Menu.init(changeStatus, set);
+
     State.Menu.current = this.id;
     State.Menu.open(e);
     return false;
 }
+
+
 function changeStatus (e) {
     State.Menu.close();
     var ids = State.Menu.current.split('-');
-    setCategoryState(ids[0], ids[1], this.value, $('c_reason').value);
+	var text = this.nextSibling.nodeValue;
+
+	if (  ids[0] == "priority" ) {
+    	setPriority(ids[1], this.value, text);
+	} else { 
+    	setCategoryState(ids[0], ids[1], this.value, $('c_reason').value);
+	}
     return false;
 }
+
+function setPriority (project, priority, text) {
+    var req = getRequest();
+    if (!req) return null; // Request object.
+    req.onreadystatechange = function () {
+        switch (req.readyState) {
+            case 1: // Loading (Open)
+                // Until the operation is complete (or timed out) we'll 'lock'
+                // the service we're operating on. This will work in
+                // conjuction with our collision check.
+                // status.style.cursor = mtime.style.cursor = 'wait';
+                // status.oncontextmenu = function () { return false; }
+            case 2: // Loaded (Sent)
+            case 3: // Interactive (Recieving)
+                break;
+            case 4: // Complete
+                if (req.status == 200) { // Success
+                    // This should update the selected services and our
+                    // overall timestamp.
+                    eval(req.responseText);
+                    // TODO: We should throw away this request if our return
+                    // timestamp is before the current one.
+                }
+                else {
+                    // document.body.innerHTML = req.responseText;
+                }
+                // 'unlock' the services.
+                // status.oncontextmenu = displayControl;
+                // status.style.cursor = mtime.style.cursor = '';
+        }
+    };
+    req.open('POST', 'project_priority', true);
+    req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    req.send('pid='+project+';priority='+priority+';text='+text);
+}
+
 function setCategoryState (project, category, state, comment) {
     var req = getRequest();
     if (!req) return null; // Request object.
@@ -166,6 +247,7 @@ function getRequest () {
 function setCellText(cell, text) {
     cell.textContent = cell.innerText = text;
 }
+
 function getCellText(cell) {
     if   (cell.textContent) return cell.textContent;
     else                    return cell.innerText;   // IE

@@ -1,0 +1,48 @@
+form#upload fieldset { margin-bottom: 2ex; }
+
+table#files { 
+    width: 100%; 
+    border-bottom: 4px solid #0B0D60; 
+    margin-bottom: 1ex; 
+}
+
+table#files thead th { vertical-align: bottom; }
+table#files tfoot th { vertical-align: top; }
+
+table#files td {
+    vertical-align: top; 
+    border: none;
+}
+
+table#files td a { font-weight: bold; }
+table#files td p { color: gray; }
+
+table#files img { float: left; }
+
+table#files img.checkmark { 
+    padding-left: 8px; 
+    padding-top: 16px;
+}
+
+table#files td.select { 
+    width: 20px; 
+    padding: 3px; 
+    vertical-align: middle; 
+    padding-right: 0;
+}
+
+table#files td.icon { 
+    width: 48px; 
+    padding: 0; 
+    vertical-align: middle; 
+}
+
+#approval {
+    background-color: #AACCFF;
+    clear: both;
+    margin-top: 1em;
+}
+
+#approval label { display: inline; float: none; margin: 0; }
+#approval input, #approval select { float: none; }
+

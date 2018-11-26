@@ -1,0 +1,90 @@
+html, body {
+	margin: 0;
+	padding: 0;
+}
+
+div#sizer,
+div#expander,
+div#wrapper1,
+div#wrapper2,
+div.outer,
+div.float-wrap,
+div.center,
+div.center-box,
+div.textpadder {
+	width: auto;
+	margin: 0;
+	padding: 0;
+	text-align: left;
+}
+
+div#header,
+div#banner,
+div#nav,
+div#headerTabs,
+div.tab,
+div.left,
+div.container-left,
+div#sidebar,
+div#footer,
+h1,
+legend,
+.icon,
+p,
+ul,
+li,
+input.print-chk {
+	display: none;
+}
+
+fieldset {
+	margin: 0;
+	padding: 0;
+	border: 0;
+
+}
+
+
+div.page {
+	float: left;
+	clear: both;
+	display: inline;
+	position: relative;
+
+	margin: 0;
+	padding: 0;
+}
+
+address.label {
+	position: absolute;
+	clear: none;
+
+	width: 3.32in;
+
+	margin: 0;
+	padding: 0;
+
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12pt;
+	font-style: normal;
+}
+
+.hide-label {
+	visibility: hidden;
+}
+
+.col1 {
+	left: 0;
+	padding-right: 0.34in;
+}
+
+.col2 {
+	left: 3.85in;
+	padding-left: 0.34in;
+}
+
+.row1 { top: 0in; }
+.row2 { top: 2in; }
+.row3 { top: 4in; }
+.row4 { top: 6in; }
+.row5 { top: 8in; }

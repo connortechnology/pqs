@@ -10,6 +10,8 @@ use sql ();
 
 use Data::Dumper;
 
+use PQS::Object::order;
+
 sub payment {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
@@ -94,40 +96,45 @@ sub make_payment {
 
 	sql::insert( $log, $dbh, 'tbl_Payments', @data );
 
-	my $in_production;
-	if ( $payments == $order_total ) {
-		# Set Status of Order to Paid if Complete
-		sql::update( $log, $dbh, 'tbl_Orders', 
-			"lngOrderID='$order_id'", 
-			'strStatus', 'Paid', 'paid', 1 );
-		$in_production = 1;
-	} 
-	elsif( $payments >= $down_payment ) {
-		# Set status of Order to 'In Production' if downpayment has been met.
-		sql::update( $log, $dbh, 'tbl_Orders', 
-			"lngOrderID='$order_id' AND strStatus='Pending Deposit'", 
-			'strStatus', 'In Production' );
-		$in_production = 1;
-	}
-	if ( $in_production ) {
 
-		# Put the Projects into production if they were 'Peding Deposit'
-		my $pids = $dbh->selectcol_arrayref(q{
-			SELECT lngProjectIndex FROM tbl_Order_Contents WHERE lngOrderID= ?
-			AND lngProjectIndex Is Not NULL
-		}, undef, $order_id);
+	my $order = new PQS::Object::order($order_id);
 
-		foreach my $pid ( @{$pids} ) {
-			sql::update( $log, $dbh, 'tbl_Projects', 
-			"lngProjectIndex='$pid' AND strStatus='Pending Deposit'", 
-				'strStatus', 'In Production' );
+	$order->status_tree();
 
-			sql::update( $log, $dbh, 'tbl_project_contents', 
-			"lngProjectIndex='$pid' AND strStatus='Pending Deposit'", 
-				'strStatus', 'In Production' );
-		} # end foreach
-	}
+	#	my $in_production;
+	#	if ( $payments == $order_total ) {
+	# Set Status of Order to Paid if Complete
+	#		sql::update( $log, $dbh, 'tbl_Orders', 
+	#			"lngOrderID='$order_id'", 
+	#		'strStatus', 'Paid', 'paid', 1 );
+	#	$in_production = 1;
+	#} 
+	#elsif( $payments >= $down_payment ) {
+	#	# Set status of Order to 'In Production' if downpayment has been met.
+	#	sql::update( $log, $dbh, 'tbl_Orders', 
+	#		"lngOrderID='$order_id' AND strStatus='Pending Deposit'", 
+	#		'strStatus', 'In Production' );
+	#	$in_production = 1;
+	#}
+	#if ( $in_production ) {
+	#
+	#	# Put the Projects into production if they were 'Peding Deposit'
+	#	my $pids = $dbh->selectcol_arrayref(q{
+	#		SELECT lngProjectIndex FROM tbl_Order_Contents WHERE lngOrderID= ?
+	#		AND lngProjectIndex Is Not NULL
+	#	}, undef, $order_id);
+	#
+	#	foreach my $pid ( @{$pids} ) {
+	#		sql::update( $log, $dbh, 'tbl_Projects', 
+	#		"lngProjectIndex='$pid' AND strStatus='Pending Deposit'", 
+	#			'strStatus', 'In Production' );
 
+	#		sql::update( $log, $dbh, 'tbl_project_contents', 
+	#		"lngProjectIndex='$pid' AND strStatus='Pending Deposit'", 
+	#			'strStatus', 'In Production' );
+	#	} # end foreach
+	#}
+	#
 
 	return;
 }

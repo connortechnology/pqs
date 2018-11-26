@@ -1,0 +1,112 @@
+/* order.css is used for order pages with common elements */
+address { font-style: normal !important; }
+
+/* HEADER CONTAINERS */
+
+#order-box {
+	position: relative;
+	margin-bottom: 2ex;
+	padding: 2ex 2ex 1ex 2ex; /* Top, Right, Bottom, Left */
+
+	border: 1px solid #0B0D60;
+}
+
+#order-header {
+  	margin-top: 1ex;
+	vertical-align:	top;
+	text-align: left;
+}
+
+#order-header img {
+	float: left;
+	clear: left;
+	display: inline;
+	position: relative;
+
+	margin-right: 1em;
+}
+
+#order-header address {
+	float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	text-align: left;
+}
+
+#primary_info table {
+	float: right;
+	clear: right;
+	display: inline;
+	position: relative;
+
+	margin: 2px 4px;
+
+	border: 1px solid #0B0D60;
+	background-color: #BFEBF0;
+}
+
+#primary_info th, #primary_info td {
+	text-align: right;
+	background-color: #BFEBF0;
+	padding: 0 0.5ex 0 0.5ex;
+}
+#primary_info th { padding-right: 0.5em; }
+
+table.customer {
+	clear: both;
+
+	width: 100%;
+	margin-top: 4ex;
+	margin-bottom: 2ex;
+
+	text-align: left;
+}
+
+table.customer th,
+table.customer td { width: 50%; padding-right: 2ex; }
+
+
+/* INVOICE */
+
+table.invoice {width: 100%;}
+table.invoice td {background-color: #FFFFFF;}
+
+col#project_name { text-align: left;}
+col#date { width: 100px; text-align: center;}
+col#qty { width: 100px; text-align: right;}
+col#total { width: 75px;  text-align: right;}
+
+table.invoice thead th:first-child {text-align: left;}
+
+table.invoice th + th, table.invoice td + td {text-align: right; }
+
+table.invoice td:last-child, table.invoice th:last-child { text-align: right; }
+
+table.invoice thead th {
+	color: #FFFFFF;
+	background-color: #0B0D60;
+}
+
+
+table.invoice tr.project th,
+table.invoice tr.project td {
+	background: transparent;
+	border: 0;
+	border-bottom: 1px solid #0B0D60;
+}
+
+table.invoice tr.sub-total th,
+table.invoice tr.sub-total td { border-top: 3px double #0B0D60; }
+
+table.invoice td.total { border-bottom: 1px solid #0B0D60; border-top: 3px double #0B0D60; }
+
+table.invoice td.sub-total { border-bottom: 1px solid  #0B0D60; }
+
+table.invoice tfoot th,
+table.invoice tfoot td {
+	background-color: transparent;
+	border: 0;
+	text-align: right;
+}

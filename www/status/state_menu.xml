@@ -11,3 +11,13 @@
 		<textarea id="c_reason" name="comment"></textarea>
 	</form>
 </div>
+
+<div id="priority_controls">
+	<h4>Priority</h4>
+	<form>
+		<label class="Low"><input name="priority" type="radio" value="0" />Low</label>
+		<label class="Normal"><input name="priority" type="radio" value="1" />Normal</label>
+		<label class="High"><input name="priority" type="radio" value="3" />High</label>
+		<label class="Urgent"><input name="priority" type="radio" value="4" />Urgent</label>
+	</form>
+</div>

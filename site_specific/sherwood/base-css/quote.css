@@ -1,0 +1,163 @@
+/* quote.css is used for quote pages with common elements */
+address { font-style: normal; }
+
+/* HEADER CONTAINERS */
+#quote-box {
+	position: relative;
+    border: 1px solid #0B0D60;
+    margin-bottom: 2ex;
+    padding: 2ex 2ex 1ex 2ex; /* Top, Right, Bottom, Left */
+}
+
+#quote-header {
+	text-align: left;
+	margin-top: 1ex;
+	vertical-align:	top;
+}
+
+#quote-header h2 {
+	float: left;
+	display: inline;
+	position: relative;
+
+	margin-top: 1ex;
+
+	vertical-align:	top;
+	font-size: 1.6em;
+}
+
+#quote-header img {
+	float: left;
+	clear: left;
+	display: inline;
+	position: relative;
+
+	margin-right: 1em;
+}
+
+#quote-header address {
+	float: left;
+	clear: right;
+	display: inline;
+	position: relative;
+
+	text-align: left;
+}
+
+table#primary_info {
+	float: right;
+  	display: inline; 
+	position: relative;
+
+	margin: 2px 4px;
+
+	border: 1px solid #0B0D60;
+	background-color: #BFEBF0;
+}
+
+#primary_info th,
+#primary_info td {
+	text-align: right;
+	background-color: #BFEBF0;
+	padding: 0 0.5ex 0 0.5ex;
+}
+
+#primary_info th { padding-right: 0.5em; }
+
+table.customer {
+	clear: both;
+	
+	width: 100%;
+	
+	text-align: left;
+	margin-top: 4ex;
+	margin-bottom: 2ex;
+}
+
+table.customer th,
+table.customer td {
+	width: 300px;
+	padding-right: 2ex;
+	
+	background-color: transparent;
+	border: 0;
+	text-align: left;
+}
+
+
+/* __________ QUOTE RESELLER __________ */
+
+col#project_name {}
+col#qty {width: 100px;}
+col#markup {width: 100px;}
+col#price {width: 100px;}
+col#muprice {width: 100px;}
+
+table.quote_reseller {width: 100%;}
+
+table.quote_reseller th,
+table.quote_reseller td {border: 0;}
+
+table.quote_reseller th {text-align: right !important;}
+
+table.quote_reseller td {background-color: #FFFFFF;}
+
+
+table.quote_reseller td + td,
+table.quote_reseller th + th { text-align: right; }
+
+table.quote_reseller td + td + td,
+table.quote_reseller th + th + th { text-align: right; }
+
+table.quote_reseller td + td + td + td,
+table.quote_reseller th + th + th + th { text-align: right; }
+
+table.quote_reseller td:last-child,
+table.quote_reseller th:last-child { text-align: right; padding-right: 0.5em;}
+
+table.quote_reseller th {
+    padding: 0.25ex 0 0.25ex 0.5ex;
+    background-color: #0B0D60;
+    color: #FFFFFF;
+}
+
+table.quote_reseller td { padding: 0.25ex 0 0.25ex 0.5em; }
+
+table.quote_reseller tr.project th,
+table.quote_reseller tr.project td { border-bottom: 1px solid #0B0D60;}
+
+table.quote_reseller tr.totalfirst th,
+table.quote_reseller tr.totalfirst td { border-top: 3px double #0B0D60; font-weight: bold}
+
+table.quote_reseller tr.total th,
+table.quote_reseller tr.total td { font-weight: bold;}
+
+
+/* __________ QUOTE ENDUSER __________ */
+
+col#project_name 	{ width: 450px; text-align: left; }
+col#qty    		{ width: 75px; text-align: right; }
+col#price   	{ width: 75px; text-align: right; }
+
+table.quote_enduser td + td,
+table.quote_enduser th + th { text-align: right; }
+
+table.quote_enduser td:last-child,
+table.quote_enduser th:last-child { text-align: right; }
+
+table.quote_enduser thead th {
+    color: #FFFFFF;
+    background-color: #0B0D60;
+    padding: 0.25ex 0 0.25ex 0.5ex;
+}
+
+table.quote_enduser td { padding: 0.25ex 0 0.25ex 0.5em; }
+
+table.quote_enduser tr.project th,
+table.quote_enduser tr.project td { border-bottom: 1px solid #0B0D60;}
+
+table.quote_enduser tr.totalfirst th,
+table.quote_enduser tr.totalfirst td { border-top: 3px double #0B0D60; font-weight: bold; text-align: right; }
+
+table.quote_enduser tr.total th,
+table.quote_enduser tr.total td { font-weight: bold; text-align: right; }

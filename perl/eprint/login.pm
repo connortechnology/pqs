@@ -1090,9 +1090,9 @@ print STDERR "SELECT CUSTOMER: " , $sql , "\n";
 
 # Called when a salesperson/admin selects a customer to act as.
 sub select_customer {
-    my ($r, $log, $dbh, $cookie, $variable) = @_;
+    my ($r, $log, $dbh, $cookie, $variable, $customer) = @_;
 
-	my $cust_id = $r->param('ddmCustomer') || $r->param('SelectCustomer');
+	my $cust_id = $customer || $r->param('ddmCustomer') || $r->param('SelectCustomer');
 
     sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID= '$cookie' AND chrSite = 'C' ",
         lngCustomerID => $cust_id

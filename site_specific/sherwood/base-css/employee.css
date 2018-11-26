@@ -1,0 +1,30 @@
+
+/* employee.css is used for employee pages with common elements */
+
+#top-menu	{ padding-left: 110px; }
+#logo img { display: inline; }
+
+
+/* Standard data table. */
+
+table.common { border: 1px solid #7D7D7D; table-layout: auto; }
+table.common thead tr { background-color: #0B0D60; color: #FFFFFF; }
+table.common thead th { text-align: left; vertical-align: middle; }
+
+table.common tbody th,
+table.common tbody td,
+table.common       td { vertical-align: baseline; }
+
+table.common th,
+table.common td {
+    border-left:  1px solid #0B0D60;
+    border-right: 1px solid #0B0D60;
+    padding: 0.4ex 0.5em;
+}
+
+/* These shouldn't be defined on a "common" table. */
+
+table.list col.label { width: 150px; text-align: left; }
+table.list col.criteria { width: 450px; text-align: left; }
+table.list td.buttons { padding: 0.5ex 0ex 0.5ex 0ex;   }
+table.list th, table.list td { padding: 0.4ex 0.5em; }

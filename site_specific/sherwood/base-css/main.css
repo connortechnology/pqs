@@ -1,0 +1,272 @@
+/* Styles for Site Layout - Jello Mold Piefecta */
+
+body {
+	padding: 0 385px; /* the critical side padding that sets the natural min-width! */
+	background-color: #CCCCCC;
+	text-align: center; /* centers the #sizer element in IE5.x/win */
+	color: #000000;
+}
+
+#sizer {
+	margin: 0 auto; /* centers #sizer in standard browsers */
+	padding: 0;
+	width: 88.88%; /* this value controls liquidity in IE; 0% = full rigid, 100% = full liquid */
+	text-align: left; /* resets the default text alignment for the page */
+	max-width: 220px;	/* this value controls the liquidity in FF */
+}
+
+#expander { /* Any % height here causes IE to lose the neg right margin */
+	position: relative; /* makes #expander visible outside #sizer in IEwin */
+	min-width: 1100px; /* This prevents Safari from losing the negative margins in narrow windows */
+	margin: 0 -385px; /* neg side margin values should be < or = to side body padding */
+
+	background-color: #FFFFFF;
+	background-image: url('/images/main/menu/left-menu-background.gif');
+	background-repeat: repeat-y;
+}
+
+/*\*/
+* html #expander {height: 0;}
+/* #expander must have "height: 0" in IEwin bug fixing */
+
+/* The above is a modified Holly hack for #expander, with zero substituted for the
+usual 1% height value. Any % value on this element causes a horrendous IE bug! */
+
+
+#wrapper1 {position: relative;}
+/* this positioning may be needed for IEwin if page is to contain positioned elements */
+
+#wrapper2 {position: relative;}
+/* extra insurance against bugs in IEwin */
+
+
+/* __________ Main Page Structure __________ */
+
+/* To modify the side column widths and the col divider widths, the values that are
+marked "critical" and also refer to the desired mod MUST be changed as a group. */
+
+
+.outer {margin: 0 0 0 132px;}
+/*** Critical left col width value ***/
+
+.float-wrap {
+	float: left;
+	display: inline;
+	position: relative;
+	width: 100%;
+}
+
+.center {
+	float: right;
+	display: inline;
+	position: relative;
+	width: 100%;
+}
+
+.left {
+	float: left;
+	display: inline;
+	position: relative; /* Needed for IE/win */
+	width: 130px;    /*** Critical left col width value ***/
+	margin-left: -132px;    /*** Critical left col width value ***/ /*** Critical left divider dimension value ***/
+}
+
+
+.centerbox {
+	width: 100%;
+	overflow: visible;
+	text-align: left;
+}
+
+
+
+/* __________ Special Fixes __________ */
+
+/* Holly Hack \*/
+* html #wrapper1,
+* html #wrapper2,
+* html .outer a,
+* html .container-left,
+* html .outer
+{height: 1%;}
+/* Holly hack */
+
+
+/*** Variance fixes for IEwin ***/
+
+/*\*/
+* html .outer p {margin-right: -6px;}
+/* */
+
+
+/* __________ Spacing Controls for various column contents __________ */
+
+.textpadder {padding: 10px;}
+
+
+/* __________ Header __________ */
+
+#header {
+	width: 100%;
+	padding: 0;
+	
+	background-color: #1D23F4;
+	background-image: url(/images/main/header/background.gif);
+	color: #FFFFFF;
+}
+
+/* used to prevent content jumping when banner loads */
+#banner {
+	width: 770px !important;
+	height: 60px !important;
+	
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+
+/* __________ Sidebar Navigation __________*/
+
+
+#sidebar {
+	color: #FFFFFF;
+	font-size: 1.2em;
+	font-weight: 900;	
+}
+
+#sidebar ul {
+	display: block;
+    margin:  0.5ex -10px 0 -10px;
+    padding: 0;
+	
+/*	border-top: 1px dotted #FFFFFF;	*/
+/*	border-bottom: 1px dotted #FFFFFF;	*/
+}
+
+#sidebar li {
+	display: inline;
+    margin:  0;
+    padding: 0;
+}
+
+#sidebar a { padding-bottom: 0; }
+
+#sidebar li a,
+#sidebar li li a {
+	display: block;
+
+	width: 116px;
+
+	margin: 0;
+	padding: 0.65ex 0 0 14px;
+
+/*	border-bottom: 1px dotted #FFFFFF;	*/
+
+	list-style-type: none;
+	text-align: left;
+
+	font-size: 0.9em;
+	font-weight: normal;
+}
+
+#sidebar li li a {
+	margin-top: -4px;
+	margin-left: 10px;
+	padding-left: 18px;
+	padding-bottom: 0;
+}
+
+#sidebar a:link, #sidebar li a:link { color: #FFFFFF; }
+#sidebar a:visited, #sidebar li a:visited { color: #FFFFFF; }
+#sidebar a:hover, #sidebar li a:hover { color: #AACCFF; }
+#sidebar a:active, #sidebar li a:active { color: #AACCFF; }
+
+
+/* __________ Footer elements __________ */
+
+/* Start Footer */
+
+#footer {
+	position: relative;
+	clear: both;
+
+	width: 100%;
+	padding: 7px 0 3px 0;
+
+	background-color: #0B0D60;
+	color: #FFFFFF;
+}
+/* Holly Hack \*/
+* html #footer {
+	padding-bottom: 5px;
+}
+/* */
+
+#footer-text {
+	padding-left: 15px;
+	padding-bottom: 5px;
+
+	margin: auto;
+	text-align: center;
+}
+/* Holly Hack \*/
+* html #footer-text {
+	padding-bottom: 0;
+}
+/* */
+
+
+#footer-text a,
+#footer-text span {
+	float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	margin: 0;
+	padding: 0;
+	padding-right: 0.5em;
+}
+
+	/* Footer Search */
+
+#footer form {
+	float: right;
+	display: inline;
+	position: relative;
+
+	margin: 0px;
+	margin-top: -5px;
+	padding: 3px 15px 0 0;
+	vertical-align: middle;
+}
+
+#footer form label {
+	width: auto;
+	margin-top: -2px;
+}
+
+/* Holly Hack \*/
+* html #footer form label { margin-top: -1px; }
+/* */
+
+
+/* Search Query */
+#query {
+	width: 140px;
+	margin: 0 0 0 0.5em;
+	padding: 0;
+	font-size: 0.8em;
+}
+
+/* Search Button */
+#go-search {
+	float: none;
+
+	width: auto;
+	margin: 0;
+	padding: 0;
+
+	text-align: center;
+	font-size: 0.8em;
+}

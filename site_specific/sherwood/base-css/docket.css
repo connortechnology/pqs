@@ -1,0 +1,242 @@
+/* docket.css is used for docket pages with common elements */
+.label { font-weight: bold; }
+
+/* MAIN CONTAINERS */
+#project-view {
+	border: 1px solid #0B0D60;
+	margin-bottom: 2ex;
+	padding: 2ex 2ex 1ex 2ex; /* Top, Right, Bottom, Left */
+}
+
+
+#project-view h1 {
+	background-color: #0B0D60;
+	color: #FFFFFF;
+	font-size: 1.1em;
+}
+
+
+#docket { padding: 2ex 2ex 2ex 2ex; }
+
+
+.id {
+	float: left; 
+	display: inline;
+	position: relative;
+	clear: none;
+	color: black;
+	font-size: 25pt;
+	line-height: 60px;
+	text-align: center;
+}
+.id1 {
+	float: center; 
+	display: inline;
+	position: relative;
+	clear: none;
+	color: red;
+	font-size: 35pt;
+}
+
+/* PRIMARY INFORMATION CALLOUT */
+#primary_info {
+	float: right;
+	clear: right;
+	display: inline;
+	position: relative;
+
+	margin-top: 0.25em;
+	padding: 0;
+	
+	border: 1px solid #0B0D60;
+	background-color: #BFEBF0;
+}
+
+#primary_info th, #primary_info td {
+	text-align: right;
+	background-color: #BFEBF0;
+}
+
+#primary_info th {
+    padding-right: 0.5em;
+}
+
+/* __________ Docket Quantity & Printer Friendly Table __________ */
+
+table#docket-quantity {
+	width: 100%;
+}
+
+table#docket-quantity td {
+	background-color: transparent;
+	border: 0;
+}
+
+/* NAVIGATION MENU: FOR SERVICE TYPE CATEGORIES */
+#docket-nav {
+    width: 100%;
+	overflow: hidden;
+}
+
+#docket-nav ul {
+    display: block;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+#docket-nav li	{
+    display: inline;
+
+    height: 20px;
+
+    margin: 0 0.2em 0 0;
+    padding: 0;
+
+	border: 1px solid #0B0D60;
+	border-bottom: 0;
+
+	white-space: nowrap;
+}
+
+#docket-nav li.first { border-left: 1px solid #0B0D60; }
+
+/* Styles for Menu Items */
+#docket-nav ul li a {
+	margin: 0;
+	padding: 0.5ex 1ex 0.5ex 1ex; /* Top, Right, Bottom, Left */
+	
+	background-color: #AACCFF;
+
+	line-height: 19px;
+	text-decoration: none;
+	color: #000000;
+}
+
+#docket-nav ul li a:hover { background-color: #1D23F4; color: #FFFFFF; }
+
+#docket-nav li a.selected:hover,
+#docket-nav ul li a.selected {
+	background-color: #FFFFFF;
+	color: #000000;
+}
+
+/* Fix Win IE - Hide from IE Mac \*/
+* #docket-nav ul li {
+	float: left;
+	display: inline;
+	position: relative;
+
+	height: 1%;
+}
+* #docket-nav li a { height: 1%; }
+/* End */
+
+
+
+
+div.category {
+	font-size: 17px;
+}
+
+
+/* SERVICE TYPE CATEGORIES */
+
+div.category h1 {
+    padding: 0px 4px 1px 4px;
+    margin: 0;
+}
+
+
+
+div.category h1 {
+    margin-top: 0;
+    vertical-align: middle;
+    font-size: 1.1em;
+}
+
+
+div.category h5 {
+	margin: 5px 0 5px 0;
+
+	background-color: #0B0D60;
+	border: 1px solid #0B0D60;
+
+	color: #FFFFFF;
+}
+
+/* IE Fix \*/
+* html div.category h5 {width: 99%;}
+/* */
+
+div.supplied{
+	margin-top: 1ex;
+	padding: 0 4px;
+}
+
+div.supplied h3 {
+	background-color: #0B0D60;
+	border: 1px solid #0B0D60;
+	
+	color: #FFFFFF;
+	font-size: 1em;
+}
+
+/* SERVICE TYPE GROUP */
+div.group {
+/*	padding: 30px 4px 50px 4px; /* Top, Right, Bottom, Left */
+    border-bottom: 4px solid #0B0D60;
+
+/*    line-height: 1.6em; */
+}
+
+div.group h4 {
+		display: inline-block;
+		font-size: 1em;
+		margin-right: 0.25em;
+/*		padding: 0 0 10px 0; */
+
+		/*
+		background-color: cyan;
+		width: 100%;
+		text-align: center;
+		*/
+
+}
+
+
+div.group a.comment {
+	float: right;
+	display: inline;
+	position: relative;
+
+	font-style: italic;
+}
+
+p.comment {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+div.indent {
+   	padding: 0 0 0 4px; /* Top, Right, Bottom, Left */
+/*   	line-height: 1.5em; */
+}
+
+/* DOCKET TABLES */
+table.docket {
+    margin: 0px 0 0px 0; /* Top, Right, Bottom, Left */
+    width: auto;
+}
+
+table.docket td,
+table.docket th {
+	margin: 0;
+	padding: 1px 4px;
+	background-color: transparent;
+	border: 0;
+}
+
+table.docket col.header  { width: 130px; }
+table.docket col.data    { width: 350px; }
+table.docket col.data2   { width: 200px; }

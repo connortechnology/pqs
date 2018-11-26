@@ -5,6 +5,10 @@ use warnings;
 use session; 
 
 use Data::Dumper;
+use PQS::Object::order;
+use PQS::model::project;
+
+require status;
 
 
 sub new {
@@ -34,8 +38,13 @@ sub type_name {
 }
 
 sub load {
+	
+	my $self = shift;
+
+ 	$self->{specs} = PQS::model::project::get($self->{id});
 
 }
+
 
 sub ink_sum {
 	my $self = shift;
@@ -97,9 +106,96 @@ sub ink_sum {
 
 }
 
-sub order_id {
+sub have_production_file { 
+	my $self = shift;
+	my $dbh = session::dbh;
+
+	my $file = $dbh->selectrow_array(q{
+		 select count(*) from project_files where approval_production is not null AND pid = ?
+	}, undef, $self->{id});
+
+	return $file;
+}
+
+sub check_status {
+	my $self = shift;
+
+
+	my $oid = $self->order_id;
+	my $order = new PQS::Object::order($oid);
+
+	if ( $oid ) {
+
+		#IF peding deposit then go no futher
+		return 'PD' if $order->pending_deposit;
+		
+		return 'CP' if  $self->{specs}{completion_date};
+
+		return 'IP' if  $self->{specs}{files} && $self->have_production_file;
+
+		return 'WF';
+	}
+
+
+	
+}
+
+sub set_status {
+	my $self = shift;
+	my $status = shift;
+	my $dbh  = session::dbh;
+	my $log = session::log;
+
+	PQS::model::project::set_status($self->{id}, $status);
+
+	my $sids = $dbh->selectcol_arrayref(q{
+		SELECT lngserviceindex FROM tbl_project_contents where lngprojectindex = ?}, undef, $self->{id});
+
+	eprint::service::set_status($log, $dbh, $self->{id}, $status, @{$sids});
+
+
+}
+
+sub update_status {
+	my $self = shift;
+
+
+	my $pid = $self->{id};
+
+print STDERR "UPDATE PROJECT STATUS: $pid \n";
+
+	my $oid = $self->order_id;
+
+
+	if ( $oid ) {
+		my $order = new PQS::Object::order($oid);
+
+
+		my $status  = $self->check_status();
+
+		PQS::model::project::set_status($pid, $status::project->{$status});
+
+		$order->update_status() if $oid;
+
+		$self->set_status($status::project->{$status});
+	}
+
+
+
+	return 	PQS::model::project::get_status($pid);
+
+}
+
+
+sub order {
 	my $self = shift;
 	return PQS::model::order::get_order_by_pid($self->{id});
+
+}
+
+sub order_id {
+	my $self = shift;
+	return PQS::model::order::get_orderid_by_pid($self->{id});
 
 }
 
@@ -227,7 +323,7 @@ sub due_date {
 	my $date = PQS::model::order::duedate($self->{id});
 
 	
-	my $i = $self->order_id();
+	my $i = $self->order();
 
 	$date = $i->{dtmrequireddate} unless $date;
 

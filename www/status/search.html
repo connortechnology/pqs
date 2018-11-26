@@ -113,7 +113,9 @@
                         <th class="vert-border" rowspan="2">Due Date</th>
 						<th class="id vert-border" rowspan="2">ID</th>
 						<th class="vert-border" rowspan="2">Project</th>
-                        <th class="vert-border" rowspan="2" width="70px">Tech</th>
+
+						<th class="vert-border" rowspan="2">Priority</th>
+
 						<th class="status horiz-border" colspan="9">Status</th>
 					</tr>
 
@@ -163,69 +165,6 @@
 						<td class="x"></td>
 					</tr>
 
-					<tr tal:replace="nothing">
-						<td class="customer">Grierson, Matthew</td>
-                        <td class="proj-duedate">Due Date</td>
-						<td class="proj-id">1654</td>
-						<td class="proj-name"><a href="project.html">Acme Booklet</a></td>
-                        <td class="proj-tech">Tech</td>
-						<td class="none"></td>
-						<td class="none"></td>
-						<td class="none"></td>
-						<td class="x"></td>
-						<td class="x">&nbsp;</td>
-						<td class="none"></td>
-						<td class="none"></td>
-						<td class="none"></td>
-					</tr>
-
-					<tr tal:replace="nothing" class="odd">
-						<td class="customer">Barkhouse, Raymond</td>
-                        <td class="proj-duedate">Due Date</td>
-						<td class="proj-id">1732</td>
-						<td class="proj-name"><a href="project.html">Manual Addendum</a></td>
-                        <td class="proj-tech">Tech</td>
-						<td class="open">S</td>
-						<td class="wait">W</td>
-						<td class="none"></td>
-						<td class="none"></td>
-						<td class="none"></td>
-						<td class="x">&nbsp;</td>
-						<td class="x">&nbsp;</td>
-						<td class="x"></td>
-					</tr>
-
-					<tr tal:replace="nothing" class="odd">
-						<td class="customer">Barkhouse, Raymond</td>
-                        <td class="proj-duedate">Due Date</td>
-						<td class="proj-id">1732</td>
-						<td class="proj-name"><a href="project.html">IPC Manual</a></td>
-                        <td class="proj-tech">Tech</td>
-						<td class="none"></td>
-						<td class="none"></td>
-						<td class="none"></td>
-						<td class="none"></td>
-						<td class="none"></td>
-						<td class="none">&nbsp;</td>
-						<td class="none">&nbsp;</td>
-						<td class="none"></td>
-					</tr>
-
-					<tr class="odd" tal:replace="nothing">
-						<td class="customer">Lasso, Chris</td>
-                        <td class="proj-duedate">Due Date</td>
-						<td class="proj-id">1925</td>
-						<td class="proj-name"><a href="project.html">Tradeshow Posters</a></td>
-                        <td class="proj-tech">Tech</td>
-						<td class="done">C</td>
-						<td class="wait">W</td>
-						<td class="x"></td>
-						<td class="x"></td>
-						<td class="none"></td>
-						<td class="none"></td>
-						<td class="x"></td>
-						<td class="x"></td>
-					</tr>
 
 					<!-- TODO: Loop over an outer join of the project services and the categories instead of this hand population of status fields. -->
 
@@ -234,7 +173,7 @@
                         <td class="proj-duedate" tal:content="p/duedate">08/24/2004</td>
 						<td class="proj-id" tal:define="s p/status" tal:content="p/id">1440</td>
 						<td class="proj-name"><a href="project.html" tal:attributes="href string:project?pid=$p/id;title p/name" tal:content="substr:p/name 0 1000 1">Brochures</a></td>
-                        <td class="proj-tech"  tal:content="p/tech"><input type="text" name="tech" id="tech" value="" size="10" /></td>
+                        <td  controlSet="priority" tal:attributes="class string:priority $p/priority; id string:priority-$p/id" class="priority"  tal:content="p/priority"><input type="text" name="priority" id="priority" value="" size="10" /></td>
 						<td tal:attributes="id string:$p/id-$s/design/id;class string:$s/design/class" tal:content="s/design/label"></td>
 						<td tal:attributes="id string:$p/id-$s/prepress/id;class string:$s/prepress/class" tal:content="s/prepress/label"></td>
 						<td tal:attributes="id string:$p/id-$s/printing/id;class string:$s/printing/class" tal:content="s/printing/label"></td>
@@ -246,7 +185,22 @@
 						<td tal:attributes="id string:$p/id-$s/custom/id;class string:$s/custom/class" tal:content="s/custom/label"></td>
 					</tr>
 				</tbody>
-			</table>
+			</table>	
+<style>
+ .Urgent, 	tr td.Urgent  { background-color: White; }
+ .High, 	tr td.High    { background-color: White; }
+ .Normal, 	tr td.Normal  { background-color: White; }
+ .Low, 		tr td.Low     { background-color: White; }
+</style>
+
+<!--
+<style>
+ .Urgent, 	tr td.Urgent  { background-color: Red; }
+ .High, 	tr td.High    { background-color: Cyan; }
+ .Normal, 	tr td.Normal  { background-color: White; }
+ .Low, 		tr td.Low     { background-color: Beige; }
+</style>
+-->
 
 			<!--
 				DISABLE: Feature may never be supported.

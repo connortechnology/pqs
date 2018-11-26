@@ -1,0 +1,170 @@
+# Header
+
+Header_Background: #1D23F4
+Header_Text: #FFFFFF
+
+
+# Body & Content
+
+Body_Background: #CCCCCC
+Content_Background: #FFFFFF
+
+Body_Text: #000000
+
+Page_Title: #0B0D60
+Page_Title_Section: #0B0D60
+
+
+# Top_Nav
+
+Nav_Bar_Background: #0B0D60
+
+Nav_Menu_Background: #0B0D60
+Nav_Text: #FFFFFF
+
+Nav_Background_Hover: #1D23F4
+
+
+# Side_Bar
+
+Sidebar_Text: #FFFFFF
+
+Sidebar_Link: #FFFFFF
+Sidebar_Visited: #FFFFFF
+Sidebar_Hover: #AACCFF
+Sidebar_Active: #AACCFF
+
+
+# Footer
+
+Footer_Background: #0B0D60
+Footer_Text: #FFFFFF
+
+Footer_Link: #FFFFFF
+Footer_Visited: #FFFFFF
+Footer_Hover: #AACCFF
+Footer_Active: #AACCFF
+
+
+# Regular_Links
+
+Link: #1D23F4
+Link_Visited: #1D23F4
+Link_Hover: #0B0D60
+Link_Active: #0B0D60
+
+
+# Borders
+
+Borders: #0B0D60
+
+
+# Form_Elements
+
+Fieldset_Text: #000000
+Internal_Fieldset_Text: #0B0D60
+
+Fieldset_Borders: #0B0D60
+Internal_Fieldset_Borders: #0B0D60
+
+Button_Background: #1D23F4
+Button_Borders: #0B0D60
+Button_Text: #FFFFFF
+
+Button_Background_Hover: #0B0D60
+Button_Borders_Hover: #0B0D60
+Button_Text_Hover: #FFFFFF
+
+Input_Background: #FFFFFF
+Input_Border: #000000
+Input_Text: #000000
+
+Input_Disabled: #959595
+Input_Hover: #FAFAFA
+Input_Focus: F4F4F4
+
+
+# Tables 
+
+Table_Header_Background: #0B0D60
+Table_Header_Text: #FFFFFF
+
+Table_Data_Background: #FFFFFF
+Table_Data_Text: #0B0D60
+
+Rows_Background: #AACCFF
+Rows_Text: #0B0D60
+
+Rows_Link: #0B0D60
+Rows_Link_Visited: #0B0D60
+Rows_Link_Hover: #1D23F4
+Rows_Link_Active: #1D23F4
+
+
+# Products
+
+Product_Name_Background: #1D23F4
+Product_Name_Text: #FFFFFF
+Product_Description: #AACCFF
+
+
+# Top Tabs
+
+Tab_Text: #000000
+Tabs_Background: #AACCFF
+
+Tab_Link: #000000
+Tab_Link_Visited: #000000
+Tab_Link_Hover: #1D23F4
+Tab_Link_Active: #1D23F4
+
+
+# Additional Services & Docket Tabs
+
+Interactive_Tabs_Text: #000000
+Interactive_Tabs_Background: #AACCFF
+
+Interactive_Tabs_Text_Hover: #FFFFFF
+Interactive_Tabs_Background_Hover: #1D23F4
+
+Interactive_Tabs_Text_Active: #000000
+Interactive_Tabs_Background_Active: #FFFFFF
+
+
+#Panels
+
+Panel_Border: #0B0D60
+
+Panel_Container_Background: #0B0D60
+Panel_Container_Text: #FFFFFF
+
+Panel_Container_Link: #F3FCFE
+Panel_Container_Link_Visited: #F3FCFD
+Panel_Container_Link_Hover: #BFEBF8
+Panel_Container_Link_Active: #F3FCFC
+
+Panel_Header_Background: #1D23F4
+Panel_Header_Text: #FFFFFF
+
+Panel_Header_Link: #FFFFFF
+Panel_Header_Link_Visited: #FFFFFF
+Panel_Header_Link_Hover: #0B0D60
+Panel_Header_Link_Active: #FFFFFF
+
+Panel_Background: #FFFFFF
+Panel_Text: #0B0D60
+
+Panel_Link: #0B0D60
+Panel_Link_Visited: #0B0D60
+Panel_Link_Hover: #1D23F4
+Panel_Link_Active: #0B0D60
+
+
+# Misc
+
+InfoBox: #BFEBF0
+Tool_Tip: #1D23F4
+Error: #FF0000
+
+Disabled_Background: #AAAAAA
+Disabled_Text: #888888

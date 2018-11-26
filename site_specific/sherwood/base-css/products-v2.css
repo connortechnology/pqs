@@ -1,0 +1,126 @@
+div.product {
+    overflow: hidden;
+    margin-bottom: -0.5ex;
+    margin-top: 2ex;
+}
+
+div.product img { float: left; } 
+form.info       { 
+    display: block; 
+    position: relative;
+
+    margin-left: 130px;
+    margin-bottom: 1ex;
+} 
+div.product p   { overflow: auto; }
+
+div.product select { margin: 1ex 0; }
+
+/* Safari doesn't update the position when the DOM is modified through JS
+ * leaving the button not visible as it's in .info's overflow
+ *
+div.product input[type=submit] {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+*/
+
+div.product input[type=submit]:hover {
+    color: #FFFFFF;
+    cursor: pointer;
+    background-color: #0B0D60;
+    border: 1px solid #0B0D60;
+}
+
+div.product div.views {
+	margin: 2ex 50px 0 20px;
+}
+
+hr { /* div.product + hr */
+    color: #CFCFCF; 
+    background-color: #CFCFCF; 
+    height: 1px; 
+    border: 0;
+}
+
+
+/* View switching (matrix or questions) tabs */
+div.product div.tabs {
+	border-bottom: 1px solid #0B0D60;
+}
+div.product div.tabs span { 
+    cursor: pointer;
+    padding: 0 1ex; 
+    line-height: 2.2em;
+}
+
+div.product div.tabs span.selected {
+
+    border-left: 1px solid #0B0D60;
+    border-right: 1px solid #0B0D60;
+}
+
+div.product div.tabs span:hover { 
+    background-color: #1D23F4; 
+}
+
+
+/* Question view */
+div.questions {
+    padding: 2ex;
+}
+
+div.questions > strong { 
+	display: block; 
+	float: left;
+	width: 9em;
+}
+
+
+/* Matrix table. */
+table.matrix {
+	margin: 0;
+	width: 100%;
+	border: hidden;
+	border-collapse: collapse;
+}
+table.matrix tr  { border-top: 1px solid #0B0D60; }
+table.matrix     { border-top: hidden; }
+table.matrix td, 
+table.matrix th  { border-right: 1px solid #0B0D60; }
+table.matrix     { border-right: hidden; margin-bottom: 1ex; }
+
+table.matrix thead th { 
+    background-color: #0B0D60;
+    color: white;
+}
+
+table.matrix tbody td { 
+	vertical-align: middle; 
+	background-color: white;
+	color: black;
+	padding: 1px 3px;
+}
+
+table.matrix tbody tr.r0 td { 
+	background-color: #EFF4FA;
+}
+
+table.matrix td       { text-align: center; }
+table.matrix td.first { text-align: left; }
+
+
+
+/* OLD PRODUCT PAGES
+ *
+ * Some still reference this so a few rules that (hopefully) don't conflict
+ * are left for them.
+ *
+ */
+
+div.info { 
+    height: 123px;
+    position: relative;
+}
+

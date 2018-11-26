@@ -1,0 +1,640 @@
+
+input.button, button, a.button {width: auto;}
+
+
+/*  Button Bar */
+
+fieldset div.indent-regular {margin-left: 20em;}
+
+/* Holy Hack \*/
+* html div.indent-regular {margin-left: 0; padding-left: 20.2em;}
+/* */
+
+
+/* Tables */
+
+#content table {	
+	width: 750px !important;
+	margin: 1ex 0 2ex 0 !important;
+}
+
+
+/* Greenbar effect. */
+
+tr.even, tr.even input {background-color: #FFFFFF;}
+tr.odd td, tr.odd input {background-color: #AACCFF;}
+
+
+/* Navigation symbols. */
+
+span.symbol {
+    vertical-align: baseline;
+    line-height: 0.5em;
+    font-weight: bold;
+}
+
+
+/* GENERIC TEMPLATE SETTINGS */
+
+div#content h1 {
+	margin: 0;
+	padding: 0;
+}
+
+.none {display: none;}
+
+
+/* COLUMNAR TABLE - A standard way of displaying and editing one record */
+
+table.columnar thead tr {text-align: left;}
+table.columnar tbody th {text-align: right;}
+
+table.columnar tbody td {text-align: left;}
+
+
+/* The following need to generalised where possible and where not broken into
+ * section specific or page specific files. */
+
+/*  MULTI, SINGLE SHARED ITEMS */
+
+/* Input boxes in the specs/pricing tables don't get any border so they look
+ * like spreadsheet cells (the table itself gets rules). */
+
+
+table.multi input, table.single input {
+    width: 6.2em;
+    margin: 0;
+    padding: 0;
+
+    border: 0;
+    text-align: right;
+}
+
+
+/*  MULTI (RANGED) ITEM SERVICE PRICING AND EQUIPMENT SPECS */
+
+/* Possition the group name header. */
+
+table.multi thead tr.service th {
+    background-color: #0B0D60;
+    border-left: 1px solid #0B0D60;
+
+    text-align: left;
+    color: #FFFFFF;
+}
+
+table.multi > thead > tr.service th:first-child {border-left: 1px solid #0B0D60;}
+
+table.multi thead th.equipment {border-right: 1px solid #0B0D60;}
+
+/* Move the "Back to Top" (^) link into place and colour it. */
+
+table.multi thead tr.service th.top {
+    padding: 0;
+    margin: 0;
+
+	border-right: 1px solid #0B0D60;
+
+    vertical-align: bottom;
+    text-align: right;
+}
+
+table.multi tr.service th.top a,
+table.multi tr.service th.top a:hover,
+table.multi tr.service th.top a:visited
+{
+    color: #FFFFFF;
+    text-decoration: none !important;
+}
+
+
+/* Backgrounds of header after group name. */
+
+table.multi thead tr.units th, table.multi thead tr.per-service th {
+    background-color: #E3E3E2;
+    color: #626262;
+	font-size: 0.8em;
+}
+
+
+/* Add a border only on the distinction between ranges and values. */
+
+thead tr.units th, tr.per-service th.max, tr.per-service th.price {
+    border-right: 1px solid #0B0D60;
+}
+
+thead tr.units th, tr.per-service th.min {
+    border-left: 1px solid #0B0D60;
+}
+
+
+/* Unforunately due to some other fancy things we're and browser compliance
+ * issues this doesn't work for the above. So it's lots of extra HTML tags.
+
+colgroup {
+    border-right: 1px dotted #7D7D7D;
+    border-left:  1px dotted #7D7D7D;
+}
+
+*/
+
+
+/* Add a double rule after all the header stuff. */
+
+tr.per-service th { border-bottom: 3px double #0B0D60; }
+
+
+/* Create the look for the data input */
+
+table.multi tbody td {
+    border-right: 1px solid #0B0D60;
+    border-left: 1px solid #0B0D60;
+    text-align: right;
+}
+
+
+/* Draw a rule under the body of the table. */
+
+table.multi tfoot td, table.multi tfoot th { border-top: 1px solid #0B0D60; }
+
+
+/* Colour and position the per group footer (Discountable tab) if it exists */
+
+table.multi tfoot tr {
+    height: 3ex;
+    vertical-align: center;
+}
+
+table.multi tfoot td {
+    background-color: #0B0D60;
+    text-align: right;
+    color: #FFFFFF;
+	font-size: 0.85em;
+    font-weight: bold;
+}
+
+table.multi tfoot input {
+    width: 1em;
+    margin: 0 0.5ex 0.42ex 0.8ex;
+    background-color: #0B0D60;
+    color: #FFFFFF;
+}
+
+/* Holly Hack \*/
+* html table.multi tfoot input {
+	font-size: 1.5em;
+}
+/* */
+
+
+/*  SINGLE ITEM SERVICE PRICING AND EQUIPMENT SPECS */
+
+
+table.single { border: 1px solid #0B0D60; }
+
+
+/* Define the header. */
+
+table.single thead tr th {
+    background-color: #0B0D60;
+    color: #FFFFFF;
+}
+
+colgroup.name { width: 24em; }
+colgroup.pricing { width: 9em; }
+
+
+/* And the data rules. */
+
+table.single td {
+    border-right: 1px solid #0B0D60;
+    border-left:  1px solid #0B0D60;
+    text-align: right;
+}
+
+
+/* colgroup.pricing { text-align: right; } *
+ * Remove the greenbar effect from fixed fields so we differentiate between
+ * editable data and fixed data. This isn't all that nice a look but it's what
+ * we have for now. */
+
+
+table.single td.fixed {
+	color: black;
+	background-color: #FFFFFF;
+	text-align: left;
+}
+
+table.single tr.odd td.fixed {
+    background-color: #AACCFF;
+}
+
+
+/* Make the checkbox small and centered. */
+
+table.single tbody td.chk {
+    width: 1.2em;
+    vertical-align: center;
+    text-align: center;
+}
+
+table.single tbody td.chk input {
+    width: 1.4em;
+    margin-bottom: .1ex;
+}
+
+
+/*  Table of Contents */
+
+div.option {
+    margin-bottom: 2ex;
+}
+
+div.option ul, div.option p {
+    margin-right: .5ex;
+    margin-left:  .5ex;
+}
+
+div.option table {
+    width: 100%;
+    border: 1px solid #0B0D60;
+}
+
+div.option table thead th {
+    background-color: #0B0D60;
+    color: #FFFFFF;
+}
+
+div.option table tbody td {padding-left: .5ex;}
+div.option a:link  {display: block;}
+
+div.option a:hover { } /* Some sort of background effect once we've sorted
+                           out how to differentiate between disabled and
+                           selected? (Angd also fixed margins and paddins. */
+
+div.option tr.disabled   {font-style: italic;}
+
+div.option table tbody tr.disabled td a { color: #0B0D60 !important; /* disable color? */ }
+
+div.option td.selected   {background-color: #E3E3E2; color: #626262; font-weight: bold;}
+
+div.option td.selected a {}
+
+div.option tr a { color: #525252 !important}
+
+
+/* Cookie trail type back link. */
+
+div.option a.back {
+    display: block;
+
+    margin: 0;
+    padding: 0.4ex 1ex;
+
+    background-color: #0B0D60;
+    border: 1px solid #0B0D60;
+
+    color: #FFFFFF;
+    font-weight: bold;
+    text-decoration: none !important;
+}
+
+div.option a.back:hover {
+    background-color: #D9D9D9;
+    color: #A5A5A5;
+}
+
+div.option col.currency {width: 2.2em;}
+
+div#content div.nav {
+    margin:  0;
+    padding: 0;
+    text-align: right;
+}
+
+div#content div.nav a {
+    background-color: #FFFFFF; /* Stop pseudo attributes. */
+
+    color: #0B0D60;
+    font-weight: bold;
+    text-decoration: none !important;
+}
+
+div#content div.nav a:hover {
+    background-color: #CCE6F6;
+}
+
+div#content div.nav hr {
+    margin: 0;
+    padding: 0;
+}
+
+div.nav #prev {
+    float: left;
+	display: inline;
+	position: relative;
+
+    padding-right: 2.0ex;
+    padding-left: 0.5ex;
+    border: 1px solid #0B0D60;
+}
+
+div.nav #next {
+    padding-right: 0.5ex;
+    padding-left: 2.0ex;
+
+    border-collapse: collapse;
+    border: 1px solid #0B0D60;
+}
+
+
+/* STANDARD LISTING TABLES */
+
+table.common { width: 98.5%; border: 1px solid #0B0D60; }
+table.common tr.even td { background-color: transparent;   }
+
+
+/* Define the header. */
+
+table.common thead tr th {
+    background-color: #0B0D60;
+    color: #FFFFFF;
+}
+
+colgroup.name {width: 26em;}
+
+
+/* And the data rules. */
+
+table.common td {
+    border-right: 1px solid #0B0D60;
+    border-left:  1px solid #0B0D60;
+
+    color: black;
+    text-align: left;
+}
+
+table.common colgroup.id          { width: 12.4em; }
+table.common colgroup.name        { width: 20em; }
+table.common colgroup.description { width: 28em; }
+
+div.equipment {
+    height: 10.4em;
+    margin-bottom: 4ex;
+
+    background-color: #F2F2F2;
+    border: 1px solid #0B0D60;
+}
+
+div.equipment h2 {
+    margin: 0 0 .4ex 0;
+    padding: .2ex 1ex .2ex 1ex;
+    background-color: #0B0D60;
+    color: #FFFFFF;
+}
+
+div.equipment table.columnar {
+    float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+    width: 15em;
+    margin: 0;
+    padding: 0;
+}
+
+p.description {
+    overflow: hidden;
+    display: block;
+
+    height: 7em;
+    margin: .4ex 1ex .4ex 1em;
+    padding: .4ex 1ex 1ex 1ex;
+
+    background-color: #FFFFFF;
+    border: 1px solid #0B0D60;
+    text-align: justify;
+}
+
+fieldset table.multi  { font-size: 1.2em}
+
+fieldset {
+	margin: 0 0 1ex 0;
+	padding: 0 0.5em 2ex 1.5em;
+
+	border: 2px solid #0B0D60;
+}
+
+
+legend {
+    cursor: help;
+
+	padding: 1ex 0.5ex;
+
+    vertical-align: middle;
+    font-weight: bold;
+}
+
+
+label {
+	overflow: none;
+    display: block;
+	float: none;
+	clear: both;
+
+	width: auto;
+	margin-left: 1em;
+    vertical-align: top;
+}
+
+
+label span {
+    float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+    width: 18em;
+    padding-right: 2ex;
+}
+
+
+
+input    { width: 20em; }
+select   { width: 20.8em; }
+textarea { width: 30em; height: 12ex; }
+input#id { width: 2.6em; text-align: right; }
+input { padding-right: 0.4em; }
+
+input, select, textarea {
+    margin-bottom: 1ex;
+    padding-left: 0.4em;
+
+    border: 1px solid #0B0D60;
+    line-height: 1em;
+}
+
+input[disabled="true"], select[disabled="true"], textarea[disabled="true"] {
+    background-color: #F7F7F7;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+	width: 13px;
+}
+
+input.check {
+    position: relative;
+	top: 3px;
+    width: 13px;
+    margin-right: 0.125em;
+
+    background-color: #FFFFFF;
+    border: 0;
+}
+
+fieldset#action label > input.check {top: 4px;}
+fieldset#action input[type="button"] {position: relative; top: 8px;}
+
+fieldset#action label  {
+    display: inline;
+    margin-right: 1em;
+    vertical-align: middle;
+}
+
+fieldset#action legend { color: #FF0000; }
+
+select[multiple="multiple"] { height: 20ex; }
+input.numeric  { width: 4em; }
+select.numeric { width: 4.6em; }
+.numeric { text-align: right; }
+select.time { width: 8em; }
+
+
+fieldset > table.single {
+    border: 0;
+    border-bottom: 1px solid #0B0D60;
+}
+
+
+table.spec { margin-top: 1ex; }
+
+table.spec tbody th {
+    padding: 0;
+    padding-right: 1em;
+    text-align: right;
+}
+
+table.spec colgroup.name { width: 13em; }
+table.spec thead th {line-height: 1.1em;}
+table.spec th {font-weight: normal;}
+table.spec th, table.spec td { padding: 0 0.5ex 0 0.5ex; }
+table.spec colgroup.minimum col.length { padding-left: 4em; }
+
+table.multi thead tr th.name  { width: 18em; }
+table.multi thead tr th.value { width: 10em; }
+
+colgroup.value { width: 10em; }
+colgroup.unit  { width: 12em; }
+
+tbody.specs input {
+    width: 11em;
+}
+
+
+/* POSITIONING FOR OLD HEADER MENU */
+
+table.topmenu { margin: 0; line-height: 10px; }
+table.topmenu td { padding-left: 0; }
+
+.topmenu { cursor: pointer; }
+
+#recommendations {
+    table-layout: fixed;
+    margin-top: 2ex;
+}
+
+#recommendations th, #recommendations td {padding: 1px 2px;}
+
+#recommendations tbody th {
+    padding-right: 2em;
+    text-align: left;
+    font-weight: normal;
+}
+
+col#project_type { width: 22em; }
+
+#recommendations col.press_type { width: 50px; }
+#recommendations select { width: 40px; }
+
+#recommendations tbody td {
+    border: 1px solid #0B0D60;
+    vertical-align: middle;
+    text-align: center;
+}
+
+#recommendations tbody td,
+#recommendations tbody th { line-height: 1.8em; }
+
+#recommendations input { vertical-align: bottom; }
+
+#recommendations td.recommended,
+#legend span.recommended { background-color: #626262; }
+
+#recommendations td.default,
+#legend span.default { background-color: #AACCFF; }
+
+#legend {
+    float: right;
+	display: inline;
+	position: relative;
+
+    margin-top: -2ex;
+    margin-left: 2ex;
+    padding: 3px;
+
+    border: 1px solid #0B0D60;
+}
+
+#legend h2 {
+    margin-top: 3px;
+}
+
+#legend div { line-height: 1.4em; }
+
+#legend span {
+    float: left;
+	display: inline;
+	position: relative;
+
+    width: 20px;
+    margin-bottom: 1ex;
+    margin-right: 1em;
+
+    border: 1px solid #0B0D60;
+    text-align: center;
+}
+
+#legend br { clear: both; }
+
+#paper {
+    width: 99%;
+    height: 90ex;
+    margin-top: 1ex;
+}
+
+#paper > optgroup > option { font-size: 0.925em; }
+
+
+/* Sub-type admin, should be in it's own sheet but... it's not. */
+
+div.sub_type {margin-bottom: 4ex; padding-bottom: 2ex; border-bottom: 1px solid #0B0D60; }
+
+
+/*
+#paper option {
+    white-space: pre;
+		font-family: monospace;
+}
+*/

@@ -1,0 +1,63 @@
+/* print.css is used for printer friendly printing (print media) */
+#header { height: 2cm; }
+
+body, td,th {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 8pt !important;
+}
+
+body, h1,h2,h3,h4,th,a { color: black !important; }
+
+h1 { font-size: 14pt !important; }
+h2 { font-size: 10pt !important; }
+h3 { font-size:  9pt !important; }
+h4, h5 { font-size:  8pt !important; }
+
+/*h5 {
+	margin: 1ex 0 0 0;
+	padding: 0.2ex 0.5em 0 0.5em;
+} */
+
+div.category h2 {
+		border: none;
+		padding-top: 4pt;
+		padding-bottom: none;
+		border-bottom: 2px solid #0B0D60;
+}
+
+#order-box,
+#quote-box,
+#project-view { border: none !important; }
+
+#primary_info {
+	float: right;
+	clear: right;
+	display: inline;
+	position: relative;
+
+	margin-top: 0.5ex;
+	border: 1px solid black;
+}
+
+
+.docket th {text-align: left !important;}
+
+.project-current-view {border-collapse: collapse;}
+
+.project-current-view thead tr th {border-color: #0B0D60; border-style: solid; border-width: 1px 0;}
+
+.project-current-view thead tr th:first-child {border-left-width: 1px;}
+.project-current-view thead tr th:last-child {border-right-width: 1px;}
+
+th.print-left-border {border-left-width: 1px !important;}
+th.print-right-border {border-right-width: 1px  !important;}
+th.print-borders {border-width: 1px;}
+
+div.group a.comment {
+	display: none !important;
+}
+
+table {
+
+	margin: 0 0 0 0;
+}

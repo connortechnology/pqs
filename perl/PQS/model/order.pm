@@ -61,6 +61,25 @@ sub get_payment_from_token {
 	return $dbh->selectrow_array(q{select curamount from tbl_payments where strtransactionid = ?}, undef, $token);
 	
 }
+sub downpayment {
+  	my $dbh = session::dbh;
+	my $id = shift;
+	return $dbh->selectrow_array(q{select curdownpayment from tbl_orders where lngorderid = ?}, undef, $id);
+	
+}
+
+sub payments {
+  	my $dbh = session::dbh;
+	my $id = shift;
+	my ($amount) = $dbh->selectrow_array(q{
+        SELECT SUM(curamount)
+        FROM tbl_payments
+        WHERE lngorderid = ?
+        }, undef, $id
+    );
+	return $amount;
+	
+}
 
 sub get_id_from_token {
   	my $dbh = session::dbh;
@@ -83,6 +102,27 @@ print STDERR "SET AMDIN COMMENTS \n";
   	my $dbh = session::dbh;
 
 	$dbh->do(q{update tbl_orders set stradministratorcomments = ? where lngorderid = ?}, undef, $comments, $order);
+}
+
+sub project_status{ 
+  	my $dbh = session::dbh;
+	my $order  = shift;
+	my $status  = shift;
+	return $dbh->selectrow_array(q{select count(p.lngprojectindex)  from tbl_order_contents oc, tbl_projects p
+	   	where oc.lngprojectindex = p.lngprojectindex 
+		AND lngorderid = ? AND p.strstatus = ? 
+	}, undef, $order, $status);
+
+}
+
+sub waiting_for_files{ 
+  	my $dbh = session::dbh;
+	my $order  = shift;
+	return $dbh->selectrow_array(q{select count(p.lngprojectindex)  from tbl_order_contents oc, tbl_projects p
+	   	where oc.lngprojectindex = p.lngprojectindex 
+		AND lngorderid = ? AND p.files is NULL
+	}, undef, $order);
+
 }
 
 sub set_status {
@@ -225,6 +265,17 @@ sub get_products {
 	
 }
 
+sub get_projects { 
+  my $order = shift;
+  my $dbh = session::dbh;
+  my $projects = $dbh->selectcol_arrayref(q{
+		SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ? 
+  }, undef, $order);
+  
+  return $projects;
+	
+}
+
 sub get_cust_id {
   my $order = shift;
   my $dbh = session::dbh;
@@ -234,6 +285,15 @@ sub get_cust_id {
   
   return $cust_id;
 
+}
+sub get_orderid_by_pid {
+
+  my ($pid) = @_;
+  my $dbh = session::dbh;
+  my $order = $dbh->selectrow_array(q{
+    SELECT lngorderid FROM tbl_order_contents WHERE tbl_order_contents.lngprojectindex = ?
+  }, undef, $pid);
+  return $order;
 }
 
 #gets the order for a given project

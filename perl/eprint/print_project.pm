@@ -992,23 +992,35 @@ sub history_list {
 
 	my $is_num = is_integer($ref); 
 	
-	my $pid = $is_num ? $dbh->selectrow_array(q{
-		SELECT lngprojectindex FROM tbl_projects WHERE lngprojectindex = ?
+	my $redirect;
+	my $cust;
+	my $pid;
+   	($pid, $cust) = $is_num ? $dbh->selectrow_array(q{
+		SELECT lngprojectindex, lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?
 	}, undef, $ref) : undef;
 
 	if ( $pid ) {
-		$variable->{Redirect} = "/main/proj/proj_view.html?pid=$pid";
-        return;
+		$redirect = "/main/proj/proj_view.html?pid=$pid";
 	}
 
 	$ref =~ /(\d*)/;
-	my $order = $1 ? $dbh->selectrow_array(q{
-		SELECT lngorderid FROM tbl_orders WHERE lngorderid = ?
+
+	my $order;
+	my $ocust;
+   	($order, $ocust)	= $1 ? $dbh->selectrow_array(q{
+		SELECT lngorderid, lngcustomerid FROM tbl_orders WHERE lngorderid = ?
 	}, undef, $1) : undef;
 
 	if ( $order ) {
-		$variable->{Redirect} = "/main/order/order_history_details.html?order_id=$order";
-        return;
+		$redirect = "/main/order/order_history_details.html?order_id=$order";
+		$cust = $ocust;
+	}
+
+	if ( $redirect ) {
+		die("have cust: $cust, $variable->{cookie} ") unless $cust;
+        eprint::login::select_customer( $r, $log, $dbh, $variable->{cookie}, $variable, $cust );
+		$variable->{Redirect} = $redirect;
+		return;
 	}
 
 print STDERR "HAVE STUFF: $ref ; $is_num -- PID: $pid \n";
@@ -1061,7 +1073,7 @@ print STDERR "HAVE STUFF: $ref ; $is_num -- PID: $pid \n";
 
 	my @data = ($variable->{cust_id}, $variable->{StartDate}, $variable->{EndDate});
 
-	my $ref_clause = $ref ? ' AND lower(strprojectreference) ~ ? ' : '';
+	my $ref_clause = $ref ? q{ AND lower(regexp_replace(strprojectreference, '\s','','g')) ~ regexp_replace(?, '\s','','g') } : '';
 	push @data, $ref if $ref;
 
     # Get the list of projects respecting any search params the user entered.

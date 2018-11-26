@@ -1,0 +1,129 @@
+#nav {
+	width: 100%;
+	font-size: 1.2em;	
+}
+
+
+#nav, #nav ul {
+	z-index: 99;
+
+	float: left;
+	display: inline;
+	position: relative;
+
+	margin: 0;
+	padding: 0;
+
+	border-style: none;
+	background-color: #0B0D60;
+
+	list-style: none;
+	line-height: 1ex;
+
+	font-weight: bold;
+}
+
+#nav li {
+	float: left;
+	display: inline;
+	position: relative;
+	padding: 0;
+}
+
+#nav a {
+	display: block;
+	width: 8.3em; /* originally set to 4 smaller than width */
+	color: #FFFFFF;
+	text-decoration: none;
+	text-align: left;
+	padding: 0.25ex 0 0.35ex 0.85em;
+	line-height: 3ex;
+}
+
+#nav a.parent {
+	background: url(/images/main/menu/right-arrow.gif) center right no-repeat;
+}
+
+#nav li ul {
+	position: absolute;
+	left: -999em;
+	height: auto;
+	font-weight: normal;
+	margin: 0;
+	background-color: #0B0D60;
+	width: 11em;
+}
+
+#nav li li {
+	padding-right: 0;
+	padding-bottom: 0px;
+	width: 11em;
+}
+
+#nav li ul a {
+	width: 11em;
+	font-size: 0.85em;
+	text-align: left;
+	padding: 0 1em;
+	line-height: 4ex;
+}
+
+#nav li ul ul {
+	margin: -3.4ex 0 0 11em;
+}
+
+/* Start Holly Hack \*/
+* html #nav li ul ul {
+	margin-left: 0;
+}
+/* End Holly Hack */
+
+#nav li:hover ul ul, #nav li:hover ul ul ul, #nav li.sfhover ul ul, #nav li.sfhover ul ul ul {
+	left: -999em;
+}
+
+#nav li:hover ul, #nav li li:hover ul, #nav li li li:hover ul, #nav li.sfhover ul, #nav li li.sfhover ul, #nav li li li.sfhover ul {
+	left: auto;
+}
+
+#nav li:hover, #nav li.sfhover {
+	background-color: #1D23F4;
+}
+
+
+#nav #home, #nav #home a {
+    padding-right: 0;
+    padding-left: 0;
+    width: 130px;
+    text-align: center;
+}
+
+
+/* Holly Hack \*/
+* html #nav #homeAdmin,
+* html #nav #homeEmployee {
+	margin-left: -65px;
+}
+/*  */
+
+
+/* Holly Hack \*/
+* html #nav li ul ul {
+	margin-left: 11em;
+}
+/* Aligns Secondary SubMenu Properly in IE Win */
+
+/* Holly Hack \*/
+* html #nav li {
+	padding-bottom: 2px;
+}
+/* Adds 2px to the Bottom of Nav Items in IE Win */
+
+/* Holly Hack \*/
+* html #nav
+{
+	margin-top: -3px;
+}
+/* Moves Nav Up 3px, flush /w Banner Bottoms in IE Win */
+
+

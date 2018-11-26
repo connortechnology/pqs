@@ -1,0 +1,174 @@
+/* project.css is used for project pages with common elements */
+.label {font-weight: normal; }
+
+/* MAIN CONTAINERS */
+#project-view {
+    border: 1px solid #0B0D60;
+    margin-bottom: 2ex;
+    padding: 2ex 2ex 1ex 2ex; /* Top, Right, Bottom, Left */
+}
+
+#project-view h1 {
+    background-color: #0B0D60;
+    color: #FFFFFF;
+}
+
+#project {
+    border: 1px solid #0B0D60;
+    margin: 2ex 0;
+    padding: 2ex 2ex 1ex 2ex; /* Top, Right, Bottom, Left */
+    font-size: 0.85em;
+}
+
+#project h5 {
+    color: #FFFFFF;
+    background-color: #0B0D60;
+}
+
+#docket {padding: 2ex;}
+
+.id {
+    float: right;
+    display: inline;
+    position: relative;
+}
+
+/* PRIMARY INFORMATION CALLOUT */
+#primary_info table {
+    float: right;
+    display: inline;
+    position: relative;
+
+    margin-top: 0.25em;
+    padding: 2px 4px;
+
+    border: 1px solid #0B0D60;
+    background-color: #BFEBF0;
+}
+
+#primary_info th, #primary_info td {
+    padding: 0 0.5ex;
+    background-color: #BFEBF0;
+    border: 0;
+    text-align: right;
+    color: #000000;
+}
+
+#primary_info th {
+    padding-right: 0.5em;
+}
+
+/* SERVICE TYPE CATEGORIES */
+div.category h1, div.category h2 {
+    position: relative;
+    padding: 0 4px;
+    margin: 0;
+}
+
+div.category h5 {
+    font-size: 1em;
+    color: #FFFFFF;
+    background-color: #0B0D60;
+    border: 1px solid #0B0D60;
+}
+
+
+/* IE Fix \*/
+* html div.category h5 {width: 98.825%;}
+/* If you change the value here, check the proj view page, in IE6, to see that it will resize properly once the max width is hit */
+
+
+div.indent {
+   padding: 0 0 0 4px; /* Top, Right, Bottom, Left */
+   line-height: 1.5em;
+}
+
+/* SERVICE TYPE GROUP */
+div.group {
+    display: inline;
+    padding: 0 4px 0 4px; /* Top, Right, Bottom, Left */
+    font-size:     1em;
+    line-height:   1.6em;
+}
+
+div.group h3 {
+    display: inline;
+    font-size: 1em;
+    margin-right: 0.25em;
+}
+
+div.group a.comment {
+    float: right;
+    display: inline;
+    position: relative;
+
+    font-style: italic;
+}
+
+p.comment {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+div.signature {
+    padding: 0 4px 4px 4px; /* Top, Right, Bottom, Left */
+    line-height: 1.2em;
+}
+
+/* DOCKET TABLES */
+table.docket {
+    margin: 2px 0 2px 0; /* Top, Right, Bottom, Left */
+    width: auto;
+}
+
+table.docket td, table.docket th {
+    margin: 0;
+    padding: 1px 4px;
+    background-color: transparent;
+    border: 0;
+}
+
+table.docket th         { text-align: left; color: #1D23F4; }
+table.docket col.header { width: 110px; }
+table.docket col.data   { width: 190px; }
+
+
+/* PROJECT VIEW (SERVICES AND TOTALS) */
+col#service {               text-align: left;  }
+col#qty1    { width:  80px; text-align: right; }
+col#qty2    { width:  80px; text-align: right; }
+col#qty3    { width:  80px; text-align: right; }
+col#status  { width:  90px; text-align: right; }
+col#changes { width: 120px; text-align: right; }
+
+table.project-current-view { width: 100%; }
+
+table.project-current-view td,
+table.project-current-view th {
+    background-color: transparent;
+    border: 0;
+    text-align: left;
+}
+
+table.project-current-view tr.title th { 
+    background-color: #0B0D60; 
+    color: #FFFFFF; 
+    padding: 0.25ex 0 0.25ex 0.5em;
+}
+
+table.project-current-view td { padding: 0.25ex 0.25ex 0.25ex 0.5em; }
+
+table.project-current-view td:first-child,
+table.project-current-view th:first-child { text-align: left; }
+
+table.project-current-view .total td { text-align: right; }
+
+table.project-current-view .unit th,
+table.project-current-view .unit td { border-top: 1px solid #0B0D60; }
+
+table.project-current-view .grand th,
+table.project-current-view .grand td { border-top: 3px double #0B0D60; font-weight: bold; }
+
+table.project-current-view tr.service td:first-child { text-indent: 2ex; }
+
+

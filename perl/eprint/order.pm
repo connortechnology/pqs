@@ -246,9 +246,13 @@ sub insert_prod {
 sub add_project_to_order {
     my ( $log, $dbh, $cookie, $variable, $project_index, $order_id, $type ) = @_;
 
-	my $error = check_customer_account( $log, $dbh, $cookie, $variable, $project_index, $order_id, $type );
 
-	return ( 0, $error) if $error;
+
+	my $error;
+	#Allow user to pay with credit card instead.
+	#	my $error = check_customer_account( $log, $dbh, $cookie, $variable, $project_index, $order_id, $type );
+
+	#	return ( 0, $error) if $error;
 
 
     $order_id ||= get_unfinished_order(
@@ -1151,8 +1155,6 @@ print STDERR "CHECK ORDER INFO \n";
             $dbh, $variable->{cust_id}, $order_id
         );
 
-        my $inv;
-
 #print STDERR "ORDER TOTALS ", Dumper($order_info);
 
         foreach my $order (@{ $order_info->{projects} }) {
@@ -1178,22 +1180,27 @@ print STDERR "CHECK ORDER INFO \n";
 
         $total = $order_info->{total};
 
+
+
         my $customer_credit = eprint::customer_credit->new(
             $log, $dbh, $variable->{cust_id}
         );
 
+    	my $avail_credit = $customer_credit->available;
+
         my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
 
         $downpayment = $total * ( $downpayment / 100 );
+
         $downpayment = sprintf( '%.2f', $downpayment );
 
 		$downpayment = $total unless $downpayment > 0;
 
-	print STDERR "HAVE DP: $downpayment \n";
+		#If we have credit to cover the downpayment then we will not require one.
+		if ( $downpayment  <= $avail_credit ) {
+			$downpayment = 0;
+		}
 
-
-        my $status        = 'In Production';
-        my $pstatus       = 'Waiting For Files';
 
         my ($amount_paid) = $dbh->selectrow_array(q{
             SELECT SUM(curAmount)
@@ -1203,14 +1210,6 @@ print STDERR "CHECK ORDER INFO \n";
             }, undef, $order_id
         );
 
-        if ( $downpayment - $amount_paid > 0 ) {
-			print STDERR "CHECK FOR CREDIT DP: $downpayment \n";
-            $status = 'Pending Deposit' if $downpayment > $customer_credit->available;
-        }
-
-
-# All safeway orders require Date Approval.
-#		$status = 'Pending Date Approval';
 
         sql::update(
             $log, $dbh, 'tbl_Orders', "lngOrderID = '$order_id'",
@@ -1221,7 +1220,6 @@ print STDERR "CHECK ORDER INFO \n";
             curTotalSale   => $order_info->{total}     || 'NULL',
             curDownpayment => $downpayment             || 'NULL',
             strSessionID   => q{},
-            strStatus      => $status,
             ysnfinished    => 1,
 
             ( defined $r->param('AdministratorName')
@@ -1251,11 +1249,11 @@ print STDERR "CHECK ORDER INFO \n";
 		my $plist = [];
 
         foreach my $pid ( @{ $projects } ) {
-            sql::update(
-                $log, $dbh, 'tbl_Project_Contents',
-                "lngProjectIndex = $pid AND strStatus != 'Complete'",
-                strStatus => $status
-            );
+#            sql::update(
+			#                $log, $dbh, 'tbl_Project_Contents',
+			#                "lngProjectIndex = $pid AND strStatus != 'Complete'",
+			#                strStatus => $status
+			#            );
 
             my @delete_columns = qw(
                 txtEmployeeComments    rdbComplete
@@ -1279,11 +1277,11 @@ print STDERR "CHECK ORDER INFO \n";
 
             $dbh->do($query, undef, $pid);
 
-            sql::update(
-                    $log, $dbh, 'tbl_Projects',
-                    "lngProjectIndex = $pid AND strStatus != 'Complete'",
-                    strStatus => $pstatus
-            );
+			#            sql::update(
+			#                    $log, $dbh, 'tbl_Projects',
+			#                    "lngProjectIndex = $pid AND strStatus != 'Complete'",
+			#                    strStatus => $pstatus
+			#            );
 
             # Send a notice to the user's manager if they're filled a PDF
             # template (as that's about the same as uploading a file).
@@ -1299,7 +1297,6 @@ print STDERR "CHECK ORDER INFO \n";
             }
 
 
-            $inv = inventory_checkin($r, $log, $dbh, $order_id, $pid);
 
 			# New Feature requested by sherwood.
 			# Create project directory when it is ordered.
@@ -1317,6 +1314,8 @@ print STDERR "CHECK ORDER INFO \n";
 
 			push @{$plist}, $data;
 
+    		inventory_checkin($r, $log, $dbh, $order_id, $pid);
+
 		    
         }
 
@@ -1326,14 +1325,17 @@ print STDERR "CHECK ORDER INFO \n";
 
 
 		# Safeway  orders are set to Pending Date Approval.
-		my $pending = 1;
+		#my $pending = 1;
+
+
 
 		$variable->{dockets} = make_product_dockets($order_id, $variable);
 
-		unless ( $status eq 'Pending Deposit' ) { 
+		#unless ( $status eq 'Pending Deposit' ) { 
         	# Send notice of the order to the user and the solution owner.
-        	send_sales_order($r, $log, $dbh, $order_id, $pending, $inv);
-		}
+			#	send_sales_order($r, $log, $dbh, $order_id, $pending, $inv);
+		#}
+		
 
         # Send out a notice to the ordering user's manager (if applicable).
         eprint::user::notify_manager($r, $log, $dbh, $variable->{user_id}, 'order', {
@@ -1342,15 +1344,14 @@ print STDERR "CHECK ORDER INFO \n";
             info     => { order => $order_id, },
         });
 
+
         # We are going to manually invoice for now. Now we are back to sending
         # invoice when order is submitted.  Nope, back to manual invoice
-        
-        if ($variable->{Downpayment} > 0) {
+		#if ($variable->{Downpayment} > 0) {
 			##     send_invoice( $r, $log, $dbh, $order_id );
-        }
+		#}
 		
 
-		print STDERR "PROJECTS: ", Dumper($variable->{dockets});
 
     }
 
@@ -1361,17 +1362,25 @@ print STDERR "CHECK ORDER INFO \n";
 
     my $credit = new eprint::customer_credit( $log, $dbh, $cust_id );
 
-    my $avail_credit    = $credit->available;
+    my $avail_credit = $credit->available;
 
-print STDERR "HAVE AVAIL CREDIT: $avail_credit \n";
 
 	if ( $avail_credit < 0 ) {
        notify_overdraft( $r, $log, $dbh, $cust_id, $avail_credit );
 	}
 
-    $variable->{order_total} = $dbh->selectrow_array(q{
-        SELECT curtotalsale FROM tbl_orders where lngorderid = ?
-    }, undef, $order_id );
+	my $order = new PQS::Object::order($order_id);
+
+	my $status = $order->status_tree();
+
+	#If we are peding deposit then don't send sales order yet.
+	unless ( $status eq 'Pending Deposit' ) { 
+		my $pending = 1;
+
+      	# Send notice of the order to the user and the solution owner.
+       	send_sales_order($r, $log, $dbh, $order_id, $pending);
+	}
+
     $variable->{order_id} = $order_id;
 
     return OK;
@@ -1522,6 +1531,17 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
 					 jobname => $o->{jobname} . ' - ' . $prod->{specs}{name},
 				    };
 	}
+
+	my $custom_projects = $dbh->selectall_arrayref(q{ 
+		SELECT p.strprojectreference as jobname, p.lngprojectindex as pid 
+		FROM tbl_order_contents oc, tbl_projects p
+		WHERE oc.lngprojectindex = p.lngprojectindex AND oc.type = 'print' AND lngorderid = ? 
+	}, {Slice => {}}, $order->{lngorderid});
+
+	push @pids, @{$custom_projects};
+
+
+
 	return \@pids;
 }
 

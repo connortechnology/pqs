@@ -300,13 +300,19 @@ sub actions {
 		print STDERR "LAST FILE \n";
 		$dbh->do(q{Update tbl_projects set files = true where lngprojectindex = ? }, undef, $pid);
 
-		project_status($dbh, $pid, 'In Production');
 
-		my $sids = $dbh->selectcol_arrayref(q{
-			SELECT lngserviceindex FROM tbl_project_contents where lngprojectindex = ?}, undef, $pid);
+		#project_status($dbh, $pid, 'In Production');
 
-		eprint::service::set_status($log, $dbh, $pid, 'In Production', @{$sids});
+		#	my $sids = $dbh->selectcol_arrayref(q{
+		#		SELECT lngserviceindex FROM tbl_project_contents where lngprojectindex = ?}, undef, $pid);
+
+		#eprint::service::set_status($log, $dbh, $pid, 'In Production', @{$sids});
+		#
+
+		my $p = new PQS::Object::project($pid);
+		$p->update_status;
 		
+
 		send_notice($r, $log, $dbh, $variable, $pid);
 	}
 	elsif ( $r->param('morefiles') ) {
@@ -444,6 +450,10 @@ sub approve_files {
           AND filename = ?
     });
     $approve->execute($user->{name}, $pid, $_) for @filenames;
+
+	my $p = new PQS::Object::project($pid);
+
+	$p->update_status;
 
     return;
 }

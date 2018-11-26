@@ -41,7 +41,7 @@ sub add_link {
     my $x = shift;
     my $l = shift;
 
-    $x->{link} = "/main/order/order_history_details.html?orderid=$x->{value}" if $x->{id} eq 'lngorderid';
+    $x->{link} = "/main/order/order_history_details.html?order_id=$x->{value}" if $x->{id} eq 'lngorderid';
     $x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
     $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'strcompanyname';
     $x->{link} = "/administrator/managerial/user_profiles.html?ddmUser=$l->{lnguserid}" if $x->{id} eq 'contact';
@@ -87,8 +87,8 @@ sub dashboard_defaults {
 
 	my $dt =  $strp->parse_datetime($today);
 
-	my $s = 100;
-	my $e = 30;
+	my $s = 0;
+	my $e = 90;
 
 	$param->{startdate}   = $dt->add(days => -$s)->strftime('%m/%d/%Y') unless $param->{startdate};
 	$param->{enddate}     = $dt->add(days => $s + $e)->strftime('%m/%d/%Y') unless $param->{enddate};
@@ -215,6 +215,7 @@ sub action {
 	my ( $action, $value, $list ) = @_;
 
 	my $dbh = session::dbh;
+	my $r   = session::r;
 
 	print STDERR "HAVE VALUES ", Dumper($action, $value, $list);
 
@@ -232,7 +233,20 @@ sub action {
 		print STDERR "UPDATE PID: $action \n";
 		foreach my $p ( @{$list} ) {
 			print STDERR "SET STATUS $p, $value \n";
-			eprint::project::project_status($dbh, $p, $value );
+			if ( $value eq 'Complete' ) {
+				eprint::employee_project::complete_project($r, $dbh, $p);
+			} elsif (  $value eq 'In Production' ) {
+				#prevent completion date trigger in db;
+				eprint::project::project_status($dbh, $p, $value );
+				#Reset Completion date.
+				$dbh->do(q{UPDATE tbl_projects SET completion_date = NULL WHERE lngprojectindex = ?},undef,  $p);
+				$dbh->do(q{UPDATE tbl_projects SET files = true WHERE lngprojectindex = ?},undef,  $p);
+			} else {
+				eprint::project::project_status($dbh, $p, $value );
+			}
+
+			my $project = new PQS::Object::project($p);
+			$project->update_status();
 		}
 	} elsif ( $action eq 'OrderStatus' ) {
 		print STDERR "UPDATE ORDER \n";
@@ -253,6 +267,9 @@ sub display {
 	my $param 	= shift;
 
 	
+	my $p = new PQS::Object::project(100907);
+
+	$p->update_status();
 
 	my ($action, $value )  =  split /:/,  $param->{action};
 
@@ -288,7 +305,7 @@ sub display {
 
 
 
-	apply_sort(\@data);
+	apply_sort(\@data, $param);
 
 	page_options($var, $param);
 
@@ -303,6 +320,8 @@ sub display {
 
 	#Always Reset action box before loading page
 	$param->{action} = undef;
+	$param->{actionpid} = undef;
+	$param->{selectall} = undef;
 
 	map { $var->{__FillInForm}{$_} = $param->{$_} } keys %{$param};
 
@@ -315,6 +334,7 @@ sub display {
 
 sub apply_sort {
 	my $data = shift;
+	my $param = shift;
 
 
 	my $x = int($$data[0]->{sortdata});
@@ -327,6 +347,11 @@ sub apply_sort {
 	    @{$data} = sort { $a->{sortdata} <=> $b->{sortdata} } @{$data};
 	} else { 
 	    @{$data} = sort { $a->{sortdata} cmp $b->{sortdata} } @{$data};
+	}
+	if ( $param->{sortdirection} == -1 ) {
+
+		print STDERR "REVERSE SORT \n";
+	    @{$data} = reverse @{$data};
 	}
 }
 

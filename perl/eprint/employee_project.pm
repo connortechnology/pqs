@@ -178,17 +178,31 @@ sub complete_project {
 
 		my $log = $r->log;
 
-		$dbh->do(q{ UPDATE tbl_projects set dtmshipdate = NOW() WHERE lngprojectindex = ? } , {} , $pid );
-		sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$pid", 'strStatus', 'Complete' );
-		sql::update( $log, $dbh, 'tbl_Projects',         "lngProjectIndex=$pid", 'strStatus', 'Complete' );
 
-		my $order_id = scalar $dbh->selectrow_array(q{
-			SELECT lngorderid FROM tbl_order_contents where lngprojectindex = ? LIMIT 1
-		}, undef, $pid );
+		$dbh->do(q{ UPDATE tbl_projects set dtmshipdate = NOW() WHERE lngprojectindex = ? } , {} , $pid );
+		$dbh->do(q{ UPDATE tbl_projects set completion_date = NOW() WHERE lngprojectindex = ? } , {} , $pid );
+
+		sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$pid", 'strStatus', 'Complete' );
+
+		# sql::update( $log, $dbh, 'tbl_Projects',         "lngProjectIndex=$pid", 'strStatus', 'Complete' );
+
+
+		
+		my $p = new PQS::Object::project($pid);
+		$p->update_status();
+
+		#Update status should do allow of these things inlcluding update order.
+		#my $order_id = scalar $dbh->selectrow_array(q{
+		#	SELECT lngorderid FROM tbl_order_contents where lngprojectindex = ? LIMIT 1
+		#}, undef, $pid );
+
+		#mark_order($dbh, $order_id);
+		#
 
 # Disable for safway for now.
 #        send_project_complete_email($r, $dbh, $pid, $order_id, $$variable{cust_id});
-        mark_order($dbh, $order_id);
+
+
 		$variable->{complete} = 1;
 		$dbh->do(q{UPDATE tbl_inventory SET complete = true WHERE lngprojectindex = ?}, undef, $pid);
 }

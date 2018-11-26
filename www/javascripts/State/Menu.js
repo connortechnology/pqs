@@ -54,9 +54,9 @@ if (!State.Menu) {
     };
     // First run setup and event handling; bind to the HTML portion of the
     // menu. Takes a callback to fire on a menu item click.
-    State.Menu.init = function (callback) {
+    State.Menu.init = function (callback, controlSet) {
         // Make sure we"re in the document.
-        State.Menu.element = document.getElementById("controls");
+        State.Menu.element = document.getElementById(controlSet);
         var control = State.Menu.element;
         if (!control || control.nodeName != "DIV")
             throw "No state menu found in document.";

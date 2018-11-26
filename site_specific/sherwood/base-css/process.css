@@ -1,0 +1,5 @@
+/* ORDER SELECTION */
+table.selection col#rbd { width: 80px; text-align: left; }
+table.selection col#qty { width: 120px; text-align:	right; }
+table.selection col#unit { width: 130px; text-align: right; }
+table.selection col#price { width: 130px; text-align: right; }

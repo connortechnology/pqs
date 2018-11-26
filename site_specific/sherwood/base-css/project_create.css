@@ -1,0 +1,694 @@
+/* __________ Utilities __________ */
+
+br {
+	display: block;
+	clear: both;
+	width: 0;
+	margin: 0;
+	padding: 0;
+	line-height: 0;
+}
+
+
+/* __________ Elements __________ */
+
+fieldset table td,
+fieldset table th {
+	border: none;
+}
+
+	/* Paragraph */
+
+fieldset p {
+	padding-left: 1.5em;
+}
+
+fieldset fieldset p {
+	padding-left: 0.3em;
+	_padding-left: 0.35em;
+}
+
+	/* Label */
+
+fieldset label,
+fieldset span.label {
+	float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	width: 20em;
+	margin: 0;
+	padding: 0 0 0.5ex 3em;
+
+	line-height: 4.25ex;
+	text-align: left;
+}
+
+fieldset fieldset label,
+fieldset fieldset span.label {
+	padding-left: 1.8em;
+}
+
+* html fieldset fieldset label {
+	padding-left: 1.85em;
+}
+
+	/* Div */
+
+fieldset div {
+	float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	width: auto;
+	margin: 0;
+	padding: 0 0 1ex 0;
+
+	text-align: left;
+}
+
+	/* Header */
+
+fieldset h4,
+fieldset h5 {
+	padding: 1ex 0 0 1em;
+}
+
+	/* Input Elements */
+
+fieldset input,
+fieldset select,
+fieldset textarea {font-size: 1em;}
+
+
+fieldset textarea {
+	width: 27em;
+	height: 9ex;
+
+	margin: 0 0 2ex 0;
+	padding: 0;
+
+	font-family: "MS Sans Serif", Arial, Helvetica, sans-serif;
+}
+
+* html fieldset textarea {
+	width: 27.3em;
+	height: 10.25ex;
+}
+
+
+/* __________ Element.Classes __________ */
+
+/* table */
+fieldset table.indent-label {
+	margin-left: 2em !important
+}
+
+/* label */
+fieldset label.label {
+	float: none;
+	display: inline;
+
+	width: auto;
+	margin: 0;
+	padding: 0;
+
+	line-height: normal;
+}
+
+fieldset label.no-label {
+	width: auto;
+	padding: 0 0 0 1em;
+
+	line-height: 4.25ex;
+	text-align: left;
+}
+
+fieldset label.first {
+	width: 10em;
+	line-height: 4.25ex;
+	padding-left: 4em;
+}
+
+fieldset label.first {padding-left: 3em;}
+fieldset label.newline {width: auto; clear: both;}
+
+fieldset label.small {width: 8em;}
+fieldset label.medium {width: 14em;}
+fieldset label.large {width: 30em;}
+
+fieldset label.width {width: auto;}
+fieldset label.indent {padding-left: 23em;}
+fieldset fieldset label.indent {padding-left: 21.85em;}
+
+fieldset label.strong {font-weight: bold;}
+
+fieldset label.dollar {
+	width: auto;
+	padding: 0;
+	margin-left: -0.75em;
+	line-height: 3.25ex;
+}
+
+label.next-label-closer {
+	margin-bottom: -0.5ex;
+	padding-bottom: 0;
+}
+
+
+	/* div */
+
+/* FireFox Fix ...(yeah, sounds funny) 
+The Div is required for JS Hiding - the Class is so FireFox doesn't ThrowUp on itself */
+
+div.nothing {
+	float: none;
+	display: inline;
+
+	margin: 0;
+	padding: 0;
+	width: auto;
+}
+
+	/* Div.width */
+
+fieldset div.width {
+	clear: both;
+	width: 95%;
+	padding-left: 2.5em;
+}
+
+fieldset fieldset div.width {
+	width: 96%;
+}
+
+fieldset fieldset div.width {
+	padding-left: 1.5em;
+}
+
+* html fieldset fieldset div.width {
+	padding-left: 1.6em;
+}
+
+	/* Div.thirds label - Works with Div.width */
+
+fieldset div.thirds label,
+fieldset div.fourths label {
+	width: 33%;
+	padding: 0;
+	line-height: 2.75ex;
+}
+
+fieldset div.fourths label {
+	width: 25%;
+}
+
+* html fieldset div.thirds label input,
+* html fieldset div.fourths label input {
+	height: 17px;
+}
+
+	/* Div.restricted - Works with Div.width & Div.thirds */
+
+fieldset div.restricted {
+	width: 90.8%;
+	padding: 0 0 0 3em;
+}
+
+* html fieldset div.restricted {
+	width: 92.15%;
+}
+
+fieldset div.restricted label {
+	line-height: normal;
+	height: auto;
+}
+
+
+fieldset div.pad-right {padding-right:2em;}
+
+	/* DIV.INDENT-X */
+	/* Div.indent-regular - fixes indent mis-alignment under Project Create */
+
+fieldset div.indent-regular {
+	margin-left: 22.9em !important;
+}
+
+* html fieldset div.indent-regular {
+	margin-left: 0 !important;
+	padding-left: 22.95em !important;
+}
+
+fieldset .indent-input {
+	margin-left: 21.9em !important;
+}
+
+* html fieldset .indent-input {
+	margin-left: 0 !important;
+	padding-left: 21.95em !important;
+}
+
+
+	/* input */
+
+fieldset input.max {width: 27em;}
+
+fieldset input.override {margin: 0 0 0 0.5em;}
+
+fieldset input.first,
+fieldset select.first,
+fieldset textarea.first {margin-left: 3em;}
+
+fieldset fieldset input.first,
+fieldset fieldset select.first,
+fieldset fieldset textarea.first {margin-left: 1.8em;}
+
+* html fieldset fieldset input.first,
+* html fieldset fieldset select.first,
+* html fieldset fieldset textarea.first {margin-left: 1.85em;}
+
+
+fieldset input.indent,
+fieldset select.indent,
+fieldset textarea.indent {margin-left: 27em;}
+
+/* Holly Hack \*/
+* html fieldset input.indent,
+* html fieldset select.indent,
+* html fieldset textarea.indent {margin-left: 18.7em;}
+/* Win IE fix - likely due to differences between IE's default font size*/
+
+
+/* __________ Pure .Classes __________ */
+
+
+fieldset .no-pad {padding: 0;}
+fieldset .no-pad-bot {padding-bottom: 0;}
+
+fieldset .no-marg-bot {margin-bottom: 0;}
+
+fieldset .marg-top {margin-top: 1ex;}
+
+fieldset .marg-bot-half {margin-bottom: 0.5ex;}
+
+
+/* __________ Specialized IDs __________ */
+
+	/* #templates */
+
+fieldset#templates {
+	margin: 0 auto;
+	text-align: center;
+}
+
+fieldset#templates div {
+	overflow: visible;
+
+	float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	width: 24%;
+	margin: auto;
+	padding: 2ex 0;
+
+	text-align: center;
+}
+
+fieldset#templates label {
+	float: none;
+	display: inline; 
+	width: auto;
+	margin: auto;
+	padding: 0;
+	line-height: normal;
+	text-align: center;
+}
+
+fieldset#templates div image {
+	margin: auto;
+	text-align: center;
+}
+
+
+/* __________ Pricing __________ */
+
+h2#pricing_title {
+	float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+    font-size: 1.2em;
+
+	width: 4.55em;
+	_width: 4.8em;
+	
+	margin-bottom: -2px;
+	padding-left: 0.8em;
+	_padding-left: 1.25em;
+	padding-bottom: 2px;
+	
+	background-color: #AACCFF;
+	border: 2px solid #0B0D60;
+	border-bottom-width: 0;
+}
+
+div#pricing {
+	_height: 1%;	/* IE6 Float Fix */
+
+	margin-bottom: 1.5ex;
+	_margin-bottom: 4ex;
+	_padding-top: 1ex;
+	padding-left: 3em;
+	
+	background-color: #AACCFF;
+	border: 2px solid #0B0D60;
+}
+
+div#pricing input {font-size: 1em;}
+
+div#pricing span.label,
+div#pricing span.currency,
+div#pricing span.price {
+	float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+	
+	padding-top: 2ex;
+	padding-bottom: 2.5ex;
+}
+
+div#pricing span.label {
+	width: 19.25em;
+	margin: 0;
+	padding-left: 1em;
+}
+
+div#pricing span.total {
+	margin-top: -3px;
+	border-top: 3px double #000000;
+}
+
+div#pricing table {
+	width: 95%;
+	padding: 0;
+	
+	border: 0;
+}
+
+div#pricing table th,
+div#pricing table td {
+	margin: 0;
+	padding: 0;
+
+	border: 0;
+	vertical-align: top;
+	text-align: right;
+}
+
+div#pricing table th {
+	border-bottom: 1px solid #000000;
+}
+
+div#pricing table td.each {
+	padding-left: 0.4em;
+	text-align: left;
+}
+
+div#pricing table td.quantity,
+div#pricing table td.service {
+	padding-left: 2em;
+	text-align: left;
+}
+
+div#pricing table td.total {
+	border-left: 4px double #000000;
+	_border-left: 3px double #000000;
+}
+
+div#pricing tr.new-quantity td {
+	padding-top: 2ex;
+}
+
+div#pricing tr.each td {
+	color: #0B0D60;
+}
+
+/* __________ Existing IDs __________ */
+
+fieldset table#colours-1,
+fieldset table#colours-2 {
+	float: left;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	width: auto;
+	margin: 0;
+	padding: 0;
+}
+
+fieldset table#colours-1 td,
+fieldset table#colours-1 th,
+fieldset table#colours-2 td,
+fieldset table#colours-2 th {
+	margin: 0;
+	padding: 0 2em 0 0;
+}
+
+
+
+fieldset table#colours-1 td.none,
+fieldset table#colours-2 td.none {
+	display: none;
+
+	width: 0;
+	margin: 0;
+	padding: 0;
+}
+
+div#format,
+div#hidelf,
+div#project_types {
+	float: none;
+	clear: none;
+	width: auto;
+	height: auto;
+	margin: 0;
+	padding: 0;
+	font-size: inherit;
+}
+
+table#multiversion td {
+	margin: 0;
+	padding-right: 0;
+}
+
+
+
+/* __________ Specialized Classes __________ */
+
+.press-runstyle {height: auto;}
+.plates-pressSheetQuantity-webRollQuantity {height: 20ex;}
+.specifications-quantities {height: 20ex;}
+
+
+fieldset label.override {
+	padding-top: 0.85ex;
+	padding-left: 0.5em;
+}
+
+fieldset label.override-post-label {
+	padding-top: 0.85ex;
+	padding-left: 1.3em;
+}
+
+/* __________ Colours & Coatings __________ */
+
+fieldset#side1,
+fieldset#side2 {
+	padding-bottom: 0.5ex;
+}
+
+
+fieldset.ink {padding-bottom: 0;}
+
+
+
+	/* PMS Colour Fieldset */
+
+fieldset.colours-coatings fieldset.ink fieldset.pms { 
+    margin: 10px auto;
+}
+
+fieldset.colours-coatings fieldset.pms input.pms-colour {
+	margin: 0 0 0 0.5em;
+}
+
+fieldset.colours-coatings fieldset.ink fieldset.pms input.pms-colour,
+fieldset.colours-coatings fieldset.pms input.pms-percent {
+	margin: 0;
+}
+
+fieldset.pms input.pms-colour { width: 6em; }
+fieldset.pms input.pms-percent { width: 4em; }
+
+fieldset.pms input.pms-pallet {
+	width: auto;
+	margin: 2px 2px 0 0;
+	padding-left: 0;
+	padding-right: 0;
+}
+
+	/* MV ChkBoxes */
+
+fieldset label.indent-process-mv {
+	padding-left: 4em;
+	padding-right: 0;
+}
+
+fieldset label.top-process-mv {
+	padding-top: 0.65ex;
+}
+
+	/* Linking Side 1 & 2 */
+
+div#side2_linked {
+	display: none;
+
+	float: none;
+	clear: none;
+
+	position: absolute;
+	top: 30%;
+	left: 1%;
+	_left: 5%;
+	z-index: 88;
+
+	width: 90%;
+
+	margin: 0;
+	padding: 1.5ex 0.5em;
+
+	border: 2px solid #0B0D60;
+	background-color: #FFFFFF;
+	
+	text-align: center;
+	
+	color: #000000 !important;
+}
+
+.link-outer {
+	_height: 3ex;
+	margin: 2ex 25% -4.5ex 25%;
+	_margin-bottom: -1.85ex;
+	border: 2px solid #0B0D60;
+	border-bottom: 0;
+}
+
+.link-inner {
+	position: relative;
+	margin: -2ex auto 1ex auto;
+	padding-bottom: 3ex;
+	_padding-bottom: 0ex;
+	border: 0;
+	text-align: center;
+}
+
+.linkage {
+	float: none;
+	display: inline;
+
+	padding: 0 1em;
+	background-color: #FFFFFF;
+}
+
+
+/* __________ Additional Service Tabs __________ */
+
+fieldset div.tab-title-container {
+	position: absolute;
+	top: 0;
+	left: 0.3em;
+	
+	margin: 0;
+	padding: 0;
+}
+
+fieldset div.tab-title {
+	cursor: pointer;
+
+	margin: 0 0.2em 0 0;
+	padding: 0.5ex 1em;
+
+	background-color: #AACCFF;
+	border: 2px solid #0B0D60;
+
+	color: #000000;
+}
+
+fieldset div.tab-active {
+	background-color: #FFFFFF;
+	border-bottom-color: #FFFFFF;
+	color: #000000;
+}
+
+fieldset fieldset.tab-fieldset {
+	margin: 0;
+	padding: 0 1.2em;
+
+	border: 0;
+}
+
+fieldset fieldset.tab-fieldset legend {
+	display: none;
+}
+
+fieldset div.tab-hover {
+	background-color: #1D23F4;
+	color: #FFFFFF;
+}
+
+fieldset div.tab-instructions {
+	display: none;
+	width: 99%;
+}
+
+
+/*__________ MultiVersion __________*/
+
+
+fieldset fieldset input.multiversion {
+	float: right;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	margin-right: 1.1em;
+	
+}
+
+fieldset fieldset fieldset input.multiversion {
+	margin-right: 0;
+}
+
+span.multiversion-label {
+	float: right;
+	clear: none;
+	display: inline;
+	position: relative;
+
+	margin: -1ex 0 -1.4ex 0;
+	padding-right: 2.8em;
+}
+
+span.multiversion-label img {
+	position: relative;
+
+	margin: 1.1ex 0 -1.2ex 0;
+}

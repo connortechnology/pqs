@@ -1,0 +1,764 @@
+@media screen {
+	html, body
+	{
+		margin: 0;
+		padding: 0;
+		border: none;
+	
+		font-size: 100.1%;
+		font-family: Verdana, Arial, Helvetica, sans-serif;
+	}
+	
+	body {font-size: 0.7em;}
+	
+	form {
+		display: inline;
+		margin: 0;
+		padding: 0;
+	}
+
+    .l { text-align: left; }
+    .c { text-align: center; }
+    .r { text-align: right; }
+
+    input[type="submit"].r, 
+    input[type="button"].r, 
+    input.button.r, 
+    img.r                    { float: right; }
+
+    .numeric { text-align: right; }
+
+    /* LINKS */
+
+    /* Normal text links. */
+	a { text-decoration: none; }
+	a:link    { color: #1D23F4; }
+	a:visited { color: #1D23F4; }
+	a:hover   { color: #0B0D60; }
+	a:active  { color: #0B0D60; }
+
+
+    /* Link Button */
+	a.button         { background-color: #1D23F4; border-color: #0B0D60; color: #FFFFFF; white-space: nowrap !important;}
+	a.button:link    { background-color: #1D23F4; border-color: #0B0D60; color: #FFFFFF;}
+	a.button:visited { background-color: #1D23F4; border-color: #0B0D60; color: #FFFFFF;}
+	a.button:hover   { background-color: #0B0D60; border-color: #0B0D60; color: #FFFFFF;}
+	a.button:active  { background-color: #0B0D60; border-color: #0B0D60; color: #FFFFFF;}
+
+
+    /* Footer Links */
+	#footer a:link    { color: #FFFFFF; }
+	#footer a:visited { color: #FFFFFF; }
+	#footer a:hover   { color: #AACCFF; }
+	#footer a:active  { color: #AACCFF; }
+
+
+
+    /* ELEMENTS */
+
+    /* Headers */
+	h1 {color: #0B0D60;}
+	.title-section {color: #0B0D60;}
+
+	h1, h2, h3, h4, h5, h6 {
+		margin: 0 0 0.8ex 0;
+		padding: 0;
+	}
+
+
+	h1 {font-size: 1.4em;}
+	h2 {font-size: 1.3em;}
+	h3 {font-size: 1.2em;}
+	h4 {font-size: 1.1em;}
+	h5 {font-size: 1em;}
+	h6 {font-size: 0.9em}
+
+
+	/* Holly Hack - for Tabs & Content Hiding?? \*/
+	* html h1,
+	* html h2,
+	* html h3,
+	* html h4,
+	* html h5,
+	* html h6 {position: relative;}
+	/* */
+
+
+	/* Fieldset */
+	fieldset legend {color: #000000;}
+
+
+    /* Tables */
+	table {
+		border-collapse: collapse;
+
+		margin: 1ex 0 2ex 0;
+		padding: 0;
+
+		font-family: Verdana, Arial, Helvetica, sans-serif;
+	}
+
+	td, th {
+		margin: 0;
+		padding: 0.1ex 1em 0.25ex 1em;
+		
+		background-color: #FFFFFF;
+		border: 1px #0B0D60 solid;
+		
+		color: #0B0D60;
+	}
+
+	th {
+		background-color: #0B0D60;
+	
+		white-space: nowrap;
+		text-align: center;
+	
+		color: #FFFFFF;
+	}
+
+	/* Table Specific Classes */
+
+    /* Greenbar effect */
+    tr.r0 td, tr.even td { background-color: #AACCFF; }
+
+	table.colRow tr.colRow td,
+	tr.colRow td {
+		background-color: #AACCFF;
+		color: #0B0D60;
+	}
+
+
+	table.colRow tr.colRow td a:link,
+	tr.colRow td a:link { color: #0B0D60; }
+	
+	table.colRow tr.colRow td a:visited,
+	tr.colRow td a:visited { color: #0B0D60; }
+	
+	table.colRow tr.colRow td a:hover,
+	tr.colRow td a:hover { color: #1D23F4; }
+	
+	table.colRow tr.colRow td a:active,
+	tr.colRow td a:active { color: #1D23F4; }
+	
+	table.tighter-td td,
+	table.tighter-td th,
+	tr.tighter-td td,
+	tr.tighter-td th,
+	td.tighter-td,
+	th.tighter-td {padding-left: 0.5em; padding-right: 0.5em;}
+	
+	table.no-formatting th,
+	table.no-formatting td,
+	tr.no-formatting th,
+	tr.no-formatting td,
+	th.no-formatting,
+	td.no-formatting {
+		background-color: transparent;
+		border: 0;
+		color: #000000;
+	}
+	
+	table.no-background td,
+	table.no-background th,
+	tr.no-background td,
+	tr.no-background th,
+	td.no-background,
+	th.no-background {
+		background-color: transparent;
+	}
+	
+	table.no-border td,
+	table.no-border th,
+	tr.no-border td,
+	tr.no-border th,
+	td.no-border,
+	th.no-border {
+		border: 0;
+	}
+	
+	table.no-th-border th,
+	tr.no-th-border th,
+	th.no-th-border {
+		border: none;
+	}
+	
+	table.no-td td,
+	tr.no-td td,
+	td.no-td {
+		background-color: transparent;
+		color:#000000;
+	}
+	
+	table.no-th th,
+	tr.no-th th,
+	th.no-th {
+		background-color: transparent;
+		color:#000000;
+	}
+	
+	table.th-td th,
+	tr.th-td th,
+	th.th-td th {
+		background-color: transparent;
+		color: #0B0D60;
+	}
+	
+	table.no-center th,
+	table.no-center td,
+	tr.no-center th,
+	tr.no-center td,
+	th.no-center,
+	td.no-center {
+		text-align: left;
+	}
+	
+	table.no-padding th,
+	table.no-padding td,
+	tr.no-padding th,
+	tr.no-padding td,
+	th.no-padding,
+	td.no-padding {
+		padding: 0;
+	}
+	
+	table.th-left th,
+	tr.th-left th {text-align: left;}
+	
+	table.th-right th,
+	tr.th-right th {text-align: right;}
+	
+	table.td-center td,
+	tr.td-left td {text-align: center;}
+	
+	table.td-right td,
+	tr.td-right td {text-align: right;}
+	
+		/* More Elements */
+	
+	p {
+		position: relative;
+		margin-top: 0;
+		margin-bottom: 1.5ex;
+	}
+	
+	img {border: none;}
+	
+	
+	
+	/* __________ Lists __________ */
+	
+	
+	/* Lists where Buttlets Are Not Visible */
+	
+	ul.non-list,
+	ul.non-list li {
+		margin: 0 0 2ex 0;
+		padding: 0;
+	
+		list-style: none;
+	}
+	
+	ul.non-list li {
+		margin: 0;
+		padding: 0;
+	
+		list-style: none;
+	}
+	
+	
+	/* __________ Buttons __________ */
+	
+		/* Button Bar */
+	
+	div.button-bar {
+		overflow: visible;
+	
+		float: none;
+		display: block;
+		position: relative;
+	
+		margin: 1px 0 1px -1px;
+		padding: 0;
+	
+		white-space: nowrap;
+	}
+	
+	
+	/* Holly Hack \*/
+	* html div.button-bar { height: 1%; }
+	/* */
+	
+	
+	/* Button Bar Indent - NOTE: Div.indent-regular also appears in Project_Create.CSS, and is a fix */
+	fieldset div.indent-regular {
+		width: auto;
+		margin: 0 0 0 18.9em;
+	}
+	
+	/* Holy Hack \*/
+	* html div.indent-regular {
+		margin: 0;
+		padding: 0 0 0 18.9em;}
+	/* */
+	
+	
+		/* Buttons */
+	
+	.button-bar input,
+	input.button,
+	button,
+	a.button {
+		float: left;
+		clear: none;
+		display: inline;
+		position: relative;
+	
+		width: auto;
+		margin: 0 1px 1ex 1px;
+		padding: 0.25ex 0.5em 0.5ex 0.5em;
+	
+		background-color: #1D23F4;
+		border: 1px solid #0B0D60;
+	
+		color: #FFFFFF;
+		font-family: Verdana, Arial, Helvetica, sans-serif;
+		font-size: 0.85em;
+		font-weight: normal;
+	}
+	
+	
+	/* \*/
+	* html .button-bar input,
+	* html input.button,
+	* html button,
+	* html a.button {padding: 0.25ex 0 0.5ex 0;}
+	/* */
+	
+	input.no-float {
+		float: none;
+		clear: none;
+		display: block;
+		position: relative;
+	}
+	
+	input.centered {
+		float: none;
+		clear: none;
+		display: block;
+		position: relative;
+	
+		margin: auto;
+	}
+	
+	
+	/* Right Aligned Buttons within .button-bar */
+	.button-bar input.right,
+	.button-bar a.right,
+	input.right,
+	a.right {
+		float: right !important;
+		display: inline;
+		position: relative;
+	
+		margin: 1px 0 1px 1px;
+	}
+	
+		/* Visual Style for Buttons */
+	
+	
+	a.button {padding: 0.6ex 1ex;}
+	
+	
+	input.button:hover, button:hover, a.button:hover, input.over {
+		cursor: pointer;
+		background-color: #0B0D60;
+		border: 1px solid #0B0D60;
+		color: #FFFFFF;
+	}
+	
+	a.button {padding: 0.5ex 0.8em 0.6ex 0.8em;}
+	
+	/* \*/
+	* html a.button {padding: 0.5ex 1.85em 0.8ex 1.85em;}
+	/* */
+	
+	
+	/* __________ Tool Tips __________ */
+	
+	.tip { cursor: help; color: #1D23F4; }
+	
+	span.tip {float: none; display: inline;}
+	
+	/* __________ Tabs __________ */
+	
+	.tab {
+		float: right;
+		display: inline;
+		position: relative;
+	
+		height: 27px;
+		margin: -10px 0 0 5px;
+		padding: 0px 4px;
+		
+		border-width: 0px 1px 1px 1px;
+		border-color: #0B0D60;
+		border-style: solid;
+		
+		background-color: #AACCFF;
+		
+		white-space: nowrap;
+		text-align: right;
+		color: #000000;
+		font-size: 0.9em;
+	}
+	
+	.tab a {cursor: pointer;}
+	.tab a:link { color: #000000; }
+	.tab a:visited { color: #000000; }
+	.tab a:hover { color: #1D23F4; }
+	.tab a:active { color: #1D23F4; }
+	
+	
+		/* Account Tab */
+	
+	#accountValue,
+	#accountLabel {
+		float: left;
+		clear: none;
+		display: inline;
+	
+		white-space: nowrap;
+		text-align: left;
+	}
+	
+	#accountLabel {font-weight: bold; text-align: right;}
+	
+	
+	/* Quick find project box (takes you to project number) */
+	
+	#quick-project label,
+	#quick-project form,
+	#quick-project input {
+		float: left;
+		clear: none;
+		display: inline;
+		position: relative;
+	}
+	
+	#quick-project form {
+		width: auto;
+		height: auto;
+		margin: 0;
+		padding: 0;
+	}
+	
+	#quick-project label {
+		margin: 0;
+		padding: 1.5ex 0 0 0;
+		color: #000000;
+	}
+	
+	#quick-project input {
+		width: 3.5em;
+		margin: 0.8ex 0 0 2px;
+		font-size: 1em;
+	}
+	
+	#quick-project input.button {
+		width: auto;
+		margin: 1.05ex 0 0 2px;
+		padding: 0;
+		border: 1px solid black;
+		font-size: 0.85em;
+	}
+	
+	/* \*/
+	* html #quick-project input.button { margin-top: 0.9ex; }
+	/* */
+
+
+	/* __________ Panels __________ */
+
+	div.panel-set {
+		width: 100%;
+		margin: 0;
+		padding: 0;
+	}
+	
+	/* Holly Hack \*/
+	* html div.panel-set {height: 1%;}
+	/* */
+	
+	div.one-third,
+	div.two-thirds,
+	div.one-fourth,
+	div.one-fifth,
+	div.one-sixth {
+		float: left;
+		clear: none;
+		display: inline;
+		position: relative;
+	
+		margin: 0;
+		padding: 0;
+	}
+	
+	
+	/* Evenly Spaced Panels */
+	
+	/* IE Fix in Core CSS Header "Include" - the one in the /includes directory */
+	
+	div.one-third {
+		width: 32%;
+		margin-right: 2%;
+	}
+	
+	div.one-fourth {
+		width: 24%;
+		margin-right: 1.333%;
+	}	
+	
+	div.one-fifth {
+		width: 19%;
+		margin-right: 1.25%;
+	}
+	
+	div.one-sixth {
+		width: 15%;
+		margin-right: 2%;
+	}
+
+	
+		/* Misc Spaced Panels */
+	
+	div.two-thirds {
+		width: 66%;
+		margin-right: 2%;
+	}
+	
+	
+	div.last-panel {margin-right: 0; margin-bottom: 2ex;}
+	
+	div.panel {
+		margin: 0;
+		padding: 0;
+	
+		background-color: #FFFFFF;
+		border: 1px solid #0B0D60;
+	
+		text-align: center;
+		
+		color: #0B0D60;
+	}
+	
+	
+	div.panel h3 {
+		padding: 0.5em;
+	
+		background-color: #1D23F4;
+		border-bottom: 1px solid #0B0D60;
+		
+		color: #FFFFFF;
+	}
+	
+	div.panel p {padding: 7px 10px;}
+	
+	div.image {
+		width: 100%;
+		margin: 0;
+		padding: 0;
+		
+		text-align: center;
+	}
+	
+	div.image img {
+		margin: 0;
+		padding: 0;
+	}
+	
+	
+	/* __________ Common Panel Class__________ */
+	
+	div.panel a:link,
+	table.panels a:link { color: #0B0D60; }
+	div.panel a:visited,
+	table.panels a:visited { color: #0B0D60; }
+	div.panel a:hover,
+	table.panels a:hover { color: #1D23F4; }
+	div.panel a:active,
+	table.panels a:active { color: #0B0D60; }
+	
+	div.panel h3 a:link,
+	table.panels h3 a:link { color: #FFFFFF; }
+	div.panel h3 a:visited,
+	table.panels h3 a:visited { color: #FFFFFF; }
+	div.panel h3 a:hover,
+	table.panels h3 a:hover { color: #0B0D60; }
+	div.panel h3 a:active,
+	table.panels h3 a:active { color: #FFFFFF; }
+	
+	
+	div.invisible-panel,
+	div.invisible-panel div.panel,
+	table.invisible-panel td {
+		background-color: #FFFFFF;
+		color: #000000;
+	}
+	
+	div.invisible-panel p {margin: 0 0 1.5ex 0; padding: 0;}
+	
+	/* __________ Table Panels __________ */
+	
+	
+	
+	
+	table.two td {width: 49.98376%;}
+	table.three td {width: 33.30086%;}
+	table.four td {width: 24.93506%;}
+	table.five td {width: 19.93506%;}
+	table.six td {width: 15.31385%;}
+	
+	
+	table.panels {
+		table-layout: fixed;
+		border-collapse: separate;
+	
+		width: 100%;
+		margin: -8px 0 0 0;
+		padding: 0;
+	
+		background-color: transparent;
+	}
+	
+	/* Holly Hack \*/
+	* html table.panels {
+		width: auto;
+		margin: -8px 0 0 ;
+	}
+	/* */
+	
+	table.panels td {
+		margin: 0;
+		padding: 0;
+	
+		background-color: #FFFFFF;
+		border: 1px solid #0B0D60;
+	
+		vertical-align: top;
+		text-align: center;
+	
+		color: #0B0D60;
+	}
+	
+	table.panels td h3 {
+		padding: 0.5em;
+	
+		background-color: #1D23F4;
+		border-bottom: 1px solid #0B0D60;
+	
+		color: #FFFFFF; 
+	}
+	
+	table.panels td p {padding: 0 10px;}
+	
+	
+	.panel-section {
+		margin-bottom: 10px;
+		border: 1px solid #0B0D60;
+	}
+	
+	.panel-section h3 {
+		padding: 5px 0;
+	
+		background-color: #0B0D60;
+		border-bottom: 1px solid #0B0D60;
+	
+		text-align: center;
+	
+		color: #FFFFFF;
+	}
+	
+	.panel-section h3 a:link { color: #F3FCFE; }
+	.panel-section h3 a:visited { color: #F3FCFD; }
+	.panel-section h3 a:hover { color: #BFEBF8; }
+	.panel-section h3 a:active { color: #F3FCFC; }
+	
+	
+	/* __________ Utilities __________ */
+	
+	.error { color: #FF0000 !important; }
+	
+	input.disabled,
+	select.disabled,
+	textarea.disabled {
+		background-color: #AAAAAA !important;
+		color: #888888 !important;
+	}
+	
+	
+	#pqs-logo { display: none; }
+	
+	.transparent { background-color: transparent; }
+	
+	.float-right {
+		float: right;
+		clear: none;
+		display: inline;
+		position: relative;
+	}
+	
+	br.clear { /* Use a line-break with this class to clear float containers */
+		display: block;
+		clear: both;
+		height: 0;
+		margin: 0;
+		line-height: 0;
+		font-size: 0;
+		visibility: hidden;
+	}
+	
+	br.right {clear: right;}
+	br.left {clear: left;}
+	
+	
+	.margin-top {margin-top: 1.5ex;}
+	
+	.align-left {text-align: left;}
+	.align-right {text-align: right;}
+	
+	
+	/* __________ Bugs __________ */
+	
+		/* FireFox */
+	
+	/* If the first element after the Legend in a Fieldset isn't a Paragraph, put this there: <p class="none">&nbsp;</p> */
+	fieldset p.none {
+		visibility: hidden;
+		width: 0;
+		margin: 0;
+		padding: 0;
+		line-height: 0;
+		font-size: 0;
+	}
+	
+	/* First used for Project View / Docket Page because Hidden Input Elements were appearing as little 2x2px dots */
+	input[type="hidden"] { display: none;}
+	
+	
+	* html .ie-fix-image { margin-bottom: -2px; }
+
+}
+ 
+@media print {   
+	#nav,
+	#sidebar,
+	#headerTabs {
+		display: none;
+	}
+
+	body {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 9pt;
+	}
+}

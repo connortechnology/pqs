@@ -242,6 +242,8 @@ sub search {
                p.lngprojectindex      AS id, 
                p.strprojectreference  AS "name",
 			   p.tech				  AS tech,
+			   p.lngpriority		  AS priorityid,
+			   (Select name FROM priority WHERE id = p.lngpriority)  AS priority,
 			   delivery_date(p.lngprojectindex)::date AS duedate
         FROM tbl_projects p, tbl_order_contents t,
              tbl_customer c, tbl_customer_users u,
@@ -252,7 +254,7 @@ sub search {
           AND t.lngorderid      = o.lngorderid
           AND NOT o.cancelled
           @where
-        ORDER BY 5, 1, 3
+        ORDER BY priorityid desc, 1, 3
     });
 
     # Not sure if it's faster to prepare this now and loop over it, or to do
@@ -288,8 +290,11 @@ sub search {
                          ? '' : uc(substr($_->{state}, 0, 1)),
         } while ($_ = $status->fetchrow_hashref);
 
+
         push @projects, $project;
+
     }
+
 use Data::Dumper;
 print STDERR "HAVE PROJECTS FOR STATUS: ", Dumper(\@projects);
 
@@ -479,6 +484,46 @@ sub aggregate_state {
     # No states means nothing's been done. 
     return undef;
 }
+
+sub project_priority {
+    my ($r, $t) = @_;
+
+    # We only support setting the state through this function at this time.
+    return HTTP_METHOD_NOT_ALLOWED unless $r->method eq 'POST';
+
+    # Simple argument assertions.
+    my $pid     	= $r->param('pid');   $pid   =~ tr/0-9//cd;
+    my $priority    = $r->param('priority'); $priority =~ tr/0-9//cd;
+    my $text        = $r->param('text');
+    
+    die "Integer PID,  priotiry expected. Found: ($pid, $priority)."
+        unless $pid and $priority >= 0; # 0 state allowed
+
+    # TODO: Only allow alphanumeric, whitespace, and punctuation here.
+    my $comment = $r->param('comment') || undef;
+
+
+    # Update all the project services in the category to the given state.
+    $dbh->do(q{
+        UPDATE tbl_projects 
+        SET lngpriority = ?
+        WHERE lngprojectindex = ?
+    }, {}, $priority, $pid );
+
+
+	$dbh->commit();
+
+    # TEMP: Update timestamp so the autoupdate doesn't reget the update.
+    my $now = $dbh->selectrow_array(q{
+        SELECT to_char(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI')
+    });
+    
+    # Send the resultant JS to the browser.
+    $r->content_type('text/plain; charset=utf-8');
+    print "updateStatus('priority-$pid', '$text', 1); timestamp = '$now';";
+    
+    return OK;
+};
 
 # TODO: Refactor this and project_service_state to use the same function to
 # actually modify the states.
