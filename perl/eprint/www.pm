@@ -217,7 +217,22 @@ sub parse_page {
 	use XML::Simple;
 
 print STDERR "START PARSE PAGE \n\n";
+    # The module dispatches by 'section' based on the uri.
+    my @path     = grep { $_ } split '/', $page;
+    my $filename = pop @path;
+    
+    shift @path if $path[0] eq 'site_specific';
 
+    
+    my ($first, $second) = @path;
+    
+    print STDERR "HAVE SECTIONS FIRST: $first SECOND: $second \n";
+
+
+	if ( $first eq 'notification' ) {
+		use eprint::notification;
+		eprint::notification::handler( $variable, $page );
+	}
     unless ($cookie || $variable->{error}) {
 		print STDERR "COOKIE: $cookie : ERROR: $variable->{error} \n\n";
 		my $error_page = configuration::get_value($r->log, $dbh, 'errorpage');
@@ -233,16 +248,6 @@ print STDERR "START PARSE PAGE \n\n";
 		return OK;
      }
 
-    # The module dispatches by 'section' based on the uri.
-    my @path     = grep { $_ } split '/', $page;
-    my $filename = pop @path;
-    
-    shift @path if $path[0] eq 'site_specific';
-
-    
-    my ($first, $second) = @path;
-    
-    print STDERR "HAVE SECTIONS FIRST: $first SECOND: $second \n";
 
     # The current section we're in.
     $variable->{section} = $first if defined $first;
@@ -774,6 +779,9 @@ print STDERR "MAIN -- SUB : $sub_section file: $filename \n";
             require eprint::Service::Shipping;
             eprint::Service::Shipping::print_labels($r, $log, $dbh, $variable, $r->param('ServiceIndex'));
         }
+
+		use eprint::admin_paper;
+        eprint::admin_paper::paper_edit($r, $log, $dbh, $variable)       if $filename eq 'paper_edit.html';
     }
     elsif ($sub_section eq 'supplier') {
         require eprint::rfq;

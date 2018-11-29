@@ -117,7 +117,8 @@ sub update_status {
 	}
 
 
-	if ( PQS::model::order::waiting_for_files($self->{id}) ) {
+	if ( PQS::model::order::project_status( $self->{id}, $status::order->{'WF'} ) ) {
+	#if ( PQS::model::order::waiting_for_files($self->{id}) ) {
 		$status = 'WF';
 		PQS::model::order::set_status($self->{id}, $status::order->{$status});
 		return $status::order->{$status};

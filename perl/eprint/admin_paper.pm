@@ -453,6 +453,29 @@ sub paper_edit {
 	$_ = "SELECT lngIndex, strName FROM tbl_ProjectTypes ORDER BY strName";
 	my @types = sql::sql_statement( $log, $dbh, $_ );
 
+	$variable->{pid} = $r->param('pid');
+
+	my $pricelists = $dbh->selectall_hashref(q{
+			SELECT id, name FROM    pricelist
+	},'id',{});
+
+
+	map {
+			my $prices = $dbh->selectall_hashref(q{
+					SELECT dblcost, dblmarkup, dblprice,
+					   ysndiscountable as discount, lngpaperindex as paper, strunits as units
+					FROM   tbl_paper_prices
+					WHERE  lngpaperindex = ? AND lnglistindex = ?
+			},'paper',{}, $index, $_ );
+			my @p;
+			map { push @p, $prices->{$_} } keys %{$prices};
+			$pricelists->{$_}{prices} = scalar @p ? \@p : [{paper => $index}];
+
+	} keys %{$pricelists} if $index;
+
+	$variable->{PRICELISTS} = $pricelists;
+
+
 	return OK;
 	
 } # end sub paper_price_edit
