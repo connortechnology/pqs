@@ -2481,7 +2481,9 @@ sub history_details {
         eprint::login::select_customer( $r, $log, $dbh, $variable->{cookie}, $variable );
     }
 
-    my $order_id = $r->param('order_id') || $r->param('pid');
+    my $order_id = $r->param('order_id') 
+		|| $r->param('pid')
+		|| $variable->{param}{order_id};
 
 
     $variable->{HidePricing} = 1 if $r->param('PackingSlip');

@@ -90,8 +90,8 @@ sub dashboard_defaults {
 	my $s = 0;
 	my $e = 90;
 
-	$param->{startdate}   = $dt->add(days => -$s)->strftime('%m/%d/%Y') unless $param->{startdate};
-	$param->{enddate}     = $dt->add(days => $s + $e)->strftime('%m/%d/%Y') unless $param->{enddate};
+	#$param->{startdate}   = $dt->add(days => -$s)->strftime('%m/%d/%Y') unless $param->{startdate};
+	#$param->{enddate}     = $dt->add(days => $s + $e)->strftime('%m/%d/%Y') unless $param->{enddate};
 
 	$param->{reportType} = 'Order' unless $param->{reportType} ;
 
@@ -276,7 +276,61 @@ sub action {
 sub display {
 	my $var 	= shift;
 	my $param 	= shift;
+	my $r = session::r;
+	my $log = session::log;
+	my $dbh	= session::dbh;
 	
+	my $search_type = $param->{search_type};
+
+	if ( $search_type eq 'lngprojectindex' || $search_type eq 'lngorderid' ) {
+		my $ref = lc($param->{'textsearch'});
+		$ref =~ /(\d*)/;
+
+		my $is_num = eprint::print_project::is_integer($ref); 
+		
+		my $redirect;
+		my $cust;
+		my $pid;
+		if ( $search_type eq 'lngprojectindex' ) {
+			($pid, $cust) = $is_num ? $dbh->selectrow_array(q{
+				SELECT lngprojectindex, lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?
+			}, undef, $ref) : undef;
+
+			print STDERR "HAVE SEARCH: $search_type, PID: $pid, CUST: $cust, REF: $ref \n";
+
+			if ( $pid ) {
+				$var->{param}{pid} = $pid;
+				$redirect = "/main/proj/proj_view.html?pid=$pid";
+			}
+		}
+
+		if ( $search_type eq 'lngorderid' ) {
+
+			my $order;
+			my $ocust;
+			($order, $ocust)	= $1 ? $dbh->selectrow_array(q{
+				SELECT lngorderid, lngcustomerid FROM tbl_orders WHERE lngorderid = ?
+			}, undef, $1) : undef;
+
+			print STDERR "HAVE SEARCH: $search_type, ORDER $order, CUST: $cust, REF: $ref \n";
+
+			if ( $order ) {
+				$var->{param}{order_id} = $order;
+				$redirect = "/main/order/order_history_details.html?order_id=$order";
+				$cust = $ocust;
+			}
+		}
+
+		if ( $redirect ) {
+			die("have cust: $cust, $var->{cookie} ") unless $cust;
+			print STDERR "HAVE REDIRECT: $redirect \n";
+			eprint::login::select_customer( $r, $log, $dbh, $var->{cookie}, $var, $cust );
+			$var->{Redirect} = $redirect;
+			return;
+		}
+	}
+	
+
 
 	my ($action, $value )  =  split /:/,  $param->{action};
 

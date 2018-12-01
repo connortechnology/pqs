@@ -24,9 +24,11 @@ sub view_services {
 
     my $pid = $r->param('ProjectIndex') 
            || $r->param('pid') 
+		   || $variable->{param}{pid} #used by dashboard.
            || continue_project($dbh, $variable->{user_id});
        $pid =~ tr/0-9//cd;
 
+	print STDERR "VIEW PROJECT: $pid \n";
 
 	if ( $r->param('start') && $r->param('end') ) {
 		custom_sort( $dbh, $pid, $r->param('start') ,  $r->param('end') );
