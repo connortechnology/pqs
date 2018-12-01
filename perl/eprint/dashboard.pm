@@ -93,6 +93,8 @@ sub dashboard_defaults {
 	#$param->{startdate}   = $dt->add(days => -$s)->strftime('%m/%d/%Y') unless $param->{startdate};
 	#$param->{enddate}     = $dt->add(days => $s + $e)->strftime('%m/%d/%Y') unless $param->{enddate};
 
+	$param->{ddmProjectStatus} = 'In Production' unless $param->{ddmProjectStatus} ;
+
 	$param->{reportType} = 'Order' unless $param->{reportType} ;
 
 	return $param;
