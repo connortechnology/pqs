@@ -93,7 +93,7 @@ sub dashboard_defaults {
 	#$param->{startdate}   = $dt->add(days => -$s)->strftime('%m/%d/%Y') unless $param->{startdate};
 	#$param->{enddate}     = $dt->add(days => $s + $e)->strftime('%m/%d/%Y') unless $param->{enddate};
 
-	$param->{ddmProjectStatus} = 'In Production' unless defined $param->{ddmProjectStatus} ;
+	#$param->{ddmProjectStatus} = 'In Production' unless defined $param->{ddmProjectStatus} ;
 
 	$param->{reportType} = 'Order' unless $param->{reportType} ;
 
@@ -143,7 +143,7 @@ sub get_data {
 		$sql_filter
 
 		ORDER by 1 DESC
-		--LIMIT 30 
+		LIMIT 50 
 	};
 
 	my $lines = $dbh->selectall_arrayref( $sql, {Slice => {}} );
