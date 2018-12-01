@@ -141,7 +141,7 @@ sub get_data {
 		$sql_filter
 
 		ORDER by 1 DESC
-		LIMIT 30 
+		--LIMIT 30 
 	};
 
 	my $lines = $dbh->selectall_arrayref( $sql, {Slice => {}} );
