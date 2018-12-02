@@ -59,7 +59,7 @@ sub sql_filters {
 	my $param = shift;
 
 	my $list = [
-		{ input => 'ddmCompanyName', 	col => 'o.lngcustomerid' },
+		{ input => 'ddmCompanyName', 	col => 'p.lngcustomerid' },
 		{ input => 'ddmSalesRep',    	col => 'c.lngsalesperson' },
 		{ input => 'ddmOrderBy',     	col => 'o.lnguserid' },
 		{ input => 'ddmProjectStatus',  col => 'p.strstatus' },
@@ -67,11 +67,29 @@ sub sql_filters {
 	];
 
 
+
 	my $text; 
 	foreach my $f ( @{$list} ) {
 		$text .= " AND $f->{col} = " . "'" .  "$param->{$f->{input}}" . "'" if $param->{$f->{input}};
-
 	}
+
+	if (  $param->{textsearch} && $param->{search_type} eq 'strprojectreference' ) {
+
+		my $searchstring = lc($param->{textsearch});
+		$searchstring =~ s/'//g;
+
+		my @words = split(' ', $searchstring);
+
+		#$searchstring = '%' . join('%', @words) . '%';
+
+		map {
+			$text .= qq{ AND lower(strprojectreference) LIKE  '\%$_\%' \n}  
+		} @words;
+	}
+	 
+
+	#$text .= qq{ AND lower(strprojectreference) LIKE  '$searchstring'}  
+
 
 	print STDERR "HAVE TEXT: $text \n";
 	return $text;
@@ -146,6 +164,23 @@ sub get_data {
 		LIMIT 50 
 	};
 
+	my $sql = qq{
+		SELECT *, p.strstatus as status 
+
+		FROM tbl_projects p, tbl_project_contents pc, tbl_customer c
+
+		WHERE 1>0 
+ 
+		AND		p.lngprojectindex = pc.lngprojectindex
+		AND 	p.lngcustomerid = c.lngcustomerid
+		AND		strservicetype = 'Printing'
+
+		$sql_filter
+
+		ORDER by 1 DESC
+		LIMIT 50 
+	};
+
 	my $lines = $dbh->selectall_arrayref( $sql, {Slice => {}} );
 
 print STDERR "HAVE SQL: $sql \n";
@@ -162,6 +197,8 @@ print STDERR "HAVE SQL: $sql \n";
 		#print STDERR "HAVE LINE $l->{lngorderid} \n";
 
 		my $p = new PQS::Object::project($l->{lngprojectindex});
+
+		$l->{lngorderid} = $p->order_id;
 
 		$l->{ptype} = $p->type_name();
 
@@ -185,7 +222,7 @@ print STDERR "HAVE SQL: $sql \n";
 
 		my $con =  $dbh->selectrow_hashref(q{ 
 			SELECT * FROM tbl_customer_users WHERE lnguserid = ?
-		}, undef, $l->{lnguserid});
+		}, undef, $l->{lnguserindex});
 		
 		$l->{contact} = "$con->{strfirstname} $con->{strlastname}";
 
@@ -467,7 +504,8 @@ sub apply_filters {
 
 		my $searchfield = $param->{search_type};
 
-		@{$data} = filter( $searchfield, $searchstring, $data);
+		# Teach searches have be moved to other areas
+		#@{$data} = filter( $searchfield, $searchstring, $data);
 	
     }
 
