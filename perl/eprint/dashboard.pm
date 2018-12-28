@@ -61,7 +61,7 @@ sub sql_filters {
 	my $list = [
 		{ input => 'ddmCompanyName', 	col => 'p.lngcustomerid' },
 		{ input => 'ddmSalesRep',    	col => 'c.lngsalesperson' },
-		{ input => 'ddmOrderBy',     	col => 'o.lnguserid' },
+		{ input => 'ddmOrderBy',     	col => 'p.lnguserindex' },
 		{ input => 'ddmProjectStatus',  col => 'p.strstatus' },
 		{ input => 'ddmCSR',  			col => 'c.csr' },
 	];
