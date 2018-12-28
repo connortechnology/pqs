@@ -1038,7 +1038,7 @@ print STDERR "QUOTE SQL: \n $_ \n";
 sub show_quote {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	my $quote_id =  $r->param('quote_id');
+	my $quote_id =  $r->param('quote_id') || $variable->{param}{quote_id};
        $quote_id =~ tr/0-9//cd;
        
 	$$variable{'QUOTE_ID'} = $quote_id;

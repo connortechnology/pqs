@@ -21,7 +21,7 @@ sub file_upload {
 	my $var;
 
 	my $list  = $dbh->selectall_arrayref(q{
-		SELECT * from tbl_projects WHERE strstatus = 'Waiting For Files' order by 1 desc Limit 5
+		SELECT * from tbl_projects WHERE strstatus = 'Waiting For Files' order by 1 desc Limit 11
 	}, {Slice => {}} ); 
 
 	print STDERR "HAVE lIST ", Dumper($list);
@@ -40,6 +40,9 @@ sub file_upload {
 		}, undef, $p->{lngprojectindex} );
 
 		print STDERR "HAVE ORDER", Dumper($order);
+
+		warn("Order Not Found for Project: $p->{lngprojectindex} \n") unless $order->{lngorderid};
+		next unless $order->{stremail};
 
 		my $to		=  $order->{stremail};	
 		$info->{pid} = $p->{lngprojectindex};

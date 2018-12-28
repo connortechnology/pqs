@@ -111,7 +111,7 @@ sub dashboard_defaults {
 	#$param->{startdate}   = $dt->add(days => -$s)->strftime('%m/%d/%Y') unless $param->{startdate};
 	#$param->{enddate}     = $dt->add(days => $s + $e)->strftime('%m/%d/%Y') unless $param->{enddate};
 
-	#$param->{ddmProjectStatus} = 'In Production' unless defined $param->{ddmProjectStatus} ;
+	$param->{ddmProjectStatus} = 'In Production' unless defined $param->{ddmProjectStatus} ;
 
 	$param->{reportType} = 'Order' unless $param->{reportType} ;
 
@@ -126,43 +126,6 @@ sub get_data {
 	my $dbh = session::dbh;
 
 	my $sql_filter = sql_filters($param);
-
-
-	my $table;
-	if ( $type eq 'Quote' ) {
-		$table = q{
-			FROM 
-				tbl_quotes q, tbl_quote_details qd, tbl_projects p, 
-				tbl_project_contents pc, tbl_customer c
-			WHERE 	q.lngquoteid = qd.lngquoteid
-			AND		qd.lngprojectindex = p.lngprojectindex
-		}
-	} elsif ( $type eq 'Order' )  {
-		$table = q{
-			FROM 
-				tbl_orders o, tbl_order_contents oc, tbl_projects p, 
-				tbl_project_contents pc, tbl_customer c
-			WHERE 	o.lngorderid = oc.lngorderid
-			AND		oc.lngprojectindex = p.lngprojectindex
-			AND 	o.ysnfinished 
-		}
-
-	}
-
-	my $sql = qq{
-		SELECT *, p.strstatus as status 
-
-		$table
-
-		AND		p.lngprojectindex = pc.lngprojectindex
-		AND 	p.lngcustomerid = c.lngcustomerid
-		AND		strservicetype = 'Printing'
-
-		$sql_filter
-
-		ORDER by 1 DESC
-		LIMIT 50 
-	};
 
 	my $sql = qq{
 		SELECT *, p.strstatus as status 
@@ -199,6 +162,7 @@ print STDERR "HAVE SQL: $sql \n";
 		my $p = new PQS::Object::project($l->{lngprojectindex});
 
 		$l->{lngorderid} = $p->order_id;
+		$l->{lngquoteid} = $p->quote_id;
 
 		$l->{ptype} = $p->type_name();
 
@@ -321,7 +285,7 @@ sub display {
 	
 	my $search_type = $param->{search_type};
 
-	if ( $search_type eq 'lngprojectindex' || $search_type eq 'lngorderid' ) {
+	if ( $search_type eq 'lngprojectindex' || $search_type eq 'lngorderid' || $search_type eq 'lngquoteid' ) {
 		my $ref = lc($param->{'textsearch'});
 		$ref =~ /(\d*)/;
 
@@ -356,6 +320,23 @@ sub display {
 			if ( $order ) {
 				$var->{param}{order_id} = $order;
 				$redirect = "/main/order/order_history_details.html?order_id=$order";
+				$cust = $ocust;
+			}
+		}
+
+		if ( $search_type eq 'lngquoteid' ) {
+
+			my $quote;
+			my $ocust;
+			($quote, $ocust) = $1 ? $dbh->selectrow_array(q{
+				SELECT lngquoteid, lngcustomerid FROM tbl_quotes WHERE lngquoteid = ?
+			}, undef, $1) : undef;
+
+			print STDERR "HAVE SEARCH: $search_type, ORDER $quote, CUST: $cust, REF: $ref \n";
+
+			if ( $quote ) {
+				$var->{param}{quote_id} = $quote;
+				$redirect = "/main/quote/quote_history_details.html?quote_id=$quote";
 				$cust = $ocust;
 			}
 		}
@@ -475,6 +456,18 @@ sub page_options {
 
 	$var->{EmployeeList} 	= ssi::make_drop_down($sql);
 
+	$sql = $dbh->selectall_arrayref(q{ 
+		SELECT lnguserid, strfirstname || ' ' || strlastname FROM tbl_customer_users 
+
+		--WHERE ( chrtype = 'A' or chrtype = 'E') 
+
+		ORDER by strlastname, strfirstname
+
+	   	--LIMIT 5 
+	}, {});
+
+	$var->{CustomerList} 	= ssi::make_drop_down($sql);
+
 
 	my $sql = $dbh->selectall_arrayref(q{ 
 		SELECT Distinct  strStatus, strStatus  FROM tbl_projects ORDER by 1
@@ -505,7 +498,7 @@ sub apply_filters {
 		my $searchfield = $param->{search_type};
 
 		# Teach searches have be moved to other areas
-		#@{$data} = filter( $searchfield, $searchstring, $data);
+		@{$data} = filter( $searchfield, $searchstring, $data);
 	
     }
 

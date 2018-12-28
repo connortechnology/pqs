@@ -194,6 +194,16 @@ sub order {
 
 }
 
+sub quote_id {
+	my $self = shift;
+	my $dbh = session::dbh;
+	my $qid = $dbh->selectrow_array(q{ 
+			select lngquoteid from tbl_quote_details where lngprojectindex = ?
+	}, undef, $self->{id});
+
+	return $qid;
+}
+
 sub order_id {
 	my $self = shift;
 	return PQS::model::order::get_orderid_by_pid($self->{id});

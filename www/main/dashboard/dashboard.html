@@ -136,6 +136,7 @@ function select_all(source) {
 				<option value="strprojectreference">Project Name</option>
 				<option value="lngprojectindex">Project Id</option>
 				<option value="lngorderid">Order Id</option>
+				<option value="lngquoteid">Quote Id</option>
 			</select>
 			<input type="submit" class="button" value="Go">
 	</form>
@@ -172,7 +173,7 @@ function select_all(source) {
 
 			<select name="ddmOrderBy" id="ddmOrderBy">
 				<option value="">Ordred By</option>
-				<?EmployeeList?>
+				<?CustomerList?>
 			</select>
 
 			<select name="ddmProjectStatus" id="ddmProjectStatus">
@@ -190,10 +191,12 @@ function select_all(source) {
 
 			<br/>
 
+			<!--
 			<div>
 				<input type="radio" value="Order" name="reportType" id="SelectOrder">Orders</input>
 				<input type="radio" value="Quote" name="reportType" id="SelectQuote">Quotes</input>
 			</div>
+			-->
 
 
 			<div class="button-bar">
