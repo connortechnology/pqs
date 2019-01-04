@@ -280,14 +280,14 @@ sub action {
 
 }
 
+sub text_search {
+	my $param = shift;
+	my $var   = shift;
 
-sub display {
-	my $var 	= shift;
-	my $param 	= shift;
 	my $r = session::r;
 	my $log = session::log;
 	my $dbh	= session::dbh;
-	
+
 	my $search_type = $param->{search_type};
 
 	if ( $search_type eq 'lngprojectindex' || $search_type eq 'lngorderid' || $search_type eq 'lngquoteid' ) {
@@ -354,8 +354,17 @@ sub display {
 			return;
 		}
 	}
-	
+}
 
+
+sub display {
+	my $var 	= shift;
+	my $param 	= shift;
+
+	if ( $param->{textsearch} ) {
+		text_search($param, $var);
+		return if $var->{Redirect};
+	}
 
 	my ($action, $value )  =  split /:/,  $param->{action};
 
