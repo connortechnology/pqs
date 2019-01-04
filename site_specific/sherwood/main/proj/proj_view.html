@@ -71,6 +71,14 @@
 			<? if not:checkout ?>
 
 				<?if is_staff ?>
+					<? if product ?> 
+						<form name="define" action="/main/proj/dispatch.html" method="post" onsubmit="return product_update_confirm(this.form);">
+							<input type="hidden" name="pid"     value="<?pid?>" />
+							<button name="action" Value="update_product">Update Product Template</button>
+						</form>
+					<? endif product ?> 
+
+					
 					<? if ( ! grep { $$variable{HeaderInfo}{status} eq $_ } qw(predefined uncalculated) ) ?>
 						<form name="define" action="/main/proj/dispatch.html" method="post" onsubmit="return project_defined_confirm(this.form);">
 							<input type="hidden" name="pid"     value="<?pid?>" />

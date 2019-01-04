@@ -1960,8 +1960,9 @@ use constant TEMPLATE_PAGE => '/template/record.html';
         edit_line_item         => \&edit_line_item,         # Add a custom line item
         add_discount           => \&add_discount,          # Create fixed price project
         add_per_item_discount  => \&add_per_item_discount, # Create fixed price project
-	complete	       => \&complete_project,
-	add_product_to_order   => \&add_product_to_order,
+		complete	       => \&complete_project,
+		add_product_to_order   => \&add_product_to_order,
+		update_product		=> \&update_product,
     );
 
     sub dispatch {
@@ -1989,6 +1990,28 @@ print STDERR "START DISPATCH: COOKIE: $cookie ACTION: $action FUNC: $func \n";
         return $func->(@_, $pid);
     }
 }
+
+
+sub update_product {
+	my ($r, $log, $dbh, $cookie, $var, $pid) = @_;
+
+	my $prod = $dbh->selectrow_array(q{SELECT prod FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
+	die("Missing Product") unless $prod;
+
+	my $dsc = $dbh->selectrow_array(q{SELECT strcomments From tbl_projects WHERE lngprojectindex = ? }, undef, $pid);
+
+	my @a = split('\*\*', $dsc);
+
+	if ( scalar @a == 3 ) {
+		$dbh->do(q{ Update tbl_projects set strcomments = ? where lngprojectindex = ?}, undef, $a[2], $pid); 
+	}
+
+	$dbh->do(q{ Update tbl_products set project = ?, description = NULL where id = ?}, undef, $pid, $prod); 
+
+	return "/main/proj/proj_view.html?pid=$pid";
+
+}
+
 
 
 sub add_product_to_order {

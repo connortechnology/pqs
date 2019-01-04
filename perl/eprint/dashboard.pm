@@ -210,6 +210,11 @@ print STDERR "HAVE SQL: $sql \n";
 		#print STDERR "HAVE DATA: ",Dumper($l);
 		push @data, $d;
 	}
+
+	map {
+		print STDERR "HAVE SQL RESULTS:$_->{fields}[0]->{value} $_->{fields}[8]->{value}  \n";
+	} @data;
+	print STDERR "# of Records: ", scalar @data , "\n";
 	return @data;
 
 }
@@ -383,6 +388,8 @@ sub display {
 
 	apply_filters($param, \@data);
 
+	print STDERR "# of records after filters: ", scalar @data , "\n";
+
 
 
 
@@ -498,7 +505,7 @@ sub apply_filters {
 		my $searchfield = $param->{search_type};
 
 		# Teach searches have be moved to other areas
-		@{$data} = filter( $searchfield, $searchstring, $data);
+		#@{$data} = filter( $searchfield, $searchstring, $data);
 	
     }
 
@@ -578,7 +585,7 @@ sub filter {
 	my @newdata;
 	foreach my $row ( @{$data} ) {
 		my @field = grep { $_->{id} eq $f } @{$row->{fields}};
-		print STDERR "HAVE FIELD: " , Dumper(\@field);
+		#print STDERR "HAVE FIELD: " , Dumper(\@field);
 		push @newdata, $row if $field[0]{value} =~ /$s/;
 	}
 

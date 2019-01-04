@@ -214,6 +214,10 @@ print STDERR "HAVE DIGIFED: $digifed PMS: $pms ************\n";
 		SELECT max(lngorderid) FROM tbl_order_contents WHERE lngprojectindex = ?
 	}, undef, $pid);
 
+	$variable->{product} =  $dbh->selectrow_array(q{
+		SELECT prod FROM tbl_projects WHERE lngprojectindex = ?
+	}, undef, $pid);
+
 	print STDERR "Comments " , Dumper($variable->{COMMENTS});
 
 

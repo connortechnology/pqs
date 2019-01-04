@@ -129,6 +129,8 @@ map {
 		$var->{filter} = PQS::model::product_filter::get($fid);
 		$var->{filter}{options} = PQS::model::product_filter::get_options($fid);
 
+		print STDERR "HAVE FILTER ", Dumper($var->{filter});
+
 		# Add blanks to add new options.
 		push @{$var->{filter}{options}}, ( {name => undef}, {name => undef}, {name => undef}); 
 	} elsif ( $r->param('New') ) {

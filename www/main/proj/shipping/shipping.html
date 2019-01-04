@@ -39,10 +39,12 @@
 	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
     <script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
     <script type="text/javascript">
-	function loadwithpage() {
+
+function loadwithpage() {
 //	needhelp(); 
 	singlemultiplesing();
 	total_qtys();
+	ship();
 //	accountnumber1();
 	getmymethod();
 }
@@ -315,6 +317,7 @@ var del = document.getElementsByName('delete');
 //alert ('end total_qtys');
 }	
 
+
 function check_qtys() {
 //	alert ('start check_qtys');
 	var qty1 = document.f1.txtQuantity1 || document.f1.hdnQuantity1;
@@ -341,8 +344,14 @@ function check_qtys() {
 	return true;
 }
 
+function shipping_required() {
+	//
+	alert('yest');
+
+}
+
 //displays for single vs multiple shipping addresses
-	function singlemultiple() {
+function singlemultiple() {
 
 	if(document.getElementById("multiple").checked == true)
 		setDisplay(elements, "");
@@ -370,6 +379,19 @@ function singlemultiplesing() {
 	 
 
 }
+
+function ship() {
+	if(document.getElementById("yesshipping").checked == true) {
+	 	document.getElementById("ShipInfo").style.display = "";
+	 	document.getElementById("multiple").disabled = "";
+	 	document.getElementById("calculate-service").style.display = "";
+	} else { 
+		if (document.getElementById("calculate-service"))
+	 		document.getElementById("calculate-service").style.display = "none";
+	 	document.getElementById("ShipInfo").style.display = "none";
+	 	document.getElementById("multiple").disabled = "true";
+	}
+}
 		
 function setDisplay(elements, value){
 	var o;
@@ -380,6 +402,7 @@ function setDisplay(elements, value){
 	}
 	return true;
 }
+
 //Auto Check No for Single Shipping Address
 //function setValue() {
  //document.getElementById("single").checked=true;
@@ -495,10 +518,19 @@ function set_ddm (ddm, v) {
 <form action="/service/<?lc:service.ref?>" autocomplete="off" method="post" name="f1" id="f1">
   <fieldset>
   <legend style="font-size:14px !important; color:#F00 !important;">Single or Multiple Shipping Destinations</legend>
- <p><strong>Do you require shipment or pick-up for more than one location?
+
+ <p><strong>Do you require this job to be shipped?
+ <input type="radio" name="shipping_required" value="1" onchange="ship();" id="yesshipping" />Yes
+<input name="shipping_required" type="radio" id="noshipping"  onchange="ship()" value="0"  />No
+</strong></p>
+
+ <p><strong>Do you require more than one shipment?
  <input type="radio" name="singlemultiple" value="1" onchange="singlemultiplesing()" id="multiple" />Yes
 <input name="singlemultiple" type="radio" id="single"  onchange="singlemultiplesing()" value="0"  />No
 </strong></p>
+
+
+
 </fieldset>  
    
 <table width="100%" id="ShipInfo">

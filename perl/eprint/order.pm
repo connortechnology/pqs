@@ -1468,6 +1468,8 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
 
 		my ($pid) = eprint::print_project::copy_project($dbh, $var, $ppid, $args);
 
+		$dbh->do(q{UPDATE tbl_projects set prod = ? WHERE lngprojectindex = ?}, undef,  $prod->{id}, $pid); 
+
 
     	my $sid 	= eprint::project::check_for_service( undef, $dbh, $pid, 'Discount');
     	my $ship 	= eprint::project::check_for_service( undef, $dbh, $pid, 'Shipping');
