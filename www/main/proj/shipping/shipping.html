@@ -476,7 +476,12 @@ function set_ddm (ddm, v) {
 
 }
 
-	function check_cost_center () {
+function check_cost_center () {
+
+	//Unless we have indicated shipping is required stop here.
+	if(!document.getElementById("yesshipping").checked == true) {
+		return true;
+	} 
 		
 		var msg = '';
 		msg += check_information();
