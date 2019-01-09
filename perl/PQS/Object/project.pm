@@ -305,7 +305,7 @@ sub delivery_method {
 
 		 $ship = $dbh->selectrow_array(q{
 			 SELECT strname FROM tbl_ship_via WHERE lngindex = ?
-		 }, undef, $results{ddmShipVia1});
+		 }, undef, $results{ddmShipVia1}) || 'Not Found';
 	 } else { 
 		 $ship = $pu;
 	 }
@@ -317,6 +317,12 @@ sub delivery_method {
 
 
 
+}
+sub date {
+
+	my $self = shift;
+
+	return $self->{specs}{dtmcreationdate};
 }
 
 sub due_date {

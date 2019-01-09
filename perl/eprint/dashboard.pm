@@ -29,7 +29,7 @@ our $dbh = session::dbh;
 	{ desc=>"Equipment", 			id=>"equipment", 			class=> "srfield", ro=>1 },
 	{ desc=>"Finished Size",		id=>"finished", 			class=> "srfield", ro=>1 },
 	{ desc=>"Time", 				id=>"time", 				class=> "smfield", ro=>1 },
-	{ desc=>"Due Date", 			id=>"duedate", 				class=> "srfield", ro=>1 },
+	{ desc=>"Project Date", 		id=>"duedate", 				class=> "srfield", ro=>1 },
 	{ desc=>"Delivery Method", 		id=>"delivery", 			class=> "smfield", ro=>1 },
 	{ desc=>"Stock", 				id=>"stock", 				class=> "lgfield", ro=>1 },
 	{ desc=>"Sheet Size", 			id=>"sheet_size",			class=> "smfield", ro=>1 },
@@ -44,7 +44,7 @@ sub add_link {
     $x->{link} = "/main/order/order_history_details.html?order_id=$x->{value}" if $x->{id} eq 'lngorderid';
     $x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
     $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'strcompanyname';
-    $x->{link} = "/administrator/managerial/user_profiles.html?ddmUser=$l->{lnguserid}" if $x->{id} eq 'contact';
+    $x->{link} = "/administrator/managerial/user_profiles.html?ddmUser=$l->{lnguserindex}" if $x->{id} eq 'contact';
     $x->{link} = "/main/proj/proj_view.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'strprojectreference';
     $x->{link} = "/main/proj/edit.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'intquantity1';
     $x->{link} = "/service/shipping?pid=$l->{lngprojectindex};sid=$l->{shipid}" if $x->{id} eq 'delivery';
@@ -85,6 +85,12 @@ sub sql_filters {
 		map {
 			$text .= qq{ AND lower(strprojectreference) LIKE  '\%$_\%' \n}  
 		} @words;
+	}
+
+	if ( $param->{startdate} && $param->{enddate} ) {
+		$text .= q{AND p.dtmcreationdate BETWEEN '} . $param->{startdate} . q{ 1:00am' AND '} . $param->{enddate} . q{ 11:59pm'};
+	} elsif( $param->{startdate} ) {
+		$text .= q{AND p.dtmcreationdate > '} . $param->{startdate} . q{ 1:00am'};
 	}
 	 
 
@@ -128,7 +134,7 @@ sub get_data {
 	my $sql_filter = sql_filters($param);
 
 	my $sql = qq{
-		SELECT *, p.strstatus as status 
+		SELECT *, p.strstatus as status, to_char(dtmcreationdate, 'YY-MM-DD') as dtmcreationdate 
 
 		FROM tbl_projects p, tbl_project_contents pc, tbl_customer c
 
@@ -174,7 +180,9 @@ print STDERR "HAVE SQL: $sql \n";
 
 		$l->{equipment} = "--";
 
-		$l->{duedate}  = $p->due_date();
+		$l->{duedate}  = $l->{dtmcreationdate};
+		#$l->{duedate}  = $p->due_date();
+
 		$l->{delivery} = $p->delivery_method();
 		$l->{stock} = $p->stock_name($l->{lngserviceindex});
 		$l->{sheets} = $p->sheet_count($l->{lngserviceindex});
@@ -520,7 +528,8 @@ sub apply_filters {
 
 
 	#Date field search
-	@{$data} = filter_date($param, $data);
+	#Moved to sql filter
+	#@{$data} = filter_date($param, $data);
 
     print STDERR "HAVE PARAMS", Dumper($param);
 

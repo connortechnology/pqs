@@ -506,10 +506,13 @@ sub display_project {
         # Shipping should display what it's shipping in it's name. 
         Shipping => sub {
             my ($s) = @_;
-            my ($name) = get_specifications(
-                $log, $dbh, $pid, $s->{id}, 'txtServiceDescription');
-            $name =~ s/^\s+(.*?)\s+$/$1/;
-            $s->{name} .= " - $name" if defined $name && $name ne ''; # 0 is OK
+			#my ($name) = get_specifications(
+			#    $log, $dbh, $pid, $s->{id}, 'txtServiceDescription');
+			#$name =~ s/^\s+(.*?)\s+$/$1/;
+			#$s->{name} .= " - $name" if defined $name && $name ne ''; # 0 is OK
+			my $p = new PQS::Object::project($pid);
+			my $name = $p->delivery_method;
+            $s->{name} = "$name" if defined $name && $name ne ''; # 0 is OK
         },
         
         # CUSTOM LINE ITEMS
