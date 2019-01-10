@@ -29,7 +29,7 @@ our $dbh = session::dbh;
 	{ desc=>"Equipment", 			id=>"equipment", 			class=> "srfield", ro=>1 },
 	{ desc=>"Finished Size",		id=>"finished", 			class=> "srfield", ro=>1 },
 	{ desc=>"Time", 				id=>"time", 				class=> "smfield", ro=>1 },
-	{ desc=>"Project Date", 		id=>"duedate", 				class=> "srfield", ro=>1 },
+	{ desc=>"Due Date", 			id=>"duedate", 				class=> "srfield", ro=>1 },
 	{ desc=>"Delivery Method", 		id=>"delivery", 			class=> "smfield", ro=>1 },
 	{ desc=>"Stock", 				id=>"stock", 				class=> "lgfield", ro=>1 },
 	{ desc=>"Sheet Size", 			id=>"sheet_size",			class=> "smfield", ro=>1 },
@@ -180,8 +180,8 @@ print STDERR "HAVE SQL: $sql \n";
 
 		$l->{equipment} = "--";
 
-		$l->{duedate}  = $l->{dtmcreationdate};
-		#$l->{duedate}  = $p->due_date();
+		#$l->{duedate}  = $l->{dtmcreationdate};
+		$l->{duedate}  = $p->due_date();
 
 		$l->{delivery} = $p->delivery_method();
 		$l->{stock} = $p->stock_name($l->{lngserviceindex});
