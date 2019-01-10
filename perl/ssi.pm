@@ -447,7 +447,7 @@ sub variable_substitution {
 		$insert_text = "<!-- START INCLUDE $file --> \n " . 
 		                $insert_text .
 		               "\n <!-- END   INCLUDE $file --> \n " 
-		unless $file =~ /title/ || ! DEBUG;
+		unless $file =~ /title/ || ! DEBUG || $file =~ /css/;
 
         $text =~ s/<!--#include\s+virtual="(.*?)"\s*-->/$insert_text/i;
     }

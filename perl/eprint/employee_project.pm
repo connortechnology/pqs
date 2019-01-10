@@ -199,8 +199,7 @@ sub complete_project {
 		#mark_order($dbh, $order_id);
 		#
 
-# Disable for safway for now.
-#        send_project_complete_email($r, $dbh, $pid, $order_id, $$variable{cust_id});
+        send_project_complete_email($r, $dbh, $pid, $p->order_id, $$variable{cust_id});
 
 
 		$variable->{complete} = 1;
@@ -285,6 +284,9 @@ sub send_project_complete_email {
     my $template = misc::load_file($r, '/email/email_template.html');
 
     my $email = encode_qp(ssi::variable_substitution($r, $log, $dbh, $template, \%hash));
+
+	use Data::Dumper;
+	print STDERR "HAVE EMAIL: ", Dumper($email);
     my @body = ('', $email, 'text/html', 'quoted-printable');
     my %mail = (
         SMTP	=> configuration::get_value($log, $dbh, 'Mail Server'),

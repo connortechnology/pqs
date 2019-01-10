@@ -135,6 +135,10 @@
           <? if ($$variable{Category} != -1) ?>
           <?loop categories?>
           <?loop service_type?>
+
+		  <? eval( if ($variable->{name} eq 'SHIPPING'  ) $variable->{name} = $variable->{html} ) ?>
+		  <? eval( $variable->{name} = $variable->{html} if $variable->{name} eq 'SHIPPING' && $variable->{html} =~ /Pick/ ) ?>
+
           <? if ( $variable->{name} eq 'Printing' ) ?>
           <?html?>
           <? else ( $variable->{name} eq 'Printing' ) ?>

@@ -357,7 +357,6 @@ sub text_search {
 		if ( $redirect ) {
 			die("have cust: $cust, $var->{cookie} ") unless $cust;
 			print STDERR "HAVE REDIRECT: $redirect \n";
-			eprint::login::select_customer( $r, $log, $dbh, $var->{cookie}, $var, $cust );
 			$var->{Redirect} = $redirect;
 			return;
 		}

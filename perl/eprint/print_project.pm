@@ -1561,6 +1561,8 @@ sub price_breakdown {
                     cuts    width_original     height_original    chosen
     );
 
+	return unless $runs;
+
 	# We need to replace equipment index with strid for display.
 	my $press_list = $dbh->selectall_hashref(q{
 		SELECT lngindex, strID from tbl_equipment
@@ -1602,7 +1604,7 @@ sub price_breakdown {
 
             \%comp;
         }
-    @$runs;
+    @$runs if @$runs;
 
     $variable->{comparisons} = \@comparisons;
 

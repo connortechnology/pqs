@@ -114,19 +114,16 @@ print STDERR "HAVE DIGIFED: $digifed PMS: $pms ************\n";
 ####### CUSTOM CODE SECTION ***********
 
 
-
-
-
-
-
-
-
-
-
-
-
     # Is the user even allowed to view this project?
     return unless project_allowed($dbh, $pid, $variable);
+
+
+
+	my ($cust) = $dbh->selectrow_array(q{
+			SELECT lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?
+	}, undef, $pid);
+
+	eprint::login::select_customer( $r, $log, $dbh, $variable->{cookie}, $variable, $cust );
 
 	#print STDERR "USER DUMPER" , Dumper($variable);
     # Determine if the project is currently in a quote or order and therefor

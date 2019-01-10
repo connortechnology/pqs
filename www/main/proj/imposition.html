@@ -19,6 +19,22 @@
 	<script type="text/javascript" src="/javascripts/other.js"></script>
 
 	<style type="text/css">
+	/* Make svg object clickable */
+	a.svg:after {
+	  content: ""; 
+	  position: absolute; 
+	  top: 0; 
+	  right: 0; 
+	  bottom: 0; 
+	  left: 0;
+	}
+
+	a.svg {
+	  position: relative;
+	  display: inline-block;
+	}
+	/* Make svg object clickable */
+
 		table,
 		table th,
 		table td { border: 0 !important; }
@@ -90,7 +106,16 @@
 				<h2>Impostion</h2>
 				<?loop layout?>
 
-							<img src="/images/imposition.svgz?sid=<?sid?>;n=<?n?>;preview=0" onClick="window.location='/images/imposition.svgz?sid=<?sid?>;n=<?n?>;preview=0'" />
+					<a class="svg" href="/images/imposition.svgz?sid=<?sid?>;n=<?n?>">
+
+					<object data="/images/imposition.svgz?sid=<?sid?>;n=<?n?>" type="image/svg+xml" width="190px" height="190px" onClick="window.location='/images/impostion.svgz?sid=<?sid?>;n=<?n?>">
+							<img width="190px" height="190px" src="/images/imposition.png?sid=<?sid?>;n=<?n?>;preview=1" />
+					</object>
+
+
+					</a>
+
+
 
 				<?endloop layout?>
 			<?endif ($variable->{layout}) ?>
