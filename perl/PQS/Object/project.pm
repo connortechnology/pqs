@@ -293,7 +293,7 @@ sub delivery_method {
 
 	return $pu unless $sid; 
 
-	my @specs = qw( deliverymethod ddmShipVia1 );
+	my @specs = qw( shipping_required ddmShipVia1 );
 	
 	my %results = eprint::service::get_specifications_pairs(
             $log, $dbh, undef, $sid, @specs
@@ -301,11 +301,11 @@ sub delivery_method {
 
 	 my $ship;
 
-	 if ( $results{deliverymethod} eq 'Standard' ) {
+	 if ( $results{shipping_required} ) {
 
 		 $ship = $dbh->selectrow_array(q{
 			 SELECT strname FROM tbl_ship_via WHERE lngindex = ?
-		 }, undef, $results{ddmShipVia1}) || 'Not Found';
+		 }, undef, $results{ddmShipVia1}) || 'Shipping';
 	 } else { 
 		 $ship = $pu;
 	 }
