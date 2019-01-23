@@ -349,9 +349,12 @@ sub best_fit {
     # We want the most images that will fit on this sheet. TODO Right now we
     # blindly prefer WT over WF when really it should be the cutting
     # complexity and bindery options that have first say.
+	
+	#Swapped Sort order, card is top of list, then check wt/wf
+	#reversed back to the what it was in older versions.
     my $node = (
-		#sort { $b->[0]       cmp $a->[0]       } # Prefere WT over WF
         sort { $b->[1]->card <=> $a->[1]->card } 
+		sort { $b->[0]       cmp $a->[0]       } # Prefere WT over WF
         grep { $_->[1] } 
              @possible
     )[0];
