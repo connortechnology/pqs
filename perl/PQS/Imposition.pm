@@ -350,7 +350,7 @@ sub best_fit {
     # blindly prefer WT over WF when really it should be the cutting
     # complexity and bindery options that have first say.
     my $node = (
-        sort { $b->[0]       cmp $a->[0]       } # Prefere WT over WF
+		#sort { $b->[0]       cmp $a->[0]       } # Prefere WT over WF
         sort { $b->[1]->card <=> $a->[1]->card } 
         grep { $_->[1] } 
              @possible
