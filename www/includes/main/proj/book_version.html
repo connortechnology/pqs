@@ -19,29 +19,49 @@
 				<tr> 
 					<th style="text-align: left;">Name</th>
 					<th>Qty 1</th>
-					<th>Qty 2</th>
-					<th>Qty 3</th>
+					<th style="display:none">Qty 2</th>
+					<th style="display:none">Qty 3</th>
 					<th>%</th>
+					<th>Color Changes</th>
 				</tr>
 			</thead>
 
 			<tbody>
-				<? eval( use Data::Dumper; print STDERR "HAVE VERSIONS ", Dumper($variable->{versions}) ) ?>
 				<?loop versions?>
 				<tr>
 					<td><input name="mv_name" value="<?name?>" type="text" /></td>
 					<td><input name="mv_qty" value="<?q1?>" type="text" class="numeric" onkeyup="update_version_quantity(this);" /></td>
-					<td><?q2?></td>
-					<td><?q3?></td>
+					<td style="display:none"><?q2?></td>
+					<td style="display:none"><?q3?></td>
 					<td class="percent"><?percent?></td>
+					<td><select name="mv_num_colours_<?id?>" id="mv_num_colours_<?id?>" >
+							<option value=1>1</option>
+							<option value=2>2</option>
+							<option value=3>3</option>
+							<option value=4>4</option>
+							<option value=5>5</option>
+							<option value=6>6</option>
+							<option value=7>7</option>
+							<option value=8>8</option>
+					</select></td>
 				</tr>
 				<?endloop versions?>
 				<tr>
 					<td><input name="mv_name" value="" type="text" onkeypress="growTable(this)" /></td>
 					<td><input name="mv_qty" value="" type="text" class="numeric" onkeyup="update_version_quantity(this);" /></td>
-					<td></td>
-					<td></td>
+					<td style="display:none"></td>
+					<td style="display:none"></td>
 					<td class="percent"></td>
+					<td><select name="mv_num_colours_<?next_version?>" id="mv_num_colours_<?next_version?>">
+							<option value=1>1</option>
+							<option value=2>2</option>
+							<option value=3>3</option>
+							<option value=4>4</option>
+							<option value=5>5</option>
+							<option value=6>6</option>
+							<option value=7>7</option>
+							<option value=8>8</option>
+					</select></td>
 				</tr>
 			</tbody>
 

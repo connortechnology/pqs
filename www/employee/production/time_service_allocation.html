@@ -14,6 +14,13 @@
 	<!--#include virtual="/includes/h2-js.html" -->
 
 	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<style>
+		.Urgent { background-color:red}
+		.High { background-color:coral}
+		.Normal { background-color:green}
+		.Low { background-color:beige}
+	</style>
 </head>
 
 <body>
@@ -29,54 +36,103 @@
             <legend>
                 Service Allocation
           </legend>
+
+           <label for="ddmCategory">Department:</label>
+			<select id="ddmCategory" name="ddmCategory" >
+				<option value=""> Select a Department </option>
+				<option value=""> ----------------- </option>
+				<?CAT_LIST?>
+			</select>
+
+			<br />
+
+           <label for="ddmPressType">Press Type:</label>
+			<select id="ddmPressType" name="ddmPressType" >
+				<option value=""> Select a PressType </option>
+				<option value=""> ----------------- </option>
+				<option value="14">Sheetfed </option>
+				<option value="41">Digital </option>
+			</select>
+
+		<br />
+           <label for="ddmEquipment">Press Type:</label>
+			<select id="ddmEquipment" name="ddmEquipment" >
+				<option value=""> Select Equipment </option>
+				<option value=""> ----------------- </option>
+				<?EQUIPMENT_LIST?>
+			</select>
+			<br />
 			
             
-           <!-- <label for="ddmUser">Service:</label>
+           <label for="ddmUser">Service:</label>
 			<select id="ddmService" name="ddmService" >
 				<option value=""> Select a Service </option>
 				<option value=""> ----------------- </option>
 				<?SERVICE_LIST?>
-			</select><input type="button" name="btnFunction" class="button" value="Go" />
-			<br />-->
+			</select>
+			<br />
+
+           <label for="ddmStatus">Status:</label>
+			<select id="ddmStatus" name="ddmStatus" >
+				<option value=""> Select a Status </option>
+				<option value=""> ----------------- </option>
+				<?STATUS_LIST?>
+			</select>
+			<br /
             
             <? if ( $$variable{'user_type'} eq 'A' ) ?>
-            <label for="ddmUser">User Name:</label>
-			<select id="ddmUser" name="ddmUser" onChange='form.submit()' >
+			<!--Allow all users/see modify list -->
+            <? endif ( $$variable{'user_type'} eq 'A' ) ?>
+
+
+
+            <label for="assigned_only">Show only Assigned Services:</label>
+			<input type="checkbox" name="assigned_only" value="1">
+			<br />
+			<button type="submit">Search</button>
+			<br />
+
+            <label for="ddmUser">Assign To:</label>
+			<select id="ddmUser" name="ddmUser" onChange="form.submit();"  >
 				<option value=""> Select a User </option>
 				<option value=""> ----------------- </option>
 				<?USERS?>
 			</select>
+            <input type="submit" name="Update" class="button" value="Save" />
            
-			<br />
-            <? endif ( $$variable{'user_type'} eq 'A' ) ?>
-
+			<br>
 			
                 <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
                     <tr>
-                      <th>Due Date</th>
+                      <th>Department</th>
+                      <th>Priority</th>
+                      <th>ID - Due Date</th>
                       <th>Order ID</th>
                       <th>Project ID</th>
                         <th>Service Name</th>
+                        <th>Equipment</th>
                         <th>Status</th>
                         <th>Assigned To</th>
                         <th>Assign</th>
                     </tr>
 
 						<?loop SERVICES ?>
-                        <tr>
-                          <td style="text-align: left;"> <?lngserviceindex ?> - <?daterequired?></td>
-                          <td style="text-align: left;"><?lngorderid?></td>
-                          <td style="text-align: left;"><?lngprojectindex?></td>
-                            <td style="text-align: left;"><?strservicetype?></td>
-                            <td style="text-align: left;"><?strstatus?></td>
-                            <td style="text-align: left;"><?assigned_to?></td>
-                            <td class="select c" style="text-align: center;">
-								<input type="checkbox" name="assign" value="<?lngserviceindex?>" 
-											<? if a?>checked<?endif a?> /> 
-								<input type="hidden" name="uncheck" value="<?lngserviceindex?>" />
-							</td>
+		<tr class="<?priority?>">
+			<td style="text-align: left;"><?strcategory?></td>
+			<td style="text-align: left;" class="<?priority?>"><?priority?></td>
+                        <td style="text-align: left;"> <?lngserviceindex ?> - <?daterequired?></td>
+                        <td style="text-align: left;"><?lngorderid?></td>
+                        <td style="text-align: left;"><?lngprojectindex?></td>
+                        <td style="text-align: left;"><?common_name?></td>
+                        <td style="text-align: left;width: 10em"><?equipment?></td>
+                        <td style="text-align: left;"><?strstatus?></td>
+                        <td style="text-align: left;"><?assigned_to?></td>
+                        <td class="select c" style="text-align: center;">
+				<input type="checkbox" name="assign" id="assign-<?lngserviceindex?>" value="<?lngserviceindex?>" /><?a?>
+				<input type="hidden" name="uncheck" id="uncheck-<?lngserviceindex?>" value="<?lngserviceindex?>" />
+			</td>
 					
-                        </tr>
+                 </tr>
 						<?endloop SERVICES ?>
                 </table>
             <br />

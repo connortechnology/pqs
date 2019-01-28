@@ -52,4 +52,10 @@ sub set_material_actual {
   $dbh->commit;
 }
 
+sub get_index_from_id {
+	my $id = shift;
+  	my $dbh = session::dbh;
+	return $dbh->selectrow_array(q{ SELECT lngindex FROM tbl_equipment WHERE strid = ?}, undef, $id );
+}
+
 1;

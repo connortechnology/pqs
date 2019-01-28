@@ -99,6 +99,27 @@ sub service_type {
     }, undef, shift);
 }
 
+sub common_name {
+	my $dbh = session::dbh;
+	my $sid = shift;
+	my ($name, $strid) =  $dbh->selectrow_array(q{SELECT strname, strid FROM tbl_service_types WHERE strid = 
+		(SELECT strservicetype FROM tbl_project_contents WHERE lngserviceindex = ? )
+	}, undef, $sid);
+
+	my %modify;
+
+	$modify{Printing} = sub { 
+		my $desc = get_spec($sid, 'txtServiceDescription');
+		$name .= " - $desc" if $desc;
+	};
+
+	&{$modify{Printing}};
+	
+	die("Could not identify service name for SID: $sid \n") unless $name;
+	return $name;
+	
+}
+
 sub in_project {
     my $dbh = shift;
     return scalar $dbh->selectrow_array(q{
@@ -419,6 +440,15 @@ sub get_specifications_pairs {
     $query = "$query WHERE " . join(' AND ', @ands); # Will always have some
 
     return @{ $dbh->selectcol_arrayref($query, { Columns => [ 1, 2 ] }) };
+}
+
+sub get_spec {
+	my $sid = shift;
+	my $name = shift;
+	my $dbh = session::dbh;
+
+	my $query =  q{SELECT strvalue FROM tbl_service_specifications WHERE lngserviceindex = ? and strname = ?};
+	return $dbh->selectrow_array($query, undef, $sid, $name);
 }
 
 

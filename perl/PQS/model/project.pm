@@ -34,6 +34,14 @@ sub get {
 
 	return $dbh->selectrow_hashref(q{SELECT * from tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
 
+}
+
+sub set_equipment{
+	my $dbh = session::dbh;
+	my $sid = shift;
+	my $val = shift;
+
+	$dbh->do(qq{UPDATE tbl_project_contents SET equipment = ? WHERE lngserviceindex = ?}, undef,  $val, $sid);
 
 }
 

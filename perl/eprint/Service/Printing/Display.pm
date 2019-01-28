@@ -29,7 +29,7 @@ use constant LF_BINDERY => qw(
 );
 
 use base qw(Exporter);
-our @EXPORT_OK = qw(display template_sizes);
+our @EXPORT_OK = qw(display template_sizes multiversion);
 
 
 sub display {
@@ -253,7 +253,9 @@ sub multiversion {
     # We've changed the version storage to the name and a breakdown of the
     # first quantity.
     my (@list, $remaining);
+	my $i;
     for my $name (sort keys %versions) {
+	$i++;
         my $q1      = $versions{$name};
         my $percent = $q1 / $qty[1];
         
@@ -262,6 +264,7 @@ sub multiversion {
             name    => $name, 
             q1      => $q1,
             percent => sprintf("%.2f", $percent * 100), # Approx.
+	    id	=> $i,
         );
         # Extrapolate the second and third quantities.
         $v{"q$_"} = int($qty[$_] * $percent) for 2..3;

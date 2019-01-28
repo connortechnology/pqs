@@ -4,14 +4,72 @@ package eprint::Service::Book;
 use strict;
 use warnings;
 
+
+use POSIX qw(ceil);
+
 use eprint::project                      qw(:common);
 use eprint::print_project                qw(insert_service delete_service);
 use eprint::service                      qw(:common :status);
 use eprint::Service::Printing::Constants qw(:spread_types);
-use eprint::Service::Printing::Display   qw(template_sizes);
+use eprint::Service::Printing::Display   qw(template_sizes multiversion);
 use eprint::Service::Printing::Price     qw(signatures_of_type);
 use PQS::model::materials;
 use PQS::model::service;
+use Data::Dumper;
+
+sub store {
+    my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
+
+    # Very, very simple multi-version input processing.
+    if ($specs->{is_mv}) {
+        my @name  = @{ $specs->{mv_name} };
+        my @qty   = @{ $specs->{mv_qty}  };
+        my $total = (get_quantities($log, $dbh, $pid))[0];
+
+        my (@versions, @quantities);
+
+        # For now mirror the JS precisely. Note: Multiple labels of the
+        # same name are allowed and treated as different versions.
+        for my $i (0 .. $#qty) {
+            my $name    = $name[$i];
+            my $qty     = int($qty[$i]);
+
+            next unless $qty > 0;
+
+            my $percent = ($qty / $total) * 100;
+
+            if ($name and $percent and ceil($percent) > 0) {
+                push @versions,   $name => $percent;
+                push @quantities, $name => $qty;
+            }
+        }
+        $specs->{versions}           = join(',', @versions);
+        $specs->{version_quantities} = join(',', @quantities); # For UI
+
+		$specs->{s0_black_mv} = 'on' if ref $specs->{s0_black_mv} eq 'ARRAY';
+		$specs->{s1_black_mv} = 'on' if ref $specs->{s1_black_mv} eq 'ARRAY';
+		
+
+    }
+
+    return $specs;
+}
+
+sub restore {
+    my ($dbh, $pid, $sid, $service_type, $specs) = @_;
+
+    # The versions are stored against 1NF as a flattened pair list.
+    if ($specs->{version_quantities}) {
+        my %versions = split ',', $specs->{version_quantities};
+
+        $specs->{mv_name} = [ keys %versions ];
+        $specs->{mv_qty}  = [ values %versions ];
+	$specs->{versions} = \%versions;
+    }
+
+    print STDERR "HAVE VERSIONS: ", Dumper($specs->{versions});
+    return $specs;
+}
 
 sub necessary {
     my ($log, $dbh, $pid, $service_type) = @_;
@@ -23,6 +81,14 @@ sub necessary {
 sub display {
     my ($log, $dbh, $service_type, $pid, $sid, $specs) = @_;
 
+    my %mv;
+    # Get info to recreate version table when editting the service.
+    @mv{qw(versions remaining)} = multiversion($log, $dbh, $pid, $specs)
+            if $specs->{mv_name} && $specs->{mv_qty};
+	$mv{next_version} = $mv{versions} ? scalar @{$mv{versions}} + 1 : 1;
+	map { $mv{$_} = $specs->{$_} if $_ =~ /mv_num_col/; } keys %{$specs};
+
+	print STDERR "HAVE VERSIONS DATA", Dumper(\%mv);
     
     # Get the bindery options (radio buttons w/ images).
     my $bindery = $dbh->selectall_arrayref(qq{
@@ -47,9 +113,12 @@ sub display {
     my $templates 
         = template_sizes($log, $dbh, $project_type, $bindery);
 
-	my @versions = mp_versions($specs);
+    my @qty = get_quantities($log, $dbh, $pid);
 
-    return { templates => $templates, bindery => $bindery, no_print_covers => $noprintcovers, VERSIONS => \@versions };
+    my $page =  { templates => $templates, bindery => $bindery, no_print_covers => $noprintcovers,  txtQuantity1 => $qty[0] };
+    map { $page->{$_} = $mv{$_} } keys %mv;
+
+    return $page;
 
 }
 
@@ -264,9 +333,16 @@ print STDERR "IS SINGLE ********* $double - $bind_type ****\n";
         txtSpreadWidth            => $specs->{flat_width},
         txtSpreadHeight           => $specs->{flat_height},
         txtSignatureSize          => ($bind_type =~ /^(Loop|Saddle)Stitching/i ? 4 : 2),
+	VERSIONS		  =>  mp_versions($specs),
     });
     insert_service_spec( $log, $dbh, $pid, $interior, SignatureIndex => $interior);
     insert_service_specs($log, $dbh, $pid, $interior, %defaults);
+
+    map { 
+    	if ( $_ =~ /mv/ || $_ =~ /version/ ) {
+    		insert_service_spec( $log, $dbh, $pid, $interior, $_ => $specs->{$_}, undef, 1);
+	}
+    } keys %{$specs};
 
     # Insert previous specs if we're redoing this book.
     if (exists $prev->{INTERIOR()}) {
@@ -276,6 +352,8 @@ print STDERR "IS SINGLE ********* $double - $bind_type ****\n";
             );
         }
     }
+
+    print STDERR "HAVE SPECS", Dumper($specs);
 
     # NOTE: The bindery types will take care of themselves.
 

@@ -213,17 +213,51 @@ sub service_allocation {
 	my $ins = $dbh->prepare(q{ INSERT into time_user_service VALUES ( ?, ? ) });
 	my $del = $dbh->prepare(q{ DELETE FROM time_user_service WHERE userid = ? AND service = ?});
 
+
+	print STDERR "HAVE uncheck", Dumper($r->param('uncheck'));
 	if ( $r->param('Update') ) {
-		map { $del->execute($userid, $_) } $r->param('uncheck');
+		map { $del->execute($userid, $_) if $_ } $r->param('uncheck');
 		map { $ins->execute($userid, $_) } $r->param('assign');
 	}
 
+	my $filters = '';
+	my @params;
+	if ( $r->param('ddmCategory') ) {
+		$filters  .= " AND s.strcategory = ? ";
+		push @params, $r->param('ddmCategory');
+	}
+	if ( $r->param('ddmService') ) {
+		$filters  .= " AND s.lngindex = ? ";
+		push @params, $r->param('ddmService');
+	}
 
-	my $list = $dbh->selectall_arrayref(q{
+	if ( $r->param('ddmStatus') ) {
+		$filters  .= " AND p.strstatus = ? ";
+		push @params, $r->param('ddmStatus');
+	}
+	if ( $r->param('ddmPressType') ) {
+		$filters  .= " AND p.lngpresstype = ? ";
+		push @params, $r->param('ddmPressType');
+	}
+	if ( $r->param('ddmEquipment') ) {
+		$filters  .= " AND pc.equipment = ? ";
+		push @params, $r->param('ddmEquipment');
+	}
+
+
+	if ( $r->param('assigned_only') ) {
+		$filters  .= " AND Exists ( SELECT * FROM time_user_service WHERE userid = ? AND service = pc.lngserviceindex ) ";
+		push @params, $userid;
+
+	}
+
+	my $list_sql = qq{
 		SELECT *, 
 
 			( SELECT count(*) FROM time_user_service 
-				WHERE lngserviceindex = service AND userid = ?) as a 
+				WHERE lngserviceindex = service AND userid = ?) as a ,
+			(SELECT name from priority WHERE id = p.lngpriority) as priority,
+			(SELECT strname FROM tbl_equipment WHERE lngindex = pc.equipment) as equipment
 
  
 		FROM  
@@ -240,13 +274,23 @@ sub service_allocation {
 		AND		p.strstatus <>  'Unordered'
 		AND       p.strstatus <> 'Complete'
 		AND       p.strstatus <> 'Canceled'
+		AND       p.strstatus <> 'Cancel'
 		AND       p.strstatus <> 'Cancelled'
 		AND       p.strstatus <> 'Deleted'
+
+		$filters
 		
-		ORDER By c.lngorderid, p.lngprojectindex, pc.strservicetype
+		ORDER By strcategory, p.lngpriority desc, c.lngorderid, p.lngprojectindex, pc.strservicetype
 
-	},{Slice=>{}}, $userid);
+	};
 
+	my $list = $dbh->selectall_arrayref($list_sql,{Slice=>{}}, $userid, @params);
+
+
+print STDERR "HAVE SQL: $list_sql FOR USER: $userid ";
+#print STDERR Dumper($list);
+
+	my @assigned;
 	map { 
 		$_->{assigned_to} = join(',',
 			@{$dbh->selectcol_arrayref(q{
@@ -255,16 +299,47 @@ sub service_allocation {
 				WHERE  lnguserid = time_user_service.userid 
 				AND    service = ?
 			}, undef, $_->{lngserviceindex})} );
+		my $p = new PQS::Object::project($_->{lngprojectindex});
+		$_->{daterequired} = $p->due_date();
+		$_->{common_name} = eprint::service::common_name($_->{lngserviceindex});
+
+
+		print STDERR "HAVE $_->{lngprojectindex} - $_->{a} - $_->{service} \n";
+
+		push @assigned, $_->{lngserviceindex} if $_->{a};
 	} @{$list};
+
+
+
 
 	$var->{SERVICES} = $list;
 
 	my $sql = q{ SELECT lnguserid, strfirstname || ' ' || strlastname FROM tbl_customer_users WHERE chrType = 'A'  };
 	$var->{USERS} = ssi::fill_drop_down( $r->log, $dbh, $sql, $r->param('ddmUser') );
 
+
 	$sql = q{ SELECT lngindex, strname FROM tbl_service_types WHERE active ORDER by strname };
 	$var->{SERVICE_LIST} = ssi::fill_drop_down( $r->log, $dbh, $sql, $r->param('ddmService') );
 
+	$sql = q{ SELECT Distinct(strstatus), strstatus FROM tbl_projects  ORDER by 1  };
+	$var->{STATUS_LIST} = ssi::fill_drop_down( $r->log, $dbh, $sql, $r->param('ddmStatus') );
+
+	$sql = q{ SELECT Distinct(strcategory), strcategory FROM tbl_service_types  ORDER by 1  };
+	$var->{CAT_LIST} = ssi::fill_drop_down( $r->log, $dbh, $sql, $r->param('ddmStatus') );
+
+	$sql = q{ SELECT lngindex, strname FROM tbl_equipment  ORDER by 2  };
+	$var->{EQUIPMENT_LIST} = ssi::fill_drop_down( $r->log, $dbh, $sql, $r->param('ddmEquipment') );
+
+
+
+	my @skip_param = qw(uncheck assign);
+	foreach my $p ($r->param()) { 
+		$var->{__FillInForm}{$p} = $r->param($p) unless grep {/$p/} @skip_param;
+	} $r->param();
+
+	$var->{__FillInForm}{assign} = \@assigned;
+
+	print STDERR "HAVE FILL IN FORM" , Dumper($var->{__FillInForm}), "UNCHCKE" ,Dumper($r->param('uncheck'));
 }
 
 

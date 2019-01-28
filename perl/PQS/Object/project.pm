@@ -7,6 +7,9 @@ use session;
 use Data::Dumper;
 use PQS::Object::order;
 use PQS::model::project;
+use Scalar::Util qw( looks_like_number );
+use PQS::model::service;
+
 
 require status;
 
@@ -124,21 +127,65 @@ sub check_status {
 	my $oid = $self->order_id;
 	my $order = new PQS::Object::order($oid);
 
+	my $status  = '';
 	if ( $oid ) {
-		return 'CN' if $order->{specs}{cancelled};
 
-		return 'CP' if  $self->{specs}{completion_date};
+		$status =  'WF';
 
-		#IF peding deposit then go no futher
-		return 'PD' if $order->pending_deposit;
+		$status =  'PD' if $order->pending_deposit;
 
-		return 'IP' if  $self->{specs}{files} && $self->have_production_file;
+		$status =  'IP' if  $self->{specs}{files} && $self->have_production_file;
 
-		return 'WF';
+		$status = 'CN' if $order->{specs}{cancelled};
+
+		$status =  'CP' if  $self->{specs}{completion_date};
 	}
 
+	if ( $status  eq 'IP' ) {
+		$self->init_production unless ( $self->{specs}{init_production} );
+	}
+
+	return $status;
 
 	
+}
+sub init_production {
+	my $self = shift;
+	my $s = $self->services;
+	print STDERR "SERV: ", Dumper($s);
+
+	foreach my $s ( @{$self->services} ) {
+		#print STDERR Dumper($s);
+		my $sid = $s->{lngserviceindex};
+		my %specs = eprint::service::get_specifications_pairs(
+				session::log, session::dbh, undef, $sid 
+		);
+
+		my $equip = $specs{hdnEquipment1} 
+				 || $specs{txtEquipment} 
+				 || $specs{DefaultEquipment} 
+				 || $specs{equipment}
+			 	 || 'ManualLabourStation-1';
+		
+		my $eid = looks_like_number($equip) ? $equip : PQS::model::service::get_index_from_id($equip);
+
+		
+		$self->set_equipment($sid, $eid);
+ 
+		print STDERR "HAVE EQUIPMENT: $equip, $eid FROM Service $s->{strservicetype} \n";
+
+
+	}
+}
+
+sub services {
+	my $self = shift;
+
+	my $dbh  = session::dbh;
+	my $sids = $dbh->selectall_arrayref(q{
+		SELECT * FROM tbl_project_contents where lngprojectindex = ?}, { Slice => {} }, $self->{id});
+	return $sids;
+
 }
 
 sub set_status {
@@ -153,6 +200,17 @@ sub set_status {
 		SELECT lngserviceindex FROM tbl_project_contents where lngprojectindex = ?}, undef, $self->{id});
 
 	eprint::service::set_status($log, $dbh, $self->{id}, $status, @{$sids});
+
+
+}
+
+sub set_equipment {
+	my $self = shift;
+
+	my $sid = shift;
+	my $value = shift;
+
+	PQS::model::project::set_equipment($sid, $value);
 
 
 }

@@ -227,6 +227,24 @@ function growTable (last_row) {
         input.value = '';
     }
 
+    // TEMPORARY: This should be replaced by a callback.
+    var inputs = next_row.getElementsByTagName('select');
+    var pattern = /[0-9]+$/;
+    for (var i=0; i < inputs.length; i++) {
+        var input = inputs[i];
+        var n = parseInt(input.name.match(pattern));
+
+        if (n == NaN || n <= 0) {
+            alert('Invalid field name: '+input.name);
+            input.name = '';
+        }
+
+		input.name = input.name.replace(pattern, ++n);
+		input.id   = input.id.replace(pattern, n);
+        // Clear any values from the old record.
+        input.value = '';
+    }
+
     tbody.appendChild(next_row);
     // Remove the growtbody event from all inputs in what was the last_row.
     var inputs = last_row.getElementsByTagName('input');
