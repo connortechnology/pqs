@@ -269,7 +269,7 @@ print STDERR "HAVE PID FROM RFQ: $rid -- $pid \n";
 
 }
 
-sub display_rfq {
+sub fisplay_rfq {
    my ($r, $dbh, $var) = @_;
    my $rid = $r->param('rid');
    my $pid = $dbh->selectrow_array(q{
@@ -1189,7 +1189,10 @@ sub create_rfq {
     my @services  = $r->param('rfq');
     my @info_only = $r->param('info_only');
 
+	print STDERR "HAVE SERVICES", Dumper(\@services);
+
     my $rid = new_rfq($dbh, $r->param('pid'));
+
 
 	my $st = $dbh->prepare(q{
 		SELECT strservicetype FROM tbl_project_contents WHERE lngserviceindex = ?
