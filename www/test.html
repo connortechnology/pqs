@@ -1,0 +1,141 @@
+<html>
+<head>
+	<title>
+		Sherwood Printers -
+
+		Email
+	</title>
+
+	<style type="text/css"><!-- START INCLUDE /styles/email.css --> 
+ /* email.css is used for email pages */
+html, body { 
+	background-image: none;
+	background-color: #ffffff;
+	
+	color: #000000;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 100.1%;
+}
+
+body {font-size: 0.8em;}
+
+p, address {font-size: 0.85em;}
+
+p {margin-top: 0.4ex; padding-top: 0;}
+
+h4 {font-size: 1em !important;}
+h5 {font-size: 0.85em !important;}
+
+h3,h5 {margin-bottom: 0; padding-bottom: 0;}
+
+#email-template {margin: 0px; }
+#email-wrapper 	{ text-align: center; }
+#email-border 	{ width: 640px; margin: 2ex auto; text-align: left; }
+#email-header 	{ width: 640px; }
+#email-content 	{ width: 640px; padding: 10px; margin: 10px 0 0 0; }
+#email-footer 	{ width: 640px; padding: 0 10px 10px 10px; margin: 0; }
+
+a, img {border: 0;}
+
+table {border-collapse: collapse;}
+
+th, td {
+	margin: 0;
+	padding: 0.2ex 1em;
+	border: 0 !important;
+	font-size: 0.85em;
+}
+
+table.customer tbody td address {font-size: 1em;}
+
+a { text-decoration: none; }
+a:link    { color: #1D23F4; }
+a:visited { color: #1D23F4; }
+a:hover   { color: #0B0D60; }
+a:active  { color: #0B0D60; }
+
+#order-box, #quote-box {
+	position: relative;
+}
+ <!-- END   INCLUDE /styles/email.css --> 
+ </style>
+
+	<base href="http://192.168.1.245" />
+	</head>
+	
+	<body id="email-template">
+	
+		<div id="email-wrapper">	
+			<div id="email-border">
+			
+				<div id="email-header">
+					<a href="/" target="_blank"><img src="/images/e-mail/email_header.gif" /></a>
+				</div>
+		
+				<div id="email-content">
+					<!-- START INCLUDE /email/content/project_files.html --> 
+ <p>The following files have been added/changed for project <a href="">#100763</a> by our staff.<br />
+<br />
+Please click below to view the files.</p>
+
+
+
+<table cellpadding="0" cellspacing="0" border="0" class="no-fomatting">
+	<tr>
+			<th style="text-align: left;">Filename</th>
+			<th style="text-align: left;">Description</th>
+			<th style="text-align: left;">View Files</th>
+	</tr>
+
+	
+		<tr>
+			<td>DIY_shelf_plans.pdf</td>
+			<td></td>
+			<td><a href="/main/proj/files.html?pid=100763">View project files</a></td>
+		</tr>
+	
+    
+</table>
+
+ <!-- END   INCLUDE /email/content/project_files.html --> 
+ 
+				</div>
+		
+				<div id="email-footer">
+					<p><!-- START INCLUDE /includes/company_tag_line.html --> 
+ 
+ <!-- END   INCLUDE /includes/company_tag_line.html --> 
+ </p>
+					<p><!-- START INCLUDE /includes/company_contact_info.html --> 
+ <strong>Sherwood Printers</strong><br />
+240 Brunel Road<br />
+Mississauga, Ontario<br />
+L4Z 1T5
+ <!-- END   INCLUDE /includes/company_contact_info.html --> 
+ </p>
+					<p>
+						Tel: <!-- START INCLUDE /includes/company_telephone_number.html --> 
+ <span style="color: #0B0D60; font-weight: bold;">(905) 501-1296</span>
+ <!-- END   INCLUDE /includes/company_telephone_number.html --> 
+ <br />
+						Fax: <!-- START INCLUDE /includes/company_fax_number.html --> 
+ 905.949.1021
+
+ <!-- END   INCLUDE /includes/company_fax_number.html --> 
+ 
+					</p>
+					<p><!-- START INCLUDE /includes/company_contact_e-mail.html --> 
+ <a href="mailto:info@sherwoodprinters.com">info@sherwoodprinters.com</a>
+ <!-- END   INCLUDE /includes/company_contact_e-mail.html --> 
+ <br />
+					<!-- START INCLUDE /includes/web_site_URL.html --> 
+ <a href="http://sherwoodprinters.com/" >http://sherwoodprinters.com//</a>
+ <!-- END   INCLUDE /includes/web_site_URL.html --> 
+ </p>
+				</div>
+				
+			</div>
+		</div>
+		
+	</body>
+</html>
