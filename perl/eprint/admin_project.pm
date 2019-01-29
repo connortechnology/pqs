@@ -24,8 +24,9 @@ sub view_project_for_rfq {
         for my $s (@{ $cat->{services} }) {
             # The only control each service gets is an HTML checkbox.
             $s->{controls} = [ { html => 
-                  qq{ <input type="checkbox" name="$s->{id}-info_only" value="1" />}
-               .  qq{<input type="checkbox" name="rfq" id="rfq-$s->{id}" checked='checked' value="$s->{id}" />}
+					#qq{ <input type="checkbox" name="$s->{id}-info_only" value="1" />}
+				  #  .  qq{<input type="checkbox" name="rfq" id="rfq-$s->{id}" checked='checked' value="$s->{id}" />}
+				  qq{<input type="checkbox" name="rfq" id="rfq-$s->{id}" checked='checked' value="$s->{id}" />}
             }];
         }
     }

@@ -269,7 +269,7 @@ print STDERR "HAVE PID FROM RFQ: $rid -- $pid \n";
 
 }
 
-sub fisplay_rfq {
+sub display_rfq {
    my ($r, $dbh, $var) = @_;
    my $rid = $r->param('rid');
    my $pid = $dbh->selectrow_array(q{
