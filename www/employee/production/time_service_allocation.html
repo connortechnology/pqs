@@ -3,7 +3,7 @@
 <head>
 	<title>
 		<!--#include virtual="/includes/web_page_title.html" -->
-		Production > Time Collection > Service Allocation
+		Production > Schdule
 	</title>
 
 	<!--#include virtual="/includes/web_page_meta.html" -->
@@ -106,7 +106,7 @@
                     <tr>
                       <th>Department</th>
                       <th>Priority</th>
-                      <th>ID - Due Date</th>
+                      <th>Due Date</th>
                       <th>Order ID</th>
                       <th>Project ID</th>
                         <th>Service Name</th>
@@ -120,7 +120,7 @@
 		<tr class="<?priority?>">
 			<td style="text-align: left;"><?strcategory?></td>
 			<td style="text-align: left;" class="<?priority?>"><?priority?></td>
-                        <td style="text-align: left;"> <?lngserviceindex ?> - <?daterequired?></td>
+                        <td style="text-align: left;"><?daterequired?></td>
                         <td style="text-align: left;"><?lngorderid?></td>
                         <td style="text-align: left;"><?lngprojectindex?></td>
                         <td style="text-align: left;"><?common_name?></td>
@@ -128,7 +128,7 @@
                         <td style="text-align: left;"><?strstatus?></td>
                         <td style="text-align: left;"><?assigned_to?></td>
                         <td class="select c" style="text-align: center;">
-				<input type="checkbox" name="assign" id="assign-<?lngserviceindex?>" value="<?lngserviceindex?>" /><?a?>
+				<input type="checkbox" name="assign" id="assign-<?lngserviceindex?>" value="<?lngserviceindex?>" />
 				<input type="hidden" name="uncheck" id="uncheck-<?lngserviceindex?>" value="<?lngserviceindex?>" />
 			</td>
 					
