@@ -134,7 +134,7 @@ sub check_status {
 
 		$status =  'PD' if $order->pending_deposit;
 
-		$status =  'IP' if  $self->{specs}{files} && $self->have_production_file;
+		$status =  'IP' if  $self->{specs}{files} && $self->have_production_file || $self->{specs}{strstatus} eq 'In Production';
 
 		$status = 'CN' if $order->{specs}{cancelled};
 
