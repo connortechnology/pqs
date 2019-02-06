@@ -547,6 +547,7 @@ sub make_drop_down {
     my ( $val, $checkval, $length ) = @_;
     my ( $options, $selected ) = ('', '');
     my @data;
+	
 
 
 	my $value;

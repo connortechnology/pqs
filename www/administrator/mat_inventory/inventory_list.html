@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Mangerial - Company Profile
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script type="text/javascript">
+
+		function do_sort(field) {
+			
+		if ( $('sortfield').value == field ) {
+			$('sortdirection').value *= -1; 
+		} else { 
+			$('sortdirection').value = 1; 
+		}
+
+		$('sortfield').value = field;
+	 	$('f1').submit();
+	}
+	</script>
+
+
+	<style>
+		#expander { min-width: 1750px; }
+		#sizer {max-width: none; } 
+		.editbox { width: 5em;}
+	</style>
+<style>
+	.lgfield {
+		width: 40em;
+		border: none;
+	}
+	.rgfield {
+		width: 15em;
+		border: none;
+	}
+	.smfield {
+		width: 100%;
+		border: none;
+	}
+	.srfield {
+		width: 5em;
+		border: none;
+	}
+	.tifield {
+		width: 2em;
+		border: none;
+	}
+
+	.paddingTop { 
+		padding-top: 1em;
+	}
+	th { padding: 0.2em 0.2em 0.2em 0.2em; white-space: normal; min-width: 1em; }
+	td { padding: 0.2em 0.2em 0.2em 0.2em; text-align: center }
+	select { width: 18em; }
+	div.button-bar { margin-top: 3em;}
+</style>
+
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+	<h1><span class="title-section">Inventory</h1>
+
+
+		<fieldset style="height: 23em;width:75em;">
+			<legend>
+				Search Area
+			</legend>
+		
+			<div id="SearchOptions" style="border: 0px solid black">
+
+	<form action="/administrator/mat_inventory/inventory_list.html" method="get" name="f1" id="f1">
+			<label>Inventory Type</label>
+			<input type='radio' value="product" name="itype" onChange="f1.submit()">Product
+			<input type='radio' value="stock" name="itype" onChange="f1.submit()">Stock
+
+
+
+			<br/>
+
+
+			<label>Filters</label><br>
+
+			<?loop FILTERS?>
+			<label><?label?>:</label>
+			<select name="fltr<?name?>" id="<?id?>">
+				<option value="">Please Select</option>
+				<?OPTIONS?>
+			</select>
+			<br/>
+			<?endloop FILTERS?>
+
+
+
+
+			<div class="button-bar">
+				<input type="reset" class="button" value="Reset" />
+				<input type="submit" class="button" value="Search" />
+				<br />
+				</div>
+			<br />
+		</fieldset>
+
+
+
+	
+
+<!-- ******************* START ****************************** -->
+<input type="hidden" name="sortfield" 		id="sortfield" value="aaa" />
+<input type="hidden" name="sortdirection" 	id="sortdirection" value="1" />
+<button name="save" value=1 style="margin: 0 0 0 0;">Save</button>
+<br/>
+ <table>
+    <tr>
+
+		<?loop fields?>
+		<th><a href="#" onClick="do_sort('<?id?>');" style="color: white;" ><?desc?></a></th>
+		<?endloop fields?>
+		<th>Adjust Inventory</th>
+
+     
+    </tr>
+    <?loop data?>
+			<tr>
+		<?loop fields?>
+
+			<td>
+			<?if ro?>
+			<div class="<?class?>" ><?if link?><a href="<?link?>"><?endif link?><?value?><?if link?></a><?endif link?></div>
+			<?else ro?>
+			 <?if big?>
+				<textarea name="<?fname?>[<?id?>]" cols=50><?value?> </textarea>
+			 <?else big?>
+
+			 	<?if ( $variable->{type} eq 'bool' ) ?>
+					<input type="checkbox" name="<?fname?>[<?id?>]" value="1" size="<?size?>" <?if value?>checked<?endif value?> />
+			 	<?else ( $variable->{type} eq 'bool' ) ?>
+					<!-- ***** -->
+					<input name="<?fname?>[<?id?>]" value="<?value?>" class="<?class?>"  />
+			 	<?endif ( $variable->{type} eq 'bool' ) ?>
+
+			 <?endif big?>
+				
+			<?endif ro?>
+
+			</td>		
+	
+		<?endloop fields?>
+		<td>
+			<input class="editbox" name="onhand-<?id?>" id="onhand-<?id?>" disabled=true>
+			<input class="editbox" name="onorder-<?id?>" id="onorder-<?id?>" disabled=true>
+			<input type="Button" name="edit-<?id?>" value="Edit On Hand/Allocated" onClick="$('onorder-<?id?>').disabled=false;$('onhand-<?id?>').disabled=false; ">
+		</td>
+        
+			</tr>
+    <?endloop data?>
+
+  </table>
+<!-- ******************* END ****************************** -->
+
+<button name="save" value=1>Save</button>
+<button onClick="window.realod" name="Reload" style="margin-top: 200px; width: 300px; height: 300px">Reload</button>
+	</form>
+
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

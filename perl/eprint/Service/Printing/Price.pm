@@ -1225,12 +1225,24 @@ sub calc_print_price {
     my $used_plates = 0;
     my $numRuns     = 1;
     my $waste       = 0;
+	my $plate_multiplier = ($run_style =~ /^W/) ? 2 : 1;
+	my $forms = scalar @{ $imp->{layout} };
 
     # If we're running multiple versions (and we're not multi-page because we
     # don't handle that yet), calculate plates and paper wastage.
-    if (%$versions and !$spreads_remaining ) {
-        # Each layout is a differently imposed press sheet.
-        $numRuns = scalar @{ $imp->{layout} };
+	#if (%$versions and $spreads_remaining <= 1 ) {
+    if (%$versions) {
+
+
+		#if ( $spreads_remaining <= 1 ) {
+print STDERR "USE STANDART MV Plate Change \n";
+			# Each layout is a differently imposed press sheet.
+			$numRuns = scalar @{ $imp->{layout} };
+		#} else { 
+		#		my $ver =  scalar keys %$versions;
+		#	$numRuns =  ceil($ver / ($imposition/$plate_multiplier) );
+		#print STDERR "USE MultiPage MV Plate Change,  $ver Versions; \n";
+#}
 
         # Count the number of plates that vary by version. WT/F look up a
         # pre-cached press unit counts, others count inks per side.
@@ -1245,9 +1257,18 @@ sub calc_print_price {
         # Waste is the sum of the layout percentages less the required (100%).
         $waste = $price{sheet_wastage} =
             sum(map{ sum(map{$_->{final}}@$_) } @{$imp->{layout}})-100;
+	} else {
+
     }
 
+	
+
+	#$plate_changes =   $plate_multiplier * $spread->{colour_changes} || 0;
+
     $price{'hdnNumRuns'} = $numRuns;
+
+	print STDERR "HAVE COLOUR CHANGES: multi: $plate_multiplier, Changes: $plate_changes STYLE: $run_style IMP: $imposition Remain: $spreads_remaining \n";
+	print STDERR "HAVE NUM RUNS: $numRuns FORMS: $forms \n", Dumper($versions);
 
 	my $mp_versions = mp_versions($pid);
 
@@ -2347,6 +2368,8 @@ sub calc_sheet_qty {
 
     return 0 if !$imposition;
 
+print STDERR "CALC SHEET QTY IMP: $imposition QTY: $qty \n";
+
     my $net_sheets = 0;
        $net_sheets = ceil($qty / $imposition) if $imposition;
 
@@ -2450,6 +2473,7 @@ sub calc_sheet_qty {
                      'Net Form Count'   => $net_forms,
                      'Gross Form Count' => $gross_forms,);
 
+	print STDERR "HAVE SHEETY QTY: ", Dumper(\%sheet_qty);
     return %sheet_qty;
 }
 
@@ -2631,6 +2655,21 @@ sub press_setup_cost {
     }
     $total_setup += $envelope_setup;
     $total_setup += $press_make_ready * ($colourcritical_make_ready / 100.0);
+
+	print STDERR "HAVE PRESS SETUP ", Dumper( {
+ 		'Envelope Setup'  => $envelope_setup,
+        'Plate Count'     => $plate_count,
+        'Plate Price'             => $plate_price,
+        'Plate Material ID'       => $plate_id,
+        'Press Unit Setup Price'  => $press_unit_price,
+        'Plate Type'              => $plate_type,
+        'Film Cost'               => $film_cost,
+        'Plate Cost'              => $plate_total,
+        'Press Setup Cost'        => $total_setup,
+
+        'Total Setup Cost'  => $total_setup + $plate_total,
+	}
+    );
 
     return (
         'Envelope Setup'  => $envelope_setup,

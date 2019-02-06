@@ -153,6 +153,7 @@ sub init_production {
 	my $self = shift;
 	my $s = $self->services;
 	print STDERR "SERV: ", Dumper($s);
+	my $dbh = session::dbh;
 
 	foreach my $s ( @{$self->services} ) {
 		#print STDERR Dumper($s);
@@ -171,11 +172,47 @@ sub init_production {
 
 		
 		$self->set_equipment($sid, $eid);
+
+		if ( $s->{strservicetype} eq 'Printing' ) {
+				my $stock = $specs{hdnPaperIndex};
+			    my $sheets = $specs{hdnPaperBuyQuantity1};
+			    my $index =  $s->{lngserviceindex};
+			print STDERR "INIT SET STOCK: $stock, $sheets, $index PD: $self->{id} \n";	
+				if ( $stock && $sheets ) {
+					$dbh->do(
+						q{ Update tbl_project_contents SET stock = ?, gross_sheets = ? WHERE lngserviceindex = ? },
+						undef, $stock, $sheets, $index
+					);
+					allocate_inventory($stock, $sheets);
+				} else {
+					die("MISSING DATA: STock $stock, Sheets, $sheets INDEX: $index PID: $self->{id}");
+
+				}
+	
+
+
+		}
+			
+
  
 		print STDERR "HAVE EQUIPMENT: $equip, $eid FROM Service $s->{strservicetype} \n";
 
 
 	}
+}
+
+sub allocate_inventory {
+	my $stock = shift;
+	my $sheets = shift;
+
+	my $dbh = session::dbh;
+
+	my $id = $dbh->selectrow_array(q{SELECT strid FROM tbl_paper WHERE lngindex = ?}, undef, $stock);
+
+	$dbh->do(q{Update inventory_count SET onorder = onorder + ? WHERE id = ?}, undef, $sheets, $id);
+
+
+
 }
 
 sub services {

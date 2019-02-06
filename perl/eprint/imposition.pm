@@ -124,6 +124,8 @@ sub desired_signature_size {
     my ($desired_signature_size, $impositions) = @_;
   
     my $max_setup = max(map { $_->{setup} } @$impositions);
+
+	print STDERR "HAVE MAX SETUP: $max_setup DSS: $desired_signature_size \n";
     if ($max_setup == 9) {
         # right now 36 pg signatures are not a good thing, so until we can
         # figure when we do want them we are just going to do without. will -
@@ -157,6 +159,7 @@ sub desired_signature_size {
             $desired_signature_size = 4;
         }
     }
+	print STDERR "HAVE NEW DSS: $desired_signature_size \n";
     return $desired_signature_size;
 }
 
@@ -165,7 +168,10 @@ sub convert_to_signature {
 
     my $setup   = $imp->{setup};
 
+
     my ($r, $c) = @{ $imp }{ qw(rows cols) };
+
+print STDERR "CONVERT TO SIGNATURE: DS: $desired_signature_size, SETUP: $setup R: $r C: $c \n";
 
     $imp->setSpreadRows($imp->{rows});
     $imp->setSpreadCols($imp->{cols});
@@ -193,11 +199,14 @@ sub convert_to_signature {
         my ($rows, $cols);
         my $imp_rows = $imp->{rows};
         my $imp_cols = $imp->{cols};
+print STDERR "CONVERT A ROW: $imp_rows COL: $imp_cols \n";
         if ($imp_rows >= $desired_signature_size) {
             $rows = int($imp_rows / $desired_signature_size);
             $cols = $imp_cols;
+			print STDERR "CONVER B Rows: $rows COLS: $cols \n";
         }
         else {
+		print STDERR "CONVER C \n";
             $rows = 1;
             my $temp = $desired_signature_size / $imp_rows if $imp_rows;
             $temp = int($temp) == $temp ? $temp : $temp + 1;

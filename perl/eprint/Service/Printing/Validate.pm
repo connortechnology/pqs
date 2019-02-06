@@ -170,13 +170,32 @@ sub spread {
 	
     # Additional plates are required to print this (int).
     $spread{add_plates}   = $specs->{add_plates}; 
+	$spread{colour_changes} = colour_changes($specs);
 
 	$spread{rfq_only}     = rfq_only($dbh, $pid);
 	$spread{product_only} = product_only($dbh, $pid);
+
 print STDERR "HAVE RFQ ONLY: $spread{rfq_only} \n";
 
 
     return \%spread;
+}
+
+sub colour_changes {
+	my $specs = shift;
+
+	#Only for multipage projects
+	my $colour_changes;
+
+	map { 
+		if ( $_ =~ /mv_num_colour/ ) {
+			$colour_changes += $specs->{$_};
+		}
+	} %{$specs};
+
+	print STDERR "HAVE COLOUR CHANGES: $colour_changes \n";
+
+	return $colour_changes;
 }
 
 # Extract the colours and coating (inks, varnishes, aqueous, etc.) information

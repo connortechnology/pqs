@@ -469,11 +469,17 @@ sub section_admininistrator {
     require eprint::docket;
     require eprint::employee_project;
     require eprint::products;
+	require eprint::mat_inventory;
+
+	my $param = map_param();
 
 print STDERR "SUB: $sub_section F: $filename \n";
     if ($sub_section eq 'administrator') {
         eprint::login::email_password($r, $log, $dbh, $variable)  if $filename eq 'administrator_password_confirmation.html';
     } 
+    elsif ($sub_section eq 'mat_inventory') {
+		eprint::mat_inventory::display($param, $variable);
+	}
     elsif ($sub_section eq 'production') {
         eprint::admin_service::price_list_view($r, $log, $dbh, $variable)                  if $filename eq 'services_price_lists_view.html';
         eprint::admin_material::price_list_view($r, $log, $dbh, $variable)                 if $filename eq 'materials_price_lists_view.html';
@@ -700,16 +706,8 @@ print STDERR "MAIN -- SUB : $sub_section file: $filename \n";
     elsif ($sub_section eq 'dashboard') {
 
 		use eprint::dashboard;
-		my $param;
-       	map { 
-			my @p = $r->param($_);
 
-			if (@p == 1 ) {
-				$param->{$_} = shift @p;
-			} else {
-				$param->{$_} = \@p;
-			}
-		} $r->param();
+		my $param = map_param();
 
 		print STDERR "HAVE AP ", Dumper($r->param('actionpid'), scalar $r->param('actionpid') );
 
@@ -831,6 +829,23 @@ print STDERR "CHECK ASR " . $r->param('run_asr') . "-- \n";
 	};
 
     return $status;
+}
+
+sub map_param {
+		my $param;
+		my $r = session::r;
+       	map { 
+			my @p = $r->param($_);
+
+			if (@p == 1 ) {
+				$param->{$_} = shift @p;
+			} else {
+				$param->{$_} = \@p;
+			}
+		} $r->param();
+
+
+		return $param;
 }
 
 sub menu_options {

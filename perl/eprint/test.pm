@@ -4,6 +4,7 @@ use strict;
 use PQS::Object::project;
 use session;
 use PQS::DB;
+use Apache2::Const qw(:common HTTP_MOVED_TEMPORARILY);
 
 use eprint::service;
 
@@ -24,7 +25,7 @@ sub handler {
 
 
 	my $dbh = session::dbh;
-	my $pids = $dbh->selectcol_arrayref(q{SELECT lngprojectindex from tbl_projects order by 1 desc limit 500});
+	my $pids = $dbh->selectcol_arrayref(q{SELECT lngprojectindex from tbl_order_contents order by 1 desc limit 50});
 
 
 
@@ -45,7 +46,7 @@ sub handler {
         print(  );
 
 
-	return 1;
+	return OK;
 }
 
 1;

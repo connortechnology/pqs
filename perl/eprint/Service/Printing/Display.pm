@@ -82,8 +82,9 @@ sub display {
     # For now we only show multi-version controls if the press is sheetfed
     # offset and we're not doing a pads or a press sheet combo.
     $page{multiversion_allowed} = ( 
-               !$project->{is_multipage}
-            && $press_type =~ /^(web|digital|press)$/
+			#     !$project->{is_multipage}
+			#&& $press_type =~ /^(web|digital|press)$/
+               $press_type =~ /^(web|digital|press)$/
             && $project_type ne 'PressSheetCombination'
             && $project_type ne 'Scratch/WritingPads'
     );
