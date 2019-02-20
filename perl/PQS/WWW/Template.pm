@@ -321,7 +321,7 @@ print STDERR "START UPLOAD \n";
     # Just use it's existing filename.
 	if ( $upload &&  $upload->type eq 'application/pdf' ) {
 		my $x = $r->param('name');
-		if (my $id = $r->param('id')) {
+		if (my $id = $r->param('id') && 0) {
 			
 			$filename = $dbh->selectrow_array(q{
 				SELECT filename FROM template.template
@@ -337,6 +337,8 @@ print STDERR "START UPLOAD \n";
 			}, {}, $r->param('name'), $id);
 
 			if ( $upload ) {
+				open($fh, ">$filename");
+
 				open($fh, ">$filename")
 					or die "Couldn't open existing template ($id) $filename: $!";
 			}
@@ -345,7 +347,6 @@ print STDERR "START UPLOAD \n";
 			($filename, $fh) = newfile()
 				or die "Can't open output file: $!";
 			
-
 			$dbh->do(q{
 				INSERT INTO template.template ("name", filename)
 				VALUES (?, ?)
@@ -447,8 +448,12 @@ sub newfile {
         ($newfile) = $newfile =~ /^([^<>|;*]+)$/; # untaint
         $newfile =~ tr/\//\//s;
 
+		print STDERR "HAVE NEWFILE 1: $newfile \n";
+
         next if (-e $newfile);
-        open(my $fh, ">", $newfile);
+		print STDERR "HAVE NEWFILE 2: $newfile \n";
+        open(my $fh, ">", $newfile) or die("Can Not open Handle for: $newfile \n");
+		print STDERR "HAVE NEWFILE 3: $newfile \n";
 
         if ($fh) {
             return wantarray ? ($newfile, $fh) : $fh;

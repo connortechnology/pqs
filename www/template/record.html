@@ -13,54 +13,84 @@
 
 	<script type="text/javascript" src="/javascripts/JSAN.js"></script>
 	<script type="text/javascript" src="interactive.js"></script>
-    <script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
 
 	<style type="text/css">
 		/* Nav & Tabs & Side Bar Ads */
 		.tab { display: none; }
 		#side-bar-ads {display: none; }
 	</style>
+    <script type="text/javascript">
+		
+		function reloadpdf(reload_page) {
+			view_pdf(reload_page);
+			<? if reload_page ?>
+			<? endif reload_page ?>
+		}
+		
+			</script>
 </head>
 
-<body>
+<body onload="reloadpdf(<?reload_page?>)">
 	<!--#include virtual="/includes/c1-main-nav.html" -->
-<fieldset>
-<legend>Instructions</legend>
-<p>Please fill in the fields below. When finished please select the Save and Continue button.</p>
-</fieldset>
+<? if is_staff ?>
+<form method="get" action="main.html">
+		<input type="hidden" name="pid" value="<?pid?>"/>
+		<?if create_to_order?>
+			<input type="hidden" name="create_to_order" value="1" />
+		<?endif create_to_order?>
+			<input type="submit" class="button" value="Exit"  />
+</form>
+<? endif is_staff ?>
 	<form id="template" method="post" action="record.html?pid=<?pid?>">
 		<input type="hidden" name="pid" value="<?pid?>" id="pid" />
 		<?if create_to_order?>
 			<input type="hidden" name="create_to_order" value="1" />
 		<?endif create_to_order?>
 
-		
+		<div id="record-nav">
+		<? if ($$variable{user_id} eq '10283'  || $$variable{is_staff} || $$variable{user_id} eq '129' || $$variable{user_id} eq '162') ?>
+        <!-- User ID Numbers 10283, 129 and 162:
+        10283 = Eric * Jowharian from company number 10283 = Company Name 10283
+        129 = Salendra Singh from company number 113 = Company Name 10018
+        162 = Jatinder Chauhan from company number 147 = Company Name 10100-->
+        
+        <input name="new"    type="submit" class="button"       style="float: left" value="New" /> 
+		<? endif ($$variable{user_id} eq '10283'  || $$variable{is_staff} || $$variable{user_id} eq '129' || $$variable{user_id} eq '162') ?>
+		 <? if is_staff ?>
+         <input name="delete" type="submit" class="button right" value="Delete" />
+         <? endif is_staff ?>
+                    <input               type="submit" class="button right" value="Save" />
+
+			<!-- <input type="button" class="button right" value="Clear" style="float: right;" /> -->
+
+			<div id="offsets" style="width: 22em; padding-bottom:3em;">
+				<? if ($$variable{user_id} eq '10283'  || $$variable{is_staff} || $$variable{user_id} eq '129' || $$variable{user_id} eq '162') ?>
+                <input name="first"  type="submit" class="button arrow" value="|&lt;&lt;" />
+				<input name="prev"   type="submit" class="button arrow" value="&lt;" />
+				<input name="offset" type="text"   id="offset"          value="<?offset?>" />
+				<input               type="submit" class="button"       value="Go" />
+				<input name="next"   type="submit" class="button arrow" value="&gt;" />
+				<input name="last"   type="submit" class="button arrow" value="&gt;&gt;|" /> 
+            <? else ($$variable{user_id} eq '10283'  || $$variable{is_staff} || $$variable{user_id} eq '129' || $$variable{user_id} eq '162') ?>
+            <input name="offset" type="hidden" id="offset" value="<?offset?>" />
+              <? endif ($$variable{user_id} eq '10283'  || $$variable{is_staff} || $$variable{user_id} eq '129' || $$variable{user_id} eq '162') ?>
+                
+			</div> 
+		</div>
 
 		<div id="fill">
-			<input type="hidden" name="id" id="id" />
+			<input type="hidden" id="id" name="id" />
 
 			<? loop pages ?>
 				<fieldset>
 					<legend>Page <?_row?></legend>
 
-
 					<? loop blocks ?>
-
-
-						<?if ($$variable{Custom}{disabled} )?>
-						<?else ($$variable{Custom}{disabled} )?>
-							<label for="b<?_row?>" style="width:300px;"><?Description?></label>
-						<?endif ($$variable{Custom}{disabled} )?>
+						<label for="b<?_row?>" style="width:250px;"><?Description?></label>
 
 						<?if ($$variable{Subtype} eq 'Text') ?>
 							<?if not:textarea ?>
-								<input id="b<?_row?>" size="<?cols?>" style="width: <?cols?>em;" name="<?Name?>" value="" 
-
-						<?if ($$variable{Custom}{disabled} )?>
-							type="hidden"
-						<?endif ($$variable{Custom}{disabled} )?>
-/>
-
+								<input id="b<?_row?>" size="<?cols?>" style="width: <?cols?>em;" type="text" name="<?Name?>" value="" />
 							<?endif not:textarea ?>
 
 							<?if textarea ?>
@@ -88,57 +118,24 @@
 
 						<br />
 
-
 					<? endloop blocks ?>
+                   
 		
 				</fieldset>
 			<? endloop pages ?>
 		</div>
 
 		<div class="button-bar">
-<!--			<input type="submit" class="button right" value="Save and Continue" onClick="form.action='/build'" />.
- this link brings you to the correct place but did not save my record-->            
- 			<input type="submit" class="button right" value="Save and Continue" onClick="form.action='main.html'" />
-	    </div>
-        <br />
-        <br />
-         <br />
-        <br />
-         <br />
-        <br />
-        <fieldset class="hidden-details">
-        <legend>Multiple Records</legend>
-         
-        <p>To Create Multiple Records for your print project select the New Record Button below. Make your new record by filling in the fields above then select the Save Current Record Button below. To move between Records use the Arrow buttons below or type in the record ID number and select Go to Record. Once all your records are complete select the Save and Continue button above.</p>
-        
-			<input name="new"    type="submit" class="button"       style="float: left" value="New Record" />
-			<input               type="submit" class="button right" value="Save Current Record" />
-			<input name="delete" type="submit" class="button right" value="Delete Current Record" />
-			<!-- <input type="button" class="button right" value="Clear" style="float: right;" /> -->
-
-			
-<!--				<input name="first"  type="submit" class="button arrow" value="|&lt;&lt;" />
--->				<input name="prev"   type="submit" class="button arrow" value="&lt;-" />
-				
-				<input name="next"   type="submit" class="button arrow" value="-&gt;" />
-<!--				<input name="last"   type="submit" class="button arrow" value="&gt;&gt;|" />
-<input name="offset" type="text"   id="offset"          value="<?offset?>" />
-				<input               type="submit" class="button"       value="Go" />
--->			<input name="offset" type="text"   id="offset"       size="2"  value="<?offset?>" />
-				<input               type="submit" class="button"       value="Go to Record" />
-        </fieldset>
-       
-         <fieldset class="hidden-details">
-        <legend>File Assets</legend>
-        <p>To upload template assets please click <a href="assets.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">here</a>.</p>
-        </fieldset>
-       <fieldset class="hidden-details">
-       <legend>Bulk Uploads</legend>
-        <p>To bulk upload record data please click <a href="data.html?pid=<?pid?><?if create_to_order?>;create_to_order=1<?endif create_to_order?>">here</a>.</p>
-      </fieldset>
-        
-        <input type="hidden" name="go" id="go" value="1" />
-        <input type="hidden" name="Finish" value="1" id="Finish" />
+            <input type="hidden" name="auto_preview" id="auto_preview" value="1"  />
+		<!--	<label for="auto_preview">Auto Preview</label> -->
+<!--			<? if is_staff ?><input type="submit" class="button right" value="Exit" name="Exit" /><? end if is_staff ?>
+-->			<input type="submit" class="button right" value="Save and Continue" name="Finish" onClick="form.action='main.html'" />
+<!--			<input type="button" class="button right" value="Preview" onClick="update_preview()";  />
+-->            
+				<input type="submit" class="button right" value="Preview"  />
+                 <input type="hidden" name="reload_page" id="reload_page"  />
+                 <input type="hidden" id="marker" name="marker"  value="<?marker?>" />
+		</div>
 	</form>
 
 
@@ -149,8 +146,10 @@
 	<div id="previews">
 		<? loop pages ?>
 			<div class="preview">
-				<img width="322px" id="p<?_row?>" alt="Page <?_row?> Preview" src="" />
-				<a href="javascript:view_pdf(<?_row?>)">Click Here to View Full Size PDF Proof</a>
+            <? eval( $variable->{page} = $variable->{_row} -1 ) ?>
+				<!--<embed src="/pdf/render?pid=<?pid?>&n=<?page?>;file_type=pdf;offset=<?offset?>" width="322px"> <br /> -->
+                <img width="322px" id="p<?_row?>" alt="Page <?_row?> Preview" src="" />
+				<a href="" onclick="$('reload_page').value=<?_row?>; document.forms['template'].submit();return false;";>View Page <?_row?> as Full Size PDF</a>
 			</div>
 
 		<? endloop pages ?>

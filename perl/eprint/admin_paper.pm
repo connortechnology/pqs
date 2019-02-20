@@ -5,6 +5,7 @@ use utf8;
 use Apache2::Const qw(:common HTTP_MOVED_TEMPORARILY);
 use Text::CSV_XS;
 use sql qw(:common);
+use Data::Dumper;
 
 require misc;
 
@@ -41,7 +42,7 @@ sub get_index_by_id {
 }
 
 sub save {
-    my ( $r, $log, $dbh, $index ) = @_;
+    my ( $r, $log, $dbh, $index, $make_copy ) = @_;
 
     my @fields = qw(
         strID                strName              strCategory
@@ -49,7 +50,7 @@ sub save {
         strFinish            strMWeight           strWeight
         dblWidth             dblHeight            dbl1TonPrice
         dbl5TonPrice         dbl20TonPrice        dblEndBracketPrice
-        dblBrokenCartonPrice dblOtherPrice 
+        dblBrokenCartonPrice dblOtherPrice		  lngpaperlistindex 
     );
 
     my %substrate; 
@@ -60,6 +61,7 @@ sub save {
 
         $substrate{$attr} = $value;
     }
+	$substrate{strID} .= "-copy" if $make_copy;
 
     # We have two oddball names, instead of making the entire list above a
     # hashmap we'll just handle them here.
@@ -72,15 +74,53 @@ sub save {
 
     return unless %substrate;
 
+
+	print STDERR "SAVE PAPER: ", Dumper(\%substrate);
     if (!$index) {
         insert( $log, $dbh, 'tbl_Paper', %substrate );
-        my $index = $dbh->last_insert_id(undef, undef, 'tbl_paper', 'lngindex');
+        $index = $dbh->last_insert_id(undef, undef, 'tbl_paper', 'lngindex');
     } 
     else {
         update($log, $dbh, 'tbl_Paper', "lngIndex = $index", %substrate);
     }
 
+	save_price($r);
+
     return $index;
+}
+
+sub save_price {
+		my $r = session::r;
+		my $log = session::log;
+		my $dbh = session::dbh;
+
+		my %price_sets;
+		foreach my $key ( $r->param() ) {
+			if ( $key =~ /chk-(.*)-(.*)-(.*)/ ) {
+				my ( $listIndex, $paperIndex, $priceIndex ) = ($1, $2, $3);
+				my $setId = $listIndex.'-'.$paperIndex;
+				$log->debug("PRICE SET: $listIndex - $paperIndex ");
+				$price_sets{$setId} = new eprint::admin_paper::priceset( $log, $dbh, $listIndex, $paperIndex ) if  ! defined $price_sets{$setId};
+				if ( $r->param("rdbIncluded-$listIndex-$paperIndex") eq 'Y' ) {
+					my $price = new eprint::admin_paper::price( $log, $dbh, $price_sets{$setId} );
+					$price->set(
+							'', # No Equipment
+							$r->param("txtMin-$listIndex-$paperIndex-$priceIndex"),
+							$r->param("txtMax-$listIndex-$paperIndex-$priceIndex"),
+							$r->param("txtUnits-$listIndex-$paperIndex-$priceIndex"),
+							$r->param("txtCost-$listIndex-$paperIndex-$priceIndex"),
+							$r->param("txtMarkup-$listIndex-$paperIndex-$priceIndex"),
+							$r->param("txtPrice-$listIndex-$paperIndex-$priceIndex"),
+							$r->param("rdbDiscount-$listIndex-$paperIndex-$priceIndex")
+							);
+					$price_sets{$setId}->addPrice( $price );
+				} # end if
+			} # end if
+        } # end foreach
+		foreach my $set ( keys %price_sets ) {
+			$price_sets{$set}->save();
+		} # end if
+
 }
 
 sub paper_prices {
@@ -308,7 +348,8 @@ sub paper_prices {
 sub paper_edit {
 	my ( $r, $log, $dbh, $variable ) = @_;
 	my ( $temp );
-
+	my $action = $r->param('btnFunction');
+print STDERR "Start Paer Edit - $action \n";
 	my $index = $r->param('ddmPaper');
 	$r->param('ddmSheetSize') =~ /(\d*\.*\d*)x(\d*\.*\d*)/;
 	my $width = $1;
@@ -363,18 +404,28 @@ sub paper_edit {
 		}
 	} elsif ( $r->param('btnFunction') eq 'Save' ) {
 		$index = save( $r, $log, $dbh, $index );
+	} elsif ( $r->param('btnFunction') eq 'Copy' ) {
+		print STDERR "HAVE INDEX before copy: $index \n";
+
+		my $old_index = $index;
+		$index = save( $r, $log, $dbh, undef, 1 );
+		$dbh->do(qq{INSERT into tbl_paper_prices  ( 
+					select lnglistindex, $index, dtmstart, dtmend, lngmin, lngmax, strunits, dblcost, dblmarkup, dblprice, ysndiscountable 
+					FROM tbl_paper_prices WHERE lngpaperindex = ? )
+		}, undef, $old_index);
+		print STDERR "HAVE INDEX after copy: $index \n";
 	} # end if
 
 	# only do the following code if there is a paper selected
 	if ( $index ne '' ) {
 		$_ = "SELECT strID, strName, strCategory, strDetails, strFinish, strColour, strMWeight, strWeight, strCalliper, dblWidth, dblHeight,\n".
 			"dbl1TonPrice, dbl5TonPrice, dbl20TonPrice, dblOtherPrice, dblEndBracketPrice, dblBrokenCartonPrice,\n".
-			"ysnTaxExempt1, ysnTaxExempt2, ysnPerfecting, lngPackageQty\n".
+			"ysnTaxExempt1, ysnTaxExempt2, ysnPerfecting, lngPackageQty, lngpaperlistindex\n".
 			"FROM tbl_Paper WHERE lngIndex = '$index'";
 		@$variable{
 			'strID', 'strName', 'strCategory','strDetails','strFinish', 'strColour', 'strMWeight', 'strWeight', 'strCalliper','dblWidth','dblHeight',
 			'dbl1TonPrice','dbl5TonPrice','dbl20TonPrice','dblOtherPrice','dblEndBracketPrice','dblBrokenCartonPrice',
-			'TaxExempt1','TaxExempt2','Perfecting', 'dblPackageQuantity'
+			'TaxExempt1','TaxExempt2','Perfecting', 'dblPackageQuantity', 'lngpaperlistindex'
 		} = sql::sql_statement( $log, $dbh, $_ );
 
 		$$variable{'rdbTaxExempt1'.$$variable{'TaxExempt1'}} = 'CHECKED';
@@ -448,7 +499,7 @@ sub paper_edit {
 	$$variable{'ddmWeight'} = ssi::fill_drop_down( $log, $dbh, $_, $r->param('ddmWeight') );
 
 	$_ = "SELECT lngIndex, strName FROM tbl_PaperLists ORDER BY strName";
-	$$variable{'ddmPaperList'} = ssi::fill_drop_down( $log, $dbh, $_, $r->param('ddmPaperList') );
+	$$variable{'ddmPaperList'} = ssi::fill_drop_down( $log, $dbh, $_, $variable->{lngpaperlistindex} );
 
 	$_ = "SELECT lngIndex, strName FROM tbl_ProjectTypes ORDER BY strName";
 	my @types = sql::sql_statement( $log, $dbh, $_ );

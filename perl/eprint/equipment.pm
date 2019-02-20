@@ -320,6 +320,7 @@ sub equipment_fits {
 
 use Data::Dumper;
 print STDERR "EQUIPMENT FITS: ", Dumper(@_);
+print STDERR "FITS 1\n";
     # If we haven't explicitly said we can't rotate the supplied dimensions
     # to try fitting the other way, we'll assume we can (legacy reasons).
     $rotate = 1 unless defined $rotate and $rotate == 0;
@@ -342,6 +343,7 @@ print STDERR "EQUIPMENT FITS: ", Dumper(@_);
     if (defined $min_length_override) {
         $equip{'Minimum Sheet Length'} = $min_length_override;
     }
+print STDERR "FITS 2\n";
     # Check the supplied size agains the equipment.    
     if ((( 1*$width  < 1*$equip{'Minimum Sheet Width'} ) 
       or ( 1*$height < 1*$equip{'Minimum Sheet Length'}) 
@@ -360,6 +362,7 @@ print STDERR "EQUIPMENT FITS: ", Dumper(@_);
             return 0;
         }
     }
+print STDERR "FITS 3\n";
     
     # If the width and height fit, check the depth.
     if ( $equip{'Minimum Calliper'} and 1*$calliper > 0 and 1*$calliper < 1*$equip{'Minimum Calliper'} ) {
@@ -368,7 +371,7 @@ print STDERR "EQUIPMENT FITS: ", Dumper(@_);
     if ( $equip{'Maximum Calliper'} and 1*$calliper > 0 and 1*$calliper > 1*$equip{'Maximum Calliper'} ) {
         return 0;
     }
- 
+print STDERR "Equip: $eid FITS Project W: $width x H: $height on ", Dumper(\%equip); 
     # If we're here it fits.
     return 1;
 }

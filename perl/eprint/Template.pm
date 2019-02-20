@@ -33,7 +33,8 @@ print STDERR "********* INIT TEMPLATE PID: $pid Template: $template_id  ********
 
     # Create a template dir.
     mkpath("$proj_dir/.template")
-        or die "Couldn't create template dir for project ($pid).";
+        or die "Couldn't create template dir for project ($pid)."
+		unless -e "$proj_dir/.template";
 
 	$dbh->do(qq{UPDATE tbl_projects SET pdf_template = '$template_id' WHERE lngprojectindex = $pid});
 	$dbh->commit;

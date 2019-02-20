@@ -2865,6 +2865,8 @@ sub get_imposition_charge {
 
         }
         else {
+
+			print STDERR "START PER PAGE CHARGE TOTAL: $imposition_charge \n";
             $imposition_charge =
               $multisignature_imposition;    #this covers the make-ready
             my $per_page_charge =
@@ -2873,6 +2875,8 @@ sub get_imposition_charge {
 
             $imposition_charge += $per_page_charge * $$imp{'spreads'} * 4 *
               $$imp{'setup'};    #since we will have 4 pages per spread
+print STDERR "PER PGE: $per_page_charge SPREADS: $$imp{'spreads'}  SETUP: $$imp{'setup'} WIDTH: $imageWidth x $imageHeight; TOTA: $imposition_charge \n", Dumper($imp);
+
 
             my $base_trapping;
             if ((@$side_one_colours > 1) || (@$side_two_colours > 1)) {
@@ -2893,6 +2897,8 @@ sub get_imposition_charge {
                 $imposition_charge += $trapping_charge if $trapping_charge > 0;
                 $imposition_charge += $trapping_make_ready
                   if $trapping_make_ready > 0;
+
+print STDERR "Add Trapping Charge:  $trapping_charge MR: trapping_make_ready IMP CHARGE TOTAl: $imposition_charge   \n";
             }
 
 
@@ -2901,6 +2907,7 @@ sub get_imposition_charge {
             my $group_factor =
               ($per_page_charge + $base_trapping) * $$imp{'spreads'} * 4 *
               $$imp{'setup'};    # includes imposition AND trapping
+print STDERR "GROUP FACTOR : $group_factor PPC: $per_page_charge BASE TRAP:  $base_trapping \n";
 
             # Wipe out any previous group factors for this signature
             $dbh->do(q{
@@ -2962,6 +2969,7 @@ sub get_imposition_charge {
                                      $dbh, $variable, 'MetalEffectsMakeReady',)
     if $metal_effects;
 
+	print STDERR "HAVE IMP CHARGE TOTAL: $imposition_charge \n";
 
     return $imposition_charge;
 }

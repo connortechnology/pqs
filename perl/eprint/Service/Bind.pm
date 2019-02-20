@@ -197,6 +197,7 @@ print STDERR "Print Presses: @$print_presses \n";
         elsif (eprint::equipment::equipment_fits(
                 $log, $dbh, $eid, @project{qw(width height calliper)}, 0) ) 
         {
+			print "EQUIPMENT $eid FITS, Time to push\n";
             if ( grep /$supplier{$eid}/,  @print_suppliers ) {
                 push @s_eids, $eid;
             } else {
@@ -204,9 +205,10 @@ print STDERR "Print Presses: @$print_presses \n";
             }
         }
     }
-print STDERR "HAVE EQUIPMENT: @eids : @s_eids : @o_eids \n";
 
-#    @eids = @s_eids ? @s_eids : @o_eids;
+    @eids = @s_eids ? @s_eids : @o_eids;
+
+print STDERR "HAVE EQUIPMENT: @eids : @s_eids : @o_eids \n";
     
     # Default project quantities to use if custom ones aren't defined.
     my @qty = (undef, get_quantities($log, $dbh, $pid));
@@ -443,6 +445,8 @@ print STDERR "HAVE PRICE: ", Dumper($price, $mat_price, $mat);
         # to 'calculated' unless it's specifically set to something else.
 #        if ($best{price} && $best{price} > 0) {
         if ($best{price} ) {
+
+			print STDERR "HAVE BEST PRICE: ", Dumper(\%best);
 
             @$specs{"txtPrice$n", "txtUnitPrice$n"}
                 = format_pricing($best{price}, $qty);

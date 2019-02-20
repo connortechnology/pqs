@@ -25,6 +25,7 @@ function auto_preview () {
     
 
 function update_preview () {
+	alert('Update Preview');
     var form = $('template');
 
     var qs       = Form.serialize(form);
@@ -44,8 +45,8 @@ function view_pdf (n) {
 	var offset = $('offset').value;
 	var pid = $('pid').value;
 	
-    var myurl = PDF_URL + '?file_type=pdf;n=' + (n-1) + ';' + 'id=' + id + ';' + 'offset=' + offset + ';' + 'pid=' + pid + ';';
-    window.open(myurl);
+    var myurl = PDF_URL + '?file_type=pdf;n=' + (n-1) + ';' + 'id=' + id + ';' + 'offset=' + offset + ';' + 'pid=' + pid + ';+pagenumber=1;';
+    //window.open(myurl);
 }
 
 

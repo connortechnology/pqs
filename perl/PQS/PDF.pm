@@ -81,7 +81,8 @@ print STDERR "HAVE RECORD: ", Dumper($data, $record);
             dropshadow => 1,
             crop       => \@bounds,
         }, $path);
-        $r->print($image);
+	    #$r->print($image);
+        print($image);
     }
     
     $dbh->disconnect();
@@ -482,6 +483,8 @@ print STDERR "DONE FILL: $name - $value Type: $type : $block_options \n\n";
 
 sub embed_fonts {
     my ($p, $path) = @_;
+
+	return 1;
 	PDF_set_parameter($p, 'SearchPath', Apache2::RequestUtil->request->document_root . '/site_specific/fonts');
 	PDF_set_parameter($p, 'FontOutline', 'Frutiger 57Cn=Frutiger57Cn.otf');
 
