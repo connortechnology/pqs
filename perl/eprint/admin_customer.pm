@@ -156,6 +156,7 @@ print STDERR  "HAVE LINE SCREEN: $ls \n";
             my %mail = (
                     SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
                     FROM    => configuration::get_value( $log, $dbh, 'AdministratorEmail'),
+                    CC    	=> configuration::get_value( $log, $dbh, 'AdministratorEmail'),
                     TO      => join( ',', @to ),
                     SUBJECT => "Customer account status has changed!",
                     );

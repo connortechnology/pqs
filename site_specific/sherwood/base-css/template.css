@@ -1,0 +1,98 @@
+
+/* OVERRIDE
+ *
+ * Override main site layout to get more screen space for preview panel.
+ *
+ */
+
+#expander {
+    /* Any % height here causes IE to lose the neg right margin */
+        background-color: #FFFFFF;
+        background-image: none;
+        background-repeat: no-repeat;
+}
+
+.center { float: left !important; }
+
+.outer {
+    margin:         0   !important;
+    margin-right: 340px !important;
+}
+.left {
+    width:         340px !important;
+        margin-left:     0   !important;
+        margin-right: -340px !important;
+
+        float: right !important;
+}
+
+#sidebar { font-size: 1em;}
+fieldset { text-align: left; }
+
+#headerTabs, #accountTab { display: none; }
+
+
+/* RECORD NAVIGATION CONTROLS */
+
+#record-nav { clear: both; }
+#record-nav input { float: none; }
+
+div#offsets {
+    margin: auto;
+}
+
+#record-nav input#offset {
+        width: 4.5em;
+        height: 2.7ex;
+        margin: 0 1px 1.1ex 1px;
+        border: 1px solid #29587C;
+        text-align: center;
+}
+* html input#offset { height: 3.9ex; }
+
+#record-nav input {
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 0.85em;
+        font-weight: normal;
+
+        padding: 0.25ex 0.25em 0.5ex 0.25em;
+}
+
+#record-nav .arrow {
+    width: 3em;
+}
+
+
+/* TEMPLATE FORM */
+
+#fill label              { width: 12em; }
+
+
+/* PREVIEW PANEL */
+
+div#side {
+    float: right;
+    display: inline;
+    position: relative;
+}
+
+.preview {
+        margin: 0 auto;
+    margin-top: 5.8ex;
+
+        padding: 0;
+    text-align: center;
+}
+
+.preview a {
+    color: black !important;
+    position: relative;
+    top: -1ex;
+    font-weight: normal;
+}
+.preview a:hover { font-weight: bold; }
+
+.preview img {
+    float: none;
+    display: block;
+}
