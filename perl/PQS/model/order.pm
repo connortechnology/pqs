@@ -291,7 +291,8 @@ sub get_orderid_by_pid {
   my ($pid) = @_;
   my $dbh = session::dbh;
   my $order = $dbh->selectrow_array(q{
-    SELECT lngorderid FROM tbl_order_contents WHERE tbl_order_contents.lngprojectindex = ?
+    SELECT tbl_orders.lngorderid FROM tbl_order_contents, tbl_orders WHERE tbl_order_contents.lngprojectindex = ?
+	AND tbl_orders.lngorderid = tbl_order_contents.lngorderid AND tbl_orders.ysnfinished
   }, undef, $pid);
   return $order;
 }
