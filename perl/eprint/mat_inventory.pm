@@ -46,6 +46,7 @@ sub sql_filters {
 
 	my $param = shift;
 	my $type = shift;
+	my $dbh	= session::dbh;
 
 	my $list = $dbh->selectall_arrayref(q{SELECT itable, field, label FROM inventory_filters WHERE itype =?}, {Slice=>{}}, $type); 
 
@@ -197,6 +198,7 @@ sub text_search {
 sub update_inventory {
 
 	my $param = shift;
+	my $dbh	= session::dbh;
 
 	print STDERR "UPDATE INVENTORY \n";
 
