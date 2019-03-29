@@ -167,7 +167,7 @@ print STDERR "HAVE SQL: $sql \n";
 
 			push @{$d->{fields}}, \%x; 
 			$d->{sortdata} = $l->{$sortfield};
-			$d->{id} = $l->{id};
+			$d->{id} = $l->{strid};
 
 		}
 
@@ -177,7 +177,7 @@ print STDERR "HAVE SQL: $sql \n";
 	}
 
 
-	#print STDERR "HAVE DATA X: ", Dumper(\@data);
+	print STDERR "HAVE DATA X: ", Dumper(\@data);
 	print STDERR "# of Records: ", scalar @data , "\n";
 	return @data;
 
