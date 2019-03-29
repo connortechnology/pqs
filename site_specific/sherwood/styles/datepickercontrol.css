@@ -3,11 +3,14 @@
  * System-colors theme
  */
 
+fieldset nobr span { float:none;}
+
 div.calendarbutton{
 	position: absolute;
 	width: 15px;
 	height: 16px;
 	background: transparent url("/main/rfq/calendar_icon.png") no-repeat center;
+	vertical-align: middle;
 }
 
 #CalendarPickerControl{

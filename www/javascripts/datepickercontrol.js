@@ -423,7 +423,7 @@ DatePickerControl.createButton = function(input, useId)
 	calButton.className = "calendarbutton";
 	calButton.style.position = "relative";
 	calButton.style.cursor = "pointer";
-	calButton.style.verticalAlign = "bottom";
+	calButton.style.verticalAlign = "middle";
 	calButton.style.height = input.offsetHeight;
 	calButton.src = "/main/rfq/calendar_icon.png";
 	if (this.buttonPosition == "in"){

@@ -540,6 +540,22 @@ sub htmlize {
 #    return @_;
 #}
 
+
+sub select_options {
+	my $table 	= shift;
+	my $col1 	= shift;
+	my $col2 	= shift;
+	
+	my $dbh = session::dbh;
+
+	my $sql = qq{SELECT $col1, $col2 FROM $table order by $col2};
+	my $data = $dbh->selectall_arrayref($sql);
+
+
+	return ssi::make_drop_down($data);
+	
+}
+
 # Populate the <options>s of an HTML select element. Takes a flat array of
 # what should be pairs, a SINGLE value to select, and an option maximum label
 # length.

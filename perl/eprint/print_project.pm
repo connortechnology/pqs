@@ -1371,10 +1371,16 @@ sub remove_service {
     # If the project service is marked as NEEDED we don't delete it but
     # instead set its removed flag. 
     else {
-        $dbh->do(q{ UPDATE tbl_project_contents 
-                    SET ysnremoved = TRUE 
-                    WHERE lngprojectindex = ? AND lngserviceindex = ?
-        }, undef, $pid, $sid);
+		my $removed = $dbh->selectrow_array(q{
+			SELECT ysnremoved FROM tbl_project_contents WHERE lngprojectindex = ? and lngserviceindex = ?
+		}, undef, $pid, $sid );
+
+		my $status = $removed ? 'FALSE' : 'TRUE';
+
+		$dbh->do(qq{ UPDATE tbl_project_contents 
+					SET ysnremoved = $status
+					WHERE lngprojectindex = ? AND lngserviceindex = ?
+		}, undef, $pid, $sid);
     }
 
     # NOTE: Until we finish the changes to all the various service checks and

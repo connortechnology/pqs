@@ -223,6 +223,16 @@
         <th colspan="4">Sub-Total:</th>
         <td class="sub-total"><?SUB_TOTAL?></td>
       </tr>
+
+      <? if ( $$variable{'PROMO_DISCOUNT'} > 0 ) ?>
+      <tr>
+        <th colspan="4">Promotional Discount:</th>
+        <td class="sub-total"> - <?PROMO_DISCOUNT?></td>
+      </tr>
+      <? endif ( $$variable{'PROMO_DISCOUNT'} > 0 ) ?>
+
+
+
       <tr>
         <th colspan="4">Shipping & Handling:</th>
         <td><?SHIPPING?></td>

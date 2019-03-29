@@ -856,6 +856,32 @@ sub cat_image {
 	return "/images/main/product/category/default.jpg";
 }
 
+sub cat_chain {
+	my $cat = shift;
+	my $var;
+
+	#Create category chain for parents of current category.
+	my $parent = $cat;
+
+	my $name =  PQS::model::categories::get_name_from_id($parent);    
+	push @{$var->{cat_chain}}, { id => $parent, name => $name};
+
+
+	print STDERR " CAT CHAIN " , Dumper($var->{cat_chain});
+
+	while ( $parent ) {
+		$parent = PQS::model::categories::get_parent_from_id($parent);
+
+		next unless $parent;
+		$name =  PQS::model::categories::get_name_from_id($parent);    
+
+		unshift @{$var->{cat_chain}}, { id => $parent, name => $name};
+	}
+
+	return $var->{cat_chain};
+
+}
+
 sub display_categories {
  my ($r, $dbh, $var) = @_;
  

@@ -1,4 +1,4 @@
-package eprint::mat_inventory;
+package eprint::promotion;
 
 use Apache2::Const qw(:common HTTP_MOVED_TEMPORARILY); # Offers OK, Error, etc for web server.
 use strict;
@@ -11,15 +11,18 @@ use PQS::Object::project;
 use DateTime;
 use DateTime::Format::Strptime;
 use eprint::project;
+use PQS::model::promo;
+
+use PQS::Object::promotion;
 
 our $dbh = session::dbh;
 
 our $cols = [
 	{ desc=>"ID", 					id=>"id", 					class=> "rgfield", ro=>1 },
-	{ desc=>"Description", 			id=>"name", 				class=> "lgfield", ro=>1 },
-	{ desc=>"On Hand", 				id=>"onhand", 				class=> "srfield", ro=>1 },
-	{ desc=>"Allocated", 			id=>"onorder", 				class=> "srfield", ro=>1 },
-	{ desc=>"Net Count", 			id=>"netcount", 			class=> "srfield", ro=>1 },
+	{ desc=>"Name", 				id=>"name", 				class=> "rgfield", ro=>1 },
+	{ desc=>"Title", 				id=>"title", 				class=> "srfield", ro=>1 },
+	{ desc=>"Description", 			id=>"description", 			class=> "lgfield", ro=>1 },
+
 #	{ desc=>"Contact", 				id=>"contact", 				class=> "rgfield", ro=>1 },
 #	{ desc=>"Stock", 				id=>"stock", 				class=> "lgfield", ro=>1 },
 #	{ desc=>"P", 					id=>"pulled", 				class=> "tifield", ro=>1 },
@@ -29,15 +32,39 @@ sub add_link {
     my $x = shift;
     my $l = shift;
 
-    $x->{link} = "/main/order/order_history_details.html?order_id=$x->{value}" if $x->{id} eq 'lngorderid';
-    $x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
-    $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'strcompanyname';
-    $x->{link} = "/administrator/managerial/user_profiles.html?ddmUser=$l->{lnguserindex}" if $x->{id} eq 'contact';
-    $x->{link} = "/main/proj/proj_view.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'strprojectreference';
-    $x->{link} = "/main/proj/edit.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'intquantity1';
-    $x->{link} = "/service/shipping?pid=$l->{lngprojectindex};sid=$l->{shipid}" if $x->{id} eq 'delivery';
-    $x->{link} = "/service/printing?pid=$l->{lngprojectindex};sid=$l->{lngserviceindex}" if $x->{id} eq 'stock';
-    $x->{link} = "/main/quote/quote_history_details.html?quote_id=$l->{lngquoteid};" if $x->{id} eq 'lngquoteid';
+    $x->{link} = "promotion_edit.html?id=$x->{value}" if $x->{id} eq 'id';
+	#$x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
+
+
+
+}
+
+sub text_search {
+	my $string = shift;
+	my $dbfield = shift;
+
+	print STDERR "START TEXT SEARCH \n";
+
+	my $text;
+
+	if (  $string ) {
+
+	
+		my $searchstring = lc($string);
+		$searchstring =~ s/'//g;
+	
+		my @words = split(' ', $searchstring);
+	
+		$searchstring = '%' . join('%', @words) . '%';
+	
+		map {
+			$text .= qq{ AND lower($dbfield) LIKE  '\%$_\%' \n}  
+		} @words;
+
+	}
+
+	print STDERR "HAVE TEXT SEARCH: $text \n";
+	return $text;
 
 
 }
@@ -47,14 +74,8 @@ sub sql_filters {
 	my $param = shift;
 	my $type = shift;
 
-	my $list = $dbh->selectall_arrayref(q{SELECT itable, field, label FROM inventory_filters WHERE itype =?}, {Slice=>{}}, $type); 
 
-	map {
-		$_->{input} = 'fltr' . $_->{label}; 
-		$_->{col} = $_->{itable} . '.' . $_->{field}; 
-	} @{$list};
-
-
+	print STDERR "START SQL FILTER \n";
 	#	my $list = [
 	#	{ input => 'ddmCompanyName', 	col => 'p.lngcustomerid' },
 	#	{ input => 'ddmSalesRep',    	col => 'c.lngsalesperson' },
@@ -66,23 +87,15 @@ sub sql_filters {
 
 
 	my $text; 
-	foreach my $f ( @{$list} ) {
-		$text .= " AND $f->{col} = " . "'" .  "$param->{$f->{input}}" . "'" if $param->{$f->{input}};
-	}
-
-	#	if (  $param->{textsearch} && $param->{search_type} eq 'strprojectreference' ) {
-	#
-	#	my $searchstring = lc($param->{textsearch});
-	#	$searchstring =~ s/'//g;
-	#
-	#	my @words = split(' ', $searchstring);
-	#
-	#	#$searchstring = '%' . join('%', @words) . '%';
-	#
-	#	map {
-	#		$text .= qq{ AND lower(strprojectreference) LIKE  '\%$_\%' \n}  
-	#	} @words;
+	#foreach my $f ( @{$list} ) {
+	#	$text .= " AND $f->{col} = " . "'" .  "$param->{$f->{input}}" . "'" if $param->{$f->{input}};
 	#}
+
+
+	$text .= text_search($param->{search_name}, 'name');
+	$text .= text_search($param->{search_title}, 'title');
+	$text .= text_search($param->{search_description}, 'description');
+
 	#
 	#if ( $param->{startdate} && $param->{enddate} ) {
 	#	$text .= q{AND p.dtmcreationdate BETWEEN '} . $param->{startdate} . q{ 1:00am' AND '} . $param->{enddate} . q{ 11:59pm'};
@@ -94,7 +107,7 @@ sub sql_filters {
 	#$text .= qq{ AND lower(strprojectreference) LIKE  '$searchstring'}  
 
 
-	print STDERR "HAVE TEXT: $text \n", Dumper($list, $param);
+	print STDERR "HAVE TEXT: $text \n";
 	return $text;
 
 }
@@ -109,38 +122,27 @@ sub dashboard_defaults {
 
 sub get_data {
 	my $param = shift;
-	my $type = shift;
 	my $col_list = shift;
 
+
+	print STDERR "START GET DATA \n";
 	my $dbh = session::dbh;
 
-	my $sql_filter = sql_filters($param, $type);
-	my $table;
-	my $and;
+	my $sql_filter = sql_filters($param);
 
-	if ( $type eq 'product' ) {
-		$table = 'tbl_products';
-		$and = ' AND tbl_products.strid = i.id';
-	} else {
-		$table = 'tbl_paper';
-		$and = ' AND tbl_paper.strid = i.id';
-	}
 	my $sql = qq{
-		SELECT *, onhand - onorder as netcount 
+		SELECT *
 		FROM  
-		mat_inventory i, inventory_count ic, $table
-	   	WHERE itype = ? 
-		AND i.id = ic.id
-		$and
+		promo
+	   	WHERE 1>0
 
 		$sql_filter
 
 		ORDER by 1 DESC
 
-		--LIMIT 2 
 	};
 
-	my $lines = $dbh->selectall_arrayref( $sql, {Slice => {}}, $type );
+	my $lines = $dbh->selectall_arrayref( $sql, {Slice => {}});
 
 print STDERR "HAVE SQL: $sql \n";
 
@@ -182,17 +184,6 @@ print STDERR "HAVE SQL: $sql \n";
 
 }
 
-sub text_search {
-	my $param = shift;
-	my $var   = shift;
-
-	my $r = session::r;
-	my $log = session::log;
-	my $dbh	= session::dbh;
-
-	my $search_type = $param->{search_type};
-
-}
 
 sub update_inventory {
 
@@ -208,13 +199,83 @@ sub update_inventory {
 			$dbh->do(q{Update inventory_count set onhand = ? WHERE id = ?}, undef, $val, $1);
 
 		}
-		if ( $key =~ /onorder-(.*)/ && $val ) {
-			print STDERR "UPDATE $_ ID: $1 \n";
-			$dbh->do(q{Update inventory_count set onorder = ? WHERE id = ?}, undef, $val, $1);
-
-		}
 	} keys %{$param};
 }
+
+sub save_edit {
+	my $param 	= shift;
+	my $var 	= shift;
+
+	print STDERR "HAVE PARAM", Dumper($param);
+
+	die("Missing Parameter Name") unless $param->{id} || $param->{name};
+
+	my $id =  $param->{id} || PQS::model::promo::insert($param->{name});	
+
+	my $promo = new PQS::Object::promotion($param->{id});
+
+	$promo->formtodb($param);
+
+
+
+	print STDERR "HAVE PARAM", Dumper($param);
+
+}
+
+sub list {
+	my $param 	= shift;
+	my $var 	= shift;
+
+	$param = dashboard_defaults($param);
+	
+	my @col_list = @{$cols};
+	my @data = get_data($param, \@col_list);
+
+	apply_sort(\@data, $param);
+
+
+	$var->{fields} = \@col_list;
+
+
+	$var->{data} = \@data;
+
+	map { $var->{__FillInForm}{$_} = $param->{$_} } keys %{$param};
+
+
+
+	return ;
+
+}
+
+sub edit {
+	my $param 	= shift;
+	my $var 	= shift;
+
+	my $promo = new PQS::Object::promotion($param->{id});
+
+	if ($param->{save} ) {
+		#save_edit($param);
+		$promo->formtodb($param);
+	} elsif( $param->{delete} ) {
+		$promo->self_destruct;
+		$var->{Redirect} = "/administrator/marketing/promotions.html";
+	}
+
+
+
+	#	map { $var->{__FillInForm}{$_} = $param->{$_} } keys %{$param};
+
+	map { $var->{__FillInForm}{$_} = $promo->{specs}{$_} } keys %{$promo->{specs}};
+	
+	$var->{MARKETING_CATEGORIES} = ssi::select_options(qw(tbl_marketing_categories lngindex strname));
+
+	$var->{PRODUCT_CATEGORIES} = ssi::select_options(qw(categories id name));
+
+
+
+}
+
+
 
 
 sub display {

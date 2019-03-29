@@ -19,6 +19,7 @@ use PQS::model::payment ();
 use PQS::model::order ();
 use PQS::Object::product ();
 use PQS::model::order ();
+use PQS::Object::promotion();
 
 require configuration;
 require eprint::customer;
@@ -1133,6 +1134,16 @@ print STDERR "MY ORDER ID: $order_id \n";
         return misc::error($log, $dbh, $variable, 'No order id!  Not processing!');
     }
 
+			#Allocate product inventory for mat_inventory
+			my $prods = $dbh->selectall_arrayref(q{
+				SELECT product, intquantity FROM tbl_order_contents WHERE lngorderid = ?
+			}, {Slice => {} }, $order_id);
+
+			foreach my $p ( @{$prods} ) {
+				$dbh->do(q{Update inventory_count set onorder = onorder + ? WHERE id = (SELECT strid FROM tbl_products WHERE id = ?)},
+					undef, $p->{intquantity}, $p->{product});
+			}
+
 
 
 print STDERR "CHECK ORDER INFO \n";
@@ -1316,6 +1327,7 @@ print STDERR "CHECK ORDER INFO \n";
 
     		inventory_checkin($r, $log, $dbh, $order_id, $pid);
 
+
 		    
         }
 
@@ -1380,6 +1392,7 @@ print STDERR "CHECK ORDER INFO \n";
       	# Send notice of the order to the user and the solution owner.
        	send_sales_order($r, $log, $dbh, $order_id, $pending);
 	}
+
 
     $variable->{order_id} = $order_id;
 
@@ -2721,10 +2734,12 @@ print STDERR "HAVE VARS: $r, $log, $dbh \n";
 	$variable->{ssid} = $ssid;
 
 
-    @$variable{qw( SUB_TOTAL SHIPPING POSTAGE GST PST HST CountyTAX TOTAL )}
+	print STDERR "HAVE ORDER TOTALS: ", Dumper($totals);
+
+    @$variable{qw( SUB_TOTAL SHIPPING POSTAGE GST PST HST CountyTAX TOTAL PROMO_DISCOUNT )}
         = map { sprintf('%.2f', $_) }
             @$totals{qw(sub_total shipping_total postage_total 
-						gst_total pst_total hst_total county_total total)};
+						gst_total pst_total hst_total county_total total discount)};
 
 
 	$variable->{CCITYPROVCOUNTRY} = misc::build_city_prov_country(
@@ -3057,10 +3072,41 @@ print STDERR "Have County Tax RATE: $county_rate FOR ORDER: $order_id \n";
        $return_ref->{projects} = [];
 	my $subgroup;
 
+	my $promo;
 
+	$dbh->do(q{DELETE from order_discount WHERE orderid = ? }, undef,  $order_id);
+
+	my $discount;
     while ($sth->fetch()) {
 
 print STDERR "ADD TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PRICE: $prod_price \n";
+
+		my $contentid = $pid || $product;
+		my $new_promo = new PQS::Object::promotion();
+
+
+		my @promos = $new_promo->qualify($pid, $product);
+
+
+		if ( @promos ) {
+			#For now use first available promo.
+			my $promo_id = shift @promos;
+			$promo = new PQS::Object::promotion($promo_id) unless $promo;
+
+
+			$discount  = $promo->discount($prod_price);
+
+			$dbh->do(q{INSERT INTO order_discount ( promo, orderid, contentid, customer, discount ) VALUES (?, ?, ?, ?, ?) }, undef, 
+				$promo_id, $order_id, $contentid,  $customer_id, $discount);
+
+			print STDERR "HAVE VALID PROMO TOAL DISCOUNT: $discount \n";
+
+		
+		}
+
+
+
+
 		my $status;
 		my $shipping;
 		my $postage;
@@ -3202,11 +3248,14 @@ print STDERR "HAVE PROJECT DETAILS: $line->{project_price} FOR PID: $pid \n";
 
         
         $sub_total   += $price;
-        $total       += $price + $shipping + $postage;
+        $total       += ($price + $shipping + $postage);
 		$total       += $gst_amount + $pst_amount + $hst_amount;
 		$total 	     += $county_amount;
     
     }
+
+	#Apply discount after project loop
+	$total -= $discount;
 
 	map { 
 		my $ci = $_->{content_index};
@@ -3219,10 +3268,10 @@ print STDERR "HAVE PROJECT DETAILS: $line->{project_price} FOR PID: $pid \n";
 
     @$return_ref{qw(
          pst_total   gst_total   hst_total   county_total 	sub_total   total   
-		 shipping_total postage_total
+		 shipping_total postage_total discount
     )} = (
         $pst_total, $gst_total, $hst_total, $county_total, $sub_total, $total, 
-		$shipping_total, $postage_total
+		$shipping_total, $postage_total, $discount
     );
 
     return $return_ref;

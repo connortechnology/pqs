@@ -261,12 +261,20 @@ sub load {
 
   $self->{specs} = PQS::model::products::get($self->{id});
   
-#  print STDERR "LOAD PRODUCT: $self->{id} HAVE PRODUCTS CAT: ", Dumper($self->{category_id}, $self->{specs} );
-  
-  
   $self->{specs}{category_id} = $self->{specs}{category};
+
   $self->{specs}{category}    = PQS::model::categories::get_name_from_id($self->get('category_id'));
+
+  print STDERR "LOAD PRODUCT: $self->{id} HAVE PRODUCTS CAT: ", Dumper($self->{category_id}, $self->{specs} );
   
+}
+
+sub cat_chain {
+	my $self = shift;
+	print STDERR "GET CHAIN FOR: $self->{specs}{category_id} \n";
+	my $chain = eprint::products::cat_chain($self->{specs}{category_id});
+	return $chain;
+
 }
 
 sub add_option {

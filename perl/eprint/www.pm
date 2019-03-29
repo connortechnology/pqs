@@ -470,6 +470,7 @@ sub section_admininistrator {
     require eprint::employee_project;
     require eprint::products;
 	require eprint::mat_inventory;
+	require eprint::promotion;
 
 	my $param = map_param();
 
@@ -477,6 +478,10 @@ print STDERR "SUB: $sub_section F: $filename \n";
     if ($sub_section eq 'administrator') {
         eprint::login::email_password($r, $log, $dbh, $variable)  if $filename eq 'administrator_password_confirmation.html';
     } 
+    elsif ($sub_section eq 'marketing') {
+		eprint::promotion::list($param, $variable) if $filename eq 'promotions.html';
+		eprint::promotion::edit($param, $variable) if  $filename eq 'promotion_edit.html';
+	}
     elsif ($sub_section eq 'mat_inventory') {
 		eprint::mat_inventory::display($param, $variable);
 	}
@@ -834,8 +839,10 @@ print STDERR "CHECK ASR " . $r->param('run_asr') . "-- \n";
 sub map_param {
 		my $param;
 		my $r = session::r;
+		print STDERR "START MAP \n";
        	map { 
 			my @p = $r->param($_);
+			print STDERR "HAVE PARAM P $_ " , Dumper(scalar @p);
 
 			if (@p == 1 ) {
 				$param->{$_} = shift @p;
@@ -843,6 +850,8 @@ sub map_param {
 				$param->{$_} = \@p;
 			}
 		} $r->param();
+
+		print STDERR "HAVE PARAM MAPPED", Dumper($param);
 
 
 		return $param;

@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Marketing - Promotions
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+
+	<script type="text/javascript">
+
+		function do_sort(field) {
+			
+		if ( $('sortfield').value == field ) {
+			$('sortdirection').value *= -1; 
+		} else { 
+			$('sortdirection').value = 1; 
+		}
+
+		$('sortfield').value = field;
+	 	$('f1').submit();
+	}
+	</script>
+
+
+	<style>
+		#expander { min-width: 1750px; }
+		#sizer {max-width: none; } 
+		.editbox { width: 5em;}
+	</style>
+<style>
+	.lgfield {
+		width: 40em;
+		border: none;
+	}
+	.rgfield {
+		width: 15em;
+		border: none;
+	}
+	.smfield {
+		width: 10em;
+	}
+	.srfield {
+		width: 5em;
+		border: none;
+	}
+	.tifield {
+		width: 2em;
+		border: none;
+	}
+
+	.paddingTop { 
+		padding-top: 1em;
+	}
+	th { padding: 0.2em 0.2em 0.2em 0.2em; white-space: normal; min-width: 1em; }
+	td { padding: 0.2em 0.2em 0.2em 0.2em; text-align: center }
+	select { width: 18em; }
+	div.button-bar { margin-top: 3em;}
+	input, fieldset textarea { width: 30em; }
+</style>
+
+	<!--#include virtual="/includes/datepicker.html" -->
+
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+	<h1><span class="title-section">Promotion Edit</h1>
+
+	<form name="f1" action="/administrator/marketing/promotion_edit.html">
+
+		<fieldset>
+			<legend>
+				Edit	
+			</legend>
+		
+			<div id="SearchOptions" style="border: 0px solid black">
+
+				<label>Promo ID</label> <input name="id" value="" id="id" /> </br>
+				<label>Promo Name</label> <input name="name" value="" id="name" /> </br>
+				<label>Promo Title</label> <input name="title" value="" id="title" /> </br>
+				<label>Promo Description</label><textarea name="description" id="description" /></textarea> </br>
+
+				<label>Start Date</label> <input class="smfield" name="startdate" value="" id="DPC_startdate" /> </br>
+				<label>End Date</label> <input class="smfield" name="enddate" value="" id="DPC_enddate" /> </br>
+				<label>Product Category</label> 
+				<select name="productcategory" id="productcategory">
+					<option value="">Please Select</option>
+					<?PRODUCT_CATEGORIES?>
+				</select> <br>
+
+				<label>Minimum Order ($)</label> <input class="smfield" name="minspend" value="" id="minspend" /> </br>
+				<label>Percent Discount %</label> <input class="smfield" name="percentdiscount" value="" id="percentdiscount" /> </br>
+				<label>Maxium Discount($)</label> <input class="smfield" name="maxdollar" value="" id="maxdollar" /> </br>
+			</div>
+
+		</fieldset>
+
+		<fieldset>
+			<legend>
+				Marketing Groups	
+			</legend>
+			<div id="MarketingGroupsDiv" style="border: 0px solid black">
+				<select multiple name="marketing_categories">
+					<?MARKETING_CATEGORIES?>
+				</select>
+			<div>
+		</fieldset>
+
+
+
+	
+
+<!-- ******************* START ****************************** -->
+<!--
+<input type="hidden" name="sortfield" 		id="sortfield" value="aaa" />
+<input type="hidden" name="sortdirection" 	id="sortdirection" value="1" />
+ <table>
+    <tr>
+
+		<?loop fields?>
+		<th><a href="#" onClick="do_sort('<?id?>');" style="color: white;" ><?desc?></a></th>
+		<?endloop fields?>
+		<th>Adjust Inventory</th>
+
+     
+    </tr>
+    <?loop data?>
+			<tr>
+		<?loop fields?>
+
+			<td>
+			<?if ro?>
+			<div class="<?class?>" ><?if link?><a href="<?link?>"><?endif link?><?value?><?if link?></a><?endif link?></div>
+			<?else ro?>
+			 <?if big?>
+				<textarea name="<?fname?>[<?id?>]" cols=50><?value?> </textarea>
+			 <?else big?>
+
+			 	<?if ( $variable->{type} eq 'bool' ) ?>
+					<input type="checkbox" name="<?fname?>[<?id?>]" value="1" size="<?size?>" <?if value?>checked<?endif value?> />
+			 	<?else ( $variable->{type} eq 'bool' ) ?>
+					<!-- ***** -->
+					<input name="<?fname?>[<?id?>]" value="<?value?>" class="<?class?>"  />
+			 	<?endif ( $variable->{type} eq 'bool' ) ?>
+
+			 <?endif big?>
+				
+			<?endif ro?>
+
+			</td>		
+	
+		<?endloop fields?>
+		<td>
+			<input class="editbox" name="onhand-<?id?>" id="onhand-<?id?>" disabled=true>
+			<input class="editbox" name="onorder-<?id?>" id="onorder-<?id?>" disabled=true>
+			<input type="Button" name="edit-<?id?>" value="Edit On Hand/Allocated" onClick="$('onorder-<?id?>').disabled=false;$('onhand-<?id?>').disabled=false; ">
+		</td>
+        
+			</tr>
+    <?endloop data?>
+
+  </table>
+ -->
+<!-- ******************* END ****************************** -->
+
+<button name="save" value=1>Save</button>
+<button name="delete" value=1 onClick="$('f1').action="promotions.html">Delete</button>
+
+<button onClick="window.realod" name="Reload" style="margin-top: 200px; width: 300px; height: 300px">Reload</button>
+
+	</form>
+<a href="promotions.html"><button id="cancel" style="margin-left: -295px;">Cancel</button>
+
+
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

@@ -703,6 +703,11 @@ sub display_project {
                     name => $name,
                     url => "/main/proj/dispatch.html?action=remove;pid=$pid;sid=$service->{id}"
                 };
+			} else {
+                push @controls, { 
+                    name => 'Price',
+                    url => "/main/proj/dispatch.html?action=remove;pid=$pid;sid=$service->{id}"
+                };
             }
 
             # Add Pricing Breakdown linke for employees/admins.
