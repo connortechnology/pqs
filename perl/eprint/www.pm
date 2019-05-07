@@ -529,8 +529,17 @@ print STDERR "SUB: $sub_section F: $filename \n";
     elsif ($sub_section eq 'managerial') {
         require eprint::credit_application;
 
+		#New Accounting Features
+		use eprint::bills;
+
+        eprint::bills::display($param, $variable)                					if $filename eq 'accounting_bills.html';
+
+
+
         eprint::admin_accounting::details($r, $log, $dbh, $variable)                if $filename eq 'accounting_details.html' 
                                                                                     || $filename eq 'accounting_details_printer_friendly.html';
+
+
         eprint::admin_accounting::payment($r, $log, $dbh, $variable)                if $filename eq 'accounting_payments.html';
         eprint::admin_accounting::search($r, $log, $dbh, $variable)                 if $filename eq 'accounting_search.html';
         
@@ -842,7 +851,7 @@ sub map_param {
 		print STDERR "START MAP \n";
        	map { 
 			my @p = $r->param($_);
-			print STDERR "HAVE PARAM P $_ " , Dumper(scalar @p);
+			print STDERR "HAVE PARAM P $_ =  " , $r->param($_)  . "\n";
 
 			if (@p == 1 ) {
 				$param->{$_} = shift @p;

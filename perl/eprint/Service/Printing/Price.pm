@@ -524,6 +524,8 @@ print STDERR "HAVE TOTAL IMPS: $total_imp \n";
         # This is large format stitching, not saddle stitching/bindery.
         $price{'Comparison Cost'} += $price{stitching};
 
+		my $mc =  $price{'Comparison Cost'} / $price{imp}{spreads};
+
         # COMPARISON TABLE
         #
         # Keep a log of what we've tried and the price of each.
@@ -548,16 +550,30 @@ print STDERR "HAVE TOTAL IMPS: $total_imp \n";
             # stock sizes of anything that's been precut.
             $price{imp}{paper}{cuts},
             $price{hdnSuppliedStockWidth}, $price{hdnSuppliedStockHeight}, 
+			0,
+
+			$price{imp}{spreads},
+			$mc
         ];
 
 
+
+		print STDERR "HAVE COMP: $price{'Comparison Cost'} SETUP: $price{imp}{setup} RS:  $price{imp}{run_style}  SPREADS: $price{imp}{spreads}  MYCOMP: $mc
+		\n", Dumper( $price{imp}  );
+
         # BEST PRICE
         #
+		#Origianl
+		#if (     valid_price(\%price) 
+		#     && ($price{'Comparison Cost'} < $price_check || $price_check == -1)
+		#
         if (     valid_price(\%price) 
-             && ($price{'Comparison Cost'} < $price_check || $price_check == -1)
+             && ( $mc < $price_check || $price_check == -1)
         ) {
             # Keep track of the best price we have found so far.
-            $price_check = $price{'Comparison Cost'};
+			#$price_check = $price{'Comparison Cost'};
+			
+			$price_check = $mc;
 
             $best_price  = \%price;
 
@@ -792,7 +808,9 @@ print STDERR "HAVE TOTAL IMPS: $total_imp \n";
     $best_price->{imp} = encode_base64(sfreeze_c($best_price->{imp}));
 
     # Mark the best price as 'chosen' in the run style check.
-    push @{ $price_check[ $best_price->{comparison_idx} ] }, 1;
+	#push @{ $price_check[ $best_price->{comparison_idx} ] }, 1;
+	#
+	${ $price_check[ $best_price->{comparison_idx} ] }[15] = 1;
 
     # The run stlye check is for historical comparison of why we chose a given
     # (press, imposition) pair over another. TODO: Move this further up
@@ -968,6 +986,7 @@ sub create_impositions {
 
      $end =  Time::HiRes::time() - $start_time;
 
+print STDERR "HAVE IMPOSTIONS BEFORE FILTER " . scalar @impositions . "\n";
     print STDERR "DONE IMPOSE 3 $project->{id} :  elapsed $end (s)  \n";
 
     # MULTI-VERSION TEMP: For now we'll constrain business cards to layout
@@ -1002,6 +1021,7 @@ sub create_impositions {
                            @impositions;
     }
 
+print STDERR "HAVE IMPOSTIONS BEFORE FILTER " . scalar @impositions . "\n", Dumper($project);
     @impositions = grep { $_->{setup} > 0 } @impositions;
 print STDERR "HAVE IMPOSTIONS TOTAL " . scalar @impositions . "\n";
 

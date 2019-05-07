@@ -88,7 +88,7 @@ table#versions tr.layout_form th {
 
 #comparisons {
     table-layout: fixed;
-    width: 720px;
+    width: 900px;
     margin-bottom: 0;
     border: 1px solid #0B0D60 !important;
 }
@@ -100,8 +100,10 @@ table#versions tr.layout_form th {
 
 #comparisons th,
 #comparisons td { text-align: right;  }
-#comparisons th:last-child { width: 85px; padding-right: 20px; }
-#comparisons td:last-child { width: 85px; padding-right: 20px; }
+/*
+#comparisons th:last-child {  padding-right: 20px; }
+#comparisons td:last-child {  padding-right: 20px; }
+*/
 
 #run_style  { width: 30px; }
 #geometry   { width: 36px; }
@@ -114,6 +116,7 @@ table#versions tr.layout_form th {
 #printing   { width: 7em !important; }
 #stock      { width: 7em !important; }
 #comparison { width: 9em !important; }
+
 * html #comparison { width: 7em !important; }
 
 /* Highlight the price comparison winner. (woohoo!) */

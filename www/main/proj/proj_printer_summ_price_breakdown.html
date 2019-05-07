@@ -18,6 +18,13 @@
 
 	<script type="text/javascript" src="/javascripts/other.js"></script>
 
+<script src='/javascripts/tablesort/tablesort.js'></script>
+
+<!-- Include sort types you need -->
+<script src='/javascripts/tablesort/sorts/tablesort.number.js'></script>
+<script src='/javascripts/tablesort/sorts/tablesort.date.js'></script>
+
+
 	<style type="text/css">
 
 a.svg:after {
@@ -458,19 +465,20 @@ a.svg {
 				<th rowspan="2" title="Plate count."> P </th>
 				<th colspan="3" class="m"> Imposition </th>
 				<th colspan="3" class="m"> Stock </th>
-				<th colspan="3" class="m"> Pricing ($) </th>
+				<th colspan="4" class="m"> Pricing ($) </th>
 			</tr>
 
-			<tr class="second">
+			<tr class="second" data-sort-method='thead'>
 				<th class="m" title="Number of images in the imposition."> n </th>
 				<th title="Number of forms."> f </th>
 				<th title="Percent version image wastage."> %w </th>
 				<th class="m" title="Sheet dimensions (height &#215; width)."> (h&#215;w) </th>
 				<th style="text-align: center;" title="Original stock dimensions if it&#8216;s been cut (height &#215; width)."> (h&#215;w) </th>
 				<th title="Gross stock quantity."> Gross </th>
-				<th class="c"> Printing </th>
+				<th class="c" data-sort-method="number"> Printing </th>
 				<th> Stock </th>
 				<th> Compare </th>
+				<th> PPS </th>
 			</tr>
 		</thead>
 
@@ -480,7 +488,7 @@ a.svg {
 					<td class="l"><?press?></td>
 					<td class="l"><?run_style?></td>
 					<td><?plates?></td>
-					<td class="m"><?card?></td>
+					<td class="m"><?card?>x<?spreadcount?></td>
 					<td><?layouts?></td>
 					<td><?paper.wastage?></td>
 					<td class="c"><?float:paper.height?>
@@ -497,9 +505,13 @@ a.svg {
 					<td><?price.printing?></td>
 					<td><?price.stock?></td>
 					<td><?price.comparison?></td>
+					<td><?price.priceperspread?></td>
 				</tr>
 			<?endloop comparisons?>
 		</tbody>
 	</table>
 </body>
+<script>
+  new Tablesort(document.getElementById('comparisons'));
+</script>
 </html>

@@ -166,6 +166,11 @@ sub desired_signature_size {
 sub convert_to_signature {
     my ($desired_signature_size, $imp) = @_;
 
+	my $ds = desired_signature_size($desired_signature_size, [$imp]);
+
+print STDERR "HAVE DS: $ds \n";
+    $desired_signature_size = $ds;
+
     my $setup   = $imp->{setup};
 
 

@@ -1565,6 +1565,7 @@ sub price_breakdown {
     my @fields = qw(press   run_style  plates  card      layouts  wastage 
                     width   height     gross   printing  stock    comparison  
                     cuts    width_original     height_original    chosen
+					spreadcount priceperspread
     );
 
 	return unless $runs;
@@ -1574,6 +1575,8 @@ sub price_breakdown {
 		SELECT lngindex, strID from tbl_equipment
 	}, 'lngindex', {});
 
+
+print STDERR "HAVE RUNS: ", Dumper($runs);
     # Comparisons are a sorted, formatted selection of fields from each run.
     # For now we'll sort in a fixed order.
     my @comparisons =
@@ -1591,6 +1594,7 @@ sub price_breakdown {
 
             @comp{ @fields } = @$_;
 
+
             # Sheet stock information.
             $comp{paper}{$_} = sprintf "%.2f", $comp{$_} for qw(width height);
             $comp{paper}{wastage} = sprintf "%5.2f", $comp{wastage};
@@ -1604,9 +1608,13 @@ sub price_breakdown {
 
             # Pricing.
             $comp{price}{$_} = sprintf "%.2f", $comp{$_} 
-                for qw(printing stock comparison);
+                for qw(printing stock comparison priceperspread);
 
 			$comp{press} = $press_list->{$comp{press}}{strid};
+
+			#	$comp{price}{comparison} = $comp{priceperspread};
+
+			print STDERR "HAVE COMP: ", Dumper(\%comp);
 
             \%comp;
         }
