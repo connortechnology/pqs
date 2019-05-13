@@ -305,6 +305,27 @@ sub order_id {
 	return PQS::model::order::get_orderid_by_pid($self->{id});
 
 }
+sub parent_sheet_count {
+
+	my $self = shift;
+	my $sid = shift;
+
+	my $dbh = $self->{dbh};
+	my $log = $self->{log};
+
+	my @specs = qw( hdnPaperBuyQuantity1 hdnGrossSheetCount1 );
+
+	my %results = eprint::service::get_specifications_pairs(
+            $log, $dbh, undef, $sid, @specs
+     );
+
+
+	 my $count =  $results{hdnPaperBuyQuantity1} || $results{hdnGrossSheetCount1};
+
+	return $count;
+
+
+}
 
 sub sheet_count {
 

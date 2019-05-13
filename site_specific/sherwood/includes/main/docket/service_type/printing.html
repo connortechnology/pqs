@@ -227,7 +227,10 @@ No Printing <!-- <?chargefor?> -->
 
 		<span style="padding: 0 50px 0 0"> Cut From: <?hdnSuppliedStockWidth?> x <?hdnSuppliedStockHeight?></span>
 		<span style="padding: 0 50px 0 0"><?PaperOut?> Out</span> 
-		<span> Parent Sheet Count: <?hdnPaperBuyQuantity1?> </span>
+		<span> Parent Sheet Count: <?hdnPaperBuyQuantity1?> </span> 
+
+		<?eval( $variable->{SheetHeight} = $variable->{txtStockCalliper} * $variable->{hdnPaperBuyQuantity1} ) ?>
+		<span> Parent Sheet Height <?SheetHeight?> </span>
 
 
 		<br />

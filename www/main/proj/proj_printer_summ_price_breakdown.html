@@ -26,6 +26,7 @@
 
 
 	<style type="text/css">
+	table { margin-top: 20px }
 
 a.svg:after {
   content: ""; 
@@ -488,7 +489,7 @@ a.svg {
 					<td class="l"><?press?></td>
 					<td class="l"><?run_style?></td>
 					<td><?plates?></td>
-					<td class="m"><?card?>x<?spreadcount?></td>
+					<td class="m"><?card?><?if spreadcount?>x<?spreadcount?><?endif spreadcount?></td>
 					<td><?layouts?></td>
 					<td><?paper.wastage?></td>
 					<td class="c"><?float:paper.height?>

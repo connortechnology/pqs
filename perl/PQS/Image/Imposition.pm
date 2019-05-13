@@ -283,6 +283,9 @@ print STDERR "HAVE N: $n \n", Dumper($versions, $imposition);
     # Now that we've defined the various elements we can combine them on the
     # canvas to create a full image.
 
+    my $offx = (MAX_X - $w) / 2;
+	my $offy = (MAX_Y - $h) / 2;
+
     my $offset = join(q{, }, ((MAX_X - $w) / 2), ((MAX_Y - $h) / 2));
     
     # Translate the canvas so padding doesn't effect our co-ordinate system.
@@ -292,6 +295,72 @@ print STDERR "HAVE N: $n \n", Dumper($versions, $imposition);
 
     # Create a link (a plus inside a circle) to a bigger version.
     # draw_link($canvas, $w+2, $h+2);
+
+	#Label Y axis position;
+	my $ly =  $offy + $h + 4.5;
+	my $lh =  5;
+
+	$style = $imposition->{run_style};
+	# Add Lables to Image
+		$svg->text( 
+			x      		=> $lh + 2,
+            y      		=> $ly, 
+			'font-size' => 1.5,
+ 		)->cdata("Run Style:"); 
+
+		$svg->text( 
+			x      		=> $lh + 10,
+            y      		=> $ly,
+			'font-size' => 1.5,
+			'font-weight' => 'bold',
+ 		)->cdata("$style");
+
+		$svg->text( 
+			x      		=> $lh + 15,
+            y      		=> $ly,
+			'font-size' => 1.5,
+ 		)->cdata("Width:"); 
+
+		$svg->text( 
+			x      		=> $lh + 20,
+            y      		=> $ly,
+			'font-size' => 1.5,
+			'font-weight' => 'bold',
+ 		)->cdata("$w\"");
+
+		$svg->text( 
+			x      		=> $lh + 25,
+            y      		=> $ly,
+			'font-size' => 1.5,
+ 		)->cdata("Height:"); 
+
+		$svg->text( 
+			x      		=> $lh + 30,
+            y      		=> $ly,
+			'font-size' => 1.5,
+			'font-weight' => 'bold',
+ 		)->cdata("$h\"");
+
+		#Height Label of left of sheet
+		$svg->text( 
+			x      		=> $offx - 1.7, 
+            y      		=> MAX_Y / 2 + 1.5,  
+			'font-size' => 1,
+			'font-weight' => 'bold',
+ 		)->cdata("$h\"");
+
+		#Width label at top of sheet
+		$svg->text( 
+			x      		=> MAX_X / 2 - 0.75,
+            y      		=>  $offy - 1,
+			'font-size' => 1,
+			'font-weight' => 'bold',
+ 		)->cdata("$w\"");
+
+
+		print STDERR "HAVE IMP: ", Dumper($imposition);
+
+		#)->cdata("$style</bold> Stock Width: $w Height $h ");
     
     return $svg->xmlify;
 }
@@ -540,11 +609,14 @@ sub draw_node {
 
 		#$canvas->title()->cdata('hello');
 		
+		#Shorten label to defined length
+		my $l = substr($label,0,7);
+
 		$canvas->text( 
-			x      		=> $offset->[W] + 2, 
-            y      		=> $offset->[H] + 5,
+			x      		=> $offset->[W] + 0.25, #Text start on left/mirrored on right. 
+            y      		=> $offset->[H] + ($h/2), #Center text vertically in box.
 			'font-size' => 1
- 		)->cdata("$label");
+ 		)->cdata("$l");
 
     }
     # We're a cutting group. TODO Draw a dashed cutting line.

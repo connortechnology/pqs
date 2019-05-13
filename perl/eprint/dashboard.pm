@@ -185,7 +185,7 @@ print STDERR "HAVE SQL: $sql \n";
 
 		$l->{delivery} = $p->delivery_method();
 		$l->{stock} = $p->stock_name($l->{lngserviceindex});
-		$l->{sheets} = $p->sheet_count($l->{lngserviceindex});
+		$l->{sheets} = $p->parent_sheet_count($l->{lngserviceindex});
 		$l->{sheet_size} = $p->sheet_size($l->{lngserviceindex});
 		$l->{shipid} = eprint::project::check_for_service(undef, $dbh, $l->{lngprojectindex}, 'Shipping');
 

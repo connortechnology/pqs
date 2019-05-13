@@ -524,7 +524,7 @@ print STDERR "HAVE TOTAL IMPS: $total_imp \n";
         # This is large format stitching, not saddle stitching/bindery.
         $price{'Comparison Cost'} += $price{stitching};
 
-		my $mc =  $price{'Comparison Cost'} / $price{imp}{spreads};
+		my $mc =  $price{'Comparison Cost'} / ($price{imp}{spreads} || 1);
 
         # COMPARISON TABLE
         #
