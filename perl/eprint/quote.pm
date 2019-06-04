@@ -1084,6 +1084,9 @@ sub show_quote {
 	if ( $r->param('btnFunction') eq 'Send Quote' ) {
 			send_quote( $r, $log, $dbh, $quote_id, $variable );
 	}
+	if ( $r->param('btnFunction') eq 'Make Order' ) {
+		eprint::order::make_order_from_quote( $r, $log, $dbh, $quote_id, $variable );
+	}
 
 } # end sub show_quote
 

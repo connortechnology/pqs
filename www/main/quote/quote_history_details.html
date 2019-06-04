@@ -52,12 +52,18 @@
 			<input type="hidden" name="quote_id" value="<?QUOTE_ID?>" />
 		</form>
 
-		<? if ( ! $$variable{'InvalidPrices'} ) ?>
+			<form name="f3" method="post" action="/main/order/order_submit.html">
+				<input type="hidden" name="btnFunction" value="Process Order" />
+				<input type="hidden" name="quote_id" value="<?QUOTE_ID?>" />
+				<input type="submit" name="f3.submit();return false;" class="button right" value="Product Order" />
+			</form>
+
 			<form name="f3" method="post" action="/main/order/order_selection.html">
 				<input type="hidden" name="btnFunction" value="Process Order" />
 				<input type="hidden" name="quote_id" value="<?QUOTE_ID?>" />
 				<input type="submit" name="f3.submit();return false;" class="button right" value="Process Order" />
 			</form>
+		<? if ( ! $$variable{'InvalidPrices'} ) ?>
 		<? endif ( ! $$variable{'InvalidPrices'} ) ?>
 
 		<form name="f4" method="post" action="/main/quote/quote_history_details.html">

@@ -225,16 +225,19 @@ No Printing <!-- <?chargefor?> -->
 
 		<?if ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
 
-		<span style="padding: 0 50px 0 0"> Cut From: <?hdnSuppliedStockWidth?> x <?hdnSuppliedStockHeight?></span>
-		<span style="padding: 0 50px 0 0"><?PaperOut?> Out</span> 
-		<span> Parent Sheet Count: <?hdnPaperBuyQuantity1?> </span> 
+		<span> Cut From: </span>
+		<span style="padding: 5px 20px 0 0"> <?hdnSuppliedStockWidth?> x <?hdnSuppliedStockHeight?></span>
+		<span style="padding: 0 20px 0 0"><?PaperOut?> Out</span> 
+		
+		<span style="padding: 0 20px 0 0"> Parent Sheet Count: <?hdnPaperBuyQuantity1?> </span> 
+
+		<?endif ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
 
 		<?eval( $variable->{SheetHeight} = $variable->{txtStockCalliper} * $variable->{hdnPaperBuyQuantity1} ) ?>
-		<span> Parent Sheet Height <?SheetHeight?> </span>
+		<span> Parent Sheet Height: <span> <?SheetHeight?> </span></span>
 
 
 		<br />
-		<?endif ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
 
 		<br />
 

@@ -1,6 +1,12 @@
 <?loop signatures?>
 <div style=" padding-left: 2em; ">
 	<span class="label">Description:&nbsp;&nbsp;</span>
-	<strong><?name?>&nbsp;</strong><?loop notes?><?operation?><?endloop notes?>
+	<strong><?name?>&nbsp;</strong>
+	<div style="text-align: left; padding-left: 2em; width:500px">
+	<?loop notes?>
+	<? eval($variable->{note}++ ) ?>
+	<?note?>) <?operation?> <br/> 
+	<?endloop notes?>
+	</div>
 </div>
 <?endloop signatures?>

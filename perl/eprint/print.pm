@@ -707,7 +707,7 @@ sub display_project {
                 push @controls, { 
                     name => 'Price',
                     url => "/main/proj/dispatch.html?action=remove;pid=$pid;sid=$service->{id}"
-                };
+                } unless $service->{ref} eq 'Printing';
             }
 
             # Add Pricing Breakdown linke for employees/admins.

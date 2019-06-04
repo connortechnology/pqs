@@ -1,8 +1,20 @@
 <div style=" padding-left: 2em; ">
 <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
   <tr>
-    <td width="50%"><span class="label">Fold Type:&nbsp;&nbsp;</span><br />
-<div style=" padding-left: 6em; ">
+    <td width="50%" valign="top"><span class="label">Equipment:&nbsp;&nbsp;</span>
+<?if ($$variable{'qtyIndex'} eq '1')?>
+<?ddmEquipment1?>
+<?endif ($$variable{'qtyIndex'} eq '1')?>
+<?if ($$variable{'qtyIndex'} eq '2')?>
+<?ddmEquipment2?>
+<?endif ($$variable{'qtyIndex'} eq '2')?>
+<?if ($$variable{'qtyIndex'} eq '3')?>
+<?ddmEquipment3?>
+<?endif ($$variable{'qtyIndex'} eq '3')?></td>
+
+<td width="50%"><span class="label">Fold Type:&nbsp;&nbsp;</span>
+
+
 <? if ( $$variable{'txt2PanelFoldQty'} )?>
 <?txt2PanelFoldQty?> - 2 Panel<br />
 <? endif ( $$variable{'txt2PanelFoldQty'} )?>
@@ -65,17 +77,8 @@
 <? endif ( $$variable{'txtPerpendicularSoftFoldQty'} )?>
 <? if ( $$variable{'txtParallelSoftFoldQty'} )?>
 <?txtParallelSoftFoldQty?> - Parallel<br />
-<? endif ( $$variable{'txtParallelSoftFoldQty'} )?></div></td>
-    <td width="50%" valign="top"><span class="label">Equipment:&nbsp;&nbsp;</span>
-<?if ($$variable{'qtyIndex'} eq '1')?>
-<?ddmEquipment1?>
-<?endif ($$variable{'qtyIndex'} eq '1')?>
-<?if ($$variable{'qtyIndex'} eq '2')?>
-<?ddmEquipment2?>
-<?endif ($$variable{'qtyIndex'} eq '2')?>
-<?if ($$variable{'qtyIndex'} eq '3')?>
-<?ddmEquipment3?>
-<?endif ($$variable{'qtyIndex'} eq '3')?></td>
+<? endif ( $$variable{'txtParallelSoftFoldQty'} )?>
+</td>
   </tr>
  </table>
 </div>

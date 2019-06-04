@@ -169,6 +169,7 @@ sub add_product_to_order {
 #	my $error = check_customer_account( $log, $dbh, $cookie, $var);
 
 #	return ( 0, $error) if $error;
+
 	
 	$cookie = $var->{cookie} unless $cookie;
 
@@ -187,6 +188,9 @@ sub add_product_to_order {
 	my $price =  defined $quote_price ? $quote_price : $prod->price($var->{cust_id}, $qty, $versions);
 
 	$qty *= $versions;
+
+	print STDERR "HAVE: QTY: $qty PRICE: $price QPrice: $quote_price VERSIONS: $versions Name: $jobname \n";
+	die("No Product Quantity for Product: $product VERSIONS: $versions") unless $qty;
 
 
 	print STDERR "ADDD PRODUCT: $product Q: $qty V: $versions PRICE: $price \n";
@@ -314,7 +318,7 @@ sub make_order_from_quote {
 
     $_ = "SELECT lngProjectIndex\n".
         "FROM tbl_Quote_Details\n".
-        "WHERE lngQuoteID = '$quote_id'";
+        "WHERE lngQuoteID = '$quote_id' AND type <> 'product'";
     my @quote = sql::sql_statement( $log, $dbh, $_ );
 
     if ( @quote > 0 ) {
@@ -327,6 +331,25 @@ sub make_order_from_quote {
         $error .= "make_order_from_quote: Empty quote specified: $quote_id";
         $log->debug( "make_order_from_quote: Empty quote specified: $quote_id" );
     }
+
+
+	my $dbh = session::dbh;
+
+	my $prods = $dbh->selectall_arrayref(q{SELECT * FROM tbl_quote_details WHERE  lngquoteid = ? AND type = 'product'}, 
+		{Slice => {}}, $quote_id);
+	
+	print STDERR "HAVE PRODUCTS: ", Dumper($prods);
+
+	foreach my $p ( @$prods ) {
+			my $product =  $p->{product};
+			my $qty = $p->{intquantity1};
+			my $price =  $p->{dblprice1} / $qty;
+
+			print STDERR "ADD PRODUCT: $product QUANTITY: $qty \n";
+			($order_id) = add_product_to_order( $cookie, $variable, $product, $qty, undef, $p->{jobname}, 1, $price );
+			#my ( $cookie, $var, $product, $qty, $subgroup, $jobname, $versions, $quote_price, $order_id ) = @_;
+	}
+
     return ( 0, $error );
 }
 
@@ -944,6 +967,16 @@ sub verify_order {
     );
 print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 # Start of new code
+
+
+	if ( $r->param('btnFunction') eq 'Process Order' ) {
+		print STDERR "MAKE QUOTE FORM ORDER  \n";
+		my $quote_id = $r->param('quote_id');
+ 		make_order_from_quote( $r, $log, $dbh, $cookie, $quote_id, $variable );
+
+	}	
+
+	return unless $order_id;
 
 	fill_contact($r, $dbh, $order_id);
 

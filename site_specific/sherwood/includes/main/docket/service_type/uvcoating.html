@@ -1,10 +1,12 @@
 <div style=" padding-left: 2em; ">
 <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
   <tr>
+	  E: <?equipment?>
     <td width="50%"><span class="label">Dimensions:&nbsp;&nbsp;</span><?hdnSheetSizeHeight?>&nbsp;x&nbsp;<?hdnSheetSizeWidth?></td>
     <td width="50%"><span class="label">Coating Sides:&nbsp;&nbsp;</span><?rdbCoatingSides?></td>
   </tr>
   
+  <?eval( use Data::Dumper; print STDERR "DOCKET DUMER", Dumper($variable) ) ?>
 </table>
 
 </div>

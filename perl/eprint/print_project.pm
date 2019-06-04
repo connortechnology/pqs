@@ -1136,6 +1136,9 @@ sub delete_project {
         unless $variable->{user_type} =~ /^[AE]$/ 
             || $id == $variable->{cust_id};
 
+	#****************************** This code is broken > 1 allows projects to be delted *******************************
+	#Projects show not be allowed to be deleted after order or quote.
+			
     # Check to see if the project is in a quote or order.
     my $is_ordered = $dbh->selectrow_array(q{
         SELECT count(*) > 1 FROM tbl_order_contents WHERE lngprojectindex = ?
@@ -1151,11 +1154,19 @@ sub delete_project {
 
     # Only mark the project as no longer visible if it is in either a quote or
     # order, otherwise it may be safely removed.
-    my $statement = ($is_ordered || $is_quoted) 
-        ? q{ UPDATE tbl_projects SET strstatus = 'Deleted' WHERE lngprojectindex = ? }
-        : q{ DELETE FROM tbl_projects                      WHERE lngprojectindex = ? };
+	
+	#Disable deleting until bugs are fixed.
+	#Projects are being removed from db.
+	
 
-    my $deleted = $dbh->do($statement, undef, $pid);
+	#my $statement = ($is_ordered || $is_quoted) 
+	#    ? q{ UPDATE tbl_projects SET strstatus = 'Deleted' WHERE lngprojectindex = ? }
+	#    : q{ DELETE FROM tbl_projects                      WHERE lngprojectindex = ? };
+
+	#my $statement =  q{UPDATE tbl_projects SET strstatus = 'Deleted' WHERE lngprojectindex = ? };
+
+
+	#my $deleted = $dbh->do($statement, undef, $pid);
 
     return;
 }
