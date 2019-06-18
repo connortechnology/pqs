@@ -124,7 +124,8 @@
 						<th>File Type:</th>
 						<td><?HeaderInfo.software?></td>
 					<? else ($variable->{HeaderInfo}{design} eq 'ElectronicFile') ?>
-						<td colspan="2"></td>
+					   <th>Bindery Type:</th>
+				   		<td><?HeaderInfo.bindery_type?></td>	   
 					<? endif ($variable->{HeaderInfo}{design} eq 'ElectronicFile') ?>
 				</tr>
 				<tr>

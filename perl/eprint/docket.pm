@@ -1887,6 +1887,8 @@ sub header_info {
 		ORDER by 1;
 	}, {Slice => {} }, $hash{order_id}, $pid) if $hash{order_id};
 
+	$hash{bindery_type} = eprint::project::get_bindery_type($log, $dbh, $pid);
+
     return \%hash;
 
 }
@@ -2312,8 +2314,11 @@ sub setup_docket {
             FROM tbl_service_categories
             WHERE strname = ?
         }, undef, $cat);
-        if (($catID == undef) || ($catNumericalID == $catID) || ($catID == -1))
+        if (($catID == undef) || ($catNumericalID == $catID) || ($catID == -1
+			 ) || $catID == -3)
         {
+			next if $catID == -3 && $cat eq 'Printing';
+
             my @service_types;
             my @supplied_service_types;
 
