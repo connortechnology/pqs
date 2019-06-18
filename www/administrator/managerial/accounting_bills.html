@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Managerial - Accounting Search
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script>
+		var show_bill = 'none';
+	</script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+	<!--#include virtual="/includes/datepicker.html" -->
+
+<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+
+<div id="content">
+	<h1><span class="title-section">Accounting &#187;</span>  Receivables</h1>
+
+	<p>Choose criteria and click show results.  </p>
+
+	<form id="f1" name="f1" method="post" action="accounting_bills.html">
+		<fieldset>
+			<legend>
+				Search
+			</legend>
+		
+			<p class="none">&nbsp;</p>
+		
+			<label for="ddmCustomers">Company:</label>
+			<select id="ddmCustomers" name="ddmCustomers" size="1">
+				<option value=""> All Customers </option>
+				<?COMPANY?>
+			</select>
+			<br />
+
+			<label for="ddmBalance">Balance:</label>
+			<select id="ddmBalance" name="ddmBalance" size="1">
+				<option value="All"   > All </option>
+				<option value="Owing" > Owing </option>
+				<option value="Paid"  > Paid </option>
+			</select>
+			<br />
+
+			<label for="ddmCategories">Category:</label>
+			<select id="searchCategory" name="searchCategory" size="1">
+				<option value=""> All Categories </option>
+				<?BILL_CATEGORY?>
+			</select>
+			<br />
+
+			<label for="ddmStartMonth">Start Date:</label> <input id="DPC_startdate" name="startdate">
+			<br/>
+			<label for="ddmENDDate">End Date:</label> <input id="DPC_enddate" name="enddate">
+			<br/>
+
+
+			<label for="dblTotal1">Total Price Range:</label>
+			<input type="text" id="dblTotal1" name="dblTotal1" size="9" class="smBox" value="<?dblTotal1?>" />
+			<label for="dblTotal2" class="value">&nbsp;to&nbsp;</label>
+			<input type="text" id="dblTotal2" name="dblTotal2" size="9" class="smBox" value="<?dblTotal2?>" />
+			<br />
+	
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Show Results" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+<style>
+
+	h3 { 
+		text-align: center;
+		min-width: 15em;
+	}
+	.fieldblock {
+		margin: 0 1em 0 1em;
+	}
+	#description { min-width: 48em; }
+	select { min-width: 15em; }
+		.lgfield {
+		width: 30em;
+		border: none;
+	}
+	.rgfield {
+		width: 6em;
+		border: none;
+	}
+	.mdfield {
+		width: 10em;
+		border: none;
+	}
+	.smfield {
+		width: 100%;
+		border: none;
+	}
+	.srfield {
+		width: 5em;
+		border: none;
+	}
+	.tifield {
+		width: 2em;
+		border: none;
+	}
+
+	.paddingTop { 
+		padding-top: 1em;
+	}
+	.fbutton { 
+		width: 10em;
+	}
+
+</style>
+		<fieldset class="hidden-details">
+			<legend/> 
+				Enter New Bill
+			</legend>
+
+
+				<label>Vendor</label> <select name=company id=company> <?COMPANY?> </select> <br />
+
+				<label>Category</label> <select name=category id=category style="margin: auto"> <?BILL_CATEGORY?> </select> <br/>
+
+				<label>Bill Date</label> <input type=text name=billdate id=DPC_billdate> <br />
+
+				<label>Due Date</label>  <input type=text name=duedate  id=DPC_duedate> <br />
+
+				<label>Amount</label> <input type=text name=amount id=amount> <br />
+
+				<label>Description</label> <textarea name=description id=description></textarea> <br />
+
+				<button name="save" value=1>Save</button>
+		</fieldset>
+
+		<fieldset class="hidden-details">
+			<legend/> 
+				Pay Bill
+			</legend>
+
+
+				<label>Payment Type</label> <select name=paytype id=paytype> <?PAYTYPE?> </select> <br />
+
+
+				<label>Amount</label> <input type=text name=payamount id=payamount> <br />
+
+
+				<button name="save" value=1>Save</button>
+		</fieldset>
+
+
+		<fieldset>
+			<legend>
+				Results
+			</legend>
+			<!-- ******************* START ****************************** -->
+<input type="hidden" name="sortfield" 		id="sortfield" value="aaa" />
+<input type="hidden" name="sortdirection" 	id="sortdirection" value="1" />
+
+<input type="hidden" name="editbill" 	id="editbill"  />
+
+ <table>
+    <tr>
+
+		<th></th>
+		<?loop fields?>
+		<th><a href="#" onClick="do_sort('<?id?>');" style="color: white;" ><?desc?></a></th>
+		<?endloop fields?>
+
+     
+    </tr>
+    <?loop data?>
+			<tr>
+				<td><input type="checkbox" id="billid" name="billid" /> </td>
+		<?loop fields?>
+
+			<td>
+			<?if ro?>
+			<div class="<?class?>" ><?if link?><a href="<?link?>"><?endif link?><?value?><?if link?></a><?endif link?></div>
+			<?else ro?>
+			 <?if big?>
+				<textarea name="<?fname?>[<?id?>]" cols=50><?value?> </textarea>
+			 <?else big?>
+
+			 	<?if ( $variable->{type} eq 'bool' ) ?>
+					<input type="checkbox" name="<?fname?>[<?id?>]" value="1" size="<?size?>" <?if value?>checked<?endif value?> />
+			 	<?else ( $variable->{type} eq 'bool' ) ?>
+					<!-- ***** -->
+					<input name="<?fname?>[<?id?>]" value="<?value?>" class="<?class?>"  />
+			 	<?endif ( $variable->{type} eq 'bool' ) ?>
+
+			 <?endif big?>
+				
+			<?endif ro?>
+
+			</td>		
+	
+		<?endloop fields?>
+        
+			</tr>
+    <?endloop data?>
+
+  </table>
+<!-- ******************* END ****************************** -->
+		</fieldset>
+
+
+
+
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>
