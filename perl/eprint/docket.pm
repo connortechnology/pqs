@@ -1887,6 +1887,8 @@ sub header_info {
 		ORDER by 1;
 	}, {Slice => {} }, $hash{order_id}, $pid) if $hash{order_id};
 
+	$hash{bindery_type} = eprint::project::get_bindery_type($log, $dbh, $pid);
+
     return \%hash;
 
 }
