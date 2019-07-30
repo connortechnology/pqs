@@ -1047,6 +1047,15 @@ sub printing {
     use Storable              qw(thaw);
     use MIME::Base64;
 
+    if ( $r->param('customovers') ) {
+	    my $overs = $r->param('customovers');
+	    my $sid = $r->param('sid');
+
+	    $dbh->do("DELETE FROM tbl_service_Specifications WHERE lngserviceindex = $sid AND strname = 'CustomOvers'");
+	    $dbh->do("INSERT INTO tbl_service_Specifications VALUES ( $pid, $sid, 'CustomOvers', $overs)");
+	    print STDERR "CUSTOM OVERS: $sid, $overs \n";
+
+    }
     my %hash;
     my $signatureIndex            = 0;
     my @signature_service_indices =
@@ -1126,6 +1135,7 @@ sub printing {
     else {
         $results{single} = 1;
     }
+    print STDERR "HAVE CUSTOM RESULts $results{'CustomOvers'} \n";
     $results{txtServiceDescription} = $results{ProjectType}
       if (!(eprint::project::is_multipage($log, $dbh, $pid)));
 
@@ -1279,6 +1289,26 @@ sub printing {
     {
         my $coated;
         if ($results{'pressType'} ne 'web') {
+	  
+		my $forms		= $results{txtSignatureQuantity};
+	  	my $parent_sheets	= $results{hdnPaperBuyQuantity1} * $forms; 
+	  	my $sheet_height	= $results{hdnPaperBuyQuantity1} * $forms; 
+	
+		#$paper = "F: $forms PS: $parent_sheets SH: $sheet_height ";
+	
+
+            $paper .=  $results{"hdnSheetSizeHeight"} . "x" . $results{"hdnSheetSizeWidth"};  
+
+            $paper .= $results{"stock_name"};
+            $paper .= " - " . $results{"txtSpecificStockBrand"}
+              if $results{"txtSpecificStockBrand"};
+            $paper .= ", "
+              . $results{"stock_finish"} . ", "
+              . $results{'stock_colour'} . ", "
+              . $results{"stock_weight"} . ", "
+              . $results{"txtStockCalliper"}
+			  ;
+
             if (
                 ( 
                   $results{'hdnSuppliedStockHeight'} != $results{'hdnSheetSizeHeight'} or
@@ -1291,30 +1321,30 @@ sub printing {
 
                )
             {
-#                $paper = 
-#                  $results{'hdnSuppliedStockHeight'} . "x"
-#                . $results{'hdnSuppliedStockWidth'} . " ";
+
+    $results{'PaperOut'}     = ceil($results{'hdnSheetQuantity1'} / $results{hdnPaperBuyQuantity1}) if  $results{hdnPaperBuyQuantity1} ;
+    		my $sheetHeight = $results{txtStockCalliper} * $results{hdnPaperBuyQuantity1};
+
+
+           	$paper .= "<br/> Cut From ";
+                $paper .= 
+                  $results{'hdnSuppliedStockHeight'} . "x"
+                . $results{'hdnSuppliedStockWidth'} . " "
+		. " " . $results{PaperOut} . " Out"
+		. " Parent Sheet Count: " . $results{'hdnPaperBuyQuantity1'} 
+		. " Parent Sheet Height " . $sheetHeight
+		;
             }
 
-#           $paper .= " Cut to "
-            $paper .= " "
-              . $results{"hdnSheetSizeHeight"} . "x"
-              . $results{"hdnSheetSizeWidth"} . " - " 
-                    if ( $results{"hdnSheetSizeHeight"} && $results{"hdnSheetSizeWidth"} );
+	    #$paper .= " "
+	    #  . $results{"hdnSheetSizeHeight"} . "x"
+	    #  . $results{"hdnSheetSizeWidth"} . " - " 
+	    #        if ( $results{"hdnSheetSizeHeight"} && $results{"hdnSheetSizeWidth"} );
 
-            $paper .= $results{"stock_name"};
-            $paper .= " - " . $results{"txtSpecificStockBrand"}
-              if $results{"txtSpecificStockBrand"};
-            $paper .= ", "
-              . $results{"stock_finish"} . ", "
-              . $results{'stock_colour'} . ", "
-              . $results{"stock_weight"} . ", "
-              . $results{"txtStockCalliper"}
-			  ;
-
+	
         }
         else {
-            $paper =
+            $paper = 
                 $results{"hdnSheetSizeHeight"} . "x"
               . $results{"hdnSheetSizeWidth"} . " - "
               . $results{"stock_name"} . ", "
@@ -1332,8 +1362,11 @@ sub printing {
           { category => "Paper",
             name     => $paper,
             alt_name => $alt_name,
-            qty      => $results{"hdnSheetQuantity$qtyIndex"} *
-              $results{'txtSignatureQuantity'}, }
+            qty      => $results{"hdnSheetQuantity$qtyIndex"}, 
+	    #qty      => $results{"hdnSheetQuantity$qtyIndex"} *
+	    #  $results{'txtSignatureQuantity'}, }
+
+    	  }
 
     }
 
@@ -1405,6 +1438,7 @@ sub printing {
     $results{'NoPrint'} = $results{chargefor} eq 'Free' ? 1 : 0;
 
     $results{'PaperOut'}     = ceil($results{'hdnSheetQuantity1'} / $results{hdnPaperBuyQuantity1}) if  $results{hdnPaperBuyQuantity1} ;
+
 
     $results{'UserType'}     = $userType;
     $results{'ProjectIndex'} = $pid;
@@ -2318,6 +2352,7 @@ sub setup_docket {
 			 ) || $catID == -3)
         {
 			next if $catID == -3 && $cat eq 'Printing';
+			next if $catID == -3 && $cat eq 'Prepress';
 
             my @service_types;
             my @supplied_service_types;
