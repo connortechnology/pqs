@@ -1047,7 +1047,7 @@ sub printing {
     use Storable              qw(thaw);
     use MIME::Base64;
 
-    if ( $r->param('customovers') ) {
+    if ( $r->param('customovers') ne '' ) {
 	    my $overs = $r->param('customovers');
 	    my $sid = $r->param('sid');
 
@@ -2351,8 +2351,26 @@ sub setup_docket {
         if (($catID == undef) || ($catNumericalID == $catID) || ($catID == -1
 			 ) || $catID == -3)
         {
-			next if $catID == -3 && $cat eq 'Printing';
-			next if $catID == -3 && $cat eq 'Prepress';
+	
+	  #Collect the material information for ALL services when viewing the 'Other' category
+	  if ( $catID == -3 ) {
+
+            foreach my $service (@$services) {
+                my ($ref, $name, $id, $supplied, $desc) 
+                    = @$service{qw(ref name id supplied desc)};
+
+                    my ($data, $material) =
+                      	summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count);
+
+			
+			for my $m (@{$material}) {
+			    push @materials, $m;
+			}
+		}
+	  }
+
+	  next if $catID == -3 && $cat eq 'Prepress';
+	  next if $catID == -3 && $cat eq 'Printing';
 
             my @service_types;
             my @supplied_service_types;
@@ -2449,6 +2467,8 @@ sub setup_docket {
                             ssi::insert_html($r, '/includes/main/docket/time.html'), $data
                     );
                 }
+
+		next if $catID == -3 && $cat eq 'Printing';
 
                 if ($supplied) {
                     push @supplied_service_types,
