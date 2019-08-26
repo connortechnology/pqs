@@ -7,7 +7,7 @@ use Business::OnlinePayment;
 use Date::Calendar::Profiles  qw( $Profiles );
 use Date::Calendar;
 use Mail::Sendmail;
-use MIME::QuotedPrint;
+#use MIME::QuotedPrint;
 use File::Path;
 
 use PQS::Util       qw(verify_cc);
@@ -15,11 +15,14 @@ use sql             ();
 use eprint::service ();
 use eprint::project qw(:common has_pdf_template);
 
+use Mail;
+
 use PQS::model::payment ();
 use PQS::model::order ();
 use PQS::Object::product ();
 use PQS::model::order ();
 use PQS::Object::promotion();
+
 
 require configuration;
 require eprint::customer;
@@ -1846,7 +1849,7 @@ sub notify_overdraft {
      );
 
      misc::send_email_with_attachment(
-         $r, $log, \%mail, '', encode_qp($email_template), 'text/html',
+         $r, $log, \%mail, '', Mail::encode_qp($email_template), 'text/html',
          'quoted-printable'
      );
 }
@@ -2056,12 +2059,12 @@ print STDERR "CHECK INV_NOT; $inv_not \n\n";
     my @attachments = ();
 
     my $email_template = misc::load_file($r, '/email/forms/order.html');
-    $_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order ) );
+    $_ = Mail::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order ) );
     my @body = ('', $_, 'text/html', 'quoted-printable');
 
     $_ = misc::load_file($r, '/email/forms/order.html');
     if ( $_ ) {
-        $_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $_, \%order ) );
+        $_ = Mail::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $_, \%order ) );
         push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
     }
     my %mail = (
@@ -2076,11 +2079,11 @@ print STDERR "CHECK INV_NOT; $inv_not \n\n";
 
     @attachments = ();
     $email_template = misc::load_file($r, '/email/forms/order.html');
-    $_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order ) );
+    $_ = Mail::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order ) );
     @body = ('', $_, 'text/html', 'quoted-printable');
     $_ = misc::load_file($r, '/email/forms/order.html');
     if ( $_ ) {
-        $_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $_, \%order ) );
+        $_ = Mail::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $_, \%order ) );
         push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
     }
     %mail = (
@@ -2141,6 +2144,8 @@ sub send_sales_order {
 
 
 
+	use MIME::Base64;
+
     my @project_summaries;
 
 
@@ -2150,7 +2155,7 @@ sub send_sales_order {
 
     $order{'siteURL'} = configuration::get_value( $log, $dbh, 'siteURL' );
 
-	$email_content = encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
+	$email_content = Mail::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
 
 	my @body = ("", $email_content,  'text/html', 'quoted-printable');
 
@@ -2165,7 +2170,6 @@ sub send_sales_order {
 
     my $html = ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order );
 
-	use MIME::Base64;
 	use PDF::WebKit;
 	my %opt = (page_size => 'Letter', 
 		margin_right => '0.25in', margin_left=>'0.4in',
