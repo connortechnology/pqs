@@ -32,6 +32,7 @@
 		}
 	</script>
 
+	<?eval( use Data::Dumper; print STDERR "HAVE VARIABLE PRODUCTS ", Dumper($variable->{PRODUCTS}) ) ?>
 <body>
 <!--#include virtual="/includes/c1-main-nav.html" -->
 	<h1><span class="title-section">Quotes &#187;</span> Quote Details</h1>
@@ -52,17 +53,23 @@
 			<input type="hidden" name="quote_id" value="<?QUOTE_ID?>" />
 		</form>
 
+		<?if ( @{$variable->{PRODUCTS}} ) ?>
 			<form name="f3" method="post" action="/main/order/order_submit.html">
 				<input type="hidden" name="btnFunction" value="Process Order" />
 				<input type="hidden" name="quote_id" value="<?QUOTE_ID?>" />
-				<input type="submit" name="f3.submit();return false;" class="button right" value="Product Order" />
+				<input type="submit" name="f3.submit();return false;" class="button right" value="Process Order"  />
+				<!-- This is a Product quotes, projects are not made yet --> 
+
 			</form>
 
+		<?else ( @{$variable->{PRODUCTS}} ) ?>
 			<form name="f3" method="post" action="/main/order/order_selection.html">
 				<input type="hidden" name="btnFunction" value="Process Order" />
 				<input type="hidden" name="quote_id" value="<?QUOTE_ID?>" />
 				<input type="submit" name="f3.submit();return false;" class="button right" value="Process Order" />
 			</form>
+			<?endif ( @{$variable->{PRODUCTS}} ) ?>
+
 		<? if ( ! $$variable{'InvalidPrices'} ) ?>
 		<? endif ( ! $$variable{'InvalidPrices'} ) ?>
 
