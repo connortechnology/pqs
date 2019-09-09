@@ -293,11 +293,38 @@ sub price_item {
 sub valid_equipment {
 	my ($log, $dbh, $service_type, $pid) = @_;
 
-	my $sql = q{
+	my $specs = shift;
+	use session;
+	my $r = session::r;
+	my $specs;
+	map { $specs->{$_} = $r->param($_) } $r->param();
+
+
+
+	use Data::Dumper;
+	print STDERR "DUMPER SPECS: " , Dumper($specs, $specs->{chkOverrideEquipment1});
+
+	my $override;
+
+
+	if ( $specs->{chkOverrideEquipment1} ) {
+		$override = $specs->{ddmEquipment1};
+	print STDERR " OVERRRIDE FOUND:  $override \n";
+	}
+
+	my $over_sql;
+	if ( $override ) {
+		$over_sql = " AND eq.lngindex = $override ";
+	}
+
+	print STDERR "HAVE OVERRRIDE:  $override \n";
+
+	my $sql = qq{
 		SELECT equipment 
         FROM service_type_equipment e, tbl_service_types t, tbl_equipment eq
         WHERE t.lngindex = e.service_type AND equipment = eq.lngindex 
         AND t.strid    = ?
+	$over_sql
 	};
 
 	my $rfq_only =  $pid ? $dbh->selectrow_array(q{

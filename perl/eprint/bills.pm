@@ -14,12 +14,13 @@ use PQS::model::bills;
 
 
 our $cols = [
-	{ desc=>"ID", 					id=>"id", 					class=> "smfield", ro=>1 },
-	{ desc=>"Company", 				id=>"strcompanyname", 		class=> "mdfield", ro=>1 },
+	{ desc=>"ID", 				id=>"id", 				class=> "smfield", ro=>1 },
+	{ desc=>"Company", 			id=>"strcompanyname", 			class=> "mdfield", ro=>1 },
 	{ desc=>"Category", 			id=>"name", 				class=> "srfield", ro=>1 },
 	{ desc=>"Bill Date", 			id=>"billdate", 			class=> "rgfield", ro=>1 },
 	{ desc=>"Due Date", 			id=>"duedate", 				class=> "rgfield", ro=>1 },
-	{ desc=>"Amount", 				id=>"amount", 				class=> "rgfield", ro=>1 },
+	{ desc=>"Amount", 			id=>"amount", 				class=> "rgfield", ro=>1 },
+	{ desc=>"Owing", 			id=>"amount", 				class=> "rgfield", ro=>1 },
 	{ desc=>"Description", 			id=>"description", 			class=> "lgfield", ro=>1, big=>1 },
 
 	];
@@ -54,7 +55,8 @@ sub display {
 
 	my @col_list = @{$cols};
 
-	save_bill($param) if  $param->{save};
+	save_bill($param) if  $param->{save_bill};
+	pay_bill($param) if  $param->{pay_bill};
 	get_bill($param->{editbill}, $var) if  $param->{editbill};
 
 
@@ -68,6 +70,7 @@ sub display {
 
 
 	$var->{BILL_CATEGORY} = ssi::select_options(qw(bill_category id name));
+	$var->{PAYTYPE} = ssi::select_options(qw(bill_pay_methods id name));
 
 	my $list = $dbh->selectall_arrayref(q{SELECT lngcustomerid, strcompanyname  
 		FROM tbl_customer
@@ -105,6 +108,25 @@ sub save_bill {
 	print STDERR "HAVE PARAMS" , Dumper($param);
 
 	PQS::model::bills::update($param, $id);
+
+
+}
+sub pay_bill {
+	my $param = shift;;
+
+	print STDERR "SAVE BILL \n";
+
+
+
+	my $id = $param->{billid};
+	#|| PQS::model::bills::insert($company, $category);
+
+	$param->{billdate} = 'NOW()' unless $param->{billdate};
+	$param->{duedate} = 'NOW()' unless $param->{duedate};
+
+	print STDERR "HAVE PARAMS" , Dumper($param);
+
+	#PQS::model::bills::update($param, $id);
 
 
 }

@@ -40,3 +40,6 @@ create table bill_payments (
 
 INSERT into bill_category (name) values ( 'Test 1');
 INSERT into bill_category (name) values ( 'Test 2');
+
+INSERT into bill_pay_methods values ( 1, 'Cash' ) ;
+INSERT into bill_pay_methods values ( 2, 'Cheque');
