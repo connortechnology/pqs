@@ -27,7 +27,7 @@
 <script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
 
 <div id="content">
-	<h1><span class="title-section">Accounting &#187;</span>  Receivables</h1>
+	<h1><span class="title-section">Accounting &#187;</span>  Bills</h1>
 
 	<p>Choose criteria and click show results.  </p>
 
@@ -125,7 +125,7 @@
 	}
 
 </style>
-		<fieldset class="hidden-details">
+		<fieldset class="idden-details">
 			<legend/> 
 				Enter New Bill
 			</legend>
@@ -143,10 +143,10 @@
 
 				<label>Description</label> <textarea name=description id=description></textarea> <br />
 
-				<button name="save" value=1>Save</button>
+				<button name="save_bill" value=1>Save</button>
 		</fieldset>
 
-		<fieldset class="hidden-details">
+		<fieldset class="idden-details">
 			<legend/> 
 				Pay Bill
 			</legend>
@@ -156,9 +156,10 @@
 
 
 				<label>Amount</label> <input type=text name=payamount id=payamount> <br />
+				<label>Note</label> <input type=text name=paynote id=paynote> <br />
 
 
-				<button name="save" value=1>Save</button>
+				<button name="pay_bill" value=1>Save</button>
 		</fieldset>
 
 

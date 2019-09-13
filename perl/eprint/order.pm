@@ -8,6 +8,9 @@ use Date::Calendar::Profiles  qw( $Profiles );
 use Date::Calendar;
 use Mail::Sendmail;
 #use MIME::QuotedPrint;
+use Encode;
+
+
 use File::Path;
 
 use PQS::Util       qw(verify_cc);
@@ -2156,8 +2159,10 @@ sub send_sales_order {
     $order{'siteURL'} = configuration::get_value( $log, $dbh, 'siteURL' );
 
 	$email_content = Mail::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
+	$email_content = encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
 
-	my @body = ("", $email_content,  'text/html', 'quoted-printable');
+	my @body = ("", $email_content,  'text/html', 'utf-8');
+	#my @body = ("", $email_content,  'text/html', 'quoted-printable');
 
 
 #print STDERR "SALES ORDER SHOW PROJECTS \n";

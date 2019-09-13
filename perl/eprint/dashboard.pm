@@ -345,17 +345,20 @@ sub text_search {
 				SELECT lngquoteid, lngcustomerid FROM tbl_quotes WHERE lngquoteid = ?
 			}, undef, $1) : undef;
 
-			print STDERR "HAVE SEARCH: $search_type, ORDER $quote, CUST: $cust, REF: $ref \n";
+			print STDERR "HAVE SEARCH: $search_type, ORDER $quote, CUST: $ocust, REF: $ref \n";
 
 			if ( $quote ) {
 				$var->{param}{quote_id} = $quote;
 				$redirect = "/main/quote/quote_history_details.html?quote_id=$quote";
 				$cust = $ocust;
+				print STDERR "SELECT CUST NUMBER: $cust *****\n";
+
 			}
 		}
 
 		if ( $redirect ) {
 			die("have cust: $cust, $var->{cookie} ") unless $cust;
+			eprint::login::select_customer( $r, $log, $dbh, $var->{cookie}, $var, $cust );
 			print STDERR "HAVE REDIRECT: $redirect \n";
 			$var->{Redirect} = $redirect;
 			return;

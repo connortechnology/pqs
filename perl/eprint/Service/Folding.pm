@@ -345,6 +345,8 @@ sub calc {
 sub get_fold_prices {
 
 	my ($log, $dbh, $variable, $pid, $sid, $specs, @quantities ) = @_;
+
+
     my @equipment =
       eprint::service::valid_equipment($log, $dbh, 'Folding', $pid);
 
