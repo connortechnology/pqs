@@ -2633,13 +2633,42 @@ sub packing_slip {
 
 	my $variable = shift;
 
-	my $shipid 	 = $r->param('shipid');
 
 
 
+	my $oid = $r->param('order_id');
 
-	my $sid = $dbh->selectrow_array(q{SELECT sid FROM ship_address WHERE shipid = ?}, undef, $shipid);
-	my $pid = $dbh->selectrow_array(q{SELECT lngprojectindex FROM tbl_project_contents WHERE lngserviceindex = ?}, undef, $sid);
+	my $pid = $r->param('pid') || $dbh->selectrow_array(q{SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ?  order by 1}, undef, $oid);
+
+	my $packid 	 = $r->param('packid') || $dbh->selectrow_array(q{SELECT id FROM packing_slip WHERE pid = ? } , undef, $pid );
+
+	print STDERR "HAVE PID: $pid Order: $oid \n";
+
+
+	my $boxes = $r->param('boxes');
+	my $item_qty = $r->param('ship_qty');
+
+	if ( $r->param('submit') ) {
+		$dbh->do('DELETE FROM packing_slip where id = ?', undef, $packid) if $packid;
+		if ($packid) {
+			$dbh->do('INSERT INTO packing_slip values ( ?,?,?,? ) ', undef, $packid, $pid, $boxes, $item_qty);
+		} else { 
+			$dbh->do('INSERT INTO packing_slip ( pid, boxes, item_qty)  values ( ?,?,? ) ', undef, $pid, $boxes, $item_qty);
+			$packid = $dbh->last_insert_id('','public','packing_slip','id');
+		}
+
+
+		
+	}
+
+	my $pack = $dbh->selectrow_hashref(q{SELECT * from packing_slip WHERE id = ? }, undef, $packid);
+
+
+	print STDERR "HAVE PACK: ", Dumper($pack);
+	
+
+	#	my $sid = $dbh->selectrow_array(q{SELECT sid FROM ship_address WHERE shipid = ?}, undef, $shipid);
+	# my $pid = $dbh->selectrow_array(q{SELECT lngprojectindex FROM tbl_project_contents WHERE lngserviceindex = ?}, undef, $sid);
 
 	my $order = $dbh->selectrow_hashref(q{SELECT * FROM tbl_order_contents, tbl_orders WHERE lngprojectindex = ?
 			AND tbl_order_contents.lngorderid = tbl_orders.lngorderid}, undef, $pid);
@@ -2650,40 +2679,47 @@ sub packing_slip {
 	
 
 
-	my $address = new eprint::address($log, $dbh, $shipid);
+	#	my $address = new eprint::address($log, $dbh, $shipid);
 	
-	$address->bake_form_hash($variable, 1);
+	#$address->bake_form_hash($variable, 1);
 
 
 
 
-	my $shipid = $r->param('shipid');
+	#my $shipid = $r->param('shipid');
 
-	my %shipping;
-	   %shipping 	= eprint::service::get_specifications_pairs($log, $dbh, $pid, $sid) if $sid;
+	#my %shipping;
+	#   %shipping 	= eprint::service::get_specifications_pairs($log, $dbh, $pid, $sid) if $sid;
 	
 
 	   #print STDERR "HAVE: $sid, $pid, $order_id -- $shipid \n", Dumper($order, \%shipping, $variable);
 
-	$variable->{ship} = \%shipping;
+	   #$variable->{ship} = \%shipping;
 
 
 
 	print STDERR "HAVE ORDER ID: $variable->{order_id}, $order_id \n";
 
-	$variable->{boxes}  = $shipping{"boxes-$shipid"};
-	$variable->{weight} = $shipping{"weight-$shipid"};
-	$variable->{size}   = $shipping{"size-$shipid"};
-	$variable->{ship_qty}   = $shipping{"add_qty1-$shipid"};
+	#$variable->{boxes}  = $shipping{"boxes-$shipid"};
+	#$variable->{weight} = $shipping{"weight-$shipid"};
+	#$variable->{size}   = $shipping{"size-$shipid"};
+	#$variable->{ship_qty}   = $shipping{"add_qty1-$shipid"};
 
 	$variable->{order_id} = $order_id;
-	$variable->{ship_sid} = $sid;
+	#$variable->{ship_sid} = $sid;
 
 	$variable->{order} 		= $order;
+
+	#Used for Project details
 	$variable->{project} 	= $project;
 	$variable->{docket}      = eprint::docket::header_info($log, $dbh, $pid);
 
-	$variable->{shipnum} = $dbh->selectrow_array(q{SELECT shipnum FROM ship_address WHERE shipid = ? }, undef, $shipid);
+	$variable->{pid} = $pid;
+	$variable->{boxes} = $pack->{boxes};
+	$variable->{ship_qty} = $pack->{item_qty};
+	$variable->{packid} = $pack->{id};
+
+	#$variable->{shipnum} = $dbh->selectrow_array(q{SELECT shipnum FROM ship_address WHERE shipid = ? }, undef, $shipid);
 
 	use POSIX qw(strftime);
 
@@ -2691,7 +2727,7 @@ sub packing_slip {
 
 	$variable->{date} =  $date;
 
-	print STDERR "HAVE: $sid, $pid, $order_id -- $shipid \n", Dumper($variable);
+	print STDERR Dumper($pack), "HAVE: $pid, $order_id -- $packid \n";
 
 	my $r    = session::r;
 	my $log    = session::log;

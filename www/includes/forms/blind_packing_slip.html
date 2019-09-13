@@ -1,5 +1,12 @@
 <style>
 	
+	@media print {
+		#submitButton {
+			display: none;
+		}
+		input { border: none; }
+
+	}
 	.head {
 		display: inline-block;
 		vertical-align: bottom;
@@ -53,6 +60,7 @@
 
 </style>
 
+<form name="packing_slip_form" action="/main/order/packing_slip.html" >
 
 <div class="pagewidth botbord">
 	<div class="head fullheight" style="width: 443px; height:125px">
@@ -62,7 +70,7 @@
 	<div class="head fullheight" style="width:300px">
 	  <p style="font-size:36px;  text-align: center">PACKING SLIP</p>
 	  <br />
-	  <p style="font-size: 15pt;">Order Number: <?order_id?>-<?shipnum?> </p>
+	  <p style="font-size: 15pt;">Order Number: <?order_id?> </p>
 	</div>
 
 	<div class="head bottom fullheight" style="width: 250px; float: right;">
@@ -74,12 +82,12 @@
 
 <div style="height: 75px;" class="fullwidth botbord">
 				<div style="float: left; width: 60%;" class="show_border fullheight">
-					<span style="padding-top: 20px; font-size: 16pt; display: block">Company Name: <?txtCompanyName?> </span>
+					<span style="padding-top: 20px; font-size: 16pt; display: block">Company Name: <?order.strshippingcompanyname?> </span>
 				</div>
 				<div style="float: right; width: 35%;" class="show_border fullheight">
-					<span class="label">Contact Name: 	</span> <?txtContact?> <?txtFirstName?> <?txtLastName?>  <br/>
-					<span class="label">Phone:  	</span>  <?txtPhone?> <br/>
-					<span class="label">E-mail:   	</span> <?ship.txtEmail?>   <br/>
+					<span class="label">Contact Name: 	</span> <?txtContact?> <?order.strshippingfirstname?> <?order.strshippinglastname?>  <br/>
+					<span class="label">Phone:  	</span>  <?order.strshippingphone?> <br/>
+					<span class="label">E-mail:   	</span> <?order.strshippingemail?>   <br/>
 				</div>
 </div>
 
@@ -102,13 +110,18 @@
 </div>
 
 <div class="space3"> &nbsp; </div>
+<input type="submit" name="submit" id="submitButton" />
 <div class="fullwidth" style="height: 75px">
 	<div class="fullheight show_border" style="float: left; width: 60%;">
-		<span class="label">No. of Boxes:</span> <?boxes?> <br/>
+		<span class="label">No. of Boxes:</span> 
+		<input name="boxes" value="<?boxes?>" id="boxes" />
+		<br/>
 	</div>
 
 	<div class="fullheight show_border" style="float: right; width: 35%;">
-		<span class="label">Delivered Qty:</span> <?ship_qty?> <br/>
+		<span class="label">Delivered Qty:</span> 
+		<input name="ship_qty" value="<?ship_qty?>" id="ship_qty" />
+		<br/>
 	</div>
 
 </div>
@@ -124,4 +137,7 @@
 		<span class="label">Date:</span>  <input type="text" class="signature" /> <br/>
 	</div>
 
+	<input type="hidden" value="<?pid?>" name="pid" id="pid"  />
+	<input type="hidden" value="<?packid?>" name="packid" id="packid"  />
 </div>
+</form>

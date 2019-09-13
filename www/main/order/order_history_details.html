@@ -36,7 +36,7 @@
 		}
 
 		function packing_slip(shipid) {
-			var page = "/main/order/packing_slip.html?order_id=<?order_id?>;packing_slip=1;shipid=" + shipid;
+			var page = "/main/order/packing_slip.html?order_id=<?ORDER_ID?>;packing_slip=1;shipid=" + shipid;
 			window.open(page, 
 				'newWin,left=160,width=840,top=140,height=155,resizable=no,scrollbars=no,menubar=no,toolbar=yes,location=no,directories=no,status=no');
 		}
@@ -104,7 +104,8 @@
 	</div>
 
 		<div style="margin-bottom: 10px">
-			<button style="float: right" onClick="shipping_service();"; return false;">Packing Slip</button>
+			<!--<button style="float: right" onClick="shipping_service();"; return false;">Packing Slip</button> -->
+			<button style="float: right" onClick="packing_slip();"; return false;">Packing Slip</button>
 		</div>
 		<!--
 			<?loop ship_data?>
