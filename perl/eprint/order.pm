@@ -2645,20 +2645,22 @@ sub packing_slip {
 
 	my $pid = $r->param('pid') || $dbh->selectrow_array(q{SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ?  order by 1}, undef, $oid);
 
-	my $packid 	 = $r->param('packid') || $dbh->selectrow_array(q{SELECT id FROM packing_slip WHERE pid = ? } , undef, $pid );
+	my $packid 	 = $r->param('packid');
+	#my $packid 	 = $r->param('packid') || $dbh->selectrow_array(q{SELECT id FROM packing_slip WHERE pid = ? } , undef, $pid );
 
 	print STDERR "HAVE PID: $pid Order: $oid \n";
 
 
 	my $boxes = $r->param('boxes');
 	my $item_qty = $r->param('ship_qty');
+	my $notes = $r->param('notes');
 
 	if ( $r->param('submit') ) {
 		$dbh->do('DELETE FROM packing_slip where id = ?', undef, $packid) if $packid;
 		if ($packid) {
-			$dbh->do('INSERT INTO packing_slip values ( ?,?,?,? ) ', undef, $packid, $pid, $boxes, $item_qty);
+			$dbh->do('INSERT INTO packing_slip values ( ?,?,?,?,? ) ', undef, $packid, $pid, $boxes, $item_qty, $notes);
 		} else { 
-			$dbh->do('INSERT INTO packing_slip ( pid, boxes, item_qty)  values ( ?,?,? ) ', undef, $pid, $boxes, $item_qty);
+			$dbh->do('INSERT INTO packing_slip ( pid, boxes, item_qty, notes, pack_date)  values ( ?,?,?,?, NOW() ) ', undef, $pid, $boxes, $item_qty, $notes);
 			$packid = $dbh->last_insert_id('','public','packing_slip','id');
 		}
 
@@ -2848,8 +2850,12 @@ print STDERR "HAVE VARS: $r, $log, $dbh \n";
         ) };
     }
 
+    my $packing_slips = $dbh->selectall_arrayref(q{SELECT * FROM packing_slip WHERE pid in ( 
+	    SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ? ) order by pack_date},  {Slice => {}}, $order_id); 
+    $variable->{SLIPS} = $packing_slips;
 
-print STDERR "HAVE QTYS IN VAR", Dumper($variable->{qty});
+
+print STDERR "HAVE QTYS IN VAR", Dumper($variable->{SLIPS});
 
 }
 
