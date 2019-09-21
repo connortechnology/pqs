@@ -28,9 +28,9 @@
         <td><?Delivery_date?></td>
       </tr>
       <tr>
-        <th>Pakcing Slip:</th>
+        <th>Packing Slip:</th>
 	<td><?loop SLIPS?>
-		<?pack_date?>-<?id?> <br/>
+		<a href="/main/order/packing_slip.html?packid=<?id?>"><?pack_date?>-<?id?> </a> <br/>
 	<?endloop SLIPS?>
 	</td>
       </tr>

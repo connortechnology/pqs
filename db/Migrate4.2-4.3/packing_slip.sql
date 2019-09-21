@@ -1,3 +1,4 @@
+DROP table packing_slip;
 create table packing_slip (
 	id serial primary key,
 	pid  int,

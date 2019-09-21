@@ -2653,7 +2653,7 @@ sub packing_slip {
 
 	my $boxes = $r->param('boxes');
 	my $item_qty = $r->param('ship_qty');
-	my $notes = $r->param('notes');
+	my $notes = $r->param('comments');
 
 	if ( $r->param('submit') ) {
 		$dbh->do('DELETE FROM packing_slip where id = ?', undef, $packid) if $packid;
@@ -2668,7 +2668,10 @@ sub packing_slip {
 		
 	}
 
-	my $pack = $dbh->selectrow_hashref(q{SELECT * from packing_slip WHERE id = ? }, undef, $packid);
+	my $pack = $dbh->selectrow_hashref(q{SELECT *,
+	   to_char(pack_date, 'Mon dd, yyyy') as pdate	from packing_slip WHERE id = ? }, undef, $packid);
+
+   $pid = $pack->{pid} unless $pid;
 
 
 	print STDERR "HAVE PACK: ", Dumper($pack);
@@ -2725,14 +2728,14 @@ sub packing_slip {
 	$variable->{boxes} = $pack->{boxes};
 	$variable->{ship_qty} = $pack->{item_qty};
 	$variable->{packid} = $pack->{id};
+	$variable->{comments} = $pack->{notes};
 
 	#$variable->{shipnum} = $dbh->selectrow_array(q{SELECT shipnum FROM ship_address WHERE shipid = ? }, undef, $shipid);
 
 	use POSIX qw(strftime);
 
-	my $date = strftime "%m/%d/%Y", localtime;
 
-	$variable->{date} =  $date;
+	$variable->{date} =  $pack->{pdate};
 
 	print STDERR Dumper($pack), "HAVE: $pid, $order_id -- $packid \n";
 

@@ -5,6 +5,7 @@
 			display: none;
 		}
 		input { border: none; }
+		.noprint { display: none; }
 
 	}
 	.head {
@@ -23,7 +24,7 @@
 	}
 	.botbord {
 		border-bottom: 2px solid black;
-		padding: 0 0 40px 0;
+		padding-bottom: 15px;
 	}
 	div {
 		display: inline-block;
@@ -59,26 +60,39 @@
 	}
 
 </style>
+	<script>
+		function blind () {
+			  var x = document.getElementById("logo");
+  if (x.style.display === "none") {
+    x.style.display = "block";
+  } else {
+    x.style.display = "none";
+  }
+		}
+	</script>
 
 <form name="packing_slip_form" action="/main/order/packing_slip.html" >
 
 <div class="pagewidth botbord">
 	<div class="head fullheight" style="width: 443px; height:125px">
-	<img src="<?logo?>" class="pslogo" />
+	<img src="<?logo?>" class="pslogo" id="logo" />
 	</div>
 
-	<div class="head fullheight" style="width:300px">
+	<div class="head fullheight" style="width:520px">
 	  <p style="font-size:36px;  text-align: center">PACKING SLIP</p>
 	  <br />
-	  <p style="font-size: 15pt;">Order Number: <?order_id?> </p>
+	  <p style="font-size: 28pt;">Order Number: <?order_id?> </p>
 	</div>
 
-	<div class="head bottom fullheight" style="width: 250px; float: right;">
+
+	<div style="width:100%">	
+		<div style="width: 50%" > <input type="button" onClick="blind()" value="Blind" class="noprint" ></div>
+	<div class="head bottom fullheight" style="width: 50%; float: right;">
 		<h2 class="date"> <?date?></h2>
+	</div>
 	</div>
 </div>
 
-<div class="space1"> &nbsp; </div>
 
 <div style="height: 75px;" class="fullwidth botbord">
 				<div style="float: left; width: 60%;" class="show_border fullheight">
@@ -91,7 +105,6 @@
 				</div>
 </div>
 
-<div class="space2"> &nbsp; </div>
 
 
 
@@ -109,8 +122,6 @@
 
 </div>
 
-<div class="space3"> &nbsp; </div>
-<input type="submit" name="submit" id="submitButton" />
 <div class="fullwidth" style="height: 75px">
 	<div class="fullheight show_border" style="float: left; width: 60%;">
 		<span class="label">No. of Boxes:</span> 
@@ -126,6 +137,7 @@
 
 </div>
 
+
 <div class="space4"> &nbsp; </div>
 <div class="fullwidth" style="height: 75px">
 	<div class="fullheight show_border" style="float: left; width: 60%;">
@@ -140,4 +152,10 @@
 	<input type="hidden" value="<?pid?>" name="pid" id="pid"  />
 	<input type="hidden" value="<?packid?>" name="packid" id="packid"  />
 </div>
+	<div class="fullheight show_border" style="float: left;margin-top: 50px">
+		<span class="label" >Comments: &nbsp; </span> 
+		<textarea name="comments" id="comments" style="width:835px;height: 200px; margin-bottom:30px; float:right" /><?comments?></textarea>
+		<br/>
+	</div>
+<input type="submit" style="float:right;" name="submit" id="submitButton" />
 </form>
