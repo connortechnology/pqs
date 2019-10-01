@@ -2643,19 +2643,27 @@ sub packing_slip {
 
 	my $oid = $r->param('order_id');
 
-	my $pid = $r->param('pid') || $dbh->selectrow_array(q{SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ?  order by 1}, undef, $oid);
+	my $pid = $r->param('pid');
+       
+	$pid = $dbh->selectrow_array(q{SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ?  order by 1}, undef, $oid) unless $pid;
+	$oid = $dbh->selectrow_array(q{SELECT lngorderid FROM tbl_order_contents WHERE lngprojectindex = ?  order by 1}, undef, $pid) unless $oid;
 
 	my $packid 	 = $r->param('packid');
-	#my $packid 	 = $r->param('packid') || $dbh->selectrow_array(q{SELECT id FROM packing_slip WHERE pid = ? } , undef, $pid );
 
 	print STDERR "HAVE PID: $pid Order: $oid \n";
+
+	my $PIDS = $dbh->selectall_arrayref(q{
+		SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ? order by 1
+	}, {Slice => {}}, $oid);
+
+	$variable->{PIDS} = $PIDS;
 
 
 	my $boxes = $r->param('boxes');
 	my $item_qty = $r->param('ship_qty');
 	my $notes = $r->param('comments');
 
-	if ( $r->param('submit') ) {
+	if ( $r->param('Save') ) {
 		$dbh->do('DELETE FROM packing_slip where id = ?', undef, $packid) if $packid;
 		if ($packid) {
 			$dbh->do('INSERT INTO packing_slip values ( ?,?,?,?,? ) ', undef, $packid, $pid, $boxes, $item_qty, $notes);
@@ -2668,10 +2676,12 @@ sub packing_slip {
 		
 	}
 
-	my $pack = $dbh->selectrow_hashref(q{SELECT *,
-	   to_char(pack_date, 'Mon dd, yyyy') as pdate	from packing_slip WHERE id = ? }, undef, $packid);
+	print STDERR "HAVE PID: $pid PACK: $packid ORDER: $oid \n";
 
-   $pid = $pack->{pid} unless $pid;
+	my $pack = $dbh->selectrow_hashref(q{SELECT *,
+	   to_char(pack_date, 'Mon dd, yyyy') as pdate	from packing_slip WHERE id = ? }, undef, $packid) if $packid;
+
+   ##$pid = $pack->{pid} unless $pid;
 
 
 	print STDERR "HAVE PACK: ", Dumper($pack);

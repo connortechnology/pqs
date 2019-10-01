@@ -96,7 +96,16 @@
 
 <div style="height: 75px;" class="fullwidth botbord">
 				<div style="float: left; width: 60%;" class="show_border fullheight">
-					<span style="padding-top: 20px; font-size: 16pt; display: block">Company Name: <?order.strshippingcompanyname?> </span>
+					<span style="padding-top: 20px; font-size: 16pt; display: block">
+						Company Name: <?order.strshippingcompanyname?> 
+					</span>
+					<span class="noprint" style="position:relative; top: 36px;">
+					PROJECT: <select id="pid" name="pid" onChange="this.form.submit()">
+						<?loop PIDS?>
+						<option value="<?lngprojectindex?>"><?lngprojectindex?></option>
+						<?endloop PIDS?>
+					</select>
+					</span>
 				</div>
 				<div style="float: right; width: 35%;" class="show_border fullheight">
 					<span class="label">Contact Name: 	</span> <?txtContact?> <?order.strshippingfirstname?> <?order.strshippinglastname?>  <br/>
@@ -149,7 +158,6 @@
 		<span class="label">Date:</span>  <input type="text" class="signature" /> <br/>
 	</div>
 
-	<input type="hidden" value="<?pid?>" name="pid" id="pid"  />
 	<input type="hidden" value="<?packid?>" name="packid" id="packid"  />
 </div>
 	<div class="fullheight show_border" style="float: left;margin-top: 50px">
@@ -157,5 +165,5 @@
 		<textarea name="comments" id="comments" style="width:835px;height: 200px; margin-bottom:30px; float:right" /><?comments?></textarea>
 		<br/>
 	</div>
-<input type="submit" style="float:right;" name="submit" id="submitButton" />
+<input type="submit" style="float:right;" name="Save" id="submitButton" />
 </form>
