@@ -2642,13 +2642,14 @@ sub packing_slip {
 
 
 	my $oid = $r->param('order_id');
-
 	my $pid = $r->param('pid');
+	my $packid 	 = $r->param('packid');
        
 	$pid = $dbh->selectrow_array(q{SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ?  order by 1}, undef, $oid) unless $pid;
+	$pid = $dbh->selectrow_array(q{SELECT pid FROM packing_slip WHERE id = ?}, undef, $packid) unless $pid;
+
 	$oid = $dbh->selectrow_array(q{SELECT lngorderid FROM tbl_order_contents WHERE lngprojectindex = ?  order by 1}, undef, $pid) unless $oid;
 
-	my $packid 	 = $r->param('packid');
 
 	print STDERR "HAVE PID: $pid Order: $oid \n";
 

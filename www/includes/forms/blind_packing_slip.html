@@ -100,7 +100,7 @@
 						Company Name: <?order.strshippingcompanyname?> 
 					</span>
 					<span class="noprint" style="position:relative; top: 36px;">
-					PROJECT: <select id="pid" name="pid" onChange="this.form.submit()">
+					PROJECT: <select id="pid" name="pid" onChange="this.form.packid.value='';this.form.submit()">
 						<?loop PIDS?>
 						<option value="<?lngprojectindex?>"><?lngprojectindex?></option>
 						<?endloop PIDS?>
