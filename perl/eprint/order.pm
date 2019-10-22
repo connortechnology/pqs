@@ -2159,7 +2159,7 @@ sub send_sales_order {
     $order{'siteURL'} = configuration::get_value( $log, $dbh, 'siteURL' );
 
 	$email_content = Mail::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
-	$email_content = encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
+	#$email_content = encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
 
 	my @body = ("", $email_content,  'text/html', 'utf-8');
 	#my @body = ("", $email_content,  'text/html', 'quoted-printable');
