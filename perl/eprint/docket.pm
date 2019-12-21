@@ -38,6 +38,7 @@ our %RUN_STYLE = (
     WF => 'Work & Flop', # Tumble
     PF => 'Perfecting',
 );
+sub round ($;$) {my($n,$s)=@_;$s=(defined $s)?$s:2;int($n*10**$s+0.5)/10**$s}
 
 our %switch = (
     Film                => \&film,
@@ -1402,12 +1403,13 @@ sub printing {
 			$form{VERSIONS} = [ 
 				sort { $a->{requested_qty} <=> $b->{requested_qty} } 
 
+				
 				# Count the net press sheets per form.
 				map  { 
 					   $_->{'requested_qty1' } = $_->{requested} / 100 * $qtys[0];
 					   $_->{'requested_qty2' } = $_->{requested} / 100 * $qtys[1];
 					   $_->{'requested_qty3' } = $_->{requested} / 100 * $qtys[2];
-					   $_->{requested_qty} = $_->{requested} / 100 * $qty;
+					   $_->{requested_qty} = round $_->{requested} / 100 * $qty;
 					   $_->{final_qty} = ceil($_->{final} / 100 * $qty);
 					   $_ } @{$f} ];
 
@@ -1706,7 +1708,7 @@ sub header_info {
 
 				# Count the net press sheets per form.
 				map  { 
-					   $_->{requested_qty} = $_->{requested} / 100 * $qty;
+					   $_->{requested_qty} = round $_->{requested} / 100 * $qty;
 					   $_->{final_qty} = ceil($_->{final} / 100 * $qty);
 					   $_ } @{$f} ];
 
