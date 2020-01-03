@@ -250,21 +250,32 @@ sub login_app_process {
 
 	use Captcha::reCAPTCHA;
 
+	map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
+
     my $c = Captcha::reCAPTCHA->new;
-    my $challenge = $r->param('recaptcha_challenge_field');
-    my $response  = $r->param('recaptcha_response_field');
-	my $key = "6Lf0zu0SAAAAAIuCZ5If8tATPVrBj-RVQliRyAY6";
+    my $challenge = 1;
+    my $response  = $r->param('g-recaptcha-response');
 
-	unless ( $variable->{user_id} ) {
+	#my $challenge = 6LfKz8gUAAAAAFW_im9xh9VAp8XA5C2F5qrhKsX-
+	#my $response  = $r->param('recaptcha_response_field');
+	my $key = "6LfKz8gUAAAAAEQQyR2BZhg15phipZkfyCl4kuUi";
+
+
+	use Data::Dumper;
+	print STDERR "START LOGIN APP PROCESS \n\n\n";
+	#unless ( $variable->{user_id} ) {
 		# Verify submission
-		my $result = $c->check_answer($key, $ENV{'REMOTE_ADDR'}, $challenge, $response);
+		my $result = $c->check_answer_v2($key, $response, $ENV{'REMOTE_ADDR'});
 
-		unless ( $result->{is_valid} || $challenge == undef ) {
+	print STDERR "CONTINUE LOGIN APP PROCESS:  \n\n\n", Dumper($result);
+
+		unless ( $result->{is_valid} ) {
 		   # Error
 			return misc::error( $log, $dbh, $variable, 
-				'Bad Field', 'Your Captcha is incorrect. Please press the back button to try again' );
+				'Bad Field', 'Your Captcha is incorrect. Please press the back button to try again'  );
 		}
-	}
+	#}
+	#
 
 #wsc    $r->param('txtCompanyName' => $r->param('ddmCompany'))
 #wsc    if $r->param('txtCompanyName') eq '';
