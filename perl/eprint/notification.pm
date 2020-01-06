@@ -24,7 +24,7 @@ sub file_upload {
 		SELECT * from tbl_projects WHERE strstatus = 'Waiting For Files' order by 1 desc Limit 11
 	}, {Slice => {}} ); 
 
-	print STDERR "HAVE lIST ", Dumper($list);
+#print STDERR "HAVE lIST ", Dumper($list);
 
 	my $from 	= configuration::get_value(undef, $dbh, 'FileUploadEmail');
 	my $file 	= '/email/content/notification/file_upload.html';
@@ -39,12 +39,18 @@ sub file_upload {
 			AND oc.lngorderid = o.lngorderid
 		}, undef, $p->{lngprojectindex} );
 
-		print STDERR "HAVE ORDER", Dumper($order);
+
+
+	#		print STDERR "HAVE ORDER", Dumper($order);
 
 		warn("Order Not Found for Project: $p->{lngprojectindex} \n") unless $order->{lngorderid};
 		next unless $order->{stremail};
+		next unless $order->{strstatus} eq 'Waiting For Files';
 
 		my $to		=  $order->{stremail};	
+
+		print STDERR "SEND FILE UPLOAD REMINDER: TO: $to : $order->{lngorderid}, $order->{strstatus}, $p->{lngprojectindex} \n";
+
 		$info->{pid} = $p->{lngprojectindex};
 
 		send_email( $var, $to, $from, $subject, $file, $info); 

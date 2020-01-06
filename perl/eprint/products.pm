@@ -107,6 +107,45 @@ print STDERR "INSERTING OPTOINS FOR : $fid -- $_ \n ";
 
 }
 
+sub copy_filters {
+	my ($from, $to, $r, $dbh, $var) = @_;
+
+
+	my $from_filters = PQS::model::product_filter::get_category($from);
+
+	map { 
+
+		my $fid = PQS::model::product_filter::insert($_->{name}, $to, $_->{sortorder});
+
+		my $option = PQS::model::product_filter::get_options($_->{id});
+
+		map { 
+			print STDERR "Insert Options", Dumper($_);
+			PQS::model::product_filter::insert_option($_->{name}, $fid );
+		} @{ $option };
+
+	} @{$from_filters};
+
+}
+
+sub load_filters {
+	my ($cat, $r, $dbh, $var, $all) = @_;
+
+	return unless $cat;
+
+
+	$var->{filters} = PQS::model::product_filter::get_category($cat);
+
+	map { 
+		$_->{options} = PQS::model::product_filter::get_options($_->{id});
+		my @ol;
+		map { push @ol, $_->{name} } @{ $_->{options} };
+		$all->{$_->{name}} = \@ol;
+	} @{$var->{filters}};
+
+
+}
+
 sub builder { 
 	my ($r, $dbh, $var) = @_;
 
@@ -140,17 +179,10 @@ map {
 	}
 	
 
-	$var->{filters} = PQS::model::product_filter::get_category($cat) if $cat;
-
-
-
 	my %all;
-	map { 
-		$_->{options} = PQS::model::product_filter::get_options($_->{id});
-		my @ol;
-		map { push @ol, $_->{name} } @{ $_->{options} };
-		$all{$_->{name}} = \@ol;
-	} @{$var->{filters}};
+
+	load_filters($cat, $r, $dbh, $var, \%all);
+
 
 
 	my $p = new PQS::Object::product;
@@ -195,9 +227,28 @@ map {
 	}
 
 
-	my $catid = $r->param('Copy') ? $r->param('cat-copy') : $cat;
+
+	my $defs;
+	if ( $r->param('Copy') && $r->param('cat-copy') ) {
+		my $catid = $r->param('cat-copy');
+		PQS::model::product_filter::reset_category($cat);
+		
+		copy_filters($catid, $cat, $r, $dbh, $var);
+
+		print STDERR "COPYING FILTERS FROM $catid TO $cat \n";
+
+		load_filters($cat, $r, $dbh, $var);
+
+
+
+		$defs = PQS::model::product_defaults::get($catid);
+	} else {
+		$defs = PQS::model::product_defaults::get($cat);
+	}
+
+
+	#my $catid = $r->param('Copy') ? $r->param('cat-copy') : $cat;
 	#Load defaults back from db.
-	my $defs = PQS::model::product_defaults::get($catid) if $catid;
 	my $map;
 
 	map { 
@@ -215,6 +266,7 @@ map {
 		}
 		
 	} (1..MAX_DISCOUNT);
+
 
 	
 

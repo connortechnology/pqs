@@ -1763,6 +1763,10 @@ sub header_info {
     $hash{FORMS} = $forms;
 	my $mp_versions = eprint::project::mp_versions($pid);
 	$hash{num_versions} = $mp_versions if $mp_versions > 1;
+	my $prod_versions = $dbh->selectrow_array(q{
+		SELECT versions FROM tbl_order_contents WHERE lngprojectindex = ?}, undef, $pid);
+
+	$hash{num_versions} = $prod_versions if $prod_versions;
 
 
     @hash{qw(interior_spreads gatefolded_spreads)}

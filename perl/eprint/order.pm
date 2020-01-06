@@ -205,7 +205,7 @@ sub add_product_to_order {
 
 
 	
-	insert_prod($log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname);
+	insert_prod($log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname, $versions);
 	
 
 
@@ -238,7 +238,7 @@ print STDERR "SET DELIVERY DATE: $days FOR $order_id \n";
 }
 
 sub insert_prod {
-	my ( $log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname) = @_;
+	my ( $log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname, $versions) = @_;
     sql::insert(
         $log, $dbh, 'tbl_Order_Contents', 
         'lngOrderID'    	=> $order_id,
@@ -248,7 +248,8 @@ sub insert_prod {
 		'cursalesprice'		=> $qty * $price,
         'type' 				=> 'product',
 		subgroup			=> $subgroup || undef,
-		jobname				=> $jobname
+		jobname				=> $jobname,
+		versions			=> $versions
     );
 
 }
