@@ -993,6 +993,7 @@ sub display {
  
 
 
+
 	my $cat 	= $r->param('category');
 	my $qty 	= $r->param('quantity');
 	my $cid 	= $var->{cust_id} || 1;
@@ -1001,6 +1002,14 @@ sub display {
 	my $versions = $r->param('versions') || 1;
 
 	$cat = configuration::get_value($log, $dbh, 'Default Product Category') unless $cat;
+
+
+	print STDERR "START PRODUCT DISPLAY \n";
+	eprint::www::show_params();
+
+
+
+
 
 	#Get children for current cat.
 	my $childs =  PQS::model::categories::get_children_from_id($cat);
@@ -1142,6 +1151,8 @@ sub filter_products {
 		if ( $_ =~ /filter-(\d+)/ && $r->param($_) ) {
 			my $fid = $1;
 			my $oid = $r->param($_);
+
+			print STDERR "FILTER PRODUCTS: FILTER: $fid VALUE $oid FROM $_ \n";
 			$have_filter = 1;
 
 			$var->{__FillInForm}{"filter-$fid"} = $oid;

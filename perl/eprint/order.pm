@@ -1502,7 +1502,7 @@ print STDERR "HAVE ORDER LINE: " , Dumper( $order);
 
 
 	foreach my $o ( @{$list} ) {
-print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
+print STDERR "HAVE ORDER LINE: " , Dumper($o, $list, $order);
 		my $prod = new PQS::Object::product($o->{product});
 		my $ppid = $prod->{specs}{project};
 
@@ -1522,6 +1522,26 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
 		my ($pid) = eprint::print_project::copy_project($dbh, $var, $ppid, $args);
 
 		$dbh->do(q{UPDATE tbl_projects set prod = ? WHERE lngprojectindex = ?}, undef,  $prod->{id}, $pid); 
+
+		my $versions = $o->{versions};
+print STDERR "OV1 HAVE VERSIONS: $versions \n";
+		if ( $versions ) {
+			use POSIX;
+			my $qty = $o->{intquantity};
+			my $perversion = ceil($qty / $versions); 
+print STDERR "OV1 PER VERSIONS: $versions Q: $qty : $perversion \n";
+    		my $print 	= eprint::project::check_for_service( undef, $dbh, $pid, 'Printing');
+			eprint::service::insert_service_spec( $log, $dbh, $pid, $print, 'is_mv' , 1);
+			my $v;
+			
+			foreach (1..$versions) {
+				$v .=   "," if $v;
+				$v .=   "Version $_,$perversion";
+			}
+
+			eprint::service::insert_service_spec( $log, $dbh, $pid, $print, 'version_quantities' , $v);
+print STDERR "OV1 PER VERSIONS: $versions Q: $qty : $perversion V: $v \n";
+		}
 
 
     	my $sid 	= eprint::project::check_for_service( undef, $dbh, $pid, 'Discount');
