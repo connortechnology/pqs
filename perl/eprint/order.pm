@@ -1525,7 +1525,7 @@ print STDERR "HAVE ORDER LINE: " , Dumper($o, $list, $order);
 
 		my $versions = $o->{versions};
 print STDERR "OV1 HAVE VERSIONS: $versions \n";
-		if ( $versions ) {
+		if ( $versions > 1 ) {
 			use POSIX;
 			my $qty = $o->{intquantity};
 			my $perversion = ceil($qty / $versions); 

@@ -45,10 +45,17 @@ sub substrate_lookup : JSRS {
 
 print STDERR "IS PROD: $prod \n";
 
-	my $query = $prod 
-	   ? substrate_attributes_prod($r, $log, $dbh, $variable, $prod, %attribute )
-	   : substrate_attributes(	   $r, $log, $dbh, $variable, $pid, $sid, 
+print STDERR "****** IS PROD: $prod PRODUCT Specific Reccomendataions have been disabled ********** \n";
+
+#	my $query = $prod 
+#	   ? substrate_attributes_prod($r, $log, $dbh, $variable, $prod, %attribute )
+#	   : substrate_attributes(	   $r, $log, $dbh, $variable, $pid, $sid, 
+#											 $template, $type, $press, %attribute );
+
+
+	my $query = substrate_attributes(	   $r, $log, $dbh, $variable, $pid, $sid, 
 											 $template, $type, $press, %attribute );
+
 
     # If all the known substrate attributes are defined, check that the
     # substrate exists (pre-existing projects, template changes, etc.) If it
