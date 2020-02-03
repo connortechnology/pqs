@@ -205,7 +205,7 @@ sub add_product_to_order {
 
 
 	
-	insert_prod($log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname);
+	insert_prod($log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname, $versions);
 	
 
 
@@ -238,7 +238,7 @@ print STDERR "SET DELIVERY DATE: $days FOR $order_id \n";
 }
 
 sub insert_prod {
-	my ( $log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname) = @_;
+	my ( $log, $dbh, $order_id, $product, $qty, $price, $subgroup, $jobname, $versions) = @_;
     sql::insert(
         $log, $dbh, 'tbl_Order_Contents', 
         'lngOrderID'    	=> $order_id,
@@ -248,7 +248,8 @@ sub insert_prod {
 		'cursalesprice'		=> $qty * $price,
         'type' 				=> 'product',
 		subgroup			=> $subgroup || undef,
-		jobname				=> $jobname
+		jobname				=> $jobname,
+		versions			=> $versions
     );
 
 }
@@ -1501,7 +1502,7 @@ print STDERR "HAVE ORDER LINE: " , Dumper( $order);
 
 
 	foreach my $o ( @{$list} ) {
-print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
+print STDERR "HAVE ORDER LINE: " , Dumper($o, $list, $order);
 		my $prod = new PQS::Object::product($o->{product});
 		my $ppid = $prod->{specs}{project};
 
@@ -1521,6 +1522,26 @@ print STDERR "HAVE ORDER LINE: " , Dumper($0, $list, $order);
 		my ($pid) = eprint::print_project::copy_project($dbh, $var, $ppid, $args);
 
 		$dbh->do(q{UPDATE tbl_projects set prod = ? WHERE lngprojectindex = ?}, undef,  $prod->{id}, $pid); 
+
+		my $versions = $o->{versions};
+print STDERR "OV1 HAVE VERSIONS: $versions \n";
+		if ( $versions > 1 ) {
+			use POSIX;
+			my $qty = $o->{intquantity};
+			my $perversion = ceil($qty / $versions); 
+print STDERR "OV1 PER VERSIONS: $versions Q: $qty : $perversion \n";
+    		my $print 	= eprint::project::check_for_service( undef, $dbh, $pid, 'Printing');
+			eprint::service::insert_service_spec( $log, $dbh, $pid, $print, 'is_mv' , 1);
+			my $v;
+			
+			foreach (1..$versions) {
+				$v .=   "," if $v;
+				$v .=   "Version $_,$perversion";
+			}
+
+			eprint::service::insert_service_spec( $log, $dbh, $pid, $print, 'version_quantities' , $v);
+print STDERR "OV1 PER VERSIONS: $versions Q: $qty : $perversion V: $v \n";
+		}
 
 
     	my $sid 	= eprint::project::check_for_service( undef, $dbh, $pid, 'Discount');
@@ -2159,10 +2180,10 @@ sub send_sales_order {
     $order{'siteURL'} = configuration::get_value( $log, $dbh, 'siteURL' );
 
 	$email_content = Mail::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
-	$email_content = encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
+	#$email_content = encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
 
-	my @body = ("", $email_content,  'text/html', 'utf-8');
-	#my @body = ("", $email_content,  'text/html', 'quoted-printable');
+	#my @body = ("", $email_content,  'text/html', 'utf-8');
+	my @body = ("", $email_content,  'text/html', 'quoted-printable');
 
 
 #print STDERR "SALES ORDER SHOW PROJECTS \n";

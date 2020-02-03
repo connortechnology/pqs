@@ -22,6 +22,13 @@ require eprint::login;
 use constant MAX_REDIRECTS => 20;
 
 
+sub show_params {
+	my $r = session::r;
+	map {
+		print STDERR " HAVE PARAM: $_ = " . $r->param($_) . "\n";
+	} $r->param();
+}
+
 sub generate_cookie {
     my ( $r, $log, $dbh ) = @_;
 

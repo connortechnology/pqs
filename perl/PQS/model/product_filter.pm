@@ -8,6 +8,30 @@ use session;
 use Data::Dumper;
 
 
+sub reset_category {
+	my $cat = shift;
+  	my $dbh = session::dbh;
+
+	$dbh->do(q{DELETE FROM product_filter where category = ?}, undef, $cat);
+
+}
+
+sub copy_filter {
+	my $from = shift;
+	my $to = shift;
+
+  	my $dbh = session::dbh;
+
+	$dbh->do(q{INSERT into product_filter ( SELECT nextval('product_filter_seq'), ?, name, sortorder FROM product_filter where category = ? )
+	}, undef, $to, $from );	
+
+	
+	print STDERR "COPYING FILTERS FROM $from  TO $to CF \n";
+
+
+
+}
+
 
 sub set {
   my ($filter) = @_;
@@ -46,9 +70,13 @@ sub delete_options {
 
 
 sub insert {
-  my ($name, $cat) = @_;
+  my ($name, $cat, $sort) = @_;
   my $dbh = session::dbh;
-  $dbh->do(q{insert into product_filter (name, category) values ( ?, ? ) },undef,  $name, $cat);
+  $dbh->do(q{insert into product_filter (name, category, sortorder) values ( ?, ?, ? ) },undef,  $name, $cat, $sort);
+  my $id = $dbh->last_insert_id(undef, undef, 'product_filter', 'id');
+
+  return $id;
+
 }
 
 sub insert_option {
@@ -60,8 +88,11 @@ sub insert_option {
 sub get_options {
   my ($filter) = @_;
   my $dbh = session::dbh;
+
+  #Change sort to be id, stay in order created, instead of apha sort.
+  #Jan 6 2020.
   my $id = $dbh->selectall_arrayref(
-	"select * from options where filter = ? order by name", {Slice => {}}, $filter);
+	"select * from options where filter = ? order by id", {Slice => {}}, $filter);
 
 }
 

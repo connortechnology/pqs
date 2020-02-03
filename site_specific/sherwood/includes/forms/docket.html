@@ -2,6 +2,9 @@
 	<!-- Standard project header (shared between project view, quotes, orders, docket, etc.) -->
 
 	<!--#include virtual="/includes/main/docket/header.html" -->
+	<? if ( $variable->{Category} == -3 ) ?>
+	<!--#include virtual="/includes/main/docket/versions.html" -->
+	<? endif ( $variable->{Category} == -3 ) ?>
 
 	<!-- Sevice Type Summaries. -->
 
@@ -55,7 +58,7 @@
 						<?html?>
 
 						<?if ($$variable{comment}) ?>
-							<p class="comment"><strong>Comment: </strong>&nbsp;<?comment?></p>
+							<p class="comment" style="font-weight: Bold;"><strong>Comment: </strong>&nbsp;<?comment?></p>
 						<?endif ($$variable{comment}) ?>
 					</div>
 				<?endloop service_type?>

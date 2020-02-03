@@ -16,6 +16,7 @@
     <!--#include virtual="/includes/h2-js.html" -->
 
     <script type="text/javascript" src="/javascripts/other.js"></script>
+	 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
 <!--#include virtual="/includes/c1-main-nav.html" -->
@@ -243,6 +244,9 @@
 			<label for="txtComments">Questions or Comments:</label>
 			<textarea name="txtComments" class="formTxt marg-bot" id="txtComments" rows="6"></textarea>
 			<br />
+
+
+			<div class="g-recaptcha" data-sitekey="6LfKz8gUAAAAAFW_im9xh9VAp8XA5C2F5qrhKsX-"></div>
 
 			<div class="button-bar indent-regular">
 				<input type="reset" id="button-space" class="button" value="Reset" />
