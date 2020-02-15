@@ -40,6 +40,7 @@ my @update_fields =  (
 			{fname => 'lead_time', 		type => 'text', 	desc => 'Lead time', 		sort_order => 2100},
 			{fname => 'delivery_days', 	type => 'int', 		desc => 'Delivery Days', 	sort_order => 2100},
 			{fname => 'qprice', 	 	type => 'num', 		desc => 'Price', 			sort_order => 0001},
+			{fname => 'file_upload',  	type => 'bool', 	desc => 'File Upload (1-Yes/0-No)',	sort_order => 0002},
 			);
 
 sub new {
