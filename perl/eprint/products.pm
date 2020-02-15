@@ -379,8 +379,12 @@ sub build_products {
 			$p->{$field} = $val;
 		}
 
+		$all->{tmp} = ['prod'] unless scalar %{$all} > 1;
+
 		
 		my $list =  Set::CrossProduct->new($all);
+
+	print STDERR "HAVE PRODUCTS: ", Dumper($all, defined $list);
 
 		return unless defined $list;
 
@@ -399,10 +403,10 @@ sub build_products {
 			$p{category} = $r->param('cat');
 			$p{filters} = [keys %{$all}];
 
-#print STDERR "HAVE LIST ", Dumper(\%p);
 			push @{$var->{list}}, \%p;
 
 		}
+print STDERR "HAVE LIST ", Dumper($var->{list});
 }
 
 sub quick_price { 
