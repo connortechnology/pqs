@@ -45,7 +45,6 @@
 
 	
 
-
 <?if is_staff ?>
 <table>
 <? loop projects ?>
@@ -61,6 +60,7 @@
 <?endif is_staff ?>
 
 <?loop dockets?>
+	<?if ( $variable->{file_upload} ne '0' ) ?>
 <div style="border:blue solid; background-color:lemonchiffon; height:100px; 
 			font-size: 2em;
 			text-align: center;
@@ -80,6 +80,7 @@
 	</div>
 
 </div>
+	<?endif ( $variable->{file_upload} ne '0' ) ?>
 <?endloop dockets?>
 
 <p>If you would like to view a printer friendly version of your order please click on the button below:</p>

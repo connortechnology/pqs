@@ -1607,10 +1607,15 @@ print STDERR "OV1 PER VERSIONS: $versions Q: $qty : $perversion V: $v \n";
 		#eprint::project::project_status($dbh, $pid, 'Waiting For Files');
 		project_status($dbh, $pid, 'Waiting For Files');
 
+		my $file_upload = $dbh->selectrow_array(q{
+			SELECT upload_required FROM tbl_projects where lngprojectindex = ?
+		},undef, $pid);
+
 		push @pids, {
 					 pid 		=> $pid,
 					 #jobname	=> $o->{jobname},
 					 jobname => $o->{jobname} . ' - ' . $prod->{specs}{name},
+					 file_upload => $file_upload,
 				    };
 	}
 
