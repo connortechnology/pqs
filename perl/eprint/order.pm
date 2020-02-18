@@ -23,6 +23,7 @@ use Mail;
 use PQS::model::payment ();
 use PQS::model::order ();
 use PQS::Object::product ();
+use PQS::Object::project ();
 use PQS::model::order ();
 use PQS::Object::promotion();
 
@@ -1523,6 +1524,12 @@ print STDERR "HAVE ORDER LINE: " , Dumper($o, $list, $order);
 
 		$dbh->do(q{UPDATE tbl_projects set prod = ? WHERE lngprojectindex = ?}, undef,  $prod->{id}, $pid); 
 
+
+
+		my $p = new PQS::Object::project($pid);
+		$p->upload_required($prod->{specs}{file_upload});
+
+		
 		my $versions = $o->{versions};
 print STDERR "OV1 HAVE VERSIONS: $versions \n";
 		if ( $versions > 1 ) {

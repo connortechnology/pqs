@@ -109,6 +109,34 @@ sub ink_sum {
 
 }
 
+sub upload_required {
+	my $self = shift;
+	my $val = shift;
+	my $dbh = session::dbh;
+	$dbh->do(q{
+		update tbl_projects set upload_required = ?  where lngprojectindex = ?
+	}, undef, $val, $self->{id});
+	print STDERR "SET PROJECT: $self->{id} = $val \n";
+}
+
+
+sub no_upload_required {
+
+	my $self = shift;
+	my $dbh = session::dbh;
+
+
+
+	my $nf = $dbh->selectrow_array(q{
+		 select upload_required from tbl_projects where lngprojectindex = ?
+	}, undef, $self->{id});
+
+	print STDERR "SET PROJECT NE UPLOAD: $nf \n";
+
+	return 1 if $nf eq '0';
+	
+}
+
 sub have_production_file { 
 	my $self = shift;
 	my $dbh = session::dbh;
@@ -134,7 +162,13 @@ sub check_status {
 
 		$status =  'PD' if $order->pending_deposit;
 
-		$status =  'IP' if  $self->{specs}{files} && $self->have_production_file || $self->{specs}{strstatus} eq 'In Production';
+		$status =  'IP' if  $self->{specs}{files} && $self->have_production_file;
+		$status =  'IP' if  $self->{specs}{strstatus} eq 'In Production';
+
+		$status =  'IP' if  $self->no_upload_required;
+
+
+
 
 		$status = 'CN' if $order->{specs}{cancelled};
 
