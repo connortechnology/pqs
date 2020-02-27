@@ -122,7 +122,7 @@ print STDERR "SEND EMAIL WITH ATTACHMENT START \n", Dumper($mail);
 
 	$mail->{TO} = join ',', keys %{$list};
 
-print STDERR "SEND MAIL TO: $mail->{TO} \n";
+print STDERR "SEND MAIL TO: $mail->{TO} FROM $mail->{FROM} SUBJECT: $mail->{SUBJECT} $mail->{subject} \n";
 
 	
     my $message = $mail->{BODY};

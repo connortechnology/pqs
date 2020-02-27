@@ -304,14 +304,12 @@ select.failed {
 
 <div style="float:right; margin-top: -40px; width:300px">
 
-<?if ( @{$variable->{filters}} ) ?>
 <form action="/main/order/order_info.html" name="fcheckout">
 <div style="text-align:center">
 <button name="checkout" type="submit" onClick="return order_checkout();"
 style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; height: 30px; margin-top: 30px">Checkout <?order_count?> Item(s)</button>
 </div>
 </form>
-<?endif ( @{$variable->{filters}} ) ?>
 </div>
 
 					<h2>
@@ -361,7 +359,6 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 <?eval ( $variable->{products} =  [shift @{$variable->{products}}] ) ?>
 <?loop products?> 
 
-	<?if ( @{$variable->{filters}} ) ?>
 
 	<div style="margin-bottom: 30px;">
 	<label> Quantity:</label> 
@@ -436,7 +433,6 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 	-->
 	<?endif is_staff?>
 
-	<?endif ( @{$variable->{filters}} ) ?>
 </div>
 
 

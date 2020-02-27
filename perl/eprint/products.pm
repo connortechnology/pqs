@@ -379,7 +379,8 @@ sub build_products {
 			$p->{$field} = $val;
 		}
 
-		$all->{tmp} = ['prod'] unless scalar %{$all} > 1;
+		$all->{tmp} = ['p0'] unless scalar %{$all} > 1;
+		$all->{tmp1} = ['p1'] unless scalar %{$all} > 2;
 
 		
 		my $list =  Set::CrossProduct->new($all);
@@ -1076,9 +1077,12 @@ sub display {
 		$var->{products} =  PQS::model::categories::products_in_tree($cat, $product);
 	}
 
+print STDERR "HAVE PRODUCTS TO DISPLAY: ", Dumper($var->{products});
 	
 	
 	$var->{products} = filter_products($r, $var, $var->{products});
+
+print STDERR "HAVE DISPLAY: ", Dumper($var->{products});
 
 
 	my $total_qty;
