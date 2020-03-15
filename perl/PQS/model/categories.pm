@@ -142,6 +142,22 @@ sub get_all {
   return $cats;
 
 }
+sub products_in_cat {
+  	my $dbh = session::dbh;
+	my $cat = shift;
+	my $show_all = shift;
+
+	my $active;
+	$active = q{AND active} unless $show_all;
+
+	return $dbh->selectall_arrayref(qq{
+		SELECT * from tbl_products WHERE category = ?
+		$active
+		ORDER by name
+
+	}, {Slice => {}}, $cat);
+}
+
 
 sub products_in_tree {
   	my $dbh = session::dbh;

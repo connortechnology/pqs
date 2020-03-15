@@ -997,7 +997,7 @@ sub quote_history {
         $_ .= "AND  EXISTS ( SELECT lngquoteid FROM tbl_quote_details qd, tbl_projects p  
 					      		WHERE tbl_quotes.lngquoteid = qd.lngquoteid AND qd.lngprojectindex = p.lngprojectindex
 								AND p.lnguserindex = '$variable->{user_id}' )\n"
-         			if $variable->{user}{type} eq 'C' && $variable->{user_id} ne '293';
+         			if $variable->{user}{type} eq 'C' && $variable->{user_id} ne '293' && 0;
 
 
 		$_ .= "AND tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName = '$quoted_for'" if $quoted_for ne '';

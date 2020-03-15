@@ -587,7 +587,7 @@ print STDERR "START KIT SELECT \n";
 	$var->{kit} = $p->{specs};
 
 
-	$var->{products} = PQS::model::categories::products_in_tree($cat, $show_all) if $cat;
+	$var->{products} = PQS::model::categories::products_in_cat($cat, $show_all) if $cat;
 	$var->{categories} = ssi::make_drop_down(PQS::model::categories::select_list(), $cat);
 
 	$var->{__FillInForm}{show_all} = $show_all;
@@ -623,7 +623,7 @@ print STDERR "START PRODUCT LIST \n";
 	price_import($r, $dbh, $var) 	if $r->upload("price_import");
 
 
-	$var->{products} = PQS::model::categories::products_in_tree($cat, $show_all) if $cat;
+	$var->{products} = PQS::model::categories::products_in_cat($cat, $show_all) if $cat;
 
 	my $pricelist = 1;
 
@@ -1049,13 +1049,14 @@ sub display {
 	while ( $parent ) {
 		$parent = PQS::model::categories::get_parent_from_id($parent);
 
+		print STDERR "HAVE PARENT: $parent \n";
 		next unless $parent;
 		$name =  PQS::model::categories::get_name_from_id($parent);    
 
 		unshift @{$var->{cat_chain}}, { id => $parent, name => $name};
 	}
 
-
+print STDERR "TIME FOR CHILDREN ", Dumper($childs);
 
 	map {
 		my $c = PQS::model::categories::get($_);
@@ -1063,18 +1064,21 @@ sub display {
 		push @{$var->{cat_children}}, $c;
 	} @{$childs};
 
+print STDERR "DONE CHILDREN ", Dumper($childs);
 
    #Show products for first Child category if it exists.
    #Parent Categorys should not have products under sherwood model.
    $cat = @{$childs}[0] if  @{$childs};
 
+print STDERR "HAVE CAT: $cat PRODUCT: $product \n";
 
   	if ( $product ) {
 		#skip straight to the product we are looking for.
 		push	@{$var->{products}}, PQS::model::products::get($product);
 	} else { 
 		#products of of current and all children cats.
-		$var->{products} =  PQS::model::categories::products_in_tree($cat, $product);
+		#$var->{products} =  PQS::model::categories::products_in_tree($cat, $product);
+		$var->{products} =  PQS::model::categories::products_in_cat($cat, $product);
 	}
 
 print STDERR "HAVE PRODUCTS TO DISPLAY: ", Dumper($var->{products});
