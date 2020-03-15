@@ -394,6 +394,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 -->
 </form>
 
+	<?if id?>
 
 	<div style="margin-bottom: 30px;" id="cartdiv" >
 
@@ -419,6 +420,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 				</div>
 
 	<?if is_staff?>
+	
 	<button style="width: 50%; margin-left: 25%" onClick="open_price_window(<?id?>)" > Edit Prices</button>
 	<button style="width: 50%; margin-left: 25%" onClick="open_discount_window(<?id?>)" >Version Discount</button>
 
@@ -431,6 +433,11 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 		<button style="width: 100px"> Edit Prices</button>
 	</a>
 	-->
+	<?else id?>
+		<div>Product Information Missing <br>
+			 <a href="/administrator/products/builder.html?cat=<?cat?>">Click HERE to Rebuild Products</a>
+			 </div>
+	<?endif id?>
 	<?endif is_staff?>
 
 </div>
