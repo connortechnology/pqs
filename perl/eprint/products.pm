@@ -1084,14 +1084,23 @@ print STDERR "HAVE CAT: $cat PRODUCT: $product \n";
 print STDERR "HAVE PRODUCTS TO DISPLAY: ", Dumper($var->{products});
 	
 	
-	$var->{products} = filter_products($r, $var, $var->{products});
+	@{$var->{products}} = shift filter_products($r, $var, $var->{products});
 
 print STDERR "HAVE DISPLAY: ", Dumper($var->{products});
+	
 
+
+print STDERR "HAVE proudct to DISPLAY: ", $product , "\n" ;
 
 	my $total_qty;
 
 	foreach my $p (@{$var->{products}} ) {
+
+
+		#Need to refactor, this loop should not have more than one product.
+		#Set product variable to make sure correct filters are display for selected product.
+		#This should only be needed for initial page load.
+		$product = $p->{id};
 
 		my $prod = new PQS::Object::product($p->{id});
 
