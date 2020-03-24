@@ -40,6 +40,13 @@ sub type_name {
 	return $t[1];
 }
 
+sub type {
+	my $self = shift;
+
+	my @t = eprint::project::get_type( $self->{log}, $self->{dbh}, $self->{id});
+	return $t[0];
+}
+
 sub load {
 	
 	my $self = shift;
@@ -220,11 +227,16 @@ sub init_production {
 					);
 					allocate_inventory($stock, $sheets);
 				} else {
-					die("MISSING DATA: STock $stock, Sheets, $sheets INDEX: $index PID: $self->{id}");
+					# Data points not required for no print projects.
+					if ( $self->type eq 'NoPrint' ) {
+						print STDERR "HAVE NO PRINT Project \n";
+					} else {
+						die("MISSING DATA: STock $stock, Sheets, $sheets INDEX: $index PID: $self->{id} TYPE: "  . $self->type . " ");
+					}
 
 				}
 	
-
+`
 
 		}
 			
