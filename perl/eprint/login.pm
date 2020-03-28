@@ -953,10 +953,10 @@ sub verify_user {
 
     $$variable{'CUSTOMER_CATEGORY_GREETING'} = eprint::greetings::select_customer_category_greeting($log, $dbh, $user->{cust_id}) if $user->{cust_id};
 
-	my $sql = "SELECT stremail, strfirstname || ' ' || strlastname  from tbl_customer_users WHERE lngcustomerid = $variable->{cust_id}";
-	print STDERR "HAVE USERS: ", Dumper( $sql ); 
-
-    $$variable{'email_to'} = ssi::fill_drop_down($log, $dbh, $sql);
+#	my $sql = "SELECT stremail, strfirstname || ' ' || strlastname  from tbl_customer_users WHERE lngcustomerid = $variable->{cust_id}";
+#	print STDERR "HAVE USERS: ", Dumper( $sql ); 
+#
+#    $$variable{'email_to'} = ssi::fill_drop_down($log, $dbh, $sql);
 
     return OK;
 }
