@@ -358,7 +358,7 @@ sub parent_sheet_count {
 	my $dbh = $self->{dbh};
 	my $log = $self->{log};
 
-	my @specs = qw( hdnPaperBuyQuantity1 hdnGrossSheetCount1 );
+	my @specs = qw( hdnPaperBuyQuantity1 hdnGrossSheetCount1 txtSignatureQuantity );
 
 	my %results = eprint::service::get_specifications_pairs(
             $log, $dbh, undef, $sid, @specs
@@ -366,6 +366,8 @@ sub parent_sheet_count {
 
 
 	 my $count =  $results{hdnPaperBuyQuantity1} || $results{hdnGrossSheetCount1};
+
+	 $count *= $results{txtSignatureQuantity} if  $results{txtSignatureQuantity} > 1;
 
 	return $count;
 

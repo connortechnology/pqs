@@ -217,6 +217,12 @@ print STDERR "HAVE DIGIFED: $digifed PMS: $pms ************\n";
 
 	print STDERR "Comments " , Dumper($variable->{COMMENTS});
 
+	my $sql = "SELECT stremail, strfirstname || ' ' || strlastname  from tbl_customer_users 
+					WHERE lngcustomerid = $variable->{cust_id} order by strlastname, strfirstname";
+
+	print STDERR "HAVE USERS: ", Dumper( $sql ); 
+
+    $$variable{'email_to'} = ssi::fill_drop_down($log, $dbh, $sql);
 
     return OK;
 }

@@ -2474,6 +2474,9 @@ sub setup_docket {
                     );
                 }
 
+				#format commments to show line breaks from text area input.
+				$comment =~ s/\r/<br>/g; 
+
 		next if $catID == -3 && $cat eq 'Printing';
 
                 if ($supplied) {
