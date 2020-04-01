@@ -3663,9 +3663,9 @@ sub show_payflow {
 	) unless $order_id;
 
 	my $totals = get_order_totals($dbh, $var->{cust_id}, $order_id);
-	my $amount = $totals->{total};
+	my $amount = sprintf( "%.2f", $totals->{total} );
 
-print STDERR "HAVE PAYMENT AMOUNT: $amount \n";
+print STDERR "HAVE PAYMENT AMOUNT: $amount, Rounded FROM: $totals->{total} \n";
 
 	die("No Payment Amount") unless $amount;
 
@@ -3691,6 +3691,8 @@ print STDERR "HAVE PAYMENT AMOUNT: $amount \n";
 
 		
     my $payments = WebService::PayPal::PaymentsAdvanced->new($args);
+
+	print STDERR "HAVE PAYPAL PARAMS: ", Dumper($args, $amount );
 
     my $response = $payments->create_secure_token(
         {
