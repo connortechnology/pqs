@@ -3705,6 +3705,7 @@ print STDERR "HAVE PAYMENT AMOUNT: $amount, Rounded FROM: $totals->{total} \n";
 
 	$var->{SECURETOKEN} 	= $response->secure_token;
 	$var->{SECURETOKENID} 	= $response->secure_token_id;
+	$var->{PAYPAL_MODE} 	= $paypal_mode;
 
 	PQS::model::order::set_paypal_token($order_id,  $response->secure_token_id, $type);
 

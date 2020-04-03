@@ -9,8 +9,17 @@ use HTTP::Request::Common;
 use sql ();
 require configuration;
 
+
 sub misc_settings_edit {
     my ($r, $log, $dbh, $variable) = @_;
+
+
+	if ( $r->param('paypal_mode') ) {
+		my $mode = $r->param('paypal_mode');
+		$dbh->do("UPDATE tbl_configuration SET strconfigdata = ? WHERE strconfigtitle = ?", undef, $mode, 'paypal_mode');
+	}
+
+    $$variable{'paypal_mode'} = configuration::get_value( $log, $dbh, 'paypal_mode' );
 
     # Save the setting if the user has posted them
     save_settings($r, $log, $dbh) if $r->param('btnFunction') eq 'Save';
