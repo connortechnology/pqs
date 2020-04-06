@@ -153,7 +153,7 @@ sub products_in_cat {
 	return $dbh->selectall_arrayref(qq{
 		SELECT * from tbl_products WHERE category = ?
 		$active
-		ORDER by name
+		ORDER by id
 
 	}, {Slice => {}}, $cat);
 }
