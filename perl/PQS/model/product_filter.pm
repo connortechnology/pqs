@@ -133,7 +133,7 @@ sub options_for_product {
   my $dbh = session::dbh;
   my $id  = shift;
 
-  my $all = $dbh->selectall_arrayref("select opt, filter from product_options, options  Where product = ? AND product_options.opt = options.id "
+  my $all = $dbh->selectall_arrayref("select opt, filter from product_options, options  Where product = ? AND product_options.opt = options.id order by filter, id "
 	,{Slice => {}}, $id);
 
 
