@@ -369,11 +369,17 @@ sub build_products {
 		
 			my $x   = $r->param($field);
 			my $val = $r->param($field);
+print STDERR "\n\nBUILD SUB:\n";
+print STDERR "\n\nBUILD SUB: START: $x, \n";
 
-			while ( $x =~ /(\[(\w+)\])/g ) {;
+			while ( $x =~ /(\[([\w\s]+)\])/g ) {;
 			 my $f = "\\\[$2\\\]";
 			 my $n = $p->{$2};
+
+
 			 $val =~ s/$f/$n/;
+			 
+print STDERR "BUILD SUB: $x, $val : F: $f, N: $n \n";
 			
 			}
 			$p->{$field} = $val;
