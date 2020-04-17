@@ -1333,10 +1333,17 @@ sub price_import {
   my $line;
   
   while (my $row = $csv->getline($fh)) {
+	print STDERR "HAVE ROW", Dumper($row);
 	$line++;
 	my $id =  PQS::model::products::get_id_from_str($row->[0]);
 	die("Invalid Product ID: $row->[0] Row: $line") unless $id;
-    $row->[0] = PQS::model::products::get_id_from_str($row->[0]) if $header->[0] eq 'strid';
+	my $strid = $row->[0];
+    $row->[0] = $id if $header->[0] eq 'strid';
+	$row->[1] = undef if $row->[1] eq ''; #min
+	$row->[2] = undef if $row->[2] eq ''; #max
+	$row->[3] = 0 if $row->[3] eq ''; #cost
+
+	die("Missing Price for $strid Line: $line", Dumper($row)) if $row->[4] eq '';
 
     #( $row->[3] ) = $row->[3] =~ m{(\d+\.\d+)};
     #( $row->[4] ) = $row->[4] =~ m{(\d+\.\d+)};
