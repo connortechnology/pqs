@@ -521,9 +521,11 @@ sub price_admin {
 
     my $plist = $dbh->selectcol_arrayref(q{
         SELECT id, name
-        FROM tbl_products 
+        FROM tbl_products where category = ? 
 		ORDER by name;
-    }, { Columns => [1, 2] });
+    }, { Columns => [1, 2] },
+	$p->spec('category_id')
+	);
 
 	$var->{PRODUCT_LIST} = ssi::make_drop_down($plist);
 
