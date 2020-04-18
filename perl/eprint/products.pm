@@ -520,7 +520,7 @@ sub price_admin {
 	$var->{name} = $p->spec('name');
 
     my $plist = $dbh->selectcol_arrayref(q{
-        SELECT id, name
+        SELECT id, strid
         FROM tbl_products where category = ? 
 		ORDER by name;
     }, { Columns => [1, 2] },
