@@ -486,6 +486,30 @@ sub price_admin {
 		PQS::model::pricing::add_price(@{$price});
 	} elsif ($r->param('delete') ) { 
 		PQS::model::pricing::delete_price($r->param('delete'));
+	} elsif ($r->param('Copy') && $r->param('copyid') ) { 
+
+		my $cid = $r->param('copyid');
+		my $markup = (100 + $r->param('upsell')) / 100;
+
+		PQS::model::pricing::delete_item_price($id);
+
+
+		print STDERR "MAKE COpy: $cid \n";
+
+		my $p = new PQS::Object::product($cid);
+		my $copy = $p->price_export($pricelist);
+		map {
+
+			$_->{sell} *= $markup if  $markup;
+			print STDERR "ADDING PRICE SELL: $_->{sell} M: $markup \n";
+
+		my $price = [$list, $id, $_->{min}, $_->{max}, $_->{cost}, $_->{sell}, $_->{discountable}, $_->{pricelist}];
+
+
+		PQS::model::pricing::add_price(@{$price});
+			
+
+		} @{$copy}
 
 	}
 
@@ -495,6 +519,15 @@ sub price_admin {
 	$var->{product} = $id;
 	$var->{name} = $p->spec('name');
 
+    my $plist = $dbh->selectcol_arrayref(q{
+        SELECT id, name
+        FROM tbl_products 
+		ORDER by name;
+    }, { Columns => [1, 2] });
+
+	$var->{PRODUCT_LIST} = ssi::make_drop_down($plist);
+
+	print STDERR "HAVE LIST ", Dumper($prices );
 
 }
 

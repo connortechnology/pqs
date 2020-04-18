@@ -87,6 +87,12 @@ sub delete_price {
  $dbh->do('delete from pricing_matrix where id = ?', undef, $item);
 }
 
+sub delete_item_price {
+ my $dbh = session::dbh;
+ my $item = shift;
+ $dbh->do('delete from pricing_matrix where item = ?', undef, $item);
+}
+
 sub clear_item {
  my $dbh = session::dbh;
  my $item = shift;
