@@ -341,6 +341,11 @@ print STDERR "GO BUILD \n";
         }, undef, $pid) if is_complete($log, $dbh, $pid);
     }
 
+
+	use PQS::Object::project;
+	my $p = new PQS::Object::project($pid);
+	$p->update_status; 
+
     return; # Go to the default location
 }
 

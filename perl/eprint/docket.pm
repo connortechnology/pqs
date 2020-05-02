@@ -1053,7 +1053,7 @@ sub printing {
 	    my $sid = $r->param('sid');
 
 	    $dbh->do("DELETE FROM tbl_service_Specifications WHERE lngserviceindex = $sid AND strname = 'CustomOvers'");
-	    $dbh->do("INSERT INTO tbl_service_Specifications VALUES ( $pid, $sid, 'CustomOvers', $overs)");
+	    $dbh->do("INSERT INTO tbl_service_Specifications VALUES ( $pid, $sid, 'CustomOvers', $overs, true)");
 	    print STDERR "CUSTOM OVERS: $sid, $overs \n";
 
     }
