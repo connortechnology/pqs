@@ -2075,25 +2075,29 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
 		SELECT max(custom_sort) from tbl_project_contents WHERE lngprojectindex = ?
 	}, undef, $pid);
 	
+	my $custom_sort_sql;
 	if ( $custom ) {
-		$category = $dbh->prepare(q{
-			SELECT distinct 1, 'Custom' WHERE ? > 0
-		});
+		#$category = $dbh->prepare(q{ SELECT distinct 1, 'Custom' WHERE ? > 0 });
 
-		$variable->{CategoryMenu} = [{ name => 'Custom', id => 1}];
+		#$variable->{CategoryMenu} = [{ name => 'Custom', id => 1}];
+		
+		$custom_sort_sql = q{OR p.custom_sort > 0 } if $catID == -3;
 	}
 
     # Statement to get the service types in a categroy.
     my $service_type;
-    $service_type = $dbh->prepare(q{
+    $service_type = $dbh->prepare(qq{
         SELECT lower(t.strid) AS ref, t.strname AS name , p.lngserviceindex AS ID, t.strid AS strID, p.ysnremoved as supplied
         FROM tbl_service_types t, tbl_project_contents p
         WHERE ( t.strid = p.strservicetype OR (p.strservicetype is null AND (t.strid = 'Printing' OR t.strid='InkMixing' ) ))
         AND p.lngprojectindex = ?
         AND 
 		( t.strcategory = (SELECT strid FROM tbl_service_categories WHERE lngindex = ?) 
- 		OR
-		p.custom_sort > 0 )
+
+			$custom_sort_sql
+
+		)
+	
 		
 		ORDER by custom_sort
 
@@ -2349,14 +2353,14 @@ sub setup_docket {
     for my $cat (map { $_->{name} } @{ $variable->{CategoryMenu} }) {
         my $services = $$services_by_category{$cat};
 
+	
+
         my $catNumericalID = scalar $dbh->selectrow_array(q{
             SELECT lngindex
             FROM tbl_service_categories
             WHERE strname = ?
         }, undef, $cat);
-        if (($catID == undef) || ($catNumericalID == $catID) || ($catID == -1
-			 ) || $catID == -3)
-        {
+        if (($catID == undef) || ($catNumericalID == $catID) || ($catID == -1) || $catID == -3) {
 	
 	  #Collect the material information for ALL services when viewing the 'Other' category
 	  if ( $catID == -3 ) {
