@@ -196,14 +196,22 @@ print STDERR "HAVE SQL: $sql \n";
 			SELECT * FROM tbl_customer_users WHERE lnguserid = ?
 		}, undef, $l->{lnguserindex});
 
-		if (  $l->{lngcustomerid} != $con->{lngcustomerid} ) {
+		
+		if ( $l->{lngorderid}) {
 			$con =  $dbh->selectrow_hashref(q{ 
-				SELECT * FROM tbl_customer_users WHERE lngcustomerid = ? order by strlastname limit 1
-			}, undef, $l->{lngcustomerid});
+				SELECT * FROM tbl_orders WHERE lngorderid = ?
+			}, undef, $l->{lngorderid});
 
 		}
 		
 		$l->{contact} = "$con->{strfirstname} $con->{strlastname}";
+		
+		# add email also sometimes same account in multiple companies
+		$con = $dbh->selectrow_hashref(q{ 
+			SELECT * FROM tbl_customer_users
+			WHERE stremail = ?
+		}, undef, $con->{stremail});
+
 		$l->{contactid} = $con->{lnguserid};
 
 
