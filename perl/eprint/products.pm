@@ -1165,8 +1165,13 @@ print STDERR "HAVE proudct to DISPLAY: ", $product , "\n" ;
 		$p->{price} = $price * $total_qty;
 
 		$p->{image}  = $prod->image(1);
-  
+
+		$var->{kit_list} = $prod->kit_list();  
   	}
+
+
+	use Data::Dumper;
+	print STDERR "Data from Kit List " , Dumper($var->{kit_list});
 	
 	my $filters =  PQS::model::product_filter::get_category($cat);
 
