@@ -216,35 +216,14 @@ select.failed {
 	-moz-animation-iteration-count: infinite;
 }
 
-@keyframes flash {  
-    0% { opacity: 1.0; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1.0; }
-}
-
-#tblKitList{
-	width: 100%;
-	margin-top: 20px;
-}
-
-#tblKitList tr{
-	background-color: #f2f2f2;
-	border-bottom: 3px solid transparent;
-}
-
-tr:nth-child(even){
+#p2name table tr:nth-child(even) td{
 	background-color: #f2f2f2;
 }
 
-#tblKitList td:nth-child(1){
-	text-align: center;
+#p2name table tr:hover td{
+	background-color: #ddd;
 }
 
-#p2name span{
-	font-weight: bold;
-	display: inline-block;
-	width: 130px;
-}
 </style>
 
 <body>
@@ -522,23 +501,23 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 					-->
 
 					<div id="name" style="margin: 10px 0 0 0">
-					<span>Starter Kit:</span><?name?> <br />
+					<span style="font-weight: bold; display: inline-block; width: 130px;">Starter Kit:</span><?name?> <br />
 					</div>
 					<div id="details" style="margin: 10px 0 0 0">
-					<span>Details: </span><?details?> <br />
+					<span style="font-weight: bold; display: inline-block; width: 130px;">Details: </span><?details?> <br />
 					</div>
 					<div id="leadtime" style="margin: 10px 0 0 0">
-					<span>Lead Time: </span><?lead_time?> <br />
+					<span style="font-weight: bold; display: inline-block; width: 130px;">Lead Time: </span><?lead_time?> <br />
 					</div>
 					<div>
-						<table id="tblKitList">
-							<tr>
+						<table style="width: 100%; margin-top: 20px">
+							<tr style="padding-bottom: 3px">
 							<th>Qty</th>
 							<th>Name</th>
 							</tr>
 							<?loop kit_list?>
-							<tr>
-							<td>
+							<tr style="padding-bottom: 3px">
+							<td style="text-align: center">
 								<?qty?>
 							</td>
 							<td>
@@ -547,8 +526,8 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 							</tr>
 							<?endloop kit_list?>
 						</table>
-						</div>
-                	</div>
+					</div>
+				</div>
 			<!--
              </a>
 			 -->
