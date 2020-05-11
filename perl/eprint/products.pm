@@ -1202,6 +1202,11 @@ print STDERR "HAVE proudct to DISPLAY: ", $product , "\n" ;
 	$var->{versions} 		= $versions;
 	$var->{productinfo}  	= $category->{productinfo};
 
+	#Job name & tmp job name are on sperate forms,
+	#reload job name is product selection form is reloded.
+	$var->{jobname}  		= $r->param('tmpjobname');
+
+
 	print STDERR "CSAT: " , Dumper($var->{category});
 
 

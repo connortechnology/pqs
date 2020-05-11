@@ -12,7 +12,6 @@ Products
 <script type="text/javascript" src="/javascripts/other.js"></script>
 <script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
 <script type="text/javascript" src="/javascripts/JSAN.js"></script>
-<link rel="Stylesheet" href="/styles/DPZSiteStyles.css"  />
 <link href="/styles/products-v2.css" rel="stylesheet" type="text/css" />
 </head>
 <script type="text/javascript">
@@ -24,6 +23,11 @@ function open_price_window( i ) {
 }
 
 function open_discount_window( i ) {
+
+	if ( i == "" ) {
+		alert("Missing product id");
+		return;
+	}
 	window.open('/administrator/products/version_discount.html?pricelist=1;product=' + i,
 			'printerfriendlyorder','newWin,left=140,width=1000,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 }
@@ -377,6 +381,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 			style="font-size: 0.7em; float:none; width: 70px; border-radius: 5px; margin: 0 0 0 12px;" /> 
 			Update 
 		</button>
+		<input type="hidden" name="tmpjobname"	id="tmpjobname" value="<?jobname?>"  />           
 
 
 
@@ -405,7 +410,9 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
         <form name="f1" method="post" action="/main/proj/dispatch.html" >	
 
 		<label>Job Description:</label> 
-		<textarea name="jobname" id="jobname" style="width: 270px;margin: 0 0 0 20px;"><?jobname?></textarea>
+		<textarea name="jobname" id="jobname" style="width: 270px;margin: 0 0 0 20px;"
+							onChange="document.getElementById('tmpjobname').value = this.value";
+			><?jobname?></textarea>
 
 		<?if price?>
 		<label style="font-size: 2em; line-height: 70px">

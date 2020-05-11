@@ -362,6 +362,7 @@ print STDERR "HAVE PUBLIC FOR PAGE: $page" , Dumper(\@public);
                     ? 'destination=' . misc::get_destination($r, $log, $page)
                     : '';
 
+print STDERR "HAVE DEST: $destination \n";
                 $r->status(HTTP_MOVED_TEMPORARILY);
                 $r->headers_out->set(
                     Location => "/$first/login.html?section=$section;$destination"
