@@ -2071,33 +2071,47 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
 
     my $category = setup_categories($log, $dbh, $pid, $variable, 1);
 
+
+	#Docket for projects that use Custom Sort now have 2 views.
+	#IF viewing all services the will be shown in a 'Custom' sort category;
+	#IF viewing a single service category i.e. "Packaging", still sort by  Custom sort order but 
+	#only show services for that category.	
 	my $custom = $dbh->selectrow_array(q{
 		SELECT max(custom_sort) from tbl_project_contents WHERE lngprojectindex = ?
 	}, undef, $pid);
 	
-	if ( $custom ) {
-		$category = $dbh->prepare(q{
-			SELECT distinct 1, 'Custom' WHERE ? > 0
-		});
+	my $use_custom;
+	$use_custom = 1 if $catID == -3 or $catID == 0;
 
-		$variable->{CategoryMenu} = [{ name => 'Custom', id => 1}];
+	if ( $use_custom  ) {
+		$category = $dbh->prepare(q{ SELECT distinct 1, 'Custom' WHERE ? > 0 });
+
 	}
 
-    # Statement to get the service types in a categroy.
-    my $service_type;
-    $service_type = $dbh->prepare(q{
+	my $standard_sort = q{
         SELECT lower(t.strid) AS ref, t.strname AS name , p.lngserviceindex AS ID, t.strid AS strID, p.ysnremoved as supplied
         FROM tbl_service_types t, tbl_project_contents p
         WHERE ( t.strid = p.strservicetype OR (p.strservicetype is null AND (t.strid = 'Printing' OR t.strid='InkMixing' ) ))
         AND p.lngprojectindex = ?
-        AND 
-		( t.strcategory = (SELECT strid FROM tbl_service_categories WHERE lngindex = ?) 
- 		OR
-		p.custom_sort > 0 )
+        AND t.strcategory = (SELECT strid FROM tbl_service_categories WHERE lngindex = ?) 
+		ORDER by custom_sort
+	};
+
+	my $custom_sort_sql = q{
+        SELECT lower(t.strid) AS ref, t.strname AS name , p.lngserviceindex AS ID, t.strid AS strID, p.ysnremoved as supplied
+        FROM tbl_service_types t, tbl_project_contents p
+        WHERE ( t.strid = p.strservicetype OR (p.strservicetype is null AND (t.strid = 'Printing' OR t.strid='InkMixing' ) ))
+        AND p.lngprojectindex = ?
 		
 		ORDER by custom_sort
+	
+	};
 
-    });
+    # Statement to get the service types in a categroy.
+    my $service_type;
+	my $service_sql = $use_custom ? $custom_sort_sql : $standard_sort;
+
+    $service_type = $dbh->prepare($service_sql);
 
     $category->execute($pid);
     my %services_by_category;
@@ -2105,8 +2119,11 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
     $category->bind_columns(\$id, \$name);
 
     while ($category->fetch) {
-        $services_by_category{$name} =
-          $dbh->selectall_arrayref($service_type, { Slice => {} }, $pid, $id);
+		if ( $use_custom ) {
+        	$services_by_category{$name} = $dbh->selectall_arrayref($service_type, { Slice => {} }, $pid);
+		} else  {
+        	$services_by_category{$name} = $dbh->selectall_arrayref($service_type, { Slice => {} }, $pid, $id);
+		}
     }
 
 
@@ -2349,14 +2366,14 @@ sub setup_docket {
     for my $cat (map { $_->{name} } @{ $variable->{CategoryMenu} }) {
         my $services = $$services_by_category{$cat};
 
+	
+
         my $catNumericalID = scalar $dbh->selectrow_array(q{
             SELECT lngindex
             FROM tbl_service_categories
             WHERE strname = ?
         }, undef, $cat);
-        if (($catID == undef) || ($catNumericalID == $catID) || ($catID == -1
-			 ) || $catID == -3)
-        {
+        if (($catID == undef) || ($catNumericalID == $catID) || ($catID == -1) || $catID == -3) {
 	
 	  #Collect the material information for ALL services when viewing the 'Other' category
 	  if ( $catID == -3 ) {

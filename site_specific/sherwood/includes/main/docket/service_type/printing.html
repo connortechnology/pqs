@@ -72,7 +72,6 @@ No Printing <!-- <?chargefor?> -->
 	</div>	
 <br />
 
-<? eval ( use Data::Dumper; print STDERR "Printing Docket", Dumper($variable); ) ?>
 		<!-- Colour Information Per Side -->
 		<div style=" padding-left: 2em; ">
            <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
@@ -168,7 +167,6 @@ No Printing <!-- <?chargefor?> -->
 		<!-- Version Information -->
 		<? if ( $$variable{FORMS} ) ?>
 		<span class="label"> <br />VERSION INFORMATION </span>
-		<? eval ( use Data::Dumper; print STDERR "Printing Docket VERSIONS", Dumper($variable->{FOMRS}); ) ?>
 		<br />
 			<?loop FORMS?>
 

@@ -11,7 +11,9 @@
 	<? if ($$variable{Category} != -1) ?>
 		<?loop categories?>
 			<div class="category">
+				<?if ( scalar @{$variable->{service_type}} > 0 ) ?>
 				<h5><?name?> Information </h5>
+				<?endif ( scalar @{$variable->{service_type}} > 0 ) ?>
 
 				<?loop service_type?>
 					<div class="group">

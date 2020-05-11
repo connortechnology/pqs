@@ -165,7 +165,6 @@ print STDERR "HAVE COOKIE: $cookie\n";
     }
     else {
 
-print STDERR "HERE I AM, WWW 1 \n\n";
 		my $filename = ssi::get_file_path($r, $page);
 
         my $fh;
@@ -181,6 +180,7 @@ print STDERR "HERE I AM, WWW 1 \n\n";
 
         close $fh;
 
+print STDERR "START SSI \n";
         $file_data = ssi::variable_substitution(
             $r, $r->log, $dbh, $file_data, $variable
         );
