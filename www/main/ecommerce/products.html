@@ -224,6 +224,11 @@ select.failed {
 	background-color: #ddd;
 }
 
+#kit_contents td {
+	padding:10px 0 10px 0
+}
+
+
 </style>
 
 <body>
@@ -509,8 +514,10 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 					<div id="leadtime" style="margin: 10px 0 0 0">
 					<span style="font-weight: bold; display: inline-block; width: 130px;">Lead Time: </span><?lead_time?> <br />
 					</div>
+					<?if (scalar @{$variable->{kit_list}} > 0 )?>
 					<div>
-						<table style="width: 100%; margin-top: 20px">
+						<table id="kit_contents" style="width: 100%; marginop: 20px">
+							<tr style="padding-bottom: 3px"> <td colspan=2 style="text-align: center;font-size:1.4em;font-weight: bold;"> Kit Contents </td> <tr>
 							<tr style="padding-bottom: 3px">
 							<th>Qty</th>
 							<th>Name</th>
@@ -527,6 +534,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 							<?endloop kit_list?>
 						</table>
 					</div>
+					<?endif (scalar @{$variable->{kit_list}} > 0 )?>
 				</div>
 			<!--
              </a>
