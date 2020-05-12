@@ -2081,7 +2081,7 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
 	}, undef, $pid);
 	
 	my $use_custom;
-	$use_custom = 1 if $catID == -3 or $catID == 0;
+	$use_custom = 1 if $custom && ($catID == -3 or $catID == 0);
 
 	if ( $use_custom  ) {
 		$category = $dbh->prepare(q{ SELECT distinct 1, 'Custom' WHERE ? > 0 });
