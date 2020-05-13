@@ -2084,12 +2084,12 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
 	$use_custom = 1 if $custom && ($catID == -3 or $catID == 0);
 
 	if ( $use_custom  ) {
-		$category = $dbh->prepare(q{ SELECT distinct 1, 'Custom' WHERE ? > 0 });
+		$category = $dbh->prepare(q{ SELECT distinct 1, 'Custom Sort' WHERE ? > 0 });
 
 	}
 
 	my $standard_sort = q{
-        SELECT lower(t.strid) AS ref, t.strname AS name , p.lngserviceindex AS ID, t.strid AS strID, p.ysnremoved as supplied
+        SELECT lower(t.strid) AS ref, t.strname AS name , p.lngserviceindex AS ID, t.strid AS strID, p.ysnremoved as supplied, t.strcategory
         FROM tbl_service_types t, tbl_project_contents p
         WHERE ( t.strid = p.strservicetype OR (p.strservicetype is null AND (t.strid = 'Printing' OR t.strid='InkMixing' ) ))
         AND p.lngprojectindex = ?
@@ -2098,7 +2098,7 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
 	};
 
 	my $custom_sort_sql = q{
-        SELECT lower(t.strid) AS ref, t.strname AS name , p.lngserviceindex AS ID, t.strid AS strID, p.ysnremoved as supplied
+        SELECT lower(t.strid) AS ref, t.strname AS name , p.lngserviceindex AS ID, t.strid AS strID, p.ysnremoved as supplied, t.strcategory
         FROM tbl_service_types t, tbl_project_contents p
         WHERE ( t.strid = p.strservicetype OR (p.strservicetype is null AND (t.strid = 'Printing' OR t.strid='InkMixing' ) ))
         AND p.lngprojectindex = ?
@@ -2125,6 +2125,7 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
         	$services_by_category{$name} = $dbh->selectall_arrayref($service_type, { Slice => {} }, $pid, $id);
 		}
     }
+
 
 
     my $project_type = scalar $dbh->selectrow_array(q{
@@ -2288,6 +2289,8 @@ sub setup_categories {
     });
     $variable->{CategoryMenu} =
       $dbh->selectall_arrayref($category, { Slice => {} }, $pid);
+	  push @{ $variable->{CategoryMenu} } , {id=>1, name=>"Custom Sort"};
+
     return $category;
 }
 
@@ -2375,25 +2378,24 @@ sub setup_docket {
         }, undef, $cat);
         if (($catID == undef) || ($catNumericalID == $catID) || ($catID == -1) || $catID == -3) {
 	
-	  #Collect the material information for ALL services when viewing the 'Other' category
-	  if ( $catID == -3 ) {
+		  #Collect the material information for ALL services when viewing the 'Other' category
+		  if ( $catID == -3 ) {
 
-            foreach my $service (@$services) {
-                my ($ref, $name, $id, $supplied, $desc) 
-                    = @$service{qw(ref name id supplied desc)};
+				foreach my $service (@$services) {
+					my ($ref, $name, $id, $supplied, $desc) 
+						= @$service{qw(ref name id supplied desc)};
 
-                    my ($data, $material) =
-                      	summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count);
+						my ($data, $material) =
+							summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count);
 
-			
-			for my $m (@{$material}) {
-			    push @materials, $m;
+				
+				for my $m (@{$material}) {
+					push @materials, $m;
+				}
 			}
-		}
-	  }
+		  }
 
-	  next if $catID == -3 && $cat eq 'Prepress';
-	  next if $catID == -3 && $cat eq 'Printing';
+
 
             my @service_types;
             my @supplied_service_types;
@@ -2403,7 +2405,19 @@ sub setup_docket {
                     = @$service{qw(ref name id supplied desc)};
 
 
+
+
                 next if ($ref eq 'inkmixing' && $cat eq 'Printing');
+
+
+				#IF using a project with Custom Sorting for services
+				#all serivces will be in a 'Custom' cateogry,
+				#filter out printing, prepress for bindery docket view
+				#based on orginal service category.`
+		  		my $cat_check = $dbh->selectrow_array(q{SELECT strcategory from tbl_service_types where strname = ?}, undef, $name);
+
+				next if ($cat_check eq 'Printing' && $catID == -3);
+				next if ($cat_check eq 'Prepress' && $catID == -3);
 
                 my ($filename, $data, $material);
                 eval {
@@ -2494,7 +2508,7 @@ sub setup_docket {
 				#format commments to show line breaks from text area input.
 				$comment =~ s/\r/<br>/g; 
 
-		next if $catID == -3 && $cat eq 'Printing';
+				next if $catID == -3 && $cat eq 'Printing';
 
                 if ($supplied) {
                     push @supplied_service_types,
@@ -2546,6 +2560,11 @@ sub setup_docket {
     push @{ $variable->{CategoryMenu} },
       { name => 'Materials',
         id   => '-1', };
+
+
+	#Stop Custom Sort Categor from being displayed on docket tabs.
+	@{ $variable->{CategoryMenu} } = grep({$_->{name} ne 'Custom Sort'} @{ $variable->{CategoryMenu} }); 
+
 
     # Allow the template to see the categories and service types.
     $variable->{categories} = \@categories;
