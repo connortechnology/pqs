@@ -2663,14 +2663,14 @@ sub history_details {
 	} @pids;
 
     my $payment_info_query 
-    = qq{select strmethod, strtransactionid, 
+    = qq{select strmethod, strtransactionid, TO_CHAR(dtmdate :: DATE,'dd MON yyyy') AS dtmdate, curamount, 
         case 
         when strmethod = 'PayPal' and strdescription LIKE '%Approved%'
         then 'APPROVED'
-        when strmethod = 'PayPal' and strdescription LIKE '%Declined%'
-        then 'DECLINED'
+        when strmethod = 'PayPal' and strdescription NOT LIKE '%Approved%'
+        then 'NOT APPROVED'
         else strdescription
-        end as strdescription 
+        end as strdescription
         from tbl_payments WHERE lngorderid = ?};
     my $sth = $dbh->prepare($payment_info_query);
     $sth->execute($order_id);    
