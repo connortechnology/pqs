@@ -2662,6 +2662,24 @@ sub history_details {
 	print STDERR "HAVE SHIP DATA", Dumper($variable->{ship_data}, @data);
 	} @pids;
 
+    my $payment_info_query 
+    = qq{select strmethod, strtransactionid, 
+        case 
+        when strmethod = 'PayPal' and strdescription LIKE '%Approved%'
+        then 'APPROVED'
+        when strmethod = 'PayPal' and strdescription LIKE '%Declined%'
+        then 'DECLINED'
+        else strdescription
+        end as strdescription 
+        from tbl_payments WHERE lngorderid = ?};
+    my $sth = $dbh->prepare($payment_info_query);
+    $sth->execute($order_id);    
+    my $payment_info = $sth->fetchall_arrayref({});
+
+        
+	print STDERR "Payment Info: ", Dumper($payment_info);
+
+    $variable->{payment_info} = $payment_info;
 }
 
 sub packing_slip {
