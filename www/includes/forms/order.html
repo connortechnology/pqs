@@ -285,6 +285,20 @@
         <th colspan="4">Amount Paid:</th>
         <td><?AmountPaid?></td>
       </tr>
+      <?loop payment_info?>
+      <tr>
+        <th colspan="4">Method:</th>
+        <td><?strmethod?></td>
+      </tr>
+      <tr>
+        <th colspan="4">Status:</th>
+        <td><?strdescription?></td>
+      </tr>
+      <tr>
+        <th colspan="4">Transaction #:</th>
+        <td><?strtransactionid?></td>
+      </tr>
+      <?endloop payment_info?>
       <? endif ( $$variable{'AmountPaid'} > 0 ) ?>
       <? if ( $$variable{'AmountOutstanding'} > 0 and $$variable{'ORDER_STATUS'} eq 'Complete' ) ?>
       <tr>
