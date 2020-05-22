@@ -235,8 +235,9 @@ print STDERR "TEMPLATE: $generated GO \n";
 	}, undef, $ordered);
 
 
-	$variable->{jobname} = $dbh->selectrow_array(q{
-		SELECT jobname FROM tbl_order_contents WHERE lngprojectindex = ?
+    $variable->{next_project_name} = $dbh->selectrow_array(q{
+		Select strprojectreference FROM tbl_projects
+		where lngprojectindex = ?
 	}, undef, $variable->{next_project});
 
 
