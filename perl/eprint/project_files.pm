@@ -38,7 +38,12 @@ sub display_upload {
     # staff file uploads and approvals (through the system).
     $variable->{contacts} = project_contacts($dbh, $pid)
         if $variable->{is_staff};
-
+        
+    $variable->{current_project_name} = $dbh->selectrow_array(q{
+            SELECT strprojectreference FROM tbl_projects 
+            WHERE lngprojectindex = ?
+        }, undef, $pid);
+        
 # Use a port other than port 80 for uploading files.
 #    my ($user, $pass, $host, $port) = $r->header_in('Host')
 #        =~ /(?:([^:]+):([^\@]+)\@)?([^\@:]+)(?::(\d+))?/;
@@ -225,6 +230,10 @@ print STDERR "TEMPLATE: $generated GO \n";
 
 	$variable->{ordered} = $ordered;
 
+	$variable->{current_project_name} = $dbh->selectrow_array(q{
+		SELECT strprojectreference FROM tbl_projects 
+		WHERE lngprojectindex = ?
+	}, undef, $pid);
 
 	$variable->{next_project} = $dbh->selectrow_array(q{
 		Select p.lngprojectindex FROM tbl_projects p, tbl_order_contents oc 
