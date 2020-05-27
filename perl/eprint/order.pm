@@ -1890,6 +1890,49 @@ sub notify_overdraft {
      );
 }
 
+# only notifies for paypal payments right now
+sub notify_payment {
+    my ( $r, $log, $dbh, $order_id, $token) = @_;
+
+    # Send confirmation
+    my %info;
+    my $fullname = $dbh->selectrow_array(q{
+        SELECT concat(strfirstname, ' ', strlastname) FROM tbl_orders WHERE lngorderid = ?
+    },undef, $order_id);
+
+    my $amount_paid = $dbh->selectrow_array(q{
+        SELECT curamount FROM tbl_payments WHERE strtransactionid = ?
+    },undef, $token);
+
+    $info{CustomerName}     = $fullname;
+    $info{AmountPaid}       = sprintf("%.2f", $amount_paid);
+    $info{OrderNumber}      = $order_id;
+
+    my $email_template = misc::load_file($r, '/email/email_template.html');
+
+    $info{ReplacementText}
+        = q{<!--#include virtual="/email/content/payment_notification.html"}
+        . q{-->};
+
+    $email_template
+        = ssi::variable_substitution($r, $log, $dbh, $email_template, \%info);
+
+    my $order_email = $dbh->selectrow_array(q{
+        SELECT stremail FROM tbl_orders WHERE lngorderid = ?
+    },undef, $order_id);
+
+     my %mail = (
+         SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
+         FROM    => configuration::get_value( $log, $dbh, 'OrderingEmail'),
+         TO      => $order_email,
+         SUBJECT => "PayPal Payment Approval Notification"
+     );
+
+     misc::send_email_with_attachment(
+         $r, $log, \%mail, '', Mail::encode_qp($email_template), 'text/html',
+         'quoted-printable'
+     );
+}
 sub inventory_checkin {
     my ($r, $log, $dbh, $order_id, $project_index ) = @_;
 print STDERR "START SUB inventory_checkin \n";
@@ -3645,8 +3688,10 @@ sub paypal_return {
 		print STDERR "TIME TO COMPLETE Send Sales Order $order_id \n";
 		#finalise_order( $r, $log, $dbh, $cookie, $var, $order_id );
 		
+        #send payment confirmation
+        notify_payment( $r, $log, $dbh, $order_id, $token);
+
 		send_sales_order( $r, $log, $dbh, $order_id, 1 );
-		
 	} else {
 		print STDERR "HAVE PAYAPL RESULT: $results \n";
 	}
@@ -3663,6 +3708,12 @@ sub show_payflow {
 	) unless $order_id;
 
 	my $totals = get_order_totals($dbh, $var->{cust_id}, $order_id);
+	my $order = new PQS::Object::order($order_id);
+    my $amount_paid = $order->payment_total;
+    if($amount_paid){
+        $totals->{total} = $totals->{total} - $amount_paid;
+        if($totals->{total}<0){ $totals->{total} = 0; }
+    }
 	my $amount = sprintf( "%.2f", $totals->{total} );
 
 print STDERR "HAVE PAYMENT AMOUNT: $amount, Rounded FROM: $totals->{total} \n";
