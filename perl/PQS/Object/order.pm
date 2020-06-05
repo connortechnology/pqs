@@ -49,8 +49,13 @@ sub payment_total {
 
 sub deposit_required {
 	my $self = shift;
-
 	return PQS::model::order::downpayment($self->{id});
+
+}
+
+sub deposit_not_required {
+	my $self = shift;
+	return PQS::model::order::clear_downpayment($self->{id});
 
 }
 

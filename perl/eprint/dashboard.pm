@@ -264,6 +264,10 @@ sub action {
 	if ( $action eq 'PidStatus' ) {
 		print STDERR "UPDATE PID: $action \n";
 		foreach my $p ( @{$list} ) {
+			my $order_id = PQS::model::order::get_order_by_pid($p);
+			$order_id = $order_id->{lngorderid};
+			my $order = new PQS::Object::order($order_id);
+
 			print STDERR "SET STATUS $p, $value \n";
 			if ( $value eq 'Complete' ) {
 				eprint::employee_project::complete_project($r, $dbh, $p);
@@ -273,12 +277,15 @@ sub action {
 				#Reset Completion date.
 				$dbh->do(q{UPDATE tbl_projects SET completion_date = NULL WHERE lngprojectindex = ?},undef,  $p);
 				$dbh->do(q{UPDATE tbl_projects SET files = true WHERE lngprojectindex = ?},undef,  $p);
+				#Clear Deposit database field to prevent status returning to pending deposit.
+				$order->deposit_not_required();
 			} else {
 				eprint::project::project_status($dbh, $p, $value );
 			}
 
 			my $project = new PQS::Object::project($p);
 			$project->update_status();
+    		# die $value;
 		}
 	} elsif ( $action eq 'OrderStatus' ) {
 		print STDERR "UPDATE ORDER \n";
@@ -293,6 +300,7 @@ sub action {
 
 				eprint::order::cancel_order($r, $log, $dbh, $order->{lngorderid});
 			} elsif ( $value eq 'Complete' ) {
+				# here complete_order?? tbl_order doesn't change
 				eprint::employee_project::complete_project($r, $dbh, $p);
 			} else {
 				print STDERR "SET ORDER STATUS $p, $value, $order \n";

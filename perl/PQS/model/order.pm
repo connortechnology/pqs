@@ -68,6 +68,13 @@ sub downpayment {
 	
 }
 
+sub clear_downpayment {
+  	my $dbh = session::dbh;
+	my $id = shift;
+	return $dbh->do(q{UPDATE tbl_orders SET curdownpayment = null WHERE lngorderid = ?}, undef, $id);
+	
+}
+
 sub payments {
   	my $dbh = session::dbh;
 	my $id = shift;
