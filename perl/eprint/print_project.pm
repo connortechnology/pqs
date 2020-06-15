@@ -2049,6 +2049,7 @@ sub add_product_to_order {
 	my $product = $r->param('product');
 	my $qty     = $r->param('txtQuantity1') ||  1;
 	my $jobname = $r->param('jobname') ||  undef;
+    my $addprice = $r->param('addprice') || 0;
 	my $versions = $r->param('versions1') ||  1;
 
 	$jobname .= " $versions Versions " if $versions > 1;
@@ -2056,7 +2057,8 @@ print STDERR "PRODUCT: $jobname \n";
 
 	die("Invalid request. Product can not be added to order") unless $product && $qty;
 
-	my $order_id = eprint::order::add_product_to_order($cookie, $var, $product, $qty, undef, $jobname, $versions);
+    # Add new parameter to the list
+	my $order_id = eprint::order::add_product_to_order($cookie, $var, $product, $qty, undef, $jobname, $versions, $addprice);
 	
 	$ENV{HTTP_REFERER} =~ /.*(\/main\/ecommerce.*)/;
 	my $ref = $1;

@@ -35,11 +35,22 @@ function open_discount_window( i ) {
 
 function form_validate() {
 	 var val = $('jobname').value;
-	 if ( val ) {
-		 return true;
-	 } else { 
-		alert('Please enter a Job Description');
+	 var priceval = parseFloat($('addPrice').value);
+	
+	 var errorMsg = '';
+	 if ( !val ) {
+		 errorMsg += 'Please enter a Job Description\n';
+	 }
+
+	 if(priceval<0){
+		 errorMsg += 'Please enter a price greater than and equals to 0\n';
+	 }
+
+	 if(errorMsg!=''){
+		alert(errorMsg);
 		return false;
+	 }else{
+		return true;
 	 }
 }
 function make_quote() {
@@ -413,6 +424,11 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 		<textarea name="jobname" id="jobname" style="width: 270px;margin: 0 0 0 20px;"
 							onChange="document.getElementById('tmpjobname').value = this.value";
 			><?jobname?></textarea>
+		
+		<div style="margin-bottom: 30px;">
+			<label>Add Price:</label> 
+			<input name="addPrice" id="addPrice" style="width: 60px; margin: 0 0 0 20px " />
+		</div>
 
 		<?if price?>
 		<label style="font-size: 2em; line-height: 70px">

@@ -191,7 +191,6 @@ sub project_status {
         FROM tbl_projects
         WHERE lngprojectindex = ?
     });
-
     return $dbh->selectrow_array($sth, undef, $pid);
 }
 
