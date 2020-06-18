@@ -2288,12 +2288,8 @@ sub setup_categories {
     });
     $variable->{CategoryMenu} =
       $dbh->selectall_arrayref($category, { Slice => {} }, $pid);
-<<<<<<< HEAD
 	  push @{ $variable->{CategoryMenu} } , {id=>1, name=>"Custom Sort"};
 
-=======
-      push  @{$variable->{CategoryMenu}}, {id=> -5, name=>'Custom Sort'};
->>>>>>> hkim-15may20
     return $category;
 }
 
