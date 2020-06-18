@@ -2071,7 +2071,6 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
 
     my $category = setup_categories($log, $dbh, $pid, $variable, 1);
 
-
 	#Docket for projects that use Custom Sort now have 2 views.
 	#IF viewing all services the will be shown in a 'Custom' sort category;
 	#IF viewing a single service category i.e. "Packaging", still sort by  Custom sort order but 
@@ -2289,8 +2288,12 @@ sub setup_categories {
     });
     $variable->{CategoryMenu} =
       $dbh->selectall_arrayref($category, { Slice => {} }, $pid);
+<<<<<<< HEAD
 	  push @{ $variable->{CategoryMenu} } , {id=>1, name=>"Custom Sort"};
 
+=======
+      push  @{$variable->{CategoryMenu}}, {id=> -5, name=>'Custom Sort'};
+>>>>>>> hkim-15may20
     return $category;
 }
 
