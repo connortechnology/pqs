@@ -2384,14 +2384,12 @@ sub setup_docket {
 					my ($ref, $name, $id, $supplied, $desc) 
 						= @$service{qw(ref name id supplied desc)};
 
-						my ($data, $material) =
-							summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count);
-
-				
-				for my $m (@{$material}) {
-					push @materials, $m;
-				}
-			}
+                    my ($data, $material) =
+                        summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count);
+                    for my $m (@{$material}) {
+                        push @materials, $m;
+                    }
+			    }
 		  }
 
 
@@ -2459,6 +2457,7 @@ sub setup_docket {
                       AND lngprojectindex =?
                 }, undef, $id, $pid);
 
+                next if ($ref eq 'impositionlayout' && $catID == -3);
 				# Imposition Comments are stored with the project.
 				if ( $ref eq 'impositionlayout' ) {
 					$comment = $dbh->selectrow_array(q{
@@ -2541,7 +2540,6 @@ sub setup_docket {
                 }
                 $variable->{dockethash}{$name}{comment} = $comment;
             }
-
             push @categories,
               { id                    => $cat,
                 name                  => $cat,
