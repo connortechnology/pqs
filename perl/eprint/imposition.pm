@@ -66,7 +66,7 @@ sub convert_to_old {
     my $versions = $project->{versions};
     my $n        = $style =~ /^W[TF]$/ ? $slots/2 : $slots;
 
-    my $layouts  = (%$versions) ? version_layouts($n, $versions)
+    my $layouts  = (%$versions) ? version_layouts($n, $versions, $project->{is_multipage})
                                 : [[[{ n         => 0,
                                       label     => 'Signature',
                                       requested => 100,
@@ -484,7 +484,7 @@ memoize('version_layouts',
    SCALAR_CACHE => 'MEMORY',
 );
 sub version_layouts {
-    my ($slots, $versions) = @_;
+    my ($slots, $versions, $multipage) = @_;
 
     # Given the number of versions determine all the unique groupings where no
     # version spans multiple press sheets (integer partitions). TODO: We
@@ -492,6 +492,30 @@ sub version_layouts {
     # a setup of 4 with version % of 40,30,20,10 will probably work best that
     # way (only one plate change, 0 waste for 2A2B, 2C1D1A layout).
     my @partitions = partitions(scalar keys %$versions);
+
+
+	#We now alllot multipage projects to have multiple verions, however 
+	#the current restriction is 1 Verions per Form.
+	# X Versions = X Froms regardless of layout.
+	if ( $multipage ) {
+
+		#Filter out at partition set that uses multiple verions.
+		my @tmp;
+		my @org = @partitions;
+		foreach my $set (@partitions) {
+
+			my $check = 1;
+			foreach my $n (@$set) {
+				$check = 0 if $n > 1;
+			}
+			push @tmp, $set if $check;
+		}
+
+		@partitions = @tmp;
+		print STDERR "START HAVE PARITIONS ", Dumper(\@partitions, \@tmp, @org, $multipage);
+
+	}
+
 
     # If there're less slots than versions we need to discard the first n
     # partitions that contain layouts with more than x slots.
@@ -512,6 +536,7 @@ sub version_layouts {
     # order of plate changes.
     my (%result, $max_waste);
     foreach my $set (@partitions) {
+
         my @remaining = @nversions;
 
         # Choose which n versions will go on the current sheet (n is a single
@@ -523,6 +548,7 @@ sub version_layouts {
             # Determine how the selected version get laid out on the sheet.
             push @layout, match_versions($slots, $selected);
         }
+
 
         # Determine the layout wastage.
         my $wastage = sum( map { map { $_->{final} } @$_ } @layout ) - 100;
@@ -537,6 +563,7 @@ sub version_layouts {
         # Note: Run overs are variable based on each form's run length, so
         # wastage is not the only factor. However it's felt 
     }
+
 
     return [values %result];
 }
