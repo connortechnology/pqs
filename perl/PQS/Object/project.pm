@@ -167,18 +167,20 @@ sub check_status {
 
 		$status =  'WF';
 
-		$status =  'PD' if $order->pending_deposit;
+		#If paymnet has not been made, do not allow order to go into production
+		if ( $order->pending_deposit ) {
+		   	$status =  'PD'
+		} else { 
 
-		$status =  'IP' if  $self->{specs}{files} && $self->have_production_file;
-		$status =  'IP' if  $self->{specs}{strstatus} eq 'In Production';
-
-		$status =  'IP' if  $self->no_upload_required;
+			$status =  'IP' if  $self->{specs}{files} && $self->have_production_file;
+			$status =  'IP' if  $self->{specs}{strstatus} eq 'In Production';
+			$status =  'IP' if  $self->no_upload_required;
+		}
 
 
 
 
 		$status = 'CN' if $order->{specs}{cancelled};
-
 		$status =  'CP' if  $self->{specs}{completion_date};
 	}
 

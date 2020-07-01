@@ -1,12 +1,14 @@
 <!-- Basic Info. -->
+<?eval( use Data::Dumper; print STDERR " MY DUMPER" , Dumper($variable->{HeaderInfo}); ) ?>
 
 	<h2 style="font-size: 3em; text-align: center; margin: 0px 0 0px 0; line-height: 2em">
-		<? if (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
+		<? if ( $variable->{HeaderInfo}{'order_id'} ) ?>
 			<span class="id" style="float: left"> DOCKET ID: </span>
-			<span class="id1"><?HeaderInfo.docket_id?></span>
-		<? else (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
+			<?HeaderInfo.docket_id?>
+		<? else ( $variable->{HeaderInfo}{'order_id'} ) ?>
+			<span class="id1" style="float: left"> Project: </span> 
 			<?HeaderInfo.id?>
-		<? endif (( $variable->{HeaderInfo}{'status'} eq 'Complete' ) || ( $variable->{HeaderInfo}{'status'} eq 'In Production' )) ?>
+		<? endif ( $variable->{HeaderInfo}{'order_id'} ) ?>
 	</h2>
 
 <div class="category">
