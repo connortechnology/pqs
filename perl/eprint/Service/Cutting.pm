@@ -959,7 +959,7 @@ sub display {
     # If we're not calculated there's a problem. As we don't have a
     # standardised messaging system we'll co-opt our signature output.
     my $s = get_status($log, $dbh, $sid);
-    if ( ! grep { $s eq $_ }  ('calculated', 'In Production', 'Complete') ) {
+    if ( grep { $s eq $_ }  ('uncalculated', 'error')) {
         $page{signatures} = [ { 
             name => 'Call for Quote', 
             notes => [ { 

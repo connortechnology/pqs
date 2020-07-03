@@ -191,10 +191,13 @@ sub add_product_to_order {
 	my $list_index = eprint::customer::get_product_list();
 
 	my $prod = new PQS::Object::product($product);
+	my $price =  defined $quote_price ? $quote_price + $prod->price($var->{cust_id}, $qty, $versions) : $prod->price($var->{cust_id}, $qty, $versions);
+	# my $price =  $quote_price + $prod->price($var->{cust_id}, $qty, $versions);
+	# my $addprice = $quote_price;
+    # my $price = $prod->price($var->{cust_id}, $qty, $versions);
 
-	my $price =  defined $quote_price ? $quote_price : $prod->price($var->{cust_id}, $qty, $versions);
-
-	$qty *= $versions;
+    # $price += $addprice;
+	# $qty *= $versions;
 
 	print STDERR "HAVE: QTY: $qty PRICE: $price QPrice: $quote_price VERSIONS: $versions Name: $jobname \n";
 	die("No Product Quantity for Product: $product VERSIONS: $versions") unless $qty;
@@ -2705,6 +2708,24 @@ sub history_details {
 	print STDERR "HAVE SHIP DATA", Dumper($variable->{ship_data}, @data);
 	} @pids;
 
+    my $payment_info_query 
+    = qq{select strmethod, strtransactionid, TO_CHAR(dtmdate :: DATE,'dd MON yyyy') AS dtmdate, curamount, 
+        case 
+        when strmethod = 'PayPal' and strdescription LIKE '%Approved%'
+        then 'APPROVED'
+        when strmethod = 'PayPal' and strdescription NOT LIKE '%Approved%'
+        then 'NOT APPROVED'
+        else strdescription
+        end as strdescription
+        from tbl_payments WHERE lngorderid = ?};
+    my $sth = $dbh->prepare($payment_info_query);
+    $sth->execute($order_id);    
+    my $payment_info = $sth->fetchall_arrayref({});
+
+        
+	print STDERR "Payment Info: ", Dumper($payment_info);
+
+    $variable->{payment_info} = $payment_info;
 }
 
 sub packing_slip {

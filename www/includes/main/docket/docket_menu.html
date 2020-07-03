@@ -15,6 +15,7 @@
 					<?endif ($variable->{Category} == -3) ?>
 					> Bindery </a> </li>
 		<?loop CategoryMenu?>
+		<?if ($variable->{id}!=-5)?>
 			<li>
 				<a href="<?site?>?ProjectIndex=<?ProjectIndex?>&QuantityIndex=<?QtyIndex?>&Category=<?id?>"
 					<?if ($variable->{Category} == $variable->{id}) ?>
@@ -24,6 +25,7 @@
 					<?name?>
 				</a>
 			</li>
+		<?endif ($variable->{id}!=-5)?>
 		<?endloop CategoryMenu?>
 	</ul>
 </div>

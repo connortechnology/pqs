@@ -2071,7 +2071,6 @@ $variable->{ModifiedDocket} = $dbh->selectrow_array(q{
 
     my $category = setup_categories($log, $dbh, $pid, $variable, 1);
 
-
 	#Docket for projects that use Custom Sort now have 2 views.
 	#IF viewing all services the will be shown in a 'Custom' sort category;
 	#IF viewing a single service category i.e. "Packaging", still sort by  Custom sort order but 
@@ -2385,14 +2384,12 @@ sub setup_docket {
 					my ($ref, $name, $id, $supplied, $desc) 
 						= @$service{qw(ref name id supplied desc)};
 
-						my ($data, $material) =
-							summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count);
-
-				
-				for my $m (@{$material}) {
-					push @materials, $m;
-				}
-			}
+                    my ($data, $material) =
+                        summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count);
+                    for my $m (@{$material}) {
+                        push @materials, $m;
+                    }
+			    }
 		  }
 
 
@@ -2460,6 +2457,7 @@ sub setup_docket {
                       AND lngprojectindex =?
                 }, undef, $id, $pid);
 
+                next if ($ref eq 'impositionlayout' && $catID == -3);
 				# Imposition Comments are stored with the project.
 				if ( $ref eq 'impositionlayout' ) {
 					$comment = $dbh->selectrow_array(q{
@@ -2542,7 +2540,6 @@ sub setup_docket {
                 }
                 $variable->{dockethash}{$name}{comment} = $comment;
             }
-
             push @categories,
               { id                    => $cat,
                 name                  => $cat,
