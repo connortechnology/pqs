@@ -27,7 +27,7 @@ my $transport1 = Email::Sender::Transport::SMTPS->new({
   sasl_username => $smtpuser,
   sasl_password => $smtppassword,
   helo => 'pqsdev.sherwoodprinters.com',
-  debug => 1
+  Debug => 1
 });
 
 my $email = Email::Simple->create(

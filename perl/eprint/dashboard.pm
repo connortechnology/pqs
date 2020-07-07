@@ -41,7 +41,7 @@ sub add_link {
     my $x = shift;
     my $l = shift;
 
-    $x->{link} = "/main/order/order_history_details.html?order_id=$x->{value}" if $x->{id} eq 'lngorderid';
+    $x->{link} = "/main/order/order_history_details.html?order_id=$x->{value};ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'lngorderid';
     $x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
     $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'strcompanyname';
     $x->{link} = "/administrator/managerial/user_profiles.html?ddmUser=$l->{contactid}" if $x->{id} eq 'contact';
