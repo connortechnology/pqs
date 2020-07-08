@@ -197,7 +197,7 @@ print STDERR "CONVERT TO SIGNATURE: DS: $desired_signature_size, SETUP: $setup R
 
 			foreach my $f (@{ $imp->{layout} }) {
 				# Count the net press sheets per form.
-				map  { $_->{slots} = 1  } @{$f};
+				map  { $_->{sig_slots} = 1  } @{$f};
 
 			}
 

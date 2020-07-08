@@ -1407,12 +1407,14 @@ sub printing {
 				map  { $form{total_req} = $_->{requested};
                        $eachversiontotal +=  $_->{requested};
 					   $form{version_count}++;
+					   $_->{slots} = $_->{sig_slots} if $_->{sig_slots};
         			   $_->{'requested_qty1' } = $_->{requested} / 100 * $qtys[0];
 					   $_->{'requested_qty2' } = $_->{requested} / 100 * $qtys[1];
 					   $_->{'requested_qty3' } = $_->{requested} / 100 * $qtys[2];
 					   $_->{requested_qty} = round $_->{requested} / 100 * $qty;
 					   $_->{final_qty} = ceil($_->{final} / 100 * $qty);
 					   $_ } @{$f} ];
+
 
 			$form{net_sheets} = ceil(@{$f}[0]->{final_qty} / @{$f}[0]->{slots});
             $form{net_sheets} += ceil($results{CustomOvers} * ( $form{total_req} / 100));
@@ -1423,6 +1425,7 @@ sub printing {
 
 			push @{ $results{FORMS} }, \%form;
             $eachversiontotal = 0;
+
 
 		}
 	} else { 
