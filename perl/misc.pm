@@ -28,6 +28,7 @@ use Text::CSV_XS;
 
 use MIME::QuotedPrint;
 use Mail::Sendmail;
+use session;
 
 use strict;
 use POSIX qw( ceil floor strftime );
@@ -152,6 +153,7 @@ print STDERR "SEND MAIL TO: $mail->{TO} FROM $mail->{FROM} SUBJECT: $mail->{SUBJ
                        . "$text\n";
     }
 
+    my $attachmentname = '';
     while ( @attachments ) {
         my ($name, $text, $type, $encoding) = splice @attachments, 0, 4;
 print STDERR "EMAIL DUMPER", Dumper($name );
@@ -162,13 +164,29 @@ print STDERR "EMAIL DUMPER", Dumper($name );
                       .  "Content-Disposition: attachment;\n"
                       .  ($name ? "\tfilename=\"$name\"\n" : q{})
                       .  "\n$text\n";
+        $attachmentname .= $name . ", ";
     }
 
     # Signal end of attachments
     $mail->{BODY} .= "$boundary--\n\n";
+    insert_to_emaildb($mail, $attachmentname);
     sendmail( %$mail ) || $log->debug( "Error: $Mail::Sendmail::error\n" );
 }
 
+sub insert_to_emaildb {
+    my $mail = shift;
+    my $attachmentname = shift;
+    my $dbh = session::dbh;
+
+    my @k = keys $mail;
+    foreach my $key (@k){
+        if ($key =~ /(subject)/i){
+            $dbh->  do("INSERT INTO public.tbl_email(from_address, to_address, subject, attachmentname)
+            VALUES (?, ?, ?, ?)" , undef, $mail->{FROM}, $mail->{TO}, $mail->{$key}, $attachmentname);
+            print STDERR "EMAIL HISTORY SAVED IN TBL_EMAIL DATABASE \n";
+        }
+    }
+}
 # We now use the SSI insert_html (which really just slurps in a file) as it
 # respects site_specific directory changes and overrides.
 sub load_file { ssi::insert_html(@_); }

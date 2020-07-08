@@ -1395,18 +1395,19 @@ sub printing {
     if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
         # If there's more than one version, list the versions. We don't care
         # what sheet they're on, just the version information.
-		my $i;
+        my $eachversiontotal = 0;
 		foreach my $f (@{ $imp->{layout} }) {
 
 			my %form;
 
 			$form{VERSIONS} = [ 
-				sort { $a->{requested_qty} <=> $b->{requested_qty} } 
+				sort { $a->{requested_qty} <=> $b->{requested_qty} }
 
-				
 				# Count the net press sheets per form.
-				map  { 
-					   $_->{'requested_qty1' } = $_->{requested} / 100 * $qtys[0];
+				map  { $form{total_req} = $_->{requested};
+                       $eachversiontotal +=  $_->{requested};
+					   $form{version_count}++;
+        			   $_->{'requested_qty1' } = $_->{requested} / 100 * $qtys[0];
 					   $_->{'requested_qty2' } = $_->{requested} / 100 * $qtys[1];
 					   $_->{'requested_qty3' } = $_->{requested} / 100 * $qtys[2];
 					   $_->{requested_qty} = round $_->{requested} / 100 * $qty;
@@ -1414,9 +1415,14 @@ sub printing {
 					   $_ } @{$f} ];
 
 			$form{net_sheets} = ceil(@{$f}[0]->{final_qty} / @{$f}[0]->{slots});
+            $form{net_sheets} += ceil($results{CustomOvers} * ( $form{total_req} / 100));
+            $form{eachversiontotal} =  $eachversiontotal ;
+            $form{eachversiongrosstotal} = ceil($results{hdnSheetQuantity1} * $eachversiontotal /100);
+            $form{gross_sheets} = ceil($results{hdnSheetQuantity1} * ( $form{total_req} / 100));
 
 
 			push @{ $results{FORMS} }, \%form;
+            $eachversiontotal = 0;
 
 		}
 	} else { 
@@ -1426,16 +1432,6 @@ sub printing {
 		} 1..$results{txtSignatureQuantity};
 
     }
-
-	if ($multi) {
-		my $bookid = eprint::project::get_service_index($log, $dbh, $pid, 'Book');
-
-		my %vspecs = eprint::service::get_specifications_pairs($log, $dbh, $pid, $bookid);
-
-		my @versions = eprint::Service::Book::mp_versions(\%vspecs);
-
-		$results{VERSIONS} = \@versions;
-	}
 
     $results{'NoPrint'} = $results{chargefor} eq 'Free' ? 1 : 0;
 
@@ -1638,6 +1634,7 @@ sub header_info {
     my $run_style = '';
     my $forms;
 
+	my $max_versions = 1;
     foreach my $sigIndex (@signature_service_indices) {
         # Side n colours and coatings.
         my @keys = qw(
@@ -1693,9 +1690,12 @@ sub header_info {
     my $qty  = $qtys[0];
 
 
+	my $vcount;
     if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
         # If there's more than one version, list the versions. We don't care
         # what sheet they're on, just the version information.
+		#
+		#
 		my $i;
 		foreach my $f (@{ $imp->{layout} }) {
 			$i++; # Count the number of Forms
@@ -1708,6 +1708,7 @@ sub header_info {
 
 				# Count the net press sheets per form.
 				map  { 
+					   $vcount++;
 					   $_->{requested_qty} = round $_->{requested} / 100 * $qty;
 					   $_->{final_qty} = ceil($_->{final} / 100 * $qty);
 					   $_ } @{$f} ];
@@ -1717,7 +1718,9 @@ sub header_info {
 			push @{ $forms }, \%form;
 
 		}
+
     }
+
 
 # END CUSTOM CODE
 
@@ -1749,6 +1752,9 @@ sub header_info {
 
         # Map the code to a longer name.
         $run_style = $RUN_STYLE{ $specs{runstyle} } . q{ };
+
+		$max_versions  =  $vcount if $vcount > $max_versions;
+
     }
 
     my %hash = get_specifications_pairs($log, $dbh, $pid, $index,
@@ -1763,9 +1769,11 @@ sub header_info {
     $hash{FORMS} = $forms;
 	my $mp_versions = eprint::project::mp_versions($pid);
 	$hash{num_versions} = $mp_versions if $mp_versions > 1;
+
 	my $prod_versions = $dbh->selectrow_array(q{
 		SELECT versions FROM tbl_order_contents WHERE lngprojectindex = ?}, undef, $pid);
 
+	$hash{num_versions} = $prod_versions if $prod_versions;
 	$hash{num_versions} = $prod_versions if $prod_versions;
 
 
@@ -1865,6 +1873,7 @@ sub header_info {
     $hash{phoneNumber}     = $companyPhone;
     $hash{software}        = $programs;
 	$hash{SalesRep}		   = $sales_rep;
+	$hash{version_count}		   = $max_versions;
 
     {
         no warnings qw(deprecated syntax);

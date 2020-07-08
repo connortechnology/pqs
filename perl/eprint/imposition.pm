@@ -195,6 +195,13 @@ print STDERR "CONVERT TO SIGNATURE: DS: $desired_signature_size, SETUP: $setup R
             $imp->setCols(1);
             $imp->setSetup(1);
 
+			foreach my $f (@{ $imp->{layout} }) {
+				# Count the net press sheets per form.
+				map  { $_->{slots} = 1  } @{$f};
+
+			}
+
+
             return $imp;
         }
     }
@@ -265,7 +272,18 @@ print STDERR "CONVERT A ROW: $imp_rows COL: $imp_cols \n";
         else {
             $imp->setImageWidth($imp->{image_width} / $imp->{rows});
             $imp->setImageHeight($imp->{image_height} / $imp->{cols});
+
         }
+
+		#Update this latere, change 1 to sig setup rows * cols
+		#			foreach my $f (@{ $imp->{layout} }) {
+		##		# Count the net press sheets per form.
+		#		map  { $_->{slots} = 1  } @{$f};
+		#
+		#	}
+
+
+
 
        return $imp;
     }
