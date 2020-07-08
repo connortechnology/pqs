@@ -10,6 +10,9 @@
 
 	<? if ($$variable{Category} != -1) ?>
 		<?loop categories?>
+		<?if ( $variable->{id} eq 'Printing' )?>
+			<div style="page-break-before: always"></div>
+		<?endif ( $variable->{id} eq 'Printing' )?>
 			<div class="category">
 				<?if ( scalar @{$variable->{service_type}} > 0 ) ?>
 				<h5><?name?> Information </h5>
@@ -17,7 +20,6 @@
 
 				<?loop service_type?>
 					<div class="group">
-
 						<h4 style="font-size:14px"><?name?></h4>
 
 							<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
@@ -63,6 +65,9 @@
 							<p class="comment" style="font-weight: Bold;"><strong>Comment: </strong>&nbsp;<?comment?></p>
 						<?endif ($$variable{comment}) ?>
 					</div>
+					<?if ( $variable->{id} eq 'Printing' )?>
+						<div style="page-break-before: always"></div>
+					<?endif ( $variable->{id} eq 'Printing' )?>
 				<?endloop service_type?>
 
 				<?if (@{$$variable{supplied_service_type}} )?>

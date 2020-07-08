@@ -191,14 +191,9 @@ sub add_product_to_order {
 	my $list_index = eprint::customer::get_product_list();
 
 	my $prod = new PQS::Object::product($product);
-	my $price =  defined $quote_price ? $quote_price + $prod->price($var->{cust_id}, $qty, $versions) : $prod->price($var->{cust_id}, $qty, $versions);
-	# my $price =  $quote_price + $prod->price($var->{cust_id}, $qty, $versions);
-	# my $addprice = $quote_price;
-    # my $price = $prod->price($var->{cust_id}, $qty, $versions);
-
-    # $price += $addprice;
-	# $qty *= $versions;
-
+	# my $price =  defined $quote_price ? $quote_price : $prod->price($var->{cust_id}, $qty, $versions);
+	my $price = $quote_price + $prod->price($var->{cust_id}, $qty, $versions);
+    
 	print STDERR "HAVE: QTY: $qty PRICE: $price QPrice: $quote_price VERSIONS: $versions Name: $jobname \n";
 	die("No Product Quantity for Product: $product VERSIONS: $versions") unless $qty;
 
@@ -223,22 +218,15 @@ sub add_product_to_order {
 
 print STDERR "SET DELIVERY DATE: $days FOR $order_id \n";
 
-
-
-#	if ( $prod->{specs}{kit} ) {
-#		map { 
-#			
-#			my $price1 = PQS::model::pricing::price_item( $var->{cust_id}, $list_index, $_->{product}, $_->{qty});
-#
-#			my $sub = $prod->spec('showprice') ? undef : $ocid;
-#			insert_prod($log, $dbh, $order_id, $_->{product}, $_->{qty}, $price1, $sub);
-#		} @{$prod->kit_list()};
-#			
-#	}
+	if ( $prod->{specs}{kit} ) {
+		map { 
+			my $price1 = PQS::model::pricing::price_item( $var->{cust_id}, $list_index, $_->{product}, $_->{qty});
+			my $sub = $prod->spec('showprice') ? undef : $ocid;
+			insert_prod($log, $dbh, $order_id, $_->{product}, $_->{qty}, $price1, $sub);
+		} @{$prod->kit_list()};			
+	}
 
 	return ($order_id, $ocid);
-
-
 }
 
 sub insert_prod {
@@ -2715,6 +2703,8 @@ sub history_details {
         then 'APPROVED'
         when strmethod = 'PayPal' and strdescription NOT LIKE '%Approved%'
         then 'NOT APPROVED'
+        when strmethod = 'Manual'
+        then 'APPROVED'
         else strdescription
         end as strdescription
         from tbl_payments WHERE lngorderid = ?};
