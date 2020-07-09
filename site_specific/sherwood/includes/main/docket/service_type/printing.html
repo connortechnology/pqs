@@ -174,23 +174,34 @@ No Printing <!-- <?chargefor?> -->
 				<tr>
 					<td colspan="4" style="padding-left: 1em;"><strong><?label?></strong> 
 				<tr>
-				
 				<?loop VERSIONS?>
-					<tr>
+				<tr>
 						<td style="padding-left: 2em;"><?label?></td>
-						<td style="padding-left: 2em;"><strong>Req Qty:&nbsp;&nbsp;</strong>
-							 <?int:requested_qty?></td>
-						<td style="padding-left: 2em;">(<?float:requested?> %)</td>
-						<td style="padding-left: 2em;"><strong>Qty Out:&nbsp;&nbsp;</strong>
-							 <?slots?></td>
-						<td style="padding-left: 2em;"><strong>Printed Qty:&nbsp;&nbsp;</strong>
-							 <?int:final_qty?></td>
+						<td style="padding-left: 2em;">
+							<strong>Req Qty: &nbsp;</strong><?int:requested_qty?>
+						</td>
+						<td style="padding-left: 2em;">
+							(<?float:requested?> %)
+						</td>
+						<td style="padding-left: 2em;">
+							<strong>Qty Out: </strong> <?slots?>
+						</td>
+						<td style="padding-left: 2em;">
+							<strong>Printed Qty: </strong> <?int:final_qty?>
+						</td>
 					</tr>
 				<?endloop VERSIONS?>
 				<tr>
-					<td colspan="4" style="padding: 1em 0 1em 2em; font-size: 30px;">Net Sheets: &nbsp;&nbsp;<strong><?net_sheets?></strong></td>
+					<td colspan="6" style="padding: 1em; font-size: 20px;"> 
+						Gross Sheets: &nbsp;&nbsp;<strong><?eachversiongrosstotal?></strong> &nbsp;&nbsp;
+						Net Sheets: &nbsp;&nbsp;<strong><?net_sheets?></strong> &nbsp;&nbsp;(<?eachversiontotal?> %) 
+					</td>
+					<td></td>
+				</tr>
 				<tr>
-		
+					<td colspan="4" style="padding: 1em; font-size: 20px;"> </td>
+					<td><span class="label">Press Count:&nbsp;&nbsp;______________</span></td>
+				</tr>
 		</table>
 			<?endloop FORMS?>
 		<? endif ( $$variable{FORMS} ) ?>

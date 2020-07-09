@@ -1395,18 +1395,18 @@ sub printing {
     if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
         # If there's more than one version, list the versions. We don't care
         # what sheet they're on, just the version information.
-		my $i;
+        my $eachversiontotal = 0;
 		foreach my $f (@{ $imp->{layout} }) {
 
 			my %form;
 
 			$form{VERSIONS} = [ 
-				sort { $a->{requested_qty} <=> $b->{requested_qty} } 
+				sort { $a->{requested_qty} <=> $b->{requested_qty} }
 
-				
 				# Count the net press sheets per form.
-				map  { 
-					   $_->{'requested_qty1' } = $_->{requested} / 100 * $qtys[0];
+				map  { $form{total_req} = $_->{requested};
+                       $eachversiontotal +=  $_->{requested};
+        			   $_->{'requested_qty1' } = $_->{requested} / 100 * $qtys[0];
 					   $_->{'requested_qty2' } = $_->{requested} / 100 * $qtys[1];
 					   $_->{'requested_qty3' } = $_->{requested} / 100 * $qtys[2];
 					   $_->{requested_qty} = round $_->{requested} / 100 * $qty;
@@ -1414,9 +1414,14 @@ sub printing {
 					   $_ } @{$f} ];
 
 			$form{net_sheets} = ceil(@{$f}[0]->{final_qty} / @{$f}[0]->{slots});
+            $form{net_sheets} += ceil($results{CustomOvers} * ( $form{total_req} / 100));
+            $form{eachversiontotal} =  $eachversiontotal ;
+            $form{eachversiongrosstotal} = ceil($results{hdnSheetQuantity1} * $eachversiontotal /100);
+            $form{gross_sheets} = ceil($results{hdnSheetQuantity1} * ( $form{total_req} / 100));
 
 
 			push @{ $results{FORMS} }, \%form;
+            $eachversiontotal = 0;
 
 		}
 	} else { 
