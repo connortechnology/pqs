@@ -117,13 +117,17 @@ print STDERR "HAVE DIGIFED: $digifed PMS: $pms ************\n";
     # Is the user even allowed to view this project?
     return unless project_allowed($dbh, $pid, $variable);
 
+	
+	#Only admin/employee can select customer account.
+	#Prevent errors when admin makes project and then customer places order.
+	if ( $variable->{user_type} =~ /^[AE]$/ ) {
 
+		my ($cust) = $dbh->selectrow_array(q{
+				SELECT lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?
+		}, undef, $pid);
 
-	my ($cust) = $dbh->selectrow_array(q{
-			SELECT lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid);
-
-	eprint::login::select_customer( $r, $log, $dbh, $variable->{cookie}, $variable, $cust );
+		eprint::login::select_customer( $r, $log, $dbh, $variable->{cookie}, $variable, $cust );
+	}
 
 	#print STDERR "USER DUMPER" , Dumper($variable);
     # Determine if the project is currently in a quote or order and therefor
