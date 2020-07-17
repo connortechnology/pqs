@@ -12,6 +12,7 @@
 <!--#include virtual="/includes/c1-admin-nav.html" -->
 <div id="content">
 <h1><span class="title-section">Employee &#187;</span> Login Confirmation</h1>
+
 <? if ( $$variable{'USER_GREETING'} ) ?><p>
 <?USER_GREETING?></p>
 <? endif ( $$variable{'USER_GREETING'} ) ?>
@@ -25,6 +26,9 @@
 <?CUSTOMER_CATEGORY_GREETING?></p>
 <? endif ( $$variable{'CUSTOMER_CATEGORY_GREETING'} ) ?>
 <?Destination?>
+</div>
+<div style="font-size: 3em;">
+Click here to View Assigned Jobs: <a href="/employee/production/time_collection.html">Job List</a>
 </div>
 <!--#include virtual="/includes/administrator/admin-footer.html" -->
 </body>
