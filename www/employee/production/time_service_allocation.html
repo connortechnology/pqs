@@ -14,12 +14,35 @@
 	<!--#include virtual="/includes/h2-js.html" -->
 
 	<script type="text/javascript" src="/javascripts/other.js"></script>
-
+	<script type="text/javascript">
+		function do_sort(field) {
+			if ( $('sortfield').value == field ) {
+				$('sortdirection').value *= -1; 
+			} else { 
+				$('sortdirection').value = 1; 
+			}
+	
+			$('sortfield').value = field;
+			 $('f2').submit();
+		}
+	</script>
 	<style>
 		.Urgent { background-color:red}
 		.High { background-color:coral}
 		.Normal { background-color:green}
 		.Low { background-color:beige}
+		#content {
+			position: relative;
+		}
+		#btnSearch {
+			position: absolute;
+			right: 4em;
+			top: 6em;
+			width: 10em;
+			height: 5em;
+			font-size: 2em;
+			border-radius: 1em;
+		}
 	</style>
 </head>
 
@@ -78,8 +101,16 @@
 				<option value=""> ----------------- </option>
 				<?STATUS_LIST?>
 			</select>
-			<br /
+			<br />
             
+           <label for="ddmProjectId">Project ID:</label>
+		   <input id="ddmProjectId" name="ddmProjectId" />
+		   <br />
+		   
+           <label for="ddmOrderId">Order ID:</label>
+		   <input id="ddmOrderId" name="ddmOrderId" />
+		   <br />
+
             <? if ( $$variable{'user_type'} eq 'A' ) ?>
 			<!--Allow all users/see modify list -->
             <? endif ( $$variable{'user_type'} eq 'A' ) ?>
@@ -89,7 +120,7 @@
             <label for="assigned_only">Show only Assigned Services:</label>
 			<input type="checkbox" name="assigned_only" value="1">
 			<br />
-			<button type="submit">Search</button>
+			<button id="btnSearch" type="submit">Search</button>
 			<br />
 
             <label for="ddmUser">Assign To:</label>
@@ -102,18 +133,22 @@
            
 			<br>
 			
+			<!-- ******************* START ****************************** -->
+			<input type="hidden" name="sortfield" 		id="sortfield" value="aaa" />
+			<input type="hidden" name="sortdirection" 	id="sortdirection" value="1" />
+
                 <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
                     <tr>
-                      <th>Department</th>
-                      <th>Priority</th>
-                      <th>Due Date</th>
-                      <th>Order ID</th>
-                      <th>Project ID</th>
-                        <th>Service Name</th>
-                        <th>Equipment</th>
-                        <th>Status</th>
-                        <th>Assigned To</th>
-                        <th>Assign</th>
+                      <th><a href="#" onClick="do_sort('strcategory');" style="color: white;" >Department</a></th>
+                      <th><a href="#" onClick="do_sort('priority');" style="color: white;" >Priority</a></th>
+                      <th><a href="#" onClick="do_sort('daterequired');" style="color: white;" >Due Date</a></th>
+                      <th><a href="#" onClick="do_sort('lngorderid');" style="color: white;" >Order ID</a></th>
+                      <th><a href="#" onClick="do_sort('lngprojectindex');" style="color: white;" >Project ID</a></th>
+                      <th><a href="#" onClick="do_sort('common_name');" style="color: white;" >Service Name</a></th>
+                      <th><a href="#" onClick="do_sort('equipment');" style="color: white;" >Equipment</a></th>
+                      <th><a href="#" onClick="do_sort('strstatus');" style="color: white;" >Status</a></th>
+                      <th><a href="#" onClick="do_sort('assigned_to');" style="color: white;" >Assigned To</a></th>
+                      <th>Assign</th>
                     </tr>
 
 						<?loop SERVICES ?>
