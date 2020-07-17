@@ -308,6 +308,12 @@ sub action {
 			}
 
 		}
+	} elsif ( $action eq 'PriorityStatus' ) {
+		print STDERR "UPDATE PRIORITY \n";
+		foreach my $p ( @{$list} ) {
+			my $proj = new PQS::Object::project($p);
+			PQS::model::project::set_priority_status( $proj->{id}, $value);
+		}
 	}
 
 }
