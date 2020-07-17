@@ -7,6 +7,7 @@ use strict;
 use sql ();
 require misc;
 use Data::Dumper;
+use eprint::dashboard;
 
 sub service_history {
 	my ($r, $dbh, $var) = @_;
@@ -170,7 +171,6 @@ sub time_collection {
 		AND t.userid = ?
 	},{Slice=>{}}, $userid);
 
-	my $esql = q{ SELECT lngindex, strname FROM tbl_equipment ORDER by strname };
 
 	foreach my $x (@{$list}) {
 
@@ -186,6 +186,10 @@ print STDERR "UPDATE ME: $_->{lngserviceindex} \n";
 		}, undef, $userid, $x->{lngserviceindex});
 
 print STDERR "HAVE EQUIPMENT: $e - $userid / $x->lngserviceindex \n";
+		my $esql = qq{ SELECT lngindex, strname FROM tbl_equipment where lngindex in 
+			( select equipment from service_type_equipment ste, tbl_Service_types st 
+				WHERE ste.service_type = st.lngindex AND  st.strid = '$x->{strservicetype}' )  ORDER by strname };
+
 		$x->{EQUIPMENT}  = ssi::fill_drop_down( $r->log, $dbh, $esql, $e );
 		
 		$x->{duration} = $dbh->selectrow_array(q{
@@ -215,6 +219,11 @@ sub service_allocation {
 
 
 	print STDERR "HAVE uncheck", Dumper($r->param('uncheck'));
+	
+	#576
+	my $sortfield = $r->param('sortfield');
+	print STDERR "HAVE SORT FIELD: $sortfield \n";
+
 	if ( $r->param('Update') ) {
 		map { $del->execute($userid, $_) if $_ } $r->param('uncheck');
 		map { $ins->execute($userid, $_) } $r->param('assign');
@@ -242,6 +251,16 @@ sub service_allocation {
 	if ( $r->param('ddmEquipment') ) {
 		$filters  .= " AND pc.equipment = ? ";
 		push @params, $r->param('ddmEquipment');
+	}
+	
+	if ( $r->param('ddmProjectId') ) {
+		$filters  .= " AND p.lngprojectindex = ? ";
+		push @params, $r->param('ddmProjectId');
+	}
+	
+	if ( $r->param('ddmOrderId') ) {
+		$filters  .= " AND c.lngorderid = ? ";
+		push @params, $r->param('ddmOrderId');
 	}
 
 
@@ -291,6 +310,8 @@ print STDERR "HAVE SQL: $list_sql FOR USER: $userid ";
 #print STDERR Dumper($list);
 
 	my @assigned;
+	my $sortfield = $r->param('sortfield');
+
 	map { 
 		$_->{assigned_to} = join(',',
 			@{$dbh->selectcol_arrayref(q{
@@ -306,15 +327,14 @@ print STDERR "HAVE SQL: $list_sql FOR USER: $userid ";
 
 		print STDERR "HAVE $_->{lngprojectindex} - $_->{a} - $_->{service} \n";
 
+		$_->{sortdata} = $_->{$sortfield};
 		push @assigned, $_->{lngserviceindex} if $_->{a};
 	} @{$list};
 
-
-
+	eprint::dashboard::apply_sort($list, { sortdirection => $r->param('sortdirection')} );
 
 	$var->{SERVICES} = $list;
-
-	my $sql = q{ SELECT lnguserid, strfirstname || ' ' || strlastname FROM tbl_customer_users WHERE chrType = 'A'  };
+	my $sql = q{ SELECT lnguserid, strfirstname || ' ' || strlastname FROM tbl_customer_users WHERE chrType = 'A' or chrType = 'E' ORDER BY strfirstname, strlastname};
 	$var->{USERS} = ssi::fill_drop_down( $r->log, $dbh, $sql, $r->param('ddmUser') );
 
 
