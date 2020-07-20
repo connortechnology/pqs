@@ -181,9 +181,11 @@ sub insert_to_emaildb {
     my @k = keys $mail;
     foreach my $key (@k){
         if ($key =~ /(subject)/i){
+			eval {
             $dbh->  do("INSERT INTO public.tbl_email(from_address, to_address, subject, attachmentname)
             VALUES (?, ?, ?, ?)" , undef, $mail->{FROM}, $mail->{TO}, $mail->{$key}, $attachmentname);
             print STDERR "EMAIL HISTORY SAVED IN TBL_EMAIL DATABASE \n";
+			}
         }
     }
 }
