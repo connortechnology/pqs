@@ -190,7 +190,8 @@ sub insert_to_emaildb {
 	eval {
 		$dbh->  do("INSERT INTO public.tbl_email(from_address, to_address, subject, attachmentname)
 		VALUES (?, ?, ?, ?)" , undef, $mail->{FROM}, $mail->{TO}, $subject, $attachmentname);
-	}
+	};
+
     print STDERR "$mail->{FROM}, $mail->{TO}, $subject EMAIL HISTORY SAVED IN TBL_EMAIL DATABASE \n";
     
 }
