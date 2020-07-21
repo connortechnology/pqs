@@ -1,3 +1,15 @@
+<style>
+	.indent:nth-child(3n){
+		background-color: #F9E6EC;
+	}
+	.indent:nth-child(3n-1){
+		background-color: #F0FFBD;
+	}
+	.indent:nth-child(3n-2){
+		background-color: #C2E7FA;
+	}
+</style>
+
 <?if NoPrint?>
 <?desc?>
 No Printing <!-- <?chargefor?> -->
@@ -17,133 +29,6 @@ No Printing <!-- <?chargefor?> -->
 		Indoor
 	<? endif ($$variable{outdoor_printing}) ?>
 <? endif ( $$variable{pressType} eq 'inkjetprinter' ) ?>
-
-
-<div class="indent">
-
-	<span class="label">Press:&nbsp;&nbsp;</span>
-	<?hdnPress?> 
-	
-    <div style=" padding-left: 2em; ">
-		
-<? if ( $$variable{pressType} ne 'inkjetprinter' ) ?>
-		<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
-  <tr>
-    <td width="50%"><span class="label">Run Style: </span> &nbsp;
-		<?if SIDE.1?><?runstyle?> <?else SIDE.1?> One Sided<?endif SIDE.1?></td>
-    <td width="50%"><span class="label">
-					<?if ( $variable->{pressType} eq 'digital' ) ?>
-					<?else ( $variable->{pressType} eq 'digital' ) ?>
-    					<?if ($$variable{'pressType'} ne 'screen') ?>Plates:
-						<?else ($$variable{'pressType'} ne 'screen') ?>Screens:
-						<?endif($$variable{'pressType'} ne 'screen') ?>
-					</span>
-                    &nbsp;<?txtPlateQuantity?> 
-                    <? if($$variable{'pressType'} ne 'screen')?>
-					&nbsp;<?plate_type?>
-					<? endif($$variable{'pressType'} ne 'screen') ?></td>
-					<?endif ( $variable->{pressType} eq 'digital' ) ?>
-  </tr>
-  <tr>
-    <td><span class="label">Colour Bars: </span>
-		<? if ( $$variable{'colour_bar'} == 1 ) ?>
-			&nbsp;Yes
-		<? else ( $$variable{'colour_bar'} == 1 ) ?>
-			&nbsp;No
-		<? endif ( $$variable{'colour_bar'} == 1 ) ?></td>
-        <? endif ( $$variable{pressType} ne 'inkjetprinter' ) ?>
-    <td><span class="label">Approval: </span>
-		<? if ( $$variable{'needs_approval'} == 1 ) ?>
-			&nbsp;Yes
-		<? else ( $$variable{'needs_approval'} == 1 ) ?>
-			&nbsp;No
-		<? endif ( $$variable{'needs_approval'} == 1 ) ?></td>
-  </tr>
-  <tr>
-    <td><span class="label">Colour Match: </span>&nbsp;<?ddmColourMatch?></td>
-    <td><span class="label">Forms:&nbsp;&nbsp;</span>
-		<?txtSignatureQuantity?></td>
-  </tr>
-  <tr>
-    <td><span class="label">UPS: </span>&nbsp;<?hdnImposition?></td>
-  </tr>
-</table>
-       
-	</div>	
-<br />
-
-		<!-- Colour Information Per Side -->
-		<div style=" padding-left: 2em; ">
-           <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
-  <tr>
-    <td width="50%"><span class="label">SIDE <?SIDE.0.side?></span>
-			<span class="label" ><br />Inks: </span>
-			&nbsp;<?SIDE.0.std?>
-			<? if  ($$variable{SIDE}[0]{pms}) ?>
-				<? if  ($$variable{SIDE}[0]{std}) ?>
-					<span class="label"> + </span>
-				<? else  ($$variable{SIDE}[0]{std}) ?>
-					<span class="label">PMS </span>
-				<? endif  ($$variable{SIDE}[0]{std}) ?>
-
-			    &nbsp;<?SIDE.0.pms?>
-			<? endif  ($$variable{SIDE}[0]{pms}) ?>
-
-			<? if  ($$variable{SIDE}[0]{varnish}) ?>
-			<span class="label"><br /> Varnish: </span>
-				&nbsp;<?SIDE.0.varnish?>
-			<? endif  ($$variable{SIDE}[0]{varnish}) ?>
-			<? if  ($$variable{SIDE}[0]{coating}) ?>
-			<span class="label"><br /> Coating: </span>
-				&nbsp;<?SIDE.0.coating?>
-			<? endif  ($$variable{SIDE}[0]{coating}) ?>
-			<? if lf_coverage ?>
-				<span class="label"><br /> Coverage: </span>
-				&nbsp;<?SIDE.0.lf_coverage?>
-			<? endif lf_coverage ?>
-			<? if lf_quality ?>
-				<span class="label"><br /> Quality: </span>
-				&nbsp;<?SIDE.0.lf_quality?>
-			<? endif lf_quality ?></td>
-            
-	<?if SIDE.1?>
-    <td width="50%"><span class="label">SIDE <?SIDE.1.side?></span>
-			<span class="label" ><br />Inks: </span>
-			&nbsp;<?SIDE.1.std?>
-			<? if  ($$variable{SIDE}[1]{pms}) ?>
-				<? if  ($$variable{SIDE}[1]{std}) ?>
-					<span class="label"> + </span>
-				<? else  ($$variable{SIDE}[1]{std}) ?>
-					<span class="label">PMS </span>
-				<? endif  ($$variable{SIDE}[1]{std}) ?>
-
-			    &nbsp;<?SIDE.1.pms?>
-			<? endif  ($$variable{SIDE}[1]{pms}) ?>
-
-			<? if  ($$variable{SIDE}[1]{varnish}) ?>
-			<span class="label"><br /> Varnish: </span>
-				&nbsp;<?SIDE.1.varnish?>
-			<? endif  ($$variable{SIDE}[1]{varnish}) ?>
-			<? if  ($$variable{SIDE}[1]{coating}) ?>
-			<span class="label"><br /> Coating: </span>
-				&nbsp;<?SIDE.1.coating?>
-			<? endif  ($$variable{SIDE}[1]{coating}) ?>
-			<? if lf_coverage ?>
-				<span class="label"><br /> Coverage: </span>
-				&nbsp;<?SIDE.1.lf_coverage?>
-			<? endif lf_coverage ?>
-			<? if lf_quality ?>
-				<span class="label"><br /> Quality: </span>
-				&nbsp;<?SIDE.1.lf_quality?>
-			<? endif lf_quality ?></td>
-	<?endif SIDE.1?>
-  </tr>
-  
-</table>  
-            
-           
-		</div>
-
 
 	<? if ($$variable{s0_laminate}) ?>
 		<span class="label">Lamination: </span>
@@ -167,152 +52,294 @@ No Printing <!-- <?chargefor?> -->
 		<!-- Version Information -->
 		<? if ( $$variable{FORMS} ) ?>
 		<span class="label"> <br />VERSION INFORMATION </span>
+		<br/>
 		<br />
 			<?loop FORMS?>
+			<div class="indent">
+				<div class= "versionBG">
 
-		<table class="no-formatting no-padding" style="margin: 0 0 10px 0; border-bottom: 5px solid;" cellspacing="0" cellpadding="0" border="0" >
+				<span class="label">Press:&nbsp;&nbsp;</span>
+				<?hdnPress?> 
+				
+				<div style=" padding-left: 2em; ">
+					
+			<? if ( $$variable{pressType} ne 'inkjetprinter' ) ?>
+					<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+						<tr>
+							<td width="50%"><span class="label">Run Style: </span> &nbsp;
+								<?if SIDE.1?><?runstyle?> <?else SIDE.1?> One Sided<?endif SIDE.1?></td>
+							<td width="50%">
+								<span class="label">
+								<?if ( $variable->{pressType} eq 'digital' ) ?>
+								<?else ( $variable->{pressType} eq 'digital' ) ?>
+									<?if ($$variable{'pressType'} ne 'screen') ?>Plates:
+									<?else ($$variable{'pressType'} ne 'screen') ?>Screens:
+									<?endif($$variable{'pressType'} ne 'screen') ?>
+								</span>
+								&nbsp;<?txtPlateQuantity?> 
+								<? if($$variable{'pressType'} ne 'screen')?>
+								&nbsp;<?plate_type?>
+								<? endif($$variable{'pressType'} ne 'screen') ?></td>
+								<?endif ( $variable->{pressType} eq 'digital' ) ?>
+						</tr>
+						<tr>
+							<td><span class="label">Colour Bars: </span>
+								<? if ( $$variable{'colour_bar'} == 1 ) ?>
+									&nbsp;Yes
+								<? else ( $$variable{'colour_bar'} == 1 ) ?>
+									&nbsp;No
+								<? endif ( $$variable{'colour_bar'} == 1 ) ?></td>
+								<? endif ( $$variable{pressType} ne 'inkjetprinter' ) ?>
+							<td><span class="label">Approval: </span>
+								<? if ( $$variable{'needs_approval'} == 1 ) ?>
+									&nbsp;Yes
+								<? else ( $$variable{'needs_approval'} == 1 ) ?>
+									&nbsp;No
+								<? endif ( $$variable{'needs_approval'} == 1 ) ?></td>
+						</tr>
+						<tr>
+							<td><span class="label">Colour Match: </span>&nbsp;<?ddmColourMatch?></td>
+							<td><span class="label">Forms:&nbsp;&nbsp;</span>
+								<?txtSignatureQuantity?></td>
+						</tr>
+						<tr>
+							<td><span class="label">UPS: </span>&nbsp;<?hdnImposition?></td>
+						</tr>
+					</table>
+				</div>	
+			<br />
+			<!-- Colour Information Per Side -->
+		<div style=" padding-left: 2em; ">
+			<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+				<tr>
+					<td width="50%"><span class="label">SIDE <?SIDE.0.side?></span>
+							<span class="label" ><br />Inks: </span>
+							&nbsp;<?SIDE.0.std?>
+							<? if  ($$variable{SIDE}[0]{pms}) ?>
+								<? if  ($$variable{SIDE}[0]{std}) ?>
+									<span class="label"> + </span>
+								<? else  ($$variable{SIDE}[0]{std}) ?>
+									<span class="label">PMS </span>
+								<? endif  ($$variable{SIDE}[0]{std}) ?>
+				
+								&nbsp;<?SIDE.0.pms?>
+							<? endif  ($$variable{SIDE}[0]{pms}) ?>
+				
+							<? if  ($$variable{SIDE}[0]{varnish}) ?>
+							<span class="label"><br /> Varnish: </span>
+								&nbsp;<?SIDE.0.varnish?>
+							<? endif  ($$variable{SIDE}[0]{varnish}) ?>
+							<? if  ($$variable{SIDE}[0]{coating}) ?>
+							<span class="label"><br /> Coating: </span>
+								&nbsp;<?SIDE.0.coating?>
+							<? endif  ($$variable{SIDE}[0]{coating}) ?>
+							<? if lf_coverage ?>
+								<span class="label"><br /> Coverage: </span>
+								&nbsp;<?SIDE.0.lf_coverage?>
+							<? endif lf_coverage ?>
+							<? if lf_quality ?>
+								<span class="label"><br /> Quality: </span>
+								&nbsp;<?SIDE.0.lf_quality?>
+							<? endif lf_quality ?></td>
+							
+					<?if SIDE.1?>
+					<td width="50%"><span class="label">SIDE <?SIDE.1.side?></span>
+							<span class="label" ><br />Inks: </span>
+							&nbsp;<?SIDE.1.std?>
+							<? if  ($$variable{SIDE}[1]{pms}) ?>
+								<? if  ($$variable{SIDE}[1]{std}) ?>
+									<span class="label"> + </span>
+								<? else  ($$variable{SIDE}[1]{std}) ?>
+									<span class="label">PMS </span>
+								<? endif  ($$variable{SIDE}[1]{std}) ?>
+				
+								&nbsp;<?SIDE.1.pms?>
+							<? endif  ($$variable{SIDE}[1]{pms}) ?>
+				
+							<? if  ($$variable{SIDE}[1]{varnish}) ?>
+							<span class="label"><br /> Varnish: </span>
+								&nbsp;<?SIDE.1.varnish?>
+							<? endif  ($$variable{SIDE}[1]{varnish}) ?>
+							<? if  ($$variable{SIDE}[1]{coating}) ?>
+							<span class="label"><br /> Coating: </span>
+								&nbsp;<?SIDE.1.coating?>
+							<? endif  ($$variable{SIDE}[1]{coating}) ?>
+							<? if lf_coverage ?>
+								<span class="label"><br /> Coverage: </span>
+								&nbsp;<?SIDE.1.lf_coverage?>
+							<? endif lf_coverage ?>
+							<? if lf_quality ?>
+								<span class="label"><br /> Quality: </span>
+								&nbsp;<?SIDE.1.lf_quality?>
+							<? endif lf_quality ?></td>
+					<?endif SIDE.1?>
+				</tr>
+			</table>  
+		 </div>
+		 <br/>
+		<table class="no-formatting no-padding" style="margin: 0 0 10px 0" cellspacing="0" cellpadding="0" border="0" >
 				<tr>
 					<td colspan="4" style="padding-left: 1em;"><strong><?label?></strong> 
 				<tr>
-				
 				<?loop VERSIONS?>
-					<tr>
+				<tr>
 						<td style="padding-left: 2em;"><?label?></td>
-						<td style="padding-left: 2em;"><strong>Req Qty:&nbsp;&nbsp;</strong>
-							 <?int:requested_qty?></td>
-						<td style="padding-left: 2em;">(<?float:requested?> %)</td>
-						<td style="padding-left: 2em;"><strong>Qty Out:&nbsp;&nbsp;</strong>
-							 <?slots?></td>
-						<td style="padding-left: 2em;"><strong>Printed Qty:&nbsp;&nbsp;</strong>
-							 <?int:final_qty?></td>
+						<td style="padding-left: 2em;">
+							<strong>Req Qty: &nbsp;</strong><?int:requested_qty?>
+						</td>
+						<td style="padding-left: 2em;">
+							(<?float:requested?> %)
+						</td>
+						<td style="padding-left: 2em;">
+							<strong>Qty Out: </strong> <?slots?>
+						</td>
+						<td style="padding-left: 2em;">
+							<strong>Printed Qty: </strong> <?int:final_qty?>
+						</td>
 					</tr>
 				<?endloop VERSIONS?>
 				<tr>
-					<td colspan="4" style="padding: 1em 0 1em 2em; font-size: 30px;">Net Sheets: &nbsp;&nbsp;<strong><?net_sheets?></strong></td>
-				<tr>
-		
+					<td colspan="6" style="padding: 1em 2em; font-size: 30px;"> 
+						Net Sheets: &nbsp;&nbsp;<strong><?net_sheets?></strong> &nbsp;&nbsp;(<?eachversiontotal?> %) 
+					</td>
+				</tr>
+				<!-- <tr>
+					<td colspan="4" style="padding: 0 0 1em 2em; font-size: 20px;"> 
+						<span class="label">Overs Qty: &nbsp<??></span>
+						<form action="/main/proj/proj_docket.html" name=fco >
+						<input name="eachcustomovers<?ServiceIndex?>" placeholder="Update"/> 
+						<input type="hidden" name="sid" value="<?ServiceIndex?>" >
+						<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" >
+						</form>
+					</td>
+					<td><span class="label">Press Count:&nbsp;&nbsp;______________</span></td>
+				</tr> -->
 		</table>
+		
+
+	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
+	<? if ($$variable{stock_custom}) ?>
+		<span class="label"><br />Customer Supplied Stock: </span>
+		<br /><?stock_custom?>
+		<br />
+	<? endif ($$variable{stock_custom}) ?>	
+<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
+
+
+
+<!- ***** START PAPER INFO HERE ******** ->
+<span class="label"><br />STOCK </span>
+
+
+
+<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
+	
+
+
+
+	<br /><?hdnSheetSizeHeight?> x <?hdnSheetSizeWidth?>
+
+	<? if ($$variable{stock_custom}) ?>
+		<span class="label">Estimated Value: </span>
+		<?stock_finish?> , <?stock_weight?>
+	<? else ($$variable{stock_custom}) ?>
+		- <?stock_name?> , <?stock_finish?> , <?stock_colour?> , <?stock_weight?>, <?txtStockCalliper?>
+	<? endif ($$variable{stock_custom}) ?>
+	<br />
+
+	<?if ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
+
+	<span> Cut From: </span>
+	<span style="padding: 5px 20px 0 0"> <?hdnSuppliedStockWidth?> x <?hdnSuppliedStockHeight?></span>
+	<span style="padding: 0 20px 0 0"><?PaperOut?> Out</span> 
+	
+	<span style="padding: 0 20px 0 0"> Parent Sheet Count: <?hdnPaperBuyQuantity1?> </span> 
+
+	<?endif ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
+
+	<?eval( $variable->{SheetHeight} = $variable->{txtStockCalliper} * $variable->{hdnPaperBuyQuantity1} ) ?>
+	<span> Parent Sheet Height: <span> <?SheetHeight?> </span></span>
+
+
+	<br />
+
+	<br />
+
+
+
+<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
+
+<!- ***** END PAPER INFO HERE ******** ->
+
+<? if ($variable->{pressType} ne 'inkjetprinter') ?>
+<div style=" padding-left: 2em; border-bottom: 5px solid;">
+<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
+<tr style="height:50px;">
+<td width="50%"><span class="label">Gross Qty: </span>
+	<? if ( $$variable{'QtyIndex'} == 1 ) ?>
+		&nbsp;<?hdnSheetQuantity1?><br />
+	<? endif ( $$variable{'QtyIndex'} == 1 ) ?>
+	<? if ( $$variable{'QtyIndex'} == 2 ) ?>
+		&nbsp;<?hdnSheetQuantity2?><br />
+	<? endif ( $$variable{'QtyIndex'} == 2 ) ?>
+	<? if ( $$variable{'QtyIndex'} == 3 ) ?>
+		&nbsp;<?hdnSheetQuantity3?><br />
+	<? endif ( $$variable{'QtyIndex'} == 3 ) ?></td>
+<td width="50%">
+	<span class="label">Net Qty: 
+		<? if ( $$variable{'QtyIndex'} == 1  ) ?>
+		<!-- <?eval ( $variable->{hdnNetSheetCount1} += $variable->{CustomOvers} ) ?> -->
+		<?eval ( $variable->{hdnNetSheetCount1}) ?> &nbsp;<?hdnNetSheetCount1?><br />
+		<? endif ( $$variable{'QtyIndex'} == 1  ) ?>
+		<? if ( $$variable{'QtyIndex'} == 2  ) ?>
+			&nbsp;<?hdnNetSheetCount2?><br />
+		<? endif ( $$variable{'QtyIndex'} == 2  ) ?>
+		<? if ( $$variable{'QtyIndex'} == 3  ) ?>
+			&nbsp;<?hdnNetSheetCount3?><br />
+		<? endif ( $$variable{'QtyIndex'} == 3  ) ?>
+
+	</span>
+</td>
+</tr>
+<tr>
+  <td>
+	  <span class="label">Overs Qty:&nbsp<?CustomOvers?></span>
+	  <form action="/main/proj/proj_docket.html" name=fco > 
+	  <input name="customovers" style="width: 5em; font-size:0.6em; height:1.5em" placeholder=" Update">
+	  <input type="hidden" name="sid" value="<?ServiceIndex?>" >
+	  <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" >
+	  </form>
+	  
+	  
+  </td>
+<td><span class="label">Press Count:&nbsp;&nbsp;______________</span></td>
+</tr>
+<tr>
+<td><span class="label">Grain: </span>
+	<? if ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
+		&nbsp;No Preference
+	<? else ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
+		<? if ( $$variable{'grain_direction'} == 1 ) ?>
+			&nbsp;Height
+		<? else ( $$variable{'grain_direction'} == 1 ) ?>
+			&nbsp;Width
+		<? endif ( $$variable{'grain_direction'} == 1 ) ?>
+	<? endif ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?></td>
+	<? endif ($variable->{pressType} ne 'inkjetprinter') ?>
+<td><? if ($$variable{'stock_supplied'})?>
+<span class="label"><br />Customer Supplied: </span>&nbsp;Yes	
+<? endif ($$variable{'stock_supplied'})?></td>
+</tr>
+</table>
+</div>
+		</div> <!-- Background Color Ends-->
+			
+	</div> <!-- Indent Ends-->
+	<p style="page-break-before: always"> 
 			<?endloop FORMS?>
 		<? endif ( $$variable{FORMS} ) ?>
 		<!-- END Version Information -->
 
-
-	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
-		<? if ($$variable{stock_custom}) ?>
-			<span class="label"><br />Customer Supplied Stock: </span>
-			<br /><?stock_custom?>
-			<br />
-		<? endif ($$variable{stock_custom}) ?>	
-	<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
-
-
-
-	<!- ***** START PAPER INFO HERE ******** ->
-	<span class="label"><br />STOCK </span>
-
-
-
-	<?if ($$variable{'ProjectType'} ne 'ScreenItem')?>
-		
-
-	
-
-		<br /><?hdnSheetSizeHeight?> x <?hdnSheetSizeWidth?>
-
-		<? if ($$variable{stock_custom}) ?>
-			<span class="label">Estimated Value: </span>
-			<?stock_finish?> , <?stock_weight?>
-		<? else ($$variable{stock_custom}) ?>
-			- <?stock_name?> , <?stock_finish?> , <?stock_colour?> , <?stock_weight?>, <?txtStockCalliper?>
-		<? endif ($$variable{stock_custom}) ?>
-		<br />
-
-		<?if ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
-
-		<span> Cut From: </span>
-		<span style="padding: 5px 20px 0 0"> <?hdnSuppliedStockWidth?> x <?hdnSuppliedStockHeight?></span>
-		<span style="padding: 0 20px 0 0"><?PaperOut?> Out</span> 
-		
-		<span style="padding: 0 20px 0 0"> Parent Sheet Count: <?hdnPaperBuyQuantity1?> </span> 
-
-		<?endif ( $variable->{hdnSuppliedStockWidth} != $variable->{hdnSheetSizeWidth} || $variable->{hdnSuppliedStockHeight} != $variable->{hdnSheetSizeHeight} ) ?>
-
-		<?eval( $variable->{SheetHeight} = $variable->{txtStockCalliper} * $variable->{hdnPaperBuyQuantity1} ) ?>
-		<span> Parent Sheet Height: <span> <?SheetHeight?> </span></span>
-
-
-		<br />
-
-		<br />
-
-
-
-	<?endif ($$variable{'ProjectType'} ne 'ScreenItem')?>
-
-	<!- ***** END PAPER INFO HERE ******** ->
-	
-	<? if ($variable->{pressType} ne 'inkjetprinter') ?>
-    <div style=" padding-left: 2em; ">
-<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
-  <tr style="height:50px;">
-    <td width="50%"><span class="label">Gross Qty: </span>
-		<? if ( $$variable{'QtyIndex'} == 1 ) ?>
-			&nbsp;<?hdnSheetQuantity1?><br />
-		<? endif ( $$variable{'QtyIndex'} == 1 ) ?>
-		<? if ( $$variable{'QtyIndex'} == 2 ) ?>
-			&nbsp;<?hdnSheetQuantity2?><br />
-		<? endif ( $$variable{'QtyIndex'} == 2 ) ?>
-		<? if ( $$variable{'QtyIndex'} == 3 ) ?>
-			&nbsp;<?hdnSheetQuantity3?><br />
-		<? endif ( $$variable{'QtyIndex'} == 3 ) ?></td>
-    <td width="50%">
-		<span class="label" style="font-size: 20pt;">Net Qty: 
-			<? if ( $$variable{'QtyIndex'} == 1  ) ?>
-			<?eval ( $variable->{hdnNetSheetCount1} += $variable->{CustomOvers} ) ?>
-				&nbsp;<?hdnNetSheetCount1?><br />
-			<? endif ( $$variable{'QtyIndex'} == 1  ) ?>
-			<? if ( $$variable{'QtyIndex'} == 2  ) ?>
-				&nbsp;<?hdnNetSheetCount2?><br />
-			<? endif ( $$variable{'QtyIndex'} == 2  ) ?>
-			<? if ( $$variable{'QtyIndex'} == 3  ) ?>
-				&nbsp;<?hdnNetSheetCount3?><br />
-			<? endif ( $$variable{'QtyIndex'} == 3  ) ?>
-
-		</span>
-	</td>
-  </tr>
-  <tr>
-	  <td>
-		  <span class="label">Overs Qty:&nbsp<?CustomOvers?></span>
-		  <form action="/main/proj/proj_docket.html" name=fco > 
-		  <input name="customovers" style="width: 5em; font-size:0.6em; height:1.5em" placeholder=" Update">
-		  <input type="hidden" name="sid" value="<?ServiceIndex?>" >
-		  <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" >
-		  </form>
-		  
-		  
-	  </td>
-    <td><span class="label">Press Count:&nbsp;&nbsp;______________</span></td>
-  </tr>
-  <tr>
-    <td><span class="label">Grain: </span>
-		<? if ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
-			&nbsp;No Preference
-		<? else ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
-			<? if ( $$variable{'grain_direction'} == 1 ) ?>
-				&nbsp;Height
-			<? else ( $$variable{'grain_direction'} == 1 ) ?>
-				&nbsp;Width
-			<? endif ( $$variable{'grain_direction'} == 1 ) ?>
-		<? endif ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?></td>
-        <? endif ($variable->{pressType} ne 'inkjetprinter') ?>
-    <td><? if ($$variable{'stock_supplied'})?>
-	<span class="label"><br />Customer Supplied: </span>&nbsp;Yes	
-<? endif ($$variable{'stock_supplied'})?></td>
-  </tr>
-</table>
-</div>
-</div>
 
 <!-- <?hdnPaperBuyQuantity1?> <?hdnPaperBuyQuantity2?> <?hdnPaperBuyQuantity3?> -->
 <?endif NoPrint?>

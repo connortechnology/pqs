@@ -1057,6 +1057,19 @@ sub printing {
 	    print STDERR "CUSTOM OVERS: $sid, $overs \n";
 
     }
+
+    # custom over for each version ( not working / error )    
+    my $customoverssid = 'eachcustomovers'.$sid;
+    if ( $r->param($customoverssid) ne '' ) {
+	    my $overs = $r->param($customoverssid);
+	    my $sid = $r->param('sid');
+
+	    #$dbh->do("DELETE FROM tbl_service_Specifications WHERE lngserviceindex = $sid AND strname = $customoverssid");
+        #$dbh->do("INSERT INTO tbl_service_Specifications VALUES ( $pid, $sid, $customoverssid, $overs, true)");
+	    print STDERR "CUSTOM OVERS: $sid, $overs \n";
+
+    }
+
     my %hash;
     my $signatureIndex            = 0;
     my @signature_service_indices =
@@ -1391,32 +1404,41 @@ sub printing {
 	# Std Project qtys from project.pm
     my @qtys = get_quantities($log,  $dbh, $pid);
     my $qty  = $qtys[$qtyIndex-1];
+    my $implength = scalar @{$imp->{layout}};
 
-    if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
+    # if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
+    if ($imp and (@{$imp->{layout}} > 0 or @{$imp->{layout}[0]} > 0)) {
         # If there's more than one version, list the versions. We don't care
         # what sheet they're on, just the version information.
-		my $i;
+        my $eachversiontotal = 0;
 		foreach my $f (@{ $imp->{layout} }) {
 
 			my %form;
 
 			$form{VERSIONS} = [ 
-				sort { $a->{requested_qty} <=> $b->{requested_qty} } 
+				sort { $a->{requested_qty} <=> $b->{requested_qty} }
 
-				
 				# Count the net press sheets per form.
-				map  { 
-					   $_->{'requested_qty1' } = $_->{requested} / 100 * $qtys[0];
+				map  { $form{total_req} = $_->{requested};
+                       $eachversiontotal +=  $_->{requested};
+        			   $_->{'requested_qty1' } = $_->{requested} / 100 * $qtys[0];
 					   $_->{'requested_qty2' } = $_->{requested} / 100 * $qtys[1];
 					   $_->{'requested_qty3' } = $_->{requested} / 100 * $qtys[2];
 					   $_->{requested_qty} = round $_->{requested} / 100 * $qty;
 					   $_->{final_qty} = ceil($_->{final} / 100 * $qty);
 					   $_ } @{$f} ];
 
-			$form{net_sheets} = ceil(@{$f}[0]->{final_qty} / @{$f}[0]->{slots});
+			# $form{net_sheets} = ceil(@{$f}[0]->{final_qty} / @{$f}[0]->{slots});
+			# $form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);			# $form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
+			$form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
+
+            # $form{net_sheets} =+ ceil($results{CustomOvers} / $implength);
+            $form{eachversiontotal} =  $eachversiontotal ;
+            # $form{gross_sheets} = ceil($results{hdnSheetQuantity1} * ( $form{total_req} / 100));
 
 
 			push @{ $results{FORMS} }, \%form;
+            $eachversiontotal = 0;
 
 		}
 	} else { 
@@ -1637,7 +1659,9 @@ sub header_info {
     my $press     = '';
     my $run_style = '';
     my $forms;
+	my $i;
 
+    
     foreach my $sigIndex (@signature_service_indices) {
         # Side n colours and coatings.
         my @keys = qw(
@@ -1680,7 +1704,7 @@ sub header_info {
                 if $results{"s${s}_coating_type"};
         }
         my %specs = eprint::service::get_specifications_pairs(
-              $log, $dbh, undef, $sigIndex, qw(hdnPress runstyle side_link imp)
+              $log, $dbh, undef, $sigIndex, qw(hdnPress runstyle side_link imp txtServiceDescription)
         );
 
 # CUSTOM CODE FOR FLASH
@@ -1696,12 +1720,14 @@ sub header_info {
     if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
         # If there's more than one version, list the versions. We don't care
         # what sheet they're on, just the version information.
-		my $i;
+
 		foreach my $f (@{ $imp->{layout} }) {
 			$i++; # Count the number of Forms
 
 			my %form;
-			$form{label} = "Form $i";
+            my $label = $specs{txtServiceDescription} || "Form $i";
+			$form{label} = $label;
+            #die(Dumper(%specs));
 
 			$form{VERSIONS} = [ 
 				sort { $a->{label} cmp $b->{label} } 
