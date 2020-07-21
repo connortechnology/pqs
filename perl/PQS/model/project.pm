@@ -28,6 +28,14 @@ sub get_status {
 
 }
 
+sub set_priority_status {
+	my $order  = shift;
+    my $status  = shift;
+  	my $dbh = session::dbh;
+
+	$dbh->do(q{update tbl_projects set lngpriority = ? where lngprojectindex = ?}, undef, $status, $order);
+}
+
 sub get {
 	my $dbh = session::dbh;
 	my $pid = shift;
