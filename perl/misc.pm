@@ -179,15 +179,18 @@ sub insert_to_emaildb {
     my $dbh = session::dbh;
 
     my @k = keys $mail;
+    my $subject;
     foreach my $key (@k){
         if ($key =~ /(subject)/i){
-			eval {
-            $dbh->  do("INSERT INTO public.tbl_email(from_address, to_address, subject, attachmentname)
-            VALUES (?, ?, ?, ?)" , undef, $mail->{FROM}, $mail->{TO}, $mail->{$key}, $attachmentname);
-            print STDERR "EMAIL HISTORY SAVED IN TBL_EMAIL DATABASE \n";
-			}
+            $subject = $mail->{$key};
         }
     }
+	eval {
+		$dbh->  do("INSERT INTO public.tbl_email(from_address, to_address, subject, attachmentname)
+		VALUES (?, ?, ?, ?)" , undef, $mail->{FROM}, $mail->{TO}, $subject, $attachmentname);
+	};
+    print STDERR "$mail->{FROM}, $mail->{TO}, $subject EMAIL HISTORY SAVED IN TBL_EMAIL DATABASE \n";
+    
 }
 # We now use the SSI insert_html (which really just slurps in a file) as it
 # respects site_specific directory changes and overrides.

@@ -1057,6 +1057,19 @@ sub printing {
 	    print STDERR "CUSTOM OVERS: $sid, $overs \n";
 
     }
+
+    # custom over for each version ( not working / error )    
+    my $customoverssid = 'eachcustomovers'.$sid;
+    if ( $r->param($customoverssid) ne '' ) {
+	    my $overs = $r->param($customoverssid);
+	    my $sid = $r->param('sid');
+
+	    #$dbh->do("DELETE FROM tbl_service_Specifications WHERE lngserviceindex = $sid AND strname = $customoverssid");
+        #$dbh->do("INSERT INTO tbl_service_Specifications VALUES ( $pid, $sid, $customoverssid, $overs, true)");
+	    print STDERR "CUSTOM OVERS: $sid, $overs \n";
+
+    }
+
     my %hash;
     my $signatureIndex            = 0;
     my @signature_service_indices =
@@ -1391,8 +1404,10 @@ sub printing {
 	# Std Project qtys from project.pm
     my @qtys = get_quantities($log,  $dbh, $pid);
     my $qty  = $qtys[$qtyIndex-1];
+    my $implength = scalar @{$imp->{layout}};
 
-    if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
+    # if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
+    if ($imp and (@{$imp->{layout}} > 0 or @{$imp->{layout}[0]} > 0)) {
         # If there's more than one version, list the versions. We don't care
         # what sheet they're on, just the version information.
         my $eachversiontotal = 0;
@@ -1415,12 +1430,13 @@ sub printing {
 					   $_->{final_qty} = ceil($_->{final} / 100 * $qty);
 					   $_ } @{$f} ];
 
+			# $form{net_sheets} = ceil(@{$f}[0]->{final_qty} / @{$f}[0]->{slots});
+			# $form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);			# $form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
+			$form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
 
-			$form{net_sheets} = ceil(@{$f}[0]->{final_qty} / @{$f}[0]->{slots});
-            $form{net_sheets} += ceil($results{CustomOvers} * ( $form{total_req} / 100));
+            # $form{net_sheets} =+ ceil($results{CustomOvers} / $implength);
             $form{eachversiontotal} =  $eachversiontotal ;
-            $form{eachversiongrosstotal} = ceil($results{hdnSheetQuantity1} * $eachversiontotal /100);
-            $form{gross_sheets} = ceil($results{hdnSheetQuantity1} * ( $form{total_req} / 100));
+            # $form{gross_sheets} = ceil($results{hdnSheetQuantity1} * ( $form{total_req} / 100));
 
 
 			push @{ $results{FORMS} }, \%form;
@@ -1636,6 +1652,7 @@ sub header_info {
     my $press     = '';
     my $run_style = '';
     my $forms;
+	my $i;
 
 	my $max_versions = 1;
     foreach my $sigIndex (@signature_service_indices) {
@@ -1680,7 +1697,7 @@ sub header_info {
                 if $results{"s${s}_coating_type"};
         }
         my %specs = eprint::service::get_specifications_pairs(
-              $log, $dbh, undef, $sigIndex, qw(hdnPress runstyle side_link imp)
+              $log, $dbh, undef, $sigIndex, qw(hdnPress runstyle side_link imp txtServiceDescription)
         );
 
 # CUSTOM CODE FOR FLASH
@@ -1704,7 +1721,9 @@ sub header_info {
 			$i++; # Count the number of Forms
 
 			my %form;
-			$form{label} = "Form $i";
+            my $label = $specs{txtServiceDescription} || "Form $i";
+			$form{label} = $label;
+            #die(Dumper(%specs));
 
 			$form{VERSIONS} = [ 
 				sort { $a->{label} cmp $b->{label} } 
