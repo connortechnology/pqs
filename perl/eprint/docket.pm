@@ -1407,7 +1407,7 @@ sub printing {
     my $implength = scalar @{$imp->{layout}};
 
     # if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
-    if ($imp and (@{$imp->{layout}} > 0 or @{$imp->{layout}[0]} > 0)) {
+    if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
         # If there's more than one version, list the versions. We don't care
         # what sheet they're on, just the version information.
         my $eachversiontotal = 0;
@@ -1415,26 +1415,32 @@ sub printing {
 
 			my %form;
 
-			$form{VERSIONS} = [ 
-				sort { $a->{requested_qty} <=> $b->{requested_qty} }
+				$form{VERSIONS} = [ 
+					sort { $a->{requested_qty} <=> $b->{requested_qty} }
 
-				# Count the net press sheets per form.
-				map  { $form{total_req} = $_->{requested};
-                       $eachversiontotal +=  $_->{requested};
-					   $form{version_count}++;
-        			   $_->{'requested_qty1' } = $_->{requested} / 100 * $qtys[0];
-					   $_->{'requested_qty2' } = $_->{requested} / 100 * $qtys[1];
-					   $_->{'requested_qty3' } = $_->{requested} / 100 * $qtys[2];
-					   $_->{requested_qty} = round $_->{requested} / 100 * $qty;
-					   $_->{final_qty} = ceil($_->{final} / 100 * $qty);
-					   $_ } @{$f} ];
+					# Count the net press sheets per form.
+					map  { $form{total_req} = $_->{requested};
+						   $eachversiontotal +=  $_->{requested};
+						   $form{version_count}++;
+						   $_->{'requested_qty1' } = $_->{requested} / 100 * $qtys[0];
+						   $_->{'requested_qty2' } = $_->{requested} / 100 * $qtys[1];
+						   $_->{'requested_qty3' } = $_->{requested} / 100 * $qtys[2];
+						   $_->{requested_qty} = round $_->{requested} / 100 * $qty;
+						   $_->{final_qty} = ceil($_->{final} / 100 * $qty);
+						   $_ } @{$f} ];
+    		if ($@{$imp->{layout}} == 1 or @{$imp->{layout}[0]} ==  1) {
+				#$form{VERSIONS} = undef
+			}
 
 			# $form{net_sheets} = ceil(@{$f}[0]->{final_qty} / @{$f}[0]->{slots});
 			# $form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);			# $form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
-			$form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
+			
+			$form{net_sheets} = $results{'hdnNetSheetCount'}* $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
+
+			####$form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
 
             # $form{net_sheets} =+ ceil($results{CustomOvers} / $implength);
-            $form{eachversiontotal} =  $eachversiontotal ;
+			#$form{eachversiontotal} =  $eachversiontotal ;
             # $form{gross_sheets} = ceil($results{hdnSheetQuantity1} * ( $form{total_req} / 100));
 
 
@@ -1443,6 +1449,8 @@ sub printing {
 
 		}
 	} else { 
+
+			push @{ $results{FORMS} }, { net_sheets => $results{'hdnNetSheetCount'} + $results{CustomOvers} };
 		 map {
 			$$form_count++;
 			push @{$results{FORM_COUNT}}, { id =>  $$form_count } 

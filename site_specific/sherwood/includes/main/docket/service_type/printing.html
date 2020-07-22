@@ -11,12 +11,14 @@
 </style>
 
 <?if NoPrint?>
-<?desc?>
+<?desc?> 
 No Printing <!-- <?chargefor?> -->
 <?else NoPrint?>
 <?if is_staff ?>
+<span style="font-size: 2em;>
 	<a href="/main/proj/proj_printer_summ_price_breakdown.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>#chosen">
-		<?desc?> </a>
+		<?desc?>  </a>
+</span>
 <?else is_staff ?>
 	<span class="label">Project Type: </span><?ProjectType?>
 <?endif is_staff ?>
@@ -49,9 +51,7 @@ No Printing <!-- <?chargefor?> -->
 	<? endif ($$variable{mounting_type}) ?>
 
 
-		<!-- Version Information -->
 		<? if ( $$variable{FORMS} ) ?>
-		<span class="label"> <br />VERSION INFORMATION </span>
 		<br/>
 		<br />
 			<?loop FORMS?>
@@ -176,6 +176,10 @@ No Printing <!-- <?chargefor?> -->
 			</table>  
 		 </div>
 		 <br/>
+		<!-- Version Information -->
+		<? if ( $variable->{VERSIONS} )?>
+		<span class="label"> <br />VERSION INFORMATION </span>
+		<? endif ( $variable->{VERSIONS} )?>
 		<table class="no-formatting no-padding" style="margin: 0 0 10px 0" cellspacing="0" cellpadding="0" border="0" >
 				<tr>
 					<td colspan="4" style="padding-left: 1em;"><strong><?label?></strong> 
@@ -198,9 +202,15 @@ No Printing <!-- <?chargefor?> -->
 					</tr>
 				<?endloop VERSIONS?>
 				<tr>
-					<td colspan="6" style="padding: 1em 2em; font-size: 30px;"> 
-						Net Sheets: &nbsp;&nbsp;<strong><?net_sheets?></strong> &nbsp;&nbsp;(<?eachversiontotal?> %) 
+					<td colspan="4" style="padding: 1em 2em; font-size: 30px;"> 
+						Net Sheets: &nbsp;&nbsp;<strong><?net_sheets?></strong> 
+						<!--
+						&nbsp;&nbsp;(<?eachversiontotal?> %) 
+						-->
+
 					</td>
+
+					<td><span class="label">Press Count:&nbsp;&nbsp;______________</span></td>
 				</tr>
 				<!-- <tr>
 					<td colspan="4" style="padding: 0 0 1em 2em; font-size: 20px;"> 
@@ -274,7 +284,7 @@ No Printing <!-- <?chargefor?> -->
 <div style=" padding-left: 2em; border-bottom: 5px solid;">
 <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
 <tr style="height:50px;">
-<td width="50%"><span class="label">Gross Qty: </span>
+<td width="50%"><span class="label">Gross Qty ( All Versions ): </span>
 	<? if ( $$variable{'QtyIndex'} == 1 ) ?>
 		&nbsp;<?hdnSheetQuantity1?><br />
 	<? endif ( $$variable{'QtyIndex'} == 1 ) ?>
@@ -285,9 +295,10 @@ No Printing <!-- <?chargefor?> -->
 		&nbsp;<?hdnSheetQuantity3?><br />
 	<? endif ( $$variable{'QtyIndex'} == 3 ) ?></td>
 <td width="50%">
+	<!--
 	<span class="label">Net Qty: 
 		<? if ( $$variable{'QtyIndex'} == 1  ) ?>
-		<!-- <?eval ( $variable->{hdnNetSheetCount1} += $variable->{CustomOvers} ) ?> -->
+		<?eval ( $variable->{hdnNetSheetCount1} += $variable->{CustomOvers} ) ?>
 		<?eval ( $variable->{hdnNetSheetCount1}) ?> &nbsp;<?hdnNetSheetCount1?><br />
 		<? endif ( $$variable{'QtyIndex'} == 1  ) ?>
 		<? if ( $$variable{'QtyIndex'} == 2  ) ?>
@@ -298,6 +309,7 @@ No Printing <!-- <?chargefor?> -->
 		<? endif ( $$variable{'QtyIndex'} == 3  ) ?>
 
 	</span>
+	-->
 </td>
 </tr>
 <tr>
@@ -311,7 +323,9 @@ No Printing <!-- <?chargefor?> -->
 	  
 	  
   </td>
+ <!--
 <td><span class="label">Press Count:&nbsp;&nbsp;______________</span></td>
+ -->
 </tr>
 <tr>
 <td><span class="label">Grain: </span>
