@@ -1,3 +1,14 @@
+<style>
+	#printOnly {
+   		display : none;
+	}
+
+	@media print {
+		#printOnly {
+		display : block;
+		}
+	}
+</style>
 <div id="project-view">
 	<!-- Standard project header (shared between project view, quotes, orders, docket, etc.) -->
 
@@ -20,6 +31,11 @@
 
 				<?loop service_type?>
 					<div class="group">
+					<?if ( $variable->{id} eq 'Printing' )?>
+						<div id="printOnly">
+							<!--#include virtual="/includes/main/docket/header.html" -->
+						</div>
+					<?endif ( $variable->{id} eq 'Printing' )?>
 						<h4 style="font-size:14px"><?name?></h4>
 
 							<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
@@ -65,9 +81,6 @@
 							<p class="comment" style="font-weight: Bold;"><strong>Comment: </strong>&nbsp;<?comment?></p>
 						<?endif ($$variable{comment}) ?>
 					</div>
-					<?if ( $variable->{id} eq 'Printing' )?>	
-						<div style="page-break-before: always"></div>
-					<?endif ( $variable->{id} eq 'Printing' )?>
 				<?endloop service_type?>
 
 				<?if (@{$$variable{supplied_service_type}} )?>
