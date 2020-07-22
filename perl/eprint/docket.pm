@@ -1407,7 +1407,7 @@ sub printing {
     my $implength = scalar @{$imp->{layout}};
 
     # if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
-    if ($imp and (@{$imp->{layout}} > 0 or @{$imp->{layout}[0]} > 0)) {
+    if ($imp and (@{$imp->{layout}} > 1 or @{$imp->{layout}[0]} > 1)) {
         # If there's more than one version, list the versions. We don't care
         # what sheet they're on, just the version information.
         my $eachversiontotal = 0;
@@ -1432,10 +1432,13 @@ sub printing {
 
 			# $form{net_sheets} = ceil(@{$f}[0]->{final_qty} / @{$f}[0]->{slots});
 			# $form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);			# $form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
-			$form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
+			
+			$form{net_sheets} = $results{'hdnNetSheetCount'}* $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
+
+			####$form{net_sheets} = $results{'hdnNetSheetCount'} * $eachversiontotal / 100 + ceil($results{CustomOvers} / $implength);
 
             # $form{net_sheets} =+ ceil($results{CustomOvers} / $implength);
-            $form{eachversiontotal} =  $eachversiontotal ;
+			#$form{eachversiontotal} =  $eachversiontotal ;
             # $form{gross_sheets} = ceil($results{hdnSheetQuantity1} * ( $form{total_req} / 100));
 
 
@@ -1445,6 +1448,8 @@ sub printing {
 
 		}
 	} else { 
+
+			push @{ $results{FORMS} }, { net_sheets => $results{'hdnNetSheetCount'} + $results{CustomOvers} };
 		 map {
 			$$form_count++;
 			push @{$results{FORM_COUNT}}, { id =>  $$form_count } 
