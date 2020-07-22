@@ -30,137 +30,6 @@ No Printing <!-- <?chargefor?> -->
 	<? endif ($$variable{outdoor_printing}) ?>
 <? endif ( $$variable{pressType} eq 'inkjetprinter' ) ?>
 
-<<<<<<< HEAD
-=======
-
-<div class="indent">
-
-	<span class="label">Press:&nbsp;&nbsp;</span>
-	<?hdnPress?> 
-	
-    <div style=" padding-left: 2em; ">
-		
-<? if ( $$variable{pressType} ne 'inkjetprinter' ) ?>
-		<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
-  <tr>
-    <td width="50%"><span class="label">Run Style: </span> &nbsp;
-		<?if SIDE.1?><?runstyle?> <?else SIDE.1?> One Sided<?endif SIDE.1?></td>
-    <td width="50%"><span class="label">
-					<?if ( $variable->{pressType} eq 'digital' ) ?>
-					<?else ( $variable->{pressType} eq 'digital' ) ?>
-    					<?if ($$variable{'pressType'} ne 'screen') ?>Plates:
-						<?else ($$variable{'pressType'} ne 'screen') ?>Screens:
-						<?endif($$variable{'pressType'} ne 'screen') ?>
-					</span>
-                    &nbsp;<?txtPlateQuantity?> 
-                    <? if($$variable{'pressType'} ne 'screen')?>
-					&nbsp;<?plate_type?>
-					<? endif($$variable{'pressType'} ne 'screen') ?></td>
-					<?endif ( $variable->{pressType} eq 'digital' ) ?>
-  </tr>
-  <tr>
-    <td><span class="label">Colour Bars: </span>
-		<? if ( $$variable{'colour_bar'} == 1 ) ?>
-			&nbsp;Yes
-		<? else ( $$variable{'colour_bar'} == 1 ) ?>
-			&nbsp;No
-		<? endif ( $$variable{'colour_bar'} == 1 ) ?></td>
-        <? endif ( $$variable{pressType} ne 'inkjetprinter' ) ?>
-    <td><span class="label">Approval: </span>
-		<? if ( $$variable{'needs_approval'} == 1 ) ?>
-			&nbsp;Yes
-		<? else ( $$variable{'needs_approval'} == 1 ) ?>
-			&nbsp;No
-		<? endif ( $$variable{'needs_approval'} == 1 ) ?></td>
-  </tr>
-  <tr>
-    <td><span class="label">Colour Match: </span>&nbsp;<?ddmColourMatch?></td>
-    <td><span class="label">Forms:&nbsp;&nbsp;</span>
-		<?txtSignatureQuantity?></td>
-  </tr>
-  <tr>
-    <td><span class="label">UPS: </span>&nbsp;<?hdnImposition?></td>
-  </tr>
-</table>
-       
-	</div>	
-<br />
-
-<? eval ( use Data::Dumper; print STDERR "Printing Docket", Dumper($variable); ) ?>
-		<!-- Colour Information Per Side -->
-		<div style=" padding-left: 2em; ">
-           <table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
-  <tr>
-    <td width="50%"><span class="label">SIDE <?SIDE.0.side?></span>
-			<span class="label" ><br />Inks: </span>
-			&nbsp;<?SIDE.0.std?>
-			<? if  ($$variable{SIDE}[0]{pms}) ?>
-				<? if  ($$variable{SIDE}[0]{std}) ?>
-					<span class="label"> + </span>
-				<? else  ($$variable{SIDE}[0]{std}) ?>
-					<span class="label">PMS </span>
-				<? endif  ($$variable{SIDE}[0]{std}) ?>
-
-			    &nbsp;<?SIDE.0.pms?>
-			<? endif  ($$variable{SIDE}[0]{pms}) ?>
-
-			<? if  ($$variable{SIDE}[0]{varnish}) ?>
-			<span class="label"><br /> Varnish: </span>
-				&nbsp;<?SIDE.0.varnish?>
-			<? endif  ($$variable{SIDE}[0]{varnish}) ?>
-			<? if  ($$variable{SIDE}[0]{coating}) ?>
-			<span class="label"><br /> Coating: </span>
-				&nbsp;<?SIDE.0.coating?>
-			<? endif  ($$variable{SIDE}[0]{coating}) ?>
-			<? if lf_coverage ?>
-				<span class="label"><br /> Coverage: </span>
-				&nbsp;<?SIDE.0.lf_coverage?>
-			<? endif lf_coverage ?>
-			<? if lf_quality ?>
-				<span class="label"><br /> Quality: </span>
-				&nbsp;<?SIDE.0.lf_quality?>
-			<? endif lf_quality ?></td>
-            
-	<?if SIDE.1?>
-    <td width="50%"><span class="label">SIDE <?SIDE.1.side?></span>
-			<span class="label" ><br />Inks: </span>
-			&nbsp;<?SIDE.1.std?>
-			<? if  ($$variable{SIDE}[1]{pms}) ?>
-				<? if  ($$variable{SIDE}[1]{std}) ?>
-					<span class="label"> + </span>
-				<? else  ($$variable{SIDE}[1]{std}) ?>
-					<span class="label">PMS </span>
-				<? endif  ($$variable{SIDE}[1]{std}) ?>
-
-			    &nbsp;<?SIDE.1.pms?>
-			<? endif  ($$variable{SIDE}[1]{pms}) ?>
-
-			<? if  ($$variable{SIDE}[1]{varnish}) ?>
-			<span class="label"><br /> Varnish: </span>
-				&nbsp;<?SIDE.1.varnish?>
-			<? endif  ($$variable{SIDE}[1]{varnish}) ?>
-			<? if  ($$variable{SIDE}[1]{coating}) ?>
-			<span class="label"><br /> Coating: </span>
-				&nbsp;<?SIDE.1.coating?>
-			<? endif  ($$variable{SIDE}[1]{coating}) ?>
-			<? if lf_coverage ?>
-				<span class="label"><br /> Coverage: </span>
-				&nbsp;<?SIDE.1.lf_coverage?>
-			<? endif lf_coverage ?>
-			<? if lf_quality ?>
-				<span class="label"><br /> Quality: </span>
-				&nbsp;<?SIDE.1.lf_quality?>
-			<? endif lf_quality ?></td>
-	<?endif SIDE.1?>
-  </tr>
-  
-</table>  
-            
-           
-		</div>
-
-
->>>>>>> 6227bf174c6c33ef39ba1dfc9ffeb3c6629fe8e1
 	<? if ($$variable{s0_laminate}) ?>
 		<span class="label">Lamination: </span>
 		<span class="label"><br />Side 1 </span><?s0_laminate?> 
@@ -183,16 +52,11 @@ No Printing <!-- <?chargefor?> -->
 		<!-- Version Information -->
 		<? if ( $$variable{FORMS} ) ?>
 		<span class="label"> <br />VERSION INFORMATION </span>
-<<<<<<< HEAD
 		<br/>
-=======
-		<? eval ( use Data::Dumper; print STDERR "Printing Docket VERSIONS", Dumper($variable->{FOMRS}); ) ?>
->>>>>>> 6227bf174c6c33ef39ba1dfc9ffeb3c6629fe8e1
 		<br />
 			<?loop FORMS?>
 			<div class="indent">
 				<div class= "versionBG">
-
 				<span class="label">Press:&nbsp;&nbsp;</span>
 				<?hdnPress?> 
 				
