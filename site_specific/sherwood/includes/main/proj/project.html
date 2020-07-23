@@ -29,6 +29,11 @@ var start;
 var end;
 
 </script>
+<style>
+	.highlight :hover {
+		background-color: gold 
+	}
+</style>
 
 	<link href="/styles/line_item_validation.css" rel="stylesheet" type="text/css" />
 	<table id="service-pricing" class="project-current-view no-formatting">
@@ -67,7 +72,7 @@ var end;
 			<!-- Services in <?category?>. -->				
 			<?loop services?>
 			<form action="/main/proj/dispatch.html" name="fs-<?id?>" id="fs-<?id?>" />
-				<tr class="service <?ref?>">
+				<tr class="service <?ref?> highlight ">
 					<td> &#183; 
 						<span
 		  						draggable="true"
@@ -115,7 +120,8 @@ var end;
 						onClick="$('fs-<?id?>').submit();" 
 						<?endif is_staff?>
 						<?endif ( $variable->{edit} != $variable->{id} ) ?>
-						style="text-align: right; padding-right:20px !important; ">
+						style="text-align: right; padding-right:20px !important; 
+						">
 							<?if ( $variable->{edit} == $variable->{id} ) ?>
 								<input name="price" value="<?price1?>" id="price_<?id?>" size="6"  />
 							<?else ( $variable->{edit} == $variable->{id} ) ?>
