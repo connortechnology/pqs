@@ -20,7 +20,7 @@ Service.prototype = {
         this.form = $('f1');
 
         // The submission button should validate first
-        $('submit-service').onclick = this.validate.bindAsEventListener(this);
+        $('submit-service').onclick = this.novalidate.bindAsEventListener(this);
 
         // Create a 'Calculate' button.
         var attributes = {
@@ -95,6 +95,7 @@ Service.prototype = {
 
         return true;
     },
+    novalidate : function () { return true },
 
     validate : function () { return true },
 

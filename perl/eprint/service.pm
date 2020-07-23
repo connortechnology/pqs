@@ -65,6 +65,7 @@ use sql               qw(:common);
 use ssi               qw(make_drop_down);
 use eprint::equipment ();
 use eprint::material  ();
+use PQS::Object::project;
 
 require eprint::customer;
 
@@ -562,6 +563,7 @@ sub set_status {
 sub recalc_dependencies {
     my ($log, $dbh, $pid, $sid) = @_;
 
+
     # Get the status and level of the current service.
     my ($status, $level) = $dbh->selectrow_array(q{
         SELECT status, level
@@ -575,6 +577,25 @@ sub recalc_dependencies {
 
     # If we're not part of the dependency tree we don't need to be here.
     return 0 unless defined $level;
+
+	my $p = new PQS::Object::project($pid);
+
+	if ( $p->no_service_dependencies() ) {
+		my $service = $dbh->selectall_arrayref(q{
+			SELECT id, level
+			FROM project_service_status
+			WHERE project = ?
+			ORDER BY level
+		}, { Slice => {} }, $pid);
+
+		 set_status($log, $dbh, $pid, 'calculated',
+		    map { $_->{id} } @{$service});
+
+		return 1
+	}
+	#die($p->no_service_dependencies());
+
+
 
     # If we're calculated but there are other uncalculated services on the
     # current level, we don't need to adjust anything.
@@ -622,9 +643,9 @@ sub recalc_dependencies {
     }
     # If we aren't calculated or we're errored out, we need to make sure all
     # the levels below are still marked as dependent on us.
-    else {
-        set_status($log, $dbh, $pid, 'dependent',
-            map { $_->{id} } @{$service});
+	else {
+		 set_status($log, $dbh, $pid, 'dependent',
+		    map { $_->{id} } @{$service});
     }
 
     return 1; # TODO: Make return number of modified records.
@@ -1088,6 +1109,12 @@ sub price {
 
         return 'error';
     }
+
+	my $override = $dbh->selectrow_array(q{
+		SELECT price_override FROM tbl_project_contents WHERE lngserviceindex = ?
+	}, undef, $sid );
+
+	$specs->{txtPrice1} = $override if $override ne '';
 
     return $status;
 }

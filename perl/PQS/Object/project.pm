@@ -126,6 +126,20 @@ sub upload_required {
 	print STDERR "SET PROJECT: $self->{id} = $val \n";
 }
 
+sub no_service_dependencies {
+	my $self = shift;
+	my $dbh = session::dbh;
+	my $log = session::log;
+
+	my $pid = $self->{id};
+	my $project_type = eprint::project::get_type($log, $dbh, $pid);
+
+	return 1 if $project_type eq 'NoPrint';
+	
+	return 0;
+}
+
+
 
 sub no_upload_required {
 

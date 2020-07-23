@@ -1787,6 +1787,11 @@ sub copy_project_services {
 
         $contents->{lngcompletestate} = 0;
         $contents->{lngpriority}      = 0;
+
+		#Reset Price override on project contents table
+		if ( $contents->{pirice_override}  ne '' ) {
+        	$contents->{price_override} = undef;
+		}
         
         # Change the project ID to the new project and remove the project
         # service ID. Then insert the project service.
@@ -2475,24 +2480,45 @@ sub edit_line_item {
 	my $price = $r->param('price');
 	my $docket = $r->param('docket');
 	my $hide_docket = $r->param('hide_docket');
+	my $have_price = 0;
+
+	map { $have_price = 1 if $_ eq 'price' } $r->param();
+
+	if ( $r->param('edit_service') ) {
+		#Display input for selected service unless we are saving price
+		$edit =  $r->param('edit_service') unless $have_price;
+
+		#if saving price field but it is empty, reset price override.
+		if ( $have_price &&  $price eq '') {
+			$dbh->do(q{UPDATE tbl_project_contents set price_override = NULL where lngserviceindex = ?}, 
+				undef, $sid);
+		}
+	};
 
 	$price = int($price * 100) / 100;
 
-	my $data = { 
-					txtPrice1 => $price, 
-					ServiceName => $name, 
-					docket => $docket,
-					hide_docket => $hide_docket,
-				};
+	my $data = {}; 
+	$data->{txtPrice1} = $price if $price;
+	$data->{ServiceName} = $name if $name;
+	$data->{docket} = $docket if $docket;
+	$data->{hide_docket} = $hide_docket if $hide_docket;
+
 
 	if ( $sid ) {
     	insert_service_specs($log, $dbh, $pid, $sid, %$data);
 	}
 
+	if ( $price ) {
+		$dbh->do(q{UPDATE tbl_project_contents set price_override = ? where lngserviceindex = ?}, 
+			undef, $price, $sid);
+	}
+
+	map { print STDERR "HAVE PARAM: $_  = " . $r->param($_) . "\n"; } $r->param();
 
 
 
-	print STDERR "HAVE EDIT LNIE", Dumper($edit, $name, $price, $sid);
+	print STDERR "HAVE EDIT LNIE", Dumper($edit, $name, $price, $sid, $edit);
+
 
 	#return BUILD_PAGE . "?pid=$pid;edit=11111";
 	#
