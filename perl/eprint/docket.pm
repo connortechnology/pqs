@@ -186,7 +186,7 @@ sub setup_RFQ {
         }, undef, $serviceID, $pid);
 
         my ($data, $material) =
-          summary($r, $log, $dbh, $pid, $serviceID, $qtyIndex, $tmp->{'name'});
+          summary($r, $log, $dbh, $pid, $serviceID, $qtyIndex, $tmp->{'name'},undef, $variable);
         
         push @materials, $_ for @{$material};
 
@@ -244,7 +244,11 @@ sub setup_RFQ {
     $variable->{QtyIndex}        = $qtyIndex;
     $variable->{ProjectIndex}    = $pid;
     $variable->{RFQ}             = \@services;
+  
     $variable->{HeaderInfo}      = header_info($log, $dbh, $pid);
+
+
+
     $variable->{OrderedQuantity} = $qty || join(', ',@qtys);
     my $order_id = $r->param('order_id');
     $variable->{order_id}  = $order_id;
@@ -300,7 +304,7 @@ sub send_rfq_email {
 # Dispatch Function used to return information about a given
 # service type.
 sub summary {
-    my ($r, $log, $dbh, $pid, $sid, $qtyIndex, $sname, $form_count) = @_;
+    my ($r, $log, $dbh, $pid, $sid, $qtyIndex, $sname, $form_count, $variable) = @_;
 
     my $service_type = $sname eq 'Inkjet Printing'   ? 'Inkjet'
                      : $sname eq 'Imposition Layout' ? 'ImpositionLayout'
@@ -313,7 +317,7 @@ sub summary {
 
     if (exists $switch{$service_type}) {
         ($data, $materials) =
-          $switch{$service_type}->($r, $log, $dbh, $pid, $sid, $qtyIndex, $form_count);
+          $switch{$service_type}->($r, $log, $dbh, $pid, $sid, $qtyIndex, $form_count, $variable);
     }
     else {
         $data = fill_info($r, $log, $dbh, $pid, $sid, $qtyIndex);
@@ -1032,9 +1036,21 @@ sub get_equipment {
     });
     return scalar $dbh->selectrow_array($sth, undef, $pid, $sid, $qtyIndex);
 }
+sub make_header {
+    my ($r, $log, $dbh,$pid, $variable) = @_;
+
+    $variable->{HeaderInfo} = header_info($log, $dbh, $pid);
+    $variable->{docket_header} = ssi::variable_substitution($r, $log, $dbh,
+                            ssi::insert_html($r, "/includes/main/docket/header.html"), $variable);
+    use Data::Dumper;
+    #die(Dumper($variable->{docket_header}));
+
+    
+
+}
 
 sub printing {
-    my ($r, $log, $dbh, $pid, $sid, $qtyIndex, $form_count) = @_;
+    my ($r, $log, $dbh, $pid, $sid, $qtyIndex, $form_count, $variable) = @_;
 
 
 	my $type = eprint::project::get_type($log, $dbh, $pid);
@@ -1042,7 +1058,7 @@ sub printing {
 
 	return { NoPrint => 1}, [] if $type eq 'NoPrint';
 
-
+                            
 	
     use Compress::LZF qw(:compress :freeze);
     use Storable              qw(thaw);
@@ -1436,10 +1452,8 @@ sub printing {
             $form{eachversiontotal} =  $eachversiontotal ;
             # $form{gross_sheets} = ceil($results{hdnSheetQuantity1} * ( $form{total_req} / 100));
 
-
 			push @{ $results{FORMS} }, \%form;
             $eachversiontotal = 0;
-
 		}
 	} else { 
 		 map {
@@ -1467,6 +1481,8 @@ sub printing {
     $results{'UserType'}     = $userType;
     $results{'ProjectIndex'} = $pid;
     $results{'ServiceIndex'} = $sid;
+
+    $results{docket_header} = $variable->{docket_header};
 
     return \%results, \@materials;
 
@@ -2387,6 +2403,8 @@ sub setup_docket {
     }, undef, $pid);
 	$variable->{pressType} = $pressType;
     $variable->{HeaderInfo} = header_info($log, $dbh, $pid);
+        make_header($r, $log, $dbh,$pid, $variable);
+
     $variable->{project} = project_summary($dbh, $pid);
     my @categories;
     my @materials;
@@ -2448,7 +2466,7 @@ sub setup_docket {
 
                     # Get the service information.
                     ($data, $material) =
-                      summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count);
+                      summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count, $variable);
                 };
 
 				$data->{is_docket} = $variable->{is_docket};
