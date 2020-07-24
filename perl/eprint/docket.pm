@@ -2538,6 +2538,14 @@ sub setup_docket {
                             ssi::insert_html($r, '/includes/main/docket/time.html'), $data
                     );
                 }
+                # Add Time Data to All Services.
+                if ( 1 ) {
+    				$data->{service_comment} = get_specifications($log, $dbh, undef, $id, "service_comment") if $id;
+					
+                    $html .= ssi::variable_substitution($r, $log, $dbh,
+                            ssi::insert_html($r, '/includes/main/docket/service_comment.html'), $data
+                    );
+                }
 
 				#format commments to show line breaks from text area input.
 				$comment =~ s/\r/<br>/g; 
