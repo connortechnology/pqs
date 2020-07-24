@@ -61,6 +61,7 @@
 
 <?if NoPrint?>
 		<!--#include virtual="/includes/main/proj/NoPrint.html"-->
+ 		<!--#include virtual="/includes/main/proj/service_comment.html"-->
 <?else NoPrint?>
 
 		<!--#include virtual="/includes/main/proj/project_types.html"-->
@@ -133,6 +134,8 @@
 
 		<!--#include virtual="/includes/main/proj/press_approval.html"-->
 
+ 		<!--#include virtual="/includes/main/proj/service_comment.html"-->
+
 		<? if separate_stock ?>
 			<!--#include virtual="/includes/main/proj/prices.html"-->
 		<? else separate_stock ?>
@@ -140,6 +143,8 @@
 		<? endif separate_stock ?>
 
 <?endif NoPrint?>
+
+
 		<!--#include virtual="/includes/main/proj/prin_add_to_project.html"-->
 	</form>
 
