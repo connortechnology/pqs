@@ -7,11 +7,8 @@ use strict;
 use sql ();
 require misc;
 use Data::Dumper;
-<<<<<<< Updated upstream
 use eprint::dashboard;
-=======
 use eprint::service;
->>>>>>> Stashed changes
 
 sub service_history {
 	my ($r, $dbh, $var) = @_;
