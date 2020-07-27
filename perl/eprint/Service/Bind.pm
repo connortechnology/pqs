@@ -197,7 +197,7 @@ print STDERR "Print Presses: @$print_presses \n";
         elsif (eprint::equipment::equipment_fits(
                 $log, $dbh, $eid, @project{qw(width height calliper)}, 0) ) 
         {
-			print "EQUIPMENT $eid FITS, Time to push\n";
+			print STDERR "EQUIPMENT $eid FITS, Time to push\n";
             if ( grep /$supplier{$eid}/,  @print_suppliers ) {
                 push @s_eids, $eid;
             } else {

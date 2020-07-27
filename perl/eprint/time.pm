@@ -8,6 +8,7 @@ use sql ();
 require misc;
 use Data::Dumper;
 use eprint::dashboard;
+use eprint::service;
 
 sub service_history {
 	my ($r, $dbh, $var) = @_;
@@ -165,16 +166,17 @@ sub time_collection {
 	my $list = $dbh->selectall_arrayref(q{
 		SELECT * 
  
-		FROM  tbl_order_contents c, tbl_project_contents pc, time_user_service t, tbl_projects p
+		FROM  tbl_order_contents c, tbl_project_contents pc, time_user_service t, tbl_projects p, tbl_service_types st
 		WHERE  c.lngprojectindex = pc.lngprojectindex AND t.service = lngserviceindex
 		AND pc.lngprojectindex = p.lngprojectindex
+		AND strid = pc.strservicetype
 		AND t.userid = ?
 	},{Slice=>{}}, $userid);
 
 
 	foreach my $x (@{$list}) {
 
-print STDERR "UPDATE ME: $_->{lngserviceindex} \n";
+print STDERR "Have X: ", Dumper($x);
 
 		$x->{start} = $dbh->selectrow_hashref(q{
 			SELECT * FROM time_collection WHERE userid = ? AND service = ? AND tstop IS NULL 
@@ -186,6 +188,7 @@ print STDERR "UPDATE ME: $_->{lngserviceindex} \n";
 		}, undef, $userid, $x->{lngserviceindex});
 
 print STDERR "HAVE EQUIPMENT: $e - $userid / $x->lngserviceindex \n";
+
 		my $esql = qq{ SELECT lngindex, strname FROM tbl_equipment where lngindex in 
 			( select equipment from service_type_equipment ste, tbl_Service_types st 
 				WHERE ste.service_type = st.lngindex AND  st.strid = '$x->{strservicetype}' )  ORDER by strname };
