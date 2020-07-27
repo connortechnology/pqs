@@ -231,6 +231,12 @@ sub service_allocation {
 
 	my $filters = '';
 	my @params;
+	
+	if ( $r->param('ddmClear') ) {
+		$filters  .= " AND 1 = ? ";
+		push @params, $r->param('ddmClear');
+	}
+
 	if ( $r->param('ddmCategory') ) {
 		$filters  .= " AND s.strcategory = ? ";
 		push @params, $r->param('ddmCategory');
@@ -344,8 +350,12 @@ print STDERR "HAVE SQL: $list_sql FOR USER: $userid ";
 	$sql = q{ SELECT Distinct(strstatus), strstatus FROM tbl_projects  ORDER by 1  };
 	$var->{STATUS_LIST} = ssi::fill_drop_down( $r->log, $dbh, $sql, $r->param('ddmStatus') );
 
-	$sql = q{ SELECT Distinct(strcategory), strcategory FROM tbl_service_types  ORDER by 1  };
-	$var->{CAT_LIST} = ssi::fill_drop_down( $r->log, $dbh, $sql, $r->param('ddmStatus') );
+	# $sql = q{ SELECT Distinct(strcategory), strcategory FROM tbl_service_types  ORDER by 1  };
+	# $var->{CAT_LIST} = ssi::fill_drop_down( $r->log, $dbh, $sql, $r->param('ddmStatus') );
+	my $categorylist = $dbh->selectall_arrayref(q{
+		SELECT Distinct(strcategory), strcategory FROM tbl_service_types  ORDER by 1 
+	},{Slice=>{}},);
+	$var->{CAT_LIST} = $categorylist;
 
 	$sql = q{ SELECT lngindex, strname FROM tbl_equipment  ORDER by 2  };
 	$var->{EQUIPMENT_LIST} = ssi::fill_drop_down( $r->log, $dbh, $sql, $r->param('ddmEquipment') );
