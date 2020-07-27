@@ -36,14 +36,6 @@
             <legend>
                 Service Allocation
           </legend>
-
-           <label for="ddmCategory">Department:</label>
-			<select id="ddmCategory" name="ddmCategory" >
-				<option value=""> Select a Department </option>
-				<option value=""> ----------------- </option>
-				<?CAT_LIST?>
-			</select>
-
 			<br />
 
            <label for="ddmPressType">Press Type:</label>
@@ -101,6 +93,10 @@
             <input type="submit" name="Update" class="button" value="Save" />
            
 			<br>
+			<?loop CAT_LIST ?>
+				<button name="ddmCategory"><?strcategory?></button>
+			<?endloop CAT_LIST ?>
+			</br>
 			
                 <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 2ex;">
                     <tr>
