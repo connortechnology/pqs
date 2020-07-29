@@ -1119,6 +1119,27 @@ sub price {
     return $status;
 }
 
+sub clean_calc {
+	my $pid = shift;
+	my $specs = shift;
+	my $p = new PQS::Object::project($pid);
+
+	if ( $p->noprint() ) {
+		my @list = qw( txtImageWidth txtImageHeight );
+		map {
+			
+			foreach my $s ( keys %{$specs} ) {
+				if  ( $s =~ /$_/ ) { 
+					delete $specs->{$s}; 
+					print STDERR "CHECK SPEC: $s to $_ \n";
+				}
+			}
+
+		} @list;
+
+	}
+}
+
 
 sub save {
     my ($log, $dbh, $pid, $sid, $service, $form, $specs) = @_;

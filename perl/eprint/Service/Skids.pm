@@ -22,6 +22,7 @@ use constant {
 sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
+
     # TODO this only considers the one piece of equipment
     my $eid = (valid_equipment($log, $dbh, $service_type,$pid))[0];
 
@@ -142,16 +143,20 @@ print STDERR "HAVE PROJECT TYPE: $project_type \n";
 
         my $total_weight = $projectWeight * $qtys[$i];
 
-        $specs->{"txtTotalProjectWeight$i"} = sprintf('%.2f', $total_weight);
+        $specs->{"txtTotalProjectWeight$i"} = $specs->{TotalWeightOverride} ||  sprintf('%.2f', $total_weight);
         $specs->{"hdnSkidQuantity$i"}       = $qty || 1;
         $specs->{"txtCartonWeight$i"}       = sprintf('%.1f', $total_weight / $$specs{"hdnSkidQuantity$i"});
 
         @$specs{"txtPrice$i", "txtUnitPrice$i"} = format_pricing($price, $qty);
     }
 
+
     $specs->{txtPackageQuantity} = join(', ', @totals);
     $specs->{txtItemsPerPackage} = $skidItemQty;
-    $specs->{txtPackageWeight}   = sprintf('%.0f', $projectWeight * $skidItemQty);
+	#$specs->{txtPackageWeight}   = sprintf('%.0f', $projectWeight * $skidItemQty);
+	#
+    $specs->{txtPackageWeight} = $specs->{PackageWeightOverride} || sprintf('%.0f', $projectWeight * $skidItemQty);
+
     $specs->{hdnProjectWeight}   = $projectWeight;
 
     return 'calculated';

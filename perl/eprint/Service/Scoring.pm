@@ -84,6 +84,7 @@ sub signature_needs {
 sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
+	use Data::Dumper;
     # To detect status... is very difficult Note: No it's not.
     my $status = 'uncalculated';
 
@@ -196,6 +197,8 @@ sub calc {
             my $bestMaterialPrice = 0;
             my $bestServicePrice  = 0;
             my $bestImposition    = 0;
+			my $imp_over = 0;
+
 
             my @equipment;
             if ( $$specs{"chkOverrideEquipment$qty_index-$sig"} eq
@@ -207,32 +210,43 @@ sub calc {
             else {
                 @equipment = @all_equipment;
             }    # endif
+			print STDERR "HAVE EQUIPMENT ", Dumper(@equipment);
 
             if ( $$specs{"chkOverrideImposition$qty_index-$sig"} eq
                 'Y' )
             {
-                if ( $$specs{"txtImposition$qty_index-$sig"} >
-                       $imposition
-                    or $$specs{"txtImposition$qty_index-$sig"} <=
-                    0 )
-                {
-                    $$specs{'alert'} =
-                      "The specified imposition is not possible.";
-                    last;
-                }
+				$imp_over = 1;
+
+				#if ( $$specs{"txtImposition$qty_index-$sig"} >
+				#       $imposition
+				#    or $$specs{"txtImposition$qty_index-$sig"} <=
+				#    0 )
+				#{
+				#    $$specs{'alert'} =
+				#      "The specified imposition is not possible.";
+				#    last;
+				#}
             }
 
             my %imposition;
 
             my @impositions = ();
 
+			if ( $imp_over ) {
+                $imposition{'Imposition'} = $$specs{"txtImposition$qty_index-$sig"};
+                $imposition{'Rows'} = 1;
+                $imposition{'Cols'} = 1;
+			} else {
                 # For Our Dutch Impositions We only allow 1-up die cutting.
                 $imposition{'Imposition'} = 1;
                 $imposition{'Rows'} = 1;
                 $imposition{'Cols'} = 1;
-                push @impositions, \%imposition;
+			}
+            push @impositions, \%imposition;
 
             foreach my $imposition (@impositions) {
+
+				print STDERR "HAVE IMPOSTION", Dumper($imposition);
 
                 my $width;
                 my $height;
@@ -254,9 +268,11 @@ sub calc {
                         SELECT strtype FROM tbl_equipment WHERE lngindex = ?
                     }, undef, $eid);
 
+					print STDERR "PRICE EQUIPMENT $eid $equipment_type \n";
+
                     next EQUIPMENT unless eprint::equipment::equipment_fits(
                             $log, $dbh, $eid, $width, $height, $calliper
-                    );
+                    ) ||  $specs->{chkOverrideImposition1} ;
 
                     my $servicePrice = eprint::service::get_price($log, $dbh, $variable, 'ScorePerforating', $qtyTotal, $eid);
                     my $materialPrice = 0;
@@ -456,8 +472,13 @@ sub calc {
         my $mat = PQS::model::materials::material_by_strid('Score');
         PQS::model::service::set_material_estimate($qtyTotal, undef, $sid, $mat->{lngindex}, $qty_index);
 
+
         @$specs{"txtPrice$qty_index", "txtUnitPrice$qty_index"}
             = format_pricing($price, $qty);
+
+		use eprint::service;
+
+		eprint::service::clean_calc($pid, $specs);
 
         $status = 'calculated';
     }

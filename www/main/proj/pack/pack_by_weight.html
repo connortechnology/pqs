@@ -50,13 +50,16 @@
 			<? endif ( $$variable{'ddmPackageType'} ne '' ) ?>
 
 			<span class="label">Unit Weight:</span>
-			<span id="txtPackageWeight"><?spec.txtPackageWeight?></span> lbs.
+			<span id="txtPackageWeight"><?spec.txtPackageWeight?> 
+			</span> lbs.
+				<input name="PackageWeightOverride" id="PackageWeightOverride" >
 			<br />
 		
 			<span class="label">Total Weight:</span>
 			<div>
 				<?if spec.txtTotalProjectWeight1 ?>
 					<span id="txtTotalProjectWeight1"><?ceil:spec.txtTotalProjectWeight1?></span> lbs.
+					<input name="TotalWeightOverride" id="TotalWeightOverride" >
 					<br />
 				<?endif spec.txtTotalProjectWeight1 ?>
 				<?if spec.txtTotalProjectWeight2 ?>
