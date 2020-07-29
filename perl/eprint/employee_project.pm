@@ -178,6 +178,9 @@ sub complete_project {
 
 		my $log = $r->log;
 
+		my $p = new PQS::Object::project($pid);
+		return if $p->check_status() eq 'CP';
+
 
 		$dbh->do(q{ UPDATE tbl_projects set dtmshipdate = NOW() WHERE lngprojectindex = ? } , {} , $pid );
 		$dbh->do(q{ UPDATE tbl_projects set completion_date = NOW() WHERE lngprojectindex = ? } , {} , $pid );
@@ -188,7 +191,6 @@ sub complete_project {
 
 
 		
-		my $p = new PQS::Object::project($pid);
 		$p->update_status();
 
 		#Update status should do allow of these things inlcluding update order.
