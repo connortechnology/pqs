@@ -534,12 +534,12 @@ sub insert_layout_proof {
     my $default_proof_type =
           eprint::equipment::get_specification($log, $dbh,
                                                'Default Layout Proof',
-                                               '', $press);
+                                               '', $press) if $press;
     if ($sides_to_print == 2) {
         my $two_sided_proof =
           eprint::equipment::get_specification($log, $dbh,
                                                '2 Sided Layout Proof',
-                                               '', $press);
+                                               '', $press) if $press;
 
     	$default_proof_type = $two_sided_proof if $two_sided_proof ne '';
     }
