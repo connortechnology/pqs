@@ -1125,7 +1125,7 @@ sub clean_calc {
 	my $p = new PQS::Object::project($pid);
 
 	if ( $p->noprint() ) {
-		my @list = qw( txtImageWidth txtImageHeight );
+		my @list = qw( txtImageWidth txtImageHeight txtFinishedCalliper );
 		map {
 			
 			foreach my $s ( keys %{$specs} ) {

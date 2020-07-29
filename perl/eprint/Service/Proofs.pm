@@ -492,7 +492,7 @@ sub insert_layout_proof {
     #2-sided dylux modifications
     my $sides_to_print =
       eprint::equipment::get_specification($log, $dbh, 'Layout Proof Sides',
-                                           undef, $press);
+                                           undef, $press) if $press;
 
     $sides_to_print = 1 unless ($sides_to_print == 2 && $sideTwoColours);
 

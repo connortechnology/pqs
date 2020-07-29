@@ -100,6 +100,7 @@ var end;
 									<?else not:custom_service.hide_docket?>
 									<?endif not:custom_service.hide_docket?>
 										<input type="checkbox" name="hide_docket" value="1">Hide
+										<input type="submit" name="submit" value="save">
 								<?else ( $variable->{edit} == $variable->{id} ) ?>
 									<?if ( $variable->{ref} eq 'Custom' ) ?>
 									<a href="/main/proj/dispatch.html?pid=<?pid?>;action=edit_line_item;edit=<?id?>"> 
