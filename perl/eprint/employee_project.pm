@@ -178,6 +178,19 @@ sub complete_project {
 
 		my $log = $r->log;
 
+		my $p = new PQS::Object::project($pid);
+
+		if ($p->{specs}{completion_date}) {
+
+			print STDERR "PROJECT ALREADY COMPLETE!!!!!!: $pid on $p->{specs}{completion_date} \n";
+		
+			return 
+		}
+
+
+
+		$p->close_inventory();
+
 
 		$dbh->do(q{ UPDATE tbl_projects set dtmshipdate = NOW() WHERE lngprojectindex = ? } , {} , $pid );
 		$dbh->do(q{ UPDATE tbl_projects set completion_date = NOW() WHERE lngprojectindex = ? } , {} , $pid );
@@ -188,7 +201,6 @@ sub complete_project {
 
 
 		
-		my $p = new PQS::Object::project($pid);
 		$p->update_status();
 
 		#Update status should do allow of these things inlcluding update order.
@@ -199,11 +211,17 @@ sub complete_project {
 		#mark_order($dbh, $order_id);
 		#
 
-        send_project_complete_email($r, $dbh, $pid, $p->order_id, $$variable{cust_id});
 
 
 		$variable->{complete} = 1;
 		$dbh->do(q{UPDATE tbl_inventory SET complete = true WHERE lngprojectindex = ?}, undef, $pid);
+		
+
+
+
+        send_project_complete_email($r, $dbh, $pid, $p->order_id, $$variable{cust_id});
+
+
 }
 
 # Display a basic project view where employees can mark the project as

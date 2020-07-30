@@ -385,10 +385,16 @@ print STDERR "BUILD SUB: $x, $val : F: $f, N: $n \n";
 			$p->{$field} = $val;
 		}
 
-		$all->{tmp} = ['p0'] unless scalar %{$all} > 1;
-		$all->{tmp1} = ['p1'] unless scalar %{$all} > 2;
+		my $key_count = scalar ( keys %{$all} );
+		print STDERR "HAVE ALL PRODUCTS", Dumper($all, keys %{$all}, $key_count );
+
+		$all->{tmp} = ['p0'] unless $key_count > 0;
+		$all->{tmp1} = ['p1'] unless scalar $key_count > 1;
 
 		
+		print STDERR "HAVE ALL PRODUCTS", Dumper($all);
+
+
 		my $list =  Set::CrossProduct->new($all);
 
 	print STDERR "HAVE PRODUCTS: ", Dumper($all, defined $list);

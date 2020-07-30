@@ -35,16 +35,16 @@ function open_discount_window( i ) {
 
 function form_validate() {
 	 var val = $('jobname').value;
-	 var priceval = parseFloat($('addPrice').value);
+	 //var priceval = parseFloat($('addPrice').value);
 	
 	 var errorMsg = '';
 	 if ( !val ) {
 		 errorMsg += 'Please enter a Job Description\n';
 	 }
 
-	 if(priceval<0){
-		 errorMsg += 'Please enter a price greater than and equals to 0\n';
-	 }
+	 //if(priceval<0){
+	//	 errorMsg += 'Please enter a price greater than and equals to 0\n';
+	 //}
 
 	 if(errorMsg!=''){
 		alert(errorMsg);

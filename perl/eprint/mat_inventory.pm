@@ -223,7 +223,8 @@ sub display {
 	my $param 	= shift;
 	my $var 	= shift;
 
-	if ( $param->{save} ) {
+	my $save = grep { $_ =~ /onhand|onorder/ } keys %{$param};
+	if ( $save ) {
 		update_inventory($param);
 	}
 
