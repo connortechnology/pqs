@@ -145,11 +145,18 @@ sub calc {
         my %imposition;
 
         my @impositions = ();
-            # For Our Dutch Impositions We only allow 1-up die cutting.
-            $imposition{'Imposition'} = 1;
-            $imposition{'Rows'} = 1;
-            $imposition{'Cols'} = 1;
-            push @impositions, \%imposition;
+
+		if ( $specs->{chkOverrideImposition1} ) {
+			$imposition{'Imposition'} =  $specs->{txtImposition1};
+			$imposition{'Rows'} = 1;
+			$imposition{'Cols'} = 1;
+		} else {
+			# For Our Dutch Impositions We only allow 1-up die cutting.
+			$imposition{'Imposition'} = 1;
+			$imposition{'Rows'} = 1;
+			$imposition{'Cols'} = 1;
+		}
+		push @impositions, \%imposition;
 
         foreach my $imposition (@impositions) {
             my $imp_width  = 0;
@@ -245,6 +252,10 @@ sub calc {
 
     # We use 'Complex' when the die is supplied but don't want to return it.
     delete $specs->{rdbDieCutting};
+
+	if ( $specs->{chkOverrideImposition1} ) {
+		delete  $specs->{txtImposition1};
+	}
 
     unless (   $$specs{'txtPrice1'} > 0
         or $$specs{'txtPrice2'} > 0

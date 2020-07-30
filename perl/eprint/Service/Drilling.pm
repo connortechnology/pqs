@@ -14,7 +14,9 @@ sub display {
 	my ($log, $dbh ,$service_type, $pid, $sid, $specs) = @_;
 	my %page;
 
-	$specs->{txtFinishedCalliper} = get_finished_calliper($log, $dbh, $specs, $pid);
+	my $p = new PQS::Object::project($pid);
+	$specs->{txtFinishedCalliper} = get_finished_calliper($log, $dbh, $specs, $pid) 
+		unless $p->noprint();
 
 	return \%page;
 }

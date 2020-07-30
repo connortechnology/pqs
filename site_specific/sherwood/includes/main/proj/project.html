@@ -29,6 +29,11 @@ var start;
 var end;
 
 </script>
+<style>
+	.highlight :hover {
+		background-color: gold 
+	}
+</style>
 
 	<link href="/styles/line_item_validation.css" rel="stylesheet" type="text/css" />
 	<table id="service-pricing" class="project-current-view no-formatting">
@@ -66,8 +71,8 @@ var end;
 
 			<!-- Services in <?category?>. -->				
 			<?loop services?>
-				<form action="/main/proj/dispatch.html" />
-				<tr class="service <?ref?>">
+			<form action="/main/proj/dispatch.html" name="fs-<?id?>" id="fs-<?id?>" />
+				<tr class="service <?ref?> highlight ">
 					<td> &#183; 
 						<span
 		  						draggable="true"
@@ -95,6 +100,7 @@ var end;
 									<?else not:custom_service.hide_docket?>
 									<?endif not:custom_service.hide_docket?>
 										<input type="checkbox" name="hide_docket" value="1">Hide
+										<input type="submit" name="submit" value="save">
 								<?else ( $variable->{edit} == $variable->{id} ) ?>
 									<?if ( $variable->{ref} eq 'Custom' ) ?>
 									<a href="/main/proj/dispatch.html?pid=<?pid?>;action=edit_line_item;edit=<?id?>"> 
@@ -109,10 +115,16 @@ var end;
 							<span class="supplied">(Customer Supplied)</span>
 						<?endif ($$variable{removed}) ?>					</td>
 
-					<td style="text-align: right; padding-right:20px !important; ">
+					<td 
+						<?if ( $variable->{edit} != $variable->{id} ) ?>
+						<?if is_staff?>
+						onClick="$('fs-<?id?>').submit();" 
+						<?endif is_staff?>
+						<?endif ( $variable->{edit} != $variable->{id} ) ?>
+						style="text-align: right; padding-right:20px !important; 
+						">
 							<?if ( $variable->{edit} == $variable->{id} ) ?>
 								<input name="price" value="<?price1?>" id="price_<?id?>" size="6"  />
-								<input type="submit" value="Save" />
 							<?else ( $variable->{edit} == $variable->{id} ) ?>
 								<?money:price1?>
 							<?endif ( $variable->{edit} == $variable->{id} ) ?>
@@ -140,7 +152,9 @@ var end;
 
 					<input type="hidden" name="sid" value="<?id?>" />
 					<input type="hidden" name="action" value="edit_line_item" />
-					<input type="hidden" name="pid" value="<?pid?>" id="pid_<?id?" />
+					<input type="hidden" name="pid" value="<?pid?>" id="pid_<?id?>" />
+					<input type="hidden" name="edit_service" value="<?id?>" id="edit_service<?id?>" />
+
 				</form>
 			<?endloop services?>
 		<?endloop categories?>

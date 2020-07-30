@@ -35,8 +35,11 @@ sub view_services {
 
 	}
 	
+
+print STDERR "START VIEW SERVICES :  $variable->{edit} ************************* \n\n";
+
 	#Custom Line Item Edit
-   	if ( $r->param('edit') ) {
+   	if ( $r->param('edit') and $variable->{user_type} =~ /^[AE]$/ ) {
 		my $sid =  $r->param('edit');
 		$variable->{edit} = $sid;
 
