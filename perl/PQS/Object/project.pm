@@ -259,6 +259,50 @@ sub allocate_inventory {
 
 	$dbh->do(q{Update inventory_count SET onorder = onorder + ? WHERE id = ?}, undef, $sheets, $id);
 
+}
+
+sub qty {
+	my $self = shift;
+	return $self->{specs}{intquantity1};
+
+}
+
+sub product {
+	my $self = shift;
+	return $self->{specs}{prod};
+}
+
+sub close_inventory {
+	my $self = shift;
+
+	my $dbh = session::dbh;
+	if ( $self->product() ) {
+
+		my $id = $dbh->selectrow_array(q{SELECT strid FROM tbl_products WHERE id = ?}, undef, $self->product());
+
+		if ( $id ) {
+			$dbh->do(q{Update inventory_count SET onorder = onorder - ? WHERE id = ?}, undef, $self->qty(), $id);
+			$dbh->do(q{Update inventory_count SET onhand = onhand - ? WHERE id = ?}, undef, $self->qty(), $id);
+		}
+
+	}
+
+	foreach my $s ( @{$self->services} ) {
+
+		if ( $s->{strservicetype} eq 'Printing' ) {
+			    my $index 	=  $s->{lngserviceindex};
+			    my $sheets 	=  $s->{gross_sheets};
+			    my $stock 	=  $s->{stock};
+
+				if ( $stock && $sheets ) {
+					my $id = $dbh->selectrow_array(q{SELECT strid FROM tbl_paper WHERE lngindex = ?}, undef, $stock);
+
+					$dbh->do(q{Update inventory_count SET onorder = onorder - ? WHERE id = ?}, undef, $sheets, $id);
+					$dbh->do(q{Update inventory_count SET onhand = onhand - ? WHERE id = ?}, undef, $sheets, $id);
+
+				}
+		}
+	}
 
 
 }
