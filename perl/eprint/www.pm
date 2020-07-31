@@ -791,7 +791,10 @@ print STDERR "MAIN -- SUB : $sub_section file: $filename \n";
         $status = eprint::project_files::actions($r, $log, $dbh, $variable)          if $filename eq 'file_action.html';
 
         $status = eprint::docket::pdf($r, $log, $dbh, $variable)       if $filename eq 'docket.pdf';
-        $status = eprint::docket::display($r, $log, $dbh, $variable, undef, undef, undef, 1)       if $filename =~ /^(?:proj_)?docket(?:_printer_friendly|_custom)?.html/;
+        $status = eprint::docket::display($r, $log, $dbh, $variable, undef, undef, undef, 1, undef)       if $filename =~ /^(?:proj_)?docket(?:|_custom)?.html/;
+
+        $status = eprint::docket::display($r, $log, $dbh, $variable, undef, undef, undef, 1, 1)       if $filename eq 'proj_docket_printer_friendly.html';
+
         $status = eprint::docket::comment($r, $log, $dbh, $variable)       if $filename eq 'docket_comment.html';
 
         eprint::print_project::project_notification($r, $dbh, $variable)          if $filename eq 'project_notification.html';
