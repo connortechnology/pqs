@@ -1174,7 +1174,7 @@ sub display {
 		SELECT strcompanyname FROM tbl_customer WHERE lngcustomerid = (
 			SELECT lngcustomerid FROM tbl_customer_users WHERE lnguserid = ? )
 	}, undef, $user_id);
-		
+
 
 # Option will be selected by __FillInForm from Service Specs.
 	$variable->{StateProvince}

@@ -173,20 +173,6 @@ return msg;
 		
 }
 
-function check_contact () {
-		var msg = '';
-		msg += check_information();
-		if (msg != '' ) {
-			
-			alert(msg);
-			return false;
-		} 
-		else {
-			copy_address();
-		
-		}
-}
-
 function check_ship_to () {
 
       	document.f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';
@@ -447,24 +433,24 @@ function getmymethod() {
 	}
 }
 
-function copy_address() {
-		$('txtShippingCompany').value  	= $('txtCompanyName').value;
-		$('txtShippingFirstName').value  	= $('txtFirstName').value;
-		$('txtShippingLastName').value  	= $('txtLastName').value;
-		$('txtShippingAddress1').value 	= $('txtAddress1').value;
-		$('txtShippingAddress2').value 	= $('txtAddress2').value;
-		//$('txtShippingCubicle').value 	= $('txtCubicle').value;
-		$('txtShippingPhone').value 	= $('txtPhone').value;
-		$('txtShippingCity').value 		= $('txtCity').value;
-		$('txtShippingPostalCode').value = $('txtPostalCode').value;
-		var prov = $('ddmStateProvince').options[$('ddmStateProvince').selectedIndex].value;
-		set_ddm($('ddmShippingStateProvince'), prov);
+// function copy_address() {
+// 		$('txtShippingCompany').value  	= $('txtCompanyName').value;
+// 		$('txtShippingFirstName').value  	= $('txtFirstName').value;
+// 		$('txtShippingLastName').value  	= $('txtLastName').value;
+// 		$('txtShippingAddress1').value 	= $('txtAddress1').value;
+// 		$('txtShippingAddress2').value 	= $('txtAddress2').value;
+// 		//$('txtShippingCubicle').value 	= $('txtCubicle').value;
+// 		$('txtShippingPhone').value 	= $('txtPhone').value;
+// 		$('txtShippingCity').value 		= $('txtCity').value;
+// 		$('txtShippingPostalCode').value = $('txtPostalCode').value;
+// 		var prov = $('ddmStateProvince').options[$('ddmStateProvince').selectedIndex].value;
+// 		set_ddm($('ddmShippingStateProvince'), prov);
 
-		var country = $('ddmCountry').options[$('ddmCountry').selectedIndex].value;
-		set_ddm($('ddmShippingCountry'), country);
+// 		var country = $('ddmCountry').options[$('ddmCountry').selectedIndex].value;
+// 		set_ddm($('ddmShippingCountry'), country);
 		
 	
-}
+// }
 
 function set_ddm (ddm, v) {
 	for (var i = 0; i < ddm.options.length; i++) {
@@ -538,157 +524,21 @@ function check_cost_center () {
 
 </fieldset>  
    
-<table width="100%" id="ShipInfo">
-<tr>
-<td valign="top" style="border-top:2px solid #000000 !important;border-right:2px solid #000000 !important;border-left:2px solid #000000 !important">
+<div width="100%" id="ShipInfo" valign="top" style=" padding: 2em; border-top:2px solid #000000 !important;border-right:2px solid #000000 !important;border-left:2px solid #000000 !important">
 		
-        <table width="395px">
-        <tr valign="top" style="height: 0px">
-        <td colspan="2"><b>Contact Information</b>
-        <p>Please input your contact address. When complete you can copy your contact address to your shipping address by selecting the copy button below.<br /><br /></p>
-        </td>
-        </tr>
-		<tr>
-			<td class="label">Update my profile:</td>
-			<td><input type="checkbox" value="1" name="contact_default" <?contact_default?> />
-		</tr>
-       
-			<? if ($$variable{'ddmOrderForUsers'} ne '') ?>
-             <tr>
-             <td valign="top">Users:</td>
-				<td><select id="ddmOrderForUsers" name="ddmOrderForUsers" onchange="fill_user(f1)";>
-					<option value=""> Select </option>
-					<?ddmOrderForUsers?>
-				</select></td>
-                </tr>
-                <tr>
-                <td valign="top"></td>
-                <td>
-                <a href="/main/account/user_profile.html" target="_new">Update User Profile Here</a>
-				</td>
-                </tr>
-			<? endif ($$variable{'ddmOrderForUsers'} ne '') ?>
-			
-			<tr>
-            <td width="138px" valign="top">* Company Name:</td>
-            <td><input type="text" id="txtCompanyName" name="txtCompanyName" size="30"	class="input-text" value="<?txtCompanyName?>" /></td>
-            </tr>
-            
-            <tr>
-            <td valign="top">* First Name:</td>
-            <td><input type="text" id="txtFirstName" name="txtFirstName" size="30"	class="input-text" value="<?txtFirstName?>" /></td>
-            </tr>
-            
-            <tr>
-            <td valign="top">* Last Name:</td>
-            <td><input type="text" id="txtLastName" name="txtLastName" size="30"	class="input-text" value="<?txtLastName?>" /></td>
-            </tr>
-            
-			<tr>
-			<td valign="top">* Address:</td>
-			<td><input type="text" id="txtAddress1" name="txtAddress1" size="30"	class="input-text marg-bot" value="<?txtAddress1?>" /></td>
-            </tr>
-            
-            <tr>
-            <td valign="top">Address 2:</td>
-            <td><input type="text" id="txtAddress2" name="txtAddress2" size="30"	class="input-text" value="<?txtAddress2?>" /></td>
-
-            
-            <tr>
-            <td valign="top">* City:</td>
-            <td><input type="text" id="txtCity" name="txtCity" size="30"	class="input-text" value="<?txtCity?>" />
-			</td>
-            </tr>
-			
-            <tr>
-            <td valign="top">* State/Province:</td>
-			<td><select id="ddmStateProvince" name="ddmStateProvince">
-				<option value="">- Please select one. -</option>
-				<?StateProvince?>
-			</select>
-			</td>
-            </tr>
-			
-			<tr>
-            <td valign="top">* Zip/Postal Code:</td>
-            <td><input type="text" id="txtPostalCode" name="txtPostalCode" size="30"	class="input-text" value="<?txtPostalCode?>" /></td>
-            </tr>
-            
-            <tr>
-            <td valign="top">* Country:</td>
-            <td>
-			
-            <select id="ddmCountry" name="ddmCountry" >
-				<option value="">- Please select one. -</option>
-				<?Country?>
-			</select>
-			</td>
-            </tr>
-			
-			<tr>
-            <td valign="top">* Phone:</td>
-            <td><input type="text" id="txtPhone" name="txtPhone" size="30"	class="input-text" value="<?txtPhone?>" />
-			</td>
-            </tr>
-			
-            
-            <tr>
-            <td valign="top">Extension:</td>
-			<td><input type="text" id="txtExtension" name="txtExtension" size="30"	class="input-text" value="<?txtExtension?>" maxlength="4" /></td>
-            </tr>
-            
-			<tr>
-            <td valign="top">Fax:</td>
-            <td><input type="text" id="txtFax" name="txtFax" size="30"	class="input-text" value="<?txtFax?>" />
-			</td>
-            </tr>
-			
-            <tr>
-            <td valign="top">* E-mail Address:</td>
-            <td><input type="text" id="txtEmail" name="txtEmail" size="30" class="input-text" value="<?txtEmail?>" />
-			</td>
-            </tr>
-
-            </table>
-		
-      </td>
-      <td valign="top" style="border-top:2px solid #000000 !important;border-right:2px solid #000000 !important;border-left:2px solid #000000 !important">
-      <table width="400px">
-      <tr valign="top" style="height: 180px">
-      <td colspan="2">
-      <input id="contactandshipsame" type="button" name="Contact and Ship Info Same" style="float:left" value="Same as Contact Information" class="button right"
-       onClick="return check_contact();">
-       
-      <!-- return (check_contact()); -->
       <br />
-      <b>Ship to Location</b>
-           
+      <b style="font-size: 2em;">Ship to Location</b>
+
+	<table>
+			<p id="sing1" style="margin-top: 2em;">Please input the address to where your project will be shipped to or select from the drop down menu below. When complete select the Save and Continue button at the bottom of the page.</p>
+            <p id="mult3" style="margin-top: 2em;">Please input the first address to where your project will be shipped to or select from the drop down menu below. When complete select the Save and New button at the bottom of this section (Manual Address). Repeat for all additional addresses. Once Saved your Addresses will be displayed in the Entered Addresses Section. <? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>To import or export the entered addresses skip down to the Import/Export section of the page<? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?></p>
 			
-			<p id="sing1">Please input the address to where your project will be shipped to or select from the drop down menu below. When complete select the Save and Continue button at the bottom of the page.</p>
-            <p id="mult3">Please input the first address to where your project will be shipped to or select from the drop down menu below. When complete select the Save and New button at the bottom of this section (Manual Address). Repeat for all additional addresses. Once Saved your Addresses will be displayed in the Entered Addresses Section. <? if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?>To import or export the entered addresses skip down to the Import/Export section of the page<? endif ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ?></p>
-			</td>
-            </tr>
-            
-            
-            <tr>
-            <td class="label">Delivery Method:</td>
-			 <td><select id="deliverymethod" name="deliverymethod" onchange="getmymethod()">
-				 <option value="Customer Pick-up">None - Customer Pick-up</option>
-			 	 <option value="Standard">Standard Shipping</option>
-			 </select>
-
-			 </td>
-			 </tr>
-
-          
-    
-    
-
-            
             <tr class="ship">
             <td width="140px" valign="top">Select an Address:</td>
-            <td><select id="ddmShippingCompany" name="ddmShippingCompany" onChange="f1.btnFunction.value='Get Address'; f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';f1.submit();" >
+            <td>
+			<select id="ddmShippingCompany" name="ddmShippingCompany" onChange="f1.btnFunction.value='Get Address'; f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';f1.submit();" >
                 <option value="">- Select -</option>
+				<option value="tomycompany">Ship to my company</option>
                 <?Ship_Addresses?>
             </select>
             </td>
@@ -927,7 +777,7 @@ function check_cost_center () {
 <td style="border-bottom:2px solid #000000 !important; border-left:2px solid #000000 !important;border-right:2px solid #000000 !important"><div id="mult1"><input type='submit' name='New Address' value='Save Address' class='button' style="float:left"	onClick="return check_ship_to();"  /></div></td>
 </tr>
 
-</table>
+</div>
             
 			<input type="hidden" name="Location" id="Location" />
             
