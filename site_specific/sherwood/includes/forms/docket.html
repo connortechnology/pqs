@@ -12,7 +12,11 @@
 <div id="project-view">
 	<!-- Standard project header (shared between project view, quotes, orders, docket, etc.) -->
 
+	<?if NO_HEADER?>
+	<?else NO_HEADER?>
 	<!--#include virtual="/includes/main/docket/header.html" -->
+	<?endif NO_HEADER?>
+
 	<? if ( $variable->{Category} == -3 ) ?>
 	<!--#include virtual="/includes/main/docket/versions.html" -->
 	<? endif ( $variable->{Category} == -3 ) ?>
