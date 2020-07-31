@@ -2057,22 +2057,27 @@ sub display {
     #catID = -2 when it is sending an email
     #Yes this is ugly, this procedre really should be refactored
     #Will do when I have a chance.
-    my ($r, $log, $dbh, $variable, $pid, $catID, $qtyIndex, $is_docket) = @_;
+    my ($r, $log, $dbh, $variable, $pid, $catID, $qtyIndex, $is_docket, $printer_friendly) = @_;
 
     $pid      ||= $r->param('pid') || $r->param('ProjectIndex');
     $catID    ||= $r->param('Category');
     $qtyIndex ||= $r->param('QuantityIndex') || 1;
 
-if ( $r->param('EditedVersion') ) {
-	$dbh->do(q{DELETE FROM docket WHERE pid = ?}, undef, $pid);
-	$dbh->do(q{INSERT INTO docket values ( ?, ? ) }, undef, $pid, $r->param('EditedVersion'));
-} elsif ( $r->param('resetdocket') ) {
-	$dbh->do(q{DELETE FROM docket WHERE pid = ?}, undef, $pid);
-}
+	if ( $printer_friendly && $catID == 2 ) {
+		$variable->{NO_HEADER} = 1;
+	}	
 
-$variable->{ModifiedDocket} = $dbh->selectrow_array(q{
-	SELECT data from docket WHERE pid = ?
-}, undef, $pid);
+
+	if ( $r->param('EditedVersion') ) {
+		$dbh->do(q{DELETE FROM docket WHERE pid = ?}, undef, $pid);
+		$dbh->do(q{INSERT INTO docket values ( ?, ? ) }, undef, $pid, $r->param('EditedVersion'));
+	} elsif ( $r->param('resetdocket') ) {
+		$dbh->do(q{DELETE FROM docket WHERE pid = ?}, undef, $pid);
+	}
+
+	$variable->{ModifiedDocket} = $dbh->selectrow_array(q{
+		SELECT data from docket WHERE pid = ?
+	}, undef, $pid);
 
     $variable->{is_docket} = $is_docket; 
 
