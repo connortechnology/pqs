@@ -59,7 +59,6 @@
             <legend>
                 Service Allocation
           </legend>
-			<br />
 
            <label for="ddmPressType">Press Type:</label>
 			<select id="ddmPressType" name="ddmPressType" >
@@ -122,7 +121,13 @@
 				<?USERS?>
 			</select>
             <input type="submit" name="Update" class="button" value="Save" />
-           
+		   
+			<br>
+			<br>
+			<?loop CAT_LIST ?>
+				<button style="font-size: 1.3em;" name="ddmCategory" value = "<?strcategory?>"><?strcategory?></button>
+			<?endloop CAT_LIST ?>
+			<button style="font-size: 1.3em; background-color: red;" name="ddmClear" value = "1">Clear</button>
 			<br>
 			<?loop CAT_LIST ?>
 				<button name="ddmCategory"><?strcategory?></button>

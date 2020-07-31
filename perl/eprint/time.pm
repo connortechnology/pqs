@@ -234,6 +234,12 @@ sub service_allocation {
 
 	my $filters = '';
 	my @params;
+	
+	if ( $r->param('ddmClear') ) {
+		$filters  .= " AND 1 = ? ";
+		push @params, $r->param('ddmClear');
+	}
+
 	if ( $r->param('ddmCategory') ) {
 		$filters  .= " AND s.strcategory = ? ";
 		push @params, $r->param('ddmCategory');
