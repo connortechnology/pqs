@@ -35,13 +35,7 @@
 
 				<?loop service_type?>
 					<div class="group">
-					<?if ( $variable->{id} eq 'Printing' )?>
-						<div id="printOnly">
-							<!--#include virtual="/includes/main/docket/header.html" -->
-						</div>
-					<?endif ( $variable->{id} eq 'Printing' )?>
 						<h4 style="font-size:14px"><?name?></h4>
-
 							<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
 							<? if ( $variable->{sid} ) ?>
 							<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
@@ -65,6 +59,9 @@
                             
 						<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
 
+						<?if ($$variable{comment}) ?>
+							<p class="comment" style="font-weight: Bold;"><strong>Comment: </strong>&nbsp;<?comment?></p>
+						<?endif ($$variable{comment}) ?>
 
 						<!--
 
@@ -81,9 +78,6 @@
 
 						<?html?>
 
-						<?if ($$variable{comment}) ?>
-							<p class="comment" style="font-weight: Bold;"><strong>Comment: </strong>&nbsp;<?comment?></p>
-						<?endif ($$variable{comment}) ?>
 					</div>
 				<?endloop service_type?>
 

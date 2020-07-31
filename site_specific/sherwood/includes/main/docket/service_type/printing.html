@@ -8,6 +8,16 @@
 	.indent:nth-child(3n-2){
 		background-color: #C2E7FA;
 	}
+
+	#printOnlyDisappear {
+   		display : inline;
+	}
+
+	@media print {
+		#printOnlyDisappear {
+		display : none;
+		}
+	}
 </style>
 
 <?if NoPrint?>
@@ -53,9 +63,14 @@ No Printing <!-- <?chargefor?> -->
 
 		<? if ( $$variable{FORMS} ) ?>
 		<br/>
-		<br />
+		<br/>
 			<?loop FORMS?>
 			<div class="indent">
+				<div id="printOnly">
+					<?docket_header?>
+					<br/>
+					<br/>
+				</div>
 				<div class= "versionBG">
 				<span class="label">Press:&nbsp;&nbsp;</span>
 				<?hdnPress?> 
@@ -212,17 +227,6 @@ No Printing <!-- <?chargefor?> -->
 
 					<td><span class="label">Press Count:&nbsp;&nbsp;______________</span></td>
 				</tr>
-				<!-- <tr>
-					<td colspan="4" style="padding: 0 0 1em 2em; font-size: 20px;"> 
-						<span class="label">Overs Qty: &nbsp<??></span>
-						<form action="/main/proj/proj_docket.html" name=fco >
-						<input name="eachcustomovers<?ServiceIndex?>" placeholder="Update"/> 
-						<input type="hidden" name="sid" value="<?ServiceIndex?>" >
-						<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" >
-						</form>
-					</td>
-					<td><span class="label">Press Count:&nbsp;&nbsp;______________</span></td>
-				</tr> -->
 		</table>
 		
 
@@ -316,7 +320,7 @@ No Printing <!-- <?chargefor?> -->
   <td>
 	  <span class="label">Overs Qty:&nbsp<?CustomOvers?></span>
 	  <form action="/main/proj/proj_docket.html" name=fco > 
-	  <input name="customovers" style="width: 5em; font-size:0.6em; height:1.5em" placeholder=" Update">
+	  <input name="customovers" id="printOnlyDisappear" style="width: 5em; font-size:0.6em; height:1.5em" placeholder=" Update">
 	  <input type="hidden" name="sid" value="<?ServiceIndex?>" >
 	  <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" >
 	  </form>
