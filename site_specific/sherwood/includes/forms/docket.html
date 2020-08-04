@@ -17,9 +17,12 @@
 			position: absolute;
 			bottom: 0;
 		}
+		<?if ( $variable->{Category} == 2 )?>
 		div.group h4.noprint, .noprint {
 			display: none;
 		}
+		<?endif ( $variable->{Category} == 2 )?>
+		div.group { border: none; }
 	}
 </style>
 <div id="project-view">
@@ -38,15 +41,18 @@
 
 	<? if ($$variable{Category} != -1) ?>
 		<?loop categories?>
-		<?if ( $variable->{id} eq 'Printing' )?>
-			<div style="page-break-before: always"></div>
-		<?endif ( $variable->{id} eq 'Printing' )?>
 			<div class="category">
 				<?if ( scalar @{$variable->{service_type}} > 0 ) ?>
 				<h5 class="noprint"><?name?> Information </h5>
 				<?endif ( scalar @{$variable->{service_type}} > 0 ) ?>
 
 				<?loop service_type?>
+		<?if ( $variable->{id} eq 'Printing' )?>
+	<? if ($$variable{Category} == 2) ?>
+			<div style="page-break-before: always"></div>
+	<? endif ($$variable{Category} == 2) ?>
+		<?endif ( $variable->{id} eq 'Printing' )?>
+
 					<div class="group">
 						<h4 class="noprint" style="font-size:14px"><?name?></h4>
 							<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>

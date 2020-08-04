@@ -65,6 +65,9 @@ No Printing <!-- <?chargefor?> -->
 		<br/>
 		<br/>
 			<?loop FORMS?>
+	<?if not:_first?>
+	<p style="page-break-before: always"> 
+	<?endif not:_first?>
 			<div class="indent">
 				<div id="printOnly">
 					<?docket_header?>
@@ -352,7 +355,6 @@ No Printing <!-- <?chargefor?> -->
 		</div> <!-- Background Color Ends-->
 			
 	</div> <!-- Indent Ends-->
-	<p style="page-break-before: always"> 
 			<?endloop FORMS?>
 		<? endif ( $$variable{FORMS} ) ?>
 		<!-- END Version Information -->
