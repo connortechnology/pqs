@@ -2,10 +2,23 @@
 	#printOnly {
    		display : none;
 	}
+	.versionBG { border-top: 5px solid black }
+
 
 	@media print {
 		#printOnly {
 		display : block;
+		}
+
+		#project-view {
+			border: none;
+		}
+		p.comment {
+			position: absolute;
+			bottom: 0;
+		}
+		div.group h4.noprint, .noprint {
+			display: none;
 		}
 	}
 </style>
@@ -30,12 +43,12 @@
 		<?endif ( $variable->{id} eq 'Printing' )?>
 			<div class="category">
 				<?if ( scalar @{$variable->{service_type}} > 0 ) ?>
-				<h5><?name?> Information </h5>
+				<h5 class="noprint"><?name?> Information </h5>
 				<?endif ( scalar @{$variable->{service_type}} > 0 ) ?>
 
 				<?loop service_type?>
 					<div class="group">
-						<h4 style="font-size:14px"><?name?></h4>
+						<h4 class="noprint" style="font-size:14px"><?name?></h4>
 							<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
 							<? if ( $variable->{sid} ) ?>
 							<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
