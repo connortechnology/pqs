@@ -538,9 +538,9 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 
 	#override all errors for now.
 	$status = 'calculated';
-	$status = 'uncalculated' unless $specs->{deliverymethod};
+	$status = 'uncalculated' unless $specs->{shipping_required} ne '';
 
-	print STDERR "HAVE STATUS: $status - $specs->{deliverymethod}  \n";
+	print STDERR "HAVE STATUS: $status - $specs->{shipping_required}  \n";
 	return $status eq 'calculated' ? $status : 'uncalculated';
 }
 
