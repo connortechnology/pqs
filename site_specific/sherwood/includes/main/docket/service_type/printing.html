@@ -355,6 +355,10 @@ No Printing <!-- <?chargefor?> -->
 		</div> <!-- Background Color Ends-->
 			
 	</div> <!-- Indent Ends-->
+	<?if not:_last_FORMS?>
+	<!--#include virtual="/includes/main/docket/service_comment.html" -->
+	<?endif not:_last_FORMS?>
+
 			<?endloop FORMS?>
 		<? endif ( $$variable{FORMS} ) ?>
 		<!-- END Version Information -->

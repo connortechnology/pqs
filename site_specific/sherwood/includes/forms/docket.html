@@ -13,7 +13,7 @@
 		#project-view {
 			border: none;
 		}
-		p.comment {
+		p.commentxx {
 			position: absolute;
 			bottom: 0;
 		}
@@ -78,9 +78,6 @@
                             
 						<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
 
-						<?if ($$variable{comment}) ?>
-							<p class="comment" style="font-weight: Bold;"><strong>Comment: </strong>&nbsp;<?comment?></p>
-						<?endif ($$variable{comment}) ?>
 
 						<!--
 
@@ -96,6 +93,13 @@
 
 
 						<?html?>
+
+						<!-- Moved to service_comment.html
+						<?if ($$variable{comment}) ?>
+							<p class="comment" style="font-weight: Bold;"><strong>Docket Comment: </strong>&nbsp;<?comment?></p>
+						<?endif ($$variable{comment}) ?>
+						-->
+
 
 					</div>
 				<?endloop service_type?>

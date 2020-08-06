@@ -1,7 +1,11 @@
 <!--Service Comments are shown here -->
-<?if service_comment?>
-<span class="label" >Service Comments</span>
+<?if ($variable->{service_comment} || $variable->{comment} )?>
+
+<span class="label" >Comments</span>
 <div style="font-weight: bold; padding: 0 0 5px 10px; background-color: azure;">
 <?service_comment?>
+<br/>
+<?comment?>
 </div>
-<?endif service_comment?>
+
+<?endif ($variable->{service_comment} || $variable->{comment} )?>
