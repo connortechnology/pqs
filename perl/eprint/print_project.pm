@@ -1788,10 +1788,7 @@ sub copy_project_services {
         $contents->{lngcompletestate} = 0;
         $contents->{lngpriority}      = 0;
 
-		#Reset Price override on project contents table
-		if ( $contents->{pirice_override}  ne '' ) {
-        	$contents->{price_override} = undef;
-		}
+       	$contents->{price_override} = undef;
         
         # Change the project ID to the new project and remove the project
         # service ID. Then insert the project service.
@@ -2429,12 +2426,13 @@ sub copy {
        $p .= ";level=0"           if $r->param('predefined');
        $p .= ";create_to_order=1" if $r->param('create_to_order');
 
-    return (has_pdf_template(undef, $dbh, $pid) ? TEMPLATE_PAGE : BUILD_PAGE) 
-         . "?$p";
+       #return (has_pdf_template(undef, $dbh, $pid) ? TEMPLATE_PAGE : BUILD_PAGE) 
+       #  . "?$p";
 
     # Recalculate the project if the customer has changed.
-    #return $changed ? BUILD_PAGE . "?pid=$new;level=0"
-    #                : VIEW_PAGE  . "?pid=$new";
+    # Force recalc to make sure price override is reset after copy.
+    return $changed ? BUILD_PAGE . "?pid=$new;level=0"
+                    : VIEW_PAGE  . "?pid=$new";
 }
 
 # Mark the project as predefined.

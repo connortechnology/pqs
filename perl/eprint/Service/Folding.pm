@@ -91,8 +91,10 @@ sub signature_needs {
 
     # If the final dimensions are different than the flat ones, it has to get
     # there somehow...
-    return 1 if   $specs->{final_width}  != $specs->{flat_width}
-               || $specs->{final_height} != $specs->{flat_height};
+    #
+    # Disabled at Sherwoods request. Email Aug 8, 2020.
+    #return 1 if   $specs->{final_width}  != $specs->{flat_width}
+    #           || $specs->{final_height} != $specs->{flat_height};
 
     return 0;
 }

@@ -176,35 +176,8 @@ sub calc {
                 }
 
 #we need to check that the die cut image is not larger than the page we are printing on.
-                if (
-                    !(
-                        eprint::equipment::equipment_fits(
-                            $log,
-                            $dbh,
-                            $equipment_index,
-                            $imp_width,
-                            $imp_height,
-                            $printing_specs{'txtStockCalliper'}
-                        )
-                        && (
-                            eprint::equipment::equipment_fits(
-                                $log,
-                                $dbh,
-                                $equipment_index,
-                                $$specs{'txtDieWidth'},
-                                $$specs{'txtDieHeight'},
-                                $printing_specs{'txtStockCalliper'},
-                                undef,
-                                0,
-                                0
-                            )
-                        )
-                    )
-                  )
-                {
-                    if ( $$specs{'rdbSuppliedDie'} ne 'Y' ) {
-                        $check_failed_equipment = 1;
-                    }
+                if ( 0 ) {
+			#Equipment fits check has been removed.
                 }
                 else {
                     my %price =
