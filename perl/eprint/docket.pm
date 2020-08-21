@@ -1040,8 +1040,19 @@ sub make_header {
     my ($r, $log, $dbh,$pid, $variable) = @_;
 
     $variable->{HeaderInfo} = header_info($log, $dbh, $pid);
+
+    my $catID = $r->param('Category');
+
+    $variable->{header_category} = 	$catID == -3 ? 'Bindery Sheet' :
+    				   	$catID == -1 ? 'Materials Sheet' :
+    				   	$catID == 2 ? 'Printing Sheet' :
+					'';
+
     $variable->{docket_header} = ssi::variable_substitution($r, $log, $dbh,
                             ssi::insert_html($r, "/includes/main/docket/header.html"), $variable);
+
+
+
     use Data::Dumper;
     #die(Dumper($variable->{docket_header}));
 
@@ -1980,6 +1991,7 @@ sub header_info {
 
 	$hash{bindery_type} = eprint::project::get_bindery_type($log, $dbh, $pid);
 
+
     return \%hash;
 
 }
@@ -2515,6 +2527,9 @@ sub setup_docket {
                       AND lngprojectindex =?
                 }, undef, $id, $pid);
 
+		#format commments to show line breaks from text area input.
+		$comment =~ s/\r/<br>/g; 
+
                 next if ($ref eq 'impositionlayout' && $catID == -3);
 				# Imposition Comments are stored with the project.
 				if ( $ref eq 'impositionlayout' ) {
@@ -2569,10 +2584,8 @@ sub setup_docket {
                     );
                 }
 
-				#format commments to show line breaks from text area input.
-				$comment =~ s/\r/<br>/g; 
 
-				next if $catID == -3 && $cat eq 'Printing';
+		next if $catID == -3 && $cat eq 'Printing';
 
                 if ($supplied) {
                     push @supplied_service_types,
@@ -2638,6 +2651,7 @@ sub setup_docket {
     $variable->{linescreen}  = $dbh->selectrow_array(q{SELECT linescreen FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
     $variable->{certified}   = $dbh->selectrow_array(q{SELECT strvalue FROM tbl_service_specifications WHERE lngprojectindex = ? AND strname = 'certified' LIMIT 1}, undef, $pid);
     $variable->{secureprint} = $dbh->selectrow_array(q{SELECT strvalue FROM tbl_service_specifications WHERE lngprojectindex = ? AND strname = 'secureprint' LIMIT 1}, undef, $pid);
+
 
     return OK;
 }

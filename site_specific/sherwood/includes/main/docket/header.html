@@ -2,11 +2,16 @@
 	.whiteBG{
 		background-color: #fff !important;
 	}
+	#category_header{
+		font-size: 3em;
+		text-align: center;
+	}
 </style>
 <div class="whiteBG">
 <!-- Basic Info. -->
 <?eval( use Data::Dumper; print STDERR " MY DUMPER" , Dumper($variable->{HeaderInfo}); ) ?>
 
+	<h2 id="category_header"><?header_category?></h2>
 	<h2 style="font-size: 3em; text-align: center; margin: 0px 0 0px 0; line-height: 2em">
 		<? if ( $variable->{HeaderInfo}{'order_id'} ) ?>
 			<span class="id" style="float: left"> DOCKET ID: </span>
