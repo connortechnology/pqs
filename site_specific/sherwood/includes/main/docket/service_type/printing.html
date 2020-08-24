@@ -17,6 +17,9 @@
 		#printOnlyDisappear {
 		display : none;
 		}
+		div.whiteBG {
+			margin-top: -140px;
+		}
 	}
 </style>
 
@@ -25,9 +28,9 @@
 No Printing <!-- <?chargefor?> -->
 <?else NoPrint?>
 <?if is_staff ?>
-<span style="font-size: 2em;>
-	<a href="/main/proj/proj_printer_summ_price_breakdown.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>#chosen">
-		<?desc?>  </a>
+
+<span style="font-size: 2em;">
+		&nbsp;
 </span>
 <?else is_staff ?>
 	<span class="label">Project Type: </span><?ProjectType?>

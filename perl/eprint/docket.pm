@@ -1043,9 +1043,9 @@ sub make_header {
 
     my $catID = $r->param('Category');
 
-    $variable->{header_category} = 	$catID == -3 ? 'Bindery Sheet' :
-    				   	$catID == -1 ? 'Materials Sheet' :
-    				   	$catID == 2 ? 'Printing Sheet' :
+    $variable->{header_category} = 	$catID == -3 ? 'BINDERY SHEET' :
+    				   	$catID == -1 ? 'MATERIALS SHEET' :
+    				   	$catID == 2 ? 'PRINTING SHEET' :
 					'';
 
     $variable->{docket_header} = ssi::variable_substitution($r, $log, $dbh,

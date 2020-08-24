@@ -3,18 +3,25 @@
 		background-color: #fff !important;
 	}
 	#category_header{
-		font-size: 3em;
+		font-size: 30pt;
 		text-align: center;
+		margin-bottom: 0px;
 	}
+	@media print {
+		.whiteBG {
+			margin-top: -60px;
+		}
+	}
+
 </style>
 <div class="whiteBG">
 <!-- Basic Info. -->
 <?eval( use Data::Dumper; print STDERR " MY DUMPER" , Dumper($variable->{HeaderInfo}); ) ?>
 
 	<h2 id="category_header"><?header_category?></h2>
-	<h2 style="font-size: 3em; text-align: center; margin: 0px 0 0px 0; line-height: 2em">
+	<h2 style="font-size: 30pt; text-align: center; margin: 0px 0 0px 0; line-height: 2em">
 		<? if ( $variable->{HeaderInfo}{'order_id'} ) ?>
-			<span class="id" style="float: left"> DOCKET ID: </span>
+			<span class="id" style="float: left; margin-top: 12px"> DOCKET ID: </span>
 			<?HeaderInfo.docket_id?>
 		<? else ( $variable->{HeaderInfo}{'order_id'} ) ?>
 			<span class="id1" style="float: left"> Project: </span> 
