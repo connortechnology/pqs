@@ -192,7 +192,10 @@ sub add_product_to_order {
 
 	my $prod = new PQS::Object::product($product);
 	# my $price =  defined $quote_price ? $quote_price : $prod->price($var->{cust_id}, $qty, $versions);
+
 	my $price = $quote_price + $prod->price($var->{cust_id}, $qty, $versions);
+
+	$qty = $qty * $versions if $versions > 1;
     
 	print STDERR "HAVE: QTY: $qty PRICE: $price QPrice: $quote_price VERSIONS: $versions Name: $jobname \n";
 	die("No Product Quantity for Product: $product VERSIONS: $versions") unless $qty;
