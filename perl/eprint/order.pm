@@ -1511,7 +1511,7 @@ print STDERR "HAVE ORDER LINE: " , Dumper($o, $list, $order);
 			#
 			qty  		=> $o->{intquantity},
 			comment 	=> $prod->{specs}{description},
-
+			no_assets	=> 1,
 		};
 
 		my ($pid) = eprint::print_project::copy_project($dbh, $var, $ppid, $args);
