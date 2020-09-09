@@ -334,13 +334,14 @@ sub save_shipping {
 	$id = undef if $id eq 'New';
     my $address = $self->get_shipping_address($id);
 
+	return unless $params->{txtShippingAddress1};
 
 	if ( $form) {
    		$address->form_set( $params );
 	} else {
    		$address->set( $params );
 	}
-	$self->{dbh}->do(qq{INSERT INTO customer_ship_address 
+	 $self->{dbh}->do(qq{INSERT INTO customer_ship_address 
 						VALUES ( $self->{index}, $address->{index}) } ) if !$id;
 }
 
