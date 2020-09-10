@@ -660,6 +660,7 @@ sub ic_api {
 
 	if ( $rep->{statusMessage} eq 'FAIL' ) {		
 	  	print STDERR "HAVE FAIL RESULT FOR GET RATES", Dumper($rep);
+		$specs->{api_error} = Dumper($rep->{data});
 		return undef;
 	}
 
@@ -755,7 +756,7 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 
 	map { $$specs{"txtPrice$_"}    = $total } (1..3);
 
-	$specs->{txtResults} = $results; 
+	$specs->{txtResults} = $results || $specs->{api_error}; 
 	$specs->{txtShipmentPrice} = $rate->{Total} || '';
 	
 
