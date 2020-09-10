@@ -517,7 +517,7 @@ sub packages {
 	my $pid = $specs->{pid};
 	my $pweight = get_weight($log, $dbh, $pid, 'Project');
 
-	my $qty = $specs->{add_qty1};
+	my $qty = $specs->{add_qty1} || $specs->{txtQuantity1};
 
 	my $ship_weight = ceil($pweight * $qty);
 
@@ -735,7 +735,9 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 
 	}
 
-	$results .= "Packages:   $specs->{debug} ";
+	
+	#uncomment this line to display in results box
+	#$results .= "Packages:   $specs->{debug} ";
 
 	my $ship_total = $dbh->selectrow_array(q{SELECT sum(price) from ship_address WHERE sid = ? }, undef, $sid);
 
