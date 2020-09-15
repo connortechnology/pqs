@@ -738,7 +738,7 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 
 	
 	#uncomment this line to display in results box
-	#$results .= "Packages:   $specs->{debug} ";
+	$results .= "Packages:   $specs->{debug} ";
 
 	my $ship_total = $dbh->selectrow_array(q{SELECT sum(price) from ship_address WHERE sid = ? }, undef, $sid);
 
