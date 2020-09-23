@@ -281,6 +281,7 @@ sub action {
 				$order->deposit_not_required();
 			} else {
 				eprint::project::project_status($dbh, $p, $value );
+				print STDERR "SET PROJECT STATUS $p = $value \n";
 			}
 
 			my $project = new PQS::Object::project($p);

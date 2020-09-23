@@ -11,7 +11,7 @@ use constant COMPLETE => (
     'Waiting For Files', 'In Production', 'Complete',  'calculated', 'Pending Deposit' );
 
 use constant STATUSES => ( COMPLETE,
-    'uncalculated',  'dependent', 'error',      );
+    'uncalculated',  'dependent', 'error', 'Canceled'   );
 
 # Project service need levels.
 use constant {

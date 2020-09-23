@@ -206,13 +206,16 @@ sub check_status {
 
 
 
-		$status = 'CN' if $order->{specs}{cancelled};
 		$status =  'CP' if  $self->{specs}{completion_date};
 	}
 
 	if ( $status  eq 'IP' ) {
 		$self->init_production unless ( $self->{specs}{init_production} );
 	}
+
+	$status = 'CN' if $self->{specs}{strstatus} eq q{Canceled};
+
+	print STDERR "CHECK STATUS $self->{id} = $status \n";
 
 	return $status;
 
@@ -356,6 +359,8 @@ sub set_status {
 
 	eprint::service::set_status($log, $dbh, $self->{id}, $status, @{$sids});
 
+	print STDERR "PROJECT: $self->{id} Set to : $status  \n ";
+
 
 }
 
@@ -376,16 +381,15 @@ sub update_status {
 
 	my $pid = $self->{id};
 
-print STDERR "UPDATE PROJECT STATUS: $pid \n";
+	my $status  = $self->check_status();
+
+print STDERR "UPDATE PROJECT STATUS: $pid =  $status \n";
 
 	my $oid = $self->order_id;
 
 
 	if ( $oid ) {
 		my $order = new PQS::Object::order($oid);
-
-
-		my $status  = $self->check_status();
 
 		PQS::model::project::set_status($pid, $status::project->{$status});
 
@@ -396,7 +400,10 @@ print STDERR "UPDATE PROJECT STATUS: $pid \n";
 
 
 
-	return 	PQS::model::project::get_status($pid);
+	my $out = PQS::model::project::get_status($pid);
+	print STDERR "UPDATE PROJECT STATUS: $pid =  $out \n";
+	#return 	PQS::model::project::get_status($pid);
+	return 	$out;
 
 }
 

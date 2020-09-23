@@ -17,6 +17,11 @@
 			position: absolute;
 			bottom: 0;
 		}
+
+		
+		.noprint1, h5.noprint1, div.group h4.noprint1 {
+			display: none;
+		}
 		<?if ( $variable->{Category} == 2 )?>
 		div.group h4.noprint, .noprint {
 			display: none;
@@ -40,20 +45,39 @@
 
 	<? if ($$variable{Category} != -1) ?>
 		<?loop categories?>
+			<?if ( $variable->{name} ne 'Printing' ) ?>
+				<?if have_print?>
+					<div style="page-break-before: always"></div>
+					<?eval( $variable->{have_print} = 0 ) ?>
+				<?endif have_print?>
+			<?endif ( $variable->{name} ne 'Printing' ) ?>
+
 			<div class="category">
 				<?if ( scalar @{$variable->{service_type}} > 0 ) ?>
+				<?if ( $variable->{name} ne 'Printing' && $variable->{Category} eq '' )?>
 				<h5 class="noprint"><?name?> Information </h5>
+				<?else ( $variable->{name} ne 'Printing' && $variable->{Category} eq '' )?>
+				<h5 class="noprint1"><?name?> Information </h5>
+				<?endif ( $variable->{name} ne 'Printing' && $variable->{Category} eq '' )?>
 				<?endif ( scalar @{$variable->{service_type}} > 0 ) ?>
 
 				<?loop service_type?>
+
 		<?if ( $variable->{id} eq 'Printing' )?>
-	<? if ($$variable{Category} == 2) ?>
-			<div style="page-break-before: always"></div>
-	<? endif ($$variable{Category} == 2) ?>
+			<? if ($$variable{Category} == 2) ?>
+			<? endif ($$variable{Category} == 2) ?>
+			<div style="page-break-before: always"> </div>
+			<?eval( $variable->{have_print} = 1 ) ?>
 		<?endif ( $variable->{id} eq 'Printing' )?>
 
 					<div class="group">
-						<h4 class="noprint" style="font-size:14px"><?name?></h4>
+				<?if ( $variable->{name} ne 'PRINTING' && $variable->{Category} eq '' )?>
+				<h4 class="noprint" style="font-size:14px"><?name?> <?name?>, <?Category?> </h4>
+				<?else ( $variable->{name} ne 'PRINTING' && $variable->{Category} eq '' )?>
+						<h4 class="noprint1" style="font-size:14px"><?name?></h4>
+				<?endif ( $variable->{name} ne 'PRINTING' && $variable->{Category} eq '' )?>
+
+
 							<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
 							<? if ( $variable->{sid} ) ?>
 							<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					

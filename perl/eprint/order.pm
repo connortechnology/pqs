@@ -3148,7 +3148,7 @@ sub cancel_order {
 
     sql::update(
         $log, $dbh, 'tbl_Orders', "lngOrderID='$order_id'",
-        strStatus => 'Cancelled'
+        strStatus => 'Canceled'
     );
 
     my $sth = $dbh->prepare(q{
