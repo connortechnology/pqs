@@ -54,11 +54,11 @@
 
 			<div class="category">
 				<?if ( scalar @{$variable->{service_type}} > 0 ) ?>
-				<?if ( $variable->{name} ne 'Printing' && $variable->{Category} eq '' )?>
-				<h5 class="noprint"><?name?> Information </h5>
-				<?else ( $variable->{name} ne 'Printing' && $variable->{Category} eq '' )?>
+				<?if ( $variable->{name} eq 'Printing' && $variable->{Category} eq '' )?>
 				<h5 class="noprint1"><?name?> Information </h5>
-				<?endif ( $variable->{name} ne 'Printing' && $variable->{Category} eq '' )?>
+				<?else ( $variable->{name} eq 'Printing' && $variable->{Category} eq '' )?>
+				<h5 class="noprint"><?name?> Information </h5>
+				<?endif ( $variable->{name} eq 'Printing' && $variable->{Category} eq '' )?>
 				<?endif ( scalar @{$variable->{service_type}} > 0 ) ?>
 
 				<?loop service_type?>
@@ -71,24 +71,24 @@
 		<?endif ( $variable->{id} eq 'Printing' )?>
 
 					<div class="group">
-				<?if ( $variable->{name} ne 'PRINTING' && $variable->{Category} eq '' )?>
-				<h4 class="noprint" style="font-size:14px"><?name?> <?name?>, <?Category?> </h4>
-				<?else ( $variable->{name} ne 'PRINTING' && $variable->{Category} eq '' )?>
-						<h4 class="noprint1" style="font-size:14px"><?name?></h4>
-				<?endif ( $variable->{name} ne 'PRINTING' && $variable->{Category} eq '' )?>
+				<?if ( $variable->{name} eq 'PRINTING' && $variable->{Category} eq '' )?>
+					<h4 class="noprint1" style="font-size:14px"><?name?></h4>
+				<?else ( $variable->{name} eq 'PRINTING' && $variable->{Category} eq '' )?>
+					<h4 class="noprint" style="font-size:14px"><?name?></h4>
+				<?endif ( $variable->{name} eq 'PRINTING' && $variable->{Category} eq '' )?>
 
 
 							<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
 							<? if ( $variable->{sid} ) ?>
 							<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
-							<br />
+							<br  class="noprint"/>
                             
                             <!-- If service is equal to shipping display below Add/Edit link and pop up comment window with new tracking ID-->
                             
 							<? if ( $variable->{id} eq 'Shipping' ) ?>
 
                             <a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?ServiceID=<?sid?>&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Tracking ID Add/Edit</a>
-                           <br/> 
+                           <br class="noprint"/> 
                            
 							<? endif ( $variable->{id} eq 'Shipping' ) ?>
                             
@@ -96,7 +96,7 @@
 
 							<? if ( ! $variable->{sid} ) ?>
 							<a class="comment" href="#" onclick="window.open('/main/proj/docket_comment.html?CommentType=ImpComment&ProjectIndex=<?ProjectIndex?>','pop','newWin,left=300,width=680,top=200,height=300,resizable=no,scrollbars=no,menubar=no,toolbar=no,location=no,directories=no,status=no');" >Comment</a>					
-							<br />
+							<br class="noprint" />
 							<? endif ( ! $variable->{sid} ) ?>
                             
 						<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>

@@ -31,7 +31,7 @@ No Printing <!-- <?chargefor?> -->
 <?else NoPrint?>
 <?if is_staff ?>
 
-<span style="font-size: 2em;">
+<span class="noprint" style="font-size: 2em;">
 		&nbsp;
 </span>
 <?else is_staff ?>
@@ -67,8 +67,6 @@ No Printing <!-- <?chargefor?> -->
 
 
 		<? if ( $$variable{FORMS} ) ?>
-		<br/>
-		<br/>
 			<?loop FORMS?>
 	<?if not:_first?>
 	<p style="page-break-before: always"> 
