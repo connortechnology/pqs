@@ -554,6 +554,13 @@ sub packages {
 	return  \@ship;
 
 }
+sub no_space {
+	my $s = shift;
+	$s =~ s/\s+//g; 
+	$s =~ s/\-//g; 
+	$s =~ s/\-//g; 
+	return $s;
+}
 
 sub to_address {
 	my $specs = shift;
@@ -568,11 +575,14 @@ sub to_address {
       "emailAddress"=> $specs->{txtShippingEmail} . "a\@b.ccc",
       "city"=> $specs->{txtShippingCity},
       "provinceCode"=> $specs->{ddmShippingStateProvince}
-
 	};
+
+	#map { 1 } qw(postalCode phone emailAddress);
+	map { $to->{$_} = no_space($to->{$_}) } qw(postalCode phone emailAddress);
 
 	return $to;
 }
+
 sub ic_login {
 	my $log = session::log;
 	my $dbh = session::dbh;
@@ -660,7 +670,7 @@ sub ic_api {
 
 	if ( $rep->{statusMessage} eq 'FAIL' ) {		
 	  	print STDERR "HAVE FAIL RESULT FOR GET RATES", Dumper($rep);
-		$specs->{api_error} = Dumper($rep->{data});
+		$specs->{api_error} = $rep->{data};
 		return undef;
 	}
 
@@ -756,7 +766,12 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 
 	map { $$specs{"txtPrice$_"}    = $total } (1..3);
 
-	$specs->{txtResults} = $results || $specs->{api_error}; 
+	if ( $specs->{api_error} ) {
+		$specs->{txtResults} = format_error($specs->{api_error});
+	} else {
+		$specs->{txtResults} = $results;
+	}
+
 	$specs->{txtShipmentPrice} = $rate->{Total} || '';
 	
 
@@ -772,6 +787,22 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 
 	print STDERR "HAVE STATUS: $status - $specs->{shipping_required}  \n";
 	return $status eq 'calculated' ? $status : 'uncalculated';
+}
+sub format_error {
+	my $e = shift;
+	my $text = "ERROR: \n";
+
+	map {
+
+		if ( scalar @{$e->{$_}} ) {
+			$text .=  "$_ : " . @{$e->{$_}}[0] . " \n"; 
+		}
+
+	} keys %{$e};
+
+	#die($text);
+	return $text;
+		
 }
 
 
