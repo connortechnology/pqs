@@ -66,6 +66,7 @@ sub add_ship_address {
 	) }, undef, $name, $cid);
 
 	$cust->save_shipping( $id, $specs, 1 );
+	$specs->{Save_Ship_Address} = '';
 
 }
 
@@ -484,6 +485,8 @@ sub preaction {
 		delete $specs->{btnFunction};
 		$specs->{ddmShippingCompany} = '';
 
+		#$specs->{txtShippingFirstName} = 'Hello';
+
 	}
 
 	update_shipnum($sid);
@@ -492,17 +495,19 @@ sub preaction {
 }
 
 sub from_address {
+	my $log = session::log;
+	my $dbh = session::dbh;
 	return {      
-      "companyName"=>"SHEROOD PRINTERS",
-      "address1"=>"240 Brunel Road",
-      "address2"=>"",
-      "postalCode"=>"L4Z1T5",
-      "countryCode"=>"CA",
-      "phone"=>"9055011296",
-      "attention"=>"Manoj Sheth",
-      "emailAddress"=>"info\@sherwoodprinters.com",
-      "city"=>"MISSISSAUGA",
-      "provinceCode"=>"ON"
+      "companyName"=> 	configuration::get_value($log, $dbh, 'CompanyName'),
+      "address1"=>   	configuration::get_value($log, $dbh, 'Address1'),
+      "address2"=> 		configuration::get_value($log, $dbh, 'Address2'),
+      "postalCode"=>	configuration::get_value($log, $dbh, 'PostalCode'),
+      "countryCode"=> 	configuration::get_value($log, $dbh, 'CountryCode'),
+      "phone"=> 		configuration::get_value($log, $dbh, 'Phone'),
+      "attention"=>		configuration::get_value($log, $dbh, 'Attention'),
+      "emailAddress"=> 	configuration::get_value($log, $dbh, 'Email'),
+      "city"=> 			configuration::get_value($log, $dbh, 'City'),
+      "provinceCode"=> 	configuration::get_value($log, $dbh, 'ProvinceCode'),
    };
 
 }
@@ -624,6 +629,8 @@ sub ic_login {
 sub ic_api {
 	my ($specs )  = @_;
 
+	print STDERR "\n***********************CALL SHIPPING API NOW ************************\n\n";
+
 	my $api = JSON::API->new("https://soluship.com/api/v1/getRatesMobile/");
 
 	my $token = ic_login();
@@ -679,7 +686,7 @@ sub ic_api {
 	  $specs->{debug} = Dumper($packages);
 	  
 
-	  print STDERR "HAVE SHIP", Dumper($obj);
+	  #print STDERR "HAVE SHIP", Dumper($obj);
 
 
 	  return $rates;
@@ -755,12 +762,17 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 
 	my $rate = $rate_over || shift @{$rates};
 
+	my $markup = configuration::get_value($log, $dbh, 'ShippingMarkup');
+
+
     my $strid =  "$rate->{carrierName} $rate->{serviceName}";
  	$rate_id = $dbh->selectrow_array(q{SELECT lngindex from tbl_ship_via where strname = ? }, undef, $strid );
 
 	$rate->{Total} =~ s/\$//g;
 
-	my $total = $ship_total + $rate->{Total};
+	my $ship_price = $rate->{Total} * ( 1 + ($markup / 100) );
+
+	my $total = $ship_total + $ship_price;
 		
 
 
@@ -772,7 +784,7 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 		$specs->{txtResults} = $results;
 	}
 
-	$specs->{txtShipmentPrice} = $rate->{Total} || '';
+	$specs->{txtShipmentPrice} = $ship_price || '';
 	
 
 	# Remove Address data inserted by calc price.

@@ -532,6 +532,8 @@ sub get_signature_weight {
 
     my $ptype = get_type($log, $dbh, $pid);
 
+	return 1 if $ptype eq 'NoPrint';
+
     #For Screen items the weight is in the print container.
     if ( $ptype eq 'ScreenItem' ) {
         return get_specifications(

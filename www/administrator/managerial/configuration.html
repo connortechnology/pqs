@@ -165,28 +165,12 @@
 			<br class="clear" />
 
 			<fieldset>
-				<legend>Shipping Type Overrides</legend>
-
-				<label for="ddmProofShippingOverride">Proofs:</label>
-				<select id="ddmProofShippingOverride" name="ddmProofShippingOverride">
-					<option value=""> Please select one </option>
-					<?ddmProofShippingOverride?>
-				</select>
+				<legend>Shipping</legend>
+				<?loop SHIPPING?>
+				<label ><?label?>:</label>
+				<input id="<?strconfigtitle?>" name="<?strconfigtitle?>" value="<?value?>" />
 				<br />
-
-				<label for="ddmSampleShippingOverride">Samples:</label>
-				<select id="ddmSampleShippingOverride" name="ddmSampleShippingOverride">
-					<option value=""> Please select one </option>
-					<?ddmSampleShippingOverride?>
-				</select>
-				<br />
-
-				<label for="ddmProjectShippingOverride">Projects:</label>
-				<select id="ddmProjectShippingOverride" name="ddmProjectShippingOverride">
-					<option value=""> Please select one </option>
-					<?ddmProjectShippingOverride?>
-				</select>
-				<br />
+				<?endloop SHIPPING?>
 
 			</fieldset>
 

@@ -43,7 +43,7 @@
 function loadwithpage() {
 //	needhelp(); 
 	singlemultiplesing();
-	total_qtys();
+	//total_qtys();
 	ship();
 //	accountnumber1();
 	getmymethod();
@@ -51,40 +51,14 @@ function loadwithpage() {
 
     window.onload=loadwithpage;
 	
-//	function helpmsg() {
-//		alert("If you require assistance with your project please call us.");
-//	}
-//	
-//	function needhelp() {
-//    window.onload = function () {
-//        setTimeout(helpmsg, 300000); //Then set it to run again after ten minutes
-//    }
-//	}
+
 	</script>
     
 	<script type="text/javascript">
-var service = new Service('<?service.ref?>');
-//function accountnumber1() {
-//	var an = $('select_account_number');
-//	var ma = $('accountnumber');
-//	var val = an.options[an.selectedIndex].value;
-//	if ( val ) {
-//		ma.value = val;
-//	} else {
-//	}
-//	ma.disabled = false;
-//}
 
-function open_export(summaryPage) {
-window.open('/main/proj/shipping/import_export.html?sid=<?sid?>','shippingimport','newWin,left=160,width=840,top=140,height=155,resizable=no,scrollbars=no,menubar=no,toolbar=yes,location=no,directories=no,status=no');
-}
+	var service = new Service('<?service.ref?>');
 
-function packing_slip(shipid) {
-	var page = "/main/order/packing_slip.html?order_id=<?order_id?>;packing_slip=1;shipid=" + shipid;
-	//alert(page);
-	window.open(page, 
-			'newWin,left=160,width=840,top=140,height=155,resizable=no,scrollbars=no,menubar=no,toolbar=yes,location=no,directories=no,status=no');
-}
+
 
 
 function check_text (f,n) {
@@ -101,18 +75,9 @@ function check_text (f,n) {
 function check_shipping () {
 		var msg = '';
 		
-// Ship field checking for now. Fields have been temp disabled.
-return msg;
-	
 
 		if(document.getElementById("multiple").checked == true){
-				msg += check_text('add_qty1','Quantity to Ship to this Address Quantity 1');
-				 <? if ( $$variable{'txtQuantity2'} > 0 ) ?>
-				 msg += check_text('add_qty2','Quantity to Ship to this Address Quantity 2');
-				  <? endif ( $$variable{'txtQuantity2'} > 0 ) ?>
-				   <? if ( $$variable{'txtQuantity3'} > 0 ) ?>
-				msg += check_text('add_qty3','Quantity to Ship to this Address Quantity 3');
-				 <? endif ( $$variable{'txtQuantity3'} > 0 ) ?>
+				msg += check_text('add_qty1','Quantity to Ship to this Address');
 		}
 		msg += check_text('txtShippingFirstName','Ship to First Name');
 		msg += check_text('txtShippingLastName','Ship to Last Name');
@@ -127,27 +92,6 @@ return msg;
 			if (x == 0){
 			msg += 'Please Select a Ship to State/Province' + '\n';
 			}
-		}
-		var month =  document.getElementById('ddmDueDateMonth1');
-		var day   =  document.getElementById('ddmDueDateDay1');
-		var year  =  document.getElementById('ddmDueDateYear1');
-		var time  =  document.getElementById('ddmDueDateTime');
-
-		if ( month.selectedIndex == 0 ) {
-			msg += 'Please Select a Delivery Month' + '\n';
-
-		}
-		if ( day.selectedIndex == 0 ) {
-			msg += 'Please Select a Delivery Day' + '\n';
-
-		}
-		if ( year.selectedIndex == 0 ) {
-			msg += 'Please Select a Delivery Year' + '\n';
-
-		}
-		if ( time.selectedIndex == 0 ) {
-			msg += 'Please Select a Delivery Time' + '\n';
-
 		}
 		
 return msg;
@@ -164,6 +108,7 @@ function check_information () {
 		msg += check_text('txtPostalCode','Contact Information Zip or Postal Code');
 		msg += check_text('txtPhone','Contact Information Phone Number');
 		msg += check_text('txtEmail','Contact Information Email');
+		msg += check_text('txtShipmentPrice','Price must be calculated before adding to Shipment');
 		var x = $('ddmStateProvince').selectedIndex;
 		if (x == 0){
 			msg += 'Please Select a Contact State/Province' + '\n';
@@ -173,9 +118,9 @@ return msg;
 		
 }
 
+// Stuff to do before adding this shipment to multiple shipment list.
 function check_ship_to () {
 
-      	document.f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';
 		var msg = '';
 		msg += check_shipping();
 		if (msg != '' ) {
@@ -183,31 +128,22 @@ function check_ship_to () {
 			alert(msg);
 			return false;
 		}
+		if ( $('txtShipmentPrice').value == 0 ) {
+			alert("Shipping Price must be calculated before adding to Shipment");
+			return false;
+		}
 
       	document.f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';
-		// Always have the Save Address buttons return to shipping page
-		/*if ( $('multiple').checked ) {
-      		document.f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';
-			$('ddmShippingCompany').selectedIndex = 0;
-		} else {
-			return true;
-		}*/
 
 }
 
-function check_list (x) {
-			var n=0;
-			if ( n == 0 ) {
-			alert(x);
-			}
-			n=1;
-}
 
 
 function my_validate() {
 	if (!document.getElementsByName('delete')) return;
 	var n =document.getElementsByName('delete').length || 1;
 	var status; 
+	alert(0);
 
 	for(var i=0; i < n; i++){
 		var elm =  n > 1 ? document.getElementsByName('delete')[i] : document.getElementsByName('delete');
@@ -250,91 +186,8 @@ function valid_qty (Q) {
 }
 
 
-function total_qtys() {
-//	alert ('start total_qtys');
-var del = document.getElementsByName('delete');
-
-	if (!del.length) return;
-	//alert ("del="+del.length);
-	var q1 = 0;
-	var q2 = 0;
-	var q3 = 0;
-	var n = document.getElementsByName('delete').length || 1;
-	for(var i=0; i < n; i++){
-		
-		var x =  n > 0 ? document.getElementsByName('delete')[i].value : document.getElementsByName('delete').value;
-//alert (document.getElementsByName('delete'));
-//if ( $('add_qty1-' + x) ) {
-//alert ('add_qty 1 start');
-		var n1 = $('add_qty1-' + x).value;
-		q1 += Number(n1);
-
-		<? if ( $$variable{'txtQuantity2'} > 0 ) ?>
-			q2 += Number($('add_qty2-' + x).value);
-		<? endif ( $$variable{'txtQuantity2'} > 0 ) ?>
-		
-		<? if ( $$variable{'txtQuantity3'} > 0 ) ?>
-			q3 += Number($('add_qty3-' + x).value);
-		<? endif ( $$variable{'txtQuantity3'} > 0 ) ?>
-//		}
-	}
-
-	var qty1 = document.f1.txtQuantity1 || document.f1.hdnQuantity1;
-	if ( $('qty_total1') ) {
-//alert ('start qty 1');
-	$('qty_total1').innerHTML = q1;
-	$('qty_remaining1').innerHTML =  Number(qty1.value) - q1;
-	}
-//	document.getElementsByName('qty_total1').innerHTML = q1;
-//	document.getElementsByName('qty_remaining1').innerHTML =  Number(qty1.value) - q1;
-
-	<? if ( $$variable{'txtQuantity2'} > 0 ) ?>
-		var qty2 = document.f1.txtQuantity2 || document.f1.hdnQuantity2;
-		document.getElementsByName('qty_total2').innerHTML = q2;
-		document.getElementsByName('qty_remaining2').innerHTML =  Number(qty2.value) - q2;
-	<? endif ( $$variable{'txtQuantity2'} > 0 ) ?>
-
-	<? if ( $$variable{'txtQuantity3'} > 0 ) ?>
-		var qty3 = document.f1.txtQuantity3 || document.f1.hdnQuantity3;			
-		document.getElementsByName('qty_total3').innerHTML = q3;
-		document.getElementsByName('qty_remaining3').innerHTML =  Number(qty3.value) - q3;
-	<? endif ( $$variable{'txtQuantity3'} > 0 ) ?>
-
-//alert ('end total_qtys');
-}	
 
 
-function check_qtys() {
-//	alert ('start check_qtys');
-	var qty1 = document.f1.txtQuantity1 || document.f1.hdnQuantity1;
-	var qty2 = document.f1.txtQuantity2 || document.f1.hdnQuantity2;
-	var qty3 = document.f1.txtQuantity3 || document.f1.hdnQuantity3;
-
-//	if ( Number($('qty_total1').innerHTML) > Number(qty1.value) ) {
-//		alert('Quantity 1 exceeded.');
-//		return false;
-//	}
-	<? endif ( $$variable{'txtQuantity2'} > 0 ) ?>
-	<? if ( $$variable{'txtQuantity2'} > 0 ) ?>
-	if ( Number($('qty_total2').innerHTML) > Number(qty2.value) ) {
-		alert('Quantity 2 exceeded.');
-		return false;
-	}
-	<? endif ( $$variable{'txtQuantity2'} > 0 ) ?>
-	<? if ( $$variable{'txtQuantity3'} > 0 ) ?>
-	if ( Number($('qty_total3').innerHTML) > Number(qty3.value) ) {
-		alert('Quantity 3 exceeded.');
-		return false;
-	}
-	<? endif ( $$variable{'txtQuantity3'} > 0 ) ?>
-	return true;
-}
-
-function shipping_required() {
-	//
-	alert('yest');
-
-}
 
 //displays for single vs multiple shipping addresses
 function singlemultiple() {
@@ -351,8 +204,8 @@ function singlemultiplesing() {
 	//	alert ('none checked');
 		$('single').checked = true;
 	}
-	var elements = new Array("mult2","mult3","mult5","mult6","mult7","mult8","mult9","calculate-service");
-	//var elements = new Array("mult1","mult2","mult3","mult4","mult5","mult6","mult7","mult8","mult9","calculate-service");
+	var elements = new Array("mult1", "mult2","mult3","mult5","mult6","mult7","mult8","mult9");
+
 	var elements1 = new Array("sing1","sing2");
 
 	if(document.getElementById("multiple").checked == false) {
@@ -366,11 +219,28 @@ function singlemultiplesing() {
 
 }
 
+//runs before call price calculations
+service.validate = function validate(e) {
+
+	$('txtShipmentPrice').value = '';
+	$('txtResults').innerHTML = '...';
+	if(document.getElementById("multiple").checked == true) {
+
+		if(document.getElementById("multiple").checked == true){
+			if ($('add_qty1').value == 0) {
+				$('txtResults').innerHTML = 'Please select Quantity to Ship';
+				return 0;
+			}
+		}
+
+	}
+	return 1;
+}
+
 function ship() {
 	if(document.getElementById("yesshipping").checked == true) {
 	 	document.getElementById("ShipInfo").style.display = "";
 	 	document.getElementById("multiple").disabled = "";
-	 	document.getElementById("calculate-service").style.display = "";
 	} else { 
 		if (document.getElementById("calculate-service"))
 	 		document.getElementById("calculate-service").style.display = "none";
@@ -389,10 +259,6 @@ function setDisplay(elements, value){
 	return true;
 }
 
-//Auto Check No for Single Shipping Address
-//function setValue() {
- //document.getElementById("single").checked=true;
-//}
 		
 // Shipping OVERRIDES chkOverrideShipper
 
@@ -407,89 +273,8 @@ function overrides (id) {
 }
 
 
-function getmymethod() {
-	var delmethod = $('deliverymethod');
-	if ( !delmethod ) {
-		return;
-	}
-	
 
-	var method = delmethod.options[delmethod.selectedIndex].value;
 
-	if (method != "Standard"){
-
-		var f = document.getElementsByClassName('ship')
-		for(i=0; i<f.length; i++) {
-			f[i].style.display =    'none';
-		}
-
-	}
-	else {
-		var f = document.getElementsByClassName('ship')
-		for(i=0; i<f.length; i++) {
-			f[i].style.display =    'table-row';
-		}
-
-	}
-}
-
-// function copy_address() {
-// 		$('txtShippingCompany').value  	= $('txtCompanyName').value;
-// 		$('txtShippingFirstName').value  	= $('txtFirstName').value;
-// 		$('txtShippingLastName').value  	= $('txtLastName').value;
-// 		$('txtShippingAddress1').value 	= $('txtAddress1').value;
-// 		$('txtShippingAddress2').value 	= $('txtAddress2').value;
-// 		//$('txtShippingCubicle').value 	= $('txtCubicle').value;
-// 		$('txtShippingPhone').value 	= $('txtPhone').value;
-// 		$('txtShippingCity').value 		= $('txtCity').value;
-// 		$('txtShippingPostalCode').value = $('txtPostalCode').value;
-// 		var prov = $('ddmStateProvince').options[$('ddmStateProvince').selectedIndex].value;
-// 		set_ddm($('ddmShippingStateProvince'), prov);
-
-// 		var country = $('ddmCountry').options[$('ddmCountry').selectedIndex].value;
-// 		set_ddm($('ddmShippingCountry'), country);
-		
-	
-// }
-
-function set_ddm (ddm, v) {
-	for (var i = 0; i < ddm.options.length; i++) {
-		if ( ddm.options[i].value == v ) {
-			ddm.selectedIndex = i;
-			return;
-		}
-	}
-
-}
-
-function check_cost_center () {
-
-	//Unless we have indicated shipping is required stop here.
-	if(!document.getElementById("yesshipping").checked == true) {
-		return true;
-	} 
-		
-		var msg = '';
-		msg += check_information();
-		msg += check_shipping();
-	//	var costcenter = $('cost_center').value;
-		//var test = /\d{4}\-\d{3}/;
-		//var x = test.match(costcenter);
-		//if (x==false)
-		//msg += 'Invalid Cost Center Format. The Cost Center must be entered in this format 0000-000.';
-		if (msg != '' ) {
-			
-			alert(msg);
-			return false;
-		}
-
-	
-		if ( $('multiple').checked ) {
-      		document.f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';
-		} else {
-			return true;
-		}
-}
 	
 	
 </script>
@@ -545,7 +330,7 @@ function check_cost_center () {
             </tr>
 
 			<tr class="ship">
-				<td>Add this Address to my company profile:</td>
+				<td>Save this Address to my company profile:</td>
 				<td><input type="checkbox" value="1" name="Save_Ship_Address" <?Save_Ship_Address?> />
 			</tr>
 
@@ -628,7 +413,7 @@ function check_cost_center () {
       
 			<tr id="mult8">
 			<td>* Quantity to Ship:</td>
-			<td><input name="add_qty1" id="add_qty1" onKeyup="total_qtys()" size="10" /></td>
+			<td><input name="add_qty1" id="add_qty1" onKeyup="" size="10" /></td>
 			</tr>
 <!--                        
                         <tr>
@@ -745,7 +530,7 @@ function check_cost_center () {
 		<tr>
             <td valign="top">Price:</td>
             <td>
-			<input id="txtShipmentPrice" name="txtShipmentPrice" value="<?txtShipmentPrice?>" type="text" size="9" class="smBox" />
+			<input id="txtShipmentPrice" name="txtShipmentPrice" value="<?txtShipmentPrice?>" type="text" size="9" class="smBox" readonly />
 		    </td>
         </tr>
 		<tr>
@@ -774,7 +559,9 @@ function check_cost_center () {
 </tr>
 <tr>
 <td style="border-bottom:2px solid #000000 !important; border-left:2px solid #000000 !important;border-right:2px solid #000000 !important"> </td>
-<td style="border-bottom:2px solid #000000 !important; border-left:2px solid #000000 !important;border-right:2px solid #000000 !important"><div id="mult1"><input type='submit' name='New Address' value='Add to Shipment' class='button' style="float:left"	onClick="return check_ship_to();"  /></div></td>
+
+<td style="border-bottom:2px solid #000000 !important; border-left:2px solid #000000 !important;border-right:2px solid #000000 !important">
+	<div id="mult1"><input type='submit' name='New Address' value='Add to Shipment' class='button' style="float:left"	onClick="return check_ship_to();"  /></div></td>
 </tr>
 
 </div>
@@ -783,7 +570,6 @@ function check_cost_center () {
             
         
         <? if ( @{$variable->{'ADDRESSES'}} > 0 ) ?>
-		<?eval ( use Data::Dumper; print STDERR Dumper($variable->{ADDRESSES}) ) ?>
         <fieldset id="mult4" style="margin-top: 5px">
             
             <legend>
@@ -899,6 +685,7 @@ i						 <br /><?if strcity?><?strcity?>,<?endif strcity?>
 </fieldset>
   <? endif ( @{$variable->{'ADDRESSES'}} > 0 ) ?>
 
+
 		<? if ($$variable{isServicePricing}) ?>
 
 			<h2 id="pricing_title">Pricing</h2>
@@ -950,9 +737,6 @@ i						 <br /><?if strcity?><?strcity?>,<?endif strcity?>
 			</div><!--div end pricing-->
 			<br class="clear" />
 		<? endif ($$variable{isServicePricing}) ?>
-
-  <? if ( @{$variable->{'ADDRESSES'}} > 0 ) ?>
-     <? endif ( @{$variable->{'ADDRESSES'}} > 0 ) ?>
 
 		
 		<input type="hidden" name="hdnQuantity1" value="<?txtQuantity1?>" />
