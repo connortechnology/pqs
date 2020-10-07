@@ -26,9 +26,9 @@
 <?eval( use Data::Dumper; print STDERR " MY DUMPER" , Dumper($variable->{HeaderInfo}); ) ?>
 
 	<h2 id="category_header"><?header_category?></h2>
-	<h2 style="font-size: 30pt; text-align: center; margin: 0px 0 10px 0; line-height: 1em">
+	<h2 style="font-size: 30pt; text-align: center;">
 		<? if ( $variable->{HeaderInfo}{'order_id'} ) ?>
-			<span class="id" style="float: left; margin-top: 12px"> DOCKET ID: </span>
+			<span class="id" style="float: left;"> DOCKET ID: </span>
 			<?HeaderInfo.docket_id?>
 		<? else ( $variable->{HeaderInfo}{'order_id'} ) ?>
 			<span class="id1" style="float: left"> Project: </span> 
