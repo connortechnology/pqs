@@ -1057,6 +1057,7 @@ sub price {
     my ($log, $dbh, $variable, $pid, $sid, $service, $specs, $is_save) = @_;
 
     my $service_type = $service->{type};
+	print STDERR "START SERVICE PRICE \n";
 
     # Allow the service to convert the specs whatever dataformat it wants.
     eval {
@@ -1113,6 +1114,8 @@ sub price {
 	my $override = $dbh->selectrow_array(q{
 		SELECT price_override FROM tbl_project_contents WHERE lngserviceindex = ?
 	}, undef, $sid );
+
+	print STDERR "HAVE PRICE OVERRIDE: FOR SID: $sid \n";
 
 	$specs->{txtPrice1} = $override if $override ne '';
 

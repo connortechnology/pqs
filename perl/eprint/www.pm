@@ -352,8 +352,6 @@ print STDERR "START PARSE PAGE \n\n";
         unless (user_allowed($variable->{user}{type}, $section)) {
 
             my @public = split /,/, configuration::get_value($log, $dbh, 'public_URIs');
-use Data::Dumper;
-print STDERR "HAVE PUBLIC FOR PAGE: $page" , Dumper(\@public);
 
             # We're not a public URI, so direct them to login.
             unless (grep { $page =~ /^$_$/ } @public) {

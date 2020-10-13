@@ -2482,14 +2482,21 @@ sub edit_line_item {
 
 	map { $have_price = 1 if $_ eq 'price' } $r->param();
 
+	print STDERR "HAVE PRICE: $have_price , PRice: $price \n";
+
 	if ( $r->param('edit_service') ) {
 		#Display input for selected service unless we are saving price
 		$edit =  $r->param('edit_service') unless $have_price;
 
 		#if saving price field but it is empty, reset price override.
-		if ( $have_price &&  $price eq '') {
+		if ( ($have_price &&  $price eq '') || $r->param('reset') ) {
+			print STDERR "RESET PRICE OVERRIDE: $sid \n";
+
 			$dbh->do(q{UPDATE tbl_project_contents set price_override = NULL where lngserviceindex = ?}, 
 				undef, $sid);
+
+			my $log = session::log;
+			eprint::Build::build($log, $dbh, $pid, $variable, 0);
 		}
 	};
 

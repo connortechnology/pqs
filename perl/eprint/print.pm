@@ -551,7 +551,7 @@ sub display_project {
                s.strurl          AS url,         c.strstatus   AS status,
                c.lngneedlevel    AS need_level,  c.ysnremoved  AS removed,
                t.lngsort         AS cat_sort,     s.lngindex    AS type,
-			   c.custom_sort,
+			   c.custom_sort,	 c.price_override,
                (CASE WHEN s.ysnviewvisible = 'Y' 
                      THEN true 
                      ELSE false
@@ -700,6 +700,11 @@ sub display_project {
             my @controls;
 
             my $name = lc $service->{ref};
+            push @controls, { 
+                name => 'Reset', 
+                url  => "/main/proj/dispatch.html?action=edit_line_item;pid=$pid;sid=$service->{id};reset=1;edit_service=1;"
+            } if $service->{price_override};
+
 
             # Users can edit the service type if it has an edit page.
             push @controls, { 
