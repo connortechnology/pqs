@@ -183,6 +183,8 @@ sub complete_project {
 		if ($p->{specs}{completion_date}) {
 
 			print STDERR "PROJECT ALREADY COMPLETE!!!!!!: $pid on $p->{specs}{completion_date} \n";
+
+			$p->update_status();
 		
 			return 
 		}

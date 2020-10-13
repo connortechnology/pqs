@@ -205,14 +205,15 @@ sub check_status {
 
 
 
+		print STDERR "STATUS HAVE COMPLETION DATE FOR:  $self->{id} = $self->{specs}{completion_date}  \n";
 
-		$status =  'CP' if  $self->{specs}{completion_date};
 	}
 
 	if ( $status  eq 'IP' ) {
 		$self->init_production unless ( $self->{specs}{init_production} );
 	}
 
+	$status = 'CP' if  $self->{specs}{completion_date};
 	$status = 'CN' if $self->{specs}{strstatus} eq q{Canceled};
 
 	print STDERR "CHECK STATUS $self->{id} = $status \n";

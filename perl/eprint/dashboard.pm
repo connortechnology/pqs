@@ -301,6 +301,7 @@ sub action {
 
 				eprint::order::cancel_order($r, $log, $dbh, $order->{lngorderid});
 			} elsif ( $value eq 'Complete' ) {
+				print STDERR "STATUS TIME TO COMPLETE PROJECT: $p \n";
 				# here complete_order?? tbl_order doesn't change
 				eprint::employee_project::complete_project($r, $dbh, $p);
 			} else {
