@@ -980,7 +980,8 @@ print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 
 	return unless $order_id;
 
-	fill_contact($r, $dbh, $order_id);
+	#not sure if we need this for products?
+	#fill_contact($r, $dbh, $order_id);
 
 	my $ship_method = $r->param('ddmShipVia1');
 
