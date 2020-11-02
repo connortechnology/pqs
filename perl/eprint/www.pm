@@ -16,6 +16,7 @@ use sql ();
 use misc;
 use configuration;
 use session;
+use Data::Dumper;
 
 require eprint::login;
 
@@ -870,7 +871,7 @@ sub map_param {
 			}
 		} $r->param();
 
-		print STDERR "HAVE PARAM MAPPED", Dumper($param);
+		#print STDERR "HAVE PARAM MAPPED", Dumper($param);
 
 
 		return $param;
