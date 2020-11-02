@@ -7,7 +7,19 @@
 		input { border: none; }
 		.noprint { display: none; }
 
+
+		
+		body { font-size:12pt; }
+
+		div { padding-top: 5px; }
+
 	}
+
+	#jobname { 
+		font-size: 16pt; 
+		font-weight: bold;
+	}
+
 	.head {
 		display: inline-block;
 		vertical-align: bottom;
@@ -41,6 +53,18 @@
 		display: inline-block;
 		font-weight: bold;
 	}
+	.large_font span {
+		font-size:19pt;
+	}
+	.rightcol {
+		float:right;
+		width:40%;
+	}
+	.large_font input {
+		font-size:26pt;
+		font-weight: bold;
+		padding-left: 1em;
+	}
 
 	.date{ text-align: right; padding-top: 30px; font-size: 15pt; }
 
@@ -51,7 +75,7 @@
 	.signature {
     	border: 0;
     	border-bottom: 1px solid #000;
-		width: 250px;
+		width: 300px;
 		margin-bottom: 40px;
 	}
 
@@ -73,7 +97,7 @@
 
 <form name="packing_slip_form" action="/main/order/packing_slip.html" >
 
-<div class="pagewidth botbord">
+<div class="fullwidth botbord">
 	<div class="head fullheight" style="width: 443px; height:125px">
 	<img src="<?logo?>" class="pslogo" id="logo" />
 	</div>
@@ -87,15 +111,17 @@
 
 	<div style="width:100%">	
 		<div style="width: 50%" > <input type="button" onClick="blind()" value="Blind" class="noprint" ></div>
+
 	<div class="head bottom fullheight" style="width: 50%; float: right;">
 		<h2 class="date"> <?date?></h2>
 	</div>
+
 	</div>
 </div>
 
 
-<div style="height: 75px;" class="fullwidth botbord">
-				<div style="float: left; width: 60%;" class="show_border fullheight">
+<div style="" class="fullwidth botbord">
+				<div style="float: left; width: 55%;" class="show_border fullheight">
 					<span style="padding-top: 20px; font-size: 16pt; display: block">
 						Company Name: <?order.strshippingcompanyname?> 
 					</span>
@@ -107,7 +133,7 @@
 					</select>
 					</span>
 				</div>
-				<div style="float: right; width: 35%;" class="show_border fullheight">
+				<div style="" class="show_border fullheight rightcol">
 					<span class="label">Contact Name: 	</span> <?txtContact?> <?order.strshippingfirstname?> <?order.strshippinglastname?>  <br/>
 					<span class="label">Phone:  	</span>  <?order.strshippingphone?> <br/>
 					<span class="label">E-mail:   	</span> <?order.strshippingemail?>   <br/>
@@ -117,30 +143,30 @@
 
 
 
-<div class="fullwidth botbord" style="height: 75px">
-	<div class="fullheight show_border" style="float: left; width: 60%;">
-		<span class="label">Job Name:</span> <?project.strprojectreference?>  <br/>
+<div class="fullwidth botbord" style="">
+	<div class="fullheight show_border" style="float: left; width: 55%;">
+		<span class="label">Job Name:</span> <span id="jobname"><?project.strprojectreference?></span>  <br/>
 		<span class="label">Master Size:</span> <?docket.final_width?> x <?docket.final_height?>  <br/>
 		<span class="label">Category:</span> <?docket.ptype?>  <br/>
 	</div>
 
-	<div class="fullheight show_border" style="float: right; width: 35%;">
+	<div class="fullheight show_border rightcol" style="">
 		<span class="label">Master Quantity:</span> <?docket.qty1?>  <br/>
 		<span class="label">P.O Number:</span> <?order.strponumber?>  <br/>
 	</div>
 
 </div>
 
-<div class="fullwidth" style="height: 75px">
-	<div class="fullheight show_border" style="float: left; width: 60%;">
+<div class="fullwidth" style="">
+	<div class="fullheight show_border large_font" style="float: left; width: 50%;">
 		<span class="label">No. of Boxes:</span> 
-		<input name="boxes" value="<?boxes?>" id="boxes" />
+		<input name="boxes" value="<?boxes?>" id="boxes" size=6 class="large_font"/>
 		<br/>
 	</div>
 
-	<div class="fullheight show_border" style="float: right; width: 35%;">
+	<div class="fullheight show_border large_font rightcol" style="">
 		<span class="label">Delivered Qty:</span> 
-		<input name="ship_qty" value="<?ship_qty?>" id="ship_qty" />
+		<input name="ship_qty" value="<?ship_qty?>" id="ship_qty" size=6 class="large_font" />
 		<br/>
 	</div>
 
@@ -148,13 +174,13 @@
 
 
 <div class="space4"> &nbsp; </div>
-<div class="fullwidth" style="height: 75px">
+<div class="fullwidth" style="">
 	<div class="fullheight show_border" style="float: left; width: 60%;">
 		<span class="label">Name (please print):</span> <input type="text" class="signature" /> <br/>
 		<span class="label">Customer Signature:</span> <input type="text" class="signature" />  <br/>
 	</div>
 
-	<div class="fullheight show_border" style="float: right; width: 35%;">
+	<div class="fullheight show_border rightcol" style="">
 		<span class="label">Date:</span>  <input type="text" class="signature" /> <br/>
 	</div>
 

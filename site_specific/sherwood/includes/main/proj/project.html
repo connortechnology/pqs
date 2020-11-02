@@ -33,6 +33,9 @@ var end;
 	.highlight :hover {
 		background-color: gold 
 	}
+	.price_over {
+		background-color: peachpuff;
+	}
 </style>
 
 	<link href="/styles/line_item_validation.css" rel="stylesheet" type="text/css" />
@@ -72,7 +75,11 @@ var end;
 			<!-- Services in <?category?>. -->				
 			<?loop services?>
 			<form action="/main/proj/dispatch.html" name="fs-<?id?>" id="fs-<?id?>" />
-				<tr class="service <?ref?> highlight ">
+				<tr class="service <?ref?> highlight 
+					<?if price_override?>
+						price_over
+					<?endif price_override?>
+					">
 					<td> &#183; 
 						<span
 		  						draggable="true"
@@ -85,7 +92,7 @@ var end;
 
 						<?if ($$variable{url} and $$variable{flags}{can_edit}) ?>
 							<a href="/service/<?lc:ref?>?pid=<?pid?>;sid=<?id?>" >
-							<?name?></a>
+								<?name?></a> <?price_override?>
 						<?else ($$variable{url} and $$variable{flags}{can_edit}) ?>
 
 								<?if ( $variable->{edit} == $variable->{id} ) ?>
