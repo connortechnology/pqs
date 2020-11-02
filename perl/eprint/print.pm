@@ -648,7 +648,7 @@ sub display_project {
             # If the service isn't calculated, just show a placeholder.
             if ( not grep {$service->{status} eq $_} 
                 	('calculated', 'In Production', 'Complete', 
-				 	 'Pending Deposit', 'Pending Date Approval') ) 
+				 	 'Pending Deposit', 'Pending Date Approval', 'Waiting For Files') ) 
             {
                     $service->{"price$i"} = '-';
                     next QUANTITY;

@@ -1442,7 +1442,7 @@ sub mark_project_complete_if_necessary {
         FROM tbl_Project_Contents
         WHERE lngProjectIndex = ?
           AND strStatus NOT IN ( 'calculated',    'Complete', 
-                                 'In Production', 'Pending Deposit' )
+                                 'In Production', 'Pending Deposit' , 'Waiting For Files' )
     }, undef, $pid);
     
     if ( $complete ) {

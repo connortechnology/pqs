@@ -191,13 +191,13 @@ sub check_status {
 	my $status  = '';
 	if ( $oid ) {
 
-		$status =  'WF';
 
 		#If paymnet has not been made, do not allow order to go into production
 		if ( $order->pending_deposit ) {
 		   	$status =  'PD'
 		} else { 
 
+			$status =  'WF';
 			$status =  'IP' if  $self->{specs}{files} && $self->have_production_file;
 			$status =  'IP' if  $self->{specs}{strstatus} eq 'In Production';
 			$status =  'IP' if  $self->no_upload_required;

@@ -205,7 +205,7 @@ sub is_complete {
         FROM tbl_Project_Contents
         WHERE lngProjectIndex = ?
           AND strStatus NOT IN ( 'calculated',    'Complete', 
-                                 'In Production', 'Pending Deposit', 'Pending Date Approval' )
+                                 'In Production', 'Pending Deposit', 'Pending Date Approval', 'Waiting For Files' )
     }, undef, $pid);
 }
 
