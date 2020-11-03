@@ -236,6 +236,21 @@ sub set_ship_price {
   $dbh->do("update tbl_orders set shipping = ? where lngorderid = ?", undef, $price, $oid);
 }
 
+sub set_ship_type {
+  my ($oid, $data) = @_;
+  my $dbh = session::dbh;
+  $dbh->do("update tbl_orders set ship_type = ? where lngorderid = ?", undef, $data, $oid);
+}
+
+sub ship_type {
+  my ($oid) = @_;
+  my $dbh = session::dbh;
+  my $data = $dbh->selectrow_array(q{
+		SELECT ship_type FROM tbl_orders WHERE lngorderid = ?
+  }, undef, $oid);
+  return $data;
+}
+
 sub shipping_price {
   my $order = shift;
   my $dbh = session::dbh;
@@ -251,13 +266,13 @@ print STDERR "HAVE ORDER SHIPPING PRICE: $price \n";
 sub address {
   my $order = shift;
   my $dbh = session::dbh;
-  my @add = $dbh->selectrow_array(q{
-		SELECT strpostalcode, strstate, strcountry FROM tbl_orders WHERE lngorderid = ?
-  }, undef, $order);
+  my $add = $dbh->selectall_arrayref(q{
+		SELECT * FROM tbl_orders WHERE lngorderid = ?
+  }, {Slice => {}}, $order);
 
-print STDERR "HAVE MODEL ADDRESS: @add \n";
+print STDERR "HAVE MODEL ADDRESS: \n", Dumper($add);
 
-  return @add;
+  return shift @{$add};
 }
 
 
@@ -278,6 +293,8 @@ sub get_projects {
   my $projects = $dbh->selectcol_arrayref(q{
 		SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ? 
   }, undef, $order);
+
+print STDERR "HAVE PROJECTS: FOR ORDER ", Dumper($order, $projects);
   
   return $projects;
 	

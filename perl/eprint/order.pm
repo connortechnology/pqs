@@ -795,8 +795,8 @@ sub store_order_info {
     $_ = "SELECT lngSalesPerson FROM tbl_Customer WHERE lngCustomerID = '$$variable{'cust_id'}'";
     my ( $emp_id ) = sql::sql_statement( $log, $dbh, $_ );
 
-    my $state 	= ( $r->param('ddmShippingStateProvince') ? $r->param('ddmShippingStateProvince') : $r->param('txtShippingOtherStateProvince') );
-    my $country = ( $r->param('ddmShippingCountry')		  ? $r->param('ddmShippingCountry'):$r->param('txtShippingOtherCountry'));
+    my $state 	=  $r->param('ddmShippingStateProvince') || $r->param('ddmStateProvince');  
+    my $country =  $r->param('ddmCountry') || $r->param('ddmCountry');
     my @data = (
         #'lngEmployeeID',            $emp_id,
         #'strTitle',                 $r->param('txtTitle'),
@@ -823,8 +823,8 @@ sub store_order_info {
         'strShippingAddress2',        	$r->param('txtShippingAddress2')	|| $r->param('txtAddress2'),
         'strShippingCity',            	$r->param('txtShippingCity')		|| $r->param('txtCity'),
         'strShippingPostalCode',    	$r->param('txtShippingPostalCode') 	|| $r->param('txtPostalCode'),
-        'strShippingState',            	$r->param('ddmShippingStateProvince') || $state,
-        'strShippingCountry',        	$r->param('ddmShippingCountry') 	|| $country,
+        'strShippingState',            	$state,
+        'strShippingCountry',        	$country,
         'strShippingPhone',            	$r->param('txtShippingPhone')		|| $r->param('txtPhone'),
         'strShippingExt',            	$r->param('txtShippingExtension')	|| $r->param('txtExtension'),
         'strShippingFax',            	$r->param('txtShippingFax')			|| $r->param('txtFax'),
@@ -977,18 +977,29 @@ print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 
 	return unless $order_id;
 
-	fill_contact($r, $dbh, $order_id);
+	#fill_contact($r, $dbh, $order_id);
+	
+	if ( $r->param('ddmShipVia1') ) {
+		PQS::model::order::set_ship_type($order_id, $r->param('ddmShipVia1') );
+	}
 
-	my $ship_method = $r->param('ddmShipVia1');
+	my $ship_method = PQS::model::order::ship_type($order_id);
+
 
 	$_ = "SELECT lngIndex, strName FROM tbl_Ship_Via";
     $$variable{'SHIP_OPTIONS'} = ssi::fill_drop_down($log, $dbh, $_);
 
 	$variable->{__FillInForm}{ddmShipVia1} = $ship_method;
 	
-	$dbh->do(q{UPDATE tbl_orders set shipping_type = (select strname from tbl_ship_via WHERE lngindex = ?) WHERE lngorderid = ? }, undef, $ship_method, $order_id);
+	#************* FIx This
+	#$dbh->do(q{UPDATE tbl_orders set shipping_type = (select strname from tbl_ship_via WHERE lngindex = ?) WHERE lngorderid = ? }, undef, $ship_method, $order_id);
 
-	my $ship_price = eprint::Service::Shipping::order_ship_cost($order_id, $ship_method);
+	my $ship_price = 0;
+
+	if ( $ship_method eq "Standard" ) {
+		$ship_price = eprint::Service::Shipping::order_ship_cost($order_id, $ship_method);
+	}
+
 print STDERR "VERIFY ORDER - HAVE ORDER SHIP PRICE: $order_id = $ship_price METHOD: $ship_method \n";
 
 	PQS::model::order::set_ship_price($order_id, $ship_price);

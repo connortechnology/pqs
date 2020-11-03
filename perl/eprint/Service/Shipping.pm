@@ -520,11 +520,11 @@ sub packages {
 	my $dbh = session::dbh;
 
 	my $pid = $specs->{pid};
-	my $pweight = get_weight($log, $dbh, $pid, 'Project');
+	my $pweight = $specs->{weight} || get_weight($log, $dbh, $pid, 'Project');
 
 	my $qty = $specs->{add_qty1} || $specs->{txtQuantity1};
 
-	my $ship_weight = ceil($pweight * $qty);
+	my $ship_weight = $specs->{total_weight} || ceil($pweight * $qty);
 
 	if ( $specs->{chkWeightOverride} ) {
 		$ship_weight = $specs->{txtShipmentWeight};
@@ -569,21 +569,38 @@ sub no_space {
 
 sub to_address {
 	my $specs = shift;
+
+	map { my $a = $_;
+		$specs->{lc($_)} = $specs->{$_};
+
+		$a =~ s/str/txt/g;
+		$specs->{lc($a)} = $specs->{$_};
+
+		$specs->{ddmshippingcountry} = $specs->{strshippingcountry};
+		$specs->{ddmshippingstateprovince} = $specs->{strshippingstate};
+
+
+	} keys %{$specs};
+
+	#print STDERR "HAVE TO ADDRESS SPECS " , Dumper($specs);
+
 	my $to = {
-	  "companyName"=> $specs->{txtShippingCompanyName}, 
-      "address1"=> $specs->{txtShippingAddress1},
-      "address2"=> $specs->{txtShippingAddress2},
-      "postalCode"=> $specs->{txtShippingPostalCode},
-      "countryCode"=> $specs->{ddmShippingCountry},
-      "phone"=> $specs->{txtShippingPhone},
-      "attention"=> $specs->{txtShippingFirstName} . ' ' . $specs->{txtShippingLastName},
-      "emailAddress"=> $specs->{txtShippingEmail} . "a\@b.ccc",
-      "city"=> $specs->{txtShippingCity},
-      "provinceCode"=> $specs->{ddmShippingStateProvince}
+	  "companyName"=> $specs->{txtshippingcompanyname}, 
+      "address1"=> $specs->{txtshippingaddress1},
+      "address2"=> $specs->{txtshippingaddress2},
+      "postalCode"=> $specs->{txtshippingpostalcode},
+      "countryCode"=> $specs->{ddmshippingcountry},
+      "phone"=> $specs->{txtshippingphone},
+      "attention"=> $specs->{txtshippingfirstname} . ' ' . $specs->{txtshippinglastname},
+      "emailAddress"=> $specs->{txtshippingemail},
+      "city"=> $specs->{txtshippingcity},
+      "provinceCode"=> $specs->{ddmshippingstateprovince}
 	};
 
 	#map { 1 } qw(postalCode phone emailAddress);
 	map { $to->{$_} = no_space($to->{$_}) } qw(postalCode phone emailAddress);
+
+	print STDERR "HAVE TO ADDREDSS", Dumper($to);
 
 	return $to;
 }
@@ -1174,30 +1191,37 @@ sub order_ship_cost {
 	my $price_list  = 1;
 
 
-	my $weight = product_weight($order_id);
+	my $weight = product_weight($order_id) || 5;
 
 	unless ($weight) {
 		print STDERR "THIS ORDER HAS NO PRODUCT WEIGHT: $order_id \n";
 		return 0;
 	}
 
-	my @add = PQS::model::order::address($order_id);
 
-	my @specs = (undef, undef, undef, @add,, undef); 
-print STDERR "SHIP: Method: $ship_method ORDER: $order_id WEIGHT: $weight \n";
 
-print STDERR "GET ADDRESS: @add \n";
+	my $specs =  PQS::model::order::address($order_id);
 
-    my ($f_zone, $t_zone) = get_ship_zones($log, $dbh, $ship_method, @specs);
+	$specs->{total_weight} = $weight;
 
-print STDERR "HAVE ZONES: $f_zone, $t_zone \n";
+	$specs->{txtQuantity1} = 100;
 
-	print STDERR "HAVE SHIP WEIGHT: $weight \n";
+	my $rates = ic_api($specs);
 
-	my $price = price_service($weight, $ship_method, $price_list, $f_zone, $t_zone);
+	my $rate = shift @{$rates};
 
-print STDERR "HAVE PRICE: $price \n";
-	return $price;
+	$rate->{Total} =~ s/\$//g;
+
+	my $markup = configuration::get_value($log, $dbh, 'ShippingMarkup');
+
+	my $ship_price = $rate->{Total} * ( 1 + ($markup / 100) );
+
+
+	#my $price = price_service($weight, $ship_method, $price_list, $f_zone, $t_zone);
+
+print STDERR "HAVE PRICE: $ship_price \n", Dumper($rate);
+
+	return $ship_price;
 
 
 }
