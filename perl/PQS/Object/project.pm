@@ -263,7 +263,8 @@ sub init_production {
 					if ( $self->type eq 'NoPrint' ) {
 						print STDERR "HAVE NO PRINT Project \n";
 					} else {
-						die("MISSING DATA: STock $stock, Sheets, $sheets INDEX: $index PID: $self->{id} TYPE: "  . $self->type . " ");
+						#die("MISSING DATA: STock $stock, Sheets, $sheets INDEX: $index PID: $self->{id} TYPE: "  . $self->type . " ");
+						print STDERR "MISSING DATA: STock $stock, Sheets, $sheets INDEX: $index PID: $self->{id} TYPE: "  . $self->type . " ";
 					}
 
 				}
