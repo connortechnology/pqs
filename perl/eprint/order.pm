@@ -2919,7 +2919,7 @@ print STDERR "HAVE VARS: $r, $log, $dbh \n";
 	$variable->{ssid} = $ssid;
 
 
-	print STDERR "HAVE ORDER TOTALS: ", Dumper($totals);
+	#print STDERR "HAVE ORDER TOTALS: ", Dumper($totals);
 
     @$variable{qw( SUB_TOTAL SHIPPING POSTAGE GST PST HST CountyTAX TOTAL PROMO_DISCOUNT )}
         = map { sprintf('%.2f', $_) }
@@ -3308,7 +3308,7 @@ print STDERR "ADD TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PRICE: $
 
 print STDERR "HAVE PROJECT PRICES: @project_prices FOR PID: $pid \n";
 
-        my $price = $prod_price > 0 ? $prod_price : $project_prices[$qtyIndex - 1];
+        my $price = $pid ? $project_prices[$qtyIndex - 1] : $prod_price;
 
 print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $prod_price PRICE: $price \n";
 
@@ -3322,7 +3322,6 @@ print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $pr
 					AND lngprojectindex = ?
 				)
 			}, undef, "txtPrice$qtyIndex", $pid);
-	print STDERR "POSTAGE TOTAL: $postage \n";
 
 			$shipping = $dbh->selectrow_array(q{
 				SELECT SUM(strValue::Numeric(10,2)) FROM tbl_service_specifications
@@ -3333,8 +3332,11 @@ print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $pr
 				)
 			}, undef, "txtPrice$qtyIndex", $pid);
 
+
 			$price -= $shipping;
 			$price -= $postage;
+
+	print STDERR "POSTAGE TOTAL: $postage SHIPPING: $shipping: New Price: $price \n";
 
 			$shipping_total += $shipping;
 			$postage_total  += $postage;
