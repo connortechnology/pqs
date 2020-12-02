@@ -3,6 +3,8 @@ use strict;
 use warnings;
 
 use Date::Calc        qw(Delta_Days Today Add_Delta_Days Month_to_Text);
+use JSON::API;
+use JSON;
 
 use eprint::Config;
 use eprint::project  qw(get_weight get_print_container get_quantities);
@@ -14,6 +16,7 @@ use POSIX qw(ceil);
 use POSIX qw(floor);
 use jsrs;
 use ssi ();
+use session;
 
 use PQS::model::order();
 
@@ -43,6 +46,30 @@ sub necessary {
     return 1;
 }
 
+sub add_ship_address {
+	my $pid = shift;
+	my $specs = shift;
+
+	my $log = session::log;
+	my $dbh = session::dbh;
+
+	my $cid = $dbh->selectrow_array(q{SELECT lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
+	my $cust = new eprint::obj_customer( $log, $dbh, $cid);
+
+	my $id;
+
+
+	my $name = $specs->{txtShippingLocationName};
+
+	my $id = $dbh->selectrow_array(q{SELECT lngindex FROM tbl_addresses WHERE shipname = ? and lngindex in ( 
+		SELECT shipid FROM customer_ship_address WHERE customer = ? 
+	) }, undef, $name, $cid);
+
+	$cust->save_shipping( $id, $specs, 1 );
+	$specs->{Save_Ship_Address} = '';
+
+}
+
 sub action {
     my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
 print STDERR "ACTION: SHIPPING \n\n";
@@ -57,6 +84,8 @@ print STDERR "ACTION: SHIPPING \n\n";
         	ShippingType          => 'Shipping_Project'
     	));
 	}
+
+	add_ship_address($pid, $specs) if $specs->{Save_Ship_Address};
 
 	my $order_id = $dbh->selectrow_array(q{	
 		SELECT max(lngorderid) FROM tbl_order_contents WHERE lngprojectindex = ?
@@ -290,13 +319,17 @@ sub insert_address {
 	my $add = new eprint::address( $log, $dbh );
 	my $index = $add->{index};
 
-print STDERR "INSERT NEW ADDRESS SID: $sid I: - $index \n";
 
 
 	$add->form_set($specs);
+	my $price = $specs->{txtShipmentPrice};
+	my $qty = $specs->{add_qty1};
+
 	$dbh->do(qq{
-		INSERT INTO ship_address values ( $sid, $index )
+		INSERT INTO ship_address values ( $sid, $index, 0, $price, $qty )
 	});
+
+print STDERR "INSERT NEW ADDRESS SID: $sid I: - $index PRICE: $price QTY: $qty \n";
 
 	update_shipnum($sid);
 
@@ -409,13 +442,9 @@ sub preaction {
 
 	if ( $specs->{'New Address'} ) {
 		if ( $specs->{Save_Ship_Address} ) {
-
-			$cust->save_shipping( 'New', $specs, 1 );
-
+			add_ship_address($pid, $specs);
 		} else {
-
-			print STDERR " NO Save Address \n", Dumper($specs);
-
+			print STDERR " NO Save Address \n";
 		}
 
 		if ( $specs->{contact_default} ) {
@@ -454,6 +483,9 @@ sub preaction {
 		my $add = new eprint::address( $log, $dbh, $specs->{ddmShippingCompany} );
 		$add->bake_form_hash($specs);
 		delete $specs->{btnFunction};
+		$specs->{ddmShippingCompany} = '';
+
+		#$specs->{txtShippingFirstName} = 'Hello';
 
 	}
 
@@ -462,6 +494,221 @@ sub preaction {
 	$specs->{Location} = '';
 }
 
+sub from_address {
+	my $log = session::log;
+	my $dbh = session::dbh;
+	return {      
+      "companyName"=> 	configuration::get_value($log, $dbh, 'CompanyName'),
+      "address1"=>   	configuration::get_value($log, $dbh, 'Address1'),
+      "address2"=> 		configuration::get_value($log, $dbh, 'Address2'),
+      "postalCode"=>	configuration::get_value($log, $dbh, 'PostalCode'),
+      "countryCode"=> 	configuration::get_value($log, $dbh, 'CountryCode'),
+      "phone"=> 		configuration::get_value($log, $dbh, 'Phone'),
+      "attention"=>		configuration::get_value($log, $dbh, 'Attention'),
+      "emailAddress"=> 	configuration::get_value($log, $dbh, 'Email'),
+      "city"=> 			configuration::get_value($log, $dbh, 'City'),
+      "provinceCode"=> 	configuration::get_value($log, $dbh, 'ProvinceCode'),
+   };
+
+}
+
+sub packages {
+	my $specs = shift;
+
+	#die(Dumper($specs));
+	my $log = session::log;
+	my $dbh = session::dbh;
+
+	my $pid = $specs->{pid};
+	my $pweight = $specs->{weight} || get_weight($log, $dbh, $pid, 'Project');
+
+	my $qty = $specs->{add_qty1} || $specs->{txtQuantity1};
+
+	my $ship_weight = $specs->{total_weight} || ceil($pweight * $qty);
+
+	if ( $specs->{chkWeightOverride} ) {
+		$ship_weight = $specs->{txtShipmentWeight};
+	} else {
+		$specs->{txtShipmentWeight} = $ship_weight; 
+	}
+
+	print STDERR "HAVE QTY: $qty , Weight: $ship_weight, $pweight ";
+	my $pack_max = 50;
+
+	my $packs = int($ship_weight / $pack_max) + 1;
+	my $pack_weight = $ship_weight / $packs;
+
+
+	my @ship;
+	foreach my $i ( 1 .. $packs ){
+		push @ship, 
+      {
+         "length"=>"12.00",
+         "width"=>"12.00",
+         "height"=>"12.00",
+         "weight"=>"$pack_weight",
+         "description"=>"",
+         "codValue"=>"0.00",
+         "insuranceAmount"=>"0.00"
+      }
+
+
+	}
+
+	print STDERR "HAVE PACKAGES: ",  Dumper(\@ship);
+	return  \@ship;
+
+}
+sub no_space {
+	my $s = shift;
+	$s =~ s/\s+//g; 
+	$s =~ s/\-//g; 
+	$s =~ s/\-//g; 
+	return $s;
+}
+
+sub to_address {
+	my $specs = shift;
+
+	map { my $a = $_;
+		$specs->{lc($_)} = $specs->{$_};
+
+		$a =~ s/str/txt/g;
+		$specs->{lc($a)} = $specs->{$_};
+
+		$specs->{ddmshippingcountry} = $specs->{strshippingcountry};
+		$specs->{ddmshippingstateprovince} = $specs->{strshippingstate};
+
+
+	} keys %{$specs};
+
+	#print STDERR "HAVE TO ADDRESS SPECS " , Dumper($specs);
+
+	my $to = {
+	  "companyName"=> $specs->{txtshippingcompanyname}, 
+      "address1"=> $specs->{txtshippingaddress1},
+      "address2"=> $specs->{txtshippingaddress2},
+      "postalCode"=> $specs->{txtshippingpostalcode},
+      "countryCode"=> $specs->{ddmshippingcountry},
+      "phone"=> $specs->{txtshippingphone},
+      "attention"=> $specs->{txtshippingfirstname} . ' ' . $specs->{txtshippinglastname},
+      "emailAddress"=> $specs->{txtshippingemail},
+      "city"=> $specs->{txtshippingcity},
+      "provinceCode"=> $specs->{ddmshippingstateprovince}
+	};
+
+	#map { 1 } qw(postalCode phone emailAddress);
+	map { $to->{$_} = no_space($to->{$_}) } qw(postalCode phone emailAddress);
+
+	print STDERR "HAVE TO ADDREDSS", Dumper($to);
+
+	return $to;
+}
+
+sub ic_login {
+	my $log = session::log;
+	my $dbh = session::dbh;
+
+
+	my $api = JSON::API->new("https://soluship.com/api/v1/login/");
+
+	my $obj = { 
+		userName => configuration::get_value($log, $dbh, "IC_LOGIN"),
+		password => configuration::get_value($log, $dbh, "IC_PASS")
+	};
+
+
+	my $h = {
+			COUNTRYCODE => 'CA',
+			LANGCODE =>  'en_CA',
+			'Content-Type' => 'application/json',
+	};
+
+	use Data::Dumper;
+	if ($api->post("", $obj,$h)) {
+		#have response
+	 } else {
+		return;
+	}
+
+	my $r = $api->response();
+	my $rep = decode_json($r->{_content});
+	my $token = $rep->{data}{remembertoken};
+
+	print STDERR "HAVE LOGN: " . Dumper($rep, $token);
+
+	return $token;
+
+
+
+}
+
+sub ic_api {
+	my ($specs )  = @_;
+
+	print STDERR "\n***********************CALL SHIPPING API NOW ************************\n\n";
+
+	my $api = JSON::API->new("https://soluship.com/api/v1/getRatesMobile/");
+
+	my $token = ic_login();
+
+	my $h = {
+		COUNTRYCODE => 'CA',
+		LANGCODE =>  'en_CA',
+		'Content-Type' => 'application/json',
+		Authtoken => $token
+	};
+
+	my $ship = {
+      "shipDate"=>"2021-08-27",
+      "dutiableAmount"=>"1",
+      "dutiableCurrency"=>"CAD",
+      "packagetype"=>"3",
+      "dangerousGoods"=>"0",
+      "unitOfMeasureId"=>"2",
+      "mobileRatesType"=>"mobileAPI"
+   };
+
+
+
+	my $from = from_address();
+	my $to 	 = to_address($specs);
+	my $packages = packages($specs);
+	
+	my $obj = {
+			order 		=> $ship,
+			fromAddress => $from,
+			toAddress 	=> $to,
+			packages 	=> $packages
+	};
+
+	if ($api->post("", $obj,$h)) {
+		#Have Repsonse from API
+	 } else {
+		print STDERR $api->errstr . "\n";
+		return undef;
+	}
+
+	  my $r = $api->response();
+	  my $rep = decode_json($r->{_content});
+
+	if ( $rep->{statusMessage} eq 'FAIL' ) {		
+	  	print STDERR "HAVE FAIL RESULT FOR GET RATES", Dumper($rep);
+		$specs->{api_error} = $rep->{data};
+		return undef;
+	}
+
+	  my $rates = $rep->{data};
+
+	  $specs->{debug} = Dumper($packages);
+	  
+
+	  #print STDERR "HAVE SHIP", Dumper($obj);
+
+
+	  return $rates;
+	
+}
 
 
 sub calc {
@@ -470,66 +717,91 @@ sub calc {
 print STDERR "CALC MY SHIPPING SERVICE \n\n";
 
 
-	my $shipids = $dbh->selectcol_arrayref(q{
-		SELECT shipid FROM ship_address WHERE sid = ?
-	}, undef, $sid);
-
-	if (    $specs->{singlemultiple} eq '0' 
-  		 && $specs->{txtShippingContact} 
-	) {
-
-		#	map { my $add = new eprint::address( $log, $dbh, $_);
-		#	     $add->delete();
-		#} @{$shipids};
-
-		#	my $i = insert_address( $log, $dbh, $sid, $specs);
-		#  $shipids = [ $i ];
-	}
-
 	my $status;
 
-	$status = 'calculated' if $specs->{deliverymethod} eq 'Customer Pick-up';
+	#$status = 'calculated' if $specs->{deliverymethod} eq 'Customer Pick-up';
 	my $totals = [0.0.0,0];
 	my @qty = ( undef,
 				$$specs{txtQuantity1},
 				$$specs{txtQuantity2},
 				$$specs{txtQuantity3});
 
-	foreach my $shipid (@{$shipids}) {
-		
-		map { $$specs{"txtQuantity$_"} = $$specs{"add_qty${_}-$shipid"} } (1..3);
+	my $rates;
 
-		#return 'uncalculated' unless $specs->{txtQuantity1};
+	if ( $specs->{txtShippingAddress1} ) {
+		$rates = ic_api($specs);
+	}
+	
+	#@{$rates} = sort { $a->{Total} <=> $a->{Total} } @{$rates};
+	print STDERR "HAE RATES: " , Dumper($rates);
+	my $results;
+	my $rate_over;
 
-    	$status = calc_price($log, $dbh, $variable, $pid, $sid, 
-							 	   $service_type, $specs, $shipid);
-		my $no_price;
-		$no_price = 1 if $specs->{deliverymethod} eq 'Duplicating Center Hand Delivery';
-		$no_price = 1 if $specs->{deliverymethod} eq 'Interoffice Mail';
-		$no_price = 1 if $specs->{deliverymethod} eq 'Store Mail - Norcal';
-		$no_price = 1 if $specs->{deliverymethod} eq 'Store Mail - Norcal+Hawaii';
-		$no_price = 1 if $specs->{deliverymethod} eq 'Store Mail - All Stores';
 
-		if ( $no_price ) {
-    		map { $$specs{"txtPrice$_"} = '0.00' } ( 1..3);
-			$status = 'calculated';
-		} else {
-    		$status = calc_price($log, $dbh, $variable, $pid, $sid, 
-							 	   $service_type, $specs, $shipid);
-		}
+	my $rate_id;
+	if ( defined $rates) {
 
-    	map { $$specs{"add_price${_}-$shipid"} = $$specs{"txtPrice$_"} } ( 1..3);
+		foreach my $rate ( @{$rates} ) {
 
-		map { $$totals[$_] += $$specs{"txtPrice$_"} } (1..3);
-		
+			  print STDERR "RATE: " , $rate->{carrierName} , ": ", "$rate->{serviceName} = $rate->{Total} ", "\n";
+			  $results .= "RATE:  $rate->{carrierName} : $rate->{serviceName} = $rate->{Total} \n";
+			  #$results .= "$rate->{carrierName} : $rate->{serviceName}\n";
+
+
+
+
+			  my $strid =  "$rate->{carrierName} $rate->{serviceName}";
+			  my $id = $dbh->selectrow_array(q{SELECT lngindex from tbl_ship_via where strname = ? }, undef, $strid );
+			  $dbh->do(q{INSERT INTO tbl_ship_via ( strid, strname ) values ( ?, ?)},
+			  	undef, $strid, $strid ) unless $id;
+			$dbh->commit();
+			 if ( $specs->{chkOverrideShipper1} ) {
+				 if ( $specs->{ddmShipVia1} eq $id ) {
+					 $rate_over = $rate;
+				 }
+
+			 }
+
+
+
+
+		 }
+
+
 	}
 
-	#map { $$specs{"txtQuantity$_"} = $qty[$_] } (1..3);
-	#map { $$specs{"txtPrice$_"}    = $$totals[$_] } (1..3);
+	
+	#uncomment this line to display in results box
+	$results .= "Packages:   $specs->{debug} ";
 
-	map { $$specs{"txtQuantity$_"} = $qty[$_] } (1..3);
+	my $ship_total = $dbh->selectrow_array(q{SELECT sum(price) from ship_address WHERE sid = ? }, undef, $sid);
 
-	map { $$specs{"txtPrice$_"}    = $$totals[$_] } (1..3);
+
+	my $rate = $rate_over || shift @{$rates};
+
+	my $markup = configuration::get_value($log, $dbh, 'ShippingMarkup');
+
+
+    my $strid =  "$rate->{carrierName} $rate->{serviceName}";
+ 	$rate_id = $dbh->selectrow_array(q{SELECT lngindex from tbl_ship_via where strname = ? }, undef, $strid );
+
+	$rate->{Total} =~ s/\$//g;
+
+	my $ship_price = $rate->{Total} * ( 1 + ($markup / 100) );
+
+	my $total = $ship_total + $ship_price;
+		
+
+
+	map { $$specs{"txtPrice$_"}    = $total } (1..3);
+
+	if ( $specs->{api_error} ) {
+		$specs->{txtResults} = format_error($specs->{api_error});
+	} else {
+		$specs->{txtResults} = $results;
+	}
+
+	$specs->{txtShipmentPrice} = $ship_price || '';
 	
 
 	# Remove Address data inserted by calc price.
@@ -540,8 +812,26 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 	$status = 'calculated';
 	$status = 'uncalculated' unless $specs->{shipping_required} ne '';
 
+	$specs->{ddmShipVia1} = $rate_id;
+
 	print STDERR "HAVE STATUS: $status - $specs->{shipping_required}  \n";
 	return $status eq 'calculated' ? $status : 'uncalculated';
+}
+sub format_error {
+	my $e = shift;
+	my $text = "ERROR: \n";
+
+	map {
+
+		if ( scalar @{$e->{$_}} ) {
+			$text .=  "$_ : " . @{$e->{$_}}[0] . " \n"; 
+		}
+
+	} keys %{$e};
+
+	#die($text);
+	return $text;
+		
 }
 
 
@@ -901,30 +1191,37 @@ sub order_ship_cost {
 	my $price_list  = 1;
 
 
-	my $weight = product_weight($order_id);
+	my $weight = product_weight($order_id) || 5;
 
 	unless ($weight) {
 		print STDERR "THIS ORDER HAS NO PRODUCT WEIGHT: $order_id \n";
 		return 0;
 	}
 
-	my @add = PQS::model::order::address($order_id);
 
-	my @specs = (undef, undef, undef, @add,, undef); 
-print STDERR "SHIP: Method: $ship_method ORDER: $order_id WEIGHT: $weight \n";
 
-print STDERR "GET ADDRESS: @add \n";
+	my $specs =  PQS::model::order::address($order_id);
 
-    my ($f_zone, $t_zone) = get_ship_zones($log, $dbh, $ship_method, @specs);
+	$specs->{total_weight} = $weight;
 
-print STDERR "HAVE ZONES: $f_zone, $t_zone \n";
+	$specs->{txtQuantity1} = 100;
 
-	print STDERR "HAVE SHIP WEIGHT: $weight \n";
+	my $rates = ic_api($specs);
 
-	my $price = price_service($weight, $ship_method, $price_list, $f_zone, $t_zone);
+	my $rate = shift @{$rates};
 
-print STDERR "HAVE PRICE: $price \n";
-	return $price;
+	$rate->{Total} =~ s/\$//g;
+
+	my $markup = configuration::get_value($log, $dbh, 'ShippingMarkup');
+
+	my $ship_price = $rate->{Total} * ( 1 + ($markup / 100) );
+
+
+	#my $price = price_service($weight, $ship_method, $price_list, $f_zone, $t_zone);
+
+print STDERR "HAVE PRICE: $ship_price \n", Dumper($rate);
+
+	return $ship_price;
 
 
 }

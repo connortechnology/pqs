@@ -15,16 +15,31 @@ sub get_value {
     return scalar $dbh->selectrow_array($sth, undef, $name);
 }
 
+sub get_category {
+    my ($log, $dbh, $id) = @_;
+
+
+    my $results = $dbh->selectall_arrayref(qq{
+        SELECT  *, strconfigdata as value
+        FROM tbl_Configuration 
+        WHERE category = ? ORDER by sortval } , { Slice => {} }, $id );
+
+	use Data::Dumper;
+	print STDERR "RESULTS", Dumper($results);
+
+    return $results; 
+}
+
 sub get_values {
     my ($log, $dbh, @names) = @_;
 
     my $placeholders = join(',', ('?') x scalar @names);
 
     my %results = @{ $dbh->selectcol_arrayref(qq{
-        SELECT strConfigTitle, strConfigData 
+        SELECT strConfigTitle, strConfigData, label 
         FROM tbl_Configuration 
         WHERE strConfigTitle IN ($placeholders)
-    }, { Columns => [1,2] }, @names) };
+    }, { Columns => [1,2,3] }, @names) };
 
     return @results{@names};
 }

@@ -119,6 +119,10 @@ sub misc_settings_edit {
     }
     $variable->{categories} = \@categories;
 
+	$variable->{SHIPPING} = configuration::get_category($log, $dbh, 'SHIPPING');
+
+
+
     return;
 }
 
@@ -179,6 +183,15 @@ sub save_settings {
             'predefined_allowed_services' => join(',', @services)
         );
     }
+
+	my $list = configuration::get_category($log, $dbh, 'SHIPPING');
+	foreach my $f ( @{$list} ) {
+		my $name =  $f->{strconfigtitle};
+		print STDERR "SAVE Field: $name \n";
+
+    	configuration::save_entry($log, $dbh, $name  => $r->param($name));
+	}
+
 
     return 1;
 }
