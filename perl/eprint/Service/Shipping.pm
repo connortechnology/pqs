@@ -576,8 +576,8 @@ sub to_address {
 		$a =~ s/str/txt/g;
 		$specs->{lc($a)} = $specs->{$_};
 
-		$specs->{ddmshippingcountry} = $specs->{strshippingcountry};
-		$specs->{ddmshippingstateprovince} = $specs->{strshippingstate};
+		$specs->{ddmshippingcountry} = $specs->{ddmshippingcountry} || $specs->{strshippingcountry};
+		$specs->{ddmshippingstateprovince} =$specs->{ddmshippingstateprovince} || $specs->{strshippingstate};
 
 
 	} keys %{$specs};
@@ -592,7 +592,7 @@ sub to_address {
       "countryCode"=> $specs->{ddmshippingcountry},
       "phone"=> $specs->{txtshippingphone},
       "attention"=> $specs->{txtshippingfirstname} . ' ' . $specs->{txtshippinglastname},
-      "emailAddress"=> $specs->{txtshippingemail},
+      "emailAddress"=> $specs->{txtshippingemail} || 'info@sherwoodprinters.com',
       "city"=> $specs->{txtshippingcity},
       "provinceCode"=> $specs->{ddmshippingstateprovince}
 	};
