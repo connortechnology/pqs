@@ -81,7 +81,10 @@ sub handler {
     # inside this module. We can decide on more complex mappings later.
     my $name = ( split '/', $r->uri )[2];
 
-    # Get a refrence to the function.
+	die();
+
+	print STDERR "HAVE FUNC: $name \n";
+	# Get a refrence to the function.
     my $func = qualify_to_ref( $name, __PACKAGE__ );
 
     # Verify that the function requested exists, if not return a 404.

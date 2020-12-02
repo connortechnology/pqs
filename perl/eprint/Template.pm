@@ -5,7 +5,7 @@ use warnings;
 use Apache2::Const qw(OK HTTP_MOVED_TEMPORARILY);
 use Apache2::RequestUtil ();
 use Data::Dumper;
-use Text::CSV_XS 0.45;
+use Text::CSV_XS;
 
 use PQS::Template;
 use eprint::project qw(get_path);
@@ -31,6 +31,8 @@ sub init_template {
 print STDERR "********* INIT TEMPLATE PID: $pid Template: $template_id  ****************** \n\n";
     my $proj_dir = get_path(undef, $dbh, $pid);
 
+	return if -e "$proj_dir/.template";
+
     # Create a template dir.
     mkpath("$proj_dir/.template")
         or die "Couldn't create template dir for project ($pid)."
@@ -46,6 +48,7 @@ print STDERR "********* INIT TEMPLATE PID: $pid Template: $template_id  ********
 
     my $template_path = "$proj_dir/.template/template.pdf";
 
+print STDERR "\n********* INIT TEMPLATE PID: $pid Template: $source  **** TPATH $template_path  ****************** \n\n";
     cp($source, $template_path)
         or die "Couldn't copy PDF template into project dir ($pid) from : $source - $template_path.";
 
@@ -563,6 +566,18 @@ sub view_record {
     my ($r, $dbh, $variable) = @_;
 
     my $pid        = get_pid($r);
+
+	my $init_template = $r->param('init_template');
+
+	if ( $init_template ) {
+		my $template_id = $dbh->selectrow_array(q{
+			SELECT pdftemplate FROM tbl_products where id = (
+				SELECT prod from tbl_projects where lngprojectindex = ?
+			)	}, undef, $pid);
+
+    	init_template($dbh, $pid, $template_id);
+	}
+
     my $info       = get_template_info($dbh, $pid);
     my $datasource = get_datasource($dbh, $pid);
 
@@ -572,6 +587,10 @@ sub view_record {
         if ($r->param('delete')) { delete_record($r, $datasource); } 
         else                     { change_record($r, $datasource, $dbh, $variable->{cust_id}); }
     }
+	if ( $r->param('Finish') ) { 
+			$variable->{Redirect} = '/main/order/confirmation_make_order.html';
+			return OK;
+	} 
 
 use Data::Dumper;
 print STDERR "VIEW RECORD";
@@ -833,6 +852,7 @@ sub assets {
     my ($r, $dbh, $variable) = @_;
 
     my $pid        = get_pid($r);
+
     my $info       = get_template_info($dbh, $pid);
     my $datasource = get_datasource($dbh, $pid);
 
