@@ -2090,8 +2090,10 @@ sub display {
     $catID    ||= $r->param('Category');
     $qtyIndex ||= $r->param('QuantityIndex') || 1;
 
+    my ($type) = get_type($log, $dbh, $pid);
 	if ( $printer_friendly && $catID == 2 ) {
-		$variable->{NO_HEADER} = 1;
+		#Printing Service already has the header, unless there is not printing service.
+		$variable->{NO_HEADER} = 1 unless $type eq 'NoPrint';
 	}	
 
 
