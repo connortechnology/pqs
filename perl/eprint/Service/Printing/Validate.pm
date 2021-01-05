@@ -175,6 +175,9 @@ sub spread {
 	$spread{rfq_only}     = rfq_only($dbh, $pid);
 	$spread{product_only} = product_only($dbh, $pid);
 
+	$spread{SpreadWidth} = $specs->{ovrSpreadWidth};
+	$spread{SpreadHeight} = $specs->{ovrSpreadHeight};
+
 print STDERR "HAVE RFQ ONLY: $spread{rfq_only} \n";
 
 

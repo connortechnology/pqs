@@ -267,10 +267,20 @@ sub get_project_price {
         @{ $project->{signature} }{@fields}
             = get_specifications($log, $dbh, $pid, $sid, @fields);
 
+
+		print STDERR "HAVE PROJECT: ", Dumper($project, $spread);
+		$project->{width}  = $spread->{SpreadWidth} if  $spread->{SpreadWidth}  ;
+		$project->{height} = $spread->{SpreadHeight} if $spread->{SpreadHeight}  ;
+
+
         # Load the preset spread size if the sizes weren't supplied (interior).
         unless ($project->{width} && $project->{height}) {
-            @$project{qw(width height)} 
-                = @{ $project->{signature} }{qw(txtSpreadWidth txtSpreadHeight)};
+			
+
+			@$project{qw(width height)} 
+			= @{ $project->{signature} }{qw(txtSpreadWidth txtSpreadHeight)};
+
+
 
             if (   $project->{template} 
                 && $project->{template} =~ /^(Single|Double)GateFold$/i )
