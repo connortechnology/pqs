@@ -130,7 +130,12 @@ sub calc {
 
     my @qty = (undef, get_quantities($log, $dbh, $pid));
 
-    foreach my $i ( 1 .. 3 ) {
+	#Sherwood only uses qty1
+	#No long calculate size for impostions great than 1.
+	#User must enter Imp size for processing multi-up.
+	#Still compare equipment, validate equipment fits project.
+
+    foreach my $i ( 1 ) {
         my %bestPrice;
         my %bestImposition;
 
@@ -144,58 +149,62 @@ sub calc {
 
         my %imposition;
 
-        my @impositions = ();
+        my $imp_width  = 0;
+        my $imp_height = 0;
+
 
 		if ( $specs->{chkOverrideImposition1} ) {
 			$imposition{'Imposition'} =  $specs->{txtImposition1};
 			$imposition{'Rows'} = 1;
 			$imposition{'Cols'} = 1;
+            $imp_width  = $$specs{"txtImageWidth1"};
+            $imp_height = $$specs{"txtImageHeight1"};
 		} else {
 			# For Our Dutch Impositions We only allow 1-up die cutting.
 			$imposition{'Imposition'} = 1;
 			$imposition{'Rows'} = 1;
 			$imposition{'Cols'} = 1;
+            $imp_width  = $$specs{"flat_width"};
+            $imp_height = $$specs{"flat_height"};
+
+            $$specs{"txtImageWidth$i"}  = $$specs{"flat_width"};
+            $$specs{"txtImageHeight$i"} = $$specs{"flat_height"};
 		}
-		push @impositions, \%imposition;
 
-        foreach my $imposition (@impositions) {
-            my $imp_width  = 0;
-            my $imp_height = 0;
+		foreach my $equipment_index (@equipment) {
+			my $equipment_id =
+			  eprint::equipment::get_id_by_index( $log, $dbh,
+				$equipment_index );
 
-            $imp_width  = $$specs{"flat_width"} * $$imposition{'Cols'};
-            $imp_height = $$specs{"flat_height"} * $$imposition{'Rows'};
+				 
+			if ( grep { $_ = $equipment_index } @folder_makers ) {
+				next if $imposition{Imposition} > 1;
+			}
 
-            foreach my $equipment_index (@equipment) {
-                my $equipment_id =
-                  eprint::equipment::get_id_by_index( $log, $dbh,
-                    $equipment_index );
+		   if ( !eprint::equipment::equipment_fits( 
+					$log, $dbh, $equipment_index, $imp_width, $imp_height)
+			) {
+				print STDERR "EQUIPMENT: $equipment_id Does not fit $imp_width x $imp_height \n";
+				next;
+			}
+			else {
+				print STDERR "EQUIPMENT: $equipment_id FITS **** \n";
+				my %price =
+				  calc_price( $log, $dbh, $variable, $specs,
+					$equipment_id, $i,
+					$imposition{'Imposition'}, $standard_pf, $service_type );
 
-                     
-                if ( grep { $_ = $equipment_index } @folder_makers ) {
-                    next if $imposition->{Imposition} > 1;
-                }
+				if ( !$bestPrice{'txtPrice'}
+					or $price{'txtPrice'} < $bestPrice{'txtPrice'} )
+				{
+					$bestEquipment  = $equipment_index;
+					%bestPrice      = %price;
+					%bestImposition = %imposition;
+				}
 
-#we need to check that the die cut image is not larger than the page we are printing on.
-                if ( 0 ) {
-			#Equipment fits check has been removed.
-                }
-                else {
-                    my %price =
-                      calc_price( $log, $dbh, $variable, $specs,
-                        $equipment_id, $i,
-                        $$imposition{'Imposition'}, $standard_pf, $service_type );
+			}
+		}
 
-                    if ( !$bestPrice{'txtPrice'}
-                        or $price{'txtPrice'} < $bestPrice{'txtPrice'} )
-                    {
-                        $bestEquipment  = $equipment_index;
-                        %bestPrice      = %price;
-                        %bestImposition = %$imposition;
-                    }
-
-                }
-            }
-        }
         if ( $check_failed_equipment && !$bestPrice{'txtPrice'} ) {
             $$specs{'error'} =
 "The size of your document and die are unable to fit on any of our letterpresses.";
@@ -209,18 +218,7 @@ sub calc {
 
         $$specs{"txtCustomDiePrice$i"} =
           sprintf( '%.2f', $bestPrice{'DiePrice'} );
-        if ( $printing_specs{'hdnImageOrientation'} eq 'Vertical' ) {
-            $$specs{"txtImageWidth$i"} =
-              $$specs{"flat_width"} * $bestImposition{'Cols'};
-            $$specs{"txtImageHeight$i"} =
-              $$specs{"flat_height"} * $bestImposition{'Rows'};
-        }
-        else {
-            $$specs{"txtImageWidth$i"} =
-              $$specs{"flat_width"} * $bestImposition{'Rows'};
-            $$specs{"txtImageHeight$i"} =
-              $$specs{"flat_height"} * $bestImposition{'Cols'};
-        }
+
     }
 
     # We use 'Complex' when the die is supplied but don't want to return it.
@@ -245,16 +243,6 @@ sub calc {
     return $status;
 }
 
-sub decrease_imposition {
-    my ($imp) = @_;
-    if ($imp->{Rows} > $imp->{Cols}) {
-        $imp->{Rows} -= 1;
-    } else {
-        $imp->{Cols} -= 1;
-    }
-    $imp->{Imposition} = $imp->{Rows} * $imp->{Cols};
-    return;
-}
 
 sub calc_price {
     my ( $log, $dbh, $variable, $specs, $eid, $qty_index, $imposition,
