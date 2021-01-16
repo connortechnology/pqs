@@ -65,8 +65,9 @@
 
 		<?if ( $variable->{id} eq 'Printing' )?>
 			<? if ($$variable{Category} == 2) ?>
-			<? endif ($$variable{Category} == 2) ?>
+			<? else ($$variable{Category} == 2) ?>
 			<div style="page-break-before: always"> </div>
+			<? endif ($$variable{Category} == 2) ?>
 			<?eval( $variable->{have_print} = 1 ) ?>
 		<?endif ( $variable->{id} eq 'Printing' )?>
 

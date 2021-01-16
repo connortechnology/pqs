@@ -1482,6 +1482,8 @@ sub printing {
     }
 
     $results{'NoPrint'} = $results{chargefor} eq 'Free' ? 1 : 0;
+	$variable->{NO_HEADER} = '' if $results{'NoPrint'};
+	$variable->{NoPrint} = '' if $results{'NoPrint'};
 
     $results{'PaperOut'}     = ceil($results{'hdnSheetQuantity1'} / $results{hdnPaperBuyQuantity1}) if  $results{hdnPaperBuyQuantity1} ;
 
