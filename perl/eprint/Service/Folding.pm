@@ -339,7 +339,17 @@ sub calc {
         $specs->{"hdnRunTime$i"}   = sprintf("%.2f",$service->{RunTimePerK} * $qty / 1000);
 
         $valid_price = 1 if $total > 0;
+	print STDERR "HAVE VALID PRICE: $total  ************** $valid_price \n"
+
     }
+
+	unless ( $valid_price ) {
+		$specs->{txtPrice1} = 0.00;
+		$specs->{txtUnitPrice1} = 0.00;
+		$specs->{error} = 'Invalid Equipment Override' if $specs->{"chkOverrideEquipment1"} eq 'Y';
+
+	}
+
 
     return $valid_price == 1 ? 'calculated' : 'uncalculated';
 }

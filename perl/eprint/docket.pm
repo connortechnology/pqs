@@ -1858,7 +1858,7 @@ sub header_info {
 
     $hash{'runstyle'} = $run_style;
     $hash{'hdnPress'}    = $press;
-    $hash{colours}       = \@colours;
+    $hash{colours}       = $hash{ProjectType} eq 'No Printing' ? []  : \@colours;
     $hash{'multipage'}   = eprint::project::is_multipage($log, $dbh, $pid);
     $hash{txtSignatureQuantity}        = $signatures;
     $hash{txtGateFoldedSpreadQuantity} = 0

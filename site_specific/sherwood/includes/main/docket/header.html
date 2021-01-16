@@ -170,6 +170,7 @@
 						<th>Surfaces Printed On:</th><td><?HeaderInfo.txtScreenPrintingSurfaces?></td>
 					<? endif ($variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
 				</tr>
+				<? if ( @{$variable->{HeaderInfo}{colours}} > 0 ) ?>
 				<tr>
 					<th>Colours:</th>
 					<td>
@@ -188,6 +189,7 @@
 						<td><?HeaderInfo.txtPressSheetComboItems?></td>
 					<? endif ($variable->{HeaderInfo}{ptype} ne 'PressSheetCombination')?>
 				</tr>
+				<? endif ( @{$variable->{HeaderInfo}{colours}} > 0 ) ?>
 				<? if ($variable->{HeaderInfo}{multipage} and $variable->{HeaderInfo}{ptype} ne 'ScreenItem')?>
 					<tr>
 						<th>Pages:</th>

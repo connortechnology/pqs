@@ -2437,16 +2437,21 @@ print STDERR "CALC SHEET QTY IMP: $imposition QTY: $qty \n";
                                            '', $press);
     $min_overs = $min_overs_spec if $min_overs_spec ne '';
 
-    my $overs_per_colour =
-      eprint::equipment::get_specification($log, $dbh, 'Press Unit Setup Overs',
-                                           $colours, $press);
+    my $setup_overs;
 
-    $overs_per_colour = $unit_overs_OR if $unit_overs_OR > 0;
-    my $first_unit_overs =
-      eprint::equipment::get_specification($log, $dbh, 'First Unit Setup Overs',
-                                           $colours, $press);
-    $first_unit_overs = $overs_per_colour unless $first_unit_overs;
-    my $setup_overs = $first_unit_overs + ($overs_per_colour * ($colours - 1));
+	if ( $unit_overs_OR ne '' ) {
+    	$setup_overs = $unit_overs_OR 
+	} else { 
+		my $overs_per_colour =
+		  eprint::equipment::get_specification($log, $dbh, 'Press Unit Setup Overs', $colours, $press);
+
+		my $first_unit_overs =
+		  eprint::equipment::get_specification($log, $dbh, 'First Unit Setup Overs', $colours, $press);
+
+		$first_unit_overs = $overs_per_colour unless $first_unit_overs;
+
+    	$setup_overs = $first_unit_overs + ($overs_per_colour * ($colours - 1));
+	}
 
     #multi-page multi-version overs adjustment
     my $bookid = eprint::project::get_service_index($log, $dbh, $pid, 'Book');
@@ -2470,7 +2475,7 @@ print STDERR "CALC SHEET QTY IMP: $imposition QTY: $qty \n";
       eprint::equipment::get_specification($log, $dbh, 'Press Run Overs',
                                            $over_range, $press);
 
-    $over_rate = $run_overs_OR if $run_overs_OR > 0;
+    $over_rate = $run_overs_OR if $run_overs_OR ne '';
     my $run_overs = ceil($net_sheets * $over_rate);
     $run_overs = $run_overs * $print_sides if $print_sides > 1;
 
