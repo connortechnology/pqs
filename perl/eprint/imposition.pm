@@ -511,7 +511,6 @@ sub version_layouts {
     # way (only one plate change, 0 waste for 2A2B, 2C1D1A layout).
     my @partitions = partitions(scalar keys %$versions);
 
-
 	#We now alllot multipage projects to have multiple verions, however 
 	#the current restriction is 1 Verions per Form.
 	# X Versions = X Froms regardless of layout.
@@ -555,6 +554,7 @@ sub version_layouts {
     my (%result, $max_waste);
     foreach my $set (@partitions) {
 
+		print STDERR "HAVE SET CHECK: ",  Dumper($set);
         my @remaining = @nversions;
 
         # Choose which n versions will go on the current sheet (n is a single
@@ -596,6 +596,7 @@ sub partitions {
     return []  if $n == 0;
     return [1] if $n == 1;
 
+
     my @set;
     for my $p ( partitions($n - 1) ) {
         my $append = [@$p, 1]; # Append 1 to each elem.
@@ -609,6 +610,7 @@ sub partitions {
 
         push @set, $append;
     }
+
     return @set;
 }
 
@@ -631,6 +633,9 @@ memoize('get_matching_versions',
 sub get_matching_versions {
     my ($n, @versions) = @_;
 
+
+	print STDERR "\n\n*************** START GET MATCH ***************** ", Dumper($n, @versions);
+
     # The simple case of we only need one or we need them all. We can do the
     # first because partitions are always in descending order.
     return [ shift @versions ], @versions if $n == 1;
@@ -641,8 +646,11 @@ sub get_matching_versions {
     my @percentages = map { $_->{requested} } @versions;
 
     my ($start, $min);
-    for my $i (0..$#percentages - $n) {
-        my $stddev = stddev([ @percentages[$i..$i + $n] ]);
+    for my $i (0..$#percentages - $n + 1) {
+
+        my $stddev = stddev([ @percentages[$i..$i + $n-1] ]);
+
+		print STDERR "\n Min: $min START: $start FOR LOOP 0 to $#percentages - $n   I: $i $stddev @percentages[$i]";
         
         if (not defined $min or $stddev < $min) {
             $min   = $stddev;
@@ -650,6 +658,8 @@ sub get_matching_versions {
         }
     }
     my @selected = splice @versions, $start, $n;
+
+	print STDERR "\nHAVE MATCH: $min, $start ", Dumper(\@selected);
 
     return \@selected, @versions;
 }
@@ -720,6 +730,8 @@ sub match_versions {
 # Standard deviation. TODO Replace with XS function for speed?
 sub stddev {
     my $array = shift;
+
+	print STDERR "\nMAKE STD DEV" ,Dumper($array);
     
     my $elems  = scalar @$array;
     my $sum    = 0;
