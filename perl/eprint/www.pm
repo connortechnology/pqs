@@ -552,6 +552,7 @@ print STDERR "SUB: $sub_section F: $filename \n";
         eprint::admin_accounting::search($r, $log, $dbh, $variable)                 if $filename eq 'accounting_search.html';
         
         eprint::admin_customer::admin_customer_edit($r, $log, $dbh, $variable)      if $filename eq 'company_profiles.html';
+        eprint::admin_customer::product_markup($r, $log, $dbh, $variable)      		if $filename eq 'product_markup.html';
         eprint::admin_user::admin_user_edit($r, $log, $dbh, $variable)              if $filename eq 'user_profiles.html';
         eprint::credit_application::credit_application($r, $log, $dbh, $variable)   if $filename eq 'credit_application.html';
         eprint::credit_application::credit_applications($r, $log, $dbh, $variable)  if $filename eq 'credit_applications.html';

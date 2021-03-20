@@ -11,6 +11,25 @@ require eprint::customer_credit;
 require eprint::obj_customer;
 require eprint::address;
 
+sub product_markup {
+    my ($r, $log, $dbh, $variable) = @_;
+
+
+	my $index;
+
+## New Product Markup
+	$variable->{new_product_categories} = $dbh->selectall_arrayref(q{
+		SELECT * FROM categories ORDER by name 
+	}, {Slice => {} } );
+
+	map { 
+		$_->{markup} = $dbh->selectrow_array(q{
+			SELECT markup from product_markup WHERE customer = ? and category = ?
+		}, undef, $index, $_->{id} );
+	} @{ $variable->{new_product_categories} };
+}
+
+
 sub admin_customer_edit {
     my ($r, $log, $dbh, $variable) = @_;
     

@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>
+		<!--#include virtual="/includes/web_page_title.html" -->
+		Mangerial - Company Profile
+	</title>
+
+	<!--#include virtual="/includes/web_page_meta.html" -->
+	<!--#include virtual="/includes/h1-admin-css.html" -->
+
+	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+	<!--#include virtual="/includes/h2-js.html" -->
+
+	<script type="text/javascript" src="/javascripts/other.js"></script>
+</head>
+
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+
+<div id="content">
+	<h1><span class="title-section">Managerial &#187;</span> Company Profiles</h1>
+
+	<p>Were you looking for the <a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">User Profile Page</a>?</p>
+	<p>
+	All fields marked with an Asterisk (*) are required. Blank or Null values are
+not acceptable, however "0" is valid.
+	</p>
+
+	<form id="f1" name="f1" method="post" onsubmit="return fmCheck(f1);" action="/administrator/managerial/company_profiles.html">
+
+		<fieldset>
+			<legend>
+				Company
+			</legend>
+	
+			<p class="none">&nbsp;</p>
+	
+			<label for="category">Company Name:</label>
+			<select id="category" name="category" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
+				<option value=""> Select a Category </option>
+				<option value=""> ----------------- </option>
+				<?ddmCategory?>
+			</select>
+			<br />
+	
+			<label for="name">Category Name:</label>
+			<input type="text" id="name" name="name" class="" size="25" />
+			<br />
+			
+			<div class="button-bar indent-regular">
+				<input class="button" type="button" name="btnFunction" value="New" onclick="addCheck(f1);" />
+				<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=4;" />
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<br />
+			</div>
+			<br />
+		</fieldset>
+
+        
+
+			<fieldset>
+
+			<legend> New Product Category Mark-up/Discount </legend>
+				<?loop new_product_categories?>
+						<label for="txtPricingLevel"><?name?>: </label>
+						<input type="text" size="9" class="smBox" id="txtMarkup-<?id?>" name="txtMarkup-<?id?>" value="<?markup?>" />%<br />
+				<?endloop new_product_categories?>
+			</fieldset>
+			<fieldset>
+
+			<legend> Product Category Mark-up/Discount </legend>
+				<?loop product_categories?>
+						<label for="txtPricingLevel"><?name?>: </label>
+						<input type="text" size="9" class="smBox" id="txtMarkup-<?id?>" name="txtMarkup-<?id?>" value="<?markup?>" />%<br />
+				<?endloop product_categories?>
+			</fieldset>
+
+
+	</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>
