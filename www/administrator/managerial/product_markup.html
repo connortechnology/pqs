@@ -21,15 +21,14 @@
 <!--#include virtual="/includes/c1-admin-nav.html" -->
 
 <div id="content">
-	<h1><span class="title-section">Managerial &#187;</span> Company Profiles</h1>
+	<h1><span class="title-section">Managerial &#187;</span> Product Markup</h1>
 
-	<p>Were you looking for the <a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">User Profile Page</a>?</p>
 	<p>
 	All fields marked with an Asterisk (*) are required. Blank or Null values are
 not acceptable, however "0" is valid.
 	</p>
 
-	<form id="f1" name="f1" method="post" onsubmit="return fmCheck(f1);" action="/administrator/managerial/company_profiles.html">
+	<form id="f1" name="f1" method="post" onsubmit="return fmCheck(f1);" action="product_markup.html">
 
 		<fieldset>
 			<legend>
@@ -38,15 +37,13 @@ not acceptable, however "0" is valid.
 	
 			<p class="none">&nbsp;</p>
 	
-			<label for="category">Company Name:</label>
-			<select id="category" name="category" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
+			<label for="category">Group Name:</label>
+			<select id="group" name="group" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
 				<option value=""> Select a Category </option>
 				<option value=""> ----------------- </option>
 				<?ddmCategory?>
 			</select>
-			<br />
 	
-			<label for="name">Category Name:</label>
 			<input type="text" id="name" name="name" class="" size="25" />
 			<br />
 			
@@ -65,18 +62,15 @@ not acceptable, however "0" is valid.
 			<fieldset>
 
 			<legend> New Product Category Mark-up/Discount </legend>
+			<div class="button-bar indent-regular">
+				<input class="button" type="reset" />
+				<input class="button" type="submit" name="btnFunction" value="Save Markup" onclick="fmChange=3;" />
+				<br />
+			</div>
 				<?loop new_product_categories?>
 						<label for="txtPricingLevel"><?name?>: </label>
 						<input type="text" size="9" class="smBox" id="txtMarkup-<?id?>" name="txtMarkup-<?id?>" value="<?markup?>" />%<br />
 				<?endloop new_product_categories?>
-			</fieldset>
-			<fieldset>
-
-			<legend> Product Category Mark-up/Discount </legend>
-				<?loop product_categories?>
-						<label for="txtPricingLevel"><?name?>: </label>
-						<input type="text" size="9" class="smBox" id="txtMarkup-<?id?>" name="txtMarkup-<?id?>" value="<?markup?>" />%<br />
-				<?endloop product_categories?>
 			</fieldset>
 
 

@@ -15,18 +15,113 @@ sub product_markup {
     my ($r, $log, $dbh, $variable) = @_;
 
 
-	my $index;
+	my $group = $r->param('group');
 
 ## New Product Markup
 	$variable->{new_product_categories} = $dbh->selectall_arrayref(q{
 		SELECT * FROM categories ORDER by name 
 	}, {Slice => {} } );
 
+
+
+
+	my $action = $r->param('btnFunction');
+	my $name = $r->param('name');
+
+	print STDERR "ACTION: $action Name: $name \n";
+	if ( $action eq 'Save' ) {
+		if ( $group ) {
+			$dbh->do(q{update markup_group set name = ? where id = ? },undef, $name, $group);
+		} else {
+			$dbh->do(q{INSERT INTO markup_group ( name ) values (?) },undef, $name);
+			$group = $dbh->last_insert_id(undef, undef, 'markup_group', 'id');
+		}
+	} elsif ( $action eq 'Delete') {
+		$dbh->do(q{delete from markup_group where id = ?}, undef, $group);
+	} elsif ( $action eq 'Save Markup') {
+
+		save_markup( $r, $dbh, $variable, $group);
+
+	}	
+
 	map { 
 		$_->{markup} = $dbh->selectrow_array(q{
-			SELECT markup from product_markup WHERE customer = ? and category = ?
-		}, undef, $index, $_->{id} );
-	} @{ $variable->{new_product_categories} };
+			SELECT markup from group_markups WHERE mugroup = ? and category = ?
+		}, undef, $group, $_->{id} );
+	} @{ $variable->{new_product_categories} } if $group;
+
+
+
+	$_ = q{SELECT id, name from markup_group order by name};
+    $$variable{'ddmCategory'} = ssi::fill_drop_down( $log, $dbh, $_, $group );
+
+	$variable->{__FillInForm}{category} = $group;
+
+	reset_cust_markup(1);
+}
+sub markup_cats {
+	my $dbh = session::dbh;
+	my $list = $dbh->selectcol_arrayref(q{
+		SELECT id FROM categories ORDER by name 
+	}  );
+	return $list;
+}
+
+sub reset_cust_markup {
+	my $dbh = session::dbh;
+	my ($cust ) = @_;
+	my $group = $dbh->selectrow_array(q{Select markup_group from tbl_customer where lngcustomerid = ?}, undef, $cust);
+	my $cats = markup_cats;
+	my $markups = $dbh->selectall_arrayref(q{SELECT * FROM group_markups WHERE mugroup = ?},{Slice=>{}}, , $group);
+
+
+	$dbh->do('DELETE FROM product_markup WHERE customer = ?', undef, $cust);
+
+	map {
+		my $mu = $_->{markup};
+		my $cat = $_->{category};
+		my $sql = 'insert into product_markup values ( ?,?,?)';
+		$dbh->do($sql, undef, $cust, $mu, $cat);
+	} @{$markups};
+
+	
+
+	print STDERR "HAVE RESET ", Dumper( $cust, $group, $cats, $markups);
+
+
+}
+
+sub set_markup {
+	my ($dbh, $cust_list, $mu, $cat ) = @_;
+
+        foreach my $cust ( @{$cust_list} ) {
+			my $sql = 'insert into product_markup values ( ?,?,?)';
+			$dbh->do($sql, undef, $cust, $mu, $cat);
+		print STDERR "\nSET HAVE CUST LIST (CUST $cust, MU $mu, CAT $cat) ";
+		}
+
+
+}
+
+sub save_markup {
+	my ($r, $dbh, $variable, $group ) = @_;
+
+		$dbh->do(q{delete from group_markups where mugroup = ?}, undef, $group);
+
+		my @cust_list = $dbh->selectrow_array(
+			q{SELECT lngcustomerid FROM tbl_customer WHERE markup_group = ?}, 
+			undef, $group
+		);
+
+		map { 
+			my $cat = $_->{id};
+			my $mu =  $r->param("txtMarkup-" . $cat) || 0;
+			$dbh->do(q{Insert into group_markups values ( ?, ?, ?) }, undef, $group, $cat, $mu);
+
+# TESTING ONLY REMOVE LATER
+			#	set_markup($dbh, \@cust_list, $mu, $cat);
+
+		} @{ $variable->{new_product_categories} };
 }
 
 
@@ -86,6 +181,7 @@ sub admin_customer_edit {
             chkOrderCreditCarry        =>  'OrderCreditCarry',
             txtNotificationEmail  =>  'NotificationEmail',
 			linescreen				=> 'linescreen',
+			markup_group				=> 'markup_group',
     );
     
     # Project/service pricing display flags.
@@ -240,6 +336,8 @@ print STDERR  "HAVE LINE SCREEN: $ls \n";
         $customer->set( \%params );
         $index = $customer->{index};
 
+		reset_cust_markup($index);
+
 # Customer Categories
 # I was trying to do this the hard way.  Then it occurred to me: Just delete them all from the table, and add back in the ones we want.  
         $_ = "SELECT lngIndex FROM tbl_Marketing_Categories";
@@ -293,14 +391,14 @@ print STDERR  "HAVE LINE SCREEN: $ls \n";
         }
         $customer_credit->set( \%params );
 
-		$dbh->do(q{ DELETE from product_markup WHERE customer = ? }, undef, $index );
-		map { 
-			if ( $_ =~ /txtMarkup-(\d*)/ ){
-				print STDERR  "HAVE MARKUP $1 \n";
-				$dbh->do(q{INSERT INTO product_markup ( customer, category, markup) VALUES ( ?, ?, ? ) },
-					undef, $index, $1, $r->param($_) ) if $r->param($_);
-			}
-		} $r->param();
+		#		$dbh->do(q{ DELETE from product_markup WHERE customer = ? }, undef, $index );
+		#		map { 
+		#			if ( $_ =~ /txtMarkup-(\d*)/ ){
+		#				print STDERR  "HAVE MARKUP $1 \n";
+		#			$dbh->do(q{INSERT INTO product_markup ( customer, category, markup) VALUES ( ?, ?, ? ) },
+		#				undef, $index, $1, $r->param($_) ) if $r->param($_);
+		#		}
+		#	} $r->param();
 	
 		
     }
@@ -461,6 +559,13 @@ print STDERR "HAVE LINE SCRREN TO FILL: $variable->{linescreen} \n";
 
 
 ## Product Markup
+	#	$_ = "SELECT nt) FROM tbl_Payments WHERE lngCustomerIndex='$index'";
+	#( $payments ) = sql::sql_statement( $log, $dbh, $_ );
+
+print STDERR "HAVE MUG: $$variable{markup_group} \n";
+    $_ = "SELECT id, name FROM markup_group ORDER BY name";
+    $$variable{'ddmMarkupGroup'} = ssi::fill_drop_down( $log, $dbh, $_, $$variable{'markup_group'} );
+
 	$variable->{product_categories} = $dbh->selectall_arrayref(q{
 		SELECT * FROM product.category ORDER by name 
 	}, {Slice => {} } );
@@ -470,6 +575,7 @@ print STDERR "HAVE LINE SCRREN TO FILL: $variable->{linescreen} \n";
 			SELECT markup from product_markup WHERE customer = ? and category = ?
 		}, undef, $index, $_->{id} );
 	} @{ $variable->{product_categories} };
+
 
 
 ## New Product Markup

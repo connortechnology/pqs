@@ -85,6 +85,7 @@ my %fields = (
 
     Warehouse            => 'lngWarehouseID', # ?
     division             => 'division', # ?
+    markup_group             => 'markup_group', # ?
 );
 
 my %transforms = (

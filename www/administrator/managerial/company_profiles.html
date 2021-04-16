@@ -132,13 +132,25 @@ not acceptable, however "0" is valid.
            
        	</fieldset>
 
+
 			<fieldset>
 
 			<legend> New Product Category Mark-up/Discount </legend>
+            	<label>Markup Group:</label>
+				<select id="markup_group" name="markup_group" onchange="fmChange=1;">
+					<option value=""> Select</option>
+					<?ddmMarkupGroup?>
+				</select> <br>
+
+				
+
+
+				<!--
 				<?loop new_product_categories?>
 						<label for="txtPricingLevel"><?name?>: </label>
-						<input type="text" size="9" class="smBox" id="txtMarkup-<?id?>" name="txtMarkup-<?id?>" value="<?markup?>" />%<br />
+						<input type="text" size="9" readonly class="smBox" id="txtMarkup-<?id?>" name="txtMarkup-<?id?>" value="<?markup?>" />%<br />
 				<?endloop new_product_categories?>
+				-->
 			</fieldset>
 			<fieldset>
 
