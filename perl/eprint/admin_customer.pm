@@ -118,8 +118,7 @@ sub save_markup {
 			my $mu =  $r->param("txtMarkup-" . $cat) || 0;
 			$dbh->do(q{Insert into group_markups values ( ?, ?, ?) }, undef, $group, $cat, $mu);
 
-# TESTING ONLY REMOVE LATER
-			#	set_markup($dbh, \@cust_list, $mu, $cat);
+			set_markup($dbh, \@cust_list, $mu, $cat);
 
 		} @{ $variable->{new_product_categories} };
 }

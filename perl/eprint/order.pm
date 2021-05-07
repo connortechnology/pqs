@@ -352,6 +352,25 @@ sub make_order_from_quote {
 			#my ( $cookie, $var, $product, $qty, $subgroup, $jobname, $versions, $quote_price, $order_id ) = @_;
 	}
 
+
+	my $contact = $dbh->selectrow_hashref(q{
+		SELECT * FROM tbl_quote_users_for WHERE lngquoteid = ?
+	}, {}, $quote_id);
+
+	my $order_fields = $dbh->selectrow_hashref(q{
+		SELECT * FROM tbl_orders WHERE lngorderid = ?
+	}, {}, $order_id);
+
+	
+
+	map { 
+		print STDERR "HAVE CONTACT ", Dumper($_);
+
+		$dbh->do(qq{update tbl_orders set $_ = ? where lngorderid = ?}, undef, $contact->{$_}, $order_id)
+			if exists $order_fields->{$_};
+
+	} keys %{$contact};
+
     return ( 0, $error );
 }
 
