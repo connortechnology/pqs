@@ -786,8 +786,11 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
  	$rate_id = $dbh->selectrow_array(q{SELECT lngindex from tbl_ship_via where strname = ? }, undef, $strid );
 
 	$rate->{Total} =~ s/\$//g;
+	$rate->{Total} =~ s/,//g;
 
 	my $ship_price = $rate->{Total} * ( 1 + ($markup / 100) );
+
+	print STDERR "APPLYING MARKUPS: BEFORE:  $rate->{Total} AFTER: $ship_price MARKUP: $markup \n";
 
 	my $total = $ship_total + $ship_price;
 		
