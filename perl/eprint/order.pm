@@ -193,7 +193,7 @@ sub add_product_to_order {
 	my $prod = new PQS::Object::product($product);
 	# my $price =  defined $quote_price ? $quote_price : $prod->price($var->{cust_id}, $qty, $versions);
 
-	my $price = $quote_price + $prod->price($var->{cust_id}, $qty, $versions);
+	my $price = $quote_price || $prod->price($var->{cust_id}, $qty, $versions);
 
 	$qty = $qty * $versions if $versions > 1;
     
@@ -347,7 +347,7 @@ sub make_order_from_quote {
 			my $qty = $p->{intquantity1};
 			my $price =  $p->{dblprice1} / $qty;
 
-			print STDERR "ADD PRODUCT: $product QUANTITY: $qty \n";
+			print STDERR "ADD PRODUCT: $product QUANTITY: $qty QUOTE: $p->{dblprice1} Price: $price \n";
 			($order_id) = add_product_to_order( $cookie, $variable, $product, $qty, undef, $p->{jobname}, 1, $price );
 			#my ( $cookie, $var, $product, $qty, $subgroup, $jobname, $versions, $quote_price, $order_id ) = @_;
 	}
