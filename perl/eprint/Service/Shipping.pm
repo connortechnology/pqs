@@ -704,12 +704,32 @@ sub ic_api {
 	  
 
 	  #print STDERR "HAVE SHIP", Dumper($obj);
+	  
+	update_shipvia($rates);
 
 
 	  return $rates;
 	
 }
 
+
+sub update_shipvia {
+	my $rates = shift;
+	my $dbh = session::dbh;
+
+	foreach my $rate ( @{$rates} ) {
+		my $strid =  "$rate->{carrierName} $rate->{serviceName}";
+		my $id = $dbh->selectrow_array(q{SELECT lngindex from tbl_ship_via where strname = ? }, undef, $strid );
+		$rate->{strid} = $strid;
+		$rate->{id} = $id;
+
+		$dbh->do(q{INSERT INTO tbl_ship_via ( strid, strname ) values ( ?, ?)},
+					undef, $strid, $strid ) unless $id;
+	}
+
+	$dbh->commit();
+
+}
 
 sub calc {
 
@@ -738,25 +758,19 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 	my $rate_over;
 
 
-	my $rate_id;
+
+
 	if ( defined $rates) {
 
 		foreach my $rate ( @{$rates} ) {
 
 			  print STDERR "RATE: " , $rate->{carrierName} , ": ", "$rate->{serviceName} = $rate->{Total} ", "\n";
 			  $results .= "RATE:  $rate->{carrierName} : $rate->{serviceName} = $rate->{Total} \n";
-			  #$results .= "$rate->{carrierName} : $rate->{serviceName}\n";
 
 
-
-
-			  my $strid =  "$rate->{carrierName} $rate->{serviceName}";
-			  my $id = $dbh->selectrow_array(q{SELECT lngindex from tbl_ship_via where strname = ? }, undef, $strid );
-			  $dbh->do(q{INSERT INTO tbl_ship_via ( strid, strname ) values ( ?, ?)},
-			  	undef, $strid, $strid ) unless $id;
-			$dbh->commit();
 			 if ( $specs->{chkOverrideShipper1} ) {
-				 if ( $specs->{ddmShipVia1} eq $id ) {
+				 #test this from shipping page
+				 if ( $specs->{ddmShipVia1} eq $rate->{id} ) {
 					 $rate_over = $rate;
 				 }
 
@@ -779,18 +793,10 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 
 	my $rate = $rate_over || shift @{$rates};
 
-	my $markup = configuration::get_value($log, $dbh, 'ShippingMarkup');
+
+	my $ship_price = process_rate($rate);
 
 
-    my $strid =  "$rate->{carrierName} $rate->{serviceName}";
- 	$rate_id = $dbh->selectrow_array(q{SELECT lngindex from tbl_ship_via where strname = ? }, undef, $strid );
-
-	$rate->{Total} =~ s/\$//g;
-	$rate->{Total} =~ s/,//g;
-
-	my $ship_price = $rate->{Total} * ( 1 + ($markup / 100) );
-
-	print STDERR "APPLYING MARKUPS: BEFORE:  $rate->{Total} AFTER: $ship_price MARKUP: $markup \n";
 
 	my $total = $ship_total + $ship_price;
 		
@@ -815,11 +821,34 @@ print STDERR "CALC MY SHIPPING SERVICE \n\n";
 	$status = 'calculated';
 	$status = 'uncalculated' unless $specs->{shipping_required} ne '';
 
-	$specs->{ddmShipVia1} = $rate_id;
+	$specs->{ddmShipVia1} = $rate->{id};
 
 	print STDERR "HAVE STATUS: $status - $specs->{shipping_required}  \n";
 	return $status eq 'calculated' ? $status : 'uncalculated';
 }
+
+sub process_rate {
+	my $rate = shift;
+	my $log = session::log;
+	my $dbh = session::dbh;
+
+	my $markup = configuration::get_value($log, $dbh, 'ShippingMarkup');
+
+
+    my $strid =  "$rate->{carrierName} $rate->{serviceName}";
+ 	my $rate_id = $dbh->selectrow_array(q{SELECT lngindex from tbl_ship_via where strname = ? }, undef, $strid );
+
+	$rate->{Total} =~ s/\$//g;
+	$rate->{Total} =~ s/,//g;
+
+	my $ship_price = $rate->{Total} * ( 1 + ($markup / 100) );
+
+	print STDERR "APPLYING MARKUPS: BEFORE:  $rate->{Total} AFTER: $ship_price MARKUP: $markup VERIFY MARKUP, Rate: $rate_id, $strid, RID: $rate->{id} \n";
+
+	return $ship_price;
+
+}
+
 sub format_error {
 	my $e = shift;
 	my $text = "ERROR: \n";
@@ -1211,20 +1240,16 @@ sub order_ship_cost {
 
 	my $rates = ic_api($specs);
 
+
 	my $rate = shift @{$rates};
 
-	$rate->{Total} =~ s/\$//g;
-
-	my $markup = configuration::get_value($log, $dbh, 'ShippingMarkup');
-
-	my $ship_price = $rate->{Total} * ( 1 + ($markup / 100) );
+	my $ship_price = process_rate($rate);
 
 
-	#my $price = price_service($weight, $ship_method, $price_list, $f_zone, $t_zone);
+	print STDERR " VERIFY OSC: $rate->{id} HAVE PRICE: $ship_price \n", Dumper($rate);
 
-print STDERR "HAVE PRICE: $ship_price \n", Dumper($rate);
 
-	return $ship_price;
+	return ($ship_price, $rate->{id});
 
 
 }

@@ -38,10 +38,20 @@
 
 	}
 
+	function need_shipping(e) {
+		var x = document.getElementById('yesshipping');
+		var edit = document.getElementById('shipedit');
+		if (x.checked ) {
+			edit.style.display="block"
+		} else {
+			edit.style.display="none"
+		}
+	}
+
 	</script>
 
 </head>
-<body>
+<body onload="need_shipping()">
 <!--#include virtual="/includes/c1-main-nav.html" -->
 	<h1><span class="title-section">Orders &#187;</span> Submit</h1>
     <div style="max-width:740px !important; max-height:54px !important; margin-left:auto; margin-right:auto"><img src="/images/main/progress/step3-order.png"  /></div>
@@ -53,13 +63,24 @@
         <form method="post" name="f2" action="/main/order/order_submit.html" id="f2">
         <div>
                 <fieldset>
-                <legend>Shipping Method
+                <legend>Shipping
                 </legend>
-                <label for="method">Shipping Via:</label>
+				<p><strong>Do you require this job to be shipped?
+ <input type="radio" name="shipping_required" value="1" onchange="need_shipping(self);form.submit()" id="yesshipping" />Yes
+<input name="shipping_required" type="radio" id="noshipping"  onchange="need_shipping(self);form.submit()" value="0"  />No
+</strong></p>
+
+                <label for="method">Delivery Method:</label>
 				<select class="form" id="ddmShipVia1" name="ddmShipVia1" onchange="form.submit();";>
 					<option value="PickUp">Customer Pick Up</option>
-					<option value="Standard">Standard Shipping</option>
+					<?SHIP_OPTIONS?>
                 </select>
+
+				<br />
+				<div id="shipedit" style="display: none;">
+                <label for="method">Shipping Address:</label>
+				<a href="/main/order/order_info.html">Edit Shipping Address</a>
+				</div>
 
                 </fieldset>
 

@@ -100,26 +100,31 @@ sub delete_unfinished_orders {
 sub get_unfinished_order {
     my ( $log, $dbh, $cookie, $my_cust_id, $my_user_id ) = @_;
 
-    $_ = "SELECT MAX(lngOrderID) FROM tbl_Orders WHERE strSessionID='$cookie' AND strStatus='Re-Opened'";
+    $_ = "SELECT MAX(lngOrderID) FROM tbl_Orders WHERE strSessionID='$cookie' 
+			AND strStatus='Re-Opened' AND lngcustomerid = $my_cust_id";
     my ( $order_id ) = sql::sql_statement( $log, $dbh, $_ );
+
     if ( ! $order_id ) {
 
         $_ = "SELECT lngOrderID, lngCustomerID, lngUserID FROM tbl_Orders 
-			  WHERE strSessionID='$cookie' AND strStatus='Incomplete' ORDER by lngOrderID Desc Limit 1";
+			  WHERE strSessionID='$cookie' AND strStatus='Incomplete' 
+			  AND lngcustomerid = $my_cust_id ORDER by lngOrderID Desc Limit 1";
 
 print STDERR "GET UNFINISHED ORDER: $_ \n";
         ( $order_id, my $cust_id, my $user_id ) = sql::sql_statement( $log, $dbh, $_ );
 
 print STDERR "GET UNFINISHED ORDER: $_ - $order_id \n";
 
-        if ( $order_id ) {
-            if ( $cust_id != $my_cust_id ) {
-                sql::update( $log, $dbh, 'tbl_Orders', "lngOrderID = '$order_id'", 'lngCustomerID', $my_cust_id );
-            }
-            if ( $user_id != $my_user_id ) {
-                sql::update( $log, $dbh, 'tbl_Orders', "lngOrderID = '$order_id'", 'lngUserID', $my_user_id );
-            }
-        }
+#THis no longer makes sense. And is counter productive for administrator.
+#   if ( $order_id ) {
+#            if ( $cust_id != $my_cust_id ) {
+#                sql::update( $log, $dbh, 'tbl_Orders', "lngOrderID = '$order_id'", 'lngCustomerID', $my_cust_id );
+#            }
+#            if ( $user_id != $my_user_id ) {
+#                sql::update( $log, $dbh, 'tbl_Orders', "lngOrderID = '$order_id'", 'lngUserID', $my_user_id );
+#            }
+#        }
+
     }
 
     return $order_id;
@@ -352,6 +357,8 @@ sub make_order_from_quote {
 			#my ( $cookie, $var, $product, $qty, $subgroup, $jobname, $versions, $quote_price, $order_id ) = @_;
 	}
 
+	print STDERR "UPDATE CONTACT QUOTE: $quote_id ORDER: $order_id \n";
+
 
 	my $contact = $dbh->selectrow_hashref(q{
 		SELECT * FROM tbl_quote_users_for WHERE lngquoteid = ?
@@ -371,7 +378,7 @@ sub make_order_from_quote {
 
 	} keys %{$contact};
 
-    return ( 0, $error );
+    return ( $order_id, $error );
 }
 
 sub add_to_order {
@@ -892,6 +899,8 @@ sub get_invoice_to {
 sub get_ship_to {
     my ( $log, $dbh, $variable, $order_id ) = @_;
 
+	return unless $order_id;
+
     $_ = "SELECT strShippingCompanyName, strShippingSalutation,strShippingFirstName, strShippingLastName, strShippingAddress1, strShippingAddress2, strShippingCity, strShippingState, strShippingCountry, strShippingPostalCode, strShippingPhone, strShippingExt, strShippingFax, strShippingEmail\n".
         "FROM tbl_Orders ".
         "WHERE lngOrderID = '$order_id'";
@@ -993,7 +1002,7 @@ print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 	if ( $r->param('btnFunction') eq 'Process Order' ) {
 		print STDERR "MAKE QUOTE FORM ORDER  \n";
 		my $quote_id = $r->param('quote_id');
- 		make_order_from_quote( $r, $log, $dbh, $cookie, $quote_id, $variable );
+ 		($order_id) = make_order_from_quote( $r, $log, $dbh, $cookie, $quote_id, $variable );
 
 	}	
 
@@ -1002,28 +1011,45 @@ print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 	#not sure if we need this for products?
 	#fill_contact($r, $dbh, $order_id);
 	
-	if ( $r->param('ddmShipVia1') ) {
-		PQS::model::order::set_ship_type($order_id, $r->param('ddmShipVia1') );
-	}
-
-	my $ship_method = PQS::model::order::ship_type($order_id);
-
-
-	$_ = "SELECT lngIndex, strName FROM tbl_Ship_Via";
-    $$variable{'SHIP_OPTIONS'} = ssi::fill_drop_down($log, $dbh, $_);
-
-	$variable->{__FillInForm}{ddmShipVia1} = $ship_method;
 	
-	#************* FIx This
-	#$dbh->do(q{UPDATE tbl_orders set shipping_type = (select strname from tbl_ship_via WHERE lngindex = ?) WHERE lngorderid = ? }, undef, $ship_method, $order_id);
+
 
 	my $ship_price = 0;
+	if ( $r->param('shipping_required') ) {
+		if ( $r->param('ddmShipVia1') ) {
+			PQS::model::order::set_ship_type($order_id, $r->param('ddmShipVia1') );
+		}
 
-	if ( $ship_method eq "Standard" ) {
-		$ship_price = eprint::Service::Shipping::order_ship_cost($order_id, $ship_method);
+		my $ship_method = PQS::model::order::ship_type($order_id);
+
+
+		$_ = "SELECT lngIndex, strName FROM tbl_Ship_Via";
+		$$variable{'SHIP_OPTIONS'} = ssi::fill_drop_down($log, $dbh, $_);
+
+		#$variable->{__FillInForm}{ddmShipVia1} = $ship_method;
+		
+		#************* FIx This
+		#$dbh->do(q{UPDATE tbl_orders set shipping_type = (select strname from tbl_ship_via WHERE lngindex = ?) WHERE lngorderid = ? }, undef, $ship_method, $order_id);
+
+		$_ = "SELECT lngIndex, strName FROM tbl_Ship_Via";
+		$$variable{'SHIP_OPTIONS'} = ssi::fill_drop_down($log, $dbh, $_);  
+
+
+
+
+
+		my $rate_id;
+
+		($ship_price, $rate_id) = eprint::Service::Shipping::order_ship_cost($order_id, $ship_method);
+		$variable->{__FillInForm}{ddmShipVia1} = $rate_id;
+		$variable->{__FillInForm}{shipping_required} = 1; 
+
+		print STDERR "VERIFY ORDER - HAVE ORDER SHIP PRICE: $order_id = $ship_price METHOD: $ship_method RATEID: $rate_id \n";
+	} else 
+	{
+		$variable->{__FillInForm}{shipping_required} = 0; 
+		$variable->{__FillInForm}{ddmShipVia1} = "PickUp"; 
 	}
-
-print STDERR "VERIFY ORDER - HAVE ORDER SHIP PRICE: $order_id = $ship_price METHOD: $ship_method \n";
 
 	PQS::model::order::set_ship_price($order_id, $ship_price);
 
