@@ -1133,6 +1133,17 @@ print STDERR "UPDATE CUST TO : $variable->{cust_id} \n";
 		SELECT ordercredit FROM tbl_customer WHERE lngcustomerid = ?
 	}, undef, $variable->{user}{company}{id}) || '0.00';
 
+		my $order_id = eprint::order::get_unfinished_order(
+				undef, $dbh, $cookie, $variable->{cust_id}, $variable->{user_id} );
+
+		$variable->{order_count} = $order_id ? $dbh->selectrow_array(q{
+				SELECT count(*) FROM tbl_order_contents
+				WHERE lngorderid = ?
+		}, undef, $order_id) : '';
+
+
+	print STDERR "VERIFY HAVE ORDER: $order_id OC: $variable->{order_count} \n";
+
 
     return OK;
 }

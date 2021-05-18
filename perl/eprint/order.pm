@@ -1016,41 +1016,34 @@ print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 
 	my $ship_price = 0;
 	if ( $r->param('shipping_required') ) {
-		if ( $r->param('ddmShipVia1') ) {
-			PQS::model::order::set_ship_type($order_id, $r->param('ddmShipVia1') );
-		}
-
-		my $ship_method = PQS::model::order::ship_type($order_id);
+		my $shipping_override = $r->param('ddmShipVia1') if $r->param('shippingoverride');
 
 
-		$_ = "SELECT lngIndex, strName FROM tbl_Ship_Via";
-		$$variable{'SHIP_OPTIONS'} = ssi::fill_drop_down($log, $dbh, $_);
-
-		#$variable->{__FillInForm}{ddmShipVia1} = $ship_method;
-		
-		#************* FIx This
-		#$dbh->do(q{UPDATE tbl_orders set shipping_type = (select strname from tbl_ship_via WHERE lngindex = ?) WHERE lngorderid = ? }, undef, $ship_method, $order_id);
-
-		$_ = "SELECT lngIndex, strName FROM tbl_Ship_Via";
-		$$variable{'SHIP_OPTIONS'} = ssi::fill_drop_down($log, $dbh, $_);  
+		#	my $ship_method = PQS::model::order::ship_type($order_id);
 
 
-
+		#$_ = "SELECT lngIndex, strName FROM tbl_Ship_Via";
+		#$$variable{'SHIP_OPTIONS'} = ssi::fill_drop_down($log, $dbh, $_);
 
 
 		my $rate_id;
 
-		($ship_price, $rate_id) = eprint::Service::Shipping::order_ship_cost($order_id, $ship_method);
+		print STDERR "VERIFY: Have SHIPPING OVERRIDE: $shipping_override \n";
+		my $ship_list;
+		($ship_price, $rate_id, $ship_list) = eprint::Service::Shipping::order_ship_cost($order_id, $shipping_override);
+
+		$$variable{'SHIP_OPTIONS'} = $ship_list; 
 		$variable->{__FillInForm}{ddmShipVia1} = $rate_id;
 		$variable->{__FillInForm}{shipping_required} = 1; 
 
-		print STDERR "VERIFY ORDER - HAVE ORDER SHIP PRICE: $order_id = $ship_price METHOD: $ship_method RATEID: $rate_id \n";
+		print STDERR "VERIFY ORDER - HAVE ORDER SHIP PRICE: $order_id = $ship_price RATEID: $rate_id \n";
 	} else 
 	{
 		$variable->{__FillInForm}{shipping_required} = 0; 
 		$variable->{__FillInForm}{ddmShipVia1} = "PickUp"; 
 	}
 
+	PQS::model::order::set_ship_type($order_id, $r->param('ddmShipVia1') );
 	PQS::model::order::set_ship_price($order_id, $ship_price);
 
 	PQS::model::order::set_admin_comments($order_id, $r->param('AdministratorComments'));

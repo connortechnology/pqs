@@ -37,6 +37,16 @@
 		<?endif ( @{$variable->{projects}} ) ?> 
 
 	}
+	function set_ship_over(e) {
+		var x = document.getElementById('shippingoverride');
+		x.value = 1;
+
+	}
+	function reset_shipping(e) {
+		var x = document.getElementById('shippingoverride');
+		x.value = 0;
+
+	}
 
 	function need_shipping(e) {
 		var x = document.getElementById('yesshipping');
@@ -60,7 +70,9 @@
 		<!--#include virtual="/includes/forms/order.html"-->
 	</form>
 
+
         <form method="post" name="f2" action="/main/order/order_submit.html" id="f2">
+		<input type="hidde" name="shippingoverride" id="shippingoverride" value=0 />
         <div>
                 <fieldset>
                 <legend>Shipping
@@ -71,10 +83,11 @@
 </strong></p>
 
                 <label for="method">Delivery Method:</label>
-				<select class="form" id="ddmShipVia1" name="ddmShipVia1" onchange="form.submit();";>
+				<select class="form" id="ddmShipVia1" name="ddmShipVia1" onchange="set_ship_over();form.submit();";>
 					<option value="PickUp">Customer Pick Up</option>
 					<?SHIP_OPTIONS?>
                 </select>
+				<button onClick="reset_shipping();form.submit();">Reset</button>
 
 				<br />
 				<div id="shipedit" style="display: none;">

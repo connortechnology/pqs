@@ -730,6 +730,42 @@ sub update_shipvia {
 	$dbh->commit();
 
 }
+sub filter_rates {
+	my $rates = shift;
+	my $override = shift;
+	my $results = "";
+	my $rate_over;
+
+	print STDERR "VERIFY  FILTER: OVER: $override \n";
+
+		foreach my $rate ( @{$rates} ) {
+
+			 $results .= "RATE:  $rate->{carrierName} : $rate->{serviceName} = $rate->{Total} \n";
+
+			
+			 print STDERR "VERIFY: check: $rate->{id} \n";
+			 if ( $override ) {
+				 #test this from shipping page
+				 if ( $override eq $rate->{id} ) {
+					 $rate_over = $rate;
+				 }
+
+			 }
+
+
+
+
+		 }
+
+
+		 my $rate = $rate_over || shift @{$rates};
+
+		 print STDERR "VERIFY FILTER: $rate->{carrierName} : $rate->{serviceName}, $rate->{id} = $rate->{Total} \n";  
+
+
+		 return ($rate, $results);
+
+}
 
 sub calc {
 
@@ -1231,7 +1267,6 @@ sub order_ship_cost {
 	}
 
 
-
 	my $specs =  PQS::model::order::address($order_id);
 
 	$specs->{total_weight} = $weight;
@@ -1240,17 +1275,40 @@ sub order_ship_cost {
 
 	my $rates = ic_api($specs);
 
+	my $select = select_list($rates);
 
-	my $rate = shift @{$rates};
+
+	my ($rate, $results) = filter_rates($rates, $ship_method);
 
 	my $ship_price = process_rate($rate);
+
 
 
 	print STDERR " VERIFY OSC: $rate->{id} HAVE PRICE: $ship_price \n", Dumper($rate);
 
 
-	return ($ship_price, $rate->{id});
+	return ($ship_price, $rate->{id}, $select);
 
+
+}
+
+
+sub select_list {
+	my $rates = shift;
+	my @list;
+
+	my $dbh = session::dbh;
+
+	foreach my $rate ( @{$rates} ) {
+		my $strid =  "$rate->{carrierName} $rate->{serviceName}";
+		my $id = $dbh->selectrow_array(q{SELECT lngindex from tbl_ship_via where strname = ? }, undef, $strid );
+		push @list, $id, $strid;
+
+	}
+
+	my $control = ssi::make_drop_down(\@list);
+	print STDERR "VERIFY: CONTROL: $control \n";
+	return $control;
 
 }
 
