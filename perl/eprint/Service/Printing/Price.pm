@@ -2497,12 +2497,13 @@ print STDERR "CALC SHEETY QTY IMP: $imposition QTY: $qty  SIG $variable->{Signat
 	}
 	if ( $run_overs_OR ne '' ) {
 		$run_overs = ceil($net_sheets * $run_overs_OR);
+	} else { 
+    	$run_overs = $min_overs unless $run_overs > $min_overs;
 	}
 
     # The total required overs is the sum of the sheets needed to setup the
     # press and the total running waste. Unless that sum is less than the
     # mininum number of overs wanted for the press (set by user).
-    $run_overs = $min_overs unless $run_overs > $min_overs;
     my $overs       = $setup_overs + $run_overs;
     my $gross_forms = ceil(($overs + $net_sheets) / $form_multiplier);
     my %sheet_qty = ('Gross Sheet Count' => $overs + $net_sheets,
