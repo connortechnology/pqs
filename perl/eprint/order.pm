@@ -985,6 +985,24 @@ print STDERR "FILL CONTACT: " , Dumper(\%ship);
 		return;
 
 }
+sub needs_shipping {
+	my $order_id = shift;
+	my $r = shift;
+	my $ship_method = PQS::model::order::ship_type($order_id);
+
+
+	if ( $r->param('shipping_required') eq '0' ) {
+	#use has selected no from radio button.
+		return 0;
+	}
+
+	if ( $ship_method && $ship_method ne 'PickUp' ) {
+	#restore previous settings from db.
+		return 1;
+	}
+
+	return 0;
+}
 
 
 sub verify_order {
@@ -1015,7 +1033,7 @@ print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 
 
 	my $ship_price = 0;
-	if ( $r->param('shipping_required') ) {
+	if ( $r->param('shipping_required') || needs_shipping($order_id, $r) ) {
 		my $shipping_override = $r->param('ddmShipVia1') if $r->param('shippingoverride');
 
 
@@ -1035,15 +1053,17 @@ print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 		$$variable{'SHIP_OPTIONS'} = $ship_list; 
 		$variable->{__FillInForm}{ddmShipVia1} = $rate_id;
 		$variable->{__FillInForm}{shipping_required} = 1; 
+		PQS::model::order::set_ship_type($order_id, $rate_id );
 
 		print STDERR "VERIFY ORDER - HAVE ORDER SHIP PRICE: $order_id = $ship_price RATEID: $rate_id \n";
 	} else 
 	{
+		PQS::model::order::set_ship_type($order_id, "PickUp" );
+
 		$variable->{__FillInForm}{shipping_required} = 0; 
 		$variable->{__FillInForm}{ddmShipVia1} = "PickUp"; 
 	}
 
-	PQS::model::order::set_ship_type($order_id, $r->param('ddmShipVia1') );
 	PQS::model::order::set_ship_price($order_id, $ship_price);
 
 	PQS::model::order::set_admin_comments($order_id, $r->param('AdministratorComments'));
@@ -3405,6 +3425,7 @@ print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $pr
 
 
 
+
         my ($prod_tax1_exempt, $prod_tax2_exempt, $prod_tax3_exempt );
 		my $county_exempt;
 
@@ -3444,7 +3465,7 @@ print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $pr
 
                 $$total += $$amount;
             }
-print STDERR "TAX INFO: $tax Rate: $$rate, Amount: $$amount \n";
+print STDERR "TAX INFO: $tax Rate: $$rate, Amount: $$amount SHIPPING: $shipping \n";
         }
 
 print STDERR "HAVE ORDER TOTAL PROJECT PRICE: $price \n";
@@ -3494,6 +3515,10 @@ print STDERR "HAVE PROJECT DETAILS: $line->{project_price} FOR PID: $pid \n";
     
     }
 
+
+
+
+
 	#Apply discount after project loop
 	$total -= $discount;
 
@@ -3501,10 +3526,14 @@ print STDERR "HAVE PROJECT DETAILS: $line->{project_price} FOR PID: $pid \n";
 		my $ci = $_->{content_index};
 		$_->{price} = $subgroup->{$ci} if defined $subgroup->{$ci}  
 	} @{$return_ref->{products}};
+
     my $order_ship = PQS::model::order::shipping_price($order_id);
 	
     $total          += $order_ship;
     $shipping_total += $order_ship;
+
+print STDERR "TAX ORDER SHIPPING ADDED TO HST TOTAL SHIPPING COST/HST Rate: $order_ship, $hst_rate \n";
+	$hst_total 		+=  $order_ship * $hst_rate / 100;
 
     @$return_ref{qw(
          pst_total   gst_total   hst_total   county_total 	sub_total   total   

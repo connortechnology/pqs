@@ -293,9 +293,9 @@ sub user_quote_info {
 				my $pname = PQS::model::products::get_name_from_id($o->{product});
 
 				$dbh->do(q{
-					INSERT into tbl_quote_details ( lngquoteid, lngprojectindex, intquantity1, dblprice1, type, product, label ) 
-					VALUES ( ?, ?, ?, ?, ?, ?, ? ) 
-					}, undef, $quote_id, 0, $o->{intquantity}, $o->{cursalesprice}, 'product',$o->{product},  $o->{jobname} . " - $pname"
+					INSERT into tbl_quote_details ( lngquoteid, lngprojectindex, intquantity1, dblprice1, type, product, label, jobname ) 
+					VALUES ( ?, ?, ?, ?, ?, ?, ?, ? ) 
+					}, undef, $quote_id, 0, $o->{intquantity}, $o->{cursalesprice}, 'product',$o->{product},  $o->{jobname} . " - $pname", $o->{jobname}
 				);
 		}
 

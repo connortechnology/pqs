@@ -19,6 +19,13 @@ require eprint::print_project;
 require eprint::customer;
 require PQS::model::change_order;
 
+sub needs_build {
+	my $pid = shift;
+	my $dbh = session::dbh;
+
+	my $n = $dbh->selectrow_array(q{SELECT build FROM tbl_projects where lngprojectindex = ?}, undef, $pid);
+}
+
 sub view_services {
     my ($r, $log, $dbh, $cookie, $variable) = @_;
 
@@ -29,6 +36,11 @@ sub view_services {
        $pid =~ tr/0-9//cd;
 
 	print STDERR "VIEW PROJECT: $pid \n";
+
+	if (needs_build($pid)) {
+		eprint::Build::build($log, $dbh, $pid, $variable, 0);
+		$dbh->do(q{update tbl_projects set build = false where lngprojectindex = ?}, undef, $pid); 
+	}
 
 	if ( $r->param('start') && $r->param('end') ) {
 		custom_sort( $dbh, $pid, $r->param('start') ,  $r->param('end') );

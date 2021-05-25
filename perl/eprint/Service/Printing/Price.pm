@@ -1320,7 +1320,7 @@ print STDERR "USE STANDART MV Plate Change \n";
         $colour_setup{'Plate Count'}, $press,        $imposition,
         $waste,                       $pid,          $print_sides,
         $unit_overs_OR,               $run_overs_OR, $run_style,
-        $paper, $imp, $cover, $spread->{colourcritical_extra_waste}
+        $paper, $imp, $cover, $spread->{colourcritical_extra_waste}, $variable
     );
 
     my $impressions = $is_largeformat
@@ -1366,7 +1366,7 @@ print STDERR "USE STANDART MV Plate Change \n";
                          $waste,        $pid,
                          $print_sides,  $unit_overs_OR,
                          $run_overs_OR, $run_style, $paper,
-						 $imp,			$cover, $spread->{colourcritical_extra_waste});
+						 $imp,			$cover, $spread->{colourcritical_extra_waste}, $variable);
 
         $impressions = $sheet_qty{'Gross Sheet Count'} * $print_sides;
     }
@@ -2394,11 +2394,11 @@ sub calc_sheet_qty {
     my ($log,         $dbh,           $qty,            $colours,
         $press,       $imposition,    $version_waste,  $pid,
         $print_sides, $unit_overs_OR, $run_overs_OR,   $run_style,
-        $paper,		  $imp, $cover, $colourcritical_overs ) = @_;
+        $paper,		  $imp, $cover, $colourcritical_overs, $variable ) = @_;
 
     return 0 if !$imposition;
 
-print STDERR "CALC SHEET QTY IMP: $imposition QTY: $qty \n";
+print STDERR "CALC SHEETY QTY IMP: $imposition QTY: $qty  SIG $variable->{SignatureQuantity} \n";
 
     my $net_sheets = 0;
        $net_sheets = ceil($qty / $imposition) if $imposition;
@@ -2492,6 +2492,12 @@ print STDERR "CALC SHEET QTY IMP: $imposition QTY: $qty \n";
 
     # Add the colour critical set up overs
     $setup_overs += ($colourcritical_overs * $colours);
+	if ( $unit_overs_OR ne '' ) {
+		$setup_overs = $unit_overs_OR 
+	}
+	if ( $run_overs_OR ne '' ) {
+		$run_overs = ceil($net_sheets * $run_overs_OR);
+	}
 
     # The total required overs is the sum of the sheets needed to setup the
     # press and the total running waste. Unless that sum is less than the
@@ -2506,7 +2512,13 @@ print STDERR "CALC SHEET QTY IMP: $imposition QTY: $qty \n";
                      : $setup_overs,
                      'Running Overs'    => $run_overs,
                      'Net Form Count'   => $net_forms,
-                     'Gross Form Count' => $gross_forms,);
+                     'Gross Form Count' => $gross_forms,
+				 	'Unit Setup Override' => $unit_overs_OR,
+				 	 'Run Overs Override' => $run_overs_OR,
+					 'Service/Bindery Setup' => $service_setup_overs,
+					 'Service/Bindery RUN' => $service_run_overs,
+				);
+
 
 	print STDERR "HAVE SHEETY QTY: ", Dumper(\%sheet_qty);
     return %sheet_qty;

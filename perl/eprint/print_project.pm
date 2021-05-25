@@ -98,6 +98,8 @@ sub insert_service {
         $attr,         # Optional attributes hashref.
         $specs,        # Service specifications hashref.
     ) = @_;
+
+	$dbh->do(q{update tbl_projects set build = true where lngprojectindex = ?}, undef, $pid);
     
     # Get the numeric ID from the string one.
     my $stid = $dbh->selectrow_array(q{
@@ -1366,6 +1368,8 @@ print STDERR "MY QTYS: $sq \n";
 # unless they're NOT_NEEDED.
 sub remove_service {
     my ($log, $dbh, $pid, $sid) = @_;
+
+	$dbh->do(q{update tbl_projects set build = true where lngprojectindex = ?}, undef, $pid);
     
     # Until we care about bindery only projects, you're just not allowed to
     # delete the 'Printing' service. TODO: We shouldn't be able to delete the

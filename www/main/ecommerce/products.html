@@ -107,6 +107,12 @@ h2 {
 	Custom Select box Style 
 */
 
+label {
+	display:inline-block;
+	width:160px;
+	text-align: right;
+}
+
 select {
   margin: 3%;
   vertical-align: top;
@@ -352,7 +358,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 
 
 
-<div class="right" style="float:right; width:300px;   margin-top: -0px; min-height:550px" > 
+<div class="right" style="float:right; width:390px;   margin-top: -0px; min-height:550px" > 
 
 
 
@@ -382,7 +388,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 	<div style="margin-bottom: 30px;">
 	<label> Quantity:</label> 
 		<!--	onChange="$('btn-update').setAttribute('class','flash-button')" -->
-		<input name="quantity" id="quantity" style="width: 60px; margin: 0 0 0 20px " 
+		<input name="quantity" id="quantity" style="width: 60px; margin: 0 0 0 10px " 
 			onChange="submit(  check_qty(this, <?increment?>,<?minimum_qty?>,<?maximum_qty?>) );"
 
 			value="<?quantity?>" />
@@ -402,7 +408,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 
 	<div style="margin-bottom: 30px;">
 		<label>Versions:</label> 
-		<input name="versions" id="versions" style="width: 60px; margin: 0 0 0 20px " 
+		<input name="versions" id="versions" style="width: 60px; margin: 0 0 0 10px " 
 			value="<?versions?>" 
 			onChange="submit();"
 			/>
@@ -421,7 +427,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
         <form name="f1" method="post" action="/main/proj/dispatch.html" >	
 
 		<label>Job Description:</label> 
-		<textarea name="jobname" id="jobname" style="width: 270px;margin: 0 0 0 20px;"
+		<textarea name="jobname" id="jobname" style="width: 330px;margin: 0 10px 0 20px; float:right"
 							onChange="document.getElementById('tmpjobname').value = this.value";
 			><?jobname?></textarea>
 		
@@ -433,9 +439,9 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 -->
 
 		<?if price?>
-		<label style="font-size: 2em; line-height: 70px">
-                    Price: <strong><?money:price?></strong>
-		</label>
+		<br/>
+		<label style="font-size: 2em; line-height: 70px; display:inline; margin-left:30px">
+			Price: <strong><?money:price?></strong> </label>
 
             <input type="hidden" name="action" value="add_product_to_order" />
             <input type="hidden" name="product"	id="product" value="<?id?>"  />           
@@ -443,7 +449,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 			<input type="hidden" name="txtQuantity1" id="txtQuantity1" value="<?quantity?>"  />
 			<input type="hidden" name="versions1" id="versions1" value="<?versions?>"  />
 
-			<input class="button" id="addtocart" value="Add To Cart" type="submit" align="right" style="float:inherit;  height:30px; border-radius: 5px; margin: 0 0 0 -5px;" 
+			<input class="button" id="addtocart" value="Add To Cart" type="submit" align="right" style="float:inherit;  height:30px; border-radius: 5px; margin: 0 0 0 20px;" 
 				   	onClick="return form_validate();"	/>
 		<?else price?>
 		<label style="font-size: 2em; line-height: 70px; margin: 0 0 0 10px;">

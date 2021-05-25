@@ -465,7 +465,7 @@ sub overrides {
     # (ie. employee/admin).
    	if ( $user_type eq 'A' || $user_type eq 'E' ) {	
     	$override{overs}{unit} = $specs->{override_overs_unit};
-    	$override{overs}{run}  = $specs->{override_overs_run} / 100;
+    	$override{overs}{run}  = $specs->{override_overs_run} ne '' ? $specs->{override_overs_run} / 100 : undef;
 	}
 
     # Multipage projects can override the number of spreads on a form and the
