@@ -333,10 +333,8 @@ sub make_order_from_quote {
             ( $order_id, $_ ) =    add_project_to_order( $log, $dbh, $cookie, $variable, $project_index, $order_id, 'print' );
             $error .= $_;
         }
-        return ( $order_id, $error );
     } else {
-        $error .= "make_order_from_quote: Empty quote specified: $quote_id";
-        $log->debug( "make_order_from_quote: Empty quote specified: $quote_id" );
+        $log->debug( "make_order_from_quote: Empty quote specified: $quote_id/No Projects on Quote" );
     }
 
 
@@ -371,10 +369,11 @@ sub make_order_from_quote {
 	
 
 	map { 
-		print STDERR "HAVE CONTACT ", Dumper($_);
-
-		$dbh->do(qq{update tbl_orders set $_ = ? where lngorderid = ?}, undef, $contact->{$_}, $order_id)
-			if exists $order_fields->{$_};
+		$dbh->do(qq{update tbl_orders set straddress1 = ? where lngorderid = ?}, undef, $contact->{$_}, $order_id) if $_ eq 'straddress';
+		if (exists $order_fields->{$_} ) {
+			$dbh->do(qq{update tbl_orders set $_ = ? where lngorderid = ?}, undef, $contact->{$_}, $order_id);
+			print STDERR "HAVE CONTACT ", Dumper($_, $contact->{$_});
+		}
 
 	} keys %{$contact};
 
