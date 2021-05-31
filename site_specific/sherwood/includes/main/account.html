@@ -8,7 +8,9 @@
 	>My Account</a>
 <ul>
 	<? if ( $$variable{user_type} )?>
-		<li><a href="/main/order/order_submit.html">Shopping Cart</a></li>
+		<li><a href="/main/order/order_submit.html">Shopping Cart</a>
+		<ul><a href="/main/order/order_submit.html?reset=1">Reset Cart</a></ul>
+		</li>
 		<li><a href="/main/account/my_products.html">My Products</a></li>
 		<li><a href="/main/proj/inventory/inventory_history.html">My Inventory</a></li>
 		<li><a href="/main/proj/proj_hist.html">Project History</a></li>

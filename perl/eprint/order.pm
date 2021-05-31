@@ -1016,6 +1016,16 @@ sub verify_order {
 print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 # Start of new code
 
+	if ( $r->param('reset') ) {
+        delete_unfinished_orders( $log, $dbh, $cookie );
+		$variable->{order_count} = $order_id ? $dbh->selectrow_array(q{
+			SELECT count(*) FROM tbl_order_contents
+			WHERE lngorderid = ?
+		}, undef, $order_id) : '';
+		$variable->{Redirect} = '/main/order/order_history.html';
+		return OK;
+	}
+
 
 	if ( $r->param('btnFunction') eq 'Process Order' ) {
 		print STDERR "MAKE QUOTE FORM ORDER  \n";
@@ -1226,6 +1236,7 @@ sub finalise_order {
 print STDERR "FINALIZE ORDER \n\n";
 
     $order_id =  $order_id || $r->param('hiddenOrderID');
+
 
 print STDERR "MY ORDER ID: $order_id \n";
     if ( $order_id eq q{} ) {
