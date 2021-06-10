@@ -91,7 +91,7 @@ sub payments {
 sub get_id_from_token {
   	my $dbh = session::dbh;
 	my $token = shift;
-	return $dbh->selectrow_array(q{select lngorderid from tbl_orders where paypal_token = ?}, undef, $token);
+	return $dbh->selectrow_array(q{select lngorderid from payflow_tokens where securetokenid = ?}, undef, $token);
 	
 }
 
@@ -147,6 +147,15 @@ sub set_paypal_token {
   	my $dbh = session::dbh;
 
 	$dbh->do(q{update tbl_orders set paypal_token = ?, token_type = ? where lngorderid = ?}, undef, $token, $type, $order);
+}
+sub record_token {
+	my $order  = shift;
+    my $tokenid  = shift;
+    my $token  = shift;
+    my $details  = shift;
+  	my $dbh = session::dbh;
+
+	$dbh->do(q{insert into payflow_tokens values ( ?, ?,?, ?, NOW())}, undef,$order, $tokenid, $token, $details);
 }
 
 sub get_pid_from_index {

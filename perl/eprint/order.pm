@@ -3821,6 +3821,7 @@ sub show_payflow {
     }
 	my $amount = sprintf( "%.2f", $totals->{total} );
 
+print STDERR "SHOW PAYFLOW: Order: $order PAID: $amount_paid Current Payment: $amount \n";
 print STDERR "HAVE PAYMENT AMOUNT: $amount, Rounded FROM: $totals->{total} \n";
 
 	die("No Payment Amount") unless $amount;
@@ -3848,7 +3849,7 @@ print STDERR "HAVE PAYMENT AMOUNT: $amount, Rounded FROM: $totals->{total} \n";
 		
     my $payments = WebService::PayPal::PaymentsAdvanced->new($args);
 
-	print STDERR "HAVE PAYPAL PARAMS: ", Dumper($args, $amount );
+	print STDERR "HAVE PAYPAL PARAMS: ", Dumper( $amount );
 
     my $response = $payments->create_secure_token(
         {
@@ -3862,8 +3863,13 @@ print STDERR "HAVE PAYMENT AMOUNT: $amount, Rounded FROM: $totals->{total} \n";
 	$var->{SECURETOKEN} 	= $response->secure_token;
 	$var->{SECURETOKENID} 	= $response->secure_token_id;
 	$var->{PAYPAL_MODE} 	= $paypal_mode;
+	my $details =  Dumper($response);
+
+	print STDERR "HAVE TOKEN REPLY: $details";
+
 
 	PQS::model::order::set_paypal_token($order_id,  $response->secure_token_id, $type);
+	PQS::model::order::record_token($order_id,  $response->secure_token_id, $response->secure_token,  $details);
 
 
 }

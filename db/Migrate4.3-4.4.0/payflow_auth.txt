@@ -1,0 +1,7 @@
+create table payflow_tokens (
+lngorderid int,
+SECURETOKENID text,
+SECURETOKEN text,
+details text,
+authtime timestamp );
+
