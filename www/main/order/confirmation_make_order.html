@@ -26,6 +26,17 @@
 			window.open(myurl,
 				'printerfriendlyorder' + p,'newWin,left=140,width=1000,top=50,height=800,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 		}
+
+		function pdf_template(p,q) {
+			var myurl = "/template/record.html?init_template=1;pid=" + p;
+
+			window.location = myurl;
+
+			return true;
+
+			window.open(myurl,
+				'printerfriendlyorder' + p,'newWin,left=140,width=1000,top=50,height=800,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+		}
 	</script>
     <script  type="text/javascript">
 		function open_project_docket(p,q) {
@@ -67,16 +78,26 @@
 			vertical-align:middle;
 			margin: 0 0 10px 0;
 			"
-			onClick="file_upload(<?pid?>);"
-			onmouseover="this.style.background='gray';" 
-   			onmouseout="this.style.background='lemonchiffon'"
 			>
 
 
-	<div style="top: 50%;
-			margin-top: 20px;
-		">
-		Click here to upload Project Files For:  <?jobname?>
+	<div 
+		style="top: 50%; margin-top: 20px;"	 >
+
+		<div><?jobname?></div>
+		<div style="text-align: left; background-color: burlywood"
+			onmouseover="this.style.background='gray';" 
+   			onmouseout="this.style.background='burlywood'"
+			onClick="file_upload(<?pid?>);"
+			>Click here to upload Project Files</div>
+		<?if pdftemplate?>
+		<div style="text-align: left; background-color: bisque"
+			onmouseover="this.style.background='gray';" 
+   			onmouseout="this.style.background='bisque'"
+			onClick="pdf_template(<?pid?>);"
+			>Click here to Use the Online Template to create your artwork</div>
+		<?endif pdftemplate?>
+
 	</div>
 
 </div>

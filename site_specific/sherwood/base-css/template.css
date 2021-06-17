@@ -19,11 +19,12 @@
     margin-right: 340px !important;
 }
 .left {
-    width:         340px !important;
-        margin-left:     0   !important;
+   /* width:         340px !important; 
         margin-right: -340px !important;
-
         float: right !important;
+	 */
+        margin-left:     0   !important;
+
 }
 
 #sidebar { font-size: 1em;}
