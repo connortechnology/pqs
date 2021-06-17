@@ -281,7 +281,7 @@ sub download {
 
     $r->content_type('application/pdf');
     $r->headers_out->{'Content-Disposition'} = qq{inline; filename="template-$id.pdf"};
-    $r->headers_out->{'Content Length'} = ( -s $filename );
+	#$r->headers_out->{'Content Length'} = ( -s $filename );
 
     flock   $fh, LOCK_SH or return HTTP_SERVICE_UNAVAILABLE;
     binmode $fh; 
