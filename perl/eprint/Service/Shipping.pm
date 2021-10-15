@@ -659,8 +659,15 @@ sub ic_api {
 		Authtoken => $token
 	};
 
+	#create shipping estimate based on shipping x number of days in the future
+	my $lead_time = 7;
+	my $later = DateTime->now->add(days => $lead_time);
+	my $ship_date = $later->year . '-' . $later->month . '-' . $later->day; 
+
+
 	my $ship = {
-      "shipDate"=>"2021-08-27",
+		#"shipDate"=>"2021-08-27",
+      "shipDate"=> $ship_date,
       "dutiableAmount"=>"1",
       "dutiableCurrency"=>"CAD",
       "packagetype"=>"3",
