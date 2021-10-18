@@ -1057,7 +1057,6 @@ sub price {
     my ($log, $dbh, $variable, $pid, $sid, $service, $specs, $is_save) = @_;
 
     my $service_type = $service->{type};
-	print STDERR "START SERVICE PRICE \n";
 
     # Allow the service to convert the specs whatever dataformat it wants.
     eval {
