@@ -26,6 +26,8 @@ sub store {
         my @qty   = @{ $specs->{mv_qty}  };
         my $total = (get_quantities($log, $dbh, $pid))[0];
 
+		print STDERR "STORE FOR BOOK  Servcie: PID: $pid SID: $sid \n";
+
         my (@versions, @quantities);
 
         # For now mirror the JS precisely. Note: Multiple labels of the
@@ -218,6 +220,9 @@ sub calc {
 sub action { 
     my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
 
+
+	print STDERR "START BOOK ACTION: PID: $pid SID: $sid \n";
+
     my $project_type = get_type($log, $dbh, $pid);
     my $bind_type    = $specs->{template};
 
@@ -339,9 +344,9 @@ print STDERR "IS SINGLE ********* $double - $bind_type ****\n";
     insert_service_specs($log, $dbh, $pid, $interior, %defaults);
 
     map { 
-    	if ( $_ =~ /mv/ || $_ =~ /version/ ) {
+		if ( $_ =~ /mv/ || $_ =~ /version/ || /version_quantities/ ) {
     		insert_service_spec( $log, $dbh, $pid, $interior, $_ => $specs->{$_}, undef, 1);
-	}
+		}
     } keys %{$specs};
 
     # Insert previous specs if we're redoing this book.
@@ -372,7 +377,7 @@ sub previous_specs {
         my %specs = @{ $dbh->selectcol_arrayref(q{
             SELECT strname as name, strvalue as value
             FROM tbl_service_specifications 
-            WHERE ui_spec = true 
+            WHERE (ui_spec = true OR strname = 'version_quantities') 
               AND strname !~ '^override'
               AND strname NOT IN ( 'runstyle',         'substrate', 
                                    'spreads_in_group', 'hdnRunStyleCheck' )
