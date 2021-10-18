@@ -97,6 +97,8 @@ sub calc {
     }
 
 
+	print STDERR "TIME TO GET PROJECT PRICE \n";
+
     my $pricing = get_project_price(
         $log, $dbh, $variable, 
         $pid, $sid, @$specs{qw(spread versions overrides)}
@@ -347,6 +349,7 @@ sub get_project_price {
       return {'error' => 'Project must be at least ' . $project->{minwidth} . 'x' . $project->{minheight}};
     }
 
+
     $ts_impose = Time::HiRes::time() if TIMINGS;
 
     # IMPOSITION
@@ -354,6 +357,7 @@ sub get_project_price {
 
     # The number of spreads remaining to be allocated.
     my $spreads_remaining = spreads_remaining($log, $dbh, $pid, $sid);
+
 
 # Override Digital Signatures to be 1 spread only.
 #    if ($press_type eq 'digital') {
@@ -413,6 +417,7 @@ sub get_project_price {
         "SELECT strPMSID, strMaterialID FROM tbl_Ink_Colours",
         { Columns => [ 1, 2 ] }
     ) };
+
 
     # CACHES
     #
@@ -3081,9 +3086,12 @@ sub spreads_remaining {
 
     my $type      = get_specifications($log, $dbh, $pid, $sid, 'txtSignatureType');
     my $book      = get_print_container($log, $dbh, $pid);
- 
+
+	print STDERR "HAVE SIGNATURE TYPE : $type SID: $sid \n";
+
     my $total     = get_specifications($log, $dbh, $pid, $book, $type);
     my $completed = count_completed_spreads($log, $dbh, $type, $pid, $sid);
+ 
     my $needed    = $total - $completed;
 
     die "Invalid number of finished spreads ($type) for project ($pid)"
@@ -3096,6 +3104,9 @@ sub spreads_remaining {
 # accounted for (calculated) so far. Optionally excludes a given signature.
 sub count_completed_spreads {
     my ($log, $dbh, $spread_type, $pid, $exclude) = @_;
+
+
+	die("No Spread Type") unless $spread_type;
 
     # Get all the other calculated signatures.
     my @signatures = grep { get_status($log, $dbh, $_) eq 'calculated' }
