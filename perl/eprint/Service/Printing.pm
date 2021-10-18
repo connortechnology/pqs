@@ -49,8 +49,10 @@ sub store {
     $specs->{bleed_sides} = defined $specs->{bleed_sides} 
         ? join(',', @{ $specs->{bleed_sides} }) : undef;
 
+	print STDERR "STORE FOR Printing Servcie: PID: $pid SID: $sid \n";
     # Very, very simple multi-version input processing.
     if ($specs->{is_mv}) {
+	print STDERR "STORE FOR Printing Servcie: START MV \n";
         my @name  = @{ $specs->{mv_name} };
         my @qty   = @{ $specs->{mv_qty}  };
         my $total = (get_quantities($log, $dbh, $pid))[0];
@@ -72,6 +74,7 @@ sub store {
                 push @quantities, $name => $qty;
             }
         }
+		print STDERR "STORE FOR Printing Servcie: START MV @versions \n";
         $specs->{versions}           = join(',', @versions);
         $specs->{version_quantities} = join(',', @quantities); # For UI
 
