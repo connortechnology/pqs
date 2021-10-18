@@ -223,7 +223,6 @@ sub parse_page {
     my ($r, $log, $cookie, $dbh, $variable, $page) = @_;
     my ($status);
 	use XML::Simple;
-	sleep(0);
 
 print STDERR "START PARSE PAGE \n\n";
     # The module dispatches by 'section' based on the uri.
