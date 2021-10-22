@@ -25,7 +25,6 @@ function auto_preview () {
     
 
 function update_preview () {
-	alert('Update Preview');
     var form = $('template');
 
     var qs       = Form.serialize(form);

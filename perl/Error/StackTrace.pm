@@ -44,7 +44,7 @@ our $VERSION = '$Revision: 1.3.24.1 $';
 
 sub trace {
     my ($r, $err) = @_;
-print STDERR "HAVE STACK TRACE HERE \n";
+print STDERR "HAVE STACK TRACE HERE  \n";
 
     local $Data::Dumper::Terse = 1; # Don't append 'VARn' to dumper output.
 
@@ -57,6 +57,7 @@ print STDERR "HAVE STACK TRACE HERE \n";
     $trace->prev_frame; # if MOD_PERL;
 
     my @stack;
+    my @ministack;
 	my $cnt;
     while (my $frame = $trace->prev_frame) {
         next if $frame->subroutine eq 'Apache2::StatINC::__ANON__';
@@ -67,6 +68,12 @@ print STDERR "HAVE COUNT: $cnt  - " . $frame->subroutine . "\n";
         
         # Eval blocks.
         $func = '(eval)' if $frame->subroutine eq '(eval)';
+
+        push @ministack, {
+            filename => $frame->filename,
+            line     => $frame->line,
+            caller   => $frame->package,
+		};
         
         push @stack, {
             filename => $frame->filename,
@@ -86,11 +93,15 @@ print STDERR "HAVE COUNT: $cnt  - " . $frame->subroutine . "\n";
     # If we're in the stack, remove us and and the call to us.
     pop @stack and pop @stack;
 
+	print STDERR "HAVE ERROR STACK ", Dumper($err->message );
+
     # Output the template.  
     my $t = Petal->new(
-        base_dir => $r->document_root,
+		#base_dir => $r->document_root,
+        base_dir =>  '/usr/local/share/pqs/www', 
         file     => '/error/debug.html'
     );
+
 
     return $t->process(
         error => "$err",

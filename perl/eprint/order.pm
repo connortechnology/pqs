@@ -1035,8 +1035,12 @@ print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
 
 	return unless $order_id;
 
-	#not sure if we need this for products?
-	#fill_contact($r, $dbh, $order_id);
+	my ( $firstname, $lastname, $email ) = $dbh->selectrow_array(q{
+		SELECT strfirstname, strlastname, stremail FROM tbl_Orders WHERE lngOrderid = ?
+	}, undef, $order_id);
+
+	#We need this for products
+	fill_contact($r, $dbh, $order_id) unless $firstname && $lastname && $email;
 	
 	
 
@@ -1245,9 +1249,22 @@ print STDERR "MY ORDER ID: $order_id \n";
         );
     }
 
+	if ( $r->param('Finish') ) {
+    	$order_id = $dbh->selectrow_array(q{
+			SELECT MAX(lngOrderID) FROM tbl_Orders WHERE lngcustomerid = ?
+		}, undef, $variable->{cust_id});
+	}
+
     if ( $order_id eq q{} ) {
-        return misc::error($log, $dbh, $variable, 'No order id!  Not processing!');
+		 return misc::error($log, $dbh, $variable, 'No order id!  Not processing!');
     }
+
+	my ( $firstname, $lastname, $email ) = $dbh->selectrow_array(q{
+		SELECT strfirstname, strlastname, stremail FROM tbl_Orders WHERE lngOrderid = ?
+	}, undef, $order_id);
+
+	die("Missing Contact Data: $firstname, $lastname, $email") unless $firstname && $lastname && $email;
+
 
 			#Allocate product inventory for mat_inventory
 			my $prods = $dbh->selectall_arrayref(q{
@@ -1580,6 +1597,7 @@ print STDERR "HAVE ORDER LINE: " , Dumper( $order);
 print STDERR "HAVE ORDER LINE: " , Dumper($o, $list, $order);
 		my $prod = new PQS::Object::product($o->{product});
 		my $ppid = $prod->{specs}{project};
+		my $template = $prod->{specs}{pdftemplate};
 
 		next unless $ppid;
 
@@ -1690,6 +1708,7 @@ print STDERR "OV1 PER VERSIONS: $versions Q: $qty : $perversion V: $v \n";
 					 #jobname	=> $o->{jobname},
 					 jobname => $o->{jobname} . ' - ' . $prod->{specs}{name},
 					 file_upload => $file_upload,
+					 pdftemplate => $template,
 				    };
 	}
 

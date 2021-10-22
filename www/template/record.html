@@ -33,6 +33,7 @@
 <body onload="reloadpdf(<?reload_page?>)">
 	<!--#include virtual="/includes/c1-main-nav.html" -->
 <? if is_staff ?>
+<!--
 <form method="get" action="main.html">
 		<input type="hidden" name="pid" value="<?pid?>"/>
 		<?if create_to_order?>
@@ -40,6 +41,7 @@
 		<?endif create_to_order?>
 			<input type="submit" class="button" value="Exit"  />
 </form>
+-->
 <? endif is_staff ?>
 	<form id="template" method="post" action="record.html?pid=<?pid?>">
 		<input type="hidden" name="pid" value="<?pid?>" id="pid" />
@@ -47,12 +49,9 @@
 			<input type="hidden" name="create_to_order" value="1" />
 		<?endif create_to_order?>
 
+	<!--
 		<div id="record-nav">
 		<? if ($$variable{user_id} eq '10283'  || $$variable{is_staff} || $$variable{user_id} eq '129' || $$variable{user_id} eq '162') ?>
-        <!-- User ID Numbers 10283, 129 and 162:
-        10283 = Eric * Jowharian from company number 10283 = Company Name 10283
-        129 = Salendra Singh from company number 113 = Company Name 10018
-        162 = Jatinder Chauhan from company number 147 = Company Name 10100-->
         
         <input name="new"    type="submit" class="button"       style="float: left" value="New" /> 
 		<? endif ($$variable{user_id} eq '10283'  || $$variable{is_staff} || $$variable{user_id} eq '129' || $$variable{user_id} eq '162') ?>
@@ -61,7 +60,6 @@
          <? endif is_staff ?>
                     <input               type="submit" class="button right" value="Save" />
 
-			<!-- <input type="button" class="button right" value="Clear" style="float: right;" /> -->
 
 			<div id="offsets" style="width: 22em; padding-bottom:3em;">
 				<? if ($$variable{user_id} eq '10283'  || $$variable{is_staff} || $$variable{user_id} eq '129' || $$variable{user_id} eq '162') ?>
@@ -76,7 +74,9 @@
               <? endif ($$variable{user_id} eq '10283'  || $$variable{is_staff} || $$variable{user_id} eq '129' || $$variable{user_id} eq '162') ?>
                 
 			</div> 
+
 		</div>
+-->
 
 		<div id="fill">
 			<input type="hidden" id="id" name="id" />
@@ -129,10 +129,19 @@
             <input type="hidden" name="auto_preview" id="auto_preview" value="1"  />
 		<!--	<label for="auto_preview">Auto Preview</label> -->
 <!--			<? if is_staff ?><input type="submit" class="button right" value="Exit" name="Exit" /><? end if is_staff ?>
--->			<input type="submit" class="button right" value="Save and Continue" name="Finish" onClick="form.action='main.html'" />
+-->		
+
+			<!--
+			<input type="submit" class="button right" value="Save and Continue" name="Finish" onClick="form.action='main.html'" />
+			-->
+                    <input               type="submit" class="button " value="Save" />
+
+			<input type="submit" class="button right" value="Finish" name="Finish"  />
 <!--			<input type="button" class="button right" value="Preview" onClick="update_preview()";  />
 -->            
-				<input type="submit" class="button right" value="Preview"  />
+			<!--
+				<input type="submit" class="button" value="Preview"  />
+			-->
                  <input type="hidden" name="reload_page" id="reload_page"  />
                  <input type="hidden" id="marker" name="marker"  value="<?marker?>" />
 		</div>
@@ -148,8 +157,10 @@
 			<div class="preview">
             <? eval( $variable->{page} = $variable->{_row} -1 ) ?>
 				<!--<embed src="/pdf/render?pid=<?pid?>&n=<?page?>;file_type=pdf;offset=<?offset?>" width="322px"> <br /> -->
-                <img width="322px" id="p<?_row?>" alt="Page <?_row?> Preview" src="" />
+                <img width="522px" id="p<?_row?>" alt="Page <?_row?> Preview" src="" />
+				<!--
 				<a href="" onclick="$('reload_page').value=<?_row?>; document.forms['template'].submit();return false;";>View Page <?_row?> as Full Size PDF</a>
+				-->
 			</div>
 
 		<? endloop pages ?>

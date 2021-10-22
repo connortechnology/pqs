@@ -41,6 +41,7 @@ my @update_fields =  (
 			{fname => 'delivery_days', 	type => 'int', 		desc => 'Delivery Days', 	sort_order => 2100},
 			{fname => 'qprice', 	 	type => 'num', 		desc => 'Price', 			sort_order => 0001},
 			{fname => 'file_upload',  	type => 'bool', 	desc => 'File Upload (1-Yes/0-No)',	sort_order => 0002},
+			{fname => 'pdftemplate',  	type => 'int', 		desc => 'PDF Template',	sort_order => 1410},
 			);
 
 sub new {

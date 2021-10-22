@@ -81,7 +81,8 @@ sub handler {
     # inside this module. We can decide on more complex mappings later.
     my $name = ( split '/', $r->uri )[2];
 
-    # Get a refrence to the function.
+	print STDERR "HAVE FUNC: $name \n";
+	# Get a refrence to the function.
     my $func = qualify_to_ref( $name, __PACKAGE__ );
 
     # Verify that the function requested exists, if not return a 404.
@@ -280,7 +281,7 @@ sub download {
 
     $r->content_type('application/pdf');
     $r->headers_out->{'Content-Disposition'} = qq{inline; filename="template-$id.pdf"};
-    $r->headers_out->{'Content Length'} = ( -s $filename );
+	#$r->headers_out->{'Content Length'} = ( -s $filename );
 
     flock   $fh, LOCK_SH or return HTTP_SERVICE_UNAVAILABLE;
     binmode $fh; 

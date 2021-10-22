@@ -591,7 +591,7 @@ print STDERR "START 2: $x \n";
     $ENV{GS_LIB} = '/usr/share/fonts/type1/gsfonts/';
 
     my $rv = $image->BlobToImage($$pdf);
-    die $rv if $rv;
+	#die $rv if $rv;
 
 
 my $x = time();

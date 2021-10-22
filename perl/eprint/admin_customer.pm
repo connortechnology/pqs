@@ -99,7 +99,7 @@ sub set_markup {
 
 			my $sql = 'insert into product_markup values ( ?,?,?)';
 			$dbh->do($sql, undef, $cust, $mu, $cat);
-		print STDERR "\nSET HAVE CUST LIST (CUST $cust, MU $mu, CAT $cat) ";
+			print STDERR "\nSET HAVE CUST LIST (CUST $cust, MU $mu, CAT $cat) ";
 		}
 
 

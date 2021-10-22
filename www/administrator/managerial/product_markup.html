@@ -14,6 +14,19 @@
 	<!--#include virtual="/includes/h2-js.html" -->
 
 	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script type="text/javascript">
+	function save_name() {
+		var name = document.getElementById('name').value;
+		if (name.length == 0 ) {
+			alert("Please enter a Group Name!");
+			return false;
+		} else {
+		var form = document.getElementById('f1').value;
+			fmChange=3;
+		}
+	}
+	</script>
+	
 </head>
 
 <body>
@@ -51,7 +64,7 @@ not acceptable, however "0" is valid.
 				<input class="button" type="button" name="btnFunction" value="New" onclick="addCheck(f1);" />
 				<input class="button" type="submit" name="btnFunction" value="Delete" onclick="fmChange=2;" />
 				<input class="button" type="reset" />
-				<input class="button" type="submit" name="btnFunction" value="Save" onclick="fmChange=3;" />
+				<input class="button" type="submit" name="btnFunction" value="Save" onclick="return save_name();" />
 				<br />
 			</div>
 			<br />
