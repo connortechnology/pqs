@@ -243,7 +243,8 @@ sub multiversion {
     my ($log, $dbh, $pid, $specs) = @_;
 
     my %versions;
-    @versions{ @{$specs->{mv_name}} } = @{$specs->{mv_qty}};
+	
+	eval { @versions{ @{$specs->{mv_name}} } = @{$specs->{mv_qty}}; };
 
     return unless scalar keys %versions;
 

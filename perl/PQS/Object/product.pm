@@ -115,7 +115,7 @@ sub price {
 	my $markup = $self->markup($cust_id);
 	$price = $price * (1 + ( $markup / 100));
 
-	print STDERR "Customer Discount Price: $price \n";
+	print STDERR "Customer Discount Price: $price Markup: $markup CUST: $cust_id) \n";
 
 	if ( $self->{specs}{units} eq 'Per 1000' ) {
 		$price /= 1000;

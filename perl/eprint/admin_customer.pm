@@ -95,6 +95,8 @@ sub set_markup {
 	my ($dbh, $cust_list, $mu, $cat ) = @_;
 
         foreach my $cust ( @{$cust_list} ) {
+			$dbh->do('DELETE FROM product_markup WHERE customer = ? and category = ?', undef, $cust, $cat);
+
 			my $sql = 'insert into product_markup values ( ?,?,?)';
 			$dbh->do($sql, undef, $cust, $mu, $cat);
 		print STDERR "\nSET HAVE CUST LIST (CUST $cust, MU $mu, CAT $cat) ";
@@ -108,7 +110,7 @@ sub save_markup {
 
 		$dbh->do(q{delete from group_markups where mugroup = ?}, undef, $group);
 
-		my @cust_list = $dbh->selectrow_array(
+		my $cust_list = $dbh->selectcol_arrayref(
 			q{SELECT lngcustomerid FROM tbl_customer WHERE markup_group = ?}, 
 			undef, $group
 		);
@@ -118,7 +120,7 @@ sub save_markup {
 			my $mu =  $r->param("txtMarkup-" . $cat) || 0;
 			$dbh->do(q{Insert into group_markups values ( ?, ?, ?) }, undef, $group, $cat, $mu);
 
-			set_markup($dbh, \@cust_list, $mu, $cat);
+			set_markup($dbh, $cust_list, $mu, $cat);
 
 		} @{ $variable->{new_product_categories} };
 }
