@@ -1583,6 +1583,22 @@ sub display {
 
 	$variable->{__FillInForml}{rdbSalutation} = $variable->{txtTitle};
 
+	 (
+		 $variable->{txtShippingAddress1},
+		 $variable->{txtShippingAddress2},
+		 $variable->{txtShippingCity},
+		 $variable->{txtShippingPostalCode},
+		 $variable->{txtShippingPhone},
+		 $variable->{ddmShippingStateProvince},
+		 $variable->{ddmShippingCountry},
+		 $variable->{txtShippingCompany},
+
+	 ) = $dbh->selectrow_array(q{
+		SELECT strAddress1, strAddress2, strCity, strPostalCodeZip, strPhone, strProvState, strCountry, strCompanyName
+	   	FROM tbl_Customer WHERE lngcustomerid = ?
+	}, undef, $variable->{cust_id}) unless $variable->{txtShippingAddress1};
+
+
 
 return $variable;
 }
@@ -1592,8 +1608,7 @@ sub shipping_summary {
 		my ($r, $log, $dbh, $var, $pid) = @_;
 		my $ships = $dbh->selectcol_arrayref(q{
 			SELECT lngserviceindex FROM tbl_project_contents 
-			WHERE lngprojectindex = ? AND strservicetype = 'Shipping'
-		}, undef, $pid);
+			WHERE lngprojectindex = ? AND strservicetype = 'Shipping' }, undef, $pid);
 		map { 
 			my $specs = eprint::docket::shipping($r, $log, $dbh, $pid, $_);
 			push @{$var->{SHIPPING}}, $specs
