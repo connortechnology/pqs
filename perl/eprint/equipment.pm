@@ -34,6 +34,29 @@ sub get_name {
     return scalar $dbh->selectrow_array($sth, undef, $eid);
 }
 
+sub bindery_imp {
+	my ($imp_over, $specs) = @_;
+
+
+
+
+        my $imp_width  = 0;
+        my $imp_height = 0;
+		my $up = 1;
+
+
+		if ( $imp_over ) {
+			$up =  $specs->{txtImposition1};
+            $imp_width  = $$specs{"txtImageWidth1"};
+            $imp_height = $$specs{"txtImageHeight1"};
+		} else {
+            $imp_width  = $$specs{"flat_width"};
+            $imp_height = $$specs{"flat_height"};
+		}
+
+		return ($up, $imp_width, $imp_height);
+}
+
 # Given the equipment's ID return it's type.
 sub get_type {
     my ($log, $dbh, $eid) = @_;
