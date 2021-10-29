@@ -150,7 +150,7 @@ sub calc {
                 $imp_cols,        $reference,   $sheet_width,
                 $sheet_height,    $calliper,    $image_orientation,
                 $press,           $image_width, $image_height,
-                $grain_direction,
+                $grain_direction, 
             ) = get_specifications($log, $dbh, undef, $sig, qw(
                   hdnImposition
                   hdnImpositionRows     hdnImpositionColumns
@@ -163,6 +163,9 @@ sub calc {
 
 			$imp_rows = 1 unless $imp_rows;
 			$imp_cols = 1 unless $imp_cols;
+
+			$specs->{flat_width} = $spread_width;
+			$specs->{flat_height} = $spread_height;
 
 
             $specs->{"txtScoreQty-$sig"} = $specs->{'txtScoreQty-0'}
@@ -215,7 +218,7 @@ sub calc {
             if ( $$specs{"chkOverrideImposition$qty_index-$sig"} eq
                 'Y' )
             {
-				$imp_over = 1;
+				$imp_over = $$specs{"chkOverrideImposition$qty_index-$sig"} ;
 
 				#if ( $$specs{"txtImposition$qty_index-$sig"} >
 				#       $imposition
@@ -228,39 +231,26 @@ sub calc {
 				#}
             }
 
-            my %imposition;
+            my %imposition = ( Rows => 1, Cols => 1, Imposition => 1  );
 
             my @impositions = ();
 
-			if ( $imp_over ) {
-                $imposition{'Imposition'} = $$specs{"txtImposition$qty_index-$sig"};
-                $imposition{'Rows'} = 1;
-                $imposition{'Cols'} = 1;
-			} else {
-                # For Our Dutch Impositions We only allow 1-up die cutting.
-                $imposition{'Imposition'} = 1;
-                $imposition{'Rows'} = 1;
-                $imposition{'Cols'} = 1;
-			}
+                my $width;
+                my $height;
+
+
             push @impositions, \%imposition;
 
             foreach my $imposition (@impositions) {
 
 				print STDERR "HAVE IMPOSTION", Dumper($imposition);
 
-                my $width;
-                my $height;
 
-                if ( $image_orientation eq 'Vertical' ) {
-                    $width  = $spread_width * $$imposition{'Cols'};
-                    $height = $spread_height * $$imposition{'Rows'};
-                }
-                else {
-                    $width  = $spread_height * $$imposition{'Cols'};
-                    $height = $spread_width * $$imposition{'Rows'};
-                }
-				#$width = $sheet_width;
-				#$height = $sheet_height;
+				($imp_over, $width, $height)  = eprint::equipment::bindery_imp($imp_over, $specs);
+
+				#$width  = $spread_height * $$imposition{'Cols'};
+				#$height = $spread_width * $$imposition{'Rows'};
+                
 
               EQUIPMENT:
                 foreach my $eid (@equipment) {
@@ -443,8 +433,14 @@ sub calc {
                   : 0;
             }
 
-            $$specs{"txtImageWidth$qty_index-$sig"} = $sheet_width;
-            $$specs{"txtImageHeight$qty_index-$sig"} = $sheet_height;
+			if ( eprint::project::is_multipage($log, $dbh, $pid) ) {
+				$$specs{"txtImageWidth$qty_index-$sig"} = $sheet_width;
+				$$specs{"txtImageHeight$qty_index-$sig"} = $sheet_height;
+			} else {
+				$$specs{"txtImageWidth$qty_index-$sig"} = $width;
+				$$specs{"txtImageHeight$qty_index-$sig"} = $height;
+
+			}
 
             if ( !$bestEquipment ) {
                 $status = 'uncalculated';
