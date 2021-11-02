@@ -662,7 +662,10 @@ sub ic_api {
 	#create shipping estimate based on shipping x number of days in the future
 	my $lead_time = 7;
 	my $later = DateTime->now->add(days => $lead_time);
-	my $ship_date = $later->year . '-' . $later->month . '-' . $later->day; 
+	my $ship_date = $later->year . '-' . $later->month . '-' . 
+			($later->day > 9 ? $later->day : '0' . $later->day); 
+
+	print STDERR "HAVE SHIP DATE: $ship_date \n";
 
 
 	my $ship = {
@@ -699,7 +702,17 @@ sub ic_api {
 	  my $r = $api->response();
 	  my $rep = decode_json($r->{_content});
 
-	if ( $rep->{statusMessage} eq 'FAIL' ) {		
+	  print STDERR "HAVE DECODED JSON RESPONSE: ", Dumper($rep, ref($rep), $$rep[0] );
+	
+
+	if ( ref($rep) eq 'ARRAY' ) {
+		my $msg = $$rep[0];
+		print STDERR "HAVE ARRAY RESPONSE", Dumper($msg);
+		$specs->{api_error} = {'Message' => [$msg]};
+		return undef;
+
+	}
+	elsif ( $rep->{statusMessage} eq 'FAIL' ) {		
 	  	print STDERR "HAVE FAIL RESULT FOR GET RATES", Dumper($rep);
 		$specs->{api_error} = $rep->{data};
 		return undef;
@@ -895,6 +908,7 @@ sub process_rate {
 sub format_error {
 	my $e = shift;
 	my $text = "ERROR: \n";
+	print STDERR "HAVE ERROR TO FORMAT: ", Dumper($e);
 
 	map {
 
@@ -1492,6 +1506,7 @@ sub display {
 			AND lngprojectindex = $pid )
 	};
     $$variable{'Ship_Addresses'} = ssi::fill_drop_down($log, $dbh, $sql);
+	#die(Dumper( $pid,  $$variable{'Ship_Addresses'} ));
 
     # we want to shove in our weights whenever we calc at all, so that the ssi
     # and use these dynamically on the radio button
