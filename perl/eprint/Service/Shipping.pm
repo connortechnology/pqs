@@ -702,7 +702,7 @@ sub ic_api {
 	  my $r = $api->response();
 	  my $rep = decode_json($r->{_content});
 
-	  print STDERR "HAVE DECODED JSON RESPONSE: ", Dumper($rep, ref($rep), $$rep[0] );
+	  print STDERR "HAVE DECODED JSON RESPONSE: ", Dumper($rep, ref($rep) );
 	
 
 	if ( ref($rep) eq 'ARRAY' ) {
