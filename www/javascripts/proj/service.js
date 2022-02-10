@@ -81,6 +81,13 @@ Service.prototype = {
         // (it's huge). TODO Remove completely.
         if ($('run_log')) $('run_log').value = '';
 
+			$('txtPrice1').innerHTML = '.';
+
+			//not all pages show unit price ( printing page.. ) 
+			if ( $('txtUnitPrice1') ) {
+				$('txtUnitPrice1').innerHTML = '.';
+			}
+
         
         this.req = new Ajax.Request('/service/' + this.name, {
             method:         'get',
@@ -124,6 +131,7 @@ Service.prototype = {
             var value = data[field];
             var elem = form.elements[field] || document.getElementById(field);
             if (!elem) continue;
+
 
             // IE uses NodeLists but doesn't recognize them as DOM objects.
             //   elem = $A( elem instanceof NodeList ? elem : [elem] );

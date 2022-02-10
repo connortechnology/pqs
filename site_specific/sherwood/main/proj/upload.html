@@ -15,11 +15,58 @@
 
 	<link href="/styles/forms.css"         rel="stylesheet" type="text/css" media="screen" />
 	<link href="/styles/project_files.css" rel="stylesheet" type="text/css" media="screen" />
+	<Script>
+
+	function upload_msg() {
+		$('inprogress').style.display='block';
+	}
+
+
+	</Script>
+
+
+<style>
+#inprogress {
+  position: fixed;
+  display: block;
+  width: 50%;
+  height: 30%;
+  top: 200px;
+  left: 30%;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 2;
+  cursor: pointer;
+  font-size: 5em;
+}
+</style>
+
 </head>
 
-<body>
+<body onunload="alert(1)">
 	<!--#include virtual="/includes/c1-main-nav.html" -->
 	<h1><span class="title-section">Project &#187;</span> <?current_project_name?> &#187;</span> Files &#187; Upload</h1>
+
+<div id=inprogress >
+		File upload in Progress...
+	</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	<p>
 		<? if empty:files ?>
@@ -47,7 +94,7 @@
 				</tr>
 
 				<tr>
-					<td><input type="file" class="file" size="40" name="filename-1" onchange="growTable(this)"/></td>
+					<td><input type="file" class="file" size="40" name="filename-1" onchange="growTable(this);"/></td>
 					<td class="l">
 						<input type="text" name="description-1" style="width: 20em;" class="input-text" />
 					</td>
@@ -82,7 +129,7 @@
 				<!--#include virtual="/includes/main/proj/notification_contacts.html" -->
 			</fieldset>
 
-			<input type="submit" name="upload" class="button" value="Upload" style="float: right;" />
+			<input type="submit" name="upload" class="button" value="Upload" style="float: right;" onClick="upload_msg();" />
 		<?else is_staff ?>
 
 			<!-- File approval confirmation for end-users. -->
@@ -105,7 +152,8 @@
 
 				<br />
 				Signed, <br />
-				<input class="button" type="submit" style="float: right; margin: 0;" name="upload" value="Upload" />
+				<input class="button" type="submit" style="float: right; margin: 0;" name="upload" value="Upload" onclick="upload_msg();" />
+				
 				<input type="text" name="initials" maxlength="2" style="width: 3em; margin-left: 4em;" /> <em>Please enter your initials.</em>
 
 			</fieldset>

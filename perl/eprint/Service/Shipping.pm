@@ -483,7 +483,7 @@ sub preaction {
 		my $add = new eprint::address( $log, $dbh, $specs->{ddmShippingCompany} );
 		$add->bake_form_hash($specs);
 		delete $specs->{btnFunction};
-		$specs->{ddmShippingCompany} = '';
+		#$specs->{ddmShippingCompany} = '';
 
 		#$specs->{txtShippingFirstName} = 'Hello';
 
@@ -633,7 +633,7 @@ sub ic_login {
 
 	my $r = $api->response();
 	my $rep = decode_json($r->{_content});
-	my $token = $rep->{data}{remembertoken};
+	my $token = $rep->{data}{mobileToken};
 
 	print STDERR "HAVE LOGN: " . Dumper($rep, $token);
 
@@ -656,14 +656,15 @@ sub ic_api {
 		COUNTRYCODE => 'CA',
 		LANGCODE =>  'en_CA',
 		'Content-Type' => 'application/json',
-		Authtoken => $token
+		AUTHTOKEN => $token
 	};
 
 	#create shipping estimate based on shipping x number of days in the future
 	my $lead_time = 7;
 	my $later = DateTime->now->add(days => $lead_time);
-	my $ship_date = $later->year . '-' . $later->month . '-' . 
-			($later->day > 9 ? $later->day : '0' . $later->day); 
+	my $ship_date = $later->year . '-' . 
+		($later->month > 9 ? $later->month : '0' . $later->month) . '-' . 
+		($later->day   > 9 ? $later->day   : '0' . $later->day); 
 
 	print STDERR "HAVE SHIP DATE: $ship_date \n";
 
@@ -694,6 +695,7 @@ sub ic_api {
 
 	if ($api->post("", $obj,$h)) {
 		#Have Repsonse from API
+		print STDERR "HAVE API FROM REQUEST:", Dumper($h); 
 	 } else {
 		print STDERR $api->errstr . "\n";
 		return undef;
@@ -1505,7 +1507,13 @@ sub display {
 			WHERE customer_ship_address.customer = tbl_projects.lngcustomerid 
 			AND lngprojectindex = $pid )
 	};
-    $$variable{'Ship_Addresses'} = ssi::fill_drop_down($log, $dbh, $sql);
+
+	my $r = session::r;
+	my $address_id = $specs->{'ddmShippingCompany'};
+
+	#die($address_id) if $address_id;
+
+    $$variable{'Ship_Addresses'} = ssi::fill_drop_down($log, $dbh, $sql, $address_id);
 	#die(Dumper( $pid,  $$variable{'Ship_Addresses'} ));
 
     # we want to shove in our weights whenever we calc at all, so that the ssi

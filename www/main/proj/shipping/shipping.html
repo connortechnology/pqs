@@ -320,10 +320,10 @@ function overrides (id) {
 			When complete push the Add Next Address button. Repeat for all additional addresses. Once Saved your Addresses will be displayed in the Entered Addresses Section. 
 			
             <tr class="ship">
-            <td width="140px" valign="top">Select an Address:</td>
+            <td width="140px" valign="top">Change shipping Address:</td>
             <td>
 			<select id="ddmShippingCompany" name="ddmShippingCompany" onChange="f1.btnFunction.value='Get Address'; f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';f1.submit();" >
-                <option value="">- Select -</option>
+                <option value="">- Default -</option>
                 <?Ship_Addresses?>
             </select>
             </td>

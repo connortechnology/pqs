@@ -2517,7 +2517,7 @@ sub edit_line_item {
     	insert_service_specs($log, $dbh, $pid, $sid, %$data);
 	}
 
-	if ( $price ) {
+	if ( $price || $price eq '0' ) {
 		$dbh->do(q{UPDATE tbl_project_contents set price_override = ? where lngserviceindex = ?}, 
 			undef, $price, $sid);
 	}
