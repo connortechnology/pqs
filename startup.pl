@@ -19,7 +19,7 @@ use session;
 # Prevent XS from thorwing error where Readonly is loaded.
 $Readonly::XS::MAGIC_COOKIE = "Do NOT use or require Readonly::XS unless you're me.";
 
-#$SIG{__DIE__} = sub { what_happend(@_); };
+$SIG{__DIE__} = sub { what_happend(@_); };
 
 #load callbacks
 #use callback;
