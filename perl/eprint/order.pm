@@ -2582,6 +2582,7 @@ print STDERR "COUNTY TAX: $variable->{CountyTAX} \n";
         WHERE lngOrderID = ? AND strSessionID IS NULL
     }, undef, $order_id);
 
+
     $variable->{CustID} = scalar $dbh->selectrow_array(q{
         SELECT lngcustomerid
         FROM tbl_orders 
