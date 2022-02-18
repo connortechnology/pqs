@@ -804,6 +804,56 @@ print STDERR "FILE DATA: " , Dumper($data);
     }
 }
 
+sub paypal {
+
+    my ( $r, $log, $dbh, $variable ) = @_;
+
+    initialise_drop_downs( $r, $log, $dbh, $variable );
+
+    my $header = [ 'OrderID', 'Order Date', 'Company Name', 'Status',
+                   'Total'                                            ];
+    my $query = q{
+        SELECT
+            tbl_Orders.lngOrderID                                AS id,
+            to_char(tbl_payments.dtmDate, 'MM/DD/YYYY')       AS date,
+            tbl_Orders.strCompanyName                            AS cname,
+            tbl_payments.curAmount                              AS amount,
+            tbl_Orders.curTotalSale                              AS cursale,
+			tbl_payments.strdescription							AS desc,
+			tbl_payments.lngindex								AS payid,
+			tbl_payments.strtransactionid						AS transactionid
+        FROM
+            tbl_Orders,  tbl_Customer,  tbl_payments
+        WHERE
+            tbl_payments.dtmDate::Date BETWEEN ? AND ?
+        AND
+            tbl_Customer.lngCustomerID = tbl_Orders.lngCustomerID
+
+		AND tbl_orders.lngorderid = tbl_payments.lngorderid
+		AND strmethod = ?
+    };
+
+    my @bind_params = ( $variable->{StartDate}, $variable->{EndDate}, 'PayPal' );
+
+
+
+    $query .= q{
+		ORDER BY tbl_Orders.lngOrderID
+	};
+print STDERR "HAVE SQL QUERY FOR PAYPAL: $query \n";
+
+    my $sth = $dbh->prepare($query);
+       $sth->execute(@bind_params);
+
+    if ( $r->param('btnFunction') eq 'Download in CSV Format' ) {
+    }
+    else {
+        my $results = $sth->fetchall_arrayref( {} );
+
+        $variable->{orders} = $results;
+    }
+}
+
 
 sub order_report {
 

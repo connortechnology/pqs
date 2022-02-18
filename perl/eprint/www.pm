@@ -571,6 +571,7 @@ print STDERR "SUB: $sub_section F: $filename \n";
         eprint::admin_reports::stored_report_display($r, $log, $dbh, $variable)      if $filename eq 'reports_custom.html';
         eprint::admin_reports::stored_report_process($r, $log, $dbh, $variable)      if $filename eq 'reports_custom_results.html';
         eprint::admin_reports::order_report($r, $log, $dbh, $variable)               if $filename eq 'reports_orders.html';
+        eprint::admin_reports::paypal($r, $log, $dbh, $variable)               		 if $filename eq 'paypal_report.html';
         eprint::admin_reports::project_report($r, $log, $dbh, $variable)             if $filename eq 'reports_projects.html';
         eprint::admin_reports::quotes_report($r, $log, $dbh, $variable)              if $filename eq 'reports_quotes.html';
         eprint::admin_reports::cost_center($r, $log, $dbh, $variable)             	 if $filename eq 'reports_cost_center.html';
