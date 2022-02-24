@@ -890,11 +890,19 @@ sub shipping {
     my %specs = eprint::service::get_specifications_pairs(
         $log, $dbh, $pid, $sid
     );
+
+	$specs{txtShippingContact} = $specs{txtshippingfirstname} . ' ' . $specs{txtshippinglastname};
+	$specs{txtShippingEmail} = $specs{txtshippingemail};
+
+
+
 	my $sql = q{ SELECT * FROM tbl_addresses, ship_address WHERE lngindex = shipid AND sid = ?  };
 	my $shipid = $r->param('shipid');
 	$sql .= qq{ AND tbl_addresses.lngindex = $shipid } if $shipid;
 
 	$specs{ADDRESSES} = $dbh->selectall_arrayref($sql,{Slice => {}}, $sid);
+
+print STDERR "HAVE ADDRESS", Dumper($specs{ADDRESSES}, \%specs);
 
 	my @keys = qw(add_price1 add_price2 add_price3 add_qty1 add_qty2 add_qty3 cost_center pickup manualcostcenter accountnumber storemailinstructions department);
 
@@ -903,6 +911,14 @@ sub shipping {
 			$_->{$key} = $specs{$key . '-'.$_->{shipid}};
 		}
 	} @{$specs{ADDRESSES}};
+
+	my $index = $specs{ddmShipVia1};
+
+	my $ship_via = $dbh->selectrow_array(q{SELECT strname FROM tbl_ship_via WHERE lngindex = ?}, 
+		undef, $index);
+
+	$specs{hdnShipVia1} = $ship_via; 
+	$specs{txtShippingCompany} = $specs{txtshippingcompanyname};
 
 	$specs{order_id} = $dbh->selectrow_array(q{
 		SELECT lngorderid FROM tbl_order_contents WHERE lngprojectindex = ?

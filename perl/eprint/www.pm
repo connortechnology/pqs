@@ -217,12 +217,33 @@ sub word_sub {
 	map { $file_data =~ s/$_/$words{$_}/g; print STDERR "CHANGE: $_ to $words{$_} \n"; } keys %words;
 	return $file_data;
 }
+sub log_request {
+	my $r  = session::r;
+	my $dbh = session::dbh;
+
+	my $page = shift;
+	my $variable = shift;
+
+	my $ip = '';
+	my $userid = $variable->{user_id}; 
+
+	my $params;
+   	map { $params .=  $_ . '=' . $r->param($_) } $r->param(); 
+
+	my $pid = $r->param('pid');
+	my $oid = $r->param('order_id');
+
+	$dbh->do(q{INSERT into log (ip, userid, page, params, pid, oid, reqtime)
+	   	values ( ?, ?,?,?,?,?, now() )  
+	}, undef, $ip, $userid, $page, $params, $pid, $oid);
+}
 
 
 sub parse_page {
     my ($r, $log, $cookie, $dbh, $variable, $page) = @_;
     my ($status);
 	use XML::Simple;
+
 
 print STDERR "START PARSE PAGE \n\n";
     # The module dispatches by 'section' based on the uri.
@@ -412,6 +433,7 @@ print STDERR "HAVE DEST: $destination \n";
             = configuration::get_value($log, $dbh, 'BuildVersion');
     }
 
+	log_request($page, $variable);
 
     
 

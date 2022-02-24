@@ -5,13 +5,7 @@
 <div style=" padding-left: 2em; ">
 	<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
   <tr>
-    <td width="50%"><span class="label">Shipping Type:&nbsp;&nbsp;</span>
-	<? if ($$variable{'rdbShippingContents'} ne 'Other') ?>
-		<?rdbShippingContents?>
-	<? else ($$variable{'rdbShippingContents'} ne 'Other') ?>
-		Samples
-	<? endif ($$variable{'rdbShippingContents'} ne 'Other') ?></td>
-    <td width="50%"><span class="label">Method:&nbsp;&nbsp;</span>
+    <td width="60%"><span class="label">Method:&nbsp;&nbsp;</span>
 	<?hdnShipVia1?></td>
   </tr>
   <tr>
@@ -43,9 +37,11 @@
   <tr>
   	<td><span class="label">Phone:&nbsp;&nbsp;</span>
 	<?txtShippingPhone?></td>
+<!--
     <td><span class="label">Email:&nbsp;&nbsp;</span>
 	<?txtShippingEmail?></td>
   </tr>
+-->
   <tr>
   	<td><span class="label">Ship Address:&nbsp;&nbsp;</span>
     <?txtShippingCompany?>
