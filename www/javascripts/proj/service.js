@@ -81,7 +81,10 @@ Service.prototype = {
         // (it's huge). TODO Remove completely.
         if ($('run_log')) $('run_log').value = '';
 
-			$('txtPrice1').innerHTML = '.';
+			// not all views show price field
+			if ( $('txtPrice1') ) {
+				$('txtPrice1').innerHTML = '.';
+			}
 
 			//not all pages show unit price ( printing page.. ) 
 			if ( $('txtUnitPrice1') ) {
