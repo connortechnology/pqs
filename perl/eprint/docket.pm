@@ -1442,7 +1442,8 @@ sub printing {
 
     # Retrieve this services imposition information
     my $imp = sthaw(decode_base64($specs->{imp}{value}));
-	my $runstyle = $imp->{style};
+	my $runstyle = $imp->{run_style};
+	$results{runstyle} =  $runstyle;
 
 	# Std Project qtys from project.pm
     my @qtys = get_quantities($log,  $dbh, $pid);
