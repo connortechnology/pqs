@@ -21,12 +21,28 @@
 		  cursor: default;
 		  text-decoration: none;
 		}
+
+
+
+	<?if SECURETOKENID?>	
+	#order-box, #ShippingFS {
+	  background-color: rgba(0,0,0,0.1); /* Black background with opacity */
+	  z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+	  cursor: pointer; /* Add a pointer on hover */
+	  colour: darkgrey;
+	  pointer-events:none;
+	}
+	<?endif SECURETOKENID?>
+
+
+
 	</style>
 
 	<!--#include virtual="/includes/h2-js.html" -->
 
 	<script type="text/javascript" src="/javascripts/other.js"></script>
 	<script  type="text/javascript">
+
 
 	function check_submit() {
 		<?if ( @{$variable->{projects}} ) ?> 
@@ -74,7 +90,7 @@
         <form method="post" name="f2" action="/main/order/order_submit.html" id="f2">
 		<input type="hidden" name="shippingoverride" id="shippingoverride" value=0 />
         <div>
-                <fieldset>
+                <fieldset id="ShippingFS" >
                 <legend>Shipping
                 </legend>
 				<p><strong>Do you require this job to be shipped?
