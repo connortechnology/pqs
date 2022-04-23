@@ -28,6 +28,7 @@ sub convert_to_old {
     # The total number of images in this imposition.
     my $slots = $imposition->card;
 
+
     # These should always exist but they don't for all presses so we check
     # existance first to avoid an error on equipment lookup.
     my $grip   = exists $press->{grip}   && !$project->{override}{margin} ? $press->{grip}   : 0;
@@ -58,8 +59,15 @@ sub convert_to_old {
         }
         else { die "Invalid imposition.\n"; }
     
-        ($rows, $cols) = $imposition->cut ? ($y, $x) : ($x, $y);
+		#($rows, $cols) = $imposition->cut ? ($y, $x) : ($x, $y);
+		#
+		($cols, $rows) = $imposition->cut ? ($y, $x) : ($x, $y);
+
+
+	print STDERR "IMP1: Rows: $rows, COLS: $cols CUT: " . $imposition->cut . " X: $x Y: $y \n";
+	
     }
+
 
     # Multi-version needs it's layouts determined, single version is just
     # the full sheet.
@@ -168,6 +176,8 @@ sub convert_to_signature {
 
 	my $ds = desired_signature_size($desired_signature_size, [$imp]);
 
+	print STDERR "HAVE LAYOUT: ", Dumper($imp->{layout});
+
 print STDERR "HAVE DS: $ds \n";
     $desired_signature_size = $ds;
 
@@ -176,7 +186,7 @@ print STDERR "HAVE DS: $ds \n";
 
     my ($r, $c) = @{ $imp }{ qw(rows cols) };
 
-print STDERR "CONVERT TO SIGNATURE: DS: $desired_signature_size, SETUP: $setup R: $r C: $c \n";
+print STDERR "CONVERT TO SIGNATURE: DS: $desired_signature_size, SETUP: $setup R: $r C: $c \n", Dumper($imp);
 
     $imp->setSpreadRows($imp->{rows});
     $imp->setSpreadCols($imp->{cols});
@@ -211,7 +221,14 @@ print STDERR "CONVERT TO SIGNATURE: DS: $desired_signature_size, SETUP: $setup R
         my ($rows, $cols);
         my $imp_rows = $imp->{rows};
         my $imp_cols = $imp->{cols};
-print STDERR "CONVERT A ROW: $imp_rows COL: $imp_cols \n";
+print STDERR "CONVERT A ROW: $imp_rows COL: $imp_cols ROTATE: $imp->{'rotate_sheet'} , $imp->{run_style}  \n";
+
+		if ( $imp->{run_style} eq  'WT' ) {   
+			$imp_cols = $imp_cols / 2;
+		}
+
+print STDERR "CONVERT A1 ROW: $imp_rows COL: $imp_cols ROTATE: $imp->{'RotateSheet'}, \n";
+
         if ($imp_rows >= $desired_signature_size) {
             $rows = int($imp_rows / $desired_signature_size);
             $cols = $imp_cols;
@@ -228,6 +245,7 @@ print STDERR "CONVERT A ROW: $imp_rows COL: $imp_cols \n";
             else {
                 $cols = 1;
             }
+		print STDERR "CONVER C ROWS: $rows COLS: $cols TMEP: $temp \n";
 
         }
 
@@ -256,6 +274,11 @@ print STDERR "CONVERT A ROW: $imp_rows COL: $imp_cols \n";
             }
         }
 
+		print STDERR "CONVER DONE ROWS: $rows COLS: $cols SETUP $ \n";
+		if ( $imp->{run_style} eq  'WT' ) {   
+			$cols = $cols * 2;
+		}
+
         $imp->setRows($rows);
         $imp->setCols($cols);
         $imp->setSetup($rows * $cols);
@@ -281,9 +304,20 @@ print STDERR "CONVERT A ROW: $imp_rows COL: $imp_cols \n";
 		#		map  { $_->{slots} = 1  } @{$f};
 		#
 		#	}
-
-
-
+		
+		my $sig_size = $rows * $cols;
+		print STDERR "CONVER DONE2 ROWS: $rows COLS: $cols SETUP $ \n";
+		map {
+			foreach my $l (@{$_}) {
+				print STDERR "HAVE L VALUE: $l->{slots} \n";
+				if ( $l->{slots} >= ($desired_signature_size * $sig_size) ) {
+					print STDERR "HAVE VALID SLOTS: $l->{slots} SIG: $sig_size DSS: $desired_signature_size \n";	
+				} else {
+					print STDERR "INVALID SLOTS: $l->{slots} SIG: $sig_size DSS: $desired_signature_size \n";	
+					return {};
+				}	
+			}
+		} @{$imp->{layout}};
 
        return $imp;
     }
@@ -528,7 +562,7 @@ sub version_layouts {
 			push @tmp, $set if $check;
 		}
 
-		@partitions = @tmp;
+			@partitions = @tmp;
 		print STDERR "START HAVE PARITIONS ", Dumper(\@partitions, \@tmp, @org, $multipage);
 
 	}

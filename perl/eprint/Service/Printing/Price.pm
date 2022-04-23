@@ -1032,7 +1032,7 @@ print STDERR "HAVE IMPOSTIONS BEFORE FILTER " . scalar @impositions . "\n";
         # For books with more than one spread in the signature, we need to
         # convert the raw impositions of the single spread dimesions into
         # images of multiple spreads.
-        @impositions = map { convert_to_signature($signature_size, $_) } 
+        @impositions = map { convert_to_signature($signature_size, $_, $project) } 
                            @impositions;
     }
 
