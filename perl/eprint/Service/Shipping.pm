@@ -632,10 +632,21 @@ sub ic_login {
 	}
 
 	my $r = $api->response();
-	my $rep = decode_json($r->{_content});
-	my $token = $rep->{data}{mobileToken};
+		print STDERR "HAVE R: " , Dumper($r);
 
-	print STDERR "HAVE LOGN: " . Dumper($rep, $token);
+
+	my $token;
+	if ( $r->{_msg} eq 'OK' ) {
+		my $rep = decode_json($r->{_content});
+		$token = $rep->{data}{mobileToken};
+		print STDERR "HAVE LOGN: " . Dumper($rep, $token);
+	} else {
+		print STDERR "HAVE LOGIN ERROR: " . $r->{_msg} . "\n";
+
+		#print STDERR "HAVE R: " , Dumper($r);
+	
+	}
+
 
 	return $token;
 
@@ -651,6 +662,13 @@ sub ic_api {
 	my $api = JSON::API->new("https://soluship.com/api/v1/getRatesMobile/");
 
 	my $token = ic_login();
+
+	#New sanity check to make sure we get logged in first.
+	if ( !$token  ) {		
+	  	print STDERR "Could not get login token!!!";
+		$specs->{api_error} = "Could not get login token.";
+		return undef;
+	}
 
 	my $h = {
 		COUNTRYCODE => 'CA',
@@ -792,12 +810,19 @@ sub filter_rates {
 sub calc {
 
     my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
-print STDERR "CALC MY SHIPPING SERVICE \n\n";
+print STDERR "CALC MY SHIPPING SERVICE $specs->{shipping_required} \n\n";
 
 
 	my $status;
 
 	#$status = 'calculated' if $specs->{deliverymethod} eq 'Customer Pick-up';
+	#
+	if ( $specs->{shipping_required} == 0 ) {
+			print STDERR "SERVICE: Shipping: Calc: No Shipping Required. Skipping all calcuations \n";
+			$$specs{"txtPrice1"} = 0;
+			return 'calculated';
+	}
+
 	my $totals = [0.0.0,0];
 	my @qty = ( undef,
 				$$specs{txtQuantity1},
