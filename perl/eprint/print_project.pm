@@ -1369,15 +1369,19 @@ print STDERR "MY QTYS: $sq \n";
 sub remove_service {
     my ($log, $dbh, $pid, $sid) = @_;
 
-	$dbh->do(q{update tbl_projects set build = true where lngprojectindex = ?}, undef, $pid);
+	#Testing to see what happens if we don't build, other than doing less work??
+#$dbh->do(q{update tbl_projects set build = true where lngprojectindex = ?}, undef, $pid);
     
     # Until we care about bindery only projects, you're just not allowed to
     # delete the 'Printing' service. TODO: We shouldn't be able to delete the
     # last signature and commit the transaction (if we actually used them).
     return 0 if $sid == get_print_container(@_);
 
+
     # Whether we remove or delete is based on the need level of the service.
     my $need = get_need($log, $dbh, $sid);
+
+	print STDERR "REMOVE SERVICE $pid, $sid : Need: $need \n ";
 
     # If it's not needed we can just delete it outright.
     if ($need != NEEDED) {
@@ -1389,6 +1393,8 @@ sub remove_service {
 		my $removed = $dbh->selectrow_array(q{
 			SELECT ysnremoved FROM tbl_project_contents WHERE lngprojectindex = ? and lngserviceindex = ?
 		}, undef, $pid, $sid );
+
+	print STDERR "REMOVE SERVICE $pid, $sid : Need: $need REMOVED: $removed Before update \n ";
 
 		my $status = $removed ? 'FALSE' : 'TRUE';
 

@@ -3883,6 +3883,7 @@ print STDERR "HAVE PAYMENT AMOUNT: $amount, Rounded FROM: $totals->{total} \n";
 	$var->{SECURETOKEN} 	= $response->secure_token;
 	$var->{SECURETOKENID} 	= $response->secure_token_id;
 	$var->{PAYPAL_MODE} 	= $paypal_mode;
+	$var->{order_id} = $order_id;
 	my $details =  Dumper($response);
 
 	print STDERR "HAVE TOKEN REPLY: $details";
