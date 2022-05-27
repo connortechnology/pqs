@@ -1,6 +1,7 @@
 
 <?if SECURETOKENID?>
 <div> 
+
 <iframe src="https://payflowlink.paypal.com?
 MODE=<?PAYPAL_MODE?>&SECURETOKENID=<?SECURETOKENID?>&SECURETOKEN=<?SECURETOKEN?>"
 name="test_iframe" scrolling="no" width="570px" height="540px" frameborder="0">
@@ -8,14 +9,15 @@ name="test_iframe" scrolling="no" width="570px" height="540px" frameborder="0">
 <form action="/main/order/order_history_details.html?order_id=<?order_id?>" >
 	<input type="hidden" name="order_id" value="<?order_id?>" id="order_id" />
  <button style="
-	 margin: -230px 0 50px 75px;float: none;
+	 margin: -240px 0 50px 75px;float: none;
 	 display: block;
 	 width:300px;
-	 z-index: -1;
 	 "
 	 onclick="form.submit()">Cancel Payment</button>
  </form>
  </div>
+
+</script>
 
  <!-- PayPal Logo --><img src="https://www.paypalobjects.com/webstatic/en_CA/mktg/logo-image/bdg_secured_by_pp_2line.png" border="0"  style="float:right; z-index:100;" alt="Secured by PayPal"><!-- PayPal Logo -->
 
