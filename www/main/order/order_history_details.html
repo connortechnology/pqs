@@ -67,35 +67,39 @@
 		<? endif ( $$variable{'AmountOutstanding'} ) ?>
 
 		<? if ( ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) or ( $$variable{'ORDER_STATUS'} eq 'Pending Deposit' ) ) ?>
-			<? if ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+			<? if ( $$variable{'ORDER_STATUS'} ne 'Canceled' ) ?>
 				<form name="f5" method="post" action="/main/order/order_history_details.html">
 					<input type="submit" name="f5.submit();return false;" class="button right" value="Cancel Order" />
 					<input type="hidden" name="order_id" value="<?ORDER_ID?>" />
 					<input type="hidden" name="btnFunction" value="Cancel" />
 				</form>
-			<? endif ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+			<? endif ( $$variable{'ORDER_STATUS'} ne 'Canceled' ) ?>
 
 		<? if ( ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ) ?>
+			<? if ( $$variable{'ORDER_STATUS'} ne 'Canceled' ) ?>
 				<form name="UpdateOrder" method="post" action="/main/order/order_history_details.html">
 					<input type="submit" name="UpdateOrder.submit();return false;" class="button right" value="Update Order" />
 					<input type="hidden" name="order_id" value="<?ORDER_ID?>" />
 					<input type="hidden" name="btnFunction" value="UpdateOrder" />
 				</form>
+				<br>
+			<? endif ( $$variable{'ORDER_STATUS'} ne 'Canceled' ) ?>
+
 		<? endif ( ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ) ?>
             	
 
-			<? if ( $$variable{'ORDER_STATUS'} eq 'Cancelled' ) ?>
+			<? if ( $$variable{'ORDER_STATUS'} eq 'Canceled' ) ?>
 				<form name="f6" method="post" action="/main/order/order_selection.html">
 					<input type="submit" name="f6.submit();return false;" class="button right" value="Re-Open Order" />
 					<input type="hidden" name="order_id" value="<?ORDER_ID?>" />
 					<input type="hidden" name="btnFunction" value="ReOpen" />
 				</form>
-			<? endif ( $$variable{'ORDER_STATUS'} eq 'Cancelled' ) ?>
+			<? endif ( $$variable{'ORDER_STATUS'} eq 'Canceled' ) ?>
            
            <? else ( ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) or ( $$variable{'ORDER_STATUS'} eq 'Pending Deposit' ) ) ?>
-          <? if ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+          <? if ( $$variable{'ORDER_STATUS'} ne 'Canceled' ) ?>
             <a class="button right" href="#" onclick="alert('Please call us at <!--#include virtual="/includes/company_telephone_number.html"--> and we will help you cancel your order.');">Cancel Order</a>
-           <? endif ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+           <? endif ( $$variable{'ORDER_STATUS'} ne 'Canceled' ) ?>
 		<? endif ( ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) or ( $$variable{'ORDER_STATUS'} eq 'Pending Deposit' ) ) ?>
 		<br class="clear" />
 	</div>
@@ -150,7 +154,7 @@
 
     
     <? if is_staff ?>
-	<? if ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
+	<? if ( $$variable{'ORDER_STATUS'} ne 'Canceled' ) ?>
     <fieldset>
 				<legend>Customer Selection</legend>
 				
@@ -168,8 +172,8 @@
                     
 				</form>
                 </fieldset>
-                <? endif ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
-                <? endif is_staff ?>
+  <? endif ( $$variable{'ORDER_STATUS'} ne 'Canceled' ) ?>
+  <? endif is_staff ?>
 	<!-- Standard disclaimer -->
 	<div id="disclaimer">
 		<!--#include virtual="/includes/invoice_disclaimer.html"-->
