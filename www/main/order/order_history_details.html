@@ -75,17 +75,14 @@
 				</form>
 			<? endif ( $$variable{'ORDER_STATUS'} ne 'Cancelled' ) ?>
 
-            	
-
-		<?if ($variable->{is_staff} || $variable->{user_id} eq '293')?>
-        <? if ( $$variable{'ORDER_STATUS'} eq 'Pending Date Approval' ) ?>
-				<form name="f7" method="post" action="/main/order/order_history_details.html">
-					<input type="submit" name="OrderDateModify"   class="button right" value="Delivery Dates Need Modification" />
-                    <input type="submit" name="OrderDateApproved" class="button right" value="Approve All Delivery Dates" />
+		<? if ( ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ) ?>
+				<form name="UpdateOrder" method="post" action="/main/order/order_history_details.html">
+					<input type="submit" name="UpdateOrder.submit();return false;" class="button right" value="Update Order" />
 					<input type="hidden" name="order_id" value="<?ORDER_ID?>" />
+					<input type="hidden" name="btnFunction" value="UpdateOrder" />
 				</form>
-			 <? endif ( $$variable{'ORDER_STATUS'} eq 'Pending Date Approval' ) ?>
-          <?endif ($variable->{is_staff} || $variable->{user_id} eq '293')?>
+		<? endif ( ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) ) ?>
+            	
 
 			<? if ( $$variable{'ORDER_STATUS'} eq 'Cancelled' ) ?>
 				<form name="f6" method="post" action="/main/order/order_selection.html">

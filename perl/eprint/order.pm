@@ -1818,14 +1818,16 @@ print STDERR "HAVE OLD RID: $old_rid FROM PID: $old_pid \n";
 }
 
 sub update_order {
-	my ($r, $log, $dbh, $cookie, $var, $pid) = @_;
-	my $order_id = $dbh->selectrow_array(q{
-		SELECT max(lngorderid) from tbl_order_contents WHERE lngprojectindex = ?
-	}, undef, $pid);
-	
+	my ($r, $log, $dbh, $cookie, $var, $pid, $order_id) = @_;
 
+	$order_id = $dbh->selectrow_array(q{
+		SELECT max(lngorderid) from tbl_order_contents WHERE lngprojectindex = ?
+	}, undef, $pid) unless $order_id;
+
+
+		my $update = 1;
         my $order_info = get_order_totals(
-            $dbh, $var->{cust_id}, $order_id
+            $dbh, $var->{cust_id}, $order_id, $update
         );
 
         foreach my $order (@{ $order_info->{projects} }) {
@@ -2719,6 +2721,11 @@ sub history_details {
         cancel_order($r, $log, $dbh, $order_id );
 	}
 
+    if ( $r->param('btnFunction') eq 'UpdateOrder' ) {
+		my $pid;
+		update_order($r, $log, $dbh, undef, $variable, $pid, $order_id);
+	}
+
 	if ( $r->param('OrderDateModify') ) {
 
 		notify_date_change( $r, $log, $dbh, $order_id );
@@ -3305,7 +3312,7 @@ sub cancel_order {
 # I'm positive much of this can be cleaned up even more, but for now, I just
 # factored it out because it was duplicated (and poorly, at that) in the code.
 sub get_order_totals {
-    my ( $dbh, $customer_id, $order_id ) = @_;
+    my ( $dbh, $customer_id, $order_id, $update ) = @_;
 
 print STDERR "\n\nwSTART ORDER TOTALS FOR PROJECTS \n";
 
@@ -3407,7 +3414,11 @@ print STDERR "ADD TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PRICE: $
 
 print STDERR "HAVE PROJECT PRICES: @project_prices FOR PID: $pid \n";
 
-        my $price = $pid ? $project_prices[$qtyIndex - 1] : $prod_price;
+		#my $price = $pid ? $project_prices[$qtyIndex - 1] : $prod_price;
+		my $price = $prod_price ? $prod_price :  $project_prices[$qtyIndex - 1];
+		if ( $update && $pid ) {
+			$price = $project_prices[$qtyIndex - 1];
+		}
 
 print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $prod_price PRICE: $price \n";
 
