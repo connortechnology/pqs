@@ -1001,7 +1001,7 @@ sub create_impositions {
 
      $end =  Time::HiRes::time() - $start_time;
 
-print STDERR "HAVE IMPOSTIONS BEFORE FILTER " . scalar @impositions . "\n";
+print STDERR "HAVE IMPOSTIONS BEFORE FILTER  1" . scalar @impositions . "\n";
     print STDERR "DONE IMPOSE 3 $project->{id} :  elapsed $end (s)  \n";
 
     # MULTI-VERSION TEMP: For now we'll constrain business cards to layout
@@ -1020,6 +1020,7 @@ print STDERR "HAVE IMPOSTIONS BEFORE FILTER " . scalar @impositions . "\n";
         } @impositions;
     }
 
+print STDERR "HAVE IMPOSTIONS BEFORE FILTER  2" . scalar @impositions . "\n";
     if ($desired_size > 0) {
         my $signature_size = desired_signature_size($desired_size, \@impositions);
 
@@ -1029,6 +1030,7 @@ print STDERR "HAVE IMPOSTIONS BEFORE FILTER " . scalar @impositions . "\n";
             && $project->{bind_type} !~ /^(Loop|Saddle)Stitching$/
             && configuration::get_value(undef, $dbh, 'Digital2PageSignatures');
     
+print STDERR "HAVE IMPOSTIONS BEFORE FILTER  3" . scalar @impositions . "\n";
         # For books with more than one spread in the signature, we need to
         # convert the raw impositions of the single spread dimesions into
         # images of multiple spreads.
@@ -1036,7 +1038,7 @@ print STDERR "HAVE IMPOSTIONS BEFORE FILTER " . scalar @impositions . "\n";
                            @impositions;
     }
 
-print STDERR "HAVE IMPOSTIONS BEFORE FILTER " . scalar @impositions . "\n", Dumper($project);
+print STDERR "HAVE IMPOSTIONS BEFORE FILTER 99 " . scalar @impositions . "\n", Dumper(\@impositions);
     @impositions = grep { $_->{setup} > 0 } @impositions;
 print STDERR "HAVE IMPOSTIONS TOTAL " . scalar @impositions . "\n";
 

@@ -310,7 +310,8 @@ print STDERR "CONVERT A1 ROW: $imp_rows COL: $imp_cols ROTATE: $imp->{'RotateShe
 		map {
 			foreach my $l (@{$_}) {
 				print STDERR "HAVE L VALUE: $l->{slots} \n";
-				if ( $l->{slots} >= ($desired_signature_size * $sig_size) ) {
+				if ( $l->{slots} >= $desired_signature_size ) {
+				#if ( $l->{slots} >= ($desired_signature_size * $sig_size) ) {
 					print STDERR "HAVE VALID SLOTS: $l->{slots} SIG: $sig_size DSS: $desired_signature_size \n";	
 				} else {
 					print STDERR "INVALID SLOTS: $l->{slots} SIG: $sig_size DSS: $desired_signature_size \n";	
@@ -548,24 +549,30 @@ sub version_layouts {
 	#We now alllot multipage projects to have multiple verions, however 
 	#the current restriction is 1 Verions per Form.
 	# X Versions = X Froms regardless of layout.
-	if ( $multipage ) {
+	print STDERR "START HAVE PARITIONS SLOTS: $slots ", Dumper(\@partitions, $multipage);
+	
+	#***************************************************
+	#disble this filter for now. filtering done down stream in convert to signatrue function.
+	#***************************************************
+	#	if ( $multipage ) {
+	#
+	#		#Filter out at partition set that uses multiple verions.
+	#		my @tmp;
+	#		my @org = @partitions;
+	#		foreach my $set (@partitions) {
 
-		#Filter out at partition set that uses multiple verions.
-		my @tmp;
-		my @org = @partitions;
-		foreach my $set (@partitions) {
+	#		my $check = 1;
+	#			foreach my $n (@$set) {
+	#				$check = 0 if $n > 1;
+	#			}
+	#			push @tmp, $set if $check;
+	#		}
 
-			my $check = 1;
-			foreach my $n (@$set) {
-				$check = 0 if $n > 1;
-			}
-			push @tmp, $set if $check;
-		}
+	#	@partitions = @tmp;
+	#	print STDERR "START HAVE PARITIONS ", Dumper(\@partitions, \@tmp, @org, $multipage);
 
-			@partitions = @tmp;
-		print STDERR "START HAVE PARITIONS ", Dumper(\@partitions, \@tmp, @org, $multipage);
-
-	}
+	#}
+	#***************************************************
 
 
     # If there're less slots than versions we need to discard the first n
@@ -582,6 +589,8 @@ sub version_layouts {
                     sort { $versions->{$a} <=> $versions->{$b}    }
                          keys %$versions;
     undef $i;
+
+	print STDERR "HAVR PART  NVER" , Dumper(\@nversions);
 
     # It's important to note that the partitions are processed in ascending
     # order of plate changes.
@@ -616,6 +625,7 @@ sub version_layouts {
         # wastage is not the only factor. However it's felt 
     }
 
+	print STDERR "HAVR PART " , Dumper(\%result);
 
     return [values %result];
 }
