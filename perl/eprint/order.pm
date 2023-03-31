@@ -107,8 +107,13 @@ sub get_unfinished_order {
     if ( ! $order_id ) {
 
         $_ = "SELECT lngOrderID, lngCustomerID, lngUserID FROM tbl_Orders 
-			  WHERE strSessionID='$cookie' AND strStatus='Incomplete' 
+			  WHERE  strStatus='Incomplete' 
 			  AND lngcustomerid = $my_cust_id ORDER by lngOrderID Desc Limit 1";
+
+#        $_ = "SELECT lngOrderID, lngCustomerID, lngUserID FROM tbl_Orders 
+#			  WHERE strSessionID='$cookie' AND strStatus='Incomplete' 
+#			  AND lngcustomerid = $my_cust_id ORDER by lngOrderID Desc Limit 1";
+
 
 print STDERR "GET UNFINISHED ORDER: $_ \n";
         ( $order_id, my $cust_id, my $user_id ) = sql::sql_statement( $log, $dbh, $_ );
