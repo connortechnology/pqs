@@ -108,14 +108,16 @@ sub get_unfinished_order {
 
         $_ = "SELECT lngOrderID, lngCustomerID, lngUserID FROM tbl_Orders 
 			  WHERE  strStatus='Incomplete' 
-			  AND lngcustomerid = $my_cust_id ORDER by lngOrderID Desc Limit 1";
+			  AND lngcustomerid = $my_cust_id 
+			  AND dtmorderdate > now() - interval '7 days'
+			  ORDER by lngOrderID Desc Limit 1";
 
 #        $_ = "SELECT lngOrderID, lngCustomerID, lngUserID FROM tbl_Orders 
 #			  WHERE strSessionID='$cookie' AND strStatus='Incomplete' 
 #			  AND lngcustomerid = $my_cust_id ORDER by lngOrderID Desc Limit 1";
 
 
-print STDERR "GET UNFINISHED ORDER: $_ \n";
+print STDERR "GET UNFINISHED ORDER, Any incomplete order started within las 7 days: $_ \n";
         ( $order_id, my $cust_id, my $user_id ) = sql::sql_statement( $log, $dbh, $_ );
 
 print STDERR "GET UNFINISHED ORDER: $_ - $order_id \n";
@@ -3459,7 +3461,7 @@ print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $pr
 				SELECT intQuantity$qtyIndex, strStatus
 				FROM tbl_Projects
 				WHERE lngProjectIndex = ?
-			}, undef, $pid);
+			}, undef, $pid) if $qtyIndex;
 		} else {
 		  $desc = PQS::model::products::get_name_from_id($product);
 
