@@ -1911,7 +1911,8 @@ sub header_info {
 		strcompanyname, straddress1, straddress2,
 		strcity,        strstate,    strpostalcode,
 		strcountry,     strponumber, strphone,
-		strfax,         strext,      stremail
+		strfax,         strext,      stremail,
+		ysnfinished
     FROM tbl_orders
     WHERE lngorderid = 
         ( SELECT lngorderid
@@ -1937,7 +1938,10 @@ sub header_info {
 	my $id = $hash{order_id};
 	$id =~ /(\d\d\d\d)(\d\d\d\d)/;
 
-    $hash{docket_id}       = "$1  $2-$pid";
+	#Only allow a docket id if order has completed order process, marked as finished.
+	if ( $order->{ysnfinished} ) {
+    	$hash{docket_id}       = "$1  $2-$pid";
+	}
     $hash{OrderFirstName}  = $order->{strfirstname};
     $hash{OrderLastName}   = $order->{strlastname};
     $hash{OrderSalutation} = $order->{strsalutation};

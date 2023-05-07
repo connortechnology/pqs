@@ -26,13 +26,13 @@
 
 	<h2 id="category_header"><?header_category?></h2>
 	<h2 style="font-size: 30pt; text-align: center;">
-		<? if ( $variable->{HeaderInfo}{'order_id'} ) ?>
+		<? if ( $variable->{HeaderInfo}{'docket_id'} ) ?>
 			<span class="id" style="float: left;"> DOCKET ID: </span>
 			<?HeaderInfo.docket_id?>
-		<? else ( $variable->{HeaderInfo}{'order_id'} ) ?>
+		<? else ( $variable->{HeaderInfo}{'docket_id'} ) ?>
 			<span class="id1" style="float: left"> Project: </span> 
 			<?HeaderInfo.id?>
-		<? endif ( $variable->{HeaderInfo}{'order_id'} ) ?>
+		<? endif ( $variable->{HeaderInfo}{'docket_id'} ) ?>
 	</h2>
 
 <div class="category">
