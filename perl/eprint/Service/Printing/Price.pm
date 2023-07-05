@@ -454,6 +454,8 @@ print STDERR "HAVE TOTAL IMPS: $total_imp \n";
         # If we're a multipage project, respect the spreads on form and forms
         # (signature groups) overrides.
         if ($project->{is_multipage}) {
+			#			die(Dumper($imp));
+			print STDERR "versions: SETUP $imp->{setup} SPREAD: $imp->{spreads} \n";
 
             next if $project->{override}{spreads_on_form} 
                  && $imp->{spreads} != $project->{override}{spreads_on_form};
@@ -569,7 +571,7 @@ print STDERR "HAVE TOTAL IMPS: $total_imp \n";
 
 			$price{imp}{spreads},
 			$mc
-        ];
+        ] if valid_price(\%price);
 
 
 
@@ -1264,7 +1266,29 @@ sub calc_print_price {
     my $waste       = 0;
 	my $plate_multiplier = ($run_style =~ /^W/) ? 2 : 1;
 	my $forms = scalar @{ $imp->{layout} };
+	
+	my %vl;
+	my %lay_count;
+	my @lays = @{$imp->{layout}};
+	foreach my $l (@lays) {
+		my $count = scalar(@{$l});
+		$lay_count{$count} = 1;
+		map {
+			print STDERR "LAYS: ", Dumper($_);
+			$vl{$_->{label}} = 1; 
+		} @{$l};
+	}
+	if (scalar(keys %lay_count) > 1 ) {
+		$price{reject_mv_layout} = 1;
+		print STDERR "versions REJECT MV LAYOUT \n", Dumper(\%lay_count);
+	} else {
+		print STDERR "versions PASS MV LAYOUT \n";
 
+	}
+
+	my $lay_versions = scalar(keys %vl);
+
+print STDERR "HAVE PROJECT : " , Dumper($project, \%lay_count);
     # If we're running multiple versions (and we're not multi-page because we
     # don't handle that yet), calculate plates and paper wastage.
 	#if (%$versions and $spreads_remaining <= 1 ) {
@@ -1272,11 +1296,10 @@ sub calc_print_price {
 
 
 		#if ( $spreads_remaining <= 1 ) {
-print STDERR "USE STANDART MV Plate Change \n";
 			# Each layout is a differently imposed press sheet.
 			$numRuns = scalar @{ $imp->{layout} };
 		#} else { 
-		#		my $ver =  scalar keys %$versions;
+		#	my $ver =  scalar keys %$versions;
 		#	$numRuns =  ceil($ver / ($imposition/$plate_multiplier) );
 		#print STDERR "USE MultiPage MV Plate Change,  $ver Versions; \n";
 #}
@@ -1287,9 +1310,17 @@ print STDERR "USE STANDART MV Plate Change \n";
             ($run_style =~ /^W/) ? @{$project->{wx_press_units}}
                                  : map { @{$_->{colours}} } @{$spread->{side}};
    
+print STDERR "versions USE STANDART MV Plate Change RUNS: $numRuns PC: $plate_changes FORMS: $forms LV $lay_versions \n";
+#die(Dumper($imp));
+
         # Scale the version plates with the number of layouts, the static
         # plates we'll leave as constant.
-        $plate_changes *= $numRuns - 1;
+		if ( $project->{is_multipage} ) {
+        	$plate_changes *= $lay_versions  - 1; 
+		} else {
+        	$plate_changes *= $numRuns  - 1; 
+
+		}
 
         # Waste is the sum of the layout percentages less the required (100%).
         $waste = $price{sheet_wastage} =
@@ -1309,7 +1340,9 @@ print STDERR "USE STANDART MV Plate Change \n";
 
 	my $mp_versions = mp_versions($pid);
 
-    my $plate_runs   = 1 * $mp_versions;  # Handled poorly especially when MV.
+	my $plate_runs   = 1 * $mp_versions;  # Handled poorly especially when MV.
+
+print STDERR "HAVE MP versions: $mp_versions PC FINAL: $plate_changes \n ";
 
     #$plate_changes  *= $mp_versions if $mp_versions > 1;
 
@@ -2820,6 +2853,12 @@ sub valid_price {
         Apache2::ServerUtil->server->log_error("Impression price is 0");
         return 0;
     }
+	if ( $$price{reject_mv_layout} ) {
+		print STDERR "PRICE REJECTED FOR INVALID MV LAYOUT ", Dumper($price);
+		return 0;
+	}
+
+
     $$price{'Valid Price'} = 1;
 
     return 1;

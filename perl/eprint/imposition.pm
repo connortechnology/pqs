@@ -616,10 +616,10 @@ sub version_layouts {
 
         # Subsequent layouts use the same or more plates, so they must use
         # less waste or they aren't worth considering.
-        if (not defined $max_waste or $wastage < $max_waste) {
+		if (not defined $max_waste or $wastage <= $max_waste) {
             $max_waste = $wastage;
             $result{@layout} = \@layout;
-        }
+		}
 
         # Note: Run overs are variable based on each form's run length, so
         # wastage is not the only factor. However it's felt 

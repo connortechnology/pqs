@@ -947,6 +947,8 @@ sub paper_info {
         }
     }
 
+	print STDERR "HAVE PAPER", Dumper(\@papers);
+
     # Compose the final sorted and grouped list of paper.
     @papers = sort { not ($a->{is_supplied} <=> $b->{is_supplied})
                      || $a->{name} <=> $b->{name}
