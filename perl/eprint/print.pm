@@ -929,15 +929,19 @@ sub paper_info {
     my @papers = map signature_paper($log, $dbh, $pid, $_), 
                      check_for_service($log, $dbh, $pid, 'Printing');
 
+print STDERR "HAVE PAPER 1 " , Dumper(\@papers);
+
     # Collect identical papers (by ID and if they're supplied) so we can
     # display similar papers on the same line. Customer supplied paper is
     # differentiated from printer supplied.
     my %dupe;
     for my $paper (@papers) {
-        my $key = "$paper->{id}_$paper->{is_supplied}";
+		my $supplied = $paper->{is_supplied} || 0;
+        my $key = "$paper->{id} $supplied $paper->{width}_$paper->{height}";
         $dupe{$key} = [] unless exists $dupe{$key};
         push @{ $dupe{$key} }, $paper;
     }
+print STDERR "HAVE DUPE " , Dumper(\%dupe);
 
     # Go through and sum the quanties of each paper type.
     for my $papers (values %dupe) {
