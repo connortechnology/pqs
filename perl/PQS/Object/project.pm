@@ -329,7 +329,7 @@ sub close_inventory {
 					my $id = $dbh->selectrow_array(q{SELECT strid FROM tbl_paper WHERE lngindex = ?}, undef, $stock);
 
 					$dbh->do(q{Update inventory_count SET onorder = onorder - ? WHERE id = ?}, undef, $sheets, $id);
-					$dbh->do(q{Update inventory_count SET onhand = onhand - ? WHERE id = ?}, undef, $sheets, $id);
+					$dbh->do(q{Update inventory_count SET onhand  = onhand  - ? WHERE id = ?}, undef, $sheets, $id);
 
 				}
 		}

@@ -11,6 +11,8 @@ use PQS::Object::project;
 use DateTime;
 use DateTime::Format::Strptime;
 use eprint::project;
+use Scalar::Util qw(looks_like_number);
+
 
 our $dbh = session::dbh;
 
@@ -205,12 +207,12 @@ sub update_inventory {
 	map { 
 		my $key = $_;
 		my $val = $param->{$_};
-		if ( $key =~ /onhand-(.*)/ && $val ) {
+		if ( $key =~ /onhand-(.*)/ && looks_like_number($val) ) {
 			print STDERR "UPDATE $_ ID: $1 \n";
 			$dbh->do(q{Update inventory_count set onhand = ? WHERE id = ?}, undef, $val, $1);
 
 		}
-		if ( $key =~ /onorder-(.*)/ && $val ) {
+		if ( $key =~ /onorder-(.*)/ && looks_like_number($val) ) {
 			print STDERR "UPDATE $_ ID: $1 \n";
 			$dbh->do(q{Update inventory_count set onorder = ? WHERE id = ?}, undef, $val, $1);
 
