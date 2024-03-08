@@ -2521,8 +2521,11 @@ print STDERR "CALC SHEETY QTY IMP: $imposition QTY: $qty  SIG $variable->{Signat
 
     # Get the bindery (and other service) overs that we will need to provide
     # extra sheets for.
-    my ($service_setup_overs, $service_run_overs) 
-        = calc_service_overs($log, $dbh, $pid);
+	# my ($service_setup_overs, $service_run_overs) 
+	#    = calc_service_overs($log, $dbh, $pid);
+	
+	 my ($service_setup_overs, $service_run_overs)  = (0,0);
+	 
 
     # Only factor in service setup overs if they exceed press run overs.
     if ($service_setup_overs > $setup_overs) {
