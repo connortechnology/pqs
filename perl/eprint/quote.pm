@@ -860,12 +860,15 @@ print STDERR "START SEND QUOTES HERE \n";
     # quote was prepared for (if applicable).
     if (   $variable->{Reseller}  eq 'Y' || $variable->{user_type} eq 'A'
         || $variable->{user_type} eq 'E' ) {
+	my $from = "$quote{ByFirstName} $quote{ByLastName} <$quote{ByEmail}>";
+$log->debug($from);
+	if (index(lc $quote{ByEmail}, lc configuration::get_value($log, $dbh, 'domain')) == -1) {
+	  $from = configuration::get_value($log, $dbh, 'QuotingEmail');
+$log->debug($from);
+        }
         my %mail = (
-                SMTP    => configuration::get_value(
-                            $log, $dbh, 'Mail Server'
-                           ),
-                FROM    => qq{"$quote{ByFirstName} $quote{ByLastName}"}
-                         . "<$quote{ByEmail}>",
+                SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
+                FROM    => $from,
                 TO      => qq{"$quote{ByFirstName} $quote{ByLastName}"}
                          . "<$quote{ByEmail}>",
                 SUBJECT => "Quote $quote_id",
@@ -879,8 +882,7 @@ print STDERR "START SEND QUOTES HERE \n";
 			SMTP    => configuration::get_value(
 						$log, $dbh, 'Mail Server'
 					   ),
-			FROM    => qq{"$quote{ByFirstName} $quote{ByLastName}" }
-					 . "<$quote{ByEmail}>",
+			FROM    => $from,
 			TO      => qq{"$quote{ForFirstName} $quote{ForLastName}" }
 					 . "<$quote{ForEmail}>",
 			SUBJECT => "Quote $quote_id",
@@ -891,10 +893,14 @@ print STDERR "START SEND QUOTES HERE \n";
         
     }
     else {
+	my $from = $quote{ByEmail};
+	if (index($quote{ByEmail}, configuration::get_value($log, $dbh, 'domain')) == -1) {
+	  $from = configuration::get_value($log, $dbh, 'QuotingEmail');
+        }
 
         my %mail = (
             SMTP    => configuration::get_value($log, $dbh, 'Mail Server'),
-            FROM    => $quote{ByEmail},
+            FROM    => $from,
             TO      => $quote{ForEmail},
             SUBJECT => "Quote $quote_id",
 			CC => $cc,
