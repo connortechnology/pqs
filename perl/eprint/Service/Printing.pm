@@ -53,8 +53,8 @@ sub store {
     # Very, very simple multi-version input processing.
     if ($specs->{is_mv}) {
 	print STDERR "STORE FOR Printing Servcie: START MV \n";
-        my @name  = @{ $specs->{mv_name} };
-        my @qty   = @{ $specs->{mv_qty}  };
+        my @name  = @{ $specs->{mv_name} } if $specs->{mv_name};
+        my @qty   = @{ $specs->{mv_qty}  } if $specs->{mv_qty};
         my $total = (get_quantities($log, $dbh, $pid))[0];
 
         my (@versions, @quantities);
