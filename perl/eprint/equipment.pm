@@ -218,7 +218,7 @@ sub get_specifications {
 
     # TEMP: Get from package cache if it's been populated.
     return cache_lookup($eid, undef, @specs) 
-        if defined %cache && exists $cache{$eid} && @specs;
+        if %cache && exists $cache{$eid} && @specs;
 
     my $sql = q{
         SELECT strName, strValue
@@ -307,7 +307,7 @@ sub get_specification {
 
     # TEMP: Get from package cache if it's been populated.
     return cache_lookup($eid, $range, $name) 
-        if defined %cache and exists $cache{$eid};
+        if %cache and exists $cache{$eid};
 
     # Remove all spaces and lowercase the specification name given so we to
     # avoid lookup errors in our ever so fun hash style table.
