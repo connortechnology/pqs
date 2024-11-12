@@ -736,10 +736,10 @@ print STDERR "MAIN -- SUB : $sub_section file: $filename \n";
         eprint::quote::submit_quote($r, $log, $dbh, $cookie, $variable)     if $filename eq 'quote_submit.html';
     } 
     elsif ($sub_section eq 'support') {
-        eprint::support::userinfo($r, $log, $dbh, $variable)  if $filename eq 'support_help_desk.html';
-        eprint::support::helpdesk($r, $log, $dbh, $variable)  if $filename eq 'confirmation_help_desk.html';
-        eprint::support::userinfo($r, $log, $dbh, $variable)  if $filename eq 'support_returns.html';    
-        eprint::support::rma($r, $log, $dbh, $variable)       if $filename eq 'confirmation_returns.html';
+        #eprint::support::userinfo($r, $log, $dbh, $variable)  if $filename eq 'support_help_desk.html';
+        #eprint::support::helpdesk($r, $log, $dbh, $variable)  if $filename eq 'confirmation_help_desk.html';
+        #eprint::support::userinfo($r, $log, $dbh, $variable)  if $filename eq 'support_returns.html';    
+        #eprint::support::rma($r, $log, $dbh, $variable)       if $filename eq 'confirmation_returns.html';
     } 
     elsif ($sub_section eq 'products') {
         require eprint::ProductGroup;
