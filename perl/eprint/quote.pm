@@ -727,7 +727,8 @@ print STDERR "START SEND QUOTES HERE \n";
                   get_misc_info( $log, $dbh, \%quote, $quote_id );
     get_finished_quote_contents( $log, $dbh, \%quote, $quote_id );
 
-    $quote{siteURL} = "http://" . $r->hostname;
+    #$quote{siteURL} = "http://" . $r->hostname;
+    $quote{siteURL} = configuration::get_value( $log, $dbh, 'siteURL');
 
     my @project_summaries = ();
 
