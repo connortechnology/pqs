@@ -2252,45 +2252,34 @@ sub create_multiple {
 
 # Create the project and start the build process.
 sub create_project {
-    my ($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref) = @_;
+  my ($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref) = @_;
 
-	map { $qty->[$_-1] = int $qty->[$_-1] || $r->param("txtQuantity$_") ||  0 } 1..3;
+  map { $qty->[$_-1] = int $qty->[$_-1] || $r->param("txtQuantity$_") || 0 } 1..3;
+map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) } $r->param();
 
-	map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) } $r->param();
+  $projref ||= $r->param('txtProjectReference');
+  die('Missing Project Referenece') unless $projref;
 
-	$projref = $projref || $r->param('txtProjectReference');
-	
-	die('Missing Project Referenece') unless $projref;
+  my $pid;
 
-    my $pid;
+  $predefined ||= $r->param('predefined');
 
-	my $predefined = $predefined || $r->param('predefined');
+  print STDERR "START CREATE PROJECT \n";
 
-print STDERR "START CREATE PROJECT \n";
+  if ($predefined) {
+    $variable->{user_id} = $r->param('ddmUser') if $r->param('ddmUser');
+    $pid = create_project_from_predefined($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref);
 
-    if ($predefined) {
-
-		$variable->{user_id} = $r->param('ddmUser') if $r->param('ddmUser');
-
-        $pid = create_project_from_predefined($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref);
-
-        modify_services($r, $log, $dbh, $cookie, $variable, $pid);
-
-print STDERR "CREATE MY PROJECT TO ORDER - $cookie - $pid \n";
-
+    modify_services($r, $log, $dbh, $cookie, $variable, $pid);
+    print STDERR "CREATE MY PROJECT TO ORDER - $cookie - $pid \n";
 		my $i = $r->param('item') || $predefined;
 
-		$dbh->do(q{
-			UPDATE tbl_projects SET prod_id = ? WHERE lngprojectindex = ?
-		}, undef, $i, $pid);
+		$dbh->do('UPDATE tbl_projects SET prod_id = ? WHERE lngprojectindex=?', undef, $i, $pid);
 
 		if ( $r->param('create_to_order') ) {
-			$dbh->do(q{
-				UPDATE tbl_projects SET create_to_order = true WHERE lngprojectindex = ?
-			}, undef, $pid);
+			$dbh->do('UPDATE tbl_projects SET create_to_order = true WHERE lngprojectindex = ?', undef, $pid);
 			make_order($r, $log, $dbh, $cookie, $variable, $pid);
 		}
-		
 
 # Make all predefined projects  go to order;
 		if ( $r->param('MakeOrder') ) {
@@ -2300,65 +2289,64 @@ print STDERR "CREATE MY PROJECT TO ORDER - $cookie - $pid \n";
 		}
 
 		$variable->{new_pid} = $pid;
-    }
-    else {
+  } else {
 print STDERR "CREATE PROCESS ", Dumper(@_);
-        $pid = create_process($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref);
+$pid = create_process($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref);
     }
 
-	$dbh->do(q{
-		UPDATE tbl_projects SET create_to_order = true WHERE lngprojectindex = ?
-	}, undef, $pid) if $r->param('create_to_order');
+    $dbh->do(q{
+      UPDATE tbl_projects SET create_to_order = true WHERE lngprojectindex = ?
+      }, undef, $pid) if $r->param('create_to_order');
 
-#Special param used for domino's mailing projects.
-	if ( $r->param('mail_type') ) {
-		my $type = $r->param('mail_type');
-		my $art  = $r->param('mail_art');
+    #Special param used for domino's mailing projects.
+    if ( $r->param('mail_type') ) {
+      my $type = $r->param('mail_type');
+      my $art  = $r->param('mail_art');
 
-		die("MISSING MAIL ART FOR MAIL TYPE: $type ") unless $art;
+      die("MISSING MAIL ART FOR MAIL TYPE: $type ") unless $art;
 
-		$dbh->do(q{
-			UPDATE tbl_projects SET mail_type = ?, mail_art  = ? 
-			WHERE lngprojectindex = ?
-		}, undef, $type, $art, $pid);
+      $dbh->do(q{
+        UPDATE tbl_projects SET mail_type = ?, mail_art  = ? 
+        WHERE lngprojectindex = ?
+        }, undef, $type, $art, $pid);
 
-	}
+    }
 
 
-	
+
 
     die "Couldn't create project" unless $pid;
 
-my $x = has_pdf_template(undef, $dbh, $pid);
-print STDERR " 1 CREATE PROJECT 2 X: $x T: " . $r->param('template') . " \n\n";
+    my $x = has_pdf_template(undef, $dbh, $pid);
+    print STDERR " 1 CREATE PROJECT 2 X: $x T: " . $r->param('template') . " \n\n";
 
     # If we're creating a project with PDF template, (and one isn't already
     # associated with it (can happen with predefined projects), create the
     # project and it's dir but belay the calculation until after filling.
     if ($r->param('template') ) {
-    #if ($r->param('template') && ! has_pdf_template(undef, $dbh, $pid)) {
+      #if ($r->param('template') && ! has_pdf_template(undef, $dbh, $pid)) {
 
-print STDERR "TIME TO INIT TEMPLATE PROJECT \n\n";
-        require eprint::Template;
-        
-        # Copy the template into the project dir and create it's database.
-        eprint::Template::init_template($dbh, $pid, $r->param('template'));
+      print STDERR "TIME TO INIT TEMPLATE PROJECT \n\n";
+      require eprint::Template;
+
+      # Copy the template into the project dir and create it's database.
+      eprint::Template::init_template($dbh, $pid, $r->param('template'));
     }
-	if ( $r->param('mail_type') ) {
+    if ( $r->param('mail_type') ) {
 
-		eprint::mailing::reserve_mail($r, $dbh, $variable, 
-									  $pid, $r->param('txtQuantity1'));
+      eprint::mailing::reserve_mail($r, $dbh, $variable, 
+        $pid, $r->param('txtQuantity1'));
 
-		eprint::mailing::make_address_file($r, $dbh, $variable, $pid);
-	}
+      eprint::mailing::make_address_file($r, $dbh, $variable, $pid);
+    }
 
     my $p  = "pid=$pid";
-       $p .= ";level=0"           if $predefined;
-       $p .= ";create_to_order=1" if $r->param('create_to_order');
+    $p .= ";level=0"           if $predefined;
+    $p .= ";create_to_order=1" if $r->param('create_to_order');
 
     return (has_pdf_template(undef, $dbh, $pid) ? TEMPLATE_PAGE : BUILD_PAGE) 
-         . "?$p";
-}
+    . "?$p";
+  }
 
 sub inventory_checkout {
     my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
