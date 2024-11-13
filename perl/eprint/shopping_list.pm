@@ -29,7 +29,7 @@ sub get {
     from tbl_shopping_lists_contents as c left join tbl_products as p on c.product_id = p.id
     where c.shopping_list_id = ?", { Slice => {} }, $id);
     $variable->{shopping_list}->{cost} = 0;
-  foreach (keys($variable->{contents})) {
+  foreach (keys %{$variable->{contents}}) {
     $variable->{contents}[$_]->{cost} = $variable->{contents}[$_]->{quantity} * $variable->{contents}[$_]->{price};
     $variable->{shopping_list}->{cost} += $variable->{contents}[$_]->{cost};
   }
