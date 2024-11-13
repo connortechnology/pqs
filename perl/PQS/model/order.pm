@@ -369,8 +369,8 @@ sub save_ordered_project_info {
   my ($proj) = @_;
   my $dbh = session::dbh;
   if ($proj->{lngprojectindex}) {
-    my $columns = join ",", keys $proj;
-    my @vals = values $proj;
+    my $columns = join ",", keys %{$proj};
+    my @vals = values %{$proj};
     $dbh->do("update tbl_order_contents set ($columns) = (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) where lngprojectindex = ? and lngorderid = ?", undef, @vals, $proj->{lngprojectindex}, $proj->{lngorderid});
   }
 }
