@@ -1,20 +1,18 @@
 package eprint::login;
 use strict;
+use utf8;
 
 use Apache2::Const qw(:common HTTP_MOVED_TEMPORARILY);
 use Apache2::Cookie ();
-use Mail::Sendmail;
-use MIME::QuotedPrint;
 
-
-use sql qw(:common);
-use ssi ();
-use eprint::obj_customer ();
+#use sql qw(:common);
+require sql;
+require ssi;
+require eprint::obj_customer;
 require misc;
-require crypto;
 require eprint::greetings;
 require eprint::user;
-use eprint::order;
+require eprint::order;
 
 # displays the login page, and populates the destination variable
 sub login_display {
@@ -37,7 +35,8 @@ sub verify_login {
     my $email = sql::escape($r->param('txtEmail'));
     $email =~ tr/[A-Z]/[a-z]/;
 
-    my $crypt = crypto::get_crypt($log, $dbh);
+    require crypto;
+    my $crypt = crypto::get_crypt();
     my $password = misc::escape($crypt->encrypt($r->param('txtPassword')));
 
     # doing it this way allows for multiple accounts with the same email
@@ -206,24 +205,30 @@ sub email_password {
         return misc::error($log, $dbh, $variable, 'Account doesn\'t exist.', 'The account you entered does not exist.  Please push the back button and try again. If you require assistance please call us at 1-888-500-0999.');
     }
 
-    my %info;
-    my $crypt = crypto::get_crypt($log, $dbh);
-    $info{'password'} = $crypt->decrypt(misc::unescape($password));
+    eval {
+      my %info;
+      require crypto;
+      my $crypt = crypto::get_crypt();
+      # data coming from db may not be utf8
+      utf8::encode($password);
+      $info{password} = $crypt->decrypt(misc::unescape($password));
 
-    my $email_template = misc::load_file($r, '/email/email_template.html');
-    $info{'ReplacementText'} = "<!--#include virtual=\"/email/content/forgotten_password.html\"-->";
-    $info{'domain'} = configuration::get_value($log, $dbh, 'domain');
-    $info{'siteURL'} = "http://" . $r->hostname;
-    $_ = encode_qp(ssi::variable_substitution($r, $log, $dbh, $email_template, \%info));
-    my @body = ('', $_, 'text/html', 'quoted-printable');
+      my $email_template = misc::load_file($r, '/email/email_template.html');
+      $info{'ReplacementText'} = "<!--#include virtual=\"/email/content/forgotten_password.html\"-->";
+      $info{'domain'} = configuration::get_value($log, $dbh, 'domain');
+      $info{'siteURL'} = "http://" . $r->hostname;
+      require MIME::QuotedPrint;
+      $_ = MIME::QuotedPrint::encode_qp(ssi::variable_substitution($r, $log, $dbh, $email_template, \%info));
+      my @body = ('', $_, 'text/html', 'quoted-printable');
 
-    my %mail = (
-          SMTP    => configuration::get_value($log, $dbh, 'Mail Server'),
-          FROM    => configuration::get_value($log, $dbh, 'AdministratorEmail'),
-          TO      => $r->param('txtEmail2'),
-          SUBJECT => 'Forgotten Password',
-    );
-    misc::send_email_with_attachment($r, $log, \%mail, @body);
+      my %mail = (
+        SMTP    => configuration::get_value($log, $dbh, 'Mail Server'),
+        FROM    => configuration::get_value($log, $dbh, 'AdministratorEmail'),
+        TO      => $r->param('txtEmail2'),
+        SUBJECT => 'Forgotten Password',
+      );
+      misc::send_email_with_attachment($r, $log, \%mail, @body);
+    };
 
     return OK;
 } 
@@ -328,7 +333,8 @@ sub login_app_process {
         $agent = configuration::get_value($log, $dbh, 'UserRegistrationEmail');
     }
 
-    my $crypt = crypto::get_crypt($log, $dbh);
+    require crypto;
+    my $crypt = crypto::get_crypt();
 
     # No errors, We are in go status
     my %info;
@@ -461,7 +467,8 @@ sub login_app_process {
             SELECT strPassword FROM tbl_Customer_Users WHERE lngUserID = ?
         }, undef, $user_id) if $user_id;
 
-        my $crypt = crypto::get_crypt($log, $dbh);
+      require crypto;
+        my $crypt = crypto::get_crypt();
         $info{'password'} = $crypt->decrypt(misc::unescape($password));
 		
 
@@ -866,7 +873,8 @@ sub change_password {
           misc::error($log, $dbh, $variable, 'No password.', 'We were unable to retrieve a valid password from the database.    This is likely a programming error.    Please report to support\@print-quotes-software.com.' );
     }
 
-    my $crypt = crypto::get_crypt($log, $dbh);
+    require crypto;
+    my $crypt = crypto::get_crypt();
     $password = $crypt->decrypt(misc::unescape($password));
 
     if ($password eq $r->param('txtOldPassword')) {
