@@ -571,56 +571,38 @@ sub date {
 }
 
 sub due_date {
-	
 	my $self = shift;
 
-	my $date = shift;
-
-	if ( $date ) { 
+	if ( @_ ) { 
+    my $date = shift;
 		PQS::model::order::set_duedate($self->{id}, $date);
 		return $date;
 	}
 
-
 	my $date = PQS::model::order::duedate($self->{id});
-
-	
 	my $i = $self->order();
-
 	$date = $i->{dtmrequireddate} unless $date;
-
-
 	$date =~ /(\d\d-\d*-\d*)/;
-
 	#$date =~ s/\-//;
-
 	return $1;
-
 }
 
 sub dims_finished {
-
 	my $self = shift;
-	my $sid = shift;
+  #my $sid = shift;
 
 	my $dbh = $self->{dbh};
 	my $log = $self->{log};
 
 	my $sid = eprint::project::get_print_container($log, $dbh, $self->{id});
 
+  my %results = eprint::service::get_specifications_pairs(
+    $log, $dbh, undef, $sid, qw( final_width final_height )
+  );
 
-	my @specs = qw( final_width final_height );
-    my %results = eprint::service::get_specifications_pairs(
-            $log, $dbh, undef, $sid, @specs
-     );
-
-	 my $text = "$results{final_width} x $results{final_height}";
-
-	 return $text;
-
+  my $text = "$results{final_width} x $results{final_height}";
+  return $text;
 }
 
-
-
-
 1;
+__END__
