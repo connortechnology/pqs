@@ -2,8 +2,8 @@ package eprint::quote;
 use strict;
 
 use Apache2::Const qw(:common HTTP_MOVED_TEMPORARILY); # Offers OK, Error, etc for web server.
-#use MIME::QuotedPrint;
-use Mail;
+use MIME::QuotedPrint;
+#use Mail;
 use MIME::Base64;
 use Mail::Sendmail;
 use Data::Dumper;
@@ -808,14 +808,8 @@ print STDERR "START SEND QUOTES HERE \n";
    	my $email_content = misc::load_file($r, '/email/email_template.html');
 
    	$quote{ReplacementText} = q{<!--#include virtual="/email/forms/quote_with_PDF.html"} . q{-->};
-
-
-	$email_content = Mail::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%quote ));
-
-
-
+	  $email_content = MIME::QuotedPrint::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%quote ));
     my @body = ('', $email_content, 'text/html', 'quoted-printable' );
-	
 
 #print STDERR "HAVE QUOTE DATA" , Dumper(%quote);
 
