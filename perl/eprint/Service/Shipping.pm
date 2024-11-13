@@ -55,10 +55,6 @@ sub add_ship_address {
 
 	my $cid = $dbh->selectrow_array(q{SELECT lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
 	my $cust = new eprint::obj_customer( $log, $dbh, $cid);
-
-	my $id;
-
-
 	my $name = $specs->{txtShippingLocationName};
 
 	my $id = $dbh->selectrow_array(q{SELECT lngindex FROM tbl_addresses WHERE shipname = ? and lngindex in ( 
@@ -67,7 +63,6 @@ sub add_ship_address {
 
 	$cust->save_shipping( $id, $specs, 1 );
 	$specs->{Save_Ship_Address} = '';
-
 }
 
 sub action {
