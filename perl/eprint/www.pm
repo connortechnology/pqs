@@ -36,9 +36,10 @@ sub generate_cookie {
   my ($user, $pass, $host, $port) = $r->headers_in->{'Host'}
   =~ /(?:([^:]+):([^\@]+)\@)?([^\@:]+)(?::(\d+))?/;
 
-  my $domain = $host
-  || $r->dir_config('cookiedomain')
-  || configuration::get_value($log, $dbh, 'cookiedomain');
+  my $domain = 
+  $r->dir_config('cookiedomain')
+  || configuration::get_value($log, $dbh, 'cookiedomain')
+  || $host;
 
 
   # Generate and set the cookie.
@@ -48,6 +49,7 @@ sub generate_cookie {
     -path    => '/',
     -domain  => $domain
   );
+  print STDERR "Cookie $cookie for $domain Host:".$r->headers_in->{'Host'}." cookiedomain: ".$r->dir_config('cookiedomain')."\n";
   $cookie->bake($r);
 
   # Return the generated session ID.
@@ -426,8 +428,6 @@ sub parse_page {
 
   log_request($page, $variable);
 
-
-
   # PAGE DISPATCH
   #
   my %section = (
@@ -439,8 +439,7 @@ sub parse_page {
   );
   my $func = $section{ $first };
 
-  $status = $func->($r, $log, $dbh, $variable, $cookie, $page, $second, $filename) 
-  if $func;
+  $status = $func->($r, $log, $dbh, $variable, $cookie, $page, $second, $filename) if $func;
 
   eprint::inventory::show_inventory($r, $log, $dbh, $variable)               if $filename eq 'Inventoried.html';
 
@@ -474,23 +473,17 @@ sub section_admininistrator {
 
   require eprint::admin_customer;
   require eprint::admin_user;
-  require eprint::admin_project;
-  require eprint::admin_service;
   require eprint::admin_clerical;
   require eprint::admin_paper;
   require eprint::admin_quote;
   require eprint::admin_order;
-  require eprint::admin_material;
   require eprint::admin_marketing;
   require eprint::admin_accounting;
   require eprint::admin_colours;
   require eprint::admin_shipping;
-  require eprint::admin_reports;
   require eprint::docket;
   require eprint::employee_project;
   require eprint::products;
-  require eprint::mat_inventory;
-  require eprint::promotion;
 
   my $param = map_param();
 
@@ -499,13 +492,17 @@ sub section_admininistrator {
     eprint::login::email_password($r, $log, $dbh, $variable)  if $filename eq 'administrator_password_confirmation.html';
   } 
   elsif ($sub_section eq 'marketing') {
+    require eprint::promotion;
     eprint::promotion::list($param, $variable) if $filename eq 'promotions.html';
     eprint::promotion::edit($param, $variable) if  $filename eq 'promotion_edit.html';
-  }
-  elsif ($sub_section eq 'mat_inventory') {
+  } elsif ($sub_section eq 'mat_inventory') {
+    require eprint::mat_inventory;
     eprint::mat_inventory::display($param, $variable);
   }
   elsif ($sub_section eq 'production') {
+  require eprint::admin_project;
+  require eprint::admin_service;
+  require eprint::admin_material;
     eprint::admin_service::price_list_view($r, $log, $dbh, $variable)                  if $filename eq 'services_price_lists_view.html';
     eprint::admin_material::price_list_view($r, $log, $dbh, $variable)                 if $filename eq 'materials_price_lists_view.html';
 
@@ -579,6 +576,7 @@ sub section_admininistrator {
 
   } 
   elsif ($sub_section eq 'reports') {
+    require eprint::admin_reports;
     eprint::admin_reports::inventory($r, $log, $dbh, $variable)          		 if $filename eq 'inventory_reports.html';
     eprint::admin_reports::accounting_report($r, $log, $dbh, $variable)          if $filename eq 'reports_accounting.html';
     eprint::admin_reports::stored_report_display($r, $log, $dbh, $variable)      if $filename eq 'reports_custom.html';
@@ -775,8 +773,10 @@ sub section_main {
     eprint::admin_reports::inventory_usage($r, $log, $dbh, $variable)          if $filename eq 'inventory_reports.html';
     eprint::admin_reports::template_data($r, $log, $dbh, $variable)            if $filename eq 'template_data.html';
 
-    require eprint::Service::Shipping;
-    eprint::Service::Shipping::import_export($r, $log, $dbh, $variable)        if $filename eq 'import_export.html';
+    if ($filename eq 'import_export.html') {
+      require eprint::Service::Shipping;
+      eprint::Service::Shipping::import_export($r, $log, $dbh, $variable);
+    }
 
     # View the project (pricing).
     if ( $filename eq 'proj_view.html' ) {
@@ -814,10 +814,11 @@ sub section_main {
       eprint::Service::Shipping::print_labels($r, $log, $dbh, $variable, $r->param('ServiceIndex'));
     }
 
-    require eprint::admin_paper;
-    eprint::admin_paper::paper_edit($r, $log, $dbh, $variable)       if $filename eq 'paper_edit.html';
-  }
-  elsif ($sub_section eq 'supplier') {
+    if ($filename eq 'paper_edit.html') {
+      require eprint::admin_paper;
+      eprint::admin_paper::paper_edit($r, $log, $dbh, $variable);
+    }
+  } elsif ($sub_section eq 'supplier') {
     require eprint::rfq;
     eprint::rfq::rfq_list($r, $dbh, $variable) if $filename eq 'rfq_history.html';
     eprint::rfq::bid_history($r, $dbh, $variable) if $filename eq 'bid_history.html';
@@ -855,6 +856,7 @@ sub section_main {
     eprint::products::design($r, $dbh, $variable, $cookie) if $filename eq 'design.html';
   }
 
+  print STDERR "Before menu_options\n";
   menu_options($dbh, $variable);
 
   print STDERR "CHECK ASR " . $r->param('run_asr') . "-- \n";
@@ -891,12 +893,13 @@ sub menu_options {
   my ( $dbh, $var) = @_;
 
   my $cats = PQS::model::categories::get_all();
+  print STDERR "cats: $cats\n";
 
   #map { push @{$var->{prod_menu}}, $cats->{$_}; } sort keys $cats;
-  @{$var->{prod_menu}} = undef;
+  @{$var->{prod_menu}} = ();
 
-  map { push @{$var->{prod_menu}}, $cats->{$_}; } sort keys %{$cats};
-  #	print STDERR "HAVE CATS: ", Dumper($var->{prod_menu}, $cats);
+  map { push @{$var->{prod_menu}}, $cats->{$_}; } sort { $a cmp $b } keys %{$cats};
+  	print STDERR "HAVE CATS: ", Dumper($var->{prod_menu}, $cats);
 }
 
 sub check_cart {
