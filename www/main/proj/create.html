@@ -15,13 +15,13 @@
 
 	<!--#include virtual="/includes/h2-js.html" -->
 
-	<script type="text/javascript" src="/javascripts/other.js"></script>
-	<script type="text/javascript" src="/javascripts/tabs.js"></script>
-	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
-	<script type="text/javascript" src="/javascripts/proj/create.js"></script>
-	<script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
+	<script src="/javascripts/other.js"></script>
+	<script src="/javascripts/tabs.js"></script>
+	<script src="/javascripts/proj/utilities.js"></script>
+	<script src="/javascripts/proj/create.js"></script>
+	<script src="/javascripts/proj/proj_create.js"></script>
 
-	<script  type="text/javascript">
+	<script>
 		// Each press has different project types it can process.
 		var PRESS_TO_PROJECT = eval(<?press_to_project?>);
 
@@ -46,7 +46,6 @@
 				<input type="hidden" name="template"      value="<?template?>" />
 			<?endif template ?>
 		<?endif predefined ?>
-
 
 		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 
@@ -73,7 +72,6 @@
 				<?endloop press_types ?>
 			<? endif ($variable->{press_types} > 1) ?>
 
-
 			<div id='project_types'>
 				<fieldset id="project-type">
 					<legend>
@@ -98,7 +96,6 @@
 							</div>
 						</div>
 					<? endif project_type.singlepage ?>
-
 
 					<!-- Multi-page Projects. -->
 					<?if project_type.multipage ?>
