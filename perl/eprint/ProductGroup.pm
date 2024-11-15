@@ -95,7 +95,7 @@ sub select_project {
 		my @answers = map { $_ = $r->param($_); tr/0-9//cd; $_ } 
 							  grep /^q\d+$/, $r->param;
 
-		$predefined = shift assigned_project($dbh, $item, @answers);
+		($predefined) = assigned_project($dbh, $item, @answers);
 
 
 		die "No project found based on selections." unless $predefined;
@@ -230,23 +230,23 @@ sub questions {
 
 # Get the project id and label of the project assigned to a given answer set.
 sub assigned_project {
-    my ($dbh, $item, @answers) = @_;
+  my ($dbh, $item, @answers) = @_;
 
-    die "Must provide at least one answer." unless @answers;
+  die "Must provide at least one answer." unless @answers;
 
-    my $answers = join ', ', @answers;
+  my $answers = join ', ', @answers;
 
-    my ($pid, $name, $qty, $id) = $dbh->selectrow_array(qq{
-        SELECT a.project, a.label, a.qty, a.id
-        FROM product.assignment a, product.answer_set s
-        WHERE a.id = s.assignment
-          AND s.answer IN ($answers)
-        GROUP BY a.project, a.label, a.qty, a.id, s.assignment
-        HAVING count(s.assignment) = (
-            SELECT count(*) FROM product.question WHERE item = ? )
-    	}, undef, $item);
+  my ($pid, $name, $qty, $id) = $dbh->selectrow_array(qq{
+    SELECT a.project, a.label, a.qty, a.id
+    FROM product.assignment a, product.answer_set s
+    WHERE a.id = s.assignment
+    AND s.answer IN ($answers)
+    GROUP BY a.project, a.label, a.qty, a.id, s.assignment
+    HAVING count(s.assignment) = (
+    SELECT count(*) FROM product.question WHERE item = ? )
+    }, undef, $item);
 
-    return $pid, $name, $qty, $id;
+  return $pid, $name, $qty, $id;
 }
 
 # Create the data structure needed to create the pivot table view of the
