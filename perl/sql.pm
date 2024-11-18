@@ -8,10 +8,14 @@ package sql;
 use strict;
 use warnings;                   # Turn off for production version.
 no  warnings qw(uninitialized); # Interpolating undef into strings is okay.
+use Time::HiRes qw{ gettimeofday tv_interval };
 
 use base qw(Exporter);
+use constant DEBUG=>1;
+use constant TIMING=>1;
 
 our @EXPORT_OK = qw(
+execute
     sql_statement
     insert
     update
@@ -22,6 +26,59 @@ our %EXPORT_TAGS = ( all    => \@EXPORT_OK,
                      common => [ qw(sql_statement insert update) ] );
 
 
+sub execute {
+  my ( $l, $d, $sql, @values ) = @_;
+  my @return_array = ();
+  my $print_sql = $sql;
+  my $starttime;
+
+  #$l = $log if ! defined $l;
+  #$d = $dbh if ! $d;
+
+  if ( $l and DEBUG ) {
+    $print_sql = $sql;
+    $print_sql =~ s/\?/\%s/g;
+    $print_sql = sprintf($print_sql, @values);
+     $starttime = [gettimeofday] if TIMING;
+   } # end if
+   my $sth;
+   if ( ! $d ) {
+     $l->error( "No dbh $print_sql" ) if $l;
+     return;
+   } # end if
+   if ( ! ( $sth = $d->prepare_cached($sql) ) ) {
+     $l->error( "Error Preparing SQL: ($print_sql): " . $d->errstr ) if $l;
+     return;
+   } # end if
+   #$l->warn($sql);
+   if ( ! $sth->execute(@values) ) {
+     $l->error("SQL execution failed: ($print_sql):" . $d->errstr) if $l;
+     return;
+   } # end if
+   if ( my $num_of_fields = $sth->{'NUM_OF_FIELDS'} ) {
+     while ( my $ref = $sth->fetchrow_arrayref ) {
+       push @return_array, @$ref;
+
+       #for ( my $i = 0; $i < $num_of_fields; $i += 1 ) {
+       #push @return_array, $$ref[$i];
+       #} # end for
+     } # end while
+   } # end if
+   $sth->finish();
+   if ( $l and DEBUG ) {
+     if ( TIMING ) {
+       $l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+     } elsif ( @return_array ) {
+       $l->debug("SQL ($print_sql) Results:".join(',',@return_array));
+     } else {
+       $l->debug("SQL ($print_sql) No Results:");
+     } # end if
+   } # end if
+
+   return @return_array if wantarray;
+   return \@return_array;
+ } # end sub execute
+
 # DEPRECATED. Runs the given SQL statement and returns the values AS A FLAT
 # LIST! There is NO way to determine the number of fields per record or how
 # many records you have.
@@ -31,6 +88,7 @@ sub sql_statement {
 
 	die("Bad dbh") unless $dbh;
 
+  print STDERR "$sql\n";
     my $sth = $dbh->prepare($sql);
        $sth->execute;
 
@@ -107,8 +165,15 @@ sub update {
 	#prevents sql errors for inserting empty strings into numeric fields
     for my $k (keys %data) { $data{$k} = undef if $data{$k} eq ''; }
 
-    my $sth = $dbh->prepare($sql);
-       $sth->execute( values %data );
+    if ( $log ) {
+      my $starttime = [gettimeofday] if TIMING;
+      my $sth = $dbh->prepare($sql);
+      $sth->execute( values %data );
+      my $print_sql = $sql;
+      $print_sql =~ s/\?/\%s/g;
+      $print_sql = sprintf($print_sql, values %data );
+      $log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, $print_sql ) );
+    } # end if
 
     # We should think about returning the number of records affected.
     return 1;
