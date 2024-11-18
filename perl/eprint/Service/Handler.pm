@@ -41,12 +41,18 @@ sub handler {
     session::r($r);
     session::log($r->log);
 
-    return HTTP_METHOD_NOT_ALLOWED unless $r->method_number == M_GET
-                                       || $r->method_number == M_POST;
+    if (!( $r->method_number == M_GET || $r->method_number == M_POST)) {
+      print STDERR "Invalid method ".$r->method_number." get:".M_GET.' post:'.M_POST."\n";
+      return HTTP_METHOD_NOT_ALLOWED;
+    }
 
     # If the customer isn't valid and logged in, they can't use us.
     my $cookie = misc::get_cookie();
-    return FORBIDDEN if !defined $cookie || $cookie eq '';
+    if (!defined $cookie || $cookie eq '') {
+      $r->headers_out->set(Location => '/main/account/account_login.html');
+      $r->status(Apache2::Const::REDIRECT); #302
+      return Apache2::Const::OK;
+    }
 
     my $dbh = PQS::DB->connect($r);  # TODO Use RO session for GETs
     session::dbh($dbh);
@@ -54,7 +60,12 @@ sub handler {
     my $customer_id = eprint::login::get_login_info( # Populates $variable
         $r->log, $dbh, $cookie, $variable, 'C'
     );
-    $dbh->disconnect and return FORBIDDEN unless $customer_id;
+    if (!$customer_id) {
+      $r->headers_out->set(Location => '/main/account/login.html');
+      $r->status(Apache2::Const::REDIRECT); #302
+      $dbh->disconnect;
+      return Apache2::Const::OK;
+    }
 
     # Determine if we're a known service for processing.
     my $service = uri_to_service($r, $dbh);
