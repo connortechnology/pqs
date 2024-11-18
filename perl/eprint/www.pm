@@ -84,15 +84,12 @@ sub handler {
   session::log($r->log);
 
   if ( $r->header_only ) {
-    $r->log->debug("Browser only wanted header.");
+    $r->log->debug('Browser only wanted header.');
     return OK;
   }
 
   ssi:$gdb 	 = PQS::DB->connect($r, { ReadOnly => 1 });
-  my $dbh      = PQS::DB->connect($r, { AutoCommit => 1 });
-
-
-
+  my $dbh    = PQS::DB->connect($r, { AutoCommit => 1 });
 
   session::dbh($dbh);
   my $variable = {};
@@ -101,6 +98,7 @@ sub handler {
   $cookie = generate_cookie($r, $r->log, $dbh) unless $cookie;
 
   %{$variable->{param}} = map {$_ => $r->param($_)} $r->param();
+  show_params();
 
   #print STDERR "HAVE COOKIE: $cookie\n";
 
@@ -123,15 +121,12 @@ sub handler {
         }
 
         $variable->{Redirect} = '';
-      }
-      else {
+      } else {
         $page = $r->uri();
       }
 
       $status = parse_page( $r, $r->log, $cookie, $dbh, $variable, $page );
-
       die "Maximum redirects exceeded" if $redirects > MAX_REDIRECTS;
-
       $redirects++, redo REDIRECTS if $variable->{Redirect};
     }
   };
@@ -139,7 +134,6 @@ sub handler {
     my $err = $@;
 
     $dbh->disconnect;
-
     $r->log->error($err);
 
     if (DEBUG) {
@@ -242,7 +236,7 @@ sub log_request {
 
 sub parse_page {
   my ($r, $log, $cookie, $dbh, $variable, $page) = @_;
-  my ($status);
+  my $status = OK;
 
   print STDERR "START PARSE PAGE \n\n";
   # The module dispatches by 'section' based on the uri.
@@ -250,32 +244,24 @@ sub parse_page {
   my $filename = pop @path;
 
   shift @path if $path[0] eq 'site_specific';
-
-
-  my ($first, $second) = @path;
+  my $first = @path ? shift @path : '';
+  my $second = @path ? shift @path : '';
 
   print STDERR "HAVE SECTIONS FIRST: $first SECOND: $second \n";
-
-
   if ( $first eq 'notification' ) {
     require eprint::notification;
     eprint::notification::handler( $variable, $page );
   }
+
   unless ($cookie || $variable->{error}) {
     print STDERR "COOKIE: $cookie : ERROR: $variable->{error} \n\n";
     my $error_page = configuration::get_value($r->log, $dbh, 'errorpage');
 
     $variable->{error}   = 'Restricted Access';
-    $variable->{details} = q{
-    This site can only be accessed from:
-    <a href='http://online.dominos.ca'>http://online.dominos.ca</a>
-    };
-
+    $variable->{details} = q{Cookie error};
     $variable->{Redirect} = $error_page;
-
     return OK;
   }
-
 
   # The current section we're in.
   $variable->{section} = $first if defined $first;
@@ -289,7 +275,7 @@ sub parse_page {
   # USER AUTHENTICATION/AUTHORIZATION
   #
   # While this section is cleaned up it's still the old code that really has
-  # no idea of what authentication then autorization is.
+  # no idea of what authentication then authorization is.
 
   # Unauthenticated users are redirected here.
   if ($filename eq 'login.html') {
@@ -311,6 +297,7 @@ sub parse_page {
       return OK;
     }
 
+    print STDERR "Displaying login\n";
     return eprint::login::login_display($r, $log, $dbh, $cookie, $variable);
   }
 
@@ -322,19 +309,14 @@ sub parse_page {
     }
 
     # Handles idle timeouts and last visit/access times.
-    my $status = eprint::login::verify_user(
-      $r, $log, $dbh, $cookie, $variable, $section
-    );
+    my $status = eprint::login::verify_user($r, $log, $dbh, $cookie, $variable, $section);
+    print STDERR "Status $status if redirect: $$variable{Redirect}\n";
     return $status if $variable->{Redirect};
 
     # Process a login if one is occuring.
-    if (   $filename eq 'confirmation_login.html' 
-      || $filename eq 'login_confirmation.html' ) 
-    {
-
-      my $status = eprint::login::verify_login(
-        $r, $log, $dbh, $cookie, $variable, $section); 
-
+    if ($filename eq 'confirmation_login.html' || $filename eq 'login_confirmation.html' ) {
+      print STDERR "Doing login\n";
+      my $status = eprint::login::verify_login($r, $log, $dbh, $cookie, $variable, $section); 
       check_cart($r, $log, $dbh, $cookie, $variable);
       return $status if $status && $status != OK;
     }
@@ -365,6 +347,7 @@ sub parse_page {
     # If the user isn't authorized for this section, check if the page is
     # public otherwise redirect them to a login page.
     unless (user_allowed($variable->{user}{type}, $section)) {
+      print STDERR "Used not allowed: type: ".$variable->{user}{type}, ' section: '.$section."\n";
 
       my @public = split /,/, configuration::get_value($log, $dbh, 'public_URIs');
 
@@ -397,11 +380,7 @@ sub parse_page {
 
     if ( configuration::get_value($log, $dbh, 'UsesBanners') && !$variable->{BANNER_AD} ) {
       require eprint::banner;
-
-      $variable->{BANNER_AD} 
-      = eprint::banner::select_banner(
-        $log, $dbh, $variable->{cust_id}, $variable->{user_id}
-      );
+      $variable->{BANNER_AD} = eprint::banner::select_banner($log, $dbh, $variable->{cust_id}, $variable->{user_id});
 
       # Calls procedure to get the ysnpricingservice,
       # ysnpricingprojectview, ysnpricingquotes from tbl_customer and
@@ -414,22 +393,17 @@ sub parse_page {
 
       require eprint::greetings;
       #Make Greeting available on all pages. Requested by Juile for Dominos.
-      $$variable{'USER_CATEGORY_GREETING'} = 
-      eprint::greetings::select_user_category_greeting($log, $dbh, $variable->{user_id})
+      $$variable{'USER_CATEGORY_GREETING'} = eprint::greetings::select_user_category_greeting($log, $dbh, $variable->{user_id})
       if $variable->{user_id};
-
     }
-  }
-  else {
+  } else {
     # Adds the current version information (for use in the admin. footer).
-    $variable->{pqs_version} 
-    = configuration::get_value($log, $dbh, 'BuildVersion');
+    $variable->{pqs_version} = configuration::get_value($log, $dbh, 'BuildVersion');
   }
 
   log_request($page, $variable);
 
   # PAGE DISPATCH
-  #
   my %section = (
     administrator => \&section_admininistrator,
     employee      => \&section_employee,
@@ -438,13 +412,12 @@ sub parse_page {
     template      => \&section_templating,
   );
   my $func = $section{ $first };
-
   $status = $func->($r, $log, $dbh, $variable, $cookie, $page, $second, $filename) if $func;
 
   eprint::inventory::show_inventory($r, $log, $dbh, $variable)               if $filename eq 'Inventoried.html';
 
   return $status;
-}
+} # end sub parse_page
 
 sub section_templating {
   my ($r, $log, $dbh, $variable, $cookie, $uri, $sub_section, $filename) = @_;
@@ -471,7 +444,6 @@ sub section_templating {
 sub section_admininistrator {
   my ($r, $log, $dbh, $variable, $cookie, $uri, $sub_section, $filename) = @_;
 
-  require eprint::admin_customer;
   require eprint::admin_user;
   require eprint::admin_clerical;
   require eprint::admin_paper;
@@ -487,124 +459,116 @@ sub section_admininistrator {
 
   my $param = map_param();
 
-  print STDERR "SUB: $sub_section F: $filename \n";
-  if ($sub_section eq 'administrator') {
-    eprint::login::email_password($r, $log, $dbh, $variable)  if $filename eq 'administrator_password_confirmation.html';
-  } 
-  elsif ($sub_section eq 'marketing') {
-    require eprint::promotion;
-    eprint::promotion::list($param, $variable) if $filename eq 'promotions.html';
-    eprint::promotion::edit($param, $variable) if  $filename eq 'promotion_edit.html';
-  } elsif ($sub_section eq 'mat_inventory') {
-    require eprint::mat_inventory;
-    eprint::mat_inventory::display($param, $variable);
-  }
-  elsif ($sub_section eq 'production') {
-  require eprint::admin_project;
-  require eprint::admin_service;
-  require eprint::admin_material;
-    eprint::admin_service::price_list_view($r, $log, $dbh, $variable)                  if $filename eq 'services_price_lists_view.html';
-    eprint::admin_material::price_list_view($r, $log, $dbh, $variable)                 if $filename eq 'materials_price_lists_view.html';
+  if ($sub_section) {
+    if ($sub_section eq 'administrator') {
+      eprint::login::email_password($r, $log, $dbh, $variable)  if $filename eq 'administrator_password_confirmation.html';
+    } elsif ($sub_section eq 'marketing') {
+      require eprint::promotion;
+      eprint::promotion::list($param, $variable) if $filename eq 'promotions.html';
+      eprint::promotion::edit($param, $variable) if  $filename eq 'promotion_edit.html';
+    } elsif ($sub_section eq 'mat_inventory') {
+      require eprint::mat_inventory;
+      eprint::mat_inventory::display($param, $variable);
+    } elsif ($sub_section eq 'production') {
+      require eprint::admin_project;
+      require eprint::admin_service;
+      require eprint::admin_material;
+      eprint::admin_service::price_list_view($r, $log, $dbh, $variable)                  if $filename eq 'services_price_lists_view.html';
+      eprint::admin_material::price_list_view($r, $log, $dbh, $variable)                 if $filename eq 'materials_price_lists_view.html';
 
-    eprint::admin_project::template_import_export($r, $log, $dbh, $variable)           if $filename eq 'project_templates.html';
-    eprint::admin_project::template_services_import_export($r, $log, $dbh, $variable)  if $filename eq 'project_services.html';
-    eprint::admin_project::types_edit($r, $log, $dbh, $variable)                       if $filename eq 'project_types.html';
-    eprint::admin_project::defaults_edit($r, $log, $dbh, $variable)                    if $filename eq 'project_defaults.html';
+      eprint::admin_project::template_import_export($r, $log, $dbh, $variable)           if $filename eq 'project_templates.html';
+      eprint::admin_project::template_services_import_export($r, $log, $dbh, $variable)  if $filename eq 'project_services.html';
+      eprint::admin_project::types_edit($r, $log, $dbh, $variable)                       if $filename eq 'project_types.html';
+      eprint::admin_project::defaults_edit($r, $log, $dbh, $variable)                    if $filename eq 'project_defaults.html';
 
-    eprint::admin_colours::import_export($r, $log, $dbh, $variable)                    if $filename eq 'colour_import_export.html';
-    eprint::admin_shipping::zone_import($r, $log, $dbh, $variable)                     if $filename eq 'shipping.html';
+      eprint::admin_colours::import_export($r, $log, $dbh, $variable)                    if $filename eq 'colour_import_export.html';
+      eprint::admin_shipping::zone_import($r, $log, $dbh, $variable)                     if $filename eq 'shipping.html';
 
-    eprint::docket::display($r, $log, $dbh, $variable, undef, undef, undef, 1)         if $filename eq 'proj_docket.html';
-    eprint::docket::RFQ($r, $log, $dbh, $variable)                                     if $filename eq 'rfq_preview.html';
-    eprint::admin_project::view_project_for_rfq($r, $log, $dbh, $variable)             if $filename eq 'project_view.html';
+      eprint::docket::display($r, $log, $dbh, $variable, undef, undef, undef, 1)         if $filename eq 'proj_docket.html';
+      eprint::docket::RFQ($r, $log, $dbh, $variable)                                     if $filename eq 'rfq_preview.html';
+      eprint::admin_project::view_project_for_rfq($r, $log, $dbh, $variable)             if $filename eq 'project_view.html';
 
-    use eprint::rfq;
+      use eprint::rfq;
 
-    eprint::rfq::send_rfq($r, $dbh, $variable)                          			if $filename eq 'email_sent.html';
-    eprint::rfq::process_rfq($r, $log, $dbh, $variable)                                if $filename eq 'rfq.html';
-    eprint::rfq::process_rfq($r, $log, $dbh, $variable)                                if $filename eq 'po.html';
+      eprint::rfq::send_rfq($r, $dbh, $variable)                          			if $filename eq 'email_sent.html';
+      eprint::rfq::process_rfq($r, $log, $dbh, $variable)                                if $filename eq 'rfq.html';
+      eprint::rfq::process_rfq($r, $log, $dbh, $variable)                                if $filename eq 'po.html';
 
-    eprint::rfq::send_po($r, $log, $dbh, $variable)                          		   if $filename eq 'send_po.html';
+      eprint::rfq::send_po($r, $log, $dbh, $variable)                          		   if $filename eq 'send_po.html';
 
-    eprint::rfq::admin_list($r, $dbh, $variable)                  					if $filename eq 'rfq_list.html';
-    eprint::rfq::admin_list($r, $dbh, $variable)                  if $filename eq 'rfq_project_summary.html';
-    eprint::rfq::rfq_project_list($r, $dbh, $variable)                  if $filename eq 'rfq_search.html';
-    eprint::rfq::bid_history($r, $dbh, $variable) if $filename eq 'bid_history.html';
-    eprint::rfq::api_bid($r, $dbh, $variable) 											if $filename eq 'api.html';
+      eprint::rfq::admin_list($r, $dbh, $variable)                  					if $filename eq 'rfq_list.html';
+      eprint::rfq::admin_list($r, $dbh, $variable)                  if $filename eq 'rfq_project_summary.html';
+      eprint::rfq::rfq_project_list($r, $dbh, $variable)                  if $filename eq 'rfq_search.html';
+      eprint::rfq::bid_history($r, $dbh, $variable) if $filename eq 'bid_history.html';
+      eprint::rfq::api_bid($r, $dbh, $variable) 											if $filename eq 'api.html';
 
-    use eprint::time;
-    eprint::time::service_list($r, $dbh, $variable)                                                 if $filename eq 'time_service_list.html';
-  } 
-  elsif ($sub_section eq 'paper') {
-    eprint::admin_paper::paper_edit($r, $log, $dbh, $variable)       if $filename eq 'paper.html';
-    eprint::admin_paper::paper_prices($r, $log, $dbh, $variable)     if $filename eq 'paper_prices.html';
-    eprint::admin_paper::import_export($r, $log, $dbh, $variable)    if $filename eq 'import_export.html';
-    eprint::admin_paper::price_list_edit($r, $log, $dbh, $variable)  if $filename eq 'price_list_edit.html';
-    eprint::admin_paper::price_list_view($r, $log, $dbh, $variable)  if $filename eq 'price_list_view.html';
+      use eprint::time;
+      eprint::time::service_list($r, $dbh, $variable)                                                 if $filename eq 'time_service_list.html';
+    } elsif ($sub_section eq 'paper') {
+      eprint::admin_paper::paper_edit($r, $log, $dbh, $variable)       if $filename eq 'paper.html';
+      eprint::admin_paper::paper_prices($r, $log, $dbh, $variable)     if $filename eq 'paper_prices.html';
+      eprint::admin_paper::import_export($r, $log, $dbh, $variable)    if $filename eq 'import_export.html';
+      eprint::admin_paper::price_list_edit($r, $log, $dbh, $variable)  if $filename eq 'price_list_edit.html';
+      eprint::admin_paper::price_list_view($r, $log, $dbh, $variable)  if $filename eq 'price_list_view.html';
 
-  } 
-  elsif ($sub_section eq 'managerial') {
-    require eprint::credit_application;
+    } elsif ($sub_section eq 'managerial') {
+      require eprint::credit_application;
 
-    #New Accounting Features
-    use eprint::bills;
+      #New Accounting Features
+      use eprint::bills;
 
-    eprint::bills::display($param, $variable)                					if $filename eq 'accounting_bills.html';
+      eprint::bills::display($param, $variable)                					if $filename eq 'accounting_bills.html';
 
+      eprint::admin_accounting::details($r, $log, $dbh, $variable)                if $filename eq 'accounting_details.html' 
+      || $filename eq 'accounting_details_printer_friendly.html';
 
+      eprint::admin_accounting::payment($r, $log, $dbh, $variable)                if $filename eq 'accounting_payments.html';
+      eprint::admin_accounting::search($r, $log, $dbh, $variable)                 if $filename eq 'accounting_search.html';
 
-    eprint::admin_accounting::details($r, $log, $dbh, $variable)                if $filename eq 'accounting_details.html' 
-    || $filename eq 'accounting_details_printer_friendly.html';
+      require eprint::admin_customer;
+      eprint::admin_customer::admin_customer_edit($r, $log, $dbh, $variable)      if $filename eq 'company_profiles.html';
+      eprint::admin_customer::product_markup($r, $log, $dbh, $variable)      		if $filename eq 'product_markup.html';
+      eprint::admin_user::admin_user_edit($r, $log, $dbh, $variable)              if $filename eq 'user_profiles.html';
+      eprint::credit_application::credit_application($r, $log, $dbh, $variable)   if $filename eq 'credit_application.html';
+      eprint::credit_application::credit_applications($r, $log, $dbh, $variable)  if $filename eq 'credit_applications.html';
 
+      eprint::admin_clerical::currency_edit($r, $log, $dbh, $variable)            if $filename eq 'currency.html';
+      eprint::admin_clerical::tax_tables($r, $log, $dbh, $variable)               if $filename eq 'taxes.html';
+      eprint::admin_clerical::county_tax_tables($r, $log, $dbh, $variable)        if $filename eq 'county_taxes.html';
+      eprint::admin_clerical::tax_stewardship($r, $log, $dbh, $variable)          if $filename eq 'taxes_stewardship.html';
+      eprint::admin_clerical::notifications_edit($r, $log, $dbh, $variable)       if $filename eq 'notifications.html';
+      eprint::admin_clerical::misc_settings_edit($r, $log, $dbh, $variable)       if $filename eq 'configuration.html';
+      eprint::admin_clerical::inventory_locations($r, $log, $dbh, $variable)      if $filename eq 'inventory_locations.html';
 
-    eprint::admin_accounting::payment($r, $log, $dbh, $variable)                if $filename eq 'accounting_payments.html';
-    eprint::admin_accounting::search($r, $log, $dbh, $variable)                 if $filename eq 'accounting_search.html';
+    } elsif ($sub_section eq 'reports') {
+      require eprint::admin_reports;
+      eprint::admin_reports::inventory($r, $log, $dbh, $variable)          		 if $filename eq 'inventory_reports.html';
+      eprint::admin_reports::accounting_report($r, $log, $dbh, $variable)          if $filename eq 'reports_accounting.html';
+      eprint::admin_reports::stored_report_display($r, $log, $dbh, $variable)      if $filename eq 'reports_custom.html';
+      eprint::admin_reports::stored_report_process($r, $log, $dbh, $variable)      if $filename eq 'reports_custom_results.html';
+      eprint::admin_reports::order_report($r, $log, $dbh, $variable)               if $filename eq 'reports_orders.html';
+      eprint::admin_reports::paypal($r, $log, $dbh, $variable)               		 if $filename eq 'paypal_report.html';
+      eprint::admin_reports::project_report($r, $log, $dbh, $variable)             if $filename eq 'reports_projects.html';
+      eprint::admin_reports::quotes_report($r, $log, $dbh, $variable)              if $filename eq 'reports_quotes.html';
+      eprint::admin_reports::cost_center($r, $log, $dbh, $variable)             	 if $filename eq 'reports_cost_center.html';
+      eprint::admin_reports::internal_billing($r, $log, $dbh, $variable)           if $filename eq 'reports_internal_billing.html';
+      eprint::docket::service_summary($r, $log, $dbh, $variable)                   if $filename eq 'service_feedback.html';
+      eprint::docket::service_summary($r, $log, $dbh, $variable)                   if $filename eq 'docket.html';
+      eprint::admin_reports::national_report($r, $log, $dbh, $variable)            if $filename eq 'national_report.html';
+      eprint::admin_reports::shipping_report($r, $log, $dbh, $variable)            if $filename eq 'shipping_report.html';
+    } elsif ($sub_section eq 'products') {
+      eprint::products::list($r, $dbh, $variable) if $filename eq 'products.html';
+      eprint::products::category_admin($r, $dbh, $variable) if $filename eq 'categories.html';
+      eprint::products::builder($r, $dbh, $variable) if $filename eq 'builder.html';
+      eprint::products::kit_select($r, $dbh, $variable) if $filename eq 'kit_select.html';
+      eprint::products::price_admin($r, $dbh, $variable) if $filename eq 'price.html';
+      eprint::products::discount_admin($r, $dbh, $variable) if $filename eq 'version_discount.html';
 
-    eprint::admin_customer::admin_customer_edit($r, $log, $dbh, $variable)      if $filename eq 'company_profiles.html';
-    eprint::admin_customer::product_markup($r, $log, $dbh, $variable)      		if $filename eq 'product_markup.html';
-    eprint::admin_user::admin_user_edit($r, $log, $dbh, $variable)              if $filename eq 'user_profiles.html';
-    eprint::credit_application::credit_application($r, $log, $dbh, $variable)   if $filename eq 'credit_application.html';
-    eprint::credit_application::credit_applications($r, $log, $dbh, $variable)  if $filename eq 'credit_applications.html';
+    }
+  } # end if sub_section
 
-    eprint::admin_clerical::currency_edit($r, $log, $dbh, $variable)            if $filename eq 'currency.html';
-    eprint::admin_clerical::tax_tables($r, $log, $dbh, $variable)               if $filename eq 'taxes.html';
-    eprint::admin_clerical::county_tax_tables($r, $log, $dbh, $variable)        if $filename eq 'county_taxes.html';
-    eprint::admin_clerical::tax_stewardship($r, $log, $dbh, $variable)          if $filename eq 'taxes_stewardship.html';
-    eprint::admin_clerical::notifications_edit($r, $log, $dbh, $variable)       if $filename eq 'notifications.html';
-    eprint::admin_clerical::misc_settings_edit($r, $log, $dbh, $variable)       if $filename eq 'configuration.html';
-    eprint::admin_clerical::inventory_locations($r, $log, $dbh, $variable)      if $filename eq 'inventory_locations.html';
-
-  } 
-  elsif ($sub_section eq 'reports') {
-    require eprint::admin_reports;
-    eprint::admin_reports::inventory($r, $log, $dbh, $variable)          		 if $filename eq 'inventory_reports.html';
-    eprint::admin_reports::accounting_report($r, $log, $dbh, $variable)          if $filename eq 'reports_accounting.html';
-    eprint::admin_reports::stored_report_display($r, $log, $dbh, $variable)      if $filename eq 'reports_custom.html';
-    eprint::admin_reports::stored_report_process($r, $log, $dbh, $variable)      if $filename eq 'reports_custom_results.html';
-    eprint::admin_reports::order_report($r, $log, $dbh, $variable)               if $filename eq 'reports_orders.html';
-    eprint::admin_reports::paypal($r, $log, $dbh, $variable)               		 if $filename eq 'paypal_report.html';
-    eprint::admin_reports::project_report($r, $log, $dbh, $variable)             if $filename eq 'reports_projects.html';
-    eprint::admin_reports::quotes_report($r, $log, $dbh, $variable)              if $filename eq 'reports_quotes.html';
-    eprint::admin_reports::cost_center($r, $log, $dbh, $variable)             	 if $filename eq 'reports_cost_center.html';
-    eprint::admin_reports::internal_billing($r, $log, $dbh, $variable)           if $filename eq 'reports_internal_billing.html';
-    eprint::docket::service_summary($r, $log, $dbh, $variable)                   if $filename eq 'service_feedback.html';
-    eprint::docket::service_summary($r, $log, $dbh, $variable)                   if $filename eq 'docket.html';
-    eprint::admin_reports::national_report($r, $log, $dbh, $variable)            if $filename eq 'national_report.html';
-    eprint::admin_reports::shipping_report($r, $log, $dbh, $variable)            if $filename eq 'shipping_report.html';
-  }
-  elsif ($sub_section eq 'products') {
-    eprint::products::list($r, $dbh, $variable) if $filename eq 'products.html';
-    eprint::products::category_admin($r, $dbh, $variable) if $filename eq 'categories.html';
-    eprint::products::builder($r, $dbh, $variable) if $filename eq 'builder.html';
-    eprint::products::kit_select($r, $dbh, $variable) if $filename eq 'kit_select.html';
-    eprint::products::price_admin($r, $dbh, $variable) if $filename eq 'price.html';
-    eprint::products::discount_admin($r, $dbh, $variable) if $filename eq 'version_discount.html';
-
-  }
-
-  return;
+  return OK;
 }
-
 
 sub section_employee {
   my ($r, $log, $dbh, $variable, $cookie, $uri, $sub_section, $filename) = @_;
@@ -621,8 +585,7 @@ sub section_employee {
   if ( $sub_section eq 'employee') {
     eprint::employee::user_edit($r, $log, $dbh, $variable)    if $filename eq 'profile.html';
     eprint::login::email_password($r, $log, $dbh, $variable)  if $filename eq 'password_confirmation.html';
-  } 
-  elsif ( $sub_section eq 'production' ) {
+  } elsif ( $sub_section eq 'production' ) {
     eprint::employee_orders::orders_report($r, $log, $dbh, $variable)  if $filename eq 'modify_orders.html';
     eprint::employee_quotes::quotes_report($r, $log, $dbh, $variable)  if $filename eq 'modify_quotes.html';
     eprint::employee_project::project_list($r, $log, $dbh, $variable)  if $filename eq 'projects.html';
@@ -635,8 +598,7 @@ sub section_employee {
     eprint::time::time_collection($r, $dbh, $variable)                  			if $filename eq 'time_collection.html';
     eprint::time::punch_history($r, $dbh, $variable)                  				if $filename eq 'time_punch_history.html';
     eprint::time::service_history($r, $dbh, $variable)                  			if $filename eq 'time_service_history.html';
-  } 
-  elsif ( $sub_section eq 'marketing' ) {
+  } elsif ( $sub_section eq 'marketing' ) {
     eprint::banner::banner_action($r, $log, $dbh, $variable)                if $filename eq 'banners.html';
     eprint::admin_marketing::category_edit($r, $log, $dbh, $variable)       if $filename eq 'categories.html';
     eprint::admin_marketing::maillist($r, $log, $dbh, $variable)            if $filename eq 'mail_confirmation.html';
@@ -645,22 +607,19 @@ sub section_employee {
 
     use eprint::admin_mail;
     eprint::admin_mail::handler($r, $log, $dbh, $variable)       			if $filename eq 'mailing_database.html';
-
-  } 
-  elsif ($sub_section eq 'support' ) {
+  } elsif ($sub_section eq 'support' ) {
     eprint::employee_support::helpdesk($r, $log, $dbh, $variable)         if $filename eq 'helpdesk.html';
     eprint::employee_support::helpdesk_search($r, $log, $dbh, $variable)  if $filename eq 'helpdesk_search.html';
     eprint::employee_support::rma($r, $log, $dbh, $variable)              if $filename eq 'return.html';
     eprint::employee_support::rma_search($r, $log, $dbh, $variable)       if $filename eq 'returns.html';
   }
 
-  return;
+  return OK;
 }
-
 
 sub section_main {
   my ($r, $log, $dbh, $variable, $cookie, $uri, $sub_section, $filename) = @_;
-  my $status;
+  my $status = OK;
 
   require eprint::customer;
   require eprint::inventory;
@@ -685,7 +644,6 @@ sub section_main {
     eprint::login::login_password($r, $log, $dbh, $variable)                                if $filename eq 'account_password.html';
     eprint::login::email_password($r, $log, $dbh, $variable)                                if $filename eq 'confirmation_password_0.html';
     eprint::login::change_password($r, $log, $dbh, $variable)                               if $filename eq 'confirmation_password_1.html';
-
 
     eprint::credit_application::credit_app_display($r, $log, $dbh, $variable)               if $filename eq 'credit_application.html';
     eprint::credit_application::credit_app_process($r, $log, $dbh, $variable)               if $filename eq 'confirmation_credit_application.html';
@@ -719,31 +677,23 @@ sub section_main {
     eprint::quote::user_quote_info($r, $log, $dbh, $cookie, $variable)  if $filename eq 'quote_info.html';
     eprint::quote::show_quote($r, $log, $dbh, $variable)                if $filename eq 'quote_printer_friendly.html';
     eprint::quote::submit_quote($r, $log, $dbh, $cookie, $variable)     if $filename eq 'quote_submit.html';
-  } 
-  elsif ($sub_section eq 'support') {
+  } elsif ($sub_section eq 'support') {
     #require eprint::support;
     #eprint::support::userinfo($r, $log, $dbh, $variable)  if $filename eq 'support_help_desk.html';
     #eprint::support::helpdesk($r, $log, $dbh, $variable)  if $filename eq 'confirmation_help_desk.html';
     #eprint::support::userinfo($r, $log, $dbh, $variable)  if $filename eq 'support_returns.html';    
     #eprint::support::rma($r, $log, $dbh, $variable)       if $filename eq 'confirmation_returns.html';
-  } 
-  elsif ($sub_section eq 'products') {
+  } elsif ($sub_section eq 'products') {
     require eprint::ProductGroup;
 
     $status = eprint::ProductGroup::display_category($r, $dbh, $variable) if $filename eq 'display.html';
     $status = eprint::ProductGroup::select_project($r, $dbh, $variable)   if $filename eq 'select.html';
     eprint::qprice::upload($r, $dbh, $variable)							  if $filename eq 'upload_complete.html';
-  }
-  elsif ($sub_section eq 'dashboard') {
-
+  } elsif ($sub_section eq 'dashboard') {
     require eprint::dashboard;
-
     my $param = map_param();
-
     print STDERR "HAVE AP ", Dumper($r->param('actionpid'), scalar $r->param('actionpid') );
-
     eprint::dashboard::display($variable, $param) if $filename eq 'dashboard.html';
-
   } elsif ($sub_section eq 'proj') {
     require eprint::print_project;    
     require eprint::print;
@@ -827,8 +777,7 @@ sub section_main {
     eprint::rfq::process_rfq($r, $log, $dbh, $variable, 1)                if $filename eq 'purchase_order_printer_friendly.html';
     print STDER "MY FILENAME: $filename \n";
 
-  }
-  elsif ($sub_section eq 'rfq') {
+  } elsif ($sub_section eq 'rfq') {
     require eprint::rfq;
     require eprint::admin_project;
     eprint::rfq::process_rfq($r, $log, $dbh, $variable)           if $filename eq 'rfq.html';
@@ -839,28 +788,25 @@ sub section_main {
     eprint::docket::RFQ($r, $log, $dbh, $variable)                                     if $filename eq 'rfq_preview.html';
     eprint::admin_project::view_project_for_rfq($r, $log, $dbh, $variable)             if $filename eq 'project_view.html';
     eprint::rfq::send_rfq($r, $dbh, $variable)                          			if $filename eq 'email_sent.html';
-  }
-  elsif ($sub_section eq 'files') {
+  } elsif ($sub_section eq 'files') {
     eprint::project_files::ftp_folder($r, $dbh, $variable)          if $filename eq 'folders.html';
     eprint::project_files::ftp_file($r, $dbh, $variable)           	if $filename eq 'files.html';
 
-  }
-  elsif ($sub_section eq 'shopping_list') {
+  } elsif ($sub_section eq 'shopping_list') {
     eprint::shopping_list::list($r, $dbh, $variable) if $filename eq 'shopping_lists.html';
     eprint::shopping_list::get($r, $dbh, $variable) if $filename eq 'shopping_list.html';
-  }
-  elsif ($sub_section eq 'ecommerce') {
+  } elsif ($sub_section eq 'ecommerce') {
     eprint::products::display($r, $dbh, $variable) if $filename eq 'products.html';
     eprint::products::display_categories($r, $dbh, $variable) if $filename eq 'categories.html';
     eprint::products::details($r, $dbh, $variable) if $filename eq 'product_details.html';
     eprint::products::design($r, $dbh, $variable, $cookie) if $filename eq 'design.html';
   }
 
-  print STDERR "Before menu_options\n";
+  #print STDERR "Before menu_options\n";
   menu_options($dbh, $variable);
 
-  print STDERR "CHECK ASR " . $r->param('run_asr') . "-- \n";
-  if ( $r->param('asr') eq 'mailing' ) {
+  #print STDERR "CHECK ASR " . $r->param('run_asr') . "-- \n";
+  if ( $r->param('asr') and ( $r->param('asr') eq 'mailing')) {
     require eprint::mailing;
     eprint::mailing::handler($r, $dbh, $variable);
   };
@@ -930,7 +876,7 @@ sub check_cart {
     # we may want to look for there last unfinished project (non hybrid)
   }
 
-  print STDERR "HAVE ORDER: $order_id PID: $pid - $var->{user_id} \n";
+  #print STDERR "HAVE ORDER: $order_id PID: $pid - $var->{user_id} \n";
 } # end sub check_cart
 
 1;
