@@ -74,6 +74,7 @@ sub handler {
                   AND lngserviceindex = ?
             }, undef, $pid, $sid))
     {
+print STDERR "Service not found for $pid/$sid\n";
         $dbh->disconnect;
         return NOT_FOUND;
     }
@@ -88,6 +89,7 @@ sub handler {
              && !exists $allowed->{ $service->{id} } 
              && !$variable->{is_staff} ) )
     {
+print STDERR "Forbidden for $pid\n";
         $dbh->disconnect;
         return FORBIDDEN; 
     }
