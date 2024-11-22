@@ -1,20 +1,18 @@
 package eprint::login;
 use strict;
+use utf8;
 
 use Apache2::Const qw(:common HTTP_MOVED_TEMPORARILY);
 use Apache2::Cookie ();
-use Mail::Sendmail;
-use MIME::QuotedPrint;
 
-
-use sql qw(:common);
-use ssi ();
-use eprint::obj_customer ();
+#use sql qw(:common);
+require sql;
+require ssi;
+require eprint::obj_customer;
 require misc;
-require crypto;
 require eprint::greetings;
 require eprint::user;
-use eprint::order;
+require eprint::order;
 
 # displays the login page, and populates the destination variable
 sub login_display {
@@ -37,7 +35,8 @@ sub verify_login {
     my $email = sql::escape($r->param('txtEmail'));
     $email =~ tr/[A-Z]/[a-z]/;
 
-    my $crypt = crypto::get_crypt($log, $dbh);
+    require crypto;
+    my $crypt = crypto::get_crypt();
     my $password = misc::escape($crypt->encrypt($r->param('txtPassword')));
 
     # doing it this way allows for multiple accounts with the same email
@@ -47,11 +46,11 @@ sub verify_login {
     $_ =
       "SELECT lngUserID, lngCustomerID, strSalutation, strFirstName, strLastName, chrType "
       . "FROM tbl_Customer_Users "
-      . "WHERE strEmail = '$email' "
-      . "AND strPassword = '$password'";
+      . "WHERE strEmail = ? "
+      . "AND strPassword = ?";
 
     my ($user_id, $cust_id, $salutation, $first_name, $last_name, $user_type) =
-      sql::sql_statement($log, $dbh, $_);
+      sql::execute($log, $dbh, $_, $email, $password);
 
     if ($user_id eq '') {
         # user not found. Let's see if we got the password wrong, or the email
@@ -108,7 +107,7 @@ sub verify_login {
     # into. In this case, they are logged into the customer site.  An S value
     # is set in the supplier version of this function, and A value is set in
     # the admin version of this function
-    sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID = '$cookie' AND chrSite = '$site'",
+    sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID = '$cookie'", # AND chrSite = '$site'",
             chrUserType     => $user_type,
             lngCustomerID   => $cust_id,
             lngUserID       => $user_id,
@@ -185,9 +184,8 @@ sub verify_login {
 sub logout {
     my ($log, $dbh, $cookie, $site) = @_;
 
-    $dbh->do(q{
-        DELETE FROM tbl_logged_in WHERE strSessionID = ? AND chrSite = ?
-    }, undef, $cookie, $site);
+    $dbh->do('DELETE FROM tbl_logged_in WHERE strSessionID = ?' # AND chrSite = ?
+    , undef, $cookie);#, $site);
 
     return OK;
 }
@@ -206,24 +204,30 @@ sub email_password {
         return misc::error($log, $dbh, $variable, 'Account doesn\'t exist.', 'The account you entered does not exist.  Please push the back button and try again. If you require assistance please call us at 1-888-500-0999.');
     }
 
-    my %info;
-    my $crypt = crypto::get_crypt($log, $dbh);
-    $info{'password'} = $crypt->decrypt(misc::unescape($password));
+    eval {
+      my %info;
+      require crypto;
+      my $crypt = crypto::get_crypt();
+      # data coming from db may not be utf8
+      utf8::encode($password);
+      $info{password} = $crypt->decrypt(misc::unescape($password));
 
-    my $email_template = misc::load_file($r, '/email/email_template.html');
-    $info{'ReplacementText'} = "<!--#include virtual=\"/email/content/forgotten_password.html\"-->";
-    $info{'domain'} = configuration::get_value($log, $dbh, 'domain');
-    $info{'siteURL'} = "http://" . $r->hostname;
-    $_ = encode_qp(ssi::variable_substitution($r, $log, $dbh, $email_template, \%info));
-    my @body = ('', $_, 'text/html', 'quoted-printable');
+      my $email_template = misc::load_file($r, '/email/email_template.html');
+      $info{'ReplacementText'} = "<!--#include virtual=\"/email/content/forgotten_password.html\"-->";
+      $info{'domain'} = configuration::get_value($log, $dbh, 'domain');
+      $info{'siteURL'} = "http://" . $r->hostname;
+      require MIME::QuotedPrint;
+      $_ = MIME::QuotedPrint::encode_qp(ssi::variable_substitution($r, $log, $dbh, $email_template, \%info));
+      my @body = ('', $_, 'text/html', 'quoted-printable');
 
-    my %mail = (
-          SMTP    => configuration::get_value($log, $dbh, 'Mail Server'),
-          FROM    => configuration::get_value($log, $dbh, 'AdministratorEmail'),
-          TO      => $r->param('txtEmail2'),
-          SUBJECT => 'Forgotten Password',
-    );
-    misc::send_email_with_attachment($r, $log, \%mail, @body);
+      my %mail = (
+        SMTP    => configuration::get_value($log, $dbh, 'Mail Server'),
+        FROM    => configuration::get_value($log, $dbh, 'AdministratorEmail'),
+        TO      => $r->param('txtEmail2'),
+        SUBJECT => 'Forgotten Password',
+      );
+      misc::send_email_with_attachment($r, $log, \%mail, @body);
+    };
 
     return OK;
 } 
@@ -245,35 +249,38 @@ print STDERR "START APP \n";
 }
 
 sub login_app_process {
-    my ($r, $log, $dbh, $variable, $cookie) = @_;
-    my ($error, $temp, $cust_id, $user_id, $email);
+	my ($r, $log, $dbh, $variable, $cookie) = @_;
+	my ($error, $temp, $cust_id, $user_id, $email);
 
 	use Captcha::reCAPTCHA;
 
 	map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
+	my $result;
 
-    my $c = Captcha::reCAPTCHA->new;
-    my $challenge = 1;
-    my $response  = $r->param('g-recaptcha-response');
+	eval {
+		my $c = Captcha::reCAPTCHA->new;
+		my $challenge = 1;
+		my $response  = $r->param('g-recaptcha-response');
 
-	#my $challenge = 6LfKz8gUAAAAAFW_im9xh9VAp8XA5C2F5qrhKsX-
-	#my $response  = $r->param('recaptcha_response_field');
-	my $key = "6LfKz8gUAAAAAEQQyR2BZhg15phipZkfyCl4kuUi";
+#my $challenge = 6LfKz8gUAAAAAFW_im9xh9VAp8XA5C2F5qrhKsX-
+#my $response  = $r->param('recaptcha_response_field');
+		my $key = "6LfKz8gUAAAAAEQQyR2BZhg15phipZkfyCl4kuUi";
 
 
-	use Data::Dumper;
-	print STDERR "START LOGIN APP PROCESS \n\n\n";
-	#unless ( $variable->{user_id} ) {
-		# Verify submission
-		my $result = $c->check_answer_v2($key, $response, $ENV{'REMOTE_ADDR'});
+		use Data::Dumper;
+		print STDERR "START LOGIN APP PROCESS \n\n\n";
+#unless ( $variable->{user_id} ) {
+# Verify submission
+	$result = $c->check_answer_v2($key, $response, $ENV{'REMOTE_ADDR'});
 
 	print STDERR "CONTINUE LOGIN APP PROCESS:  \n\n\n", Dumper($result);
 
-		unless ( $result->{is_valid} ) {
-		   # Error
-			return misc::error( $log, $dbh, $variable, 
+	unless ( $result->{is_valid} ) {
+# Error
+		return misc::error( $log, $dbh, $variable, 
 				'Bad Field', 'Your Captcha is incorrect. Please press the back button to try again'  );
-		}
+	}
+};
 	#}
 	#
 
@@ -328,7 +335,8 @@ sub login_app_process {
         $agent = configuration::get_value($log, $dbh, 'UserRegistrationEmail');
     }
 
-    my $crypt = crypto::get_crypt($log, $dbh);
+    require crypto;
+    my $crypt = crypto::get_crypt();
 
     # No errors, We are in go status
     my %info;
@@ -461,7 +469,8 @@ sub login_app_process {
             SELECT strPassword FROM tbl_Customer_Users WHERE lngUserID = ?
         }, undef, $user_id) if $user_id;
 
-        my $crypt = crypto::get_crypt($log, $dbh);
+      require crypto;
+        my $crypt = crypto::get_crypt();
         $info{'password'} = $crypt->decrypt(misc::unescape($password));
 		
 
@@ -495,7 +504,7 @@ sub login_app_process {
             && configuration::get_value($log, $dbh, 'NewCustomerAccountActivation')  eq 'Y')
         {
             # auto log in.
-            sql::update( $log, $dbh, 'tbl_Logged_In', "strSessionID='$cookie' AND chrSite='C'",
+            sql::update( $log, $dbh, 'tbl_Logged_In', "strSessionID='$cookie'", # AND chrSite='C'",
                     lngCustomerID   => $cust_id,
                     lngUserID       => $user_id,
                     strEmail        => $email,
@@ -624,7 +633,7 @@ sub login_app_process {
 # See bug 5018
 
             if ($activate_account eq 'Y') {
-                sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID='$cookie' AND chrSite='C'",
+                sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID='$cookie'", # AND chrSite='C'",
                     lngCustomerID   =>  $cust_id,
                     lngUserID       => $user_id,
                     strEmail        => $email,
@@ -866,7 +875,8 @@ sub change_password {
           misc::error($log, $dbh, $variable, 'No password.', 'We were unable to retrieve a valid password from the database.    This is likely a programming error.    Please report to support\@print-quotes-software.com.' );
     }
 
-    my $crypt = crypto::get_crypt($log, $dbh);
+    require crypto;
+    my $crypt = crypto::get_crypt();
     $password = $crypt->decrypt(misc::unescape($password));
 
     if ($password eq $r->param('txtOldPassword')) {
@@ -884,81 +894,75 @@ sub change_password {
 
 # looks up user info, and handle timeouts. Updates accessdate.
 sub verify_user {
-    my ($r, $log, $dbh, $cookie, $variable, $site) = @_;
+  my ($r, $log, $dbh, $cookie, $variable, $site) = @_;
 
-    # If the user doesn't have a cookie they aren't authenticated.
-    return unless $cookie;
+  # If the user doesn't have a cookie they aren't authenticated.
+  if (!$cookie) {
+    print STDERR "No cookie\n";
+    return;
+  }
 
-    my $idletime = configuration::get_value($log, $dbh, 'idletime');
+  my $idletime = configuration::get_value($log, $dbh, 'idletime');
 
-    # Retrieve the 'session' information based on the cookie.
-    my $session = $dbh->prepare_cached(q{
-        SELECT lnguserid       AS user,
-               dtmLastAccessed AS last_visit 
-        FROM tbl_Logged_In
-        WHERE strSessionID = ? AND chrSite = ?
+  # Retrieve the 'session' information based on the cookie.
+  my $session = $dbh->prepare_cached(q{ SELECT lnguserid AS user, dtmLastAccessed AS last_visit FROM tbl_Logged_In WHERE strSessionID=?});
+  $session = $dbh->selectrow_hashref($session, {}, $cookie);
+
+  # Lookup the user that went with this session.
+  my $user = $dbh->prepare_cached(q{
+    SELECT u.lnguserid       AS user_id,
+    c.lngcustomerid   AS cust_id,
+    u.stremail        AS email,
+    u.chrtype         AS user_type,
+    c.ysnproductsonly AS products_only
+    FROM tbl_customer c, tbl_customer_users u
+    WHERE c.lngcustomerid = u.lngcustomerid
+    AND u.lnguserid = ?
     });
-    $session = $dbh->selectrow_hashref($session, {}, $cookie, $site);
+  $user = $dbh->selectrow_hashref($user, {}, $session->{user});
 
-    # Lookup the user that went with this session.
-    my $user = $dbh->prepare_cached(q{
-        SELECT u.lnguserid       AS user_id,
-               c.lngcustomerid   AS cust_id,
-               u.stremail        AS email,
-               u.chrtype         AS user_type,
-               c.ysnproductsonly AS products_only
-        FROM tbl_customer c, tbl_customer_users u
-        WHERE c.lngcustomerid = u.lngcustomerid
-          AND u.lnguserid = ?
-    });
-    $user = $dbh->selectrow_hashref($user, {}, $session->{user});
+  if (not $session->{last_visit}) {
+    # no logged In information yet, so create some. NOTE: This code is
+    # stupid. The 0,0 bit has caused a ton of weird problems.
+    sql::insert($log, $dbh, 'tbl_Logged_In',
+      dtmLastAccessed => 'NOW()',
+      lngCustomerID   => 0,
+      lngUserID       => 0,
+      chrUserType     => '',
+      chrSite         => $site,
+      strSessionID    => $cookie,);
 
-    if (not $session->{last_visit}) {
+    $variable->{user_type} = '';
+  } elsif ($user->{'user_id'} && (misc::gettime() - misc::gettime($session->{last_visit}) > $idletime)) {
+    logout($log, $dbh, $cookie, $site);
+    $$variable{'idletime'} = $idletime;
+    $$variable{'destination'} = misc::get_destination($r, $log);
 
-        # no logged In information yet, so create some. NOTE: This code is
-        # stupid. The 0,0 bit has caused a ton of weird problems.
-        sql::insert($log, $dbh, 'tbl_Logged_In',
-                    dtmLastAccessed => 'NOW()',
-                    lngCustomerID   => 0,
-                    lngUserID       => 0,
-                    chrUserType     => '',
-                    chrSite         => $site,
-                    strSessionID    => $cookie,);
+    $variable->{Redirect} = $site eq 'C' ? '/error/idle_timeout.html'
+    : $site eq 'A' ? '/administrator/error/idle_timeout.html'
+    : $site eq 'E' ? '/employee/error/idle_timeout.html'
+    :                undef;
+  } else {
+    $cookie = $dbh->quote($cookie);
+    $site   = $dbh->quote($site);
 
-        $variable->{user_type} = '';
-    }
-    elsif ($user->{'user_id'} && (misc::gettime() - misc::gettime($session->{last_visit}) > $idletime))
-    {
-        logout($log, $dbh, $cookie, $site);
-        $$variable{'idletime'} = $idletime;
-        $$variable{'destination'} = misc::get_destination($r, $log);
+    # Update the last accessed time.
+    sql::update($log, $dbh, 'tbl_logged_in',
+      "strSessionID = $cookie", # AND chrSite = $site",
+      dtmLastAccessed => 'NOW()');
 
-        $variable->{Redirect} = $site eq 'C' ? '/error/idle_timeout.html'
-                              : $site eq 'A' ? '/administrator/error/idle_timeout.html'
-                              : $site eq 'E' ? '/employee/error/idle_timeout.html'
-                              :                undef;
-    }
-    else {
-        $cookie = $dbh->quote($cookie);
-        $site   = $dbh->quote($site);
+    # Map the user info into the global storage thingy.
+    $variable->{$_} = $user->{$_} for keys %$user;
+  }
 
-        # Update the last accessed time.
-        sql::update($log, $dbh, 'tbl_logged_in',
-                    "strSessionID = $cookie AND chrSite = $site",
-                    dtmLastAccessed => 'NOW()',);
+  $$variable{'CUSTOMER_CATEGORY_GREETING'} = eprint::greetings::select_customer_category_greeting($log, $dbh, $user->{cust_id}) if $user->{cust_id};
 
-        # Map the user info into the global storage thingy.
-        $variable->{$_} = $user->{$_} for keys %$user;
-    }
+  #	my $sql = "SELECT stremail, strfirstname || ' ' || strlastname  from tbl_customer_users WHERE lngcustomerid = $variable->{cust_id}";
+  #	print STDERR "HAVE USERS: ", Dumper( $sql ); 
+  #
+  #    $$variable{'email_to'} = ssi::fill_drop_down($log, $dbh, $sql);
 
-    $$variable{'CUSTOMER_CATEGORY_GREETING'} = eprint::greetings::select_customer_category_greeting($log, $dbh, $user->{cust_id}) if $user->{cust_id};
-
-#	my $sql = "SELECT stremail, strfirstname || ' ' || strlastname  from tbl_customer_users WHERE lngcustomerid = $variable->{cust_id}";
-#	print STDERR "HAVE USERS: ", Dumper( $sql ); 
-#
-#    $$variable{'email_to'} = ssi::fill_drop_down($log, $dbh, $sql);
-
-    return OK;
+  return OK;
 }
 
 # Load up "variable" with the customer's info from the current session.
@@ -984,9 +988,9 @@ sub get_login_info {
                (CASE WHEN ysnreseller = 'Y' THEN true ELSE false END) AS is_reseller
         FROM tbl_logged_in JOIN tbl_customer USING (lngcustomerid)
         WHERE strsessionid = ?
-          AND chrsite      = ?
      });
-    my $company = $dbh->selectrow_hashref($company, undef, $cookie, $site);
+   #AND chrsite      = ?
+    my $company = $dbh->selectrow_hashref($company, undef, $cookie);
 
     # User information
     my $user = $dbh->prepare_cached(q{
@@ -998,9 +1002,10 @@ sub get_login_info {
 			   u.editproject	AS editproject
         FROM tbl_logged_in l JOIN tbl_customer_users u USING (lnguserid)
         WHERE l.strsessionid = ?
-          AND l.chrsite      = ?
     });
-    $user = $dbh->selectrow_hashref($user, undef, $cookie, $site);
+
+  #AND l.chrsite      = ?
+    $user = $dbh->selectrow_hashref($user, undef, $cookie);
 
     # die "Invalid session or customer does not exist."
     #     unless $company->{id} && $user->{id};
@@ -1109,7 +1114,7 @@ sub select_customer {
 
 	my $cust_id = $customer || $r->param('ddmCustomer') || $r->param('SelectCustomer');
 
-    sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID= '$cookie' AND chrSite = 'C' ",
+    sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID= '$cookie'",# AND chrSite = 'C' ",
         lngCustomerID => $cust_id
     );
 
