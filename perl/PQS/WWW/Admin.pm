@@ -207,7 +207,7 @@ sub valid_admin {
                                      FROM tbl_configuration
                                      WHERE strconfigtitle = 'idletime') )
         FROM tbl_logged_in
-        WHERE strsessionid = ? AND chrsite = 'A'
+        WHERE strsessionid = ?
     });
 
     my ($uid, $exist, $admin, $timed_out) =
