@@ -89,39 +89,35 @@ our ($ts_req, $te_req, $ts_impose, $te_impose, $ts_price, $te_price, $total_imp)
 use constant TIMINGS => 1;
 
 sub calc {
-    my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
+  my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
-    if (TIMINGS) {
-        require Time::HiRes;
-        $ts_req = Time::HiRes::time(); # Debug/profiling timings;
-    }
-
-
-	print STDERR "TIME TO GET PROJECT PRICE \n";
-
-    my $pricing = get_project_price(
-        $log, $dbh, $variable, 
-        $pid, $sid, @$specs{qw(spread versions overrides)}
-    );
+  if (TIMINGS) {
+    require Time::HiRes;
+    $ts_req = Time::HiRes::time(); # Debug/profiling timings;
+  }
 
 
+  print STDERR "TIME TO GET PROJECT PRICE \n";
 
+  my $pricing = get_project_price(
+    $log, $dbh, $variable, 
+    $pid, $sid, @$specs{qw(spread versions overrides)}
+  );
 
-	# Keep Version information. Needed for auto-calc.
-    delete $specs->{$_} for grep {! $_ =~ /mv/} keys %$specs;
+  # Keep Version information. Needed for auto-calc.
+  delete $specs->{$_} for grep {! $_ =~ /mv/} keys %$specs;
 
-	print STDERR "HAVE IMP", Dumper($specs->{imp});
+  print STDERR "HAVE IMP", Dumper($specs->{imp});
 
-    $specs->{$_} = $pricing->{$_} for keys %$pricing;
+  $specs->{$_} = $pricing->{$_} for keys %$pricing;
 
-    return exists $specs->{error} ? 'uncalculated' : 'calculated';
+  return exists $specs->{error} ? 'uncalculated' : 'calculated';
 }
 
 
 # Price the spread.
 sub get_project_price {
-    my ($log, $dbh, $variable, 
-        $pid, $sid, $spread, $versions, $overrides) = @_;
+    my ($log, $dbh, $variable, $pid, $sid, $spread, $versions, $overrides) = @_;
 
 #HANDLE NEW No PRINT PROJECT TYPE
 	my $type = get_type($log, $dbh, $pid);
