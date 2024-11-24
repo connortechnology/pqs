@@ -9,6 +9,7 @@ use strict;
 use warnings;                   # Turn off for production version.
 no  warnings qw(uninitialized); # Interpolating undef into strings is okay.
 use Time::HiRes qw{ gettimeofday tv_interval };
+require eprint;
 
 use base qw(Exporter);
 use constant DEBUG=>1;
@@ -111,7 +112,9 @@ sub sql_statement {
 # database.
 sub insert {
     my $log   = shift;
+    $log = $eprint::log if ! $log;
     my $dbh   = shift;
+    $dbh = $eprint::dbh if ! $dbh;
     my $table = shift; # The table name to operate on (may contain schema)
     my %data  = @_;    # Field and value pairs
 
@@ -187,5 +190,30 @@ sub escape {
     s/(['"])/\\$1/g;
     return $_;
 }
+sub start_transaction {
+  #my ( $caller, undef, $line ) = caller;
+#$openprint::log->debug("Called start_transaction from $caller : $line");
+  my $d = shift;
+  $d = $eprint::dbh if ! $d;
+  my $ac = $d->{AutoCommit};
+  $d->{AutoCommit} = 0;
+  return $ac;
+} # end sub start_transaction
+
+sub end_transaction {
+  #my ( $caller, undef, $line ) = caller;
+#$eprint::log->debug("Called end_transaction from $caller : $line");
+  my ( $d, $ac ) = @_;
+if ( ! defined $ac ) {
+  $eprint::log->error("Undefined ac");
+}
+  $d = $eprint::dbh if ! $d;
+  if ( $ac ) {
+    #$log->debug("Committing");
+    $d->commit();
+  } # end if
+  $d->{AutoCommit} = $ac;
+} # end sub end_transaction
+
 
 1;
