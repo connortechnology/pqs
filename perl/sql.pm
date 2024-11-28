@@ -9,7 +9,7 @@ use strict;
 use warnings;                   # Turn off for production version.
 no  warnings qw(uninitialized); # Interpolating undef into strings is okay.
 use Time::HiRes qw{ gettimeofday tv_interval };
-require eprint;
+require openprint;
 
 use base qw(Exporter);
 use constant DEBUG=>1;
@@ -112,9 +112,9 @@ sub sql_statement {
 # database.
 sub insert {
     my $log   = shift;
-    $log = $eprint::log if ! $log;
+    $log = $openprint::log if ! $log;
     my $dbh   = shift;
-    $dbh = $eprint::dbh if ! $dbh;
+    $dbh = $openprint::dbh if ! $dbh;
     my $table = shift; # The table name to operate on (may contain schema)
     my %data  = @_;    # Field and value pairs
 
@@ -194,7 +194,7 @@ sub start_transaction {
   #my ( $caller, undef, $line ) = caller;
 #$openprint::log->debug("Called start_transaction from $caller : $line");
   my $d = shift;
-  $d = $eprint::dbh if ! $d;
+  $d = $openprint::dbh if ! $d;
   my $ac = $d->{AutoCommit};
   $d->{AutoCommit} = 0;
   return $ac;
@@ -202,12 +202,12 @@ sub start_transaction {
 
 sub end_transaction {
   #my ( $caller, undef, $line ) = caller;
-#$eprint::log->debug("Called end_transaction from $caller : $line");
+#$openprint::log->debug("Called end_transaction from $caller : $line");
   my ( $d, $ac ) = @_;
 if ( ! defined $ac ) {
-  $eprint::log->error("Undefined ac");
+  $openprint::log->error("Undefined ac");
 }
-  $d = $eprint::dbh if ! $d;
+  $d = $openprint::dbh if ! $d;
   if ( $ac ) {
     #$log->debug("Committing");
     $d->commit();
