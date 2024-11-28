@@ -83,7 +83,7 @@ use Data::Dumper;
                    dblwidth    AS width,   dblheight  AS height,
                    strmweight  AS mweight, 'sheet'    AS type,
                    strcalliper::NUMERIC AS calliper,
-                   (CASE WHEN ysncutpaper   = 'Y' THEN TRUE ELSE FALSE END) AS cut_paper, 
+                   cut_paper, 
                    (CASE WHEN ysnperfecting = 'Y' THEN TRUE ELSE FALSE END) AS perfecting
             FROM tbl_paper 
         },
