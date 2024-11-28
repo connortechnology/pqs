@@ -28,22 +28,18 @@ sub substrate_lookup : JSRS {
         = map { defined $_ && $_ ne '' ? $_ : undef } @attrs;
 
 
-	my $prod;
+	my $prod = '';
 
 	if ( $pid ) {
 		# For regular projects check to see if we are flagged
 		# as a product.
- 		$prod = $dbh->selectrow_array(q{
-			SELECT prod_id FROM tbl_projects WHERE lngprojectindex = ?
-		}, undef, $pid) 
-	} else {
+ 		$prod = $dbh->selectrow_array(q{SELECT prod_id FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
+    $prod //= '';
+	} elsif ($sid) {
 		# From our hybrid product page sid contains product
 		# item number.
 		$prod = $sid;
 	}
-
-
-print STDERR "IS PROD: $prod \n";
 
 print STDERR "****** IS PROD: $prod PRODUCT Specific Reccomendataions have been disabled ********** \n";
 
