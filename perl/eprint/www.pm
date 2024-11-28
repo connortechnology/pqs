@@ -18,9 +18,43 @@ require configuration;
 use session;
 use Data::Dumper;
 
+require openprint;
 require eprint::login;
 
+use vars qw( $r %variable %session %param %config $log $dbh $starttime );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*r = \$openprint::r;
+
 use constant MAX_REDIRECTS => 20;
+use constant DEBUG => 1;
+
+sub cleanup {
+  if ( $r->connection->aborted( ) ) {
+    $log->debug('Was aborted');
+  } elsif ( DEBUG ) {
+    $log->debug('cleanup');
+  } # end if
+  %openprint::variable = ();
+  %openprint::param = ();
+  if ( $dbh ) {
+    $session{lastupdated} = time;
+    untie %session;
+    openprint::Object::init_cache();
+    if ( ! $dbh->{AutoCommit} ) {
+      $log->error('Uncommited transaction');
+    } elsif ( DEBUG ) {
+      $log->debug('Finished cleanup');
+    } # end if
+    $dbh->disconnect();
+  } else {
+    $log->debug('No dbh at cleanup');
+  } # end if
+} # end sub cleanup
 
 sub show_params {
   my $r = session::r;
@@ -77,28 +111,31 @@ sub handler {
   return NOT_FOUND unless -e $rec->filename;
   return FORBIDDEN unless -r $rec->filename;
 
-  my $r = Apache2::Request->new($rec);
+  $r = Apache2::Request->new($rec);
   $r->parse;
 
   session::r($r);
   session::log($r->log);
+  $openprint::log = $r->log;
 
   if ( $r->header_only ) {
     $r->log->debug('Browser only wanted header.');
     return OK;
   }
+  $r->push_handlers(PerlCleanupHandler => \&cleanup);
 
   ssi:$gdb 	 = PQS::DB->connect($r, { ReadOnly => 1 });
-  my $dbh    = PQS::DB->connect($r, { AutoCommit => 1 });
+  $dbh    = PQS::DB->connect($r, { AutoCommit => 1 });
 
   session::dbh($dbh);
-  my $variable = {};
+  my $variable = \%variable;
   my $cookie   = misc::get_cookie($r, $r->log, $dbh, $variable);
 
   $cookie = generate_cookie($r, $r->log, $dbh) unless $cookie;
 
-  %{$variable->{param}} = map {$_ => $r->param($_)} $r->param();
+  %openprint::param = %{$variable->{param}} = map {$_ => $r->param($_)} $r->param();
   show_params();
+  openprint::session_init();
 
   #print STDERR "HAVE COOKIE: $cookie\n";
 
@@ -133,7 +170,6 @@ sub handler {
   if ($@) {
     my $err = $@;
 
-    $dbh->disconnect;
     $r->log->error($err);
 
     if (DEBUG) {
@@ -148,7 +184,6 @@ sub handler {
   }
 
   if ( $status != OK and $status != 200 ) {
-    $dbh->disconnect;
     $r->status( $status );
     return $status;
   }
@@ -165,7 +200,6 @@ sub handler {
     my $fh;
 
     if (!open $fh, '<', $filename ) {
-      $dbh->disconnect;
       $r->log->error("Failed opening $page: $!");
       die "Failed to open $filename: $!";
     }
@@ -190,13 +224,21 @@ sub handler {
     }
 
     # this is where we actually send the page to the client
-    $r->content_type('text/html');
-    print( $file_data );
+    if ( $filename =~ /\.html/ ) {
+      $r->content_type(q{text/html; charset=utf-8});
+    } elsif ( $filename =~ /\.json/ ) {
+      $r->content_type(q{text/javascript; charset=utf-8});
+    } elsif ( $filename =~ /\.xml/ ) {
+      $r->content_type(q{text/xml; charset=utf-8});
+    } elsif ( $filename =~ /\.rss/ ) {
+      $r->content_type(q{application/rss+xml; charset=utf-8});
+    } # end if
+
+    print $file_data;
   }
 
   print STDERR "END REQUEST \n\n\n\n\n";
 
-  $dbh->disconnect;
   $gdb->disconnect;
 
   return OK;
@@ -510,6 +552,22 @@ sub section_admininistrator {
       eprint::admin_paper::import_export($r, $log, $dbh, $variable)    if $filename eq 'import_export.html';
       eprint::admin_paper::price_list_edit($r, $log, $dbh, $variable)  if $filename eq 'price_list_edit.html';
       eprint::admin_paper::price_list_view($r, $log, $dbh, $variable)  if $filename eq 'price_list_view.html';
+    } elsif ($sub_section eq 'stock') {
+      my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+      if ( $proc ) {
+        my $module = join('_', 'administrator', $sub_section);
+        eval {
+          require "openprint/$module.pm";
+          if ( my $function = ('openprint::'.$module)->can($proc) ) {
+            $log->debug("Running openprint::$module->$proc") if DEBUG;
+            $function->($r, $log, $dbh, $variable );
+            $log->error( "Can't $module :: $proc, Reason: $@" ) if $@;
+          } else {
+            $log->error( "Can't $module :: $proc, Reason: " );
+          }
+        };
+        $log->error( "Can't $module :: $proc, Reason: $@" ) if $@;
+      } # end if
 
     } elsif ($sub_section eq 'managerial') {
       require eprint::credit_application;
