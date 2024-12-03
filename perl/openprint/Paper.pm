@@ -720,13 +720,19 @@ sub mweight {
 $openprint::log->debug("Setting mweight to $$self{mweight} from wpsi $wpsi and basis size");
 				# MWeight is in relation to the basis size
 			} elsif ( $$self{width} and $$self{height} ) {
-				$$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 1000 );
+        if ($self->is_envelope()) {
+          $$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 500 );
+        } else {
+          $$self{mweight} = Math::Round::round( $wpsi * $$self{width} * $$self{height} * 1000 );
+        } # endif
+
 			} # end if
-		} elsif ( ($self->weight() =~ /(\d+)lb/) or ($self->weight() =~ /(\d+)#/) ) {
-			$$self{mweight} = Math::Round::round(($1*$$self{width}*$$self{height})/($self->basis_width()*$self->basis_height()));
+		} elsif ($self->basis_mweight()) {
+			$$self{mweight} = Math::Round::round(($$self{basis_mweight}*$$self{width}*$$self{height})/($self->basis_width()*$self->basis_height()));
+$openprint::log->debug("Auto calcing mweight from basis" . $self->weight() );
 		} elsif ( ! $self->weight() =~ /\D/ ) {
 			# weigiht of 500sheets of 25x38
-#$openprint::log->debug("Auto calcing mweight from " . $self->weight() );
+$openprint::log->debug("Auto calcing mweight from " . $self->weight() );
 			$$self{mweight} = Math::Round(($self->weight()*$$self{width}*$$self{height})/($self->basis_width()*$self->basis_height()));
 		} # end if
 		$self->wpsi(undef);
@@ -1295,9 +1301,15 @@ sub wpsi {
 	if (!$$self{wpsi}) {
 		if ( $self->basis_mweight() ) {
 			$$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
-$log->debug("Setting wpsi to $$self{wpsi} from basisweight ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height()");
-		} elsif ( $$self{mweight} and ( $self->type() eq 'Sheet' ) and $$self{width} and $$self{height} ) {
+      if ($self->is_envelope()) {
+        $$self{wpsi} *= 2;
+        $log->debug("Setting wpsi to $$self{wpsi} from envelope 2 * basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
+      } else {
+        $log->debug("Setting wpsi to $$self{wpsi} from basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
+      }
+    } elsif ( $$self{mweight} and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
+$$self{wpsi} *= 2 if $self->is_envelope();
 $log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height}) = $$self{wpsi}");
     } elsif ( $$self{gsm} and $$self{gsm} ne 'unknown') {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
@@ -1698,9 +1710,10 @@ sub basis_mweight {
 	if ( ! $$self{basis_mweight} ) {
 		my $wpsi = $$self{wpsi};
 		if ( $wpsi ) {
+      $wpsi /= 2 if $self->is_envelope();
 			$$self{basis_mweight} = Math::Round::nearest(0.01, $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
-$openprint::log->debug("calcing basis_mweight from wpsi: $$self{basis_mweight} = $wpsi * $$self{basis_width} * $$self{basis_height} * 1000");
-		} elsif ( ( $$self{weight} =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
+$openprint::log->debug("calcing basis_weight from wpsi: $$self{basis_mweight} = $wpsi * $$self{basis_width} * $$self{basis_height} * 1000");
+		} elsif ( ( $self->weight() =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
 			$$self{basis_mweight} = 2*$1;
 $openprint::log->debug("calcing basis_mweight from weight: $$self{basis_mweight} = $$self{weight} =~ 2*$1");
     } elsif ($$self{mweight} and $self->type() eq 'Sheet' and $$self{width} and $$self{height}) {
@@ -1709,7 +1722,7 @@ $openprint::log->debug("calcing basis_mweight from mweight: $$self{basis_mweight
 
 		} else {
 			#$$self{basis_mweight} = 'Unknown';
-			$openprint::log->error('Unable to calculated basis_mweight'.$$self{id});
+			$openprint::log->error('Unable to calculated basis_mweight'.$$self{id}." weight was $$self{weight}");
 		} # end if
 	} # end if
 	return $$self{basis_mweight};
@@ -1724,7 +1737,7 @@ sub basis_width {
 	if ( ! $$self{basis_width} ) {
 		if ( $self->is_cover() ) {
 			$$self{basis_width} = 20;
-		} elsif ( $self->is_bond() ) {
+		} elsif ( $self->is_bond() or $self->is_envelope() ) {
 			$$self{basis_width} = 17;
 		} else {
 			$$self{basis_width} = 25;
@@ -1742,7 +1755,7 @@ sub basis_height {
 	if ( ! $$self{basis_height} ) {
 		if ( $self->is_cover() ) {
 			$$self{basis_height} = 26;
-		} elsif ( $self->is_bond() ) {
+		} elsif ( $self->is_bond() or $self->is_envelope() ) {
 			$$self{basis_height} = 22;
 		} else {
 			$$self{basis_height} = 38;
@@ -1959,7 +1972,7 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
   }
 	if ( $Paper->weight() =~ /(\d+) *lb/i ) {
 		if ( int($Paper->basis_mweight()) != 2*$1 ) {
-			push @results, 'may have wrong basis mweight.  Should probably be '.2*$1;
+			push @results, 'may have wrong basis weight ('.int($Paper->basis_mweight()).'. Should probably be '.2*$1;
 		}
 	}
   my $old_wpsi = 1*$$Paper{wpsi};
@@ -1997,14 +2010,18 @@ sub is_bond {
 			or 
 			$Paper->weight() =~ /bond/i);
 }
+
 sub is_envelope {
 	my $Paper = shift;
-	return 
-			($Paper->brand() =~ /envelope/i
-			 or
-			$Paper->finish() =~ /envelope/i
-			or 
-			$Paper->weight() =~ /envelope/i);
+	return (
+    $$Paper{type} eq 'Envelope'
+      or
+    $Paper->brand() =~ /envelope/i
+      or
+    $Paper->finish() =~ /envelope/i
+      or 
+    $Paper->weight() =~ /envelope/i
+  );
 }
 
 sub is_fsc {
