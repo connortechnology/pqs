@@ -251,6 +251,15 @@
 	
 	/* Lists where Buttlets Are Not Visible */
 	
+	ul.non-list:after,
+	ul.non-list li:after {
+    content: ".";
+  display: block;
+  height: 0;
+    font-size: 0;
+  clear: both;
+  visibility: hidden;
+  }
 	ul.non-list,
 	ul.non-list li {
 		margin: 0 0 2ex 0;
