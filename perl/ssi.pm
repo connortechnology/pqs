@@ -592,45 +592,43 @@ sub select_options {
 # what should be pairs, a SINGLE value to select, and an option maximum label
 # length.
 sub make_drop_down {
-    my ( $val, $checkval, $length ) = @_;
-    my ( $options, $selected ) = ('', '');
-    my @data;
-	
+  my ( $val, $checkval, $length ) = @_;
+  my ( $options, $selected ) = ('', '');
+  my @data;
 
+  my $value;
+  my $label;
 
-	my $value;
-	my $label;
+  my $x = ref $val;
+  #print STDERR "START MAKE: $x \n";
+  # Return an empty string if no data was passed.
+  if    (ref $val eq 'HASH')                           { @data = %$val }
+  elsif (ref $val eq 'ARRAY') 						 { @data = @$val }
+  else                                                 { return;       }
 
-	my $x = ref $val;
-	print STDERR "START MAKE: $x \n";
-    # Return an empty string if no data was passed.
-    if    (ref $val eq 'HASH')                           { @data = %$val }
-    elsif (ref $val eq 'ARRAY') 						 { @data = @$val }
-    else                                                 { return;       }
-
-    while (@data) {
-		if ( ref $data[0] eq 'ARRAY' ) {
-			my $row = shift @data;
-			$value = shift @$row;
-			$label = shift @$row;
-		} else { 
-			$value = shift @data;
-			$label = shift @data;
-		}
-
-        # Should the current option be selected?
-        $selected = defined $checkval && $checkval eq $value 
-            ? 'selected="selected"' : '';
-
-        # Escape html entities where needed and trim label length.
-        $value = encode_entities( $value );
-        $label = encode_entities( $length ? substr($label, 0, $length) : $label );
-
-        # Output the option.
-        $options .= qq|<option value="$value" $selected>$label</option>\n|;
+  while (@data) {
+    if ( ref $data[0] eq 'ARRAY' ) {
+      my $row = shift @data;
+      $value = shift @$row;
+      $label = shift @$row;
+    } else { 
+      $value = shift @data;
+      $label = shift @data;
     }
-    # Return an HTML text block of options.
-    return $options;
+
+    # Should the current option be selected?
+    $selected = defined $checkval && $checkval eq $value 
+    ? 'selected="selected"' : '';
+
+    # Escape html entities where needed and trim label length.
+    $value = encode_entities( $value );
+    $label = encode_entities( $length ? substr($label, 0, $length) : $label );
+
+    # Output the option.
+    $options .= qq|<option value="$value" $selected>$label</option>\n|;
+  }
+  # Return an HTML text block of options.
+  return $options;
 }
 
 # Generate an HTML option set (as a string) of materials in the given type.
