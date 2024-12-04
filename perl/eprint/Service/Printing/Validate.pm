@@ -11,7 +11,6 @@ use eprint::Config;
 use eprint::project qw(:common);
 use List::Util		qw(sum);
 
-
 use constant VARNISHES        => qw(gloss matte);
 use constant DEFAULT_COVERAGE => eprint::Config->get('Printing' => 'default_coverage');
 
@@ -353,62 +352,70 @@ sub colours_coatings {
 
 # Extract the substrate (stock) information from the form.
 sub stock {
-    my ($dbh, $specs) = @_;
-    my %stock;
+  my ($dbh, $specs) = @_;
+  my %stock;
 
-print STDERR "CALL STOCK HERE \n";
-    # At this stage we've chosen a family/type (for some reason we combine
-    # them), coatings, colour, and weight. Due to our poor database design
-    # this does not equate to a paper, so we pass it all. TODO: Add some
-    # assertions and other validity checks.
-    
-    $stock{name} = $specs->{stock_name}
-        or warn "No stock name selected.";
+  # At this stage we've chosen a family/type (for some reason we combine
+  # them), coatings, colour, and weight. Due to our poor database design
+  # this does not equate to a paper, so we pass it all. TODO: Add some
+  # assertions and other validity checks.
 
-    $stock{colour} = $specs->{stock_colour}
-        or warn "No stock colour selected.";
-
-print STDERR "GET MY  STOCK HERE \n";
+  if ($specs->{rdbSpecificStock} eq 'Y') {
+    $stock{custom} = 1;
+    $stock{name} = $specs->{txtSpecificStockBrand};
+    $stock{finish} = $specs->{txtSpecificStockFinish};
+    $stock{colour} = $specs->{txtSpecificStockColour};
+    $stock{weight} = $specs->{txtSpecificStockWeight};
+    $stock{calliper} = $specs->{txtSpecificStockCalliper};
+    $stock{type} = lc $specs->{StockType};
+    $stock{width} = $specs->{txtSpecificStockWidth};
+    $stock{height} = $specs->{txtSpecificStockHeight};
+    $stock{cut_paper} = $specs->{cuttable};
+    $stock{mweight} = $specs->{txtCustomMWeight}
+  } else {
+    $stock{name} = $specs->{stock_name} or warn "No stock name selected.";
+    $stock{colour} = $specs->{stock_colour} or warn "No stock colour selected.";
 
     # In addition to setting our stock coating, we'll tell each side of the
     # spread whether they're coated or not.
-    $stock{finish} = $specs->{stock_finish}
-        or warn "No stock finish selected.";
+    $stock{finish} = $specs->{stock_finish} or warn "No stock finish selected.";
 
     # $spread{side}[0]{coated_paper} = ($stock{coating} >= 1);
     # $spread{side}[1]{coated_paper} = ($stock{coating} >= 2);
 
     $stock{weight} = $specs->{stock_weight};
 
-    # Does the customer wish to supply their own stock?
-    $stock{supplied} = ($specs->{stock_supplied}) ? 1 : 0;
 
-     # Add the calliper as everyone wants it.
-     $stock{calliper} = $dbh->selectrow_array(qq{
-            SELECT strcalliper FROM tbl_paper 
-            WHERE strname   = ?
-              AND strfinish = ?
-              AND strcolour = ?
-              AND strweight = ?
-     }, {}, @{\%stock}{qw(name finish colour weight)});
+    # Add the calliper as everyone wants it.
+    $stock{calliper} = $dbh->selectrow_array(qq{
+      SELECT strcalliper FROM tbl_paper 
+      WHERE strname   = ?
+      AND strfinish = ?
+      AND strcolour = ?
+      AND strweight = ?
+      }, {}, @{\%stock}{qw(name finish colour weight)});
 
-	 if ( ! $stock{calliper} ) { 
-        	$stock{calliper} = $dbh->selectrow_array(qq{
-            	SELECT strcalliper FROM tbl_paper_roll 
-            	WHERE strname   = ?
-              	  AND strfinish = ?
-              	  AND strcolour = ?
-              	  AND strweight = ?
-        	}, {}, @{\%stock}{qw(name finish colour weight)});
+    if ( ! $stock{calliper} ) { 
+      $stock{calliper} = $dbh->selectrow_array(qq{
+        SELECT strcalliper FROM tbl_paper_roll 
+        WHERE strname   = ?
+        AND strfinish = ?
+        AND strcolour = ?
+        AND strweight = ?
+        }, {}, @{\%stock}{qw(name finish colour weight)});
 
-			if ( $stock{calliper} ) {
-				$stock{is_roll} = 1;
-			} else {
-				warn "Stock Calliper Not Found FOR: " . Dumper(\%stock);
-			}
-	 }
+      if ( $stock{calliper} ) {
+        $stock{is_roll} = 1;
+      } else {
+        warn "Stock Calliper Not Found FOR: " . Dumper(\%stock);
+      }
+    } # end if ! calliper
+  } #end if specific
 
-    return \%stock;
+  # Does the customer wish to supply their own stock?
+  $stock{supplied} = ($specs->{stock_supplied}) ? 1 : 0;
+
+  return \%stock;
 }
 
 # Extract the version information from the form.
@@ -448,49 +455,46 @@ sub versions {
 }
 
 sub overrides {
-    my ($specs, $user_type) = @_;
+  my ($specs, $user_type) = @_;
 
-    my %override;
+  my %override;
 
-    # Each field shows the automatically selected value by default, so we only
-    # set it as an override if the user has checked the associated box.
-    for my $field (qw(press runstyle substrate quality)) {
-        $override{$field} = $specs->{$field}
-            if $specs->{"override_$field"};
+  # Each field shows the automatically selected value by default, so we only
+  # set it as an override if the user has checked the associated box.
+  for my $field (qw(press runstyle substrate quality)) {
+    $override{$field} = $specs->{$field}
+    if $specs->{"override_$field"};
+  }
+
+  $override{margin} = $specs->{ignore_margins} || undef;
+
+  # TODO Before these are allowed we must make sure the user is priveledged
+  # (ie. employee/admin).
+  if ( $user_type eq 'A' || $user_type eq 'E' ) {	
+    $override{overs}{unit} = $specs->{override_overs_unit};
+    $override{overs}{run}  = $specs->{override_overs_run} ne '' ? $specs->{override_overs_run} / 100 : undef;
+  }
+
+  # Multipage projects can override the number of spreads on a form and the
+  # number of forms in that group.
+  if ($specs->{spreads} && $specs->{forms}) {
+    my $spreads = $specs->{spreads} || 0;
+    $spreads =~ tr/0-9//cd;
+
+    my $forms   = $specs->{forms}   || 0;
+    $forms   =~ tr/0-9//cd;
+
+    if ($spreads > 0 && $forms > 0) {
+      $override{spreads_on_form} = $spreads;
+      $override{forms}           = $forms;
     }
+  }
 
-    $override{margin} = $specs->{ignore_margins} || undef;
+  $override{chargefor} = $specs->{chargefor};
+  print STDERR "HAVE OVERRIDES: ", Dumper(\%override);
 
-    # TODO Before these are allowed we must make sure the user is priveledged
-    # (ie. employee/admin).
-   	if ( $user_type eq 'A' || $user_type eq 'E' ) {	
-    	$override{overs}{unit} = $specs->{override_overs_unit};
-    	$override{overs}{run}  = $specs->{override_overs_run} ne '' ? $specs->{override_overs_run} / 100 : undef;
-	}
-
-    # Multipage projects can override the number of spreads on a form and the
-    # number of forms in that group.
-    if ($specs->{spreads} && $specs->{forms}) {
-        my $spreads = $specs->{spreads} || 0;
-           $spreads =~ tr/0-9//cd;
-
-        my $forms   = $specs->{forms}   || 0;
-           $forms   =~ tr/0-9//cd;
-
-        if ($spreads > 0 && $forms > 0) {
-            $override{spreads_on_form} = $spreads;
-            $override{forms}           = $forms;
-        }
-    }
-	
-	$override{chargefor} = $specs->{chargefor};
-use Data::Dumper;
-print STDERR "HAVE OVERRIDES: ", Dumper(\%override);
-
-
-    return \%override;
+  return \%override;
 }
 
-
-
 1;
+__END__
