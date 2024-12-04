@@ -215,7 +215,7 @@ print STDERR "Pass Digital Test \n";
     # If our project has specified Press Quality Requirements only allow the presses
     # that exactly match the quality rating we are looking for.
     
-	return if ( $project->{product_only} == 0 && $press->{product_only} );
+	return if ( (!$project->{product_only}) && $press->{product_only} );
 
 print STDERR "\nC PRESS IS VALID: $press->{id} - $press->{name} \n";
     return 1;
