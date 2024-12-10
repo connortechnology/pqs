@@ -371,7 +371,13 @@ sub stock {
     $stock{width} = $specs->{txtSpecificStockWidth};
     $stock{height} = $specs->{txtSpecificStockHeight};
     $stock{cut_paper} = $specs->{cuttable};
-    $stock{mweight} = $specs->{txtCustomMWeight}
+    $stock{mweight} = $specs->{txtCustomMWeight};
+    $stock{Price} = {
+      Cost  => $$specs{CustomStockPrice} * $specs->{txtCustomMWeight} / (100 * 1000),
+      Price => $$specs{CustomStockPrice} * $specs->{txtCustomMWeight} / (100 * 1000),
+      units => 'lbs'
+    };
+
   } else {
     $stock{name} = $specs->{stock_name} or warn "No stock name selected.";
     $stock{colour} = $specs->{stock_colour} or warn "No stock colour selected.";
@@ -385,11 +391,10 @@ sub stock {
 
     $stock{weight} = $specs->{stock_weight};
 
-
     # Add the calliper as everyone wants it.
     $stock{calliper} = $dbh->selectrow_array(qq{
       SELECT strcalliper FROM tbl_paper 
-      WHERE strname   = ?
+      WHERE strname = ?
       AND strfinish = ?
       AND strcolour = ?
       AND strweight = ?
