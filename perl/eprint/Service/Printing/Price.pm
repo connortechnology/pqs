@@ -1194,7 +1194,6 @@ sub calc_print_price {
   my $cover;
 
   if ( $project->{signature}{txtSignatureType} eq 'Cover Spreads' ) {
-
     my $x = $paper->{width} * $paper->{height};
 
     my $cover_spec = $dbh->selectrow_hashref(q{
@@ -1522,7 +1521,9 @@ sub calc_print_price {
   }
 
   my $paper_price;
-  if ( $paper->{index} ) {
+  my $roll;
+  my $id = $paper->{index};
+  if ($id) {
     $paper_price = $is_largeformat
     ? eprint::paper::get_lf_price(
       $log, $dbh, $variable, $imp,
@@ -1532,52 +1533,40 @@ sub calc_print_price {
       $log, $dbh, $variable, $paper, $press,
       $price{'Buy Quantity'}
     );
+    $roll = $dbh->selectrow_array(q{
+      SELECT COUNT(*) > 0 FROM tbl_paper_roll WHERE lngindex = ?
+      }, undef, $id);
+  } elsif ($paper->{custom}) {
+    $paper_price = $paper->{Price};
+    $$paper_price{buy_qty} = $price{'Buy Quantity'};
   }
 
-  my $roll = $dbh->selectrow_array(q{
-    SELECT COUNT(*) > 0 FROM tbl_paper_roll WHERE lngindex = ?
-    }, undef, $paper->{index});
-
-
-  if ($press_type eq 'web' || $roll) {
-    $price{'Roll Qty'} = sprintf('%.2f',
-      eprint::paper::convert_sheets_into_rolls(
-        $log, $dbh, $price{'Buy Quantity'}, $paper->{index}
-      )
-    );
+  if ($press_type eq 'web' || $roll || $paper->{type} eq 'roll') {
+    $price{'Roll Qty'} = sprintf('%.2f', eprint::paper::convert_sheets_into_rolls( $log, $dbh, $price{'Buy Quantity'}, $id));
   }
 
-  $price{'Buy Quantity'} = ceil($paper_price->{buy_qty});
-  $price{'Sheet Price'}  = $paper_price->{Price};
+  #$price{'Buy Quantity'} = ceil($paper_price->{buy_qty});
+  #$price{'Sheet Price'}  = $paper_price->{Price};
 
-  my $id = $paper->{index};
   my $baby_sheets;
-
   if ($paper->{width} > 0 && $paper->{height} > 0) {
-    $baby_sheets = ($paper->{start_width}  * $paper->{start_height}) 
-    / ($paper->{width}        * $paper->{height}      );
+    $baby_sheets = ($paper->{start_width} * $paper->{start_height}) / ($paper->{width} * $paper->{height});
   }
 
   my ($pack_qty, $break) = $dbh->selectrow_array(q{
     SELECT lngPackageQty, ysnBreakable FROM tbl_Paper WHERE lngIndex = ?
-    }, {}, $id);
+    }, {}, $id) if $id;
 
   $pack_qty *= $baby_sheets if $baby_sheets > 1;
 
   if ($break eq 'N' and $pack_qty) {
-    $price{'Buy Quantity'} = (int($price{'Buy Quantity'} / $pack_qty) + 1)
-    * $pack_qty
-    if $price{'Buy Quantity'} % $pack_qty;
+    $price{'Buy Quantity'} = (int($price{'Buy Quantity'} / $pack_qty) + 1) * $pack_qty if $price{'Buy Quantity'} % $pack_qty;
 
     # New buy quantity means getting a new dataset.
-    $paper_price = eprint::paper::get_price(
-      $log, $dbh, $variable, $paper, $press, $price{'Buy Quantity'}
-    );
-
-    $price{'Sheet Price'} = $paper_price->{Price};
-
-    my $mod = $price{'Buy Quantity'} % $pack_qty;
+    $paper_price = eprint::paper::get_price($log, $dbh, $variable, $paper, $press, $price{'Buy Quantity'});
+    #my $mod = $price{'Buy Quantity'} % $pack_qty;
   }
+  $price{'Sheet Price'} = $paper_price->{Price};
 
   if ($is_largeformat) {
     my $is_sqft = $paper_price->{units} eq 'square foot';
@@ -1588,14 +1577,11 @@ sub calc_print_price {
     }
 
     if ($is_sqft) {
-      $price{'Buy Quantity'}
-      = ceil($qty / ($imp->getSetup||1)) * get_lf_jobsize($imp) / 144;
-    }
-    else {
+      $price{'Buy Quantity'} = ceil($qty / ($imp->getSetup||1)) * get_lf_jobsize($imp) / 144;
+    } else {
       # we're looking at sheet cost -- assuming there is one.
       #$price{'Buy Quantity'} = $imp->getSpreads * $qty;
       $price{'Buy Quantity'} = ceil(($imp->getSpreads * $qty) / ($imp->getSetup || 1));
-
 
       # New buy quantity means getting a new dataset.
       $paper_price = eprint::paper::get_price(
@@ -1614,12 +1600,8 @@ sub calc_print_price {
       print STDERR "OLD PAPER PRICE", Dumper($paper_price);
       $paper_price->{Price} = ( $paper_price->{Price} + $cover_price->{Price} ) / 2;
       print STDERR "HAVE COVER SPECS", Dumper($cover, $cover_price, $paper_price);
-
     }
-
   }
-
-  #
 
   $price{'Paper Cost'} = $price{'Buy Quantity'} * $paper_price->{Cost};
 
@@ -1633,9 +1615,7 @@ sub calc_print_price {
     # the stock free and not worry about it.
   }
 
-  $price{'Paper Price'}       = $price{'Buy Quantity'}
-  * $paper_price->{Price};
-
+  $price{'Paper Price'}       = $price{'Buy Quantity'} * $paper_price->{Price};
   $price{'Setup Cost'}        = $setup_cost;
 
   $price{'Impressions'}       = $impressions;
