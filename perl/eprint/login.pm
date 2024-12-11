@@ -193,6 +193,23 @@ sub logout {
 sub email_password {
     my ($r, $log, $dbh, $variable) = @_;
 
+    use Captcha::reCAPTCHA;
+    my $c = Captcha::reCAPTCHA->new;
+    my $challenge = 1;
+    my $response  = $r->param('g-recaptcha-response');
+    my $key = "6LfKz8gUAAAAAEQQyR2BZhg15phipZkfyCl4kuUi";
+    if (!$response) {
+      return misc::error( $log, $dbh, $variable, 
+        'Bad Field', 'You must provide the Captcha.  Please press the back button to try again'  );
+    }
+
+    use Data::Dumper;
+    my $result = $c->check_answer_v2($key, $response, $ENV{'REMOTE_ADDR'});
+    if (!$result->{is_valid}) {
+      return misc::error( $log, $dbh, $variable, 
+        'Bad Field', 'Your Captcha is incorrect. Please press the back button to try again'  );
+    }
+
     my $email = $r->param('txtEmail2');
     $email =~ tr/[A-Z]/[a-z]/;
     $email = sql::escape($email);
@@ -252,10 +269,10 @@ sub login_app_process {
     my ($r, $log, $dbh, $variable, $cookie) = @_;
     my ($error, $temp, $cust_id, $user_id, $email);
 
+
+  #map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
+
 	use Captcha::reCAPTCHA;
-
-	map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
-
     my $c = Captcha::reCAPTCHA->new;
     my $challenge = 1;
     my $response  = $r->param('g-recaptcha-response');
