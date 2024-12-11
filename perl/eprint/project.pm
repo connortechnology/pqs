@@ -554,8 +554,8 @@ sub get_signature_weight {
                 pad_sheets		 txtSignatureQuantity
     ));
 
-    die "Invalid MWeight ($mweight) for project ($pid) signature ($sid)."
-        unless $mweight && int $mweight > 0;
+  #die "Invalid MWeight ($mweight) for project ($pid) signature ($sid)."
+  #unless $mweight && int $mweight > 0;
 
     $spread_width  ||= $width;
     $spread_height ||= $height;
