@@ -4,7 +4,6 @@
 	}
 	.versionBG { border-top: 5px solid black }
 
-
 	@media print {
 		#printOnly {
 		display : block;
@@ -101,8 +100,6 @@
 							<? endif ( ! $variable->{sid} ) ?>
                             
 						<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
-
-
 						<!--
 
 						<?if ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
@@ -112,10 +109,6 @@
 						<?endif ((($$variable{'user_type'} eq 'A') || ($$variable{'user_type'} eq 'E')) && (! $$variable{'email'}))?>
 						-->
 
-
-
-
-
 						<?html?>
 
 						<!-- Moved to service_comment.html
@@ -123,8 +116,6 @@
 							<p class="comment" style="font-weight: Bold;"><strong>Docket Comment: </strong>&nbsp;<?comment?></p>
 						<?endif ($$variable{comment}) ?>
 						-->
-
-
 					</div>
 				<?endloop service_type?>
 
@@ -151,12 +142,6 @@
 			</div>
 		<?endloop categories?>
 	<? endif ($$variable{Category} != -1) ?>
-	
-
-
-
-
-
 
 	<? if ($$variable{Category} < 1) ?>
 		<div class="category">
@@ -174,18 +159,17 @@
 
 					<? if ($$variable{stock_supplied}) ?><strong> - Customer Supplied Stock</strong> <?stock_custom?><? endif ($$variable{stock_supplied}) ?>
 					<?loop subMaterials?>
-						<div style=" padding-left: 2em; ">
+						<div style="padding-left: 2em;">
 							<? if ($$variable{'category'} eq 'Inks')?><strong>Colour:&nbsp;&nbsp;</strong><?endif ($$variable{'category'} eq 'Inks')?>
 							
-                           <? if ($$variable{stock_supplied}) ?><strong>Estimated Value:&nbsp;&nbsp;</strong><? endif ($$variable{stock_supplied}) ?> <?name?> <?value?>	<br />
+              <? if ($$variable{stock_supplied}) ?><strong>Estimated Value:&nbsp;&nbsp;</strong><? endif ($$variable{stock_supplied}) ?>
+              <?name?> <?value?>	<br />
 							<table class="no-formatting no-padding" style="margin: 0;" cellspacing="0" cellpadding="0" border="0" width="90%">
-                              <tr>
-                                <td width="50%"><strong>Estimated Press Sheet Qty:&nbsp;&nbsp;</strong><?qty?></td>
-                                <td width="50%"><strong>Actual Qty:&nbsp;&nbsp;______________</strong></td>
-                              </tr>
-                              
-                            </table>
-                           
+                <tr>
+                  <td width="50%"><strong>Estimated Press Sheet Qty:&nbsp;&nbsp;</strong><?qty?></td>
+                  <td width="50%"><strong>Actual Qty:&nbsp;&nbsp;______________</strong></td>
+                </tr>
+              </table>
 						</div>
 					<?endloop subMaterials?>
 
