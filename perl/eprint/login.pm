@@ -4,6 +4,8 @@ use utf8;
 
 use Apache2::Const qw(:common HTTP_MOVED_TEMPORARILY);
 use Apache2::Cookie ();
+use Captcha::reCAPTCHA;
+use Data::Dumper;
 
 #use sql qw(:common);
 require sql;
@@ -193,6 +195,21 @@ sub logout {
 sub email_password {
     my ($r, $log, $dbh, $variable) = @_;
 
+    my $c = Captcha::reCAPTCHA->new;
+    my $challenge = 1;
+    my $response  = $r->param('g-recaptcha-response');
+    my $key = "6LdWLJkqAAAAAO8NEwEMoeumR5L0wB9mCagA3ZrP";
+    if (!$response) {
+      return misc::error( $log, $dbh, $variable, 
+        'Bad Field', 'You must provide the Captcha.  Please press the back button to try again'  );
+    }
+
+    my $result = $c->check_answer_v2($key, $response, $ENV{'REMOTE_ADDR'});
+    if (!$result->{is_valid}) {
+      return misc::error( $log, $dbh, $variable, 
+        'Bad Field', 'Your Captcha is incorrect. Please press the back button to try again'  );
+    }
+
     my $email = $r->param('txtEmail2');
     $email =~ tr/[A-Z]/[a-z]/;
     $email = sql::escape($email);
@@ -252,7 +269,6 @@ sub login_app_process {
 	my ($r, $log, $dbh, $variable, $cookie) = @_;
 	my ($error, $temp, $cust_id, $user_id, $email);
 
-	use Captcha::reCAPTCHA;
 
 	map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
 	my $result;
@@ -267,7 +283,6 @@ sub login_app_process {
 		my $key = "6LfKz8gUAAAAAEQQyR2BZhg15phipZkfyCl4kuUi";
 
 
-		use Data::Dumper;
 		print STDERR "START LOGIN APP PROCESS \n\n\n";
 #unless ( $variable->{user_id} ) {
 # Verify submission
