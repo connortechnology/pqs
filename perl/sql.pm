@@ -158,20 +158,28 @@ sub update {
         join ', ', map {$dbh->quote_identifier(lc($_)) . ' = ?'} keys %data
     ;
     # If there's a condition sent include it in the statement.
-    $sql .= " WHERE $condition " if defined $condition and $condition ne '';
+    my @condition_values;
+    if (defined $condition and $condition ne '') {
+      if (ref $condition eq 'ARRAY') {
+        $sql .= ' WHERE '. shift @{$condition};
+        @condition_values = @{$condition};
+      } else {
+        $sql .= " WHERE $condition "
+      }
+    }
 
     # Some code passes NULL as a string instead of as undef. Bad code, no
     # biscuit.
-    for my $k (keys %data) { $data{$k} = undef if $data{$k} eq 'NULL'; }
-
-	#Change empty strings to undefined, DBI will convert undefiend to NULL
-	#prevents sql errors for inserting empty strings into numeric fields
-    for my $k (keys %data) { $data{$k} = undef if $data{$k} eq ''; }
+    #Change empty strings to undefined, DBI will convert undefiend to NULL
+    #prevents sql errors for inserting empty strings into numeric fields
+    for my $k (keys %data) {
+      $data{$k} = undef if $data{$k} eq 'NULL' or $data{$k} eq '';
+    }
 
     if ( $log ) {
       my $starttime = [gettimeofday] if TIMING;
       my $sth = $dbh->prepare($sql);
-      $sth->execute( values %data );
+      $sth->execute(@condition_values, values %data );
       my $print_sql = $sql;
       $print_sql =~ s/\?/\%s/g;
       $print_sql = sprintf($print_sql, values %data );
