@@ -89,7 +89,7 @@ sub email_error {
 			  SUBJECT => 'Website Error',
 		);
 
-    	#misc::send_email_with_attachment($r, $r->log, \%mail, @body);
+    	misc::send_email_with_attachment($r, $r->log, \%mail, @body);
 }
 
 

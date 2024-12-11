@@ -1019,11 +1019,9 @@ sub display {
         };
     }
 
-	 my @qty       = (get_quantities($log, $dbh, $pid));
-	 $page{project}{qty} = \@qty;
-    
-    return \%page;
+	 $page{project}{qty} = [get_quantities($log, $dbh, $pid)];
+   return \%page;
 }
 
-
 1;
+__END__

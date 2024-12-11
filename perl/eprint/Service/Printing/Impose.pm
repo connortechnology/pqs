@@ -55,14 +55,14 @@ print STDERR "HAVE NO PAPER \n" unless @{$substrates};
     # allowed) so currently need a number of special exceptions.
     my $is_inkjet = $project->{press_type} eq 'inkjetprinter';
 
-	my $end =  Time::HiRes::time() - $start_time;
+	 $end =  Time::HiRes::time() - $start_time;
 	print STDERR "START Printing \ IMPOSE 2: $end  \n";
 
     # Generate all possible impositions for the project (except inkjet).
     my $impositions 
         = !$is_inkjet ? PQS::Imposition->new(project => $project, start => $start_time) : undef;
 
-	my $end =  Time::HiRes::time() - $start_time;
+	 $end =  Time::HiRes::time() - $start_time;
 	print STDERR "START Printing \ IMPOSE 3: $end  \n";
 
     # A press run is the set of valid run styles X sheet sizes for that press.
@@ -103,7 +103,6 @@ print STDERR "TIME TO VALIDATE DATA \n";
     return igrep { $_ } iflatten ( igrep { $_->isnt_exhausted } 
                                    imap  { $run->($_)         } $presses );
 }
-
 
 #
 # PRESSES

@@ -1,6 +1,7 @@
 package eprint::project;
 use strict;
 use warnings;
+use Data::Dumper;
 
 use base qw(Exporter);
 
@@ -870,19 +871,17 @@ sub sig_stock_prices {
 
 # Totals service and material (currently only stock) prices for the project.
 sub project_price {
-    my ($log, $dbh, $pid) = @_;
-    
-    my @total;
-    my @material = stock_price($log, $dbh, $pid);
-    my @service  = map { $_ ? sum( map { $_->{price} } values %$_ ) : 0 }
-                      @{ service_prices($dbh, $pid) };
+  my ($log, $dbh, $pid) = @_;
 
-    $total[$_] = $service[$_] + $material[$_] for 0..2; 
+  my @total;
+  my @material = stock_price($log, $dbh, $pid);
+  my @service  = map { $_ ? sum( map { $_->{price} } values %$_ ) : 0 } @{ service_prices($dbh, $pid) };
 
-	use Data::Dumper;
-	print STDERR "HAVE PROJECT PRICES: ", Dumper(\@material, \@service, \@total);
+  $total[$_] = $service[$_] + $material[$_] for 0..(scalar @service); 
 
-    return @total;
+  print STDERR "HAVE PROJECT PRICES: ", Dumper(\@material, \@service, \@total);
+
+  return @total;
 }
 
 # Returns a hash of the service type and price of each service in the project.

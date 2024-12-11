@@ -1803,7 +1803,7 @@ print STDERR "HAVE COVER SPECS", Dumper($cover, $cover_price, $paper_price);
                                    + $perfecting_change_over
                                    + $aqueous{'Setup Price'}
                                    + $UV{'Setup Price'}
-                                   + $SOFTTOUCH{'Setup Price'};
+                                   + $SOFTTOUCH{'Setup Price'}
                                    + $pms_price->{'Ink Mix Charge'}
                                    + $pms_price->{'Press Wash Charge'};
 

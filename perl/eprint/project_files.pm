@@ -910,7 +910,7 @@ sub	email_pdf {
     );
     
     my $add = configuration::get_value(undef, $dbh, 'ProjectFileNotification');
-    $header{Bcc}   => $add if $add; 
+    $header{Bcc} = $add if $add; 
 
 	my $email = $dbh->selectrow_array(q{
 		SELECT stremail FROM tbl_orders WHERE lngorderid =  ?

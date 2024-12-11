@@ -994,11 +994,9 @@ sub display_categories {
 
 	$cat = configuration::get_value($log, $dbh, 'Default Product Category') unless $cat;
 
-  
 	#Set categories for left nav.
 	my $cats = PQS::model::categories::get_all();
-
-	map { push @{$var->{categories}}, $cats->{$_}; } sort keys $cats;
+	map { push @{$var->{categories}}, $cats->{$_}; } sort keys %{$cats};
 
 
 	#Create category chain for parents of current category.
@@ -1082,7 +1080,7 @@ sub display {
 	#Set categories for left nav.
 	my $cats = PQS::model::categories::get_all();
 
-	map { push @{$var->{categories}}, $cats->{$_}; } sort keys $cats;
+	map { push @{$var->{categories}}, $cats->{$_}; } sort keys %{$cats};
 
 
 	#Create category chain for parents of current category.
@@ -1129,21 +1127,15 @@ print STDERR "HAVE CAT: $cat PRODUCT: $product \n";
 	}
 
 print STDERR "HAVE PRODUCTS TO DISPLAY: ", Dumper($var->{products});
-	
-	
-	@{$var->{products}} = shift filter_products($r, $var, $var->{products});
+	$var->{products} = filter_products($r, $var, $var->{products});
 
 print STDERR "HAVE DISPLAY: ", Dumper($var->{products});
-	
-
 
 print STDERR "HAVE proudct to DISPLAY: ", $product , "\n" ;
 
 	my $total_qty;
 
 	foreach my $p (@{$var->{products}} ) {
-
-
 		#Need to refactor, this loop should not have more than one product.
 		#Set product variable to make sure correct filters are display for selected product.
 		#This should only be needed for initial page load.
@@ -1158,7 +1150,6 @@ print STDERR "HAVE proudct to DISPLAY: ", $product , "\n" ;
 			} else {
 				$qty = 1;
 			}
-
 		}
 
 		#Set total qty once we have a default or user entered qty.
@@ -1166,28 +1157,22 @@ print STDERR "HAVE proudct to DISPLAY: ", $product , "\n" ;
 
 		$p->{category} = PQS::model::categories::get_name_from_id($p->{category});
 
-		my $price 		= $prod->price($cid, $qty, $versions);
-
+		my $price	= $prod->price($cid, $qty, $versions);
 		$p->{price} = $price * $total_qty;
-
-		$p->{image}  = $prod->image(1);
+		$p->{image} = $prod->image(1);
 
 		$var->{kit_list} = $prod->kit_list();  
-  	}
+  } # end foreach product
 
-
-	use Data::Dumper;
 	print STDERR "Data from Kit List " , Dumper($var->{kit_list});
 	
-	my $filters =  PQS::model::product_filter::get_category($cat);
-
+	my $filters = PQS::model::product_filter::get_category($cat);
 	foreach my $f (@{$filters}) {
 		$f->{options} = PQS::model::product_filter::get_options($f->{id});
 	}
 
 	#IF a product id is supplied, set the filter options to match that product.
 	if ( $product ) {
-
 		my $list = PQS::model::product_filter::options_for_product($product);
 
 		map {
@@ -1195,11 +1180,8 @@ print STDERR "HAVE proudct to DISPLAY: ", $product , "\n" ;
 		} @{$list};
 	}
 
-
 	#print STDERR "HAVE PRODUCTS: ", Dumper($var->{products});
-	
 	my $category = PQS::model::categories::get($cat);
-	
 
 	$var->{filters} 		= $filters;
 	$var->{cat} 			= $cat;
@@ -1220,11 +1202,11 @@ print STDERR "HAVE proudct to DISPLAY: ", $product , "\n" ;
 
 
 sub filter_products {
-	my ($r, $var, $prods ) = @_;
+	my ($r, $var, $prods) = @_;
 
 	my @valid;
 	my @list;
-	my $have_filter ;
+	my $have_filter;
 	map {
 		if ( $_ =~ /filter-(\d+)/ && $r->param($_) ) {
 			my $fid = $1;
@@ -1254,16 +1236,12 @@ sub filter_products {
 
 	my @plist;
 
-
 	foreach my $p (@{$prods} ) {
 		push @plist, $p if grep {$p->{id} eq $_} @list;
 	}
 
 #print STDERR "HAE PRODUCTS: ", Dumper($have_filter, @plist, $prods);
-	
 	return $have_filter ? \@plist : $prods;
-	
-
 }
 
 

@@ -6,6 +6,7 @@ use Date::Calc        qw(Delta_Days Today Add_Delta_YM);
 use List::Util        qw(max);
 use eprint::project   qw(:common :pricing);
 use eprint::equipment ();
+use Data::Dumper;
 
 require configuration;
 
@@ -14,25 +15,20 @@ sub munge {
    
     # Put the pricing into arrays of quantity pricing for each currency.
     my %prices;
-    my %buy;;
     for (keys %$specs) {
-        next unless /^price-(\w{3})-(\d+)$/
-                 && $specs->{$_};
-
+        next unless /^price-(\w{3})-(\d+)$/ && $specs->{$_};
         $prices{ $1 }{ $2 } = $specs->{ $_ };
     }
 
-    my %buy;;
+    my %buy;
     for (keys %$specs) {
-        next unless /^buy-(\w{3})-(\d+)$/
-                 && $specs->{$_};
+        next unless /^buy-(\w{3})-(\d+)$/ && $specs->{$_};
 
         $buy{ $1 }{ $2 } = $specs->{ $_ };
     }
 
     die "No pricing." unless keys %prices;
 
-use Data::Dumper;
 print STDERR "HAVE PRICES: " , Dumper(%prices);
 
     # Create range lookups for each currency.
@@ -45,13 +41,10 @@ print STDERR "HAVE PRICES: " , Dumper(%prices);
                 $specs->{"max-$n"},
                 $items->{$n}
             ];
-
         }
         
-        $specs->{prices}{$currency} 
-            = eprint::equipment::create_range_lookup(@ranges);
+        $specs->{prices}{$currency} = eprint::equipment::create_range_lookup(@ranges);
     }
-
 
     while (my ($currency, $items) = each %buy) {
         my @ranges;
@@ -69,8 +62,6 @@ print STDERR "HAVE BUY DATA: ", Dumper(@ranges);
         $specs->{buy}{$currency} 
             = eprint::equipment::create_range_lookup(@ranges);
     }
-
-
 
     # Set up the excluded services list as an existance check hash.
     my @services = exists $specs->{services} ? 
@@ -139,7 +130,6 @@ sub calc {
 
     }
 
-use Data::Dumper;
 print STDERR "HAVE SPECS: " , Dumper($specs);
 
     return 'calculated';

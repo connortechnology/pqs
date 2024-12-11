@@ -33,126 +33,150 @@ use constant GRAIN => 4; # REMOVE
 
 
 sub _init :Init {
-    my ($self, $args_ref, ) = @_;
+  my ($self, $args_ref, ) = @_;
 
-    # TODO Use the :InitArgs construct and do some type checking and
-    # validation on these arguements.
+  # TODO Use the :InitArgs construct and do some type checking and
+  # validation on these arguements.
 
-	my $start_time = $args_ref->{start};
+  my $start_time = $args_ref->{start};
 
-    # Save a reference to the project for later use.
-    $self->set(\@project, $args_ref->{project});
+  # Save a reference to the project for later use.
+  $self->set(\@project, $args_ref->{project});
 
-    my $project = $args_ref->{project};
+  my $project = $args_ref->{project};
 
-    # Our imposition code wasn't in an object before, we'll wrap it in
-    # it's own little closure type environment until we have time to
-    # refactor it.
-    local @images = (); 
-    local $cache  = {};
+  # Our imposition code wasn't in an object before, we'll wrap it in
+  # it's own little closure type environment until we have time to
+  # refactor it.
+  local @images = (); 
+  local $cache  = {};
 
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 1: $end  \n";
-
-    
-    # Screen items surfaces are the size they are.
-    if ($project->{type} eq 'ScreenItem' || $project->{type} eq 'Envelopes') {
-        my @dims = @$project{qw(width height)};
-
-        $lookup[$$self] = [ PQS::Imposition::Node->new(
-                size  => \@dims,
-                image => 1,
-                bleed => [0,0,0,0],
-                grain => undef,
-        ) ];
-        return $self;
-    }
-
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 2: $end  \n";
-
-    # Our file cache (shared between children).
-    my $result_cache = Cache::FileCache->new({ namespace => 'imposition' })
-        or die "Couldn't initialise cache: $!";
-
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 2a: $end  \n";
-
-    # width x height - bleed size - trim size - multipage - bleed sides
-    my $key = sprintf("%06.3fx%06.3f-%4.3f-%d-%s",
-        @$project{qw(width height trim)},
-        $project->{is_multipage} ? 1 : 0,
-        join(',', @{ $project->{bleed} })
-    );
-
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 2b: $end KEY: *$key*  \n";
-
-	my $have_cache = $result_cache->get($key);
-
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 2c: $end HAVE CACHE: $have_cache  \n";
+  {
+    my $end =  Time::HiRes::time() - $start_time;
+    print STDERR "START PQS \ IMPOSE 1: $end  \n";
+  }
 
 
-    # Retrieve cached results if we've seen this before.
-    if ($have_cache) {
-        $lookup[$$self] = $have_cache;
-        return $self;
-    }
+  # Screen items surfaces are the size they are.
+  if ($project->{type} eq 'ScreenItem' || $project->{type} eq 'Envelopes') {
+    my @dims = @$project{qw(width height)};
 
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 3: $end  \n";
-
-    
-    # A kludge to handle multi-page books the way they were previously. We do
-    # two rounds of imposition, one for each grain direction.
-    my $is_special = $project->{is_multipage} && !defined $project->{grain};
-
-    my @valid;
-    my $grain = $is_special ? 0 : $project->{grain};
-
-    IMPOSITION: {
-        @images = $self->images($grain);
-
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 4: $end  \n";
-
-        my $trees = fill_box(BOUNDS); # Impose.
-        
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 5: $end  \n";
-
-        # TEMP: The sub-node generation is currently generating impositions with
-        # spacing and sub-optimal results. We'll do a simple post-processing prune
-        # of the cache to remove the worst of these.
-        push @valid, post_process($trees, $cache);
-
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 6: $end  \n";
-
-        # If we're multipage, try the rotated image appending any results.
-        if ($is_special && $grain != 1 ) {
-            $grain = 1;
-            $cache = {};
-            redo IMPOSITION;
-        }
-    }
-
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 7: $end  \n";
-
-    $lookup[$$self] = \@valid;           # Impositions
-
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 8: $end  \n";
-
-	$result_cache->set($key => \@valid); # Store to cache.
-
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START PQS \ IMPOSE 9: $end  \n";
-
-
+    $lookup[$$self] = [ PQS::Imposition::Node->new(
+        size  => \@dims,
+        image => 1,
+        bleed => [0,0,0,0],
+        grain => undef,
+      ) ];
     return $self;
+  }
+
+  {
+    my $end =  Time::HiRes::time() - $start_time;
+    print STDERR "START PQS \ IMPOSE 2: $end  \n";
+  }
+
+  # Our file cache (shared between children).
+  my $result_cache = Cache::FileCache->new({ namespace => 'imposition' })
+    or die "Couldn't initialise cache: $!";
+
+  {
+    my $end =  Time::HiRes::time() - $start_time;
+    print STDERR "START PQS \ IMPOSE 2a: $end  \n";
+  }
+
+  # width x height - bleed size - trim size - multipage - bleed sides
+  my $key = sprintf("%06.3fx%06.3f-%4.3f-%d-%s",
+    @$project{qw(width height trim)},
+    $project->{is_multipage} ? 1 : 0,
+    join(',', @{ $project->{bleed} })
+  );
+
+  {
+    my $end =  Time::HiRes::time() - $start_time;
+    print STDERR "START PQS \ IMPOSE 2b: $end KEY: *$key*  \n";
+  }
+
+  my $have_cache = $result_cache->get($key);
+
+  {
+    my $end =  Time::HiRes::time() - $start_time;
+    print STDERR "START PQS \ IMPOSE 2c: $end HAVE CACHE: $have_cache  \n";
+  }
+
+
+  # Retrieve cached results if we've seen this before.
+  if ($have_cache) {
+    $lookup[$$self] = $have_cache;
+    return $self;
+  }
+
+  {
+    my $end =  Time::HiRes::time() - $start_time;
+    print STDERR "START PQS \ IMPOSE 3: $end  \n";
+  }
+
+
+  # A kludge to handle multi-page books the way they were previously. We do
+  # two rounds of imposition, one for each grain direction.
+  my $is_special = $project->{is_multipage} && !defined $project->{grain};
+
+  my @valid;
+  my $grain = $is_special ? 0 : $project->{grain};
+
+  IMPOSITION: {
+    @images = $self->images($grain);
+
+    {
+      my $end =  Time::HiRes::time() - $start_time;
+      print STDERR "START PQS \ IMPOSE 4: $end  \n";
+    }
+
+    my $trees = fill_box(BOUNDS); # Impose.
+
+    {
+      my $end =  Time::HiRes::time() - $start_time;
+      print STDERR "START PQS \ IMPOSE 5: $end  \n";
+    }
+
+    # TEMP: The sub-node generation is currently generating impositions with
+    # spacing and sub-optimal results. We'll do a simple post-processing prune
+    # of the cache to remove the worst of these.
+    push @valid, post_process($trees, $cache);
+
+    {
+      my $end =  Time::HiRes::time() - $start_time;
+      print STDERR "START PQS \ IMPOSE 6: $end  \n";
+    }
+
+    # If we're multipage, try the rotated image appending any results.
+    if ($is_special && $grain != 1 ) {
+      $grain = 1;
+      $cache = {};
+      redo IMPOSITION;
+    }
+  }
+
+  {
+    my $end =  Time::HiRes::time() - $start_time;
+    print STDERR "START PQS \ IMPOSE 7: $end  \n";
+  }
+
+  $lookup[$$self] = \@valid;           # Impositions
+
+  {
+    my $end =  Time::HiRes::time() - $start_time;
+    print STDERR "START PQS \ IMPOSE 8: $end  \n";
+  }
+
+  $result_cache->set($key => \@valid); # Store to cache.
+
+  {
+    my $end =  Time::HiRes::time() - $start_time;
+    print STDERR "START PQS \ IMPOSE 9: $end  \n";
+  }
+
+
+  return $self;
 }
 
 # Generate the image information from the project. TODO The images would

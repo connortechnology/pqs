@@ -7,7 +7,7 @@ use Business::OnlinePayment;
 use Date::Calendar::Profiles  qw( $Profiles );
 use Date::Calendar;
 use Mail::Sendmail;
-#use MIME::QuotedPrint;
+use MIME::QuotedPrint;
 use Encode;
 
 
@@ -18,7 +18,7 @@ use sql             ();
 use eprint::service ();
 use eprint::project qw(:common has_pdf_template);
 
-use Mail;
+#use Mail;
 
 use PQS::model::payment ();
 use PQS::model::order ();
@@ -1987,7 +1987,7 @@ sub notify_overdraft {
      );
 
      misc::send_email_with_attachment(
-         $r, $log, \%mail, '', Mail::encode_qp($email_template), 'text/html',
+         $r, $log, \%mail, '', MIME::QuotedPrint::encode_qp($email_template), 'text/html',
          'quoted-printable'
      );
 }
@@ -2031,7 +2031,7 @@ sub notify_payment {
      );
 
      misc::send_email_with_attachment(
-         $r, $log, \%mail, '', Mail::encode_qp($email_template), 'text/html',
+         $r, $log, \%mail, '', MIME::QuotedPrint::encode_qp($email_template), 'text/html',
          'quoted-printable'
      );
 }
@@ -2240,12 +2240,12 @@ print STDERR "CHECK INV_NOT; $inv_not \n\n";
     my @attachments = ();
 
     my $email_template = misc::load_file($r, '/email/forms/order.html');
-    $_ = Mail::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order ) );
+    $_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order ) );
     my @body = ('', $_, 'text/html', 'quoted-printable');
 
     $_ = misc::load_file($r, '/email/forms/order.html');
     if ( $_ ) {
-        $_ = Mail::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $_, \%order ) );
+        $_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $_, \%order ) );
         push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
     }
     my %mail = (
@@ -2260,11 +2260,11 @@ print STDERR "CHECK INV_NOT; $inv_not \n\n";
 
     @attachments = ();
     $email_template = misc::load_file($r, '/email/forms/order.html');
-    $_ = Mail::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order ) );
+    $_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order ) );
     @body = ('', $_, 'text/html', 'quoted-printable');
     $_ = misc::load_file($r, '/email/forms/order.html');
     if ( $_ ) {
-        $_ = Mail::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $_, \%order ) );
+        $_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( $r, $log, $dbh, $_, \%order ) );
         push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
     }
     %mail = (
@@ -2336,7 +2336,7 @@ sub send_sales_order {
 
     $order{'siteURL'} = configuration::get_value( $log, $dbh, 'siteURL' );
 
-	$email_content = Mail::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
+	$email_content = MIME::QuotedPrint::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
 	#$email_content = encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
 
 	#my @body = ("", $email_content,  'text/html', 'utf-8');
@@ -3872,7 +3872,7 @@ print STDERR "HAVE PAYMENT AMOUNT: $amount, Rounded FROM: $totals->{total} \n";
 
 	my $production = $paypal_mode eq 'LIVE' ? 1 : 0;
 
-    use WebService::PayPal::PaymentsAdvanced;
+    require WebService::PayPal::PaymentsAdvanced;
 	my $args = 
         {
             user     		=> $paypal_user,

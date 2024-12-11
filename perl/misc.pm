@@ -178,7 +178,7 @@ sub insert_to_emaildb {
     my $attachmentname = shift;
     my $dbh = session::dbh;
 
-    my @k = keys $mail;
+    my @k = keys %{$mail};
     my $subject;
 
     foreach my $key (@k){
@@ -375,7 +375,7 @@ sub unescape {
     return undef if !defined $decode;
 
     $decode =~ tr/+/ /;
-    $decode =~ s/%([0-9a-fA-F]{2})/pack('c', hex $1)/ge;
+    $decode =~ s/%([0-9a-fA-F]{2})/pack('C', hex $1)/ge;
     return $decode;
 }
 

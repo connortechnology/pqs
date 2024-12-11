@@ -1,21 +1,19 @@
 package eprint::admin_reports;
 use strict;
+use warnings;
 
 # TODO I'm sure this module can be cleaned up even further -- I've rewritten
 # it from the 2600 line monstrosity it was before, but had to kind of rush,
 # and fear it might still be inadequate.
 
-use HTML::Entities qw( encode_entities                        );
-use List::Util   qw( sum                                );
-use sql          qw(                                    );
-use ssi          qw( get_start_end_dates make_drop_down );
-use DateTime;
-
-use MIME::QuotedPrint;
-
-use eprint::Service::Shipping;
-
+use List::Util   qw(sum);
+require sql;
+require Text::CSV_XS;
+use Data::Dumper;
+require eprint::Service::Shipping;
+require eprint::project;
 require misc;
+
 our @QBE_HEADER_LINE;
     $QBE_HEADER_LINE[0]  = 'HDR';
     $QBE_HEADER_LINE[1]  = 'QuickBooks For Windows';
@@ -92,21 +90,10 @@ use constant DEFAULT_END => qw(
 
 sub save_account_numbers {
 	my ($r, $dbh) = @_;
-	my $xth = $dbh->prepare(q{
-		INSERT INTO tbl_service_specifications VALUES (?,?,?,?,true); 
-	});
-
-	my $dth = $dbh->prepare(q{
-		DELETE FROM  tbl_service_specifications
-		WHERE lngserviceindex = ? AND strname = ? 
-	});
-
-	my $sidh = $dbh->prepare(q{
-		SELECT sid FROM ship_address WHERE shipid = ?
-	});
-	my $pidh = $dbh->prepare(q{
-		SELECT lngprojectindex  FROM tbl_project_contents  WHERE lngserviceindex = ?
-	});
+	my $xth = $dbh->prepare(q{ INSERT INTO tbl_service_specifications VALUES (?,?,?,?,true); });
+	my $dth = $dbh->prepare(q{ DELETE FROM  tbl_service_specifications WHERE lngserviceindex = ? AND strname = ?  });
+	my $sidh = $dbh->prepare(q{ SELECT sid FROM ship_address WHERE shipid = ?  });
+	my $pidh = $dbh->prepare(q{ SELECT lngprojectindex  FROM tbl_project_contents  WHERE lngserviceindex = ?  });
 	map {
 		if ( $_ =~ /acc-(\d*)/ ) {
 
@@ -142,8 +129,6 @@ sub billing_report_data {
 		WHERE lngprojectindex = ? AND strname ~ ? 
 	});
 
-
-
 	my $query = qq{
 		SELECT *, DATE(completion_date) as date 
 		FROM tbl_orders, tbl_order_contents, tbl_projects, tbl_customer
@@ -160,18 +145,13 @@ sub billing_report_data {
 	};
 
     my @bind_params = ( $var->{StartDate}, $var->{EndDate}, $r->param('division') );
-
 	
     my $sth = $dbh->prepare($query);
        $sth->execute(@bind_params);
 
-
     my $projects = $sth->fetchall_arrayref({});
-	use Data::Dumper;
 
 print STDERR "HAVE DIVISOIN: $var->{division} Projects FOUND: " . @{$projects} . "  \n";
-
-
 
 	my @data;
 	my $bd = $dbh->prepare(q{ SELECT bdate FROM bill_date WHERE shipid = ? });
@@ -200,9 +180,7 @@ print STDERR "HAVE COST CENTER FILTER: $ccf \n";
 
 print STDERR "HAVE PRICES: $billonrelease ", Dumper(@prices);
 
-
 		my $order_id = $dbh->selectrow_array(q{
-
 			SELECT lngorderid FROM tbl_order_contents WHERE lngprojectindex = ?
 		}, undef, $pid);
 
@@ -232,7 +210,6 @@ print STDERR "HAVE PRICES: $billonrelease ", Dumper(@prices);
 			
 			$c = 'Bill on Release' if $billonrelease;
 			
-
 			next if $ccf eq '99' && ! ($c =~ /^99/);
 			next if $ccf eq 'Non99' && $c =~ /^99/;
 			next if $ccf eq 'Non99' && $c =~ /^0000/;
@@ -255,7 +232,6 @@ print STDERR "HAVE PRICES: $billonrelease ", Dumper(@prices);
 
 			my $safeway_cost_center = $r->param('division') == 2 ?'6770-909 / Acct 391-696' : '9946-909 / Acct 391696';
 
-
 			#print STDERR "STUFF", Dumper($cc, $q, $i, $id, $ships);
 			push @data, { 	
 						date  			=> $_->{date},
@@ -276,12 +252,11 @@ print STDERR "HAVE PRICES: $billonrelease ", Dumper(@prices);
 						order_id 		=> $order_id,
 						divs 			=> $divs,
 						credit_cost_center => $safeway_cost_center,
-		
 			}; 
 		}
 	} @{$projects};
-my $x = scalar @data;
-print STDERR "HAVE $x PROJECTS AFTER FILTER \n";
+  my $x = scalar @data;
+  print STDERR "HAVE $x PROJECTS AFTER FILTER \n";
 
 # Limit results to 400 Records to prevent form from having too much 
 # data to submit.
@@ -291,7 +266,6 @@ print STDERR "HAVE $x PROJECTS AFTER FILTER \n";
 	}
 
 	return \@data;
-
 }
 
 sub send_billing_report {
@@ -318,14 +292,12 @@ sub send_billing_report {
 	}
 	my %checks;
 	my $x = $r->param('export_entry');
-	my $y = ref $x;
 
-print STDERR "HAVE DATA:  -- \n", Dumper($x, $data);
+  print STDERR "HAVE DATA:  -- \n", Dumper($x, $data);
 	map {
 		$checks{$_} = 1;
 		$sth->execute($_);
 	} $r->param('export_entry');
-
 
 	map {
 		push(
@@ -344,10 +316,7 @@ print STDERR "EMAIL DATA: ", Dumper($_);
 		$output .= $csv->string();
 	}
 
-
-
 	my $email_template = misc::load_file($r, '/email/email_template.html');
-
 	my %info;
 
 	$info{'siteURL'} = "http://" . $r->hostname;
@@ -371,8 +340,9 @@ print STDERR "EMAIL DATA: ", Dumper($_);
 		 SUBJECT => "Invoice From SAFEWAY COST CENTER $safeway_cost_center",
 	 );
 
+   require MIME::QuotedPrint;
 	 misc::send_email_with_attachment(
-		 $r, $r->log, \%mail, '', encode_qp($email_template), 'text/html',
+		 $r, $r->log, \%mail, '', MIME::QuotedPrint::encode_qp($email_template), 'text/html',
 		 'quoted-printable', 'data.csv',$output, 'text/csv','quoted-printable'
 	 );
 	return $output;
@@ -456,7 +426,6 @@ sub cost_center {
        $sth->execute(@bind_params);
 
     my $projects = $sth->fetchall_arrayref({});
-	use Data::Dumper;
 
 	my @data;
 	map {
@@ -496,15 +465,11 @@ sub cost_center {
 	$variable->{projects} = \@data;
 
 print STDERR "ORDER REPORT: " , Dumper(\@data);
-
-
     if ( $r->param('btnFunction') eq 'Download in CSV Format' ) {
         my @report;
 
         map {
-            push(
-                @report, @$_{qw( date job cost_center cost)}
-            );
+            push( @report, @$_{qw( date job cost_center cost)});
         } @data;
 
 		my $header = ['date', 'job','cost_center', 'amount'];
@@ -512,21 +477,13 @@ print STDERR "ORDER REPORT: " , Dumper(\@data);
             $r, $log, $variable, 'cost_center_billing.csv', $header, \@report
         );
     }
-
-
 }
-
 
 sub project_report {
     my ($r, $log, $dbh, $variable) = @_;
-
-
     initialise_drop_downs( $r, $log, $dbh, $variable );
 
-    my $header = [
-        'Docket #', 'Project Reference', 'Company Name', 'Required Date',
-        'Status'
-    ];
+    my $header = [ 'Docket #', 'Project Reference', 'Company Name', 'Required Date', 'Status' ];
 
     my $query = q{
         SELECT
@@ -554,7 +511,6 @@ sub project_report {
 		push @bind_params, lc($r->param('search'));
 		$variable->{search} = $r->param('search');
 	}
-	
 
     my %include_map = (
         lngUserIndex                 => 'ddmEstimator',
@@ -721,7 +677,6 @@ sub quotes_report {
 					AND q.lngprojectindex = p.lngprojectindex
             }, {Slice=>{}}, $_->{qid});
 		} @{$quotes};
-use Data::Dumper;
 print STDERR "ADMIN QUOTES" , Dumper($quotes);
 
         foreach my $total ( 1.. 3 ) {
@@ -767,10 +722,10 @@ print STDERR "RUN TEMPLATE REPORT \n";
 print STDERR Dumper($projects);
 	my $data;
 
+	require eprint::Template;
 	map {
 		my $pid = shift @{$_};
 print STDERR "GET DATA FOR PID: $pid \n";
-		use eprint::Template;
 		my $datasource = eprint::Template::get_datasource($dbh, $pid);
 
 		my $csv = Text::CSV_XS->new({
@@ -854,114 +809,108 @@ print STDERR "HAVE SQL QUERY FOR PAYPAL: $query \n";
     }
 }
 
-
 sub order_report {
+  my ( $r, $log, $dbh, $variable ) = @_;
+  print STDERR "Here\n";
+  initialise_drop_downs( $r, $log, $dbh, $variable );
 
-    my ( $r, $log, $dbh, $variable ) = @_;
+  my $header = [ 'OrderID', 'Order Date', 'Company Name', 'Status', 'Total'];
+  my $query = q{
+  SELECT
+  tbl_Orders.lngOrderID                                AS id,
+  to_char(tbl_Orders.dtmOrderDate, 'MM/DD/YYYY')       AS date,
+  tbl_Orders.strCompanyName                            AS cname,
+  tbl_Orders.strStatus                                 AS status,
+  tbl_Orders.curTotalSale                              AS cursale,
+  tbl_Orders.strPOnumber                               AS po,
+  tbl_Orders.curTotalSale - COALESCE((
+  SELECT
+  SUM(curAmount)
+  FROM
+  tbl_Payments
+  WHERE
+  tbl_Payments.lngOrderiD
+  = tbl_Orders.lngOrderID
+  ), 0)                                                AS balance
+  FROM
+  tbl_Orders, tbl_Order_Contents, tbl_Customer, tbl_projects
+  WHERE
+  dtmOrderDate::Date BETWEEN ? AND ?
+  AND
+  tbl_Order_Contents.lngOrderID = tbl_Orders.lngOrderID
+  AND
+  tbl_Customer.lngCustomerID = tbl_Orders.lngCustomerID
+  };
 
-    initialise_drop_downs( $r, $log, $dbh, $variable );
+  my @bind_params = ( $variable->{StartDate}, $variable->{EndDate} );
 
-    my $header = [ 'OrderID', 'Order Date', 'Company Name', 'Status',
-                   'Total'                                            ];
+  if ( $r->param('search') ) {
+    $query .= q{ AND lower(strProjectReference) ~ ? };
+    push @bind_params, lc($r->param('search'));
+    $variable->{search} = $r->param('search');
+  }
 
-    my $query = q{
-        SELECT
-            tbl_Orders.lngOrderID                                AS id,
-            to_char(tbl_Orders.dtmOrderDate, 'MM/DD/YYYY')       AS date,
-            tbl_Orders.strCompanyName                            AS cname,
-            tbl_Orders.strStatus                                 AS status,
-            tbl_Orders.curTotalSale                              AS cursale,
-            tbl_Orders.strPOnumber                               AS po,
-            tbl_Orders.curTotalSale - COALESCE((
-                SELECT
-                    SUM(curAmount)
-                 FROM
-                    tbl_Payments
-                 WHERE
-                    tbl_Payments.lngOrderiD
-                        = tbl_Orders.lngOrderID
-            ), 0)                                                AS balance
-        FROM
-            tbl_Orders, tbl_Order_Contents, tbl_Customer, tbl_projects
-        WHERE
-            dtmOrderDate::Date BETWEEN ? AND ?
-        AND
-            tbl_Order_Contents.lngOrderID = tbl_Orders.lngOrderID
-        AND
-            tbl_Customer.lngCustomerID = tbl_Orders.lngCustomerID
-    };
+  if ( $r->param('ddmDivision') ) {
+    print STDERR "HAVE DIVISION " . $r->param('ddmDivision') . " \n";
+    $query .= q{ AND tbl_projects.division = ? };
+    push @bind_params, $r->param('ddmDivision');
+  }
 
-    my @bind_params = ( $variable->{StartDate}, $variable->{EndDate} );
+  my %sql_map = (
+    'tbl_Orders.strStatus'        => 'ddmStatus',
+    'tbl_Orders.lngCustomerID'    => 'ddmCustomers',
+    'tbl_Customer.lngSalesPerson' => 'ddmEmployees',
+  );
 
-	if ( $r->param('search') ) {
-		$query .= q{ AND lower(strProjectReference) ~ ? };
-		push @bind_params, lc($r->param('search'));
-		$variable->{search} = $r->param('search');
-	}
+  foreach my $col ( keys %sql_map ) {
+    my $param = $r->param($sql_map{ $col });
+    if ($param) {
+      $query .= "    AND $col = ? ";
+      push(@bind_params, $param);
+    }
+  }
 
-	if ( $r->param('ddmDivision') ) {
-print STDERR "HAVE DIVISION " . $r->param('ddmDivision') . " \n";
-		$query .= q{ AND tbl_projects.division = ? };
-		push @bind_params, $r->param('ddmDivision');
-	}
+  if ($r->param('dblTotal1') && $r->param('dblTotal2')) {
+    $query .= ' AND tbl_Orders.curTotalSale BETWEEN ? AND ?';
+    push(@bind_params, $r->param('dblTotal1'), $r->param('dblTotal2'));
+  }
 
+  $query .= q{
+  GROUP BY
+  tbl_orders.lngorderid, date, cname, status, cursale 
+  ORDER BY tbl_Orders.lngOrderID
+  };
+  print STDERR "HAVE SQL QUERY: $query \n";
 
-    my %sql_map = (
-        'tbl_Orders.strStatus'        => 'ddmStatus',
-        'tbl_Orders.lngCustomerID'    => 'ddmCustomers',
-        'tbl_Customer.lngSalesPerson' => 'ddmEmployees',
+  my $sth = $dbh->prepare($query);
+  $sth->execute(@bind_params);
+
+  if ( $r->param('btnFunction') eq 'Download in CSV Format' ) {
+    my @data;
+
+    while (my $row = $sth->fetchrow_hashref) {
+      push(@data, @$row{qw( id date cname status cursale )});
+    }
+
+    misc::export_csv(
+      $r, $log, $variable, 'order_report.csv', $header, \@data
     );
+  } else {
+    my $results = $sth->fetchall_arrayref( {} );
 
-    foreach my $col ( keys %sql_map ) {
-        my $param = $r->param($sql_map{ $col });
-        if ($param) {
-            $query .= "    AND $col = ? ";
-            push(@bind_params, $param);
-        }
-    }
+    map {
+      $_->{projects} = $dbh->selectall_arrayref(q{
+      SELECT o.spec_pid as pid, strprojectreference as reference 
+      FROM tbl_Order_contents o, tbl_projects p WHERE lngorderid = ?
+      AND  o.spec_pid = p.lngprojectindex
+      }, {Slice=>{}}, $_->{id});
+    } @{$results};
 
-    if ($r->param('dblTotal1') && $r->param('dblTotal2')) {
-        $query .= ' AND tbl_Orders.curTotalSale BETWEEN ? AND ?';
-        push(@bind_params, $r->param('dblTotal1'), $r->param('dblTotal2'));
-    }
+    $variable->{ReportTotal}   = sum map { $_->{cursale} } @{ $results };
+    $variable->{ReportBalance} = sum map { $_->{balance} } @{ $results };
 
-    $query .= q{
-       	GROUP BY
-           	tbl_orders.lngorderid, date, cname, status, cursale 
-		ORDER BY tbl_Orders.lngOrderID
-	};
-print STDERR "HAVE SQL QUERY: $query \n";
-
-    my $sth = $dbh->prepare($query);
-       $sth->execute(@bind_params);
-
-    if ( $r->param('btnFunction') eq 'Download in CSV Format' ) {
-        my @data;
-
-        while (my $row = $sth->fetchrow_hashref) {
-            push(@data, @$row{qw( id date cname status cursale )});
-        }
-
-        misc::export_csv(
-            $r, $log, $variable, 'order_report.csv', $header, \@data
-        );
-    }
-    else {
-        my $results = $sth->fetchall_arrayref( {} );
-
-		map {
-			$_->{projects} = $dbh->selectall_arrayref(q{
-					SELECT o.spec_pid as pid, strprojectreference as reference 
-					FROM tbl_Order_contents o, tbl_projects p WHERE lngorderid = ?
-                    AND  o.spec_pid = p.lngprojectindex
-            }, {Slice=>{}}, $_->{id});
-		} @{$results};
-
-        $variable->{ReportTotal}   = sum map { $_->{cursale} } @{ $results };
-        $variable->{ReportBalance} = sum map { $_->{balance} } @{ $results };
-
-        $variable->{orders} = $results;
-    }
+    $variable->{orders} = $results;
+  }
 }
 
 sub stored_report_display {
@@ -1030,7 +979,7 @@ sub stored_report_display {
         }, { Columns => [ 1, 2 ] }
     );
 
-    $variable->{ddmStoredReport} = make_drop_down( $reports, $id );
+    $variable->{ddmStoredReport} = ssi::make_drop_down( $reports, $id );
     $variable->{hiddenReportID}  = $id;
 
     return;
@@ -1070,7 +1019,6 @@ sub stored_report_process {
     }
 
     if ( $r->param('btnFunction') eq 'Show Results' ) {
-use Data::Dumper;
 print STDERR "HAVE HEADERS: ", Dumper($sth->{NAME});
 
         return misc::error(
@@ -1084,9 +1032,10 @@ print STDERR "HAVE HEADERS: ", Dumper($sth->{NAME});
         # ones exist you ask? Deadline of 5min including deployment I say.
         $variable->{RESULTS} = "<table class='common'>\n<thead>\n\t<tr>\n";
 
+        require HTML::Entities;
         foreach my $headers (@{ $sth->{NAME} }) {
             $variable->{RESULTS} .= "\t\t<th>"
-                                 .  encode_entities($headers)
+                                 .  HTML::Entities::encode_entities($headers)
                                  .  "</th>\n";
         }
 
@@ -1220,7 +1169,6 @@ sub send_orders_csv {
         }
 
     }
-use Data::Dumper;
 print STDERR "LINES : " , Dumper(@lines);
     if ( $r->param('ddmFormat') eq 'SimplyAccounting' ) {
         misc::export_csv($r, $variable, 'export_invoices.imp', \@lines);
@@ -1798,7 +1746,8 @@ sub payment_lines {
 sub initialise_drop_downs {
     my ( $r, $log, $dbh, $variable ) = @_;
 
-    get_start_end_dates(
+    require ssi;
+    ssi::get_start_end_dates(
         $log, $dbh, $variable,
         $r->param('ddmStartYear')  || undef,
         $r->param('ddmStartMonth') || undef,
@@ -1869,7 +1818,7 @@ sub initialise_drop_downs {
             $sql_map{ $drop_down }, $columns
         );
 
-        $variable->{$drop_down} = make_drop_down(
+        $variable->{$drop_down} = ssi::make_drop_down(
             $results, $r->param($drop_down)
         );
     }
@@ -2141,7 +2090,6 @@ sub inventory {
         $variable->{ReportBalance} = sum map { $_->{balance} } @{ $results };
 
         $variable->{inventory} = $results;
-use Data::Dumper;
 print STDERR "INVENTORY RESULTS " , Dumper($results);
     }
 }
@@ -2151,6 +2099,7 @@ sub inventory_usage {
 
 	my @t = localtime();
 
+  require DateTime;
 #Get 1st & last day of the current month;
 	my $date = DateTime->new(
 		year  => $t[5]+1900,
@@ -2327,7 +2276,6 @@ my $header = [ $today, 'Obsolete Report','','','Prepared For:',$var->{user}{comp
     misc::export_csv(
         $r, $log, $var, 'obsolete_report.csv', $header, \@data
     );
-use Data::Dumper;
 print STDERR Dumper($var);
 	
 
@@ -2445,7 +2393,6 @@ sub national_report {
 		WHERE  nationalcredit > 0
 	},{ SLICE => {} });
 
-	use Data::Dumper;
 	print STDERR "CUST " , Dumper($cust);
 	map {
 		national_email($r, $log, $dbh, $var, $_);
@@ -2474,11 +2421,7 @@ sub national_email {
     );
 
     misc::send_email_with_attachment($r, $log, \%mail, @body);
-
 }
 
-
-
-
-
 1;
+__END__

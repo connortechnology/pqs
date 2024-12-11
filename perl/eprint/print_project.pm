@@ -28,6 +28,8 @@ use PQS::Imposition::Colour  qw(:all);
 use PQS::model::change_order;
 use PQS::model::order;
 
+use Data::Dumper;
+
 require misc;
 require eprint::login;
 require eprint::obj_customer;
@@ -231,225 +233,211 @@ sub project_types {
 
 
 sub create_display {
-    my ($r, $log, $dbh, $cookie, $variable) = @_;
+  my ($r, $log, $dbh, $cookie, $variable) = @_;
 
-    # PREDEFINED PROJECTS
-    #
-    # Some pages had all the projects in a single form resulting in tens to
-    # hundreds of blank ids with one actual id.
-    my $pid = first { $_ } 
-              map   { tr/0-9//cd; $_ } 
-                    $r->param('PredefinedProject') , $r->param('predefined');
+  # PREDEFINED PROJECTS
+  #
+  # Some pages had all the projects in a single form resulting in tens to
+  # hundreds of blank ids with one actual id.
+  my $pid = first { $_ } 
+  map   { tr/0-9//cd; $_ } 
+  $r->param('PredefinedProject') , $r->param('predefined');
 
+  if ($pid) {
+    # Populate the display with the old reference and comments.
+    @$variable{qw(txtProjectReference txtComments type)} =
+    $dbh->selectrow_array(q{
+      SELECT strprojectreference, strcomments, lngprojecttype
+      FROM tbl_projects 
+      WHERE strstatus = 'predefined'
+      AND lngprojectindex = ?
+      }, undef, $pid
+    );
+
+    #FillInForm does a better job of encoding special characters than our standard ssi code.
+    $variable->{__FillInForm}{txtProjectReference} = $variable->{txtProjectReference};
+    delete $variable->{txtProjectReference};
+
+    die "Predefined project ($pid) not found" 
+    unless $pid && $variable->{type};
+
+    $variable->{pms_colours_1} = $dbh->selectall_hashref(q{
+      SELECT strname as name from tbl_service_specifications 
+      WHERE lngprojectindex = ? And strName like 's0_pms%name'
+      AND lngserviceindex IN ( select lngserviceindex FROM tbl_project_contents
+      WHERE lngprojectindex = ?
+      AND strservicetype = 'Printing'
+      )
+      ORDER by 1 DESC
+      },'name', {}, $pid, $pid);
+    $variable->{pms_colours_2} = $dbh->selectall_hashref(q{
+      SELECT strname as name from tbl_service_specifications 
+      WHERE lngprojectindex = ? And strName like 's1_pms%name'
+      AND lngserviceindex IN ( select lngserviceindex FROM tbl_project_contents
+      WHERE lngprojectindex = ?
+      AND strservicetype = 'Printing'
+      )
+      ORDER by 1 DESC
+      },'name', {}, $pid, $pid);
+
+    # Tells the creation process which project to copy.
+    $variable->{predefined}    = $pid;
+
+    # If we're predefined, see if our services or quantity is locked
+    # (fixed price and fixed item pricing).
     if ($pid) {
-        # Populate the display with the old reference and comments.
-        @$variable{qw(txtProjectReference txtComments type)} =
-            $dbh->selectrow_array(q{
-               SELECT strprojectreference, strcomments, lngprojecttype
-               FROM tbl_projects 
-               WHERE strstatus = 'predefined'
-                 AND lngprojectindex = ?
-            }, undef, $pid
-        );
-
-		#FillInForm does a better job of encoding special characters than our standard ssi code.
-		$variable->{__FillInForm}{txtProjectReference} = $variable->{txtProjectReference};
-		delete $variable->{txtProjectReference};
-
-        die "Predefined project ($pid) not found" 
-            unless $pid && $variable->{type};
-
-        $variable->{pms_colours_1} = $dbh->selectall_hashref(q{
-            SELECT strname as name from tbl_service_specifications 
-            WHERE lngprojectindex = ? And strName like 's0_pms%name'
-            AND lngserviceindex IN ( select lngserviceindex FROM tbl_project_contents
-                                     WHERE lngprojectindex = ?
-                                     AND strservicetype = 'Printing'
-                                   )
-            ORDER by 1 DESC
-        },'name', {}, $pid, $pid);
-        $variable->{pms_colours_2} = $dbh->selectall_hashref(q{
-            SELECT strname as name from tbl_service_specifications 
-            WHERE lngprojectindex = ? And strName like 's1_pms%name'
-            AND lngserviceindex IN ( select lngserviceindex FROM tbl_project_contents
-                                     WHERE lngprojectindex = ?
-                                     AND strservicetype = 'Printing'
-                                   )
-            ORDER by 1 DESC
-        },'name', {}, $pid, $pid);
-
-        # Tells the creation process which project to copy.
-        $variable->{predefined}    = $pid;
-
-        # If we're predefined, see if our services or quantity is locked
-        # (fixed price and fixed item pricing).
-        if ($pid) {
-            $variable->{has_locked_quantity} =  $r->param('qty') ? 1 : has_locked_quantity($dbh, $pid);
-            $variable->{has_locked_services} = has_locked_services($dbh, $pid);
-        }
-
-		$variable->{product_qty} = $r->param('qty');
-print STDERR "PRODUCT QTY , $variable->{product_qty} \n";
-
-
-        # Go to Order process instead of project view if true.
-        $variable->{create_to_order} = $r->param('create_to_order');
-
-        # Allow user added services from the original predefined project.
-        $variable->{__FillInForm}{project_service} = $dbh->selectcol_arrayref(q{
-            SELECT strServiceType
-            FROM tbl_Project_Contents
-            WHERE lngProjectIndex = ?
-        }, undef, $pid, );
-    }
-	
-	
-	#get the default line screen from the company profile.
-	my $cust = new eprint::obj_customer($log, $dbh, $variable->{cust_id});
-    $variable->{__FillInForm}{linescreen} = $cust->get('linescreen');
-	
-	
-
-    # Allow PDF template selection to pass through
-    $variable->{template} = $r->param('template')
-        if $r->param('template');
-
-
-    # ONLY PREDEFINDED ALLOWED CUSTOMERS
-    #
-    # If the user has been denied creating custom projects then
-    # the create page takes them to the products page.
-    if ($variable->{products_only} && !$pid) {
-        $variable->{Redirect} =
-            '/site_specific/main/products/products_overview.html';
-        return OK;
+      $variable->{has_locked_quantity} =  $r->param('qty') ? 1 : has_locked_quantity($dbh, $pid);
+      $variable->{has_locked_services} = has_locked_services($dbh, $pid);
     }
 
+    $variable->{product_qty} = $r->param('qty');
+    print STDERR "PRODUCT QTY , $variable->{product_qty} \n";
 
-    # ADDITIONAL SERVICES
-    #
-    # We need to display all service types on create stage one and use the
-    # mappings below to dynamic exclude certain ones by project type (JS).
-    # Note: The project type will only be defined for predefined projects.
-    @$variable{qw(categories category)} 
-        = service_types_by_category(
-            $dbh, $variable->{type}, $pid, $variable->{is_staff});
+    # Go to Order process instead of project view if true.
+    $variable->{create_to_order} = $r->param('create_to_order');
 
+    # Allow user added services from the original predefined project.
+    $variable->{__FillInForm}{project_service} = $dbh->selectcol_arrayref(q{
+      SELECT strServiceType
+      FROM tbl_Project_Contents
+      WHERE lngProjectIndex = ?
+      }, undef, $pid, );
+  } # end if predefined
 
-    $variable->{display_shipping} = $dbh->selectrow_array(q{
-        SELECT count(*) from tbl_service_types WHERE strid = 'Shipping'
-            AND ysnviewvisible = 'Y'
+  #get the default line screen from the company profile.
+  my $cust = new eprint::obj_customer($log, $dbh, $variable->{cust_id});
+  $variable->{__FillInForm}{linescreen} = $cust->get('linescreen');
+
+  # Allow PDF template selection to pass through
+  $variable->{template} = $r->param('template') if $r->param('template');
+
+  # ONLY PREDEFINDED ALLOWED CUSTOMERS
+  #
+  # If the user has been denied creating custom projects then
+  # the create page takes them to the products page.
+  if ($variable->{products_only} && !$pid) {
+    $variable->{Redirect} =
+    '/site_specific/main/products/products_overview.html';
+    return OK;
+  }
+
+  # ADDITIONAL SERVICES
+  #
+  # We need to display all service types on create stage one and use the
+  # mappings below to dynamic exclude certain ones by project type (JS).
+  # Note: The project type will only be defined for predefined projects.
+  @$variable{qw(categories category)} 
+  = service_types_by_category(
+    $dbh, $variable->{type}, $pid, $variable->{is_staff});
+
+  $variable->{display_shipping} = $dbh->selectrow_array(q{
+    SELECT count(*) from tbl_service_types WHERE strid = 'Shipping'
+    AND ysnviewvisible = 'Y'
     });
 
-    # All projects get cartons by default. TODO Move into DB.
-    # $variable->{__FillInForm}{project_service} = (qw( PlainCartons ))
-    #    if !$variable->{predefined};
+  # All projects get cartons by default. TODO Move into DB.
+  # $variable->{__FillInForm}{project_service} = (qw( PlainCartons ))
+  #    if !$variable->{predefined};
 
 
-    # PREDEFINED DONE
-    #
-    # Predefined projects have simple display needs.
-    return OK if $variable->{predefined};
+  # PREDEFINED DONE
+  #
+  # Predefined projects have simple display needs.
+  return OK if $variable->{predefined};
 
+  # PRESS TYPES
+  #
+  # Weird ass way about building that data structure.
+  $variable->{SelectedPress} = configuration::get_value(
+    $log, $dbh, 'default_press_type' 
+  );
 
-    # PRESS TYPES
-    #
-    # Weird ass way about building that data structure.
-    $variable->{SelectedPress} = configuration::get_value(
-        $log, $dbh, 'default_press_type' 
-    );
-    
-    $variable->{SelectedPress} = $r->param('rdbPressType') if $r->param('rdbPressType');
-    
-    $variable->{press_types} = $dbh->selectall_arrayref(q{
-        SELECT DISTINCT et.strname AS name, et.strid AS press
-        FROM tbl_equipment e, 
-             tbl_equipment_type et, 
-             tbl_service_types s, 
-             service_type_equipment se
-        WHERE e.strtype = et.strid
-          AND s.strid = 'Printing'
-          AND s.lngindex = se.service_type
-          AND se.equipment = e.lngindex
-          ORDER BY et.strid
-        }, { Slice => {} }, 
-    );
- 
-    my %press_types;
-    for my $hash (@{ $variable->{press_types} }) {
-        $press_types{ $hash->{press} } = $hash;
-    }
+  $variable->{SelectedPress} = $r->param('rdbPressType') if $r->param('rdbPressType');
 
-    @{ $variable->{press_types} } = ();
+  $variable->{press_types} = $dbh->selectall_arrayref(q{
+    SELECT DISTINCT et.strname AS name, et.strid AS press
+    FROM tbl_equipment e, 
+    tbl_equipment_type et, 
+    tbl_service_types s, 
+    service_type_equipment se
+    WHERE e.strtype = et.strid
+    AND s.strid = 'Printing'
+    AND s.lngindex = se.service_type
+    AND se.equipment = e.lngindex
+    ORDER BY et.strid
+    }, { Slice => {} }, 
+  );
 
-    foreach my $press (qw( press web screen inkjetprinter digital NoPrinting )) {
-        push @{ $variable->{press_types} }, $press_types{ $press }
-            if $press_types{ $press }
-    }
+  my %press_types;
+  for my $hash (@{ $variable->{press_types} }) {
+    $press_types{ $hash->{press} } = $hash;
+  }
 
+  @{ $variable->{press_types} } = ();
 
-    # PROJECT TYPES
-    #
-    $variable->{project_type} = project_types($log, $dbh);
+  foreach my $press (qw( press web screen inkjetprinter digital NoPrinting )) {
+    push @{ $variable->{press_types} }, $press_types{ $press }
+    if $press_types{ $press }
+  }
 
+  # PROJECT TYPES
+  $variable->{project_type} = project_types($log, $dbh);
 
-    # If we only have 1 Project Type Category && 
-    # only 1 Project Type in that Category then select
-    # it by default when loading the page.
-    my @cats =  keys %{$variable->{project_type}};
-    if (    scalar @cats == 1 
-         && @{$variable->{project_type}{$cats[0]}} == 1
-    ) {
-        $variable->{__FillInForm}{rdbProjectType} =
-            ${$variable->{project_type}{$cats[0]}}[0]->{id};
-    };
+  # If we only have 1 Project Type Category && 
+  # only 1 Project Type in that Category then select
+  # it by default when loading the page.
+  my @cats = keys %{$variable->{project_type}};
+  if ( scalar @cats == 1 
+    && @{$variable->{project_type}{$cats[0]}} == 1
+  ) {
+    $variable->{__FillInForm}{rdbProjectType} =
+    ${$variable->{project_type}{$cats[0]}}[0]->{id};
+  };
 
-    # NOTE: Pushing the mapping onto an array instead of creating a secondary
-    # hash yields a data structure that serialised down to less than half the
-    # hash. However we then have to convert in JS or it's cumbersome to work
-    # with. Not sure where the better tradeoff lies.
+  # NOTE: Pushing the mapping onto an array instead of creating a secondary
+  # hash yields a data structure that serialised down to less than half the
+  # hash. However we then have to convert in JS or it's cumbersome to work
+  # with. Not sure where the better tradeoff lies.
 
-    # The project types allowed depends on the press type selected. TODO Use
-    # press id instead of the string.
-    my $sth = $dbh->prepare(q{
-        SELECT e.strid, p.project_type
-        FROM project_type_by_press p, tbl_equipment_type e
-        WHERE e.lngindex = p.press});
-    $sth->execute();
-    my %by_press;
-    while (my ($press, $project_type) = $sth->fetchrow_array) {
-        $by_press{$press} = {} unless exists $by_press{$press};
+  # The project types allowed depends on the press type selected. TODO Use
+  # press id instead of the string.
+  my $sth = $dbh->prepare(q{
+    SELECT e.strid, p.project_type
+    FROM project_type_by_press p, tbl_equipment_type e
+    WHERE e.lngindex = p.press});
+  $sth->execute();
+  my %by_press;
+  while (my ($press, $project_type) = $sth->fetchrow_array) {
+    $by_press{$press} = {} unless exists $by_press{$press};
+    $by_press{$press}{$project_type} = 1;
+  }
+  $variable->{press_to_project} = encode_json(\%by_press);
 
-        $by_press{$press}{$project_type} = 1;
-    }
-    $variable->{press_to_project} = encode_json(\%by_press);
+  # SERVICE EXCLUSIONS
+  #
+  # Certain services can't be performed by various presses or on various
+  # project types. Send mappings to the javascript so it can hide services
+  # when it needs to.
 
+  # Get the project type to group mappings
+  $variable->{project_groups} = encode_json({@{
+      $dbh->selectcol_arrayref(q{
+      SELECT lngindex, lnggroup FROM tbl_projecttypes
+      }, { Columns => [1,2] }) 
+      }});
 
-    # SERVICE EXCLUSIONS
-    #
-    # Certain services can't be performed by various presses or on various
-    # project types. Send mappings to the javascript so it can hide services
-    # when it needs to.
-    
-    # Get the project type to group mappings
-    $variable->{project_groups} = encode_json({@{
-        $dbh->selectcol_arrayref(q{
-            SELECT lngindex, lnggroup FROM tbl_projecttypes
-        }, { Columns => [1,2] }) 
-    }});
+  # Assemble a list of service type exclusions per group.
+  $sth = $dbh->prepare(q{SELECT * FROM service_type_by_project_group});
+  $sth->execute();
+  my %grouped;
+  while (my ($group, $service_type) = $sth->fetchrow_array) {
+    $grouped{$group} = [] unless exists $grouped{$group};
 
-    # Assemble a list of service type exclusions per group.
-    $sth = $dbh->prepare(q{SELECT * FROM service_type_by_project_group});
-    $sth->execute();
-    my %grouped;
-    while (my ($group, $service_type) = $sth->fetchrow_array) {
-        $grouped{$group} = [] unless exists $grouped{$group};
+    push @{ $grouped{$group} }, $service_type;
+  }
+  $variable->{service_types_by_group} = encode_json(\%grouped);
 
-        push @{ $grouped{$group} }, $service_type;
-    }
-    $variable->{service_types_by_group} = encode_json(\%grouped);
-
-    return OK;
+  return OK;
 }
 
 # We build a list of services grouped by category. TODO Doing more of this
@@ -499,6 +487,19 @@ sub service_types_by_category {
     # Get the list of service types in each category TODO Get everything in
     # one query and use the group() util function.
     for my $cat (@$categories) {
+      print STDERR "qq{
+        SELECT DISTINCT lngindex       AS id, 
+                        strid          AS ref, 
+                        strname        AS name, 
+                        strdescription AS description
+        FROM tbl_service_types t JOIN 
+             service_type_equipment e ON (lngindex = service_type)
+        WHERE ysncreatevisible = 'Y'
+       --   AND strtype <> 'bind'
+          AND strcategory = '$$cat{ref}'
+          $clause for $project_type
+        ORDER BY strname
+ \n";
         my @services 
             = @{ $dbh->selectall_arrayref($services, {Slice => {}}, 
                 $cat->{ref},
@@ -519,69 +520,69 @@ sub service_types_by_category {
 
 # Just like create project, all this has to do is display the page /main/proj/edit
 sub edit_display {
-    my ( $r, $log, $dbh, $cookie, $variable ) = @_;
-        
-    # GENERAL PROJECT INFORMATION
-    #
-    my $pid = $r->param('pid') || $r->param('ProjectIndex');
+  my ( $r, $log, $dbh, $cookie, $variable ) = @_;
 
-    $variable->{ProjectIndex} = $pid;
+  # GENERAL PROJECT INFORMATION
+  #
+  my $pid = $r->param('pid') || $r->param('ProjectIndex');
 
-    # TODO: Replace w/ selectrow_hashref.
-    @$variable{qw( txtProjectReference  design        file_type
-                   txtQuantity1         txtQuantity2  txtQuantity3 
-                   txtComments          ShipDate 
-                   project_type         RequiredDate txtInvoiceComments
-    )} = $dbh->selectrow_array(q{
-        SELECT strProjectReference,  strDesign,    strprograms,
-               intQuantity1,         intQuantity2, intQuantity3, 
-               strComments,          dtmShipDate,
-               lngprojecttype,       to_char(dtmRequiredDate, 'MM/DD/YYYY'),
-				strInvoiceComments
-        FROM tbl_Projects WHERE lngProjectIndex = ?
+  $variable->{ProjectIndex} = $pid;
+
+  # TODO: Replace w/ selectrow_hashref.
+  @$variable{qw( txtProjectReference  design        file_type
+  txtQuantity1         txtQuantity2  txtQuantity3 
+  txtComments          ShipDate 
+  project_type         RequiredDate txtInvoiceComments
+  )} = $dbh->selectrow_array(q{
+    SELECT strProjectReference,  strDesign,    strprograms,
+    intQuantity1,         intQuantity2, intQuantity3, 
+    strComments,          dtmShipDate,
+    lngprojecttype,       to_char(dtmRequiredDate, 'MM/DD/YYYY'),
+    strInvoiceComments
+    FROM tbl_Projects WHERE lngProjectIndex = ?
     }, {}, $pid);
-print STDERR "HAVE INVOCIE COMMENTS: $variable->{txtInvoiceComments} \n";
+  #print STDERR "HAVE INVOCIE COMMENTS: $variable->{txtInvoiceComments} \n";
 
-    $variable->{txtProjectReference} =~ s/'/&apos;/g;
-    $variable->{txtProjectReference} =~ s/"/&quot;/g;
+  $variable->{txtProjectReference} =~ s/'/&apos;/g;
+  $variable->{txtProjectReference} =~ s/"/&quot;/g;
 
-    $variable->{is_multipage} = is_multipage($log, $dbh, $pid);
+  $variable->{is_multipage} = is_multipage($log, $dbh, $pid);
 
-    $variable->{has_locked_quantity} 
-        = $variable->{is_staff}  ? 0 : has_locked_quantity($dbh, $pid);
+  $variable->{has_locked_quantity} 
+  = $variable->{is_staff}  ? 0 : has_locked_quantity($dbh, $pid);
 
-    $variable->{__FillInForm}{project_service} = $dbh->selectcol_arrayref(q{
-        SELECT strServiceType
-        FROM tbl_Project_Contents
-        WHERE lngProjectIndex = ?
+  $variable->{__FillInForm}{project_service} = $dbh->selectcol_arrayref(q{
+    SELECT strServiceType
+    FROM tbl_Project_Contents
+    WHERE lngProjectIndex = ?
     }, undef, $pid, );
 
-    push @{ $variable->{__FillInForm}{project_service} } , @{ $dbh->selectcol_arrayref(q{
-        SELECT strvalue
-        FROM tbl_service_specifications
-        WHERE lngProjectIndex = ? AND strName = 'ShippingType'
-    }, undef, $pid) };
+  push @{ $variable->{__FillInForm}{project_service} } , @{ $dbh->selectcol_arrayref(q{
+  SELECT strvalue
+  FROM tbl_service_specifications
+  WHERE lngProjectIndex = ? AND strName = 'ShippingType'
+  }, undef, $pid) };
 
-    # DESIGN FORMAT
-    # 
-    # Map the design to the file type if we're a legacy "electronic file".
-    # Give the current design an HTML string to select it. Yucky.
-    $variable->{design} = $variable->{file_type} 
-        if $variable->{design} eq 'ElectronicFile';
+  # DESIGN FORMAT
+  # 
+  # Map the design to the file type if we're a legacy "electronic file".
+  # Give the current design an HTML string to select it. Yucky.
+  $variable->{design} = $variable->{file_type} 
+  if $variable->{design} eq 'ElectronicFile';
 
-    $variable->{format}{ lc $variable->{design} } = 'selected="selected"';    
-    
-    @$variable{qw(categories category)} 
-        = service_types_by_category(
-                $dbh, $variable->{project_type}, $pid, $variable->{is_staff}
-        );
+  $variable->{format}{ lc $variable->{design} } = 'selected="selected"';    
 
-    $variable->{display_shipping} = $dbh->selectrow_array(q{
-        SELECT count(*) from tbl_service_types WHERE strid = 'Shipping'
-            AND ysnviewvisible = 'Y'
+  @$variable{qw(categories category)} 
+  = service_types_by_category(
+    $dbh, $variable->{project_type}, $pid, $variable->{is_staff}
+  );
+
+  $variable->{display_shipping} = $dbh->selectrow_array(q{
+    SELECT count(*) from tbl_service_types WHERE strid = 'Shipping'
+    AND ysnviewvisible = 'Y'
     });
 
-    return OK;
+  return OK;
 }
 
 
@@ -979,149 +980,149 @@ sub is_integer {
 
 # Display a list of projects on the project history page.
 sub history_list {
-    my ( $r, $log, $dbh, $variable, $max_records ) = @_;
+  my ( $r, $log, $dbh, $variable, $max_records ) = @_;
 
-    # Handle project deletion.
-    if ($r->param('action') eq 'Delete') {
-        my $error;
-        $error .= delete_project($log, $dbh, $variable, $_) 
-            for $r->param('delete');
+  # Handle project deletion.
+  if ($r->param('action') eq 'Delete') {
+    my $error;
+    $error .= delete_project($log, $dbh, $variable, $_) 
+    for $r->param('delete');
 
-        return misc::error( $log, $dbh, $variable, 'Error', $error ) if $error;
-    }
+    return misc::error( $log, $dbh, $variable, 'Error', $error ) if $error;
+  }
 
-	my $ref = lc($r->param('pid'));
+  my $ref = lc($r->param('pid'));
 
-	my $is_num = is_integer($ref); 
-	
-	my $redirect;
-	my $cust;
-	my $pid;
-   	($pid, $cust) = $is_num ? $dbh->selectrow_array(q{
-		SELECT lngprojectindex, lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $ref) : undef;
+  my $is_num = is_integer($ref); 
 
-	if ( $pid ) {
-		$redirect = "/main/proj/proj_view.html?pid=$pid";
-	}
+  my $redirect;
+  my $cust;
+  my $pid;
+  ($pid, $cust) = $is_num ? $dbh->selectrow_array(q{
+    SELECT lngprojectindex, lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?
+    }, undef, $ref) : undef;
 
-	$ref =~ /(\d*)/;
+  if ( $pid ) {
+    $redirect = "/main/proj/proj_view.html?pid=$pid";
+  }
 
-	my $order;
-	my $ocust;
-   	($order, $ocust)	= $1 ? $dbh->selectrow_array(q{
-		SELECT lngorderid, lngcustomerid FROM tbl_orders WHERE lngorderid = ?
-	}, undef, $1) : undef;
+  $ref =~ /(\d*)/;
 
-	if ( $order ) {
-		$redirect = "/main/order/order_history_details.html?order_id=$order";
-		$cust = $ocust;
-	}
+  my $order;
+  my $ocust;
+  ($order, $ocust)	= $1 ? $dbh->selectrow_array(q{
+    SELECT lngorderid, lngcustomerid FROM tbl_orders WHERE lngorderid = ?
+    }, undef, $1) : undef;
 
-	if ( $redirect ) {
-		die("have cust: $cust, $variable->{cookie} ") unless $cust;
-        eprint::login::select_customer( $r, $log, $dbh, $variable->{cookie}, $variable, $cust );
-		$variable->{Redirect} = $redirect;
-		return;
-	}
+  if ( $order ) {
+    $redirect = "/main/order/order_history_details.html?order_id=$order";
+    $cust = $ocust;
+  }
 
-print STDERR "HAVE STUFF: $ref ; $is_num -- PID: $pid \n";
+  if ( $redirect ) {
+    die("have cust: $cust, $variable->{cookie} ") unless $cust;
+    eprint::login::select_customer( $r, $log, $dbh, $variable->{cookie}, $variable, $cust );
+    $variable->{Redirect} = $redirect;
+    return;
+  }
 
-    # Current date.
-    my ($year, $month, $day) = (localtime(time))[5,4,3];
+  print STDERR "HAVE STUFF: $ref ; $is_num -- PID: $pid \n";
 
-    $year  += 1900;
-    $month += 1;
+  # Current date.
+  my ($year, $month, $day) = (localtime(time))[5,4,3];
 
-    # Default start is a month ago.
-    my $sYear  = $r->param('ddmStartYear')  || $year;
-    my $sMonth = $r->param('ddmStartMonth') || $month - 1;
-    my $sDay   = $r->param('ddmStartDay')   || $day;
+  $year  += 1900;
+  $month += 1;
 
-    # If we're not using a user specified date and the current date is
-    # january, default back to the december of last year.
-    if (!$r->param('ddmStartMonth') && $month <= 1) {
-        $sYear = $year - 1;
-        $sMonth = 12;
-    }
+  # Default start is a month ago.
+  my $sYear  = $r->param('ddmStartYear')  || $year;
+  my $sMonth = $r->param('ddmStartMonth') || $month - 1;
+  my $sDay   = $r->param('ddmStartDay')   || $day;
 
-    # Default end is today (can't search future)
-    my $eYear  = $r->param('ddmEndYear')  || $year;
-    my $eMonth = $r->param('ddmEndMonth') || $month;
-    my $eDay   = $r->param('ddmEndDay')   || $day;
+  # If we're not using a user specified date and the current date is
+  # january, default back to the december of last year.
+  if (!$r->param('ddmStartMonth') && $month <= 1) {
+    $sYear = $year - 1;
+    $sMonth = 12;
+  }
 
-    ssi::get_start_end_dates( 
-        $log, $dbh, $variable, $sYear, $sMonth, $sDay, $eYear, $eMonth, $eDay
-    );
+  # Default end is today (can't search future)
+  my $eYear  = $r->param('ddmEndYear')  || $year;
+  my $eMonth = $r->param('ddmEndMonth') || $month;
+  my $eDay   = $r->param('ddmEndDay')   || $day;
 
-    my $status = $r->param('ddmStatus');
+  ssi::get_start_end_dates( 
+    $log, $dbh, $variable, $sYear, $sMonth, $sDay, $eYear, $eMonth, $eDay
+  );
 
-    # Status search dropdown.
-    $variable->{ddmStatus} = ssi::fill_drop_down($log, $dbh, qq{
-        SELECT DISTINCT strStatus, strStatus 
-        FROM tbl_Projects 
-        WHERE strStatus != '' 
-          AND strStatus != 'Deleted' 
-          AND lngCustomerID = $variable->{cust_id}
-        ORDER BY strStatus
+  my $status = $r->param('ddmStatus');
+
+  # Status search dropdown.
+  $variable->{ddmStatus} = ssi::fill_drop_down($log, $dbh, qq{
+    SELECT DISTINCT strStatus, strStatus 
+    FROM tbl_Projects 
+    WHERE strStatus != '' 
+    AND strStatus != 'Deleted' 
+    AND lngCustomerID = $variable->{cust_id}
+    ORDER BY strStatus
     }, $status );
-   
-    my $clause = 'AND strstatus = ' . $dbh->quote($status) if $status;
 
-	#my $user_clause = "AND lnguserindex = $variable->{user_id} " if $variable->{user_type} eq 'C' && $variable->{user_id} ne '293';
-	my $user_clause = " ";
+  my $clause = 'AND strstatus = ' . $dbh->quote($status) if $status;
 
-    my $limit  = "LIMIT $max_records"                      if $max_records;
+  #my $user_clause = "AND lnguserindex = $variable->{user_id} " if $variable->{user_type} eq 'C' && $variable->{user_id} ne '293';
+  my $user_clause = " ";
 
-	my @data = ($variable->{cust_id}, $variable->{StartDate}, $variable->{EndDate});
+  my $limit  = "LIMIT $max_records"                      if $max_records;
 
-	my $ref_clause = $ref ? q{ AND lower(regexp_replace(strprojectreference, '\s','','g')) ~ regexp_replace(?, '\s','','g') } : '';
-	push @data, $ref if $ref;
+  my @data = ($variable->{cust_id}, $variable->{StartDate}, $variable->{EndDate});
 
-    # Get the list of projects respecting any search params the user entered.
-    $variable->{projects} = $dbh->selectall_arrayref(qq{
-        SELECT p.lngprojectindex                                AS pid,
-               p.strprojectreference                            AS reference,
-               p.strstatus                                      AS status,
-               to_char(p.dtmcreationdate, 'MM/DD/YYYY')         AS create_date,
-               to_char((p.dtmexpiredate - NOW()),'dd')::int < 1 AS expired,
-               o.lngorderid IS NOT NULL                         AS is_ordered,
-               o.lngorderid				                        AS order_id,
-			   CASE WHEN o.intquantityindex IS NULL 
-					THEN 1 ELSE o.intquantityindex 
-					END 										AS order_qty,	
-			   (SELECT MAX(lngquoteid) FROM tbl_quote_details 
-				WHERE tbl_quote_details.lngprojectindex = p.lngprojectindex) AS quote_id,
-				p.intquantity1                                  AS qty,
+  my $ref_clause = $ref ? q{ AND lower(regexp_replace(strprojectreference, '\s','','g')) ~ regexp_replace(?, '\s','','g') } : '';
+  push @data, $ref if $ref;
 
-				(SELECT strname FROM tbl_equipment_type et
-					WHERE et.lngindex = p.lngpresstype)   		AS press_type
+  # Get the list of projects respecting any search params the user entered.
+  $variable->{projects} = $dbh->selectall_arrayref(qq{
+    SELECT p.lngprojectindex                                AS pid,
+    p.strprojectreference                            AS reference,
+    p.strstatus                                      AS status,
+    to_char(p.dtmcreationdate, 'MM/DD/YYYY')         AS create_date,
+    to_char((p.dtmexpiredate - NOW()),'dd')::int < 1 AS expired,
+    o.lngorderid IS NOT NULL                         AS is_ordered,
+    o.lngorderid				                        AS order_id,
+    CASE WHEN o.intquantityindex IS NULL 
+    THEN 1 ELSE o.intquantityindex 
+    END 										AS order_qty,	
+    (SELECT MAX(lngquoteid) FROM tbl_quote_details 
+    WHERE tbl_quote_details.lngprojectindex = p.lngprojectindex) AS quote_id,
+    p.intquantity1                                  AS qty,
+
+    (SELECT strname FROM tbl_equipment_type et
+    WHERE et.lngindex = p.lngpresstype)   		AS press_type
 
 
 
-        FROM tbl_projects p LEFT JOIN tbl_order_contents o USING (lngprojectindex)
-        WHERE p.lngcustomerid = ?
-          AND p.strstatus != 'Deleted'
-          AND date(p.dtmcreationdate) BETWEEN date(?)
-                                          AND date(?)
-          $clause
-          $user_clause
-		  $ref_clause
-        ORDER BY p.lngProjectIndex DESC
-        $limit
+    FROM tbl_projects p LEFT JOIN tbl_order_contents o USING (lngprojectindex)
+    WHERE p.lngcustomerid = ?
+    AND p.strstatus != 'Deleted'
+    AND date(p.dtmcreationdate) BETWEEN date(?)
+    AND date(?)
+    $clause
+    $user_clause
+    $ref_clause
+    ORDER BY p.lngProjectIndex DESC
+    $limit
     }, 
     { Slice => {} }, @data); 
 
-	map {
-        my @prices = eprint::project::project_price($log, $dbh, $_->{pid});
-        $_->{price} = $prices[0];
-	} @{$variable->{projects}};
+  map {
+    my @prices = eprint::project::project_price($log, $dbh, $_->{pid});
+    $_->{price} = $prices[0];
+  } @{$variable->{projects}};
 
-	$variable->{search} = $r->param('pid');
+  $variable->{search} = $r->param('pid');
 
-use Data::Dumper;
-print STDERR "PROJ DUMPER " , Dumper($variable);
-    return OK;
+  #use Data::Dumper;
+  #print STDERR "PROJ DUMPER " , Dumper($variable);
+  return OK;
 }
 
 sub delete_project {
@@ -1597,7 +1598,7 @@ sub price_breakdown {
 	}, 'lngindex', {});
 
 
-print STDERR "HAVE RUNS: ", Dumper($runs);
+#print STDERR "HAVE RUNS: ", Dumper($runs);
     # Comparisons are a sorted, formatted selection of fields from each run.
     # For now we'll sort in a fixed order.
     my @comparisons =
@@ -1635,7 +1636,7 @@ print STDERR "HAVE RUNS: ", Dumper($runs);
 
 			#	$comp{price}{comparison} = $comp{priceperspread};
 
-			print STDERR "HAVE COMP: ", Dumper(\%comp);
+      #print STDERR "HAVE COMP: ", Dumper(\%comp);
 
             \%comp;
         }
@@ -1678,7 +1679,7 @@ sub display_reuse_project {
 sub copy_project {
     my ($dbh, $variable, $pid, $args) = @_;
 
-print STDERR "STARRT COPY PID ", Dumper(@_);
+    #print STDERR "STARRT COPY PID ", Dumper(@_);
 
     die "Must provide a valid project ID." unless $pid;
 
@@ -1726,7 +1727,7 @@ print STDERR "STARRT COPY PID ", Dumper(@_);
     insert(undef, $dbh, 'tbl_projects', (%$orig, %copy));
     
     # Get the next insert id in the sequence.
-    my $new = $dbh->last_insert_id('',qw(public tbl_projects lngprojectindex));
+    my $new = $dbh->last_insert_id('', qw(public tbl_projects lngProjectIndex), {sequence=>'lngProjectIndex_seq'});
 
     # Copy all the services for the project (blanks shipping if new owner).
     copy_project_services($dbh, $pid, $new, $has_new_owner);
@@ -2252,45 +2253,34 @@ sub create_multiple {
 
 # Create the project and start the build process.
 sub create_project {
-    my ($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref) = @_;
+  my ($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref) = @_;
 
-	map { $qty->[$_-1] = int $qty->[$_-1] || $r->param("txtQuantity$_") ||  0 } 1..3;
+  map { $qty->[$_-1] = int $qty->[$_-1] || $r->param("txtQuantity$_") || 0 } 1..3;
+map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) } $r->param();
 
-	map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) } $r->param();
+  $projref ||= $r->param('txtProjectReference');
+  die('Missing Project Referenece') unless $projref;
 
-	$projref = $projref || $r->param('txtProjectReference');
-	
-	die('Missing Project Referenece') unless $projref;
+  my $pid;
 
-    my $pid;
+  $predefined ||= $r->param('predefined');
 
-	my $predefined = $predefined || $r->param('predefined');
+  print STDERR "START CREATE PROJECT \n";
 
-print STDERR "START CREATE PROJECT \n";
+  if ($predefined) {
+    $variable->{user_id} = $r->param('ddmUser') if $r->param('ddmUser');
+    $pid = create_project_from_predefined($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref);
 
-    if ($predefined) {
-
-		$variable->{user_id} = $r->param('ddmUser') if $r->param('ddmUser');
-
-        $pid = create_project_from_predefined($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref);
-
-        modify_services($r, $log, $dbh, $cookie, $variable, $pid);
-
-print STDERR "CREATE MY PROJECT TO ORDER - $cookie - $pid \n";
-
+    modify_services($r, $log, $dbh, $cookie, $variable, $pid);
+    print STDERR "CREATE MY PROJECT TO ORDER - $cookie - $pid \n";
 		my $i = $r->param('item') || $predefined;
 
-		$dbh->do(q{
-			UPDATE tbl_projects SET prod_id = ? WHERE lngprojectindex = ?
-		}, undef, $i, $pid);
+		$dbh->do('UPDATE tbl_projects SET prod_id = ? WHERE lngprojectindex=?', undef, $i, $pid);
 
 		if ( $r->param('create_to_order') ) {
-			$dbh->do(q{
-				UPDATE tbl_projects SET create_to_order = true WHERE lngprojectindex = ?
-			}, undef, $pid);
+			$dbh->do('UPDATE tbl_projects SET create_to_order = true WHERE lngprojectindex = ?', undef, $pid);
 			make_order($r, $log, $dbh, $cookie, $variable, $pid);
 		}
-		
 
 # Make all predefined projects  go to order;
 		if ( $r->param('MakeOrder') ) {
@@ -2300,65 +2290,64 @@ print STDERR "CREATE MY PROJECT TO ORDER - $cookie - $pid \n";
 		}
 
 		$variable->{new_pid} = $pid;
+  } else {
+    #print STDERR "CREATE PROCESS ", Dumper(@_);
+$pid = create_process($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref);
     }
-    else {
-print STDERR "CREATE PROCESS ", Dumper(@_);
-        $pid = create_process($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref);
+
+    $dbh->do(q{
+      UPDATE tbl_projects SET create_to_order = true WHERE lngprojectindex = ?
+      }, undef, $pid) if $r->param('create_to_order');
+
+    #Special param used for domino's mailing projects.
+    if ( $r->param('mail_type') ) {
+      my $type = $r->param('mail_type');
+      my $art  = $r->param('mail_art');
+
+      die("MISSING MAIL ART FOR MAIL TYPE: $type ") unless $art;
+
+      $dbh->do(q{
+        UPDATE tbl_projects SET mail_type = ?, mail_art  = ? 
+        WHERE lngprojectindex = ?
+        }, undef, $type, $art, $pid);
+
     }
 
-	$dbh->do(q{
-		UPDATE tbl_projects SET create_to_order = true WHERE lngprojectindex = ?
-	}, undef, $pid) if $r->param('create_to_order');
-
-#Special param used for domino's mailing projects.
-	if ( $r->param('mail_type') ) {
-		my $type = $r->param('mail_type');
-		my $art  = $r->param('mail_art');
-
-		die("MISSING MAIL ART FOR MAIL TYPE: $type ") unless $art;
-
-		$dbh->do(q{
-			UPDATE tbl_projects SET mail_type = ?, mail_art  = ? 
-			WHERE lngprojectindex = ?
-		}, undef, $type, $art, $pid);
-
-	}
 
 
-	
 
     die "Couldn't create project" unless $pid;
 
-my $x = has_pdf_template(undef, $dbh, $pid);
-print STDERR " 1 CREATE PROJECT 2 X: $x T: " . $r->param('template') . " \n\n";
+    my $x = has_pdf_template(undef, $dbh, $pid);
+    print STDERR " 1 CREATE PROJECT 2 X: $x T: " . $r->param('template') . " \n\n";
 
     # If we're creating a project with PDF template, (and one isn't already
     # associated with it (can happen with predefined projects), create the
     # project and it's dir but belay the calculation until after filling.
     if ($r->param('template') ) {
-    #if ($r->param('template') && ! has_pdf_template(undef, $dbh, $pid)) {
+      #if ($r->param('template') && ! has_pdf_template(undef, $dbh, $pid)) {
 
-print STDERR "TIME TO INIT TEMPLATE PROJECT \n\n";
-        require eprint::Template;
-        
-        # Copy the template into the project dir and create it's database.
-        eprint::Template::init_template($dbh, $pid, $r->param('template'));
+      print STDERR "TIME TO INIT TEMPLATE PROJECT \n\n";
+      require eprint::Template;
+
+      # Copy the template into the project dir and create it's database.
+      eprint::Template::init_template($dbh, $pid, $r->param('template'));
     }
-	if ( $r->param('mail_type') ) {
+    if ( $r->param('mail_type') ) {
 
-		eprint::mailing::reserve_mail($r, $dbh, $variable, 
-									  $pid, $r->param('txtQuantity1'));
+      eprint::mailing::reserve_mail($r, $dbh, $variable, 
+        $pid, $r->param('txtQuantity1'));
 
-		eprint::mailing::make_address_file($r, $dbh, $variable, $pid);
-	}
+      eprint::mailing::make_address_file($r, $dbh, $variable, $pid);
+    }
 
     my $p  = "pid=$pid";
-       $p .= ";level=0"           if $predefined;
-       $p .= ";create_to_order=1" if $r->param('create_to_order');
+    $p .= ";level=0"           if $predefined;
+    $p .= ";create_to_order=1" if $r->param('create_to_order');
 
     return (has_pdf_template(undef, $dbh, $pid) ? TEMPLATE_PAGE : BUILD_PAGE) 
-         . "?$p";
-}
+    . "?$p";
+  }
 
 sub inventory_checkout {
     my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
@@ -2532,7 +2521,7 @@ sub edit_line_item {
 
 
 
-	print STDERR "HAVE EDIT LNIE", Dumper($edit, $name, $price, $sid, $edit);
+  #print STDERR "HAVE EDIT LNIE", Dumper($edit, $name, $price, $sid, $edit);
 
 
 	#return BUILD_PAGE . "?pid=$pid;edit=11111";
@@ -2647,18 +2636,16 @@ sub project_notification {
 		SELECT strfirstname || ' ' || strlastname FROM tbl_customer_users WHERE lnguserid = ?
 	}, undef, $data->{ddmUser}) if $data->{ddmUser};
 
-	print STDERR "NOT INFO", Dumper($data);
+#print STDERR "NOT INFO", Dumper($data);
 
     $data->{siteURL} = configuration::get_value( $log, $dbh, 'siteURL' );
 
-	my $debug = Dumper($data);
+  my $debug = Dumper($data);
 	$data->{debug} = $debug;
 	$data->{debug} =~ s/\n/<br>/g;
 
 
-
-
-print STDERR " NOT DUMPER " , Dumper($data->{pid}, $var->{cookie});
+  #print STDERR " NOT DUMPER " , Dumper($data->{pid}, $var->{cookie});
 	my $file = misc::load_file($r, q{/email/forms/project_requires_special_attention.html});
 
 	$file = ssi::variable_substitution($r, $log, $dbh, $file, $data);

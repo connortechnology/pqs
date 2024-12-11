@@ -196,7 +196,7 @@ sub load_pricing {
 sub get_price {
     my ($log, $dbh, $variable, $service, $range, $equipment, $subservice) = @_;
     # The cache doesn't handle subservices.
-    if (defined %cache && !$subservice && $equipment && exists $cache{$equipment}) {
+    if (%cache && !$subservice && $equipment && exists $cache{$equipment}) {
 
         # If the service doesn't exist for the equipment it's not priced.
         return unless exists $cache{$equipment}{$service};
@@ -294,20 +294,15 @@ sub price_item {
 sub valid_equipment {
 	my ($log, $dbh, $service_type, $pid) = @_;
 
-	my $specs = shift;
+  #my $specs = shift;
 	use session;
 	my $r = session::r;
 	my $specs;
 	map { $specs->{$_} = $r->param($_) } $r->param();
 
-
-
-	use Data::Dumper;
 	print STDERR "DUMPER SPECS: " , Dumper($specs, $specs->{chkOverrideEquipment1});
 
 	my $override;
-
-
 	if ( $specs->{chkOverrideEquipment1} ) {
 		$override = $specs->{ddmEquipment1};
 	print STDERR " OVERRRIDE FOUND:  $override \n";
@@ -324,17 +319,12 @@ sub valid_equipment {
 		SELECT equipment 
         FROM service_type_equipment e, tbl_service_types t, tbl_equipment eq
         WHERE t.lngindex = e.service_type AND equipment = eq.lngindex 
-        AND t.strid    = ?
+        AND t.strid=?
 	$over_sql
 	};
 
-	my $rfq_only =  $pid ? $dbh->selectrow_array(q{
-			SELECT rfq_only FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid)
-	: undef;
-	
+	my $rfq_only = $pid ? $dbh->selectrow_array('SELECT rfq_only FROM tbl_projects WHERE lngprojectindex=?', undef, $pid) : undef;
 	$sql .= q{ AND eq.strsupplier <> 'RFQ Required'} unless $rfq_only;
-
 
 	my $product_only = '';
 
@@ -351,19 +341,13 @@ sub valid_equipment {
 	
 
 	#print STDERR "VALID EQUIPEMNT SQL: $sql \n";
-
 	
-    # As this query will potentially be run for every single service for every
-    # project created, let's cache the statment.
-    my $sth = $dbh->prepare_cached($sql);
-	
-
-    my @x =  @{ $dbh->selectcol_arrayref($sth, undef, $service_type) };
-
-
-    return @{ $dbh->selectcol_arrayref($sth, undef, $service_type) };
+  # As this query will potentially be run for every single service for every
+  # project created, let's cache the statment.
+  my $sth = $dbh->prepare_cached($sql);
+  my @x =  @{ $dbh->selectcol_arrayref($sth, undef, $service_type) };
+  return @{ $dbh->selectcol_arrayref($sth, undef, $service_type) };
 }
-
 
 sub valid_equipment_dropdown {
 	my ($dbh, $service_type) = @_;

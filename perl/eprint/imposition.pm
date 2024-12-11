@@ -694,7 +694,7 @@ sub get_matching_versions {
 
         my $stddev = stddev([ @percentages[$i..$i + $n-1] ]);
 
-		print STDERR "\n Min: $min START: $start FOR LOOP 0 to $#percentages - $n   I: $i $stddev @percentages[$i]";
+		print STDERR "\n Min: $min START: $start FOR LOOP 0 to $#percentages - $n   I: $i $stddev $percentages[$i]";
         
         if (not defined $min or $stddev < $min) {
             $min   = $stddev;

@@ -101,30 +101,28 @@ sub get {
   my ($id) = @_;
   my $dbh = session::dbh;
 
-  my $id = $dbh->selectrow_hashref("select * from product_filter where id = ?", undef, $id);
+  return $dbh->selectrow_hashref("select * from product_filter where id = ?", undef, $id);
 }
 
 
 sub get_all {
   my $dbh = session::dbh;
 
-  my $all = $dbh->selectall_arrayref("select * from product_filter ORDER by sortorder",{Slice => {}});
-
+  return $dbh->selectall_arrayref("select * from product_filter ORDER by sortorder",{Slice => {}});
 }
+
 sub products_with_option {
   my $dbh = session::dbh;
   my $id = shift;
 
-  my $all = $dbh->selectcol_arrayref("select product from product_options WHERE opt = ?",undef, $id);
-
+  return $dbh->selectcol_arrayref("select product from product_options WHERE opt = ?",undef, $id);
 }
-
 
 sub get_category {
   my $dbh = session::dbh;
   my $id  = shift;
 
-  my $all = $dbh->selectall_arrayref("select * from product_filter Where category = ? order by sortorder, name"
+  return $dbh->selectall_arrayref("select * from product_filter Where category = ? order by sortorder, name"
 	,{Slice => {}}, $id);
 
 }
@@ -133,10 +131,8 @@ sub options_for_product {
   my $dbh = session::dbh;
   my $id  = shift;
 
-  my $all = $dbh->selectall_arrayref("select opt, filter from product_options, options  Where product = ? AND product_options.opt = options.id order by filter, id "
+  return $dbh->selectall_arrayref("select opt, filter from product_options, options  Where product = ? AND product_options.opt = options.id order by filter, id "
 	,{Slice => {}}, $id);
-
-
 }
 
 sub get_option_id {
@@ -145,7 +141,7 @@ print STDERR "OPTS ", Dumper(@_);
   my $cat  = shift;
   my $filter  = shift;
   my $opt  = shift;
-  my $id = $dbh->selectrow_array(q{select o.id from options o, product_filter pf 
+  return $dbh->selectrow_array(q{select o.id from options o, product_filter pf 
 		Where o.filter = pf.id AND pf.category = ?  AND o.name = ? AND pf.name = ?
 	},undef, $cat,$opt, $filter );
 }

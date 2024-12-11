@@ -120,17 +120,13 @@ sub add_price {
 sub price_item {
     my ( $cid, $index, $item, $range) = @_;
     
-    
 	my $log = session::log;
 	my $dbh = session::dbh;
 
 	my $pricelist = eprint::customer::get_pricelist_id($log, $dbh, $cid);
-
-    my ($clause, @args);
-
+  my ($clause, @args);
 
 #    print STDERR "HAVE PRICE ITEM PARAMS ", Dumper(@_);
-  my $dbh = session::dbh;
 
 die("MISSING QTY: $range ") unless $range;
   

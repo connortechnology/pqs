@@ -70,7 +70,7 @@ sub get {
 
   my $active =  $showall ? '' : ' AND ACTIVE ';
   print STDERR "Get ACTIVE: $active \n";
-  my $id = $dbh->selectrow_hashref("select * from categories where id = ? $active ", undef, $id);
+  return $dbh->selectrow_hashref("select * from categories where id = ? $active ", undef, $id);
 }
 
 sub get_children_from_id {
@@ -86,27 +86,28 @@ sub get_children_from_id {
    } else {
   	$list = $dbh->selectcol_arrayref("select id from categories where parent is NULL $active  ORDER BY name ");
   }
+  return $list;
 }
 
 sub get_parent_from_id {
   my ($id) = @_;
   my $dbh = session::dbh;
 
-  my $id = $dbh->selectrow_array("select parent from categories where id = ?", undef, $id);
+  return $dbh->selectrow_array("select parent from categories where id = ?", undef, $id);
 }
 
 sub get_id_from_name {
   my ($str) = @_;
   my $dbh = session::dbh;
 
-  my $id = $dbh->selectrow_array("select id from categories where name = ?", undef, $str);
+  return $dbh->selectrow_array("select id from categories where name = ?", undef, $str);
 }
 
 sub get_name_from_id {
   my ($str) = @_;
   my $dbh = session::dbh;
 
-  my $id = $dbh->selectrow_array("select name from categories where id = ?", undef, $str);
+  return $dbh->selectrow_array("select name from categories where id = ?", undef, $str);
 }
 sub get_all {
   my $dbh = session::dbh;
@@ -123,7 +124,7 @@ sub get_all {
     } else {
       $cats->{ $all->{$_}{name} } = $all->{$_};
     }
-  } keys $all;
+  } keys %{$all};
   
   foreach my $cat ( keys %{$cats} ) {
     
