@@ -251,6 +251,15 @@
 	
 	/* Lists where Buttlets Are Not Visible */
 	
+	ul.non-list:after,
+	ul.non-list li:after {
+    content: ".";
+  display: block;
+  height: 0;
+    font-size: 0;
+  clear: both;
+  visibility: hidden;
+  }
 	ul.non-list,
 	ul.non-list li {
 		margin: 0 0 2ex 0;
@@ -326,6 +335,9 @@
 		font-size: 0.85em;
 		font-weight: normal;
 	}
+  p.buttons button {
+    float: none;
+  }
 	
 	
 	/* \*/
@@ -761,4 +773,20 @@
 		font-family: Arial, Helvetica, sans-serif;
 		font-size: 9pt;
 	}
+}
+.form-check-inline {
+display: inline;
+padding-left: 0;
+margin-right: .2rem;
+  width: auto;
+  float: none;
+}
+.form-check-inline label {
+  display: inline;
+  width: auto;
+  float: none;
+  padding: 4px 0 8px 0;
+}
+fieldset .form-check-inline label.radio {
+  float: none;
 }
