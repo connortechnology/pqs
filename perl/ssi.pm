@@ -25,6 +25,7 @@ BEGIN {
 }
 our $gdb;
 
+require openprint;
 #Used for resource hashed links
 my $hash_cache;
 use vars qw( $r %variable %session %param %config $log $dbh );
@@ -324,7 +325,7 @@ sub do_new_substitution {
       #$log->debug("Echo $1");
         my $return = eval $1;
         $log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-        #$log->debug("Return : $return");
+        $log->debug("Return : $return");
         return $return.variable_substitution( $r, $log, $dbh, $text, $variable );
     }
     elsif ( $command =~ /^include\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
@@ -975,6 +976,7 @@ sub hash_link {
 
 sub radio {
   my ( $name, $values, $selected, $options ) = @_;
+  my $log = session::log;
 
   $options = {} if !$options;
 
@@ -984,7 +986,7 @@ sub radio {
 
   my $html;
   if ( exists($$options{default}) and ! defined($selected) ) {
-#$log->debug("Selecting default $$options{default} for radio $name");
+$log->debug("Selecting default $$options{default} for radio $name");
     $selected = $$options{default};
     delete $$options{default};
   } # end if
@@ -992,11 +994,13 @@ sub radio {
   for (my $i = 0; $i < @{$values}; $i += 2) {
     my ($value, $label) = ( $$values[$i], $$values[$i+1] );
     $html .= $$container[0] if $container;
+    $log->debug(" $value $selected =?".($value eq $selected).'='.(($value eq $selected)?'checked="checked"':''));
     $html .= sprintf(q`
       <div class="form-check%7$s">
         <label class="form-check-label radio%7$s" for="%1$s%6$s%2$s">
         <input class="form-check-input" type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s %5$s />
-        %3$s</label></div>
+        %3$s</label>
+      </div>
         `, $name, $value, $label, (($value eq $selected)?'checked="checked"':''),
         join(' ', map { $_.'="'.$$options{$_}.'"' } keys %{$options}),
         $id,
@@ -1004,6 +1008,7 @@ sub radio {
         );
     $html .= $$container[1] if $container;
   } # end foreach value
+  $log->debug($html);
   return $html;
 } # end sub radio
 
