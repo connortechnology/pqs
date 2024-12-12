@@ -82,7 +82,7 @@ sub email_with_template {
 	my $t = misc::load_file($r,'/email/email_template.html');
 
 	$data->{ReplacementText} = qq{<!--#include virtual="$file"-->};
-	$data->{siteURL} = "http://" . $r->hostname;
+	$data->{siteURL} = "https://" . $r->hostname;
 	
 	$t = ssi::variable_substitution($r, $log, $dbh, $t, $data);
 
