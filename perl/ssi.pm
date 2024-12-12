@@ -4,6 +4,7 @@
 # in need of being replaced with something else.
 package ssi;
 use strict;
+use warnings;
 no warnings qw(uninitialized);
 
 BEGIN {
@@ -24,6 +25,18 @@ BEGIN {
 }
 our $gdb;
 
+require openprint;
+#Used for resource hashed links
+my $hash_cache;
+use vars qw( $r %variable %session %param %config $log $dbh );
+*session = \%openprint::session;
+*param = \%openprint::param;
+*log = \$openprint::log;
+*variable = \%openprint::variable;
+*config = \%openprint::config;
+*r = \$openprint::r;
+$dbh = session::dbh;
+
 # If set to 1, SSI will die on keys that don't exists, otherwise we silently
 # ignore them.
 our $INVALID_KEY = 0;
@@ -32,6 +45,8 @@ use constant MAX_DEPTH => 30; # Maximum include depth.
 
 use Carp;
 use Date::Calc qw(Days_in_Month);
+use Date::Parse;
+use Date::Format;
 use sql qw(sql_statement);
 use PQS::Constants;
 
@@ -49,7 +64,8 @@ use Data::Dumper qw( Dumper            );
 use POSIX        (); # Don't import (memory issues)
 use Scalar::Util qw( looks_like_number );
 use List::Util   qw( min               );
-
+require File::Slurp;
+require File::Basename;
 
 use constant NUMBER => 
     qw(zero one two three four five six seven eight nine ten);
@@ -163,10 +179,10 @@ sub do_new_substitution {
     # IF control structure.
     elsif ( $command =~ /^\s*if\s*(.*)\s*/ ) {
         my $dataname = $1;
-
+        #$log->debug("Found if $dataname");
         unless ($text =~ /(.*?)<\?\s*endif\s*\Q$dataname\E\s*\?>(.*)/si) 
         {
-            $log->debug("Unable to find terminating $command");
+            $log->debug("Unable to find terminating $command for $dataname in $text");
             return variable_substitution( $r, $log, $dbh, $text, $variable );
         }
 
@@ -182,6 +198,7 @@ sub do_new_substitution {
 
         my $bool;
         if ($dataname =~ /^(?:\w+:)*(?:[A-Za-z_0-9]+.)*[A-Za-z_0-9]+$/) {
+          #$log->debug("Evalling $dataname");
             $bool = eval_variable($log, $variable, $dataname);
         }
         else {
@@ -297,20 +314,36 @@ sub do_new_substitution {
     }
 
     # EVAL control structure.
-    elsif ( $command =~ /eval\s*\(\s*(.*)\s*\)/ ) {
+    elsif ( $command =~ /eval\s*\(\s*(.*)\s*\)/ms ) {
         $_ = eval $1;
         $log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
         return variable_substitution( $r, $log, $dbh, $text, $variable );
     }
 
+    # Echo control structure.
+    elsif ( $command =~ /echo\s*\(\s*(.*)\s*\)/ms ) {
+      #$log->debug("Echo $1");
+        my $return = eval $1;
+        $log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
+        $log->debug("Return : $return");
+        return $return.variable_substitution( $r, $log, $dbh, $text, $variable );
+    }
+    elsif ( $command =~ /^include\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
+      #$log->debug("Include $1");
+        my $return = include( $1, $variable );
+        return $return.variable_substitution( $r, $log, $dbh, $text, $variable );
+    }
     # Dump all of $variable into the text stream.
     elsif ( $command =~ /dumper\s*\(\)/ ) {
         return Dumper($variable) 
              . variable_substitution( $r, $log, $dbh, $text, $variable );
     }
-
+    elsif ( $command =~ /^hash_link\s*\(\s*'?([^\s']+)'?\s*\)/ms ) {
+        return hash_link($1).variable_substitution( $r, $log, $dbh, $text, $variable );
+      }
     # Straight variable substitution
     else {
+      #$log->debug($command);
         my $replacement = eval_variable($log, $variable, $command);
 
         return $replacement
@@ -560,45 +593,43 @@ sub select_options {
 # what should be pairs, a SINGLE value to select, and an option maximum label
 # length.
 sub make_drop_down {
-    my ( $val, $checkval, $length ) = @_;
-    my ( $options, $selected ) = ('', '');
-    my @data;
-	
+  my ( $val, $checkval, $length ) = @_;
+  my ( $options, $selected ) = ('', '');
+  my @data;
 
+  my $value;
+  my $label;
 
-	my $value;
-	my $label;
+  my $x = ref $val;
+  #print STDERR "START MAKE: $x \n";
+  # Return an empty string if no data was passed.
+  if    (ref $val eq 'HASH')                           { @data = %$val }
+  elsif (ref $val eq 'ARRAY') 						 { @data = @$val }
+  else                                                 { return;       }
 
-	my $x = ref $val;
-	print STDERR "START MAKE: $x \n";
-    # Return an empty string if no data was passed.
-    if    (ref $val eq 'HASH')                           { @data = %$val }
-    elsif (ref $val eq 'ARRAY') 						 { @data = @$val }
-    else                                                 { return;       }
-
-    while (@data) {
-		if ( ref $data[0] eq 'ARRAY' ) {
-			my $row = shift @data;
-			$value = shift @$row;
-			$label = shift @$row;
-		} else { 
-			$value = shift @data;
-			$label = shift @data;
-		}
-
-        # Should the current option be selected?
-        $selected = defined $checkval && $checkval eq $value 
-            ? 'selected="selected"' : '';
-
-        # Escape html entities where needed and trim label length.
-        $value = encode_entities( $value );
-        $label = encode_entities( $length ? substr($label, 0, $length) : $label );
-
-        # Output the option.
-        $options .= qq|<option value="$value" $selected>$label</option>\n|;
+  while (@data) {
+    if ( ref $data[0] eq 'ARRAY' ) {
+      my $row = shift @data;
+      $value = shift @$row;
+      $label = shift @$row;
+    } else { 
+      $value = shift @data;
+      $label = shift @data;
     }
-    # Return an HTML text block of options.
-    return $options;
+
+    # Should the current option be selected?
+    $selected = defined $checkval && $checkval eq $value 
+    ? 'selected="selected"' : '';
+
+    # Escape html entities where needed and trim label length.
+    $value = encode_entities( $value );
+    $label = encode_entities( $length ? substr($label, 0, $length) : $label );
+
+    # Output the option.
+    $options .= qq|<option value="$value" $selected>$label</option>\n|;
+  }
+  # Return an HTML text block of options.
+  return $options;
 }
 
 # Generate an HTML option set (as a string) of materials in the given type.
@@ -847,5 +878,473 @@ sub get_start_end_dates {
     );
 }
 
-1;
 
+# If there is any problem, return the original path, so that the original file can be sent.
+sub hash_link {
+  my ( $path ) = @_;
+
+
+  my $r = session::r;
+  my $log = session::log;
+  my $skin_path = $r->dir_config('SkinPath');
+
+  my $src;
+  if ( -e $path ) {
+    $src = $path;
+  } elsif ( $skin_path and -e $skin_path.$path ) {
+    $src = $skin_path.$path;
+  } elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
+    $src = $ENV{DOCUMENT_ROOT}.$path;
+  } else {
+    return $path;
+  } # end if
+
+  require JSON;
+  require Digest::MD5;
+
+  my $cache_dir = $r->dir_config('cache_dir') ? $r->dir_config('cache_dir') : $skin_path.'/cache';
+  return $path if ! $cache_dir;
+
+  my $script;
+  if ( ( ! $hash_cache ) and -f $cache_dir.'/config.json' ) {
+    $_ = File::Slurp::read_file($cache_dir.'/config.json');
+    if ( $_ ) {
+      $hash_cache = JSON::from_json( $_ );
+      $hash_cache = {} if ! $hash_cache;
+    } else {
+      $log->error("No content of $cache_dir/config.json");
+      $hash_cache = {};
+    } # end if
+  } # end if
+
+  if ( !($script = $$hash_cache{$path})
+      || ! -f $$script{cache_file}
+      || ( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
+     ) {
+
+    $timestamp = (stat $src)[9] if ! $timestamp;
+
+    my ($base, $dir, $ext) = File::Basename::fileparse($src, qr/\.[^.]+/);
+    $ext =~ s/^\.//;
+    my $blob = File::Slurp::read_file($src);
+
+    if (!DEBUG) {
+      if ( $ext eq 'js' ) {
+       eval {
+         require JavaScript::Minifier::XS;
+         $blob = &JavaScript::Minifier::XS::minify( $blob );
+       };
+       $log->error( "Eval error of (minify), Reason: " . $@ ) if $@;
+
+     } elsif ( $ext eq 'css' ) {
+       eval {
+         require CSS::Minifier;
+         $blob = &CSS::Minifier::minify( input=>$blob );
+       };
+       $log->error( "Eval error of (minify), Reason: " . $@ ) if $@;
+      } # end if
+    } # end if
+
+    my $hash = Digest::MD5::md5_hex($blob);
+    $$hash_cache{$path} = $script = {
+      src     =>  $src,
+      name    => "$base-$hash.$ext",
+      path    => $path,
+      cache_file  => "$cache_dir/$base-$hash.$ext",
+      hash    => $hash,
+      timestamp => $timestamp,
+    };
+    if ( ! -f $$script{cache_file} ) {
+      mkdir $cache_dir;
+      if ( ! File::Slurp::write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
+        $log->error( "couldn't cache $script->{cache_file}" );
+        return $path;
+      } # end if
+      `gzip -c -9 "$$script{cache_file}" > "$$script{cache_file}.gz"`;
+      File::Slurp::write_file($cache_dir.'/config.json', { atomic => 1, err_mode=>'carp' },
+        JSON::to_json($hash_cache, {pretty => 1})) or warn "Couldn't save cache control file";
+    } # end if
+  #} else {
+    #my @stat = stat $script->{src};
+
+#$log->debug("HASH CACHED $path ($$script{cache_file} ($timestamp) ($$script{timestamp}) @stat");
+  } # end if
+
+  # cache_path is the url part
+  return '/cache/'.$script->{name};
+} # end sub hash_link
+
+sub radio {
+  my ( $name, $values, $selected, $options ) = @_;
+  my $log = session::log;
+
+  $options = {} if !$options;
+
+  my $id = exists($$options{id}) ? $$options{id} : '';
+  delete $$options{id};
+  my $container = exists $$options{container} ? $$options{container} : undef;
+
+  my $html;
+  if ( exists($$options{default}) and ! defined($selected) ) {
+$log->debug("Selecting default $$options{default} for radio $name");
+    $selected = $$options{default};
+    delete $$options{default};
+  } # end if
+
+  for (my $i = 0; $i < @{$values}; $i += 2) {
+    my ($value, $label) = ( $$values[$i], $$values[$i+1] );
+    $html .= $$container[0] if $container;
+    $log->debug(" $value $selected =?".($value eq $selected).'='.(($value eq $selected)?'checked="checked"':''));
+    $html .= sprintf(q`
+      <div class="form-check%7$s">
+        <label class="form-check-label radio%7$s" for="%1$s%6$s%2$s">
+        <input class="form-check-input" type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s %5$s />
+        %3$s</label>
+      </div>
+        `, $name, $value, $label, (($value eq $selected)?'checked="checked"':''),
+        join(' ', map { $_.'="'.$$options{$_}.'"' } keys %{$options}),
+        $id,
+        ( ($$options{inline} or ! exists $$options{inline} ) ? '-inline' : '' ),
+        );
+    $html .= $$container[1] if $container;
+  } # end foreach value
+  $log->debug($html);
+  return $html;
+} # end sub radio
+
+sub checked {
+  if ( $_[0] ) {
+    return 'checked="checked"';
+  } # end if
+  return '';
+} # end sub checked
+
+sub button {
+  my ( $name, $options ) = @_;
+
+  my $r = session::r;
+  my $log = session::log;
+  if ( $$options{href} ) {
+    my ( $href ) = $$options{href} =~ /^([^\?]+)/;
+    #if ( ! ( $href =~ /^\// ) ) {
+# Use a path relative to the current page
+    #my $path = $variable{uri};
+    #$path =~ s/(.*\/).*/$1/;
+    #$href = $path . $href;
+    #} # end if
+    #my $PageSetting = openprint::Page_Setting::get($href);
+    #return if $PageSetting and ! $PageSetting->can_view();
+    if ( ! $$options{onclick} ) {
+      $$options{onclick} = 'window.location.href=\''.$$options{href}.'\';return false;';
+      delete $$options{href};
+      $$options{type} = 'button';
+    }
+  } elsif ( ! $$options{type} ) {
+    # Default non-a types to a button
+    $$options{type} = 'button';
+  } # end if
+  $$options{text} = $$options{value} if ! $$options{text};
+  $$options{text} = $name if ! $$options{text};
+  if ( $$options{text} and ! $$options{value}) {
+    $$options{value} = $$options{text};
+  }
+  my $html =
+    qq`<button id="Button$name" name="`.($$options{name} ? $$options{name} : $name).qq`" class="btn button $$options{class}" `;
+    delete $$options{class};
+    delete $$options{name};
+  if ( $$options{href} and $$options{type} ) {
+    $html .= qq`onclick="window.location='$$options{href}'" `;
+    #} elsif ( $$options{onclick} and ! $$options{disabled} ) {
+    #$html .= 'onclick="';
+    #$html .= $$options{onclick}."return false;\" ";
+  } # end if
+  #$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
+  $html .= join(' ', map { ($_ eq 'onclick' or $_ eq 'text') ? () : $_.'="'.$$options{$_}.'"' } ( keys %{$options} ) );
+  $html .= '>';
+  $html .= $$options{text};
+  $html .= $$options{type} ? '</button>
+' : '</a>
+';
+  if ( $$options{onclick} ) {
+    $html .= '<script'.($r->dir_config('CSP_NONCE') ?' nonce="'.$r->dir_config('CSP_NONCE').'"':'').">
+    document.getElementById('Button$name').onclick = function(){
+    $$options{onclick};
+    };
+    </script>
+    ";
+    delete $$options{onclick};
+  } # end if
+
+  return $html;
+} # end sub button
+
+my %make_dropdown_options = map { $_=>$_} ('prepend','append','encode','length');
+
+sub select( $$$ ) {
+  my ( $data, $selected, $options ) = @_;
+  my $html = '<select' . join(' ', '', map { exists $make_dropdown_options{$_} ? () : $_.'="'.$$options{$_}.'"' } keys %{$options} ) . '>';
+  $html .= make_drop_down( $data, $selected, $options );
+  $html .= '</select>';
+} # end sub select($$$)
+
+sub checkboxes {
+  my ( $name, $values, $selected, $options ) = @_;
+
+  my $onclick = $$options{onclick} if $options;
+  my $html;
+  my @container = @{$$options{container}} if $$options{container};
+  my %selected = map {$_, $_} @{$selected};
+
+  if ( ! $values ) {
+    $values = ['on', '' ];
+  } elsif ( ref $values ne 'ARRAY' ) {
+    $values = [ $values ];
+  }
+  my $id = $$options{id} ? $$options{id} : $name;
+
+  while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+    $html .= $container[0] if @container;
+    if ( $label ) {
+      $html .= sprintf(
+'
+<label class="radio%7$s" for="%1$s%2$s">
+<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>
+%6$s
+</label>
+', $name, $value, $id, (exists $selected{$value} ? 'checked="checked"' : ''),
+( $onclick ? ' onclick="'.$onclick.'"' : ''),
+$label,
+( $$options{inline} ? '-inline' : '' ),
+ );
+    } else {
+      $html .= sprintf('<input type="checkbox" name="%1$s" value="%2$s" id="%3$s%2$s" %4$s%5$s/>',
+          $name, $value, $id,
+          (exists $selected{$value} ? 'checked="checked"' : ''),
+          ( $onclick ? ' onclick="'.$onclick.'"' : ''), );
+    } # end if has label content
+    $html .= $container[1] if @container;
+  } # end foreach value
+  return $html;
+} # end sub checkboxes
+
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this' );
+
+sub input {
+  my %options = @_;
+  my $html = '<input';
+  if ( $options{type} eq 'cardinal' ) {
+    $options{step} = '1' if ! exists $options{step};
+    if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+      $options{type} = 'text';
+      $options{pattern} = '[0-9]*' if ! $options{pattern};
+    } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+      $options{type} = 'text';
+      $options{pattern} = '[0-9]*' if ! $options{pattern};
+      delete $options{step};
+    } else {
+      $options{type} = 'number';
+    } # end if
+    $options{filter} = 'cardinalize(this);' if ! $options{filter};
+    $options{oninput} = $options{filter}.$options{oninput};
+    #$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
+  } elsif ( $options{type} eq 'integer' ) {
+    if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+      $options{type} = 'text';
+      $options{pattern} = '^-?\d*' if ! $options{pattern};
+    } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+      $options{type} = 'text';
+      $options{pattern} = '^-?\d*' if ! $options{pattern};
+      delete $options{step};
+    } else {
+      $options{type} = 'number';
+    } # end if
+    $options{oninput} = 'integerize(this);'.$options{oninput};
+  } elsif ( $options{type} eq 'float' ) {
+#$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
+    $options{step} = 'any' if ! exists $options{step};
+    if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+      $options{type} = 'text';
+      $options{pattern} = '[\+\-]?[.0-9eE]*' if ! $options{pattern};
+    } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+      $options{type} = 'text';
+      $options{pattern} = '^[\+\-]?[.0-9eE]*' if ! $options{pattern};
+      delete $options{step};
+    } else {
+      $options{type} = 'number';
+    } # end if
+    $options{oninput} = 'floatize(this);'.$options{oninput};
+   } elsif ( $options{type} eq 'positivefloat' ) {
+#$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
+        $options{step} = 'any' if ! exists $options{step};
+        if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+            $options{type} = 'text';
+            $options{pattern} = '[.0-9eE]*' if ! $options{pattern};
+        } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+            $options{type} = 'text';
+            $options{pattern} = '[.0-9eE]*' if ! $options{pattern};
+            delete $options{step};
+        } else {
+            $options{type} = 'number';
+        } # end if
+        $options{oninput} = 'positive_floatize(this);'.$options{oninput};
+  } elsif ( $options{type} eq 'float_calculator' ) {
+    if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+      $options{type} = 'text';
+      $options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
+    } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+      $options{type} = 'text';
+      $options{pattern} = '[0-9\*\+=\/\.\-]*' if ! $options{pattern};
+      delete $options{step};
+    } else {
+      $options{type} = 'text';
+    } # end if
+    $options{step} = 'any' if ! exists $options{step};
+    $options{oninput} = 'floatize_calculator(this);'.$options{oninput};
+  } elsif ( $options{type} eq 'ip' ) {
+    $options{pattern} = '[0-9\/\.:a-fA-F]*' if ! $options{pattern};
+    $options{type} = 'text';
+    $options{step} = 'any' if ! exists $options{step};
+    $options{oninput} = q`this.value=this.value.replace(/[^\.\d%\/\*a-fA-F:]/g,'');`.$options{oninput};
+  } elsif ( $options{type} eq 'mac' ) {
+    $options{pattern} = '[0-9\-:a-fA-F]*' if ! $options{pattern};
+    $options{type} = 'text';
+    $options{step} = 'any' if ! exists $options{step};
+    $options{oninput} = q`this.value=this.value.replace(/[^\-\d%\/\*a-fA-F:]/g,'');`.$options{oninput};
+  } # end if
+  $html .= ' value="'.html_escape($options{value}).'"' if $options{value} ne '';
+
+  if ( $options{with_clear} ) {
+    $options{class} = $options{class} ? $options{class} . ' input-clear' : 'input-clear';
+  }
+  foreach (@input_options) {
+    $html .= qq` $_="$options{$_}"` if exists $options{$_};
+  } # end foreach
+  $html .= ' required' if $options{required};
+  $html .= ' readonly="readonly"' if $options{readonly};
+  $html .= '/>';
+  if ( $options{with_clear} ) {
+    $html .= qq`<span class="input-clear" title="clear input" onclick="this.previousSibling.value='';this.previousSibling.focus();">x</span>`;
+    #$html .= qq`<span class="input-clear" onclick="this.parentNode.value='';this.parentNode.focus();\$j('[name=$options{name}]').val('').focus();">x</span>`;
+  }
+  return $html;
+} # end sub input
+
+my %html_replacements = (
+  '&' =>  '&amp;',
+  '"' =>  '&quot;',
+  '<' =>  '&lt;',
+  '>' =>  '&gt;',
+);
+my $replacement_string = join '', keys %html_replacements;
+sub html_escape {
+  my $thing = $_[0];
+
+  $thing =~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
+  return $thing;
+}
+sub slurp_content {
+  my ( $file ) = @_;
+
+#$log->debug("Slurping file $file");
+
+  if ( ! ( $file =~ /^\// ) ) {
+    # Use a path relative to the current page
+    my $path = $variable{uri};
+    $path =~ s/(.*\/).*/$1/;
+    $file = $path . $file;
+  } # end if
+  my $content = '';
+  if ( -e $config{SkinPath}.$file ) {
+    $content = File::Slurp::read_file($config{SkinPath}.$file, err_mode => 'carp' );
+  } elsif ( -e $config{SkinPath}.'/html/'.$file ) {
+    $content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file, err_mode => 'carp' );
+  } elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
+    $content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file, err_mode => 'carp' );
+  } elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
+    $content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file, err_mode => 'carp' );
+  } else {
+    $content = File::Slurp::read_file($file, err_mode => 'carp');
+  } # end if
+  if ( ! $content ) {
+    $log->warn( "No content found for $file" );
+  }
+  return $content;
+} # end sub slurp_content
+
+sub include {
+  my ( $file, $variable ) = @_;
+  $variable = \%variable if ! $variable;
+
+  my $content = slurp_content( $file );
+  return variable_substitution( $r, $log, $dbh, $content, $variable );
+} # end sub include
+
+sub save_params {
+  my ( $url, @keys ) = @_;
+  return if !%param;
+
+  foreach ( @keys ) {
+    $log->debug('save_params: key '.$_) if DEBUG;
+    if (!exists $param{$_}) {
+      $log->debug('save_params: does not exist in param key '.$_) if DEBUG;
+      undef($session{$url.'?'.$_});
+      next;
+    }
+    if (ref $param{$_} eq 'ARRAY') {
+      $session{"$url?$_"} = join(',', @{$param{$_}} );
+$log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if DEBUG;
+    } else {
+      s/^\s+//, s/\s+$// for $param{$_};
+      $session{$url.'?'.$_} = $param{$_};
+$log->debug("Storing ($_) (".$session{"$url?$_"}.")") if DEBUG;
+    } # end if
+    $session{$url.'?lastupdated'} = time;
+  } # end foreach
+} # end sub save_params
+
+sub format_date {
+  return $_[0] ? Date::Format::time2str( $_[1] ? $_[1] : $config{DateFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+} # end sub format_date
+
+sub format_datetime {
+  return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : $_[1];
+} # end sub format_datetime
+
+sub format_time {
+  return $_[0] ? Date::Format::time2str('%H:%M', Date::Parse::str2time($_[0])) : '';
+} # end sub format_time
+
+sub format_csv_datetime {
+  return $_[0] ? Date::Format::time2str( '%Y-%m-%d %H:%M:%S', Date::Parse::str2time( $_[0] ) ) : $_[1];
+} # end sub format_datetime
+
+sub format_csv_date {
+  return $_[0] ? Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $_[0] ) ) : '';
+} # end sub format_datetime
+
+sub link {
+  return '<link rel="stylesheet" type="text/css" href="'.hash_link($_[0]).'"/>';
+}
+
+
+sub count_lines {
+  if ( $_[0] ) {
+    my @lines = split( "\n", $_[0] );
+    my $lines = scalar @lines;
+    if ( $_[1] and $_[1]{width} ) {
+        foreach ( @lines ) {
+          $lines += ( POSIX::ceil( length($_ ) / $_[1]{width} ) ) - 1;
+        }
+    }
+    return $lines;
+  } else {
+    return 2;
+  } # end if
+} # end sub count_lines
+
+sub include_logs {
+  return '';
+}
+
+1;
+__END__

@@ -9,6 +9,7 @@ use strict;
 use warnings;                   # Turn off for production version.
 no  warnings qw(uninitialized); # Interpolating undef into strings is okay.
 use Time::HiRes qw{ gettimeofday tv_interval };
+require openprint;
 
 use base qw(Exporter);
 use constant DEBUG=>1;
@@ -111,7 +112,9 @@ sub sql_statement {
 # database.
 sub insert {
     my $log   = shift;
+    $log = $openprint::log if ! $log;
     my $dbh   = shift;
+    $dbh = $openprint::dbh if ! $dbh;
     my $table = shift; # The table name to operate on (may contain schema)
     my %data  = @_;    # Field and value pairs
 
@@ -155,20 +158,28 @@ sub update {
         join ', ', map {$dbh->quote_identifier(lc($_)) . ' = ?'} keys %data
     ;
     # If there's a condition sent include it in the statement.
-    $sql .= " WHERE $condition " if defined $condition and $condition ne '';
+    my @condition_values;
+    if (defined $condition and $condition ne '') {
+      if (ref $condition eq 'ARRAY') {
+        $sql .= ' WHERE '. shift @{$condition};
+        @condition_values = @{$condition};
+      } else {
+        $sql .= " WHERE $condition "
+      }
+    }
 
     # Some code passes NULL as a string instead of as undef. Bad code, no
     # biscuit.
-    for my $k (keys %data) { $data{$k} = undef if $data{$k} eq 'NULL'; }
-
-	#Change empty strings to undefined, DBI will convert undefiend to NULL
-	#prevents sql errors for inserting empty strings into numeric fields
-    for my $k (keys %data) { $data{$k} = undef if $data{$k} eq ''; }
+    #Change empty strings to undefined, DBI will convert undefiend to NULL
+    #prevents sql errors for inserting empty strings into numeric fields
+    for my $k (keys %data) {
+      $data{$k} = undef if $data{$k} eq 'NULL' or $data{$k} eq '';
+    }
 
     if ( $log ) {
       my $starttime = [gettimeofday] if TIMING;
       my $sth = $dbh->prepare($sql);
-      $sth->execute( values %data );
+      $sth->execute(@condition_values, values %data );
       my $print_sql = $sql;
       $print_sql =~ s/\?/\%s/g;
       $print_sql = sprintf($print_sql, values %data );
@@ -187,5 +198,30 @@ sub escape {
     s/(['"])/\\$1/g;
     return $_;
 }
+sub start_transaction {
+  #my ( $caller, undef, $line ) = caller;
+#$openprint::log->debug("Called start_transaction from $caller : $line");
+  my $d = shift;
+  $d = $openprint::dbh if ! $d;
+  my $ac = $d->{AutoCommit};
+  $d->{AutoCommit} = 0;
+  return $ac;
+} # end sub start_transaction
+
+sub end_transaction {
+  #my ( $caller, undef, $line ) = caller;
+#$openprint::log->debug("Called end_transaction from $caller : $line");
+  my ( $d, $ac ) = @_;
+if ( ! defined $ac ) {
+  $openprint::log->error("Undefined ac");
+}
+  $d = $openprint::dbh if ! $d;
+  if ( $ac ) {
+    #$log->debug("Committing");
+    $d->commit();
+  } # end if
+  $d->{AutoCommit} = $ac;
+} # end sub end_transaction
+
 
 1;

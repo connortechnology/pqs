@@ -220,401 +220,406 @@ sub item {
 
 # Create, update, or delete an item (basic attributes and categories).
 sub modify_item {
-    my $r   = shift;
-    my $dbh = $r->pnotes('dbh');
+  my $r   = shift;
+  my $dbh = $r->pnotes('dbh');
 
-    if ($r->param('delete')) {
-        my $ids = join ',', grep defined, map { tr/0-9//cd; $_ } $r->param('id');
+  if ($r->param('delete')) {
+    my $ids = join ',', grep defined, map { tr/0-9//cd; $_ } $r->param('id');
 
-        $dbh->do("DELETE FROM product.item WHERE id IN ($ids)");
-        $dbh->commit;
+    $dbh->do("DELETE FROM product.item WHERE id IN ($ids)");
+    $dbh->commit;
 
-        $r->headers_out->set(Location => "items");
-        $r->status(HTTP_MOVED_TEMPORARILY);
-        return OK;
-    }
+    $r->headers_out->set(Location => "items");
+    $r->status(HTTP_MOVED_TEMPORARILY);
+    return OK;
+  }
 
- 	if ($r->param('copy')) {
-         my $id = $r->param('id');
-
-         $dbh->do("INSERT INTO product.item (name, image, description, pid)  (SELECT name || ' Copy of ' || '$id', image, description, pid FROM product.item WHERE id = $id)");
-		 my $new_item = $dbh->selectrow_array(q{SELECT MAX(id) FROM product.item});
-
-		 my $q = $dbh->selectall_arrayref(qq{SELECT * FROM product.question WHERE item = ?}, {Slice=>{}}, $id);
-use Data::Dumper;
-print STDERR "HAVE STUFF ", Dumper($q);
-		
-        my $qin = $dbh->prepare("INSERT INTO product.question (item, label, sort, spec) VALUES ( ?, ?, ?, ?)");
-		map {
-			$qin->execute( $new_item, $_->{label}, $_->{'sort'}, $_->{spec});
-		    my $new_q = $dbh->selectrow_array(q{SELECT MAX(id) FROM product.question});
-	
-		 	my $answers = $dbh->selectall_arrayref(qq{
-					SELECT * FROM product.answer   WHERE question = ?
-			}, {Slice=>{}}, $_->{id});
-
-			foreach my $a (@{$answers}) {
-         		$dbh->do("INSERT INTO product.answer(question, label, sort, value) VALUES ( 
-							'$new_q', '$a->{label}', '$a->{sort}', '$a->{value}'
-				)");
-			}
-
-print STDERR "HAVE STUFF ", Dumper($answers);
-			
-		} @{$q};
-
-		my $s = $dbh->selectcol_arrayref(q{
-			SELECT paper FROM product.item_paper WHERE item = ?
-		}, undef, $id); 
-
-		map { 
-			$dbh->do(qq{INSERT INTO product.item_paper VALUES ( $new_item, $_ ) });
-		} @{$s};
-
-#Do the Same for Cover Stock
-
-		my $s = $dbh->selectcol_arrayref(q{
-			SELECT paper FROM product.item_cover_paper WHERE item = ?
-		}, undef, $id); 
-
-		map { 
-			$dbh->do(qq{INSERT INTO product.item_cover_paper VALUES ( $new_item, $_ ) });
-		} @{$s};
-
-
-		
-		my $s = $dbh->selectcol_arrayref(q{
-			SELECT service FROM product.item_service WHERE item = ?
-		}, undef, $id); 
-
-		map { 
-			$dbh->do(qq{INSERT INTO product.item_service VALUES ( $new_item, $_ ) });
-		} @{$s};
-		
-
-         $dbh->commit;
-
-         $r->headers_out->set(Location => "item?id=$new_item");
-         $r->status(HTTP_MOVED_TEMPORARILY);
-         return OK;
-     }
-
+  if ($r->param('copy')) {
     my $id = $r->param('id');
-       $id =~ tr/0-9//cd;
 
-    my ($name, $description, $image, $pid) = map { $r->param($_) || undef } 
-                                           qw(name description image pid);
+    $dbh->do("INSERT INTO product.item (name, image, description, pid)  (SELECT name || ' Copy of ' || '$id', image, description, pid FROM product.item WHERE id = $id)");
+    my $new_item = $dbh->selectrow_array(q{SELECT MAX(id) FROM product.item});
 
-    die "Name is required." unless $name;
+    my $q = $dbh->selectall_arrayref(qq{SELECT * FROM product.question WHERE item = ?}, {Slice=>{}}, $id);
+    use Data::Dumper;
+    print STDERR "HAVE STUFF ", Dumper($q);
 
-    # Create a new item.
-    if (!$id) {
-        $dbh->do(q{
-            INSERT INTO product.item (name, description, image, pid) 
-            VALUES (?, ?, ?, ?)
-        }, undef, $name, $description, $image, $pid);
+    my $qin = $dbh->prepare("INSERT INTO product.question (item, label, sort, spec) VALUES ( ?, ?, ?, ?)");
+    map {
+      $qin->execute( $new_item, $_->{label}, $_->{'sort'}, $_->{spec});
+      my $new_q = $dbh->selectrow_array(q{SELECT MAX(id) FROM product.question});
 
-        $id = $dbh->last_insert_id('', 'product', 'item', 'id');
-        #$id = $dbh->selectrow_array(q{SELECT max(id) FROM product.item});
+      my $answers = $dbh->selectall_arrayref(qq{
+      SELECT * FROM product.answer   WHERE question = ?
+      }, {Slice=>{}}, $_->{id});
+
+      foreach my $a (@{$answers}) {
+        $dbh->do("INSERT INTO product.answer(question, label, sort, value) VALUES ( 
+          '$new_q', '$a->{label}', '$a->{sort}', '$a->{value}'
+          )");
+      }
+
+      print STDERR "HAVE STUFF ", Dumper($answers);
+
+    } @{$q};
+
+    {
+      my $s = $dbh->selectcol_arrayref(q{
+        SELECT paper FROM product.item_paper WHERE item = ?
+        }, undef, $id); 
+
+      map { 
+        $dbh->do(qq{INSERT INTO product.item_paper VALUES ( $new_item, $_ ) });
+      } @{$s};
     }
-    else {
-        # Update the item.
-        $dbh->do(q{
-            UPDATE product.item 
-            SET name        = ?,
-                description = ?,
-                image       = ?,
-				pid			= ?
-            WHERE id = ?
-        }, undef, $name, $description, $image, $pid, $id);
+
+    #Do the Same for Cover Stock
+
+    {
+      my $s = $dbh->selectcol_arrayref(q{
+        SELECT paper FROM product.item_cover_paper WHERE item = ?
+        }, undef, $id); 
+
+      map { 
+        $dbh->do(qq{INSERT INTO product.item_cover_paper VALUES ( $new_item, $_ ) });
+      } @{$s};
     }
 
-    # Update the categories the item is in.
-    update_item_categories($dbh, $id, 
-        grep defined, map { tr/0-9//cd; $_ } $r->param('category'));
-    
-    update_item_matrix($r, $dbh, $id); 
+
+    {	
+      my $s = $dbh->selectcol_arrayref(q{
+        SELECT service FROM product.item_service WHERE item = ?
+        }, undef, $id); 
+
+      map { 
+        $dbh->do(qq{INSERT INTO product.item_service VALUES ( $new_item, $_ ) });
+      } @{$s};
+    }
+
 
     $dbh->commit;
 
-    # Send them back from whence they came.
-    $r->headers_out->{Location} = "item?id=$id";
+    $r->headers_out->set(Location => "item?id=$new_item");
     $r->status(HTTP_MOVED_TEMPORARILY);
     return OK;
+  }
+
+  my $id = $r->param('id');
+  $id =~ tr/0-9//cd;
+
+  my ($name, $description, $image, $pid) = map { $r->param($_) || undef } 
+  qw(name description image pid);
+
+  die "Name is required." unless $name;
+
+  # Create a new item.
+  if (!$id) {
+    $dbh->do(q{
+      INSERT INTO product.item (name, description, image, pid) 
+      VALUES (?, ?, ?, ?)
+      }, undef, $name, $description, $image, $pid);
+
+    $id = $dbh->last_insert_id('', 'product', 'item', 'id');
+    #$id = $dbh->selectrow_array(q{SELECT max(id) FROM product.item});
+  }
+  else {
+    # Update the item.
+    $dbh->do(q{
+      UPDATE product.item 
+      SET name        = ?,
+      description = ?,
+      image       = ?,
+      pid			= ?
+      WHERE id = ?
+      }, undef, $name, $description, $image, $pid, $id);
+  }
+
+  # Update the categories the item is in.
+  update_item_categories($dbh, $id, 
+    grep defined, map { tr/0-9//cd; $_ } $r->param('category'));
+
+  update_item_matrix($r, $dbh, $id); 
+
+  $dbh->commit;
+
+  # Send them back from whence they came.
+  $r->headers_out->{Location} = "item?id=$id";
+  $r->status(HTTP_MOVED_TEMPORARILY);
+  return OK;
 }
 
 
 sub update_item_categories {
-    my ($dbh, $id, @cats) = @_;
+  my ($dbh, $id, @cats) = @_;
 
-    # We don't want to reset the ordering of any categories an item is already
-    # in, so compare the current list and insert or delete as needed.
-    my $insert = $dbh->prepare(q{
-        INSERT INTO product.item_category (category, item) VALUES (?, ?)}
-    );
-    my $delete = $dbh->prepare(q{
-        DELETE FROM product.item_category WHERE category = ? AND item = ? 
+  # We don't want to reset the ordering of any categories an item is already
+  # in, so compare the current list and insert or delete as needed.
+  my $insert = $dbh->prepare(q{
+    INSERT INTO product.item_category (category, item) VALUES (?, ?)}
+  );
+  my $delete = $dbh->prepare(q{
+    DELETE FROM product.item_category WHERE category = ? AND item = ? 
     });
 
-    my $prev = $dbh->selectcol_arrayref(q{
-        SELECT category FROM product.item_category WHERE item = ?
+  my $prev = $dbh->selectcol_arrayref(q{
+    SELECT category FROM product.item_category WHERE item = ?
     }, undef, $id);
 
-    my %intersect;
-    $intersect{$_} += 2 for @$prev;
-    $intersect{$_} += 1 for @cats;
+  my %intersect;
+  $intersect{$_} += 2 for @$prev;
+  $intersect{$_} += 1 for @cats;
 
-    # 1 is only in new list - insert, 2 is only in old - delete, 3 is in both
-    # so nothing need be done.
-    while (my ($cat, $n) = each %intersect) {
-        if    ($n == 1) { $insert->execute($cat, $id) }
-        elsif ($n == 2) { $delete->execute($cat, $id) }
-    }
+  # 1 is only in new list - insert, 2 is only in old - delete, 3 is in both
+  # so nothing need be done.
+  while (my ($cat, $n) = each %intersect) {
+    if    ($n == 1) { $insert->execute($cat, $id) }
+    elsif ($n == 2) { $delete->execute($cat, $id) }
+  }
 }
 
 sub update_item_matrix {
-    my ($r, $dbh, $item) = @_;
+  my ($r, $dbh, $item) = @_;
 
-    my $assignment = $dbh->prepare(q{ 
-        INSERT INTO product.assignment (qty, item, project, label) VALUES (?,?,?,?) 
+  my $assignment = $dbh->prepare(q{ 
+    INSERT INTO product.assignment (qty, item, project, label) VALUES (?,?,?,?) 
     });
 
-    my $answer_set = $dbh->prepare(q{ 
-        INSERT INTO product.answer_set (assignment, answer) VALUES (?, ?) 
+  my $answer_set = $dbh->prepare(q{ 
+    INSERT INTO product.answer_set (assignment, answer) VALUES (?, ?) 
     });
 
-    # Remove existing assignments (easier than updates/merges).
-    delete_item_matrix($dbh, $item);
+  # Remove existing assignments (easier than updates/merges).
+  delete_item_matrix($dbh, $item);
 
-    # For each matrix cell, record the project assigned to it and the answer
-    # set that identifies that cell.
-    for my $set ( grep defined, map { /^pid_([0-9-]+)$/; $1 } $r->param ) {
-        my $pid = $r->param("pid_$set");
-           $pid =~ tr/0-9//cd;
+  # For each matrix cell, record the project assigned to it and the answer
+  # set that identifies that cell.
+  for my $set ( grep defined, map { /^pid_([0-9-]+)$/; $1 } $r->param ) {
+    my $pid = $r->param("pid_$set");
+    $pid =~ tr/0-9//cd;
 
-        next unless $pid;
+    next unless $pid;
 
-        my $label = $r->param("label_$set") || undef;
-        my $qty   = $r->param("qty_$set")   || undef;
+    my $label = $r->param("label_$set") || undef;
+    my $qty   = $r->param("qty_$set")   || undef;
 
-        $assignment->execute($qty, $item, $pid, $label);
-        my $assigned = $dbh->last_insert_id('', 'product', 'assignment', 'id');
+    $assignment->execute($qty, $item, $pid, $label);
+    my $assigned = $dbh->last_insert_id('', 'product', 'assignment', 'id');
 
-        $answer_set->execute($assigned, $_) 
-            for map { tr/0-9//cd; $_ } split /-/, $set;
-    }
+    $answer_set->execute($assigned, $_) 
+    for map { tr/0-9//cd; $_ } split /-/, $set;
+  }
 }
 
 sub delete_item_matrix {
-    my ($dbh, $item) = @_;
+  my ($dbh, $item) = @_;
 
-    return $dbh->do(q{DELETE FROM product.assignment WHERE item = ?}, undef, $item);
+  return $dbh->do(q{DELETE FROM product.assignment WHERE item = ?}, undef, $item);
 }
 
 # Display a question and it's answers.
 sub question {
-    my $r   = shift;
-    my $t   = shift;
-    my $dbh = $r->pnotes('dbh');
+  my $r   = shift;
+  my $t   = shift;
+  my $dbh = $r->pnotes('dbh');
 
-    my $item = $r->param('item');
-       $item =~ tr/0-9//cd;
+  my $item = $r->param('item');
+  $item =~ tr/0-9//cd;
 
-    my $id   = $r->param('id');
-       $id   =~ tr/0-9//cd;
+  my $id   = $r->param('id');
+  $id   =~ tr/0-9//cd;
 
-    # Basic details.
-    $item = $dbh->selectrow_hashref(q{
-        SELECT id, name, description, image FROM product.item WHERE id = ?
+  # Basic details.
+  $item = $dbh->selectrow_hashref(q{
+    SELECT id, name, description, image FROM product.item WHERE id = ?
     }, undef, $item);
 
-    die "Invalid or no item defined." unless $item->{id};
+  die "Invalid or no item defined." unless $item->{id};
 
-    my $question = $dbh->selectrow_hashref(q{
-        SELECT * FROM product.question WHERE item = ? AND id = ?
+  my $question = $dbh->selectrow_hashref(q{
+    SELECT * FROM product.question WHERE item = ? AND id = ?
     }, undef, $item->{id}, $id);
 
-    $question->{answers} = $dbh->selectall_arrayref(q{
-        SELECT * FROM product.answer WHERE question = ? ORDER BY sort
+  $question->{answers} = $dbh->selectall_arrayref(q{
+    SELECT * FROM product.answer WHERE question = ? ORDER BY sort
     }, { Slice => {} }, $id);
 
-    
-    # Output the template.
-    $r->content_type('text/html; charset=utf-8');
-    $t->{file} = 'admin/predefined/question.html';
 
-    print $t->process(
-        title    => 'Product Questions',
-        item     => $item, 
-        question => $question,
-    );
+  # Output the template.
+  $r->content_type('text/html; charset=utf-8');
+  $t->{file} = 'admin/predefined/question.html';
 
-    return OK;
+  print $t->process(
+    title    => 'Product Questions',
+    item     => $item, 
+    question => $question,
+  );
+
+  return OK;
 }
 
 # Modifies a question and it's answers.
 sub modify_question {
-    my $r   = shift;
-    my $dbh = $r->pnotes('dbh');
+  my $r   = shift;
+  my $dbh = $r->pnotes('dbh');
 
-    my $item = $r->param('item');
-       $item =~ tr/0-9//cd;
+  my $item = $r->param('item');
+  $item =~ tr/0-9//cd;
 
-    die "A product must be specified" unless $item;
+  die "A product must be specified" unless $item;
 
-    if ($r->param('delete')) {
-        my $ids = join ',', grep defined, map { tr/0-9//cd; $_ } $r->param('id');
+  if ($r->param('delete')) {
+    my $ids = join ',', grep defined, map { tr/0-9//cd; $_ } $r->param('id');
 
-        my $n = $dbh->do("DELETE FROM product.question WHERE id IN ($ids)");
+    my $n = $dbh->do("DELETE FROM product.question WHERE id IN ($ids)");
 
-        # Removing questions invalidate the old matrix (though we could remove
-        # the answers from the answer set and choose one of the multiple valid
-        # assignments left).
-        delete_item_matrix($dbh, $item) if $n;
-
-        $dbh->commit;
-
-        $r->headers_out->set(Location => "item?id=$item");
-        $r->status(HTTP_MOVED_TEMPORARILY);
-        return OK;
-    }
-
-    my $id   = $r->param('id');
-       $id   =~ tr/0-9//cd;
-
-    my $name = $r->param('question')
-        or die "A question label is required.";
-	my $spec = '';
-	if ($name eq 'Color:' || $name eq 'Colors:'){
-		$spec = 'colour';
-	} elsif ($name eq 'Size:' || $name eq 'Sizes:'){
-		$spec = 'size';
-	}
-
-    # Create a new question.
-    if (!$id) {
-        $dbh->do(q{
-            INSERT INTO product.question (item, label, spec)  VALUES (?, ?, ?)
-        }, undef, $item, $name, $spec);
-
-        $id = $dbh->last_insert_id('', 'product', 'question', 'id');
-
-        # New questions invalidate the old matrix (though we could add the
-        # questions anwers to all answer sets and copy the assignments if we
-        # wanted).
-        delete_item_matrix($dbh, $item); 
-    }
-    else {
-        # Update the question.
-        $dbh->do(q{
-            UPDATE product.question SET label = ? WHERE item = ? AND id = ?
-        }, undef, $name, $item, $id);
-    }
-
-    # Update/delete any existing answers.
-    if ($r->param('answer')) {
-        my $delete = $dbh->prepare(q{
-            DELETE FROM product.answer WHERE id = ?
-        });
-        my $update = $dbh->prepare(q{
-            UPDATE product.answer SET label = ?, sort = ?, value = ? WHERE id = ?
-        });
-
-        for my $answer ($r->param('answer')) {
-            if ($r->param("del-$answer")) { 
-                $delete->execute($answer);
-            }
-            else {
-                my $label = $r->param("label-$answer");
-
-                my $sort  = $r->param("sort-$answer");
-                   $sort  =~ tr/0-9//cd;
-				my $spec = $r->param("value-$answer");
-
-                $update->execute($label, $sort || 0, $spec, $answer);
-            }
-        }
-    }
-
-    # Add any new answers.
-    if ($r->param('label')) {
-        my $insert = $dbh->prepare(q{
-            INSERT INTO product.answer (question, label, sort, value) VALUES (?, ?, ?, ?)
-        });
-
-        my @label = $r->param('label');
-        my @sort  = $r->param('sort');
-		my @value = $r->param('value');
-
-        for my $i (0 .. $#label) {
-            $insert->execute($id, $label[$i], $sort[$i] || 0, $value[$i] || 0) 
-                if $label[$i];
-        }
-    }
+    # Removing questions invalidate the old matrix (though we could remove
+    # the answers from the answer set and choose one of the multiple valid
+    # assignments left).
+    delete_item_matrix($dbh, $item) if $n;
 
     $dbh->commit;
 
-    # Send them back from whence they came.
-    $r->headers_out->{Location} = "question?item=$item;id=$id";
+    $r->headers_out->set(Location => "item?id=$item");
     $r->status(HTTP_MOVED_TEMPORARILY);
     return OK;
+  }
+
+  my $id   = $r->param('id');
+  $id   =~ tr/0-9//cd;
+
+  my $name = $r->param('question')
+    or die "A question label is required.";
+  my $spec = '';
+  if ($name eq 'Color:' || $name eq 'Colors:'){
+    $spec = 'colour';
+  } elsif ($name eq 'Size:' || $name eq 'Sizes:'){
+    $spec = 'size';
+  }
+
+  # Create a new question.
+  if (!$id) {
+    $dbh->do(q{
+      INSERT INTO product.question (item, label, spec)  VALUES (?, ?, ?)
+      }, undef, $item, $name, $spec);
+
+    $id = $dbh->last_insert_id('', 'product', 'question', 'id');
+
+    # New questions invalidate the old matrix (though we could add the
+    # questions anwers to all answer sets and copy the assignments if we
+    # wanted).
+    delete_item_matrix($dbh, $item); 
+  }
+  else {
+    # Update the question.
+    $dbh->do(q{
+      UPDATE product.question SET label = ? WHERE item = ? AND id = ?
+      }, undef, $name, $item, $id);
+  }
+
+  # Update/delete any existing answers.
+  if ($r->param('answer')) {
+    my $delete = $dbh->prepare(q{
+      DELETE FROM product.answer WHERE id = ?
+      });
+    my $update = $dbh->prepare(q{
+      UPDATE product.answer SET label = ?, sort = ?, value = ? WHERE id = ?
+      });
+
+    for my $answer ($r->param('answer')) {
+      if ($r->param("del-$answer")) { 
+        $delete->execute($answer);
+      }
+      else {
+        my $label = $r->param("label-$answer");
+
+        my $sort  = $r->param("sort-$answer");
+        $sort  =~ tr/0-9//cd;
+        my $spec = $r->param("value-$answer");
+
+        $update->execute($label, $sort || 0, $spec, $answer);
+      }
+    }
+  }
+
+  # Add any new answers.
+  if ($r->param('label')) {
+    my $insert = $dbh->prepare(q{
+      INSERT INTO product.answer (question, label, sort, value) VALUES (?, ?, ?, ?)
+      });
+
+    my @label = $r->param('label');
+    my @sort  = $r->param('sort');
+    my @value = $r->param('value');
+
+    for my $i (0 .. $#label) {
+      $insert->execute($id, $label[$i], $sort[$i] || 0, $value[$i] || 0) 
+      if $label[$i];
+    }
+  }
+
+  $dbh->commit;
+
+  # Send them back from whence they came.
+  $r->headers_out->{Location} = "question?item=$item;id=$id";
+  $r->status(HTTP_MOVED_TEMPORARILY);
+  return OK;
 }
 
 
 # List the predefined projects in the system as a quick reference.
 sub projects {
-    my $r = shift;
-    my $t = shift;
+  my $r = shift;
+  my $t = shift;
 
-    my $dbh = $r->pnotes('dbh');
+  my $dbh = $r->pnotes('dbh');
 
-    # Allow a basic search/filter of the list by project name.
-    my $filter = '';
-    if ($r->param('name')) {
-        $filter = 'AND ' . join ' OR ', 
-            map { 'strprojectreference ~* ' . $dbh->quote($_) }
-                split / /, $r->param('name');
-    }
+  # Allow a basic search/filter of the list by project name.
+  my $filter = '';
+  if ($r->param('name')) {
+    $filter = 'AND ' . join ' OR ', 
+    map { 'strprojectreference ~* ' . $dbh->quote($_) }
+    split / /, $r->param('name');
+  }
 
-    # Get all the predefined projects.
-    my $projects = $dbh->selectall_arrayref(qq{
-        SELECT lngprojectindex     AS id, 
-               strprojectreference AS name
-        FROM tbl_projects
-        WHERE strstatus = 'predefined'
-              $filter
+  # Get all the predefined projects.
+  my $projects = $dbh->selectall_arrayref(qq{
+    SELECT lngprojectindex     AS id, 
+    strprojectreference AS name
+    FROM tbl_projects
+    WHERE strstatus = 'predefined'
+    $filter
     }, { Slice => {} });
 
-    # Output the template.
-    $r->content_type('text/html; charset=utf-8');
-    $t->{file} = 'admin/predefined/projects.html';
+  # Output the template.
+  $r->content_type('text/html; charset=utf-8');
+  $t->{file} = 'admin/predefined/projects.html';
 
-    print $t->process(
-        title     => 'Predefined Projects',
-        projects  => $projects,
-    );
+  print $t->process(
+    title     => 'Predefined Projects',
+    projects  => $projects,
+  );
 
-    return OK;
+  return OK;
 }
 
 
 # Sets the sort field of a number of records to 0..n in the order given.
 sub sort_order {
-    my ($dbh, $table, @ids) = @_;
+  my ($dbh, $table, @ids) = @_;
 
-    $table = $dbh->quote_identifier($table);
+  $table = $dbh->quote_identifier($table);
 
-    my $sth = $dbh->prepare(qq{ 
-        UPDATE $table SET sort = ? WHERE id = ?
+  my $sth = $dbh->prepare(qq{ 
+    UPDATE $table SET sort = ? WHERE id = ?
     });
 
-    my $i = 0;
-    for my $id (@ids) {
-        $sth->execute($i, $id);
-        $i++;
-    }
-    
-    return $i; # IDs processed
+  my $i = 0;
+  for my $id (@ids) {
+    $sth->execute($i, $id);
+    $i++;
+  }
+
+  return $i; # IDs processed
 }
 
 1;

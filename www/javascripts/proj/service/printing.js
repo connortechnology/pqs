@@ -668,3 +668,6 @@ function overrides_chkbox (e) {
     }
 }
 
+function calc() {
+  //service.calculate();
+}

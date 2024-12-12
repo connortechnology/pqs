@@ -269,33 +269,23 @@ sub login_app_process {
 	my ($r, $log, $dbh, $variable, $cookie) = @_;
 	my ($error, $temp, $cust_id, $user_id, $email);
 
-
-	#map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
 	my $result;
 
 	eval {
 		my $c = Captcha::reCAPTCHA->new;
 		my $challenge = 1;
 		my $response  = $r->param('g-recaptcha-response');
+    my $key = "6LfKz8gUAAAAAEQQyR2BZhg15phipZkfyCl4kuUi";
 
-    my $key = "6LdWLJkqAAAAAO8NEwEMoeumR5L0wB9mCagA3ZrP";
+    # Verify submission
+    $result = $c->check_answer_v2($key, $response, $ENV{'REMOTE_ADDR'});
 
-
-		#print STDERR "START LOGIN APP PROCESS \n\n\n";
-#unless ( $variable->{user_id} ) {
-# Verify submission
-	$result = $c->check_answer_v2($key, $response, $ENV{'REMOTE_ADDR'});
-
-	#print STDERR "CONTINUE LOGIN APP PROCESS:  \n\n\n", Dumper($result);
-
-	unless ( $result->{is_valid} ) {
-# Error
-		return misc::error( $log, $dbh, $variable, 
-				'Bad Field', 'Your Captcha is incorrect. Please press the back button to try again'  );
-	}
-};
-	#}
-	#
+    unless ( $result->{is_valid} ) {
+      # Error
+      return misc::error( $log, $dbh, $variable, 
+        'Bad Field', 'Your Captcha is incorrect. Please press the back button to try again'  );
+    }
+  };
 
 #wsc    $r->param('txtCompanyName' => $r->param('ddmCompany'))
 #wsc    if $r->param('txtCompanyName') eq '';

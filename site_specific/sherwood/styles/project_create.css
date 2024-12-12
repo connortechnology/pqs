@@ -692,3 +692,19 @@ span.multiversion-label img {
 
 	margin: 1.1ex 0 -1.2ex 0;
 }
+.MWeight input ,
+.Price input,
+.Basis input,
+
+.Size input {
+  width: 50px;
+  /*
+  text-align: right;
+  */
+}
+
+#PricePerM {
+  float: none;
+  padding: 0;
+  margin: 0;
+}
