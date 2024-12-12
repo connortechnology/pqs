@@ -1,38 +1,38 @@
-	<li id="home"><a href="/index.html">Home</a>
-		<? if ($$variable{user_type} eq 'E' ) ?>
-			<ul id="homeEmployee">
-				<li><a href="/employee/">Employee</a></li>
-			</ul>			
-		<? endif ($$variable{user_type} eq 'E' ) ?>
+  <li id="home"><a href="/index.html">Home</a>
+    <? if ($$variable{user_type} eq 'E' ) ?>
+      <ul id="homeEmployee">
+        <li><a href="/employee/">Employee</a></li>
+      </ul>      
+    <? endif ($$variable{user_type} eq 'E' ) ?>
 
-		<? if ( $$variable{user_type} eq 'A' ) ?>
-			<ul id="homeAdmin">
-				<li><a href="/administrator/">Administrator</a></li>
-			</ul>
-		<? endif ( $$variable{user_type} eq 'A' ) ?>
-	</li>
+    <? if ( $$variable{user_type} eq 'A' ) ?>
+      <ul id="homeAdmin">
+        <li><a href="/administrator/">Administrator</a></li>
+      </ul>
+    <? endif ( $$variable{user_type} eq 'A' ) ?>
+  </li>
 
-	<? if ( $$variable{user_type} eq 'A' ) ?>
-	<li><a href="/main/dashboard/dashboard.html">Dashboard </a></li>
-	<?endif ( $$variable{user_type} eq 'A' ) ?>
+  <? if ( $$variable{user_type} eq 'A' ) ?>
+  <li><a href="/main/dashboard/dashboard.html">Dashboard </a></li>
+  <?endif ( $$variable{user_type} eq 'A' ) ?>
 
-	<li><!--#include virtual="/includes/main/aboutus.html" --></li>
-	<li><!--#include virtual="/includes/main/products.html" --></li>
-        <li><a href="/main/templates/templates.html">Templates</a></li>
-	<li><!--#include virtual="/includes/main/proj.html" --></li>
-	<li><!--#include virtual="/includes/main/support.html" --></li>
-	<li><!--#include virtual="/includes/main/account.html" --></li>
+  <li><!--#include virtual="/includes/main/aboutus.html" --></li>
+  <li><!--#include virtual="/includes/main/products.html" --></li>
+  <li><a href="/main/templates/templates.html">Templates</a></li>
+  <li><!--#include virtual="/includes/main/proj.html" --></li>
+  <li><!--#include virtual="/includes/main/support.html" --></li>
+  <li><!--#include virtual="/includes/main/account.html" --></li>
 
-	<li style="margin-left: 30px;">
-		<div id="gotocart" style="margin-left: 0px; margin-top: 0px; width: 30px; height: 30 px; "
-			<?if order_count?>
-			onClick="window.location='/main/order/order_submit.html'"
-			<?endif order_count?>
-			>
-			<img src="/images/cart.png" style="width: 100%; height: 100%;" />
-			<div style="position: relative; bottom: 24px; right: -13px;">
-			<?order_count?>	
-			</div>
-		</div>
-	</li>
+  <li style="margin-left: 30px;">
+    <div id="gotocart" style="margin-left: 0px; margin-top: 0px; width: 30px; height: 30px;"
+      <?if order_count?>
+      onClick="window.location='/main/order/order_submit.html'"
+      <?endif order_count?>
+      >
+      <img src="/images/cart.png" style="width: 100%; height: 100%;" alt="cart"/>
+      <div style="position: relative; bottom: 24px; right: -13px;">
+      <?order_count?>  
+      </div>
+    </div>
+  </li>
 
