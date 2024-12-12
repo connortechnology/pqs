@@ -116,7 +116,7 @@ sub credit_app_process {
         $info{$key} = $r->param($key);
     }
     $info{date} = localtime;
-    $info{siteURL} = "http://" . $r->hostname;
+    $info{siteURL} = "https://" . $r->hostname;
 
     $info{SecureSiteURL} = "https://" . $r->hostname;
 
@@ -229,7 +229,7 @@ sub save_application {
     $params{txtSignature} = $variable->{Signature};
     $customer_credit->set( \%params );
 
-    $params{siteURL}       = "http://" . $r->hostname;
+    $params{siteURL}       = "https://" . $r->hostname;
     $params{SecureSiteURL} = "https://" . $r->hostname;
 
     my $email = scalar $dbh->selectrow_array(q{

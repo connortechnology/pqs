@@ -232,7 +232,7 @@ sub email_password {
       my $email_template = misc::load_file($r, '/email/email_template.html');
       $info{'ReplacementText'} = "<!--#include virtual=\"/email/content/forgotten_password.html\"-->";
       $info{'domain'} = configuration::get_value($log, $dbh, 'domain');
-      $info{'siteURL'} = "http://" . $r->hostname;
+      $info{'siteURL'} = "https://" . $r->hostname;
       require MIME::QuotedPrint;
       $_ = MIME::QuotedPrint::encode_qp(ssi::variable_substitution($r, $log, $dbh, $email_template, \%info));
       my @body = ('', $_, 'text/html', 'quoted-printable');
@@ -360,9 +360,8 @@ sub login_app_process {
     }
 
     $info{'date'} = localtime;
-    $info{'siteURL'} = "http://" . $r->hostname;
-    $info{'SecureSiteURL'} =
-      "https://" . $r->hostname;
+    $info{'siteURL'} = "https://" . $r->hostname;
+    $info{'SecureSiteURL'} = "https://" . $r->hostname;
     $info{'CustomerServiceEmail'} =
       configuration::get_value($log, $dbh, 'CustomerServiceEmail');
 
