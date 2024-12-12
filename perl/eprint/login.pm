@@ -15,6 +15,7 @@ require misc;
 require eprint::greetings;
 require eprint::user;
 require eprint::order;
+require MIME::QuotedPrint;
 
 # displays the login page, and populates the destination variable
 sub login_display {
@@ -233,7 +234,6 @@ sub email_password {
       $info{'ReplacementText'} = "<!--#include virtual=\"/email/content/forgotten_password.html\"-->";
       $info{'domain'} = configuration::get_value($log, $dbh, 'domain');
       $info{'siteURL'} = "https://" . $r->hostname;
-      require MIME::QuotedPrint;
       $_ = MIME::QuotedPrint::encode_qp(ssi::variable_substitution($r, $log, $dbh, $email_template, \%info));
       my @body = ('', $_, 'text/html', 'quoted-printable');
 
@@ -270,7 +270,7 @@ sub login_app_process {
 	my ($error, $temp, $cust_id, $user_id, $email);
 
 
-	map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
+	#map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
 	my $result;
 
 	eval {
@@ -278,17 +278,15 @@ sub login_app_process {
 		my $challenge = 1;
 		my $response  = $r->param('g-recaptcha-response');
 
-#my $challenge = 6LfKz8gUAAAAAFW_im9xh9VAp8XA5C2F5qrhKsX-
-#my $response  = $r->param('recaptcha_response_field');
-		my $key = "6LfKz8gUAAAAAEQQyR2BZhg15phipZkfyCl4kuUi";
+    my $key = "6LdWLJkqAAAAAO8NEwEMoeumR5L0wB9mCagA3ZrP";
 
 
-		print STDERR "START LOGIN APP PROCESS \n\n\n";
+		#print STDERR "START LOGIN APP PROCESS \n\n\n";
 #unless ( $variable->{user_id} ) {
 # Verify submission
 	$result = $c->check_answer_v2($key, $response, $ENV{'REMOTE_ADDR'});
 
-	print STDERR "CONTINUE LOGIN APP PROCESS:  \n\n\n", Dumper($result);
+	#print STDERR "CONTINUE LOGIN APP PROCESS:  \n\n\n", Dumper($result);
 
 	unless ( $result->{is_valid} ) {
 # Error
@@ -499,7 +497,7 @@ sub login_app_process {
             TO      => $email,
             SUBJECT => "New Login Application"
         );
-        misc::send_email_with_attachment($r, $log, \%mail, ('', encode_qp($email_template), 'text/html', 'quoted-printable'));
+        misc::send_email_with_attachment($r, $log, \%mail, ('', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable'));
 
         $log->debug("** Sent Notification to $email **");
 
@@ -512,7 +510,7 @@ sub login_app_process {
                  FROM    => $agent,
                  TO      => $agent,
                  SUBJECT => "New Login Application");
-        misc::send_email_with_attachment($r, $log, \%mail, ('', encode_qp($template), 'text/html', 'quoted-printable'));
+        misc::send_email_with_attachment($r, $log, \%mail, ('', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable'));
 
         if (   configuration::get_value($log, $dbh, 'NewFirstUserAccountActivation') eq 'Y'
             && configuration::get_value($log, $dbh, 'NewCustomerAccountActivation')  eq 'Y')
@@ -588,7 +586,7 @@ sub login_app_process {
                     TO      => $notification,
                     SUBJECT => 'New Login Application' 
                 );
-                misc::send_email_with_attachment($r, $log, \%mail, ('', encode_qp($email_template), 'text/html', 'quoted-printable'));
+                misc::send_email_with_attachment($r, $log, \%mail, ('', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable'));
             }
         }
 
@@ -603,7 +601,7 @@ sub login_app_process {
             TO      => $agent,
             SUBJECT => 'New Login Application' 
         );
-        misc::send_email_with_attachment($r, $log, \%mail, ('', encode_qp($template), 'text/html', 'quoted-printable'));
+        misc::send_email_with_attachment($r, $log, \%mail, ('', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable'));
 
         if (configuration::get_value($log, $dbh, 'NewNonFirstUserAccountActivation' ) ne 'Y'){ 
             # Send confirmation
@@ -619,7 +617,7 @@ sub login_app_process {
                  FROM    => $agent,
                  TO      => $email,
                  SUBJECT => 'New Login Application');
-            misc::send_email_with_attachment($r, $log, \%mail, ('', encode_qp($email_template), 'text/html', 'quoted-printable' ));
+            misc::send_email_with_attachment($r, $log, \%mail, ('', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ));
         }
 
         if ($r->param('rdbReasonForPurchase') eq 'Reseller') {
