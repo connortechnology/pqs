@@ -245,11 +245,10 @@
 			<br />
 
 
-			<div class="g-recaptcha" data-sitekey="6LfKz8gUAAAAAFW_im9xh9VAp8XA5C2F5qrhKsX-"></div>
+
 
 			<div class="button-bar indent-regular">
-				<input type="reset" id="button-space" class="button" value="Reset" />
-				<input type="submit" class="button" value="Submit" />
+<button type="submit" class="g-recaptcha" data-sitekey="6LdWLJkqAAAAAKTanTPJMbwpMx4752S1rOpZRGKX" data-callback="onSubmit" data-action="submit">Submit</button>
 				<br />
 			</div>
 
@@ -260,5 +259,16 @@
 <!--#include virtual="/includes/f1-main.html" -->
 <!--#include virtual="/includes/main/account.html" -->
 <!--#include virtual="/includes/f2-main.html" -->
+ <script>
+   function onSubmit(token) {
+	   const form = document.getElementById("registration");
+	   if (form.elements['txtEmail'].value) {
+		   form.submit();
+	   } else {
+		   alert("Please enter your email address!");
+		   document.getElementById('txtEmail').focus();
+	   }
+   }
+ </script>
 </body>
 </html>
