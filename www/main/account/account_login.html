@@ -1,83 +1,89 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-	<title>
-		<!--#include virtual="/includes/web_page_title.html" -->
-		Account - Login
-		<!--#include virtual="/includes/web_page_title_end.html" -->
-	</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<!--#include virtual="/includes/web_page_meta.html" -->
-	<!--#include virtual="/includes/h1-main-css.html" -->
-	
-	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
-	
-	<!--#include virtual="/includes/h2-js.html" -->
+<title>
+<!--#include virtual="/includes/web_page_title.html" -->
+Account - Login
+<!--#include virtual="/includes/web_page_title_end.html" -->
+</title>
 
-	<script type="text/javascript" src="/javascripts/other.js"></script>
+<!--#include virtual="/includes/web_page_meta.html" -->
+<!--#include virtual="/includes/h1-main-css.html" -->
+
+<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
 </head>
 
 <body onload="document.getElementById('txtEmail').focus();">
 <!--#include virtual="/includes/c1-main-nav.html" -->
 
-	<h1><span class="title-section">Account &#187;</span> Login</h1>
-	
-	<form id= "account_confirmation_login" method="post" action="/main/account/confirmation_login.html" name="f1">
-		<fieldset>
-			<legend>
-				Login
-			</legend>
-	
-			<p>Please enter your e-mail address and password to login.</p>
-	
-			<label for="txtEmail">E-mail:</label>
-			<input type="text" id="txtEmail" name="txtEmail" class="input-text" />
-			<br />
-	
-			<label for="txtPassword">Password:</label>
-			<input type="password" id="txtPassword" name="txtPassword" class="input-text" />
-			<br />
-	
-			<!--#include virtual="/includes/reset-submit.html" -->
-	
-			<br />
-		</fieldset>
+  <h1><span class="title-section">Account &#187;</span> Login</h1>
+  <form id= "account_confirmation_login" method="post" action="/main/account/confirmation_login.html" name="f1">
+    <fieldset>
+      <legend> Login </legend>
+  
+      <p>Please enter your e-mail address and password to login.</p>
+  
+      <label for="txtEmail">E-mail:</label>
+      <input type="text" id="txtEmail" name="txtEmail" class="input-text" autocomplete="username"/>
+      <br />
+  
+      <label for="txtPassword">Password:</label>
+      <input type="password" id="txtPassword" name="txtPassword" class="input-text" autocomplete="current-password"/>
+      <br />
+  
+      <!--#include virtual="/includes/reset-submit.html" -->
+  
+      <br />
+    </fieldset>
 
-		<input type="hidden" name="Destination" value="<?Destination?>" />
-	</form>
-	
-	<form id="account_confirmation_password" method="post" action="/main/account/confirmation_password_0.html" name="f2">
+    <input type="hidden" name="Destination" value="<?Destination?>" />
+  </form>
+  
+  <form id="account_confirmation_password" method="post" action="/main/account/confirmation_password_0.html" name="f2">
 
-		<fieldset>
-			<legend>
-				Password Retrieval
-			</legend>
-	
-			<p class="none">&nbsp;</p>
-	
-			<h2>Forget your Password?</h2>
-	
-			<p>To have your password e-mailed to you, please submit your e-mail address below.</p>
-	
-			<br />
-	
-			<label for="txtEmail2">E-mail:</label>
-			<input type="text" id="txtEmail2" name="txtEmail2" class="input-text" />
-			<br />
-	
-			<input type="hidden" name="btnSendCustomerPassword" />
-	
-			<label></label>
-			<div class="g-recaptcha" data-sitekey="6LfKz8gUAAAAAFW_im9xh9VAp8XA5C2F5qrhKsX-"></div>
-			<br />
-			<!--#include virtual="/includes/reset-submit.html" -->
-			<br />
-		</fieldset>
-	</form>
+    <fieldset>
+      <legend>
+        Password Retrieval
+      </legend>
+  
+      <p class="none">&nbsp;</p>
+  
+      <h2>Forget your Password?</h2>
+  
+      <p>To have your password e-mailed to you, please submit your e-mail address below.</p>
+  
+      <br />
+  
+      <label for="txtEmail2">E-mail:</label>
+      <input type="text" id="txtEmail2" name="txtEmail2" class="input-text" />
+      <br />
+  
+      <input type="hidden" name="btnSendCustomerPassword" />
+  
+      <label></label>
+      <button type="submit" class="g-recaptcha" data-sitekey="6LdWLJkqAAAAAKTanTPJMbwpMx4752S1rOpZRGKX" data-callback="onSubmit" data-action="submit">Submit</button>
+      <br />
+    </fieldset>
+  </form>
 
 <!--#include virtual="/includes/f1-main.html" -->
 <!--#include virtual="/includes/main/account.html" -->
 <!--#include virtual="/includes/f2-main.html" -->
-	 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+ <script>
+   function onSubmit(token) {
+	   const form = document.getElementById("account_confirmation_password");
+	   if (form.elements['txtEmail2'].value) {
+		   form.submit();
+	   } else {
+		   alert("Please enter your email address!");
+		   document.getElementById('txtEmail2').focus();
+	   }
+   }
+ </script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>
