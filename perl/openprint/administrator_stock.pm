@@ -240,6 +240,23 @@ $openprint::log->debug("Setting: $param{amount} " );
 	} elsif ( $param{btnFunction} ) {
 		$log->error("Unknown function $param{btnFunction}");
 	} # end if
+  if ($param{brand}) {
+    my $brand = openprint::StockBrand->find_one('name lc'=>lc$param{brand});
+    $param{brand_id} = $brand->id() if $brand;
+  }
+  if ($param{finish}) {
+    my $finish = openprint::StockFinish->find_one('name lc'=>lc$param{finish});
+    $param{finish_id} = $finish->id() if $finish;
+  }
+  if ($param{colour}) {
+    my $colour = openprint::StockColour->find_one('name lc'=>lc$param{colour});
+    $param{colour_id} = $colour->id() if $colour;
+  }
+  if ($param{weight}) {
+    my $weight = openprint::StockWeight->find_one('name lc'=>lc$param{weight});
+    $param{weight_id} = $weight->id() if $weight;
+  }
+  _stocks();
 } # end sub list
 
 sub stock {
