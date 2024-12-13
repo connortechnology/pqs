@@ -37,7 +37,9 @@ fieldset span.label {
 	display: inline;
 	position: relative;
 
+  /*
 	width: 20em;
+  */
 	margin: 0;
 	padding: 0 0 0.5ex 3em;
 
@@ -692,9 +694,14 @@ span.multiversion-label img {
 
 	margin: 1.1ex 0 -1.2ex 0;
 }
+#SpecificStock {
+  display: flex;
+}
 .MWeight input ,
 .Price input,
 .Basis input,
+.GSM input,
+.calliper input,
 
 .Size input {
   width: 50px;
@@ -703,6 +710,9 @@ span.multiversion-label img {
   */
 }
 
+#minimum_order_units,
+#sheets_per_package_units,
+#PaperAlert,
 #PricePerM {
   float: none;
   padding: 0;
