@@ -256,7 +256,6 @@ function calc_basis_weight_from_weight(weight_element) {
     const form = weight_element.form;
     form.elements['basis_mweight'+signature].value = weight * 2;
     mweight_to_gsm(form, signature);
-    service.calculate(radio);
   } else {
     console.log("No match against "+weight_element.value);
   }
@@ -341,8 +340,6 @@ function type_onchange(radio) {
     $j('#minimum_order_units'+signature).innerHTML='lbs';
     $j('#sheets_per_package'+signature).innerHTML='lbs';
   }
-
-  service.calculate(radio);
 }
 
 function specific_stock_onchange(radio) {
@@ -361,7 +358,6 @@ function specific_stock_onchange(radio) {
     if(radio.form.ddmStockSheetSize3){
       clear_ddm(radio.form.ddmStockSheetSize3);
     };
-    service.calculate(radio);
   } else {
     $j('#HouseStock'+signature).show();
     $j('#SpecificStock'+signature).hide();
