@@ -45,6 +45,7 @@ Service.prototype = {
 
     // Add events for automatic calculation on user input.
     _bind_timer : function () {
+      return;
         this.timer = new Timer(this.calculate.bind(this), 2240);
 
         // Start the timer any time an element changes
@@ -91,7 +92,6 @@ Service.prototype = {
 				$('txtUnitPrice1').innerHTML = '.';
 			}
 
-        
         this.req = new Ajax.Request('/service/' + this.name, {
             method:         'get',
             requestHeaders: { Accept: 'application/json' },
