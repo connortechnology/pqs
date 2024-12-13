@@ -74,7 +74,8 @@ sub generate_cookie {
   $host
   || $r->dir_config('cookiedomain')
   || configuration::get_value($log, $dbh, 'cookiedomain');
-
+ 
+  $log->debug("COokie domain: $domain");
 
   # Generate and set the cookie.
   my $cookie = Apache2::Cookie->new($r,
@@ -275,8 +276,12 @@ sub word_sub {
 
   my %words = (split ',', eprint::Config->get(General => 'word_sub'));
 
-  map { $variable->{'ws_'.$_}  = $words{$_}; print STDERR "CHANGE: $_ to $words{$_} \n"; } keys %words;
-  map { $file_data =~ s/$_/$words{$_}/g; print STDERR "CHANGE: $_ to $words{$_} \n"; } keys %words;
+  map { $variable->{'ws_'.$_}  = $words{$_};
+    #print STDERR "CHANGE: $_ to $words{$_} \n";
+  } keys %words;
+  map { $file_data =~ s/$_/$words{$_}/g;
+    #print STDERR "CHANGE: $_ to $words{$_} \n";
+  } keys %words;
   return $file_data;
 }
 
