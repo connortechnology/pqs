@@ -1,7 +1,24 @@
 <script>
-function addstock(page) {
-OpenWin = this.open(page,"CtrlWindow","top=80,left=100,screenX=100,screenY=80,width=1000,height=900,toolbar=no,menubar=no,location=yes, scrollbars=yes,resizable=yes");
+function addstock(button) {
+//OpenWin = this.open(page,"CtrlWindow","top=80,left=100,screenX=100,screenY=80,width=1000,height=900,toolbar=no,menubar=no,location=yes, scrollbars=yes,resizable=yes");
+    console.log(button);
+    const form = button.form;
+    if (get_rdb_value(form, 'rdbSpecificStock') == 'Y') {
+        // Go direct to add new stock
+          window.open('/administrator/stock/stock.html?brand='+form.elements['txtSpecificStockBrand'].value
+              +'&'+'finish='+form.elements['txtSpecificStockFinish'].value
+              +'&'+'colour='+form.elements['txtSpecificStockColour'].value
+              +'&'+'weight='+form.elements['txtSpecificStockWeight'].value
+              );
+      } else {
+          // Go to stock list with filters already selected
+          window.open('/administrator/stock/list.html?brand='+form.elements['stock_name'].value
+              +'&'+'finish='+form.elements['stock_finish'].value
+              +'&'+'colour='+form.elements['stock_colour'].value
+              +'&'+'weight='+form.elements['stock_weight'].value
+            );
         }
+}
 </script>
 <script src="<?hash_link(/javascripts/paper.js)?>"></script>
 
@@ -11,7 +28,9 @@ OpenWin = this.open(page,"CtrlWindow","top=80,left=100,screenX=100,screenY=80,wi
 		<p>If you're adding a new stock or modifying an existing stock, please select the button below.</p>
 		
 		  <label for="label" class="checkbox" style="padding-left: 3em;">
-		  <input id="label" name="stock_supplied2" type="button" value="Add, Modify and Delete" class="button" onClick="addstock('/main/proj/paper_edit.html?pid=<?pid?>')" />
+		  <button type="button" class="button" onclick="addstock(this);" >
+        Add, Modify and Delete
+        </button>
 		  </label><p></p><p></p>
 	<?endif user.is_staff?>
     <ul class="non-list">
@@ -45,7 +64,9 @@ OpenWin = this.open(page,"CtrlWindow","top=80,left=100,screenX=100,screenY=80,wi
       <li class="Type"><label>Format</label>
         <?echo( radio(
         'StockType'.$$variable{Signature},
-        ['Sheet'=>'Sheet', 'Roll'=>'Roll', 'Envelope'=>'Envelope'],
+        ['Sheet'=>'Sheet',
+        #'Roll'=>'Roll',
+        'Envelope'=>'Envelope'],
         $$variable{'StockType'.$$variable{Signature}},
         {
         onclick=>'type_onchange(this);'
@@ -61,6 +82,8 @@ OpenWin = this.open(page,"CtrlWindow","top=80,left=100,screenX=100,screenY=80,wi
         <? echo ( input( type=>'float', name=>'txtSpecificStockHeight'.$$variable{Signature}, value=>$$variable{'txtSpecificStockHeight'.$$variable{Signature}}, oninput=>"gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
 </span>
       </li>
+    </ul>
+    <ul class="non-list">
       <li class="MWeight" id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{spec}{'StockType'.$$variable{Signature}} eq 'Roll' ) ?>>
         <label>MWeight</label>
         <? echo ( input( type=>'float', name=>'txtCustomMWeight'.$$variable{Signature}, value=>$$variable{'txtCustomMWeight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
