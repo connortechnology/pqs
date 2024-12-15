@@ -314,7 +314,6 @@ function gsm_to_mweight( form, signature ) {
   form.elements['txtCustomMWeight'+signature].value = mweight;
 }
 
-
 function type_onchange(radio) {
   const re = /^StockType(\d*)$/;
   const matches = radio.name.match(re);
@@ -340,7 +339,35 @@ function type_onchange(radio) {
     $j('#minimum_order_units'+signature).innerHTML='lbs';
     $j('#sheets_per_package'+signature).innerHTML='lbs';
   }
+  update_basis_size(radio);
 }
+
+function update_basis_size(element) {
+  const form = document.getElementById('f1');
+  const signature = '';
+  if (get_value(form.elements['StockType']) == 'Envelope'
+      || form.elements['txtSpecificStockBrand'].value.match(/bond/i)
+      || form.elements['txtSpecificStockFinish'].value.match(/bond/i)
+      || form.elements['txtSpecificStockWeight'].value.match(/bond/i)
+  ) {
+    form.elements['basis_width'].value = 17;
+    form.elements['basis_height'].value = 22;
+  } else {
+    if (form.elements['txtSpecificStockBrand'].value.match(/cover/i)
+      || form.elements['txtSpecificStockBrand'].value.match(/board/i)
+      || form.elements['txtSpecificStockFinish'].value.match(/cover/i)
+      || form.elements['txtSpecificStockFinish'].value.match(/board/i)
+      || form.elements['txtSpecificStockWeight'].value.match(/cover/i)
+      || form.elements['txtSpecificStockWeight'].value.match(/board/i)
+    ) {
+      form.elements['basis_width'].value = 20;
+      form.elements['basis_height'].value = 26;
+    } else {
+      form.elements['basis_width'].value = 25;
+      form.elements['basis_height'].value = 38;
+    }
+  }
+} // end function update_basis_size
 
 function specific_stock_onchange(radio) {
   const re = /^rdbSpecificStock(\d*)$/;
@@ -362,5 +389,49 @@ function specific_stock_onchange(radio) {
     $j('#HouseStock'+signature).show();
     $j('#SpecificStock'+signature).hide();
     Stock_onchange(radio, signature);
+  }
+}
+function brand_onchange(element) {
+  update_basis_size(element);
+  select_grade();
+}
+function finish_onchange(element) {
+  console.log('finish_onchange');
+  update_basis_size(element);
+  select_grade();
+}
+function weight_onchange(element) {
+  calc_basis_weight_from_weight(weight_element);
+}
+function select_grade() {
+  /*
+     #1  =>  '1 Gloss-coated stock',
+    #2  =>  '2 Matte-coated stock',
+    #3  =>  '3 Gloss-coated, web stock',
+    #4  =>  '4 Uncoated, white stock',
+    #5  =>  '5 Uncoated, yellow stock'
+    */
+  const grade_ddm = document.getElementById('StockGrade');
+  const form = grade_ddm.form;
+  const stock_type = get_value( form.elements['StockType'] );
+  var new_grade = 0;
+
+  const finish = form.elements['txtSpecificStockFinish'].value;
+  const brand = form.elements['txtSpecificStockBrand'].value;
+  if (finish.match(/gloss/i)) {
+    new_grade = (stock_type == 'Roll') ? 3 : 1;
+  } else if (finish.match(/matte/i) || finish.match(/silk/i)) {
+    new_grade = 2;
+  } else if (finish.match(/uncoated/i)) {
+    new_grade = 4;
+  } else if (brand.match(/gloss/i)) {
+    new_grade = (stock_type == 'Roll') ? 3 : 1;
+  } else if (brand.match(/matte/i) || brand.match(/silk/i)) {
+    new_grade = 2;
+  } else if (brand.match(/uncoated/i)) {
+    new_grade = 4;
+  }
+  if (new_grade) {
+    $j(grade_ddm).val(new_grade);
   }
 }
