@@ -697,6 +697,9 @@ span.multiversion-label img {
 #SpecificStock {
   display: flex;
 }
+#SpecificStock label {
+width: 17em;
+}
 .MWeight input ,
 .Price input,
 .Basis input,
