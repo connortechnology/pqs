@@ -15,28 +15,28 @@
 
 	<!--#include virtual="/includes/h2-js.html" -->
 
-	<script type="text/javascript" src="/javascripts/other.js"></script>
-	<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
-	<script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
+	<script src="/javascripts/other.js"></script>
+	<script src="/javascripts/jsrsClient.js"></script>
+	<script src="/javascripts/proj/utilities.js"></script>
 
-  <script type="text/javascript" src="<?hash_link(/javascripts/proj/service.js)?>"></script>
-  <script type="text/javascript" src="<?hash_link(/javascripts/proj/service/printing.js)?>"></script>
+  <script src="<?hash_link(/javascripts/proj/service.js)?>"></script>
+  <script src="<?hash_link(/javascripts/proj/service/printing.js)?>"></script>
   <script src="<?hash_link(/javascripts/proj/service/printing/paper.js)?>"></script>
-	<script type="text/javascript" src="/javascripts/proj/service/printing/templates.js"></script>
+	<script src="/javascripts/proj/service/printing/templates.js"></script>
 	<?if project.is_multipage ?>
-	<script type="text/javascript" src="/javascripts/proj/service/printing/multipage.js"></script>
+	<script src="/javascripts/proj/service/printing/multipage.js"></script>
 	<?endif project.is_multipage ?>
 	<? if ( $variable->{project}{press_type}{ref} eq 'inkjetprinter' ) ?>
-	<script type="text/javascript" src="/javascripts/proj/service/printing/largeformat.js"></script>
-	<script type="text/javascript"><?stitch_or_weld?></script>
+	<script src="/javascripts/proj/service/printing/largeformat.js"></script>
+	<script><?stitch_or_weld?></script>
 	<? endif ( $variable->{project}{press_type}{ref} eq 'inkjetprinter' ) ?>
 
 	<? if ( $variable->{project}{type}{ref} eq 'PresentationFolders' ) ?>
-		<script type="text/javascript" src="/javascripts/proj/service/printing/presentation_folder.js"></script>
+		<script src="/javascripts/proj/service/printing/presentation_folder.js"></script>
 	<? endif ( $variable->{project}{type}{ref} eq 'PresentationFolders' ) ?>
 
 	<?if project.is_multipage ?>
-		<script type="text/javascript">
+		<script>
 			// Event.observe(window, 'load', service.calculate.bindAsEventListener(service));
 		</script>
 	<?endif project.is_multipage ?>
@@ -151,5 +151,9 @@
 	<!--#include virtual="/includes/f1-main.html" -->
 	<!--#include virtual="/includes/main/proj.html" -->
 	<!--#include virtual="/includes/f2-main.html" -->
+  <script>
+      addEventListener("DOMContentLoaded", (event) => { update_event_bindings(); });
+  </script>
+
 </body>
 </html>
