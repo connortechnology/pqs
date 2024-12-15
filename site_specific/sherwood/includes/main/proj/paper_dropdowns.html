@@ -43,36 +43,43 @@ function addstock(button) {
      } );)?>
     </li>
     </ul>
-    <div id="SpecificStock<?Signature?>" style="display: <? echo ( $$variable{spec}{'rdbSpecificStock'.$$variable{Signature}} ne 'Y' ? 'none' : 'block' ) ?>;">
+    <div id="SpecificStock<?Signature?>" <? echo ( $$variable{spec}{'rdbSpecificStock'.$$variable{Signature}} ne 'Y' ? 'style="display:none;"' : '' ) ?>>
     <ul class="non-list">
       <li class="Brand"><label>Brand</label>
-        <input type="text" name="txtSpecificStockBrand<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockBrand'.$$variable{Signature}} || $$variable{stock_name} ) ?>" />
+        <input type="text" name="txtSpecificStockBrand<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockBrand'.$$variable{Signature}} || $$variable{stock_name} ) ?>" on_input_this="brand_onchange"/>
       </li>
       <li class="Finish"><label>Finish</label>
-      <input type="text" name="txtSpecificStockFinish<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockFinish'.$$variable{Signature}} ) ?>" />
+      <input type="text" name="txtSpecificStockFinish<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockFinish'.$$variable{Signature}} ) ?>" on_input_this="finish_onchange"/>
       </li>
       <li class="Colour"><label>Colour</label>
       <input type="text" name="txtSpecificStockColour<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockColour'.$$variable{Signature}} ? $$variable{'txtSpecificStockColour'.$$variable{Signature}} : 'White' ) ?>" />
       </li>
       <li class="Weight"><label>Weight</label>
-        <input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{Signature}} ) ?>" oninput="calc_basis_weight_from_weight(this);"/>
+        <input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{Signature}} ) ?>" on_input_this="weight_onchange"/>
       </li>
       <li class="calliper"><label>Calliper</label>
         <? echo ( input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature}, value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ); ) ?>
         inches
       </li>
-      <li class="Type"><label>Format</label>
-        <?echo( radio(
-        'StockType'.$$variable{Signature},
-        ['Sheet'=>'Sheet',
-        #'Roll'=>'Roll',
-        'Envelope'=>'Envelope'],
-        $$variable{'StockType'.$$variable{Signature}},
-        {
-        onclick=>'type_onchange(this);'
-        });
+        <?echo( 
+          my @types;
+          if ( $variable->{project}{type}{name} eq 'Envelopes' ) {
+            @types = 'Envelope';
+          } else {
+            @types = sql::execute($log, $dbh, 'SELECT distinct type from tbl_Paper');
+          }
+          if (@types > 1) {
+            return join("\n",
+      '<li class="Type"><label>Format</label>',
+            radio('StockType'.$$variable{Signature}, [map { $_ => $_ } sort { $a cmp $b } @types ], $$variable{'StockType'.$$variable{Signature}},
+            {
+            onclick=>'type_onchange(this);'
+            }),
+
+      '</li>',
+    );
+            return input(name=>'StockType'.$$variable{Signature}, type=>'hidden', value=>$types[0]);
         )?>
-      </li>
       <li class="Size" id="SpecificStockSize<?Signature?>">
         <label>Size</label>
         <span id="SpecificStockWidth<?Signature?>">
