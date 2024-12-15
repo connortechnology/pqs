@@ -1713,11 +1713,11 @@ sub basis_mweight {
       $wpsi /= 2 if $self->is_envelope();
 			$$self{basis_mweight} = Math::Round::nearest(0.01, $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
 $openprint::log->debug("calcing basis_weight from wpsi: $$self{basis_mweight} = $wpsi * $$self{basis_width} * $$self{basis_height} * 1000");
-		} elsif ( ( $self->weight() =~ /^(\d+)lb/i ) or ( $$self{weight} =~ /^(\d+)#/i ) ) {
-			$$self{basis_mweight} = 2*$1;
+    } elsif ( ( $self->weight() =~ /(\d+)lb/i ) or ( $$self{weight} =~ /(\d+)#/i ) ) {
+      $$self{basis_mweight} = 2*$1;
 $openprint::log->debug("calcing basis_mweight from weight: $$self{basis_mweight} = $$self{weight} =~ 2*$1");
     } elsif ($$self{mweight} and $self->type() eq 'Sheet' and $$self{width} and $$self{height}) {
-			$$self{basis_mweight} = 500*($self->basis_width() * $self->basis_height()) * (($$self{mweight} / 1000)/($$self{width}*$$self{height}));
+			$$self{basis_mweight} = Math::Round::nearest(1, 1000*($self->basis_width() * $self->basis_height()) * (($$self{mweight} / 1000)/($$self{width}*$$self{height})));
 $openprint::log->debug("calcing basis_mweight from mweight: $$self{basis_mweight} = ($$self{basis_width} * $$self{basis_height}) * (($$self{mweight} / 1000)/($$self{width}*$$self{height}))");
 
 		} else {
