@@ -1,25 +1,3 @@
-<script>
-function addstock(button) {
-//OpenWin = this.open(page,"CtrlWindow","top=80,left=100,screenX=100,screenY=80,width=1000,height=900,toolbar=no,menubar=no,location=yes, scrollbars=yes,resizable=yes");
-    console.log(button);
-    const form = button.form;
-    if (get_rdb_value(form, 'rdbSpecificStock') == 'Y') {
-        // Go direct to add new stock
-          window.open('/administrator/stock/stock.html?brand='+form.elements['txtSpecificStockBrand'].value
-              +'&'+'finish='+form.elements['txtSpecificStockFinish'].value
-              +'&'+'colour='+form.elements['txtSpecificStockColour'].value
-              +'&'+'weight='+form.elements['txtSpecificStockWeight'].value
-              );
-      } else {
-          // Go to stock list with filters already selected
-          window.open('/administrator/stock/list.html?brand='+form.elements['stock_name'].value
-              +'&'+'finish='+form.elements['stock_finish'].value
-              +'&'+'colour='+form.elements['stock_colour'].value
-              +'&'+'weight='+form.elements['stock_weight'].value
-            );
-        }
-}
-</script>
 <script src="<?hash_link(/javascripts/paper.js)?>"></script>
 
 <fieldset id="stock">
@@ -39,7 +17,7 @@ function addstock(button) {
       <?echo(radio('rdbSpecificStock'.$$variable{Signature}, [ 'Y','Yes', 'N', 'No' ],
       $$variable{'rdbSpecificStock'.$$variable{Signature}}, {
      default=>'N',
-     onclick=>"specific_stock_onchange(this);",
+     on_click_this=>'specific_stock_onchange',
      } );)?>
     </li>
     </ul>
@@ -66,19 +44,19 @@ function addstock(button) {
           if ( $variable->{project}{type}{name} eq 'Envelopes' ) {
             @types = 'Envelope';
           } else {
-            @types = sql::execute($log, $dbh, 'SELECT distinct type from tbl_Paper');
+            @types = sql::execute($log, $dbh, q`SELECT distinct type from tbl_Paper where type !='Envelope'`);
           }
           if (@types > 1) {
             return join("\n",
-      '<li class="Type"><label>Format</label>',
-            radio('StockType'.$$variable{Signature}, [map { $_ => $_ } sort { $a cmp $b } @types ], $$variable{'StockType'.$$variable{Signature}},
-            {
-            onclick=>'type_onchange(this);'
-            }),
-
-      '</li>',
-    );
-            return input(name=>'StockType'.$$variable{Signature}, type=>'hidden', value=>$types[0]);
+              '<li class="Type"><label>Format</label>',
+              radio('StockType'.$$variable{Signature},
+                [map { $_ => $_ } sort { $a cmp $b } @types ], $$variable{'StockType'.$$variable{Signature}},
+                { default=>'Sheet', onclick=>'type_onchange(this);' }
+                ),
+              '</li>',
+            );
+          }
+          return ssi::input(name=>'StockType'.$$variable{Signature}, type=>'hidden', value=>$types[0]);
         )?>
       <li class="Size" id="SpecificStockSize<?Signature?>">
         <label>Size</label>
@@ -116,12 +94,12 @@ function addstock(button) {
         <label>Price</label>
         <? echo ( input( type=>'float', name=>'CustomStockPrice'.$$variable{Signature}, value=>$$variable{'CustomStockPrice'.$$variable{Signature}}, oninput=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/cwt
         <span id="PricePerM<?Signature?>" <? echo ( $$variable{spec}{'StockType'.$$variable{Signature}} eq 'Roll' ? 'style="display:none;"' : '' ) ?>>        <? echo ( input( type=>'float', name=>'StockPricePerM'.$$variable{Signature}, value=>$$variable{'StockPricePerM'.$$variable{Signature}}, onkeyup=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/M</span><br/>
-        <span id="PaperAlert<?Signature?>"></span>
+        <span class="warning" id="PaperAlert<?Signature?>"></span>
       </li>
-      <!--
       <li><label>Double sided?</label>
         <?echo(radio('CustomSheetDoubleSided'.$$variable{Signature}, ['Y'=>'Yes','N'=>'No'], $$variable{'CustomSheetDoubleSided'.$$variable{Signature}}, { default=>'Y', onclick=>'calc(this.form.name);' }); )?>
       </li>
+      <!--
       <li id="cuttable_li"><label>Cuttable?</label>
         <?echo(radio('cuttable'.$$variable{Signature}, ['1'=>'Yes','0'=>'No'],$$variable{'cuttable'.$$variable{Signature}}, { default=>'1', onclick=>'calc(this.form.name);' }); )?>
       </li>
