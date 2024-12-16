@@ -1245,8 +1245,6 @@ sub calc_print_price {
   # don't handle that yet), calculate plates and paper wastage.
   #if (%$versions and $spreads_remaining <= 1 ) {
   if (%$versions) {
-
-
     #if ( $spreads_remaining <= 1 ) {
     # Each layout is a differently imposed press sheet.
     $numRuns = scalar @{ $imp->{layout} };
@@ -3060,7 +3058,9 @@ sub spreads_remaining {
   print STDERR "HAVE SIGNATURE TYPE : $type SID: $sid \n";
 
   my $total     = get_specifications($log, $dbh, $pid, $book, $type);
+  print STDERR "HAVE TOTAL : $total \n";
   my $completed = count_completed_spreads($log, $dbh, $type, $pid, $sid);
+  print STDERR "HAVE COMPLETED : $completed \n";
 
   my $needed    = $total - $completed;
 
@@ -3076,19 +3076,17 @@ sub count_completed_spreads {
   my ($log, $dbh, $spread_type, $pid, $exclude) = @_;
 
 
-  die("No Spread Type") unless $spread_type;
+  print STDERR "No Spread Type\n" unless $spread_type;
 
   # Get all the other calculated signatures.
-  my @signatures = grep { get_status($log, $dbh, $_) eq 'calculated' }
-  signatures_of_type($log, $dbh, $pid, $spread_type);
+  my @signatures = grep { get_status($log, $dbh, $_) eq 'calculated' } signatures_of_type($log, $dbh, $pid, $spread_type) if $spread_type;
 
-  # Allow the user to exclude a signature from the count (generally the one
-  # being recalculated).
-  @signatures = grep { $_ != $exclude } @signatures
-  if $exclude;
+  # Allow the user to exclude a signature from the count (generally the one being recalculated).
+  @signatures = grep { $_ != $exclude } @signatures if $exclude;
 
   my $count = 0;
   for my $sid (@signatures) {
+    print STDERR "Getting specs for $pid $sid\n";
     my ($size, $groups) = get_specifications(
       $log, $dbh, $pid, $sid, qw(spreads_in_group txtSignatureQuantity)
     );
@@ -3109,10 +3107,9 @@ sub signatures_of_type {
 
   my %signature;
   for my $sig (check_for_service($log, $dbh, $pid, 'Printing')) {
-    my $type 
-    = get_specifications($log, $dbh, $pid, $sig, 'txtSignatureType');
+    my $type = get_specifications($log, $dbh, $pid, $sig, 'txtSignatureType');
 
-    $signature{$type} = [] unless exists $signature{$type};
+    $signature{$type} = [] unless $type and exists $signature{$type};
 
     push @{ $signature{$type} }, $sig;
   }

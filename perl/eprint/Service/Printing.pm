@@ -167,9 +167,10 @@ sub action {
                && get_press_type($log, $dbh, $pid) ne 'screen';
 
     my $book        = check_for_service($log, $dbh, $pid, 'Book');
-    my $spread_type = $specs->{txtSignatureType};
+    my $spread_type = $specs->{txtSignatureType} // COVER;
 
-    die "Invalid multipage project $pid" unless $book && $spread_type;
+    print STDERR "Invalid multipage project $pid book:$book spread type: $spread_type\n" unless $book && $spread_type;
+
 
     # If we're cover spreads there can only be one of us so we're done.
     return if $spread_type eq COVER;
