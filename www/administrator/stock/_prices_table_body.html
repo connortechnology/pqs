@@ -1,0 +1,16 @@
+<? echo (
+	my $html = include('/includes/error_reporting.html');
+	my $Pricelist = $$variable{Pricelist};
+	my $service = $$variable{service};
+
+	my @Prices = openprint::PaperPrice->find(
+  paper_id=>$$variable{Stock}->id(),
+  service=>$service,
+  pricelist_id=>$Pricelist->id(),
+  order=>'lngmin NULLS FIRST,lngmax NULLS FIRST' );
+	foreach my $Price ( @Prices ) {
+		$variable{Price} = $Price;
+		$html .= include( '/administrator/stock/_price_tr.html' );
+	} # end foreach Price
+	return $html;
+) ?>

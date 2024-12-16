@@ -1,0 +1,55 @@
+<? echo (
+	my $html;
+  require openprint::Equipment;
+	my @Equipment = openprint::Equipment->find( order=>'lower(strid)');
+	$$variable{Equipment} = \@Equipment;
+	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find(supplier=>'Y' ) ];
+	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+		$$variable{Pricelist} = $Pricelist;
+		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
+		foreach my $service ( 'Setup', 'Supply', 'Material' ) {
+			$$variable{service} = $service;
+			$html .= '<fieldset class="'.$service.'Prices"><legend>'.$service.' Prices</legend>';
+			$html .= '<table class="List"><thead><tr class="'.$service.'">
+						<th class="Equipment">Equipment</th>
+						<th class="Range">Quantity Range</th>
+						<th class="Units">Units</th>
+					';
+			if ( $service ne 'Material' ) {
+				$html .= '
+						<th class="Cost">Cost</th>
+						<th class="Markup">Mark up</th>
+						<th class="Price">Price</th>
+						';
+			} else {
+				$html .= '<th class="Cost">Cost CWT</th>';
+
+				if ( $$variable{Stock}->type() ne 'Roll' ) {
+					$html .= '<th class="Cost">Cost /M</th>';
+				} else {
+					$html .= '<th class="Cost">Cost /foot</th>';
+				} # end if
+				$html .= '
+				<th class="Markup">Mark up</th>
+				<th class="Price">Price CWT</th>
+				';
+				if ( $$variable{Stock}->type() ne 'Roll' ) {
+					$html .= '<th class="Price">Price /M</th>';
+				} else {
+					$html .= '<th class="Price">Price /foot</th>';
+				} # end if
+			} # end if
+			$html .= '
+				<th class="Discount">Discount?</th>
+				<th class="buttons">
+				';
+			$html .= button( 'NewPrice'.$service.$Pricelist->id(), {onclick=>"newPrice( '$service', '$$Pricelist{id}');", text=>'New Price' } );
+			$html .= qq`</th></tr></thead><tfoot><tr></tr></tfoot><tbody id="prices-$service-$$Pricelist{id}">\n`;
+			$html .= include( '/administrator/stock/_prices_table_body.html' );
+			$html .= '</tbody></table>';
+			$html .= '</fieldset><!--Service-->';
+		} # end foreach Service
+		$html .= '</fieldset><!--Pricelist-->';
+	} # end foreach Pricelist
+	return $html;
+) ?>

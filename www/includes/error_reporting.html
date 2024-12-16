@@ -1,0 +1,13 @@
+<? echo (
+	my $html = join("\n",
+		( $$variable{error} ? '<div class="error">'.$$variable{error}.'</div>' : '' ),
+		( $$variable{warning} ? '<div class="warning">'.$$variable{warning}.'</div>' : '' ),
+		( $$variable{information} ? '<div class="information">'.$$variable{information}.'</div>' : '' ),
+		( $session{error} ? '<div class="error">'.$session{error}.'</div>' : '' ),
+		( $session{warning} ? '<div class="warning">'.$session{warning}.'</div>' : '' ),
+		( $session{information} ? '<div class="information">'.$session{information}.'</div>' : '' ),
+	);
+	delete @$variable{'error','information','warning'};
+	delete @session{'error','information','warning'};
+	return $html;
+) ?>
