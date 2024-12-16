@@ -47,9 +47,13 @@ $serial	= 'paper_id_seq';
     supplier_id		=>	'supplier_id',
     manufacturer_id	=>	'manufacturer_id',
 		brand_id		=>	'brand_id',
+    brand       =>  undef,
 		colour_id		=>	'colour_id',
+    colour      => undef,
 		finish_id		=>	'finish_id',
+    finish      => undef,
 		weight_id		=>	'weight_id',
+    weight      => undef,
     quality_id		=>	'quality_id',
 		calliper		=>	'strcalliper',
     #taxexempt1		=>	'ysntaxexempt1',
@@ -546,18 +550,18 @@ sub Brand {
 
 sub brand {
 	if ( defined $_[1] ) {
-		$_[1] = openprint::StockBrand->transform( 'name', $_[1] );
-		if ( ! $_[0]{custom} ) {
-			my $Brand = openprint::StockBrand->find_one('name lc'=> lc $_[1] );
+		$_[1] = openprint::StockBrand->transform(name=>$_[1]);
+    #if ( ! $_[0]{custom} ) {
+			my $Brand = openprint::StockBrand->find_one('name lc'=> lc $_[1] ) if $_[1];
 			if ( $Brand ) {
 				@{$_[0]}{'brand_id','brand'} = @$Brand{'id','name'};
 			} else {
-				@{$_[0]}{'brand_id','brand'} = ( undef, $_[1] );;
+				@{$_[0]}{'brand_id','brand'} = ( undef, $_[1] );
 			} # end if
-		} else {
-			$_[0]{brand} = $_[1];
-			$_[0]{brand_id} = undef;
-		} # end if
+      #} else {
+      #$_[0]{brand} = $_[1];
+      #$_[0]{brand_id} = undef;
+      #} # end if
 	} elsif ( $_[0]{brand_id} and ! $_[0]{brand} ) {
 		$_[0]{Brand} = new openprint::StockBrand( $_[0]{brand_id} );
 		$_[0]{brand} = $_[0]{Brand}->name();
@@ -595,17 +599,17 @@ sub Finish {
 sub finish {
 	if ( @_ > 1 ) {
 		$_[1] = openprint::StockFinish->transform( 'name', $_[1] );
-		if ( ! $_[0]{custom} ) {
+    #if ( ! $_[0]{custom} ) {
 			my $Finish = openprint::StockFinish->find_one('name lc'=> lc $_[1] );
 			if ( $Finish ) {
 				@{$_[0]}{'finish_id','finish'} = @$Finish{'id','name'};
 			} else {
 				@{$_[0]}{'finish_id','finish'} = ( undef, $_[1] );
 			} # end if
-		} else {
-			$_[0]{finish} = $_[1];
-			$_[0]{finish_id} = undef;
-		} # end if
+      #} else {
+      #$_[0]{finish} = $_[1];
+      #$_[0]{finish_id} = undef;
+      #} # end if
 	} elsif ( $_[0]{finish_id} and ! $_[0]{finish} ) {
 		$_[0]{finish} = new openprint::StockFinish( $_[0]{finish_id} )->name();
 	} # end if
@@ -619,7 +623,7 @@ sub colour {
 
 	if ( @_ > 1 ) {
 		$_[1] = openprint::StockColour->transform( 'name', $_[1] );
-		if ( ! $_[0]{custom} ) {
+    #if ( ! $_[0]{custom} ) {
 			my $Colour = openprint::StockColour->find_one('name lc'=> lc $_[1] );
 			if ( $Colour ) {
 				@{$_[0]}{'colour_id','colour'} = @$Colour{'id','name'};
@@ -627,9 +631,9 @@ sub colour {
 				$_[0]{colour} = $_[1];
 				$_[0]{colour_id} = undef;
 			} # end if
-		} else {
-			$_[0]{colour} = $_[1];
-		} # end if
+      #} else {
+      #$_[0]{colour} = $_[1];
+      #} # end if
 	} elsif ( $_[0]{colour_id} and ! $_[0]{colour} ) {
 		$_[0]{colour} = new openprint::StockColour( $_[0]{colour_id} )->name();
 	} # end if
@@ -667,7 +671,7 @@ sub weight {
 	my ( $self, $weight ) = @_;
 	if ( @_ > 1 ) {
 		$weight = openprint::StockWeight->transform( 'name', $weight );
-		if ( ! $_[0]{custom} ) {
+    #if ( ! $_[0]{custom} ) {
 			my $Weight = openprint::StockWeight->find_one('name lc'=>lc $weight);
 			if ( $Weight ) {
 				@{$_[0]}{'weight_id','weight'} = @$Weight{'id','name'};
@@ -675,9 +679,9 @@ sub weight {
 				$_[0]{weight} = $weight;
 				$_[0]{weight_id} = '';
 			} # end if
-		} else {
-			$_[0]{weight} = $weight;
-		} # end if
+      #} else {
+      #$_[0]{weight} = $weight;
+      #} # end if
 	} elsif ( $_[0]{weight_id} and ! $_[0]{weight} ) {
 		$_[0]{weight} = new openprint::StockWeight( $_[0]{weight_id} )->name();
 	} # end if
