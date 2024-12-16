@@ -898,8 +898,7 @@ sub paper_info {
   my ($log, $dbh, $pid) = @_;
 
   # Get the paper each signature uses.
-  my @papers = map signature_paper($log, $dbh, $pid, $_), 
-  check_for_service($log, $dbh, $pid, 'Printing');
+  my @papers = map signature_paper($log, $dbh, $pid, $_), check_for_service($log, $dbh, $pid, 'Printing');
 
   print STDERR "HAVE PAPER 1 " , Dumper(\@papers);
 
@@ -909,7 +908,7 @@ sub paper_info {
   my %dupe;
   for my $paper (@papers) {
     my $supplied = $paper->{is_supplied} || 0;
-    my $key = "$paper->{id} $supplied $paper->{width}_$paper->{height}";
+    my $key = join(' ', $paper->{id},$supplied, $paper->{name}, $paper->{finish}, $paper->{colour}, $paper->{weight}, $paper->{width},$paper->{height});
     $dupe{$key} = [] unless exists $dupe{$key};
     push @{ $dupe{$key} }, $paper;
   }
