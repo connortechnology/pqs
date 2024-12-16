@@ -1080,8 +1080,10 @@ sub price {
         $calc->($log, $dbh, $variable, $pid, $sid, $service_type, $specs)
     };
     if ($@) {
-        if (DEBUG) { die $@ }
-        else       { warn("Pricing $service_type errored: $@") }
+      #if (DEBUG) { die $@ }
+      #else       {
+          warn("Pricing $service_type errored: $@");
+          #}
 
         return 'error';
     }
