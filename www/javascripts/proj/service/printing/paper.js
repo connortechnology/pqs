@@ -211,8 +211,10 @@ function stock_unbind_all (e) {
 
 function paper_price_calc( element, group ) {
   var form = element.form;
-  if ( ! form )
+  if (!form)
     alert( 'no form' );
+  $('PaperAlert'+group).innerHTML = '';
+
   if ( element.name.match( /^StockPricePerM/ ) ) {
     console.log("From per m");
     const costperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
@@ -226,21 +228,23 @@ function paper_price_calc( element, group ) {
       } // end if
     } // end if
   } else {
+    element = form.elements['CustomStockPrice'+group];
     const costcwt = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+
     console.log('from /cwt', costcwt);
+    if (!costcwt) return;
 
     if ( get_value( form.elements['StockType'+group] ) == 'Roll' ) {
       console.log("Is roll");
       return;
-    } else {
-      if ( ! form.elements['txtCustomMWeight'+group].value ) {
-        $('PaperAlert'+group).innerHTML = 'Please enter MWeight';
-        return;
-      } // end if
-
-      form.elements['StockPricePerM'+group].value = do_decimals( costcwt * form.elements['txtCustomMWeight'+group].value / 100, 2 );
-      console.log("New value", ( costcwt * form.elements['txtCustomMWeight'+group].value / 100));
+    }
+    if ( ! form.elements['txtCustomMWeight'+group].value ) {
+      $('PaperAlert'+group).innerHTML = 'Please enter MWeight';
+      return;
     } // end if
+
+    form.elements['StockPricePerM'+group].value = do_decimals( costcwt * form.elements['txtCustomMWeight'+group].value / 100, 2 );
+    console.log("New value", ( costcwt * form.elements['txtCustomMWeight'+group].value / 100));
   } // end if
 } // end function
 
@@ -262,56 +266,59 @@ function calc_basis_weight_from_weight(weight_element) {
 }
 
 function mweight_to_gsm( form, signature ) {
-    const width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
-    const height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
-    const basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
-    const basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
+  const width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
+  const height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
+  const basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
+  const basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
   var mweight;
   var basis_weight;
-  if (form.elements['txtCustomMWeight'+signature].value) {
-    mweight = parseFloat(1*form.elements['txtCustomMWeight'+signature].value);
+  mweight = parseFloat(1*form.elements['txtCustomMWeight'+signature].value);
+  if (mweight && width && height) {
     basis_weight = (basis_width*basis_height) * mweight / (width*height);
     form.elements['basis_mweight'+signature].value = basis_weight;
+    // mweight is the weight of 1000 sheets, so calc the wpsi and multiply by 703064.5 to get gsm
+    //console.log( "wpsi: " + (mweight/1000)/(width*height) );
+    var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
+    form.elements['txtStockGSM'+signature].value = gsm;
   } // end if
-  // mweight is the weight of 1000 sheets, so calc the wpsi and multiply by 703064.5 to get gsm
-  //console.log( "wpsi: " + (mweight/1000)/(width*height) );
-  var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
-  form.elements['txtStockGSM'+signature].value = gsm;
 }
 
 function basis_weight_to_gsm( form, signature ) {
-    const width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
-    const height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
-    const basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
-    const basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
+  const width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
+  const height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
+  const basis_width = parseFloat(1*form.elements['basis_width'+signature].value);
+  const basis_height = parseFloat(1*form.elements['basis_height'+signature].value);
   var mweight;
-  var basis_weight;
-  if (form.elements['basis_mweight'+signature].value) {
-    basis_weight = parseFloat(1*form.elements['basis_mweight'+signature].value);
+  var basis_weight = parseFloat(1*form.elements['basis_mweight'+signature].value);
+  if (basis_weight) {
     mweight = (width*height) * basis_weight / (basis_width*basis_height);
     form.elements['txtCustomMWeight'+signature].value = mweight;
+    // mweight is the weight of 1000 sheets, so calc the wpsi and multiply by 703064.5 to get gsm
+    //console.log( "wpsi: " + (mweight/1000)/(width*height) );
+    var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
+    form.elements['txtStockGSM'+signature].value = gsm;
   } // end if
-  // mweight is the weight of 1000 sheets, so calc the wpsi and multiply by 703064.5 to get gsm
-  //console.log( "wpsi: " + (mweight/1000)/(width*height) );
-  var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
-  form.elements['txtStockGSM'+signature].value = gsm;
 }
 
 function gsm_to_mweight( form, signature ) {
   var gsm = parseFloat(1*form.elements['txtStockGSM'+signature].value);
-  var width;
-  var height;
-  var mweight;
+  if (gsm) {
+    var width;
+    var height;
+    var mweight;
 
-  width = parseFloat(1*form.elements['basis_width'+signature].value);
-  height = parseFloat(1*form.elements['basis_height'+signature].value);
-  mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
-  form.elements['basis_mweight'+signature].value = mweight;
+    width = parseFloat(1*form.elements['basis_width'+signature].value);
+    height = parseFloat(1*form.elements['basis_height'+signature].value);
+    mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
+    form.elements['basis_mweight'+signature].value = mweight;
 
-  width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
-  height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
-  mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
-  form.elements['txtCustomMWeight'+signature].value = mweight;
+    width = parseFloat(1*form.elements['txtSpecificStockWidth'+signature].value);
+    height = parseFloat(1*form.elements['txtSpecificStockHeight'+signature].value);
+    mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
+    form.elements['txtCustomMWeight'+signature].value = mweight;
+  } else {
+    basis_weight_to_gsm(form, signature);
+  }
 }
 
 function type_onchange(radio) {
@@ -391,18 +398,36 @@ function specific_stock_onchange(radio) {
     Stock_onchange(radio, signature);
   }
 }
+
 function brand_onchange(element) {
+  update_doublesided();
   update_basis_size(element);
   select_grade();
 }
+
 function finish_onchange(element) {
-  console.log('finish_onchange');
+  update_doublesided();
   update_basis_size(element);
   select_grade();
 }
+
 function weight_onchange(element) {
-  calc_basis_weight_from_weight(weight_element);
+  calc_basis_weight_from_weight(element);
 }
+
+function update_doublesided() {
+  const form = document.getElementById('f1');
+  if (form.elements['txtSpecificStockFinish'].value.match(/C1S/i)
+    || form.elements['txtSpecificStockFinish'].value.match(/1 ?Side/i)
+  ) {
+    set_rdb_value(form.elements['CustomSheetDoubleSided'], 'N');
+  } else if (form.elements['txtSpecificStockFinish'].value.match(/C2S/i)
+    || form.elements['txtSpecificStockFinish'].value.match(/2 ?Side/i)
+  ) {
+    set_rdb_value(form.elements['CustomSheetDoubleSided'], 'Y');
+  }
+}
+
 function select_grade() {
   /*
      #1  =>  '1 Gloss-coated stock',
@@ -434,4 +459,35 @@ function select_grade() {
   if (new_grade) {
     $j(grade_ddm).val(new_grade);
   }
+}
+function addstock(button) {
+//OpenWin = this.open(page,"CtrlWindow","top=80,left=100,screenX=100,screenY=80,width=1000,height=900,toolbar=no,menubar=no,location=yes, scrollbars=yes,resizable=yes");
+    console.log(button);
+    const form = button.form;
+    if (get_rdb_value(form, 'rdbSpecificStock') == 'Y') {
+        // Go direct to add new stock
+          window.open('/administrator/stock/stock.html?brand='+encodeURIComponent(form.elements['txtSpecificStockBrand'].value)
+              +'&'+'finish='+encodeURIComponent(form.elements['txtSpecificStockFinish'].value)
+              +'&'+'colour='+encodeURIComponent(form.elements['txtSpecificStockColour'].value)
+              +'&'+'weight='+encodeURIComponent(form.elements['txtSpecificStockWeight'].value)
+              +'&'+'calliper='+encodeURIComponent(form.elements['txtSpecificStockCalliper'].value)
+              +'&'+'type='+encodeURIComponent(get_value(form.elements['StockType']))
+              +'&'+'width='+encodeURIComponent(form.elements['txtSpecificStockWidth'].value)
+              +'&'+'height='+encodeURIComponent(form.elements['txtSpecificStockHeight'].value)
+              +'&'+'mweight='+encodeURIComponent(form.elements['txtCustomMWeight'].value)
+              +'&'+'basis_mweight='+encodeURIComponent(form.elements['basis_mweight'].value)
+              +'&'+'basis_width='+encodeURIComponent(form.elements['basis_width'].value)
+              +'&'+'basis_height='+encodeURIComponent(form.elements['basis_height'].value)
+              +'&'+'gsm='+encodeURIComponent(form.elements['txtStockGSM'].value)
+              +'&'+'grade='+encodeURIComponent(get_value(form.elements['StockGrade']))
+
+              );
+      } else {
+          // Go to stock list with filters already selected
+          window.open('/administrator/stock/list.html?brand='+encodeURIComponent(form.elements['stock_name'].value)
+              +'&'+'finish='+encodeURIComponent(form.elements['stock_finish'].value)
+              +'&'+'colour='+encodeURIComponent(form.elements['stock_colour'].value)
+              +'&'+'weight='+encodeURIComponent(form.elements['stock_weight'].value)
+            );
+        }
 }
