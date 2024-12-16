@@ -372,6 +372,11 @@ sub stock {
     $stock{height} = $specs->{txtSpecificStockHeight};
     $stock{cut_paper} = $specs->{cuttable};
     $stock{mweight} = $specs->{txtCustomMWeight};
+    $stock{doublesided} = $specs->{CustomSheetDoubleSided};
+    $stock{grade} = $specs->{StockGrade};
+    $stock{minimum_order} = $specs->{minimum_order};
+    $stock{sheets_per_package} = $specs->{sheets_per_package};
+    $stock{full_packages} = $specs->{full_packages};
     $stock{Price} = {
       Cost  => $$specs{CustomStockPrice} * $specs->{txtCustomMWeight} / (100 * 1000),
       Price => $$specs{CustomStockPrice} * $specs->{txtCustomMWeight} / (100 * 1000),
