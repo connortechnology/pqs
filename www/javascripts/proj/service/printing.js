@@ -23,11 +23,11 @@ function validate (e) {
 
     // Check that at least one side has some ink selected.
     if (! has_ink(form) )
-        text += 'At least one color must be selected\n';
+        text += 'At least one colour must be selected\n';
 
     // If stock exists at all (screen items don't use it), check that all
     // attributes are selected.
-    if ($('stock')) {
+    if ($('stock') && $('rdbSpecificStockN').checked) {
         var names = ['name', 'finish', 'color', 'weight'];
         var id    = ['name', 'finish', 'colour', 'weight'];
 
