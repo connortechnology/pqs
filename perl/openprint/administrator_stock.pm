@@ -436,9 +436,10 @@ sub stock {
     } # end if
   } elsif ( ! $Paper ) {
     $Paper = new openprint::Paper();
+    $openprint::log->debug(Data::Dumper::Dumper(\%param));
+    $Paper->set(\%param) if %param;
   }
 
-  $openprint::log->debug($Paper->to_string());
 	$variable{Stock} = $Paper;
 	$variable{stock_id} = $Paper->id();
 
