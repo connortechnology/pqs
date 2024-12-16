@@ -325,7 +325,7 @@ sub do_new_substitution {
       #$log->debug("Echo $1");
         my $return = eval $1;
         $log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-        $log->debug("Return : $return");
+        #$log->debug("Return : $return");
         return $return.variable_substitution( $r, $log, $dbh, $text, $variable );
     }
     elsif ( $command =~ /^include\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
@@ -976,7 +976,6 @@ sub hash_link {
 
 sub radio {
   my ( $name, $values, $selected, $options ) = @_;
-  my $log = session::log;
 
   $options = {} if !$options;
 
@@ -986,7 +985,6 @@ sub radio {
 
   my $html;
   if ( exists($$options{default}) and ! defined($selected) ) {
-$log->debug("Selecting default $$options{default} for radio $name");
     $selected = $$options{default};
     delete $$options{default};
   } # end if
@@ -994,7 +992,6 @@ $log->debug("Selecting default $$options{default} for radio $name");
   for (my $i = 0; $i < @{$values}; $i += 2) {
     my ($value, $label) = ( $$values[$i], $$values[$i+1] );
     $html .= $$container[0] if $container;
-    $log->debug(" $value $selected =?".($value eq $selected).'='.(($value eq $selected)?'checked="checked"':''));
     $html .= sprintf(q`
       <div class="form-check%7$s">
         <label class="form-check-label radio%7$s" for="%1$s%6$s%2$s">
@@ -1008,7 +1005,6 @@ $log->debug("Selecting default $$options{default} for radio $name");
         );
     $html .= $$container[1] if $container;
   } # end foreach value
-  $log->debug($html);
   return $html;
 } # end sub radio
 
