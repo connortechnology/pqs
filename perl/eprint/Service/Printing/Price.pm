@@ -1517,6 +1517,9 @@ sub calc_print_price {
 
     $price{'Buy Quantity'} = ceil( $price{'Buy Quantity'} / ($x * $y) );
   }
+  #if ($paper->{minimum_order} and $price{'Buy Quantity'} < $paper->{minimum_order}) {
+  #$price{'Buy Quantity'} = $paper->{minimum_order};
+  #}
 
   my $paper_price;
   my $roll;
@@ -1568,9 +1571,13 @@ sub calc_print_price {
     $price{'Buy Quantity'} = (int($price{'Buy Quantity'} / $pack_qty) + 1) * $pack_qty if $price{'Buy Quantity'} % $pack_qty;
     print STDERR "Have pack new buy quantity $price{'Buy Quantity'}\n";
 
-    # New buy quantity means getting a new dataset.
-    $paper_price = eprint::paper::get_price($log, $dbh, $variable, $paper, $press, $price{'Buy Quantity'});
-    #my $mod = $price{'Buy Quantity'} % $pack_qty;
+    if ($id) {
+      # New buy quantity means getting a new dataset.
+      $paper_price = eprint::paper::get_price($log, $dbh, $variable, $paper, $press, $price{'Buy Quantity'});
+      #my $mod = $price{'Buy Quantity'} % $pack_qty;
+    } elsif ($paper->{custom}) {
+      $$paper_price{buy_qty} = $price{'Buy Quantity'};
+    }
   }
   $price{'Sheet Price'} = $paper_price->{Price};
 
