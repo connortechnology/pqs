@@ -704,13 +704,17 @@ width: 17em;
 .Price input,
 .Basis input,
 .GSM input,
-.calliper input,
+.minimum_order input,
+.quantity_per_package input,
 
 .Size input {
   width: 50px;
   /*
   text-align: right;
   */
+}
+.calliper input {
+  width: 35px;
 }
 
 #minimum_order_units,
@@ -720,4 +724,16 @@ width: 17em;
   float: none;
   padding: 0;
   margin: 0;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
 }
