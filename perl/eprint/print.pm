@@ -964,9 +964,9 @@ sub signature_paper {
       mweight => 'txtCustomMWeight',
 
       is_supplied => 'stock_supplied',
-      q1          => 'hdnGrossSheetCount1',
-      q2          => 'hdnGrossSheetCount2',
-      q3          => 'hdnGrossSheetCount3',
+      q1          => 'hdnPaperBuyQuantity1',
+      q2          => 'hdnPaperBuyQuantity2',
+      q3          => 'hdnPaperBuyQuantity3',
       group       => 'txtSignatureQuantity',
       paper_price1       => 'txtStockPrice1',
       paper_price2       => 'txtStockPrice2',
