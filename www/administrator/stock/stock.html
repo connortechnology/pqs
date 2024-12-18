@@ -333,11 +333,11 @@ return '';
 					<label>Order Full Packages</label>
 					<? echo ( radio( 'full_packages', [ '1', 'Yes', '0', 'No' ], $$variable{Stock}->full_packages() ); ) ?>
 				</li>
+          <!--
 				<li class="minimum_order">
 					<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{Stock}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>)</label>
 					<? echo ( input( type=>'cardinal', id=>'minimum_order', name=>'minimum_order', value=>$$variable{Stock}->minimum_order() ); ) ?>
 				</li>
-          <!--
 				<li class="available_to_order">
 					<label>Available to Order (<span id="AvailableToOrderUnits"><? echo ( $$variable{Stock}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>)</label>
 					<? echo ( input( type=>'cardinal', id=>'available_to_order', name=>'available_to_order', value=>$$variable{Stock}->available_to_order() ); ) ?>
