@@ -370,7 +370,7 @@ sub stock {
     $stock{type} = lc $specs->{StockType};
     $stock{width} = $specs->{txtSpecificStockWidth};
     $stock{height} = $specs->{txtSpecificStockHeight};
-    $stock{cut_paper} = $specs->{cuttable};
+    $stock{cut_paper} = $stock{type} eq 'sheet' ? 'Y' : 'N';
     $stock{mweight} = $specs->{txtCustomMWeight};
     $stock{doublesided} = $specs->{CustomSheetDoubleSided};
     $stock{grade} = $specs->{StockGrade};
