@@ -249,20 +249,6 @@ function paper_price_calc( element, group ) {
 } // end function
 
 function calc_basis_weight_from_weight(weight_element) {
-  let re = /([\d\.]+)(lb|#)/i;
-  let matches = re.exec(weight_element.value);
-  if (matches) {
-    const weight = matches[1];
-    re = /^txtSpecificStockWeight(\d*)$/;
-    matches = re.exec(weight_element.name);
-    const signature = matches[1];
-    console.log(signature, weight);
-    const form = weight_element.form;
-    form.elements['basis_mweight'+signature].value = weight * 2;
-    mweight_to_gsm(form, signature);
-  } else {
-    console.log("No match against "+weight_element.value);
-  }
 }
 
 function mweight_to_gsm( form, signature ) {
@@ -412,7 +398,26 @@ function finish_onchange(element) {
 }
 
 function weight_onchange(element) {
-  calc_basis_weight_from_weight(element);
+  let re = /^txtSpecificStockWeight(\d*)$/;
+  let matches = re.exec(element.name);
+  const signature = matches[1];
+  re = /([\d\.]+)(lb|#)/i;
+  matches = re.exec(element.value);
+  const form = element.form;
+  if (matches) {
+    const weight = matches[1];
+    console.log(signature, weight);
+    form.elements['basis_mweight'+signature].value = weight * 2;
+    mweight_to_gsm(form, signature);
+  } else {
+    re = /([\d\.])PT/i;
+    if (matches = re.exec(element.value)) {
+      form.elements['txtSpecificStockCalliper'+signature].value = matches[1]/1000;
+      form.elements['txtSpecificStockCalliperPT'+signature].value = matches[1];
+    } else {
+      console.log("No match against "+element.value);
+    }
+  }
 }
 
 function update_doublesided() {
@@ -425,6 +430,17 @@ function update_doublesided() {
     || form.elements['txtSpecificStockFinish'].value.match(/2 ?Side/i)
   ) {
     set_rdb_value(form.elements['CustomSheetDoubleSided'], 'Y');
+  }
+}
+
+function calliper_onchange(element) {
+  const form = element.form;
+  if (element.name.match(/^txtSpecificStockCalliperPT/)) {
+    form.elements['txtSpecificStockCalliper'].value = element.value/1000;
+  } else if (element.name.match(/^txtSpecificStockCalliper/)) {
+    form.elements['txtSpecificStockCalliperPT'].value = element.value*1000;
+  } else {
+    console.log("No match");
   }
 }
 
