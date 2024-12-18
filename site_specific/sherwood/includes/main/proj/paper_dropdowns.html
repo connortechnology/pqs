@@ -36,8 +36,19 @@
         <input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{Signature}} ) ?>" on_input_this="weight_onchange"/>
       </li>
       <li class="calliper"><label>Calliper</label>
-        <? echo ( input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature}, value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ); ) ?>
-        inches
+        <? echo (
+          $$variable{'txtSpecificStockCalliperPT'.$$variable{Signature}} = $$variable{'txtSpecificStockCalliper'.$$variable{Signature}} * 1000;
+        return join("\n", 
+          input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature},
+          value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}},
+          oninput=>'calliper_onchange(this);' ),
+          'inches',
+          input( type=>'float', name=>'txtSpecificStockCalliperPT'.$$variable{Signature},
+          value=>$$variable{'txtSpecificStockCalliperPT'.$$variable{Signature}},
+          oninput=>'calliper_onchange(this);' ),
+          'PT',
+          );
+          ) ?>
       </li>
         <?echo( 
           my @types;
@@ -116,11 +127,13 @@
             ) ?>
         </select>
       </li>
+      <!--
       <li class="minimum_order">
         <label for="minimum_order<?Signature?>">Minimum Order</label>
         <? echo ( input( type=>'float', id=>'minimum_order'.$$variable{Signature}, name=>'minimum_order'.$$variable{Signature}, value=>$$variable{'minimum_order'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ); ) ?>
 <span id="minimum_order_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{Signature}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>
       </li>
+      -->
       <li class="quantity_per_package">
         <label for="sheets_per_package<?Signature?>">Quantity Per Package</label>
         <? echo ( input( type=>'float', id=>'sheets_per_package'.$$variable{Signature}, name=>'sheets_per_package'.$$variable{Signature}, value=>$$variable{'sheets_per_package'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ); ) ?> <span id="sheets_per_package_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{Signature}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>
