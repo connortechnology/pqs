@@ -27,7 +27,8 @@ function validate (e) {
 
     // If stock exists at all (screen items don't use it), check that all
     // attributes are selected.
-    if ($('stock') && $('rdbSpecificStockN').checked) {
+    if ($('stock')) {
+      if ($('rdbSpecificStockN').checked) {
         var names = ['name', 'finish', 'color', 'weight'];
         var id    = ['name', 'finish', 'colour', 'weight'];
 
@@ -37,6 +38,20 @@ function validate (e) {
             if (! (field && $F(field)) )
                 text += 'Please select a stock ' + names[i] + '\n';
         }
+      } else {
+        if (!$F(form.elements['txtSpecificStockCalliper'])) {
+          text += 'Please enter a calliper for the custom stock\n';
+        }
+        if (!$F(form.elements['CustomStockPrice'])) {
+          text += 'Please enter pricing for the custom stock\n';
+        }
+        if (!$F(form.elements['basis_mweight'])) {
+          text += 'Please enter one of MWeight, Basis Weight or GSM for the custom stock\n';
+        }
+        if (!($F(form.elements['txtSpecificStockWidth']) && $F(form.elements['txtSpecificStockHeight']))) {
+          text += 'Please enter the dimensions of the custom stock\n';
+        }
+      }
     }
 
     // If multi-version, make sure everything is allocated.
