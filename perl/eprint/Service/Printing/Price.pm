@@ -257,32 +257,20 @@ sub get_project_price {
 
   # Load signature specifications.
   if ($project->{is_multipage}) {
-    my @fields = qw( txtSignatureType txtSpreadWidth    
-    txtSpreadHeight txtSignatureSize );
+    my @fields = qw( txtSignatureType txtSpreadWidth txtSpreadHeight txtSignatureSize );
 
     $project->{signature} = {};
+    @{ $project->{signature} }{@fields} = get_specifications($log, $dbh, $pid, $sid, @fields);
 
-    @{ $project->{signature} }{@fields}
-    = get_specifications($log, $dbh, $pid, $sid, @fields);
-
-
-    print STDERR "HAVE PROJECT: ", Dumper($project, $spread);
+    #print STDERR "HAVE PROJECT: ", Dumper($project, $spread);
     $project->{width}  = $spread->{SpreadWidth} if  $spread->{SpreadWidth}  ;
     $project->{height} = $spread->{SpreadHeight} if $spread->{SpreadHeight}  ;
 
-
     # Load the preset spread size if the sizes weren't supplied (interior).
     unless ($project->{width} && $project->{height}) {
+      @$project{qw(width height)} = @{ $project->{signature} }{qw(txtSpreadWidth txtSpreadHeight)};
 
-
-      @$project{qw(width height)} 
-      = @{ $project->{signature} }{qw(txtSpreadWidth txtSpreadHeight)};
-
-
-
-      if (   $project->{template} 
-        && $project->{template} =~ /^(Single|Double)GateFold$/i )
-      {
+      if ($project->{template} && $project->{template} =~ /^(Single|Double)GateFold$/i ) {
         my $multiplier = $1 eq 'Double' ? 2 : 1;
 
         $project->{width} += $multiplier * $spread->{gatefold_lip};
@@ -301,8 +289,7 @@ sub get_project_price {
     # If we're multi-page and have a bindery type, find out if we need trim.
     # TODO This should really be stored as at compile-time and only looked up
     # in the imposition code.
-    $project->{trim} 
-    = eprint::Config->get(Imposition => lc "trim_$BINDERY_CLASS{$bind_type}") || 0;
+    $project->{trim} = eprint::Config->get(Imposition => lc "trim_$BINDERY_CLASS{$bind_type}") || 0;
   } else { $project->{trim} = 0; }
 
   # Colour bars and ignoring margins don't mix.
@@ -372,14 +359,13 @@ sub get_project_price {
 
   my $impositions = create_impositions($dbh, $project, $desired_size);
 
-  print STDERR "DONE IMPOSE 4 create_impositions \n";
+  #print STDERR "DONE IMPOSE 4 create_impositions \n";
 
   $te_impose = Time::HiRes::time() if TIMINGS;
 
   # If we don't have any valid impositions we can't continue and should tell
   # the client why.
   return ({ error => 'No valid impositions' }) unless scalar @$impositions;
-
 
   ## PRICING
   #
@@ -428,7 +414,6 @@ sub get_project_price {
   # A bit kludgey but it's better than thrashing the DB until we can
   # rewrite print pricing properly.
 
-
   # PRICING (Q1)
   #
   my %pms_prices;
@@ -436,7 +421,7 @@ sub get_project_price {
 
   $ts_price  = Time::HiRes::time()  if TIMINGS;
   $total_imp = scalar @$impositions if TIMINGS;
-  print STDERR "HAVE TOTAL IMPS: $total_imp \n";
+  #print STDERR "HAVE TOTAL IMPS: $total_imp \n";
 
   foreach $imp (@$impositions) {
     my $setup           = $imp->getSetup;
@@ -447,7 +432,7 @@ sub get_project_price {
     # (signature groups) overrides.
     if ($project->{is_multipage}) {
       #			die(Dumper($imp));
-      print STDERR "versions: SETUP $imp->{setup} SPREAD: $imp->{spreads} \n";
+      #print STDERR "versions: SETUP $imp->{setup} SPREAD: $imp->{spreads} \n";
 
       next if $project->{override}{spreads_on_form} 
       && $imp->{spreads} != $project->{override}{spreads_on_form};
@@ -675,7 +660,7 @@ sub get_project_price {
     my $total_cost = $price{'Total Cost'};
 
     $best_price->{"txtPrice$i"}      = $total_cost;
-    $best_price->{"txtStockPrice$i"} = $price{'txtStockPrice'};
+    $best_price->{"txtStockPrice$i"} = $price{txtStockPrice};
 
     if ($imp->getSetup) {
       $best_price->{"txtAdditionalPrice$i"}
@@ -844,12 +829,8 @@ sub fill_price_hash {
   my ($project, $imp, $price) = @_;
 
   # Press and run style
-  $price->{press}         = $price->{hdnEquipment1}
-  = $price->{hdnPress}
-  = $imp->{press};
-
+  $price->{press}         = $price->{hdnEquipment1} = $price->{hdnPress} = $imp->{press};
   $price->{runstyle}      = $imp->getStyle;
-
 
   # Imposition
   $price->{imp}                 = $imp;
@@ -935,7 +916,7 @@ sub fill_price_hash {
 
   # Total pricing.
   $price->{txtPrice1}      = $price->{'Total Cost'};
-  $price->{txtStockPrice1} = $price->{'txtStockPrice'};
+  $price->{txtStockPrice1} = $price->{txtStockPrice};
 
   return $price;
 }
@@ -946,7 +927,7 @@ sub create_impositions {
 
   my $start_time = Time::HiRes::time();
   # Get an iterator that generates imposition possibilities.
-  print STDERR "START IMPOSE $project->{id}\n";
+  #print STDERR "START IMPOSE $project->{id}\n";
   my $iter = impositions($dbh, $project, $start_time);
 
   my $end =  Time::HiRes::time() - $start_time;
@@ -1240,7 +1221,7 @@ sub calc_print_price {
 
   my $lay_versions = scalar(keys %vl);
 
-  print STDERR "HAVE PROJECT : " , Dumper($project, \%lay_count);
+  #print STDERR "HAVE PROJECT : " , Dumper($project, \%lay_count);
   # If we're running multiple versions (and we're not multi-page because we
   # don't handle that yet), calculate plates and paper wastage.
   #if (%$versions and $spreads_remaining <= 1 ) {
@@ -1283,14 +1264,14 @@ sub calc_print_price {
 
   $price{'hdnNumRuns'} = $numRuns;
 
-  print STDERR "HAVE COLOUR CHANGES: multi: $plate_multiplier, Changes: $plate_changes STYLE: $run_style IMP: $imposition Remain: $spreads_remaining \n";
-  print STDERR "HAVE NUM RUNS: $numRuns FORMS: $forms \n", Dumper($versions);
+  #print STDERR "HAVE COLOUR CHANGES: multi: $plate_multiplier, Changes: $plate_changes STYLE: $run_style IMP: $imposition Remain: $spreads_remaining \n";
+  #print STDERR "HAVE NUM RUNS: $numRuns FORMS: $forms \n", Dumper($versions);
 
   my $mp_versions = mp_versions($pid);
 
   my $plate_runs   = 1 * $mp_versions;  # Handled poorly especially when MV.
 
-  print STDERR "HAVE MP versions: $mp_versions PC FINAL: $plate_changes \n ";
+  #print STDERR "HAVE MP versions: $mp_versions PC FINAL: $plate_changes \n ";
 
   #$plate_changes  *= $mp_versions if $mp_versions > 1;
 
@@ -1368,10 +1349,7 @@ sub calc_print_price {
 
   # Get the number of impressions we can print on the first run before the
   # first sheet is dry
-  my $drying_max_impressions =
-  eprint::equipment::get_specification($log, $dbh,
-    'WT Drying Max Impressions',
-    undef, $press);
+  my $drying_max_impressions = eprint::equipment::get_specification($log, $dbh, 'WT Drying Max Impressions', undef, $press);
 
   # For W&T, W&F the case that the first press sheet is not dry when the
   # first run completed then we will have to wait for the sheet to dry
@@ -2397,7 +2375,7 @@ sub calc_sheet_qty {
   my $net_forms = $net_sheets;
 
   my ($form_multiplier) = 1;
-  if ( $$paper{'index'} ) {
+  if ( $$paper{'index'} and !exists($$paper{multipart})) {
     # We need to adjust the net sheets (and everything downstream from them)
     # here for multipart forms.
     $_ = "SELECT lngmultipart FROM tbl_Paper where lngIndex = '$$paper{'index'}'";
