@@ -55,133 +55,132 @@ sub product_only {
 
 # Extract the spread information from the printing form.
 sub spread {
-    my ($dbh, $press_type, $project_type, $specs, $pid) = @_;
+  my ($dbh, $press_type, $project_type, $specs, $pid) = @_;
 
-    my %spread;
+  my %spread;
 
-    # TEMPLATE AND DIMENSIONS
-    #
-    # TODO: Do something other than just accept these as-is and make cleaner.
-    $spread{template} = $specs->{template};
-    $spread{template} =~ tr/0-9a-zA-Z//cd;
+  # TEMPLATE AND DIMENSIONS
+  #
+  # TODO: Do something other than just accept these as-is and make cleaner.
+  $spread{template} = $specs->{template};
+  $spread{template} =~ tr/0-9a-zA-Z//cd;
 
-    # Make sure the project dimensions are valid positive reals. TODO: This
-    # doesn't make sure they're there, do that too.
-    for (keys %$specs) {
-        next unless /^(f(?:lat|inal))_(width|height)$/;
-        my ($type, $dim) = ($1, $2);
+  # Make sure the project dimensions are valid positive reals. TODO: This
+  # doesn't make sure they're there, do that too.
+  for (keys %$specs) {
+    next unless /^(f(?:lat|inal))_(width|height)$/;
+    my ($type, $dim) = ($1, $2);
 
-        my $value = $specs->{"${type}_$dim"};
-        $value =~ tr/0-9.//cd;
+    my $value = $specs->{"${type}_$dim"};
+    $value =~ tr/0-9.//cd;
 
-        die "Invalid dimesion for $type $dim. It must be a positve real number."
-          unless defined $value
-              && $value > 0
-              && $value =~ /^\d+\.?\d*$/;
+    die "Invalid dimesion for $type $dim. It must be a positve real number."
+    unless defined $value
+    && $value > 0
+    && $value =~ /^\d+\.?\d*$/;
 
-        $spread{$type}{$dim} = $specs->{"${type}_$dim"};
+    $spread{$type}{$dim} = $specs->{"${type}_$dim"};
+  }
+  # Multipage interior spreads don't pass their dimensions.
+  #
+  # die "Invalid dimensions"
+  #     unless $spread{flat}{width} && $spread{flat}{height};
+
+  $spread{gatefold_lip} = $specs->{gatefold_lip}+0
+  if $specs->{gatefold_lip};
+
+  # Colour critical
+  $spread{colourcritical_extra_waste} = $specs->{colourcritical_enabled} ? $specs->{colourcritical_extra_waste} : 0;
+  $spread{colourcritical_make_ready} = $specs->{colourcritical_enabled} ? $specs->{colourcritical_make_ready} : 0;
+
+
+  # BLEED, COLOUR BARS, AND REGISTRATION
+  #
+  $spread{bleed} = [0,0,0,0];
+
+  # See if the user chosen a bleed, and if so what size it is.
+  my $size = $specs->{bleed_size};
+  $size =~ tr/0-9.+-//cd;
+
+
+  # If only one bleed side is selected then we must force it into an
+  # array ref.
+  if ($specs->{bleed_sides} && ref $specs->{bleed_sides} ne 'ARRAY') {
+    $specs->{bleed_sides} = [ $specs->{bleed_sides} ];
+  }
+
+  # If the user has defined a bleed size we'll map that to each side they
+  # selected. For multipage right is considered the face and left the spine.
+  if ($size and $size =~ /^-?\d+\.?\d*$/ and $size > 0) {
+    for my $side (@{ $specs->{bleed_sides} }) {
+      $side =~ tr/0-3//cd;
+      next unless defined $side;
+
+      $spread{bleed}[$side] = $size + 0;
     }
-    # Multipage interior spreads don't pass their dimensions.
-    #
-    # die "Invalid dimensions"
-    #     unless $spread{flat}{width} && $spread{flat}{height};
+  }
 
-    $spread{gatefold_lip} = $specs->{gatefold_lip}+0
-        if $specs->{gatefold_lip};
+  # The user's grain direction preference.
+  $spread{grain} = $specs->{grain_direction};
 
-    # Colour critical
-    $spread{colourcritical_extra_waste} = $specs->{colourcritical_enabled} ? $specs->{colourcritical_extra_waste} : 0;
-    $spread{colourcritical_make_ready} = $specs->{colourcritical_enabled} ? $specs->{colourcritical_make_ready} : 0;
+  # Do they want a colour bar for this spread?
+  $spread{colour_bar} = ($specs->{colour_bar}) ? 1 : 0;
 
+  # COLOUR AND COATINGS 
+  $spread{side} = colours_coatings($specs); 
 
-    # BLEED, COLOUR BARS, AND REGISTRATION
-    #
-    $spread{bleed} = [0,0,0,0];
-    
-    # See if the user chosen a bleed, and if so what size it is.
-    my $size = $specs->{bleed_size};
-    $size =~ tr/0-9.+-//cd;
+  # Metal Effects
+  $spread{metal_effects} =     $specs->{s0_metal_effects} 
+  || $specs->{s1_metal_effects};
 
-    
-    # If only one bleed side is selected then we must force it into an
-    # array ref.
-    if ($specs->{bleed_sides} && ref $specs->{bleed_sides} ne 'ARRAY') {
-        $specs->{bleed_sides} = [ $specs->{bleed_sides} ];
-    }
+  # Chemical Emboss
+  $spread{chem_emboss} =       $specs->{s0_chem_emboss} 
+  || $specs->{s1_chem_emboss};
 
-    # If the user has defined a bleed size we'll map that to each side they
-    # selected. For multipage right is considered the face and left the spine.
-    if ($size and $size =~ /^-?\d+\.?\d*$/ and $size > 0) {
-        for my $side (@{ $specs->{bleed_sides} }) {
-            $side =~ tr/0-3//cd;
-            next unless defined $side;
-
-            $spread{bleed}[$side] = $size + 0;
-        }
-    }
-
-    # The user's grain direction preference.
-    $spread{grain} = $specs->{grain_direction};
-
-    # Do they want a colour bar for this spread?
-    $spread{colour_bar} = ($specs->{colour_bar}) ? 1 : 0;
-    
-    # COLOUR AND COATINGS 
-	$spread{side} = colours_coatings($specs); 
-
-    # Metal Effects
-    $spread{metal_effects} =     $specs->{s0_metal_effects} 
-                              || $specs->{s1_metal_effects};
-
-    # Chemical Emboss
-    $spread{chem_emboss} =       $specs->{s0_chem_emboss} 
-                              || $specs->{s1_chem_emboss};
-
-	#Screen Printing Foil
-	$spread{screen_foil} = 	     $specs->{s0_foil} && $specs->{s0_foil} ne 'None' ? 1 : 0;
-	$spread{screen_foil}++  if   $specs->{s1_foil} && $specs->{s1_foil} ne 'None';
+  #Screen Printing Foil
+  $spread{screen_foil} = 	     $specs->{s0_foil} && $specs->{s0_foil} ne 'None' ? 1 : 0;
+  $spread{screen_foil}++  if   $specs->{s1_foil} && $specs->{s1_foil} ne 'None';
 
 
-	$spread{underbase} = 	     $specs->{underbase} eq 'Discharge' ? 1 : 0;
+  $spread{underbase} = 	     $specs->{underbase} eq 'Discharge' ? 1 : 0;
 
 
-    # SUBSTRATE (STOCK)
-    $spread{stock} = $project_type ne 'ScreenItem' 
-        ? stock($dbh, $specs) 
-        : { substrate => 'item' };
+  # SUBSTRATE (STOCK)
+  $spread{stock} = $project_type ne 'ScreenItem' 
+  ? stock($dbh, $specs) 
+  : { substrate => 'item' };
 
-    # Large format options.
-    $spread{large_format} = {
-         mounting => $specs->{mounting_type},
-         binding  => $specs->{bind_method},
+  # Large format options.
+  $spread{large_format} = {
+    mounting => $specs->{mounting_type},
+    binding  => $specs->{bind_method},
 
-         quality  => [ $specs->{s0_quality} ,     $specs->{s1_quality}      ],
-         coverage => [ $specs->{s0_ink_coverage}, $specs->{s1_ink_coverage} ],
-         laminate => [ $specs->{s0_laminate},     $specs->{s1_laminate}     ],
-    } if $press_type eq 'inkjetprinter';
+    quality  => [ $specs->{s0_quality} ,     $specs->{s1_quality}      ],
+    coverage => [ $specs->{s0_ink_coverage}, $specs->{s1_ink_coverage} ],
+    laminate => [ $specs->{s0_laminate},     $specs->{s1_laminate}     ],
+  } if $press_type eq 'inkjetprinter';
 
-    # A jig is required to process this screen surface?
-	$spread{screen_jig} = $specs->{jig_required} 
-        if $press_type eq 'screen' && $project_type eq 'ScreenItem';
-	
-    # Number of sheets to put into the pad.
-    $spread{pad_sheets}   = $specs->{pad_sheets}; 
-	
-    # Additional plates are required to print this (int).
-    $spread{add_plates}   = $specs->{add_plates}; 
-	$spread{colour_changes} = colour_changes($specs);
+  # A jig is required to process this screen surface?
+  $spread{screen_jig} = $specs->{jig_required} 
+  if $press_type eq 'screen' && $project_type eq 'ScreenItem';
 
-	$spread{rfq_only}     = rfq_only($dbh, $pid);
-	$spread{product_only} = product_only($dbh, $pid);
+  # Number of sheets to put into the pad.
+  $spread{pad_sheets}   = $specs->{pad_sheets}; 
 
-	$spread{SpreadWidth} = $specs->{ovrSpreadWidth};
-	$spread{SpreadHeight} = $specs->{ovrSpreadHeight};
+  # Additional plates are required to print this (int).
+  $spread{add_plates}   = $specs->{add_plates}; 
+  $spread{colour_changes} = colour_changes($specs);
 
-print STDERR "HAVE RFQ ONLY: $spread{rfq_only} \n";
+  $spread{rfq_only}     = rfq_only($dbh, $pid);
+  $spread{product_only} = product_only($dbh, $pid);
 
+  $spread{SpreadWidth} = $specs->{ovrSpreadWidth};
+  $spread{SpreadHeight} = $specs->{ovrSpreadHeight};
 
-    return \%spread;
-}
+  #print STDERR "HAVE RFQ ONLY: $spread{rfq_only} \n";
+
+  return \%spread;
+} # end sub spread
 
 sub colour_changes {
 	my $specs = shift;
@@ -195,7 +194,7 @@ sub colour_changes {
 		}
 	} %{$specs};
 
-	print STDERR "HAVE COLOUR CHANGES: $colour_changes \n";
+  #print STDERR "HAVE COLOUR CHANGES: $colour_changes \n";
 
 	return $colour_changes;
 }
@@ -397,8 +396,8 @@ sub stock {
     $stock{weight} = $specs->{stock_weight};
 
     # Add the calliper as everyone wants it.
-    $stock{calliper} = $dbh->selectrow_array(qq{
-      SELECT strcalliper FROM tbl_paper 
+    @stock{'calliper','multipart'} = $dbh->selectrow_array(qq{
+      SELECT strcalliper, lngmultipart FROM tbl_paper 
       WHERE strname = ?
       AND strfinish = ?
       AND strcolour = ?
@@ -501,7 +500,7 @@ sub overrides {
   }
 
   $override{chargefor} = $specs->{chargefor};
-  print STDERR "HAVE OVERRIDES: ", Dumper(\%override);
+  print STDERR "HAVE OVERRIDES: ", Dumper(\%override) if %override;
 
   return \%override;
 }
