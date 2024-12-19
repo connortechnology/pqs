@@ -55,13 +55,12 @@ use Data::Dumper;
     for my $format (@$formats) {
       my @list = find_substrates($dbh, $project->{paper}, $format);
 
-      print STDERR "HAVE SUBSTRATE LIST: ", Dumper(\@list);
+      #print STDERR "HAVE SUBSTRATE LIST: ", Dumper(\@list);
 
       push @substrates, 
       grep { substrate_fits_project($_, $project)       }
       map  { $_->{type} eq 'sheet' ? cut_sheet($_) : $_ }
       @list;
-
     }
 
     # Allow only the chosen substrate if the override was set. TODO Filter
