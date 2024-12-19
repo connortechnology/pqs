@@ -1,6 +1,7 @@
 package eprint::service;
 use strict;
 use warnings;
+require openprint;
 
 no warnings qw(uninitialized);
 
@@ -297,10 +298,10 @@ sub valid_equipment {
   #my $specs = shift;
 	use session;
 	my $r = session::r;
-	my $specs;
-	map { $specs->{$_} = $r->param($_) } $r->param();
+	my $specs = \%openprint::param;
+  #map { $specs->{$_} = $r->param($_) } $r->param();
 
-	print STDERR "DUMPER SPECS: " , Dumper($specs, $specs->{chkOverrideEquipment1});
+  #print STDERR "DUMPER SPECS: " , Dumper($specs, $specs->{chkOverrideEquipment1});
 
 	my $override;
 	if ( $specs->{chkOverrideEquipment1} ) {
@@ -312,8 +313,6 @@ sub valid_equipment {
 	if ( $override ) {
 		$over_sql = " AND eq.lngindex = $override ";
 	}
-
-	print STDERR "HAVE OVERRRIDE:  $override \n";
 
 	my $sql = qq{
 		SELECT equipment 
