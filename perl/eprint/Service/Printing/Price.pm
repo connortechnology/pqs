@@ -40,6 +40,7 @@ require misc;
 require eprint::material;
 require eprint::imposition;
 require eprint::paper;
+require openprint;
 
 use base qw(Exporter);
 our @EXPORT      = 'calc';
@@ -107,7 +108,7 @@ sub calc {
   # Keep Version information. Needed for auto-calc.
   delete $specs->{$_} for grep {! $_ =~ /mv/} keys %$specs;
 
-  print STDERR "HAVE IMP", Dumper($specs->{imp});
+  #print STDERR "HAVE IMP", Dumper($specs->{imp});
 
   $specs->{$_} = $pricing->{$_} for keys %$pricing;
 
@@ -424,6 +425,17 @@ sub get_project_price {
   #print STDERR "HAVE TOTAL IMPS: $total_imp \n";
 
   foreach $imp (@$impositions) {
+    if ( $openprint::r ) {
+      $openprint::r->print("\n");
+      if ( $openprint::r->connection()->aborted() ) {
+        return {error => 'Aborted'};
+      } else {
+        print STDERR "Not aborted\n";
+      } # end if
+    } else {
+      die "No openprint";
+    } # end if
+
     my $setup           = $imp->getSetup;
     my $run_style       = $imp->getStyle;
     my $press           = $imp->getPress;
@@ -1215,8 +1227,7 @@ sub calc_print_price {
     $price{reject_mv_layout} = 1;
     print STDERR "versions REJECT MV LAYOUT \n", Dumper(\%lay_count);
   } else {
-    print STDERR "versions PASS MV LAYOUT \n";
-
+    #print STDERR "versions PASS MV LAYOUT \n";
   }
 
   my $lay_versions = scalar(keys %vl);
@@ -2481,7 +2492,7 @@ sub calc_sheet_qty {
   );
 
 
-  print STDERR "HAVE SHEETY QTY: ", Dumper(\%sheet_qty);
+  #print STDERR "HAVE SHEETY QTY: ", Dumper(\%sheet_qty);
   return %sheet_qty;
 }
 
