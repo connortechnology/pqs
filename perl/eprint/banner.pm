@@ -116,40 +116,37 @@ sub banner_action {
 sub select_banner {
     my ( $log, $dbh, $cust_id, $user_id ) = @_;
 
-	my @banners = ();
+    my @banners = ();
 
-	$_ = "SELECT lngBannerIndex\n".
-		"FROM tbl_Banners_in_Categories\n".
-		"WHERE lngCategoryIndex IN (SELECT lngCategoryID FROM tbl_Customers_in_Categories WHERE lngCustomerID='$cust_id')";
+    $_ = "SELECT lngBannerIndex\n".
+	    "FROM tbl_Banners_in_Categories\n".
+	    "WHERE lngCategoryIndex IN (SELECT lngCategoryID FROM tbl_Customers_in_Categories WHERE lngCustomerID='$cust_id')";
     push @banners, sql::sql_statement( $log, $dbh, $_ ) if $cust_id; 
-	$_ = "SELECT lngBannerIndex\n".
-		"FROM tbl_Banners_in_Categories\n".
-		"WHERE lngCategoryIndex IN (SELECT lngCategoryIndex FROM tbl_Users_in_Categories WHERE lngUserIndex='$user_id')";
+    $_ = "SELECT lngBannerIndex\n".
+	    "FROM tbl_Banners_in_Categories\n".
+	    "WHERE lngCategoryIndex IN (SELECT lngCategoryIndex FROM tbl_Users_in_Categories WHERE lngUserIndex='$user_id')";
     push @banners, sql::sql_statement( $log, $dbh, $_ ) if $user_id; 
     if ( @banners == 0 ) {
-        $_ = "SELECT lngBannerIndex\n".
-            "FROM tbl_Banners_in_Categories\n".
-            "WHERE lngCategoryIndex = ( SELECT lngIndex FROM tbl_Marketing_Categories WHERE strName = 'default' )";
-		@banners = sql::sql_statement( $log, $dbh, $_ ); 
+	    $_ = "SELECT lngBannerIndex\n".
+		    "FROM tbl_Banners_in_Categories\n".
+		    "WHERE lngCategoryIndex = ( SELECT lngIndex FROM tbl_Marketing_Categories WHERE strName = 'default' )";
+	    @banners = sql::sql_statement( $log, $dbh, $_ ); 
     } # end if
 
-	my $banner = '';
-	if ( @banners ) {
-		my $whichone = int(rand scalar(@banners));
+    my $banner = '';
+    if ( @banners ) {
+	    my $whichone = int(rand scalar(@banners));
 
-		my ( $imageurl, $clickurl )  = sql::sql_statement( $log, $dbh, qq{
-            SELECT strImageURL, strClickURL 
-            FROM tbl_Banners WHERE lngIndex = $banners[$whichone]
-        }); 
-		
-        $banner = qq{<img src="/images/banners/$imageurl" />};
+	    my ( $imageurl, $clickurl )  = sql::sql_statement( $log, $dbh, qq{ SELECT strImageURL, strClickURL FROM tbl_Banners WHERE lngIndex = $banners[$whichone] }); 
 
-        # Add a link around the banner if it has a URL associated with it.
-        if ($clickurl) {
-            $banner = qq{<a href="$clickurl" target="_blank">$banner</a>};
-        }
-	}
-	return $banner;
+	    $banner = qq{<img src="/images/banners/$imageurl" />};
+
+# Add a link around the banner if it has a URL associated with it.
+	    if ($clickurl) {
+		    $banner = qq{<a href="$clickurl" target="_blank">$banner</a>};
+	    }
+    }
+    return $banner;
 }
 
 1;
