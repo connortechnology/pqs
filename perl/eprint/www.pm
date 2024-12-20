@@ -1,6 +1,7 @@
 package eprint::www;
 use strict;
 use warnings;
+use utf8;
 
 use Apache2::Const qw(:common HTTP_MOVED_TEMPORARILY);
 use Apache2::Request   ();
@@ -196,10 +197,11 @@ sub handler {
 
     # this is where we actually send the page to the client
     $r->content_type('text/html');
+#print STDERR $file_data;
     print( $file_data );
   }
 
-  print STDERR "END REQUEST \n\n\n\n\n";
+  #print STDERR "END REQUEST \n\n\n\n\n";
 
   $dbh->disconnect;
   $gdb->disconnect;
@@ -243,7 +245,7 @@ sub parse_page {
   my ($r, $log, $cookie, $dbh, $variable, $page) = @_;
   my $status = OK;
 
-  print STDERR "START PARSE PAGE \n\n";
+  #print STDERR "START PARSE PAGE \n\n";
   # The module dispatches by 'section' based on the uri.
   my @path     = grep { $_ } split '/', $page;
   my $filename = pop @path;
@@ -252,7 +254,7 @@ sub parse_page {
   my $first = @path ? shift @path : '';
   my $second = @path ? shift @path : '';
 
-  print STDERR "HAVE SECTIONS FIRST: $first SECOND: $second \n";
+  #print STDERR "HAVE SECTIONS FIRST: $first SECOND: $second \n";
   if ( $first eq 'notification' ) {
     require eprint::notification;
     eprint::notification::handler( $variable, $page );
