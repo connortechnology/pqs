@@ -367,6 +367,7 @@ sub error {
     $variable->{error}    = $error;
     $variable->{details}  = $details;
     $variable->{Redirect} = configuration::get_value($log, $dbh, 'errorpage');
+    return undef;
 }
 
 sub unescape {
