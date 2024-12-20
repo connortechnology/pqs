@@ -16,6 +16,7 @@ require eprint::greetings;
 require eprint::user;
 require eprint::order;
 require MIME::QuotedPrint;
+require crypto;
 
 # displays the login page, and populates the destination variable
 sub login_display {
@@ -35,10 +36,12 @@ sub verify_login {
 
     # convert the email address to lower case. All email addresses stored in
     # DB will be lower case.
-    my $email = sql::escape($r->param('txtEmail'));
-    $email =~ tr/[A-Z]/[a-z]/;
+    my $email = lc $r->param('txtEmail');
+    if (!$email) {
+	    $error = "No password provided. Authentication Failed.";
+	    return misc::error($log, $dbh, $variable, $error, $details);
+    }
 
-    require crypto;
     my $crypt = crypto::get_crypt();
     my $password = misc::escape($crypt->encrypt($r->param('txtPassword')));
 
@@ -224,7 +227,6 @@ sub email_password {
 
     eval {
       my %info;
-      require crypto;
       my $crypt = crypto::get_crypt();
       # data coming from db may not be utf8
       utf8::encode($password);
@@ -252,12 +254,11 @@ sub email_password {
 sub login_app_display {
     my ($r, $log, $dbh, $variable) = @_;
 
-print STDERR "START APP \n";
 #    $_ = "SELECT strCompanyName, strCompanyName FROM tbl_Customer ORDER BY lower(strCompanyName)";
 #    $$variable{'ddmCompany'}       = ssi::fill_drop_down($log, $dbh, $_);
 
-	display_select_customer($r, $log, $dbh, $variable, $variable->{cust_id});
-	$variable->{ddmCompany} = $variable->{ddmCustomer};
+    display_select_customer($r, $log, $dbh, $variable, $variable->{cust_id});
+    $variable->{ddmCompany} = $variable->{ddmCustomer};
 
     $$variable{'ddmStateProvince'} = ssi::return_states_and_provinces();
     $$variable{'ddmCountry'}       = ssi::return_countries();
@@ -273,18 +274,22 @@ sub login_app_process {
 	#map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
 	my $result;
 
+	if (!$r->param('g-recaptcha-response')) {
+		return misc::error( $log, $dbh, $variable,
+				'Bad Field', 'You must provide the Captcha.  Please press the back button to try again'  );
+	}
+
 	eval {
 		my $c = Captcha::reCAPTCHA->new;
 		my $challenge = 1;
 		my $response  = $r->param('g-recaptcha-response');
-
-    my $key = "6LdWLJkqAAAAAO8NEwEMoeumR5L0wB9mCagA3ZrP";
-
+		my $key = "6LdWLJkqAAAAAO8NEwEMoeumR5L0wB9mCagA3ZrP";
 
 		#print STDERR "START LOGIN APP PROCESS \n\n\n";
 #unless ( $variable->{user_id} ) {
 # Verify submission
 	$result = $c->check_answer_v2($key, $response, $ENV{'REMOTE_ADDR'});
+};
 
 	#print STDERR "CONTINUE LOGIN APP PROCESS:  \n\n\n", Dumper($result);
 
@@ -293,7 +298,6 @@ sub login_app_process {
 		return misc::error( $log, $dbh, $variable, 
 				'Bad Field', 'Your Captcha is incorrect. Please press the back button to try again'  );
 	}
-};
 	#}
 	#
 
@@ -348,7 +352,6 @@ sub login_app_process {
         $agent = configuration::get_value($log, $dbh, 'UserRegistrationEmail');
     }
 
-    require crypto;
     my $crypt = crypto::get_crypt();
 
     # No errors, We are in go status
@@ -382,12 +385,6 @@ sub login_app_process {
       . sql::escape($r->param('txtCompanyName')) . "')\n";
     ($cust_id) = sql::sql_statement($log, $dbh, $_);
 
-	if ( $r->param('txtCompanyName') eq 'Pleasanton' ) {
-		$cust_id = '101' unless 
-				 	lc($r->param('txtEmail')) =~ /safeway/
-				||	lc($r->param('txtEmail')) =~ /pdcenters/;
-	}
-
     if ($cust_id eq '') {
 
         # Choose a price list for the customer. First check to see if there's
@@ -401,7 +398,7 @@ sub login_app_process {
         # If the specified price list doesn't exist, we'll do something silly
         # and just choose the first price list in the system.
         $pricelist = $dbh->selectrow_array(q{ SELECT min(id) FROM pricelist })
-            unless $dbh->selectrow_array(q{ SELECT id FROM pricelist WHERE id = ? }, undef, $pricelist);
+            unless $pricelist and $dbh->selectrow_array(q{ SELECT id FROM pricelist WHERE id = ? }, undef, $pricelist);
 
 
         my $cust = eprint::obj_customer->new($log, $dbh, $cust_id);
@@ -481,11 +478,8 @@ sub login_app_process {
             SELECT strPassword FROM tbl_Customer_Users WHERE lngUserID = ?
         }, undef, $user_id) if $user_id;
 
-      require crypto;
         my $crypt = crypto::get_crypt();
         $info{'password'} = $crypt->decrypt(misc::unescape($password));
-		
-
 
         # Send confirmation
         my $email_template = misc::load_file($r, '/email/email_template.html');
@@ -554,14 +548,12 @@ sub login_app_process {
         );
 
         # TODO This should just get the last_insert_id().
-        my $user_id = $dbh->selectrow_array(q{
-            SELECT lngUserID FROM tbl_Customer_Users WHERE strEmail = ?
-          }, undef, $email);
+        my $user_id = $dbh->selectrow_array(q{SELECT lngUserID FROM tbl_Customer_Users WHERE strEmail = ?}, undef, $email);
 
         $$variable{'CustomerIndex'} = $info{'CustomerIndex'} = $cust_id;
         $$variable{'UserIndex'}     = $info{'UserIndex'}     = $user_id;
 
-		$dbh->do(q{INSERT INTO user_gift VALUES ( ?,?)}, undef, $user_id, $r->param('gift')) if $r->param('gift');
+	$dbh->do(q{INSERT INTO user_gift VALUES ( ?,?)}, undef, $user_id, $r->param('gift')) if $r->param('gift');
 
         if (configuration::get_value($log, $dbh, 'NewNonFirstUserAccountActivation') ne 'Y') {
             # send notifications
@@ -599,11 +591,12 @@ sub login_app_process {
             SMTP    => configuration::get_value($log, $dbh, 'Mail Server'),
             FROM    => $agent,
             TO      => $agent,
+	    BCC => 'iconnor@connortechnology.com',
             SUBJECT => 'New Login Application' 
         );
         misc::send_email_with_attachment($r, $log, \%mail, ('', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable'));
 
-        if (configuration::get_value($log, $dbh, 'NewNonFirstUserAccountActivation' ) ne 'Y'){ 
+        if (configuration::get_value($log, $dbh, 'NewNonFirstUserAccountActivation') ne 'Y') { 
             # Send confirmation
             my $email_template =
               misc::load_file($r, '/email/email_template.html');
@@ -887,7 +880,6 @@ sub change_password {
           misc::error($log, $dbh, $variable, 'No password.', 'We were unable to retrieve a valid password from the database.    This is likely a programming error.    Please report to support\@print-quotes-software.com.' );
     }
 
-    require crypto;
     my $crypt = crypto::get_crypt();
     $password = $crypt->decrypt(misc::unescape($password));
 
