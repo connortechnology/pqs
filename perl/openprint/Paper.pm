@@ -14,13 +14,13 @@ use vars qw( $log %variable %config );
 require sql;
 require misc;
 #require openprint::Manufacturer;
-#require openprint::PaperPrice;
+require openprint::PaperPrice;
 #require openprint::Skid;
 #require openprint::SkidContent;
 require openprint::StockBrand;
-#require openprint::StockFinish;
-#require openprint::StockColour;
-#require openprint::StockWeight;
+require openprint::StockFinish;
+require openprint::StockColour;
+require openprint::StockWeight;
 #require openprint::StockQuality;
 #require openprint::StockGroup;
 #require openprint::StockMaterial;
@@ -1313,8 +1313,8 @@ sub wpsi {
       }
     } elsif ( $$self{mweight} and $$self{width} and $$self{height} ) {
 			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
-$$self{wpsi} *= 2 if $self->is_envelope();
-$log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height}) = $$self{wpsi}");
+      $$self{wpsi} *= 2 if $self->is_envelope();
+      $log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height}) = $$self{wpsi}");
     } elsif ( $$self{gsm} and $$self{gsm} ne 'unknown') {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
 $log->debug("Setting wpsi from gsm to $$self{gsm} / 703064.5 = $$self{wpsi}");
@@ -1714,7 +1714,11 @@ sub basis_mweight {
 	if ( ! $$self{basis_mweight} ) {
 		my $wpsi = $$self{wpsi};
 		if ( $wpsi ) {
-      $wpsi /= 2 if $self->is_envelope();
+      #$openprint::log->debug("calcing basis_weight from wpsi: $$self{basis_mweight} = $wpsi * $$self{basis_width} * $$self{basis_height} * 1000");
+      if ($self->is_envelope()) {
+        $openprint::log->debug("halving wpsi because envelope");
+        $wpsi /= 2;
+      }
 			$$self{basis_mweight} = Math::Round::nearest(0.01, $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
 $openprint::log->debug("calcing basis_weight from wpsi: $$self{basis_mweight} = $wpsi * $$self{basis_width} * $$self{basis_height} * 1000");
     } elsif ( ( $self->weight() =~ /(\d+)lb/i ) or ( $$self{weight} =~ /(\d+)#/i ) ) {
@@ -1743,6 +1747,10 @@ sub basis_width {
 			$$self{basis_width} = 20;
 		} elsif ( $self->is_bond() or $self->is_envelope() ) {
 			$$self{basis_width} = 17;
+    } elsif ($self->is_index()) {
+      $$self{basis_width} = 25.5;
+    } elsif ($self->is_bristol()) {
+      $$self{basis_width} = 22.5;
 		} else {
 			$$self{basis_width} = 25;
 		} # end if
@@ -1761,6 +1769,10 @@ sub basis_height {
 			$$self{basis_height} = 26;
 		} elsif ( $self->is_bond() or $self->is_envelope() ) {
 			$$self{basis_height} = 22;
+    } elsif ($self->is_index()) {
+			$$self{basis_height} = 30.5;
+    } elsif ($self->is_bristol()) {
+			$$self{basis_height} = 28.5;
 		} else {
 			$$self{basis_height} = 38;
 		} # end if
@@ -1974,7 +1986,7 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
   if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ne 'N') ) {
     push @results, 'appears to be C1S, but is marked double sided.';
   }
-	if ( $Paper->weight() =~ /(\d+) *lb/i ) {
+	if ( $Paper->weight() =~ /(\d+) *lb/i or $Paper->weight() =~ /(\d+) *#/) {
 		if ( int($Paper->basis_mweight()) != 2*$1 ) {
 			push @results, 'may have wrong basis weight ('.int($Paper->basis_mweight()).'. Should probably be '.2*$1;
 		}
@@ -2013,6 +2025,24 @@ sub is_bond {
 			$Paper->finish() =~ /bond/i
 			or 
 			$Paper->weight() =~ /bond/i);
+}
+sub is_index {
+	my $Paper = shift;
+	return 
+			($Paper->brand() =~ /index/i
+			 or
+			$Paper->finish() =~ /index/i
+			or 
+			$Paper->weight() =~ /index/i);
+}
+sub is_bristol {
+	my $Paper = shift;
+	return 
+			($Paper->brand() =~ /bristol/i
+			 or
+			$Paper->finish() =~ /bristol/i
+			or 
+			$Paper->weight() =~ /bristol/i);
 }
 
 sub is_envelope {
