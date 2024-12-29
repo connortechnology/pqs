@@ -1320,7 +1320,7 @@ print STDERR "MY QTYS: $sq \n";
 			
 
 					$dbh->do(q{ UPDATE tbl_project_contents SET strstatus = 'uncalculated'
-						WHERE strservicetype = 'Shipping' } );
+						WHERE lngprojectindex=? strservicetype = 'Shipping' }, {}, $pid );
 				}
                
                 $modified = 2; # Full recalculate
