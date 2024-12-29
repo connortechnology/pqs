@@ -371,7 +371,7 @@ sub stock {
     $stock{height} = $specs->{txtSpecificStockHeight};
     $stock{cut_paper} = $stock{type} eq 'sheet' ? 'Y' : 'N';
     $stock{mweight} = $specs->{txtCustomMWeight};
-    $stock{doublesided} = $specs->{CustomSheetDoubleSided};
+    $stock{doublesided} = $specs->{doublesided};
     $stock{grade} = $specs->{StockGrade};
     $stock{minimum_order} = $specs->{minimum_order};
     $stock{sheets_per_package} = $specs->{sheets_per_package};
