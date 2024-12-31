@@ -790,3 +790,14 @@ margin-right: .2rem;
 fieldset .form-check-inline label.radio {
   float: none;
 }
+
+table.List, fieldset table.List {
+	table-layout: fixed;
+	width: 100%;
+  margin: 0!important;
+}
+
+table .checkbox {
+  width: 30px;
+  text-align: center;
+}
