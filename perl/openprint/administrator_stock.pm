@@ -383,7 +383,10 @@ sub stock {
         foreach my $press_type (@press_types) {
           my $rec = ($recs{$Type->id()} and $recs{$Type->id()}{$$press_type{id}}) ? $recs{$Type->id()}{$$press_type{id}} : new openprint::PaperRecommendation();
           if ($param{'chkPRF'.$Type->id().'-'.$$press_type{id}}) {
-            $rec->set({paper_id=>$Paper->id(), projecttype_id=>$Type->id(), presstype_id=>$$press_type{id},
+            $rec->set({
+                paper_id=>$Paper->id(),
+                projecttype_id=>$Type->id(), 
+                presstype_id=>$$press_type{id},
                 (visible=>($param{'chkPRFvisible'.$Type->id()} and $param{'chkPRFvisible'.$Type->id()} eq 'Y' ) ? 'Y' : 'N'),
               });
             push @{$$Paper{Recommendations}}, $rec;
