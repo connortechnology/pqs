@@ -1,6 +1,5 @@
 <? echo (
 	return '<tr class="error"><td colspan="6">'.$variable{error}.'</td></tr>' if $variable{error};
-	return if ! $$variable{Price}->id();
 	my $html = '';
 	my $Pricelist = $$variable{Pricelist};
 	my $service = $$variable{service};
@@ -64,13 +63,19 @@
 				input( type=>'float', name=>'priceperfoot-'.$Price->id(), value=>$Price->priceperfoot(), oninput=>'calc_price(this);check_price(this);' ).
 				'</td>';
 		} # end if
+    if (!$Price->id()) {
+      # Need to include pricelist_id
+      $html .= ssi::input(name=>'pricelist_id-', value=>$$variable{Pricelist}->id(), type=>'hidden');
+    }
+    
 	} # end if
 	$html .= '<td class="Discount">'.radio('discountable-'.$Price->id(), ['Y','Yes','N','No'], $Price->discountable(), { onclick=>'check_price(this);' } ).'</td>';
 	$html .= '<td class="buttons">'.
-			join("\n", 
+    join("\n", $$Price{id} ? (
 				button( 'x'.$Price->id(), { onclick=>qq`delPrice( $$Price{id} );`, text=>'X' } ),
 				button( 'c'.$Price->id(), { onclick=>qq`copyPrice( $$Price{id} );`, text=>'C' } ),
+        ):()
 				).'</td>';
-		$html .= '</tr>';
+  $html .= '</tr>';
 	return $html;
 ) ?>
