@@ -187,3 +187,21 @@ function set_basis_dimensions(width, height) {
     basis_height.value = height;
   basis_weight_to_gsm($('f1'));
 }
+
+function calc_from_calliper_pt(calliper_pt) {
+  const form = calliper_pt.form;
+  form.elements['calliper'].value = calliper_pt.value/1000;
+  form.elements['calliper_mm'].value = do_decimals(calliper_pt.value*25.4/1000,3);
+}
+
+function calc_from_calliper(calliper) {
+  const form = calliper.form;
+  form.elements['calliper_pt'].value = calliper.value*1000;
+  form.elements['calliper_mm'].value = do_decimals(calliper.value*25.4,3);
+}
+
+function calc_from_calliper_mm(calliper_mm) {
+  const form = calliper_mm.form;
+  form.elements['calliper'] = do_decimals( calliper_mm.value*0.0393701, 3 );
+  form.elements['calliper_pt'].value = form.elements['calliper'].value*1000;
+}
