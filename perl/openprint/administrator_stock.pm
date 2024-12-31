@@ -9,6 +9,7 @@ require openprint::Paper;
 #require openprint::pricelist;
 #require openprint::paper_price;
 #require openprint::paper_priceset;
+#require openprint::Equipment_Stock_Setting;
 require openprint::Company;
 require openprint::StockBrand;
 require openprint::StockFinish;
@@ -144,10 +145,10 @@ sub list {
 		foreach my $Paper ( @Papers ) {
 			my $NewPaper = $Paper->copy();
 			$NewPaper->save();
-			foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
-				$Setting = $Setting->copy();
-				$Setting->save({'stock_id'=>$NewPaper->id()});
-			} # end foreach
+      #foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+      #$Setting = $Setting->copy();
+      #$Setting->save({'stock_id'=>$NewPaper->id()});
+      #} # end foreach
 		} # end foreach
 	} elsif ( $param{btnFunction} eq 'ApplyChanges' ) {
 		foreach my $Paper ( @Papers ) {
@@ -263,7 +264,6 @@ sub stock {
 
   my $Paper = openprint::Paper->find_one( id=>$param{stock_id} ) if $param{stock_id};
   if ( $param{btnFunction} ) {
-
     if ( $param{btnFunction} eq 'Delete' ) {
       if ( ! $Paper ) {
         $variable{error} .= 'No stock selected for delete.<br/>';
@@ -272,10 +272,14 @@ sub stock {
       }
       my $new = $Paper->next();
       $new = $Paper->previous() if $new == $Paper;
-      $Paper->delete();
-      $variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
-      $Paper = $new;
-      $param{stock_id} = $Paper->id();
+      $variable{error} = $Paper->delete();
+      if (!$variable{error}) {
+        $variable{information} .= 'Stock ' . $Paper->id() . ' has been deleted.';
+        $Paper = $new;
+        $param{stock_id} = $Paper->id();
+        $variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
+      }
+
     } elsif ( $param{btnFunction} eq 'Copy' ) {
       if ( ! $Paper ) {
         $variable{error} .= "No stock selected for copy.<br/>";
@@ -285,12 +289,13 @@ sub stock {
       $variable{information} .= 'Stock ' . $Paper->link_to( $Paper->id() ) . ' has been copied.';
       my $NewPaper = $Paper->copy();
       $NewPaper->save();
-      foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
-        $Setting = $Setting->copy();
-        $Setting->save({'stock_id'=>$NewPaper->id()});
-      } # end foreach
+      #foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+      #$Setting = $Setting->copy();
+      #$Setting->save({'stock_id'=>$NewPaper->id()});
+      #} # end foreach
       $Paper = $NewPaper;
       $param{stock_id} = $Paper->id();
+      $variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
     } elsif ( $param{btnFunction} eq 'Save' ) {
 
       $Paper = new openprint::Paper() if ! $Paper;
@@ -355,12 +360,14 @@ sub stock {
       $Paper->message( $param{message} );
       $Paper->user_type( $param{user_type} );
 
+      $variable{error} .= $Paper->save();
+
       my @old_recommendations = $Paper->Recommendations();
       @{$$Paper{Recommendations}} = ();
       my %recs;
       my @ProjectTypes = openprint::ProjectType->find();
       foreach my $rec (@old_recommendations) {
-        $recs{$$rec{projecttype_id}} = {} if !  $recs{$$rec{projecttype_id}};
+        $recs{$$rec{projecttype_id}} = {} if ! $recs{$$rec{projecttype_id}};
         $recs{$$rec{projecttype_id}}{$$rec{presstype_id}} = $rec;
       }
       my @additions;
@@ -392,7 +399,12 @@ sub stock {
 
       my $message = '';
 # Save prices
-      foreach my $Price ( $Paper->Prices() ) {
+      foreach my $Price ( $Paper->Prices(), new openprint::PaperPrice() ) {
+        if (! $Price->paper_id()) {
+          $Price->paper_id($Paper->id());
+          $Price->pricelist_id($param{'pricelist_id-'});
+          $Price->service('Material');
+        }
 
         my $new_values = {
           equipment_id	=> $param{"equipment_id-$$Price{id}"},
@@ -411,7 +423,6 @@ sub stock {
         } # end if Price has changed
       } # end foreach Price
 
-      $variable{error} .= $Paper->save();
       (new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock'), note=>join('<br/>', @changes) });
       if ( ! $variable{error} ) {
         $variable{information} .= 'Stock ' . $Paper->link_to( $$Paper{id} ) . ' has been saved.';
@@ -434,10 +445,13 @@ sub stock {
       $Paper = $Paper->next();
       $param{stock_id} = $Paper->id();
     } # end if
-  } elsif ( ! $Paper ) {
+  } elsif (!$Paper) {
     $Paper = new openprint::Paper();
     $openprint::log->debug(Data::Dumper::Dumper(\%param));
     $Paper->set(\%param) if %param;
+    my $price = new openprint::PaperPrice();
+    $price->set({cost=>$param{price}, price=>$param{price}, service=>'Material', Paper=>$Paper});
+    $Paper->Prices([$price]);
   }
 
 	$variable{Stock} = $Paper;
