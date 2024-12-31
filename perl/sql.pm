@@ -33,8 +33,8 @@ sub execute {
   my $print_sql = $sql;
   my $starttime;
 
-  #$l = $log if ! defined $l;
-  #$d = $dbh if ! $d;
+  $l = $openprint::log if ! defined $l;
+  $d = $openprint::dbh if ! $d;
 
   if ( $l and DEBUG ) {
     $print_sql = $sql;
