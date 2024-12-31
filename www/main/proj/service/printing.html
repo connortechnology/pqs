@@ -10,7 +10,7 @@
 	<!--#include virtual="/includes/web_page_meta.html" -->
 	<!--#include virtual="/includes/h1-main-css.html" -->
 
-	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+  <link href="<?hash_link(/styles/forms.css)?>" rel="stylesheet" media="screen" />
   <link href="<?hash_link(/styles/project_create.css)?>" rel="stylesheet" type="text/css" />
 
 	<!--#include virtual="/includes/h2-js.html" -->
@@ -18,22 +18,6 @@
 	<script src="/javascripts/other.js"></script>
 	<script src="/javascripts/jsrsClient.js"></script>
 	<script src="/javascripts/proj/utilities.js"></script>
-
-  <script src="<?hash_link(/javascripts/proj/service.js)?>"></script>
-  <script src="<?hash_link(/javascripts/proj/service/printing.js)?>"></script>
-  <script src="<?hash_link(/javascripts/proj/service/printing/paper.js)?>"></script>
-	<script src="/javascripts/proj/service/printing/templates.js"></script>
-	<?if project.is_multipage ?>
-	<script src="/javascripts/proj/service/printing/multipage.js"></script>
-	<?endif project.is_multipage ?>
-	<? if ( $variable->{project}{press_type}{ref} eq 'inkjetprinter' ) ?>
-	<script src="/javascripts/proj/service/printing/largeformat.js"></script>
-	<script><?stitch_or_weld?></script>
-	<? endif ( $variable->{project}{press_type}{ref} eq 'inkjetprinter' ) ?>
-
-	<? if ( $variable->{project}{type}{ref} eq 'PresentationFolders' ) ?>
-		<script src="/javascripts/proj/service/printing/presentation_folder.js"></script>
-	<? endif ( $variable->{project}{type}{ref} eq 'PresentationFolders' ) ?>
 
 	<?if project.is_multipage ?>
 		<script>
@@ -151,8 +135,27 @@
 	<!--#include virtual="/includes/f1-main.html" -->
 	<!--#include virtual="/includes/main/proj.html" -->
 	<!--#include virtual="/includes/f2-main.html" -->
+  <script src="<?hash_link(/javascripts/proj/service.js)?>"></script>
+  <script src="<?hash_link(/javascripts/proj/service/printing.js)?>"></script>
+  <script src="<?hash_link(/javascripts/proj/service/printing/paper.js)?>"></script>
+	<script src="/javascripts/proj/service/printing/templates.js"></script>
+	<?if project.is_multipage ?>
+	<script src="/javascripts/proj/service/printing/multipage.js"></script>
+	<?endif project.is_multipage ?>
+	<? if ( $variable->{project}{press_type}{ref} eq 'inkjetprinter' ) ?>
+	<script src="/javascripts/proj/service/printing/largeformat.js"></script>
+	<script><?stitch_or_weld?></script>
+	<? endif ( $variable->{project}{press_type}{ref} eq 'inkjetprinter' ) ?>
+
+	<? if ( $variable->{project}{type}{ref} eq 'PresentationFolders' ) ?>
+		<script src="/javascripts/proj/service/printing/presentation_folder.js"></script>
+	<? endif ( $variable->{project}{type}{ref} eq 'PresentationFolders' ) ?>
+
   <script>
-      addEventListener("DOMContentLoaded", (event) => { update_event_bindings(); });
+    Event.observe(window, 'load', function() {
+      update_event_bindings();
+//calc('f1');
+          });
   </script>
 
 </body>
