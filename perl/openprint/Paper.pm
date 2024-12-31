@@ -338,17 +338,17 @@ sub save {
 		sql::end_transaction( $openprint::dbh, $ac );
 		return $error;
 	} # end if
-	sql::execute( undef, undef, q{DELETE FROM StockBrands WHERE id NOT IN (SELECT DISTINCT brand_id FROM Papers)} );
-	sql::execute( undef, undef, q{DELETE FROM StockFinishes WHERE id NOT IN (SELECT DISTINCT finish_id FROM Papers)} );
-	sql::execute( undef, undef, q{DELETE FROM StockColours WHERE id NOT IN (SELECT DISTINCT colour_id FROM Papers)} );
-	sql::execute( undef, undef, q{DELETE FROM StockWeights WHERE id NOT IN (SELECT DISTINCT weight_id FROM Papers)} );
-	sql::execute( undef, undef, q{DELETE FROM StockGroups WHERE id NOT IN (SELECT DISTINCT group_id FROM Papers)} );
-	sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
-	sql::execute( undef, undef, q{DELETE FROM StockQualities WHERE id NOT IN (SELECT DISTINCT quality_id FROM Papers)} );
+	sql::execute( undef, undef, 'DELETE FROM StockBrands WHERE id NOT IN (SELECT DISTINCT brand_id FROM '.$openprint::Paper::table.')' );
+	sql::execute( undef, undef, 'DELETE FROM StockFinishes WHERE id NOT IN (SELECT DISTINCT finish_id FROM '.$openprint::Paper::table.')' );
+	sql::execute( undef, undef, 'DELETE FROM StockColours WHERE id NOT IN (SELECT DISTINCT colour_id FROM '.$openprint::Paper::table.')' );
+	sql::execute( undef, undef, 'DELETE FROM StockWeights WHERE id NOT IN (SELECT DISTINCT weight_id FROM '.$openprint::Paper::table.')' );
+	sql::execute( undef, undef, 'DELETE FROM StockGroups WHERE id NOT IN (SELECT DISTINCT group_id FROM '.$openprint::Paper::table.')' );
+	sql::execute( undef, undef, 'DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM '.$openprint::Paper::table.')' );
+	sql::execute( undef, undef, 'DELETE FROM StockQualities WHERE id NOT IN (SELECT DISTINCT quality_id FROM '.$openprint::Paper::table.')' );
 
 	my @Recommendations = $self->Recommendations();
   my @ids = map {$$_{id}} @Recommendations;
-	sql::execute( undef, undef, 'DELETE FROM '.$openprint::PaperRecommendation::table.' WHERE '.$openprint::PaperRecommendation::fields{paper_id}.'=? and id NOT IN ('.join(',', map { '?' } @ids).')', $$self{id}, @ids );
+	sql::execute( undef, undef, 'DELETE FROM '.$openprint::PaperRecommendation::table.' WHERE '.$openprint::PaperRecommendation::fields{paper_id}.'=? and id NOT IN ('.join(',', map { '?' } @ids).')', $$self{id}, @ids ) if @ids;
 	foreach my $rec ( @Recommendations ) {
     $rec->save();
     if ( $openprint::dbh->errstr() ) {
@@ -374,11 +374,11 @@ sub merge {
 	my ( $self, $Duplicate ) = @_;
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::update( undef, undef, 'Paper_allocations', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
-	sql::update( undef, undef, 'Paper_Inventory', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+  #sql::update( undef, undef, 'Paper_Inventory', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	sql::update( undef, undef, 'skid_contents', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
-	sql::update( undef, undef, 'paper_prices', [ 'lngpaperindex=?', $Duplicate->id() ], 'lngpaperindex', $self->id() );
-	sql::update( undef, undef, 'paper_recommendations', [ 'lngpaperindex=?', $Duplicate->id() ], 'lngpaperindex', $self->id() );
-	sql::update( undef, undef, 'manifest_content_types', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+	sql::update( undef, undef, 'tbl_paper_prices', [ 'lngpaperindex=?', $Duplicate->id() ], 'lngpaperindex', $self->id() );
+	sql::update( undef, undef, 'tbl_paper_recommendations', [ 'lngpaperindex=?', $Duplicate->id() ], 'lngpaperindex', $self->id() );
+  #sql::update( undef, undef, 'manifest_content_types', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	$Duplicate->delete();
 	$self->save({in_stock=>undef});
 	sql::end_transaction( $openprint::dbh, $ac );
@@ -394,44 +394,44 @@ sub delete {
 	#sql::update( undef, undef, 'manifest_content_types', ['paper_id=?', $$self{id}], 'paper_id', undef );
 	sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE paper_id=?}, $$self{id} );
 	$error .= $openprint::dbh->errstr();
-	sql::execute( undef, undef, q{DELETE FROM Paper_Inventory WHERE paper_id=?}, $$self{id} );
+  #sql::execute( undef, undef, q{DELETE FROM Paper_Inventory WHERE paper_id=?}, $$self{id} );
+  #$error .= $openprint::dbh->errstr();
+	sql::execute( undef, undef, q{DELETE FROM tbl_paper_prices WHERE lngpaperindex=?}, $$self{id} );
 	$error .= $openprint::dbh->errstr();
-	sql::execute( undef, undef, q{DELETE FROM Paper_prices WHERE lngpaperindex=?}, $$self{id} );
-	$error .= $openprint::dbh->errstr();
-	sql::execute( undef, undef, q{DELETE FROM Paper_recommendations WHERE lngpaperindex=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM tbl_paper_recommendations WHERE lngpaperindex=?}, $$self{id} );
 	$error .= $openprint::dbh->errstr();
 	sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE paper_id=?}, $$self{id} );
 	$error .= $openprint::dbh->errstr();
-	sql::execute( undef, undef, q{DELETE FROM inventory_check_entries WHERE paper_id=?}, $$self{id} );
-	$error .= $openprint::dbh->errstr();
-	sql::execute( undef, undef, q{UPDATE manifest_content_types SET paper_id=NULL WHERE paper_id=?}, $$self{id});
-	$error .= $openprint::dbh->errstr();
-	foreach my $ESS ( openprint::Equipment_Stock_Setting->find( stock_id=>$$self{id} ) ) {
-		$ESS->destroy();
-	} # end foreach
-	$error .= $openprint::dbh->errstr();
-	sql::execute( undef, undef, q{DELETE FROM Papers WHERE id=?}, $$self{id} );
+  #sql::execute( undef, undef, q{DELETE FROM inventory_check_entries WHERE paper_id=?}, $$self{id} );
+  #$error .= $openprint::dbh->errstr();
+  #sql::execute( undef, undef, q{UPDATE manifest_content_types SET paper_id=NULL WHERE paper_id=?}, $$self{id});
+  #$error .= $openprint::dbh->errstr();
+  #foreach my $ESS ( openprint::Equipment_Stock_Setting->find( stock_id=>$$self{id} ) ) {
+  #$ESS->destroy();
+  #} # end foreach
+  #$error .= $openprint::dbh->errstr();
+	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$fields{id}.'=?', $$self{id} );
 	$error .= $openprint::dbh->errstr();
 
-	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT brand_id FROM Papers WHERE brand_id=?}, $$self{brand_id} ) ) {
+	if ( ! sql::execute( undef, undef, 'SELECT DISTINCT brand_id FROM '.$table.' WHERE brand_id=?', $$self{brand_id} ) ) {
 		sql::execute( undef, undef, q{DELETE FROM StockBrands WHERE id=?}, $$self{brand_id} );
 	$error .= $openprint::dbh->errstr();
 	} # end if
-	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT finish_id FROM Papers WHERE finish_id=?}, $$self{finish_id} ) ) {
+	if ( ! sql::execute( undef, undef, 'SELECT DISTINCT finish_id FROM '.$table.' WHERE finish_id=?', $$self{finish_id} ) ) {
 		sql::execute( undef, undef, q{DELETE FROM StockFinishes WHERE Id=?}, $$self{finish_id} );
 	$error .= $openprint::dbh->errstr();
 	} # end if
-	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT colour_id FROM Papers WHERE colour_id=?}, $$self{colour_id} ) ) {
+	if ( ! sql::execute( undef, undef, 'SELECT DISTINCT colour_id FROM '.$table.' WHERE colour_id=?', $$self{colour_id} ) ) {
 		sql::execute( undef, undef, q{DELETE FROM StockColours WHERE Id=?}, $$self{colour_id} );
 	$error .= $openprint::dbh->errstr();
 	} # end if
-	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT weight_id FROM Papers WHERE weight_id=?}, $$self{weight_id} ) ) {
+	if ( ! sql::execute( undef, undef, 'SELECT DISTINCT weight_id FROM '.$table.' WHERE weight_id=?', $$self{weight_id} ) ) {
 		sql::execute( undef, undef, q{DELETE FROM StockWeights WHERE Id=?}, $$self{weight_id} );
 	$error .= $openprint::dbh->errstr();
 	} # end if
-	sql::execute( undef, undef, q{DELETE FROM StockGroups WHERE id NOT IN (SELECT DISTINCT group_id FROM Papers)} );
+	sql::execute( undef, undef, 'DELETE FROM StockGroups WHERE id NOT IN (SELECT DISTINCT group_id FROM '.$table.')' );
 	$error .= $openprint::dbh->errstr();
-	sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
+	sql::execute( undef, undef, 'DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM '.$table.')' );
 	$error .= $openprint::dbh->errstr();
 	
 	# Add record to audit log - action "Delete Paper".
@@ -890,8 +890,7 @@ sub allocate {
 
 	$quantity = POSIX::ceil( $quantity );
 
-
-require openprint::PaperAllocation;
+  require openprint::PaperAllocation;
 	my $PA = new openprint::PaperAllocation();
 	$PA->save( {
 			paper_id		=>	$$self{id},
@@ -1028,7 +1027,7 @@ sub previous {
 	my $self = shift;
 	my @papers = openprint::Paper->find( 
 columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-order=>'brand,finish,colour,weight,width,height' );
+order=>'brand,finish,colour,weight,'.$fields{width}.','.$fields{height} );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i-1] if ($papers[$i] == $self )and ($i > 0);
 	} # end if
@@ -1041,13 +1040,13 @@ sub next {
 	my @papers = openprint::Paper->find( 
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 			brand_id=>$$self{brand_id},
-order=>'brand,finish,colour,weight,dblwidth,dblheight' );
+order=>'brand,finish,colour,weight,'.$fields{width}.','.$fields{height} );
 	for ( my $i = 0; $i < @papers-1; $i += 1 ) {
 		return $papers[$i+1] if ( $papers[$i]{id} == $$self{id} ) and ($i < @papers-1);
 	} # end if
 	@papers = openprint::Paper->find( 
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-order=>'brand,finish,colour,weight,dblwidth,dblheight' );
+order=>'brand,finish,colour,weight,'.$fields{width}.','.$fields{height} );
 	for ( my $i = 0; $i < @papers-1; $i += 1 ) {
 		return $papers[$i+1] if ( $papers[$i]{id} == $$self{id} ) and ($i < @papers-1);
 	} # end if
@@ -1991,11 +1990,11 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
 			push @results, 'may have wrong basis weight ('.int($Paper->basis_mweight()).'. Should probably be '.2*$1;
 		}
 	}
-  my $old_wpsi = 1*$$Paper{wpsi};
+  #my $old_wpsi = 1*$$Paper{wpsi};
 
-	if ( $old_wpsi ne $Paper->wpsi(undef) ) {
-			push @results, "invalid value for wpsi $old_wpsi should maybe be $$Paper{wpsi}";
-	}
+  #if ( $old_wpsi ne $Paper->wpsi(undef) ) {
+  #push @results, "invalid value for wpsi $old_wpsi should maybe be $$Paper{wpsi}";
+  #}
 	if ( $Paper->calliper() < 0.002 ) {
 			push @results, "calliper $$Paper{calliper}  appears to be too low.";
 	}
@@ -2078,9 +2077,9 @@ sub destroy {
       return $error;
     } # end if
   } # end foreach
-  sql::execute(undef,undef, 'DELETE FROM Paper_recommendations WHERE lngPaperIndex=?', $$self{id});
-  sql::execute(undef,undef, 'DELETE FROM inventory_check_entries WHERE paper_id=?', $$self{id});
-  sql::update(undef,undef, 'manifest_content_types', ['paper_id=?', $$self{id}], paper_id=>undef);
+  sql::execute(undef,undef, 'DELETE FROM tbl_paper_recommendations WHERE lngPaperIndex=?', $$self{id});
+  #sql::execute(undef,undef, 'DELETE FROM inventory_check_entries WHERE paper_id=?', $$self{id});
+  #sql::update(undef,undef, 'manifest_content_types', ['paper_id=?', $$self{id}], paper_id=>undef);
   $error .= $self->SUPER::destroy();
   sql::end_transaction( $openprint::dbh, $ac );
   return $error;
