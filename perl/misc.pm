@@ -339,15 +339,24 @@ sub export {
 }
 
 sub get_destination {
-    my ( $r, $log, $uri ) = @_;
+  my ( $r, $log, $uri ) = @_;
 
-    my $dest = $uri ? $uri : $r->uri;
+  my $dest = $uri ? $uri : $r->uri;
 
-    my $query_string = $r->method ne 'GET' 
-        ? undef
-        : Apache2::Util::escape_path(join(q{;}, map { "$_=" . $r->param($_) } $r->param()), $r->pool);
-
-    return $query_string ? "$dest?$query_string" : $dest;
+  my @values;
+  foreach my $key ( $r->param() ) {
+    next if $key eq 'password';
+    push @values, map { $key.'='.$_ } ( ref $r->param($key) eq 'ARRAY' ? @{$r->param($key)} : $r->param($key) );
+  } # end ofreach
+  if ( @values ) {
+    $dest .= '?' . join('&', @values );
+  } # end if
+  return $dest;
+  #my $query_string = $r->method ne 'GET' 
+  #? undef
+  #: Apache2::Util::escape_path(join(q{;}, map { "$_=" . $r->param($_) } $r->param()), $r->pool);
+  #
+  #return $query_string ? "$dest?$query_string" : $dest;
 }
 
 sub pretty_date {
