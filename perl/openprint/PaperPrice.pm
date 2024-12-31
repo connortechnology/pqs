@@ -9,7 +9,7 @@ require openprint::Equipment;
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
 $debug = 0;
 $table = 'tbl_paper_prices';
-$serial = 'paper_prices_id_seq';
+$serial = 'tbl_paper_prices_id_seq';
 
 %fields = (
 	id			=>	'id',
@@ -24,8 +24,10 @@ $serial = 'paper_prices_id_seq';
 	discountable	=>	'ysndiscountable',
 	interpolate	=>	'interpolate',
   service		=>	'service',
-  #equipment_id	=>	'equipment_id',
+  equipment_id	=>	'equipment_id',
 	stock_id		=>	undef,
+  Stock=>undef,
+  Paper => undef,
 );
 %find_fields = (
 	stock_id	=>	'lngpaperindex',
@@ -51,6 +53,7 @@ $serial = 'paper_prices_id_seq';
 sub Pricelist {
 	return new openprint::Pricelist( $_[0]{pricelist_id} );
 } # end sub Pricelist
+
 sub Equipment {
 	return new openprint::Equipment( $_[0]{equipment_id} );
 } # end sub Pricelist
@@ -65,11 +68,12 @@ sub costperm {
 	my $self = shift;
 	my $Paper = $self->Paper();
 	if ( $Paper->wpsi() ) {
-		# ROll papers won't have an mweight
+		# Roll papers won't have an mweight
 		return Math::Round::nearest(0.01, $$self{cost} * $Paper->wpsi() * $Paper->width() * $Paper->height() * 10 );
 	} elsif ( $Paper->mweight() ) {
 		return Math::Round::nearest(0.01, $$self{cost} * $Paper->mweight() / 100 );
 	} # end if
+  $openprint::log->error("Can't calculate costperm");
 } # end sub costperm
 
 sub priceperm {
@@ -82,11 +86,13 @@ sub priceperm {
 		return Math::Round::nearest(0.01, $$self{price} * $Paper->mweight() / 100 );
 	} # end if
 } # end sub priceperm
+
 sub costperfoot {
 	my $self = $_[0];
 	my $Paper = $self->Paper();
 	return Math::Round::nearest(0.01, ($$self{cost}/100 ) * ( $Paper->wpsi() * 144 ) );
 }
+
 sub priceperfoot {
 	my $self = $_[0];
 	my $Paper = $self->Paper();
@@ -118,7 +124,14 @@ sub stock_id {
 } # end sub stock_id
 
 sub Stock {
-	return new openprint::Paper( $_[0]{paper_id} );
+  my $self = shift;
+  $$self{Stock} = shift if @_;
+  $$self{Stock} = new openprint::Paper( $_[0]{paper_id} ) if !$$self{Stock};
+  return $$self{Stock};
+}
+
+sub Paper {
+  return Stock(@_);
 }
 
 sub id_string {
