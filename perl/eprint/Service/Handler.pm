@@ -184,30 +184,30 @@ print STDERR "Forbidden for $pid\n";
 
 # Map the uri to a valid service type, return a hash ref of it's attributes.
 sub uri_to_service {
-    my ($r, $dbh) = @_;
+  my ($r, $dbh) = @_;
 
-    # Get the requested service from the URI.
-    my $location = $r->location;
-    my $service_type  = $r->uri;
-       $service_type  =~ s/$location\/?//i;
-       $service_type  =~ tr/a-zA-Z0-9_-//cd;
+  # Get the requested service from the URI.
+  my $location = $r->location;
+  my $service_type  = $r->uri;
+  $service_type  =~ s/$location\/?//i;
+  $service_type  =~ tr/a-zA-Z0-9_-//cd;
 
-    return undef unless $service_type;
+  return undef unless $service_type;
 
-    # Look up the service type.
-    my $service = $dbh->selectrow_hashref(q{
-       SELECT lngindex    AS id,     strid       AS type,
-              strname     AS name,   strcategory AS category,
-              strmodule   AS module, lngdep      AS level,
-              strurl      AS page
-        FROM tbl_service_types
-        WHERE strmodule IS NOT NULL
-          AND lower(strid) = ?
+  # Look up the service type.
+  my $service = $dbh->selectrow_hashref(q{
+    SELECT lngindex    AS id,     strid       AS type,
+    strname     AS name,   strcategory AS category,
+    strmodule   AS module, lngdep      AS level,
+    strurl      AS page
+    FROM tbl_service_types
+    WHERE strmodule IS NOT NULL
+    AND lower(strid) = ?
     }, undef, lc($service_type));
 
-    return undef unless $service->{id};
+  return undef unless $service->{id};
 
-    return load_service_type($service);
+  return load_service_type($service);
 }
 
 # Show the page if we're doing a GET with just PID and SID, return an JSON
