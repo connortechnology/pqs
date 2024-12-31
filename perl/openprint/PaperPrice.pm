@@ -74,6 +74,7 @@ sub costperm {
 		return Math::Round::nearest(0.01, $$self{cost} * $Paper->mweight() / 100 );
 	} # end if
   $openprint::log->error("Can't calculate costperm");
+  return undef;
 } # end sub costperm
 
 sub priceperm {
@@ -85,6 +86,7 @@ sub priceperm {
 	} elsif ( $Paper->mweight() ) {
 		return Math::Round::nearest(0.01, $$self{price} * $Paper->mweight() / 100 );
 	} # end if
+  return undef;
 } # end sub priceperm
 
 sub costperfoot {
@@ -126,7 +128,7 @@ sub stock_id {
 sub Stock {
   my $self = shift;
   $$self{Stock} = shift if @_;
-  $$self{Stock} = new openprint::Paper( $_[0]{paper_id} ) if !$$self{Stock};
+  $$self{Stock} = new openprint::Paper( $$self{paper_id} ) if !$$self{Stock};
   return $$self{Stock};
 }
 
