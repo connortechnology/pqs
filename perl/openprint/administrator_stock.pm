@@ -397,8 +397,11 @@ sub stock {
           }
         } # end foreach press_type
       } # end foreach project_type
-      push @changes, "Recommendations added: " . join(',', map { $_->ProjectType()->name().' on '.$_->presstype() } @additions).'<br/>';
-      push @changes, "Recommendations removed: " . join(',', map { $_->ProjectType()->name().' on '.$_->presstype() } @removals).'<br/>';
+      push @changes, "Recommendations added: " . join(',', map { $_->ProjectType()->name().' on '.$_->presstype() } @additions).'<br/>' if @additions;
+      push @changes, "Recommendations removed: " . join(',', map { $_->ProjectType()->name().' on '.$_->presstype() } @removals).'<br/>' if @removals;
+      if (@additions or @removals) {
+        $Paper->save();
+      }
 
       my $message = '';
 # Save prices
