@@ -49,5 +49,16 @@ sub ProjectType {
 	return openprint::ProjectType->find( id=>$_[0]{projecttype_id} );
 } # end sub ProjectType
 
+sub presstype {
+  my %press_types = @{$dbh->selectall_arrayref(q{
+  SELECT e.lngindex AS id, strname AS name
+  FROM equipment_type_service_type t, tbl_equipment_type e
+  WHERE t.equipment_type = e.lngindex AND t.service_type=?
+  ORDER BY 2
+  }, { Slice => {} }, 68)}; # Printing
+
+  return $press_types{$_[0]{presstype_id}};
+}
+
 1;
 __END__
