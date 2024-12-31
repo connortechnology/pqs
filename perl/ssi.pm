@@ -67,6 +67,14 @@ use List::Util   qw( min               );
 require File::Slurp;
 require File::Basename;
 
+require Date::Parse;
+require Date::Format;
+require DateTime::Format::Pg;
+require DateTime::TimeZone;
+require POSIX;
+my $parser = 'DateTime::Format::Pg';
+
+
 use constant NUMBER => 
     qw(zero one two three four five six seven eight nine ten);
 
@@ -1339,8 +1347,228 @@ sub count_lines {
 } # end sub count_lines
 
 sub include_logs {
-  return '';
+  my $Object = $_[0];
+  $variable{Object} = $Object;
+  setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
+  setup_date_select( $variable{uri}, 'log_created_on_end', '' );
+  $session{$variable{uri}.'?log_limit'} = 50 if ! exists $session{$variable{uri}.'?log_limit'};
+  return include('/includes/_logs_container.html');
 }
+sub include_logs_view {
+  my $Object = $_[0];
+  $variable{Object} = $Object;
+  setup_date_select( $variable{uri}, 'log_created_on_start', -31 );
+  setup_date_select( $variable{uri}, 'log_created_on_end', '' );
+  $session{$variable{uri}.'?log_limit'} = 50 if ! exists $session{$variable{uri}.'?log_limit'};
+  return include('/includes/_logs_contents_view.html');
+}
+
+sub setup_date_select {
+  my ( $page, $prefix, $delta ) = @_;
+  if ( ( ! ( exists $session{$page.'?'.$prefix.'_year'} and exists $session{$page.'?'.$prefix.'_month'} and exists $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
+    if ( $delta ne '' ) {
+      @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1*$delta );
+    } else {
+      @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ( '', '', '' );
+    } # end if
+  } else {
+    @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} );
+  } # end if
+} # end sub setup_date_select
+
+sub date_select_session {
+  my ( $page, $prefix, $options ) = @_;
+  return date_select( $prefix, [ @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} ], $options );
+} # end sub date_select_session
+
+sub datetime_select_session {
+  my ( $page, $prefix, $options ) = @_;
+  return datetime_select( $prefix, [ @session{
+      $page.'?'.$prefix.'_year',
+      $page.'?'.$prefix.'_month',
+      $page.'?'.$prefix.'_day',
+      $page.'?'.$prefix.'_hour',
+      $page.'?'.$prefix.'_minute'} ], $options );
+} # end sub date_select_session
+
+sub date_select {
+  my ( $prefix, $value, $options ) = @_;
+
+  my ( $year,$month,$day );
+  if ( ref $value eq 'ARRAY' ) {
+    ( $year, $month, $day ) = @$value;
+  } elsif ( $value eq ' ' ) {
+    ( $year, $month, $day ) = ( '', '', '' );
+  } else {
+    ( $year, $month, $day ) = split('-', $value );
+  } # end if
+  if ( ref $options eq 'HASH' ) {
+  } elsif ( $options ) {
+    $options = {onchange=>$options};
+  } # end if
+  $$options{order} = 'y,m,d' if ! $$options{order};
+  my @fields;
+  if ( $$options{fields} ) {
+    @fields = split(',', $$options{fields} );
+  }
+
+  my ( $start_year, $start_month, $start_day ) = split( '-', $$options{start} ) if $$options{start};
+  my ( $end_year, $end_month, $end_day ) = split( '-', $$options{end} ) if $$options{end};
+
+  my $class = 'DateSelector';
+  $class .= 'C' if $$options{with_clear};
+  $class .= 'T' if $$options{with_today};
+
+  my $html = '<span class="'.$class.'" id="'.$prefix.'_date">
+';
+  foreach my $o ( split(',', $$options{order}) ) {
+    if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin('year', \@fields) ) ) {
+      $html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""> </option>`, $prefix, $$options{onchange} );
+      $html .= return_years( $start_year, $end_year, $year );
+      $html .= '</select>'."\n";
+    } elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin('month', \@fields) ) ) {
+      $html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"><option value=""> </option>`, $prefix, $$options{onchange} );
+      $html .= getmonths( $month );
+      $html .= '</select>'."\n";
+    } elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin('day', \@fields) ) ) {
+      $html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""> </option>', $prefix, $$options{onchange} );
+      $html .= getdays( $day, int($year), int($month) );
+      $html .= '</select>'."\n";
+    } # endif
+  } # end foreach o
+  $html .= "\n";
+  if ( $$options{with_clear} ) {
+    $html .= button( $prefix.'_clear', {
+        #onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+        on_click_this=>'clear_date', data_prefix=>$prefix,
+        text=>'C', title=>'Clear', class=>'Clear',
+        } );
+  } # end if
+  if ( $$options{with_today} ) {
+    $html .= button( $prefix.'_today', {
+        on_click_this=>'new_set_today', data_prefix=>$prefix,
+        #onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange},
+        text=>'T', title=>'Today', class=>'Today',
+        } );
+  } # end if
+  $html .= '<span id="'.$prefix.'_alert"></span>
+</span>';
+  return $html;
+} # end sub date_select
+
+sub date_filter {
+  my ( $field, $sql_field, $hash ) = @_;
+  $sql_field = $field if ! $sql_field;
+  if ( ! $hash ) {
+    $hash = \%openprint::session;
+    #$log->debug('ssi::date_filter: using session for hash');
+  } # end if
+    #foreach my $k ( keys %$hash ) {
+      #$log->debug("ssi::date_filter hash{$k} => $$hash{$k}");
+    #} # end foreach
+  if ( ! ( $$hash{$field.'_year'} and $$hash{$field.'_month'} and $$hash{$field.'_day'} ) ) {
+#$log->debug("ssi::date_filter: No date specified for $field");
+    return ();
+  } # end if
+  my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
+#$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
+  if ( $field =~ /end$/ ) {
+    $hour = 23 if ( ! defined $hour ) or $hour eq '';
+    $minute = 59 if ( ! defined $minute ) or $minute eq '';
+    $second = 59 if ( ! defined $second ) or $second eq '';
+  } else {
+    $hour = 0 if ( ! defined $hour ) or $hour eq '';
+    $minute = 0 if ( ! defined $minute ) or $minute eq '';
+    $second = 0 if ( ! defined $second ) or $second eq '';
+  } # end if
+#$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
+
+  my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+  my $datetime = DateTime->new( time_zone => $TZ,
+      ( year => $year, month=>$month, day=>$day, hour=>$hour, minute=>$minute, second=>$second )
+      );
+
+  return ( $sql_field, $parser->format_datetime( $datetime ) );
+} # end sub date_filter
+
+sub datetime_select {
+  my ( $prefix, $value, $options ) = @_;
+
+  my ($year,$month,$day, $hour,$min,$sec);
+  if ( ! defined $value ) {
+    ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( time );
+  } elsif ( ref $value eq 'ARRAY' ) {
+    ($year,$month,$day, $hour,$min,$sec) = @$value;
+  } elsif ( $value ) {
+    ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( Date::Parse::str2time( $value ) );
+    if ( ! $year ) {
+$openprint::log->error("No date from $value");
+    }
+  } else {
+    $year = '';
+    $month = '';
+  } # end if
+#$openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
+
+  if ( ref $options eq 'HASH' ) {
+  } elsif ( $options ) {
+    $_ = $options;
+    $options = {};
+    $$options{onchange} = $_;
+  } # end if
+#$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
+  $$options{order} = 'y,m,d' if ! $$options{order};
+
+  my $class = 'DateTimeSelector';
+  $class .= 'C' if $$options{with_clear};
+  $class .= 'T' if $$options{with_today};
+
+  my $html = '<span class="'.$class.'">';
+  $html .= sprintf(q`<span id="%1$s_date"><select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s">
+`, $prefix, $$options{onchange} );
+  $html .= '<option value=""> </option>';
+  $html .= return_years( undef, undef, $year );
+  $html .= '</select>
+';
+  $html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value;" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value,this.previousValue);this.previousValue=this.value;%2$s">`, $prefix, $$options{onchange} );
+  $html .= '<option value=""> </option>';
+  $html .= getmonths( $month );
+  $html .= '</select>
+';
+  $html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s">', $prefix, $$options{onchange} );
+  $html .= '<option value=""> </option>';
+  $html .= getdays( $day, $year, $month );
+  $html .= '</select></span>
+';
+  $html .= sprintf('<span id="%1$s_time" class="time"%3$s>
+<select id="%1$s_hour" name="%1$s_hour" onchange="%2$s"><option value=""></option>%4$s</select> :
+  <select id="%1$s_minute" name="%1$s_minute" onchange="%2$s">
+  <option value=""> </option>%5$s
+  </select></span>', $prefix, $$options{onchange},
+    ( ( exists $$options{with_time} and ! $$options{with_time} ) ? ' style="display: none;"' : '' ),
+    make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour ),
+    make_drop_down( [ map { (sprintf('%.2d', $_)) x 2 } ( 0 .. 59 ) ], $min ),
+  );
+  $html .= "\n";
+  if ( $$options{with_clear} ) {
+    $html .= button( $prefix.'_clear', { onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{onchange}, text=>'C' } )."\n";
+  } # end if
+  if ( $$options{with_today} ) {
+    $html .= button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $('%1$s_year'), $('%1$s_month'), $('%1$s_day'), $('%1$s_hour'), $('%1$s_minute') );`, $prefix ).$$options{onchange}, text=>'T' } )."\n";
+  } # end if
+  $html .= '<span id="'.$prefix.'_alert"></span></span>';
+  return $html;
+} # end sub datetime_select
+
+sub return_years {
+  my ( $start, $end, $selected ) = @_;
+  $start = $openprint::config{startYear} if ! $start;
+  $end = (localtime(time))[5] + 1901 if ! $end;
+  #$selected = (localtime(time))[5] + 1900 if ! defined $selected;
+#$log->debug("sub return_years $start .. $end $selected");
+  return make_drop_down( [ map { $_, $_ } ( $start .. $end ) ], $selected );
+} # end sub return_years
+
 
 1;
 __END__
