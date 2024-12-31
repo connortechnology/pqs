@@ -739,12 +739,11 @@ sub getmonths {
     # Either the month is a valid selection or it's not defined (for just
     # populating the drop box).
     die "Selected month must be between 1 and 12\n"
-        unless  ($selected >= 1 && $selected <= 12)
-              or (not defined $selected or $selected eq '');
+        unless  (not defined $selected or $selected eq '') or ($selected >= 1 && $selected <= 12);
 
     $months .= sprintf qq|<option value="%02d"%s>%s</option>\n|,
                   $_,
-                  ($selected == $_) ? ' selected' : '',
+                  ($selected and ($selected == $_)) ? ' selected' : '',
                   (MONTHS)[$_ - 1]
     for 1..12;
 
@@ -757,7 +756,7 @@ sub getdays {
     my $days = q{};
 
     foreach my $day ( 1 .. 31 ) {
-        my $chosen = $selected == $day ? "selected='selected'" : '';
+        my $chosen = ($selected and ($selected == $day)) ? "selected='selected'" : '';
         $days .= "<option value='$day' $chosen>$day</option>\n";
     }
 
@@ -1135,6 +1134,8 @@ my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypres
 
 sub input {
   my %options = @_;
+
+  $openprint::log->debug("@_") if (@_%2);
   my $html = '<input';
   if ( $options{type} eq 'cardinal' ) {
     $options{step} = '1' if ! exists $options{step};
