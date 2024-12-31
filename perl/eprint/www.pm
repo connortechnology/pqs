@@ -189,6 +189,7 @@ sub handler {
         $page = $r->uri();
       }
 
+      $variable{uri} = $page;
       $status = parse_page( $r, $r->log, $cookie, $dbh, $variable, $page );
       die "Maximum redirects exceeded" if $redirects > MAX_REDIRECTS;
       $redirects++, redo REDIRECTS if $variable->{Redirect};
@@ -215,17 +216,26 @@ sub handler {
     return $status;
   }
 
-  if ( $variable->{Download} ) {
+  if ( $variable{ExternalRedirect} ) {
+    $log->debug("EXTERNAL REDIRECT $variable{ExternalRedirect}");
+    foreach my $key ( 'error', 'warning', 'information' ) {
+      if ( $variable{$key} ) {
+        $session{$key} = $variable{$key};
+      } # end if
+    } # end foreach
+    $r->headers_out->set(Location=>$variable{ExternalRedirect});
+    $r->status(Apache2::Const::REDIRECT);
+    #$r->send_http_header;
+    $log->debug('Redirecting to ' . $variable{ExternalRedirect} );
+    return OK;
+  } elsif ( $variable->{Download} ) {
     for my $line (@{ $variable->{File_Data} }) {
       print $line;
     }
-  }
-  else {
-
+  } else {
     my $filename = ssi::get_file_path($r, $page);
 
     my $fh;
-
     if (!open $fh, '<', $filename ) {
       $r->log->error("Failed opening $page: $!");
       die "Failed to open $filename: $!";
