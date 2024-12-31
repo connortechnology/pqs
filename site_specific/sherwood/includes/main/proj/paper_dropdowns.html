@@ -55,7 +55,7 @@
           if ( $variable->{project}{type}{name} eq 'Envelopes' ) {
             @types = 'Envelope';
           } else {
-            @types = sql::execute($log, $dbh, q`SELECT distinct type from tbl_Paper where type !='Envelope'`);
+            @types = sql::execute($log, $dbh, q`SELECT distinct type from tbl_Paper where type IS NOT NULL AND type != '' AND type != 'Envelope'`);
           }
           if (@types > 1) {
             return join("\n",
@@ -108,7 +108,7 @@
         <span class="warning" id="PaperAlert<?Signature?>"></span>
       </li>
       <li><label>Double sided?</label>
-        <?echo(radio('CustomSheetDoubleSided'.$$variable{Signature}, ['Y'=>'Yes','N'=>'No'], $$variable{'CustomSheetDoubleSided'.$$variable{Signature}}, { default=>'Y', onclick=>'calc(this.form.name);' }); )?>
+        <?echo(radio('doublesided'.$$variable{Signature}, ['Y'=>'Yes','N'=>'No'], $$variable{'doublesided'.$$variable{Signature}}, { default=>'Y', onclick=>'calc(this.form.name);' }); )?>
       </li>
       <!--
       <li id="cuttable_li"><label>Cuttable?</label>
