@@ -670,7 +670,7 @@ sub Weight {
 sub weight {
 	my ( $self, $weight ) = @_;
 	if ( @_ > 1 ) {
-		$weight = openprint::StockWeight->transform( 'name', $weight );
+		$weight = openprint::StockWeight->transform(name=>$weight);
     #if ( ! $_[0]{custom} ) {
 			my $Weight = openprint::StockWeight->find_one('name lc'=>lc $weight);
 			if ( $Weight ) {
