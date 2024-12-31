@@ -98,12 +98,34 @@
 <?include('/includes/error_reporting.html')?>
 <div class="Stock">
 <? echo (
-$_ = $$variable{Stock}->check();
+     $_ = $$variable{Stock}->check() if $$variable{Stock}->id();
 if ( $_ ) {
 	return '<div class="error">'.$_.'</div>';
 }
 return '';
 ) ?>
+<? echo (
+ my $Paper = $$variable{Stock};
+ if (!$Paper->id() and $Paper->brand()) {
+   # Look for matching stocks
+   my @similar = openprint::Paper->find(
+    brand => $Paper->brand(),
+    ( $Paper->finish() ? ( finish=>$Paper->finish()) : () ),
+    ( $Paper->colour() ? ( colour=>$Paper->colour()) : () ),
+    ( $Paper->weight() ? ( weight=>$Paper->weight()) : () ),
+    ( $Paper->finish() ? ( finish=>$Paper->finish()) : () ),
+    ( $Paper->width() ? ( width=>$Paper->width()) : () ),
+    ( $Paper->height() ? ( height=>$Paper->height()) : () ),
+    limit => 10,
+    );
+    if (@similar) {
+      return 'There are already stocks in the system similar to the custom specs, some of them are:<br/>'.
+      join('<br/>', map { $_->link_to() } @similar);
+    }
+  }
+  return;
+)?> 
+
 <form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{Stock}->id(); ) ?>">
 	<p class="buttons">
 		<? echo ( join('',
@@ -128,8 +150,8 @@ return '';
 					<label for="ddmOwner">Owner</label>
 					<input type="text" oninput="filter_companies('ddmOwner', { name: this.value,selected_id: get_ddm_value($('ddmOwner')) } );" class="filter" />
 					<select id="ddmOwner" name="ddmOwner"><option value=""> select </option><? echo ( 
-							my @owner_ids = sql::execute(undef,undef,q`SELECT DISTINCT owner_id FROM Papers`);
-              push @owner_ids, $openprint::Owner->id() if ! @owner_ids or !sets::isin( $openprint::Owner->id(), @owner_ids);
+							my @owner_ids = sql::execute(undef,undef,'SELECT DISTINCT owner_id FROM '.$openprint::Paper::table);
+              push @owner_ids, $openprint::Owner->id() if $openprint::Owner->id() and (! @owner_ids or !sets::isin( $openprint::Owner->id(), @owner_ids));
 							make_drop_down( openprint::Company->dropdown( id=>\@owner_ids ), $$variable{Stock}->owner_id() );
 					) ?></select>
 				</li>
@@ -301,17 +323,17 @@ return '';
 									oninput=>'calc_from_basis_weight(this.form);' ),
 						); ) ?>
 				</li>
-				<li>
+				<li class="gsm">
 					<label>GSM</label>
 					<? echo ( input(type=>'float', id=>'gsm', name=>'gsm', value=>$$variable{Stock}->gsm(), oninput=>'gsm_to_mweight( this.form );' ); ) ?>
 				</li>
-        <!--
-				<li>
+				<li class="wpsi">
 					<label>WPSI</label>
 					<? echo ( input( type=>'float', name=>'wpsi', id=>'wpsi', value=>$$variable{Stock}->wpsi(), step=>'any',
 								oninput=>q`$('gsm').value=do_decimals( this.value*703064.5, 2);gsm_to_mweight(this.form);`,
 								); ) ?>
 				</li>
+        <!--
 				<li>
 					<label>Grain Direction</label>
 					<? echo ( radio( 'grain_direction', [ 'width', 'Width', 'height', 'Height' ], $$variable{Stock}->grain_direction() ); ) ?>
@@ -445,6 +467,11 @@ return '';
 			</div><!-- right-->
 		</fieldset>
 	</div>
+	<div class="Pricing">
+		<fieldset><legend>Pricing</legend>
+			<div id="Prices"><?include(/administrator/stock/_prices.html)?></div>
+		</fieldset>
+	</div>
 	<div class="Recommendations">
 		<fieldset><legend>Recomended For</legend>
       <p>Using the matrix, select which project types and press types the paper (selected from last page) will be available for. The recommendations here will effect the paper options displayed to the customer on the printing page for project type/press type combination.</p>
@@ -461,7 +488,7 @@ return '';
   foreach my $category ( openprint::ProjectTypeCategory->find()) {
     $html .= '<h4>'.$category->name().'</h4>';
 
-    $html .= '<table class="List" style="width: 1280px;"><thead><tr><th>Project Type</th>';
+    $html .= '<table class="List"><thead><tr><th class="project_type">Project Type</th>';
     foreach my $press_type (@press_types) {
       next if ! $$press_type{name};
       $html .= '<th>'.$$press_type{name}.'</th>';
@@ -472,9 +499,8 @@ return '';
       my %recs = map {$$_{presstype_id} => $_} openprint::PaperRecommendation->find(paper_id=>$$variable{Stock}->id(), projecttype_id=>$ProjectType->id());
       my @keys = keys(%recs);
       my $first_rec = $recs{shift @keys} if @keys;
-      print STDERR Data::Dumper::Dumper(\%recs);
 
-      $html .= '<tr><td>'. htmlize($ProjectType->description()).'</td>';
+      $html .= '<tr><td class="project_type">'. htmlize($ProjectType->description()).'</td>';
       $html .= join("\n", map {'<td><input type="checkbox" name="chkPRF'.$ProjectType->id().'-'.$$_{id}.'" value="1" '.checked($recs{$$_{id}}).'/>' } @press_types );
       $html .= '<td></td><td><input type="checkbox" name="chkPRFvisible'.$ProjectType->id().'" value="Y" '.checked($first_rec and $$first_rec{visible}).'/>';
       $html .= '</tr>';
@@ -486,13 +512,6 @@ return '';
 		</fieldset>
 	</div>
 	<input type="hidden" name="btnFunction" />
-	<? if ( $$variable{stock_id} ) ?>
-	<div class="Pricing">
-		<fieldset><legend>Pricing</legend>
-			<div id="Prices"><?include(/administrator/stock/_prices.html)?></div>
-		</fieldset>
-	</div>
-	<? endif ( $$variable{stock_id} ) ?>
 </form>
 	<? if ( $$variable{stock_id} ) ?>
 	<? echo ( include_logs( $$variable{Stock} ); ) ?>
