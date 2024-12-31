@@ -47,9 +47,7 @@
 			<option value="SW">Sheet Work</option>
 			<option value="WT">Work &amp; Turn</option>
 			<option value="WF">Work &amp; Flop (Tumble)</option>
-			<? if ($$variable{project}{press_type}{ref} ne 'digital') ?>
 				<option value="PF">Perfecting</option>
-			<? endif ($$variable{project}{press_type}{ref} ne 'digital') ?>
 		</select>
 		<label for="override_runstyle" class="checkbox override">
 		<input type="checkbox" id="override_runstyle" name="override_runstyle" onclick="overrides_chkbox.apply(this);" size="1" value="1" />Override</label>
