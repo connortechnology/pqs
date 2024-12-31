@@ -199,6 +199,7 @@ fieldset div.checkbox label input,
 fieldset div.radio label input,
 fieldset label.checkbox-after-label input {
 	width: auto;
+  vertical-align: -3px;
 
 	margin: 0.25ex 0.5em 0.2ex 0;
 }
