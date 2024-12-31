@@ -439,55 +439,55 @@ sub dereference {
 #
 # There's that, and they actually, y'know, *cough*, work.
 sub variable_substitution {
-    my ( $r, $log, $dbh, $text, $variable, $depth ) = @_;
+  my ( $r, $log, $dbh, $text, $variable, $depth ) = @_;
 
-    my $sslocation = $r->dir_config('site_specific');
+  my $sslocation = $r->dir_config('site_specific');
 
-    if ( $text =~ /(.*?)<\?\s*(.*?)\s*\?>(.*)/s ) {
-        my $command = $2;
-        my $after = $3;
-        my $before = variable_substitution( $r, $log, $dbh, $1, $variable );
-        $text = $before . do_new_substitution( $r, $log, $dbh, $command, $after, $variable );
-    }
+  if ( $text =~ /(.*?)<\?\s*(.*?)\s*\?>(.*)/s ) {
+    my $command = $2;
+    my $after = $3;
+    my $before = variable_substitution( $r, $log, $dbh, $1, $variable );
+    $text = $before . do_new_substitution( $r, $log, $dbh, $command, $after, $variable );
+  }
 
-    $depth = defined $depth ? $depth + 1 : 1;
+  $depth = defined $depth ? $depth + 1 : 1;
 
-    die "Too many levels of includes ($depth). Possible recursive include or include loop."
-        if $depth >= MAX_DEPTH;
+  die "Too many levels of includes ($depth). Possible recursive include or include loop."
+  if $depth >= MAX_DEPTH;
 
-    while ( my ($filename) = ( $text =~ /<!--#include\s+virtual="(.*?)"\s*-->/i )) {
+  while ( my ($filename) = ( $text =~ /<!--#include\s+virtual="(.*?)"\s*-->/i )) {
 
-        #re-write path for site specific files
-        $filename = $sslocation . '/' . $filename if $filename =~/^\/?site_specific/;
+    #re-write path for site specific files
+    $filename = $sslocation . '/' . $filename if $filename =~/^\/?site_specific/;
 
-        # Due to the dynamic generation of CSS on browser request, we need to call
-        # the generation routine before trying to include any CSS in emails.
-        css_subsitution($r, $filename)
-            or $log->warn("Could not generate the included css")
-            if $filename =~ /\.css$/ && $filename =~/^\/?site_specific/;
+    # Due to the dynamic generation of CSS on browser request, we need to call
+    # the generation routine before trying to include any CSS in emails.
+    css_subsitution($r, $filename)
+      or $log->warn("Could not generate the included css")
+    if $filename =~ /\.css$/ && $filename =~/^\/?site_specific/;
 
-        # Allow variables within the filename being included.
-        my $file = variable_substitution(
-            $r, $log, $dbh, $filename, $variable, $depth
-        );
+    # Allow variables within the filename being included.
+    my $file = variable_substitution(
+      $r, $log, $dbh, $filename, $variable, $depth
+    );
 
-        # Run the variable substitution over the included file and insert it's
-        # text into the current location before continuing.
-        my $insert_text = variable_substitution(
-            $r, $log, $dbh, insert_html($r, $file), $variable, $depth
-        );
+    # Run the variable substitution over the included file and insert it's
+    # text into the current location before continuing.
+    my $insert_text = variable_substitution(
+      $r, $log, $dbh, insert_html($r, $file), $variable, $depth
+    );
 
-		$insert_text = "<!-- START INCLUDE $file --> \n " . 
-		                $insert_text .
-		               "\n <!-- END   INCLUDE $file --> \n " 
-		unless $file =~ /title/ || ! DEBUG || $file =~ /css/;
+    $insert_text = "<!-- START INCLUDE $file --> \n " . 
+    $insert_text .
+    "\n <!-- END   INCLUDE $file --> \n " 
+    unless $file =~ /title/ || ! DEBUG || $file =~ /css/;
 
-        $text =~ s/<!--#include\s+virtual="(.*?)"\s*-->/$insert_text/i;
-    }
+    $text =~ s/<!--#include\s+virtual="(.*?)"\s*-->/$insert_text/i;
+  }
 
-    $depth--;
+  $depth--;
 
-    return $text;
+  return $text;
 }
 
 sub css_subsitution {
