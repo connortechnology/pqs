@@ -74,7 +74,7 @@ p.minimum_order label, p.fsc_code label, p.inventory_number label, p.message lab
 	text-align: left;
 }
 .size,
-.calliper, .mweight, .gsm {
+.calliper, .mweight {
 	text-align: right;
 }
 .pricing, .spp_min {
@@ -82,11 +82,13 @@ p.minimum_order label, p.fsc_code label, p.inventory_number label, p.message lab
 	text-align: right;
 }
 
-#calliper_mm, #calliper, #size, #mweight, #width, #height {
-width: 70px;
+#calliper_mm, #calliper, #size, #width, #height {
+width: 55px;
 }
+#mweight,
+.gsm input,
 #BasisSize input {
-	width: 60px;
+	width: 40px;
 }
 #message {
 	width: 100%;
@@ -116,4 +118,14 @@ width: 70px;
 .quantity_per_package span,
 .minimum_order span {
   float: none;
+}
+table .buttons {
+  width: 50px;
+}
+table input {
+  max-width: 100%;
+}
+
+.wpsi {
+  display: none;
 }
