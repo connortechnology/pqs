@@ -50,6 +50,9 @@ use Date::Format;
 use sql qw(sql_statement);
 use PQS::Constants;
 
+require JSON;
+require Digest::MD5;
+
 require countries;
 require states;
 require provinces;
@@ -890,7 +893,6 @@ sub get_start_end_dates {
 sub hash_link {
   my ( $path ) = @_;
 
-
   my $r = session::r;
   my $log = session::log;
   my $skin_path = $r->dir_config('SkinPath');
@@ -906,17 +908,16 @@ sub hash_link {
     return $path;
   } # end if
 
-  require JSON;
-  require Digest::MD5;
+  $log->debug("Hash link $path error $variable{error}");
 
   my $cache_dir = $r->dir_config('cache_dir') ? $r->dir_config('cache_dir') : $skin_path.'/cache';
   return $path if ! $cache_dir;
 
   my $script;
   if ( ( ! $hash_cache ) and -f $cache_dir.'/config.json' ) {
-    $_ = File::Slurp::read_file($cache_dir.'/config.json');
-    if ( $_ ) {
-      $hash_cache = JSON::from_json( $_ );
+    my $c = File::Slurp::read_file($cache_dir.'/config.json');
+    if ( $c ) {
+      $hash_cache = JSON::from_json( $c );
       $hash_cache = {} if ! $hash_cache;
     } else {
       $log->error("No content of $cache_dir/config.json");
@@ -1312,7 +1313,8 @@ sub format_date {
 } # end sub format_date
 
 sub format_datetime {
-  return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : $_[1];
+  my $format = $config{DateTimeFormat} ? $config{DateTimeFormat} : '%Y-%m-%d %H:%M:%S';
+  return $_[0] ? Date::Format::time2str( $format, Date::Parse::str2time( $_[0] ) ) : $_[1];
 } # end sub format_datetime
 
 sub format_time {
