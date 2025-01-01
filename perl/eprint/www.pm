@@ -20,6 +20,7 @@ use Data::Dumper;
 
 require openprint;
 require eprint::login;
+require openprint::configuration;
 
 use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *variable = \%openprint::variable;
@@ -161,14 +162,15 @@ sub handler {
       #$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
     } # end if
   } # end foreach
-  show_params();
+  #show_params();
+  openprint::configuration::init( $r->dir_config() );
   openprint::session_init();
 
   #print STDERR "HAVE COOKIE: $cookie\n";
 
   my ($page, $args, $status);
 
-  word_sub ($variable);
+  word_sub($variable);
 
   eval {
     my $redirects = 0;
@@ -454,7 +456,7 @@ sub parse_page {
 
   # EXTRA STUFF IN $VARIABLE
   #
-  if ($section ne 'A' && $section ne 'E') {
+  if ((!$section) or ($section ne 'A' && $section ne 'E')) {
     # Add banner ads to the customer side.    
 
 
