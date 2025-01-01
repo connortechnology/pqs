@@ -117,6 +117,8 @@ sub verify_login {
             strEmail        => $email,
             dtmLastAccessed => 'NOW()'
     );
+    @openprint::session{'company_id','user_id','email','user_type'} = ($cust_id, $user_id, $email, $user_type);
+
 
     $$variable{'GREETING'}                   = eprint::greetings::select_greeting($log, $dbh, $cust_id, $user_id);
     $$variable{'USER_GREETING'}              = eprint::greetings::select_user_greeting($log, $dbh, $user_id);
@@ -958,11 +960,7 @@ sub verify_user {
   }
 
   $$variable{'CUSTOMER_CATEGORY_GREETING'} = eprint::greetings::select_customer_category_greeting($log, $dbh, $user->{cust_id}) if $user->{cust_id};
-
-  #	my $sql = "SELECT stremail, strfirstname || ' ' || strlastname  from tbl_customer_users WHERE lngcustomerid = $variable->{cust_id}";
-  #	print STDERR "HAVE USERS: ", Dumper( $sql ); 
-  #
-  #    $$variable{'email_to'} = ssi::fill_drop_down($log, $dbh, $sql);
+  @openprint::session{'company_id','user_id','email','user_type'} = @$user{'cust_id', 'user_id', 'email', 'user_type'};
 
   return OK;
 }
