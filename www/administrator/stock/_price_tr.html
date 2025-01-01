@@ -6,7 +6,7 @@
 	my $Price = $$variable{Price};
 
 	if ( $Price->service() ne 'Material' ) {
-		$html .= sprintf(q`<tr id="paperprice-%1$d" class="%9$s">
+		$html .= sprintf(q`<tr id="paperprice-%1$s" class="%9$s">
 				<td class="Equipment"><select name="equipment_id-%1$d" onchange="check_price(this);"><option value=""> all </option>%8$s</select></td>
 				<td class="Range">%2$s %3$s</td>
 				<td class="Units">%4$s</td>
@@ -25,7 +25,7 @@
 			$Price->service(),
 		);
 	} else {
-		$html .= sprintf(q`<tr id="paperprice-%1$d" class="Material">
+		$html .= sprintf(q`<tr id="paperprice-%1$s" class="Material">
 				<td class="Equipment"><input type="hidden" name="equipment_id-%1$d" id="equipment_id-%1$d" /></td>
 				<td class="Range">%2$s %3$s</td>
 				<td class="Units">%4$s</td>
