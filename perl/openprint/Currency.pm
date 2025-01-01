@@ -13,14 +13,14 @@ use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults $cach
 *dbh = \$openprint::dbh;
 
 $debug = 0;
-$table = 'Currencies';
+$table = 'Currency';
 $serial = 'currencies_id_seq';
 %fields = (
 	id		=>	'id',
-	short	=>	'short',
+	short	=>	'code',
 	name	=>	'name',
 	symbol	=>	'symbol',
-  precision =>  'precision',
+  #precision =>  'precision',
 );
 %transforms = (
 	id		=> [ 's/\D//g', '<2147483647' ],
