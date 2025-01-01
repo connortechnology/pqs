@@ -102,7 +102,9 @@
 		margin: 0;
 		padding: 0.1ex 1em 0.25ex 1em;
 		
+    /*
 		background-color: #FFFFFF;
+    */
 		border: 1px #0B0D60 solid;
 		
 		color: #0B0D60;
@@ -800,4 +802,9 @@ table.List, fieldset table.List {
 table .checkbox {
   width: 30px;
   text-align: center;
+}
+.changed,
+input.changed ,
+input.changed:focus {
+	background-color: yellow;
 }
