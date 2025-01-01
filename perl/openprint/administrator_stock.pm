@@ -712,16 +712,18 @@ sub _filters_save {
 sub _price_tr {
 	$variable{Pricelist} = new openprint::Pricelist( $param{pricelist_id} );
 	$variable{Stock} = new openprint::Paper( $param{stock_id} );
-	$variable{Price} = new openprint::PaperPrice( $param{price_id} );
+	my $price = $variable{Price} = new openprint::PaperPrice( $param{price_id} );
 	my @Equipment = openprint::Equipment->find('order'=>'lower(strid)');
 	$variable{Equipment} = \@Equipment;
-    $variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( 'supplier'=>'Y', 'order'=>'lower(name)' ) ];
+  $variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y') ];
 	if ( $param{action} eq 'Add' ) {
-		$variable{error} .= $variable{Price}->save({
-			'pricelist_id'	=>	$param{pricelist_id},
-			'stock_id'		=>	$param{stock_id},
-			'service'		=>	$param{service},
+		$price->set({
+			pricelist_id	=>	$param{pricelist_id},
+			stock_id		=>	$param{stock_id},
+			service		=>	$param{service},
 		});
+    $price->save() if $param{stock_id};
+
 	} elsif ( $param{action} eq 'Delete' ) {
 		$variable{error} = $variable{Price}->delete();
 		$variable{Price} = new openprint::PaperPrice();
