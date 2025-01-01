@@ -2,9 +2,10 @@
 
 function check_price( element ) {
 	const form = element.form;
-  const matches = element.name.match( /^\w+\-(\d+)$/ );
+  const matches = element.name.match( /^\w+\-(\d*)$/ );
 	if (matches) {
 		const id = matches[1];
+    console.log(id);
 		if ( 
 			element_changed( form.elements['discountable-'+id] ) ||
 			element_changed( form.elements['price-'+id] ) ||
@@ -14,12 +15,12 @@ function check_price( element ) {
 			element_changed( form.elements['units-'+id] ) ||
 			element_changed( form.elements['equipment_id-'+id] ) 
 		   ) {
-			$('paperprice-'+id).addClassName('changed');
+			$j('#paperprice-'+id).addClass('changed');
 		} else {
-			$('paperprice-'+id).removeClassName('changed');
+			$j('#paperprice-'+id).removeClass('changed');
 		} // end if
 	} else {
-		alert('Not matched' + element.name);
+		console.log('Not matched' + element.name);
 	} // end if
 }
 
