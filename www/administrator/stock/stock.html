@@ -15,92 +15,16 @@
 
   <script src="/javascripts/other.js"></script>
 
-  <script>
-    function unselect ( ddm ) {
-      for ( var index = 0; index < ddm.options.length; index += 1 ) {
-        ddm.options[index].selected = false;
-      }
-    }
-    addEventListener("DOMContentLoaded", (event) => { update_event_bindings(); });
-  </script>
 </head>
 <body>
 
 <!--#include virtual="/includes/c1-admin-nav.html" -->
-<script src="<?hash_link(/javascripts/paper.js)?>"></script>
-<script src="<?hash_link(/administrator/stock/stock.js)?>"></script>
-<script>
-	function newPrice( service, pricelist_id ) {
-		new Ajax.Request( '_price_tr.html',
-			{
-				parameters: {
-					stock_id: '<?stock_id?>',
-					service: service,
-					pricelist_id: pricelist_id,
-					action: 'Add'
-				},
-				onSuccess: function( transport ) {
-					$('prices-'+service+'-'+pricelist_id).insert({top: transport.responseText} );
-				}
-			}
-		);
-	} // end function newPrice
-	function copyPrice( id ) {
-		var form = $('f1');
-		new Ajax.Request( '_price_tr.html', {
-				parameters: {
-					stock_id: '<?stock_id?>',
-					price_id: id,
-					action: 'Copy',
-					equipment_id: get_value( form.elements['equipment_id-'+id] ),
-					min: form.elements['min-'+id].value,
-					max: form.elements['max-'+id].value,
-					cost: form.elements['cost-'+id].value,
-					markup: form.elements['markup-'+id].value,
-					price: form.elements['price-'+id].value,
-					units: form.elements['units-'+id].value,
-					discountable: get_value(form.elements['discountable-'+id])
-				},
-				onSuccess: function( transport ) {
-					$('paperprice-'+ id).insert({after: transport.responseText} );
-				}
-			}
-		);
-	}
-	function delPrice( id ) {
-		new Ajax.Request('_price_tr.html',
-			{
-				parameters: {
-					price_id: id,
-					action: 'Delete'
-				},
-				onSuccess: function( transport ) {
-					if ( transport.responseText ) {
-						alert( transport.responseText );
-					} else {
-						var tr = $('paperprice-'+id); tr.parentNode.removeChild(tr);
-					} // end if
-				}
-			}
-		);
-	}
-
-	function savePrices( form ) {
-		new Ajax.Updater('Prices','_prices.html',
-			{
-				parameters : Form.serialize( form ),
-				onSuccess: function(){$('Prices').removeClassName('changed');}
-			 }
-		);
-	
-	}
-</script>
 <?include('/includes/error_reporting.html')?>
 <div class="Stock">
 <? echo (
-     $_ = $$variable{Stock}->check() if $$variable{Stock}->id();
-if ( $_ ) {
-	return '<div class="error">'.$_.'</div>';
+     my $check = $$variable{Stock}->check() if $$variable{Stock}->id();
+if ( $check ) {
+	return '<div class="error">'.$check.'</div>';
 }
 return '';
 ) ?>
@@ -518,5 +442,79 @@ return '';
 	<? endif ( $$variable{stock_id} ) ?>
 </div><!--Stock-->
 </div>
+<script src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script src="<?hash_link(/administrator/stock/stock.js)?>"></script>
+<script>
+	function newPrice( service, pricelist_id ) {
+		new Ajax.Request( '_price_tr.html',
+			{
+				parameters: {
+					stock_id: '<?stock_id?>',
+					service: service,
+					pricelist_id: pricelist_id,
+					action: 'Add'
+				},
+				onSuccess: function( transport ) {
+					$('prices-'+service+'-'+pricelist_id).insert({top: transport.responseText} );
+				}
+			}
+		);
+	} // end function newPrice
+	function copyPrice( id ) {
+		var form = $('f1');
+		new Ajax.Request( '_price_tr.html', {
+				parameters: {
+					stock_id: '<?stock_id?>',
+					price_id: id,
+					action: 'Copy',
+					equipment_id: get_value( form.elements['equipment_id-'+id] ),
+					min: form.elements['min-'+id].value,
+					max: form.elements['max-'+id].value,
+					cost: form.elements['cost-'+id].value,
+					markup: form.elements['markup-'+id].value,
+					price: form.elements['price-'+id].value,
+					units: form.elements['units-'+id].value,
+					discountable: get_value(form.elements['discountable-'+id])
+				},
+				onSuccess: function( transport ) {
+					$('paperprice-'+ id).insert({after: transport.responseText} );
+				}
+			}
+		);
+	}
+	function delPrice( id ) {
+		new Ajax.Request('_price_tr.html',
+			{
+				parameters: {
+					price_id: id,
+					action: 'Delete'
+				},
+				onSuccess: function( transport ) {
+					if ( transport.responseText ) {
+						alert( transport.responseText );
+					} else {
+						var tr = $('paperprice-'+id); tr.parentNode.removeChild(tr);
+					} // end if
+				}
+			}
+		);
+	}
+
+	function savePrices( form ) {
+		new Ajax.Updater('Prices','_prices.html',
+			{
+				parameters : Form.serialize( form ),
+				onSuccess: function(){$('Prices').removeClassName('changed');}
+			 }
+		);
+	
+	}
+    function unselect ( ddm ) {
+      for ( var index = 0; index < ddm.options.length; index += 1 ) {
+        ddm.options[index].selected = false;
+      }
+    }
+    addEventListener("DOMContentLoaded", (event) => { update_event_bindings(); });
+</script>
 </body>
 </html>
