@@ -455,7 +455,7 @@ return '';
 					action: 'Add'
 				},
 				onSuccess: function( transport ) {
-					$('prices-'+service+'-'+pricelist_id).insert({top: transport.responseText} );
+					$('prices-'+service+'-'+pricelist_id).insert({bottom: transport.responseText} );
 				}
 			}
 		);
