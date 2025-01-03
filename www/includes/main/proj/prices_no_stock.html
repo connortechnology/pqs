@@ -23,59 +23,60 @@
 			</thead>
 
 			<tbody>
-				<? if ( $$variable{'QUANTITY1'} > 0 ) ?>
+				<? if project.quantity.0 ?>
 					<tr>
-						<td rowspan="2" class="quantity"><?QUANTITY1?><input value="" name="txtQuantity1" type="hidden" /></td>
-						<td>$&nbsp;<span id="txtPrice1"><?total_unit?></span></td>
+            <td rowspan="2" class="quantity"><?project.quantity.0?><input value="<?project.quantity.0?>" id="txtQuantity1" name="txtQuantity1" type="hidden" /></td>
+						<td id="txtPrice1"><?money:total_unit?></td>
 						<td>&nbsp;</td>
 
-						<td class="total">$&nbsp;<span id="total_price"><?total_price?></span></td>
+						<? eval ($variable->{total_price} = $variable->{spec}{txtPrice1} + $variable->{spec}{txtStockPrice1} )?>
+						<td class="total" id="total_price1"><?money:total_price?></td>
 						<td>&nbsp;</td>
 					</tr>
 					<tr class="each">
-						<td><span id="txtUnitPrice1"><?txtUnitPrice1?</span></td>
+            <td><span id="txtUnitPrice1"><?txtUnitPrice1?></span></td>
+						<td class="each">ea.</td>
+
+						<td class="total"><span id="unit_price"><?float:spec.total_unit1?></span></td>
+						<td class="each">ea.</td>
+					</tr>
+				<? endif project.quantity.0 ?>
+				<? if project.quantity.1 ?>
+					<tr class="new-quantity">
+						<td rowspan="2" class="quantity"><?project.quantity.1?><input value="<?project.quantity.1?>" id="txtQuantity2" name="txtQuantity2" type="hidden" /></td>
+						<td id="txtPrice2"><?money:total_unit?></td>
+						<td>&nbsp;</td>
+
+						<? eval ($variable->{total_price} = $variable->{spec}{txtPrice2} + $variable->{spec}{txtStockPrice2} )?>
+						<td class="total" id="total_price2"><?money:total_price?></td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr class="each">
+						<td id="txtUnitPrice2"><?money:txtUnitPrice2?></td>
 						<td class="each">ea.</td>
 
 						<td class="total"><span id="unit_price"><?unit_price?></span></td>
 						<td class="each">ea.</td>
 					</tr>
-				<? endif ( $$variable{'QUANTITY1'} > 0 ) ?>
-
-				<? if ( $$variable{'QUANTITY2'} > 0 ) ?>
+				<? endif project.quantity.1 ?>
+				<? if project.quantity.2 ?>
 					<tr class="new-quantity">
-						<td rowspan="2" class="quantity"><?QUANTITY2?><input value="" name="txtQuantity2" type="hidden" /></td>
-						<td>$&nbsp;<span id="txtPrice2"><?total_unit?></span></td>
+						<td rowspan="2" class="quantity"><?project.quantity.2?><input value="<?project.quantity.2?>" id="txtQuantity3" name="txtQuantity3" type="hidden" /></td>
+						<td>$&nbsp;<span id="txtPrice3"><?float:spec.total_unit2?></span></td>
 						<td>&nbsp;</td>
 
-						<td class="total">$&nbsp;<span id="total_price"><?total_price?></span></td>
-						<td>&nbsp;</td>
-					</tr>
-					<tr class="each">
-						<td><span id="txtUnitPrice2"><?txtUnitPrice2?></span></td>
-						<td class="each">ea.</td>
-
-						<td class="total"><span id="unit_price"><?unit_price?></span></td>
-						<td class="each">ea.</td>
-					</tr>
-				<? endif ( $$variable{'QUANTITY2'} > 0 ) ?>
-
-				<? if ( $$variable{'QUANTITY3'} > 0 ) ?>
-					<tr class="new-quantity">
-						<td rowspan="2" class="quantity"><?QUANTITY3?><input value="" name="txtQuantity3" type="hidden" /></td>
-						<td>$&nbsp;<span id="txtPrice3"><?total_unit?></span></td>
-						<td>&nbsp;</td>
-
-						<td class="total">$&nbsp;<span id="total_price"><?total_price?></span></td>
+						<? eval ($variable->{total_price} = $variable->{spec}{txtPrice3} + $variable->{spec}{txtStockPrice3} )?>
+						<td class="total" id="total_price3"><?money:total_price?></td>
 						<td>&nbsp;</td>
 					</tr>
 					<tr class="each">
 						<td><span id="txtUnitPrice3"><?txtUnitPrice3?></span></td>
 						<td class="each">ea.</td>
 
-						<td class="total"><span id="unit_price"><?unit_price?></span></td>
+						<td class="total"><span id="unit_price"><?float:spec.total_unit3?></span></td>
 						<td class="each">ea.</td>
 					</tr>
-				<? endif ( $$variable{'QUANTITY3'} > 0 ) ?>
+				<? endif project.quantity.2 ?>
 			</tbody>
 		</table>
 		<br class="clear" />
