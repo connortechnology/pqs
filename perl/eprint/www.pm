@@ -32,7 +32,7 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *r = \$openprint::r;
 
 use constant MAX_REDIRECTS => 20;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 sub cleanup {
   if ( $r->connection->aborted( ) ) {
