@@ -133,7 +133,6 @@ function removeEvent (target, action, callback, bubble) {
     }
 }
 
-
 function get_rdb_value( form, rdbName ) {
     for ( var x = 0; x < form.elements[rdbName].length; x ++ ) {
         if ( form.elements[rdbName][x].checked == true ) {
@@ -142,3 +141,147 @@ function get_rdb_value( form, rdbName ) {
     } 
     return '';
 } 
+function update_event_bindings() {
+  console.log('update_event_bindings()');
+  document.querySelectorAll("select[data-on-change], input[data-on-change]").forEach(function attachOnChangeThis(el) {
+    const fnName = el.getAttribute("data-on-change");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName + " on "+el.name);
+      return;
+    }
+    el.onchange = window[fnName].bind(el, el);
+    //console.log('setting onchange on '+el.name+' to '+fnName);
+  });
+
+  document.querySelectorAll("select[on_change]").forEach(function attachOnChangeThis(el) {
+    const fnName = el.getAttribute("on_change");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName + " on "+el.name);
+      return;
+    }
+    el.onchange = window[fnName].bind(el, el);
+    //console.log('setting onchange on '+el.name+' to '+fnName);
+  });
+  document.querySelectorAll('select[data-on-change-this]').forEach(function(el) {
+    const fnName = el.getAttribute('data-on-change-this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    //console.log("Setting up onchangefor " + el.name + " to " + fnName);
+    el.onchange = window[fnName].bind(el, el);
+  });
+  document.querySelectorAll('select[on_change_this]').forEach(function(el) {
+    const fnName = el.getAttribute('on_change_this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    //console.log("Setting up onchangefor " + el.name + " to " + fnName);
+    el.onchange = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll("input[data-on-input]").forEach(function(el) {
+    const fnName = el.getAttribute("data-on-input");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    el.oninput = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll("input[data_on_input]").forEach(function(el) {
+    const fnName = el.getAttribute("data_on_input");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    } else {
+      //console.log("Setting oninput for "+el.name+" to "+fnName);
+    }
+    el.oninput = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll("input[on_input_this]").forEach(function(el) {
+    const fnName = el.getAttribute("on_input_this");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    //console.log("Setting up oninput for " + el.name + " to " + fnName);
+    el.oninput = window[fnName].bind(el, el);
+  });
+  document.querySelectorAll("input[data_oninput_this]").forEach(function(el) {
+    const fnName = el.getAttribute("data_oninput_this");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    //console.log("Setting up oninput for " + el.name + " to " + fnName);
+    el.oninput = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll('button[data-on-click-this], input[data-on-click-this]').forEach(function(el) {
+    const fnName = el.getAttribute('data-on-click-this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    //console.log("Setting up onclick for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll('textarea[on_keyup_this]').forEach(function(el) {
+    const fnName = el.getAttribute('on_keyup_this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    //console.log("Setting up onkeyup_this for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
+  document.querySelectorAll('button[on_click_this], input[on_click_this]').forEach(function(el) {
+    const fnName = el.getAttribute('on_click_this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    console.log("Setting up on_click_this for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll('button[data_onclick_this]').forEach(function(el) {
+    const fnName = el.getAttribute('data_onclick_this');
+    if ( !window[fnName] ) {
+      console.error('Nothing found to bind to ' + fnName);
+      return;
+    }
+    //console.log("Setting up onclick for " + el.name + " to " + fnName);
+    el.onclick = window[fnName].bind(el, el);
+  });
+
+  document.querySelectorAll("[on_click]").forEach(function attachOnClick(el) {
+    const fnName = el.getAttribute('on_click');
+    if (!window[fnName]) {
+      console.error('Nothing found to bind to ' + fnName + ' on element ' + el.name);
+      return;
+    }
+
+    //console.log('Setting for on_click to ' + fnName + ' for element ' + el.getAttribute('id'));
+    el.onclick = function(ev) {
+      window[fnName](ev);
+    };
+  });
+  document.querySelectorAll("[data-on-click]").forEach(function attachOnClick(el) {
+    const fnName = el.getAttribute('data-on-click');
+    if (!window[fnName]) {
+      console.error('Nothing found to bind to ' + fnName + ' on element ' + el.name);
+      return;
+    }
+
+    //console.log('Setting for data-on-click to ' + fnName + ' for element ' + el.getAttribute('id'));
+    el.onclick = function(ev) {
+      window[fnName](ev);
+    };
+  });
+console.log('done');
+}

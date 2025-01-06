@@ -1,6 +1,7 @@
 package eprint::Service::Handler;
 use strict;
 use warnings;
+use utf8;
 
 use Apache2::Const qw(:common :http :methods);
 use Apache2::Request   ();
@@ -22,6 +23,16 @@ require configuration;
 require misc;
 require eprint::login;
 require eprint::banner;
+require openprint;
+
+use vars qw( $r %variable %session %param %config $log $dbh $starttime );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*r = \$openprint::r;
 
 
 use constant SERVICE_PAGE_PATH  => '/main/proj';
@@ -29,7 +40,7 @@ use constant PROJECT_BUILD_PAGE => '/build';
 use constant PROJECT_VIEW_PAGE  => '/main/proj/proj_view.html';
 
 sub handler {
-    my $r = Apache2::Request->new(shift,
+    $r = Apache2::Request->new(shift,
         POST_MAX        => 8096,
         DISABLE_UPLOADS => 1,
     );
@@ -40,6 +51,7 @@ sub handler {
 
     session::r($r);
     session::log($r->log);
+    $log = $r->log;
 
     if (!( $r->method_number == M_GET || $r->method_number == M_POST)) {
       print STDERR "Invalid method ".$r->method_number." get:".M_GET.' post:'.M_POST."\n";
@@ -57,11 +69,40 @@ sub handler {
     my $dbh = PQS::DB->connect($r);  # TODO Use RO session for GETs
     session::dbh($dbh);
 
+    #%openprint::param = %{$variable->{param}} = map {$_ => $r->param($_)} $r->param();
+    # Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
+    foreach my $key ( $r->param ) {
+
+      my @values = $r->param($key);
+      $key = substr($key,0,-2) if (substr($key, -2, 2) eq '[]');
+      if ( @values > 1 ) {
+        $param{$key} = \@values;
+        #$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
+      } else {
+        my $x = $values[0];
+        if (utf8::decode($x)) {
+          $param{$key} = $x;
+        } else {
+          $param{$key} = $values[0];
+        }
+        #$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
+      } # end if
+    } # end foreach
+    foreach my $key ( sort keys %param ) {
+      if ( ref $param{$key} eq 'ARRAY' ) {
+        $log->debug('Parameter '.$key.' is ARRAY(' . join(',', @{$param{$key}}) . ')');
+      } else {
+        $log->debug('Parameter '.$key.' is ('.$param{$key}.')');# . (utf8::is_utf8($param{$key})||0) );
+        #$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
+      } # end if
+    } # end foreach
+
+
     my $customer_id = eprint::login::get_login_info( # Populates $variable
         $r->log, $dbh, $cookie, $variable, 'C'
     );
     if (!$customer_id) {
-      $r->headers_out->set(Location => '/main/account/login.html');
+      $r->headers_out->set(Location => '/main/account/account_login.html');
       $r->status(Apache2::Const::REDIRECT); #302
       $dbh->disconnect;
       return Apache2::Const::OK;
@@ -86,6 +127,13 @@ sub handler {
             }, undef, $pid, $sid))
     {
 print STDERR "Service not found for $pid/$sid\n";
+if ($dbh->selectrow_array('SELECT true from tbl_projects WHERE lngprojectindex=?', undef, $pid)) {
+      $r->headers_out->set(Location => '/main/proj/proj_view.html?pid='.$pid);
+      $r->status(Apache2::Const::REDIRECT); #302
+      $dbh->disconnect;
+      return Apache2::Const::OK;
+    }
+
         $dbh->disconnect;
         return NOT_FOUND;
     }
@@ -136,30 +184,30 @@ print STDERR "Forbidden for $pid\n";
 
 # Map the uri to a valid service type, return a hash ref of it's attributes.
 sub uri_to_service {
-    my ($r, $dbh) = @_;
+  my ($r, $dbh) = @_;
 
-    # Get the requested service from the URI.
-    my $location = $r->location;
-    my $service_type  = $r->uri;
-       $service_type  =~ s/$location\/?//i;
-       $service_type  =~ tr/a-zA-Z0-9_-//cd;
+  # Get the requested service from the URI.
+  my $location = $r->location;
+  my $service_type  = $r->uri;
+  $service_type  =~ s/$location\/?//i;
+  $service_type  =~ tr/a-zA-Z0-9_-//cd;
 
-    return undef unless $service_type;
+  return undef unless $service_type;
 
-    # Look up the service type.
-    my $service = $dbh->selectrow_hashref(q{
-       SELECT lngindex    AS id,     strid       AS type,
-              strname     AS name,   strcategory AS category,
-              strmodule   AS module, lngdep      AS level,
-              strurl      AS page
-        FROM tbl_service_types
-        WHERE strmodule IS NOT NULL
-          AND lower(strid) = ?
+  # Look up the service type.
+  my $service = $dbh->selectrow_hashref(q{
+    SELECT lngindex    AS id,     strid       AS type,
+    strname     AS name,   strcategory AS category,
+    strmodule   AS module, lngdep      AS level,
+    strurl      AS page
+    FROM tbl_service_types
+    WHERE strmodule IS NOT NULL
+    AND lower(strid) = ?
     }, undef, lc($service_type));
 
-    return undef unless $service->{id};
+  return undef unless $service->{id};
 
-    return load_service_type($service);
+  return load_service_type($service);
 }
 
 # Show the page if we're doing a GET with just PID and SID, return an JSON
@@ -279,8 +327,8 @@ sub show {
     my $html = do { local $/ = undef; <$fh> };
     close $fh or die "Can't close file: $!";
 
-	use eprint::www;
-	eprint::www::word_sub($variable);
+    use eprint::www;
+    eprint::www::word_sub($variable);
 
     # Create the page from the template.
     $html = ssi::variable_substitution($r, $r->log, $dbh, $html, $variable);

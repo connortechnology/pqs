@@ -19,9 +19,44 @@ require configuration;
 use session;
 use Data::Dumper;
 
+require openprint;
 require eprint::login;
+require openprint::configuration;
+
+use vars qw( $r %variable %session %param %config $log $dbh $starttime );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*r = \$openprint::r;
 
 use constant MAX_REDIRECTS => 20;
+use constant DEBUG => 0;
+
+sub cleanup {
+  if ( $r->connection->aborted( ) ) {
+    $log->debug('Was aborted');
+  } elsif ( DEBUG ) {
+    $log->debug('cleanup');
+  } # end if
+  %openprint::variable = ();
+  %openprint::param = ();
+  if ( $dbh ) {
+    $session{lastupdated} = time;
+    untie %session;
+    openprint::Object::init_cache();
+    if ( ! $dbh->{AutoCommit} ) {
+      $log->error('Uncommited transaction');
+    } elsif ( DEBUG ) {
+      $log->debug('Finished cleanup');
+    } # end if
+    $dbh->disconnect();
+  } else {
+    $log->debug('No dbh at cleanup');
+  } # end if
+} # end sub cleanup
 
 sub show_params {
   my $r = session::r;
@@ -41,7 +76,8 @@ sub generate_cookie {
   $host
   || $r->dir_config('cookiedomain')
   || configuration::get_value($log, $dbh, 'cookiedomain');
-
+ 
+  $log->debug("COokie domain: $domain");
 
   # Generate and set the cookie.
   my $cookie = Apache2::Cookie->new($r,
@@ -78,39 +114,64 @@ sub handler {
   return NOT_FOUND unless -e $rec->filename;
   return FORBIDDEN unless -r $rec->filename;
 
-  my $r = Apache2::Request->new($rec);
+  $r = Apache2::Request->new($rec);
   $r->parse;
 
   session::r($r);
   session::log($r->log);
-  {
-	  my $page = $r->uri();
-	  $r->log->debug('Beginning of Request: Page: '.$page);
-  }
-
+  $openprint::log = $r->log;
 
   if ( $r->header_only ) {
     $r->log->debug('Browser only wanted header.');
     return OK;
   }
+  $r->push_handlers(PerlCleanupHandler => \&cleanup);
 
   ssi:$gdb 	 = PQS::DB->connect($r, { ReadOnly => 1 });
-  my $dbh    = PQS::DB->connect($r, { AutoCommit => 1 });
+  $dbh    = PQS::DB->connect($r, { AutoCommit => 1 });
 
   session::dbh($dbh);
-  my $variable = {};
+  my $variable = \%variable;
   my $cookie   = misc::get_cookie($r, $r->log, $dbh, $variable);
 
   $cookie = generate_cookie($r, $r->log, $dbh) unless $cookie;
 
-  %{$variable->{param}} = map {$_ => $r->param($_)} $r->param();
-  show_params();
+  #%openprint::param = %{$variable->{param}} = map {$_ => $r->param($_)} $r->param();
+  # Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
+  foreach my $key ( $r->param ) {
+
+    my @values = $r->param($key);
+    $key = substr($key,0,-2) if (substr($key, -2, 2) eq '[]');
+    if ( @values > 1 ) {
+      $param{$key} = \@values;
+      #$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
+    } else {
+      my $x = $values[0];
+      if (utf8::decode($x)) {
+        $param{$key} = $x;
+      } else {
+        $param{$key} = $values[0];
+      }
+      #$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
+    } # end if
+  } # end foreach
+  foreach my $key ( sort keys %param ) {
+    if ( ref $param{$key} eq 'ARRAY' ) {
+      $log->debug('Parameter '.$key.' is ARRAY(' . join(',', @{$param{$key}}) . ')');
+    } else {
+      $log->debug('Parameter '.$key.' is ('.$param{$key}.')');# . (utf8::is_utf8($param{$key})||0) );
+      #$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
+    } # end if
+  } # end foreach
+  #show_params();
+  openprint::configuration::init( $r->dir_config() );
+  openprint::session_init();
 
   #print STDERR "HAVE COOKIE: $cookie\n";
 
   my ($page, $args, $status);
 
-  word_sub ($variable);
+  word_sub($variable);
 
   eval {
     my $redirects = 0;
@@ -131,6 +192,7 @@ sub handler {
         $page = $r->uri();
       }
 
+      $variable{uri} = $page;
       $status = parse_page( $r, $r->log, $cookie, $dbh, $variable, $page );
       die "Maximum redirects exceeded" if $redirects > MAX_REDIRECTS;
       $redirects++, redo REDIRECTS if $variable->{Redirect};
@@ -139,7 +201,6 @@ sub handler {
   if ($@) {
     my $err = $@;
 
-    $dbh->disconnect;
     $r->log->error($err);
 
     if (DEBUG) {
@@ -154,24 +215,31 @@ sub handler {
   }
 
   if ( $status != OK and $status != 200 ) {
-    $dbh->disconnect;
     $r->status( $status );
     return $status;
   }
 
-  if ( $variable->{Download} ) {
+  if ( $variable{ExternalRedirect} ) {
+    $log->debug("EXTERNAL REDIRECT $variable{ExternalRedirect}");
+    foreach my $key ( 'error', 'warning', 'information' ) {
+      if ( $variable{$key} ) {
+        $session{$key} = $variable{$key};
+      } # end if
+    } # end foreach
+    $r->headers_out->set(Location=>$variable{ExternalRedirect});
+    $r->status(Apache2::Const::REDIRECT);
+    #$r->send_http_header;
+    $log->debug('Redirecting to ' . $variable{ExternalRedirect} );
+    return OK;
+  } elsif ( $variable->{Download} ) {
     for my $line (@{ $variable->{File_Data} }) {
       print $line;
     }
-  }
-  else {
-
+  } else {
     my $filename = ssi::get_file_path($r, $page);
 
     my $fh;
-
     if (!open $fh, '<', $filename ) {
-      $dbh->disconnect;
       $r->log->error("Failed opening $page: $!");
       die "Failed to open $filename: $!";
     }
@@ -181,29 +249,35 @@ sub handler {
 
     close $fh;
 
-    print STDERR "START SSI \n";
     $file_data = ssi::variable_substitution(
       $r, $r->log, $dbh, $file_data, $variable
     );
 
-    print STDERR "CHECK FILL IN FORM \n";
+    #print STDERR "CHECK FILL IN FORM \n";
     if ( $variable->{__FillInForm} ) {
       require HTML::FillInForm;
-      print STDERR "HAVE FILL IN FORM \n";
+      #print STDERR "HAVE FILL IN FORM \n";
       my $f = new HTML::FillInForm;
       $file_data = $f->fill(scalarref => \$file_data,
         fdat      => $variable->{__FillInForm} );
     }
 
     # this is where we actually send the page to the client
-    $r->content_type('text/html');
-#print STDERR $file_data;
-    print( $file_data );
+    if ( $filename =~ /\.html/ ) {
+      $r->content_type(q{text/html; charset=utf-8});
+    } elsif ( $filename =~ /\.json/ ) {
+      $r->content_type(q{text/javascript; charset=utf-8});
+    } elsif ( $filename =~ /\.xml/ ) {
+      $r->content_type(q{text/xml; charset=utf-8});
+    } elsif ( $filename =~ /\.rss/ ) {
+      $r->content_type(q{application/rss+xml; charset=utf-8});
+    } # end if
+
+    print $file_data;
   }
 
   #print STDERR "END REQUEST \n\n\n\n\n";
 
-  $dbh->disconnect;
   $gdb->disconnect;
 
   return OK;
@@ -215,8 +289,12 @@ sub word_sub {
 
   my %words = (split ',', eprint::Config->get(General => 'word_sub'));
 
-  map { $variable->{'ws_'.$_}  = $words{$_}; print STDERR "CHANGE: $_ to $words{$_} \n"; } keys %words;
-  map { $file_data =~ s/$_/$words{$_}/g; print STDERR "CHANGE: $_ to $words{$_} \n"; } keys %words;
+  map { $variable->{'ws_'.$_}  = $words{$_};
+    #print STDERR "CHANGE: $_ to $words{$_} \n";
+  } keys %words;
+  map { $file_data =~ s/$_/$words{$_}/g;
+    #print STDERR "CHANGE: $_ to $words{$_} \n";
+  } keys %words;
   return $file_data;
 }
 
@@ -304,7 +382,7 @@ sub parse_page {
       return OK;
     }
 
-    print STDERR "Displaying login\n";
+    #print STDERR "Displaying login\n";
     return eprint::login::login_display($r, $log, $dbh, $cookie, $variable);
   }
 
@@ -317,12 +395,10 @@ sub parse_page {
 
     # Handles idle timeouts and last visit/access times.
     my $status = eprint::login::verify_user($r, $log, $dbh, $cookie, $variable, $section);
-    print STDERR "Status $status if redirect: $$variable{Redirect}\n";
     return $status if $variable->{Redirect};
 
     # Process a login if one is occuring.
     if ($filename eq 'confirmation_login.html' || $filename eq 'login_confirmation.html' ) {
-      print STDERR "Doing login\n";
       my $status = eprint::login::verify_login($r, $log, $dbh, $cookie, $variable, $section); 
       check_cart($r, $log, $dbh, $cookie, $variable);
       return $status if $status && $status != OK;
@@ -419,7 +495,27 @@ sub parse_page {
     template      => \&section_templating,
   );
   my $func = $section{ $first };
-  $status = $func->($r, $log, $dbh, $variable, $cookie, $page, $second, $filename) if $func;
+  if ($func) {
+    $status = $func->($r, $log, $dbh, $variable, $cookie, $page, $second, $filename);
+  } else {
+
+    if ( -e $ENV{DOCUMENT_ROOT}.$r->uri ) {
+      my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
+      if ( $proc ) {
+        my $module = join('_', ($first, ($second ? $second : ())));
+        require "openprint/$module.pm";
+        if ( my $function = ('openprint::'.$module)->can($proc) ) {
+          $log->debug("Running openprint::$module->$proc") if DEBUG;
+          $function->();
+        } else {
+          $log->error("No function def for $module :: $proc!");
+        }
+      } else {
+        $log->debug("No proc found for $filename");
+      } # end if
+    } # end if -e $ENV{DOCUMENT_ROOT}.$uri
+  }
+
 
   eprint::inventory::show_inventory($r, $log, $dbh, $variable)               if $filename eq 'Inventoried.html';
 
@@ -517,6 +613,22 @@ sub section_admininistrator {
       eprint::admin_paper::import_export($r, $log, $dbh, $variable)    if $filename eq 'import_export.html';
       eprint::admin_paper::price_list_edit($r, $log, $dbh, $variable)  if $filename eq 'price_list_edit.html';
       eprint::admin_paper::price_list_view($r, $log, $dbh, $variable)  if $filename eq 'price_list_view.html';
+    } elsif ($sub_section eq 'stock') {
+      my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+      if ( $proc ) {
+        my $module = join('_', 'administrator', $sub_section);
+        eval {
+          require "openprint/$module.pm";
+          if ( my $function = ('openprint::'.$module)->can($proc) ) {
+            $log->debug("Running openprint::$module->$proc") if DEBUG;
+            $function->($r, $log, $dbh, $variable );
+            $log->error( "Can't $module :: $proc, Reason: $@" ) if $@;
+          } else {
+            $log->error( "Can't $module :: $proc, Reason: " );
+          }
+        };
+        $log->error( "Can't $module :: $proc, Reason: $@" ) if $@;
+      } # end if
 
     } elsif ($sub_section eq 'managerial') {
       require eprint::credit_application;
@@ -619,6 +731,22 @@ sub section_employee {
     eprint::employee_support::helpdesk_search($r, $log, $dbh, $variable)  if $filename eq 'helpdesk_search.html';
     eprint::employee_support::rma($r, $log, $dbh, $variable)              if $filename eq 'return.html';
     eprint::employee_support::rma_search($r, $log, $dbh, $variable)       if $filename eq 'returns.html';
+  } else {
+    my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+    if ( $proc ) {
+      my $module = join('_', 'employee', $sub_section);
+      eval {
+        require "openprint/$module.pm";
+        if ( my $function = ('openprint::'.$module)->can($proc) ) {
+          $log->debug("Running openprint::$module->$proc") if DEBUG;
+          $function->($r, $log, $dbh, $variable );
+          $log->error( "Can't $module :: $proc, Reason: $@" ) if $@;
+        } else {
+          $log->error( "Can't $module :: $proc, Reason: " );
+        }
+      };
+      $log->error( "Can't $module :: $proc, Reason: $@" ) if $@;
+    } # end if
   }
 
   return OK;
@@ -633,7 +761,6 @@ sub section_main {
   require eprint::docket;
   require eprint::project_files;
   require eprint::shopping_list;
-  print STDERR "MAIN -- SUB : $sub_section file: $filename \n";
 
   if ($sub_section eq 'account') {
     require eprint::credit_application;
@@ -824,10 +951,10 @@ sub section_main {
 sub map_param {
   my $param;
   my $r = session::r;
-  print STDERR "START MAP \n";
+  #print STDERR "START MAP \n";
   map { 
     my @p = $r->param($_);
-    print STDERR "HAVE PARAM P $_ =  " , $r->param($_)  . "\n";
+    #print STDERR "HAVE PARAM P $_ =  " , $r->param($_)  . "\n";
 
     if (@p == 1 ) {
       $param->{$_} = shift @p;
@@ -846,13 +973,11 @@ sub menu_options {
   my ( $dbh, $var) = @_;
 
   my $cats = PQS::model::categories::get_all();
-  print STDERR "cats: $cats\n";
 
   #map { push @{$var->{prod_menu}}, $cats->{$_}; } sort keys $cats;
   @{$var->{prod_menu}} = ();
 
   map { push @{$var->{prod_menu}}, $cats->{$_}; } sort { $a cmp $b } keys %{$cats};
-  	print STDERR "HAVE CATS: ", Dumper($var->{prod_menu}, $cats);
 }
 
 sub check_cart {

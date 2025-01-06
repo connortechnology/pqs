@@ -1,3 +1,4 @@
+"use strict";
 // TODO Cache the last n reponses (using the serialised form as a key) so we
 // don't even have to touch the server if we're toggling between a number of
 // options.
@@ -41,10 +42,27 @@ Service.prototype = {
 
         // Create the auto calculation timer
         this._bind_timer();
+
+      if (1) {
+       for (var i = 0; i < this.form.elements.length; i++) {
+         var elem = this.form.elements[i];
+
+         // Ignore non-interactive elements (pricing fields, fieldsets,etc.).
+         if ( !elem.type || elem.type == 'hidden' || elem.readOnly ) continue;
+
+         if (elem.type == 'text' || elem.nodeName.toLowerCase() == 'textarea' || elem.type == 'number') {
+           //Event.observe(elem, 'keypress', this.calculate.bindAsEventListener(this));
+           if (!elem.oninput)
+             elem.oninput = this.calculate.bind(this, false);
+         }
+       }
+      }
+
     },
 
     // Add events for automatic calculation on user input.
     _bind_timer : function () {
+      return;
         this.timer = new Timer(this.calculate.bind(this), 2240);
 
         // Start the timer any time an element changes
@@ -70,16 +88,23 @@ Service.prototype = {
 
     // Validate and price the service in the background.
     calculate : function (e) {
-        if (this.timer) this.timer.stop();
+      if (this.timer) this.timer.stop();
 
-        // If we're already in a request or we're invalid, do nothing.
-        if (this.req || ! this.validate.apply(this, [e])) return false;
+      // If we're already in a request or we're invalid, do nothing.
+      if (this.req) {
+        this.req.transport.abort();
+      }
 
-        // *TEMPORARY* PRINTING SPECIFIC The run log (hdnRunStyleCheck) will
-        // be going away soon (handled by sessions) until then we still need
-        // to pass it back during a POST but not during a pricing request
-        // (it's huge). TODO Remove completely.
-        if ($('run_log')) $('run_log').value = '';
+      if (! this.validate.apply(this, [e])) {
+        console.log("Not valid");
+        return false;
+      }
+
+      // *TEMPORARY* PRINTING SPECIFIC The run log (hdnRunStyleCheck) will
+      // be going away soon (handled by sessions) until then we still need
+      // to pass it back during a POST but not during a pricing request
+      // (it's huge). TODO Remove completely.
+      if ($('run_log')) $('run_log').value = '';
 
 			// not all views show price field
 			if ( $('txtPrice1') ) {
@@ -91,23 +116,22 @@ Service.prototype = {
 				$('txtUnitPrice1').innerHTML = '.';
 			}
 
-        
-        this.req = new Ajax.Request('/service/' + this.name, {
-            method:         'get',
-            requestHeaders: { Accept: 'application/json' },
-            parameters:     this.form.serialize(),
-            
-            onCreate:    this.disable.bind(this),
-            onSuccess:   this._response.bind(this),
-            onComplete:  this._cleanup.bind(this)
+      this.req = new Ajax.Request('/service/' + this.name, {
+        method:         'get',
+        requestHeaders: { Accept: 'application/json' },
+        parameters:     $(this.form).serialize(),
 
-        });
+        onCreate:    this.disable.bind(this),
+        onSuccess:   this._response.bind(this),
+        onComplete:  this._cleanup.bind(this)
 
-        return true;
+      });
+
+      return true;
     },
-    novalidate : function () { return true },
+    novalidate : function () { return true; },
 
-    validate : function () { return true },
+    validate : function () { return true; },
 
     _response : function (req) {
         var data = req.responseText.evalJSON(true);
@@ -121,70 +145,61 @@ Service.prototype = {
         // Dispatch to the custom response handler
         var rv = true;
         if (this.response) rv = this.response(data);
-
         if (rv) this._fill(data);
 
         return true;
     },
 
     _fill : function (data) {
-        var form = this.form;
+      const form = this.form; // "this" gets reset into the each
+      for (const [field, value] of Object.entries(data)) {
+        var elem = form.elements[field] ? form.elements[field] : document.getElementById(field);
+        if (!elem) continue;
 
-        for (field in data) {
-            var value = data[field];
-            var elem = form.elements[field] || document.getElementById(field);
-            if (!elem) continue;
+        // IE uses NodeLists but doesn't recognize them as DOM objects.
+        //   elem = $A( elem instanceof NodeList ? elem : [elem] );
+        elem = $A( elem.nodeName ? [elem] : elem );
 
+        elem.each(function (e) {
+          switch (e.type) {
+            case "text":
+            case "textarea":
+            case "hidden":
+              if (typeof value == 'object') break;
+              e.value = value;
+              break;
 
-            // IE uses NodeLists but doesn't recognize them as DOM objects.
-            //   elem = $A( elem instanceof NodeList ? elem : [elem] );
-            elem = $A( elem.nodeName ? [elem] : elem );
+            case "radio": // Radios are equiv. to select-one.
+              if (typeof value == 'object') break; 
+              e.checked = (value == e.value);
 
-            elem.each(function (elem) {
-                switch (elem.type) {
-                    case "text":
-                    case "textarea":
-                    case "hidden":
-                        if (typeof value == 'object') break;
-                        elem.value = value;
-                        break;
+            case "checkbox":
+              e.checked = (value instanceof Array) ? value.indexOf(e.value) != -1 : value == e.value;
+              break;
 
-                    case "radio": // Radios are equiv. to select-one.
-                        if (typeof value == 'object') break; 
-                        elem.checked = (value == elem.value);
+            case "select-one":
+            case "select-multiple":
+              // We only populate select boxes that don't have an override or if they have one, it's not checked.
+              if (form.elements['override_'+field] && form.elements['override_'+field].checked) {
+                break;
+              }
 
-                    case "checkbox":
-                        elem.checked = (value instanceof Array) 
-                                           ? value.indexOf(elem.value) != -1
-                                           : value == elem.value;
-                        break;
+              for (var i = 0, len = e.options.length; i < len; i++) {
+                var opt = e.options[i];
+                var val =opt.hasAttribute('value') ? opt.value : opt.text;
 
-                    case "select-one":
-                    case "select-multiple":
-                        // We only populate select boxes that don't have an override or
-                        // if they have one, it's not checked.
-                        if (form.elements['override_'+field]
-                             && form.elements['override_'+field].checked) break;
+                opt.selected = (value instanceof Array) 
+                  ? value.indexOf(val) != -1
+                  : value == val;
+              }
+              break;
 
-
-                        for (var i = 0, len = elem.options.length; i < len; i++) {
-                            var opt = elem.options[i];
-                            var val = Element.extend(opt).hasAttribute('value') 
-                                ? opt.value : opt.text;
-
-                            opt.selected = (value instanceof Array) 
-                                               ? value.indexOf(val) != -1
-                                               : value == val;
-                        }
-                        break;
-
-                    default:
-                        elem.innerHTML = value;
-                }
-                    
-            });
-        }
-    },
+            default:
+              e.innerHTML = value;
+          }
+        });
+    }
+},
 
     // Allow user actions again.
     _cleanup: function (req) {
@@ -220,6 +235,7 @@ Service.prototype = {
     //
     // Enables/disables a form keeping track of each elements initial state.
     set_form_state : function (enable) {
+      return;
         // Let the user know we're doing (or not doing) something.
         this.form.style.cursor = enable ? '' : 'wait';
 

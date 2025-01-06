@@ -1,6 +1,8 @@
 package eprint::service;
 use strict;
 use warnings;
+require openprint;
+use Data::Dumper;
 
 no warnings qw(uninitialized);
 
@@ -297,10 +299,10 @@ sub valid_equipment {
   #my $specs = shift;
 	use session;
 	my $r = session::r;
-	my $specs;
-	map { $specs->{$_} = $r->param($_) } $r->param();
+	my $specs = \%openprint::param;
+  #map { $specs->{$_} = $r->param($_) } $r->param();
 
-	print STDERR "DUMPER SPECS: " , Dumper($specs, $specs->{chkOverrideEquipment1});
+  #print STDERR "DUMPER SPECS: " , Dumper($specs, $specs->{chkOverrideEquipment1});
 
 	my $override;
 	if ( $specs->{chkOverrideEquipment1} ) {
@@ -312,8 +314,6 @@ sub valid_equipment {
 	if ( $override ) {
 		$over_sql = " AND eq.lngindex = $override ";
 	}
-
-	print STDERR "HAVE OVERRRIDE:  $override \n";
 
 	my $sql = qq{
 		SELECT equipment 
@@ -486,7 +486,7 @@ sub insert_service_spec {
             strValue        => $value,
             ui_spec         => ($ui_spec || 0)
     );
-print STDERR "INSERTING SPECS: $name - $value - $ui_spec \n";
+    #print STDERR "INSERTING SPECS: $name - $value - $ui_spec \n";
 
     return 1;
 }
@@ -886,7 +886,7 @@ sub get_service_full_price {
         if (grep { $_ > 0 } @specs) {
             next DEVICELIST unless eprint::equipment::equipment_fits($log, $dbh, $device, @specs, 1);
         }
-print STDERR "IT FITS: $device \n";
+        #nprint STDERR "IT FITS: $device \n";
 
         my $price       = get_price($log, $dbh, $variable, $names->{service}, $quantity, $device);
         my $setup_price = get_price($log, $dbh, $variable, $names->{makeready}, 1, $device);
@@ -940,11 +940,10 @@ print STDERR "IT FITS: $device \n";
         = sort { (sum @{ $device_prices{$a} }) <=> (sum @{ $device_prices{$b} }) }
             keys %device_prices;
 
-    map { print STDERR "SUM: ", sum @{$device_prices{$_}} , "\n" } keys %device_prices;
+            #map { print STDERR "SUM: ", sum @{$device_prices{$_}} , "\n" } keys %device_prices;
 
-use Data::Dumper;
-print STDERR "BEST  FITS: $device \n", Dumper(\%device_prices);
-print STDERR "Stuff \n", Dumper(@stuff);
+#print STDERR "BEST  FITS: $device \n", Dumper(\%device_prices);
+#print STDERR "Stuff \n", Dumper(@stuff);
 
 
     #this got real ugly real fast -- it was expanded long after I wrote it to
@@ -1080,8 +1079,10 @@ sub price {
         $calc->($log, $dbh, $variable, $pid, $sid, $service_type, $specs)
     };
     if ($@) {
-        if (DEBUG) { die $@ }
-        else       { warn("Pricing $service_type errored: $@") }
+      #if (DEBUG) { die $@ }
+      #else       {
+          warn("Pricing $service_type errored: $@");
+          #}
 
         return 'error';
     }
@@ -1117,7 +1118,7 @@ sub clean_calc {
 			foreach my $s ( keys %{$specs} ) {
 				if  ( $s =~ /$_/ ) { 
 					delete $specs->{$s}; 
-					print STDERR "CHECK SPEC: $s to $_ \n";
+          #print STDERR "CHECK SPEC: $s to $_ \n";
 				}
 			}
 

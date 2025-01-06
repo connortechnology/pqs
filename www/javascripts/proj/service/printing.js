@@ -3,56 +3,71 @@
 var service = new Service('printing', validate, display);
 
 function validate (e) {
-    var form    = this.form;
-    var text    = '';
-    var is_auto = !e || e.type == 'load'; // Interactive only on user events.
+  var form    = this.form || $(e.form);
+  var text    = '';
+  var is_auto = !e || e.type == 'load'; // Interactive only on user events.
 
-    if ( form.flat_width && ! ( 0 < parseFloat(form.flat_width.value) ) ) {
-        text += 'Please enter the width of your Project\n';
+  if ( form.flat_width && ! ( 0 < parseFloat(form.flat_width.value) ) ) {
+    text += 'Please enter the width of your Project\n';
+  }
+
+  if ( form.flat_height && ! ( 0 < parseFloat(form.flat_height.value) ) ) {
+    text += 'Please enter the height of your Project\n';
+  } 
+
+  if ( form.flat_width && form.flat_height && form.final_width && form.final_height ) {
+    if ( form.flat_width.value * form.flat_height.value < form.final_width.value * form.final_height.value ) {
+      text += 'Your finished dimensions may not exceed your flat dimensions.\n';
     }
+  }
 
-    if ( form.flat_height && ! ( 0 < parseFloat(form.flat_height.value) ) ) {
-        text += 'Please enter the height of your Project\n';
-    } 
+  // Check that at least one side has some ink selected.
+  if (! has_ink(form) )
+    text += 'At least one colour must be selected\n';
 
-    if ( form.flat_width && form.flat_height && form.final_width && form.final_height ) {
-       if ( form.flat_width.value * form.flat_height.value < form.final_width.value * form.final_height.value ) {
-               text += 'Your finished dimensions may not exceed your flat dimensions.\n';
-         }
+  // If stock exists at all (screen items don't use it), check that all
+  // attributes are selected.
+  if ($('stock')) {
+    if ($('rdbSpecificStockN').checked) {
+      var names = ['name', 'finish', 'color', 'weight'];
+      var id    = ['name', 'finish', 'colour', 'weight'];
+
+      for (var i=0; i < names.length; i++) {
+        var field = form.elements['stock_' + id[i]];
+
+        if (! (field && $F(field)) )
+          text += 'Please select a stock ' + names[i] + '\n';
+      }
+    } else {
+      if (!$F(form.elements['txtSpecificStockCalliper'])) {
+        text += 'Please enter a calliper for the custom stock\n';
+      }
+      if (!$F(form.elements['CustomStockPrice'])) {
+        text += 'Please enter pricing for the custom stock\n';
+      }
+      if (!$F(form.elements['basis_mweight'])) {
+        text += 'Please enter one of MWeight, Basis Weight or GSM for the custom stock\n';
+      }
+      if (!($F(form.elements['txtSpecificStockWidth']) && $F(form.elements['txtSpecificStockHeight']))) {
+        text += 'Please enter the dimensions of the custom stock\n';
+      }
     }
+  }
 
-    // Check that at least one side has some ink selected.
-    if (! has_ink(form) )
-        text += 'At least one color must be selected\n';
+  // If multi-version, make sure everything is allocated.
+  if (form.is_mv && form.is_mv.checked) {
+    if (version_quantity_remaining() != 0)
+      text += 'Some projects are not assigned to a version\n';
+  }
 
-    // If stock exists at all (screen items don't use it), check that all
-    // attributes are selected.
-    if ($('stock')) {
-        var names = ['name', 'finish', 'color', 'weight'];
-        var id    = ['name', 'finish', 'colour', 'weight'];
-
-        for (var i=0; i < names.length; i++) {
-            var field = form.elements['stock_' + id[i]];
-
-            if (! (field && $F(field)) )
-                text += 'Please select a stock ' + names[i] + '\n';
-        }
+  if (text) {
+    if (!is_auto) {
+      alert('Your form is incomplete!\n\n' + text);
     }
+    return false;
+  }
 
-    // If multi-version, make sure everything is allocated.
-    if (form.is_mv && form.is_mv.checked) {
-       if (version_quantity_remaining() != 0)
-           text += 'Some projects are not assigned to a version\n';
-    }
-
-    if (text) {
-        if (!is_auto) {
-            alert('Your form is incomplete!\n\n' + text);
-        }
-        return false;
-    }
-
-    return true;
+  return true;
 }
 
 // If any black, process, or spot colours are selected we're okay. TODO Expand
@@ -61,7 +76,7 @@ function has_ink (form) {
     for (var i=0; i <= 1; i++) {
         var side = 's' + i + '_';
         
-        if (    form[side + 'black'] && form[side + 'black'].checked 
+        if (form[side + 'black'] && form[side + 'black'].checked 
 		     || form[side + 'process'] && form[side + 'process'].checked)
             return true;
 
@@ -422,7 +437,7 @@ function link_sides (e) {
                 break;
         }
     });
-
+  calc();
 }
 
 // BLACK/PROCESS COLOUR MUTEX
@@ -636,20 +651,20 @@ function ignore_margins_mutex(form) {
 //
 
 Event.observe(window, 'load', function () {
-	var stock_supplied = $('stock_supplied');
+  var stock_supplied = $('stock_supplied');
 
-	if (!stock_supplied) return;
+  if (!stock_supplied) return;
 
-    var description = $('stock_custom');
-    var container   = description.parentNode;
-	
-	container.style.display = stock_supplied.checked ? '' : 'none';
-	description.disabled    = !stock_supplied.checked;
+  var description = $('stock_custom');
+  var container   = description.parentNode;
 
-	Event.observe(stock_supplied, 'click', function () {
-		container.style.display = stock_supplied.checked ? '' : 'none';
-		description.disabled    = !stock_supplied.checked;
-	});
+  container.style.display = stock_supplied.checked ? '' : 'none';
+  description.disabled    = !stock_supplied.checked;
+
+  Event.observe(stock_supplied, 'click', function () {
+    container.style.display = stock_supplied.checked ? '' : 'none';
+    description.disabled    = !stock_supplied.checked;
+  });
 });
 
 
@@ -659,16 +674,21 @@ Event.observe(window, 'load', function () {
 function overrides (e) {
     var override = $('override_' + this.name);
     override.checked  = this.options[this.selectedIndex].value;
-    override.disabled = !override.checked;
+    //override.disabled = !override.checked;
+    calc();
 
     return true;
 }
 
 function overrides_chkbox (e) {
-    var override = $(this.name.replace('override_', ''));
-    if (!override.options[override.selectedIndex].value) {
-        this.disabled = true;
-        this.checked = false;
-    }
+    //var override = $(this.name.replace('override_', ''));
+    //if (!override.options[override.selectedIndex].value) {
+        //this.disabled = true;
+        //this.checked = false;
+    //}
+    calc();
 }
 
+function calc(formName) {
+  service.calculate();
+}

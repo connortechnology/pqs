@@ -1,0 +1,70 @@
+<form name="f1" id="f1" action="list.html" method="post">
+	<input type="hidden" id="num_prices" name="num_prices" value="1" />
+	<input type="hidden" name="stock_ids" value="<? echo ( join(',', (ref $param{'stock_ids'} eq 'ARRAY' ? @{$param{'stock_ids'}} : $param{'stock_ids'} ) ); ) ?>" />
+	<input type="hidden" name="btnFunction" value="ApplyChanges"/>
+	<fieldset><legend><input type="radio" id="modenew" name="mode" value="new" checked="checked" /> New Pricing</legend>
+		<? eval ( @{$$variable{'Pricelists'}} = openprint::Pricelist->find(); ) ?>
+		<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?>
+		<p>
+			<label>Prices for pricelist <? echo ( $$variable{'Pricelist'}->name() ) ?></label>
+			<table class="List" id="Prices">
+				<tr>
+					<th class="Service">Service</th>
+					<th class="Range">Quantity Range</th>
+					<th class="Units">Range Units</th>
+					<th class="Cost">Cost CWT</th>
+					<th class="Markup">Mark up</th>
+					<th class="Price">Price CWT</th>
+					<th class="Discount">Discount?</th>
+					<th class="buttons">
+<? echo ( button( 'add', { onclick=>"\$('num_prices').value=1+parseInt(\$('num_prices').value);new Ajax.Request('_popup_price.html?pricelist_id=$$variable{Pricelist}{id}&id='+\$('num_prices').value, { onSuccess: function(response){new Insertion.Bottom(\$('Prices'), response.responseText);} } );", text=>'Add' } ); ) ?>
+					</th>
+				</tr>
+				<? echo ( $param{id} = 1; $param{pricelist_id}=$$variable{Pricelist}->id(); return include( '/administrator/stock/_popup_price.html' ); ) ?>
+			</table>
+		</p>
+		<? endwhile ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?>
+	</fieldset>
+	<fieldset><legend><input type="radio" id="modemodify" name="mode" value="modify" /> Modify Pricing</legend>
+		<p>
+			To add, put a + in front.  To subtract, put a - in front.  To set, don't put anything in front.
+			<table>
+				<tr>
+					<td>Add Amount</td>
+					<td class="Price">$<? echo ( input( id=>'amount', type=>'float', name=>'amount', oninput=>q`$('modemodify').checked=true;` ) ) ?></td>
+					<td>Markup</td>
+					<td class="Markup"><? echo ( input( id=>'markup', type=>'float', name=>'markup', oninput=>q`$('modemodify').checked=true;` ) ) ?>%</td>
+				</tr>
+			</table>
+		</p>
+	</fieldset>
+	<fieldset class="Recommendations"><legend><input type="radio" id="moderecommended" name="mode" value="recommended" /> Change Estimating Availability</legend>
+		<ul>
+			<? echo (
+				my $html;
+				foreach my $ProjectType ( openprint::ProjectType->find(order=>'lower(name)') ) {
+					$html .= sprintf(q`<li><input type="checkbox" id="PRF%1$d" name="PRF" %4$s value="%1$d" onclick="$('moderecommended').checked=true;"/><label class="radio" for="PRF%1$d">%3$s</label></li>`,
+						$ProjectType->id(),
+						$ProjectType->name(),
+						htmlize($ProjectType->description()),
+						checked( sets::isin( $ProjectType->id(), [ $$variable{Stock}->recommendations() ] ) ),
+						);
+				} # end foreach
+				return $html;
+			) ?>
+		</ul>
+	</fieldset>
+	<fieldset><legend><input type="radio" id="modeother" name="mode" value="other" /> Other</legend>
+		<ul>
+			<li><label>Score required</label> <?echo( radio('score_required', ['1','Yes','0','No','','Unchanged'], undef, { onclick=>q`$('modeother').checked=true;`, default=>'' } ); ) ?> </li>
+			<li><label>Suitable for digital?</label> <?echo( radio('digital', ['1','Yes','0','No','','Unchanged'], undef, { onclick=>q`$('modeother').checked=true;`, default=>'' } ); ) ?> </li>
+			<li><label>New GSM</label> <?echo(input(type=>'float', name=>'gsm', oninput=>q`$('modeother').checked=true;` ); ) ?> </li>
+		</ul>
+	</fieldset>
+	<p class="buttons">
+		<? echo ( join("\n",
+			button( 'apply', { onclick=>q`$('f1').submit();`, text=>'Apply' } ),
+			button( 'cancel', { onclick=>'popupWin.destroy();', text=>'Cancel' } ),
+		); ) ?>
+	</p>
+</form>

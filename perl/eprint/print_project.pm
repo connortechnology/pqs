@@ -1319,8 +1319,8 @@ print STDERR "MY QTYS: $sq \n";
 					$sth->execute($pid);
 			
 
-					$dbh->do(qq{ UPDATE tbl_project_contents SET strstatus = 'uncalculated'
-						WHERE lngprojectindex='$pid' AND strservicetype = 'Shipping' } );
+					$dbh->do(q{ UPDATE tbl_project_contents SET strstatus = 'uncalculated'
+						WHERE lngprojectindex=? strservicetype = 'Shipping' }, {}, $pid );
 				}
                
                 $modified = 2; # Full recalculate
@@ -1809,8 +1809,7 @@ sub copy_project_services {
         insert(undef, $dbh, 'tbl_project_contents', %$contents);
 
         # Get the new service ID.
-        my $new_sid = $dbh->last_insert_id(
-            '', qw(public tbl_project_contents lngserviceindex));
+        my $new_sid = $dbh->last_insert_id('', qw(public tbl_project_contents lngserviceindex), 'ContentsServiceIndex_seq');
 
         # Grab the old specs.
         $specs->execute($src, $sid);

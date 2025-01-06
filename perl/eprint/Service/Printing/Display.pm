@@ -3,7 +3,7 @@ use strict;
 use warnings;
 no warnings qw(uninitialized);
 
-use Data::Dumper;
+#use Data::Dumper;
 use List::Util qw(sum);
 
 use eprint::Service::Printing::Constants qw(:spread_types);

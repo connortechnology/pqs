@@ -1,0 +1,343 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+  <title>
+    <!--#include virtual="/includes/web_page_title.html" -->
+    Paper
+  </title>
+
+  <!--#include virtual="/includes/web_page_meta.html" -->
+  <!--#include virtual="/includes/h1-admin-css.html" -->
+
+  <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+
+  <!--#include virtual="/includes/h2-js.html" -->
+
+  <script src="/javascripts/other.js"></script>
+
+  <script  >
+    function unselect ( ddm ) {
+      for ( var index = 0; index < ddm.options.length; index += 1 ) {
+        ddm.options[index].selected = false;
+      }
+    }
+  </script>
+</head>
+<body>
+
+<!--#include virtual="/includes/c1-admin-nav.html" -->
+<div id="content">
+<? eval (
+	if ( ! exists $session{$r->uri().'?Types'} ) {
+		$session{$r->uri().'?Types'} = join(',', 'Sheet','Roll' );
+	} # end if
+	if ( ! exists $session{$r->uri().'?recommendations'} ) {
+		$session{$r->uri().'?recommendations'} = '';
+	} # end if
+) ?>
+<script src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script src="<?hash_link(/administrator/stock/stock.js)?>"></script>
+<script>
+	var popupWin;
+	function popup_window( form ) {
+		let stock_ids = [];
+		if ( form.chkStock ) {
+			if ( ! form.chkStock.length ) {
+				stock_ids[0] = form.chkStock;
+			} else {
+				stock_ids = $A(form.chkStock).filter(function(e){return e.checked});
+			}
+		} // end if form.chkStock
+		if ( ! stock_ids.length ) {
+			alert('Please select stocks to apply changes to.');
+			return;
+		} // end if
+		if ( ! popupWin ) {
+			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:1024, height: 550} );
+			// Set up a windows observer, check ou debug window to get messages
+			const myObserver = {
+				onDestroy: function(eventName, win) {
+					if (win == popupWin) {
+						popupWin = null;
+						Windows.removeObserver(this);
+					}
+				}
+			}
+			Windows.addObserver(myObserver);
+		} // end if
+		popupWin.setHTMLContent('Loading... please wait');
+		popupWin.showCenter();
+		const url = '/administrator/stock/_popup.html?' + stock_ids.map(function(e){return 'stock_ids=' + e.value}).join('&');
+
+		popupWin.setAjaxContent(url, null , true);
+	} // end function popup_window
+
+	var stock_filter_ajax = null;
+	function calc(formName) {
+		if ( stock_filter_ajax ) { stock_filter_ajax.abort(); }
+
+    const div = $j('#Stocks');
+    div.html('Loading...');
+
+      console.log($j('#f1').serialize());
+    stock_filter_ajax = div.load('/administrator/stock/_stocks.html',
+
+        $j('#f1').serialize(),
+        function(){
+            if ($j('#StocksTable').bootstrapTable) {
+                $j('#StocksTable').bootstrapTable({ });
+              }
+        stock_filter_ajax = null;
+        });
+
+  }
+function reset() {
+  const f1 = document.getElementById('f1');
+  for (let i=0, len = f1.elements.length; i<len; i++) {
+    const element = f1.elements[i];
+    set_value( element, '' );
+  }
+  calc();
+}
+function body_onLoad() {
+	}
+addEventListener('DOMContentLoaded', (event) => {
+    if ($j('#StocksTable').bootstrapTable) 
+      $j('#StocksTable').bootstrapTable({ });
+});
+</script>
+<?include('/includes/error_reporting.html')?>
+<form id="f1" name="f1" method="post" action="list.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters"><legend>Go to</legend>
+		<ul class="non-list">
+			<li><label>Paper #</label>
+				<? echo ( join("\n",
+					input( type=>'cardinal', name=>'stock_id', id=>'stock_id' ),
+					button( 'Go', { onclick=>q`window.location='/administrator/stock/stock.html?stock_id='+$('stock_id').value;` } ),
+				); ) ?>
+			</li>
+		</ul>
+	</fieldset>
+	<fieldset class="filters"><legend>Search Information</legend>
+		<div class="leftColumn">
+			<ul class="non-list">
+      <? echo (
+        my @company_ids = sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} );
+        if (@company_ids > 1) {
+          $session{$r->uri().'?Owner'} = $session{company_id} if ! exists $session{$r->uri().'?Owner'};
+
+          my @Companies = openprint::Company->find( id=>\@company_ids, order=>'lower(name)' );
+          if ( $session{$r->uri().'?owner_id'} and ! sets::isin( $session{$r->uri().'?owner_id'}, \@company_ids ) ) {
+            $session{$r->uri().'?owner_id'} = '';
+          } # end if
+return join("\n",
+        '<li><label>Owner</label>',
+        ssi::select(
+          [ map { $_->id(), $_->name() } @Companies ],
+          $session{$r->uri().'?owner_id'},
+          {
+            name=>'owner_id',
+            id=>'owner_id',
+            size=>1,
+            onchange=>'calc(this.form.name);',
+            prepend=>[''=> 'All']
+          }),
+        '</li>',
+);
+        }
+        return;
+      ) ?>
+<? if ( @{$$variable{Groups}} = openprint::StockGroup->find(order=>'lower(name)') ) ?>
+		<li>
+			<label>Group</label>
+			<select id="group_id" name="group_id" size="1" onchange="calc(this.form.name);">
+				<option value="">select</option>
+				<? echo (
+					make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Groups}} ], $session{$r->uri().'?group_id'} );
+					) ?>
+			</select>
+		</li>
+<? endif ( @{$$variable{Groups}} = openprint::StockGroup->find(order=>'lower(name)') ) ?>
+<?echo(
+	my @manufacturer_ids = sql::execute( undef, undef, 'SELECT DISTINCT manufacturer_id FROM Papers WHERE manufacturer_id IS NOT NULL' );
+  if (@manufacturer_ids >1) {
+    return join("\n", '<li><label>Manufacturer</label>',
+			ssi::select(openprint::Manufacturer->dropdown(), $session{$r->uri().'?manufacturer_id'}, {
+ id=>'manufacturer_id', name=>'manufacturer_id', size=>1,  on_change=>'calc', prepend=>['','All']}),
+		'</li>',
+);
+  }
+  return;
+)?>
+<? echo ( 
+	my @stock_supplier_ids = @{$$variable{supplier_ids}} = sql::execute( undef, undef, 'SELECT DISTINCT supplier_id FROM Papers WHERE supplier_id IS NOT NULL' );
+	if ( @stock_supplier_ids ) {
+	return join("\n",
+		'<li><label>Supplier</label>
+			<select id="supplier_id" name="supplier_id" size="1" onchange="calc(this.form.name);">
+				<option value="">select</option>',
+				make_drop_down( openprint::Company->dropdown( id=> \@stock_supplier_ids, order=>'lower(name)', supplier=>'Y'), $session{$r->uri().'?supplier_id'} ), 
+			'</select>
+		</li>' );
+	} # end if
+	'';
+) ?>
+		<li>
+			<label>Brand</label>
+			<select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
+				<option value="">All</option>
+				<? echo (
+					make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $session{$r->uri().'?brand_id'} );
+					) ?>
+			</select>
+		</li>
+<? echo (
+	my $html;
+	my @options = ('Finish', 'Colour', 'Weight');
+                #, 'Quality', 'Material' );
+	my %options = map { $_, lc $_ } @options;
+
+	openprint::StockFinish->find();
+	openprint::StockColour->find();
+	openprint::StockWeight->find();
+	#openprint::StockQuality->find();
+	
+	my %find = (
+		($session{$r->uri().'?brand_id'}?(brand_id=>$session{$r->uri().'?brand_id'}) : ()),
+		($session{$r->uri().'?manufacturer_id'}?(manufacturer_id=>$session{$r->uri().'?manufacturer_id'}):()),
+		($session{$r->uri().'?group_id'}?(group_id=>$session{$r->uri().'?group_id'}):())
+	);
+	my %results;
+	my @Stocks = openprint::Paper->find(\%find);
+
+	foreach my $Stock ( @Stocks ) {
+		foreach my $option ( @options ) {
+			$results{$option}{$$Stock{$options{$option}.'_id'}} = $Stock->$option();
+		} # end foreach Stock
+	}# end foreach option
+
+	foreach my $option ( @options ) {
+		my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
+		my $lc_option = $options{$option};
+    next if @sorted < 1;
+		$html .= sprintf(q`	
+		<li> 
+			<label>%3$s</label>
+			<select id="%1$s_id" name="%1$s_id" size="1" onchange="filter_onChange(this,'');"><option value=""> All </option>%2$s</select>
+		</li>`, $lc_option, make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{$r->uri().'?'.$lc_option.'_id'} ), $option );
+		$find{$lc_option.'_id'} = $session{$r->uri().'?'.$lc_option.'_id'} if $session{$r->uri().'?'.$lc_option.'_id'};
+	}# end foreach option
+	return $html;
+) ?>
+		<li class="type"> 
+			<label>Type</label>
+			<? echo ( checkboxes( 'Types', ['Sheet','Sheet','Roll','Roll','Envelope','Envelope'], [ split(',', $session{$r->uri().'?Types'} ) ], { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li>
+			<label>Size</label>
+			<? echo ( join("\n",
+input( type=>'float', name=>'width', id=>'width', value=>$session{$r->uri().'?width'}, oninput=>'calc(this.form.name);' ),
+'x',
+input( type=>'float', name=>'height', id=>'height', value=>$session{$r->uri().'?height'}, oninput=>'calc(this.form.name);' ),
+checkboxes( 'OrLarger', [1,'Or Larger'], $session{$r->uri().'?OrLarger'}, { onclick=>'calc(this.form.name);' } ),
+); ) ?>
+			
+		</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul class="non-list">
+		<li class="calliper"><label>Calliper (Use &lt; and &gt;)</label>
+		<? echo ( join("\n",
+					input( type=>'text', name=>'calliper', id=>'calliper', value=>$session{$r->uri().'?calliper'},
+						oninput=>'calc(this.form.name);', pattern=>'[<>.0-9]*' ),
+					'inches',
+);
+) ?>
+		</li>
+    <!--
+		<li><label>Required User Type</label>
+					<? echo	( ssi::select( [ '', 'All', 'C', 'Customer', 'E', 'Employee', 'A', 'Administrator' ], $session{$r->uri().'?user_type'}, { name=>'user_type' } ); ) ?>
+		</li>
+    -->
+		<li>
+			<label>Recommendations</label>
+      <? echo ( radio( 'recommendations', [ '1'=>'Yes','0'=>'No', ''=>'All' ], $session{$r->uri().'?recommendations'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+    <!--
+		<li>
+			<label>Grain Direction</label>
+			<? echo ( radio( 'grain_direction', [ 'width', 'Width','height', 'Height', '', 'Both' ], $session{$r->uri().'?grain_direction'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li>
+			<label>FSC Code</label>
+			<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $session{$r->uri().'?fsc_code'} ) ?>" />
+			<? echo ( button( 'Go1', { onclick=>"calc('f1');", text=>'Go' } ); ) ?>
+		</li>
+		<li>
+			<label>Inventory Code</label>
+			<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $session{$r->uri().'?inventory_number'} ) ?>" />
+			<? echo ( button( 'Go2', { onclick=>q`calc('f1');`, text=>'Go' } ); ) ?>
+		</li>
+		<li>
+			<label>Digital</label>
+			<? echo ( radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?digital'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li>
+			<label>Requires Scoring</label>
+			<? echo ( radio( 'scoring', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?scoring'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li>
+			<label>Has Setup Prices</label>
+			<? echo ( radio( 'setup_prices', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?setup_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li>
+			<label>Has Material Prices</label>
+			<? echo ( radio( 'material_prices', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?material_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li><label>Customer Supplied</label>
+			<? echo ( radio( 'customer_supplied', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?customer_supplied'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li><label>Has message</label>
+			<? echo ( radio( 'has_message', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?has_message'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li><label>Has minimum order</label>
+			<? echo ( radio( 'has_minimum_order', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?has_minimum_order'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+-->
+		<li><label>Has problems</label>
+			<? echo ( radio( 'has_problems', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?has_problems'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+
+		</ul>
+		</div>
+    <br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'Show', { onclick=>q`calc('f1');` } ),
+				button( 'Reset', { on_click=>'reset', text=>'Reset' } ),
+				button( 'applychanges', { onclick=>'popup_window(f1);', text=>'Make Changes' } ),
+				button( 'New', { href=>'stock.html', text=>'Add A New Stock' } ),
+				button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text=>'Delete Checked Stocks' } ),
+				#button( 'Save', { onclick=>"show_div('StockRecommendations', event );",text=>'Set Stock Recommendations' } ),
+				#button( "Copy", { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
+				button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ),
+				button( 'ExportPrices', { onclick=>"f1.btnFunction.value='Export Prices';f1.submit();", text=>'Export Prices' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+	<br/>
+	<div id="Stocks">
+<? echo (
+	if ( map { $session{$r->uri().'?'.$_} ? $session{$r->uri().'?'.$_} : () } ( qw{ brand_id finish_id colour_id weight_id calliper has_problems } ) ) {
+		return include('/administrator/stock/_stocks.html');
+	}
+	return 'Select filters or click Show';
+) ?>
+	</div>
+</form>
+</div>
+<!--#include virtual="/includes/administrator/admin-footer.html" -->
+</body>
+</html>

@@ -33,75 +33,74 @@ use constant COATINGS => qw(aqueous uv softtouch);
 
 # Given project specs. generate the set of possible impositions.
 sub impositions {
-    my ($dbh, $project, $start_time) = @_;
+  my ($dbh, $project, $start_time) = @_;
 
-	my $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START Printing \ IMPOSE: $end \n ";
+  my $end =  Time::HiRes::time() - $start_time;
+  print STDERR "START Printing \ IMPOSE: $end \n ";
 
-    my $presses    = get_presses   ($dbh, $project); # Potential printers.
+  my $presses    = get_presses   ($dbh, $project); # Potential printers.
 
-    my $substrates = get_substrates($dbh, $project); # Fits image at least.
-print STDERR "HAVE NO PAPER \n" unless @{$substrates};
-    my $subs = @{$substrates};
-    
-	#use Data::Dumper;
-	#print STDERR "HAVE PAPER: $subs PRESSES: $presses \n", Dumper($substrates);
+  my $substrates = get_substrates($dbh, $project); # Fits image at least.
+  print STDERR "HAVE NO PAPER \n" unless @{$substrates};
+  my $subs = @{$substrates};
 
-    my @styles     = get_runstyles(       $project);
+  #use Data::Dumper;
+  #print STDERR "HAVE PAPER: $subs PRESSES: $presses \n", Dumper($substrates);
 
-    my $empty = Iterator->new(sub { Iterator::is_done });
+  my @styles     = get_runstyles($project);
 
-    # Inkjet printers don't impose the same way as others (due to tiling being
-    # allowed) so currently need a number of special exceptions.
-    my $is_inkjet = $project->{press_type} eq 'inkjetprinter';
+  my $empty = Iterator->new(sub { Iterator::is_done });
 
-	 $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START Printing \ IMPOSE 2: $end  \n";
+  # Inkjet printers don't impose the same way as others (due to tiling being
+  # allowed) so currently need a number of special exceptions.
+  my $is_inkjet = $project->{press_type} eq 'inkjetprinter';
 
-    # Generate all possible impositions for the project (except inkjet).
-    my $impositions 
-        = !$is_inkjet ? PQS::Imposition->new(project => $project, start => $start_time) : undef;
+  $end =  Time::HiRes::time() - $start_time;
+  print STDERR "START Printing \ IMPOSE 2: $end  \n";
 
-	 $end =  Time::HiRes::time() - $start_time;
-	print STDERR "START Printing \ IMPOSE 3: $end  \n";
+  # Generate all possible impositions for the project (except inkjet).
+  my $impositions 
+  = !$is_inkjet ? PQS::Imposition->new(project => $project, start => $start_time) : undef;
 
-    # A press run is the set of valid run styles X sheet sizes for that press.
-    # Returns [press, sheet, style, node tree, is_rotated]
-    my $run = sub {
-        my ($press) = @_;
+  $end =  Time::HiRes::time() - $start_time;
+  print STDERR "START Printing \ IMPOSE 3: $end  \n";
 
-		#print STDERR "HAVE PRESS: ", Dumper($press);
+  # A press run is the set of valid run styles X sheet sizes for that press.
+  # Returns [press, sheet, style, node tree, is_rotated]
+  my $run = sub {
+    my ($press) = @_;
 
-        # Get the run styles we can do and sheet sizes that fit on the press.
-        my @r = grep { can_print_style($press, $_, $project) } @styles;
-        my @s = map  { fit_to_press   ($_,     $press      ) } @$substrates;
-		#print STDERR "HAVE R: ", Dumper(@r), "S: ", Dumper(@s);
+    #print STDERR "HAVE PRESS: ", Dumper($press);
 
-        return $empty unless @r && @s;
+    # Get the run styles we can do and sheet sizes that fit on the press.
+    my @r = grep { can_print_style($press, $_, $project) } @styles;
+    my @s = map  { fit_to_press   ($_,     $press      ) } @$substrates;
+    #print STDERR "HAVE R: ", Dumper(@r), "S: ", Dumper(@s);
 
-        # Each (run style, sheet size) combination is a setup to test.
-        my $setup = cross_product(\@r, \@s);
+    return $empty unless @r && @s;
 
-        # Inkjet printers have their own imposition generation currently.
-        if ($is_inkjet) {
-            return imap { [$press, reverse(@$_), undef, undef ] } $setup;
-        }
+    # Each (run style, sheet size) combination is a setup to test.
+    my $setup = cross_product(\@r, \@s);
 
-print STDERR "HAVE SETUP: ", Dumper($setup);
+    # Inkjet printers have their own imposition generation currently.
+    if ($is_inkjet) {
+      return imap { [$press, reverse(@$_), undef, undef ] } $setup;
+    }
 
-        # Find the best (if any) imposition for each setup. TODO We try WT/WF
-        # that obviously won't work as the image check should be half the
-        # sheet size for them.
-        return igrep { $_->[-2] } 
-               imap  { [$press, $_->[1], $impositions->best_fit($press, @$_)] }
-                     $setup;
-    };
+    #print STDERR "HAVE SETUP: ", Dumper($setup);
 
-print STDERR "TIME TO VALIDATE DATA \n";
-    
-    # Flatten the press runs into a stream of impositions.
-    return igrep { $_ } iflatten ( igrep { $_->isnt_exhausted } 
-                                   imap  { $run->($_)         } $presses );
+    # Find the best (if any) imposition for each setup. TODO We try WT/WF
+    # that obviously won't work as the image check should be half the
+    # sheet size for them.
+    return igrep { $_->[-2] } 
+    imap  { [$press, $_->[1], $impositions->best_fit($press, @$_)] }
+    $setup;
+  };
+
+  #print STDERR "TIME TO VALIDATE DATA \n";
+
+  # Flatten the press runs into a stream of impositions.
+  return igrep { $_ } iflatten ( igrep { $_->isnt_exhausted } imap  { $run->($_)         } $presses );
 }
 
 #
@@ -111,225 +110,216 @@ print STDERR "TIME TO VALIDATE DATA \n";
 # Return an iterator over the set of presses that fit enough specs to attempt
 # to run the project.
 sub get_presses {
-    my ($dbh, $project) = @_;
+  my ($dbh, $project) = @_;
 
-    # If we've been overridden our press is as specified. Otherwise get all
-    # for the press type chosen for the project.
-    my @ids = $project->{override}{press}
-           || press_ids($dbh, $project->{press_type}, $project->{rfq_only});
+  # If we've been overridden our press is as specified. Otherwise get all
+  # for the press type chosen for the project.
+  my @ids = $project->{override}{press}
+  || press_ids($dbh, $project->{press_type}, $project->{rfq_only});
 
-print STDERR "HAVE PRESS LIST: ", Dumper(@ids);
+  print STDERR "HAVE PRESS LIST: ", Dumper(@ids);
 
-    return igrep { can_print_project ($dbh, $_, $project) }
-           imap  { get_equipment     ($dbh, $_          ) }
-           ilist (@ids);
+  return igrep { can_print_project ($dbh, $_, $project) }
+  imap  { get_equipment     ($dbh, $_          ) }
+  ilist (@ids);
 }
 
 # Get a list of presses (number ids) of a given press type.
 sub press_ids {
-    my ($dbh, $press_type, $rfq_only) = @_;
+  my ($dbh, $press_type, $rfq_only) = @_;
 
-    my $sql  = "SELECT lngindex FROM tbl_equipment WHERE strtype = ? ";
-	   $sql .= "AND strsupplier <> 'RFQ Required'" unless $rfq_only;
+  my $sql  = "SELECT lngindex FROM tbl_equipment WHERE strtype = ? ";
+  $sql .= "AND strsupplier <> 'RFQ Required'" unless $rfq_only;
 
-    # Get a list of all presses of the user chosen type.
-    my $presses = $dbh->prepare_cached($sql);
+  # Get a list of all presses of the user chosen type.
+  my $presses = $dbh->prepare_cached($sql);
 
-    return @{ $dbh->selectcol_arrayref($presses, {}, $press_type) };
+  return @{ $dbh->selectcol_arrayref($presses, {}, $press_type) };
 }
 
 # Returns a bool if the press has the correct attributes to print the project.
 sub can_print_project {
-    my ($dbh, $press, $project) = @_;
-    
-    #not allowed to use a non variable press if there is variable data
-    if (eprint::project::check_for_service(undef, $dbh, $project->{id}, "VariableData") && !grep(/^VariableData$/, @{$press->{services}})) {
-      return 0;
-    }
-print STDERR "Pass Variable Data Test \n";
+  my ($dbh, $press, $project) = @_;
 
-print STDERR "\nCHECK PRESS: $press->{id} - $press->{name} \n";
-    # Can we even print the project type?
-    return unless can_print_project_type($press, $project->{type});
-print STDERR "Pass Project Type Test \n";
+  #not allowed to use a non variable press if there is variable data
+  if (eprint::project::check_for_service(undef, $dbh, $project->{id}, "VariableData") && !grep(/^VariableData$/, @{$press->{services}})) {
+    return 0;
+  }
+  #print STDERR "Pass Variable Data Test \n";
 
-    # Clause added due to empty string (*sigh*) being possible as paper
-    # calliper is stored as a string. TODO Use correct type, check earlier.
-    return unless $project->{paper}{calliper} 
-               || $project->{type} eq 'ScreenItem';
+  #print STDERR "\nCHECK PRESS: $press->{id} - $press->{name} \n";
+  # Can we even print the project type?
+  return unless can_print_project_type($press, $project->{type});
+  #print STDERR "Pass Project Type Test \n";
 
-print STDERR "Pass Calliper  Test \n";
+  # Clause added due to empty string (*sigh*) being possible as paper
+  # calliper is stored as a string. TODO Use correct type, check earlier.
+  return unless $project->{paper}{calliper} 
+  || $project->{type} eq 'ScreenItem';
+
+  #print STDERR "Pass Calliper  Test \n";
+
+  # Manual screen 'presses' are exempt from calliper checks. You can place a
+  # screen on the side of a bus if you felt like it.
+  return if !($press->{type} == SCREEN && $press->{operation} =~ /^Manual/i)
+  && $press->{maximum_calliper} < $project->{paper}{calliper};
+
+  #print STDERR "Pass Max Calliper  Test \n";
+
+  # The project image can't be bigger than the maximum imageable area.
+  # Inkjet printers ignore this as they're allowed to tile their images.
+  return if $press->{type} != INKJET
+  && (   $project->{width}  > $press->{maximum_image_area_width}
+    || $project->{height} > $press->{maximum_image_area_length} )
+  && (   $project->{width}  > $press->{maximum_image_area_length}
+    || $project->{height} > $press->{maximum_image_area_width}  );
+
+  #print STDERR "Pass Project Size Test \n";
+
+  # Check minimum project size for Screen presses.
+  return if $press->{type} == SCREEN
+  && defined $press->{minimum_project_size}
+  && $project->{width}  * $project->{height} < $press->{minimum_project_size};
+
+  #print STDERR "Pass Min Project Size Test \n";
+
+  # Check if the press has pricing for the required coatings.
+  # return if grep {    ($project->{$_}{side_one} || $project->{$_}{side_two}) 
+  return if grep {    ($project->{$_}) 
+    && ! can_coat($dbh, $press, $_) } COATINGS;
+
+  #print STDERR "Pass COATING Test \n";
+
+  # While a varnish is just another ink so shouldn't be a special check, our
+  # customer's want a work around to setting up proper wash and varnish
+  # costs. So if we have a varnish check for pricing (in any price list).
+  if (grep { /Varnish/i } map { @$_ } @{ $project->{colours} }) {
+    return unless can_coat($dbh, $press, 'varnish');
+  }
+
+  #print STDERR "Pass Varnish Test \n";
+  # We do not support offline Corner Stitching.
+  # So we will only allow presses with inline corner stitching.
+  return if (   $press->{type} == DIGITAL
+    && defined $project->{bind_type} 
+    && $project->{bind_type} eq 'CornerStitching'
+    && ! grep { $_ eq 'CornerStitching' } @{$press->{services}} );
 
 
-    # Manual screen 'presses' are exempt from calliper checks. You can place a
-    # screen on the side of a bus if you felt like it.
-    return if !($press->{type} == SCREEN && $press->{operation} =~ /^Manual/i)
-           && $press->{maximum_calliper} < $project->{paper}{calliper};
+  #print STDERR "Pass Digital Test \n";
 
-print STDERR "Pass Max Calliper  Test \n";
+  # If our project has specified Press Quality Requirements only allow the presses
+  # that exactly match the quality rating we are looking for.
 
-    # The project image can't be bigger than the maximum imageable area.
-    # Inkjet printers ignore this as they're allowed to tile their images.
-    return if $press->{type} != INKJET
-           && (   $project->{width}  > $press->{maximum_image_area_width}
-               || $project->{height} > $press->{maximum_image_area_length} )
-           && (   $project->{width}  > $press->{maximum_image_area_length}
-               || $project->{height} > $press->{maximum_image_area_width}  );
+  return if ( (!$project->{product_only}) && $press->{product_only} );
 
-print STDERR "Pass Project Size Test \n";
-
-
-
-	# Check minimum project size for Screen presses.
-    return if $press->{type} == SCREEN
-			&& defined $press->{minimum_project_size}
-            && $project->{width}  * $project->{height} < $press->{minimum_project_size};
-
-print STDERR "Pass Min Project Size Test \n";
-
-    # Check if the press has pricing for the required coatings.
-    # return if grep {    ($project->{$_}{side_one} || $project->{$_}{side_two}) 
-    return if grep {    ($project->{$_}) 
-                     && ! can_coat($dbh, $press, $_) } COATINGS;
-
-print STDERR "Pass COATING Test \n";
-
-    # While a varnish is just another ink so shouldn't be a special check, our
-    # customer's want a work around to setting up proper wash and varnish
-    # costs. So if we have a varnish check for pricing (in any price list).
-    if (grep { /Varnish/i } map { @$_ } @{ $project->{colours} }) {
-        return unless can_coat($dbh, $press, 'varnish');
-    }
-
-print STDERR "Pass Varnish Test \n";
-    # We do not support offline Corner Stitching.
-    # So we will only allow presses with inline corner stitching.
-    return if (   $press->{type} == DIGITAL
-               && defined $project->{bind_type} 
-               && $project->{bind_type} eq 'CornerStitching'
-               && ! grep { $_ eq 'CornerStitching' } @{$press->{services}} );
-
-    
-print STDERR "Pass Digital Test \n";
-
-    # If our project has specified Press Quality Requirements only allow the presses
-    # that exactly match the quality rating we are looking for.
-    
-	return if ( $project->{product_only} == 0 && $press->{product_only} );
-
-print STDERR "\nC PRESS IS VALID: $press->{id} - $press->{name} \n";
-    return 1;
+  #print STDERR "\nC PRESS IS VALID: $press->{id} - $press->{name} \n";
+  return 1;
 }
 
 # Some presses can't print certain project types. TODO Dispatch table for this
 # section if it gets bigger.
 sub can_print_project_type {
-    my ($press, $project_type) = @_;
+  my ($press, $project_type) = @_;
 
-    # If we're envelopes, can the press print us? Only us?
-    if  ($project_type eq 'Envelopes') {
-        return unless exists $press->{envelope_ready}
-                          && $press->{envelope_ready};
-    }
-    else {
-        return if exists $press->{envelope_only}
-                      && $press->{envelope_only};
-    }
+  # If we're envelopes, can the press print us? Only us?
+  if  ($project_type eq 'Envelopes') {
+    return unless exists $press->{envelope_ready} && $press->{envelope_ready};
+  } else {
+    return if exists $press->{envelope_only} && $press->{envelope_only};
+  }
 
-    # If we're 'plastics', can the press print us? Only us?
-    #   NOTE: This should a substrate type not a project type.
-    if  ($project_type eq 'PlasticPrinting') {
-        return unless exists $press->{plastics_capable}
-                          && $press->{plastics_capable};
-    }
-    else {
-        return if exists $press->{plastic_only}
-                      && $press->{plastic_only};
-    }
+  # If we're 'plastics', can the press print us? Only us?
+  #   NOTE: This should a substrate type not a project type.
+  if  ($project_type eq 'PlasticPrinting') {
+    return unless exists $press->{plastics_capable} && $press->{plastics_capable};
+  } else {
+    return if exists $press->{plastic_only} && $press->{plastic_only};
+  }
 
-    # Items can only be printed on manual or semi-auto screen presses.
-    return if $project_type eq 'ScreenItem'
-           && (   $press->{type}      != SCREEN
-               || $press->{operation} =~ /^Auto/i );
-print STDERR "PRESS $press->{name} PASSED CHECK \n";
+  # Items can only be printed on manual or semi-auto screen presses.
+  return if $project_type eq 'ScreenItem'
+  && (   $press->{type}      != SCREEN
+    || $press->{operation} =~ /^Auto/i );
+  #print STDERR "PRESS $press->{name} PASSED CHECK \n";
 
-    # If we've survived the gauntlet we can at least try this project type.
-    return 1;
+  # If we've survived the gauntlet we can at least try this project type.
+  return 1;
 }
 
 
 {
-    # SW - We need at least enough press units for the side with the most inks.
-    # PF - We need a press unit for each colour.
-    # Wx - We need a press unit per unique colour (front and back merged).
-    Readonly my %ENOUGH_UNITS_FOR => (
-        SW => sub { my($n, @c) = @_; $n >= max        (map {scalar @$_} @c) },
-        PF => sub { my($n, @c) = @_; $n >= sum        (map {scalar @$_} @c) },
-        Wx => sub { my($n, @c) = @_; $n >= wx_colours (map {       @$_} @c) },
-    );
+  # SW - We need at least enough press units for the side with the most inks.
+  # PF - We need a press unit for each colour.
+  # Wx - We need a press unit per unique colour (front and back merged).
+  Readonly my %ENOUGH_UNITS_FOR => (
+    SW => sub { my($n, @c) = @_; $n >= max        (map {scalar @$_} @c) },
+    PF => sub { my($n, @c) = @_; $n >= sum        (map {scalar @$_} @c) },
+    Wx => sub { my($n, @c) = @_; $n >= wx_colours (map {       @$_} @c) },
+  );
 
-    sub can_print_style {
-        my ($press, $style, $project) = @_;
-    
-print STDERR "CHECK CAN PRINT STYLE: $press, $style, $project \n";
-        # TODO Multi-pass overrides colour checks?
-        # TODO Double hit colours use two press units
-	print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
+  sub can_print_style {
+    my ($press, $style, $project) = @_;
 
-        my @s1 = $project->{drytrap}[0] 
-				? grep !/Varnish/,  @{$project->{colours}[0]}
-				: @{$project->{colours}[0]}; 
+    #print STDERR "CHECK CAN PRINT STYLE: $press, $style, $project \n";
+    # TODO Multi-pass overrides colour checks?
+    # TODO Double hit colours use two press units
+    #print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
 
-        my @s2 = $project->{drytrap}[1] 
-				? grep !/Varnish/,  @{$project->{colours}[1]}
-				: @{$project->{colours}[1]}; 
+    my @s1 = $project->{drytrap}[0] 
+    ? grep !/Varnish/,  @{$project->{colours}[0]}
+    : @{$project->{colours}[0]}; 
 
-#        map {
-#            push @s1, $project->{$_}{side_one} if (    $project->{$_}{side_one}
-#                                                    && !$press->{aqueous_coating} );
-#            push @s2, $project->{$_}{side_two} if (    $project->{$_}{side_two}
-#                                                    && !$press->{aqueous_coating} );
-#        } COATINGS;
+    my @s2 = $project->{drytrap}[1] 
+    ? grep !/Varnish/,  @{$project->{colours}[1]}
+    : @{$project->{colours}[1]}; 
+
+    #        map {
+    #            push @s1, $project->{$_}{side_one} if (    $project->{$_}{side_one}
+    #                                                    && !$press->{aqueous_coating} );
+    #            push @s2, $project->{$_}{side_two} if (    $project->{$_}{side_two}
+    #                                                    && !$press->{aqueous_coating} );
+    #        } COATINGS;
 
 
-	print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
-        # Are there enough press units to run the project this way?
-        return unless $ENOUGH_UNITS_FOR{ $style }->(
-            $press->{number_of_colours}, (\@s1, \@s2) );
+    #print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
+    # Are there enough press units to run the project this way?
+    return unless $ENOUGH_UNITS_FOR{ $style }->(
+      $press->{number_of_colours}, (\@s1, \@s2) );
 
-	print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
-        # Not all presses of a type that can perfect, do.
-        if ($style eq 'PF' &&  $press->{type} != WEB) {
+    #print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
+    # Not all presses of a type that can perfect, do.
+    if ($style eq 'PF' &&  $press->{type} != WEB) {
 
-            return unless $press->{perfecting_press};
+      return unless $press->{perfecting_press};
 
-            # Can the paper fit through the change-over unit?
-            return if $project->{paper}{calliper}
-                          > $press->{maximum_calliper_perfecting};
-        }
-	print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
-
-	print STDERR "PASS CAN PRINT STYLE: $press->{name}, $style\n ";
-        return 1;
+      # Can the paper fit through the change-over unit?
+      return if $project->{paper}{calliper}
+      > $press->{maximum_calliper_perfecting};
     }
+    #print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
+
+    #print STDERR "PASS CAN PRINT STYLE: $press->{name}, $style\n ";
+    return 1;
+  }
 }
 
 
 # Can the press AQ?
 sub can_coat {
-    my ($dbh, $press, $coating) = @_;
+  my ($dbh, $press, $coating) = @_;
 
-    # If we have aq pricing in any price list then we can_aq
-    #return scalar $dbh->selectrow_array(q{
-    my @can_coat = $dbh->selectrow_array(qq{
-        SELECT count(p.*) > 1 AS can_$coating
-        FROM tbl_services s, tbl_service_prices p
-        WHERE s.lngindex = p.lngserviceindex
-          AND lower(s.strid)    ~ '^$coating'
-          AND p.lngequipmentindex = ?
+  # If we have aq pricing in any price list then we can_aq
+  #return scalar $dbh->selectrow_array(q{
+  my @can_coat = $dbh->selectrow_array(qq{
+    SELECT count(p.*) > 1 AS can_$coating
+    FROM tbl_services s, tbl_service_prices p
+    WHERE s.lngindex = p.lngserviceindex
+    AND lower(s.strid)    ~ '^$coating'
+    AND p.lngequipmentindex = ?
     }, undef, $press->{id});
 
-    return $can_coat[0];
+  return $can_coat[0];
 }
 
 
@@ -337,56 +327,49 @@ sub can_coat {
 # RUN STYLES
 #
 {
-    Readonly my %RUN_STLYES_FOR => (
-        web           => [qw(        PF)],
-        screen        => [qw(SW  Wx    )], # Automatics aren't THAT automatic.
-        press         => [qw(SW  Wx  PF)],
-        digital       => [qw(SW  Wx  PF)], # Digitals can DUPLEX not perfect.
-        inkjetprinter => [qw(SW        )],
-    );
+  Readonly my %RUN_STLYES_FOR => (
+    web           => [qw(        PF)],
+    screen        => [qw(SW  Wx    )], # Automatics aren't THAT automatic.
+    press         => [qw(SW  Wx  PF)],
+    digital       => [qw(SW  Wx  PF)], # Digitals can DUPLEX not perfect.
+    inkjetprinter => [qw(SW        )],
+  );
 
-    # Get the run styles that are valid for the project TODO Defer the press type
-    # mapping until press selection as we'll want to price across press types.
-    sub get_runstyles {
-        my ($project) = @_;
+  # Get the run styles that are valid for the project TODO Defer the press type
+  # mapping until press selection as we'll want to price across press types.
+  sub get_runstyles {
+    my ($project) = @_;
 
-        my %rs; @rs{ @{ $RUN_STLYES_FOR{$project->{press_type}} } } = ();
+    my %rs; @rs{ @{ $RUN_STLYES_FOR{$project->{press_type}} } } = ();
 
-        # Web only has PF, for everything else remove invalid styles.
-        if ($project->{press_type} ne WEB) {
-            # If the paper isn't identical on each side, we can't just flip it and
-            # get something identical when printing. TODO Looking a string in
-            # the finish is ridiculous.
-            delete $rs{Wx} 
-                if $project->{paper}{finish} =~ /C(?:oated)?\s*1\s*S(?:ide)?/i;
+    # Web only has PF, for everything else remove invalid styles.
+    if ($project->{press_type} ne WEB) {
+      # If the paper isn't identical on each side, we can't just flip it and
+      # get something identical when printing. TODO Looking a string in
+      # the finish is ridiculous.
+      delete $rs{Wx} if $project->{paper}{finish} =~ /C(?:oated)?\s*1\s*S(?:ide)?/i;
 
-            # Carbonless forms can only ever have their primary information
-            # printing on the first side. TODO Looking a string in the finish
-            # is ridiculous.
-            delete $rs{Wx} 
-                if $project->{paper}{finish} =~ /Carbonless/i;
+      # Carbonless forms can only ever have their primary information
+      # printing on the first side. TODO Looking a string in the finish
+      # is ridiculous.
+      delete $rs{Wx} if $project->{paper}{finish} =~ /Carbonless/i;
 
-
-            # If we're only printing one side, sheet work is the only option.
-            delete @rs{qw(Wx PF)} unless @{ $project->{colours}[0] }
-                                      && @{ $project->{colours}[1] };
-        }
-
-        # If the user has overridden the run style, allow it if it's valid.
-        if ( my $override = $project->{override}{runstyle} ) {
-            
-            # At this stage Work and Turn/Flop are the same thing. We'll
-            # revisit the override again at the imposition level.
-            if ($override eq 'WT' || $override eq 'WF') { $override = 'Wx' }
-
-            return (exists $rs{$override}) ? $override : ();
-        }
-
-        return (sort keys %rs);
+      # If we're only printing one side, sheet work is the only option.
+      delete @rs{qw(Wx PF)} unless @{ $project->{colours}[0] } && @{ $project->{colours}[1] };
     }
+
+    # If the user has overridden the run style, allow it if it's valid.
+    if ( my $override = $project->{override}{runstyle} ) {
+      # At this stage Work and Turn/Flop are the same thing. We'll
+      # revisit the override again at the imposition level.
+      if ($override eq 'WT' || $override eq 'WF') { $override = 'Wx' }
+
+      return (exists $rs{$override}) ? $override : ();
+    }
+
+    return (sort keys %rs);
+  }
 }
-
-
 
 #
 # UTIL
@@ -400,67 +383,64 @@ sub can_coat {
 # of room for improvement for double hit, dry trapping, etc. etc.
 # memoize('wx_colours');
 sub wx_colours {
-    my (@colours) = @_;
-    my %uniq;
+  my (@colours) = @_;
+  my %uniq;
 
-    # Get a unique list of the colours counting the number of times we see
-    # them TODO This doesn't handle double hit colours on a single side.
-    $uniq{$_}++ for map { s/Spot Colour//i; $_ } @colours;
+  # Get a unique list of the colours counting the number of times we see
+  # them TODO This doesn't handle double hit colours on a single side.
+  $uniq{$_}++ for map { s/Spot Colour//i; $_ } @colours;
 
-    # When running W&T/F, a flood varnish on only one side turns into a spot
-    # varnish because both sides are printed at once in those run styles.
-    for my $finish (qw(Gloss Matte)) {
-        my ($flood, $spot) = map {"$_ Varnish $finish"} qw(Overall Spot);
+  # When running W&T/F, a flood varnish on only one side turns into a spot
+  # varnish because both sides are printed at once in those run styles.
+  for my $finish (qw(Gloss Matte)) {
+    my ($flood, $spot) = map {"$_ Varnish $finish"} qw(Overall Spot);
 
-        # If a flood (overall) varnish exists...
-        if ( exists $uniq{ $flood } ) {
-            # And it's only on one side...
-            if ( $uniq{ $flood } == 1 ) {
-                # Delete it and insert a spot as that's means it's only on
-                # half a W&T/F sheet which requires a plate.
-                delete $uniq{ $flood };
-                $uniq{ $spot } = 1;
-            }
-            # Or if there's already a spot we can just remove the flood
-            # listing and use that same plate.
-            elsif (exists $uniq{ $spot }) {
-                delete $uniq{ $flood };
-            }
-        }
+    # If a flood (overall) varnish exists...
+    if ( exists $uniq{ $flood } ) {
+      # And it's only on one side...
+      if ( $uniq{ $flood } == 1 ) {
+        # Delete it and insert a spot as that's means it's only on
+        # half a W&T/F sheet which requires a plate.
+        delete $uniq{ $flood };
+        $uniq{ $spot } = 1;
+      }
+      # Or if there's already a spot we can just remove the flood
+      # listing and use that same plate.
+      elsif (exists $uniq{ $spot }) {
+        delete $uniq{ $flood };
+      }
     }
-    my @keys = sort keys %uniq;
-    return @keys;
+  }
+  my @keys = sort keys %uniq;
+  return @keys;
 }
 
 # Similar to wx_colours above but using a new data structure. Determines a
 # colour -> press unit mapping based on a WT/F run style.
 sub wx_press_units {
-    my ($spread) = @_;
-    no warnings qw(uninitialized);
+  my ($spread) = @_;
+  no warnings qw(uninitialized);
 
-    my %press_units;
+  my %press_units;
 
-    # Map each sides colours into press units. TODO Handle double hit colours.
-    for my $c ( map { @{$_->{colours}} } @{ $spread->{side} } ) {
+  # Map each sides colours into press units. TODO Handle double hit colours.
+  for my $c ( map { @{$_->{colours}} } @{ $spread->{side} } ) {
+    my $key = join('-', $c->{type},$c->{name});
 
-        my $key = "$c->{type}-$c->{name}";
+    if (my $unit = $press_units{$key}) {
+      $unit->{coverage}   = min(100, $unit->{coverage} + $c->{coverage} / 2);
+      $unit->{mv_varies} |= $c->{mv_varies};
+      $unit->{ink} = $c->{ink};
 
-        if (my $unit = $press_units{$key}) {
-            $unit->{coverage}   = min(100, $unit->{coverage} + $c->{coverage} / 2);
-            $unit->{mv_varies} |= $c->{mv_varies};
-            $unit->{ink} = $c->{ink};
-            
-            # TODO Should we check that flood varnishes haven't gotten the
-            # mv_varied bit?
-        }
-        else {
-            $press_units{$key} = { %$c };        # Copy
-            $press_units{$key}->{coverage} /= 2; # Based on one pass.
-        }
+      # TODO Should we check that flood varnishes haven't gotten the
+      # mv_varied bit?
+    } else {
+      $press_units{$key} = { %$c };        # Copy
+      $press_units{$key}->{coverage} /= 2; # Based on one pass.
     }
+  }
 
-    return [ values %press_units ];
+  return [ values %press_units ];
 }
-
 
 1;

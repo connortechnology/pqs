@@ -1,0 +1,12 @@
+<? echo (
+	my $html;
+	my $Object = ('openprint::'.$param{type})->new($param{id});
+	if ( sets::isin( $param{type}, [ 'InventoryCondition','StockQuality' ] ) ) {
+	$html .= sprintf(q`$('%s_name').value = '%s';`, $param{type}, $Object->name() );
+	$html .= sprintf(q`$('%s_message').value = '%s';`, $param{type}, $Object->message() );
+	} else {
+	$html .= sprintf(q`$('%s_name').value = '%s';`, $param{type}, $Object->name() );
+	} 
+	return $html;
+) ?>
+	

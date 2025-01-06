@@ -28,22 +28,18 @@ sub substrate_lookup : JSRS {
         = map { defined $_ && $_ ne '' ? $_ : undef } @attrs;
 
 
-	my $prod;
+	my $prod = '';
 
 	if ( $pid ) {
 		# For regular projects check to see if we are flagged
 		# as a product.
- 		$prod = $dbh->selectrow_array(q{
-			SELECT prod_id FROM tbl_projects WHERE lngprojectindex = ?
-		}, undef, $pid) 
-	} else {
+ 		$prod = $dbh->selectrow_array(q{SELECT prod_id FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
+    $prod //= '';
+	} elsif ($sid) {
 		# From our hybrid product page sid contains product
 		# item number.
 		$prod = $sid;
 	}
-
-
-print STDERR "IS PROD: $prod \n";
 
 print STDERR "****** IS PROD: $prod PRODUCT Specific Reccomendataions have been disabled ********** \n";
 
@@ -371,98 +367,89 @@ sub get_lf_price {
 # roll length needed if applicable, etc.). At least it looks as if it does
 # some of that stuff.
 sub get_price {
-    my ($log, $dbh, $variable, $paper, $press, $qty) = @_;
+  my ($log, $dbh, $variable, $paper, $press, $qty) = @_;
 
-    my $price = price($dbh, $variable->{cust_id}, $paper->{index}, $qty);
+  my $price = price($dbh, $variable->{cust_id}, $paper->{index}, $qty);
+  # If we've cut down the sheet we want to use the mweight of the original
+  # sheet as that's what we're buying. NOTE: Only applies to sheet stock.
+  my $mweight = $paper->{mweight} 
+  * ($paper->{width_factor}  || 1)
+  * ($paper->{height_factor} || 1);
 
-    # If we've cut down the sheet we want to use the mweight of the original
-    # sheet as that's what we're buying. NOTE: Only applies to sheet stock.
-    my $mweight = $paper->{mweight} 
-                * ($paper->{width_factor}  || 1)
-                * ($paper->{height_factor} || 1);
+  # If we are using a roll stock, we need to price a quantity of rolls.
+  if ($paper->{type} eq 'roll') { 
+    # pass in the quantity of sheets and retreive the quantity of rolls
+    # (rounded for purchase unit)
 
+    # we should not be rounding this off - the function itself rounds
+    # appropriately.  if we need it rounded for display purposes, that
+    # should be done elsewhere.
+    $qty = convert_sheets_into_rolls($log,$dbh,$qty,$$paper{'index'}); 
 
-    # If we are using a roll stock, we need to price a quantity of rolls.
-    if ($paper->{type} eq 'roll') { 
-        # pass in the quantity of sheets and retreive the quantity of rolls
-        # (rounded for purchase unit)
+    # now that we know how many rolls we're buying we must convert this
+    # into pounds of paper to buy. since we'll now be pricing all roll
+    # paper by the pound, this is acceptable behaviour
+    $qty = convert_rolls_into_pounds($log,$dbh,$qty,$$paper{'index'}); 
+  }
 
-        # we should not be rounding this off - the function itself rounds
-        # appropriately.  if we need it rounded for display purposes, that
-        # should be done elsewhere.
-        $qty = convert_sheets_into_rolls($log,$dbh,$qty,$$paper{'index'}); 
+  my $buy_qty = $qty; # Need to make a copy
 
-        # now that we know how many rolls we're buying we must convert this
-        # into pounds of paper to buy. since we'll now be pricing all roll
-        # paper by the pound, this is acceptable behaviour
-        $qty = convert_rolls_into_pounds($log,$dbh,$qty,$$paper{'index'}); 
-    }
-
-    my $buy_qty = $qty; # Need to make a copy
-
-    if ($paper->{type} eq 'roll') {
-        if ( $price->{units} eq 'Roll' ) {
-            my $roll_weight = $dbh->selectrow_array(q{
-                    SELECT dblrollweight FROM tbl_paper_roll WHERE lngindex = ?
-            }, {}, $paper->{index});
-            $price->{Cost}  /= $roll_weight if $roll_weight;
-            $price->{Price} /= $roll_weight if $roll_weight;
-        } else {
-            $price->{Cost}  /= 100;
-            $price->{Price} /= 100;
-        
-        }
-    } 
-    elsif ( $price->{units} eq '1000 Sheets' or $price->{units} eq '1000 sheets' ) {
-        $price->{Cost}  /= 1000; 
-        $price->{Price} /= 1000;
-    } 
-    elsif ( $price->{units} =~ /lbs/ ) {
-        # Get a per sheet price for the stock. The MWeight is the weight of
-        # 1000 sheets and the price is based on 100lbs. 
-        #
-        #    per_sheet = n/1000 * MWeight * price/100 lbs, n = 1
-        #
-        $price->{Cost}  *= $mweight / (100 * 1000); 
-        $price->{Price} *= $mweight / (100 * 1000); 
+  if ($paper->{type} eq 'roll') {
+    if ( $price->{units} eq 'Roll' ) {
+      my $roll_weight = $dbh->selectrow_array(q{SELECT dblrollweight FROM tbl_paper_roll WHERE lngindex = ?}, {}, $paper->{index});
+      $price->{Cost}  /= $roll_weight if $roll_weight;
+      $price->{Price} /= $roll_weight if $roll_weight;
     } else {
-        $log->error(" Invalid Paper Units: $price->{units}");
+      $price->{Cost}  /= 100;
+      $price->{Price} /= 100;
+    }
+  } elsif ( $price->{units} eq '1000 Sheets' or $price->{units} eq '1000 sheets' ) {
+    $price->{Cost}  /= 1000; 
+    $price->{Price} /= 1000;
+  } elsif ( $price->{units} =~ /lbs/ ) {
+    # Get a per sheet price for the stock. The MWeight is the weight of
+    # 1000 sheets and the price is based on 100lbs. 
+    #
+    #    per_sheet = n/1000 * MWeight * price/100 lbs, n = 1
+    #
+    $price->{Cost}  *= $mweight / (100 * 1000); 
+    $price->{Price} *= $mweight / (100 * 1000); 
+  } else {
+    $log->error("Invalid Paper Units: $price->{units}");
+  }
+
+  # As price 'breaks' in the system are stepped instead of graduated, it can
+  # sometimes be less expensive to buy a slightly large quantity and get the
+  # better discount. If we have an bounded upper range (meaning there's a
+  # range above us) get the price for the next higher range.
+  if ($price->{max}) {
+    my $bulkprice = price(
+      $dbh, $variable->{cust_id}, $paper->{index}, $price->{max} + 1
+    );
+
+    # now we do the same calculation for bulk price and compare our total
+    # price per sheet after we subtract throwaway sheets
+    if ( $bulkprice->{units} eq '1000 Sheets' or $bulkprice->{units} eq '1000 sheets') {
+      $bulkprice->{Cost}  /= 1000;
+      $bulkprice->{Price} /= 1000;
+    } else {
+      $bulkprice->{Cost}  *= $mweight / (100 * 1000);
+      $bulkprice->{Price} *= $mweight / (100 * 1000);
     }
 
-    # As price 'breaks' in the system are stepped instead of graduated, it can
-    # sometimes be less expensive to buy a slightly large quantity and get the
-    # better discount. If we have an bounded upper range (meaning there's a
-    # range above us) get the price for the next higher range.
-    if ($price->{max}) {
-        my $bulkprice = price(
-            $dbh, $variable->{cust_id}, $paper->{index}, $price->{max} + 1
-        );
+    # throw away extra bulk and compare prices
 
-        # now we do the same calculation for bulk price and compare our total
-        # price per sheet after we subtract throwaway sheets
-        if ( $bulkprice->{units} eq '1000 Sheets' or $bulkprice->{units} eq '1000 sheets') {
-            $bulkprice->{Cost}  /= 1000;
-            $bulkprice->{Price} /= 1000;
-        } 
-        else {
-            $bulkprice->{Cost}  *= $mweight / (100 * 1000);
-            $bulkprice->{Price} *= $mweight / (100 * 1000);
-        }
-        
-        # throw away extra bulk and compare prices
-
-        # our formula for bulk price is: bulk price * price->{max}+1 / qty ...
-        # then compare this to price and take the cheapest one
-        if ( ($price->{Price}*$qty) > ($bulkprice->{Price}*($price->{max}+1))
-                and $bulkprice->{Price} > 0 ) {
-            $buy_qty = $price->{max}+1;
-            $price = $bulkprice;
-        }
+    # our formula for bulk price is: bulk price * price->{max}+1 / qty ...
+    # then compare this to price and take the cheapest one
+    if ( ($price->{Price}*$qty) > ($bulkprice->{Price}*($price->{max}+1)) and $bulkprice->{Price} > 0 ) {
+      $buy_qty = $price->{max}+1;
+      $price = $bulkprice;
     }
+  }
 
-    $price->{buy_qty} = $buy_qty;
+  $price->{buy_qty} = $buy_qty;
 
-    return $price;
+  return $price;
 }
 
 # Get the paper price (including all pricelist and customer discounts) for a

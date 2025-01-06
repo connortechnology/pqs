@@ -250,6 +250,7 @@ function growTable (last_row) {
     var inputs = last_row.getElementsByTagName('input');
     for (var i=0; i < inputs.length; i++) {
         inputs[i].onkeypress = function () {};
+        inputs[i].oninput = function () {};
     }
     // TODO: Use the event model TODO: Remove event from selects and textareas.
 }

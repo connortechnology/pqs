@@ -27,224 +27,197 @@ sub needs_build {
 }
 
 sub view_services {
-    my ($r, $log, $dbh, $cookie, $variable) = @_;
+  my ($r, $log, $dbh, $cookie, $variable) = @_;
 
-    my $pid = $r->param('ProjectIndex') 
-           || $r->param('pid') 
-		   || $variable->{param}{pid} #used by dashboard.
-           || continue_project($dbh, $variable->{user_id});
-       $pid =~ tr/0-9//cd;
+  my $pid = $r->param('ProjectIndex') 
+  || $r->param('pid') 
+  || $variable->{param}{pid} #used by dashboard.
+  || continue_project($dbh, $variable->{user_id});
+  $pid =~ tr/0-9//cd;
 
-	print STDERR "VIEW PROJECT: $pid \n";
+  print STDERR "VIEW PROJECT: $pid \n";
 
-	if (needs_build($pid)) {
-		eprint::Build::build($log, $dbh, $pid, $variable, 0);
-		$dbh->do(q{update tbl_projects set build = false where lngprojectindex = ?}, undef, $pid); 
-	}
+  if (needs_build($pid)) {
+    eprint::Build::build($log, $dbh, $pid, $variable, 0);
+    $dbh->do(q{update tbl_projects set build = false where lngprojectindex = ?}, undef, $pid); 
+  }
 
-	if ( $r->param('start') && $r->param('end') ) {
-		custom_sort( $dbh, $pid, $r->param('start') ,  $r->param('end') );
+  if ( $r->param('start') && $r->param('end') ) {
+    custom_sort( $dbh, $pid, $r->param('start') ,  $r->param('end') );
+  }
 
-	}
-	
+  #print STDERR "START VIEW SERVICES :  $variable->{edit} ************************* \n\n";
 
-print STDERR "START VIEW SERVICES :  $variable->{edit} ************************* \n\n";
+  #Custom Line Item Edit
+  if ( $r->param('edit') and $variable->{user_type} =~ /^[AE]$/ ) {
+    my $sid = $variable->{edit} = $r->param('edit');
+    my %specs = eprint::service::get_specifications_pairs($log, $dbh, $pid, $sid);
+    $variable->{custom_service} = \%specs;
+    $variable->{__FillInForm}{hide_docket} = $specs{hide_docket};
+  }
 
-	#Custom Line Item Edit
-   	if ( $r->param('edit') and $variable->{user_type} =~ /^[AE]$/ ) {
-		my $sid =  $r->param('edit');
-		$variable->{edit} = $sid;
+  #print STDERR "START VIEW SERVICES :  $variable->{edit} ************************* \n\n";
+  my $qtys = [0,0,0];
 
-		 my %specs = eprint::service::get_specifications_pairs($log, $dbh, $pid, $sid);
-		$variable->{custom_service} = \%specs;
-		$variable->{__FillInForm}{hide_docket} = $specs{hide_docket};
-	}
+  #### CUSTOM CODE SECTION ***********
+  my ($q1, $q2, $q3, $digifed) = $dbh->selectrow_array(q{
+    SELECT intQuantity1, q2, q3, digifed FROM tbl_projects WHERE lngprojectindex = ?
+    }, undef, $pid);
 
+  if ( $q2 ) {
+    $dbh->do(q{
+      UPDATE tbl_projects set q2 = NULL WHERE lngprojectindex = ?
+      },undef,$pid);
+    $qtys->[0] = $q2;
+    eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys);
+  }
+  if ( $q3 ) {
+    $dbh->do(q{
+      UPDATE tbl_projects set q3 = NULL WHERE lngprojectindex = ?
+      },undef,$pid);
+    $qtys->[0] = $q3;
+    eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys);
+  }
 
-print STDERR "START VIEW SERVICES :  $variable->{edit} ************************* \n\n";
-	my $qtys = [0,0,0];
+  my $pms = scalar $dbh->selectrow_array(q{
+    SELECT count(*) FROM tbl_service_specifications 
+    WHERE lngprojectindex = ? AND strname  LIKE  '%pms%name'
+    }, undef, $pid);
 
+  print STDERR "HAVE DIGIFED: $digifed PMS: $pms ************\n";
 
-#### CUSTOM CODE SECTION ***********
-	my ($q1, $q2, $q3, $digifed) = $dbh->selectrow_array(q{
-		SELECT intQuantity1, q2, q3, digifed FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid);
+  $dbh->do(q{UPDATE tbl_projects set digifed = false WHERE lngprojectindex = ?},undef,$pid);
 
-	if ( $q2 ) {
-		$dbh->do(q{
-			UPDATE tbl_projects set q2 = NULL WHERE lngprojectindex = ?
-		},undef,$pid);
-		$qtys->[0] = $q2;
-		eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys);
-	}
-	if ( $q3 ) {
-		$dbh->do(q{
-			UPDATE tbl_projects set q3 = NULL WHERE lngprojectindex = ?
-		},undef,$pid);
-		$qtys->[0] = $q3;
-		eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys);
-	}
+  if ( $digifed && !$pms ) {
+    $qtys->[0] = $q1;
 
-	my $pms = scalar $dbh->selectrow_array(q{
-		SELECT count(*) FROM tbl_service_specifications 
-		WHERE lngprojectindex = ? AND strname  LIKE  '%pms%name'
-	}, undef, $pid);
+    my $press_type = 41;
 
+    eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys, $press_type);
+    my ($sfpid, $status) = $dbh->selectrow_array(q{
+      SELECT lngprojectindex, strstatus FROM tbl_projects WHERE eid = (
+      SELECT eid FROM tbl_projects WHERE lngprojectindex = ?
+      ) and lngprojectindex <> ?
+      },undef, $pid, $pid);
 
-print STDERR "HAVE DIGIFED: $digifed PMS: $pms ************\n";
-
-	$dbh->do(q{
-		UPDATE tbl_projects set digifed = false WHERE lngprojectindex = ?
-	},undef,$pid);
-
-	if ( $digifed && !$pms ) {
-		$qtys->[0] = $q1;
-
-		my $press_type = 41;
-
-		eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys, $press_type);
-		my ($sfpid, $status) = $dbh->selectrow_array(q{
-			SELECT lngprojectindex, strstatus FROM tbl_projects WHERE eid = (
-				SELECT eid FROM tbl_projects WHERE lngprojectindex = ?
-			) and lngprojectindex <> ?
-		},undef, $pid, $pid);
-
-      	my @dprice = project_price($log, $dbh, $pid);
-      	my @sprice = project_price($log, $dbh, $sfpid) ;
-		if  (  $sprice[0] < $dprice[0] && $status eq 'Unordered'
-		) {
-			$pid = $sfpid 
-		}
-		print STDERR "PRICE COMP, $dprice[0], $sprice[0], $pid \n";
-	}
-
-	$variable->{pqtys} = $dbh->selectall_arrayref(q{
-		SELECT lngprojectindex as id, intQuantity1 as qty FROM tbl_projects
-		WHERE eid = ( SELECT eid FROM tbl_projects WHERE lngprojectindex = ? )
-	    AND lngprojectindex <> ?
-		ORDER BY 1
-	},{ Slice => {} }, $pid, $pid); 
-
-
-####### CUSTOM CODE SECTION ***********
-
-
-    # Is the user even allowed to view this project?
-    return unless project_allowed($dbh, $pid, $variable);
-
-	
-	#Only admin/employee can select customer account.
-	#Prevent errors when admin makes project and then customer places order.
-	if ( $variable->{user_type} =~ /^[AE]$/ ) {
-
-		my ($cust) = $dbh->selectrow_array(q{
-				SELECT lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?
-		}, undef, $pid);
-
-		eprint::login::select_customer( $r, $log, $dbh, $variable->{cookie}, $variable, $cust );
-	}
-
-	#print STDERR "USER DUMPER" , Dumper($variable);
-    # Determine if the project is currently in a quote or order and therefor
-    # locked from certain actions (site override is possible for staff).
-    if (   configuration::get_value($log, $dbh, 'ModifyOrderedProject')
-        && $variable->{is_staff} ) 
-    {
-            $variable->{is_ordered} = 0;
-            $variable->{is_quoted}  = 0;
+    my @dprice = project_price($log, $dbh, $pid);
+    my @sprice = project_price($log, $dbh, $sfpid) ;
+    if  (  $sprice[0] < $dprice[0] && $status eq 'Unordered'
+    ) {
+      $pid = $sfpid 
     }
-    else {
-        $variable->{is_ordered} = $dbh->selectrow_array(q{
-            SELECT true FROM tbl_order_contents WHERE lngprojectindex = ?
-        }, undef, $pid) ? 1 : 0;
+    print STDERR "PRICE COMP, $dprice[0], $sprice[0], $pid \n";
+  }
 
-        $variable->{is_quoted} = $dbh->selectrow_array(q{
-            SELECT true FROM tbl_quote_details WHERE lngprojectindex = ?
-        }, undef, $pid) ? 1 : 0;
-    }
-    $variable->{is_ordered_or_quoted} = $variable->{is_ordered} 
-                                     || $variable->{is_quoted};
+  $variable->{pqtys} = $dbh->selectall_arrayref(q{
+    SELECT lngprojectindex as id, intQuantity1 as qty FROM tbl_projects
+    WHERE eid = ( SELECT eid FROM tbl_projects WHERE lngprojectindex = ? )
+    AND lngprojectindex <> ?
+    ORDER BY 1
+    },{ Slice => {} }, $pid, $pid); 
 
-    # Render the service pricing section of the project view page.
-    $variable->{HeaderInfo} = eprint::docket::header_info($log, $dbh, $pid);
-    $variable->{SSRalert}   = configuration::get_value($log,$dbh, 'SuppliedServiceRemovalMessage');
+  ####### CUSTOM CODE SECTION ***********
 
-	if ( $r->param('remove_custom_sort') ) {
-		$dbh->do(q{ update tbl_project_contents set custom_sort = NUll where lngprojectindex = ? }, undef, $pid);
-	}
-   
+  # Is the user even allowed to view this project?
+  return unless project_allowed($dbh, $pid, $variable);
+
+  #Only admin/employee can select customer account.
+  #Prevent errors when admin makes project and then customer places order.
+  if ( $variable->{user_type} =~ /^[AE]$/ ) {
+    my ($cust) = $dbh->selectrow_array(q{SELECT lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
+    eprint::login::select_customer( $r, $log, $dbh, $variable->{cookie}, $variable, $cust );
+  }
+
+  #print STDERR "USER DUMPER" , Dumper($variable);
+  # Determine if the project is currently in a quote or order and therefor
+  # locked from certain actions (site override is possible for staff).
+  if (configuration::get_value($log, $dbh, 'ModifyOrderedProject')
+    && $variable->{is_staff} ) 
+  {
+    $variable->{is_ordered} = 0;
+    $variable->{is_quoted}  = 0;
+  } else {
+    $variable->{is_ordered} = $dbh->selectrow_array(q{
+      SELECT true FROM tbl_order_contents WHERE lngprojectindex = ?
+      }, undef, $pid) ? 1 : 0;
+
+    $variable->{is_quoted} = $dbh->selectrow_array(q{
+      SELECT true FROM tbl_quote_details WHERE lngprojectindex = ?
+      }, undef, $pid) ? 1 : 0;
+  }
+  $variable->{is_ordered_or_quoted} = $variable->{is_ordered} || $variable->{is_quoted};
+
+  # Render the service pricing section of the project view page.
+  $variable->{HeaderInfo} = eprint::docket::header_info($log, $dbh, $pid);
+  $variable->{SSRalert}   = configuration::get_value($log,$dbh, 'SuppliedServiceRemovalMessage');
+
+  if ( $r->param('remove_custom_sort') ) {
+    $dbh->do(q{ update tbl_project_contents set custom_sort = NULL where lngprojectindex = ? }, undef, $pid);
+  }
+
+  display_project($log, $dbh, $variable, $pid);
+
+  if ( $r->param('add_custom_sort') )  {
+    add_custom_sort($dbh, $pid, $variable); 
     display_project($log, $dbh, $variable, $pid);
+  }
 
-	if ( $r->param('add_custom_sort') )  {
-		add_custom_sort($dbh, $pid, $variable); 
-    	display_project($log, $dbh, $variable, $pid);
-	}
+  if ( $r->param('Add Comment') ) { 
+    my $comment = $r->param('comment');
+    my $assigned_to = $r->param('ddmUser') || $variable->{user_id};
+    add_comment($r, $dbh, $variable, $pid, $assigned_to, $comment);
+    print STDERR "ADD COMMENT \n\n";
+  }
 
-	if ( $r->param('Add Comment') ) { 
-		my $comment = $r->param('comment');
-		my $assigned_to = $r->param('ddmUser') || $variable->{user_id};
-		add_comment($r, $dbh, $variable, $pid, $assigned_to, $comment);
-		print STDERR "ADD COMMENT \n\n";
-	}
+  $variable->{COMMENTS} = $dbh->selectall_arrayref(q{
+    SELECT *, date_trunc('Minute', cdate) as fdate,
+    (SELECT strfirstname || ' ' || strlastname FROM tbl_customer_users 
+    WHERE lnguserid = c.assignedto ) as assigned_name 
+    FROM project_comments c, tbl_customer_users u WHERE pid = ?
+    AND c.userid = u.lnguserid 
+    }, { Slice => {} } , $pid);
 
-	$variable->{COMMENTS} = $dbh->selectall_arrayref(q{
-		SELECT *, date_trunc('Minute', cdate) as fdate,
-			(SELECT strfirstname || ' ' || strlastname FROM tbl_customer_users 
-			 WHERE lnguserid = c.assignedto ) as assigned_name 
-		FROM project_comments c, tbl_customer_users u WHERE pid = ?
-		AND c.userid = u.lnguserid 
-	}, { Slice => {} } , $pid);
+  my $str = q{
+  SELECT lngUserID, strFirstName || ' ' || strLastName FROM tbl_Customer_Users 
+  WHERE chrtype IN ( 'A', 'E' ) 
+  ORDER BY strLastName, strFirstName
+  };
 
-    my $str = q{
-          SELECT lngUserID, strFirstName || ' ' || strLastName FROM tbl_Customer_Users 
-          WHERE chrtype IN ( 'A', 'E' ) 
-          ORDER BY strLastName, strFirstName
-	};
+  $$variable{'FILL_USER_NAME'} = ssi::fill_drop_down($log, $dbh, $str, '');
 
-    $$variable{'FILL_USER_NAME'} = ssi::fill_drop_down($log, $dbh, $str, '');
-	
-	$$variable{has_rfq} = $dbh->selectrow_array(q{
-		SELECT count(*) FROM rfq WHERE pid = ?
-	}, undef, $pid);
+  $$variable{has_rfq} = $dbh->selectrow_array(q{SELECT count(*) FROM rfq WHERE pid = ?}, undef, $pid);
 
-	$str = q{
-		SELECT lngcustomerid, strCompanyName FROM tbl_customer WHERE ysnsupplier = 'Y' order by 2
-	};
+  if ( $r->param('supplier') ) {
+    $dbh->do(q{UPDATE tbl_projects SET supplier = ? WHERE lngprojectindex = ?}, undef, $r->param('supplier'), $pid);
+  }
+  my $s = $dbh->selectrow_array(q{SELECT supplier FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
+  $str = q{SELECT lngcustomerid, strCompanyName FROM tbl_customer WHERE ysnsupplier = 'Y' order by 2};
+  $$variable{SUPPLIERS} = ssi::fill_drop_down($log, $dbh, $str, $s);
 
-	if ( $r->param('supplier') ) {
-		$dbh->do(q{
-			UPDATE tbl_projects SET supplier = ? WHERE lngprojectindex = ?
-		}, undef, $r->param('supplier'), $pid);
-	}
-	my $s = $dbh->selectrow_array(q{
-		SELECT supplier FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid);
+  $variable->{quote_id} =  $dbh->selectrow_array(q{
+    SELECT max(lngquoteid) FROM tbl_quote_details WHERE lngprojectindex = ?
+    }, undef, $pid);
 
-    $$variable{SUPPLIERS} = ssi::fill_drop_down($log, $dbh, $str, $s);
+  $variable->{order_id} =  $dbh->selectrow_array(q{
+    SELECT max(lngorderid) FROM tbl_order_contents WHERE lngprojectindex = ?
+    }, undef, $pid);
 
-	$variable->{quote_id} =  $dbh->selectrow_array(q{
-		SELECT max(lngquoteid) FROM tbl_quote_details WHERE lngprojectindex = ?
-	}, undef, $pid);
+  $variable->{product} =  $dbh->selectrow_array(q{
+    SELECT prod FROM tbl_projects WHERE lngprojectindex = ?
+    }, undef, $pid);
 
-	$variable->{order_id} =  $dbh->selectrow_array(q{
-		SELECT max(lngorderid) FROM tbl_order_contents WHERE lngprojectindex = ?
-	}, undef, $pid);
+  #print STDERR "Comments " , Dumper($variable->{COMMENTS});
 
-	$variable->{product} =  $dbh->selectrow_array(q{
-		SELECT prod FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid);
+  my $sql = "SELECT stremail, strfirstname || ' ' || strlastname  from tbl_customer_users 
+  WHERE lngcustomerid = $variable->{cust_id} order by strlastname, strfirstname";
 
-	print STDERR "Comments " , Dumper($variable->{COMMENTS});
+  #print STDERR "HAVE USERS: ", Dumper( $sql ); 
 
-	my $sql = "SELECT stremail, strfirstname || ' ' || strlastname  from tbl_customer_users 
-					WHERE lngcustomerid = $variable->{cust_id} order by strlastname, strfirstname";
+  $$variable{'email_to'} = ssi::fill_drop_down($log, $dbh, $sql);
 
-	print STDERR "HAVE USERS: ", Dumper( $sql ); 
-
-    $$variable{'email_to'} = ssi::fill_drop_down($log, $dbh, $sql);
-
-    return OK;
+  return OK;
 }
+
 sub add_custom_sort {
 	my $dbh = shift;
 	my $pid = shift;
@@ -803,7 +776,6 @@ sub display_project {
 		$variable->{custom_sort} = 1;
 	}
 
-
 	#print STDERR "HAVE SERVICES :", Dumper($variable->{categories});
 
     # Is there any customer supplied stock in the project?
@@ -923,126 +895,150 @@ sub get_permissions {
 
 # Return a sorted and grouped list of all the stock used in the project.
 sub paper_info {
-    my ($log, $dbh, $pid) = @_;
+  my ($log, $dbh, $pid) = @_;
 
-    # Get the paper each signature uses.
-    my @papers = map signature_paper($log, $dbh, $pid, $_), 
-                     check_for_service($log, $dbh, $pid, 'Printing');
+  # Get the paper each signature uses.
+  my @papers = map signature_paper($log, $dbh, $pid, $_), check_for_service($log, $dbh, $pid, 'Printing');
 
-print STDERR "HAVE PAPER 1 " , Dumper(\@papers);
+  print STDERR "HAVE PAPER 1 " , Dumper(\@papers);
 
-    # Collect identical papers (by ID and if they're supplied) so we can
-    # display similar papers on the same line. Customer supplied paper is
-    # differentiated from printer supplied.
-    my %dupe;
-    for my $paper (@papers) {
-		my $supplied = $paper->{is_supplied} || 0;
-        my $key = "$paper->{id} $supplied $paper->{width}_$paper->{height}";
-        $dupe{$key} = [] unless exists $dupe{$key};
-        push @{ $dupe{$key} }, $paper;
+  # Collect identical papers (by ID and if they're supplied) so we can
+  # display similar papers on the same line. Customer supplied paper is
+  # differentiated from printer supplied.
+  my %dupe;
+  for my $paper (@papers) {
+    my $supplied = $paper->{is_supplied} || 0;
+    my $key = join(' ', $paper->{id},$supplied, $paper->{name}, $paper->{finish}, $paper->{colour}, $paper->{weight}, $paper->{width},$paper->{height});
+    $dupe{$key} = [] unless exists $dupe{$key};
+    push @{ $dupe{$key} }, $paper;
+  }
+  print STDERR "HAVE DUPE " , Dumper(\%dupe);
+
+  # Go through and sum the quanties of each paper type.
+  for my $papers (values %dupe) {
+    for my $n (0..3) {
+      $papers->[0]{qty}[$n] = {n => sum map { $_->{qty}[$n] } @$papers};
+      $papers->[0]{"paper_price$n"} = sum map { $_->{"paper_price$n"} } @$papers;
     }
-print STDERR "HAVE DUPE " , Dumper(\%dupe);
+  }
 
-    # Go through and sum the quanties of each paper type.
-    for my $papers (values %dupe) {
-        for my $n (0..3) {
-            $papers->[0]{qty}[$n] = {n => sum map { $_->{qty}[$n] } @$papers};
-       		$papers->[0]{"paper_price$n"} = sum map { $_->{"paper_price$n"} } @$papers;
-        }
-    }
+  print STDERR "HAVE PAPER", Dumper(\@papers);
 
-	print STDERR "HAVE PAPER", Dumper(\@papers);
+  # Compose the final sorted and grouped list of paper.
+  @papers = sort { not ($a->{is_supplied} <=> $b->{is_supplied})
+    || $a->{name} <=> $b->{name}
+    || $a->{width} <=> $b->{width} } 
+  map { $_->[0] } values %dupe;
 
-    # Compose the final sorted and grouped list of paper.
-    @papers = sort { not ($a->{is_supplied} <=> $b->{is_supplied})
-                     || $a->{name} <=> $b->{name}
-                     || $a->{width} <=> $b->{width} } 
-              map  { $_->[0] } values %dupe;
-
-    return \@papers;
+  return \@papers;
 }
 
 # Get the paper information for any given signature.
 sub signature_paper {
-    my ($log, $dbh, $pid, $sid) = @_;
+  my ($log, $dbh, $pid, $sid) = @_;
 
-    # Ensure the signature is priced before we give paper info.
-    my $status = get_status($log, $dbh, $sid);
-    return wantarray ? () : {} unless grep { $status eq $_ } COMPLETE;
+  # Ensure the signature is priced before we give paper info.
+  my $status = get_status($log, $dbh, $sid);
+  return wantarray ? () : {} unless grep { $status eq $_ } COMPLETE;
 
-    my %paper = (
-        id          => 'hdnPaperIndex',
-        name        => 'stock_name',
-        colour      => 'stock_colour',
-        finish      => 'stock_finish',
-        width       => 'hdnSheetSizeWidth',
-        height      => 'hdnSheetSizeHeight',
-        weight      => 'hdnPaperWeight',
-        is_supplied => 'stock_supplied',
-        q1          => 'hdnGrossSheetCount1',
-        q2          => 'hdnGrossSheetCount2',
-        q3          => 'hdnGrossSheetCount3',
-        group       => 'txtSignatureQuantity',
-        paper_price1       => 'txtStockPrice1',
-        paper_price2       => 'txtStockPrice2',
-        paper_price3       => 'txtStockPrice3',
+  my %values; # We need the hash as 'fields' may be optional.
+  $values{$_->[0]} = $_->[1] for @{ $dbh->selectall_arrayref(qq{
+  SELECT strname, strvalue 
+  FROM tbl_service_specifications
+  WHERE lngprojectindex = ? AND lngserviceindex = ?
+  }, undef, $pid, $sid) };
+
+  my %paper;
+  if ($values{rdbSpecificStock} eq 'Y') {
+    %paper = (
+      custom => 1,
+      name => 'txtSpecificStockBrand',
+      finish => 'txtSpecificStockFinish',
+      colour => 'txtSpecificStockColour',
+      weight => 'txtSpecificStockWeight',
+      calliper => 'txtSpecificStockCalliper',
+      type => 'StockType',
+      width => 'txtSpecificStockWidth',
+      height => 'txtSpecificStockHeight',
+      cut_paper => 'cuttable',
+      mweight => 'txtCustomMWeight',
+
+      is_supplied => 'stock_supplied',
+      q1          => 'hdnPaperBuyQuantity1',
+      q2          => 'hdnPaperBuyQuantity2',
+      q3          => 'hdnPaperBuyQuantity3',
+      group       => 'txtSignatureQuantity',
+      paper_price1       => 'txtStockPrice1',
+      paper_price2       => 'txtStockPrice2',
+      paper_price3       => 'txtStockPrice3',
     );
+  } else {
+    %paper = (
+      id          => 'hdnPaperIndex',
+      name        => 'stock_name',
+      colour      => 'stock_colour',
+      finish      => 'stock_finish',
+      width       => 'hdnSheetSizeWidth',
+      height      => 'hdnSheetSizeHeight',
+      weight      => 'hdnPaperWeight',
+      is_supplied => 'stock_supplied',
+      q1          => 'hdnGrossSheetCount1',
+      q2          => 'hdnGrossSheetCount2',
+      q3          => 'hdnGrossSheetCount3',
+      group       => 'txtSignatureQuantity',
+      paper_price1       => 'txtStockPrice1',
+      paper_price2       => 'txtStockPrice2',
+      paper_price3       => 'txtStockPrice3',
+    );
+  }
 
-    # Because we want to show pounds of paper for web
-    # we are going to display the buy quantity b/c it is
-    # in pounds instead of the Gross Count which is number of Cutoffs.
-     my $press = get_press_type($log, $dbh, $pid);
-    if ( $press  eq 'web' ) {
-        $paper{q1} = 'hdnPaperBuyQuantity1';
-        $paper{q2} = 'hdnPaperBuyQuantity2';
-        $paper{q3} = 'hdnPaperBuyQuantity3';
-    }
-    
-    # Check to see if we have a valid project qty before
-    # we even look up the stock info.
-    my @qtys = $dbh->selectrow_array(q{
-        SELECT intquantity1, intquantity2, intquantity3
-        FROM tbl_projects WHERE lngprojectindex = ?
+  # Because we want to show pounds of paper for web
+  # we are going to display the buy quantity b/c it is
+  # in pounds instead of the Gross Count which is number of Cutoffs.
+  my $press = get_press_type($log, $dbh, $pid);
+  if ( $press  eq 'web' ) {
+    $paper{q1} = 'hdnPaperBuyQuantity1';
+    $paper{q2} = 'hdnPaperBuyQuantity2';
+    $paper{q3} = 'hdnPaperBuyQuantity3';
+  }
+
+  # Check to see if we have a valid project qty before
+  # we even look up the stock info.
+  my @qtys = $dbh->selectrow_array(q{
+    SELECT intquantity1, intquantity2, intquantity3
+    FROM tbl_projects WHERE lngprojectindex = ?
     }, undef , $pid );
-    for my $i ( 1..3 ) {
-        delete $paper{"q$i"} unless $qtys[$i-1];
-    }
+  for my $i ( 1..3 ) {
+    delete $paper{"q$i"} unless $qtys[$i-1];
+  }
 
-    # The values in paper are the field names to look up in the database.
-    my $fields = join ', ', map { $dbh->quote($_) } values %paper;
+  # The values in paper are the field names to look up in the database.
+  my $fields = join ', ', map { $dbh->quote($_) } values %paper;
 
-    my %values; # We need the hash as 'fields' may be optional.
-    $values{$_->[0]} = $_->[1] for @{ $dbh->selectall_arrayref(qq{
-        SELECT strname, strvalue 
-        FROM tbl_service_specifications
-        WHERE lngprojectindex = ? AND lngserviceindex = ?
-          AND strname IN ($fields)
-    }, undef, $pid, $sid) };
+  # Map the values to their new names.
+  $paper{$_} = $values{ $paper{$_} } for keys %paper;
 
-    # Map the values to their new names.
-    $paper{$_} = $values{ $paper{$_} } for keys %paper;
+  # If we don't know how many are in the group, assume one.
+  $paper{group} ||= 1;
 
-    # If we don't know how many are in the group, assume one.
-    $paper{group} ||= 1;
+  # If the paper is supplied the customer can override the brand and colour.
+  if ($paper{is_supplied}) {
+    $paper{name}   = $paper{override_brand} ? $paper{override_brand} : '';
+    $paper{colour} = $paper{override_brand} if $paper{override_brand};
+  }
 
-    # If the paper is supplied the customer can override the brand and colour.
-    if ($paper{is_supplied}) {
-        $paper{name}   = $paper{override_brand} ? $paper{override_brand} : '';
-        $paper{colour} = $paper{override_brand} if $paper{override_brand};
-    }
+  # We want the quantities from the yucky way we store them to a nice array.
+  $paper{qty} = [];
+  my $pattern = qr/^q([1-3])$/o;
+  for my $key (grep /$pattern/, keys %paper) {
+    my ($i) = $key =~ /$pattern/; $i--;
+    $paper{qty}[$i] = $paper{$key} ? int $paper{$key} * $paper{group} : 0;
+    #This key is still used for display of the paper iformation.
+    #Do not delete it.
+    #        delete $paper{"q$i"}
+  }
 
-    # We want the quantities from the yucky way we store them to a nice array.
-    $paper{qty} = [];
-    my $pattern = qr/^q([1-3])$/o;
-    for my $key (grep /$pattern/, keys %paper) {
-        my ($i) = $key =~ /$pattern/; $i--;
-        $paper{qty}[$i] = $paper{$key} ? int $paper{$key} * $paper{group} : 0;
-#This key is still used for display of the paper iformation.
-#Do not delete it.
-#        delete $paper{"q$i"}
-    }
-
-    return \%paper;
+  return \%paper;
 }
 
 1;
