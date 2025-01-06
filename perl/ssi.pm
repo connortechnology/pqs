@@ -604,44 +604,64 @@ sub select_options {
 # what should be pairs, a SINGLE value to select, and an option maximum label
 # length.
 sub make_drop_down {
-  my ( $val, $checkval, $length ) = @_;
-  my ( $options, $selected ) = ('', '');
-  my @data;
+	require HTML::Entities;
+	my ( $data, $checkval, $options ) = @_;
+	$options = {} if ! $options;
+	my $check_array;
+	if ( ref $checkval eq 'ARRAY' ) {
+		$check_array = $checkval;
+	} else {
+		$check_array = [ $checkval ];
+	} # end if
 
-  my $value;
-  my $label;
+	my %selected = map { $_ => $_ } @$check_array;
 
-  my $x = ref $val;
-  #print STDERR "START MAKE: $x \n";
-  # Return an empty string if no data was passed.
-  if    (ref $val eq 'HASH')                           { @data = %$val }
-  elsif (ref $val eq 'ARRAY') 						 { @data = @$val }
-  else                                                 { return;       }
+	my $html = '';
+	if ( $$options{prepend} ) {
+		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2 ) {
+			$html .= sprintf('<option value="%s"%s>%s</option>',
+					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
+					( $selected{ $$options{prepend}[$n] } ? ' selected="selected"' : '' ),
+					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
+					);
+		} # end for
+	} # end if
 
-  while (@data) {
-    if ( ref $data[0] eq 'ARRAY' ) {
-      my $row = shift @data;
-      $value = shift @$row;
-      $label = shift @$row;
-    } else { 
-      $value = shift @data;
-      $label = shift @data;
+  for (my $i = 0; $i < @{$data}; $i++) {
+    my $value;
+    my $label;
+    if ( ref $$data[$i] eq 'ARRAY' ) {
+      my $row = $$data[$i];
+      $value = $$row[0];
+      $label = $$row[1];
+    } else {
+      $value = $$data[$i];
+      $i++;
+      $label = $$data[$i];
     }
+  
+    if ($$options{length}) {
+      $label = substr($label,0, $$options{length});
+    }
+    if ($$options{encode}) {
+      $value = HTML::Entities::encode_entities(Encode::encode('utf-8', $value));
+      $label = HTML::Entities::encode_entities(Encode::encode('utf-8', $label));
+    }
+		
+		$html .= join('','<option value="', $value, '"', ( $selected{ $value } ? ' selected="selected"' : '' ), '>', $label, '</option>');
+	} # end for
 
-    # Should the current option be selected?
-    $selected = defined $checkval && $checkval eq $value 
-    ? 'selected="selected"' : '';
-
-    # Escape html entities where needed and trim label length.
-    $value = encode_entities( $value );
-    $label = encode_entities( $length ? substr($label, 0, $length) : $label );
-
-    # Output the option.
-    $options .= qq|<option value="$value" $selected>$label</option>\n|;
-  }
-  # Return an HTML text block of options.
-  return $options;
-}
+	if ( $$options{append} ) {
+		for ( my $n = 0; $n < @{$$options{append}}; $n += 2 ) {
+			$html .= sprintf('<option value="%s"%s>%s</option>',
+					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{append}[$n])) : $$options{append}[$n] ),
+					( $selected{ $$options{append}[$n] } ? ' selected="selected"' : '' ),
+					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ) ) : $$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ),
+					);
+		} # end for
+	} # end if
+	return $html;
+} # sub make_drop_down
 
 # Generate an HTML option set (as a string) of materials in the given type.
 # Optionally selects one of the materials if it's id matches one in the list.
@@ -681,7 +701,7 @@ sub fill_drop_down {
 
     @search_data = sql_statement( $log, $dbh, $search );
 
-    return make_drop_down( \@search_data, $checkval, $length );
+    return make_drop_down( \@search_data, $checkval, {length=>$length} );
 }
 
 sub make_select {
