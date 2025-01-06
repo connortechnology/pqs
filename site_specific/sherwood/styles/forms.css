@@ -473,3 +473,60 @@ fieldset.dnd-fieldset {
 }
 
 fieldset.dnd-fieldset legend { display: none; }
+
+.DateSelector {
+  min-width: 200px;
+  display: inline-block;
+  vertical-align: top;
+}
+.DateSelectorT,
+.DateSelectorC {
+  min-width: 215px;
+  display: inline-block;
+  float: none;
+}
+.DateSelectorCT {
+  min-width: 265px;
+  display: inline-block;
+  float: none;
+}
+.DateTimeSelector {
+  min-width: 400px;
+  display: inline-block;
+  float: none;
+}
+.DateTimeSelectorT {
+  min-width: 400px;
+  display: inline-block;
+  float: none;
+}
+.DateTimeSelectorCT {
+  min-width: 400px;
+  display: inline-block;
+  float: none;
+}
+#logs_form select,
+.DateSelector select,
+.DateSelectorC select,
+.DateSelectorT select,
+.DateSelectorCT select,
+.DateTimeSelector select,
+.DateTimeSelectorCT select,
+.DateTimeSelectorC select,
+.DateTimeSelectorT select {
+  width: auto;
+  max-width: none;
+  float: none;
+}
+#logs_form span,
+#logs_form button,
+.DateSelector span,
+.DateSelectorC span,
+.DateSelectorT span,
+.DateSelectorCT span,
+.DateTimeSelector span,
+.DateTimeSelectorCT span,
+.DateTimeSelectorC span,
+.DateTimeSelectorT span {
+  float: none;
+}
