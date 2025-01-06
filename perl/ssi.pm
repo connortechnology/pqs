@@ -908,8 +908,6 @@ sub hash_link {
     return $path;
   } # end if
 
-  $log->debug("Hash link $path error $variable{error}");
-
   my $cache_dir = $r->dir_config('cache_dir') ? $r->dir_config('cache_dir') : $skin_path.'/cache';
   return $path if ! $cache_dir;
 
