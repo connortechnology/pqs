@@ -43,7 +43,11 @@
 				<th class="Discount">Discount?</th>
 				<th class="buttons">
 				';
-			$html .= button( 'NewPrice'.$service.$Pricelist->id(), {onclick=>"newPrice( '$service', '$$Pricelist{id}');", text=>'New Price' } );
+			$html .= button( 'NewPrice'.$service.$Pricelist->id(), { text=>'New Price', 
+      ($$variable{Stock}->id() ? (
+        onclick=>"newPrice( '$service', '$$Pricelist{id}');", 
+      ) : ( disabled=>'disabled', title=>'Please save the stock before entering more pricing.')
+      ) } );
 			$html .= qq`</th></tr></thead><tfoot><tr></tr></tfoot><tbody id="prices-$service-$$Pricelist{id}">\n`;
 			$html .= include( '/administrator/stock/_prices_table_body.html' );
 			$html .= '</tbody></table>';
