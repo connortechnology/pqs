@@ -304,10 +304,12 @@ function update_version_quantity (elem) {
     var row = elem.parentNode.parentNode;
     if (isNaN(elem.value)) return;
     
-	var qty1 = document.getElementById('txtQuantity1').innerHTML;
+    const qty1_elem = document.getElementById('txtQuantity1');
 
-	if (! qty1) 
-		qty1 = document.getElementById('txtQuantity1').value;
+    var qty1;
+    if (qty1_elem) {
+	    qty1 = qty1_elem.innerHTML ? qty1_elem.innerHTML : qty1_elem.value;
+    }
 
     // Figure out the percentage that current quantity if of it's total.
     var percentage
@@ -329,14 +331,16 @@ function update_version_quantity (elem) {
     version_quantity_remaining();
 }
 
-
 function version_quantity_remaining () {
     var form = document.getElementsByName("f1")[0];
     
     var result     = document.getElementById('version_quantity_remaining');
-    var total      = document.getElementById('txtQuantity1').innerHTML;
-	if (! total) 
-		total = document.getElementById('txtQuantity1').value;
+    const qty1_elem = document.getElementById('txtQuantity1');
+
+    var total;
+    if (qty1_elem) {
+	    total = qty1_elem.innerHTML ? qty1_elem.innerHTML : qty1_elem.value;
+    }
 
     var names      = form.mv_name;
     var quantities = form.mv_qty;
