@@ -30,15 +30,15 @@
 				<?loop versions?>
 				<tr>
 					<td><input name="mv_name" value="<?name?>" type="text" /></td>
-					<td><input name="mv_qty" value="<?q1?>" type="text" class="numeric" onkeyup="update_version_quantity(this);" /></td>
+					<td><input name="mv_qty" value="<?q1?>" type="text" class="numeric" oninput="update_version_quantity(this);" /></td>
 					<td><?q2?></td>
 					<td><?q3?></td>
 					<td class="percent"><?percent?></td>
 				</tr>
 				<?endloop versions?>
 				<tr>
-					<td><input name="mv_name" value="" type="text" onkeypress="growTable(this)" /></td>
-					<td><input name="mv_qty" value="" type="text" class="numeric" onkeyup="update_version_quantity(this);" /></td>
+					<td><input name="mv_name" type="text" oninput="growTable(this);" /></td>
+					<td><input name="mv_qty" type="text" class="numeric" oninput="update_version_quantity(this);" /></td>
 					<td></td>
 					<td></td>
 					<td class="percent"></td>
