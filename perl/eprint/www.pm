@@ -494,7 +494,27 @@ sub parse_page {
     template      => \&section_templating,
   );
   my $func = $section{ $first };
-  $status = $func->($r, $log, $dbh, $variable, $cookie, $page, $second, $filename) if $func;
+  if ($func) {
+    $status = $func->($r, $log, $dbh, $variable, $cookie, $page, $second, $filename);
+  } else {
+
+    if ( -e $ENV{DOCUMENT_ROOT}.$r->uri ) {
+      my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
+      if ( $proc ) {
+        my $module = join('_', ($first, ($second ? $second : ())));
+        require "openprint/$module.pm";
+        if ( my $function = ('openprint::'.$module)->can($proc) ) {
+          $log->debug("Running openprint::$module->$proc") if DEBUG;
+          $function->();
+        } else {
+          $log->error("No function def for $module :: $proc!");
+        }
+      } else {
+        $log->debug("No proc found for $filename");
+      } # end if
+    } # end if -e $ENV{DOCUMENT_ROOT}.$uri
+  }
+
 
   eprint::inventory::show_inventory($r, $log, $dbh, $variable)               if $filename eq 'Inventoried.html';
 
@@ -710,6 +730,22 @@ sub section_employee {
     eprint::employee_support::helpdesk_search($r, $log, $dbh, $variable)  if $filename eq 'helpdesk_search.html';
     eprint::employee_support::rma($r, $log, $dbh, $variable)              if $filename eq 'return.html';
     eprint::employee_support::rma_search($r, $log, $dbh, $variable)       if $filename eq 'returns.html';
+  } else {
+    my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+    if ( $proc ) {
+      my $module = join('_', 'employee', $sub_section);
+      eval {
+        require "openprint/$module.pm";
+        if ( my $function = ('openprint::'.$module)->can($proc) ) {
+          $log->debug("Running openprint::$module->$proc") if DEBUG;
+          $function->($r, $log, $dbh, $variable );
+          $log->error( "Can't $module :: $proc, Reason: $@" ) if $@;
+        } else {
+          $log->error( "Can't $module :: $proc, Reason: " );
+        }
+      };
+      $log->error( "Can't $module :: $proc, Reason: $@" ) if $@;
+    } # end if
   }
 
   return OK;
