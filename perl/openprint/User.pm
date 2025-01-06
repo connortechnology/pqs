@@ -14,13 +14,13 @@ use vars qw( $log $dbh %config $debug %fields %find_fields %transforms %defaults
 $table = 'tbl_Customer_users';
 $serial = 'users_id_seq';
 
-$debug = 0;
+$debug = 1;
 
-$default_sort	=	'lower(firstname),lower(lastname),id';
+$default_sort	=	'lower(strfirstname),lower(strlastname),lngUserId';
 
 %fields = (
-	id							=>	'lngUserId',
-	company_id			=>	'lngCustomerId',
+	id							=>	'lnguserid',
+	company_id			=>	'lngcustomerid',
 	salutation			=>	'strsalutation',
 	title						=>	'strtitle',
 	firstname				=>	'strfirstname',
@@ -517,8 +517,15 @@ sub link_to {
 	my $content = ( @_ ? shift @_ : $self->name() );
 	my %options = ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
 
-	return sprintf('<a href="/account/view.html?user_id=%1$d"%3$s>%2$s</a>', 
-			$$self{id},
+  my $url;
+  if ($openprint::User->type() eq 'A') {
+    $url = $self->admin_url_to();
+  } else {
+    $url = '/main/account/user_profile.html?ddmUser='.$$self{id};
+  }
+
+	return sprintf('<a href="%1$s"%3$s>%2$s</a>', 
+			$url,
 			$content,
 			( %options ? join(' ', '', map { $_.'="'.$options{$_}.'"' } keys %options ) : '' ),
 			);
