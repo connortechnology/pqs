@@ -503,6 +503,7 @@ sub parse_page {
       my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
       if ( $proc ) {
         my $module = join('_', ($first, ($second ? $second : ())));
+eval {
         require "openprint/$module.pm";
         if ( my $function = ('openprint::'.$module)->can($proc) ) {
           $log->debug("Running openprint::$module->$proc") if DEBUG;
@@ -510,6 +511,7 @@ sub parse_page {
         } else {
           $log->error("No function def for $module :: $proc!");
         }
+};
       } else {
         $log->debug("No proc found for $filename");
       } # end if
