@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 package openprint::Paper;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
@@ -13,6 +14,7 @@ use vars qw( $log %variable %config );
 
 require sql;
 require misc;
+require openprint::Company;
 #require openprint::Manufacturer;
 require openprint::PaperPrice;
 #require openprint::Skid;
@@ -1173,7 +1175,7 @@ sub get_price {
 
 	if ( $$openprint::Company{discount} or $$openprint::Company{csr_commission} or $$openprint::Company{credit_card_fee} or $$CSR{commission} ) {
 		my $discount = 1 - ($$openprint::Company{discount} / 100);
-		my $csr_commission = 1 + ($$openprint::Company{csr_commission} == undef ? $$CSR{commission} : $$openprint::Company{csr_commission} ) /100;
+		my $csr_commission = 1 + (! defined($openprint::Company->csr_commission()) ? $$CSR{commission} : $$openprint::Company{csr_commission} ) /100;
 		my $credit_card_fee = 1 + ($$openprint::Company{credit_card_fee}/100);
 
 		$_ = $$price{price};
