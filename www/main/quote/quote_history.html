@@ -10,13 +10,13 @@
     <!--#include virtual="/includes/web_page_meta.html" -->
     <!--#include virtual="/includes/h1-main-css.html" -->
 
-	<link href="/styles/forms.css" rel="stylesheet" media="screen" />
+    <link href="<?hash_link(/styles/forms.css)?>" rel="stylesheet" media="screen" />
 
     <!--#include virtual="/includes/h2-js.html" -->
 
-    <script type="text/javascript" src="/javascripts/other.js"></script>
+    <script src="<?hash_link(/javascripts/other.js)?>"></script>
 
-    <script  type="text/javascript">
+    <script>
 		function delete_confirm(form) {
 			var number_of_deleted_quotes = 0;
 	
@@ -133,7 +133,7 @@
 																<td style="text-align: center;"><input type="checkbox" name="chkDelete<?quote_id?>" class="checkbox" /></td>
 															</tr>
 	
-															<? if ( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice @{$$variable{'QUOTES'}},0,7; ) ?>
+															<?if( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice(@{$$variable{QUOTES}},0,7) ) ?>
 	
 																<tr class="colRow">
 																	<td style="text-align: left;"><a href="/main/quote/quote_history_details.html?quote_id=<?quote_id?>"><?quote_id?></a></td>
@@ -145,7 +145,7 @@
 																	<td style="text-align: right;"><?CurrencySymbol?><?total3?></td>
 																	<td style="text-align: center;"><input type="checkbox" name="chkDelete<?quote_id?>" class="checkbox" /></td>
 																</tr>
-															<? endif ( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice @{$$variable{'QUOTES'}},0,7; ) ?>
+															<?endif( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice(@{$$variable{QUOTES}},0,7) ) ?>
 														<? endwhile ( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice @{$$variable{'QUOTES'}},0,7; ) ?>
 
 														<tr class="no-formatting">
