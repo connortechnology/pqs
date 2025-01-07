@@ -877,7 +877,7 @@ sub project_price {
   my @material = stock_price($log, $dbh, $pid);
   my @service  = map { $_ ? sum( map { $_->{price} } values %$_ ) : 0 } @{ service_prices($dbh, $pid) };
 
-  $total[$_] = $service[$_] + $material[$_] for 0..(scalar @service); 
+  $total[$_] = ($service[$_] // 0) + ($material[$_]//0) for 0..(scalar @service); 
 
   print STDERR "HAVE PROJECT PRICES: ", Dumper(\@material, \@service, \@total);
 
