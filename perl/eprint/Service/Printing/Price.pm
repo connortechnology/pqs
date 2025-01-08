@@ -2390,7 +2390,10 @@ sub calc_sheet_qty {
     # We need to adjust the net sheets (and everything downstream from them)
     # here for multipart forms.
     $_ = "SELECT lngmultipart FROM tbl_Paper where lngIndex = '$$paper{'index'}'";
-    my ($form_multiplier) = sql::sql_statement( $log, $dbh, $_ );
+    @$paper{multipart} = sql::sql_statement( $log, $dbh, $_ );
+  }
+  if ($$paper{multipart}) {
+    my $form_multiplier = $$paper{multipart};
     if ($form_multiplier > 1) {
       $net_sheets *= $form_multiplier 
     } else {
