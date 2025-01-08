@@ -1,0 +1,75 @@
+<div class="container">
+	<div class="row">
+		<div class="col">
+			<h3>Devices</h3>
+			<ul>
+			<? echo (
+				my @monitored_devices = openprint::Host->find( monitored=>1 );
+				my @online = map { $_->online() ? $_ : () } @monitored_devices;
+				my @unknown = map { !defined($_->online()) ? $_ : () } @monitored_devices;
+				return sprintf('
+<li><label>Monitored Devices</label>%d</li>
+<li><label>Online</label>%d</li>
+<li><label>Offline</label>%d</li>
+<li><label>Unknown</label>%d</li>
+',
+scalar @monitored_devices,
+scalar @online,
+( @monitored_devices - @online - @unknown ),
+scalar @unknown,
+);
+			) ?>
+			</ul>
+		</div><!--col-->
+		<div class="col">
+			<h3>Syslog</h3>
+			<ul>
+<? echo (
+my $html;
+my %severities = (
+    0   => 'table-danger', #emerg
+    1   => 'table-danger', #alert',
+    2   => 'table-danger', #crit',
+    3   => 'table-danger', #error',
+    4   => 'table-warning', #warning',
+    5   => 'table-success', #notice',
+    6   => 'table-info', #info',
+    7   => '', #debug',
+);
+
+if ( ! $openprint::Syslog::dbh ) {
+  $openprint::Syslog::dbh = sql::open_sql( $log,
+    database  => $config{syslog_db_name},
+    driver    => $config{syslog_db_driver},
+    host      => $config{syslog_db_hostname},
+    login     => $config{syslog_db_username},
+    password  => $config{syslog_db_password},
+  );
+  return 'Unable to connect to Syslog database<br/>' if ! $openprint::Syslog::dbh;
+}
+
+my $parser = 'DateTime::Format::Pg';
+my @Logs = openprint::Syslog->find(
+    'receivedat >=' => $parser->format_datetime(DateTime->now()->subtract(days=>1)),
+);
+
+#Split them by priority
+my %log_counts;
+foreach my $Log ( @Logs ) {
+  $log_counts{$$Log{priority}} = [] if ! $log_counts{$$Log{priority}};
+  push @{$log_counts{$$Log{priority}}}, $Log;
+}
+
+foreach my $level ( 0 .. 7 ) {
+$html .= '<li class="'.$severities{$level}.'"><label>'.$openprint::Syslog::severities{$level}.'</label>'. 
+'<a href="/employee/it/syslog.html?priority='.$level.'">'.
+( $log_counts{$level} ? scalar @{$log_counts{$level}} : 0 ).'</a></li>';
+}
+$html .= '<li class="total"><label>Total</label>'.(scalar @Logs).'</li>';
+return $html;
+) ?>
+				
+			</ul>
+		</div>
+	</div><!--row-->
+</div>

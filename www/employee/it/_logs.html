@@ -1,0 +1,53 @@
+<? eval (
+		@{$$variable{Results}} = openprint::Log->find(
+			date_filter( '/employee/it/logs.html?date_time_end', 'date_time <=' ),
+			date_filter( '/employee/it/logs.html?date_time_start', 'date_time >=' ),
+			( $param{company_id} ? ( company_id	=> $param{company_id} ) : () ),
+			( $param{user_id} ? ( user_id => $param{user_id} ) : () ),
+			action_id	=>	$param{log_actions},
+			);
+) ?>
+<? if ( @{$$variable{Results}} ) ?>
+<table class="List sortable">
+	<tr>
+		<th class="Action">Action</th>
+		<th class="DateTime">When</th>
+		<th class="IP">IP Address</th>
+		<th class="Note">Note</th>
+		<th class="Email">Email</th>
+		<th class="User">Name</th>
+		<th class="Company">Company</th>
+		<th class="Object">Object</th>
+	</tr>
+	<? echo (
+		my $html = '';
+
+		foreach my $Log ( @{$$variable{Results}} ) {
+			my $User = $Log->User();
+			$html .= sprintf('<tr>
+					<td class="Action">%s</td>
+					<td class="DateTime">%s</td>
+					<td class="IP"><a href="/employee/it/host.html?host_id=%d">%s</a></td>
+					<td class="Note">%s</td>
+					<td class="Email">%s</td>
+					<td class="User">%s</td>
+					<td class="Company">%s</td>
+					<td class="Object">%s</td>
+				</tr>',
+				$Log->Action()->name(),
+				Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time($Log->date_time() ) ),
+				$Log->Host()->id(),
+				$Log->hostname() ? $Log->hostname() : $Log->ip_address(),
+				$Log->note(),
+				$User->email(),
+				$User->name(),
+				$Log->Company()->name(),
+        ($$Log{object_id} ? $Log->Object()->link_to() : '' ),
+				);
+		} # end foreach
+		return $html;
+	) ?>
+</table>
+<? else ( @{$$variable{Results}} ) ?>
+No results matched your search criteria
+<? endif ( @{$$variable{Results}} ) ?>

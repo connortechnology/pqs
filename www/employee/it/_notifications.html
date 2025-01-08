@@ -1,0 +1,41 @@
+<?include('/includes/error_reporting.html')?>
+<ul class="notifications">
+	<? echo (
+		my $html;
+
+		my @Notifications = $$variable{Host}->Notifications();
+		if ( @Notifications ) {
+			foreach my $U ( @Notifications ) {
+				$html .= sprintf( q`<li id="notification_%d"><span class="name">%s</span><span class="buttons">%s</span></li>`, 
+					$U->user_id(), $U->User()->link_to(), 
+          button( 'd'.$U->user_id(), { onclick=>"del_notification($$U{user_id});", , text=>'X' } ),
+					);
+			} # end foreach User in Notifications
+      if ( ! $$variable{Host}->id() ) {
+        $html .= '<li class="information">Click save to apply changes</li>';
+      }
+		} else {
+			$html .= '<li>No notifications will be sent. Select and add a recipient to receive notifications about this device.</li>';
+		} # end if
+    $html .= input(type=>'hidden', name=>'notification_ids', id=>'notification_ids', value=>join(',',map { $$_{user_id}} @Notifications) );
+		return $html;
+	) ?>
+	<li>
+		<select name="new_notification_id" id="new_notification_id">
+			<option value=""> select one </option>
+		<? echo ( 
+      my @user_ids = sets::exclude(
+            [ map { $_->user_id() } $$variable{Host}->Notifications() ],
+            [ map { $_->id() } openprint::User->find( company_id=>[$openprint::User->company_id(),
+            ( $$variable{Host}->owner_id() ? $$variable{Host}->owner_id() : ()),
+            ] ) ]
+          );
+      return make_drop_down( [ map { $_->id()=>$_->name().' '.$_->email() } openprint::User->find( id=>\@user_ids )]) if @user_ids;
+      return;
+		) ?>
+		</select>
+		<? echo ( button( 'AddNotification', { 
+					onclick=>'add_notification();',
+          text=>'Add' } ); ) ?>
+	</li>
+</ul>

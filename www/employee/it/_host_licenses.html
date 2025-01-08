@@ -1,0 +1,37 @@
+<? eval (
+		$$variable{Licenses} = [openprint::License->find(
+			host_id	=>	$param{host_id},
+			order	=>	'software_id',
+		)];
+) ?>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="serialkey">Serial/Key</th>
+			<th class="software">Software</th>
+			<th class="expires">Expires</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $License ( @{$$variable{Licenses}} ) {
+				$html .= sprintf('
+					<tr%1$s>
+						<td class="serialkey"><a href="/employee/it/license.html?license_id=%2$d">%3$s</a></td>
+						<td class="software"><a href="/employee/it/license.html?license_id=%2$d">%4$s</a></td>
+						<td class="expires"><a href="/employee/it/license.html?license_id=%2$d">%5$s</a></td>
+					</tr>
+					', 
+					$rowclass,
+					$License->id(), $License->serialkey(), $License->software(),
+					format_date( $License->expires_on() ),
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach License
+			return $html;
+		) ?>
+		<tr>
+	</tbody>
+</table>

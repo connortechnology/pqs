@@ -1,0 +1,27 @@
+
+<? echo (
+	return '';
+	my $html='';
+	my @Logs = openprint::Log->find(
+		'ip_address'=>$$variable{'Host'}->ip(),
+		'action_id in'	=> [ 200, 201 ],
+		ssi::date_filter( '/employee/it/license.html?log_created_on_start', 'date_time >=' ),
+		ssi::date_filter( '/employee/it/license.html?log_created_on_end', 'date_time <=' ),
+		'order'=>'date_time DESC',
+	);
+	if ( @Logs ) {
+		my $rowclass = '';
+		$html .= '<table class="List"><tr><th class="DateTime">When</th><th class="action_type">Action</th><th class="note">Note</th></tr>';
+		foreach my $Log ( @Logs ) {
+			$html .= sprintf('<tr%s><td class="DateTime">%s</td><td class="action_type">%s</td><td class="note">%s</td></tr>',
+				$rowclass,
+				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Log->date_time() ) ),
+				$Log->Action()->name(), $Log->note(),
+				);
+
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Log
+		$html .= '</table>';
+	} # end if Logs
+	return $html;
+) ?>

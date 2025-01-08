@@ -1,0 +1,23 @@
+<? echo (
+  my $Interface = $$variable{Interface};
+
+	my $html = sprintf(q`
+<tr id="hi-%1$d">
+	<td class="ip">%2$s</td>
+	<td class="options">%3$s</td>
+	<td class="comment"><textarea name="comment-%1$s">%4$s</textarea></td>
+`, 
+	$$Interface{id},
+	input( type=>'ip', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
+join('<br/>',
+	checkboxes( 'monitor-'.$$Interface{id}, [ 1, 'monitor' ], $Interface->monitor(), { container=>['<span class="option_monitor">','</span>']} ) ),
+	$Interface->comment(),
+);
+	
+	$html .= '<td class="buttons">';
+	if ( $$Interface{id} ) {
+		$html .= button( 'DI'.$Interface->id(), { onclick=>qq`delete_interface('$$Interface{id}');`, text=>'-', title=>'Delete Subnet' } ),
+	} # end if
+	$html .= '</td></tr>';
+  return $html;
+) ?>

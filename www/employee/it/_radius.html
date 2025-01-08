@@ -1,0 +1,51 @@
+<? eval (
+	if ( $param{username} and ( $param{username} !~ /%/ ) ) {
+		$param{username} = '%'.$param{username}.'%';
+	} # end if
+	if ( $param{value} and ( $param{value} !~ /%/ ) ) {
+		$param{value} = '%'.$param{value}.'%';
+	} # end if
+	my @Records = openprint::RADIUS_Check->find(
+			order => $param{order} ? $param{order} : 'lower(username),attribute',
+			( $param{username} ne '' ? ( 'username ilike' =>$param{username} ) : () ),
+			( $param{attribute} ne '' ? ( attribute => $param{attribute} ) : () ),
+			( $param{value} ne '' ? ( 'value ilike' => $param{value} ) : () ),
+			);
+
+	@{$$variable{Records}} = @Records;
+
+) ?>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="checkbox">&nbsp;</th>
+			<th class="username" onclick="load_records(f1, {order:'username'});">Username</th>
+			<th class="attribute" onclick="load_records(f1, {order:'attribute'});">Attribute</th>
+			<th class="value">Value</th>
+			<th class="buttons"><? echo ( button( 'New', { onclick=>q`new_record();` } ); ) ?>
+		</tr>
+	</thead>
+	<tbody id="tbody">
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Record ( @{$$variable{Records}} ) {
+				$html .= sprintf('<tr%1$s>
+						<td class="checkbox"><input type="checkbox" id="record_id" name="record_id" value="%2$d"/></td>
+						<td class="username"><a href="/employee/it/radius_record.html?record_id=%2$d">%3$s</a></td>
+						<td class="attribute"><a href="/employee/it/record.html?record_id=%2$d">%4$s</a></td>
+						<td class="value"><a href="/employee/it/record.html?record_id=%2$d">%5$s</a></td>
+					</tr>
+					', $rowclass, $Record->id(), $Record->username(), $Record->attribute(), $Record->value(),);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Record
+			return $html;
+		) ?>
+		<tr>
+	</tbody>
+</table>
+<p class="buttons">
+<? echo (
+    button( 'delete', { onclick => "f1.elements['action'].value='Delete';jQuery( '#Results').load('/employee/it/_radius.html', f1.serialize() );", text=>'Delete Checked' } );
+) ?>
+</p>

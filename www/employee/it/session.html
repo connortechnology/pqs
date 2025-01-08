@@ -1,0 +1,19 @@
+<fieldset><legend>Session</legend>
+<? echo ( 
+	my $html;
+	my %s;
+	if ( ! eval q`tie %s, 'Apache::Session::Postgres', $param{session_id}, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
+		$log->warn("Error fetching Session: $param{session_id}: $@");
+	} # end if
+
+	foreach my $k ( sort keys %s ) {
+		if ( $k eq 'ip' ) {
+			my @Hosts = openprint::Host->find( 'ip any' => $s{$k} );
+			$html .= $k . ' = ' . join('<br/>', map { $_->link_to() } @Hosts ) . '<br/>';
+		} else {
+		$html .= "$k = $s{$k}<br/>\n";
+		} 
+	}
+	return $html;
+) ?>
+</fieldset>

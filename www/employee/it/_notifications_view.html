@@ -1,0 +1,16 @@
+<ul class="notifications">
+	<? echo (
+		my $html;
+		my @Notifications = $$variable{Host}->Notifications();
+		if ( @Notifications ) {
+			foreach my $U ( @Notifications ) {
+				$html .= sprintf( q`<li id="notification_%d"><span class="name"><a href="mailto:">%s</a></span></li>`, 
+					$U->user_id(), $U->User()->email(), $U->User()->name(), 
+					);
+			} # end foreach User in Notifications
+		} else {
+			$html .= '<li>No notifications will be sent.</li>';
+		} # end if
+		return $html;
+	) ?>
+</ul>

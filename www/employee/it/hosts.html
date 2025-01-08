@@ -1,0 +1,150 @@
+<script>
+function load_host( form, options ) {
+  console.log(form);
+	form = form ? $j(form) : $j('#f1');
+	const p = form.serialize(true);
+	if ( options && options.order )
+		p = p+'&order='+options.order;
+	
+	LoadContent('Results', '/employee/it/_hosts.html', p);
+} // end function load
+</script>
+<?include('/includes/error_reporting.html')?>
+Please select a host to view/edit.<br/>
+<form id="f1" name="f1" method="post" action="hosts.html">
+	<input type="hidden" name="action"/>
+	<fieldset class="filters"><legend>Search Criteria</legend>
+    <div class="leftColumn">
+		<ul>
+			<li class="ip"><label for="ip">Host IP</label>
+			<? echo ( input( type=>'ip', id=>'ip', name=>'ip',
+						value=>$session{$r->uri().'?ip'},
+            onkeydown=>q`if(event&&event.keyCode==13){load_host($j('#f1'));}`,
+            with_clear=>1,
+            ); ) ?>
+			</li>
+			<li class="name"><label for="name">Name</label>
+			<? echo ( input( type=>'text', id=>'name', name=>'name',
+						value=>$session{$r->uri().'?name'},
+						onkeypress	=> q`if(event && event.keyCode == 13){load_host( $j('#f1') );}`,
+						with_clear	=> 1,
+      ); ) ?>
+			</li>
+			<li class="hostname"><label for="hostname">Hostname</label>
+			<? echo ( input( type=>'text', id=>'hostname', name=>'hostname',
+						value=>$session{$r->uri().'?hostname'}, oninput=>'to_hostname(this);',
+						onkeypress	=> q`if(event && event.keyCode == 13){load_host( $j('#f1') );}`,
+						with_clear	=> 1,
+      ); ) ?>
+			</li>
+			<li class="mac"><label for="mac">MAC</label>
+				<?echo( input( pattern=>'[0-9a-fA-F:\\-%]*', type=>'text', id=>'mac', name=>'mac',
+							value			=> $session{$r->uri().'?mac'},
+							onkeyup		=> q`this.value=this.value.replace(/[^0-9a-fA-F:\\-%]/g,'');`,
+							onkeydown	=> q`if(event && event.keyCode == 13){load_host( $j('#f1') );}`,
+							oninput		=> 'this.onkeyup.call(this);', 
+							with_clear=> 1 ); ) ?>
+			</li>
+			<? echo ( 
+        my $html = '';
+        my $Network_Type = openprint::Host_Type->find_one(name=>'Network');
+        if ( $Network_Type ) {
+          my $networks_dropdown = openprint::Host->dropdown(type_id=>$$Network_Type{id}, order=>'lower(hostname)');
+          if ( @{$networks_dropdown} ) {
+            $html .= join("\n",
+              '<li class="network"><label>Network</label>',
+              ssi::select($networks_dropdown, $session{$r->uri().'?network_id'}, { name=>'network_id', prepend=>['','All'] } ),
+              '</li>',
+            );
+          }
+        }
+        my $hosttype_dropdown = openprint::Host_Type->dropdown(order=>'lower(name)', ( $Network_Type ? ('id !='=>$$Network_Type{id}) : () ));
+        if ( @{$hosttype_dropdown} > 2 ) {
+          $html .= join("\n",
+            '<li class="type"><label>Type</label>',
+            ssi::select($hosttype_dropdown, $session{$r->uri().'?type_id'}, { name=>'type_id', prepend=>['','All'] } ),
+            '</li>',
+          );
+        }
+        
+        my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM Hosts');
+        if ( @owner_ids > 1 ) {
+          $html .= q`
+          <li class="owner"><label>Owner</label>
+            <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+            <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
+              <option value="">All</option>`.
+make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $session{$r->uri().'?owner_id'} ).
+q`
+            </select>
+          </li>
+          `;
+        }
+        my $manufacturers = openprint::Manufacturer->dropdown();
+        if ( @{$manufacturers} > 2) {
+          $html .= join("\n",
+            '<li class="manufacturer"><label>Manufacturer</label>',
+            ssi::select($manufacturers, $session{$r->uri().'?manufacturer_id'}, { name=>'manufacturer_id', prepend=>['','All'] } ),
+            '</li>',
+          );
+        }
+
+        return $html;
+    ) ?>
+		<li>
+			<label>Date Added</label>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+			to 
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Last Updated</label>
+<? echo ( date_select_session( $r->uri(), 'updated_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+			to 
+<? echo ( date_select_session( $r->uri(), 'updated_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+		</li>
+    </ul>
+    </div>
+    <div class="rightColumn">
+      <ul>
+		<li class="blacklisted">
+			<label>Blacklisted</label>
+      <? echo ( radio( 'blacklisted', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?blacklisted'} ); ) ?>
+		</li>
+		<li class="whitelisted">
+			<label>Whitelisted</label>
+      <? echo ( radio( 'whitelisted', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?whitelisted'} ); ) ?>
+		</li>
+		<li>
+			<label>Monitored</label>
+      <? echo ( radio( 'monitored', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?monitored'} ); ) ?>
+		</li>
+		<li>
+			<label>Online</label>
+      <? echo ( radio( 'online', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?online'} ); ) ?>
+		</li>
+		<li>
+			<label>Has hostname</label>
+      <? echo ( radio( 'has_hostname', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?has_hostname'} ); ) ?>
+		</li>
+    <? if ( $config{'RADIUS Support'} ) ?>
+      <li><label>Has RADIUS Auth</label>
+        <? echo ( radio( 'radius_auth', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{$r->uri().'?radius_auth'} ); ) ?>
+      </li>
+    <? endif ( $config{'RADIUS Support'} ) ?>
+      <li><label>Deleted</label>
+        <? echo ( radio( 'deleted', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {on_click=>'load_host'} ); ) ?>
+      </li>
+		</ul>
+    </div>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"load_host( \$j('#f1') );", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				button( 'Add', { href=>'host.html', text=>'Add New Host' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results"><?include(/employee/it/_hosts.html)?></div>
+</form>
+<script>document.f1.ip.focus();</script>

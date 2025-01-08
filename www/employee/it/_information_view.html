@@ -1,0 +1,16 @@
+<ul class="information">
+	<? echo (
+		my $html;
+		my @Information = openprint::Host_Info->find(host_id=>$$variable{Host}{id}, order=>'lower(name)');
+		if ( @Information ) {
+			foreach my $I ( @Information ) {
+				$html .= sprintf( q`<li id="information_%d"><span class="name">%s</span> = <span class="value">%s</span></li>`, 
+					$I->id(), $I->name(), $I->value(),
+					);
+			} # end foreach User in Information
+		} else {
+			$html .= '<li>No information.</li>';
+		} # end if
+		return $html;
+	) ?>
+</ul>

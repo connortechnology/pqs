@@ -1,0 +1,61 @@
+<?include(/includes/error_reporting.html)?>
+Please select a host to view/edit.<br/>
+<form id="f1" name="f1" method="post" action="licenses.html">
+	<input type="hidden" name="action"/>
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+			<li><label>Serial/Key</label>
+			<input type="text" name="serialkey" value="<? echo ( $session{'/employee/it/licenses.html?serialkey'} ) ?>" onkeydown="if(event && event.keyCode == 13){load_results($('f1'));}" />
+			</li>
+		</ul>
+		<hr/>	
+		<ul>
+		<li>
+			<label for="ip">Host IP</label>
+			<input type="text" id="ip" name="ip" value="<? echo ( $session{'/employee/it/licenses.html?ip'} ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onkeydown="this.form.hostname.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_results($('f1'));}" onchange="this.onkeyup.call(this);this.onkeydown.call(this);"/>
+			Hostname
+			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/licenses.html?hostname'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_results( $('f1') );}" />
+			MAC
+			<input type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/licenses.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_results( $('f1') );}" />
+		</li>
+		<li>
+			<label>Date Added</label>
+<? echo ( date_select_session( '/employee/it/licenses.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to 
+<? echo ( date_select_session( '/employee/it/licenses.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Last Updated</label>
+<? echo ( date_select_session( '/employee/it/licenses.html', 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to 
+<? echo ( date_select_session( '/employee/it/licenses.html', 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Purchased On</label>
+<? echo ( date_select_session( '/employee/it/licenses.html', 'purchased_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to 
+<? echo ( date_select_session( '/employee/it/licenses.html', 'purchased_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Expires On</label>
+<? echo ( date_select_session( '/employee/it/licenses.html', 'expires_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to 
+<? echo ( date_select_session( '/employee/it/licenses.html', 'expires_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Software</label>
+			<? echo ( ssi::select( openprint::Software->dropdown(order=>'lower(name)'), $session{'/employee/it/licenses.html?software_id'}, {name=>'software_id', prepend=>['','select'] } ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"load_results( \$('f1') );", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				button( 'Add', { href=>'license.html', text=>'Add New License' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results">Choose criteria and click Show Results</div>
+</form>
+<script>document.f1.ip.focus();</script>
+<script src="<?hash_link(/employee/it/licenses.js)?>"></script>

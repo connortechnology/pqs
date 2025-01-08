@@ -1,0 +1,28 @@
+<?include(/includes/error_reporting.html)?>
+<ul class="host_config">
+	<? echo (
+		my $html;
+		my @Config = openprint::Host_Config->find(host_id=>$$variable{Host}{id}, order=>'id desc', limit=>1, name=>'config');
+		if ( @Config ) {
+			foreach my $Config ( @Config ) {
+				$html .= sprintf(
+						q`<li id="config_%d"><span class="name">%s on %s</span> = <span class="value">%s</span><span class="buttons">%s</span></li>`, 
+						$Config->id(), $Config->name(), format_datetime($Config->created_on()), misc::json_to_html($Config->data()),
+						button( 'dc'.$$Config{id}, { onclick=>qq`jQuery('#host_config').load('_host_config.html', { action: 'delete', host_id: '$$variable{Host}{id}', config_id: '$$Config{id}'} );`, text=>'X', title=>'Delete' } ),
+					);
+			} # end foreach Config
+		} # end if
+
+		@Config = openprint::Host_Config->find(host_id=>$$variable{Host}{id}, order=>'id desc', limit=>1, name=>'status');
+		if ( @Config ) {
+			foreach my $Config ( @Config ) {
+				$html .= sprintf(
+						q`<li id="config_%d"><span class="name">%s on %s</span> = <span class="value">%s</span><span class="buttons">%s</span></li>`,
+						$Config->id(), $Config->name(), format_datetime($Config->created_on()), misc::json_to_html($Config->data()),
+						button( 'dc'.$$Config{id}, { onclick=>qq`jQuery('#host_config').load('_host_config.html', { action: 'delete', host_id: '$$variable{Host}{id}', config_id: '$$Config{id}'} );`, text=>'X', title=>'Delete' } ),
+						);
+			} # end foreach Config
+		} # end if
+		return $html;
+	) ?>
+</ul>

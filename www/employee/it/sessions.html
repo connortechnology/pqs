@@ -1,0 +1,65 @@
+<script type="text/javascript">
+function load_session( form, options ) {
+	var div = $('Results');
+	div.innerHTML = 'Loading... Please wait.';
+	var p = form.serialize(true);
+	if ( options && options.order )
+		p.order = options.order;
+	
+	new Ajax.Updater( 'Results','/employee/it/_sessions.html', { parameters: p } );
+} // end function load
+</script>
+<?include('/includes/error_reporting.html')?>
+Please select a session to view/edit.<br>
+<form id="f1" name="f1" method="post" action="sessions.html">
+	<input type="hidden" name="action"/>
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+		<li>
+			<label for="ip">Host IP</label>
+			<? echo ( input( type=>'ip', name=>'ip', id=>'ip', value=>$session{'/employee/it/sessions.html?ip'}, onkeydown=>q`if(event.keyCode==13){load_session($('f1'));};` ); ) ?>
+		</li>
+		<li>
+			<label>Date Added</label>
+<? echo ( date_select_session( '/employee/it/sessions.html', 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+			to 
+<? echo ( date_select_session( '/employee/it/sessions.html', 'created_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Last Updated</label>
+<? echo ( date_select_session( '/employee/it/sessions.html', 'updated_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+			to 
+<? echo ( date_select_session( '/employee/it/sessions.html', 'updated_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+		</li>
+		<li><label>Company</label>
+			<select name="company_id" id="company_id"><option value="">All</option>
+			<? echo ( make_drop_down( openprint::Company->dropdown(), $session{'/employee/it/sessions.html?company_id'} ); ) ?>
+			</select>
+		</li>		
+		<li>
+      <label>User Type</label>
+			<select name="user_type" id="user_type"><option value="">All</option>
+			<? echo ( make_drop_down( openprint::User_Type->dropdown(), $session{'/employee/it/sessions.html?user_type'} ); ) ?>
+			</select>
+		</li>
+		<li>
+      <label>User</label>
+			<select name="user_id" id="user_id"><option value="">All</option>
+			<? echo ( make_drop_down( openprint::User->dropdown(
+							( $session{'/employee/it/sessions.html?company_id'} ? ( company_id=>$session{'/employee/it/sessions.html?company_id'} ) : () ),
+							( $session{'/employee/it/sessions.html?user_type'} ? ( type	=>	$session{'/employee/it/sessions.html?user_type'} ) : () ),
+							), $session{'/employee/it/sessions.html?user_id'} ); ) ?>
+			</select>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>q`load_session( $('f1') );`, text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				button( 'Add', { onclick=>q`window.location='session.html?'+$('f1').serialize();`, text=>'Add New Host' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results">Choose criteria and click Show Results</div>
+</form>
+<script type="text/javascript">document.f1.ip.focus();</script>

@@ -1,0 +1,121 @@
+<? eval (
+	my @Hosts;
+	if ( $session{'/employee/it/hosts.html?mac'} and ( $session{'/employee/it/hosts.html?mac'} !~ /%/ ) ) {
+		@Hosts = openprint::Host->find(
+			order	=> $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
+			'mac any'=> $session{'/employee/it/hosts.html?mac'},
+			limit	=>10,
+		);
+	} else {
+		my $host_ids;
+		if ( $session{'/employee/it/hosts.html?ip'} ) {
+			if ( $session{'/employee/it/hosts.html?ip'} =~ /\// ) {
+				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find( 'ip <<=' => $session{'/employee/it/hosts.html?ip'} ) ];
+			} else {
+				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find( ip => $session{'/employee/it/hosts.html?ip'} ) ];
+			}
+		}
+
+		if ( (! $host_ids ) or ( @{$host_ids} ) ) {
+			$session{'/employee/it/hosts.html?order'} = 'lower(hostname)' if ! $session{'/employee/it/hosts.html?order'};
+			@Hosts = openprint::Host->find(
+				order	=> $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
+				( $host_ids ? ( id => $host_ids ) : () ),
+				( $session{'/employee/it/hosts.html?hostname'} ? ( 'hostname ilike' => ( $session{'/employee/it/hosts.html?hostname'} =~ /%/ ? $session{'/employee/it/hosts.html?hostname'} : $session{'/employee/it/hosts.html?hostname'}.'%' ) ) : () ),
+				( $session{'/employee/it/hosts.html?blacklisted'} ne '' ? ( 'blacklist'=>$session{'/employee/it/hosts.html?blacklisted'} ) : () ),
+				( $session{'/employee/it/hosts.html?whitelisted'} ne '' ? ( 'whitelist'=>$session{'/employee/it/hosts.html?whitelisted'} ) : () ),
+				( $session{'/employee/it/hosts.html?monitored'} ne '' ? ( 'monitored'=>$session{'/employee/it/hosts.html?monitored'} ) : () ),
+				( $session{'/employee/it/hosts.html?online'} ne '' ? ( 'online'=>$session{'/employee/it/hosts.html?online'} ) : () ),
+				( $session{'/employee/it/hosts.html?has_hostname'} ne '' ? ( 'hostname is null' => ! $session{'/employee/it/hosts.html?has_hostname'} ) : () ),
+				( $session{'/employee/it/hosts.html?type_id'} ne '' ? ( type_id => $session{'/employee/it/hosts.html?type_id'} ) : () ),
+				date_filter( '/employee/it/hosts.html?created_on_end', 'created_on <=' ),
+				date_filter( '/employee/it/hosts.html?created_on_start', 'created_on >=' ),
+				date_filter( '/employee/it/hosts.html?updated_on_end', 'updated_on <=' ),
+				date_filter( '/employee/it/hosts.html?updated_on_start', 'updated_on >=' ),
+				);
+		} # end if
+	} # end if
+
+	my $mac_search;
+	if ( $session{'/employee/it/hosts.html?mac'} and $session{'/employee/it/hosts.html?mac'} =~ /%/ ) {
+		$mac_search = lc $session{'/employee/it/hosts.html?mac'};
+		$mac_search =~ s/%/\.\*/g;
+		$mac_search =~ s/://g;
+	} # end $mac_search
+
+	@{$$variable{Hosts}} = ();
+	foreach my $Host ( @Hosts ) {
+		my @Interfaces = $Host->Interfaces();
+		
+		if ( $mac_search ) {
+			next if ! @Interfaces;
+			my $next = 1;
+			
+			foreach my $I ( @Interfaces ) {
+				my $mac = lc $I->mac();
+				$mac =~ s/://g;
+				if ( $mac =~ /$mac_search/ ) {
+					$next = 0;
+					last;
+				} # end if
+			} # end foreach Interface
+			next if $next;
+		} # end if
+
+		if ( $session{'/employee/it/hosts.html?radius_auth'} ne '' ) {
+			if ( $session{'/employee/it/hosts.html?radius_auth'} eq '1' ) {
+				my $show = 0;
+				next if ! @Interfaces;
+				foreach my $I ( @Interfaces ) {
+					my $mac = $I->mac();
+					if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+						$mac = "$1-$2-$3-$4-$5-$6";
+					} # end if
+					$mac = uc $mac;
+					
+					if ( openprint::RADIUS_Check->find_one( username=>$mac ) ) {
+						$show = 1;
+						last;
+					} # end if
+				} # end foreach mac
+				next if ! $show;
+			} elsif ( $session{'/employee/it/hosts.html?radius_auth'} eq '0' ) {
+				my $show = 1;
+				if ( @Interfaces ) {
+					foreach my $I ( @Interfaces ) {
+						my $mac = $I->mac();
+						if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+							$mac = "$1-$2-$3-$4-$5-$6";
+						} # end if
+						$mac = uc $mac;
+						if ( openprint::RADIUS_Check->find_one( username=>$mac ) ) {
+							$show = 0;
+							last;
+						} # end if
+					} # end foreach mac
+				} # end if
+				next if ! $show;
+			} else {
+				$log->error("Unknown value of " . $session{'/employee/it/hosts.html?radius_auth'} );
+			} # end if
+		} # end if
+		push @{$$variable{'Hosts'}}, $Host;
+	} # end foreach Host
+) ?>
+<? echo (
+	my $html;
+	my $rowclass;
+	foreach my $Host ( @{$$variable{Hosts}} ) {
+		$html .= sprintf('
+host %1$s {<br/>
+	hardware ethernet	%2$s;<br/>
+		fixed-address %3$s;<br/>
+}<br/>
+			', $Host->hostname(), 
+			join('<br/>', map { $_->mac() } $Host->Interfaces() ), 
+			join('<br/>', map { $_->ip() } $Host->Interfaces() ), 
+			);
+	} # end foreach Host
+	$html .= '<tr class="totals"><td colspan="7"># of hosts: ' . @{$$variable{Hosts}} . '</td></tr>';
+	return $html;
+) ?>

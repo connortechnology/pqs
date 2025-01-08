@@ -1,0 +1,87 @@
+<?eval(
+$openprint::Syslog::dbh = sql::open_sql( $log,
+	  database  => $config{syslog_db_name},
+	  driver    => $config{syslog_db_driver},
+	  host      => $config{syslog_db_hostname},
+	  login     => $config{syslog_db_username},
+	  password  => $config{syslog_db_password},
+	);
+	return 'Unable to connect to Syslog database<br/>' if ! $openprint::Syslog::dbh;
+)?>
+<script type="text/javascript">
+function load_page() {
+	new Ajax.Updater( 'Results', '_syslog.html', { parameters: $('searchLog').serialize() } );
+}
+</script>
+<form id="searchLog" name="searchLog" action="syslog.html" method="post">
+	<fieldset class="filters"><legend>Search</legend>
+		<ul>
+			<li><label>Received Time</label>
+			<? echo ( join("\n to \n",
+              datetime_select_session( $r->uri(), 'receivedat_start', { with_today=>1, with_clear=>1 } ),
+              datetime_select_session( $r->uri(), 'receivedat_end', { with_today=>1, with_clear=>1 } ),
+              ); ) ?>
+			</li>
+			<li><label>Device Time</label>
+				<? echo ( join("\n to \n",
+              datetime_select_session( $r->uri(), 'devicereportedtime_start', { with_today=>1, with_clear=>1 } ),
+              datetime_select_session( $r->uri(), 'devicereportedtime_end', { with_today=>1, with_clear=>1 } ),
+              ); ) ?>
+			</li>
+      <li><label>Host</label>
+	  <?echo(ssi::select(
+				  [map { $_, $_ } sql::execute(undef,$openprint::Syslog::dbh,'SELECT name FROM hosts ORDER BY lower(name)')],
+				  $session{$r->uri().'?fromhost'},
+					{name=>'fromhost',
+					prepend=>['','All'],
+} 
+); ) ?>
+      </li>
+      <li><label>Service</label>
+	  <?echo(ssi::select(
+				  [map { $_, $_ } sql::execute(undef,$openprint::Syslog::dbh,'SELECT name FROM syslogtags ORDER BY lower(name)')],
+				  $session{$r->uri().'?syslogtag'},
+					{name=>'syslogtag',
+					prepend=>['','All'],
+} 
+); ) ?>
+      </li>
+      <li><label>Severity</label>
+	  <?echo(
+			  ssi::select(
+				  [ map { $_ => $openprint::Syslog::severities{$_} } sort keys %openprint::Syslog::severities ],
+				  $session{$r->uri().'?priority'},
+				  {
+					name=>'priority',
+					prepend=>['','All'],
+# onchange=>'load_page();',
+				  },
+				  );
+) ?>
+      </li>
+      <li><label>Facility</label>
+	  <?echo(
+			  ssi::select(
+				  [ map { $_ => $openprint::Syslog::facilities{$_} } sort keys %openprint::Syslog::facilities ],
+				  $session{$r->uri().'?facility'},
+				  { name=>'facility',
+prepend=>['','All'],
+# onchange=>'load_page();',
+				  },
+				  ); 
+)?>
+		</li>
+		<li><label>Message</label>
+			<input type="text" name="message" value="<?echo($session{$r->uri().'?message'})?>"/>
+		</li>
+		</ul>
+
+		<p class="buttons">
+		<? echo ( button( 'Search', { onclick=>'load_page();' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<fieldset>
+	<legend>Logs</legend>
+	<div id="Results"><?include(_syslog.html)?></div>
+</fieldset>

@@ -1,0 +1,76 @@
+<? echo (
+	@{$$variable{Results}} = ();
+if ( ! $openprint::Syslog::dbh ) {
+	$openprint::Syslog::dbh = sql::open_sql( $log,
+	  database  => $config{syslog_db_name},
+	  driver    => $config{syslog_db_driver},
+	  host      => $config{syslog_db_hostname},
+	  login     => $config{syslog_db_username},
+	  password  => $config{syslog_db_password},
+	);
+	return 'Unable to connect to Syslog database<br/>' if ! $openprint::Syslog::dbh;
+}
+
+
+  my $uri = '/employee/it/syslog.html';
+  @{$$variable{Results}} = openprint::Syslog->find(
+		date_filter($uri.'?receivedat_end', 'receivedat <=' ),
+		date_filter($uri.'?receivedat_start', 'receivedat >=' ),
+		date_filter($uri.'?devicereportedtime_end', 'devicereportedtime <=' ),
+		date_filter($uri.'?devicereportedtime_start', 'devicereportedtime >=' ),
+		( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'facility','priority','fromhost') ),
+		( map { $session{$uri.'?'.$_} ? ( "$_ ilike" => $session{$uri.'?'.$_}.'%' ) : () } ( 'syslogtag' ) ),
+		( $session{$uri.'?message'} ? ( 'message ilike' => '%'.$session{$uri.'?message'}.'%' ) : () ),
+	  );
+	return;
+) ?>
+<? if ( @{$$variable{Results}} ) ?>
+<table class="List sortable table table-striped">
+	<tr>
+		<th class="DateTime">When</th>
+		<th class="Facility">Facility</th>
+		<th class="Host">Host</th>
+		<th class="Service">Service</th>
+		<th class="Priority">Severity</th>
+	</tr>
+	<? echo (
+		my $html = '';
+
+my %severities = (
+    0   => 'table-danger', #emerg
+    1   => 'table-danger', #alert',
+    2   => 'table-danger', #crit',
+    3   => 'table-danger', #error',
+    4   => 'table-warning', #warning',
+    5   => 'table-success', #notice',
+    6   => 'table-info', #info',
+    7   => '', #debug',
+);
+
+		foreach my $Log ( @{$$variable{Results}} ) {
+			$html .= sprintf('<tr class="%1$s" style="border-bottom: none;">
+					<td class="DateTime">%2$s</td>
+					<td class="Facility">%4$s</td>
+					<td class="Host">%5$s</td>
+					<td class="Service">%6$s</td>
+					<td class="Priority">%7$s</td>
+        </tr><tr class="%1$s">
+          <td class="DateTime">%3$s</td>
+					<td colspan="4" class="Message">%8$s</td>
+				</tr>',
+$severities{$$Log{priority}},
+        format_datetime( $$Log{receivedat} ),
+        format_datetime( $$Log{devicereportedtime} ),
+				$openprint::Syslog::facilities{$$Log{facility}},
+				$$Log{fromhost},
+				$$Log{syslogtag},
+				$openprint::Syslog::severities{$$Log{priority}},
+				$$Log{message},
+				);
+		} # end foreach
+		return $html;
+	) ?>
+</table>
+<? else ( @{$$variable{Results}} ) ?>
+No results matched your search criteria
+<? endif ( @{$$variable{Results}} ) ?>

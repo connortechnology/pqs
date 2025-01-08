@@ -1,0 +1,65 @@
+<? eval (
+	if ( $param{'ip'} ) {
+		@{$$variable{'Blacklist'}} = openprint::Blacklist->find('ip'=>$param{'ip'});
+	} elsif ( $param{'mac'} ) {
+		@{$$variable{'Blacklist'}} = openprint::Blacklist->find('mac any'=>$param{'mac'});
+	} elsif ( $param{'hostname'} ) {
+		@{$$variable{'Blacklist'}} = openprint::Blacklist->find('mac like'=>'%'.$param{'hostname'}.'%');
+	} else {
+		$$variable{Blacklist} = [ openprint::Blacklist->find(
+			order	=> ($param{'order'} ? $param{'order'} : 'created_on' ),
+			date_filter( '/employee/it/blacklist.html?created_on_end', 'created_on <=' ),
+			date_filter( '/employee/it/blacklist.html?created_on_start', 'created_on >=' ),
+			date_filter( '/employee/it/blacklist.html?updated_on_end', 'updated_on <=' ),
+			date_filter( '/employee/it/blacklist.html?updated_on_start', 'updated_on >=' ),
+			) ];
+	} # end if
+) ?>
+<? if ( @{$$variable{'Blacklist'}} ) ?>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="ip">IP</th>
+			<th class="mac">MAC</th>
+			<th class="hostname">Hostname</th>
+			<th class="DateTime">Created On</th>
+			<th class="DateTime">Updated On</th>
+			<th style="width: 40px;">Count</th>
+		</tr>
+	</thead>
+	<tbody>
+<? echo (
+	my $html;
+	my $rowclass;
+	foreach my $Blacklist ( @{$$variable{'Blacklist'}} ) {
+		$html .= sprintf('
+		<tr%1$s>
+			<td class="ip">%2$s</td>
+			<td class="mac">%3$s</td>
+			<td class="hostname">%7$s</td>
+			<td class="DateTime">%5$s</td>
+			<td class="DateTime">%6$s</td>
+			<td>%4$s</td>
+		</tr>
+		<tr%1$s>
+			<td colspan="5">%8$s</td>
+			<td>%9$s</td>
+		</tr>
+		', $rowclass,
+		$Blacklist->ip(), ( $Blacklist->mac() ? join('<br/>', @{$Blacklist->mac()} ) : '' ), $Blacklist->count(), 
+		Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Blacklist->created_on() ) ),
+		Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Blacklist->updated_on() ) ),
+		$Blacklist->Host()->hostname(), $Blacklist->Host()->description(),
+		join('', 
+			ssi::writeButton( $log, $dbh, 'E'.$Blacklist->id(), 'edit.gif', q`popup_window('_blacklist_popup.html', 'id=`.$Blacklist->id().q`' );`, '', 'E' ),
+		),
+		);
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach
+	return $html;
+) ?>
+	</tbody>
+</table>
+<? else ( @{$$variable{'Blacklist'}} ) ?>
+No results found.
+<? endif ( @{$$variable{'Blacklist'}} ) ?>

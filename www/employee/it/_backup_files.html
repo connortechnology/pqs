@@ -1,0 +1,118 @@
+<? eval (
+
+  my $Backup = $$variable{Backup};
+
+  my $dest_path = $Backup->dest_path();
+  my $path = $param{path} ? $param{path} : '/';
+  $path =~ s/\.\.//g; # protect
+  $path =~ s/\/\/+/\//g;
+  $$variable{path} = $path;
+
+  my $full_path = join('', $dest_path, $path);
+
+  my @path_parts = split('/', $path);
+  pop @path_parts;
+  my $parent_path = $$variable{parent_path} = join('/', @path_parts);
+$log->debug($parent_path);
+
+  $$variable{Files} = [];
+
+	my @filenames;
+	if ( opendir DIRHANDLE, $full_path ) {
+		@filenames = readdir DIRHANDLE;
+		closedir DIRHANDLE;
+	} else {
+		$log->error("Couldn't open directory ($full_path)");
+		$variable{error} .= "Couldn't open directory $full_path<br/>";
+		#push @{$$variable{Files}}, '..', '', '', '';
+		return;
+	} # end if
+
+	my ( @files, @dirs );
+	foreach my $file ( @filenames ) {
+		next if $file =~ /^\./;
+		if ( -d "$full_path/$file" ) {
+			push @dirs, $file;
+		} elsif ( -f "$full_path/$file" ) {
+			push @files, $file;
+		} else {
+      $log->error("Unknown file type $full_path/$file");
+		} # end if
+	} # end foreach file
+
+  if ( $path ne '/' ) {
+    push @{$$variable{Files}}, '..', '', undef;
+  }
+	foreach my $file ( sort { $b <=> $a } @dirs ) {
+			push @{$$variable{Files}}, $file, '', undef;
+	} # end foreach dir
+
+	foreach my $file ( sort { $b cmp $a } @files ) {
+		my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev, $size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("$full_path/$file");
+		push @{$$variable{Files}}, $file, $size, $mtime;
+	} # end foreach
+) ?>
+<?include('/includes/error_reporting.html')?>
+<form id="f1" name="f1" action="upload.html" method="post">
+  <a href="#" onclick="$j('#Files').load('_backup_files.html?backup_id=<?echo($$variable{Backup}->id())?>&path=<?path?>');"><?path?></a>
+	<table class="List">
+		<thead>
+			<tr> 
+				<th class="Filename">Filename</th>
+				<th class="size">Size</th>
+				<th class="DateTime">When</th>
+				<th class="checkbox"><input type="checkbox" name="checkall" onclick="select_all($('f1'),'chkFiles',this.checked);" /></th>
+			</tr>
+		</thead>
+		<? if ( @{$$variable{Files}} == 0 ) ?>
+		<tr>
+		   <td colspan="4">Empty.</td>
+		</tr>
+		<? else ( @{$$variable{Files}} == 0 ) ?>
+			<? echo (
+				my $html;
+				my $rowclass;
+
+				while ( my ( $filename, $size, $mtime ) = splice @{$$variable{Files}},0,3 ) {
+					$html .= "<tr$rowclass>\n";
+					if ( $filename eq '..' ) {
+						$html .= sprintf(q`
+<tr>
+  <td colspan="4">
+    <a href="#" onclick="$j('#Files').load('_backup_files.html?backup_id=%1$d&path=%2$s');"><img src="/images/parent-folder.gif" alt="Parent Folder" />..</a>
+  </td>
+</tr>`,
+$$variable{Backup}{id}, URI::Escape::uri_escape($$variable{parent_path}) );
+
+					} elsif ( $size ) {
+						$html .= sprintf(q`
+						<td><a href="/employee/it/_backup_files.html?backup_id=%1$s&path=%2$s&file=%3$s">%4$s</a></td>
+						<td class="size">%5$s</td>
+						<td class="DateTime">%6$s</td>
+						<td class="checkbox"><input type="checkbox" id="chkFiles" name="chkFiles" value="%4$s"/></td>`,
+              $$variable{Backup}{id}, 
+              URI::Escape::uri_escape($$variable{path}),
+              URI::Escape::uri_escape($filename),
+							$filename,
+							Number::Format::format_bytes($size),
+							Date::Format::time2str($config{DateTimeFormat}, $mtime),
+							);
+					} else {
+						# A dir
+            $html .= sprintf(q`<td colspan="4"><a href="#" onclick="$j('#Files').load('_backup_files.html?backup_id=%1$d&path=%2$s');"><img src="/images/folder.gif" alt="Folder" />%3$s</a></td>`,
+                $$variable{Backup}{id},
+                URI::Escape::uri_escape($$variable{path}.$filename.'/'),
+                $filename,
+                );
+					} # end if
+
+					$html .= '</tr>';
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end while
+				return $html;
+			) ?>
+<? endif ( @{$$variable{Files}} == 0 ) ?>
+	</table>
+	<p class="buttons"><? echo ( button( 'Delete', { onclick=>'delete_files();' } );) ?></p>
+	<input type="hidden" name="btnFunction" />
+</form>

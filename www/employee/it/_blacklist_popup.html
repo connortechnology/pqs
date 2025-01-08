@@ -1,0 +1,22 @@
+<form id="blacklist_form" name="blacklist_form" method="post" action="blacklist.html">
+	<input type="hidden" id="id" name="id" value="<? echo ( $$variable{'Blacklist'}->id() ) ?>" />
+	<input type="hidden" id="action" name="action" />
+	<fieldset><legend>Blacklist Entry</legend>
+		<div class="content">
+			<ul>
+				<li><label>IP</label> <input type="text" name="ip" id="ip" value="<? echo ( $$variable{'Blacklist'}->ip() ) ?>" /> </li>
+				<li><label>MAC</label> <textarea name="mac" id="mac"><? echo ( $$variable{'Blacklist'}->mac() ? join("\n", @{$$variable{'Blacklist'}->mac()} ) : '' ) ?></textarea></li>
+				<li><label>Count</label> <input type="text" name="count" id="count" value="<? echo ( $$variable{'Blacklist'}->count() ) ?>" /> </li>
+			</ul>
+		</div>
+		<p class="buttons">
+			<? echo (
+				return join('',
+					ssi::writeButton( $log, $dbh, 'SaveBlacklist', 'save.gif', q`blacklist_form.elements['action'].value='Save';blacklist_form.submit();`, '', 'Save' ),
+					ssi::writeButton( $log, $dbh, 'DeleteBlacklist', 'delete.gif', q`blacklist_form.elements['action'].value='Delete';blacklist_form.submit();`, '', 'Delete' ),
+					ssi::writeButton( $log, $dbh, 'CancelBlacklist', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ),
+				);
+			) ?>
+		</p>
+	</fieldset>
+</form>
