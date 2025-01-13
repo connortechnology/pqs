@@ -1,4 +1,4 @@
-<tr id="Price-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>">
+<tr class="price" id="Price-<? echo ( $param{pricelist_id} ) ?>-<? echo ( $param{id} ) ?>">
 	<td class="Service"><? echo ( ssi::select( [ map { $_, $_ } ( 'Setup', 'Supply', 'Material' ) ], 'Material', { name=>join('-', 'service', $param{pricelist_id},$param{id} ) } ); ) ?></td>
 	<td class="Range">
 		<? echo ( join( ' to ',
@@ -15,4 +15,3 @@
 	</td>
 	<td>&nbsp;</td>
 </tr>
-
