@@ -313,11 +313,11 @@ return '';
 					<label>Does this stock have multiple parts (eg: forms)?</label>
           <?echo(radio('multipart', ['1','Yes','0','No'], $$variable{Stock}->multipart(), { onclick=>q`if(this.value=='1'){$('parts_div').show();}else{$('parts_div').hide();}` });)?>
 				</li>
-        <!--
 				<li id="parts_div" <? echo ( $$variable{Stock}->multipart() ? '' : 'style="display:none;"' ) ?>>
 					<label>How many parts</label>
 					<input type="number" id="parts" name="parts" value="<? echo ( $$variable{Stock}->parts() ) ?>" />
 				</li>
+        <!--
 				<li class="perfecting">
 					<label>Is this stock stiff enough to perfect without gutters?</label>
           <?echo(radio('perfecting', ['1','Yes','0','No'], $$variable{Stock}->perfecting());)?>
