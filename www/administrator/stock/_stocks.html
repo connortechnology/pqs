@@ -29,6 +29,9 @@
 			#( $session{$uri.'?user_type'} ne '' ? ( user_type => $session{$uri.'?user_type'} ) : () ),
       order		=> 'brand,finish,colour,weight, '.$openprint::Paper::fields{width}.', '.$openprint::Paper::fields{height},
 		);
+  if ( $session{$uri.'?name'}) {
+    $sql{'name ilike'} = $session{$uri.'?name'}.'%';
+  }
 	if ( $session{$uri.'?calliper'} ) {
 		if ( $session{$uri.'?calliper'} =~ /<([\.0-9]*)/ ) { 
 			$sql{'calliper <='} = $1;
@@ -86,7 +89,7 @@
 				<? if ( @{$$variable{InventoryNumbers}} > 1 ) ?>
 				<th class="inventory" data-field="inventory" data-sortable="true">Inventory #</th>
 				<? endif ( @{$$variable{InventoryNumbers}} > 1 ) ?>
-        <th class="grade" data-field="grade" data-sortable="true">Grade</th>
+        <th class="name" data-field="name" data-sortable="true">Id</th>
 				<? if ( @{$$variable{Groups}} ) ?>
 				<th class="group" data-field="group" data-sortable="true">Group</th>
 				<? endif ( @{$$variable{Groups}} ) ?>
@@ -100,6 +103,7 @@
 				<th class="finish" data-field="finish" data-sortable="true">Finish</th>
 				<th class="colour" data-field="colour" data-sortable="true">Colour</th>
 				<th class="weight" data-field="weight" data-sortable="true">Weight</th>
+        <th class="grade" data-field="grade" data-sortable="true">Grade</th>
         <!--<th class="quality" data-field="quality" data-sortable="true">Quality</th>-->
 				<th class="size" data-field="size" data-sortable="true">Size</th>
 				<th class="calliper" data-field="calliper" data-sortable="true">Calliper</th>
@@ -129,7 +133,7 @@
 					);
 			$columns += 1;
 		}
-    $html .= sprintf('<td class="grade"><a href="stock.html?stock_id=%1$d">%2$s</a></td>',$$Stock{id}, $openprint::Paper::grades{$Stock->grade()} );
+    $html .= sprintf('<td class="name"><a href="stock.html?stock_id=%1$d">%2$s</a></td>',$$Stock{id}, $Stock->name());
 		if ( @{$$variable{Groups}} ) {
 			$html .= sprintf('<td class="group"><a href="stock.html?stock_id=%1$d">%2$s</a></td>',
 					$$Stock{id}, $Stock->group(),
@@ -153,20 +157,26 @@
 		<td class="finish"><a href="stock.html?stock_id=%1$d">%3$s</a></td>
 		<td class="colour"><a href="stock.html?stock_id=%1$d">%4$s</a></td>
 		<td class="weight"><a href="stock.html?stock_id=%1$d">%5$s</a></td>
-    <!--<td class="quality"><a href="stock.html?stock_id=%1$d">%6$s</a></td>-->
-		<td class="size"><a href="stock.html?stock_id=%1$d">%7$s</a></td>
-		<td class="calliper"><a href="stock.html?stock_id=%1$d">%8$s</a></td>
-		<td class="mweight"><a href="stock.html?stock_id=%1$d">%9$s</a></td>
-		<td class="gsm"><a href="stock.html?stock_id=%1$d">%10$s</a></td>
-    <!--<td class="spp_min"><a href="stock.html?stock_id=%1$d">%11$s</a></td>-->
-		<td class="pricing"><a href="stock.html?stock_id=%1$d">%12$s</a></td>
-	</tr>
-',
+    ',
 					$$Stock{id},
 					$Stock->brand(),
 					$Stock->finish(),
 					$Stock->colour(),
 					$Stock->weight(),
+          );
+
+    $html .= sprintf('<td class="grade"><a href="stock.html?stock_id=%1$d">%2$s</a></td>',$$Stock{id}, $openprint::Paper::grades{$Stock->grade()} );
+		$html .= sprintf('
+    <!--<td class="quality"><a href="stock.html?stock_id=%1$d">%2$s</a></td>-->
+		<td class="size"><a href="stock.html?stock_id=%1$d">%3$s</a></td>
+		<td class="calliper"><a href="stock.html?stock_id=%1$d">%4$s</a></td>
+		<td class="mweight"><a href="stock.html?stock_id=%1$d">%5$s</a></td>
+		<td class="gsm"><a href="stock.html?stock_id=%1$d">%6$s</a></td>
+    <!--<td class="spp_min"><a href="stock.html?stock_id=%1$d">%7$s</a></td>-->
+		<td class="pricing"><a href="stock.html?stock_id=%1$d">%8$s</a></td>
+	</tr>
+',
+					$$Stock{id},
 					$Stock->quality(),
 					$Stock->size(),
 					$Stock->calliper(),
