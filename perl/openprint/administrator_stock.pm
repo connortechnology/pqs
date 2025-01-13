@@ -38,14 +38,13 @@ sub _stocks {
 	if ( %param and ! $param{btnFunction} ) {
     $log->debug("Calling save_params");
 		ssi::save_params('/administrator/stock/list.html', 
+      'name',
 			'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id',
 			'colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations',
 			'grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 
 			'material_prices', 'customer_supplied', 'has_message', 'has_minimum_order',
 			'calliper', 'has_problems', 'user_type' );
 		$session{'/administrator/stock/list.html?OrLarger'} = $param{OrLarger};
-  } else {
-    $log->debug("No param");
 	} # end if
 } # end sub _stocks
 
