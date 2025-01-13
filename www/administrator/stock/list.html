@@ -10,6 +10,7 @@
   <!--#include virtual="/includes/h1-admin-css.html" -->
 
   <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+  <?echo(ssi::link('/styles/administrator_stock.css');)?>
 
   <!--#include virtual="/includes/h2-js.html" -->
 
@@ -123,7 +124,7 @@ addEventListener('DOMContentLoaded', (event) => {
 		<div class="leftColumn">
 			<ul class="non-list">
       <? echo (
-        my @company_ids = sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} );
+          my @company_ids = sql::execute(undef, undef, 'SELECT DISTINCT '.$openprint::Paper::fields{owner_id}.' FROM '.$openprint::Paper::table );
         if (@company_ids > 1) {
           $session{$r->uri().'?Owner'} = $session{company_id} if ! exists $session{$r->uri().'?Owner'};
 
@@ -160,7 +161,7 @@ return join("\n",
 		</li>
 <? endif ( @{$$variable{Groups}} = openprint::StockGroup->find(order=>'lower(name)') ) ?>
 <?echo(
-	my @manufacturer_ids = sql::execute( undef, undef, 'SELECT DISTINCT manufacturer_id FROM Papers WHERE manufacturer_id IS NOT NULL' );
+                my @manufacturer_ids = sql::execute( undef, undef, 'SELECT DISTINCT '.$openprint::Paper::fields{manufacturer_id}.' FROM '.$openprint::Paper::table.' WHERE '.$openprint::Paper::fields{manufacturer_id}.' IS NOT NULL' );
   if (@manufacturer_ids >1) {
     return join("\n", '<li><label>Manufacturer</label>',
 			ssi::select(openprint::Manufacturer->dropdown(), $session{$r->uri().'?manufacturer_id'}, {
@@ -171,7 +172,7 @@ return join("\n",
   return;
 )?>
 <? echo ( 
-	my @stock_supplier_ids = @{$$variable{supplier_ids}} = sql::execute( undef, undef, 'SELECT DISTINCT supplier_id FROM Papers WHERE supplier_id IS NOT NULL' );
+                my @stock_supplier_ids = @{$$variable{supplier_ids}} = sql::execute( undef, undef, 'SELECT DISTINCT '.$openprint::Paper::fields{supplier_id}.' FROM '.$openprint::Paper::table.' WHERE '.$openprint::Paper::fields{supplier_id}.' IS NOT NULL' );
 	if ( @stock_supplier_ids ) {
 	return join("\n",
 		'<li><label>Supplier</label>
@@ -183,6 +184,9 @@ return join("\n",
 	} # end if
 	'';
 ) ?>
+    <li><label>Id</label>
+      <input type="text" name="name" value="<?echo($session{$r->uri().'?name'})?>" oninput="calc(this.form.name);"/>
+    </li>
 		<li>
 			<label>Brand</label>
 			<select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
