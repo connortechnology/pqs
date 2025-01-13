@@ -1,3 +1,4 @@
+/*
 .filters p, .filters li {
 	padding: 0 0 0 175px;
 }
@@ -5,6 +6,7 @@
 	width: 170px;
 	margin-left: -175px;
 }
+*/
 .Recommendations ul {
 }
 .Recommendations ul li {
@@ -77,6 +79,9 @@ p.minimum_order label, p.fsc_code label, p.inventory_number label, p.message lab
 .calliper, .mweight {
 	text-align: right;
 }
+.calliper label {
+  text-align: left;
+}
 .pricing, .spp_min {
 	width: 90px;
 	text-align: right;
@@ -100,7 +105,7 @@ width: 55px;
 .Range input[type="number"],
 .dialog table .Range input[type="text"],
 .dialog table .Range input[type="number"] {
-	width: 40%;
+	width: 30%;
 }
 .Discount label {
   width: auto;
@@ -122,10 +127,35 @@ width: 55px;
 table .buttons {
   width: 50px;
 }
+.dialog table p.buttons {
+  width: 100%;
+}
 table input {
-  max-width: 100%;
+  max-width: 90%;
+}
+
+.modify_pricing table td {
+  border: none;
 }
 
 .wpsi {
   display: none;
+}
+.dialog .Recommendations {
+  display: none;
+}
+table .gsm {
+  width: 50px;
+}
+table .calliper {
+  width: 55px;
+}
+table .grade {
+  width: 125px;
+}
+table .mweight {
+  width: 105px;
+}
+table .size {
+  width: 75px;
 }
