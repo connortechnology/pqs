@@ -961,8 +961,8 @@ function do_decimals( number, precision ) {
 function pad_with_zeros(rounded_value, decimal_places) {
 	var value_string = rounded_value.toString();
 	var decimal_location = value_string.indexOf(".");
+  let decimal_part_length = 0;
 	if (decimal_location == -1) {
-		decimal_part_length = 0;
 		value_string += decimal_places > 0 ? "." : "";
 	} else {
 		decimal_part_length = value_string.length - decimal_location - 1;
