@@ -61,7 +61,7 @@ $serial	= 'paper_id_seq';
     #taxexempt1		=>	'ysntaxexempt1',
     #taxexempt2		=>	'ysntaxexempt2',
     cuttable		=>	'cut_paper', 
-		multipart		=>	'lngmultipart', 
+		multipart		=>	'multipart', 
     doublesided		=>	'ysndoublesided', 
     #perfecting		=>	'ysnperfecting', 
     score_required	=>	'score_required',
@@ -88,7 +88,7 @@ $serial	= 'paper_id_seq';
     message				=>	'message',
     in_stock			=>	'in_stock',
     allocated			=>	'allocated',
-    parts				=>	'parts',
+    parts				=>	'lngmultipart',
     material_id			=>	'material_id',
     user_type			=>	'user_type',
     available_to_order	=>	'available_to_order',
@@ -169,7 +169,7 @@ $serial	= 'paper_id_seq';
 	supplied		=>	undef,
 	sheets_per_package	=>	undef,
 	wpsi				=>	undef,
-	type				=>	q`''`,
+	type				=>	q`'Sheet'`,
 	available_to_order	=>	undef,
 	department_id		=>	undef,
 	inventory_number	=>	undef,
@@ -479,7 +479,8 @@ sub to_string {
 		my $string = join(' ', (
 					($$self{supplied} ? 'Customer Supplied' : () ),
 					($$self{id} ? () : 'Custom'),
-					$self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight(),
+					($self->manufacturer() ? $self->manufacturer() : () ),
+          $self->brand(), $self->finish(), $self->colour(), $self->weight(),
 					) );
 		if ( $self->type() eq 'Roll' ) {
 			$string .= ' ' . 1*$self->width.'"' if $$self{width};
@@ -492,10 +493,10 @@ sub to_string {
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
-		if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
+		if (!$openprint::config{Show_Stock_Calliper} or $openprint::config{Show_Stock_Calliper} ne 'N' ) {
 		$string .= ' '. Math::Round::nearest( 0.1, 1000*$self->calliper()).'PT' if $self->calliper() and ! ( $self->weight() =~ /PT/ );
 		}
-		if ( $openprint::config{Show_Stock_GSM} ne 'N' ) {
+		if (!$openprint::config{Show_Stock_GSM} or $openprint::config{Show_Stock_GSM} ne 'N' ) {
 		$string .= ' '. Math::Round::nearest(1, $self->gsm()).'gsm' if $self->gsm();
 		}
 		$string .= ' FSC:' . $$self{fsc_code} if $$self{fsc_code};
@@ -951,7 +952,7 @@ sub allocated {
 		return $qty;
 	} # end if
 	if ( ! defined $$self{allocated} ) {
-		$$self{allocated} = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}) );
+		$$self{allocated} = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}) ) // 0;
 	} # end if
 	return $$self{allocated};
 } # end sub allocated
