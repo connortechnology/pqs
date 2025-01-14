@@ -1548,9 +1548,7 @@ sub calc_print_price {
     ($pack_qty, $break) = ($paper->{sheets_per_package}, (int($paper->{full_packages}) ? 'N' : 'Y'));
     print STDERR "Have pack_qty $pack_qty and $break $$paper{full_packages} from custom\n";
   } else {
-    ($pack_qty, $break) = $dbh->selectrow_array(q{
-      SELECT lngPackageQty, ysnBreakable FROM tbl_Paper WHERE lngIndex = ?
-      }, {}, $id) if $id;
+    ($pack_qty, $break) = $dbh->selectrow_array(q{ SELECT lngPackageQty, ysnBreakable FROM tbl_Paper WHERE lngIndex = ?  }, {}, $id) if $id;
     #($pack_qty, $break) = @paper{'sheets_per_package','full_packages'};
   }
 
@@ -1586,10 +1584,7 @@ sub calc_print_price {
       $price{'Buy Quantity'} = ceil(($imp->getSpreads * $qty) / ($imp->getSetup || 1));
 
       # New buy quantity means getting a new dataset.
-      $paper_price = eprint::paper::get_price(
-        $log, $dbh, $variable, $paper, $press, $price{'Buy Quantity'}
-      );
-
+      $paper_price = eprint::paper::get_price($log, $dbh, $variable, $paper, $press, $price{'Buy Quantity'});
       $price{'Sheet Price'} = $paper_price->{Price};
     }
   }
