@@ -406,7 +406,7 @@ sub get_price {
   } elsif ( $price->{units} eq '1000 Sheets' or $price->{units} eq '1000 sheets' ) {
     $price->{Cost}  /= 1000; 
     $price->{Price} /= 1000;
-  } elsif ( $price->{units} =~ /lbs/ ) {
+  } elsif ( (!$price->{units}) or $price->{units} =~ /lbs/ ) {
     # Get a per sheet price for the stock. The MWeight is the weight of
     # 1000 sheets and the price is based on 100lbs. 
     #
