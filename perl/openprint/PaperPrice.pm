@@ -43,6 +43,7 @@ $serial = 'tbl_paper_prices_id_seq';
 	equipment_id	=>	undef,
 	min => undef,
 	max => undef,
+  units => '100 lbs',
 	cost => 0,
 	price => 0,
 	markup => 0,
