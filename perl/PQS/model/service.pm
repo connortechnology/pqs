@@ -25,8 +25,9 @@ sub set_material_estimate {
 
   if ($id) {
     $qry = "update service_materials set estimate = ? where id = ?";
-    $dbh->do($qry, undef, $estimate, $id) or die "Failed to update service_materials $!\n";
-    $dbh->commit;
+    if (!$dbh->do($qry, undef, $estimate, $id)) {
+      print STDERR "Failed to update service_materials $!\n";
+    }
     return;
   }
   $qry = "insert into service_materials (sid, mid, qty_index, estimate) values (?, ?, ?, ?)";
@@ -43,19 +44,20 @@ sub set_material_actual {
 
   if ($id) {
     $qry = "update service_materials set actual = ? where id = ?";
-    $dbh->do($qry, undef, $actual, $id) or die "Failed to update service_materials $!\n";
-    $dbh->commit;
+    if (!$dbh->do($qry, undef, $actual, $id)) {
+      print STDERR "Failed to update service_materials $!\n";
+    }
     return;
   }
   $qry = "insert into service_materials (sid, mid, qty_index, actual) values (?, ?, ?, ?)";
   $dbh->do($qry, undef, $sid, $mid, $qty_index, $actual) or die "Failed to insert into service_materials $!\n";
-  $dbh->commit;
 }
 
 sub get_index_from_id {
 	my $id = shift;
-  	my $dbh = session::dbh;
-	return $dbh->selectrow_array(q{ SELECT lngindex FROM tbl_equipment WHERE strid = ?}, undef, $id );
+  my $dbh = session::dbh;
+  return $dbh->selectrow_array(q{ SELECT lngindex FROM tbl_equipment WHERE strid = ?}, undef, $id );
 }
 
 1;
+__END__
