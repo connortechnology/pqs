@@ -188,7 +188,10 @@ sub images { # :Private
     my ($w, $h) = @$project{qw(width height)}; # Image (w x h)
     my @bleed   = @{ $project->{bleed} };
 
-    die "Invalid sizes ($w x $h)" unless $w >= 0.25 && $h >= 0.25;
+    if(!( $w >= 0.25 && $h >= 0.25)) {
+      print STDERR "Invalid sizes ($w x $h)";
+      return ();
+    }
    
     # Drop dead simple (and wrong) bindery trim/grind-off space. Basically we
     # just expand any bleeds there might be to at least the trim size.
