@@ -23,6 +23,7 @@ use POSIX             qw(ceil);
 use callback;
 use PQS::model::materials;
 use PQS::model::service;
+use Data::Dumper;
 
 # Is the supplied project service necessary for this project?
 sub necessary { 
@@ -161,8 +162,6 @@ print STDERR "EQUIPEMENT: ", Dumper(@eids);
     $supplier{$_->[0]} = $_->[1] for @{ $dbh->selectall_arrayref(qq{
         SELECT lngindex, strsupplier FROM tbl_equipment
     }, undef)};
-
-    use Data::Dumper;
 
     # Suppliers that printed at least one signature.
     my @print_suppliers = map($supplier{$_}, @presses);
@@ -387,7 +386,6 @@ print STDERR "START Pricing for: $eid \n";
                 }
                 callback::call('service_calc_end', $pid, $sid, \$make_ready, \$price);
                 $price += $make_ready;
-use Data::Dumper;
 # Start binder size selection.
 				my $need_binder = $dbh->selectrow_array(q{
 					SELECT binder FROM cover_specs WHERE pid = ?
@@ -408,11 +406,13 @@ print STDERR "GETTING BINDER FOR CAL: $cal -- $specs->{ddmBinder} \n";
 				}
 
 				my $mat = $specs->{ddmBinder};
-				my $mat_price = eprint::material::get_price( $log, $dbh, $variable, $mat, $qty ); 
-				my $material = PQS::model::materials::material_by_strid($mat);
-				PQS::model::service::set_material_estimate($qty, undef, $sid, $material->{lngindex}, $n);
-				$price += $mat_price;
-print STDERR "HAVE PRICE: ", Dumper($price, $mat_price, $mat);
+        if ($mat) {
+          my $mat_price = eprint::material::get_price( $log, $dbh, $variable, $mat, $qty ); 
+          my $material = PQS::model::materials::material_by_strid($mat) if $mat;
+          PQS::model::service::set_material_estimate($qty, undef, $sid, $material->{lngindex}, $n) if $material;
+          $price += $mat_price;
+          print STDERR "HAVE PRICE: ", Dumper($price, $mat_price, $mat);
+        }
 				
                 
                 # If we're under the minimum charge, we become it.
