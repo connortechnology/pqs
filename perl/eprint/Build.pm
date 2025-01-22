@@ -10,11 +10,24 @@ use Data::Dumper;
 use PQS::DB           ();
 use PQS::Constants;
 use PQS::Error;
+use PQS::Object::project;
 use session;
 
 require misc;
 require eprint::login;
 require eprint::project;
+
+require openprint;
+
+use vars qw( $r %variable %session %param %config $log $dbh $starttime );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*r = \$openprint::r;
+
 
 # Locations of pages of interest.
 use constant SERVICE_PAGE_BASE   => '/service/';
@@ -23,12 +36,34 @@ use constant NOTIFICATION_PAGE   => '/main/proj/project_notification.html';
 use constant ORDER_PAGE          => '/main/order/order_submit.html';
 use constant QUOTE_PAGE          => '/main/quote/quote_submit.html';
 
+sub cleanup {
+  if ( $r->connection->aborted( ) ) {
+    $log->debug('Was aborted');
+  } elsif ( DEBUG ) {
+    $log->debug('cleanup');
+  } # end if
+  %openprint::variable = ();
+  %openprint::param = ();
+  if ( $dbh ) {
+    $session{lastupdated} = time;
+    untie %session;
+    if ( ! $dbh->{AutoCommit} ) {
+      $log->error('Uncommited transaction');
+    } elsif ( DEBUG ) {
+      $log->debug('Finished cleanup');
+    } # end if
+    $dbh->disconnect();
+  } else {
+    $log->debug('No dbh at cleanup');
+  } # end if
+} # end sub cleanup
+
 # The build project handler calculates and manages services in the project.
 # It's not a page but a redirect dispatch that sends the user to either an
 # uncalculated service they need to modify or the project view page in the
 # case of an error or the project being complete.
 sub handler {
-    my $r        = Apache2::Request->new(shift);
+    $r        = Apache2::Request->new(shift);
     my $variable = {};
 
     # Process the request params.
@@ -36,12 +71,15 @@ sub handler {
 
     session::r($r);
     session::log($r->log);
+    $log = $r->log;
+
     # If the customer isn't valid and logged in, they can't use us.
     my $cookie = misc::get_cookie();
     return FORBIDDEN if !defined $cookie || $cookie eq '';
 
-    my $dbh = PQS::DB->connect($r);
+    $dbh = PQS::DB->connect($r);
     session::dbh($dbh);
+    $r->push_handlers(PerlCleanupHandler => \&cleanup);
 
     my $customer_id = eprint::login::get_login_info( # Populates $variable
         $r->log, $dbh, $cookie, $variable, 'C'
@@ -84,7 +122,7 @@ sub handler {
     }
 
 map {
-	print STDERR "HAVE PARAM  $_ \n";
+	print STDERR "HAVE PARAM  $_ =>".$r->param($_)." \n";
 } $r->param();
 
     # If build returned a service page go to it, otherwise go directly to an
@@ -95,14 +133,14 @@ map {
 	}, undef, $pid);
 
 	# If our quote is complete then we no longer need to process it.
-	$ctq = undef if $ctq && $dbh->selectrow_array(q{
+	$ctq = 0 if $ctq && $dbh->selectrow_array(q{
 		SELECT q.lngquoteid FROM tbl_quotes q, tbl_quote_details qd 
 		WHERE strstatus = 'Complete' AND q.lngquoteid = qd.lngquoteid
 		AND qd.lngprojectindex = ?
 	}, undef, $pid);
 
 	# If our order is complete then we no longer need to process it.
-	$cto = undef if $cto && $dbh->selectrow_array(q{
+	$cto = 0 if $cto && $dbh->selectrow_array(q{
 		SELECT o.lngorderid FROM tbl_orders o, tbl_order_contents oc 
 		WHERE strstatus = 'Complete' AND o.lngorderid = oc.lngorderid
 		AND oc.lngprojectindex = ?
@@ -113,11 +151,8 @@ print STDERR "********HAVE CTO: $cto CTQ: $ctq *********\n";
                 && eprint::project::project_state($dbh, $pid) eq 'Unordered';
 
 
-	my $mail_page = $dbh->selectrow_array(q{
-		SELECT mail_type FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid );
+	my $mail_page = $dbh->selectrow_array(q{ SELECT mail_type FROM tbl_projects WHERE lngprojectindex = ?  }, undef, $pid );
 
-use Data::Dumper;
 print STDERR "VARIABLE: ", Dumper( $mail_page, $to_order, $page, $variable);
     
     $page = $page eq 'notification' ? NOTIFICATION_PAGE . "?pid=$pid"
@@ -130,46 +165,43 @@ print STDERR "VARIABLE: ", Dumper( $mail_page, $to_order, $page, $variable);
 		SELECT copy_pid FROM tbl_projects WHERE lngprojectindex = ?
 	}, undef, $pid);
 
-print STDERR "HAVE COPY PID: $cpid FROM PROJECT: $pid \n";
 
+if ( $cpid ) {
+  print STDERR "HAVE COPY PID: $cpid FROM PROJECT: $pid \n";
+  if ( $cpid == 22317 ) {
+    $page = '/site_specific/customers/products/local/menu_english.html';
+    eprint::order::add_project_to_order( $r->log, $dbh, $cookie, $variable, $pid);
 
-	if ( $cpid ) {
-		 if ( $cpid == 22317 ) {
-		 	$page = '/site_specific/customers/products/local/menu_english.html';
-		 	eprint::order::add_project_to_order( $r->log, $dbh, $cookie, $variable, $pid);
+  } elsif ( $cpid == 22318 ) {
+    $page = '/site_specific/customers/products/local/menu_english.html';
+    eprint::order::add_project_to_order( $r->log, $dbh, $cookie, $variable, $pid);
 
-		 } elsif ( $cpid == 22318 ) {
-            $page = '/site_specific/customers/products/local/menu_english.html';
-            eprint::order::add_project_to_order( $r->log, $dbh, $cookie, $variable, $pid);
+  } elsif ( $cpid == 22319 ) {
+    $page = '/site_specific/customers/products/local/menu_english.html';
+    eprint::order::add_project_to_order( $r->log, $dbh, $cookie, $variable, $pid);
 
-          } elsif ( $cpid == 22319 ) {
-            $page = '/site_specific/customers/products/local/menu_english.html';
-            eprint::order::add_project_to_order( $r->log, $dbh, $cookie, $variable, $pid);
+  } elsif ( $cpid == 22315 ) {
+    $page = '/site_specific/customers/products/local/menu_french.html';
+    eprint::order::add_project_to_order( $r->log, $dbh, $cookie, $variable, $pid);
 
-           } elsif ( $cpid == 22315 ) {
-            $page = '/site_specific/customers/products/local/menu_french.html';
-            eprint::order::add_project_to_order( $r->log, $dbh, $cookie, $variable, $pid);
-
-            } elsif ( $cpid == 22322 ) {
-            $page = '/site_specific/customers/products/local/menu_bi.html';
-            eprint::order::add_project_to_order( $r->log, $dbh, $cookie, $variable, $pid);
-
-
-		 }
-	}
+  } elsif ( $cpid == 22322 ) {
+    $page = '/site_specific/customers/products/local/menu_bi.html';
+    eprint::order::add_project_to_order( $r->log, $dbh, $cookie, $variable, $pid);
+  }
+}
 
     $dbh->commit; # Save our changes.
     $dbh->disconnect;
-
 
     if (DEBUG && 0) {
         $r->content_type('text/html');
         $r->print(qq{ <a href="$page">$page</a> } );
     }
     else {
+      print STDERR "Location $page " .Apache2::Const::HTTP_SEE_OTHER."\n";
         $r->headers_out->set(Location => $page);
-        $r->status(HTTP_MOVED_TEMPORARILY);
-        return HTTP_MOVED_TEMPORARILY;
+        $r->status(Apache2::Const::HTTP_SEE_OTHER);
+        return OK;
     }
 }
 
@@ -183,170 +215,167 @@ use eprint::service       qw(:all);
 use constant NON_DEPENDENT_LEVEL => 10;
 
 sub build {
-    my ($log, $dbh, $pid, $variable, $start) = @_;
+  my ($log, $dbh, $pid, $variable, $start) = @_;
 
-    # Get the service types suggested for the project type and template, we'll
-    # check their needs as the service type comes up.
-    my %template = template_service_types($log, $dbh, $pid);
+  # Get the service types suggested for the project type and template, we'll
+  # check their needs as the service type comes up.
+  my %template = template_service_types($log, $dbh, $pid);
 
-use Data::Dumper;
-print STDERR "BUILD TEMPLATE", Dumper(\%template);
+  print STDERR "BUILD TEMPLATE", Dumper(\%template);
 
-    # Find our current place in the dependency levels.
-    my $level = current_level($dbh, $pid) || 0;
+  # Find our current place in the dependency levels.
+  my $level = current_level($dbh, $pid) || 0;
+  print STDERR "BUILD LEVEL $level\n";
+  # We can override our start level to lower than the current (recalc).
+  if (defined $start && ($start < $level || $start == 0)) {
+    $level = $start;
+    print STDERR "reset\n";
+    reset_to_level($log, $dbh, $pid, $level);
+  }
 
-    # We can override our start level to lower than the current (recalc).
-    if (defined $start && ($start < $level || $start == 0)) {
-        $level = $start;
-        reset_to_level($log, $dbh, $pid, $level);
-    }
-
-    # Process the service types at or above the current level.
-    my $sth = $dbh->prepare(q{
-        SELECT lngindex    AS id,     strid       AS type,
-               strname     AS name,   strcategory AS category,
-               strmodule   AS module, lngdep      AS level,
-               strurl      AS page,
-               CASE WHEN lngdep IS NULL THEN } . NON_DEPENDENT_LEVEL . q{
-                                        ELSE lngdep END AS sorted
-        FROM tbl_service_types
-        WHERE strmodule IS NOT NULL
-          AND ( CASE WHEN lngdep IS NULL THEN } . NON_DEPENDENT_LEVEL . q{
-                                        ELSE lngdep 
-                END >= ? )
-        ORDER BY sorted, lngdep
+  # Process the service types at or above the current level.
+  my $sth = $dbh->prepare(q{
+    SELECT lngindex    AS id,     strid       AS type,
+    strname     AS name,   strcategory AS category,
+    strmodule   AS module, lngdep      AS level,
+    strurl      AS page,
+    CASE WHEN lngdep IS NULL THEN } . NON_DEPENDENT_LEVEL . q{
+    ELSE lngdep END AS sorted
+    FROM tbl_service_types
+    WHERE strmodule IS NOT NULL
+    AND ( CASE WHEN lngdep IS NULL THEN } . NON_DEPENDENT_LEVEL . q{
+    ELSE lngdep 
+    END >= ? )
+    ORDER BY sorted, lngdep
     });
-    $sth->execute($level);
+  $sth->execute($level);
 
-    my $unfinished; # Keep track of the first unfinished service.
+  my $unfinished; # Keep track of the first unfinished service.
 
-    SERVICE_TYPE:
-    while (my $service = $sth->fetchrow_hashref) {
-        my $type     = $service->{type};
+  SERVICE_TYPE:
+  while (my $service = $sth->fetchrow_hashref) {
+    my $type     = $service->{type};
+    print STDERR "SERVICE $type\n";
 
-        # If we have any unfinished (uncalc, error) services we can't advance
-        # to the next dependency level (non-dependent are immune).
-        last SERVICE_TYPE if defined $level && defined $service->{level}
-                          && $unfinished    && $service->{level} > $level;
-        
-        $level = $service->{level} if $service->{level};
+    # If we have any unfinished (uncalc, error) services we can't advance
+    # to the next dependency level (non-dependent are immune).
+    last SERVICE_TYPE if defined($level) && defined($service->{level}) && $unfinished && ($service->{level} > $level);
 
-        # Load the service module and see if it's needed in the project.
-        eval { 
-            $service = load_service_type($service);
+    $level = $service->{level} if $service->{level};
 
-            $service->{is_needed} 
-                = needed($log, $dbh, $pid, $service, $template{$type})
-        };
-        if ($@) {
-            # If we can't properly process the module we'll mark the service
-            # in an error state (inserting it if it's not already present.
-            my @sids = check_for_service($log, $dbh, $pid, $type)
-                    || insert_service($log, $dbh, $pid, $type, {
-                            user_requested => 0,
-                            need_level     => NEEDED,
-                       });
+    # Load the service module and see if it's needed in the project.
+    eval { 
+      $service = load_service_type($service);
+      $service->{is_needed} = needed($log, $dbh, $pid, $service, $template{$type});
+      print STDERR "is needed $$service{is_needed}\n";
+    };
+    if ($@) {
+      # If we can't properly process the module we'll mark the service
+      # in an error state (inserting it if it's not already present.
+      my @sids = check_for_service($log, $dbh, $pid, $type)
+      || insert_service($log, $dbh, $pid, $type, {
+          user_requested => 0,
+          need_level     => NEEDED,
+        });
 
-            set_status($log, $dbh, $pid, 'error', @sids);
+      set_status($log, $dbh, $pid, 'error', @sids);
 
-            if (DEBUG) { die $@ }
-            else       { warn "Inserting $service->{type} in error state for $pid ", $@ }
+      if (DEBUG) { print STDERR $@ }
+      else       { warn "Inserting $service->{type} in error state for $pid ", $@ }
 
-            if   ($service->{level}) { last SERVICE_TYPE }
-            else                     { next SERVICE_TYPE } # No dependencies.
-        }
-        # Add a service if we're needed and none exist.
-        elsif ($service->{is_needed} && !service_exists($dbh, $pid, $type)) {
-            my $sid = insert_service($log, $dbh, $pid, $type, { 
-                    user_requested => 0,
-                    need_level     => $service->{is_needed},
-            });
-
-            # Override service defaults with template ones if they exist.
-            insert_service_specs(
-                    $log, $dbh, $pid, $sid, %{ $template{$type}{specs} }
-            ) if exists $template{$type}{specs};
-        }
-
-        $dbh->commit;
-
-
-        SERVICE:
-        while (my $sid = next_service($log, $dbh, $pid, $type)) { 
-
-            # TODO Should we skip the service if it's on the starting level
-            # and already calculated (or if it's non-dependent)? ie. no need
-            # to recalculate it.
-
-            # Remove the service if it's no longer needed in the project (and
-            # isn't user requested).
-            if (!$service->{is_needed} && !user_requested($dbh, $sid)) {
-                $dbh->do(q{
-                    DELETE FROM tbl_project_contents 
-                    WHERE lngserviceindex = ?
-                      AND NOT ysnuserrequested
-                }, undef, $sid);
-
-                next SERVICE;
-            }
-
-            # Get the specs and price the service.
-            my $status = process($log, $dbh, $variable, $pid, $sid, $service);
-            
-            # Track the first unfinished service we find.
-            if ($status eq 'uncalculated') {
-                $unfinished = { sid => $sid, type => $service->{type} };
-                
-                last SERVICE_TYPE;
-            }
-            elsif ($status eq 'error' && $service->{level}) {
-                # Set rest of services to a consistant state.
-                recalc_dependencies($log, $dbh, $pid, $sid);
-
-                undef $unfinished; # Clear our uncalculated tracking.
-                last SERVICE_TYPE;
-            }
-        }
+      if   ($service->{level}) { last SERVICE_TYPE }
+      else                     { next SERVICE_TYPE } # No dependencies.
     }
-    $sth->finish;
-print STDERR "GO BUILD \n";
-    # If we have an uncalculated service, handle the dependent services then
-    # send the user to it's page to supply the information it's missing.
-    if ($unfinished) {
-        recalc_dependencies($log, $dbh, $pid, $unfinished->{sid});
+    # Add a service if we're needed and none exist.
+    elsif ($service->{is_needed} && !service_exists($dbh, $pid, $type)) {
+      my $sid = insert_service($log, $dbh, $pid, $type, { 
+          user_requested => 0,
+          need_level     => $service->{is_needed},
+        });
 
-        $dbh->do(q{
-            UPDATE tbl_projects SET strstatus = 'uncalculated' 
-            WHERE lngprojectindex = ?
-        }, undef, $pid);
-		my $prod = $dbh->selectrow_array(q{
-			SELECT product FROM tbl_projects WHERE lngprojectindex = ?
-		}, undef, $pid); 
-
-		if ( $prod &&  $unfinished->{type} ne 'Shipping' ) {
-			return "notification" unless $variable->{user_id} == 2;
-		} else {
-        	return "$unfinished->{type}?pid=$pid;sid=$unfinished->{sid}";
-		}
-
-		
-        return "$unfinished->{type}?pid=$pid;sid=$unfinished->{sid}";
+      # Override service defaults with template ones if they exist.
+      insert_service_specs(
+        $log, $dbh, $pid, $sid, %{ $template{$type}{specs} }
+      ) if exists $template{$type}{specs};
     }
-    else {
-        # Change the project status if we've just completed it.
-        $dbh->do(q{
-            UPDATE tbl_projects 
-            SET strstatus = 'Unordered'
-            WHERE lngprojectindex = ? AND strStatus = 'uncalculated'
-        }, undef, $pid) if is_complete($log, $dbh, $pid);
+
+    SERVICE:
+    while (my $sid = next_service($log, $dbh, $pid, $type)) { 
+
+      # TODO Should we skip the service if it's on the starting level
+      # and already calculated (or if it's non-dependent)? ie. no need
+      # to recalculate it.
+
+      # Remove the service if it's no longer needed in the project (and
+      # isn't user requested).
+      if (!$service->{is_needed} && !user_requested($dbh, $sid)) {
+        if (!$dbh->do(q{
+            DELETE FROM tbl_project_contents 
+            WHERE lngserviceindex = ?
+            AND NOT ysnuserrequested
+            }, undef, $sid)) {
+          print STDERR "Error ".$dbh->errstr()."\n";
+        }
+
+        next SERVICE;
+      }
+
+      # Get the specs and price the service.
+      my $status = process($log, $dbh, $variable, $pid, $sid, $service);
+
+      # Track the first unfinished service we find.
+      if ($status eq 'uncalculated') {
+        $unfinished = { sid => $sid, type => $service->{type} };
+
+        last SERVICE_TYPE;
+      }
+      elsif ($status eq 'error' && $service->{level}) {
+        # Set rest of services to a consistant state.
+        recalc_dependencies($log, $dbh, $pid, $sid);
+
+        undef $unfinished; # Clear our uncalculated tracking.
+        last SERVICE_TYPE;
+      }
+    }
+  }
+  $sth->finish;
+  print STDERR "GO BUILD \n";
+  # If we have an uncalculated service, handle the dependent services then
+  # send the user to it's page to supply the information it's missing.
+  if ($unfinished) {
+    recalc_dependencies($log, $dbh, $pid, $unfinished->{sid});
+
+    $dbh->do(q{
+      UPDATE tbl_projects SET strstatus = 'uncalculated' 
+      WHERE lngprojectindex = ?
+      }, undef, $pid);
+    my $prod = $dbh->selectrow_array(q{
+      SELECT product FROM tbl_projects WHERE lngprojectindex = ?
+      }, undef, $pid); 
+
+    if ($prod && ($unfinished->{type} ne 'Shipping')) {
+      return "notification" unless $variable->{user_id} == 2;
+    } else {
+      return "$unfinished->{type}?pid=$pid;sid=$unfinished->{sid}";
     }
 
 
-	use PQS::Object::project;
-	my $p = new PQS::Object::project($pid);
-	$p->update_status; 
+    return "$unfinished->{type}?pid=$pid;sid=$unfinished->{sid}";
+  }
+  else {
+    # Change the project status if we've just completed it.
+    $dbh->do(q{
+      UPDATE tbl_projects 
+      SET strstatus = 'Unordered'
+      WHERE lngprojectindex = ? AND strStatus = 'uncalculated'
+      }, undef, $pid) if is_complete($log, $dbh, $pid);
+  }
 
-    return; # Go to the default location
+
+  my $p = new PQS::Object::project($pid);
+  $p->update_status; 
+
+  return; # Go to the default location
 }
 
 # See if the service exists in the project. NOTE: check_for_service() isn't
@@ -507,6 +536,7 @@ sub process {
 
         my $form  = get_specs($dbh, $pid, $sid, $service, 1); # User defined
         my $specs = get_specs($dbh, $pid, $sid, $service);    # All specs
+        print STDERR "process $sid ".Data::Dumper::Dumper($specs)."\n";
 
         # Price the service.
         my $state = price($log, $dbh, $variable, $pid, $sid, $service, $specs, 1);
@@ -522,9 +552,7 @@ sub process {
         
         if (DEBUG) {
             set_status($log, $dbh, $pid, 'error', $sid);
-            $dbh->commit;
-
-            die $@;
+            print STDERR $@;
         }
         
         warn "Failed to process $service->{type} ($sid)";
@@ -548,7 +576,7 @@ sub process {
         die $@;
     }
 
-    $dbh->commit; # Save the service.
+    #$dbh->commit; # Save the service.
 
     return $status;
 }
