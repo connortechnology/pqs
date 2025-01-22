@@ -18,386 +18,386 @@ use PQS::model::service;
 use Data::Dumper;
 
 sub store {
-    my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
+  my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
 
-    # Very, very simple multi-version input processing.
-    if ($specs->{is_mv}) {
-        my @name  = @{ $specs->{mv_name} };
-        my @qty   = @{ $specs->{mv_qty}  };
-        my $total = (get_quantities($log, $dbh, $pid))[0];
+  # Very, very simple multi-version input processing.
+  if ($specs->{is_mv}) {
+    my @name  = @{ $specs->{mv_name} };
+    my @qty   = @{ $specs->{mv_qty}  };
+    my $total = (get_quantities($log, $dbh, $pid))[0];
 
-		print STDERR "STORE FOR BOOK  Servcie: PID: $pid SID: $sid \n";
+    print STDERR "STORE FOR BOOK  Servcie: PID: $pid SID: $sid \n";
 
-        my (@versions, @quantities);
+    my (@versions, @quantities);
 
-        # For now mirror the JS precisely. Note: Multiple labels of the
-        # same name are allowed and treated as different versions.
-        for my $i (0 .. $#qty) {
-            my $name    = $name[$i];
-            my $qty     = int($qty[$i]);
+    # For now mirror the JS precisely. Note: Multiple labels of the
+    # same name are allowed and treated as different versions.
+    for my $i (0 .. $#qty) {
+      my $name    = $name[$i];
+      my $qty     = int($qty[$i]);
 
-            next unless $qty > 0;
+      next unless $qty > 0;
 
-            my $percent = ($qty / $total) * 100;
+      my $percent = ($qty / $total) * 100;
 
-            if ($name and $percent and ceil($percent) > 0) {
-                push @versions,   $name => $percent;
-                push @quantities, $name => $qty;
-            }
-        }
-        $specs->{versions}           = join(',', @versions);
-        $specs->{version_quantities} = join(',', @quantities); # For UI
-
-		$specs->{s0_black_mv} = 'on' if ref $specs->{s0_black_mv} eq 'ARRAY';
-		$specs->{s1_black_mv} = 'on' if ref $specs->{s1_black_mv} eq 'ARRAY';
-		
-
+      if ($name and $percent and ceil($percent) > 0) {
+        push @versions,   $name => $percent;
+        push @quantities, $name => $qty;
+      }
     }
+    $specs->{versions}           = join(',', @versions);
+    $specs->{version_quantities} = join(',', @quantities); # For UI
 
-    return $specs;
+    $specs->{s0_black_mv} = 'on' if ref $specs->{s0_black_mv} eq 'ARRAY';
+    $specs->{s1_black_mv} = 'on' if ref $specs->{s1_black_mv} eq 'ARRAY';
+
+
+  }
+
+  return $specs;
 }
 
 sub restore {
-    my ($dbh, $pid, $sid, $service_type, $specs) = @_;
+  my ($dbh, $pid, $sid, $service_type, $specs) = @_;
 
-    # The versions are stored against 1NF as a flattened pair list.
-    if ($specs->{version_quantities}) {
-        my %versions = split ',', $specs->{version_quantities};
+  # The versions are stored against 1NF as a flattened pair list.
+  if ($specs->{version_quantities}) {
+    my %versions = split ',', $specs->{version_quantities};
 
-        $specs->{mv_name} = [ keys %versions ];
-        $specs->{mv_qty}  = [ values %versions ];
-	$specs->{versions} = \%versions;
-    }
+    $specs->{mv_name} = [ keys %versions ];
+    $specs->{mv_qty}  = [ values %versions ];
+    $specs->{versions} = \%versions;
+  }
 
-    print STDERR "HAVE VERSIONS: ", Dumper($specs->{versions});
-    return $specs;
+  print STDERR "HAVE VERSIONS: ", Dumper($specs->{versions});
+  return $specs;
 }
 
 sub necessary {
-    my ($log, $dbh, $pid, $service_type) = @_;
+  my ($log, $dbh, $pid, $service_type) = @_;
 
-    return is_multipage($log, $dbh, $pid) 
-        && get_type($log, $dbh, $pid) ne 'ScreenItem';
+  return is_multipage($log, $dbh, $pid) 
+  && get_type($log, $dbh, $pid) ne 'ScreenItem';
 }
 
 sub display {
-    my ($log, $dbh, $service_type, $pid, $sid, $specs) = @_;
+  my ($log, $dbh, $service_type, $pid, $sid, $specs) = @_;
 
-    my %mv;
-    # Get info to recreate version table when editting the service.
-    @mv{qw(versions remaining)} = multiversion($log, $dbh, $pid, $specs)
-            if $specs->{mv_name} && $specs->{mv_qty};
-	$mv{next_version} = $mv{versions} ? scalar @{$mv{versions}} + 1 : 1;
-	map { $mv{$_} = $specs->{$_} if $_ =~ /mv_num_col/; } keys %{$specs};
+  my %mv;
+  # Get info to recreate version table when editting the service.
+  @mv{qw(versions remaining)} = multiversion($log, $dbh, $pid, $specs)
+  if $specs->{mv_name} && $specs->{mv_qty};
+  $mv{next_version} = $mv{versions} ? scalar @{$mv{versions}} + 1 : 1;
+  map { $mv{$_} = $specs->{$_} if $_ =~ /mv_num_col/; } keys %{$specs};
 
-	print STDERR "HAVE VERSIONS DATA", Dumper(\%mv);
-    
-    # Get the bindery options (radio buttons w/ images).
-    my $bindery = $dbh->selectall_arrayref(qq{
-        SELECT strid        AS id, 
-               strname      AS name, 
-               lower(strid) AS img
-        FROM tbl_service_types
-        WHERE strtype = 'bind'
-          AND ysncreatevisible = 'Y'
-        ORDER BY lngsort, name
+  print STDERR "HAVE VERSIONS DATA", Dumper(\%mv);
+
+  # Get the bindery options (radio buttons w/ images).
+  my $bindery = $dbh->selectall_arrayref(qq{
+    SELECT strid        AS id, 
+    strname      AS name, 
+    lower(strid) AS img
+    FROM tbl_service_types
+    WHERE strtype = 'bind'
+    AND ysncreatevisible = 'Y'
+    ORDER BY lngsort, name
     }, { Slice => {} });
 
-    my $noprintcovers = $dbh->selectall_arrayref("select lngindex, strname from tbl_materials where lngtype = 19", { Slice => {} });
+  my $noprintcovers = $dbh->selectall_arrayref("select lngindex, strname from tbl_materials where lngtype = 19", { Slice => {} });
 
-    # Corner stitching is only available on digital presses.
-    $bindery = [ grep { $_->{id} ne 'CornerStitching' } @$bindery ]
-        unless get_press_type($log, $dbh, $pid) eq 'digital';
+  # Corner stitching is only available on digital presses.
+  $bindery = [ grep { $_->{id} ne 'CornerStitching' } @$bindery ]
+  unless get_press_type($log, $dbh, $pid) eq 'digital';
 
-	my $project_type = get_type($log, $dbh, $pid);
+  my $project_type = get_type($log, $dbh, $pid);
 
-    # Get the available templates for the project type.
-    my $templates 
-        = template_sizes($log, $dbh, $project_type, $bindery);
+  # Get the available templates for the project type.
+  my $templates 
+  = template_sizes($log, $dbh, $project_type, $bindery);
 
-    my @qty = get_quantities($log, $dbh, $pid);
+  my @qty = get_quantities($log, $dbh, $pid);
 
-    my $page =  { templates => $templates, bindery => $bindery, no_print_covers => $noprintcovers,  txtQuantity1 => $qty[0] };
-    map { $page->{$_} = $mv{$_} } keys %mv;
+  my $page =  { templates => $templates, bindery => $bindery, no_print_covers => $noprintcovers,  txtQuantity1 => $qty[0] };
+  map { $page->{$_} = $mv{$_} } keys %mv;
 
-    return $page;
+  return $page;
 
 }
 
 sub mp_versions {
-	my $specs = shift;
-	my $ver;
-	map {
-		if ( $_ =~ /mv_name-(\d+)/ ) {
-			$ver->{$1} = { 
-				name => {name => $_, value => $specs->{$_} }, 
-				qty  => {name => "mv_qty-$1", value => $specs->{"mv_qty-$1"} } 
-			}; 
-		}
-	} keys %${specs};
+  my $specs = shift;
+  my $ver;
+  map {
+    if ( $_ =~ /mv_name-(\d+)/ ) {
+      $ver->{$1} = { 
+        name => {name => $_, value => $specs->{$_} }, 
+        qty  => {name => "mv_qty-$1", value => $specs->{"mv_qty-$1"} } 
+      }; 
+    }
+  } keys %${specs};
 
-	my @versions;
+  my @versions;
 
-	map { push @versions, $ver->{$_} } sort keys %${ver};
+  map { push @versions, $ver->{$_} } sort keys %${ver};
 
-	return @versions;
+  return @versions;
 }
 
 sub munge {
-    my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
+  my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
-    die "Invalid template" unless defined $specs->{template};
+  die "Invalid template" unless defined $specs->{template};
 
-    # Make sure the cover spec is set, and correctly when perfect bound. 
-    $specs->{rdbCover} = 
-        $specs->{template} eq 'PerfectBinding' ? 'DifferentCover'
-      : $specs->{rdbCover}                     ? $specs->{rdbCover}
-      :                                          'SelfCover';
+  # Make sure the cover spec is set, and correctly when perfect bound. 
+  $specs->{rdbCover} = 
+  $specs->{template} eq 'PerfectBinding' ? 'DifferentCover'
+  : $specs->{rdbCover}                     ? $specs->{rdbCover}
+  :                                          'SelfCover';
 
-    return 1;  
+  return 1;  
 }
 
 
 sub calc {
-    my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
+  my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
-    my $pages            = $specs->{txtTotalPageQuantity} || 0;
-    my $pages_per_spread = $specs->{template} =~ /^(loop|saddle)stitching/i ? 4 : 2;
+  my $pages            = $specs->{txtTotalPageQuantity} || 0;
+  my $pages_per_spread = $specs->{template} =~ /^(loop|saddle)stitching/i ? 4 : 2;
 
-    # Do we want a cover with separate specifications? This is not an option
-    # for perfect bound books, all have a separate cover.
-    my $cover = $specs->{rdbCover} eq 'DifferentCover' || 0;
+  # Do we want a cover with separate specifications? This is not an option
+  # for perfect bound books, all have a separate cover.
+  my $cover = $specs->{rdbCover} eq 'DifferentCover' || 0;
 
-    $pages -= 4 if $cover; # Remove the four page cover spread.
+  $pages -= 4 if $cover; # Remove the four page cover spread.
 
-    # TODO Spiral projects actually have two two page cover spreads.
+  # TODO Spiral projects actually have two two page cover spreads.
 
-    # Calculate the number of spreads based on the bindery type chosen.
-    my $spreads 
-        = $specs->{rdbGateFold} eq 'Yes' ? $specs->{txtTotalSpreadQuantity}
-        :                                  $pages / $pages_per_spread;
+  # Calculate the number of spreads based on the bindery type chosen.
+  my $spreads 
+  = $specs->{rdbGateFold} eq 'Yes' ? $specs->{txtTotalSpreadQuantity}
+  :                                  $pages / $pages_per_spread;
 
-    return 'uncalculated' unless $spreads && $spreads > 0;
-    
-    my @qty = get_quantities($log, $dbh, $pid);
-    my $counter = 1;
-    foreach my $q (@qty) {
-      my $range = ($specs->{final_height} * $specs->{final_width} / 12) * $q;
-      my $cost = 0;
-      if ($specs->{noprint_front}) {
-        my $mat = PQS::model::materials($specs->{noprint_front});
-        PQS::model::service::set_material_estimate($range, undef, $sid, $mat->{lngindex}, $q);
-        $cost += eprint::material::get_price($log, $dbh, $variable, $specs->{noprint_front}, $range, undef) * $range;
-      }
-      if ($specs->{noprint_back}) {
-        my $mat = PQS::model::materials($specs->{noprint_back});
-        PQS::model::service::set_material_estimate($range, undef, $sid, $mat->{lngindex}, $q);
-        $cost += eprint::material::get_price($log, $dbh, $variable, $specs->{noprint_back}, $range, undef) * $range;
-      }
-      @$specs{"txtPrice$counter", "txtUnitPrice$counter"} = format_pricing($cost, $q);
-      $counter++;
+  return 'uncalculated' unless $spreads && $spreads > 0;
+
+  my @qty = get_quantities($log, $dbh, $pid);
+  my $counter = 1;
+  foreach my $q (@qty) {
+    $q //= 0;
+    my $range = ($specs->{final_height} * $specs->{final_width} / 12) * $q;
+    my $cost = 0;
+    if ($specs->{noprint_front}) {
+      my $mat = PQS::model::materials($specs->{noprint_front});
+      PQS::model::service::set_material_estimate($range, undef, $sid, $mat->{lngindex}, $q);
+      $cost += eprint::material::get_price($log, $dbh, $variable, $specs->{noprint_front}, $range, undef) * $range;
     }
+    if ($specs->{noprint_back}) {
+      my $mat = PQS::model::materials($specs->{noprint_back});
+      PQS::model::service::set_material_estimate($range, undef, $sid, $mat->{lngindex}, $q);
+      $cost += eprint::material::get_price($log, $dbh, $variable, $specs->{noprint_back}, $range, undef) * $range;
+    }
+    @$specs{"txtPrice$counter", "txtUnitPrice$counter"} = format_pricing($cost, $q);
+    $counter++;
+  }
 
-	my $tabs = $specs->{txtTabsQuantity};
+  my $tabs = $specs->{txtTabsQuantity};
 
-    my $gatefold = $specs->{rdbGateFold} eq 'Yes' 
-                 ? $specs->{txtGateFoldedSpreadQuantity} || $tabs || 0 : 0;
-    my $interior = $spreads - $gatefold;
+  my $gatefold = $specs->{rdbGateFold} eq 'Yes' 
+  ? $specs->{txtGateFoldedSpreadQuantity} || $tabs || 0 : 0;
+  my $interior = $spreads - $gatefold;
 
 
-   # return 'uncalculated' unless $interior && $interior > 0;
+  # return 'uncalculated' unless $interior && $interior > 0;
 
-    # The (possibly) computed number of spreads.
-    $specs->{txtTotalSpreadQuantity} = $spreads + $cover;
+  # The (possibly) computed number of spreads.
+  $specs->{txtTotalSpreadQuantity} = $spreads + $cover;
 
-    # The number of spreads of each type.
-    @$specs{COVER, INTERIOR, GATEFOLD} = ($cover, $interior, $gatefold);
+  # The number of spreads of each type.
+  @$specs{COVER, INTERIOR, GATEFOLD} = ($cover, $interior, $gatefold);
 
-    return 'calculated';
+  return 'calculated';
 }
 
 # Create the signatures needed for the book type and size.
 sub action { 
-    my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
+  my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
 
+  print STDERR "START BOOK ACTION: PID: $pid SID: $sid \n";
+  print STDERR 'specs'.Data::Dumper::Dumper($specs);
 
-	print STDERR "START BOOK ACTION: PID: $pid SID: $sid \n";
+  my $project_type = get_type($log, $dbh, $pid);
+  my $bind_type    = $specs->{template};
 
-    my $project_type = get_type($log, $dbh, $pid);
-    my $bind_type    = $specs->{template};
+  die "No bindery type found for multi-page project!" 
+  unless ($bind_type || $project_type eq 'ScreenItem');
 
-    die "No bindery type found for multi-page project!" 
-        unless ($bind_type || $project_type eq 'ScreenItem');
+  # Preserve the information from the first spread if we're editing. TODO
+  # Check that we're not saving for the first time.
+  my $prev = previous_specs($log, $dbh, $pid);
+  print STDERR 'prev'.Data::Dumper::Dumper($prev);
 
-    # Preserve the information from the first spread if we're editing. TODO
-    # Check that we're not saving for the first time.
-    my $prev = previous_specs($log, $dbh, $pid);
+  # TODO We should be able to only remove all printing services and this
+  # will "just work".
+  # ICON: No it won't.
+  for my $service (qw(Printing Folding Proofs Film)) {
+  delete_service($log, $dbh, $pid, $_) for check_for_service($log, $dbh, $pid, $service);
+  }
 
-    # TODO We should be able to only remove all printing services and this
-    # will "just work".
-    for my $service (qw(Printing Folding Proofs Film)) {
-        delete_service($log, $dbh, $pid, $_) 
-            for check_for_service($log, $dbh, $pid, $service);
-    }
+  # Get the stanadard project type defaults for insertion into
+  # all of the signature services ( Interior/Cover/GF ).
+  # This will get us our bleed & other defaults.
+  my $ptd = $dbh->selectall_hashref(q{
+    SELECT strfieldname as name, strdefaultvalue as value 
+    FROM tbl_projecttype_defaults 
+    WHERE lngprojecttypeindex IS Null
+    }, 'name');
 
+  my %defaults;
+  map { $defaults{$_} = $ptd->{$_}{value} } keys %$ptd;
 
-	# Get the stanadard project type defaults for insertion into
-	# all of the signature services ( Interior/Cover/GF ).
-	# This will get us our bleed & other defaults.
-	my $ptd = $dbh->selectall_hashref(q{
-		SELECT strfieldname as name, strdefaultvalue as value 
-		FROM tbl_projecttype_defaults 
-		WHERE lngprojecttypeindex IS Null
-	}, 'name');
+  # Add a cover spread if needed.
+  if ($specs->{ COVER() }) {
+    print STDERR "Have cover?".COVER()."\n";
 
-	my %defaults;
-	map { $defaults{$_} = $ptd->{$_}{value} } keys %$ptd;
+      my $double = grep { $bind_type eq $_ } qw(SaddleStitching PerfectBinding);
+      print STDERR "IS SINGLE ********* $double - $bind_type ****\n";
 
-    # Add a cover spread if needed.
-    if ($specs->{ COVER() }) {
-
-		my $double = grep { $bind_type eq $_ } qw(SaddleStitching PerfectBinding);
-print STDERR "IS SINGLE ********* $double - $bind_type ****\n";
-
-        my $cover = insert_service($log, $dbh, $pid, 'Printing', {
-            # Perfect binding requires the cover.
-            need_level     => $bind_type eq 'PerfectBinding' ? NEEDED 
-                                                             : NOT_NEEDED,
-            user_requested => 1,
+      my $cover = insert_service($log, $dbh, $pid, 'Printing', {
+          # Perfect binding requires the cover.
+          need_level     => $bind_type eq 'PerfectBinding' ? NEEDED 
+          : NOT_NEEDED,
+          user_requested => 1,
         }, {
-            txtSignatureType         => COVER,
-            txtServiceDescription    => COVER,
-            txtSectionSpreadQuantity => $double ? 1 : 2,
-            txtSignatureSize         => $double ? 4 : 2,
+          txtSignatureType         => COVER,
+          txtServiceDescription    => COVER,
+          txtSectionSpreadQuantity => $double ? 1 : 2,
+          txtSignatureSize         => $double ? 4 : 2,
 
-            # Currently we default to no fold as covers for perfect binding
-            # are folded on the perfect binder. However other incorrect saddle
-            # stitching style templates are still offered (See Bug 1746).
-            template => $bind_type =~ /stitching/i ? '4PageSignature'
-                                                   : 'NoFold',
+          # Currently we default to no fold as covers for perfect binding
+          # are folded on the perfect binder. However other incorrect saddle
+          # stitching style templates are still offered (See Bug 1746).
+          template => $bind_type =~ /stitching/i ? '4PageSignature'
+          : 'NoFold',
 
-            txtSpreadWidth  => $double ? $specs->{final_width} * 2 : $specs->{final_width},
-            txtSpreadHeight => $specs->{final_height},
+          txtSpreadWidth  => $double ? $specs->{final_width} * 2 : $specs->{final_width},
+          txtSpreadHeight => $specs->{final_height},
         });
-        insert_service_spec( $log, $dbh, $pid, $cover, SignatureIndex => $cover);
-        insert_service_specs($log, $dbh, $pid, $cover, %defaults);
+      insert_service_spec( $log, $dbh, $pid, $cover, SignatureIndex => $cover);
+      insert_service_specs($log, $dbh, $pid, $cover, %defaults);
 
-        # TODO A perfect bound cover's size is dependent on the thickness of
-        # the book (spine size). Should we even insert it now?
+      # TODO A perfect bound cover's size is dependent on the thickness of
+      # the book (spine size). Should we even insert it now?
 
-        # TODO Spiral can have separate front and back covers, though we may
-        # want to print them together. In fact the back may just be cut and
-        # not printed on at all.
+      # TODO Spiral can have separate front and back covers, though we may
+      # want to print them together. In fact the back may just be cut and
+      # not printed on at all.
 
-    
-        # Insert previous specs if we're redoing this book.
-        if (exists $prev->{COVER()}) {
-            while (my ($name, $value) = each %{ $prev->{COVER()} }) {
-                insert_service_spec(
-                    $log, $dbh, $pid, $cover, $name => $value, undef, 1
-                );
-            }
+
+      # Insert previous specs if we're redoing this book.
+      if (exists $prev->{COVER()}) {
+        while (my ($name, $value) = each %{ $prev->{COVER()} }) {
+          insert_service_spec(
+            $log, $dbh, $pid, $cover, $name => $value, undef, 1
+          );
         }
-    }
+      }
+  } #end if different cover
 
-    # Add a gate folded spread if any have been requested.
-    if ($specs->{ GATEFOLD() }) {
-        my $gatefold = insert_service($log, $dbh, $pid, 'Printing', {
-            user_requested => 1
-        }, {
-            txtSignatureType      => GATEFOLD,
-            txtServiceDescription => 'Binder Tabs',
-        	txtSpreadWidth            => $specs->{flat_width},
-        	txtSpreadHeight           => $specs->{flat_height},
-        });
-        insert_service_spec( $log, $dbh, $pid, $gatefold, SignatureIndex => $gatefold);
-        insert_service_specs($log, $dbh, $pid, $gatefold, %defaults);
-
-#print STDERR "DO SPREADS *****************", Dumper($prev);
-
-        # Insert previous specs if we're redoing this book.
-        if (exists $prev->{GATEFOLD()}) {
-            while (my ($name, $value) = each %{ $prev->{GATEFOLD()} }) {
-                insert_service_spec(
-                    $log, $dbh, $pid, $gatefold, $name => $value, undef, 1
-                );
-            }
-        }
-    }
-
-	# We now allow GF only jobs.
-	# Check to see if there are INTERIORS before adding.
-	return 1 unless $specs->{ INTERIOR() };
-
-    # Create the first (of possibly many) signature for the interior.
-    my $interior = insert_service($log, $dbh, $pid, 'Printing', {
-        user_requested => 1,
-    }, {
-        txtSignatureType          => INTERIOR,
-        txtServiceDescription     => INTERIOR . ' 1',
+  # Add a gate folded spread if any have been requested.
+  if ($specs->{ GATEFOLD() }) {
+    my $gatefold = insert_service($log, $dbh, $pid, 'Printing', {
+        user_requested => 1
+      }, {
+        txtSignatureType      => GATEFOLD,
+        txtServiceDescription => 'Binder Tabs',
         txtSpreadWidth            => $specs->{flat_width},
         txtSpreadHeight           => $specs->{flat_height},
-        txtSignatureSize          => ($bind_type =~ /^(Loop|Saddle)Stitching/i ? 4 : 2),
-	VERSIONS		  =>  mp_versions($specs),
-    });
-    insert_service_spec( $log, $dbh, $pid, $interior, SignatureIndex => $interior);
-    insert_service_specs($log, $dbh, $pid, $interior, %defaults);
+      });
+    insert_service_spec( $log, $dbh, $pid, $gatefold, SignatureIndex => $gatefold);
+    insert_service_specs($log, $dbh, $pid, $gatefold, %defaults);
 
-    map { 
-		if ( $_ =~ /mv/ || $_ =~ /version/ || /version_quantities/ ) {
-    		insert_service_spec( $log, $dbh, $pid, $interior, $_ => $specs->{$_}, undef, 1);
-		}
-    } keys %{$specs};
+    #print STDERR "DO SPREADS *****************", Dumper($prev);
 
     # Insert previous specs if we're redoing this book.
-    if (exists $prev->{INTERIOR()}) {
-        while (my ($name, $value) = each %{ $prev->{INTERIOR()} }) {
-            insert_service_spec(
-                $log, $dbh, $pid, $interior, $name => $value, undef, 1
-            );
-        }
+    if (exists $prev->{GATEFOLD()}) {
+      while (my ($name, $value) = each %{ $prev->{GATEFOLD()} }) {
+        insert_service_spec(
+          $log, $dbh, $pid, $gatefold, $name => $value, undef, 1
+        );
+      }
     }
+  }
 
-    print STDERR "HAVE SPECS", Dumper($specs);
+  # We now allow GF only jobs.
+  # Check to see if there are INTERIORS before adding.
+  return 1 if ! $specs->{ INTERIOR() };
+  print STDERR "Don't have interior because we removed them!".INTERIOR()."\n";
 
-    # NOTE: The bindery types will take care of themselves.
+  # Create the first (of possibly many) signature for the interior.
+  my $interior = insert_service($log, $dbh, $pid, 'Printing', {
+      user_requested => 1,
+    }, {
+      txtSignatureType          => INTERIOR,
+      txtServiceDescription     => INTERIOR . ' 1',
+      txtSpreadWidth            => $specs->{flat_width},
+      txtSpreadHeight           => $specs->{flat_height},
+      txtSignatureSize          => (($bind_type eq 'LoopStitching' or $bind_type eq 'SaddleStitching') ? 4 : 2),
+      VERSIONS		  =>  [mp_versions($specs)],
+    });
+  insert_service_spec( $log, $dbh, $pid, $interior, SignatureIndex => $interior);
+  insert_service_specs($log, $dbh, $pid, $interior, %defaults);
 
-    return 1;
+  map { 
+    if ( $_ =~ /mv/ || $_ =~ /version/ || /version_quantities/ ) {
+      insert_service_spec( $log, $dbh, $pid, $interior, $_ => $specs->{$_}, undef, 1);
+    }
+  } keys %{$specs};
+
+  # Insert previous specs if we're redoing this book.
+  if (exists $prev->{INTERIOR()}) {
+    while (my ($name, $value) = each %{ $prev->{INTERIOR()} }) {
+      insert_service_spec(
+        $log, $dbh, $pid, $interior, $name => $value, undef, 1
+      );
+    }
+  }
+
+  print STDERR "HAVE SPECS", Dumper($specs);
+
+  # NOTE: The bindery types will take care of themselves.
+
+  return 1;
 }
-
 
 # For each signature type in the old project get the specs of the first
 # signature of that type.
 sub previous_specs {
-    my ($log, $dbh, $pid) = @_;
+  my ($log, $dbh, $pid) = @_;
 
-    my $sigs = signatures_of_type($log, $dbh, $pid);
+  my $sigs = signatures_of_type($log, $dbh, $pid);
 
-    for my $type (keys %$sigs) {
-        my %specs = @{ $dbh->selectcol_arrayref(q{
-            SELECT strname as name, strvalue as value
-            FROM tbl_service_specifications 
-            WHERE (ui_spec = true OR strname = 'version_quantities') 
-              AND strname !~ '^override'
-              AND strname NOT IN ( 'runstyle',         'substrate', 
-                                   'spreads_in_group', 'hdnRunStyleCheck' )
-              AND lngserviceindex = ?
-          }, { Columns => [1,2] }, $sigs->{$type}[0]) };
+  for my $type (keys %$sigs) {
+    my %specs = @{ $dbh->selectcol_arrayref(q{
+    SELECT strname as name, strvalue as value
+    FROM tbl_service_specifications 
+    WHERE (ui_spec = true OR strname = 'version_quantities' OR strname LIKE 'override%') 
+    AND strname NOT IN ( 'substrate', 'spreads_in_group', 'hdnRunStyleCheck' )
+    AND lngserviceindex = ?
+    }, { Columns => [1,2] }, $sigs->{$type}[0]) };
 
-        # If there are form size overrides make sure we step through the
-        # project (but don't re-apply the overrides).
-        if ($specs{spreads} || $specs{forms}) {
-            $specs{needs_view} = 1;
+    # If there are form size overrides make sure we step through the
+    # project (but don't re-apply the overrides).
+    if ($specs{spreads} || $specs{forms}) {
+      $specs{needs_view} = 1;
 
-            delete @specs{qw(spreads forms)};
-        }
-
-        $specs{override_press} = 1 if $specs{press};
-
-        $sigs->{$type} = \%specs;
+      #delete @specs{qw(spreads forms)};
     }
 
-    return $sigs;
+    #$specs{override_press} = 1 if $specs{press};
+
+    $sigs->{$type} = \%specs;
+  }
+
+  return $sigs;
 }
 
 
