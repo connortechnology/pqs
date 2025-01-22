@@ -14,7 +14,7 @@ use PQS::DB ();
 use PQS::Constants;
 use PQS::Error;
 
-use eprint::service qw(:status :calc);
+require eprint::service;
 use eprint::project qw(:state project_info);
 use ssi             ();
 use session;
@@ -207,7 +207,7 @@ sub uri_to_service {
 
   return undef unless $service->{id};
 
-  return load_service_type($service);
+  return eprint::service::load_service_type($service);
 }
 
 # Show the page if we're doing a GET with just PID and SID, return an JSON
@@ -229,7 +229,8 @@ sub response {
     else {
         my $form   = param_hashref($r);
         my $specs  = { %$form };
-        my $status = price($r->log, $dbh, $variable, $pid, $sid, $service, $specs);
+        print STDERR "Calling price".Data::Dumper::Dumper($specs)."\n";
+        my $status = eprint::service::price($r->log, $dbh, $variable, $pid, $sid, $service, $specs);
 
         # AJAX pricing request.
         if ($r->method_number == M_GET) {
@@ -248,17 +249,18 @@ sub response {
         }
         # Form submission (save).
         else {
+          print STDERR "Saving $status\n";
             # Save the service, set it's state, and continue the project.
-            save($r->log, $dbh, $pid, $sid, $service, $form, $specs);
-            set_status($r->log, $dbh, $pid, $status, $sid);
+            eprint::service::save($r->log, $dbh, $pid, $sid, $service, $form, $specs);
+            eprint::service::set_status($r->log, $dbh, $pid, $status, $sid);
             
-            recalc_dependencies($r->log, $dbh, $pid, $sid);
+            eprint::service::recalc_dependencies($r->log, $dbh, $pid, $sid);
 
             $dbh->commit;
 
-            my $location = $status eq 'calculated' 
-                ? PROJECT_BUILD_PAGE : PROJECT_VIEW_PAGE;
+            my $location = $status eq 'calculated' ? PROJECT_BUILD_PAGE : PROJECT_VIEW_PAGE;
 
+            print STDERR "Location $location $status\n";
 			$location .= "?pid=$pid";
 
 			$location = $r->param('Location') if $r->param('Location');
@@ -309,7 +311,7 @@ sub show {
         }, undef, $variable->{cust_id});
     
     # Load the specs from the db.
-    my $specs = $variable->{spec} = get_specs($dbh, $pid, $sid, $service);
+    my $specs = $variable->{spec} = eprint::service::get_specs($dbh, $pid, $sid, $service);
 
     # If the service has a display() function run it an populate variable with
     # it's return.
