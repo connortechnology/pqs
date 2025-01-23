@@ -20,6 +20,7 @@ use session;
 use PQS::model::order();
 
 require eprint::address;
+use constant DEBUG=>0;
 
 
 # These constants should really be equipment or configuration specs, but this
@@ -66,9 +67,8 @@ sub add_ship_address {
 
 sub action {
     my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
-print STDERR "ACTION: SHIPPING \n\n";
 
-	if ( $specs->{rdbAdditional} eq 'Yes' ) {
+	if ( $specs->{rdbAdditional} and $specs->{rdbAdditional} eq 'Yes' ) {
 		my $ship = insert_service( 
 			$log, $dbh, $pid, 'Shipping', { user_requested => 1} 
 		);
@@ -81,25 +81,23 @@ print STDERR "ACTION: SHIPPING \n\n";
 
 	add_ship_address($pid, $specs) if $specs->{Save_Ship_Address};
 
-	my $order_id = $dbh->selectrow_array(q{	
-		SELECT max(lngorderid) FROM tbl_order_contents WHERE lngprojectindex = ?
-	}, undef, $pid);
-	my $quote_id = $dbh->selectrow_array(q{	
-		SELECT max(lngquoteid) FROM tbl_quote_details WHERE lngprojectindex = ?
-	}, undef, $pid);
-
 	my ($cto, $ctq) = $dbh->selectrow_array(q{
 		SELECT create_to_order, create_to_quote FROM tbl_projects where lngprojectindex = ?
 	}, undef, $pid);
 
-print STDERR "UPDATE STUFF: $order_id, $quote_id \n"; 
-
-	if ( $cto && $order_id ) {
-		update_order($dbh, $order_id, $specs);
-	} elsif( $ctq && $quote_id ) {
-		update_quote($dbh, $quote_id, $specs);
+	if ( $cto) {
+    my $order_id = $dbh->selectrow_array(q{	
+      SELECT max(lngorderid) FROM tbl_order_contents WHERE lngprojectindex = ?
+      }, undef, $pid);
+		update_order($dbh, $order_id, $specs) if $order_id;
+	} elsif ($ctq) {
+    my $quote_id = $dbh->selectrow_array(q{	
+      SELECT max(lngquoteid) FROM tbl_quote_details WHERE lngprojectindex = ?
+      }, undef, $pid);
+		update_quote($dbh, $quote_id, $specs) if $quote_id;
 	}
 }
+
 sub update_quote {
 	my ($dbh, $quote_id, $specs ) = @_;
 	$dbh->do(q{ DELETE FROM tbl_Quote_Users_By WHERE lngQuoteID = ?}, undef, $quote_id);
@@ -393,15 +391,11 @@ sub update_shipnum {
 	my $dbh = session::dbh;
 	my $ids = $dbh->selectcol_arrayref(q{SELECT shipid FROM ship_address WHERE sid = ?}, undef, $sid);
 
-	print STDERR "UPDATE SHIPNUM \n";
-
 	map {
 		my $num = $dbh->selectrow_array(q{	SELECT count(*) FROM ship_address WHERE sid = ? AND shipid <= ? }, undef, $sid, $_);
 		$dbh->do(q{UPDATE ship_address SET shipnum = ? WHERE shipid = ?},undef,  $num, $_);
 		print STDERR "UPDATE: $_ -- $num \n";
 	} @{$ids};
-	$dbh->commit;
-
 }
 
 sub fill_testing_specs {
@@ -802,16 +796,15 @@ sub filter_rates {
 }
 
 sub calc {
-
     my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
-print STDERR "CALC MY SHIPPING SERVICE $specs->{shipping_required} \n\n";
+print STDERR "CALC MY SHIPPING SERVICE $specs->{shipping_required}\n" if DEBUG;
 
 
 	my $status;
 
 	#$status = 'calculated' if $specs->{deliverymethod} eq 'Customer Pick-up';
 	#
-	if ( $specs->{shipping_required} == 0 ) {
+	if ( !$specs->{shipping_required} ) {
 			print STDERR "SERVICE: Shipping: Calc: No Shipping Required. Skipping all calcuations \n";
 			$$specs{"txtPrice1"} = 0;
 			return 'calculated';
