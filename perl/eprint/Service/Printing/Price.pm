@@ -4,6 +4,8 @@ use warnings;
 use utf8;
 no warnings qw(uninitialized numeric);
 
+use constant DEBUG=>0;
+
 use Data::Dumper;
 use Compress::LZF         qw(:compress :freeze);
 use Storable              qw(freeze);
@@ -87,7 +89,7 @@ Readonly my %BINDERY_CLASS => (
 # Debug/profiling timings.
 our ($ts_req, $te_req, $ts_impose, $te_impose, $ts_price, $te_price, $total_imp);
 
-use constant TIMINGS => 1;
+use constant TIMINGS => 0;
 
 sub calc {
   my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
@@ -96,9 +98,6 @@ sub calc {
     require Time::HiRes;
     $ts_req = Time::HiRes::time(); # Debug/profiling timings;
   }
-
-
-  print STDERR "TIME TO GET PROJECT PRICE \n";
 
   my $pricing = get_project_price(
     $log, $dbh, $variable, 
@@ -115,7 +114,6 @@ sub calc {
   return exists $specs->{error} ? 'uncalculated' : 'calculated';
 }
 
-
 # Price the spread.
 sub get_project_price {
   my ($log, $dbh, $variable, $pid, $sid, $spread, $versions, $overrides) = @_;
@@ -124,7 +122,7 @@ sub get_project_price {
   my $type = get_type($log, $dbh, $pid);
 
   my $s;
-  $s->{error} =  'Missing Specs' unless $spread->{flat}{width} and $spread->{flat}{height};
+  #return {error =>  'Missing Specs width and height'} unless $spread->{flat}{width} and $spread->{flat}{height};
 
   #	print STDERR "HAVE DEA", Dumper($spread);
 
@@ -341,26 +339,22 @@ sub get_project_price {
 
   # Override Digital Signatures to be 1 spread only.
   #    if ($press_type eq 'digital') {
-  #        $project->{override}{spreads_on_form} = 1;
+  #        $project->{override}{spreads} = 1;
   #    }
 
   # The spreads per form x the number of forms can't exceed the number of
   # spreads remaining to be allocated.
-  if ($project->{override}{spreads_on_form} && $project->{override}{forms}) {
+  if ($project->{override}{spreads} && $project->{override}{forms}) {
     return { 
       error => "Spreads × forms exceeds remaining spreads ($spreads_remaining). Please adjust your overrides."
-    } if $project->{override}{spreads_on_form} 
-    * $project->{override}{forms} 
-    > $spreads_remaining;
+    } if $project->{override}{spreads} * $project->{override}{forms} > $spreads_remaining;
   }
 
-  my $desired_size = $project->{is_multipage} && $project->{override}{spreads_on_form}  
-  ? $project->{override}{spreads_on_form} 
-  : $spreads_remaining;
+  my $desired_size = $project->{is_multipage} && $project->{override}{spreads} ? $project->{override}{spreads} : $spreads_remaining;
 
   my $impositions = create_impositions($dbh, $project, $desired_size);
 
-  #print STDERR "DONE IMPOSE 4 create_impositions \n";
+  print STDERR "DONE IMPOSE 4 create_impositions \n";
 
   $te_impose = Time::HiRes::time() if TIMINGS;
 
@@ -392,11 +386,7 @@ sub get_project_price {
   my @mixed_colours   = get_mixed_colours($log, $dbh, $pid, $sid);
   my %washed_colours  = get_washed_colours($log, $dbh, $pid, $sid);
 
-  my %special_colours = @{ $dbh->selectcol_arrayref(
-  "SELECT strPMSID, strMaterialID FROM tbl_Ink_Colours",
-  { Columns => [ 1, 2 ] }
-  ) };
-
+  my %special_colours = @{ $dbh->selectcol_arrayref('SELECT strPMSID, strMaterialID FROM tbl_Ink_Colours', { Columns => [ 1, 2 ] }) };
 
   # CACHES
   #
@@ -412,6 +402,7 @@ sub get_project_price {
     $dbh, $project->{press_type}
   );
 
+  print STDERR "Got here\n";
   # A bit kludgey but it's better than thrashing the DB until we can
   # rewrite print pricing properly.
 
@@ -425,33 +416,39 @@ sub get_project_price {
   #print STDERR "HAVE TOTAL IMPS: $total_imp \n";
 
   foreach $imp (@$impositions) {
+    print STDERR  "imp".Data::Dumper::Dumper($imp);
     if ( $openprint::r ) {
       $openprint::r->print("\n");
       if ( $openprint::r->connection()->aborted() ) {
         return {error => 'Aborted'};
-      } else {
-        print STDERR "Not aborted\n";
+        #} else {
+        #print STDERR "Not aborted\n";
       } # end if
     } else {
-      die "No openprint";
+      print STDERR  "No openprint\n";
     } # end if
 
     my $setup           = $imp->getSetup;
+    #print STDERR "Setup $setup\n";
     my $run_style       = $imp->getStyle;
+    #print STDERR "runstyle $run_style\n";
     my $press           = $imp->getPress;
+    #print STDERR "press $press\n";
 
     # If we're a multipage project, respect the spreads on form and forms
     # (signature groups) overrides.
     if ($project->{is_multipage}) {
-      #			die(Dumper($imp));
-      #print STDERR "versions: SETUP $imp->{setup} SPREAD: $imp->{spreads} \n";
-
-      next if $project->{override}{spreads_on_form} 
-      && $imp->{spreads} != $project->{override}{spreads_on_form};
-
-      $variable->{SignatureQuantity} = $project->{override}{forms} 
-      ? $project->{override}{forms}
-      : int($spreads_remaining / $imp->{spreads});
+      if ($project->{override}{spreads} && ($imp->{spreads} != $project->{override}{spreads})) {
+        $openprint::log->debug("$$imp{spreads} != ".$project->{override}{spreads}) if $openprint::log;
+        next;
+        #} else {
+        #$openprint::log->debug("$$imp{spreads} == ".$project->{override}{spreads}) if $openprint::log;
+      }
+      $variable->{SignatureQuantity} = $project->{override}{forms} ? $project->{override}{forms} : int($spreads_remaining / $imp->{spreads});
+    }
+    if ($project->{override}{imposition} and ($setup != $project->{override}{imposition})) {
+      $openprint::log->debug("imposition $setup != ".$project->{override}{imposition}) if $openprint::log;
+      next;
     }
 
     if (! defined $pms_prices{$press} ) {    # Pantone Matching System (PMS)
@@ -486,7 +483,7 @@ sub get_project_price {
       $large_format,      $jig_specifics,     $project->{pages}
     );
 
-    $price{txtSignatureQuantity}       = $variable->{SignatureQuantity};
+    $price{forms} = $price{txtSignatureQuantity}       = $variable->{SignatureQuantity};
     $price{hdnInkMixColours}           = $pms_price->{'Mixed Colours'};
 
     # Put all the crap into the price hash (eventuall stored in DB).
@@ -811,7 +808,6 @@ sub get_project_price {
   }
 
   insert_service_spec($log, $dbh, $pid, $sid, "imp", $best_price->{imp});
-  $dbh->commit();
 
   return post_process(
     $log, $dbh, $pid, $sid, 
@@ -854,7 +850,7 @@ sub fill_price_hash {
   $price->{txtImageHeight}      = $imp->{image_height};
   $price->{hdnImageOrientation} = $imp->{image_orientation};
 
-  $price->{hdnImposition}       = $imp->getSetup;
+  $price->{imposition} = $price->{hdnImposition}       = $imp->getSetup;
   $price->{SpreadRows}          = $imp->{spread_rows};
   $price->{SpreadCols}          = $imp->{spread_cols};
 
@@ -865,8 +861,12 @@ sub fill_price_hash {
   if ($project->{is_multipage}) {
     $price->{ShapeRows}            = $imp->{spread_rows} / $imp->{rows} if $imp->{rows};
     $price->{ShapeCols}            = $imp->{spread_cols} / $imp->{cols} if $imp->{cols};
+    $price->{spreads} = $price->{ShapeRows} * $price->{ShapeCols};
+  } else {
+    $price->{spreads} = $imp->{spread_rows} * $imp->{spread_cols};
   }
   $price->{spreads_in_group} = $imp->{spreads} ? $imp->{spreads} : 1;
+  $price->{used_spreads} = $price->{spreads} * $price->{forms};
 
   $price->{LargeFormatTiled} = ($project->{press_type} eq 'inkjetprinter' && $imp->{spreads} > 1) ? 1 : 0;
 
@@ -987,7 +987,7 @@ sub create_impositions {
     && $project->{bind_type} !~ /^(Loop|Saddle)Stitching$/
     && configuration::get_value(undef, $dbh, 'Digital2PageSignatures');
 
-    print STDERR "HAVE IMPOSTIONS BEFORE FILTER  3" . scalar @impositions . "\n";
+    print STDERR "HAVE IMPOSTIONS BEFORE FILTER  3 " . scalar @impositions . "\n";
     # For books with more than one spread in the signature, we need to
     # convert the raw impositions of the single spread dimesions into
     # images of multiple spreads.
@@ -995,9 +995,9 @@ sub create_impositions {
     @impositions;
   }
 
-  print STDERR "HAVE IMPOSTIONS BEFORE FILTER 99 " . scalar @impositions . "\n", Dumper(\@impositions);
+  #print STDERR "HAVE IMPOS.TIONS BEFORE FILTER 99 " . scalar @impositions . "\n", Dumper(\@impositions);
   @impositions = grep { $_->{setup} > 0 } @impositions;
-  print STDERR "HAVE IMPOSTIONS TOTAL " . scalar @impositions . "\n";
+  print STDERR "HAVE IMPOSITIONS TOTAL " . scalar @impositions . "\n";
 
   return \@impositions;
 }
@@ -1220,7 +1220,7 @@ sub calc_print_price {
     my $count = scalar(@{$l});
     $lay_count{$count} = 1;
     map {
-      print STDERR "LAYS: ", Dumper($_);
+      print STDERR "LAYS: ", Dumper($_) if DEBUG;
       $vl{$_->{label}} = 1; 
     } @{$l};
   }
@@ -1620,11 +1620,9 @@ sub calc_print_price {
   $price{'Impression Price'}  = $run_price{'Impression Price'};
 
   $price{'hdnRunSpeed'}       = $run_price{'Run Speed'};
-  $price{'hdnRunTime1'}       = sprintf("%.2f",$impressions/$run_price{'Run Speed'})
-  if $run_price{'Run Speed'};
+  $price{'hdnRunTime1'}       = sprintf('%.2f',$impressions/$run_price{'Run Speed'}) if $run_price{'Run Speed'};
 
-  $price{'PMS Run Price'}     = $pms_price->{'Total Run Price'}
-  * $imposition;
+  $price{'PMS Run Price'}     = $pms_price->{'Total Run Price'} * $imposition;
 
   $price{'Aqueous Run Price'} = $aqueous{'Run Price'};
   $price{'UV Run Price'}      = $UV{'Run Price'};
@@ -1700,7 +1698,7 @@ sub calc_print_price {
   + ($price{'Paper Price'} || $price{'Paper Comp Price'})
   + ($paper_price->{stitch_price} * $qty) ;
 
-  #print STDERR "HAVE PRICE DUMPER \n\n\nn", Dumper(\%price);
+  print STDERR "HAVE PRICE DUMPER \n\n\nn", Dumper(\%price) if DEBUG;
 
   #print STDERR "HAVE PAPER COMP DUMPER \n\n\nn", 
   #			Dumper( $price{'Paper Price'},  $price{'Paper Comp Price'},
@@ -2727,12 +2725,10 @@ sub cut_signatures {
     return %count;
   }
 
-  if ($specs{SpreadRows} && $specs{SpreadCols} && $signature_size != 1)
-  {
+  if ($specs{SpreadRows} && $specs{SpreadCols} && ($signature_size != 1)) {
     $rows = $specs{SpreadRows} / $specs{hdnImpositionRows};
     $cols = $specs{SpreadCols} / $specs{hdnImpositionColumns};
-  }
-  else {
+  } else {
     $count{4} = $signature_qty;
     return %count;
   }
@@ -2752,7 +2748,6 @@ sub cut_signatures {
       $count{ $part_row * $spread_size } = 1;
     }
     return %count if $part_row == $cutting_signatures;
-
   }
 
   my $whole_row_sets = $rows > 4 ? int($rows / 4) : 0;
@@ -2897,10 +2892,8 @@ sub get_imposition_charge {
       eprint::service::get_price($log, $dbh, $variable,
         'ImpositionBook', $imageHeight * $imageWidth, $press);
 
-      $imposition_charge += $per_page_charge * $$imp{'spreads'} * 4 *
-      $$imp{'setup'};    #since we will have 4 pages per spread
+      $imposition_charge += $per_page_charge * $$imp{spreads} * 4 * $$imp{setup};    #since we will have 4 pages per spread
       print STDERR "PER PGE: $per_page_charge SPREADS: $$imp{'spreads'}  SETUP: $$imp{'setup'} WIDTH: $imageWidth x $imageHeight; TOTA: $imposition_charge \n", Dumper($imp);
-
 
       my $base_trapping;
       if ((@$side_one_colours > 1) || (@$side_two_colours > 1)) {
@@ -2929,8 +2922,7 @@ sub get_imposition_charge {
       # Shove in group factor here so that we can use it later for price
       # correction
       my $group_factor =
-      ($per_page_charge + $base_trapping) * $$imp{'spreads'} * 4 *
-      $$imp{'setup'};    # includes imposition AND trapping
+      ($per_page_charge + $base_trapping) * $$imp{'spreads'} * 4 * $$imp{'setup'};    # includes imposition AND trapping
       print STDERR "GROUP FACTOR : $group_factor PPC: $per_page_charge BASE TRAP:  $base_trapping \n";
 
       # Wipe out any previous group factors for this signature
@@ -3078,17 +3070,18 @@ sub spreads_remaining {
 sub count_completed_spreads {
   my ($log, $dbh, $spread_type, $pid, $exclude) = @_;
 
-
   print STDERR "No Spread Type\n" unless $spread_type;
 
   # Get all the other calculated signatures.
-  my @signatures = grep { get_status($log, $dbh, $_) eq 'calculated' } signatures_of_type($log, $dbh, $pid, $spread_type) if $spread_type;
+  my @signatures_of_type = signatures_of_type($log, $dbh, $pid, $spread_type) if $spread_type;
+  print STDERR "Signature of type $spread_type @signatures_of_type\n";
+  my @signatures = grep { get_status($log, $dbh, $_) eq 'calculated' } @signatures_of_type if $spread_type;
 
   # Allow the user to exclude a signature from the count (generally the one being recalculated).
   @signatures = grep { $_ != $exclude } @signatures if $exclude;
 
   my $count = 0;
-  for my $sid (@signatures) {
+  foreach my $sid (@signatures) {
     print STDERR "Getting specs for $pid $sid\n";
     my ($size, $groups) = get_specifications(
       $log, $dbh, $pid, $sid, qw(spreads_in_group txtSignatureQuantity)
@@ -3121,8 +3114,7 @@ sub signatures_of_type {
   if (defined $spread_type) {
     return undef unless exists $signature{$spread_type};
 
-    return wantarray ? @{$signature{$spread_type}} 
-    : $signature{$spread_type}[0];
+    return wantarray ? @{$signature{$spread_type}} : $signature{$spread_type}[0];
   }
 
   return \%signature;
@@ -3130,3 +3122,4 @@ sub signatures_of_type {
 
 
 1;
+__END__
