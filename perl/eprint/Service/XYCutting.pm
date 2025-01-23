@@ -149,13 +149,11 @@ sub calc_price {
     my $price = $run_rate * $cuts;
     callback::call('service_calc_end', $pid, $sid, $make_ready, $price);
 
-    my $price = $make_ready + $price;
-
+    $price += $make_ready;
     $price = $min_price if $price && $price < $min_price;
 
     return $price;
 }
-
 
 # Given the layout and the quantity being produced, determine the number of
 # cuts (guillotine style) required. NOTE: Exact quantity based as large format
