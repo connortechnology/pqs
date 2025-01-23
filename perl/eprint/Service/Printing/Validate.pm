@@ -18,10 +18,12 @@ use constant DEFAULT_COVERAGE => eprint::Config->get('Printing' => 'default_cove
 sub munge {
     my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
+    print STDERR "munge start ".Data::Dumper::Dumper($specs)."\n";
     # 'Detailed' mode signatures aren't allowed to calculate until the user
     # has viewed them (display() function removes 'needs_view' flag).
-    die "Signature needs viewing for detailed mode"
-        if $specs->{needs_view};
+    if ($specs->{needs_view}) {
+      print STDERR "Signature needs viewing for detailed mode\n";
+    }
 
     my @qtys         = get_quantities($log, $dbh, $pid);
     my $project_type = get_type($log, $dbh, $pid);
@@ -32,13 +34,15 @@ sub munge {
     my $versions  = versions($specs, $qtys[0]);
     my $overrides = overrides($specs, $variable->{user_type});
 
-    delete $specs->{$_} for keys %$specs;
+    #delete $specs->{$_} for keys %$specs;
 
     $specs->{spread}    = $spread;
     $specs->{versions}  = $versions;
     $specs->{overrides} = $overrides;
+    print STDERR "munge end ".Data::Dumper::Dumper($specs)."\n";
     return;
 }
+
 sub rfq_only {
 	my ( $dbh, $pid ) = @_;
 	return $dbh->selectrow_array(q{
@@ -74,10 +78,8 @@ sub spread {
     my $value = $specs->{"${type}_$dim"};
     $value =~ tr/0-9.//cd;
 
-    die "Invalid dimesion for $type $dim. It must be a positve real number."
-    unless defined $value
-    && $value > 0
-    && $value =~ /^\d+\.?\d*$/;
+    die "Invalid dimesion for $type $dim. It must be a positive real number."
+    unless defined $value && $value > 0 && $value =~ /^\d+\.?\d*$/;
 
     $spread{$type}{$dim} = $specs->{"${type}_$dim"};
   }
@@ -86,8 +88,7 @@ sub spread {
   # die "Invalid dimensions"
   #     unless $spread{flat}{width} && $spread{flat}{height};
 
-  $spread{gatefold_lip} = $specs->{gatefold_lip}+0
-  if $specs->{gatefold_lip};
+  $spread{gatefold_lip} = $specs->{gatefold_lip}+0 if $specs->{gatefold_lip};
 
   # Colour critical
   $spread{colourcritical_extra_waste} = $specs->{colourcritical_enabled} ? $specs->{colourcritical_extra_waste} : 0;
@@ -100,8 +101,9 @@ sub spread {
 
   # See if the user chosen a bleed, and if so what size it is.
   my $size = $specs->{bleed_size};
+  print STDERR "bleed $size";
   $size =~ tr/0-9.+-//cd;
-
+  print STDERR " bleed $size \n";
 
   # If only one bleed side is selected then we must force it into an
   # array ref.
@@ -141,9 +143,7 @@ sub spread {
   $spread{screen_foil} = 	     $specs->{s0_foil} && $specs->{s0_foil} ne 'None' ? 1 : 0;
   $spread{screen_foil}++  if   $specs->{s1_foil} && $specs->{s1_foil} ne 'None';
 
-
   $spread{underbase} = 	     $specs->{underbase} eq 'Discharge' ? 1 : 0;
-
 
   # SUBSTRATE (STOCK)
   $spread{stock} = $project_type ne 'ScreenItem' 
@@ -470,9 +470,8 @@ sub overrides {
 
   # Each field shows the automatically selected value by default, so we only
   # set it as an override if the user has checked the associated box.
-  for my $field (qw(press runstyle substrate quality)) {
-    $override{$field} = $specs->{$field}
-    if $specs->{"override_$field"};
+  for my $field (qw(press runstyle substrate quality imposition)) {
+    $override{$field} = $specs->{$field} if $specs->{"override_$field"};
   }
 
   $override{margin} = $specs->{ignore_margins} || undef;
@@ -486,17 +485,13 @@ sub overrides {
 
   # Multipage projects can override the number of spreads on a form and the
   # number of forms in that group.
-  if ($specs->{spreads} && $specs->{forms}) {
-    my $spreads = $specs->{spreads} || 0;
-    $spreads =~ tr/0-9//cd;
-
-    my $forms   = $specs->{forms}   || 0;
-    $forms   =~ tr/0-9//cd;
-
-    if ($spreads > 0 && $forms > 0) {
-      $override{spreads_on_form} = $spreads;
-      $override{forms}           = $forms;
-    }
+  if ($specs->{spreads} and $$specs{override_spreads}) {
+    $specs->{spreads} =~ s/\D//g;
+    $override{spreads} = $specs->{spreads} if $specs->{spreads};
+  }
+  if ($specs->{forms} and $$specs{override_forms}) {
+    $specs->{forms} =~ s/\D//g;
+    $override{forms} = $specs->{forms} if $specs->{forms};
   }
 
   $override{chargefor} = $specs->{chargefor};
