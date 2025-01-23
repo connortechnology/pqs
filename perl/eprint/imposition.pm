@@ -5,9 +5,11 @@ no warnings qw(uninitialized);
 
 use base qw(Exporter);
 our @EXPORT = qw(
-    convert_to_old        desired_signature_size 
+    convert_to_old        desired_signature_size
     convert_to_signature  lf_imposition
 );
+
+use constant DEBUG=>0;
 
 use Data::Dumper;
 use Memoize;
@@ -58,14 +60,14 @@ sub convert_to_old {
             ($x, $y) = (1,1);
         }
         else { die "Invalid imposition.\n"; }
-    
+
 		#($rows, $cols) = $imposition->cut ? ($y, $x) : ($x, $y);
 		#
 		($cols, $rows) = $imposition->cut ? ($y, $x) : ($x, $y);
 
 
-	print STDERR "IMP1: Rows: $rows, COLS: $cols CUT: " . $imposition->cut . " X: $x Y: $y \n";
-	
+	print STDERR "IMP1: Rows: $rows, COLS: $cols CUT: " . $imposition->cut . " X: $x Y: $y \n" if DEBUG;
+
     }
 
 
@@ -96,11 +98,11 @@ sub convert_to_old {
         my $corrected = ($style =~ /^W[TF]$/)
             ? [map{[map{$a={%$_};$a->{slots}*=2;$a}@$_]}@$layout]
             : $layout;
-        
+
         # Create the new imposition.
         my $imp = eprint::impositionObject->new($press->{id});
 
-		my $orientation = $grain eq 'Height' ? 'Horizontal' : 'Veritcal'; 
+		my $orientation = $grain eq 'Height' ? 'Horizontal' : 'Vertical';
 
         # Load up the old imposition object.
         $imp->set(
@@ -118,7 +120,7 @@ sub convert_to_old {
             $grip,                  # Grip size
             $gutter,                # Gutter size
         );
-        
+
         push @impositions, $imp;
     }
 
@@ -130,10 +132,10 @@ sub convert_to_old {
 # Bugzilla for a number of significant issues with this section
 sub desired_signature_size {
     my ($desired_signature_size, $impositions) = @_;
-  
+
     my $max_setup = max(map { $_->{setup} } @$impositions);
 
-	print STDERR "HAVE MAX SETUP: $max_setup DSS: $desired_signature_size \n";
+	print STDERR "HAVE MAX SETUP: $max_setup DSS: $desired_signature_size \n" if DEBUG;
     if ($max_setup == 9) {
         # right now 36 pg signatures are not a good thing, so until we can
         # figure when we do want them we are just going to do without. will -
@@ -158,7 +160,7 @@ sub desired_signature_size {
         my $new_layout  = $desired_signature_size - $empty_slots;
 
         # If the new layout is exactly half of the max then use it.
-        if ($new_layout * 2 == $max_setup) {    
+        if ($new_layout * 2 == $max_setup) {
             $desired_signature_size = $new_layout;
         }
         elsif ($desired_signature_size == 5) {
@@ -167,163 +169,152 @@ sub desired_signature_size {
             $desired_signature_size = 4;
         }
     }
-	print STDERR "HAVE NEW DSS: $desired_signature_size \n";
+	print STDERR "HAVE NEW DSS: $desired_signature_size \n" if DEBUG;
     return $desired_signature_size;
 }
 
 sub convert_to_signature {
-    my ($desired_signature_size, $imp) = @_;
+  my ($desired_signature_size, $imp) = @_;
 
-	my $ds = desired_signature_size($desired_signature_size, [$imp]);
+  print STDERR "HAVE LAYOUT: ", Dumper($imp->{layout}) if DEBUG;
 
-	print STDERR "HAVE LAYOUT: ", Dumper($imp->{layout});
+  my $ds = desired_signature_size($desired_signature_size, [$imp]);
 
-print STDERR "HAVE DS: $ds \n";
-    $desired_signature_size = $ds;
+  print STDERR "HAVE Desired sig size: $ds \n" if DEBUG;
+  $desired_signature_size = $ds;
 
-    my $setup   = $imp->{setup};
+  my $setup   = $imp->{setup};
 
+  my ($r, $c) = @{ $imp }{ qw(rows cols) };
 
-    my ($r, $c) = @{ $imp }{ qw(rows cols) };
+  print STDERR "CONVERT TO SIGNATURE: DS: $desired_signature_size, SETUP: $setup R: $r C: $c \n", Dumper($imp) if DEBUG;
 
-print STDERR "CONVERT TO SIGNATURE: DS: $desired_signature_size, SETUP: $setup R: $r C: $c \n", Dumper($imp);
+  $imp->setSpreadRows($imp->{rows});
+  $imp->setSpreadCols($imp->{cols});
+  $imp->setSpreads($desired_signature_size);
 
-    $imp->setSpreadRows($imp->{rows});
-    $imp->setSpreadCols($imp->{cols});
-    $imp->setSpreads($desired_signature_size);
+  if ($setup == $desired_signature_size || int($setup / $desired_signature_size) == 1) {
 
-    if (        $setup == $desired_signature_size
-         || int($setup / $desired_signature_size) == 1
-    ) {
+    # Can't have a 1 out W&T
+    if ($imp->{run_style} ne 'WT' and $imp->{run_style} ne 'WF') {
+      # Make signature image out of spread Image
+      $imp->setRows(1);
+      $imp->setCols(1);
+      $imp->setSetup(1);
 
-        # Can't have a 1 out W&T
-        if (    $imp->{run_style} ne 'WT'
-            and $imp->{run_style} ne 'WF')
-        {
-            # Make signature image out of spread Image
-            $imp->setRows(1);
-            $imp->setCols(1);
-            $imp->setSetup(1);
-
-			foreach my $f (@{ $imp->{layout} }) {
-				# Count the net press sheets per form.
-				map  { $_->{sig_slots} = 1  } @{$f};
-
-			}
-
-
-            return $imp;
-        }
+      foreach my $f (@{ $imp->{layout} }) {
+        # Count the net press sheets per form.
+        map  { $_->{sig_slots} = 1  } @{$f};
+      }
+      return $imp;
     }
-    elsif ($setup > $desired_signature_size) {
+  } elsif ($setup > $desired_signature_size) {
 
-        # Now figure out how to cut up the imposition
-        my ($rows, $cols);
-        my $imp_rows = $imp->{rows};
-        my $imp_cols = $imp->{cols};
-print STDERR "CONVERT A ROW: $imp_rows COL: $imp_cols ROTATE: $imp->{'rotate_sheet'} , $imp->{run_style}  \n";
+    # Now figure out how to cut up the imposition
+    my ($rows, $cols);
+    my $imp_rows = $imp->{rows};
+    my $imp_cols = $imp->{cols};
+    print STDERR "CONVERT A ROW: $imp_rows COL: $imp_cols ROTATE: $imp->{'rotate_sheet'} , $imp->{run_style}  \n" if DEBUG;
 
-		if ( $imp->{run_style} eq  'WT' ) {   
-			$imp_cols = $imp_cols / 2;
-		}
-
-print STDERR "CONVERT A1 ROW: $imp_rows COL: $imp_cols ROTATE: $imp->{'RotateSheet'}, \n";
-
-        if ($imp_rows >= $desired_signature_size) {
-            $rows = int($imp_rows / $desired_signature_size);
-            $cols = $imp_cols;
-			print STDERR "CONVER B Rows: $rows COLS: $cols \n";
-        }
-        else {
-		print STDERR "CONVER C \n";
-            $rows = 1;
-            my $temp = $desired_signature_size / $imp_rows if $imp_rows;
-            $temp = int($temp) == $temp ? $temp : $temp + 1;
-            if ($imp_cols > $temp) {
-                $cols = int($imp_cols / $temp);
-            }
-            else {
-                $cols = 1;
-            }
-		print STDERR "CONVER C ROWS: $rows COLS: $cols TMEP: $temp \n";
-
-        }
-
-        if ($rows * $cols * $desired_signature_size != $setup) {
-            my $row_check = $rows;
-            my $col_check = $cols;
-
-            if ($imp_cols >= $desired_signature_size) {
-                $cols = int($imp_cols / $desired_signature_size);
-                $rows = $imp_rows;
-            }
-            else {
-                $cols = 1;
-                my $temp = $desired_signature_size / $imp_cols if $imp_cols;
-                $temp = int($temp) == $temp ? $temp : $temp + 1;
-                if ($imp_rows > $temp) {
-                    $rows = int($imp_rows / ($temp));
-                }
-                else {
-                    $rows = 1;
-                }
-            }
-            if ($row_check * $col_check > $rows * $cols) {
-                $rows = $row_check;
-                $cols = $col_check;
-            }
-        }
-
-		print STDERR "CONVER DONE ROWS: $rows COLS: $cols SETUP $ \n";
-		if ( $imp->{run_style} eq  'WT' ) {   
-			$cols = $cols * 2;
-		}
-
-        $imp->setRows($rows);
-        $imp->setCols($cols);
-        $imp->setSetup($rows * $cols);
-        if ((    $imp->{'RotateSheet'}
-             and $imp->{'GrainDirection'} eq 'width')
-            or (    $imp->{'RotateSheet'} == 0
-                and $imp->{'GrainDirection'} eq 'height')
-
-          )
-        {
-            $imp->setImageWidth($imp->{image_width} / $imp->{cols});
-            $imp->setImageHeight($imp->{image_height} / $imp->{rows});
-        }
-        else {
-            $imp->setImageWidth($imp->{image_width} / $imp->{rows});
-            $imp->setImageHeight($imp->{image_height} / $imp->{cols});
-
-        }
-
-		#Update this latere, change 1 to sig setup rows * cols
-		#			foreach my $f (@{ $imp->{layout} }) {
-		##		# Count the net press sheets per form.
-		#		map  { $_->{slots} = 1  } @{$f};
-		#
-		#	}
-		
-		my $sig_size = $rows * $cols;
-		print STDERR "CONVER DONE2 ROWS: $rows COLS: $cols SETUP $ \n";
-		map {
-			foreach my $l (@{$_}) {
-				print STDERR "HAVE L VALUE: $l->{slots} \n";
-				if ( $l->{slots} >= $desired_signature_size ) {
-				#if ( $l->{slots} >= ($desired_signature_size * $sig_size) ) {
-					print STDERR "HAVE VALID SLOTS: $l->{slots} SIG: $sig_size DSS: $desired_signature_size \n";	
-				} else {
-					print STDERR "INVALID SLOTS: $l->{slots} SIG: $sig_size DSS: $desired_signature_size \n";	
-					return {};
-				}	
-			}
-		} @{$imp->{layout}};
-
-       return $imp;
+    if ( $imp->{run_style} eq  'WT' ) {
+      $imp_cols = $imp_cols / 2;
     }
 
-    return ();
+    print STDERR "CONVERT A1 ROW: $imp_rows COL: $imp_cols ROTATE: $imp->{'RotateSheet'}, \n" if DEBUG;
+
+    if ($imp_rows >= $desired_signature_size) {
+      $rows = int($imp_rows / $desired_signature_size);
+      $cols = $imp_cols;
+      print STDERR "CONVER B Rows: $rows COLS: $cols \n" if DEBUG;
+    } else {
+      print STDERR "CONVER C \n" if DEBUG;
+      $rows = 1;
+      my $temp = $desired_signature_size / $imp_rows if $imp_rows;
+      $temp = int($temp) == $temp ? $temp : $temp + 1;
+      if ($imp_cols > $temp) {
+        $cols = int($imp_cols / $temp);
+      } else {
+        $cols = 1;
+      }
+      print STDERR "CONVER C ROWS: $rows COLS: $cols TMEP: $temp \n" if DEBUG;
+
+    }
+
+    if ($rows * $cols * $desired_signature_size != $setup) {
+      my $row_check = $rows;
+      my $col_check = $cols;
+
+      if ($imp_cols >= $desired_signature_size) {
+        $cols = int($imp_cols / $desired_signature_size);
+        $rows = $imp_rows;
+      }
+      else {
+        $cols = 1;
+        my $temp = $desired_signature_size / $imp_cols if $imp_cols;
+        $temp = int($temp) == $temp ? $temp : $temp + 1;
+        if ($imp_rows > $temp) {
+          $rows = int($imp_rows / ($temp));
+        }
+        else {
+          $rows = 1;
+        }
+      }
+      if ($row_check * $col_check > $rows * $cols) {
+        $rows = $row_check;
+        $cols = $col_check;
+      }
+    }
+
+    print STDERR "CONVER DONE ROWS: $rows COLS: $cols SETUP $ \n" if DEBUG;
+    if ( $imp->{run_style} eq  'WT' ) {
+      $cols = $cols * 2;
+    }
+
+    $imp->setRows($rows);
+    $imp->setCols($cols);
+    $imp->setSetup($rows * $cols);
+    if ((    $imp->{'RotateSheet'}
+          and $imp->{'GrainDirection'} eq 'width')
+        or (    $imp->{'RotateSheet'} == 0
+          and $imp->{'GrainDirection'} eq 'height')
+
+    )
+    {
+      $imp->setImageWidth($imp->{image_width} / $imp->{cols});
+      $imp->setImageHeight($imp->{image_height} / $imp->{rows});
+    }
+    else {
+      $imp->setImageWidth($imp->{image_width} / $imp->{rows});
+      $imp->setImageHeight($imp->{image_height} / $imp->{cols});
+
+    }
+
+    #Update this latere, change 1 to sig setup rows * cols
+    #			foreach my $f (@{ $imp->{layout} }) {
+    ##		# Count the net press sheets per form.
+    #		map  { $_->{slots} = 1  } @{$f};
+    #
+    #	}
+
+    my $sig_size = $rows * $cols;
+    print STDERR "CONVER DONE2 ROWS: $rows COLS: $cols SETUP $ \n" if DEBUG;
+    map {
+      foreach my $l (@{$_}) {
+        print STDERR "HAVE L VALUE: $l->{slots} \n";
+        if ( $l->{slots} >= $desired_signature_size ) {
+          #if ( $l->{slots} >= ($desired_signature_size * $sig_size) ) {
+          print STDERR "HAVE VALID SLOTS: $l->{slots} SIG SIZE: $sig_size DSS: $desired_signature_size \n" if DEBUG;
+        } else {
+          print STDERR "INVALID SLOTS: $l->{slots} SIG SIZE: $sig_size DSS: $desired_signature_size \n" if DEBUG;
+          return {};
+        }
+      }
+    } @{$imp->{layout}};
+
+    return $imp;
+  }
+
+  return ();
 }
 
 
@@ -331,7 +322,7 @@ sub descrease_imposition { # [sic]
     # When refactoring this please change to correct spelling of 'decrease'.
 
     my ($imposition) = @_;
-    
+
     if ($$imposition{'Rows'} > $$imposition{'Cols'}) {
         $$imposition{'Rows'} -= 1;
     }
@@ -530,7 +521,7 @@ sub get_lf_sheet_impositions {
 # Given an imposition setup (n slots on a press sheet) and a list of versions
 # (labels => percentages) return a set of possible impositions to produce the
 # versions. Follow through for exact methods of generating the set.
-memoize('version_layouts', 
+memoize('version_layouts',
    # Version labels and order doesn't effect the end result.
    NORMALIZER => sub {my ($s,$v)=@_; join ',', $s, sort {$a<=>$b} values %$v},
    LIST_CACHE   => 'MEMORY',
@@ -546,11 +537,11 @@ sub version_layouts {
     # way (only one plate change, 0 waste for 2A2B, 2C1D1A layout).
     my @partitions = partitions(scalar keys %$versions);
 
-	#We now alllot multipage projects to have multiple verions, however 
+	#We now alllot multipage projects to have multiple verions, however
 	#the current restriction is 1 Verions per Form.
 	# X Versions = X Froms regardless of layout.
-	print STDERR "START HAVE PARITIONS SLOTS: $slots ", Dumper(\@partitions, $multipage);
-	
+	print STDERR "START HAVE PARITIONS SLOTS: $slots ", Dumper(\@partitions, $multipage) if DEBUG;
+
 	#***************************************************
 	#disble this filter for now. filtering done down stream in convert to signatrue function.
 	#***************************************************
@@ -584,20 +575,20 @@ sub version_layouts {
     # in an easier fashion.
     my $i = 0;
     my @nversions = map  { $i++; { n         => $i,
-                                   label     => $_, 
+                                   label     => $_,
                                    requested => $versions->{$_}, }}
                     sort { $versions->{$a} <=> $versions->{$b}    }
                          keys %$versions;
     undef $i;
 
-	print STDERR "HAVR PART  NVER" , Dumper(\@nversions);
+	print STDERR "HAVR PART  NVER" , Dumper(\@nversions) if DEBUG;
 
     # It's important to note that the partitions are processed in ascending
     # order of plate changes.
     my (%result, $max_waste);
     foreach my $set (@partitions) {
 
-		print STDERR "HAVE SET CHECK: ",  Dumper($set);
+		print STDERR "HAVE SET CHECK: ",  Dumper($set) if DEBUG;
         my @remaining = @nversions;
 
         # Choose which n versions will go on the current sheet (n is a single
@@ -622,10 +613,10 @@ sub version_layouts {
 		}
 
         # Note: Run overs are variable based on each form's run length, so
-        # wastage is not the only factor. However it's felt 
+        # wastage is not the only factor. However it's felt
     }
 
-	print STDERR "HAVR PART " , Dumper(\%result);
+	print STDERR "HAVR PART " , Dumper(\%result) if DEBUG;
 
     return [values %result];
 }
@@ -636,7 +627,7 @@ sub version_layouts {
 memoize('partitions');
 sub partitions {
     my $n = shift;
-   
+
     return []  if $n == 0;
     return [1] if $n == 1;
 
@@ -678,7 +669,7 @@ sub get_matching_versions {
     my ($n, @versions) = @_;
 
 
-	print STDERR "\n\n*************** START GET MATCH ***************** ", Dumper($n, @versions);
+	print STDERR "\n\n*************** START GET MATCH ***************** ", Dumper($n, @versions) if DEBUG;
 
     # The simple case of we only need one or we need them all. We can do the
     # first because partitions are always in descending order.
@@ -686,7 +677,7 @@ sub get_matching_versions {
     return \@versions                     if $n >= @versions;
 
     # We'll do a linear scan (which we can do since they're sorted) over the
-    # requested percentages and choose the n closest together. 
+    # requested percentages and choose the n closest together.
     my @percentages = map { $_->{requested} } @versions;
 
     my ($start, $min);
@@ -694,8 +685,8 @@ sub get_matching_versions {
 
         my $stddev = stddev([ @percentages[$i..$i + $n-1] ]);
 
-		print STDERR "\n Min: $min START: $start FOR LOOP 0 to $#percentages - $n   I: $i $stddev $percentages[$i]";
-        
+		print STDERR "\n Min: $min START: $start FOR LOOP 0 to $#percentages - $n   I: $i $stddev $percentages[$i]" if DEBUG;
+
         if (not defined $min or $stddev < $min) {
             $min   = $stddev;
             $start = $i;
@@ -703,7 +694,7 @@ sub get_matching_versions {
     }
     my @selected = splice @versions, $start, $n;
 
-	print STDERR "\nHAVE MATCH: $min, $start ", Dumper(\@selected);
+	print STDERR "\nHAVE MATCH: $min, $start ", Dumper(\@selected) if DEBUG;
 
     return \@selected, @versions;
 }
@@ -775,12 +766,12 @@ sub match_versions {
 sub stddev {
     my $array = shift;
 
-	print STDERR "\nMAKE STD DEV" ,Dumper($array);
-    
+	print STDERR "\nMAKE STD DEV" ,Dumper($array) if DEBUG;
+
     my $elems  = scalar @$array;
     my $sum    = 0;
     my $sum_sq = 0;
-    
+
     for (@$array) {
         $sum    += $_;
         $sum_sq += ($_ **2);
