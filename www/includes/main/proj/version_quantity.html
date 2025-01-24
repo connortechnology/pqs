@@ -1,7 +1,5 @@
 <fieldset>
-	<legend>
-		Multi-Version
-	</legend>
+	<legend> Multi-Version </legend>
 
 	<p class="none">&nbsp;</p>
 
@@ -30,7 +28,7 @@
 				<?loop versions?>
 				<tr>
 					<td><input name="mv_name" value="<?name?>" type="text" /></td>
-					<td><input name="mv_qty" value="<?q1?>" type="text" class="numeric" oninput="update_version_quantity(this);" /></td>
+					<td><input name="mv_qty" value="<?q1?>" type="text" class="numeric" on_input_this="update_version_quantity" /></td>
 					<td><?q2?></td>
 					<td><?q3?></td>
 					<td class="percent"><?percent?></td>
