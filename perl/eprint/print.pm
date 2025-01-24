@@ -102,8 +102,7 @@ sub view_services {
 
     my @dprice = project_price($log, $dbh, $pid);
     my @sprice = project_price($log, $dbh, $sfpid) ;
-    if  (  $sprice[0] < $dprice[0] && $status eq 'Unordered'
-    ) {
+    if ($sprice[0] < $dprice[0] && $status eq 'Unordered') {
       $pid = $sfpid 
     }
     print STDERR "PRICE COMP, $dprice[0], $sprice[0], $pid \n";
@@ -573,11 +572,10 @@ sub display_project {
             &{ $func }($service); 
         }
 		
-		if ( $service->{custom_sort} ) {
+        #if ( $service->{custom_sort} ) {
 			#$cat = $category{Custom};
 			#$service->{category} = 'Custom';
-
-		}
+      #}
 
         # SERVICE TYPE CATEGORY
         #
@@ -587,10 +585,8 @@ sub display_project {
         
         my $cat = $category{ $service->{category} };
 
-        
         $cat->{services} = [] unless exists $cat->{services};
 
-        
         # PRICING
         #
         # Retrieve the pricing for this service.
@@ -622,7 +618,7 @@ sub display_project {
             # If there isn't a quantity for this estimate or the project
             # service was removed from pricing (ie. customer supplied),
             # there's no need for a price.
-            if (   $service->{removed} 
+            if ($service->{removed} 
                 or $qty[$i] <= 0 
                 or $prices{"txtPrice$i"} =~ m#n/a#i)
             {
@@ -654,9 +650,9 @@ sub display_project {
 
                 $service->{"price$i"} = ''; # Blank the service price display.
             }
-			if ( $rfq_only ) {
-				$service->{status} = 'RFQ Required';
-			}
+            if ( $rfq_only ) {
+              $service->{status} = 'RFQ Required';
+            }
           }
     
 
@@ -682,46 +678,58 @@ sub display_project {
             delete $service->{url};
         }
         elsif ($flags{can_edit} && $service->{status} ne 'dependent' && !$disabled) {
-            my @controls;
+          my @controls;
 
-            my $name = lc $service->{ref};
-            push @controls, { 
-                name => 'Reset', 
-                url  => "/main/proj/dispatch.html?action=edit_line_item;pid=$pid;sid=$service->{id};reset=1;edit_service=1;"
-            } if $service->{price_override};
+          my $name = lc $service->{ref};
+          push @controls, { 
+            name => 'Reset', 
+            url  => "/main/proj/dispatch.html?action=edit_line_item;pid=$pid;sid=$service->{id};reset=1;edit_service=1;"
+          } if $service->{price_override};
 
 
-            # Users can edit the service type if it has an edit page.
-            push @controls, { 
-                name => 'Edit', 
-                url  => "/service/$name?pid=$pid;sid=$service->{id}"
-            } if $service->{url};
+          # Users can edit the service type if it has an edit page.
+          push @controls, { 
+            name => 'Edit', 
+            url  => "/service/$name?pid=$pid;sid=$service->{id}"
+          } if $service->{url};
 
-            # If the service isn't already removed (supplied) determine if
-            # it can be removed (need level under NEEDED) or supplied.
-            if (not $service->{removed} and $service->{ref} ne 'Printing') {
-                my $name = $service->{need_level} == NEEDED ? 'Supply' 
-                                                            : 'Remove';
+          # If the service isn't already removed (supplied) determine if
+          # it can be removed (need level under NEEDED) or supplied.
+          if ($service->{ref} ne 'Printing') {
+            if (not $service->{removed}) {
+              if ($service->{need_level} == NEEDED) {
                 push @controls, { 
-                    name => $name,
-                    url => "/main/proj/dispatch.html?action=remove;pid=$pid;sid=$service->{id}"
+                  name => 'Supply',
+                  url => "/main/proj/dispatch.html?action=supply;pid=$pid;sid=$service->{id}"
                 };
-			} else {
+              } else {
                 push @controls, { 
-                    name => 'Price',
-                    url => "/main/proj/dispatch.html?action=remove;pid=$pid;sid=$service->{id}"
-                } unless $service->{ref} eq 'Printing';
+                  name => 'Remove',
+                  url => "/main/proj/dispatch.html?action=remove;pid=$pid;sid=$service->{id}"
+                };
+              }
+            } else {
+              push @controls, { 
+                name => 'Price',
+                url => "/main/proj/dispatch.html?action=remove;pid=$pid;sid=$service->{id}"
+              };
             }
-
+          } else {
+            #if ($service->{ref} eq 'Printing') {
+            push @controls, { 
+              name => 'Remove',
+              url => "/main/proj/dispatch.html?action=remove;pid=$pid;sid=$service->{id}"
+            };
             # Add Pricing Breakdown linke for employees/admins.
-            if ( $variable->{user_type} =~ /^[AE]$/ && $service->{ref} eq 'Printing') {
-                push @controls, { 
-                    name => '+',
-                    url => "/main/proj/proj_printer_summ_price_breakdown.html?ProjectIndex=$pid;ServiceIndex=$service->{id}#chosen"
-                };
+            if ( $variable->{user_type} =~ /^[AE]$/ ) {
+              push @controls, { 
+                name => '+',
+                url => "/main/proj/proj_printer_summ_price_breakdown.html?ProjectIndex=$pid;ServiceIndex=$service->{id}#chosen"
+              };
             }
+          } # end if printing
 
-            $service->{controls} = \@controls;
+          $service->{controls} = \@controls;
         }
         # Simple customers don't get any ability to control services.
         else { delete $service->{url}; }
