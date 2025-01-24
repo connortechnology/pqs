@@ -64,6 +64,14 @@ sub set {
     }
 }
 
+sub clone {
+  my $self = shift;
+  my %copy = %{$self};
+  my $copy = \%copy;
+  bless $copy, ref $self;
+  return $copy;
+}
+
 sub DESTROY { };
 
 sub AUTOLOAD {
