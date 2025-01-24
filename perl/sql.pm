@@ -132,6 +132,7 @@ sub insert {
     # biscuit.
     for my $k (keys %data) { $data{$k} = undef if $data{$k} eq 'NULL'; }
 
+    print STDERR "$sql ".join(',', keys %data).'='.join(',',values %data)."\n" if DEBUG;
     my $sth = $dbh->prepare($sql);
        $sth->execute( values %data );
 
