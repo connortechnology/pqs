@@ -4,7 +4,7 @@
 <?endif not:flags.can_edit ?>
 <!--	<style type="text/css">.control { visibility: hidden; }</style> -->
 
-<script src="/javascripts/line_item_validation.js" type="text/javascript"></script>
+<script src="/javascripts/line_item_validation.js"></script>
 <script>
 
 function allowDrop(ev) {
@@ -52,7 +52,7 @@ var end;
 			<th style="text-align: right; padding-right:20px !important; width:120px !important;"><?qty.1?></th>
 			<th style="text-align: right;">Status</th>
 <!--			<th class="control print-right-border" style="text-align: right; border-right-width: 1px;">Changes</th> -->
-			<th class="control print-right-border" style="text-align: center; border-right-width: 1px;">Info &nbsp;&nbsp;   Pricing</th>
+			<th class="control print-right-border" style="text-align: center; border-right-width: 1px;">Info &nbsp;&nbsp;Pricing</th>
 	  </tr>
 
 
@@ -65,7 +65,8 @@ var end;
 						<a href="/service/<?url?>?pid=<?pid?>;sid=<?id?>"><?name?></a> 
 					<?else ($$variable{url} and $$variable{flags}{can_edit}) ?>
 						<?name?> 		
-					<?endif ($$variable{url} and $$variable{flags}{can_edit}) ?>				</td>
+					<?endif ($$variable{url} and $$variable{flags}{can_edit}) ?>				
+        </td>
 
 				<td style="padding-right:20px !important; "><?money:sub_total1?></td>
 				
@@ -74,7 +75,7 @@ var end;
 
 			<!-- Services in <?category?>. -->				
 			<?loop services?>
-			<form action="/main/proj/dispatch.html" name="fs-<?id?>" id="fs-<?id?>" />
+			<form action="/main/proj/dispatch.html" name="fs-<?id?>" id="fs-<?id?>">
 				<tr class="service <?ref?> highlight 
 					<?if price_override?>
 						price_over
@@ -120,8 +121,8 @@ var end;
 						<?endif ($$variable{url} and $$variable{flags}{can_edit}) ?>
 						<?if ($$variable{removed}) ?>
 							<span class="supplied">(Customer Supplied)</span>
-						<?endif ($$variable{removed}) ?>					</td>
-
+						<?endif ($$variable{removed}) ?>
+          </td>
 					<td 
 						<?if ( $variable->{edit} != $variable->{id} ) ?>
 						<?if is_staff?>
@@ -142,7 +143,7 @@ var end;
 							Call for Quote
 						<?else ($$variable{status} eq 'error') ?>
 							<?ucfirst:status?>
-						<?endif ($$variable{status} eq 'error') ?>					</td>
+						<?endif ($$variable{status} eq 'error') ?></td>
 
 					<td class="control" style="text-align: center;">
 						<?if flags.can_edit ?>
@@ -210,7 +211,7 @@ var end;
 	
 		<!-- MATERIALS -->
 		<tr class="title">
-			<th colspan="6" style="border-width: 1px;">Materials</th>
+			<th colspan="4" style="border-width: 1px;">Materials</th>
 		</tr>
 
 		<? if ( $$variable{'ProjectTypeID'} ne 'ScreenItem' and not $$variable{checkout} ) ?>
@@ -220,6 +221,8 @@ var end;
 				<tr class="total">
 					<th>Stock</th>
 					<td style="padding-right:20px !important; "><?money:stock_price1?></td>
+          <td></td>
+          <td></td>
 				</tr>
 			<?endif ($$variable{flags}{stock_separate} && ! $$variable{flags}{hide_project_total}) ?>
 
@@ -235,8 +238,10 @@ var end;
             <?if($$variable{id} and $$variable{user_type} eq 'A')?>
             </a>
             <?endif($$variable{id} and $$variable{user_type} eq 'A')?>
-					<?loop qty?>
-						<td style="text-align: right; padding-right:20px !important; "><?if n?><?n?><?endif n?></td>
+					<?loop qty?><?if n?>
+						<td style="text-align: right; padding-right:20px !important; "><?n?>
+            </td>
+              <?endif n?>
 					<?endloop qty?> 
 				</tr>
 			<?endloop PaperInfo?>
