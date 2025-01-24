@@ -6,6 +6,7 @@ use ssi ();
 
 require misc;
 require eprint::obj_customer;
+require openprint;
 
 use base qw(Exporter);
 our @EXPORT_OK = qw(get_pricelist_id get_currency get_discount);
@@ -65,6 +66,8 @@ sub get_currency {
 # Get the combined customer's and their pricelist's discount.
 sub get_discount {
     my ($dbh, $cid) = @_;
+
+    return $openprint::Company{discount}+$openprint::Pricelist{discount};
 
     my $sth = $dbh->prepare_cached(q{
         SELECT p.discount + c.dblpricingpercent AS discount
