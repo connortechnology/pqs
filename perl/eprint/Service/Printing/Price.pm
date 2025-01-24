@@ -5,6 +5,7 @@ use utf8;
 no warnings qw(uninitialized numeric);
 
 use constant DEBUG=>0;
+my $cutters = 0;
 
 use Data::Dumper;
 use Compress::LZF         qw(:compress :freeze);
@@ -2821,9 +2822,9 @@ sub get_cutdown_cost {
   my $total_cuts =
   ceil($old_width / $new_width) + ceil($old_height / $new_height);
 
-  my $cutters = $dbh->selectcol_arrayref(q{
+  $cutters = $dbh->selectcol_arrayref(q{
     SELECT strid FROM tbl_equipment WHERE strtype = 'cutter'
-    });
+    }) if !$cutters;
 
   my $bestprice = 0;
   foreach my $current_equipment (@$cutters) {
@@ -2932,15 +2933,14 @@ sub get_imposition_charge {
         $imposition_charge += $trapping_make_ready
         if $trapping_make_ready > 0;
 
-        print STDERR "Add Trapping Charge:  $trapping_charge MR: trapping_make_ready IMP CHARGE TOTAl: $imposition_charge   \n";
+        print STDERR "Add Trapping Charge:  $trapping_charge MR: trapping_make_ready IMP CHARGE TOTAl: $imposition_charge   \n" if DEBUG;
       }
 
 
-      # Shove in group factor here so that we can use it later for price
-      # correction
+      # Shove in group factor here so that we can use it later for price # correction
       my $group_factor =
       ($per_page_charge + $base_trapping) * $$imp{'spreads'} * 4 * $$imp{'setup'};    # includes imposition AND trapping
-      print STDERR "GROUP FACTOR : $group_factor PPC: $per_page_charge BASE TRAP:  $base_trapping \n";
+      print STDERR "GROUP FACTOR : $group_factor PPC: $per_page_charge BASE TRAP:  $base_trapping \n" if DEBUG;
 
       # Wipe out any previous group factors for this signature
       $dbh->do(q{
