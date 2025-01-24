@@ -18,21 +18,19 @@ use Data::Dumper;
 # is a JSON serialised hash keyed to the attribute, each attribute having a
 # list of [label, value] pairs.
 sub substrate_lookup : JSRS {
-    my ($r, $log, $dbh, $variable, $pid, $sid, $template, $type, $press, @attrs) = @_;
+  my ($r, $log, $dbh, $variable, $pid, $sid, $template, $type, $press, @attrs) = @_;
 
-#print STDERR "GO SUB LOOKUP START PID: $pid \n", Dumper(@_);
-	$variable->{is_cover} = $attrs[4];
+  #print STDERR "GO SUB LOOKUP START PID: $pid \n", Dumper(@_);
+  $variable->{is_cover} = $attrs[4];
 
-    my %attribute;
-    @attribute{ qw(name finish colour weight) } 
-        = map { defined $_ && $_ ne '' ? $_ : undef } @attrs;
-
+  my %attribute;
+  @attribute{ qw(name finish colour weight) } 
+  = map { defined $_ && $_ ne '' ? $_ : undef } @attrs;
 
 	my $prod = '';
 
 	if ( $pid ) {
-		# For regular projects check to see if we are flagged
-		# as a product.
+		# For regular projects check to see if we are flagged  as a product.
  		$prod = $dbh->selectrow_array(q{SELECT prod_id FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
     $prod //= '';
 	} elsif ($sid) {
@@ -41,7 +39,7 @@ sub substrate_lookup : JSRS {
 		$prod = $sid;
 	}
 
-print STDERR "****** IS PROD: $prod PRODUCT Specific Reccomendataions have been disabled ********** \n";
+print STDERR "****** IS PROD: $prod PRODUCT Specific Reccomendations have been disabled ********** \n";
 
 #	my $query = $prod 
 #	   ? substrate_attributes_prod($r, $log, $dbh, $variable, $prod, %attribute )
@@ -56,9 +54,7 @@ print STDERR "****** IS PROD: $prod PRODUCT Specific Reccomendataions have been 
     # If all the known substrate attributes are defined, check that the
     # substrate exists (pre-existing projects, template changes, etc.) If it
     # doesn't we'll reset the substrate selection.
-    if (   keys %attribute == grep defined, values %attribute
-        && ! scalar @{ $query->('name') } ) 
-    {
+    if (   keys %attribute == grep defined, values %attribute && ! scalar @{ $query->('name') } ) {
         $attribute{$_} = undef for keys %attribute 
     }
 
