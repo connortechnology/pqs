@@ -50,8 +50,6 @@ sub store {
 
     $specs->{s0_black_mv} = 'on' if ref $specs->{s0_black_mv} eq 'ARRAY';
     $specs->{s1_black_mv} = 'on' if ref $specs->{s1_black_mv} eq 'ARRAY';
-
-
   }
 
   return $specs;
@@ -76,8 +74,7 @@ sub restore {
 sub necessary {
   my ($log, $dbh, $pid, $service_type) = @_;
 
-  return is_multipage($log, $dbh, $pid) 
-  && get_type($log, $dbh, $pid) ne 'ScreenItem';
+  return is_multipage($log, $dbh, $pid) && get_type($log, $dbh, $pid) ne 'ScreenItem';
 }
 
 sub display {
@@ -85,8 +82,7 @@ sub display {
 
   my %mv;
   # Get info to recreate version table when editting the service.
-  @mv{qw(versions remaining)} = multiversion($log, $dbh, $pid, $specs)
-  if $specs->{mv_name} && $specs->{mv_qty};
+  @mv{qw(versions remaining)} = multiversion($log, $dbh, $pid, $specs) if $specs->{mv_name} && $specs->{mv_qty};
   $mv{next_version} = $mv{versions} ? scalar @{$mv{versions}} + 1 : 1;
   map { $mv{$_} = $specs->{$_} if $_ =~ /mv_num_col/; } keys %{$specs};
 
@@ -103,25 +99,22 @@ sub display {
     ORDER BY lngsort, name
     }, { Slice => {} });
 
-  my $noprintcovers = $dbh->selectall_arrayref("select lngindex, strname from tbl_materials where lngtype = 19", { Slice => {} });
+  my $noprintcovers = $dbh->selectall_arrayref("SELECT lngindex, strname FROM tbl_materials WHERE lngtype = 19", { Slice => {} });
 
   # Corner stitching is only available on digital presses.
-  $bindery = [ grep { $_->{id} ne 'CornerStitching' } @$bindery ]
-  unless get_press_type($log, $dbh, $pid) eq 'digital';
+  $bindery = [ grep { $_->{id} ne 'CornerStitching' } @$bindery ] unless get_press_type($log, $dbh, $pid) eq 'digital';
 
   my $project_type = get_type($log, $dbh, $pid);
 
   # Get the available templates for the project type.
-  my $templates 
-  = template_sizes($log, $dbh, $project_type, $bindery);
+  my $templates = template_sizes($log, $dbh, $project_type, $bindery);
 
   my @qty = get_quantities($log, $dbh, $pid);
 
-  my $page =  { templates => $templates, bindery => $bindery, no_print_covers => $noprintcovers,  txtQuantity1 => $qty[0] };
+  my $page = { templates => $templates, bindery => $bindery, no_print_covers => $noprintcovers,  txtQuantity1 => $qty[0] };
   map { $page->{$_} = $mv{$_} } keys %mv;
 
   return $page;
-
 }
 
 sub mp_versions {
@@ -173,11 +166,9 @@ sub calc {
   # TODO Spiral projects actually have two two page cover spreads.
 
   # Calculate the number of spreads based on the bindery type chosen.
-  my $spreads 
-  = $specs->{rdbGateFold} eq 'Yes' ? $specs->{txtTotalSpreadQuantity}
-  :                                  $pages / $pages_per_spread;
+  my $spreads = $specs->{rdbGateFold} eq 'Yes' ? $specs->{txtTotalSpreadQuantity} : $pages / $pages_per_spread;
 
-  return 'uncalculated' unless $spreads && $spreads > 0;
+  return 'uncalculated' unless $spreads && ($spreads > 0);
 
   my @qty = get_quantities($log, $dbh, $pid);
   my $counter = 1;
@@ -204,7 +195,6 @@ sub calc {
   my $gatefold = $specs->{rdbGateFold} eq 'Yes' 
   ? $specs->{txtGateFoldedSpreadQuantity} || $tabs || 0 : 0;
   my $interior = $spreads - $gatefold;
-
 
   # return 'uncalculated' unless $interior && $interior > 0;
 
@@ -235,11 +225,9 @@ sub action {
   my $prev = previous_specs($log, $dbh, $pid);
   print STDERR 'prev'.Data::Dumper::Dumper($prev);
 
-  # TODO We should be able to only remove all printing services and this
-  # will "just work".
-  # ICON: No it won't.
+  # TODO We should be able to only remove all printing services and this will "just work".
   for my $service (qw(Printing Folding Proofs Film)) {
-  delete_service($log, $dbh, $pid, $_) for check_for_service($log, $dbh, $pid, $service);
+    delete_service($log, $dbh, $pid, $_) for check_for_service($log, $dbh, $pid, $service);
   }
 
   # Get the stanadard project type defaults for insertion into
@@ -258,48 +246,47 @@ sub action {
   if ($specs->{ COVER() }) {
     print STDERR "Have cover?".COVER()."\n";
 
-      my $double = grep { $bind_type eq $_ } qw(SaddleStitching PerfectBinding);
-      print STDERR "IS SINGLE ********* $double - $bind_type ****\n";
+    my $double = grep { $bind_type eq $_ } qw(SaddleStitching PerfectBinding);
+    print STDERR "IS SINGLE ********* $double - $bind_type ****\n";
 
-      my $cover = insert_service($log, $dbh, $pid, 'Printing', {
-          # Perfect binding requires the cover.
-          need_level     => $bind_type eq 'PerfectBinding' ? NEEDED 
-          : NOT_NEEDED,
-          user_requested => 1,
-        }, {
-          txtSignatureType         => COVER,
-          txtServiceDescription    => COVER,
-          txtSectionSpreadQuantity => $double ? 1 : 2,
-          txtSignatureSize         => $double ? 4 : 2,
+    my $cover = insert_service($log, $dbh, $pid, 'Printing', {
+        # Perfect binding requires the cover.
+        need_level     => $bind_type eq 'PerfectBinding' ? NEEDED 
+        : NOT_NEEDED,
+        user_requested => 1,
+      }, {
+        txtSignatureType         => COVER,
+        txtServiceDescription    => COVER,
+        txtSectionSpreadQuantity => $double ? 1 : 2,
+        txtSignatureSize         => $double ? 4 : 2,
 
-          # Currently we default to no fold as covers for perfect binding
-          # are folded on the perfect binder. However other incorrect saddle
-          # stitching style templates are still offered (See Bug 1746).
-          template => $bind_type =~ /stitching/i ? '4PageSignature'
-          : 'NoFold',
+        # Currently we default to no fold as covers for perfect binding
+        # are folded on the perfect binder. However other incorrect saddle
+        # stitching style templates are still offered (See Bug 1746).
+        template => ($bind_type =~ /stitching/i ? '4PageSignature' : 'NoFold'),
 
-          txtSpreadWidth  => $double ? $specs->{final_width} * 2 : $specs->{final_width},
-          txtSpreadHeight => $specs->{final_height},
-        });
-      insert_service_spec( $log, $dbh, $pid, $cover, SignatureIndex => $cover);
-      insert_service_specs($log, $dbh, $pid, $cover, %defaults);
+        txtSpreadWidth  => $double ? $specs->{final_width} * 2 : $specs->{final_width},
+        txtSpreadHeight => $specs->{final_height},
+      });
+    insert_service_spec( $log, $dbh, $pid, $cover, SignatureIndex => $cover);
+    insert_service_specs($log, $dbh, $pid, $cover, %defaults);
 
-      # TODO A perfect bound cover's size is dependent on the thickness of
-      # the book (spine size). Should we even insert it now?
+    # TODO A perfect bound cover's size is dependent on the thickness of
+    # the book (spine size). Should we even insert it now?
 
-      # TODO Spiral can have separate front and back covers, though we may
-      # want to print them together. In fact the back may just be cut and
-      # not printed on at all.
+    # TODO Spiral can have separate front and back covers, though we may
+    # want to print them together. In fact the back may just be cut and
+    # not printed on at all.
 
-
-      # Insert previous specs if we're redoing this book.
-      if (exists $prev->{COVER()}) {
-        while (my ($name, $value) = each %{ $prev->{COVER()} }) {
-          insert_service_spec(
-            $log, $dbh, $pid, $cover, $name => $value, undef, 1
-          );
-        }
+    # Insert previous specs if we're redoing this book.
+    if (exists $prev->{COVER()}) {
+      while (my ($name, $value) = each %{ $prev->{COVER()} }) {
+        print STDERR "$name => $value\n";
+        insert_service_spec(
+          $log, $dbh, $pid, $cover, $name => $value, undef, 1
+        );
       }
+    }
   } #end if different cover
 
   # Add a gate folded spread if any have been requested.
@@ -329,8 +316,10 @@ sub action {
 
   # We now allow GF only jobs.
   # Check to see if there are INTERIORS before adding.
-  return 1 if ! $specs->{ INTERIOR() };
-  print STDERR "Don't have interior because we removed them!".INTERIOR()."\n";
+  if (! $specs->{ INTERIOR() }) {
+    print STDERR "Don't have interior because we removed them!".INTERIOR()."\n";
+    return 1;
+  }
 
   # Create the first (of possibly many) signature for the interior.
   my $interior = insert_service($log, $dbh, $pid, 'Printing', {
@@ -343,6 +332,7 @@ sub action {
       txtSignatureSize          => (($bind_type eq 'LoopStitching' or $bind_type eq 'SaddleStitching') ? 4 : 2),
       VERSIONS		  =>  [mp_versions($specs)],
     });
+  print STDERR "Interior index $interior\n";
   insert_service_spec( $log, $dbh, $pid, $interior, SignatureIndex => $interior);
   insert_service_specs($log, $dbh, $pid, $interior, %defaults);
 
