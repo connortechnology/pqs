@@ -171,6 +171,7 @@ Service.prototype = {
         elem.each(function (e) {
           switch (e.type) {
             case "text":
+            case "number":
             case "textarea":
             case "hidden":
               if (typeof value == 'object') break;
