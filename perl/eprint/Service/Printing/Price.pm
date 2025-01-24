@@ -205,7 +205,7 @@ sub get_project_price {
   # heirarchy of object soon. (Service type info broken from project etc.)
   my $project = {
     id           => $pid,
-    type         => scalar( get_type($log, $dbh, $pid) ),
+    type         => scalar($type),
     is_multipage => is_multipage($log, $dbh, $pid),
     press_type   => $press_type,
 
@@ -213,8 +213,8 @@ sub get_project_price {
     image_height => $spread->{flat}{height}, # -|
     width        => $spread->{flat}{width},
     height       => $spread->{flat}{height},
-    minwidth         => scalar( get_minimum_width($log, $dbh, $pid) ),
-    minheight         => scalar( get_minimum_height($log, $dbh, $pid) ),
+    minwidth     => scalar( get_minimum_width($log, $dbh, $pid) ),
+    minheight    => scalar( get_minimum_height($log, $dbh, $pid) ),
 
     template     => $spread->{template},
 
@@ -261,7 +261,7 @@ sub get_project_price {
     $project->{signature} = {};
     @{ $project->{signature} }{@fields} = get_specifications($log, $dbh, $pid, $sid, @fields);
 
-    print STDERR "HAVE PROJECT: ", Dumper($project, $spread);
+    print STDERR "HAVE PROJECT: ", Dumper($project, $spread) if DEBUG;
     $project->{width}  = $spread->{SpreadWidth} if  $spread->{SpreadWidth};
     $project->{height} = $spread->{SpreadHeight} if $spread->{SpreadHeight};
 
@@ -440,18 +440,16 @@ sub get_project_price {
     } # end if
 
     my $setup           = $imp->getSetup;
-    #print STDERR "Setup $setup\n";
     my $run_style       = $imp->getStyle;
-    #print STDERR "runstyle $run_style\n";
     my $press           = $imp->getPress;
-    #print STDERR "press $press\n";
+    #print STDERR "press $press runstyle $run_style setup $setup\n";
 
     # If we're a multipage project, respect the spreads on form and forms
     # (signature groups) overrides.
     if ($project->{is_multipage}) {
       next if ! $imp->{spreads};
       if ($project->{override}{spreads} && ($imp->{spreads} != $project->{override}{spreads})) {
-        $openprint::log->debug("$$imp{spreads} != ".$project->{override}{spreads}) if $openprint::log;
+        $openprint::log->debug("spreads $$imp{spreads} != override ".$project->{override}{spreads}) if $openprint::log;
         next;
         #} else {
         #$openprint::log->debug("$$imp{spreads} == ".$project->{override}{spreads}) if $openprint::log;
@@ -459,7 +457,7 @@ sub get_project_price {
       $variable->{SignatureQuantity} = $project->{override}{forms} ? $project->{override}{forms} : int($spreads_remaining / $imp->{spreads});
     }
     if ($project->{override}{imposition} and ($setup != $project->{override}{imposition})) {
-      $openprint::log->debug("imposition $setup != ".$project->{override}{imposition}) if $openprint::log;
+      #$openprint::log->debug("imposition $setup != ".$project->{override}{imposition}) if $openprint::log;
       next;
     }
 
@@ -1003,8 +1001,16 @@ sub create_impositions {
     # For books with more than one spread in the signature, we need to
     # convert the raw impositions of the single spread dimesions into
     # images of multiple spreads.
-    @impositions = map { convert_to_signature($signature_size, $_, $project) } 
-    @impositions;
+    my @converted_impositions;
+    foreach my $sig_size (1 .. $signature_size) {
+      print STDERR "converting to $sig_size\n";
+      my @new_impositions = map { convert_to_signature($sig_size, $_->clone(), $project) } @impositions;
+      push @converted_impositions, @new_impositions;
+      foreach my $imp (@new_impositions) {
+        print STDERR "Imp setup:$$imp{setup} spreads:$$imp{spreads} style:$$imp{run_style}\n";
+      }
+    }
+    @impositions = @converted_impositions;
   }
 
   #print STDERR "HAVE IMPOS.TIONS BEFORE FILTER 99 " . scalar @impositions . "\n", Dumper(\@impositions);
@@ -1232,7 +1238,7 @@ sub calc_print_price {
     my $count = scalar(@{$l});
     $lay_count{$count} = 1;
     map {
-      print STDERR "LAYS: ", Dumper($_) if DEBUG;
+      print STDERR "LAYS: ". Dumper($_) if DEBUG;
       $vl{$_->{label}} = 1; 
     } @{$l};
   }
@@ -1265,7 +1271,7 @@ sub calc_print_price {
     ($run_style =~ /^W/) ? @{$project->{wx_press_units}}
     : map { @{$_->{colours}} } @{$spread->{side}};
 
-    print STDERR "versions USE STANDART MV Plate Change RUNS: $numRuns PC: $plate_changes FORMS: $forms LV $lay_versions \n";
+    print STDERR "versions USE STANDART MV Plate Change RUNS: $numRuns PC: $plate_changes FORMS: $forms LV $lay_versions \n" if DEBUG;
     #die(Dumper($imp));
 
     # Scale the version plates with the number of layouts, the static
@@ -1302,7 +1308,7 @@ sub calc_print_price {
   #print STDERR "PRESS SETUP TIME: $press Plate Changes: $plate_changes : VERSIONS: $mp_versions \n";
 
   my %colour_setup = 
-  press_setup_cost($log,            $dbh,         $jig_specifics,
+  press_setup_cost($log,            $dbh,         $project, $jig_specifics,
     $imageWidth,     $imageHeight, $variable,
     $paper_calliper, $press,       $used_plates,
     $plate_changes,  $sheet_area,  $plate_runs,
@@ -1342,7 +1348,7 @@ sub calc_print_price {
     ? int(($plate_impressions / $max_impressions) + 1)
     : int($plate_impressions / $max_impressions);
     %colour_setup =
-    press_setup_cost($log,            $dbh,         $jig_specifics,
+    press_setup_cost($log,            $dbh,         $project, $jig_specifics,
       $imageWidth,     $imageHeight, $variable,
       $paper_calliper, $press,       $used_plates,
       $plate_changes,  $sheet_area,  $plate_runs,
@@ -1536,9 +1542,9 @@ sub calc_print_price {
       $log, $dbh, $variable, $paper, $press,
       $price{'Buy Quantity'}
     );
-    $roll = $dbh->selectrow_array(q{
-      SELECT COUNT(*) > 0 FROM tbl_paper_roll WHERE lngindex = ?
-      }, undef, $id);
+    #$roll = $dbh->selectrow_array(q{
+    #SELECT COUNT(*) > 0 FROM tbl_paper_roll WHERE lngindex = ?
+    #}, undef, $id);
   } elsif ($paper->{custom}) {
     $paper_price = $paper->{Price};
     $$paper_price{buy_qty} = $price{'Buy Quantity'};
@@ -1607,15 +1613,15 @@ sub calc_print_price {
       my $cover_price = eprint::paper::get_price(
         $log, $dbh, $variable, $cover, $press, $price{'Buy Quantity'}
       );
-      print STDERR "OLD PAPER PRICE", Dumper($paper_price);
+      print STDERR "OLD PAPER PRICE", Dumper($paper_price) if DEBUG;
       $paper_price->{Price} = ( $paper_price->{Price} + $cover_price->{Price} ) / 2;
-      print STDERR "HAVE COVER SPECS", Dumper($cover, $cover_price, $paper_price);
+      print STDERR "HAVE COVER SPECS", Dumper($cover, $cover_price, $paper_price) if DEBUG;
     }
   }
 
   $price{'Paper Cost'} = $price{'Buy Quantity'} * $paper_price->{Cost};
 
-  $project_type = get_type($log, $dbh, $pid);
+  $project_type = $$project{type};
 
   if ($project_type eq 'ScreenItem') {
     # If we're printing on an item then we don't use stock.
@@ -2507,7 +2513,7 @@ sub calc_sheet_qty {
 
 
 sub press_setup_cost {
-  my ($log,              $dbh,        $jig_specifics,
+  my ($log,              $dbh,        $project, $jig_specifics,
     $width,            $height,     $variable,
     $paper_calliper,   $press,      $used_plates,
     $plate_change_qty, $sheet_area, $plate_runs,
@@ -2675,7 +2681,7 @@ sub press_setup_cost {
   else                     { $plate_total  = 0 unless $plate_price          } 
 
   my $envelope_setup = 0;
-  if (eprint::project::get_type($log, $dbh, $pid) eq 'Envelopes') {
+  if ($$project{type} eq 'Envelopes') {
     $envelope_setup =
     eprint::service::get_price($log, $dbh, $variable, 'EnvelopeSetup',
       undef, $press);
@@ -2697,7 +2703,7 @@ sub press_setup_cost {
 
       'Total Setup Cost'  => $total_setup + $plate_total,
     }
-  );
+  ) if DEBUG;
 
   return (
     'Envelope Setup'  => $envelope_setup,
@@ -2710,7 +2716,6 @@ sub press_setup_cost {
     'Film Cost'               => $film_cost,
     'Plate Cost'              => $plate_total,
     'Press Setup Cost'        => $total_setup,
-
     'Total Setup Cost'  => $total_setup + $plate_total,
   );
 }
@@ -2905,7 +2910,7 @@ sub get_imposition_charge {
         'ImpositionBook', $imageHeight * $imageWidth, $press);
 
       $imposition_charge += $per_page_charge * $$imp{spreads} * 4 * $$imp{setup};    #since we will have 4 pages per spread
-      print STDERR "PER PGE: $per_page_charge SPREADS: $$imp{'spreads'}  SETUP: $$imp{'setup'} WIDTH: $imageWidth x $imageHeight; TOTA: $imposition_charge \n", Dumper($imp);
+      print STDERR "PER PGE: $per_page_charge SPREADS: $$imp{'spreads'}  SETUP: $$imp{'setup'} WIDTH: $imageWidth x $imageHeight; TOTA: $imposition_charge \n", Dumper($imp) if DEBUG;
 
       my $base_trapping;
       if ((@$side_one_colours > 1) || (@$side_two_colours > 1)) {
