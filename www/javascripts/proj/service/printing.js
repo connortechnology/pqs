@@ -262,6 +262,12 @@ function mv_process (e) {
     for (var i = 0; i <= 1; i++) {
         var side = $('s' + i + '_process_plates');
         if (side) side.style.display = show ? '' : 'none';
+        var varnish = form.elements['s'+i+'_varnish_spot_mv'];
+        if (varnish) {
+          for (var j=0; j<varnish.length; j++) {
+            varnish[j].style.display = show ? '' : 'none';
+          }
+        }
     }
 
     var plates = [ $(this.name  + '_mv'),         // CMY
