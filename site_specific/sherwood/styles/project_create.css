@@ -737,3 +737,11 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+#imposition {
+  float: left;
+  width: 40px;
+}
+#txtSignatureSize,
+#used_spreads {
+  float: none;
+}
