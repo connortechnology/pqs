@@ -14,6 +14,8 @@ use eprint::Service::Printing::Display   qw(display template_sizes);
 use eprint::Service::Printing::Validate  qw(munge);
 use eprint::Service::Printing::Price     qw(calc count_completed_spreads signatures_of_type);
 
+require openprint;
+
 sub necessary {
     my ($log, $dbh, $pid, $service_type) = @_;
 
@@ -168,6 +170,7 @@ sub action {
 
     my $book        = check_for_service($log, $dbh, $pid, 'Book');
     my $spread_type = $specs->{txtSignatureType} // COVER;
+    $openprint::log->debug("Spread type in action: $spread_type");
 
     print STDERR "Invalid multipage project $pid book:$book spread type: $spread_type\n" unless $book && $spread_type;
 
@@ -222,6 +225,7 @@ sub action {
     # Compare the current total number of spreads we've defined against those
     # needed according to our parent book service.
     if ($current > $needed) {
+      $openprint::log->debug("Have more sigs than needed $current > $needed");
         # We have too many signatures. Remove everyone but us.
         delete_service($log, $dbh, $pid, $_) for @signatures;
 
@@ -229,14 +233,11 @@ sub action {
             if $provided < $needed;
 
         $log->warn("Too many spreads in p:$book while processing s:$sid\n");
-    }
-    elsif ($current < $needed) {
+    } elsif ($current < $needed) {
         # We still need signatures, add a new one unless another unfinished
         # one already exists.
-        insert_signature($log, $dbh, $pid, $book, $sid, $specs)
-            unless @unfinished;
-    }
-    else {
+        insert_signature($log, $dbh, $pid, $book, $sid, $specs) unless @unfinished;
+    } else {
         # Just right. We can remove any unfinished signatures there might be.
         delete_service($log, $dbh, $pid, $_) for @unfinished;
     }
