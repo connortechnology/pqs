@@ -20,8 +20,9 @@ $serial = 'price_list_id_seq';
 	'name'			=>	'name',
   #'owner_id'		=>	'owner_id',
 	'currency_id'	=>	'currency_id',
-	'description'	=>	'description',
+	description	=>	'description',
   #'deleted'		=>	'deleted',
+  discount => 'discount',
 );
 %defaults = (
 	owner_id  	=>	q`$openprint::session{'company_id'}`,
