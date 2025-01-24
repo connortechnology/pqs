@@ -178,7 +178,8 @@ sub convert_to_signature {
 
   print STDERR "HAVE LAYOUT: ", Dumper($imp->{layout}) if DEBUG;
 
-  my $ds = desired_signature_size($desired_signature_size, [$imp]);
+  my $ds = $desired_signature_size;
+  #my $ds = desired_signature_size($desired_signature_size, [$imp]);
 
   print STDERR "HAVE Desired sig size: $ds \n" if DEBUG;
   $desired_signature_size = $ds;
@@ -247,15 +248,13 @@ sub convert_to_signature {
       if ($imp_cols >= $desired_signature_size) {
         $cols = int($imp_cols / $desired_signature_size);
         $rows = $imp_rows;
-      }
-      else {
+      } else {
         $cols = 1;
         my $temp = $desired_signature_size / $imp_cols if $imp_cols;
         $temp = int($temp) == $temp ? $temp : $temp + 1;
         if ($imp_rows > $temp) {
-          $rows = int($imp_rows / ($temp));
-        }
-        else {
+          $rows = int($imp_rows / $temp);
+        } else {
           $rows = 1;
         }
       }
@@ -300,7 +299,7 @@ sub convert_to_signature {
     print STDERR "CONVER DONE2 ROWS: $rows COLS: $cols SETUP $ \n" if DEBUG;
     map {
       foreach my $l (@{$_}) {
-        print STDERR "HAVE L VALUE: $l->{slots} \n";
+        #print STDERR "HAVE L VALUE: $l->{slots} \n";
         if ( $l->{slots} >= $desired_signature_size ) {
           #if ( $l->{slots} >= ($desired_signature_size * $sig_size) ) {
           print STDERR "HAVE VALID SLOTS: $l->{slots} SIG SIZE: $sig_size DSS: $desired_signature_size \n" if DEBUG;
