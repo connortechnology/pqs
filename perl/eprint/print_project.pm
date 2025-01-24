@@ -37,6 +37,7 @@ require eprint::inventory;
 require eprint::user;
 require eprint::Build;
 
+require openprint;
 
 # Given a project ID and a string project type, insert the name and all
 # project type default service specifications into the 'Print' container
@@ -1376,46 +1377,55 @@ sub remove_service {
     # Until we care about bindery only projects, you're just not allowed to
     # delete the 'Printing' service. TODO: We shouldn't be able to delete the
     # last signature and commit the transaction (if we actually used them).
-    return 0 if $sid == get_print_container(@_);
-
-
-    # Whether we remove or delete is based on the need level of the service.
-    my $need = get_need($log, $dbh, $sid);
-
-	print STDERR "REMOVE SERVICE $pid, $sid : Need: $need \n ";
-
-    # If it's not needed we can just delete it outright.
-    if ($need != NEEDED) {
-        delete_service(@_) 
-    }
-    # If the project service is marked as NEEDED we don't delete it but
-    # instead set its removed flag. 
-    else {
-		my $removed = $dbh->selectrow_array(q{
-			SELECT ysnremoved FROM tbl_project_contents WHERE lngprojectindex = ? and lngserviceindex = ?
-		}, undef, $pid, $sid );
-
-	print STDERR "REMOVE SERVICE $pid, $sid : Need: $need REMOVED: $removed Before update \n ";
-
-		my $status = $removed ? 'FALSE' : 'TRUE';
-
-		$dbh->do(qq{ UPDATE tbl_project_contents 
-					SET ysnremoved = $status
-					WHERE lngprojectindex = ? AND lngserviceindex = ?
-		}, undef, $pid, $sid);
+    if ($sid == get_print_container(@_)) {
+      $openprint::log->debug("Not removing $sid because it is a print container");
+      return 0;
     }
 
-    # NOTE: Until we finish the changes to all the various service checks and
-    # displays for removal (not deletion) of SUGGESTED services they'll just
-    # be deleted like NOT_NEEDED project services. 
-    # 
-    #    # If the project service is SUGGESTED it's no longer part of the
-    #    # calculations when it's removed so we can delete all its specs.
-    #    # $dbh->do(q{ DELETE FROM tbl_service_specifications
-    #    #             WHERE lngprojectindex = ? AND lngserviceindex = ?
-    #    # }, undef, $pid, $sid) if $need == SUGGESTED;
-
+    delete_service(@_);
     return 1;
+}
+
+# User removal of services, marks as removed instead of actually deleting them
+# unless they're NOT_NEEDED.
+sub supply_service {
+  my ($log, $dbh, $pid, $sid) = @_;
+
+  #Testing to see what happens if we don't build, other than doing less work??
+  #$dbh->do(q{update tbl_projects set build = true where lngprojectindex = ?}, undef, $pid);
+
+  # Until we care about bindery only projects, you're just not allowed to
+  # delete the 'Printing' service. TODO: We shouldn't be able to delete the
+  # last signature and commit the transaction (if we actually used them).
+  if ($sid == get_print_container(@_)) {
+    $openprint::log->debug("Not removing $sid because it is a print container");
+    return 0;
+  }
+
+  # If the project service is marked as NEEDED we don't delete it but
+  # instead set its removed flag. 
+  my $removed = $dbh->selectrow_array(q{
+    SELECT ysnremoved FROM tbl_project_contents WHERE lngprojectindex = ? and lngserviceindex = ?
+    }, undef, $pid, $sid );
+
+  my $status = $removed ? 'FALSE' : 'TRUE';
+
+  $dbh->do(qq{ UPDATE tbl_project_contents 
+    SET ysnremoved = $status
+    WHERE lngprojectindex = ? AND lngserviceindex = ?
+    }, undef, $pid, $sid);
+
+  # NOTE: Until we finish the changes to all the various service checks and
+  # displays for removal (not deletion) of SUGGESTED services they'll just
+  # be deleted like NOT_NEEDED project services. 
+  # 
+  #    # If the project service is SUGGESTED it's no longer part of the
+  #    # calculations when it's removed so we can delete all its specs.
+  #    # $dbh->do(q{ DELETE FROM tbl_service_specifications
+  #    #             WHERE lngprojectindex = ? AND lngserviceindex = ?
+  #    # }, undef, $pid, $sid) if $need == SUGGESTED;
+
+  return 1;
 }
 
 
@@ -1474,7 +1484,7 @@ sub mark_project_complete_if_necessary {
 
 sub price_breakdown {
     my ($r, $log, $dbh, $variable) = @_;
-
+$openprint::log->debug("Got here");
     my $pid = $variable->{pid} = $r->param('ProjectIndex');
     my $sid = $variable->{sid} = $r->param('ServiceIndex');
 
@@ -1593,10 +1603,7 @@ sub price_breakdown {
 	return unless $runs;
 
 	# We need to replace equipment index with strid for display.
-	my $press_list = $dbh->selectall_hashref(q{
-		SELECT lngindex, strID from tbl_equipment
-	}, 'lngindex', {});
-
+	my $press_list = $dbh->selectall_hashref(q{ SELECT lngindex, strID from tbl_equipment }, 'lngindex', {});
 
 #print STDERR "HAVE RUNS: ", Dumper($runs);
     # Comparisons are a sorted, formatted selection of fields from each run.
@@ -1994,6 +2001,7 @@ use constant TEMPLATE_PAGE => '/template/record.html';
 		update_order	  => \&update_order,
 
         remove            => \&remove_item,   # Remove a service
+        supply            => \&supply_item,   # Remove a service
 
         add_line_item          => \&add_line_item,         # Add a custom line item
         edit_line_item         => \&edit_line_item,         # Add a custom line item
@@ -2456,11 +2464,24 @@ sub remove_item {
     my $sid = $r->param('sid') or die "Invalid service ID";
 
     # We're modifying the project (should be a DB trigger)
-    sql::update( $log, $dbh, 'tbl_Projects', "lngProjectIndex = $pid",
-        dtmLastModified => 'NOW()', 
-    );
+    sql::update( $log, $dbh, 'tbl_Projects', "lngProjectIndex = $pid", dtmLastModified => 'NOW()', );
 
     remove_service($log, $dbh, $pid, $sid);
+
+    # See if we need to recalculate anything.
+    return BUILD_PAGE . "?pid=$pid";
+}
+
+# supply the given service from the project.
+sub supply_item {
+    my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
+
+    my $sid = $r->param('sid') or die "Invalid service ID";
+
+    # We're modifying the project (should be a DB trigger)
+    sql::update( $log, $dbh, 'tbl_Projects', "lngProjectIndex = $pid", dtmLastModified => 'NOW()', );
+
+    supply_service($log, $dbh, $pid, $sid);
 
     # See if we need to recalculate anything.
     return BUILD_PAGE . "?pid=$pid";
