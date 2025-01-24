@@ -545,94 +545,64 @@ sub set_status {
 
 # Given a project and project service, set any dependency changes needed.
 sub recalc_dependencies {
-    my ($log, $dbh, $pid, $sid) = @_;
+  my ($log, $dbh, $pid, $sid) = @_;
 
+  # Get the status and level of the current service.
+  my ($status, $level) = $dbh->selectrow_array(q{SELECT status, level FROM project_service_status WHERE project=? AND id=?}, undef, $pid, $sid);
 
-    # Get the status and level of the current service.
-    my ($status, $level) = $dbh->selectrow_array(q{
-        SELECT status, level
-        FROM project_service_status
-        WHERE project = ?
-          AND id = ?
-    }, undef, $pid, $sid);
+  # If it's not there complain about it.
+  die "No project ($pid) service with ID ($sid) exists" unless $status;
 
-    # If it's not there complain about it.
-    die "No project ($pid) service with ID ($sid) exists" unless $status;
-
-    # If we're not part of the dependency tree we don't need to be here.
-    return 0 unless defined $level;
+  # If we're not part of the dependency tree we don't need to be here.
+  return 0 unless defined $level;
 
 	my $p = new PQS::Object::project($pid);
 
-	if ( $p->no_service_dependencies() ) {
+	if ($p->no_service_dependencies()) {
 		my $service = $dbh->selectall_arrayref(q{
-			SELECT id, level
-			FROM project_service_status
-			WHERE project = ?
-			ORDER BY level
-		}, { Slice => {} }, $pid);
-
-		 set_status($log, $dbh, $pid, 'calculated',
-		    map { $_->{id} } @{$service});
-
+			SELECT id, level FROM project_service_status WHERE project = ?  ORDER BY level }, { Slice => {} }, $pid);
+    set_status($log, $dbh, $pid, 'calculated', map { $_->{id} } @{$service});
 		return 1
 	}
-	#die($p->no_service_dependencies());
 
-
-
-    # If we're calculated but there are other uncalculated services on the
-    # current level, we don't need to adjust anything.
-    return 0 if $status eq 'calculated' and $dbh->selectrow_array(q{
-        SELECT count(*) > 0
-        FROM project_service_status
-        WHERE status NOT IN ('calculated', 'In Production', 'Complete')
-          AND project = ?
-          AND level   = ?
+  # If we're calculated but there are other uncalculated services on the
+  # current level, we don't need to adjust anything.
+  return 0 if $status eq 'calculated' and $dbh->selectrow_array(q{
+    SELECT count(*) > 0
+    FROM project_service_status
+    WHERE status NOT IN ('calculated', 'In Production', 'Complete')
+    AND project = ?
+    AND level   = ?
     }, undef, $pid, $level);
 
-    # We have to adjust all the service depending on us on one way or the
-    # other, so get a list of them.
-    my $service = $dbh->selectall_arrayref(q{
-        SELECT id, level
-        FROM project_service_status
-        WHERE project = ?
-          AND level   > ?
-        ORDER BY level
+  # We have to adjust all the service depending on us on one way or the
+  # other, so get a list of them.
+  my $service = $dbh->selectall_arrayref(q{
+    SELECT id, level FROM project_service_status WHERE project=? AND level > ? ORDER BY level
     }, { Slice => {} }, $pid, $level);
 
-    # If we're calculated and the last on our level, this is either the first
-    # time through or we've been recalculated. Either way the next level down
-    # needs to calculate (maybe again) and lower is still dependent.
-    if ($status eq 'calculated') {
-        my $service = $dbh->selectall_arrayref(q{
-            SELECT id, level
-            FROM project_service_status
-            WHERE project = ?
-              AND level   > ?
-            ORDER BY level
-        }, { Slice => {} }, $pid, $level);
+  # If we're calculated and the last on our level, this is either the first
+  # time through or we've been recalculated. Either way the next level down
+  # needs to calculate (maybe again) and lower is still dependent.
+  if ($status eq 'calculated') {
+    # Get the next level to allow.
+    $level = $service->[0]{level};
 
-        # Get the next level to allow.
-        $level = $service->[0]{level};
+    # As everything on the current level is calculated, the next level is
+    # now allowed to calculate/required to calculate again.
+    set_status($log, $dbh, $pid, 'uncalculated',
+      map { $_->{id} } grep { $_->{level} <= $level} @{$service});
 
-        # As everything on the current level is calculated, the next level is
-        # now allowed to calculate/required to calculate again.
-        set_status($log, $dbh, $pid, 'uncalculated',
-            map { $_->{id} } grep { $_->{level} <= $level} @{$service});
+    # All services below the allowed level are dependent on it. Ensure it.
+    set_status($log, $dbh, $pid, 'dependent',
+      map { $_->{id} } grep { $_->{level}  > $level} @{$service});
+  } else {
+  # If we aren't calculated or we're errored out, we need to make sure all
+  # the levels below are still marked as dependent on us.
+    set_status($log, $dbh, $pid, 'dependent', map { $_->{id} } @{$service});
+  }
 
-        # All services below the allowed level are dependent on it. Ensure it.
-        set_status($log, $dbh, $pid, 'dependent',
-            map { $_->{id} } grep { $_->{level}  > $level} @{$service});
-    }
-    # If we aren't calculated or we're errored out, we need to make sure all
-    # the levels below are still marked as dependent on us.
-	else {
-		 set_status($log, $dbh, $pid, 'dependent',
-		    map { $_->{id} } @{$service});
-    }
-
-    return 1; # TODO: Make return number of modified records.
+  return 1; # TODO: Make return number of modified records.
 }
 
 # Returns the string project service status given the ID of one.
@@ -1037,73 +1007,81 @@ sub _from_db {
 
 
 sub price {
-    my ($log, $dbh, $variable, $pid, $sid, $service, $specs, $is_save) = @_;
+  my ($log, $dbh, $variable, $pid, $sid, $service, $specs, $is_save) = @_;
 
-    my $service_type = $service->{type};
+  my $service_type = $service->{type};
+  $openprint::log->debug("Service: $service, $is_save");
 
-    # Allow the service to convert the specs whatever dataformat it wants.
-    eval {
-        if (my $munge = $service->{can}->('munge')) {
-            $munge->($log, $dbh, $variable, $pid, $sid, $service_type, $specs);
-        }
-    };
-    if ($@) { 
-        $log->error($@) if DEBUG;
-
-        # An error during munging most likely is a validation error.
-        # warn("${service_type}::munge: $@");
-        return 'uncalculated';
+  # Allow the service to convert the specs whatever dataformat it wants.
+  eval {
+    if (my $munge = $service->{can}->('munge')) {
+      $munge->($log, $dbh, $variable, $pid, $sid, $service_type, $specs);
     }
+  };
+  if ($@) { 
+    $log->error($@) if DEBUG;
 
-    # The "fill from" service is a legacy bit that takes things from the main
-    # print/book service and throws specs into it's own. As it modifies the DB
-    # we only allow it during internal pricing/saving.
-    if ($is_save) {
-        if (my $func = $service->{can}->('fill_from_printing_service')) {
-            $func->($log, $dbh, $pid, $sid);
-        }
-        my $new = get_specs($dbh, $pid, $sid, $service);
-        
-        # Because we assign verions in the above munge funciton
-        # for the printing service we must not overwrite the current 
-        # versions in $spec.
-        delete $new->{versions};
-       
-        @$specs{keys %$new} = values %$new;
+    # An error during munging most likely is a validation error.
+    # warn("${service_type}::munge: $@");
+    return 'uncalculated';
+  }
+
+  # The "fill from" service is a legacy bit that takes things from the main
+  # print/book service and throws specs into it's own. As it modifies the DB
+  # we only allow it during internal pricing/saving.
+  if ($is_save) {
+    if (my $func = $service->{can}->('fill_from_printing_service')) {
+      $func->($log, $dbh, $pid, $sid);
     }
+    my $new = get_specs($dbh, $pid, $sid, $service);
 
-    # Calculate the service.
-    my $calc   = $service->{can}->('calc') 
-        or die "Service $service->{module}::calc() does not exist";
-    my $status = eval { 
-        $calc->($log, $dbh, $variable, $pid, $sid, $service_type, $specs)
+    # Because we assign verions in the above munge funciton
+    # for the printing service we must not overwrite the current 
+    # versions in $spec.
+    delete $new->{versions};
+
+    print STDERR "NEW FROM printing service ".Data::Dumper::Dumper($new)."\n";
+    @$specs{keys %$new} = values %$new;
+  }
+
+  my $status;
+  # Calculate the service.
+  my $calc   = $service->{can}->('calc');
+  if ($calc) {
+    $status = eval { 
+      $calc->($log, $dbh, $variable, $pid, $sid, $service_type, $specs)
     };
     if ($@) {
       #if (DEBUG) { die $@ }
       #else       {
-          warn("Pricing $service_type errored: $@");
-          #}
+      warn("Pricing $service_type errored: $@");
+      #}
 
-        return 'error';
+      return 'error';
     }
+    print STDERR "Status $status from $service_type\n";
 
     # Unknown statuses are treated as errors.
     unless (grep { $status eq $_ } STATUSES) {
-        no warnings qw(uninitialized);
-        warn "$service_type ($sid) returned invalid status ($status)";
+      no warnings qw(uninitialized);
+      warn "$service_type ($sid) returned invalid status ($status)";
 
-        return 'error';
+      return 'error';
     }
+  } else {
+    print STDERR "Service $service->{module}::calc() does not exist\n";
+  }
 
-	my $override = $dbh->selectrow_array(q{
-		SELECT price_override FROM tbl_project_contents WHERE lngserviceindex = ?
-	}, undef, $sid );
+  my $override = $dbh->selectrow_array(q{
+    SELECT price_override FROM tbl_project_contents WHERE lngserviceindex = ?
+    }, undef, $sid );
 
-	print STDERR "HAVE PRICE OVERRIDE: FOR SID: $sid \n";
+  if ($override ne '') {
+    print STDERR "HAVE PRICE OVERRIDE: FOR SID: $sid $override\n";
+    $specs->{txtPrice1} = $override 
+  }
 
-	$specs->{txtPrice1} = $override if $override ne '';
-
-    return $status;
+  return $status;
 }
 
 sub clean_calc {
@@ -1144,8 +1122,7 @@ sub save {
     # (eugh), storable()ing complex structures, etc.
     my $store = $service->{can}->('store');
     
-    $specs = $store->($log, $dbh, $pid, $sid, $service->{type}, $specs) 
-        if $store;
+    $specs = $store->($log, $dbh, $pid, $sid, $service->{type}, $specs) if $store;
 
     # TODO Save the actual specs (user specified) as such, and the
     # anything that's new after pricing as not.
@@ -1155,6 +1132,7 @@ sub save {
     # Perform any actions required. eg. create signatures after changing the
     # book specifications.
     if (my $action = $service->{can}->('action')) {
+      print STDERR "Doing action on $$service{type}\n";
         $action->($log, $dbh, $pid, $sid, $service->{type}, $specs);
     }
 
@@ -1164,33 +1142,34 @@ sub save {
 # Save a batch of service specifications to the DB. Optionally the batch can
 # be marked as coming from the user.
 sub to_db {
-    my ($dbh, $pid, $sid, $form, $specs) = @_;
+  my ($dbh, $pid, $sid, $form, $specs) = @_;
 
-    # Remove all the specs before we (re)insert (instead of update check).
-    $dbh->do(q{
-        DELETE FROM tbl_service_specifications
-        WHERE lngserviceindex = ?
+  # Remove all the specs before we (re)insert (instead of update check).
+  $dbh->do(q{
+    DELETE FROM tbl_service_specifications
+    WHERE lngserviceindex = ?
     }, undef, $sid);
 
-    my $insert = $dbh->prepare_cached(q{
-        INSERT INTO tbl_service_specifications
-            (lngprojectindex, lngserviceindex, strname, strvalue, ui_spec)
-        VALUES (?, ?, ?, ?, ?)
+  my $insert = $dbh->prepare_cached(q{
+    INSERT INTO tbl_service_specifications
+    (lngprojectindex, lngserviceindex, strname, strvalue, ui_spec)
+    VALUES (?, ?, ?, ?, ?)
     });
 
-    while (my ($key, $value) = each %$specs) {
-        # Only handle simple values that are defined.
-        next if ref $value || ! defined $value || $value eq ''; 
+  while (my ($key, $value) = each %$specs) {
+    # Only handle simple values that are defined.
+    next if ref $value || ! defined $value || $value eq ''; 
 
-        next if $key =~ /^[ps]id$/i; # Don't save project or service ids.
+    next if $key =~ /^[ps]id$/i; # Don't save project or service ids.
 
-        # If the spec also exists in the form it was from the user.
-        $insert->execute(
-            $pid, $sid, $key, $value, (exists $form->{$key} ? 1 : 0)
-        );
+    print STDERR "inserting $key=>$value\n";
+    # If the spec also exists in the form it was from the user.
+    if (!$insert->execute($pid, $sid, $key, $value, (exists $form->{$key} ? 1 : 0))) {
+      print STDERR "Failed insert".$dbh->errstr."\n";
     }
+  }
 
-    return 1;
+  return 1;
 }
 
 1;
