@@ -317,7 +317,9 @@ function mv_varnish (e) {
 function update_version_quantity (elem) {
     
     var row = elem.parentNode.parentNode;
-    if (isNaN(elem.value)) return;
+    if (isNaN(elem.value)) {
+      return;
+    }
     
     const qty1_elem = document.getElementById('txtQuantity1');
 
@@ -327,8 +329,7 @@ function update_version_quantity (elem) {
     }
 
     // Figure out the percentage that current quantity if of it's total.
-    var percentage
-        = (elem.value / qty1) * 100;
+    var percentage = (elem.value / qty1) * 100;
     
     // Update the text that displays the percent...
     row.cells[4].innerHTML = do_decimals(percentage);
