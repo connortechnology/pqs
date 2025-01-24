@@ -60,14 +60,14 @@ Event.observe(window, 'load', function () {
     if (!remaining) throw "Invalid number of spreads remaining.";
 
     var update = function () {
-        var result = parseInt(spreads.value) * parseInt(forms.value);
+        var result = 1*parseInt(spreads.value) * 1*parseInt(forms.value);
 
         used.className = result > remaining ? 'error' : '';
         used.innerHTML = result; // TODO set to empty string if NaN
     };
 
-    Event.observe(spreads, 'change', update);
-    Event.observe(forms,   'change', update);
+    Event.observe(spreads, 'input', update);
+    Event.observe(forms,   'input', update);
 
     return true;
 });
