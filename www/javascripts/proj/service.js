@@ -43,7 +43,7 @@ Service.prototype = {
         // Create the auto calculation timer
         this._bind_timer();
 
-      if (1) {
+      if (0) {
        for (var i = 0; i < this.form.elements.length; i++) {
          var elem = this.form.elements[i];
 
@@ -64,7 +64,7 @@ Service.prototype = {
     // Add events for automatic calculation on user input.
     _bind_timer : function () {
       //return;
-        this.timer = new Timer(this.calculate.bind(this), 2240);
+        this.timer = new Timer(this.calculate.bind(this), 4000);
 
         // Start the timer any time an element changes
         new Form.EventObserver(
@@ -80,7 +80,7 @@ Service.prototype = {
 
             Event.observe(elem, 'focus', this.timer.reset.bind(this.timer));
 
-            if (elem.type == 'text' || elem.nodeName.toLowerCase() == 'textarea')
+            if (elem.type == 'text' || elem.nodeName.toLowerCase() == 'textarea' || elem.type=='number')
                 Event.observe(elem, 'keypress', this.timer.reset.bind(this.timer));
         }
     },
