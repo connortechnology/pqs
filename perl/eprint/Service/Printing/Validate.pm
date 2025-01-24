@@ -33,6 +33,7 @@ sub munge {
     my $spread    = spread($dbh, $press_type, $project_type, $specs, $pid);
     my $versions  = versions($specs, $qtys[0]);
     my $overrides = overrides($specs, $variable->{user_type});
+    print STDERR "HAVE OVERRIDES: ", Dumper($overrides) if %$overrides;
 
     #delete $specs->{$_} for keys %$specs;
 
@@ -495,7 +496,6 @@ sub overrides {
   }
 
   $override{chargefor} = $specs->{chargefor};
-  print STDERR "HAVE OVERRIDES: ", Dumper(\%override) if %override;
 
   return \%override;
 }

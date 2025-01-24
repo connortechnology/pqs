@@ -169,10 +169,13 @@ sub can_print_project {
   # The project image can't be bigger than the maximum imageable area.
   # Inkjet printers ignore this as they're allowed to tile their images.
   return if $press->{type} != INKJET
-  && (   $project->{width}  > $press->{maximum_image_area_width}
-    || $project->{height} > $press->{maximum_image_area_length} )
-  && (   $project->{width}  > $press->{maximum_image_area_length}
-    || $project->{height} > $press->{maximum_image_area_width}  );
+    && ($press->{maximum_image_area_length} and
+    ( $project->{height} > $press->{maximum_image_area_length} 
+      || $project->{width}  > $press->{maximum_image_area_length} )
+    && ($press->{maximum_image_area_width} and (
+        $project->{width} > $press->{maximum_image_area_width}
+        || $project->{height} > $press->{maximum_image_area_width}))
+  );
 
   #print STDERR "Pass Project Size Test \n";
 

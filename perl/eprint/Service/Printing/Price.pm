@@ -261,9 +261,9 @@ sub get_project_price {
     $project->{signature} = {};
     @{ $project->{signature} }{@fields} = get_specifications($log, $dbh, $pid, $sid, @fields);
 
-    #print STDERR "HAVE PROJECT: ", Dumper($project, $spread);
-    $project->{width}  = $spread->{SpreadWidth} if  $spread->{SpreadWidth}  ;
-    $project->{height} = $spread->{SpreadHeight} if $spread->{SpreadHeight}  ;
+    print STDERR "HAVE PROJECT: ", Dumper($project, $spread);
+    $project->{width}  = $spread->{SpreadWidth} if  $spread->{SpreadWidth};
+    $project->{height} = $spread->{SpreadHeight} if $spread->{SpreadHeight};
 
     # Load the preset spread size if the sizes weren't supplied (interior).
     unless ($project->{width} && $project->{height}) {
@@ -277,6 +277,18 @@ sub get_project_price {
 
       @$project{qw(image_width image_height)} = @$project{qw(width height)};
     }
+  }
+  if (!($project->{width} && $project->{height})) {
+    @$project{qw(width height)} = get_specifications($log, $dbh, $pid, get_print_container($log, $dbh, $pid), 'final_width','final_height');
+    if (!$$project{txtSignatureSize}) {
+      my ($bind_type)    = get_specifications($log, $dbh, $pid, get_print_container($log, $dbh, $pid), 'template');
+      my $double = grep { $bind_type eq $_ } qw(SaddleStitching PerfectBinding);
+      $$project{sigature}{txtSignatureSize} = $double ? 4 : 2;
+    }
+    $$project{width} *= $$project{sigature}{txtSignatureSize} / 2;
+  }
+  if (!($project->{width} && $project->{height})) {
+    die "No dimensions.";
   }
 
   # SUBSTRATE/STOCK/PAPER
@@ -402,7 +414,6 @@ sub get_project_price {
     $dbh, $project->{press_type}
   );
 
-  print STDERR "Got here\n";
   # A bit kludgey but it's better than thrashing the DB until we can
   # rewrite print pricing properly.
 
@@ -416,7 +427,7 @@ sub get_project_price {
   #print STDERR "HAVE TOTAL IMPS: $total_imp \n";
 
   foreach $imp (@$impositions) {
-    print STDERR  "imp".Data::Dumper::Dumper($imp);
+    #print STDERR  "imp".Data::Dumper::Dumper($imp);
     if ( $openprint::r ) {
       $openprint::r->print("\n");
       if ( $openprint::r->connection()->aborted() ) {
@@ -438,6 +449,7 @@ sub get_project_price {
     # If we're a multipage project, respect the spreads on form and forms
     # (signature groups) overrides.
     if ($project->{is_multipage}) {
+      next if ! $imp->{spreads};
       if ($project->{override}{spreads} && ($imp->{spreads} != $project->{override}{spreads})) {
         $openprint::log->debug("$$imp{spreads} != ".$project->{override}{spreads}) if $openprint::log;
         next;
