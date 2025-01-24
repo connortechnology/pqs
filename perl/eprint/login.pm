@@ -1110,47 +1110,44 @@ print STDERR "SELECT CUSTOMER: " , $sql , "\n";
 
 # Called when a salesperson/admin selects a customer to act as.
 sub select_customer {
-    my ($r, $log, $dbh, $cookie, $variable, $customer) = @_;
+  my ($r, $log, $dbh, $cookie, $variable, $customer) = @_;
 
-	my $cust_id = $customer || $r->param('ddmCustomer') || $r->param('SelectCustomer');
+  my $cust_id = $customer || $r->param('ddmCustomer') || $r->param('SelectCustomer');
 
-    sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID= '$cookie'",# AND chrSite = 'C' ",
-        lngCustomerID => $cust_id
-    );
+  sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID= '$cookie'",# AND chrSite = 'C' ",
+    lngCustomerID => $cust_id
+  );
 
-    $variable->{cust_id} = $cust_id;
+  $variable->{cust_id} = $cust_id;
 
-print STDERR "UPDATE CUST TO : $variable->{cust_id} \n";
+  #print STDERR "UPDATE CUST TO : $variable->{cust_id} \n";
 
-    # Update this session's company information to the newly selected one.
-    $variable->{user}{company} = $dbh->selectrow_hashref(q{
-        SELECT lngcustomerid                                          AS id,
-               strcompanyname                                         AS "name",
-               (CASE WHEN ysnsupplier = 'Y' THEN true ELSE false END) AS is_supplier,
-               (CASE WHEN ysnreseller = 'Y' THEN true ELSE false END) AS is_reseller
-        FROM tbl_logged_in JOIN tbl_customer USING (lngcustomerid)
-        WHERE lngcustomerid = ?
+  # Update this session's company information to the newly selected one.
+  $variable->{user}{company} = $dbh->selectrow_hashref(q{
+    SELECT lngcustomerid                                          AS id,
+    strcompanyname                                         AS "name",
+    (CASE WHEN ysnsupplier = 'Y' THEN true ELSE false END) AS is_supplier,
+    (CASE WHEN ysnreseller = 'Y' THEN true ELSE false END) AS is_reseller,
+    ordercredit
+    FROM tbl_logged_in JOIN tbl_customer USING (lngcustomerid)
+    WHERE lngcustomerid = ?
     }, undef, $variable->{cust_id});
 
-    $variable->{strCompanyName} = $variable->{user}{company}{name};
+  $variable->{strCompanyName} = $variable->{user}{company}{name};
+  $variable->{dollarcredit}  = $variable->{user}{company}{ordercredit} // '0.00';
 
-	$variable->{dollarcredit}  = $dbh->selectrow_array(q{
-		SELECT ordercredit FROM tbl_customer WHERE lngcustomerid = ?
-	}, undef, $variable->{user}{company}{id}) || '0.00';
+  my $order_id = eprint::order::get_unfinished_order(
+    undef, $dbh, $cookie, $variable->{cust_id}, $variable->{user_id} );
 
-		my $order_id = eprint::order::get_unfinished_order(
-				undef, $dbh, $cookie, $variable->{cust_id}, $variable->{user_id} );
-
-		$variable->{order_count} = $order_id ? $dbh->selectrow_array(q{
-				SELECT count(*) FROM tbl_order_contents
-				WHERE lngorderid = ?
-		}, undef, $order_id) : '';
+  $variable->{order_count} = $order_id ? $dbh->selectrow_array(q{
+    SELECT count(*) FROM tbl_order_contents
+    WHERE lngorderid = ?
+    }, undef, $order_id) : '';
 
 
-	print STDERR "VERIFY HAVE ORDER: $order_id OC: $variable->{order_count} \n";
-
-
-    return OK;
+  #print STDERR "VERIFY HAVE ORDER: $order_id OC: $variable->{order_count} \n";
+  return OK;
 }
 
 1;
+__END__
