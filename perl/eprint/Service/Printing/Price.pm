@@ -1138,10 +1138,11 @@ sub adjust_price_hash {
     @$specs{"txtStockPrice$i", "txtStockUnitPrice$i"} = 
     format_pricing($specs->{"txtStockPrice$i"}, $qty);
 
-    @$specs{"total_price$i", "total_unit$i"} = format_pricing(
+    @$specs{"total_price$i", "unit_price$i"} = format_pricing(
       ($specs->{"txtPrice$i"} + $specs->{"txtStockPrice$i"}), $qty
     );
   }
+  $$specs{status_alert} = '';
 }
 
 sub calc_print_price {
