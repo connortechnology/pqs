@@ -52,8 +52,9 @@ Service.prototype = {
 
          if (elem.type == 'text' || elem.nodeName.toLowerCase() == 'textarea' || elem.type == 'number') {
            //Event.observe(elem, 'keypress', this.calculate.bindAsEventListener(this));
-           if (!elem.oninput)
+           if (!elem.oninput) {
              elem.oninput = this.calculate.bind(this, false);
+           }
          }
        }
       }
@@ -62,7 +63,7 @@ Service.prototype = {
 
     // Add events for automatic calculation on user input.
     _bind_timer : function () {
-      return;
+      //return;
         this.timer = new Timer(this.calculate.bind(this), 2240);
 
         // Start the timer any time an element changes
@@ -108,13 +109,20 @@ Service.prototype = {
 
 			// not all views show price field
 			if ( $('txtPrice1') ) {
-				$('txtPrice1').innerHTML = '.';
+				$('txtPrice1').innerHTML = '';
+			}
+			if ( $('total_price1') ) {
+				$('total_price1').innerHTML = '';
 			}
 
 			//not all pages show unit price ( printing page.. ) 
 			if ( $('txtUnitPrice1') ) {
-				$('txtUnitPrice1').innerHTML = '.';
+				$('txtUnitPrice1').innerHTML = '';
 			}
+			if ( $('unit_price1') ) {
+				$('unit_price1').innerHTML = '';
+			}
+      if ($('status_alert')) $('status_alert').innerHTML = 'Calculating...';
 
       this.req = new Ajax.Request('/service/' + this.name, {
         method:         'get',
@@ -235,7 +243,7 @@ Service.prototype = {
     //
     // Enables/disables a form keeping track of each elements initial state.
     set_form_state : function (enable) {
-      return;
+      //return;
         // Let the user know we're doing (or not doing) something.
         this.form.style.cursor = enable ? '' : 'wait';
 
