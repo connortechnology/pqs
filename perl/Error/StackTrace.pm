@@ -62,7 +62,7 @@ print STDERR "HAVE STACK TRACE HERE  \n";
     while (my $frame = $trace->prev_frame) {
         next if $frame->subroutine eq 'Apache2::StatINC::__ANON__';
 		$cnt++;
-print STDERR "HAVE COUNT: $cnt  - " . $frame->subroutine . "\n";
+print STDERR "HAVE COUNT: $cnt  - " . $frame->subroutine .' '.$frame->filename.':' . $frame->line."\n";
 
         my ($pkg, $func) = $frame->subroutine =~ /^(.*?)::(\w+)$/;
         
@@ -93,18 +93,17 @@ print STDERR "HAVE COUNT: $cnt  - " . $frame->subroutine . "\n";
     # If we're in the stack, remove us and and the call to us.
     pop @stack and pop @stack;
 
-	print STDERR "HAVE ERROR STACK ", Dumper($err->message );
+    #print STDERR "HAVE ERROR STACK ", Dumper($err->message);
 
     # Output the template.  
     my $t = Petal->new(
-		#base_dir => $r->document_root,
-        base_dir =>  '/usr/local/share/pqs/www', 
+		base_dir => $r->document_root,
+    #base_dir =>  '/usr/local/share/pqs/www', 
         file     => '/error/debug.html'
     );
 
-
     return $t->process(
-        error => "$err",
+        error => $err,
         stack => \@stack, 
     );
 }
