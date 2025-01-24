@@ -138,23 +138,23 @@
   <script src="<?hash_link(/javascripts/proj/service.js)?>"></script>
   <script src="<?hash_link(/javascripts/proj/service/printing.js)?>"></script>
   <script src="<?hash_link(/javascripts/proj/service/printing/paper.js)?>"></script>
-	<script src="/javascripts/proj/service/printing/templates.js"></script>
+  <script src="<?hash_link(/javascripts/proj/service/printing/templates.js)?>"></script>
 	<?if project.is_multipage ?>
-	<script src="/javascripts/proj/service/printing/multipage.js"></script>
+  <script src="<?hash_link(/javascripts/proj/service/printing/multipage.js)?>"></script>
 	<?endif project.is_multipage ?>
 	<? if ( $variable->{project}{press_type}{ref} eq 'inkjetprinter' ) ?>
-	<script src="/javascripts/proj/service/printing/largeformat.js"></script>
+  <script src="<?hash_link(/javascripts/proj/service/printing/largeformat.js)?>"></script>
 	<script><?stitch_or_weld?></script>
 	<? endif ( $variable->{project}{press_type}{ref} eq 'inkjetprinter' ) ?>
 
 	<? if ( $variable->{project}{type}{ref} eq 'PresentationFolders' ) ?>
-		<script src="/javascripts/proj/service/printing/presentation_folder.js"></script>
+    <script src="<?hash_link(/javascripts/proj/service/printing/presentation_folder.js)?>"></script>
 	<? endif ( $variable->{project}{type}{ref} eq 'PresentationFolders' ) ?>
 
   <script>
     Event.observe(window, 'load', function() {
       update_event_bindings();
-//calc('f1');
+calc('f1');
           });
   </script>
 
