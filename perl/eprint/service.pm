@@ -3,6 +3,7 @@ use strict;
 use warnings;
 require openprint;
 use Data::Dumper;
+require Time::HiRes;
 
 no warnings qw(uninitialized);
 
@@ -1044,6 +1045,7 @@ sub price {
     @$specs{keys %$new} = values %$new;
   }
 
+  my $start_time = Time::HiRes::time();
   my $status;
   # Calculate the service.
   my $calc   = $service->{can}->('calc');
@@ -1059,7 +1061,8 @@ sub price {
 
       return 'error';
     }
-    print STDERR "Status $status from $service_type\n";
+  my $elapsed = Time::HiRes::time() - $start_time;
+    print STDERR "Status $status from $service_type elapsed: $elapsed\n";
 
     # Unknown statuses are treated as errors.
     unless (grep { $status eq $_ } STATUSES) {
