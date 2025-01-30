@@ -15,8 +15,8 @@
 
 	<!--#include virtual="/includes/h2-js.html" -->
 
-	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
-	<script type="text/javascript">
+	<script src="/javascripts/proj/service.js"></script>
+	<script>
 			var service = new Service('<?service.ref?>');
 	</script>
 </head>
@@ -33,7 +33,7 @@
 			<ul>
 				<?if has_cover ?>
 					<li>1 - cover</li>
-				<?end has_cover ?>
+				<?endif has_cover ?>
 				<?loop signatures?>
 					<li><?qty?> - <?n?> page signature<?if ($variable->{qty} > 1)?>s<?endif ($variable->{qty} > 1)?></li>
 				<?endloop signatures?>
