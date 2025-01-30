@@ -214,8 +214,8 @@ print STDERR "HAVE EQUIPMENT: @eids : @s_eids : @o_eids \n";
     
     my @prices;
     foreach my $n ( 1 .. 3 ) {
-print STDERR "START PRICE FOR QTY: $n \n";
         next unless $qty[$n] > 0; # Skip empty estimates.
+print STDERR "START PRICE FOR QTY: $n \n";
 
         # PROJECT QUANTITY
         #
@@ -224,8 +224,7 @@ print STDERR "START PRICE FOR QTY: $n \n";
         my $qty = int($specs->{"txtQuantity$n"});
         
         # Reset the quantity to the project quantity if out of those bounds.
-        $qty = $specs->{"txtQuantity$n"} = $qty[$n]
-            if ($qty <= 0 or $qty > $qty[$n]);
+        $qty = $specs->{"txtQuantity$n"} = $qty[$n] if ($qty <= 0 or $qty > $qty[$n]);
 
         $log->debug("BIND: PROCESSING QUANTITY($n): $qty E: @eids");
 
@@ -237,7 +236,6 @@ print STDERR "START PRICING FOR EQUIPMENT: @eids \n";
         #
         my %best;
         foreach my $eid (@eids) {
-print STDERR "START Pricing for: $eid \n";
             my $type = eprint::equipment::get_type( $log, $dbh, $eid);
 
             # We have equipment for the job so remove the error.
@@ -245,8 +243,9 @@ print STDERR "START Pricing for: $eid \n";
 
             # Total number of pockets the machine has.
             my $max_pockets = eprint::equipment::get_specification($log, $dbh, 'Number of Pockets', undef, $eid);
-			$max_pockets = 500 if $type eq 'manual';
+            $max_pockets = 500 if $type eq 'manual';
 
+print STDERR "START Pricing for: $eid $type $max_pockets\n";
             # Perfect binders always have a seperate cover pocket, sticther
             # need to be checked.
             my $cover_pocket = ($service_type ne 'PerfectBinding') 
