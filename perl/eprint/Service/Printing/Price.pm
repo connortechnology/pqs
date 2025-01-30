@@ -10,7 +10,7 @@ my $cutters = 0;
 use Data::Dumper;
 use Compress::LZF         qw(:compress :freeze);
 use Storable              qw(freeze);
-use List::Util            qw(sum);    
+use List::Util            qw(sum);
 use List::MoreUtils       qw(uniq);
 use MIME::Base64;
 use POSIX                 qw(ceil floor);
@@ -65,9 +65,9 @@ use constant SHEETS_PER_UNIT_PANTONE  => eprint::Config->get(Printing => 'sheets
 use constant SHEETS_PER_UNIT_METALLIC => eprint::Config->get(Printing => 'sheets_per_unit_metallic');
 
 
-use constant WEB_COLOUR_BAR_SIZE => 
+use constant WEB_COLOUR_BAR_SIZE =>
 eprint::Config->get(Imposition => 'web_colour_bar_size');
-use constant STD_COLOUR_BAR_SIZE => 
+use constant STD_COLOUR_BAR_SIZE =>
 eprint::Config->get(Imposition => 'std_colour_bar_size');
 
 
@@ -95,13 +95,17 @@ use constant TIMINGS => 0;
 sub calc {
   my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
+  my $ac = sql::start_transaction($dbh);
   if (TIMINGS) {
     require Time::HiRes;
     $ts_req = Time::HiRes::time(); # Debug/profiling timings;
   }
 
+  print STDERR "log: $openprint::log dbh $openprint::dbh\n";
+  eprint::Service::Cutting::init($pid);
+
   my $pricing = get_project_price(
-    $log, $dbh, $variable, 
+    $log, $dbh, $variable,
     $pid, $sid, @$specs{qw(spread versions overrides)}
   );
 
@@ -111,7 +115,7 @@ sub calc {
   #print STDERR "HAVE IMP", Dumper($specs->{imp});
 
   $specs->{$_} = $pricing->{$_} for keys %$pricing;
-
+  sql::end_transaction($dbh, $ac);
   return exists $specs->{error} ? 'uncalculated' : 'calculated';
 }
 
@@ -130,7 +134,7 @@ sub get_project_price {
   return $s if $type eq 'NoPrint';
   # DONE NOPRINT
 
-  return {error => 'Rquired Specs not found: colour'} 
+  return {error => 'Rquired Specs not found: colour'}
   unless @{$spread->{side}[0]{colours}} || @{$spread->{side}[1]{colours}} ;
 
   ## MAPPINGS
@@ -150,7 +154,7 @@ sub get_project_price {
   # If we are making a scratch pad then we simply multiply our qty by the number
   # of sheets per pad. This is one of the last exceptions that was handled by
   # the javascript pre-pricing code.
-  if ( $spread->{pad_sheets} > 1 ) {    
+  if ( $spread->{pad_sheets} > 1 ) {
     for my $i ( 0 .. 2 ) {
       @$qtys[$i] *= $spread->{pad_sheets};
     }
@@ -195,8 +199,15 @@ sub get_project_price {
   my $has_softtouch  = (scalar grep {$_ eq 'soft_touch'     } map {$spread->{side}[$_]{coating}{type}} 0..1);
   my $is_spot = (scalar grep {$_             } map {$spread->{side}[$_]{coating}{spot}} 0..1) > 0;
 
+  # we can juryrig group factor in here to compensate for being unable
+  # to calculate imposition based on multiple signatures in a group
+  my $group_factor = $dbh->selectrow_array(q{
+    SELECT strvalue FROM tbl_service_specifications
+    WHERE strname = 'GroupFactor' AND lngserviceindex = ?
+    }, {}, $sid);
+  my $print_container = get_print_container($log, $dbh, $pid);
   my $pages = get_specifications(
-    $log, $dbh, undef, get_print_container($log, $dbh, $pid), 'txtTotalSpreadQuantity'
+    $log, $dbh, undef, $print_container, 'txtTotalSpreadQuantity'
   ) || 1;
 
   my $press_type = get_press_type($log, $dbh, $pid, $sid);
@@ -209,6 +220,7 @@ sub get_project_price {
     type         => scalar($type),
     is_multipage => is_multipage($log, $dbh, $pid),
     press_type   => $press_type,
+    quantities   => $qtys,
 
     image_width  => $spread->{flat}{width},  # -- DEPRECATED
     image_height => $spread->{flat}{height}, # -|
@@ -218,9 +230,10 @@ sub get_project_price {
     minheight    => scalar( get_minimum_height($log, $dbh, $pid) ),
 
     template     => $spread->{template},
+    group_factor => $group_factor,
 
-    colour_bar   => ($spread->{colour_bar} ? $press_type eq 'web' 
-      ? WEB_COLOUR_BAR_SIZE 
+    colour_bar   => ($spread->{colour_bar} ? $press_type eq 'web'
+      ? WEB_COLOUR_BAR_SIZE
       : STD_COLOUR_BAR_SIZE
       : 0),
 
@@ -231,15 +244,11 @@ sub get_project_price {
     softtouch    => $has_softtouch,
 
     bleed        => $spread->{bleed},
-    grain        => $spread->{grain},        
+    grain        => $spread->{grain},
 
     paper        => $spread->{stock},
-
-    pages        => ( get_specifications(
-        $log, $dbh, undef, 
-        get_print_container($log, $dbh, $pid), 
-        'txtTotalSpreadQuantity' 
-      ) || 1 ),
+    pages        => $pages,
+    print_container => $print_container,
 
     override => $overrides,
 
@@ -280,9 +289,9 @@ sub get_project_price {
     }
   }
   if (!($project->{width} && $project->{height})) {
-    @$project{qw(width height)} = get_specifications($log, $dbh, $pid, get_print_container($log, $dbh, $pid), 'final_width','final_height');
+    @$project{qw(width height)} = get_specifications($log, $dbh, $pid, $print_container, 'final_width','final_height');
     if (!$$project{txtSignatureSize}) {
-      my ($bind_type)    = get_specifications($log, $dbh, $pid, get_print_container($log, $dbh, $pid), 'template');
+      my ($bind_type)    = get_specifications($log, $dbh, $pid, $print_container, 'template');
       my $double = grep { $bind_type eq $_ } qw(SaddleStitching PerfectBinding);
       $$project{sigature}{txtSignatureSize} = $double ? 4 : 2;
     }
@@ -296,7 +305,13 @@ sub get_project_price {
   my %paper = %{ $spread->{stock} };
 
   if ($project->{is_multipage}) {
-    my $bind_type = $project->{bind_type} = get_bindery_type($log, $dbh, $pid);
+    my $bind_type = $project->{bind_type} = eprint::project::get_bindery_type($log, $dbh, $pid);
+    my $bookid = $$project{bookid} = eprint::project::get_service_index($log, $dbh, $pid, 'Book');
+    if ($bookid) {
+      #need the number of versions if there aren't more than one this function isn't needed
+      my ($num_versions) = eprint::service::get_specifications($log, $dbh, $pid, $bookid, ('num_versions'));
+      $$project{num_versions} = $num_versions;
+    }
 
     # If we're multi-page and have a bindery type, find out if we need trim.
     # TODO This should really be stored as at compile-time and only looked up
@@ -312,9 +327,9 @@ sub get_project_price {
     # Even though this could match a number of papers we just take the
     # first and pretend it's the only one.
     @$project{qw(image_width image_height)} = $dbh->selectrow_array(q{
-      SELECT dblwidth, dblheight 
-      FROM tbl_paper 
-      WHERE strname     = ? AND strfinish   = ? 
+      SELECT dblwidth, dblheight
+      FROM tbl_paper
+      WHERE strname     = ? AND strfinish   = ?
       AND strcolour   = ? AND strcalliper = ?
       ORDER BY dblwidth DESC
       }, {}, @paper{qw(name finish colour calliper)});
@@ -358,7 +373,7 @@ sub get_project_price {
   # The spreads per form x the number of forms can't exceed the number of
   # spreads remaining to be allocated.
   if ($project->{override}{spreads} && $project->{override}{forms}) {
-    return { 
+    return {
       error => "Spreads × forms exceeds remaining spreads ($spreads_remaining). Please adjust your overrides."
     } if $project->{override}{spreads} * $project->{override}{forms} > $spreads_remaining;
   }
@@ -475,20 +490,20 @@ sub get_project_price {
     die $run_style unless $run_style =~ /^(SW|WT|WF|PF)/;
 
     my %price = calc_print_price(
-      $log,      $dbh,     $variable, 
-      $pid,      $sid,     $qty,      
-      $spread,   $project, $press,    
+      $log,      $dbh,     $variable,
+      $pid,      $sid,     $qty,
+      $spread,   $project, $press,
       $setup,
 
       @$project{qw(image_width image_height)},
 
       $colours[0],        $colours[1],        \@filtered_colours,
       $pms_price,         \%pms_coverage,      $imp->{paper},
-      $paper{calliper},   $run_style,         
+      $paper{calliper},   $run_style,
       $has_aq,            $has_uv, $has_softtouch,           $is_spot,
       $dry_trap,          $additional_plates, $project->{versions},
       ($imp->getPaper->{width} * $imp->getPaper->{height}),          # Sheet area
-      $paper{'supplied'}, $imp, $spreads_remaining,     
+      $paper{supplied}, $imp, $spreads_remaining,
       $project->{override}{overs}{unit},
       $project->{override}{overs}{run},
       $large_format,      $jig_specifics,     $project->{pages}
@@ -515,7 +530,7 @@ sub get_project_price {
       # Create a new cutting job.
       my $precut = Job->new(
         supplier  => 'House', # TODO Set to press supplier to start.
-        signature => $sid, 
+        signature => $sid,
         width     => $price{hdnSuppliedStockWidth},
         height    => $price{hdnSuppliedStockHeight},
         qty       => $qty,
@@ -523,12 +538,6 @@ sub get_project_price {
         cuts      => $imp->{paper}{cuts},
         note      => 'Cutting to fit on press.',
       );
-
-      # Kludgy, kludge, kludge.
-      local *eprint::Service::Cutting::price = sub {
-        my ($equip, $service, $qty) = @_;
-        get_price($log, $dbh, $variable, $service, $qty, $equip);
-      };
 
       # Add the job cost to the comparison one.
       $price{'Comparison Cost'} += eprint::Service::Cutting::project_cost($dbh, $pid, $precut);
@@ -539,8 +548,11 @@ sub get_project_price {
 
     my $mc =  $price{'Comparison Cost'} / ($price{imp}{spreads} || 1);
 
+    print STDERR "Paper: ".Data::Dumper::Dumper(\%paper)."\n";
+    my $paper = $price{imp}{paper};
+    print STDERR "Paper: ".Data::Dumper::Dumper($paper)."\n";
     # COMPARISON TABLE
-    #
+    my $valid = valid_price(\%price); 
     # Keep a log of what we've tried and the price of each.
     push @price_check, [
       # Press, run style, plates.
@@ -552,8 +564,8 @@ sub get_project_price {
       scalar @{ $price{imp}{layout} }, $price{sheet_wastage},
 
       # Stock info.
-      $price{imp}{paper}{width},
-      $price{imp}{paper}{height} || $price{imp}{cut_off},
+      $$paper{width},
+      $$paper{height} || $price{imp}{cut_off},
       $price{hdnGrossSheetCount1},
 
       # Pricing.
@@ -561,22 +573,22 @@ sub get_project_price {
 
       # Ahh the fun of positional based stuff. Tack on the original
       # stock sizes of anything that's been precut.
-      $price{imp}{paper}{cuts},
-      $price{hdnSuppliedStockWidth}, $price{hdnSuppliedStockHeight}, 
+      $$paper{cuts},
+      $price{hdnSuppliedStockWidth}, $price{hdnSuppliedStockHeight},
       0,
       $price{imp}{spreads},
       $mc
-    ] if valid_price(\%price);
+    ] if $valid;
 
     #print STDERR "HAVE COMP: $price{'Comparison Cost'} SETUP: $price{imp}{setup} RS:  $price{imp}{run_style}  SPREADS: $price{imp}{spreads}  MYCOMP: $mc \n", Dumper( $price{imp}  );
 
     # BEST PRICE
     #
     #Origianl
-    #if (     valid_price(\%price) 
+    #if (     valid_price(\%price)
     #     && ($price{'Comparison Cost'} < $price_check || $price_check == -1)
     #
-    if (valid_price(\%price) && ( $mc < $price_check || $price_check == -1)) {
+    if ($valid && ( $mc < $price_check || $price_check == -1)) {
       # Keep track of the best price we have found so far.
       #$price_check = $price{'Comparison Cost'};
 
@@ -643,7 +655,7 @@ sub get_project_price {
       $additional_plates,
       $project->{versions},         $sheet_area,
       $paper{supplied},             $imp,
-      $spreads_remaining,               
+      $spreads_remaining,
       $project->{override}{overs}{unit},
       $project->{override}{overs}{run},
       $large_format,                $jig_specifics,
@@ -706,9 +718,9 @@ sub get_project_price {
       $best_price->{"txtAdditionalPrice$i"} = '0.00';
     }
 
-    $best_price->{hdnPlateCount} = $price{'txtPlateQuantity'};
+    $best_price->{hdnPlateCount} = $price{txtPlateQuantity};
     $best_price->{txtPressSheetQty} .= ", " . $price{'Gross Sheet Count'};
-    $best_price->{txtRollQty} .= ", " . 
+    $best_price->{txtRollQty} .= ", " .
     ceil($price{'Gross Sheet Count'} * $best_price->{txtMWeight} / 1000);
   }
 
@@ -757,7 +769,7 @@ sub get_project_price {
   #
   #  	  if ($mat->{lngindex}) {
   #        PQS::model::service::set_material_estimate($plate_price_qty, undef, $sid, $mat->{lngindex}, $i);
-  #	  } else { 
+  #	  } else {
   #        warn "Plate material id not found for type: *$plate_id* FRO PRESS: $press";
   #	  }
   #
@@ -821,7 +833,7 @@ sub get_project_price {
   insert_service_spec($log, $dbh, $pid, $sid, "imp", $best_price->{imp});
 
   return post_process(
-    $log, $dbh, $pid, $sid, 
+    $log, $dbh, $pid, $sid,
     $project->{press_type}, $project, $spreads_remaining, $best_price);
 }
 
@@ -835,7 +847,7 @@ sub _log_timings {
 
   print STDERR sprintf "\nPRINTING IMPOSE elapsed time: %6.3fs impose: %6.3fs (%2d%%) price: %6.3fs (%2d%%) impositions: %3d (p %1.3fs/imp) \n\n\n",
   $t_req,
-  $t_impose, ($t_impose / $t_req) * 100,  
+  $t_impose, ($t_impose / $t_req) * 100,
   $t_price,  ($t_price  / $t_req) * 100,
   $total_imp, $t_price / $total_imp
   ;
@@ -854,7 +866,7 @@ sub fill_price_hash {
   # Imposition
   $price->{imp}                 = $imp;
 
-  $price->{hdnGrainDirection}   = $price->{grainDirection} 
+  $price->{hdnGrainDirection}   = $price->{grainDirection}
   = $imp->{grain_direction};
 
   $price->{txtImageWidth}       = $imp->{image_width};
@@ -900,7 +912,7 @@ sub fill_price_hash {
   $price->{hdnRollQty1}          = $price->{'Roll Qty'};
   $price->{hdnNetSheetCount1}    = $price->{'Net Sheet Count'};
   $price->{hdnGrossSheetCount1}  = $price->{hdnSheetQuantity1}
-  = $price->{txtPressSheetQty} 
+  = $price->{txtPressSheetQty}
   = $price->{'Gross Sheet Count'};
 
   $price->{hdnPaperCost1}        = $price->{'Paper Cost'};
@@ -923,8 +935,8 @@ sub fill_price_hash {
 
 
   # Run pricing.
-  $price->{hdnImpressionQuantity1}     = $price->{'Impressions'};
-  $price->{hdnImpressionRange}         = $price->{'ImpressionRange'};
+  $price->{hdnImpressionQuantity1}     = $price->{Impressions};
+  $price->{hdnImpressionRange}         = $price->{ImpressionRange};
   $price->{hdnTotalRunPrice1}          = $price->{hdnStandardRunningPrice}
   = $price->{'Run Price'};
   $price->{hdnTotalRunCost1}           = $price->{'Run Cost'};
@@ -934,7 +946,7 @@ sub fill_price_hash {
   $price->{hdnUVRunningPrice1}         = $price->{'UV Run Price'};
   $price->{hdnSoftTouchRunningPrice1}         = $price->{'SoftTouch Run Price'};
   $price->{hdnWorkTurnDryCharge}       = $price->{'WorkTurn Dry Charge'};
-  $price->{txtRollQty}                 = 
+  $price->{txtRollQty}                 =
   ceil($price->{hdnSheetQuantity1} * $price->{txtMWeight} / 1000);
 
   # Total pricing.
@@ -980,8 +992,8 @@ sub create_impositions {
   if ($project->{type} eq 'BusinessCards' and keys %{ $project->{versions} }) {
     @impositions = map {
       my $d = ($_->{run_style} =~ /^W/) ? 2 : 1;
-      my $n = ceil(  (keys %{$project->{versions}}) 
-      / ($_->{setup} / ($d*1.8)) 
+      my $n = ceil(  (keys %{$project->{versions}})
+      / ($_->{setup} / ($d*1.8))
       );
 
       (@{$_->{layout}} > $n) ? () : $_;
@@ -992,7 +1004,7 @@ sub create_impositions {
   if ($desired_size > 0) {
     my $signature_size = desired_signature_size($desired_size, \@impositions);
 
-    $signature_size = 1 
+    $signature_size = 1
     if $signature_size
     && $project->{press_type} eq 'digital'
     && $project->{bind_type} !~ /^(Loop|Saddle)Stitching$/
@@ -1003,7 +1015,8 @@ sub create_impositions {
     # convert the raw impositions of the single spread dimesions into
     # images of multiple spreads.
     my @converted_impositions;
-    foreach my $sig_size (1 .. $signature_size) {
+    my $smallest = $signature_size > 2 ? int($signature_size/3) : 1;
+    foreach my $sig_size ($smallest .. $signature_size) {
       print STDERR "converting to $sig_size\n";
       my @new_impositions = map { convert_to_signature($sig_size, $_->clone(), $project) } @impositions;
       push @converted_impositions, @new_impositions;
@@ -1049,7 +1062,7 @@ sub post_process {
   }
   if ( $project->{type} eq 'Envelopes' ) {
     $specs->{flat_width}  = sprintf("%g",$project->{width});
-    $specs->{flat_height} = sprintf("%g",$project->{height}); 
+    $specs->{flat_height} = sprintf("%g",$project->{height});
     $specs->{final_width} = $specs->{flat_width};
     $specs->{final_height} = $specs->{flat_height};
   }
@@ -1057,7 +1070,7 @@ sub post_process {
   if ($remaining_spreads == 0 || $project->{type} eq 'ScreenItem') {
     #this is a non-book situation so we can return now.
     # adjust price hash will now total paper and printing when needed.
-    adjust_price_hash($log, $dbh, $pid, $sid, $specs, $press_type);                                                    
+    adjust_price_hash($specs, $press_type, $project);
     return $specs;
   }
 
@@ -1076,21 +1089,21 @@ sub post_process {
     $specs->{txtSingleGateFolded}  = $template eq 'SingleGateFold' ? 1 : '';
     $specs->{txtDoubleGateFolded}  = $template eq 'DoubleGateFold' ? 1 : '';
 
-    if (get_bindery_type($log, $dbh, $pid) ne 'PerfectBinding') {
+    if ($$project{bind_type} ne 'PerfectBinding') {
       $specs->{txtSignatureQty4Page} = $template eq '4PageSignature' ? 1 : '';
     }
   } else {
     # Replace Javascript that fills out signature information
     # to be used by bindery services.
-    my %sigs = cut_signatures( $log, $dbh, $pid,$project->{press_type}, %$specs );
+    my %sigs = cut_signatures($pid, $specs, $project);
 
     foreach my $key ( keys %sigs ) {
-      $specs->{'txtSignatureQty'. $key . 'Page'} 
+      $specs->{'txtSignatureQty'. $key . 'Page'}
       = $sigs{$key} ? $sigs{$key} : '';
     }
   }
 
-  adjust_price_hash($log, $dbh, $pid, $sid, $specs, $press_type);
+  adjust_price_hash($specs, $press_type, $project);
 
   return $specs;
 }
@@ -1106,7 +1119,7 @@ sub post_process {
 # calculations and do everything right once based on that rather than kludging
 # it here. - Duke - y'know, cus Duke knew all about kludging. *cough*
 sub adjust_price_hash {
-  my ($log, $dbh, $pid, $sid, $specs, $press_type) = @_;
+  my ($specs, $press_type, $project) = @_;
 
   my $group = $specs->{txtSignatureQuantity} || 1;
 
@@ -1114,12 +1127,12 @@ sub adjust_price_hash {
     # use hdnImpositionCharge to determine what not to multiply in.
     for my $i (1..3) {
       my $other = $group - 1;
-      my $discount = (   $$specs{'hdnImpositionCharge'}
-        + $$specs{'hdnInkMixCost'}
-        + $$specs{'hdnWashUpCost'} 
+      my $discount = (   $$specs{hdnImpositionCharge}
+        + $$specs{hdnInkMixCost}
+        + $$specs{hdnWashUpCost}
       );
 
-      $discount += $$specs{'hdnPressCost'} if $press_type eq 'digital'; 
+      $discount += $$specs{hdnPressCost} if $press_type eq 'digital';
       $discount *= $other;
 
       $$specs{"txtPrice$i"} = ($$specs{"txtPrice$i"} * $group) - ($discount);
@@ -1127,15 +1140,8 @@ sub adjust_price_hash {
       $$specs{"hdnRunTime$i"} *= $group;
     }
 
-    # we can juryrig group factor in here to compensate for being unable
-    # to calculate imposition based on multiple signatures in a group
-    my $group_factor = $dbh->selectrow_array(q{
-      SELECT strvalue FROM tbl_service_specifications
-      WHERE strname = 'GroupFactor' AND lngserviceindex = ?
-      }, {}, $sid);
-
-    if ($group_factor) {
-      my $group_offset = $group_factor * ($group - 1);
+    if ($$project{group_factor}) {
+      my $group_offset = $$project{group_factor} * ($group - 1);
 
       $specs->{txtPrice1}           += $group_offset;
       $specs->{txtPrice2}           += $group_offset;
@@ -1144,17 +1150,16 @@ sub adjust_price_hash {
     }
   }
 
-  # A little bit of over kill but this should take care of the rouding issues.
-
-  my @qtys = ( undef, get_quantities($log, $dbh, $pid) );
+  # A little bit of over kill but this should take care of the rounding issues.
+  my @qtys = ( undef, @{$$project{quantities}});
 
   for my $i (1..3) {
     my $qty = $qtys[$i];
 
-    @$specs{"txtPrice$i", "txtUnitPrice$i"} = 
+    @$specs{"txtPrice$i", "txtUnitPrice$i"} =
     format_pricing($specs->{"txtPrice$i"}, $qty);
 
-    @$specs{"txtStockPrice$i", "txtStockUnitPrice$i"} = 
+    @$specs{"txtStockPrice$i", "txtStockUnitPrice$i"} =
     format_pricing($specs->{"txtStockPrice$i"}, $qty);
 
     @$specs{"total_price$i", "unit_price$i"} = format_pricing(
@@ -1165,17 +1170,17 @@ sub adjust_price_hash {
 }
 
 sub calc_print_price {
-  my ($log,              $dbh,              $variable,         
+  my ($log,              $dbh,              $variable,
     $pid,              $sid,              $qty,
     $spread,           $project,          $press,
     $imposition,       $imageWidth,       $imageHeight,
-    $side_one_colours, $side_two_colours, $filtered_colours, 
-    $pms_price,        $pms_coverage,     
+    $side_one_colours, $side_two_colours, $filtered_colours,
+    $pms_price,        $pms_coverage,
     $paper,            $paper_calliper,
     $run_style,        $aqueous_sides,    $UV_sides, $softtouch_sides,
-    $is_spot_coating,  $dry_trap,         $plate_changes,    
-    $versions,         $sheet_area,       $paper_supplied,   
-    $imp,              $spreads_remaining,    $unit_overs_OR,    
+    $is_spot_coating,  $dry_trap,         $plate_changes,
+    $versions,         $sheet_area,       $paper_supplied,
+    $imp,              $spreads_remaining,    $unit_overs_OR,
     $run_overs_OR,     $large_format,     $jig_specifics,
     $pages ) = @_;
 
@@ -1211,8 +1216,8 @@ sub calc_print_price {
 
     my $cover_spec = $dbh->selectrow_hashref(q{
       SELECT  lngindex as index, strmweight as mweight, strname as name,
-      sides 
-      FROM tbl_paper p, cover_specs c 
+      sides
+      FROM tbl_paper p, cover_specs c
       WHERE p.strname = c.name
       AND p.strcolour = c.colour
       AND p.strfinish = c.finish
@@ -1240,7 +1245,7 @@ sub calc_print_price {
     $lay_count{$count} = 1;
     map {
       print STDERR "LAYS: ". Dumper($_) if DEBUG;
-      $vl{$_->{label}} = 1; 
+      $vl{$_->{label}} = 1;
     } @{$l};
   }
   if (scalar(keys %lay_count) > 1 ) {
@@ -1260,7 +1265,7 @@ sub calc_print_price {
     #if ( $spreads_remaining <= 1 ) {
     # Each layout is a differently imposed press sheet.
     $numRuns = scalar @{ $imp->{layout} };
-    #} else { 
+    #} else {
     #	my $ver =  scalar keys %$versions;
     #	$numRuns =  ceil($ver / ($imposition/$plate_multiplier) );
     #print STDERR "USE MultiPage MV Plate Change,  $ver Versions; \n";
@@ -1268,7 +1273,7 @@ sub calc_print_price {
 
     # Count the number of plates that vary by version. WT/F look up a
     # pre-cached press unit counts, others count inks per side.
-    $plate_changes = scalar grep {$_->{mv_varies}} 
+    $plate_changes = scalar grep {$_->{mv_varies}}
     ($run_style =~ /^W/) ? @{$project->{wx_press_units}}
     : map { @{$_->{colours}} } @{$spread->{side}};
 
@@ -1278,9 +1283,9 @@ sub calc_print_price {
     # Scale the version plates with the number of layouts, the static
     # plates we'll leave as constant.
     if ( $project->{is_multipage} ) {
-      $plate_changes *= $lay_versions  - 1; 
+      $plate_changes *= $lay_versions  - 1;
     } else {
-      $plate_changes *= $numRuns  - 1; 
+      $plate_changes *= $numRuns  - 1;
 
     }
 
@@ -1293,7 +1298,7 @@ sub calc_print_price {
 
   #$plate_changes =   $plate_multiplier * $spread->{colour_changes} || 0;
 
-  $price{'hdnNumRuns'} = $numRuns;
+  $price{hdnNumRuns} = $numRuns;
 
   #print STDERR "HAVE COLOUR CHANGES: multi: $plate_multiplier, Changes: $plate_changes STYLE: $run_style IMP: $imposition Remain: $spreads_remaining \n";
   #print STDERR "HAVE NUM RUNS: $numRuns FORMS: $forms \n", Dumper($versions);
@@ -1308,7 +1313,7 @@ sub calc_print_price {
 
   #print STDERR "PRESS SETUP TIME: $press Plate Changes: $plate_changes : VERSIONS: $mp_versions \n";
 
-  my %colour_setup = 
+  my %colour_setup =
   press_setup_cost($log,            $dbh,         $project, $jig_specifics,
     $imageWidth,     $imageHeight, $variable,
     $paper_calliper, $press,       $used_plates,
@@ -1320,7 +1325,8 @@ sub calc_print_price {
     $colour_setup{'Plate Count'}, $press,        $imposition,
     $waste,                       $pid,          $print_sides,
     $unit_overs_OR,               $run_overs_OR, $run_style,
-    $paper, $imp, $cover, $spread->{colourcritical_extra_waste}, $variable
+    $paper, $imp, $cover, $spread->{colourcritical_extra_waste}, $variable,
+    $project
   );
 
   my $impressions = $is_largeformat ? $qty : $sheet_qty{'Gross Sheet Count'} * $print_sides;
@@ -1397,7 +1403,7 @@ sub calc_print_price {
   }
 
   # Charge on setting up equipments for perfecting run style.
-  my $perfecting_change_over = $is_perfecting 
+  my $perfecting_change_over = $is_perfecting
   ? get_price($log, $dbh, $variable, 'PerfectingChangeOver', undef, $press)
   : 0;
 
@@ -1432,7 +1438,7 @@ sub calc_print_price {
 
   $price{ImpressionRange} = $run_price{ImpressionRange};
 
-  my %aqueous = 
+  my %aqueous =
   get_coating_price($log,             $dbh,
     $variable,        $sheet_qty{'Gross Sheet Count'},
     $aqueous_sides,   $press,
@@ -1440,7 +1446,7 @@ sub calc_print_price {
     $is_spot_coating, $pid,
     $sid, $pages, 'Aqueous');
 
-  my %UV = 
+  my %UV =
   get_coating_price($log,             $dbh,
     $variable,        $sheet_qty{'Gross Sheet Count'},
     $UV_sides,        $press,
@@ -1486,10 +1492,10 @@ sub calc_print_price {
     $side_one_colours, $side_two_colours,
     $spreads_remaining, $project->{metal_effects});
 
-  my $setup_cost 
-  = $is_largeformat ? $run_price{'Largeformat Setup'} 
+  my $setup_cost
+  = $is_largeformat ? $run_price{'Largeformat Setup'}
   : $colour_setup{'Total Setup Cost'}
-  + $imposition_charge 
+  + $imposition_charge
   + $perfecting_change_over
   + $workturn_dry_cost
   + $aqueous{'Setup Price'}
@@ -1509,7 +1515,7 @@ sub calc_print_price {
   $price{paper} = $paper;
 
   # Why do we compare the sheet count then set the form count?
-  if ( ! $price{'Buy Quantity'} 
+  if ( ! $price{'Buy Quantity'}
     || $price{'Buy Quantity'} <= $price{'Gross Sheet Count'})
   {
     # Changing the buy quantity to get the form count. So that we can
@@ -1635,11 +1641,11 @@ sub calc_print_price {
   $price{'Paper Price'}       = $price{'Buy Quantity'} * $paper_price->{Price};
   $price{'Setup Cost'}        = $setup_cost;
 
-  $price{'Impressions'}       = $impressions;
+  $price{Impressions}       = $impressions;
   $price{'Impression Price'}  = $run_price{'Impression Price'};
 
-  $price{'hdnRunSpeed'}       = $run_price{'Run Speed'};
-  $price{'hdnRunTime1'}       = sprintf('%.2f',$impressions/$run_price{'Run Speed'}) if $run_price{'Run Speed'};
+  $price{hdnRunSpeed}       = $run_price{'Run Speed'};
+  $price{hdnRunTime1}       = sprintf('%.2f',$impressions/$run_price{'Run Speed'}) if $run_price{'Run Speed'};
 
   $price{'PMS Run Price'}     = $pms_price->{'Total Run Price'} * $imposition;
 
@@ -1712,14 +1718,14 @@ sub calc_print_price {
   # if paper is supplied by customer or the cost of paper is shown on the
   # interface.
   $price{'Comparison Cost'} =
-  + $price{'Total Cost'} 
-  + $price{'Film Cost'} 
+  + $price{'Total Cost'}
+  + $price{'Film Cost'}
   + ($price{'Paper Price'} || $price{'Paper Comp Price'})
   + ($paper_price->{stitch_price} * $qty) ;
 
   print STDERR "HAVE PRICE DUMPER \n\n\nn", Dumper(\%price) if DEBUG;
 
-  #print STDERR "HAVE PAPER COMP DUMPER \n\n\nn", 
+  #print STDERR "HAVE PAPER COMP DUMPER \n\n\nn",
   #			Dumper( $price{'Paper Price'},  $price{'Paper Comp Price'},
   #					$price{paper}{width},   $price{paper}{height},
   #					$price{'Comparison Cost'}, $price{'Total Cost'} ,
@@ -1748,7 +1754,7 @@ sub calc_print_price {
   + $pms_price->{'Ink Mix Charge'}
   + $pms_price->{'Press Wash Charge'};
 
-  $price{'txtPlateQuantity'}     = $colour_setup{'Plate Count'};
+  $price{txtPlateQuantity}     = $colour_setup{'Plate Count'};
   $price{'MultiPass Run'}        = $run_price{'MultiPass Run'};
   $price{'WorkTurn Dry Charge'}  = $workturn_dry_cost;
   $price{'Press Wash Charge'}    = $pms_price->{'Press Wash Charge'}
@@ -1758,7 +1764,7 @@ sub calc_print_price {
 
 
 sub get_varnish_run_price {
-  my ($log, $dbh, $variable, 
+  my ($log, $dbh, $variable,
     $press, $print_sides, $impressions, $dry_trap, @colours) = @_;
 
   # How many varnishes we have per sheet...
@@ -1789,7 +1795,7 @@ sub get_mixed_colours {
   my @service_colours = ();
 
   my @secondarys = @{ $dbh->selectcol_arrayref(q{
-  SELECT lngServiceIndex FROM tbl_Service_Specifications 
+  SELECT lngServiceIndex FROM tbl_Service_Specifications
   WHERE strName = 'SecondarySignature' AND lngProjectIndex = ?
   }, {}, $pid) };
 
@@ -1818,7 +1824,7 @@ sub get_washed_colours {
   my %service_colours = ();
 
   my @secondarys = @{ $dbh->selectcol_arrayref(q{
-  SELECT lngServiceIndex FROM tbl_Service_Specifications 
+  SELECT lngServiceIndex FROM tbl_Service_Specifications
   WHERE strName = 'SecondarySignature' AND lngProjectIndex = ?
   }, {}, $pid) };
 
@@ -1851,7 +1857,7 @@ sub get_ink_coverage {
 # Returns a price per image, which will later need to be multiplied by the imposition
 sub get_special_colours_price {
   my ($log,         $dbh,         $variable,      $pid,
-    $sid,         $project,  	$press, 		$print_sides, 
+    $sid,         $project,  	$press, 		$print_sides,
     $pms_coverage, $mixed_colours, $washed_colours,
     $special_colours)
   = @_;
@@ -1870,7 +1876,7 @@ sub get_special_colours_price {
 
   my $wash_price = eprint::service::get_price($log, $dbh, $variable, 'WashUp', '', $press);
 
-  $price{'inkQty'}{'total'} = 0;
+  $price{inkQty}{total} = 0;
   $price{'Mixed Colours'} = '';
 
   foreach my $key (keys %$pms_coverage) {
@@ -1896,7 +1902,7 @@ sub get_special_colours_price {
 
     my $ink_units = get_ink_coverage($project, $pms_coverage->{$key}, $sheets_per_ink_unit);
 
-    my $ink_price = 
+    my $ink_price =
     eprint::material::get_price($log, $dbh, $variable, $ink_mat, $ink_units);
 
     my $run_price =  $ink_units * $ink_price / $print_sides;
@@ -1938,7 +1944,7 @@ sub get_coating_price {
   = @_;
 
 
-  return ('Setup Price' => 0, 'Run Price' => 0) 
+  return ('Setup Price' => 0, 'Run Price' => 0)
   unless $coating_sides > 0 && $sid > 0;
 
   my $make_ready = 0;
@@ -1957,7 +1963,7 @@ sub get_coating_price {
 
   # If we're the first and only signature, or we're the first in our
   # spread group, charge the AQ MakeReady if they've priced it.
-  if ($single_sig_index == 0 
+  if ($single_sig_index == 0
     || $sid == get_primary_signature_service($log, $dbh, $pid, 'Interior Spreads')
     || $sid == get_primary_signature_service($log, $dbh, $pid, 'GateFolded Spreads')
     || $sid == get_primary_signature_service($log, $dbh, $pid, 'Cover Spreads'))
@@ -2124,7 +2130,7 @@ sub get_run_price {
   # our impression prices based on a range for printing the whole book.
 
   # Our number is the Press sheet Count * the number of spreads for the
-  # entire book divided by the number spreads in the imposition 
+  # entire book divided by the number spreads in the imposition
   if ( $press_type eq 'digital' && $pages > 1 && $imp->{spreads} ) {
     $press_sheets = $press_sheets * $pages / $imp->{spreads};
     # If printing on both sides then double the lookup range to
@@ -2209,16 +2215,16 @@ sub get_run_price {
 
       }
     }
-  } 
+  }
 
   if ( $foil ) {
-    $running_price += (eprint::service::get_price($log, $dbh, 
+    $running_price += (eprint::service::get_price($log, $dbh,
         $variable, 'ScreenFoilGluing', $press_sheets)) * $foil;
   }
 
   if ( $underbase ) {
     my $sides = $side_one_colours && $side_two_colours ? 2 : 1;
-    $running_price += (eprint::service::get_price($log, $dbh, 
+    $running_price += (eprint::service::get_price($log, $dbh,
         $variable, 'DischargeUnderbase', $press_sheets)) * $sides;
   }
 
@@ -2375,7 +2381,7 @@ sub calc_sheet_qty {
   my ($log,         $dbh,           $qty,            $colours,
     $press,       $imposition,    $version_waste,  $pid,
     $print_sides, $unit_overs_OR, $run_overs_OR,   $run_style,
-    $paper,		  $imp, $cover, $colourcritical_overs, $variable ) = @_;
+    $paper,		  $imp, $cover, $colourcritical_overs, $variable, $project ) = @_;
 
   return 0 if !$imposition;
 
@@ -2399,16 +2405,16 @@ sub calc_sheet_qty {
   my $net_forms = $net_sheets;
 
   my ($form_multiplier) = 1;
-  if ( $$paper{'index'} and !exists($$paper{multipart})) {
+  if ( $$paper{index} and !exists($$paper{multipart})) {
     # We need to adjust the net sheets (and everything downstream from them)
     # here for multipart forms.
-    $_ = "SELECT lngmultipart FROM tbl_Paper where lngIndex = '$$paper{'index'}'";
+    $_ = "SELECT lngmultipart FROM tbl_Paper where lngIndex = '$$paper{index}'";
     @$paper{multipart} = sql::sql_statement( $log, $dbh, $_ );
   }
   if ($$paper{multipart}) {
     my $form_multiplier = $$paper{multipart};
     if ($form_multiplier > 1) {
-      $net_sheets *= $form_multiplier 
+      $net_sheets *= $form_multiplier
     } else {
       $form_multiplier = 1;
     }
@@ -2424,8 +2430,8 @@ sub calc_sheet_qty {
   my $setup_overs;
 
   if ( $unit_overs_OR ne '' ) {
-    $setup_overs = $unit_overs_OR 
-  } else { 
+    $setup_overs = $unit_overs_OR
+  } else {
     my $overs_per_colour =
     eprint::equipment::get_specification($log, $dbh, 'Press Unit Setup Overs', $colours, $press);
 
@@ -2438,10 +2444,9 @@ sub calc_sheet_qty {
   }
 
   #multi-page multi-version overs adjustment
-  my $bookid = eprint::project::get_service_index($log, $dbh, $pid, 'Book');
-  if ($bookid) {
+  if ($$project{bookid}) {
     #need the number of versions if there aren't more than one this function isn't needed
-    my ($num_versions) = eprint::service::get_specifications($log, $dbh, $pid, $bookid, ('num_versions'));
+    my ($num_versions) = $$project{num_versions};
     my ($mv_mp_overs) = eprint::equipment::get_specification($log, $dbh, 'mv_mp_overs', 0, $press);
     $setup_overs += $mv_mp_overs * ($num_versions - 1) * $colours if $num_versions > 1 && $mv_mp_overs > 0;
   }
@@ -2465,7 +2470,7 @@ sub calc_sheet_qty {
 
   # Get the bindery (and other service) overs that we will need to provide
   # extra sheets for.
-  # my ($service_setup_overs, $service_run_overs) 
+  # my ($service_setup_overs, $service_run_overs)
   #    = calc_service_overs($log, $dbh, $pid);
 
   my ($service_setup_overs, $service_run_overs)  = (0,0);
@@ -2480,11 +2485,11 @@ sub calc_sheet_qty {
   # Add the colour critical set up overs
   $setup_overs += ($colourcritical_overs * $colours);
   if ( $unit_overs_OR ne '' ) {
-    $setup_overs = $unit_overs_OR 
+    $setup_overs = $unit_overs_OR
   }
   if ( $run_overs_OR ne '' ) {
     $run_overs = ceil($net_sheets * $run_overs_OR);
-  } else { 
+  } else {
     $run_overs = $min_overs unless $run_overs > $min_overs;
   }
 
@@ -2545,7 +2550,7 @@ sub press_setup_cost {
   if (eprint::equipment::get_type($log, $dbh, $press) eq 'screen') {
 
     # Add 6 inches of screen in all directions.
-    my $area = (SCREEN_LAP + $width  + SCREEN_LAP) 
+    my $area = (SCREEN_LAP + $width  + SCREEN_LAP)
     * (SCREEN_LAP + $height + SCREEN_LAP);
 
     my $screen_material = eprint::material::get_price(
@@ -2623,7 +2628,7 @@ sub press_setup_cost {
 
   # Becuase the material ID for plates is the PlateSetter we do not send the
   # press to get a plate price or it will not find it.
-  $plate_price_qty *= $variable->{SignatureQuantity} 
+  $plate_price_qty *= $variable->{SignatureQuantity}
   if $variable->{SignatureQuantity} > 1;
 
   my $plate_price = 0;
@@ -2678,8 +2683,8 @@ sub press_setup_cost {
 
   $plate_total += $plate_making_make_ready if $plate_count;
 
-  if ( $screen_total > 0 ) { $plate_total += ($screen_total * $plate_count) } 
-  else                     { $plate_total  = 0 unless $plate_price          } 
+  if ( $screen_total > 0 ) { $plate_total += ($screen_total * $plate_count) }
+  else                     { $plate_total  = 0 unless $plate_price          }
 
   my $envelope_setup = 0;
   if ($$project{type} eq 'Envelopes') {
@@ -2723,29 +2728,30 @@ sub press_setup_cost {
 
 
 sub cut_signatures {
-  my ($log, $dbh, $pid, $press_type, %specs) = @_;
+  my ($pid, $specs, $project) = @_;
 
-  my $bind_type  = eprint::project::get_bindery_type( $log, $dbh, $pid );
+  my $bind_type  = $$project{bind_type};
+  my $press_type = $$project{press_type};
 
   die "No bindery type found for p:$pid" unless $bind_type;
 
   my $spread_size = $bind_type =~ /^(Loop|Saddle)Stitching$/ ? 4 : 2;
 
   my ($rows, $cols);
-  my $signature_size = $specs{spreads_in_group};
-  my $signature_qty  = $specs{txtSignatureQuantity};
+  my $signature_size = $$specs{spreads_in_group};
+  my $signature_qty  = $$specs{txtSignatureQuantity};
   my %count;
   $count{$_} = 0 for (2,4,6,8,12,16,24,32,64);
 
   if ( $press_type eq 'digital' ) {
-    my $new_size = $signature_size % 2 ? 1 : 2; 
+    my $new_size = $signature_size % 2 ? 1 : 2;
     $count{$spread_size * $new_size} = $signature_qty * ($signature_size / $new_size);
     return %count;
   }
 
-  if ($specs{SpreadRows} && $specs{SpreadCols} && ($signature_size != 1)) {
-    $rows = $specs{SpreadRows} / $specs{hdnImpositionRows};
-    $cols = $specs{SpreadCols} / $specs{hdnImpositionColumns};
+  if ($$specs{SpreadRows} && $$specs{SpreadCols} && ($signature_size != 1)) {
+    $rows = $$specs{SpreadRows} / $$specs{hdnImpositionRows};
+    $cols = $$specs{SpreadCols} / $$specs{hdnImpositionColumns};
   } else {
     $count{4} = $signature_qty;
     return %count;
@@ -2779,20 +2785,19 @@ sub cut_signatures {
   $count{ $mod_row_sets * 1 * $spread_size } += $mod_col_sets;
 
   foreach my $k (keys %count) {
-    $count{$k} *= $specs{txtSignatureQuantity} 
-    if $specs{txtSignatureQuantity};
+    $count{$k} *= $$specs{txtSignatureQuantity} if $$specs{txtSignatureQuantity};
   }
 
   return %count;
 }
 
 sub valid_price {
-  my $price = shift; 
+  my $price = shift;
 
 
   $$price{'Valid Price'} = 0;
 
-  if ($$price{'Impression Price'} == 0) { 
+  if ($$price{'Impression Price'} == 0) {
     Apache2::ServerUtil->server->log_error("Impression price is 0");
     return 0;
   }
@@ -2911,7 +2916,7 @@ sub get_imposition_charge {
         'ImpositionBook', $imageHeight * $imageWidth, $press);
 
       $imposition_charge += $per_page_charge * $$imp{spreads} * 4 * $$imp{setup};    #since we will have 4 pages per spread
-      print STDERR "PER PGE: $per_page_charge SPREADS: $$imp{'spreads'}  SETUP: $$imp{'setup'} WIDTH: $imageWidth x $imageHeight; TOTA: $imposition_charge \n", Dumper($imp) if DEBUG;
+      print STDERR "PER PGE: $per_page_charge SPREADS: $$imp{spreads}  SETUP: $$imp{setup} WIDTH: $imageWidth x $imageHeight; TOTA: $imposition_charge \n", Dumper($imp) if DEBUG;
 
       my $base_trapping;
       if ((@$side_one_colours > 1) || (@$side_two_colours > 1)) {
@@ -2922,7 +2927,7 @@ sub get_imposition_charge {
           'TrappingBook', $imageHeight * $imageWidth, $press);
 
         $trapping_charge =
-        $base_trapping * $$imp{'spreads'} * 4 * $$imp{'setup'};
+        $base_trapping * $$imp{spreads} * 4 * $$imp{setup};
 
         $trapping_make_ready =
         eprint::service::get_price($log, $dbh, $variable,
@@ -2939,7 +2944,7 @@ sub get_imposition_charge {
 
       # Shove in group factor here so that we can use it later for price # correction
       my $group_factor =
-      ($per_page_charge + $base_trapping) * $$imp{'spreads'} * 4 * $$imp{'setup'};    # includes imposition AND trapping
+      ($per_page_charge + $base_trapping) * $$imp{spreads} * 4 * $$imp{setup};    # includes imposition AND trapping
       print STDERR "GROUP FACTOR : $group_factor PPC: $per_page_charge BASE TRAP:  $base_trapping \n" if DEBUG;
 
       # Wipe out any previous group factors for this signature
@@ -2998,7 +3003,7 @@ sub get_imposition_charge {
     $imposition_charge = $imposition_minimum
   }
 
-  $imposition_charge += eprint::service::get_price($log, 
+  $imposition_charge += eprint::service::get_price($log,
     $dbh, $variable, 'MetalEffectsMakeReady',)
   if $metal_effects;
 
@@ -3033,7 +3038,7 @@ sub calc_service_overs {
   my ($total_setup_overs,$total_running_overs) = (0,0);
 
   my $sth = $dbh->prepare(q{
-    SELECT strid, lngsetupovers, dblrunovers 
+    SELECT strid, lngsetupovers, dblrunovers
     FROM tbl_service_types
     WHERE (lngsetupovers IS NOT NULL AND lngsetupovers > 0)
     OR (dblrunovers   IS NOT NULL AND dblrunovers   > 0)
