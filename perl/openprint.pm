@@ -5,12 +5,16 @@ use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $
 
 use constant Debug => 1;
 
-sub session_init {
+require openprint::Host;
+require openprint::Host_Interface;
+
 	require Apache2::Cookie;
 	require Apache::Session::Postgres;
 	require openprint::Pricelist;
 	require openprint::Currency;
 	require DateTime::TimeZone;
+
+sub session_init {
 
 	$parser = 'DateTime::Format::Pg';
  
@@ -173,7 +177,6 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
       $openprint::log->debug("openrpint Pricelist $$Pricelist{id} from $session{Pricelist_id}");
     }
   }
-  return;
 
   my $ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
   if ($ip) {
