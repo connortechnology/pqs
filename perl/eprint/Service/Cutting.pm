@@ -46,6 +46,9 @@ use eprint::Service::Spiral qw(SPIRAL);
 use eprint::Service::Printing::Constants qw(:press_types);
 use callback;
 use session;
+require openprint;
+
+my @cutters;
 
 # DEPRECATED: The only way to really determine if cutting is necessary is to
 # see if any estimate quantity of the project needs _any_ jobs done. 
@@ -93,13 +96,6 @@ sub calc {
     die "Invalid project ($pid - $sid)" 
         unless $pid && $sid && int($qty[1]) > 0;
 
-    # Really this shouldn't be here but the get_price function is horribly
-    # ugly using \%variable to retrieve customer price list information and
-    # other things, so we wrap it up into a bit neater package.
-    local *price = sub {
-        my ($equip, $service, $qty) = @_;
-        get_price($log, $dbh, $var, $service, $qty, $equip);
-    };
     
     # Running each quantity as a seperate project is a waste of resources at
     # present as the signature sizes are always the same. In the near future
@@ -143,17 +139,26 @@ sub calc {
     return 'calculated';
 }
 
+sub init {
+  my ($pid) = @_;
+  # Load all the cutters in inventory.
+  @cutters = map { cutter($openprint::dbh, $_) }
+                      eprint::service::valid_equipment(undef, $openprint::dbh, 'Cutting', $pid);
+    # Really this shouldn't be here but the get_price function is horribly
+    # ugly using \%variable to retrieve customer price list information and
+    # other things, so we wrap it up into a bit neater package.
+}
+
+sub price {
+  my ($equip, $service, $qty) = @_;
+  get_price($openprint::log, $openprint::dbh, $openprint::varable, $service, $qty, $equip);
+}
 
 # We're going to start with a very simple costing algorithm. Basically we load
 # all the cutters in inventory into memory and let the ones from the same
 # supplier as the print compete for each job and sum the winners.
 sub project_cost {
     my ($dbh, $pid, $sid, @jobs) = @_;
-
-    # Load all the cutters in inventory. For now we'll just load them all
-    # everytime.
-    my @cutters = map { cutter($dbh, $_) }
-                      eprint::service::valid_equipment(undef, $dbh, 'Cutting', $pid);
 
     # Each job is to competed for by all the cutters that are valid. Valid is
     # currently defined as being of the same supplier as the press that
