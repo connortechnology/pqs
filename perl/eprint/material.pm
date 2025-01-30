@@ -4,6 +4,15 @@ use warnings;
 
 use eprint::customer qw(get_discount);
 use eprint::equipment;
+require openprint;
+
+my %cache_by_id;
+my %cache_by_strid;
+
+sub init_cache {
+  %cache_by_id = sql::execute($openprint::log, $openprint::dbh, 'SELECT lngindex, strid from tbl_materials');
+  @cache_by_strid{values %cache_by_id} = keys %cache_by_id;
+}
 
 sub get_price {
   my ($log, $dbh, $variable, $material, $range, $equip) = @_;
@@ -17,11 +26,12 @@ sub get_price {
   }
 
   if ($material =~ /^\d+$/) {
+
     # Verify the numberic ID
-    $mi = scalar $dbh->selectrow_array(q{SELECT lngindex FROM tbl_materials WHERE lngindex = ?}, undef, $material);
+    $mi = %cache_by_id ? $cache_by_id{$material} : scalar $dbh->selectrow_array(q{SELECT lngindex FROM tbl_materials WHERE lngindex = ?}, undef, $material);
   } else {
     # Fetch the numberic ID if they're passed us a string.
-    $mi = scalar $dbh->selectrow_array(q{SELECT lngindex FROM tbl_materials WHERE strid = ?}, undef, $material);
+    $mi = %cache_by_strid ? $cache_by_strid{$material} : scalar $dbh->selectrow_array(q{SELECT lngindex FROM tbl_materials WHERE strid = ?}, undef, $material);
   } # end if id or string
 
   if (defined($equip) && $equip) {
