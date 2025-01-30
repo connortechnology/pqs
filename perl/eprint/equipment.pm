@@ -1,12 +1,13 @@
 package eprint::equipment;
 use strict;
 
-
+use Data::Dumper;
 use Carp;
 use Scalar::Util qw(dualvar looks_like_number);
 use List::Util qw(first);
 use Tie::Hash::Equipment;
 use sql ();
+require openprint;
 
 use base qw(Exporter);
 our @EXPORT_OK = qw( get_name
@@ -22,6 +23,14 @@ our @EXPORT_OK = qw( get_name
 our %EXPORT_TAGS = ( common => [@EXPORT_OK] );
 
 our %cache; # TEMP: To store localized caches of equipment specs.
+
+my %cache_by_id;
+my %cache_by_strid;
+
+sub init_cache {
+  %cache_by_id = sql::execute($openprint::log, $openprint::dbh, 'SELECT lngindex, strid from tbl_equipment');
+  @cache_by_strid{values %cache_by_id} = keys %cache_by_id;
+}
 
 # Given the equipment's ID return it's name.
 sub get_name {
@@ -70,6 +79,7 @@ sub get_type {
 sub get_id_by_index {
     my ($log, $dbh, $eid) = @_;
 
+    return $cache_by_id{$eid} if %cache_by_id;
     my $sth = $dbh->prepare_cached(q{
         SELECT strid FROM tbl_equipment WHERE lngindex = ?
     });
@@ -81,6 +91,7 @@ sub get_id_by_index {
 sub get_index_by_id {
     my ($log, $dbh, $ref) = @_;
 
+    return $cache_by_strid{$ref} if %cache_by_strid;
     return scalar $dbh->selectrow_array(q{
         SELECT lngIndex FROM tbl_Equipment WHERE strID = ?
     }, undef, $ref);
@@ -174,7 +185,10 @@ sub cache_lookup {
         my $name = $names[0];
 
         # If the equipment or service doesn't exist the can't be any pirce.
-        return unless exists $cache{$eid}{$name};
+        if (!exists $cache{$eid}{$name}) {
+          #$openprint::log->debug("No entry for $name for $eid ".Data::Dumper::Dumper($cache{$eid}));
+          return;
+        }
         
         my $spec = $cache{$eid}{$name};
 
@@ -245,23 +259,17 @@ sub get_specifications {
     $sth->bind_columns( \$name, \$value );
 
     my %equip;
-    $equip{$name} = $value while ($sth->fetch);
-
-    # Neither hashes nor IN() guarantee ordering. Quick fix that should
-    # guarantee proper ordering until a better system can be found.
-    my %order;
-    if (@specs) {
-        for (keys %equip) {
-            my $spec = $_;
-            tr/A-Z /a-z/d;
-
-            $order{ $_ } = $spec;
-        }
+    while($sth->fetch) {
+      $equip{$name} = $value;
+      $name =~ tr/A-Z /a-z_/d;
+      $equip{$name} = $value;
     }
+
+    $cache{$eid} = \%equip;
 
     # If a specification list was given only a value list is expected,
     # otherwise return the full hash.
-    return (@specs) ? @equip{ @order{ @specs } } : %equip;
+    return (@specs) ? @equip{@specs} : %equip;
 }
 
 # Duke: This procedure will get units based on a service and a piece of
@@ -306,8 +314,11 @@ sub get_specification {
     $eid = ( $eid =~ /^\d+$/ ) ? $eid : get_index_by_id($log, $dbh, $eid);
 
     # TEMP: Get from package cache if it's been populated.
-    return cache_lookup($eid, $range, $name) 
-        if %cache and exists $cache{$eid};
+    if (%cache and exists $cache{$eid}) {
+      #print STDERR "Doing cache lookup for $eid $range $name\n";
+      return cache_lookup($eid, $range, $name);
+    }
+
 
     # Remove all spaces and lowercase the specification name given so we to
     # avoid lookup errors in our ever so fun hash style table.
@@ -341,9 +352,7 @@ sub equipment_fits {
          $rotate, $min_width_override, $min_length_override 
      ) = @_;
 
-use Data::Dumper;
-print STDERR "EQUIPMENT FITS: ", Dumper(@_);
-print STDERR "FITS 1\n";
+#print STDERR "EQUIPMENT FITS: ", Dumper(@_);
     # If we haven't explicitly said we can't rotate the supplied dimensions
     # to try fitting the other way, we'll assume we can (legacy reasons).
     $rotate = 1 unless defined $rotate and $rotate == 0;
@@ -366,7 +375,6 @@ print STDERR "FITS 1\n";
     if (defined $min_length_override) {
         $equip{'Minimum Sheet Length'} = $min_length_override;
     }
-print STDERR "FITS 2\n";
     # Check the supplied size agains the equipment.    
     if ((( 1*$width  < 1*$equip{'Minimum Sheet Width'} ) 
       or ( 1*$height < 1*$equip{'Minimum Sheet Length'}) 
@@ -385,7 +393,6 @@ print STDERR "FITS 2\n";
             return 0;
         }
     }
-print STDERR "FITS 3\n";
     
     # If the width and height fit, check the depth.
     if ( $equip{'Minimum Calliper'} and 1*$calliper > 0 and 1*$calliper < 1*$equip{'Minimum Calliper'} ) {
@@ -394,7 +401,7 @@ print STDERR "FITS 3\n";
     if ( $equip{'Maximum Calliper'} and 1*$calliper > 0 and 1*$calliper > 1*$equip{'Maximum Calliper'} ) {
         return 0;
     }
-print STDERR "Equip: $eid FITS Project W: $width x H: $height on ", Dumper(\%equip); 
+    #print STDERR "Equip: $eid FITS Project W: $width x H: $height on ", Dumper(\%equip); 
     # If we're here it fits.
     return 1;
 }
