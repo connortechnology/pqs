@@ -1129,8 +1129,7 @@ sub select_customer {
     (CASE WHEN ysnsupplier = 'Y' THEN true ELSE false END) AS is_supplier,
     (CASE WHEN ysnreseller = 'Y' THEN true ELSE false END) AS is_reseller,
     ordercredit
-    FROM tbl_logged_in JOIN tbl_customer USING (lngcustomerid)
-    WHERE lngcustomerid = ?
+    FROM tbl_customer WHERE lngcustomerid = ?
     }, undef, $variable->{cust_id});
 
   $variable->{strCompanyName} = $variable->{user}{company}{name};
