@@ -62,7 +62,7 @@ print STDERR "HAVE PADDING STATION: $padding_station -- $w -- $h \n";
 
     my $status;
     for my $i (1..3) {
-        my $qty = int $specs->{"txtQuantity$i"} || $qty[$i];
+        my $qty = int ($specs->{"txtQuantity$i"} || $qty[$i] || 0);
 
         next unless $qty && $qty > 0;
 
