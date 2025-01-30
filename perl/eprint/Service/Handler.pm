@@ -66,7 +66,7 @@ sub handler {
       return Apache2::Const::OK;
     }
 
-    my $dbh = PQS::DB->connect($r);  # TODO Use RO session for GETs
+    $dbh = PQS::DB->connect($r);  # TODO Use RO session for GETs
     session::dbh($dbh);
 
     #%openprint::param = %{$variable->{param}} = map {$_ => $r->param($_)} $r->param();
@@ -96,7 +96,12 @@ sub handler {
         #$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
       } # end if
     } # end foreach
+  openprint::configuration::init( $r->dir_config() );
+  openprint::session_init();
 
+  eprint::service::init_cache();
+  eprint::material::init_cache();
+  eprint::equipment::init_cache();
 
     my $customer_id = eprint::login::get_login_info( # Populates $variable
         $r->log, $dbh, $cookie, $variable, 'C'
@@ -234,7 +239,7 @@ sub response {
 
         # AJAX pricing request.
         if ($r->method_number == M_GET) {
-            $dbh->rollback; # GET requests don't save.
+          #$dbh->rollback; # GET requests don't save.
 
             $specs->{status} = $status; # Send client the status
 
