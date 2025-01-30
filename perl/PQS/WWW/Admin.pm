@@ -162,7 +162,7 @@ sub valid_employee {
                                      FROM tbl_configuration
                                      WHERE strconfigtitle = 'idletime') )
         FROM tbl_logged_in
-        WHERE strsessionid = ? AND chrsite = 'E'
+        WHERE strsessionid = ?
     });
     my ($uid, $exist, $admin, $timed_out) =
         $dbh->selectrow_array($sth, undef, $session);
@@ -878,8 +878,8 @@ sub specifications {
     my $t = shift;
 
     # Simplistic sanity checks.
-    my $eid  = $r->param('equipment'); $eid  =~ tr/0-9//cd; # Edit existing.
-    my $type = $r->param('type');      $type =~ tr/0-9//cd; # Create new.
+    my $eid  = $r->param('equipment'); $eid  =~ tr/0-9//cd if $eid; # Edit existing.
+    my $type = $r->param('type');      $type =~ tr/0-9//cd if $type; # Create new.
 
     die "An integer equipment id or an equipment type is required."
         unless $eid or $type;
