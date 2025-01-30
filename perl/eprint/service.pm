@@ -23,6 +23,14 @@ use constant {
     NEEDED     => 2,
 };
 
+my %cache_by_id;
+my %cache_by_strid;
+
+sub init_cache {
+  %cache_by_id = sql::execute($openprint::log, $openprint::dbh, 'SELECT lngindex, strid from tbl_services');
+  @cache_by_strid{values %cache_by_id} = keys %cache_by_id;
+}
+
 # Project service specifications, pricing, and equipment.
 my @specs = qw( insert_service_spec   get_specifications
                 insert_service_specs  get_specifications_pairs
@@ -150,15 +158,14 @@ sub load_pricing {
         SELECT s.strid, e.lngindex, p.lngmin, p.lngmax, p.dblprice, 
                (CASE WHEN p.ysndiscountable = 'Y' THEN 1 ELSE 0 END) 
         FROM tbl_services s, tbl_service_prices p, 
-             tbl_equipment e, equipment_type_service t, tbl_customer c
+             tbl_equipment e, equipment_type_service t
         WHERE s.lngindex       = p.lngserviceindex
           AND s.lngindex       = t.service
           AND e.lngindex       = p.lngequipmentindex
-          AND p.lnglistindex   = c.lngpricelist
-          AND c.lngcustomerid  = ?
+          AND p.lnglistindex   = ?
           AND e.strtype IN ($types)
     });
-    $sth->execute($cid);
+    $sth->execute($openprint::Pricelist->id());
 
     my ($service, $eid, $min, $max, $price, $discountable);
     $sth->bind_columns(\$service, \$eid, \$min, \$max, \$price, \$discountable);
@@ -216,11 +223,10 @@ sub get_price {
         return $price;
    }
 
-    my $index = $dbh->selectrow_array(q{
+    my $index = %cache_by_strid ? $cache_by_strid{$service} : $dbh->selectrow_array(q{
         SELECT lngindex FROM tbl_services WHERE strid = ?
     }, {}, $service);
     return unless $index;
-
 
     my $eid = !defined $equipment   ? undef
             : $equipment =~ /^\d+$/ ? $equipment
@@ -267,10 +273,9 @@ sub price_item {
                 strunits, 
                 lngequipmentindex,
                 (CASE WHEN ysndiscountable = 'Y' THEN 1 ELSE 0 END)
-          FROM tbl_service_prices p, tbl_customer c
+          FROM tbl_service_prices p
           WHERE lngserviceindex = ?
-            AND p.lnglistindex  = c.lngpricelist
-            AND c.lngcustomerid = ?
+            AND p.lnglistindex  = ?
             $clause
           ORDER BY lngmin
           LIMIT 1
@@ -278,7 +283,7 @@ sub price_item {
 
 
     my ($price, $units, $equip, $discountable) 
-        = $dbh->selectrow_array($sth, undef, $service, $cid, @args);
+        = $dbh->selectrow_array($sth, undef, $service, $openprint::Pricelist->id(), @args);
 
     # Apply the customer's discount if applicable.
     if ($discountable) {
@@ -1020,7 +1025,7 @@ sub price {
     }
   };
   if ($@) { 
-    $log->error($@) if DEBUG;
+    $log->error($@);
 
     # An error during munging most likely is a validation error.
     # warn("${service_type}::munge: $@");
@@ -1046,6 +1051,13 @@ sub price {
   }
 
   my $start_time = Time::HiRes::time();
+  # Allow the service to convert the specs whatever dataformat it wants.
+  eval {
+    if (my $init = $service->{can}->('init')) {
+      $init->($pid, $sid, $specs);
+    }
+  };
+  $log->error($@) if $@;
   my $status;
   # Calculate the service.
   my $calc   = $service->{can}->('calc');
