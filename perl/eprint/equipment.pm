@@ -135,7 +135,7 @@ sub load_specs {
     # Get the equipments specs normalized to all lower case with spaces
     # replaced with underscores.
     my $specs = $dbh->prepare_cached(q{
-        SELECT e.lngindex, replace(lower(s.strname), ' ', '_'),
+        SELECT e.lngindex, replace(lower(s.strname), ' ', ''),
                s.strvalue, s.dblmin, s.dblmax
         FROM tbl_equipment_specifications s, tbl_equipment e
         WHERE e.lngindex = s.lngequipmentindex
@@ -178,7 +178,7 @@ sub cache_lookup {
     my ($eid, $range, @specs) = @_;
 
     # Normalize the names to lc spaces to underscore.
-    my @names = map { tr/A-Z /a-z_/; $_ } @specs;
+    my @names = map { tr/A-Z /a-z/d; $_ } @specs;
 
     # If we're only looking up one specification we can do range lookups.
     if (@names == 1) {
@@ -186,7 +186,7 @@ sub cache_lookup {
 
         # If the equipment or service doesn't exist the can't be any pirce.
         if (!exists $cache{$eid}{$name}) {
-          #$openprint::log->debug("No entry for $name for $eid ".Data::Dumper::Dumper($cache{$eid}));
+          $openprint::log->debug("No entry for $name for $eid ".Data::Dumper::Dumper($cache{$eid}));
           return;
         }
         
@@ -223,7 +223,11 @@ sub get_specifications {
     my ($log, $dbh, $eid, @specs) = @_;
 
     # Basic sanity check, improve on this.
-    croak "Equipment index must be supplied" unless $eid;
+    if (!$eid) {
+      $openprint::log->error("Equipment index must be supplied");
+      return ();
+    }
+    $openprint::log->debug("Getting @specs from $eid");
 
     # Equipment (among others) is weird in having two keys that are used
     # interchangably as the primary key. If the string key is passed convert
@@ -231,8 +235,10 @@ sub get_specifications {
     $eid = ( $eid =~ /^\d+$/ ) ? $eid : get_index_by_id($log, $dbh, $eid);
 
     # TEMP: Get from package cache if it's been populated.
-    return cache_lookup($eid, undef, @specs) 
-        if %cache && exists $cache{$eid} && @specs;
+    if ( %cache && exists $cache{$eid} ) {
+      $openprint::log->debug("Doing cache lookup for $eid @specs ".Data::Dumper::Dumper($cache{$eid}));
+      return cache_lookup($eid, undef, @specs) 
+    }
 
     my $sql = q{
         SELECT strName, strValue
@@ -240,17 +246,17 @@ sub get_specifications {
         WHERE lngEquipmentIndex = ?
     };
 
-    if (scalar @specs) {
-        my $placeholders = join ', ', ('?') x @specs;
+    if (@specs) {
+      my $placeholders = join ', ', ('?') x @specs;
 
-        # By calling lower() and replace() on the specification name we use
-        # the functional index on it and reduce name lookup errors.
-        $sql .= "AND lower(replace(strName, ' ', '')) IN ( $placeholders )";
+      # By calling lower() and replace() on the specification name we use
+      # the functional index on it and reduce name lookup errors.
+      $sql .= "AND lower(replace(strName, ' ', '')) IN ( $placeholders )";
+
+      # Remove all spaces and lowercase the specification name given so we to
+      # avoid lookup errors in our ever so fun hash style table.
+      @specs = map { tr/A-Z /a-z/d; $_ } @specs;
     }
-
-    # Remove all spaces and lowercase the specification name given so we to
-    # avoid lookup errors in our ever so fun hash style table.
-    @specs = map { tr/A-Z /a-z/d; $_ } @specs if @specs;
 
     my $sth = $dbh->prepare($sql);
     $sth->execute($eid, @specs);   # @specs will be () if none passed.
@@ -261,15 +267,16 @@ sub get_specifications {
     my %equip;
     while($sth->fetch) {
       $equip{$name} = $value;
-      $name =~ tr/A-Z /a-z_/d;
+      $name =~ tr/A-Z /a-z/d;
       $equip{$name} = $value;
     }
 
     $cache{$eid} = \%equip;
+    $openprint::log->debug(Data::Dumper::Dumper($cache{$eid}));
 
     # If a specification list was given only a value list is expected,
     # otherwise return the full hash.
-    return (@specs) ? @equip{@specs} : %equip;
+    return @specs ? @equip{@specs} : %equip;
 }
 
 # Duke: This procedure will get units based on a service and a piece of
@@ -315,7 +322,7 @@ sub get_specification {
 
     # TEMP: Get from package cache if it's been populated.
     if (%cache and exists $cache{$eid}) {
-      #print STDERR "Doing cache lookup for $eid $range $name\n";
+      print STDERR "Doing cache lookup for $eid $range $name\n";
       return cache_lookup($eid, $range, $name);
     }
 
