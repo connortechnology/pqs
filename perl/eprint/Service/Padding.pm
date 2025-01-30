@@ -56,6 +56,9 @@ sub calc {
 
     # NOTE: Padding currently only considers the first equipment that fits!
     my $padding_station = get_padding_station($dbh, $service_type, $w, $h, $pid);
+    if (!$padding_station) {
+      return 'uncalculated';
+    }
 
 print STDERR "HAVE PADDING STATION: $padding_station -- $w -- $h \n";
 
@@ -164,19 +167,19 @@ print STDERR "HAVE MATERIAL: $material * Area: $area QTY: $qty \n";
 # Return the first padding station that can process the job. TODO consider
 # them all, this is just a cleanup of existing code.
 sub get_padding_station {
-    my ($dbh, $service_type, $w, $h, $pid) = @_;
+  my ($dbh, $service_type, $w, $h, $pid) = @_;
 
-    for my $eid (valid_equipment(undef, $dbh, $service_type, $pid)) {
+  for my $eid (valid_equipment(undef, $dbh, $service_type, $pid)) {
 
-        my ($max_w, $min_w, $max_h, $min_h, $max_imp) 
-            = eprint::equipment::get_specifications(undef, $dbh, $eid, 
-                qw(maximumSheetWidth minimumSheetWidth  maximumSheetLength minimumSheetLength maximumPaddingImposition));
+    my ($max_w, $min_w, $max_h, $min_h, $max_imp) 
+    = eprint::equipment::get_specifications(undef, $dbh, $eid, 
+      qw(maximumSheetWidth minimumSheetWidth  maximumSheetLength minimumSheetLength maximumPaddingImposition));
 
-print STDERR "$max_w, $min_w, $max_h, $min_h, $max_imp ON $eid \n";
-        return $eid if $w <= $max_w && ($w >= $min_w || $max_imp > 1) && $h <= $max_h;
-    }
+    print STDERR "$w <= $max_w, $w >= $min_w, $h <= $max_h, $min_h, $max_imp ON $eid \n";
+    return $eid if ($w <= $max_w) && ($w >= $min_w || $max_imp > 1) && ($h <= $max_h);
+  }
 
-    return undef;
+  return undef;
 }
 
 1;
