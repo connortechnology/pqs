@@ -254,11 +254,12 @@ sub do_new_substitution {
                                     : $variable->{$loop};
 
         # Convert a hash into an array of hashes.
-        $array = [ map { { key => $_, value => $array->{$_} } } keys %$array ]
-            if ref $array eq 'HASH';
+        $array = [ map { { key => $_, value => $array->{$_} } } keys %$array ] if ref $array eq 'HASH';
 
-        die "$loop is not an array reference: $!\n"
-            unless ref $array eq 'ARRAY' or not defined $array;
+        if (!defined $array or ref $array ne 'ARRAY') {
+         $openprint::log->error("$loop is not an array reference: $!");
+         return variable_substitution( $r, $log, $dbh, $2, $variable );
+       }
 
         # Following the other structures the loop gets terminated by an
         # 'endloop' directive.
