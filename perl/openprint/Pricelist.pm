@@ -136,6 +136,11 @@ sub get_current {
 	} # end if
 	if ( (! $list_id) and $openprint::session{'Country'} ) {
 		$openprint::log->debug("No pricelist to be had! Country: $openprint::session{'Country'}" );
+    my @pricelists = openprint::Pricelist->find();
+    if (@pricelists == 1) {
+      $openprint::session{'Pricelist_id'} = $pricelists[0]->id();
+      return $pricelists[0];
+    }
 	} # end if
 	
 	$openprint::session{'Pricelist_id'} = $list_id;
