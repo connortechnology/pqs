@@ -693,7 +693,7 @@ function overrides_chkbox (e) {
         //this.disabled = true;
         //this.checked = false;
     //}
-    calc();
+    if (!e.checked) calc();
 }
 
 function calc(formName) {
