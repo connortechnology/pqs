@@ -256,15 +256,18 @@ sub do_new_substitution {
         # Convert a hash into an array of hashes.
         $array = [ map { { key => $_, value => $array->{$_} } } keys %$array ] if ref $array eq 'HASH';
 
-        if (!defined $array or ref $array ne 'ARRAY') {
-         $openprint::log->error("$loop is not an array reference: $!");
-         return variable_substitution( $r, $log, $dbh, $2, $variable );
-       }
 
         # Following the other structures the loop gets terminated by an
         # 'endloop' directive.
         $text =~ /(.*?)<\?\s*endloop\s+\(?\s*\Q$loop\E\s*\)?\s*\?>(.*)?/si
             or die "Cannot find terminating endloop ($loop).\n";
+
+        if (ref $array ne 'ARRAY') {
+         $openprint::log->error("$loop is not an array reference: $!");
+         return variable_substitution( $r, $log, $dbh, $2, $variable );
+       } else {
+         $openprint::log->error("$loop is an array reference: $!");
+       }
 
         my ($inside_tag, $after_tag, $replace) = ($1, $2, '');
 
