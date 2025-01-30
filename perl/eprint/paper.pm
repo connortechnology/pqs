@@ -9,6 +9,7 @@ use eprint::customer qw(get_discount);
 use POSIX qw(floor);
 use sql qw(:common);
 use jsrs;
+require openprint;
 
 
 
@@ -462,16 +463,15 @@ sub price {
                 dblmarkup       AS "Markup",
                 dblprice        AS "Price",
                 ysndiscountable AS "Discountable"
-          FROM tbl_paper_prices p, tbl_customer c
-          WHERE p.lnglistindex  = c.lngpricelist
-            AND c.lngcustomerid = ?
+          FROM tbl_paper_prices p
+          WHERE p.lnglistindex  = ?
             AND lngpaperindex   = ?
             AND  ? >= coalesce(lngmin, 0) 
             AND (? <= lngmax OR lngmax IS NULL)
           ORDER BY lngmin
           LIMIT 1
     });
-    my $price = $dbh->selectrow_hashref($sth, undef, $customer, $paper, $qty, $qty);
+    my $price = $dbh->selectrow_hashref($sth, undef, $openprint::Pricelist->id(), $paper, $qty, $qty);
 
     return undef unless $price;
 
