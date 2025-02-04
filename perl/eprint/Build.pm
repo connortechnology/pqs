@@ -73,12 +73,15 @@ sub handler {
     session::log($r->log);
     $log = $r->log;
 
+
     # If the customer isn't valid and logged in, they can't use us.
     my $cookie = misc::get_cookie();
     return FORBIDDEN if !defined $cookie || $cookie eq '';
 
     $dbh = PQS::DB->connect($r);
     session::dbh($dbh);
+    openprint::configuration::init( $r->dir_config() );
+    openprint::session_init();
     $r->push_handlers(PerlCleanupHandler => \&cleanup);
 
     my $customer_id = eprint::login::get_login_info( # Populates $variable
