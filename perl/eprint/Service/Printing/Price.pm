@@ -297,9 +297,6 @@ sub get_project_price {
     }
     $$project{width} *= $$project{sigature}{txtSignatureSize} / 2;
   }
-  if (!($project->{width} && $project->{height})) {
-    die "No dimensions.";
-  }
 
   # SUBSTRATE/STOCK/PAPER
   my %paper = %{ $spread->{stock} };
@@ -335,6 +332,9 @@ sub get_project_price {
       }, {}, @paper{qw(name finish colour calliper)});
 
     @$project{qw(width height)} = @$project{qw(image_width image_height)};
+    if (!$$project{width}) {
+      print STDERR "No dimensions found for ".Data::Dumper::Dumper(\%paper)."\n";
+    }
 
     $project->{grain} = 0; # Image orientation is exactly the paper's.
 
@@ -351,6 +351,9 @@ sub get_project_price {
     $project->{override}{margin}    = 1;
     $project->{bleed}               = [0,0,0,0];
     $project->{colour_bar}          = 0;
+  }
+  if (!($project->{width} && $project->{height})) {
+    die "No dimensions.";
   }
 
   if ($project->{width} < $project->{minwidth} || $project->{height} < $project->{minheight}) {
