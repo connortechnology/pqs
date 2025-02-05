@@ -562,90 +562,90 @@ print STDERR "DBH COMMIT HERE \n";
 }
 
 sub equipment_paper {
-    my ($r, $t) = @_;
-	
-	my $eid = $r->param('equipment');
+  my ($r, $t) = @_;
 
-	my ($equip_type, $type_id) = $dbh->selectrow_array(q{
-		SELECT t.lngindex, t.strid FROM tbl_equipment_type t, tbl_equipment e 
-		WHERE  t.strid = e.strtype
-		AND    e.lngindex  = ? 
-	}, undef, $eid);
+  my $eid = $r->param('equipment');
 
-	my $table = $type_id eq 'web' || $type_id eq 'inkjetprinter' ? 'tbl_paper_roll' : 'tbl_paper';
+  my ($equip_type, $type_id) = $dbh->selectrow_array(q{
+    SELECT t.lngindex, t.strid FROM tbl_equipment_type t, tbl_equipment e 
+    WHERE  t.strid = e.strtype
+    AND    e.lngindex  = ? 
+    }, undef, $eid);
 
-    if ($r->param('action') eq 'Save') {
+  my $table = $type_id eq 'web' || $type_id eq 'inkjetprinter' ? 'tbl_paper_roll' : 'tbl_paper';
 
-		$dbh->do(q{ DELETE FROM equipment_paper_exclusion WHERE equipment = ?  },undef, $eid);
+  if ($r->param('action') eq 'Save') {
 
-        my $sh = $dbh->prepare(qq{
-        	INSERT INTO equipment_paper_exclusion (
-                SELECT $eid, lngindex FROM tbl_paper p WHERE paper_family(p) = ?
-            )
-        });
-        my $rl = $dbh->prepare(qq{
-        	INSERT INTO equipment_paper_exclusion (
-                SELECT $eid, lngindex FROM tbl_paper_roll p WHERE paper_family(p) = ?
-            )
-        });
+    $dbh->do(q{ DELETE FROM equipment_paper_exclusion WHERE equipment = ?  },undef, $eid);
 
-        foreach my $family ($r->param('i')) {
+    my $sh = $dbh->prepare(qq{
+      INSERT INTO equipment_paper_exclusion (
+      SELECT $eid, lngindex FROM tbl_paper p WHERE paper_family(p) = ?
+      )
+      });
+    my $rl = $dbh->prepare(qq{
+      INSERT INTO equipment_paper_exclusion (
+      SELECT $eid, lngindex FROM tbl_paper_roll p WHERE paper_family(p) = ?
+      )
+      });
 
-print STDERR "HAVE PAPER: $family - $eid \n";
+    foreach my $family ($r->param('i')) {
 
-        	$sh->execute($family);
-        	$rl->execute($family);
-        }
+      print STDERR "HAVE PAPER: $family - $eid \n";
 
-        $dbh->commit();
+      $sh->execute($family);
+      $rl->execute($family);
     }
 
-    my $paper = get_paper();
+    $dbh->commit();
+  }
+
+  my $paper = get_paper();
 
 
-    my $query = qq{
-		SELECT DISTINCT paper_family(p) as family,
-		(SELECT count(*) FROM equipment_paper_exclusion e WHERE e.paper = p.lngindex AND e.equipment =  ? ) as invalid
-		FROM  $table p
-	};
-    if ($type_id eq 'inkjetprinter') {
-        $query .= qq{
-            UNION
-		    SELECT DISTINCT paper_family(p) as family,
-		    (SELECT count(*) FROM equipment_paper_exclusion e WHERE e.item = p.lngindex AND e.equipment =  $eid ) as invalid
-		    FROM  tbl_paper p
-	    };
-        
+  my $query = qq{
+  SELECT DISTINCT paper_family(p) as family,
+  (SELECT count(*) FROM equipment_paper_exclusion e WHERE e.paper = p.lngindex AND e.equipment =  ? ) as invalid
+  FROM  $table p
+  };
+  if ($type_id eq 'inkjetprinter') {
+    $query .= qq{
+    UNION
+    SELECT DISTINCT paper_family(p) as family,
+    (SELECT count(*) FROM equipment_paper_exclusion e WHERE e.item = p.lngindex AND e.equipment =  $eid ) as invalid
+    FROM  tbl_paper p
+    };
+
+  }
+  print STDERR "HAVE Q: $query \n";
+
+  my $visibility = $dbh->selectall_hashref($query,'family',{},$eid );
+
+  my (@visible, @invisible);
+  for my $key (@$paper) {
+    if ( $visibility->{ $key->{id} }->{invalid} eq '0') {
+      push (@visible, $key);
     }
-print STDERR "HAVE Q: $query \n";
-
-    my $visibility = $dbh->selectall_hashref($query,'family',{},$eid );
-
-    my (@visible, @invisible);
-	for my $key (@$paper) {
-        if ( $visibility->{ $key->{id} }->{invalid} eq '0') {
-            push (@visible, $key);
-        }
-        elsif (  $visibility->{ $key->{id} }->{invalid}) {
-            push (@invisible, $key);
-        }
+    elsif (  $visibility->{ $key->{id} }->{invalid}) {
+      push (@invisible, $key);
     }
+  }
 
-    my $visible   = group @visible,   'category';
-    my $invisible = group @invisible, 'category';
+  my $visible   = group @visible,   'category';
+  my $invisible = group @invisible, 'category';
 
-    $r->content_type('text/html; charset=utf-8');
-    $t->{file} = 'admin/paper/equipment.html';
+  $r->content_type('text/html; charset=utf-8');
+  $t->{file} = 'admin/paper/equipment.html';
 
-    print $t->process(
-        r         => $r,
-        title     => 'Equipment Paper Selection',
-        visible   => $visible,
-        invisible => $invisible,
-		eid       => $eid
-    );
+  print $t->process(
+    r         => $r,
+    title     => 'Equipment Paper Selection',
+    visible   => $visible,
+    invisible => $invisible,
+    eid       => $eid
+  );
 
-    return OK;
+  return OK;
 }
 
 sub recommendations {
