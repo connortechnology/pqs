@@ -97,7 +97,6 @@ Service.prototype = {
       }
 
       if (! this.validate.apply(this, [e])) {
-        console.log("Not valid");
         return false;
       }
 
