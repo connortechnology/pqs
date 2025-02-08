@@ -67,7 +67,12 @@ sub delete {
 
 sub costperm {
 	my $self = shift;
+  return $$self{costperm} if $$self{costperm};
 	my $Paper = $self->Paper();
+  if (lc $$Paper{units} eq '1000 sheets') {
+    return $$Paper{cost};
+  }
+
 	if ( $Paper->wpsi() ) {
 		# Roll papers won't have an mweight
 		return Math::Round::nearest(0.01, $$self{cost} * $Paper->wpsi() * $Paper->width() * $Paper->height() * 10 );
@@ -80,7 +85,11 @@ sub costperm {
 
 sub priceperm {
 	my $self = shift;
+  return $$self{priceperm} if $$self{priceperm};
 	my $Paper = $self->Paper();
+  if (lc $$Paper{units} eq '1000 sheets') {
+    return $$Paper{price};
+  }
 	if ( $Paper->wpsi() ) {
 		# ROll papers won't have an mweight
 		return Math::Round::nearest(0.01, $$self{price} * $Paper->wpsi() * $Paper->width() * $Paper->height() * 10 );
