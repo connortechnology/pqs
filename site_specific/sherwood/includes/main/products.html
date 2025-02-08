@@ -70,6 +70,7 @@
   <li>
     <a href="/main/ecommerce/products.html" class="parent">New Products</a> 
     <ul>
+		<?if prod_menu?>
       <?loop prod_menu?>
       <?if active?>
         <li><a href="/main/ecommerce/products.html?Category=<?id?>" <?if children?> class="parent" <?endif children?> > <?name?></a>
@@ -86,6 +87,7 @@
       <?endif active?>
 
       <?endloop prod_menu?>
+		<?endif prod_menu?>
     </ul>
   </li>
 </ul>
