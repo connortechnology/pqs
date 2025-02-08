@@ -309,6 +309,9 @@ return '';
 					<label>Is this stock double sided?</label>
           <?echo(radio('doublesided', ['Y','Yes','N','No'], $$variable{Stock}->doublesided());)?>
 				</li>
+        <li class="c1sc2s"><label>C1S / C2S?</label>
+          <?echo(radio('c1sc2s', ['C1S'=>'C1S','C2S'=>'C2S'], $$variable{Stock}->c1sc2s(), { default=>'C2S'} ); )?>
+      </li>
 				<li class="multipart">
 					<label>Does this stock have multiple parts (eg: forms)?</label>
           <?echo(radio('multipart', ['1','Yes','0','No'], $$variable{Stock}->multipart(), { onclick=>q`if(this.value=='1'){$('parts_div').show();}else{$('parts_div').hide();}` });)?>
