@@ -4,8 +4,18 @@
 	my $Pricelist = $$variable{Pricelist};
 	my $service = $$variable{service};
 	my $Price = $$variable{Price};
+  if (lc $Price->units() eq '1000 sheets') {
+  $$Price{costperm} = $$Price{cost};
+  $$Price{priceperm} = $$Price{price};
+  # Need to convert to 100lb
+   my $sheets_in_100lb = 100 / ($Price->Paper()->mweight()/1000);
+   $$Price{cost} = ($$Price{cost} / 1000) * $sheets_in_100lb;
+    $$Price{price} = ($$Price{price} / 1000) * $sheets_in_100lb;
 
-	if ( $Price->service() ne 'Material' ) {
+  }
+
+
+  if ( $Price->server() and ($Price->service() ne 'Material')) {
 		$html .= sprintf(q`<tr id="paperprice-%1$s" class="%9$s">
 				<td class="Equipment"><select name="equipment_id-%1$d" onchange="check_price(this);"><option value=""> all </option>%8$s</select></td>
 				<td class="Range">%2$s %3$s</td>
