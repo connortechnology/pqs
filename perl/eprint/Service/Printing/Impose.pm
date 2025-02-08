@@ -356,11 +356,11 @@ sub can_coat {
       # printing on the first side. TODO Looking a string in the finish
       # is ridiculous.
       delete $rs{Wx} if $project->{paper}{finish} =~ /Carbonless/i;
-      delete $rs{Wx} if $project->{paper}{c1sc2s} eq 'C1S';
+      delete $rs{Wx} if $project->{paper}{c1sc2s} and $project->{paper}{c1sc2s} eq 'C1S';
 
       # If we're only printing one side, sheet work is the only option.
       delete @rs{qw(Wx PF)} unless @{ $project->{colours}[0] } && @{ $project->{colours}[1] };
-      delete @rs{qw(Wx PF)} if $project->{paper}{doublesided} eq 'N';
+      delete @rs{qw(Wx PF)} if $project->{paper}{doublesided} and ($project->{paper}{doublesided} eq 'N');
     }
 
     # If the user has overridden the run style, allow it if it's valid.
