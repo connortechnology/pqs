@@ -697,5 +697,6 @@ function overrides_chkbox (e) {
 }
 
 function calc(formName) {
-  service.calculate();
+  //new Timer(service.calculate, 4000);
+  //service.calculate();
 }
