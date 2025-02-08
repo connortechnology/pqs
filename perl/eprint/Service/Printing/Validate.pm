@@ -377,11 +377,14 @@ sub stock {
     $stock{minimum_order} = $specs->{minimum_order};
     $stock{sheets_per_package} = $specs->{sheets_per_package};
     $stock{full_packages} = $specs->{full_packages};
+    $stock{multipart} = $specs->{multipart} eq '1' ? $specs->{parts} : 1;
+    $stock{c1sc2s} = $specs->{c1sc2s};
     $stock{Price} = {
-      Cost  => $$specs{CustomStockPrice} * $specs->{txtCustomMWeight} / (100 * 1000),
-      Price => $$specs{CustomStockPrice} * $specs->{txtCustomMWeight} / (100 * 1000),
+      Cost  => (($$specs{CustomStockPrice}/100) * ($specs->{txtCustomMWeight} / 1000)),
+      Price => (($$specs{CustomStockPrice}/100) * ($specs->{txtCustomMWeight} / 1000)),
       units => 'lbs'
     };
+      $openprint::log->error("Per sheet price from $$specs{CustomStockPrice} * $$specs{txtCustomMWeight} / (100*1000)=".$stock{Price}{Price});
 
   } else {
     $stock{name} = $specs->{stock_name} or warn "No stock name selected.";
@@ -398,28 +401,28 @@ sub stock {
 
     # Add the calliper as everyone wants it.
     @stock{'calliper','multipart'} = $dbh->selectrow_array(qq{
-      SELECT strcalliper, lngmultipart FROM tbl_paper 
+      SELECT strcalliper, lngmultipart, c1sc2s FROM tbl_paper 
       WHERE strname = ?
       AND strfinish = ?
       AND strcolour = ?
       AND strweight = ?
       }, {}, @{\%stock}{qw(name finish colour weight)});
 
-    if ( ! $stock{calliper} ) { 
-      $stock{calliper} = $dbh->selectrow_array(qq{
-        SELECT strcalliper FROM tbl_paper_roll 
-        WHERE strname   = ?
-        AND strfinish = ?
-        AND strcolour = ?
-        AND strweight = ?
-        }, {}, @{\%stock}{qw(name finish colour weight)});
+    #if ( ! $stock{calliper} ) { 
+      #$stock{calliper} = $dbh->selectrow_array(qq{
+      #SELECT strcalliper FROM tbl_paper_roll 
+      #WHERE strname   = ?
+        #AND strfinish = ?
+        #AND strcolour = ?
+        #AND strweight = ?
+        #}, {}, @{\%stock}{qw(name finish colour weight)});
 
-      if ( $stock{calliper} ) {
-        $stock{is_roll} = 1;
-      } else {
-        warn "Stock Calliper Not Found FOR: " . Dumper(\%stock);
-      }
-    } # end if ! calliper
+        #if ( $stock{calliper} ) {
+        #$stock{is_roll} = 1;
+        #} else {
+        #warn "Stock Calliper Not Found FOR: " . Dumper(\%stock);
+        #}
+        #} # end if ! calliper
   } #end if specific
 
   # Does the customer wish to supply their own stock?
