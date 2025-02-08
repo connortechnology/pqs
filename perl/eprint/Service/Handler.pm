@@ -57,6 +57,8 @@ sub handler {
       print STDERR "Invalid method ".$r->method_number." get:".M_GET.' post:'.M_POST."\n";
       return HTTP_METHOD_NOT_ALLOWED;
     }
+    $dbh = PQS::DB->connect($r);  # TODO Use RO session for GETs
+    session::dbh($dbh);
 
     # If the customer isn't valid and logged in, they can't use us.
     my $cookie = misc::get_cookie();
@@ -66,8 +68,6 @@ sub handler {
       return Apache2::Const::OK;
     }
 
-    $dbh = PQS::DB->connect($r);  # TODO Use RO session for GETs
-    session::dbh($dbh);
 
     #%openprint::param = %{$variable->{param}} = map {$_ => $r->param($_)} $r->param();
     # Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
@@ -120,8 +120,15 @@ sub handler {
 
 	#map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . " \n"; } $r->param();
 
-    my $pid = $r->param('pid') or die "Invalid PID";
-    my $sid = $r->param('sid') or die "Invalid SID";
+    my $pid = $r->param('pid');
+    my $sid = $r->param('sid');
+    if (!($pid and $sid)) {
+      $r->headers_out->set(Location => '/main/proj/proj_hist.html');
+      $r->status(Apache2::Const::REDIRECT); #302
+      $dbh->disconnect;
+      return Apache2::Const::OK;
+    }
+
 
     # Make sure the service exists in the project.
     unless ($dbh->selectrow_array(q{
@@ -293,58 +300,53 @@ sub param_hashref {
 
 # Display the service's page.
 sub show {
-    my ($r, $dbh, $variable, $pid, $sid, $service) = @_;
+  my ($r, $dbh, $variable, $pid, $sid, $service) = @_;
 
-    # Set standard information for every service page.
-    $variable->{pid}     = $pid;
-    $variable->{sid}     = $sid;
-    $variable->{service} = $service;
-    $variable->{project} = project_info($dbh, $pid);
+  # Set standard information for every service page.
+  $variable->{pid}     = $pid;
+  $variable->{sid}     = $sid;
+  $variable->{service} = $service;
+  $variable->{project} = project_info($dbh, $pid);
 
-    # Display the banner advert.
-    if ( configuration::get_value($r->log, $dbh, 'UsesBanners') ) {
-        $variable->{BANNER_AD} = eprint::banner::select_banner(
-            $r->log, $dbh, @$variable{qw(cust_id user_id)}
-        );
-    }
-    
-    # Display/hide pricing based on customer default.
-    $variable->{isServicePricing} = $dbh->selectrow_array(q{
-            SELECT ysnpricingservices
-            FROM tbl_customer
-            WHERE lngcustomerid = ?
-        }, undef, $variable->{cust_id});
-    
-    # Load the specs from the db.
-    my $specs = $variable->{spec} = eprint::service::get_specs($dbh, $pid, $sid, $service);
+  # Display the banner advert.
+  if ( configuration::get_value($r->log, $dbh, 'UsesBanners') ) {
+    $variable->{BANNER_AD} = eprint::banner::select_banner(
+      $r->log, $dbh, @$variable{qw(cust_id user_id)}
+    );
+  }
 
-    # If the service has a display() function run it an populate variable with
-    # it's return.
-    my $display = $service->{can}->('display');
-    my $page = $display 
-        ? $display->($r->log, $dbh, $service->{type}, $pid, $sid, $specs, $variable)
-        : {};
-    
-    $variable->{$_} = $page->{$_} for keys %$page;
+  # Display/hide pricing based on customer default.
+  $variable->{isServicePricing} = $$openprint::Company{ysnpricingservices};
 
-    # Open the template page.
-    my $path = $r->document_root . SERVICE_PAGE_PATH;
-    
-    open my $fh, '<', "$path/$service->{page}" or die "Can't find file: $path/$service->{page} -- $!";
-    my $html = do { local $/ = undef; <$fh> };
-    close $fh or die "Can't close file: $!";
+  # Load the specs from the db.
+  my $specs = $$variable{specs} = $variable->{spec} = eprint::service::get_specs($dbh, $pid, $sid, $service);
 
-    use eprint::www;
-    eprint::www::word_sub($variable);
+  # If the service has a display() function run it an populate variable with it's return.
+  my $display = $service->{can}->('display');
+  my $page = $display 
+  ? $display->($r->log, $dbh, $service->{type}, $pid, $sid, $specs, $variable)
+  : {};
 
-    # Create the page from the template.
-    $html = ssi::variable_substitution($r, $r->log, $dbh, $html, $variable);
+  $variable->{$_} = $page->{$_} for keys %$page;
 
-    # Fill in the form with any user specs.
-    my $f = HTML::FillInForm->new();
-    $html = $f->fill(fdat => $specs, scalarref => \$html);
+  # Open the template page.
+  my $path = $r->document_root . SERVICE_PAGE_PATH;
 
-    return \$html; # Don't copy the large string (yet again).
+  open my $fh, '<', "$path/$service->{page}" or die "Can't find file: $path/$service->{page} -- $!";
+  my $html = do { local $/ = undef; <$fh> };
+  close $fh or die "Can't close file: $!";
+
+  use eprint::www;
+  eprint::www::word_sub($variable);
+
+  # Create the page from the template.
+  $html = ssi::variable_substitution($r, $r->log, $dbh, $html, $variable);
+
+  # Fill in the form with any user specs.
+  my $f = HTML::FillInForm->new();
+  $html = $f->fill(fdat => $specs, scalarref => \$html);
+
+  return \$html; # Don't copy the large string (yet again).
 }
 
 1;
