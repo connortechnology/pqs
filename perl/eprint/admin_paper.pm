@@ -717,7 +717,7 @@ sub import_export {
         strcategory => V,  strid       => V,  strname     => V, 
         strdetails  => V,  strfinish   => V,  strcolour   => V,
         strmweight  => N,  strweight   => V,  strcalliper => N,
-        dblwidth    => N,  strsupplier => V,  
+        dblwidth    => N,  strsupplier => V,  c1sc2s => V,
         
         recommendations => V, # Deprecated and unused now.
 
