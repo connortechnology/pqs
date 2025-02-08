@@ -283,12 +283,7 @@ sub substrate_details : JSRS {
 
     return { details   => $str,
 			 underbase => $ub   };
-
-
-	
 }
-
-
 
 # A subroutine that verifies a stock can be used for large format (ie is
 # sheet, or is roll and has square foot pricing)
@@ -401,6 +396,7 @@ sub get_price {
       $price->{Price} /= 100;
     }
   } elsif ( $price->{units} eq '1000 Sheets' or $price->{units} eq '1000 sheets' ) {
+    $openprint::log->error("Price per 1000 sheets $$price{Price} /= 1000 = price per sheet = ".($$price{Price}/1000));
     $price->{Cost}  /= 1000; 
     $price->{Price} /= 1000;
   } elsif ( (!$price->{units}) or $price->{units} =~ /lbs/ ) {
@@ -409,6 +405,7 @@ sub get_price {
     #
     #    per_sheet = n/1000 * MWeight * price/100 lbs, n = 1
     #
+    $openprint::log->error("Price per sheet  from /100lbs $$price{Price} * $mweight / 100 * 1000 = ".($$price{Price} * $mweight /(100 *1000)));
     $price->{Cost}  *= $mweight / (100 * 1000); 
     $price->{Price} *= $mweight / (100 * 1000); 
   } else {
