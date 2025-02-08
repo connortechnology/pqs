@@ -745,3 +745,6 @@ input[type=number] {
 #used_spreads {
   float: none;
 }
+#SpecificStock input[type="text"] {
+  width: 13em;
+}
