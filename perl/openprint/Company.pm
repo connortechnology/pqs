@@ -72,6 +72,7 @@ $serial = 'tbl_Customer_lngCustomerID_seq';
 		last_quote_id				=>	'last_quote_id',
 		last_quoted_on				=>	undef,
 		last_invoice_id			=>	'last_invoice_id',
+    ysnpricingservices  => 'ysnpricingservices',
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
