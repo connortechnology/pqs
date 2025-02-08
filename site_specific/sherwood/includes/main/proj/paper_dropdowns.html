@@ -40,11 +40,11 @@
           $$variable{'txtSpecificStockCalliperPT'.$$variable{Signature}} = $$variable{'txtSpecificStockCalliper'.$$variable{Signature}} * 1000;
         return join("\n", 
           input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature},
-          value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}},
+          value=>$$variable{specs}{'txtSpecificStockCalliper'.$$variable{Signature}},
           oninput=>'calliper_onchange(this);' ),
           'inches',
           input( type=>'float', name=>'txtSpecificStockCalliperPT'.$$variable{Signature},
-          value=>$$variable{'txtSpecificStockCalliperPT'.$$variable{Signature}},
+          value=>$$variable{specs}{'txtSpecificStockCalliperPT'.$$variable{Signature}},
           oninput=>'calliper_onchange(this);' ),
           'PT',
           );
@@ -72,43 +72,58 @@
       <li class="Size" id="SpecificStockSize<?Signature?>">
         <label>Size</label>
         <span id="SpecificStockWidth<?Signature?>">
-        <? echo ( input( type=>'float', name=>'txtSpecificStockWidth'.$$variable{Signature}, value=>$$variable{'txtSpecificStockWidth'.$$variable{Signature}}, oninput=>"gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
+          <? echo ( input( type=>'float', name=>'txtSpecificStockWidth'.$$variable{Signature}, value=>$$variable{specs}{'txtSpecificStockWidth'.$$variable{Signature}}, oninput=>"gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
         </span>
         <span id="SpecificStockHeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{spec}{'StockType'.$$variable{Signature}} eq 'Roll' ) ?>> x
-        <? echo ( input( type=>'float', name=>'txtSpecificStockHeight'.$$variable{Signature}, value=>$$variable{'txtSpecificStockHeight'.$$variable{Signature}}, oninput=>"gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
+          <? echo ( input( type=>'float', name=>'txtSpecificStockHeight'.$$variable{Signature}, value=>$$variable{specs}{'txtSpecificStockHeight'.$$variable{Signature}}, oninput=>"gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
 </span>
       </li>
     </ul>
     <ul class="non-list">
       <li class="MWeight" id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{spec}{'StockType'.$$variable{Signature}} eq 'Roll' ) ?>>
         <label>MWeight</label>
-        <? echo ( input( type=>'float', name=>'txtCustomMWeight'.$$variable{Signature}, value=>$$variable{'txtCustomMWeight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
+        <? echo ( input( type=>'float', name=>'txtCustomMWeight'.$$variable{Signature}, value=>$$variable{specs}{'txtCustomMWeight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
       </li>
       <li class="Basis" id="BasisSize<?Signature?>">
         <label>Basis Weight</label>
-        <? echo ( input( type=>'float', name=>'basis_mweight'.$$variable{Signature}, value=>$$variable{'basis_mweight'.$$variable{Signature}}, oninput=>"basis_weight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+        <? echo ( input( type=>'float', name=>'basis_mweight'.$$variable{Signature}, value=>$$variable{specs}{'basis_mweight'.$$variable{Signature}}, oninput=>"basis_weight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
         @
         <? echo ( input( type=>'float', name=>'basis_width'.$$variable{Signature},
-        value=>$$variable{'basis_width'.$$variable{Signature}} ? $$variable{'basis_width'.$$variable{Signature}} : 25,
+        value=>$$variable{specs}{'basis_width'.$$variable{Signature}} ? $$variable{specs}{'basis_width'.$$variable{Signature}} : 25,
         onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);",
         onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
         x
         <? echo ( input( type=>'float', name=>'basis_height'.$$variable{Signature},
-        value=>$$variable{'basis_height'.$$variable{Signature}} ? $$variable{'basis_height'.$$variable{Signature}} : 38,
+        value=>$$variable{specs}{'basis_height'.$$variable{Signature}} ? $$variable{specs}{'basis_height'.$$variable{Signature}} : 38,
         onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);",
         onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
       </li>
       <li class="GSM"><label>GSM</label>
-        <? echo ( input( type=>'float', name=>'txtStockGSM'.$$variable{Signature}, value=>$$variable{'txtStockGSM'.$$variable{Signature}}, oninput=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);"); ) ?>
+        <? echo ( input( type=>'float', name=>'txtStockGSM'.$$variable{Signature}, value=>$$variable{specs}{'txtStockGSM'.$$variable{Signature}}, oninput=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);"); ) ?>
       </li>
       <li class="Price">
         <label>Price</label>
-        <? echo ( input( type=>'float', name=>'CustomStockPrice'.$$variable{Signature}, value=>$$variable{'CustomStockPrice'.$$variable{Signature}}, oninput=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/cwt
-        <span id="PricePerM<?Signature?>" <? echo ( $$variable{spec}{'StockType'.$$variable{Signature}} eq 'Roll' ? 'style="display:none;"' : '' ) ?>>        <? echo ( input( type=>'float', name=>'StockPricePerM'.$$variable{Signature}, value=>$$variable{'StockPricePerM'.$$variable{Signature}}, onkeyup=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/M</span><br/>
+        <? echo ( input( type=>'float', name=>'CustomStockPrice'.$$variable{Signature}, value=>$$variable{specs}{'CustomStockPrice'.$$variable{Signature}}, oninput=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/cwt
+        <span id="PricePerM<?Signature?>" <? echo ( $$variable{spec}{'StockType'.$$variable{Signature}} eq 'Roll' ? 'style="display:none;"' : '' ) ?>>
+          <? echo ( input( type=>'float', name=>'StockPricePerM'.$$variable{Signature},
+          value=>$$variable{specs}{'StockPricePerM'.$$variable{Signature}},
+          onkeyup=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" );
+          ) ?>/M</span><br/>
         <span class="warning" id="PaperAlert<?Signature?>"></span>
       </li>
-      <li><label>Double sided?</label>
-        <?echo(radio('doublesided'.$$variable{Signature}, ['Y'=>'Yes','N'=>'No'], $$variable{'doublesided'.$$variable{Signature}}, { default=>'Y', onclick=>'calc(this.form.name);' }); )?>
+      <li class="c1sc2s"><label><span class="tip" title="If a stock is C1S we will not consider Work & Turn or Tumble (Flop) Runstyles. Only Sheetwork and Perfecting.">C1S / C2S</span>?</label>
+        <?echo(radio('c1sc2s'.$$variable{Signature}, ['C1S'=>'C1S','C2S'=>'C2S'], $$variable{specs}{'c1sc2s'.$$variable{Signature}}, { default=>'C2S', onclick=>'calc(this.form.name);' }); )?>
+      </li>
+      <li class="doublesided"><label><span class="tip" title="If the stock is single sided we will only consider printing on one side of the sheet.">Double sided?</span></label>
+        <?echo(radio('doublesided'.$$variable{Signature}, ['Y'=>'Yes','N'=>'No'], $$variable{specs}{'doublesided'.$$variable{Signature}}, { default=>'Y', onclick=>'calc(this.form.name);' }); )?>
+      </li>
+      <li class="multipart">
+        <label>Multiple parts (eg: forms)?</label>
+        <?echo(radio('multipart', ['1','Yes','0','No'], $$variable{specs}{'multipart'.$$variable{Signature}}, { onclick=>q`if(this.value=='1'){$('parts_div').show();}else{$('parts_div').hide();}`, default=>'0' });)?>
+      </li>
+      <li id="parts_div" <? echo ( $$variable{specs}{'multipart'.$$variable{Signature}} ? '' : 'style="display:none;"' ) ?>>
+        <label>How many parts</label>
+        <input type="number" id="parts" name="parts" value="<? echo ( $$variable{specs}{'parts'.$$variable{Signature}} ) ?>" />
       </li>
       <!--
       <li id="cuttable_li"><label>Cuttable?</label>
