@@ -362,18 +362,17 @@ function specific_stock_onchange(radio) {
   const re = /^rdbSpecificStock(\d*)$/;
   const matches = radio.name.match(re);
   const signature = matches[1];
+  const form = radio.form;
   if (radio.value=='Y'){
     $j('#HouseStock'+signature).hide();
     $j('#SpecificStock'+signature).show();
-    if(radio.form.ddmStockSheetSize1){
-      clear_ddm(radio.form.ddmStockSheetSize1);
-    };
-    if(radio.form.ddmStockSheetSize2){
-      clear_ddm(radio.form.ddmStockSheetSize2);
-    };
-    if(radio.form.ddmStockSheetSize3){
-      clear_ddm(radio.form.ddmStockSheetSize3);
-    };
+    if (form.ddmStockSheetSize1) { clear_ddm(form.ddmStockSheetSize1); };
+    if (form.ddmStockSheetSize2) { clear_ddm(form.ddmStockSheetSize2); };
+    if (form.ddmStockSheetSize3) { clear_ddm(form.ddmStockSheetSize3); };
+    if (!form.elements['txtSpecificStockBrand'].value) form.elements['txtSpecificStockBrand'].value = form.elements['stock_name'].value;
+    if (!form.elements['txtSpecificStockFinish'].value) form.elements['txtSpecificStockFinish'].value = form.elements['stock_finish'].value;
+    if (!form.elements['txtSpecificStockColour'].value) form.elements['txtSpecificStockColour'].value = form.elements['stock_colour'].value;
+    if (!form.elements['txtSpecificStockWeight'].value) form.elements['txtSpecificStockWeight'].value = form.elements['stock_weight'].value;
   } else {
     $j('#HouseStock'+signature).show();
     $j('#SpecificStock'+signature).hide();
@@ -500,6 +499,9 @@ function addstock(button) {
               +'&'+'sheets_per_package='+encodeURIComponent(get_value(form.elements['sheets_per_package']))
               +'&'+'full_packages='+encodeURIComponent(get_value(form.elements['full_packages']))
               +'&'+'doublesided='+encodeURIComponent(get_value(form.elements['doublesided']))
+              +'&'+'c1sc2s='+encodeURIComponent(get_value(form.elements['c1sc2s']))
+              +'&'+'multipart='+encodeURIComponent(get_value(form.elements['multipart']))
+              +'&'+'parts='+encodeURIComponent(get_value(form.elements['parts']))
               +'&'+'price='+encodeURIComponent(get_value(form.elements['CustomStockPrice']))
 
               );
