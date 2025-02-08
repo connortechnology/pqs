@@ -227,7 +227,8 @@ sub get_specifications {
       $openprint::log->error("Equipment index must be supplied");
       return ();
     }
-    $openprint::log->debug("Getting @specs from $eid");
+    my ( $caller, undef, $line ) = caller;
+    $openprint::log->debug("Getting specs @specs from $eid from $caller:$line");
 
     # Equipment (among others) is weird in having two keys that are used
     # interchangably as the primary key. If the string key is passed convert
@@ -235,7 +236,7 @@ sub get_specifications {
     $eid = ( $eid =~ /^\d+$/ ) ? $eid : get_index_by_id($log, $dbh, $eid);
 
     # TEMP: Get from package cache if it's been populated.
-    if ( %cache && exists $cache{$eid} ) {
+    if (@specs && %cache && exists $cache{$eid} ) {
       $openprint::log->debug("Doing cache lookup for $eid @specs ".Data::Dumper::Dumper($cache{$eid}));
       return cache_lookup($eid, undef, @specs) 
     }
@@ -375,6 +376,7 @@ sub equipment_fits {
 
     # The equipment in question.
     my %equip = get_specifications( $log, $dbh, $eid );
+    $openprint::log->debug(Data::Dumper::Dumper(\%equip));
     
     if (defined $min_width_override) {
         $equip{'Minimum Sheet Width'} = $min_width_override;
@@ -388,7 +390,7 @@ sub equipment_fits {
       or ( 1*$width  > 1*$equip{'Maximum Sheet Width'} )
       or ( 1*$height > 1*$equip{'Maximum Sheet Length'}) )) 
     {
-        $log->debug("Doesn't fit without rotation");
+        $log->debug("Doesn't fit without rotation $width < $equip{'Minimum Sheet Width'}, $height < $equip{'Minimum Sheet Length'}, $width > $equip{'Maximum Sheet Width'}, $height > $equip{'Maximum Sheet Length'}");
 
         # It didn't fit so try it rotated unless we aren't allowed.
         if (($rotate == 0
@@ -397,6 +399,7 @@ sub equipment_fits {
           or ( 1*$height > 1*$equip{'Maximum Sheet Width'} )
           or ( 1*$width  > 1*$equip{'Maximum Sheet Length'}) ))
         {
+        $log->debug("Doesn't fit with rotation height $height < $equip{'Minimum Sheet Width'}, width < $equip{'Minimum Sheet Length'},, $height > $equip{'Maximum Sheet Width'}, $width > $equip{'Maximum Sheet Length'}");
             return 0;
         }
     }
