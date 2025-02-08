@@ -1016,7 +1016,7 @@ sub price {
   my ($log, $dbh, $variable, $pid, $sid, $service, $specs, $is_save) = @_;
 
   my $service_type = $service->{type};
-  $openprint::log->debug("Service: $service, $is_save");
+  $openprint::log->debug("Service: pid $pid sid $sid, $service, $is_save");
 
   # Allow the service to convert the specs whatever dataformat it wants.
   eval {
@@ -1046,7 +1046,7 @@ sub price {
     # versions in $spec.
     delete $new->{versions};
 
-    print STDERR "NEW FROM printing service ".Data::Dumper::Dumper($new)."\n";
+    $openprint::log->debug("NEW FROM printing service ".Data::Dumper::Dumper($new));
     @$specs{keys %$new} = values %$new;
   }
 
