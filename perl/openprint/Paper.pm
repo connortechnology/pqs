@@ -63,6 +63,7 @@ $serial	= 'paper_id_seq';
     cuttable		=>	'cut_paper', 
 		multipart		=>	'multipart', 
     doublesided		=>	'ysndoublesided', 
+    c1sc2s => 'c1sc2s',
     #perfecting		=>	'ysnperfecting', 
     score_required	=>	'score_required',
     die_score_required	=>	'die_score_required',
@@ -1271,6 +1272,7 @@ sub sheets_per_package {
 		$$self{sheets_per_package} = shift;
 	} # end if
 
+  $$self{sheets_per_package} //= 0;
 #$openprint::log->debug("SPP: $$self{start_width} / $$self{width} ) * int( $$self{start_height} / $$self{height} * spp $$self{sheets_per_package} * $factor;");
 	return $$self{sheets_per_package} * $self->factor();
 } # end sheets_per_package
@@ -1792,10 +1794,12 @@ sub start_sheet_weight {
 } # end sub start_sheet_weight
 
 sub units {
+  $_[0]{type} = 'sheet' if ! $_[0]{type};
 	return ($_[0]{type} eq 'Roll' ? 'lb' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
 } # end sub units
 
 sub types {
+  $_[0]{type} = 'sheet' if ! $_[0]{type};
 	return ($_[0]{type} eq 'Roll' ? ' roll' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
 } # end sub types
 
