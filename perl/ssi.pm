@@ -1189,17 +1189,14 @@ sub input {
     $options{oninput} = 'integerize(this);'.$options{oninput};
   } elsif ( $options{type} eq 'float' ) {
 #$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
-    $options{step} = 'any' if ! exists $options{step};
-    #if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
-    #$options{type} = 'text';
-    #$options{pattern} = '[\+\-]?[.0-9eE]*' if ! $options{pattern};
-    #} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
-      $options{type} = 'text';
-      $options{pattern} = '^[\+\-]?[.0-9eE]*' if ! $options{pattern};
+    if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+    $options{type} = 'text';
+    $options{pattern} = '[\+\-]?[.0-9eE]*' if ! $options{pattern};
       delete $options{step};
-      #} else {
-      #$options{type} = 'number';
-      #} # end if
+    } else {
+      $options{step} = 'any' if ! exists $options{step};
+      $options{type} = 'number' if !$options{type};
+    }
     $options{oninput} = 'floatize(this);'.$options{oninput};
    } elsif ( $options{type} eq 'positivefloat' ) {
 #$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
