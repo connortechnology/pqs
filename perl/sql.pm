@@ -10,6 +10,10 @@ use warnings;                   # Turn off for production version.
 no  warnings qw(uninitialized); # Interpolating undef into strings is okay.
 use Time::HiRes qw{ gettimeofday tv_interval };
 require openprint;
+use vars qw( $log $dbh $timing );
+*dbh = \$openprint::dbh;
+*log = \$openprint::log;
+
 
 use base qw(Exporter);
 use constant DEBUG=>1;
@@ -26,6 +30,25 @@ execute
 our %EXPORT_TAGS = ( all    => \@EXPORT_OK,
                      common => [ qw(sql_statement insert update) ] );
 
+
+# This uses it's own dbh so as not to quash the global dbh.  This is so that we can easily open secondary db connections while maintaining the global one.
+#
+sub open_sql {
+  my ( $l, %sql_server ) = @_;
+  $l = $log if ! $l;
+  my $new_dbh;
+
+  my $dsn = "dbi:$sql_server{driver}:dbname=$sql_server{database};";
+  $dsn .= "host=$sql_server{host}" if $sql_server{host};
+  $dsn .= ";port=$sql_server{port}" if $sql_server{port};
+  if ( ! ( $new_dbh = DBI->connect( $dsn, $sql_server{login}, $sql_server{password}, {AutoCommit=>1,pg_enable_utf8 => 1 } ) ) ) {
+    $log->error("Unable to connect to database $sql_server{database}: " . DBI->errstr );
+    return;
+  } # end if
+  #$log->info("Opened connection to $sql_server{database}.  Thread ID: " . $dbh->{thread_id});
+
+  return $new_dbh;
+} # end sub open_sql
 
 sub execute {
   my ( $l, $d, $sql, @values ) = @_;
@@ -56,7 +79,7 @@ sub execute {
      $l->error("SQL execution failed: ($print_sql):" . $d->errstr) if $l;
      return;
    } # end if
-   if ( my $num_of_fields = $sth->{'NUM_OF_FIELDS'} ) {
+   if ( my $num_of_fields = $sth->{NUM_OF_FIELDS} ) {
      while ( my $ref = $sth->fetchrow_arrayref ) {
        push @return_array, @$ref;
 
