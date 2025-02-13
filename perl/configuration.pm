@@ -2,6 +2,27 @@ package configuration;
 use strict;
 use warnings;
 
+require openprint;
+use vars qw( %config );
+*config = \%openprint::config;
+
+sub init {
+
+  %config = ();
+  if ( $openprint::dbh ) {
+    my $data = $openprint::dbh->selectall_arrayref( 'SELECT name, value FROM Configuration', {Slice=>{}} );
+    foreach (@{$data}) {
+      $config{$$_{name}} = $$_{value};
+    } # end foreach
+  } # end if
+
+  # Anything specified in dir_config override configuration
+  if ( @_ ) {
+    @config{ keys %{$_[0]}} = values %{$_[0]};
+  } # end if
+} # end sub init
+
+
 sub get_value {
 	my ($log, $dbh, $name) = @_;
 
