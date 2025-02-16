@@ -10,7 +10,7 @@ sub init {
 
   %config = ();
   if ( $openprint::dbh ) {
-    my $data = $openprint::dbh->selectall_arrayref( 'SELECT name, value FROM Configuration', {Slice=>{}} );
+    my $data = $openprint::dbh->selectall_arrayref( 'SELECT strconfigTitle AS name, strconfigdata AS value FROM tbl_Configuration', {Slice=>{}} );
     foreach (@{$data}) {
       $config{$$_{name}} = $$_{value};
     } # end foreach
