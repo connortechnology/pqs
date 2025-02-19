@@ -202,6 +202,7 @@ sub convert_to_signature {
       $imp->setRows(1);
       $imp->setCols(1);
       $imp->setSetup(1);
+      $$imp{imposition} = 1;
 
       foreach my $f (@{ $imp->{layout} }) {
         # Count the net press sheets per form.
@@ -215,13 +216,13 @@ sub convert_to_signature {
     my ($rows, $cols);
     my $imp_rows = $imp->{rows};
     my $imp_cols = $imp->{cols};
-    print STDERR "CONVERT A ROW: $imp_rows COL: $imp_cols ROTATE: $imp->{'rotate_sheet'} , $imp->{run_style}  \n" if DEBUG;
+    print STDERR "CONVERT A ROW: $imp_rows COL: $imp_cols ROTATE: $imp->{rotate_sheet} , $imp->{run_style}  \n" if DEBUG;
 
     if ( $imp->{run_style} eq  'WT' ) {
       $imp_cols = $imp_cols / 2;
     }
 
-    print STDERR "CONVERT A1 ROW: $imp_rows COL: $imp_cols ROTATE: $imp->{'RotateSheet'}, \n" if DEBUG;
+    print STDERR "CONVERT A1 ROW: $imp_rows COL: $imp_cols ROTATE: $imp->{RotateSheet}, \n" if DEBUG;
 
     if ($imp_rows >= $desired_signature_size) {
       $rows = int($imp_rows / $desired_signature_size);
@@ -269,14 +270,14 @@ sub convert_to_signature {
       $cols = $cols * 2;
     }
 
-    $imp->setRows($rows);
-    $imp->setCols($cols);
-    $imp->setSetup($rows * $cols);
-    if ((    $imp->{'RotateSheet'}
-          and $imp->{'GrainDirection'} eq 'width')
-        or (    $imp->{'RotateSheet'} == 0
-          and $imp->{'GrainDirection'} eq 'height')
+    $$imp{rows} = $rows;
+    $$imp{columns} = $$imp{cols} = $cols;
+    $$imp{setup} = $$imp{imposition} = $rows * $cols;
 
+    if ((    $imp->{RotateSheet}
+          and $imp->{GrainDirection} eq 'width')
+        or (    $imp->{RotateSheet} == 0
+          and $imp->{GrainDirection} eq 'height')
     )
     {
       $imp->setImageWidth($imp->{image_width} / $imp->{cols});
@@ -322,13 +323,13 @@ sub descrease_imposition { # [sic]
 
     my ($imposition) = @_;
 
-    if ($$imposition{'Rows'} > $$imposition{'Cols'}) {
-        $$imposition{'Rows'} -= 1;
+    if ($$imposition{Rows} > $$imposition{Cols}) {
+        $$imposition{Rows} -= 1;
     }
     else {
-        $$imposition{'Cols'} -= 1;
+        $$imposition{Cols} -= 1;
     }
-    $$imposition{'Imposition'} = $$imposition{'Rows'} * $$imposition{'Cols'};
+    $$imposition{Imposition} = $$imposition{Rows} * $$imposition{Cols};
 
     return;
 }
