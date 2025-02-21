@@ -9,7 +9,7 @@ our @EXPORT = qw(
     convert_to_signature  lf_imposition
 );
 
-use constant DEBUG=>0;
+use constant DEBUG=>1;
 
 use Data::Dumper;
 use Memoize;
@@ -21,110 +21,107 @@ use eprint::impositionObject ();
 # Convert the return from the new imposition code into the old style object.
 # Any multi-version processing is also still done here.
 sub convert_to_old {
-    my ($dbh, $project, $press, $sheet, $style, $imposition, $rotation) = @_;
+  my ($dbh, $project, $press, $sheet, $style, $imposition, $rotation) = @_;
 
-    # Ask imposition to figure out the final image size it used again (there
-    # can be multiple and rotations of it).
-    my ($width, $height) = (1,1); # @{ ($imposition->images)[0] };
+  # Ask imposition to figure out the final image size it used again (there
+  # can be multiple and rotations of it).
+  my ($width, $height) = (1,1); # @{ ($imposition->images)[0] };
 
-    # The total number of images in this imposition.
-    my $slots = $imposition->card;
-
-
-    # These should always exist but they don't for all presses so we check
-    # existance first to avoid an error on equipment lookup.
-    my $grip   = exists $press->{grip}   && !$project->{override}{margin} ? $press->{grip}   : 0;
-    my $gutter = exists $press->{gutter} && !$project->{override}{margin} ? $press->{gutter} : 0;
-
-    # Create a nice string version of the grain. TODO Should be external.
-    my $grain = !defined $imposition->grain ? 'Mixed'
-              :          $imposition->grain ? 'Height'
-              :                               'Width';
-
-    # Non-dutch (mixed grain) impositions can still get the old rows ×
-    # columns fields filled out.
-    my ($rows, $cols);
-    if ($grain ne 'Mixed') {
-        # We assume that there is NO DUTCH LAYOUT, so we look at the initial
-        # cut direction and count the number of children down and across.
-        my @children = $imposition->children;
-
-        my ($x, $y);
-
-        if (@children) {
-            $x = scalar @children              || 1; # Child count.
-            $y = scalar $children[0]->children || 1; # First child's children count.
-        }
-        # If the image fits exactly to the sheet.
-        elsif ($imposition->card == 1) {
-            ($x, $y) = (1,1);
-        }
-        else { die "Invalid imposition.\n"; }
-
-		#($rows, $cols) = $imposition->cut ? ($y, $x) : ($x, $y);
-		#
-		($cols, $rows) = $imposition->cut ? ($y, $x) : ($x, $y);
+  # The total number of images in this imposition.
+  my $slots = $imposition->card;
 
 
-	print STDERR "IMP1: Rows: $rows, COLS: $cols CUT: " . $imposition->cut . " X: $x Y: $y \n" if DEBUG;
+  # These should always exist but they don't for all presses so we check
+  # existance first to avoid an error on equipment lookup.
+  my $grip   = exists $press->{grip}   && !$project->{override}{margin} ? $press->{grip}   : 0;
+  my $gutter = exists $press->{gutter} && !$project->{override}{margin} ? $press->{gutter} : 0;
 
+  # Create a nice string version of the grain. TODO Should be external.
+  my $grain = !defined $imposition->grain ? 'Mixed'
+  :          $imposition->grain ? 'Height'
+  :                               'Width';
+
+  # Non-dutch (mixed grain) impositions can still get the old rows ×
+  # columns fields filled out.
+  my ($rows, $cols);
+  if ($grain ne 'Mixed') {
+    # We assume that there is NO DUTCH LAYOUT, so we look at the initial
+    # cut direction and count the number of children down and across.
+    my @children = $imposition->children;
+
+    my ($x, $y);
+
+    if (@children) {
+      $x = scalar @children              || 1; # Child count.
+      $y = scalar $children[0]->children || 1; # First child's children count.
     }
-
-
-    # Multi-version needs it's layouts determined, single version is just
-    # the full sheet.
-    my $versions = $project->{versions};
-    my $n        = $style =~ /^W[TF]$/ ? $slots/2 : $slots;
-
-    my $layouts  = (%$versions) ? version_layouts($n, $versions, $project->{is_multipage})
-                                : [[[{ n         => 0,
-                                      label     => 'Signature',
-                                      requested => 100,
-                                      final     => 100,
-                                      slots     => $n,
-                                }]]]
-    ;
-
-    # TEMPORARY: For now we'll treat each as a totally new imposition.
-    # Really we want to only recalculate the running costs so the
-    # whole layout set will travel with the invidiual imposition until
-    # we do running (no setup, etc.) comparison in pricing.
-    my @impositions;
-
-    for my $layout (@$layouts) {
-        # Mirror back across the slots (*2) to display W&T/F
-        # correctly. Note: Quick and Dirty deep copy needed as the
-        # return is memoized.
-        my $corrected = ($style =~ /^W[TF]$/)
-            ? [map{[map{$a={%$_};$a->{slots}*=2;$a}@$_]}@$layout]
-            : $layout;
-
-        # Create the new imposition.
-        my $imp = eprint::impositionObject->new($press->{id});
-
-		my $orientation = $grain eq 'Height' ? 'Horizontal' : 'Vertical';
-
-        # Load up the old imposition object.
-        $imp->set(
-            $slots,                 # Image 'slots'
-            $style,                 # Run style
-            $grain,                 # Grain direction
-            $rotation,              # Rotate sheet
-            ($rows, $cols),         # Rows × Cols
-            ($width, $height),      # Final image width × height
-            $orientation,           # Orientation
-            $sheet,                 # Paper
-            $corrected,             # Layout (multi-version)
-            $imposition,            # Layout geometry tree.
-            $project->{colour_bar}, # Colour bar size
-            $grip,                  # Grip size
-            $gutter,                # Gutter size
-        );
-
-        push @impositions, $imp;
+    # If the image fits exactly to the sheet.
+    elsif ($imposition->card == 1) {
+      ($x, $y) = (1,1);
     }
+    else { die "Invalid imposition.\n"; }
 
-    return @impositions;
+    #($rows, $cols) = $imposition->cut ? ($y, $x) : ($x, $y);
+    #
+    ($cols, $rows) = $imposition->cut ? ($y, $x) : ($x, $y);
+
+    print STDERR "IMP1: Rows: $rows, COLS: $cols CUT: " . $imposition->cut . " X: $x Y: $y \n" if DEBUG;
+  }
+
+  # Multi-version needs it's layouts determined, single version is just
+  # the full sheet.
+  my $versions = $project->{versions};
+  my $n        = $style =~ /^W[TF]$/ ? $slots/2 : $slots;
+
+  my $layouts  = (%$versions) ? version_layouts($n, $versions, $project->{is_multipage})
+  : [[[{ n         => 0,
+          label     => 'Signature',
+          requested => 100,
+          final     => 100,
+          slots     => $n,
+        }]]]
+  ;
+
+  # TEMPORARY: For now we'll treat each as a totally new imposition.
+  # Really we want to only recalculate the running costs so the
+  # whole layout set will travel with the invidiual imposition until
+  # we do running (no setup, etc.) comparison in pricing.
+  my @impositions;
+
+  for my $layout (@$layouts) {
+    # Mirror back across the slots (*2) to display W&T/F
+    # correctly. Note: Quick and Dirty deep copy needed as the
+    # return is memoized.
+    my $corrected = ($style =~ /^W[TF]$/)
+    ? [map{[map{$a={%$_};$a->{slots}*=2;$a}@$_]}@$layout]
+    : $layout;
+
+    # Create the new imposition.
+    my $imp = eprint::impositionObject->new($press->{id});
+
+    my $orientation = $grain eq 'Height' ? 'Horizontal' : 'Vertical';
+
+    # Load up the old imposition object.
+    $imp->set(
+      $slots,                 # Image 'slots'
+      $style,                 # Run style
+      $grain,                 # Grain direction
+      $rotation,              # Rotate sheet
+      ($rows, $cols),         # Rows × Cols
+      ($width, $height),      # Final image width × height
+      $orientation,           # Orientation
+      $sheet,                 # Paper
+      $corrected,             # Layout (multi-version)
+      $imposition,            # Layout geometry tree.
+      $project->{colour_bar}, # Colour bar size
+      $grip,                  # Grip size
+      $gutter,                # Gutter size
+    );
+
+    push @impositions, $imp;
+  }
+
+  return @impositions;
 }
 
 # Multi-page is still done the old way. Basic impositions are post-processed
@@ -199,10 +196,9 @@ sub convert_to_signature {
     # Can't have a 1 out W&T
     if ($imp->{run_style} ne 'WT' and $imp->{run_style} ne 'WF') {
       # Make signature image out of spread Image
-      $imp->setRows(1);
-      $imp->setCols(1);
-      $imp->setSetup(1);
-      $$imp{imposition} = 1;
+      $$imp{rows} = 1;
+      $$imp{cols} = $$imp{columns} = 1;
+      $$imp{setup} = $$imp{imposition} = 1;
 
       foreach my $f (@{ $imp->{layout} }) {
         # Count the net press sheets per form.
@@ -577,8 +573,7 @@ sub version_layouts {
     my @nversions = map  { $i++; { n         => $i,
                                    label     => $_,
                                    requested => $versions->{$_}, }}
-                    sort { $versions->{$a} <=> $versions->{$b}    }
-                         keys %$versions;
+                    sort { $versions->{$a} <=> $versions->{$b}    } keys %$versions;
     undef $i;
 
 	print STDERR "HAVR PART  NVER" , Dumper(\@nversions) if DEBUG;
@@ -666,37 +661,36 @@ memoize('get_matching_versions',
    NORMALIZER => sub { my($s,@v)=@_; join ',', $s, map {$_->{requested}} @v; }
 );
 sub get_matching_versions {
-    my ($n, @versions) = @_;
+  my ($n, @versions) = @_;
 
+  print STDERR "\n\n*************** START GET MATCH ***************** ", Dumper($n, @versions) if DEBUG;
 
-	print STDERR "\n\n*************** START GET MATCH ***************** ", Dumper($n, @versions) if DEBUG;
+  # The simple case of we only need one or we need them all. We can do the
+  # first because partitions are always in descending order.
+  return [ shift @versions ], @versions if $n == 1;
+  return \@versions                     if $n >= @versions;
 
-    # The simple case of we only need one or we need them all. We can do the
-    # first because partitions are always in descending order.
-    return [ shift @versions ], @versions if $n == 1;
-    return \@versions                     if $n >= @versions;
+  # We'll do a linear scan (which we can do since they're sorted) over the
+  # requested percentages and choose the n closest together.
+  my @percentages = map { $_->{requested} } @versions;
 
-    # We'll do a linear scan (which we can do since they're sorted) over the
-    # requested percentages and choose the n closest together.
-    my @percentages = map { $_->{requested} } @versions;
+  my ($start, $min);
+  for my $i (0..$#percentages - $n + 1) {
 
-    my ($start, $min);
-    for my $i (0..$#percentages - $n + 1) {
+    my $stddev = stddev([ @percentages[$i..$i + $n-1] ]);
 
-        my $stddev = stddev([ @percentages[$i..$i + $n-1] ]);
+    print STDERR "\n Min: $min START: $start FOR LOOP 0 to $#percentages - $n   I: $i $stddev $percentages[$i]" if DEBUG;
 
-		print STDERR "\n Min: $min START: $start FOR LOOP 0 to $#percentages - $n   I: $i $stddev $percentages[$i]" if DEBUG;
-
-        if (not defined $min or $stddev < $min) {
-            $min   = $stddev;
-            $start = $i;
-        }
+    if (not defined $min or $stddev < $min) {
+      $min   = $stddev;
+      $start = $i;
     }
-    my @selected = splice @versions, $start, $n;
+  }
+  my @selected = splice @versions, $start, $n;
 
-	print STDERR "\nHAVE MATCH: $min, $start ", Dumper(\@selected) if DEBUG;
+  print STDERR "\nHAVE MATCH: $min, $start ", Dumper(\@selected) if DEBUG;
 
-    return \@selected, @versions;
+  return \@selected, @versions;
 }
 
 
@@ -704,61 +698,59 @@ sub get_matching_versions {
 # >= m at all times), determine how to fit them closest to their requested
 # percentages. TODO This is still the old crap function, it needs WORK!
 sub match_versions {
-    my ($setup, $versions) = @_;
+  my ($setup, $versions) = @_;
 
-    # For now we'll continue to humour the matching function and put the
-    # labels and percentages into two separate lists. TODO: Rework!
-    my (@keys, @values);
-    for my $v (@$versions) {
-        push @keys,   [$v->{n}, $v->{label}];
-        push @values, $v->{requested};
-    }
+  # For now we'll continue to humour the matching function and put the
+  # labels and percentages into two separate lists. TODO: Rework!
+  my (@keys, @values);
+  for my $v (@$versions) {
+    push @keys,   [$v->{n}, $v->{label}];
+    push @values, $v->{requested};
+  }
 
-    my @adjusted_values = @values;
-    my @adjustment_keys = (1) x @values;
-    my @result;
+  my @adjusted_values = @values;
+  my @adjustment_keys = (1) x @values;
+  my @result;
 
-    for (0..($setup - @values - 1)) {
-        my $largest_element = 0;
-        my $largest_index   = 0;
-
-        for my $j (0..$#adjusted_values) {
-            if ($adjusted_values[$j] > $largest_element) {
-                $largest_element = $adjusted_values[$j];
-                $largest_index   = $j;
-            }
-        }
-
-        $adjustment_keys[$largest_index]++;
-
-        $adjusted_values[$largest_index] =
-          $values[$largest_index] / $adjustment_keys[$largest_index];
-    }
-
+  for (0..($setup - @values - 1)) {
     my $largest_element = 0;
     my $largest_index   = 0;
+
     for my $j (0..$#adjusted_values) {
-        if ($adjusted_values[$j] > $largest_element) {
-            $largest_element = $adjusted_values[$j];
-            $largest_index   = $j;
-        }
-    }
-    for my $i (0..$#adjusted_values) {
-        $adjusted_values[$i] = $largest_element * $adjustment_keys[$i];
+      if ($adjusted_values[$j] > $largest_element) {
+        $largest_element = $adjusted_values[$j];
+        $largest_index   = $j;
+      }
     }
 
-    # And now convert back. The body _really_ needs to be rewritten.
-    for my $i (0..$#adjustment_keys) {
-        push @result, {
-            n         => $keys[$i][0],
-            label     => $keys[$i][1],
-            requested => $values[$i],
-            final     => $adjusted_values[$i],
-            slots     => $adjustment_keys[$i],
-        };
-    }
+    $adjustment_keys[$largest_index]++;
+    $adjusted_values[$largest_index] = $values[$largest_index] / $adjustment_keys[$largest_index];
+  }
 
-    return \@result;
+  my $largest_element = 0;
+  my $largest_index   = 0;
+  for my $j (0..$#adjusted_values) {
+    if ($adjusted_values[$j] > $largest_element) {
+      $largest_element = $adjusted_values[$j];
+      $largest_index   = $j;
+    }
+  }
+  for my $i (0..$#adjusted_values) {
+    $adjusted_values[$i] = $largest_element * $adjustment_keys[$i];
+  }
+
+  # And now convert back. The body _really_ needs to be rewritten.
+  for my $i (0..$#adjustment_keys) {
+    push @result, {
+      n         => $keys[$i][0],
+      label     => $keys[$i][1],
+      requested => $values[$i],
+      final     => $adjusted_values[$i],
+      slots     => $adjustment_keys[$i],
+    };
+  }
+
+  return \@result;
 }
 
 
@@ -783,6 +775,5 @@ sub stddev {
 
     return ($result <= 0) ? 0 : sqrt($result);
 }
-
 
 1;
