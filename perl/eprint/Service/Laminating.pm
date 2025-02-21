@@ -64,7 +64,6 @@ sub new {
 sub calc {
   my ($self, $log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
-  print STDERR "In Laminating::aclc\n";
 	my $prin_sid = get_print_container( $log, $dbh, $pid);
 
 	my %p_specs = eprint::service::get_specifications_pairs($log, $dbh, $pid, $prin_sid,
@@ -75,9 +74,7 @@ sub calc {
 									  
 	my @qtys = (undef, get_quantities($log, $dbh, $pid));
 
-    	my ($device, $laminate_price, $material_price, $setup_price ) = calc_price( 
-		$self, $log, $dbh, $variable, $specs
-	);
+  my ($device, $laminate_price, $material_price, $setup_price ) = calc_price($self, $log, $dbh, $variable, $specs);
 
 	my $run_total = $laminate_price + $material_price;
 
@@ -87,6 +84,7 @@ sub calc {
     );
 
 	for my $i (1..3) {
+    next if !$qtys[$i];
     my $run_price = ($laminate_price * $qtys[$i]);
     my $make_ready = $setup_price;
     callback::call('service_calc_end', $pid, $sid, \$make_ready, \$run_price); $specs->{'txtPrice'.$i} =  sprintf("%.2f", $run_price + $make_ready);
