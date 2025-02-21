@@ -5,6 +5,7 @@
 	my $service = $$variable{service};
 	my $Price = $$variable{Price};
   if (lc $Price->units() eq '1000 sheets') {
+  $Price->units('');
   $$Price{costperm} = $$Price{cost};
   $$Price{priceperm} = $$Price{price};
   # Need to convert to 100lb
