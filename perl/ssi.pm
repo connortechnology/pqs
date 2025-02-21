@@ -265,8 +265,8 @@ sub do_new_substitution {
         if (ref $array ne 'ARRAY') {
          $openprint::log->error("$loop is not an array reference: $!");
          return variable_substitution( $r, $log, $dbh, $2, $variable );
-       } else {
-         $openprint::log->error("$loop is an array reference: $!");
+         #} else {
+         #$openprint::log->error("$loop is an array reference: $!");
        }
 
         my ($inside_tag, $after_tag, $replace) = ($1, $2, '');
@@ -531,7 +531,7 @@ sub insert_html {
 sub get_file_path {
 	my ($r, $page ) = @_;
 
-    my $path = $r->document_root; # Default path to look for includes.
+    my $path = $openprint::r->document_root; # Default path to look for includes.
 
     # If a file is already declared as customer_specific
     if ($page =~ /^.?customer_specific(.*)$/) {
@@ -557,8 +557,8 @@ sub get_file_path {
     # to be there. If it is there it's treated as an 'override' to the
     # template version in the normal dir.
     else {
-        my $cs = $r->dir_config('custom_skin');
-	    my $ss = $r->dir_config('site_specific') || "$path/site_specific";
+        my $cs = $openprint::r->dir_config('custom_skin');
+	    my $ss = $openprint::r->dir_config('site_specific') || "$path/site_specific";
 
         $path =   $cs && -e "$cs/$page" ? $cs 
 			    : $ss && -e "$ss/$page" ? $ss
@@ -1153,7 +1153,10 @@ $label,
   return $html;
 } # end sub checkboxes
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this' );
+my @input_options = (
+  'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange',
+  'class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title',
+  'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this', 'on_input_this' );
 
 sub input {
   my %options = @_;
@@ -1190,12 +1193,12 @@ sub input {
   } elsif ( $options{type} eq 'float' ) {
 #$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
     if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
-    $options{type} = 'text';
-    $options{pattern} = '[\+\-]?[.0-9eE]*' if ! $options{pattern};
+      $options{type} = 'text';
+      $options{pattern} = '[\+\-]?[.0-9eE]*' if ! $options{pattern};
       delete $options{step};
     } else {
       $options{step} = 'any' if ! exists $options{step};
-      $options{type} = 'number' if !$options{type};
+      $options{type} = 'number';
     }
     $options{oninput} = 'floatize(this);'.$options{oninput};
    } elsif ( $options{type} eq 'positivefloat' ) {
