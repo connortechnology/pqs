@@ -340,6 +340,7 @@ sub stock {
       $Paper->available_to_order( $param{available_to_order} );
       $Paper->cuttable( $param{cuttable} );
       $Paper->doublesided( $param{doublesided} );
+      $Paper->c1sc2s($param{c1sc2s});
       $Paper->multipart( $param{multipart} );
       $Paper->perfecting( $param{perfecting} );
       $Paper->score_required( $param{score_required} );

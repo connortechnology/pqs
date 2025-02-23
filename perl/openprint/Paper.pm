@@ -1799,12 +1799,14 @@ sub units {
 } # end sub units
 
 sub types {
+
   $_[0]{type} = 'sheet' if ! $_[0]{type};
 	return ($_[0]{type} eq 'Roll' ? ' roll' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
 } # end sub types
 
 sub type {
   my $self = shift;
+  $$self{type} = shift if @_;
   return 'Sheet' if !$$self{type};
   return $$self{type};
 }
