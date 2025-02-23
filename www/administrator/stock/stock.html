@@ -221,14 +221,14 @@ return '';
 				</li>
 				<li>
 					<label>Size</label>
-					<? echo ( input(type=>'float', id=>'width', name=>'width', value=>$$variable{Stock}->width(),  oninput=>'gsm_to_mweight( this.form );' ); ) ?>
+					<? echo ( input(type=>'float', id=>'width', name=>'width', value=>$$variable{Stock}->width(), oninput=>'gsm_to_mweight( this.form );' ); ) ?>
 					<span id="StockHeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>> x
 					<? echo ( input(type=>'float', id=>'height', name=>'height', value=>$$variable{Stock}->height(), oninput=>'gsm_to_mweight( this.form );' ); ) ?>
 					</span> inches
 				</li>
 				<li id="MWeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>>
 					<label>MWeight</label>
-					<? echo ( input(type=>'float', id=>'mweight', name=>'mweight', value=>$$variable{Stock}->mweight(),  oninput=>'mweight_to_gsm( this.form );' ); ) ?>
+					<? echo ( input(type=>'float', id=>'mweight', name=>'mweight', value=>$$variable{Stock}->mweight(), oninput=>'mweight_to_gsm( this.form );' ); ) ?>
 				</li>
 				<li id="BasisSize">
 					<label>Basis Weight</label>
@@ -306,7 +306,7 @@ return '';
           <?echo(radio('cuttable', ['1','Yes','0','No'], $$variable{Stock}->cuttable());)?>
 				</li>
 				<li class="doublesided">
-					<label>Is this stock double sided?</label>
+					<label>Can this stock be printed double sided?</label>
           <?echo(radio('doublesided', ['Y','Yes','N','No'], $$variable{Stock}->doublesided());)?>
 				</li>
         <li class="c1sc2s"><label>C1S / C2S?</label>
