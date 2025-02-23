@@ -211,12 +211,19 @@ sub load {
 
 # Returns a copy of the paper object.
 sub copy {
-	my $New = $_[0]->clone();
-	$$New{id} = '';
-	$$New{Prices} = [ $_[0]->Prices() ];
-	$$New{recommendations} = [ $_[0]->recommendations() ];
-	delete $$New{created_on};
-	return $New;
+  my $self = shift;
+	my $new = $self->clone();
+	$$new{id} = '';
+	delete $$new{created_on};
+	$$new{name} = 'Copy of '.$$self{name};
+  my $copy = 1;
+  while (my @result = sql::execute(undef, undef, 'SELECT '.$fields{id}.' FROM '.$table.' WHERE '.$fields{name}.'=? LIMIT 1', $$new{name})) {
+    $$new{name} = 'Copy '.$copy. ' of '.$$new{name};
+    $copy ++;
+  }
+  $$new{Prices} = [ map { $_->paper_id(undef); $_ } $self->Prices() ];
+  $$new{Recommendations} = [ map { $_->paper_id(undef); $_; } $self->Recommendations() ];
+	return $new;
 } # end sub copy
 
 sub Prices {
@@ -350,9 +357,13 @@ sub save {
 	sql::execute( undef, undef, 'DELETE FROM StockQualities WHERE id NOT IN (SELECT DISTINCT quality_id FROM '.$openprint::Paper::table.')' );
 
 	my @Recommendations = $self->Recommendations();
-  my @ids = map {$$_{id}} @Recommendations;
+  my @ids = map {$$_{id} ? $$_{id} : ()} @Recommendations;
 	sql::execute( undef, undef, 'DELETE FROM '.$openprint::PaperRecommendation::table.' WHERE '.$openprint::PaperRecommendation::fields{paper_id}.'=? and id NOT IN ('.join(',', map { '?' } @ids).')', $$self{id}, @ids ) if @ids;
 	foreach my $rec ( @Recommendations ) {
+		if ( $$rec{paper_id} != $$self{id} ) {
+			$$rec{paper_id} = $$self{id};
+			$$rec{id} = undef;
+		} # end if
     $rec->save();
     if ( $openprint::dbh->errstr() ) {
       $openprint::dbh->rollback();
@@ -1279,16 +1290,16 @@ sub sheets_per_package {
 	
 sub gsm {
 	my $self = shift;
-	if ( @_ ) {
+	if (@_) {
 		$$self{gsm} = shift;
-		if ( $$self{gsm} ) {
+		if ($$self{gsm}) {
 			$self->wpsi(undef);
 			$self->mweight(undef);
 			$self->basis_mweight(undef);
 		}
 	} 
-	if ( ! $$self{gsm} ) {
-		if ( $self->wpsi(undef) ) {
+	if (!$$self{gsm}) {
+		if ($self->wpsi(undef)) {
 			$$self{gsm} = Math::Round::nearest( 0.01, $$self{wpsi} * 703064.5 );
 			$openprint::log->warn('calculate gsm for ' . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
 		} else { 
@@ -1299,15 +1310,22 @@ sub gsm {
 	return $$self{gsm};
 } # end sub gsm
 
+# Is wpsi of the finished thing, or the source sheet?  I think the item. Same as mweight
 sub wpsi {
 	my $self = shift;
+
 	if ( @_ ) {
 #$log->debug("Setting wpsi was $$self{wpsi}") if 1;
 		$$self{wpsi} = $self->transform(wpsi=>shift);
 #$log->debug("Setting wpsi to $$self{wpsi}") if 1;
 	} # end if
+
 	if (!$$self{wpsi}) {
-		if ( $self->basis_mweight() ) {
+    if ($$self{mweight} and $$self{width} and $$self{height}) {
+      $$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
+      #$$self{wpsi} *= 2 if $self->is_envelope();
+      $log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height}) = $$self{wpsi}");
+    } elsif ($self->basis_mweight()) {
 			$$self{wpsi} = ($$self{basis_mweight}/1000)/($self->basis_width()*$self->basis_height());
       if ($self->is_envelope()) {
         $$self{wpsi} *= 2;
@@ -1688,13 +1706,12 @@ sub gsm_to_mweight {
 	my $wpsi = $gsm/703064.5;
 	return sprintf('%.0f', $wpsi * 25 * 38 * 1000);
 } # end sub gsm_to_mweight
+
 sub gsm_to_weight {
 	my ( $gsm ) = @_;
-
 	my $wpsi = $gsm/703064.5;
 	return sprintf('%.0f', $wpsi * 25 * 38 * 500 );
 } # end sub gsm_to_weight
-
 
 sub start_area {
 	my $self = shift;
@@ -1794,14 +1811,14 @@ sub start_sheet_weight {
 } # end sub start_sheet_weight
 
 sub units {
-  $_[0]{type} = 'sheet' if ! $_[0]{type};
-	return ($_[0]{type} eq 'Roll' ? 'lb' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
+  my $self = shift;
+  my $type = $self->type();
+	return ($type eq 'Roll' ? 'lb' : 'sheet') . ( @_ and $_[0] == 1 ? '' : 's' );
 } # end sub units
 
 sub types {
-
-  $_[0]{type} = 'sheet' if ! $_[0]{type};
-	return ($_[0]{type} eq 'Roll' ? ' roll' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
+  my $type = $_[0]->type();
+  return ' '.lc($type).( $_[1] == 1 ? '' : 's' );
 } # end sub types
 
 sub type {
@@ -1950,9 +1967,10 @@ sub check {
   if ( abs( POSIX::ceil($Paper->gsm()) - POSIX::ceil($Copy->gsm(undef)) ) - 3 > 0 ) {
 		push @results, "may have invalid gsm current:$$Paper{gsm} != calculated:$$Copy{gsm}";
   }
+
   $Copy = $Paper->clone();
   if ( abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) > 1 ) {
-$openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) );
+    $openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) );
     push @results, "may have invalid mweight current:$$Paper{mweight} != calculated:$$Copy{mweight}";
 	}
   $Copy = $Paper->clone();

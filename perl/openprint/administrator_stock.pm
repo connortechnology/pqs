@@ -69,17 +69,17 @@ sub list {
 					( $param{group_id} ? ( group_id => $param{group_id} ) : () ),
 					( $param{owner_id} ? ( owner_id => $param{owner_id} ) : () ),
 					( $param{manufacturer_id} ? ( manufacturer_id => $param{manufacturer_id} ) : () ),
-					( $param{supplier_id} ? ( suopplier_id => $param{supplier_id} ) : () ),
-					( $param{brand_id} ? ( 'brand_id'    => $param{brand_id} ) : () ),
-					( $param{finish_id} ? ( 'finish_id'  => $param{finish_id} ) : () ),
-					( $param{colour_id} ? ( 'colour_id'  => $param{colour_id} ) : () ),
-					( $param{weight_id} ? ( 'weight_id'  => $param{weight_id} ) : () ),
-					( $param{quality_id} ? ( 'quality_id'        => $param{quality_id} ) : () ),
-					( $param{material_id} ? ( 'material_id'      => $param{material_id} ) : () ),
-					( $param{Types} ? ( 'type'           => $param{Types} ) : () ),
-					( $param{fsc_code} ? ( 'fsc_code'    => $param{fsc_code} ) : () ),
-					( $param{width} ? ( 'width'=>$param{width} ) : () ),
-					( $param{height} ? ( 'height'=>$param{height} ) : () ),
+					( $param{supplier_id} ? ( supplier_id => $param{supplier_id} ) : () ),
+					( $param{brand_id} ? ( brand_id    => $param{brand_id} ) : () ),
+					( $param{finish_id} ? ( finish_id  => $param{finish_id} ) : () ),
+					( $param{colour_id} ? ( colour_id  => $param{colour_id} ) : () ),
+					( $param{weight_id} ? ( weight_id  => $param{weight_id} ) : () ),
+					( $param{quality_id} ? ( quality_id        => $param{quality_id} ) : () ),
+					( $param{material_id} ? ( material_id      => $param{material_id} ) : () ),
+					( $param{Types} ? ( type           => $param{Types} ) : () ),
+					( $param{fsc_code} ? ( fsc_code    => $param{fsc_code} ) : () ),
+					( $param{width} ? ( width=>$param{width} ) : () ),
+					( $param{height} ? ( height=>$param{height} ) : () ),
 					( $param{grain_direction} ? ( grain_direction => $param{grain_direction} ) : () ),
 					( $param{digital} ne '' ? ( digital=>$param{digital} ) : () ),
 					'order'         => 'brand,finish,colour,weight, width, height'
@@ -143,11 +143,15 @@ sub list {
 	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		foreach my $Paper ( @Papers ) {
 			my $NewPaper = $Paper->copy();
-			$NewPaper->save();
-      #foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
-      #$Setting = $Setting->copy();
-      #$Setting->save({'stock_id'=>$NewPaper->id()});
-      #} # end foreach
+			$variable{error} .= $NewPaper->save();
+      if (!$variable{error}) {
+        (new openprint::Log())->save({Object=>$NewPaper, action=>'Copy', note=>'Paper '.$NewPaper->link_to(). ' copied from '.$Paper->link_to()});
+        #foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+        #$Setting = $Setting->copy();
+        #$Setting->save({'stock_id'=>$NewPaper->id()});
+        #} # end foreach
+      }
+      #
 		} # end foreach
 	} elsif ( $param{btnFunction} eq 'ApplyChanges' ) {
 		foreach my $Paper ( @Papers ) {
@@ -287,14 +291,17 @@ sub stock {
       }
       $variable{information} .= 'Stock ' . $Paper->link_to( $Paper->id() ) . ' has been copied.';
       my $NewPaper = $Paper->copy();
-      $NewPaper->save();
-      #foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
-      #$Setting = $Setting->copy();
-      #$Setting->save({'stock_id'=>$NewPaper->id()});
-      #} # end foreach
-      $Paper = $NewPaper;
-      $param{stock_id} = $Paper->id();
-      $variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
+      $variable{error} .= $NewPaper->save();
+      if (!$variable{error}) {
+        (new openprint::Log())->save({Object=>$NewPaper, action=>'Copy', note=>'Paper '.$NewPaper->link_to(). ' copied from '.$Paper->link_to()});
+        #foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+        #$Setting = $Setting->copy();
+        #$Setting->save({'stock_id'=>$NewPaper->id()});
+        #} # end foreach
+        $Paper = $NewPaper;
+        $param{stock_id} = $Paper->id();
+        $variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
+      }
     } elsif ( $param{btnFunction} eq 'Save' ) {
 
       $Paper = new openprint::Paper() if ! $Paper;
@@ -331,7 +338,7 @@ sub stock {
       $Paper->basis_mweight( $param{basis_mweight} );
       $Paper->basis_width( $param{basis_width} );
       $Paper->basis_height( $param{basis_height} );
-#$Paper->mweight( $param{mweight} );
+      $Paper->mweight( $param{mweight} );
 
       $Paper->calliper( $param{calliper} );
       $Paper->sheets_per_package( $param{sheets_per_package} );
