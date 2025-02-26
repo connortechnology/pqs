@@ -18,6 +18,13 @@
 .Recommendations ul li label {
   float: none;
 }
+
+.name {
+  display: flex;
+}
+.name input {
+  flex: 1;;
+}
 /*
 .Recommendations label.radio {
 	margin-left: 2px;
