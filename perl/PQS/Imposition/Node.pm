@@ -42,9 +42,7 @@ sub _init :Init {
             : [0,0,0,0];
     }
 
-    $grain[$$self] = exists $args_ref->{grain} 
-        ? $args_ref->{grain}
-        : undef;
+    $grain[$$self] = exists $args_ref->{grain} ? $args_ref->{grain} : undef;
 
     if ($args_ref->{children}) {
         for my $child (grep { defined $_ } @{ $args_ref->{children} }) {
