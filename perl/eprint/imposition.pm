@@ -58,14 +58,15 @@ sub convert_to_old {
     # If the image fits exactly to the sheet.
     elsif ($imposition->card == 1) {
       ($x, $y) = (1,1);
-    }
-    else { die "Invalid imposition.\n"; }
+    } else { die "Invalid imposition.\n"; }
 
     #($rows, $cols) = $imposition->cut ? ($y, $x) : ($x, $y);
     #
     ($cols, $rows) = $imposition->cut ? ($y, $x) : ($x, $y);
 
     print STDERR "IMP1: Rows: $rows, COLS: $cols CUT: " . $imposition->cut . " X: $x Y: $y \n" if DEBUG;
+  } else {
+    print STDERR "CHildren:". Data::Dumper::Dumper($imposition->children)."\n";
   }
 
   # Multi-version needs it's layouts determined, single version is just
