@@ -59,8 +59,7 @@ sub impositions {
   print STDERR "START Printing \ IMPOSE 2: $end  \n";
 
   # Generate all possible impositions for the project (except inkjet).
-  my $impositions 
-  = !$is_inkjet ? PQS::Imposition->new(project => $project, start => $start_time) : undef;
+  my $impositions = !$is_inkjet ? PQS::Imposition->new(project => $project, start => $start_time) : undef;
 
   $end =  Time::HiRes::time() - $start_time;
   print STDERR "START Printing \ IMPOSE 3: $end  \n";
@@ -68,14 +67,14 @@ sub impositions {
   # A press run is the set of valid run styles X sheet sizes for that press.
   # Returns [press, sheet, style, node tree, is_rotated]
   my $run = sub {
-    my ($press) = @_;
+    my $press = shift;
 
     #print STDERR "HAVE PRESS: ", Dumper($press);
 
     # Get the run styles we can do and sheet sizes that fit on the press.
     my @r = grep { can_print_style($press, $_, $project) } @styles;
     my @s = map  { fit_to_press   ($_,     $press      ) } @$substrates;
-    #print STDERR "HAVE R: ", Dumper(@r), "S: ", Dumper(@s);
+    $openprint::log->debug("HAVE R: ". Dumper(@r). " S: ". Dumper(@s));
 
     return $empty unless @r && @s;
 
@@ -87,14 +86,14 @@ sub impositions {
       return imap { [$press, reverse(@$_), undef, undef ] } $setup;
     }
 
-    #print STDERR "HAVE SETUP: ", Dumper($setup);
+    $openprint::log->debug("HAVE SETUP: ". Dumper($setup));
 
     # Find the best (if any) imposition for each setup. TODO We try WT/WF
     # that obviously won't work as the image check should be half the
     # sheet size for them.
-    return igrep { $_->[-2] } 
-    imap  { [$press, $_->[1], $impositions->best_fit($press, @$_)] }
-    $setup;
+    my $valid = igrep { $_->[-2] } imap { [$press, $_->[1], $impositions->best_fit($press, @$_)] } $setup;
+    $openprint::log->debug("HAVE Valid: ". Dumper($valid));
+    return $valid;
   };
 
   #print STDERR "TIME TO VALIDATE DATA \n";
