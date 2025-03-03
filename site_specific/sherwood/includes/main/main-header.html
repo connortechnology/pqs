@@ -1,5 +1,11 @@
 <div id="banner">
-	<?BANNER_AD?>
+  <? echo (
+    if ( configuration::get_value($log, $dbh, 'UsesBanners') && !$variable->{BANNER_AD} ) {
+      require eprint::banner;
+      return eprint::banner::select_banner($log, $dbh, $variable->{cust_id}, $variable->{user_id});
+      }
+      return '';
+    ) ?>
 </div>
 
 <ul id="nav">
