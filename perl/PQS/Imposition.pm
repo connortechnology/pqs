@@ -175,7 +175,6 @@ sub _init :Init {
     print STDERR "START PQS \ IMPOSE 9: $end  \n";
   }
 
-
   return $self;
 }
 
@@ -224,176 +223,164 @@ sub images { # :Private
 # sub add_image { }
 
 sub best_fit {
-    my ($self, $press, $style, $sheet) = @_;
-    my $project                        = $project[$$self];
+  my ($self, $press, $style, $sheet) = @_;
+  my $project                        = $project[$$self];
 
-	#print STDERR "START BEST FIT: ", Dumper($press, $style, $sheet);
+  #print STDERR "START BEST FIT: ", Dumper($press, $style, $sheet);
 
-    # Only one way to print a screen item.
-    return ($style, $lookup[$$self][0]) if $project->{type} eq 'ScreenItem';
+  # Only one way to print a screen item.
+  return ($style, $lookup[$$self][0]) if $project->{type} eq 'ScreenItem';
 
-	#print STDERR "SETP BEST FIT: $press->{name}, $style \n";
+  #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
 
-    my @possible;
-    my $override = $project->{override}{runstyle};
+  my @possible;
+  my $override = $project->{override}{runstyle};
 
-    # While work & turn/flop are identical in how they run on the press,
-    # they aren't in terms of imposition. If we haven't been overriden expand them
-    # out now. TODO Move this section into Print::Impose.
-    my @styles = $style ne 'Wx' ? ($style)
-               : $override      ? ($override)
-               :                  qw(WT WF);
-   
-			   #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
-    # Digital presses with inline bindery are currently overriden to HAVE to
-    # use that bindery, so they must be 1-up impositions (a four page spread
-    # for stitching is one 1-up). Non-cuttable paper (like multi-part premade
-    # forms) also require 1-up impositions no matter the substrate size.
-    my $is_one_up 
-        =  (    $press->{type} eq 'digital'
-             && grep { $_ eq $project->{bind_type} } @{ $press->{services} } )
-        || ( !$sheet->{cut_paper} );
+  # While work & turn/flop are identical in how they run on the press,
+  # they aren't in terms of imposition. If we haven't been overriden expand them
+  # out now. TODO Move this section into Print::Impose.
+  my @styles = $style ne 'Wx' ? ($style) : $override ? ($override) : qw(WT WF);
 
-		#print STDERR "SETP BEST FIT: $press->{name}, $style \n";
-#This is a Safeway only rule	
-	# Allow this one type of project to print multi out ( 17x5.5)
-	# and variants that are slightly smaller.
-#	if (    ($project->{width} <= 5.5 or $project->{height} <= 5.5)
-#		and ($project->{width} == 17  or $project->{height} == 17 ) ) {
-#		#keep current is_on_up setting.
-#	} else { 
-#		$is_one_up = 1 if $project->{width} * $project->{height} > 93 && $press->{type} eq 'digital';
-#	}
+  #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
+  # Digital presses with inline bindery are currently overriden to HAVE to
+  # use that bindery, so they must be 1-up impositions (a four page spread
+  # for stitching is one 1-up). Non-cuttable paper (like multi-part premade
+  # forms) also require 1-up impositions no matter the substrate size.
+  my $is_one_up =  ( $press->{type} eq 'digital' && grep { $_ eq $project->{bind_type} } @{ $press->{services} } ) || ( !$sheet->{cut_paper} );
 
+  #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
+  #This is a Safeway only rule	
+  # Allow this one type of project to print multi out ( 17x5.5)
+  # and variants that are slightly smaller.
+  #	if (    ($project->{width} <= 5.5 or $project->{height} <= 5.5)
+  #		and ($project->{width} == 17  or $project->{height} == 17 ) ) {
+  #		#keep current is_on_up setting.
+  #	} else { 
+  #		$is_one_up = 1 if $project->{width} * $project->{height} > 93 && $press->{type} eq 'digital';
+  #	}
 
-	#print STDERR "CHECK IMPOSITION: ISONEUP: $is_one_up \n";
+  #print STDERR "CHECK IMPOSITION: ISONEUP: $is_one_up \n";
 
-	
-    # TODO normalize this during printing page input validation.
-    my $grain = $project->{grain} eq '' ? undef
-              : $project->{grain}       ? 1
-              :                           0;
+  # TODO normalize this during printing page input validation.
+  my $grain = $project->{grain} eq '' ? undef : $project->{grain} ? 1 : 0;
 
-			  #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
-    for my $style (@styles) {
+  #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
+  for my $style (@styles) {
 
-		# Inline bindery can not be W/TF if one up.
-		next if $style =~ /^W[TF]$/ && (   $is_one_up 
-										|| $project->{type} eq 'Envelopes' );
+    # Inline bindery can not be W/TF if one up. TODO: How about checking for stock cuttable instead of envelopes
+    next if $style =~ /^W[TF]$/ && ( $is_one_up || $project->{type} eq 'Envelopes' );
 
-        # Envelopes imposition is exactly the size of the envelope
-        # (currently). So just return that with the style (SW/PF).
-        return ($style, $lookup[$$self][0]) if $project->{type} eq 'Envelopes';
+    # Envelopes imposition is exactly the size of the envelope
+    # (currently). So just return that with the style (SW/PF).
+    return ($style, $lookup[$$self][0]) if $project->{type} eq 'Envelopes';
 
-    	my $rotated  = 0;
-    	my @dims     = qw(width height);
+    my $rotated  = 0;
+    my @dims     = qw(width height);
 
+    BEST_FIT:
+    {
+      my ($w, $h) = @$sheet{@dims}; # Imagable area.
 
-        BEST_FIT:
-        {
-            my ($w, $h) = @$sheet{@dims}; # Imagable area.
+      #print STDERR "STEP BEST FIT: $w x $h \n";
+      # TODO move to substrate section (substrate section needs to pass
+      # both rotated and unrotated sheets per press). Hrmm... though if
+      # we do we lose the optimization where we determine the best
+      # rotation for a single press sheet (as all other variables can be
+      # considered equal).
+      if (!sheet_fits_press(@$sheet{@dims}, $press) && !$rotated) {
+        @dims = reverse @dims;
+        $rotated = 1;
+        redo BEST_FIT;
+      }
 
-			#print STDERR "STEP BEST FIT: $w x $h \n";
-            # TODO move to substrate section (substrate section needs to pass
-            # both rotated and unrotated sheets per press). Hrmm... though if
-            # we do we lose the optimization where we determine the best
-            # rotation for a single press sheet (as all other variables can be
-            # considered equal).
-            if (!sheet_fits_press(@$sheet{@dims}, $press) && !$rotated) {
-                @dims = reverse @dims;
-                $rotated = 1;
+      unless ($project->{override}{margin}) {
 
-                redo BEST_FIT;
-            }
+        my $cb = $project->{colour_bar};
+        #$cb = min($cb, $press->{colour_bar_size}) if $press->{type} eq 'digital' && defined $press->{colour_bar_size};
 
-            unless ($project->{override}{margin}) {
+        $cb = 0 if  $press->{type} eq 'digital';
 
-				my $cb = $project->{colour_bar};
-				#$cb = min($cb, $press->{colour_bar_size}) if $press->{type} eq 'digital' && defined $press->{colour_bar_size};
+        # A flop (WF) trades head for tail, so we need to double up
+        # the grip. We can sneak (hopefully all of) the colour bar
+        # into the grip for the other side. Other run styles need the
+        # grip and colour bar at the head.
+        if ($style eq 'WF') { $h -= 2 * max($press->{grip} , $cb) }
+        else                { $h -=         $press->{grip} + $cb  }
 
-				$cb = 0 if  $press->{type} eq 'digital';
-		
-                # A flop (WF) trades head for tail, so we need to double up
-                # the grip. We can sneak (hopefully all of) the colour bar
-                # into the grip for the other side. Other run styles need the
-                # grip and colour bar at the head.
-                if ($style eq 'WF') { $h -= 2 * max($press->{grip} , $cb) }
-                else                { $h -=         $press->{grip} + $cb  }
+        #                if ($style eq 'WF') { $h -= 2 * max($press->{grip} , $project->{colour_bar}) }
+        #                else                { $h -=         $press->{grip} + $project->{colour_bar}  }
 
-#                if ($style eq 'WF') { $h -= 2 * max($press->{grip} , $project->{colour_bar}) }
-#                else                { $h -=         $press->{grip} + $project->{colour_bar}  }
+        #print STDERR "STEP BEST FIT WF: $w x $h,  GRIP: $press->{grip}, CB: $cb \n";
+        # Most presses can't print to the absolute edge of the sheet.
+        # A gutter applies to the two edges perpendicular to the feed.
+        $w -= $press->{gutter} if exists $press->{gutter};
 
-				#print STDERR "STEP BEST FIT WF: $w x $h,  GRIP: $press->{grip}, CB: $cb \n";
-                # Most presses can't print to the absolute edge of the sheet.
-                # A gutter applies to the two edges perpendicular to the feed.
-                $w -= $press->{gutter} if exists $press->{gutter};
+        #print STDERR "STEP BEST FIT GUTTER: $w x $h \n";
 
-				#print STDERR "STEP BEST FIT GUTTER: $w x $h \n";
+        #The available space is the smallest of maximum image area and the space available after the gutter and grab space
+        $w = min($w, $press->{maximum_image_area_width});
 
-				#The available space is the smallest of maximum image area and the space available after the gutter and grab space
-                $w = min($w, $press->{maximum_image_area_width});
+        $h = min($h, $press->{maximum_image_area_length} - $cb);
 
-                $h = min($h, $press->{maximum_image_area_length} - $cb);
+        #print STDERR "STEP BEST FIT IMAGE AREA: $w x $h \n";
+      }
 
-				#print STDERR "STEP BEST FIT IMAGE AREA: $w x $h \n";
-            }
+      #print STDERR "STEP BEST FIT: $w x $h \n";
+      $w /= 2 if $style eq 'WT'; # Mirrored edge to edge.
+      $h /= 2 if $style eq 'WF'; # Mirrored head to tail.
 
-			#print STDERR "STEP BEST FIT: $w x $h \n";
-            $w /= 2 if $style eq 'WT'; # Mirrored edge to edge.
-            $h /= 2 if $style eq 'WF'; # Mirrored head to tail.
+      # TODO If we're running perfecting and the sheet isn't stiff enough to
+      # hold it's form during a flip, we may need one or more rollers to guide
+      # it. As the ink is wet the roller can't be over printable area.
+      if (!$sheet->{perfecting} and $style eq 'PF') {
+        # We'll need to look at the cutting tree as we'll need vertical cuts and
+        # more than one child at the first level so we can guaruntee the roller a
+        # clear path.
 
-            # TODO If we're running perfecting and the sheet isn't stiff enough to
-            # hold it's form during a flip, we may need one or more rollers to guide
-            # it. As the ink is wet the roller can't be over printable area.
-            if (!$sheet->{perfecting} and $style eq 'PF') {
-                # We'll need to look at the cutting tree as we'll need vertical cuts and
-                # more than one child at the first level so we can guaruntee the roller a
-                # clear path.
+        # If the roller can't be near the middle of the sheet, we can use multiple
+        # rollers spaced somewhat evenly across the sheet.
+      }
 
-                # If the roller can't be near the middle of the sheet, we can use multiple
-                # rollers spaced somewhat evenly across the sheet.
-            }
+      #print STDERR "TIME TO FIND FIT: $w x $h \n";
+      my $node = $self->find_fit($w, $h, $grain, $rotated, $is_one_up);
+      $node = $node->work_and(TURN) if $node && $style eq 'WT';
+      $node = $node->work_and(FLOP) if $node && $style eq 'WF';
 
-			#print STDERR "TIME TO FIND FIT: $w x $h \n";
-            my $node = $self->find_fit($w, $h, $grain, $rotated, $is_one_up);
-               $node = $node->work_and(TURN) if $node && $style eq 'WT';
-               $node = $node->work_and(FLOP) if $node && $style eq 'WF';
+      #print STDERR "STEP BEST FIT: $w x $h \n";
+      #print STDERR "ADD NODE TO POSSIBLE LIST \n";
+      push @possible, [ $style, $node, $rotated ];
 
-			   #print STDERR "STEP BEST FIT: $w x $h \n";
-			   #print STDERR "ADD NODE TO POSSIBLE LIST \n";
-            push @possible, [ $style, $node, $rotated ];
-            
-            # Try the rotated version to see if feeding that way is better.
-            if (!$rotated) {
-                @dims = reverse @dims;
-                $rotated = 1;
+      # Try the rotated version to see if feeding that way is better.
+      if (!$rotated) {
+        @dims = reverse @dims;
+        $rotated = 1;
 
-                redo BEST_FIT if sheet_fits_press(@$sheet{@dims}, $press);
-            }
-        }
+        redo BEST_FIT if sheet_fits_press(@$sheet{@dims}, $press);
+      }
     }
+  }
 
-    # We want the most images that will fit on this sheet. TODO Right now we
-    # blindly prefer WT over WF when really it should be the cutting
-    # complexity and bindery options that have first say.
-	
-	#Swapped Sort order, card is top of list, then check wt/wf
-	#reversed back to the what it was in older versions.
-    my $node = (
-        sort { $b->[1]->card <=> $a->[1]->card } 
-		sort { $b->[0]       cmp $a->[0]       } # Prefere WT over WF
-        grep { $_->[1] } 
-             @possible
-    )[0];
+  # We want the most images that will fit on this sheet. TODO Right now we
+  # blindly prefer WT over WF when really it should be the cutting
+  # complexity and bindery options that have first say.
+
+  #Swapped Sort order, card is top of list, then check wt/wf
+  #reversed back to the what it was in older versions.
+  my $node = (
+    sort { $b->[1]->card <=> $a->[1]->card } 
+    sort { $b->[0]       cmp $a->[0]       } # Prefere WT over WF
+    grep { $_->[1] } 
+    @possible
+  )[0];
 
 
-    no warnings qw(uninitialized);
+  #no warnings qw(uninitialized);
 
-	#print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ", Dumper(@possible);
+  print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ", Dumper(@possible);
 
-    
-    # TEMP: Simple call for now.
-    return $node->[0] ? @$node : (undef, undef);
+
+  # TEMP: Simple call for now.
+  return $node->[0] ? @$node : (undef, undef);
 }
 
 # Determine if a given sheet size will fit on the given press.
@@ -410,28 +397,29 @@ sub sheet_fits_press {
 # Determines the imposition with the highest cardinality that can fit in the
 # given bounds. TODO Currently just a naïve grep/reduce over entire list.
 sub find_fit {
-    my ($self, $w, $h, $grain, $rotation, $is_one_up) = @_;
-    # If the sheet is rotated the grain we're looking for is opposite to the
-    # constraint (as width and height of the sheet are reversed).
-    $rotation = $grain ^ $rotation if defined $grain;
+  my ($self, $w, $h, $grain, $rotation, $is_one_up) = @_;
+  # If the sheet is rotated the grain we're looking for is opposite to the
+  # constraint (as width and height of the sheet are reversed).
+  $rotation = $grain ^ $rotation if defined $grain;
 
-    # TODO Gang-run related stuff.
-    
-	#print STDERR "FIND FIT:  $w, $h, $grain, $rotation, $is_one_up \n";
+  # TODO Gang-run related stuff.
 
-    # TODO Handle 1-up earlier so we don't have to do as much work.
-    my @nodes = sort {    $b->card      <=> $a->card        # Max cardinality
-                                                            }
-                grep {    
-#print STDERR "FIND FIT NODE: ", Dumper($_->size->[W],  $_->size->[H] ,  $_->grain, $_->card);
-                          ($_->size->[W] <= $w && $_->size->[H] <= $h) 
-                       && (!defined $grain ? 1 
-                                           :    defined $_->grain 
-                                             && $_->grain == $rotation)
-                       && ($is_one_up ? $_->card == 1 : 1) 
-                } @{ $lookup[$$self] };
+  #print STDERR "FIND FIT:  $w, $h, $grain, $rotation, $is_one_up \n";
 
-    return scalar @nodes ? $nodes[0] : undef;
+  # TODO Handle 1-up earlier so we don't have to do as much work.
+  my @nodes = sort {
+    $b->card      <=> $a->card        # Max cardinality
+  }
+  grep {    
+    #print STDERR "FIND FIT NODE: ", Dumper($_->size->[W],  $_->size->[H] ,  $_->grain, $_->card);
+    ($_->size->[W] <= $w && $_->size->[H] <= $h) 
+    && (!defined $grain ? 1 
+    :    defined $_->grain 
+    && $_->grain == $rotation)
+    && ($is_one_up ? $_->card == 1 : 1) 
+  } @{ $lookup[$$self] };
+
+  return scalar @nodes ? $nodes[0] : undef;
 }
 
 
@@ -446,16 +434,13 @@ sub fill_box :Private {
 
     my @forest;                  # Possible impositions for size.
 
-
     # If we've already been calculated just reference our table entry.
     return $cache->{$size} if exists $cache->{$size};
-    
 
     IMAGE:
     for my $image (@images) {
         # Don't bother with this image if it can't fit.
-        next IMAGE if $image->[W] > $box->[W] 
-                   or $image->[H] > $box->[H];
+        next IMAGE if $image->[W] > $box->[W] or $image->[H] > $box->[H];
         
         # TODO: If we prepopulate the cache with these nodes and mark the
         # cache as incomplete (as other images may be able to fit within the
@@ -498,22 +483,27 @@ sub fill_box :Private {
 
                     COMPARISON:
                     for my $potential (@forest) {
-                        # The overloaded version of calling the comparison
-                        # somehow wasn't seeing private data.
-                        #
-                        # my $cmp = $node <=> $potential;
-                        
-                        my $cmp = PQS::Imposition::Node::compare($node, $potential);
+                      # The overloaded version of calling the comparison
+                      # somehow wasn't seeing private data.
+                      #
+                      # my $cmp = $node <=> $potential;
 
-                        if (defined $cmp) {
-                            # We're better than the previous in our group.
-                            if ($cmp > 0) { $potential = $node; }
-                            
-                            # We've found our group, mark it and we're done.
-                            $has_similar = 1;
-                            last COMPARISON;
+                      my $cmp = PQS::Imposition::Node::compare($node, $potential);
+
+                      if (defined $cmp) {
+                        # We're better than the previous in our group.
+                        $openprint::log->debug("comparison $cmp ".Dumper($node) . ' and '.Dumper($potential));
+                        if ($cmp > 0) {
+                          $potential = $node;
                         }
-                    }
+
+                        # We've found our group, mark it and we're done.
+                        $has_similar = 1;
+                        last COMPARISON;
+                      } else {
+                        $openprint::log->debug("No comparison ".Dumper($node) . ' and '.Dumper($potential));
+                      }
+                    } #ned foreach potential in forest
 
                     # Add us if we're first or no comparable node exists.
                     if (!@forest or !$has_similar) {
