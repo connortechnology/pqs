@@ -1,179 +1,6 @@
-    <style>
-/*#wrapper1 {
-	width:1200px;
-}
-*/
-	table tr td {
-    border: none;
-}
-td {
-	padding:0.1ex 0.1ex 0.1ex 0.1ex;
-}
-img {
-max-height:100%; 
-max-width:100%;
-min-width:100%;
-min-height:100%;
-margin-left: auto;
-	margin-right: auto; 
-	display: block;
-
-}
-#home {
-	max-height:100%; 
-	max-width:100%;
-	margin-left: 0px;
-	margin-right: 0px; 
-
-}
-
-#image {
-	height:100%; 
-	width:100%;
-	min-width:100%;
-    min-height:100%;
-	
-}
-
-/*#wrapper1 { 	background: none;
-	background-image:url(/images/cfa_images/cfa-sourcing2.jpg); 
-	background-repeat:no-repeat;
-	background-position:center 5px; 
-	padding: 0;
-	}
-*//*#container {width: 900px;
-	margin-left: auto;
-	margin-right: auto;
-	margin-top: 150px;
-}*/
-*:focus { 
-outline: none; 
-}
-*::-moz-focus-inner { 
-border: none; 
-}
-#main2 {width: 20%;
-min-width:20%;
-min-height:20%;
-	margin-left: 5px;
-	margin-right: 5px;
-	margin-bottom:25px;
-	display: inline-block;
-	vertical-align: top;
-/*	
-	float:left;
-	border:1px solid #cccccc; */
-}
-#productname{ @import url(//fonts.googleapis.com/css?family=Montserrat:400,700);
-		font-family: 'Montserrat', sans-serif;
-	font-size: 12px;
-	color: #000000;
-	padding-bottom: 15px;
-	text-align:center;
-}
-#price { @import url(//fonts.googleapis.com/css?family=Montserrat:400,700);
-		font-family: 'Montserrat', sans-serif;
-	font-size: 14px;
-	color: #871719;
-	padding-bottom: 15px
-}
-#order { @import url(//fonts.googleapis.com/css?family=Montserrat:400,700);
-		font-family: 'Montserrat', sans-serif;
-	font-size: 14px;
-	text-align:center;
-	color: #edeccd;
-	background-color: #871719;
-	width: 40px;
-}
-.togglebox {
-/*  width: 80%; */
-  margin-top : -150px;  
-  background: #488cf2;
-  transform: translateZ(0);
-  box-shadow: 0 1px 1px rgba(0,0,0,.1);
-}
-
-input[type="radio"] {
-  position: absolute;
-  opacity: 0;
-}
-
-label {
- /*position: relative;
-  display: block;*/
-   height: 50px;
- line-height: 50px;
-  padding-left: 15px;
-   padding-right: 5px;
-  font-size: 14px;
-  font-weight: 700;
-  background: #fff;
-  cursor: pointer; /**/
-}
-
-label[for*='1'] {
-  border: 0;
-}
-
- 
-
-section {
-  height: 0;
-  transition: .3s all;
-  overflow: hidden;
-
-}
-<?loop categories?>
-#Category<?name?> {
-	 border-top: 1px solid #ddd;
-}
-#toggle<?name?>:checked ~ label[for*='<?name?>']:after
- {
-  transform: rotate(0deg);
-}
-
-  #toggle<?name?>:checked ~ #content<?name?> {
-  height: 100%;
-}
-<?endloop categories?>
-
-
-p {
-  margin: 5px 0;
-  padding: 0 20px;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.image { 
-   position: relative; 
-   width: 100px; /* for IE 6 */
-   width: 100px; /* for IE 6 */
-   padding-bottom:10%;
-   right:0px;
-   left:15%;
-   top:25px;
-}
-
-#ordercount { 
-   position: absolute; 
-   top: 19%; 
-   right: 5%; 
-   width: 100%;
-   font-size:18px;
-	color: brown;
-   }
-#checkout {position: absolute; 
-   top: 70%; 
-   right: 10%;
-   width: 100%;
-   font-size:13px;
-	color: black;
-   }
-   
-
-</style>
-<!--<?loop categories?>
+<!--
+  <?if(0)?>
+  <?loop categories?>
   CATEGORY LOOP
   <?name?> <br/>
   <?loop children?>
@@ -191,35 +18,40 @@ p {
   <?endloop categories?>
 
   <hr />
+  <?endif(0)?>
 -->
 
 
 
 
-
-		<?if prod_menu?>
-  	<?loop prod_menu?>
-		<?if active?>
-			<a href="/main/ecommerce/products.html?Category=<?id?>" >
-			<?name?></a>
-		<?endif active?>
-		
-		<?loop children?>
-		<?if active?>
-		<li><a href="/main/ecommerce/products.html?Category=<?id?>"><?name?></a></li>
-		<?endif active?>
-
-		<?endloop children?>
-		<br />
-
-	<?endloop prod_menu?>
-		<?endif prod_menu?>
-
-
-
+<ul>
+      <?echo(
+        my $html = '';
+        my $cats = PQS::model::categories::get_all();
+        my @prod_menu =  map { $cats->{$_}; } sort { $a cmp $b } keys %{$cats};
+        foreach my $prod (@prod_menu) {
+          next if ! $$prod{active};
+          $html .= '<li><a href="/main/ecommerce/products.html?Category='.$$prod{id}.'"'.($$prod{children} ? ' class="parent"' : '').'>'.$$prod{name}.'</a>
+          ';
+          if ($$prod{children}) {
+            $html .= '<ul>';
+            if (@{$$prod{children}}) {
+              foreach my $child (@{$$prod{children}}) {
+                next if ! $$child{active};
+                $html .= '<li><a href="/main/ecommerce/products.html?Category='.$$child{id}.'">'.$$child{name}.'</a></li>';
+              } # end foreach child
+            } # end if children
+            $html .= '</ul>';
+          } # end if children
+          $html .= '</li>';
+        } # end foreach prod
+        return $html;
+      ) ?>
+</ul>
 
 
 <!-- 
+  <?if(0)?>
   <?if order_count?>
          <a href="/main/order/order_submit.html">
              <div class="image" style="width: 70px; height: 100px;">
@@ -230,5 +62,6 @@ p {
         </a>
 	<p style="margin-bottom:30px"></p>
 <?endif order_count?>
+  <?endif(0)?>
 -->
 
