@@ -239,9 +239,7 @@ sub create_display {
   #
   # Some pages had all the projects in a single form resulting in tens to
   # hundreds of blank ids with one actual id.
-  my $pid = first { $_ } 
-  map   { tr/0-9//cd; $_ } 
-  $r->param('PredefinedProject') , $r->param('predefined');
+  my $pid = first { $_ } map   { tr/0-9//cd; $_ } $r->param('PredefinedProject') , $r->param('predefined');
 
   if ($pid) {
     # Populate the display with the old reference and comments.
@@ -326,14 +324,8 @@ sub create_display {
   # We need to display all service types on create stage one and use the
   # mappings below to dynamic exclude certain ones by project type (JS).
   # Note: The project type will only be defined for predefined projects.
-  @$variable{qw(categories category)} 
-  = service_types_by_category(
-    $dbh, $variable->{type}, $pid, $variable->{is_staff});
-
-  $variable->{display_shipping} = $dbh->selectrow_array(q{
-    SELECT count(*) from tbl_service_types WHERE strid = 'Shipping'
-    AND ysnviewvisible = 'Y'
-    });
+  @$variable{qw(categories category)} = service_types_by_category($dbh, $variable->{type}, $pid, $variable->{is_staff});
+  $variable->{display_shipping} = $dbh->selectrow_array(q{ SELECT count(*) from tbl_service_types WHERE strid = 'Shipping' AND ysnviewvisible = 'Y' });
 
   # All projects get cartons by default. TODO Move into DB.
   # $variable->{__FillInForm}{project_service} = (qw( PlainCartons ))
@@ -348,11 +340,7 @@ sub create_display {
   # PRESS TYPES
   #
   # Weird ass way about building that data structure.
-  $variable->{SelectedPress} = configuration::get_value(
-    $log, $dbh, 'default_press_type' 
-  );
-
-  $variable->{SelectedPress} = $r->param('rdbPressType') if $r->param('rdbPressType');
+  $variable->{SelectedPress} = $r->param('rdbPressType') ? $r->param('rdbPressType') : configuration::get_value( $log, $dbh, 'default_press_type' );
 
   $variable->{press_types} = $dbh->selectall_arrayref(q{
     SELECT DISTINCT et.strname AS name, et.strid AS press
@@ -376,8 +364,7 @@ sub create_display {
   @{ $variable->{press_types} } = ();
 
   foreach my $press (qw( press web screen inkjetprinter digital NoPrinting )) {
-    push @{ $variable->{press_types} }, $press_types{ $press }
-    if $press_types{ $press }
+    push @{ $variable->{press_types} }, $press_types{ $press } if $press_types{ $press }
   }
 
   # PROJECT TYPES
@@ -387,11 +374,8 @@ sub create_display {
   # only 1 Project Type in that Category then select
   # it by default when loading the page.
   my @cats = keys %{$variable->{project_type}};
-  if ( scalar @cats == 1 
-    && @{$variable->{project_type}{$cats[0]}} == 1
-  ) {
-    $variable->{__FillInForm}{rdbProjectType} =
-    ${$variable->{project_type}{$cats[0]}}[0]->{id};
+  if (scalar @cats == 1 && @{$variable->{project_type}{$cats[0]}} == 1) {
+    $variable->{__FillInForm}{rdbProjectType} = ${$variable->{project_type}{$cats[0]}}[0]->{id};
   };
 
   # NOTE: Pushing the mapping onto an array instead of creating a secondary
@@ -401,10 +385,7 @@ sub create_display {
 
   # The project types allowed depends on the press type selected. TODO Use
   # press id instead of the string.
-  my $sth = $dbh->prepare(q{
-    SELECT e.strid, p.project_type
-    FROM project_type_by_press p, tbl_equipment_type e
-    WHERE e.lngindex = p.press});
+  my $sth = $dbh->prepare(q{ SELECT e.strid, p.project_type FROM project_type_by_press p, tbl_equipment_type e WHERE e.lngindex = p.press});
   $sth->execute();
   my %by_press;
   while (my ($press, $project_type) = $sth->fetchrow_array) {
@@ -421,9 +402,7 @@ sub create_display {
 
   # Get the project type to group mappings
   $variable->{project_groups} = encode_json({@{
-      $dbh->selectcol_arrayref(q{
-      SELECT lngindex, lnggroup FROM tbl_projecttypes
-      }, { Columns => [1,2] }) 
+      $dbh->selectcol_arrayref(q{ SELECT lngindex, lnggroup FROM tbl_projecttypes }, { Columns => [1,2] }) 
       }});
 
   # Assemble a list of service type exclusions per group.
@@ -432,7 +411,6 @@ sub create_display {
   my %grouped;
   while (my ($group, $service_type) = $sth->fetchrow_array) {
     $grouped{$group} = [] unless exists $grouped{$group};
-
     push @{ $grouped{$group} }, $service_type;
   }
   $variable->{service_types_by_group} = encode_json(\%grouped);
@@ -548,39 +526,27 @@ sub edit_display {
 
   $variable->{is_multipage} = is_multipage($log, $dbh, $pid);
 
-  $variable->{has_locked_quantity} 
-  = $variable->{is_staff}  ? 0 : has_locked_quantity($dbh, $pid);
+  $variable->{has_locked_quantity} = $variable->{is_staff}  ? 0 : has_locked_quantity($dbh, $pid);
 
   $variable->{__FillInForm}{project_service} = $dbh->selectcol_arrayref(q{
-    SELECT strServiceType
-    FROM tbl_Project_Contents
-    WHERE lngProjectIndex = ?
+    SELECT strServiceType FROM tbl_Project_Contents WHERE lngProjectIndex = ?
     }, undef, $pid, );
 
   push @{ $variable->{__FillInForm}{project_service} } , @{ $dbh->selectcol_arrayref(q{
-  SELECT strvalue
-  FROM tbl_service_specifications
-  WHERE lngProjectIndex = ? AND strName = 'ShippingType'
+  SELECT strvalue FROM tbl_service_specifications WHERE lngProjectIndex = ? AND strName = 'ShippingType'
   }, undef, $pid) };
 
   # DESIGN FORMAT
   # 
   # Map the design to the file type if we're a legacy "electronic file".
   # Give the current design an HTML string to select it. Yucky.
-  $variable->{design} = $variable->{file_type} 
-  if $variable->{design} eq 'ElectronicFile';
+  $variable->{design} = $variable->{file_type} if $variable->{design} eq 'ElectronicFile';
 
   $variable->{format}{ lc $variable->{design} } = 'selected="selected"';    
 
-  @$variable{qw(categories category)} 
-  = service_types_by_category(
-    $dbh, $variable->{project_type}, $pid, $variable->{is_staff}
-  );
+  @$variable{qw(categories category)} = service_types_by_category( $dbh, $variable->{project_type}, $pid, $variable->{is_staff});
 
-  $variable->{display_shipping} = $dbh->selectrow_array(q{
-    SELECT count(*) from tbl_service_types WHERE strid = 'Shipping'
-    AND ysnviewvisible = 'Y'
-    });
+  $variable->{display_shipping} = $dbh->selectrow_array(q{ SELECT count(*) from tbl_service_types WHERE strid = 'Shipping' AND ysnviewvisible = 'Y' });
 
   return OK;
 }
@@ -598,13 +564,10 @@ sub design_format {
     if ($format ne 'PlatesSupplied' and $format ne 'FinalFilm') {
         $file_type = $format; 
         $format    = 'Electronic File';           # Legacy value.
-        $other     = $r->param('other_program') 
-            if defined $file_type and $file_type eq 'Other';
+        $other     = $r->param('other_program') if defined $file_type and $file_type eq 'Other';
     }
 	if ( $r->param("filetypes") ) {
-		$format = $r->param('filetypes') eq 'Hard Copy Only' 
-					? $r->param("filetypes")
-					: $r->param("filetypes") . " , " . $format;
+		$format = $r->param('filetypes') eq 'Hard Copy Only' ? $r->param("filetypes") : $r->param("filetypes") . " , " . $format;
 	}
 
     return $format, $file_type, $other;
@@ -931,13 +894,9 @@ sub api_list {
     my ( $r, $log, $dbh, $var ) = @_;
 
 	my @params = $r->param();
-	my $sth = $dbh->prepare(q{
-		UPDATE src_req set pid = ? WHERE id = ?
-	});
+	my $sth = $dbh->prepare(q{ UPDATE src_req set pid = ? WHERE id = ?  });
 
 	map { $sth->execute($r->param($_), $1) if $_ =~ /pid_(\d+)/ and $r->param($_) } @params;
-
-print STDERR "API LIST START **** \n\n";
 
     ssi::get_dates($r, $log, $dbh, $var);
 
@@ -946,7 +905,6 @@ print STDERR "API LIST START **** \n\n";
 	   $sql .= ' ORDER by id desc';
 
 	$var->{reqs} = $dbh->selectall_arrayref($sql, { Slice => {} } );
-
 }
 
 sub is_integer {
@@ -960,9 +918,7 @@ sub history_list {
   # Handle project deletion.
   if ($r->param('action') eq 'Delete') {
     my $error;
-    $error .= delete_project($log, $dbh, $variable, $_) 
-    for $r->param('delete');
-
+    $error .= delete_project($log, $dbh, $variable, $_) for $r->param('delete');
     return misc::error( $log, $dbh, $variable, 'Error', $error ) if $error;
   }
 
