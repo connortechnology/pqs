@@ -192,5 +192,192 @@ sub to_string {
   return $_[0]{to_string};
 } # end sub to_string
 
+sub columns {
+  my $self = shift;
+  if (@_) {
+    $$self{columns} = $$self{cols} = shift;
+  }
+  return $$self{columns};
+}
+
+sub rows {
+  my $self = shift;
+  $$self{rows} = shift if @_;
+  return $$self{rows};
+}
+
+sub  runstyle {
+  my $self = shift;
+  $$self{runstyle} = $$self{style} = shift if @_;
+  return $$self{runstyle};
+}
+
+sub cut {
+	my ( $I ) = @_;
+
+	my $i1 = $I->clone();
+	my @Results;
+
+	if ( $$I{runstyle} eq 'WT' ) {
+		$i1->runstyle( 'SW' );
+		$i1->columns( $$i1{columns} / 2 );
+		$i1->cols( $$i1{columns} / 2 );
+		if ( $$I{dutch_columns} ) {
+			$i1->dutch_columns( $$i1{dutch_columns} / 2 );
+		} # end if
+		$i1->quantity($i1->quantity()*2);
+		push @Results, $i1;
+
+	} elsif ( $$I{runstyle} eq 'WF' ) {
+		$i1->runstyle( 'SW' );
+		$i1->rows( $$i1{rows} / 2 );
+		$i1->dutch_rows( $$i1{dutch_rows} / 2 ) if $$I{dutch_rows};
+		$i1->quantity($i1->quantity()*2);
+		push @Results, $i1;
+
+	} elsif ( $$I{dutch_columns} ) {
+		$i1->dutch_rows( 0 );
+		$i1->dutch_columns( 0 );
+		my $i2 = $I->clone();
+		$i2->rows( $I->dutch_rows() );
+		$i2->columns( $I->dutch_columns() );
+		$i2->image_orientation( $I->image_orietation() == openprint::Imposition::Vertical ? openprint::Imposition::Horizontal : openprint::Imposition::Vertical );
+		$i2->dutch_rows( 0 );
+		$i2->dutch_columns( 0 );
+		push @Results, $i1, $i2;
+	} elsif ( ( $I->layout_width() >= $I->layout_height() ) and ( $$I{columns} > 1 ) ) {
+		$i1->columns( int($$I{columns} / 2) );
+		if ( ! ( $$I{columns} % 2 ) ) {
+			$i1->quantity( $i1->quantity() * 2 );
+			push @Results, $i1;
+		} else {
+			my $i2 = $I->clone();
+			$i2->columns( $$I{columns} - $$i1{columns} );
+			push @Results, $i1, $i2;
+		} # end if
+	} elsif ( ( $I->layout_width() < $I->layout_height() ) and ( $$I{rows} > 1 ) ) {
+		$i1->rows( int($$I{rows} / 2) );
+		if ( ! ( $$I{rows} % 2 ) ) {
+			$i1->quantity( $i1->quantity() * 2 );
+			push @Results, $i1;
+		} else {
+			my $i2 = $I->clone();
+			$i2->rows( $$I{rows} - $$i1{rows} );
+			push @Results, $i1, $i2;
+		} # end if
+	} elsif ( ( $$I{columns} >= $$I{rows} ) and ( $$I{columns} > 1 ) ) {
+		my $i2 = $I->clone();
+		$i1->columns( int($$I{columns} / 2) );
+		$i2->columns( $$I{columns} - $$i1{columns} );
+		push @Results, $i1, $i2;
+	} elsif ( $$I{rows} > 1 ) {
+		my $i2 = $I->clone();
+		$i1->rows( int($$I{rows} / 2) );
+		$i2->rows( $$I{rows} - $$i1{rows} );
+		push @Results, $i1, $i2;
+	} # end if
+	foreach my $i ( @Results ) {
+$openprint::log->debug('Cut to'.$i->to_string());
+	}
+	return @Results;
+} # end sub cut_imposition
+
+sub layout_width {
+  $_[0]{layout_width} = $_[1] if @_ > 1;
+
+	if ( ! defined $_[0]{layout_width} ) {
+		if ( $_[0]{image_orientation} == openprint::Imposition::Vertical ) {
+			$_[0]{layout_width} = ( $_[0]{columns} * $_[0]{image_width} ) + $_[0]{perfecting_wheel_space};
+#$_[0]->display();
+#$openprint::log->debug("Layout width $_[0]{layout_width} = ( $_[0]{columns} * $_[0]{image_width} ) + $_[0]{perfecting_wheel_space};") if DEBUG;
+			if ( $_[0]{folio_lip} ) {
+				my $folio_size = $_[0]{columns} * ( $_[0]{folio_lip} - ( $_[0]{columns} * $_[0]{bleed_size} ) );
+#$openprint::log->debug("Adding folio lip size to width $folio_size = $_[0]{columns} * ( $_[0]{folio_lip} - $_[0]{bleed_size} );");
+
+				$folio_size -= $_[0]{colour_bar_size} if $_[0]{colour_bar_orientation} ne 'Width';
+				$folio_size -= $_[0]{gutters} / 2;
+				$folio_size -= $_[0]{perfecting_wheel_space};
+				if ( $folio_size > 0 ) {
+					#$openprint::log->debug("Adding folio lip size to width " . $folio_size . 'gutters ' . $_[0]{gutters}  );
+					$_[0]{layout_width}  += $folio_size - $_[0]{gutters};
+					#$openprint::log->debug("image size is $_[0]{image_width}a nd perfecting wheel space is $_[0]{perfecting_wheel_space} ttial is $_[0]{layout_width}");
+#} else {
+					#$openprint::log->debug("NOT Adding folio lip size to width " . $folio_size . 'gutters:' . $_[0]{gutters}  );
+
+				}
+			}
+
+#$openprint::log->debug("layout_width = $_[0]{columns} * $_[0]{image_width} + ( $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} )");
+			if ( $_[0]{dutch_columns} ) {
+				my $dutch_width = $_[0]{dutch_columns} * $_[0]{image_height};
+
+				if ( $_[0]{dutch_orientation} eq 'width' ) {
+					$_[0]{layout_width} += $dutch_width;
+				} else {
+# Only adjust the width if it exceeds the non-dutch width
+					$_[0]{layout_width} = $dutch_width if $dutch_width > $_[0]{layout_width};
+				} # end if
+			} # end if
+		} elsif ( $_[0]{image_orientation} == openprint::Imposition::Horizontal ) {
+			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + $_[0]{perfecting_wheel_space};
+#$openprint::log->debug("Horz: $_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + $_[0]{perfecting_wheel_space};");
+
+			if ( $_[0]{dutch_columns} ) {
+				my $dutch_width = $_[0]{dutch_columns} * $_[0]{image_width};
+
+				if ( $_[0]{dutch_orientation} eq 'width' ) {
+					$_[0]{layout_width} += $dutch_width;
+				} else {
+					$_[0]{layout_width} = $dutch_width if $dutch_width > $_[0]{layout_width};
+				} # end if
+			} # end if
+		} else {
+$openprint::log->warn("layout_width: Unknown orientation ($_[0]{image_orientation})");
+		} # end if
+	} # end if ! defined $_[0]{layout_width}
+	return $_[0]{layout_width};
+}
+
+sub layout_height {
+  $_[0]{layout_height} = $_[1] if @_ > 1;
+	if ( ! defined $_[0]{layout_height} ) {
+		if ( $_[0]{image_orientation} == openprint::Imposition::Vertical ) {
+			$_[0]{layout_height} = $_[0]{rows} * $_[0]{image_height};
+			if ( $_[0]{dutch_columns} ) {
+				my $dutch_height = $_[0]{dutch_rows} * $_[0]{image_width};
+
+				if ( $_[0]{dutch_orientation} eq 'width' ) {
+					$_[0]{layout_height} = $dutch_height if $dutch_height > $_[0]{layout_height};
+				} else {
+					$_[0]{layout_height} += $dutch_height;
+				} # end if
+			} # end if
+		} elsif ( $_[0]{image_orientation} == openprint::Imposition::Horizontal ) {
+			$_[0]{layout_height} = $_[0]{rows} * $_[0]{image_width};
+			my $folio_size = $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} );
+			$folio_size -= $_[0]{colour_bar_size} if $_[0]{colour_bar_orientation} eq 'Width';
+			$folio_size -= $_[0]{grip};
+			if ( $folio_size > 0 ) {
+				$openprint::log->debug("Adding folio lip size $folio_size to height  $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} ) - $_[0]{colour_bar_size} $_[0]{colour_bar_orientation}  grip: $_[0]{grip}"  );
+				$_[0]{layout_height} += $folio_size;
+        #} else {
+        #$openprint::log->debug("Not Adding folio lip size $folio_size to height  $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} ) - $_[0]{colour_bar_size} $_[0]{colour_bar_orientation}  grip: $_[0]{grip}"  );
+			}
+
+			if ( $_[0]{dutch_columns} ) {
+				my $dutch_height = $_[0]{dutch_rows} * $_[0]{image_height};
+
+				if ( $_[0]{dutch_orientation} eq 'width' ) {
+					$_[0]{layout_height} = $dutch_height if $dutch_height > $_[0]{layout_height};
+				} else {
+					$_[0]{layout_height} += $dutch_height;
+				} # end if
+			} # end if
+		} else {
+$openprint::log->debug("Unknown orientation $_[0]{image_orientation}");
+		} # end if
+	} 
+	return $_[0]{layout_height};
+}
 1;
 __END__
