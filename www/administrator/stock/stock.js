@@ -33,6 +33,14 @@ function basis_weight_to_gsm( form ) {
 
 	const gsm = Math.round((basis_weight/1000)/(basis_width*basis_height)*70306450)/100;
 	form.elements['gsm'].value = gsm;
+  const type = get_value( form.elements['type'] );
+  console.log(type);
+  if (type != 'Envelope') {
+    console.log("Can't auto calc for envelopes");
+    //gsm *= 2;
+    //return;
+  }
+
 	form.elements['mweight'].value = Math.round((gsm/703064.5)*(width*height)*100000)/100;
 	form.elements['wpsi'].value = gsm / 703064.5;
 	recalc_prices( form );
@@ -56,10 +64,13 @@ function mweight_to_gsm( form ) {
 	form.elements['gsm'].value = gsm;
 	form.elements['wpsi'].value = gsm / 703064.5;
 
-	//const basis_mweight = Math.round(wpsi*(width*height)*100000)/100;
-	const basis_width = parseFloat(1*form.elements['basis_width'].value);
-	const basis_height = parseFloat(1*form.elements['basis_height'].value);
-	form.elements['basis_mweight'].value = Math.round( (gsm / 703064.5) * basis_width *basis_height *1000);
+  const type = get_value( form.elements['type'] );
+  if (type != 'Envelope') {
+    //const basis_mweight = Math.round(wpsi*(width*height)*100000)/100;
+    const basis_width = parseFloat(1*form.elements['basis_width'].value);
+    const basis_height = parseFloat(1*form.elements['basis_height'].value);
+    form.elements['basis_mweight'].value = Math.round( (gsm / 703064.5) * basis_width *basis_height *1000);
+  }
 	recalc_prices( form );
 }
 
@@ -68,8 +79,11 @@ function gsm_to_mweight( form ) {
 	const basis_height = parseFloat(1*form.elements['basis_height'].value);
 	const gsm = parseFloat(1*form.elements['gsm'].value);
 	const wpsi = gsm/703064.5;
-	const basis_mweight = Math.round(wpsi*(basis_width*basis_height)*1000);
-	form.elements['basis_mweight'].value = basis_mweight;
+  const type = get_value( form.elements['type'] );
+  if (type != 'Envelope') {
+    const basis_mweight = Math.round(wpsi*(basis_width*basis_height)*1000);
+    form.elements['basis_mweight'].value = basis_mweight;
+  }
 
 	const width = parseFloat(1*form.elements['width'].value);
 	const height = parseFloat(1*form.elements['height'].value);
