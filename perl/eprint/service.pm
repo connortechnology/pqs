@@ -4,6 +4,7 @@ use warnings;
 require openprint;
 use Data::Dumper;
 require Time::HiRes;
+require eprint::project;
 
 no warnings qw(uninitialized);
 
@@ -296,8 +297,6 @@ sub price_item {
     return wantarray ? ($price, $units, $equip) : $price;
 }
 
-
-
 # Return a list of equipment that offers the given service type.
 sub valid_equipment {
 	my ($log, $dbh, $service_type, $pid) = @_;
@@ -313,13 +312,10 @@ sub valid_equipment {
 	my $override;
 	if ( $specs->{chkOverrideEquipment1} ) {
 		$override = $specs->{ddmEquipment1};
-	print STDERR " OVERRRIDE FOUND:  $override \n";
+    print STDERR " OVERRRIDE FOUND:  $override \n";
 	}
 
-	my $over_sql;
-	if ( $override ) {
-		$over_sql = " AND eq.lngindex = $override ";
-	}
+	my $over_sql = " AND eq.lngindex = $override " if $override;
 
 	my $sql = qq{
 		SELECT equipment 
@@ -346,7 +342,7 @@ sub valid_equipment {
 #								  WHERE strname = 'product_only' AND strvalue = 'Y')" if $pid;
 	
 
-	#print STDERR "VALID EQUIPEMNT SQL: $sql \n";
+	print STDERR "VALID EQUIPEMNT SQL: $sql \n";
 	
   # As this query will potentially be run for every single service for every
   # project created, let's cache the statment.
@@ -823,122 +819,118 @@ sub get_inline_web_bindery {
 # as well as a quantity and material, and returns the price for that entire
 # service including materials.
 sub get_service_full_price {
-    my ($log, $dbh, $variable, $names, $quantity, $material) = @_;
+  my ($log, $dbh, $variable, $names, $quantity, $material) = @_;
 
-    require eprint::project;
+  my @equipment = valid_equipment($log, $dbh, $names->{action});
+  # print STDERR "VALID EQUIPMENT: ", Dumper(@equipment);
+  die "No valid equipment to perform: " . $names->{service} . " service!" if !scalar @equipment;
 
-    my @equipment = valid_equipment($log, $dbh, $names->{action});
-#use Data::Dumper;
- # print STDERR "VALID EQUIPMENT: ", Dumper(@equipment);
+  my @specs;
 
-    my @specs;
+  # try and be smart about what hardware we pick for the job.
+  if ($variable->{ProjectIndex}) {
+    my $print_sid = eprint::project::get_print_container( $log, $dbh, $variable->{ProjectIndex});
 
-    # try and be smart about what hardware we pick for the job.
-    if ($variable->{ProjectIndex}) {
-        my $print_sid = eprint::project::get_print_container(
-            $log, $dbh, $variable->{ProjectIndex}
-        );
+    @specs = get_specifications(
+      $log, $dbh, $variable->{ProjectIndex}, $print_sid,
+      qw( hdnSheetSizeWidth hdnSheetSizeHeight txtStockCalliper             )
+    );
+  }
 
-        @specs = get_specifications(
-            $log, $dbh, $variable->{ProjectIndex}, $print_sid,
-            qw( hdnSheetSizeWidth hdnSheetSizeHeight
-                txtStockCalliper             )
-        );
+  my %device_prices;
+
+  DEVICELIST:
+  foreach my $device (@equipment) {
+    if ($device && $variable->{force_device} && $device != $variable->{force_device}) {
+      print STDERR "Not forced device $$device{strid}\n";
+      next DEVICELIST;
     }
 
-    die "No valid equipment to perform: " . $names->{service} . " service!"
-        if !scalar @equipment;
+    if (grep { $_ > 0 } @specs) {
+      if (!eprint::equipment::equipment_fits($log, $dbh, $device, @specs, 1)) {
+        print STDERR "Does not fit $$device{strid} @specs\n";
+        next DEVICELIST;
+      }
+    }
+    #nprint STDERR "IT FITS: $device \n";
 
-    my %device_prices;
-
-    DEVICELIST:
-    foreach my $device (@equipment) {
-
-        if (   $device && $variable->{force_device}
-            && $device != $variable->{force_device}) {
-            next DEVICELIST;
-        }
-
-        if (grep { $_ > 0 } @specs) {
-            next DEVICELIST unless eprint::equipment::equipment_fits($log, $dbh, $device, @specs, 1);
-        }
-        #nprint STDERR "IT FITS: $device \n";
-
-        my $price       = get_price($log, $dbh, $variable, $names->{service}, $quantity, $device);
-        my $setup_price = get_price($log, $dbh, $variable, $names->{makeready}, 1, $device);
-        my $min_charge  = get_price($log, $dbh, $variable, $names->{mincharge}, 1, $device);
+    my $price       = get_price($log, $dbh, $variable, $names->{service}, $quantity, $device);
+    my $setup_price = get_price($log, $dbh, $variable, $names->{makeready}, 1, $device);
+    my $min_charge  = get_price($log, $dbh, $variable, $names->{mincharge}, 1, $device);
 
 
-        next DEVICELIST if !$price && !$min_charge;
-
-        my $material_price = 0;
-
-        if ($material) {
-            $material_price = eprint::material::get_price(
-                $log, $dbh, $variable, $material, $quantity, $device
-            );
-
-			$material_price *= $quantity;
-        }
-
-        my $setup;
-
-	    my $run_price = $price * $quantity;
-
-        if ($min_charge > $price * $quantity  +  $setup_price) {
-            $price = $min_charge;
-            $setup = 0;
-        }
-        else {
-            $price = $price * $quantity;
-            $setup = $setup_price;
-        }
-
-
-        $device_prices{$device} = [ $price, $material_price, $setup, $run_price, $min_charge ];
+    if (!$price && !$min_charge) {
+      print STDERR "Missing price $price for $$names{service} or min_price $min_charge for $$names{mincharge}\n";;
+      next DEVICELIST;
     }
 
-    my $deletion = delete $variable->{force_device};
+    my $material_price = 0;
 
-    if (!scalar keys %device_prices) {
-        if ($deletion) {
-            die "That device cannot perform that service!  Please choose another.\n";
-        }
-        else {
-            die "Unable to find any pricable hardware to perform: $names->{service} service!"
-        }
+    if ($material) {
+      $material_price = eprint::material::get_price(
+        $log, $dbh, $variable, $material, $quantity, $device
+      );
+
+      $material_price *= $quantity;
     }
 
-    my ($device)
-        = sort { (sum @{ $device_prices{$a} }) <=> (sum @{ $device_prices{$b} }) }
-            keys %device_prices;
-    my @stuff
-        = sort { (sum @{ $device_prices{$a} }) <=> (sum @{ $device_prices{$b} }) }
-            keys %device_prices;
+    my $setup;
 
-            #map { print STDERR "SUM: ", sum @{$device_prices{$_}} , "\n" } keys %device_prices;
+    my $run_price = $price * $quantity;
+
+    if ($min_charge > $price * $quantity  +  $setup_price) {
+      $price = $min_charge;
+      $setup = 0;
+    }
+    else {
+      $price = $price * $quantity;
+      $setup = $setup_price;
+    }
+
+
+    $device_prices{$device} = [ $price, $material_price, $setup, $run_price, $min_charge ];
+  }
+
+  my $deletion = delete $variable->{force_device};
+
+  if (!scalar keys %device_prices) {
+    if ($deletion) {
+      die "That device cannot perform that service!  Please choose another.\n";
+    } else {
+      die "Unable to find any pricable hardware to perform: $names->{service} service!"
+    }
+  }
+
+  my ($device)
+  = sort { (sum @{ $device_prices{$a} }) <=> (sum @{ $device_prices{$b} }) }
+  keys %device_prices;
+  my @stuff
+  = sort { (sum @{ $device_prices{$a} }) <=> (sum @{ $device_prices{$b} }) }
+  keys %device_prices;
+
+  #map { print STDERR "SUM: ", sum @{$device_prices{$_}} , "\n" } keys %device_prices;
 
 #print STDERR "BEST  FITS: $device \n", Dumper(\%device_prices);
 #print STDERR "Stuff \n", Dumper(@stuff);
 
 
-    #this got real ugly real fast -- it was expanded long after I wrote it to
-    #do things it wasn't originally intended to do, hence the long ugly
-    #return below.  FIXME: might consider a contextual return so we can
-    #return a hash with all the fun values we want later..
-    my $total =   $device_prices{$device}->[0]
-                + $device_prices{$device}->[1]
-                + $device_prices{$device}->[2];
-    
-    return wantarray
-         ? ($device,
-            $total,
-            $device_prices{$device}->[1],
-            $device_prices{$device}->[2],            
-            $device_prices{$device}->[3],            
-            $device_prices{$device}->[4],            
-	   )
-         :  $total;
+  #this got real ugly real fast -- it was expanded long after I wrote it to
+  #do things it wasn't originally intended to do, hence the long ugly
+  #return below.  FIXME: might consider a contextual return so we can
+  #return a hash with all the fun values we want later..
+  my $total =   $device_prices{$device}->[0]
+  + $device_prices{$device}->[1]
+  + $device_prices{$device}->[2];
+
+  return wantarray
+  ? ($device,
+    $total,
+    $device_prices{$device}->[1],
+    $device_prices{$device}->[2],            
+    $device_prices{$device}->[3],            
+    $device_prices{$device}->[4],            
+  )
+  :  $total;
 }
 
 
@@ -1016,7 +1008,7 @@ sub price {
   my ($log, $dbh, $variable, $pid, $sid, $service, $specs, $is_save) = @_;
 
   my $service_type = $service->{type};
-  $openprint::log->debug("Service: pid $pid sid $sid, $service, $is_save");
+  $openprint::log->debug("service::price pid $pid sid $sid, $service, $service_type, $is_save");
 
   # Allow the service to convert the specs whatever dataformat it wants.
   eval {
@@ -1073,7 +1065,7 @@ sub price {
 
       return 'error';
     }
-  my $elapsed = Time::HiRes::time() - $start_time;
+    my $elapsed = Time::HiRes::time() - $start_time;
     print STDERR "Status $status from $service_type elapsed: $elapsed\n";
 
     # Unknown statuses are treated as errors.
