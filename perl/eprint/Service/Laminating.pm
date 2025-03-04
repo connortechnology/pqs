@@ -41,9 +41,9 @@ sub new {
 
     my $service_names = {
         action    => 'Laminating',
-        service   => 'Laminate',
-        makeready => 'LaminateMakeReady',
-        mincharge => 'LaminateMinCharge',
+        service   => 'Laminating',
+        makeready => 'LaminatingMakeReady',
+        mincharge => 'LaminatingMinCharge',
     };
 
     my $self = {
@@ -62,8 +62,9 @@ sub new {
 #the default can just return 1 and use it as a multiplier, or something to
 #that effect.
 sub calc {
-    my ($self, $log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
+  my ($self, $log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
+  print STDERR "In Laminating::aclc\n";
 	my $prin_sid = get_print_container( $log, $dbh, $pid);
 
 	my %p_specs = eprint::service::get_specifications_pairs($log, $dbh, $pid, $prin_sid,
@@ -86,24 +87,20 @@ sub calc {
     );
 
 	for my $i (1..3) {
-          my $run_price = ($laminate_price * $qtys[$i]);
-          my $make_ready = $setup_price;
-          callback::call('service_calc_end', $pid, $sid, \$make_ready, \$run_price);
-		$specs->{'txtPrice'.$i} =  sprintf("%.2f", 
-				$run_price + $make_ready
-		);
+    my $run_price = ($laminate_price * $qtys[$i]);
+    my $make_ready = $setup_price;
+    callback::call('service_calc_end', $pid, $sid, \$make_ready, \$run_price); $specs->{'txtPrice'.$i} =  sprintf("%.2f", $run_price + $make_ready);
 
-		foreach my $side (0..1) {
-            next unless $mats[$side];
-            PQS::model::service::set_material_estimate($qtys[$i], undef, $sid, $mats[$side]->{lngindex}, $i);
-          }
+    foreach my $side (0..1) {
+      next unless $mats[$side];
+      PQS::model::service::set_material_estimate($qtys[$i], undef, $sid, $mats[$side]->{lngindex}, $i);
+    }
 	}
 
 	my $status = $run_total ? 'calculated' : 'uncalculated';
 
 	return $status;
 }
-
 
 sub calc_price {
     my ($self, $log, $dbh, $variable, $specs) = @_;
