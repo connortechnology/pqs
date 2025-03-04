@@ -70,24 +70,28 @@
   <li>
     <a href="/main/ecommerce/products.html" class="parent">New Products</a> 
     <ul>
-		<?if prod_menu?>
-      <?loop prod_menu?>
-      <?if active?>
-        <li><a href="/main/ecommerce/products.html?Category=<?id?>" <?if children?> class="parent" <?endif children?> > <?name?></a>
-      <?endif active?>
-      <ul>
-      <?loop children?>
-	      <?if active?>
-	      <li><a href="/main/ecommerce/products.html?Category=<?id?>"><?name?></a></li>
-	      <?endif active?>
-      <?endloop children?>
-      </ul>
-      <?if active?>
-      </li>
-      <?endif active?>
-
-      <?endloop prod_menu?>
-		<?endif prod_menu?>
+      <?echo(
+        my $html = '';
+        my $cats = PQS::model::categories::get_all();
+        my @prod_menu =  map { $cats->{$_}; } sort { $a cmp $b } keys %{$cats};
+        foreach my $prod (@prod_menu) {
+          next if ! $$prod{active};
+          $html .= '<li><a href="/main/ecommerce/products.html?Category='.$$prod{id}.'"'.($$prod{children} ? ' class="parent"' : '').'>'.$$prod{name}.'</a>
+          ';
+          if ($$prod{children}) {
+            $html .= '<ul>';
+            if (@{$$prod{children}}) {
+              foreach my $child (@{$$prod{children}}) {
+                next if ! $$child{active};
+                $html .= '<li><a href="/main/ecommerce/products.html?Category='.$$child{id}.'">'.$$child{name}.'</a></li>';
+              } # end foreach child
+            } # end if children
+            $html .= '</ul>';
+          } # end if children
+          $html .= '</li>';
+        } # end foreach prod
+        return $html;
+      ) ?>
     </ul>
   </li>
 </ul>
