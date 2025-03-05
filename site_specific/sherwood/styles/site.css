@@ -823,3 +823,6 @@ input[type=number] {
   color: red;
 }
 
+button[disabled='disabled'] {
+  background-color: grey;
+}
