@@ -56,6 +56,7 @@ function validate (e) {
 
   // If multi-version, make sure everything is allocated.
   if (form.is_mv && form.is_mv.checked) {
+    console.log('mv');
     if (version_quantity_remaining() != 0)
       text += 'Some projects are not assigned to a version\n';
   }
@@ -320,69 +321,79 @@ function mv_varnish (e) {
 
 // Change the other two quantities and the percentange whenever the first
 // quantity changes.
-function update_version_quantity (elem) {
-    
-    var row = elem.parentNode.parentNode;
-    if (isNaN(elem.value)) {
-      return;
-    }
-    
-    const qty1_elem = document.getElementById('txtQuantity1');
+function update_version_quantity(elem) {
+  console.log('update version quantity');
 
-    var qty1;
-    if (qty1_elem) {
-	    qty1 = qty1_elem.innerHTML ? qty1_elem.innerHTML : qty1_elem.value;
-    }
+  if (isNaN(elem.value)) {
+    console.log("elemen no value", elem);
+    return;
+  }
 
-    // Figure out the percentage that current quantity if of it's total.
-    var percentage = (elem.value / qty1) * 100;
-    
-    // Update the text that displays the percent...
-    row.cells[4].innerHTML = do_decimals(percentage);
-    
-    // ..and update the quantities for Q2 and Q3 if they're there.
-    for (var i=2; i <= 3; i++) {
-		var q = document.getElementById('txtQuantity'+i);
-		if ( q ) {
-			var qty = q.innerHTML;
-            row.cells[i].innerHTML = parseInt(qty * percentage/100);
-		}
-    }
+  const qty1_elem = document.getElementById('txtQuantity1');
+  var qty1;
+  if (qty1_elem) {
+    qty1 = qty1_elem.innerHTML ? qty1_elem.innerHTML : qty1_elem.value;
+  }
 
-    // Recalulate the quantity of Q1 we have yet to allocate
-    version_quantity_remaining();
+  // Figure out the percentage that current quantity if of it's total.
+  var percentage = (elem.value / qty1) * 100;
+
+  // Update the text that displays the percent...
+  var row = elem.parentNode.parentNode;
+  row.cells[4].innerHTML = do_decimals(percentage);
+
+  // ..and update the quantities for Q2 and Q3 if they're there.
+  for (var i=2; i <= 3; i++) {
+    var q = document.getElementById('txtQuantity'+i);
+    if ( q ) {
+      var qty = q.innerHTML;
+      row.cells[i].innerHTML = parseInt(qty * percentage/100);
+    }
+  }
+
+  // Recalulate the quantity of Q1 we have yet to allocate
+  version_quantity_remaining();
 }
 
 function version_quantity_remaining () {
-    var form = document.getElementsByName("f1")[0];
-    
-    var result     = document.getElementById('version_quantity_remaining');
-    const qty1_elem = document.getElementById('txtQuantity1');
+  console.log("version_qty_remaining");
+  const form = document.getElementsByName("f1")[0];
 
-    var total;
-    if (qty1_elem) {
-	    total = qty1_elem.innerHTML ? qty1_elem.innerHTML : qty1_elem.value;
-    }
+  const result     = document.getElementById('version_quantity_remaining');
+  const qty1_elem = document.getElementById('txtQuantity1');
 
-    var names      = form.mv_name;
-    var quantities = form.mv_qty;
-    var sum = 0;
+  var total;
+  if (qty1_elem) {
+    total = qty1_elem.innerHTML ? qty1_elem.innerHTML : qty1_elem.value;
+  }
+
+  var names      = form.mv_name; //Might not be an array, but likely is.
+  var quantities = form.mv_qty;
+
+  var sum = 0;
+  if (!quantities.length) {
+    const value = parseInt(quantities.value);
+    if (!isNaN(value)) sum += value;
+  } else {
     for (var i=0; i < quantities.length; i++) {
-        var value = parseInt(quantities[i].value);
-        if (isNaN(value) || !names[i]) continue;
-        sum += value;
+      const value = parseInt(quantities[i].value);
+      if (isNaN(value)) continue;
+      // || !names[i]) continue;
+      sum += value;
     }
+  }
 
-    var remaining = total - sum;
-    // Highlight the remaining if there are any left.
-    if (remaining)
-        result.className = 'error';
-    else
-        result.className = '';
-    
-    // Display the remaining
-    result.innerHTML = remaining;
-    return remaining;
+  var remaining = total - sum;
+  // Highlight the remaining if there are any left.
+  if (remaining)
+    result.className = 'error';
+  else
+    result.className = '';
+
+  // Display the remaining
+  result.innerHTML = remaining;
+  console.log('done', remaining);
+  return remaining;
 }
 
 
