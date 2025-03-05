@@ -52,13 +52,13 @@ return '';
 
 <form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{Stock}->id(); ) ?>">
 	<p class="buttons">
-		<? echo ( join('',
+		<? echo ( join("\n",
 		button( 'Prev1', { onclick=>"f1.btnFunction.value='Prev';f1.submit();", text=>'&lt;&lt;' } ),
 		button( 'Next1', { onclick=>"f1.btnFunction.value='Next';f1.submit();", text=>'&gt;&gt;' } ),
 		#button( 'Next1', { onclick=>"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);", text=>'&gt;&gt;' } ),
 		button( 'Add1', { onclick=>"f1.action='stock.html';f1.btnFunction.value='';f1.submit();", text=>'Add New' } ),
 		button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
-		button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
+    button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy', (!$$variable{Stock}->id() ? (disabled=>'disabled', title=>'Stock must be saved before it is copied') : () ) } ),
 		button( 'Save1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } ),
 		button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
