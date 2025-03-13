@@ -107,7 +107,7 @@ width: 55px;
 .Range input[type="number"],
 .dialog table .Range input[type="text"],
 .dialog table .Range input[type="number"] {
-	width: 30%;
+	width: 40%;
 }
 .Discount label {
   width: auto;
