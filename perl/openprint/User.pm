@@ -710,5 +710,11 @@ sub email_valid {
 	return $_[0]{email_valid};
 }
 
+sub is_staff {
+  my $self = shift;
+  $$self{is_staff} = ($$self{type} eq 'E' or $$self{type} eq 'A') if ! defined $$self{is_staff};
+  return $$self{is_staff};
+}
+
 1;
 __END__
