@@ -89,7 +89,11 @@ p.minimum_order label, p.fsc_code label, p.inventory_number label, p.message lab
 	text-align: right;
 }
 
-#calliper_mm, #calliper, #size, #width, #height {
+#calliper_pt {
+width: 35px;
+}
+#calliper_mm, 
+#calliper, #size, #width, #height {
 width: 55px;
 }
 #mweight,
