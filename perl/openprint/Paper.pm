@@ -2114,6 +2114,8 @@ sub destroy {
 
 sub grade {
   my $self = shift;
+  $$self{grade} = shift if @_;
+
   if (!$$self{grade}) {
     #1	=>	'1 Gloss-coated stock',
     #2	=>	'2 Matte-coated stock',
