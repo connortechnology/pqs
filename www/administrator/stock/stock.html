@@ -66,7 +66,7 @@ return '';
 	<br class="spacer"/>
 	<div class="Information">
 		<fieldset><legend>Stock Information: (<? echo ( $$variable{Stock}->id(); ) ?>)</legend>
-			<div class="leftColumn">
+			<div class="Column">
         <ul class="non-list">
           <li><label>Id</label><input type="text" name="name" value="<?echo($$variable{Stock}->name())?>" /></li>
           <!--
@@ -195,6 +195,10 @@ return '';
 					<input style="display: none;" type="text" id="material" name="material" onfocus="ddm_select_by_index( f1.material_id, 0 );" />
 				</li>
         -->
+        </ul>
+			</div><!--left-->
+			<div class="Column">
+        <ul class="non-list">
 				<li>
 					<label for="grade">Grade</label>
 					<select id="grade" name="grade" size="1">
@@ -206,13 +210,17 @@ return '';
 				</li>
 				<li>
 					<label>Calliper</label>
+					<? echo ( input(type=>'float', id=>'calliper_pt', name=>'calliper_pt', 
+								value=> $$variable{Stock}->calliper() *1000, 
+								on_input_this=>'calliper_onchange',
+								); ) ?> PT
 					<? echo ( input(type=>'float', id=>'calliper', name=>'calliper', 
 								value=> $$variable{Stock}->calliper(), 
-								oninput=>q`$('calliper_mm').value=do_decimals(this.value*25.4,3);`,
+								on_input_this=>'calliper_onchange',
 								); ) ?> inches
 					<? echo ( input(type=>'float', id=>'calliper_mm', name=>'calliper_mm', 
 									value => Math::Round::nearest( .001, $$variable{Stock}->calliper()*25.4),
-									oninput =>q`$('calliper').value=do_decimals( this.value*0.0393701, 4 );`,
+									on_input_this =>'calliper_onchange',
 								); ) ?> mm
 				</li>
 				<li>
@@ -269,7 +277,7 @@ return '';
         -->
         </ul>
 			</div><!--left-->
-			<div class="rightColumn">
+			<div class="Column">
         <ul class="non-list">
 				<li class="quantity_per_package">
 					<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{Stock}->units() ) ?></span>)</label>

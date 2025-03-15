@@ -236,7 +236,6 @@ function calc_price( element ) {
 } // end function
 //
 function stock_type_change(input) {
-  console.log(input);
   if (input.value=='Sheet'){
     $j('#StockHeight').show();
     $j('#MWeight').show();
@@ -264,5 +263,22 @@ function stock_type_change(input) {
     $j('.cuttable').hide();
   } else {
     alert('Unknown stock type');
+  }
+}
+
+function calliper_onchange(element) {
+  console.log('calliper_onchange');
+  const form = element.form;
+  if (element.name == 'calliper_pt') {
+    form.elements['calliper'].value = element.value/1000;
+    form.elements['calliper_mm'].value = do_decimals(element.value*0.0254,3);
+  } else if (element.name == 'calliper_mm') {
+    form.elements['calliper'].value = do_decimals( element.value*0.0393701, 4 );
+    form.elements['calliper_pt'].value = do_decimals( element.value*39.3701, 1 );
+  } else if (element.name == 'calliper') {
+    form.elements['calliper_pt'].value = element.value*1000;
+    form.elements['calliper_mm'].value = do_decimals(element.value*25.4,3);
+  } else {
+    console.log("No match");
   }
 }
