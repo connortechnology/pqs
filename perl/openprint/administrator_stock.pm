@@ -306,6 +306,7 @@ sub stock {
 
       $Paper = new openprint::Paper() if ! $Paper;
       my @changes = $Paper->changes( \%param );
+      $Paper->name($param{name});
       $Paper->owner_id( $param{ddmOwner} );
       $Paper->manufacturer( $param{txtManufacturer} ) if $param{txtManufacturer};
       $Paper->manufacturer_id( $param{ddmManufacturer} ) if ! $param{txtManufacturer};
