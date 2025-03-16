@@ -31,7 +31,7 @@ $debug = 0;
 use constant DEBUG_FOLDING => 0;
 
 %fields = (
-	id					=>	'id',
+	id					=>	'lngindex',
 	strid				=>	'strid',
 	name				=>	'strname',
 	description			=>	'strdescription',
@@ -58,7 +58,7 @@ use constant DEBUG_FOLDING => 0;
 	deleted				=>	'deleted',
 );
 %find_fields = (
-	Specifications => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
+	Specifications => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.'.$fields{id}.' AND strName=? LIMIT 1)',
 	category		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
 	servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
 );
@@ -506,7 +506,7 @@ sub next {
 		push @values, $$params{category_id};
 	} # end if
 	my ($name) = sql::execute( undef, undef, $sql, @values );
-	( $_ ) = sql::execute( undef, undef, q{SELECT id FROM tbl_Equipment WHERE strid=?}, $name );
+	( $_ ) = sql::execute( undef, undef, 'SELECT '.$fields{id}.' FROM tbl_Equipment WHERE '.$fields{name}.'=?', $name );
 	return $_;
 } # end sub next
 
@@ -524,7 +524,7 @@ sub prev {
 		push @values, $$params{category_id};
 	} # end if
 	my ($name) = sql::execute( undef, undef, $sql, @values );
-	( $_ ) = sql::execute( undef, undef, q{SELECT id FROM tbl_Equipment WHERE strid=?}, $name );
+	( $_ ) = sql::execute( undef, undef, 'SELECT '.$fields{id}.' FROM tbl_Equipment WHERE '.$fields{name}.'=?', $name );
 	return $_;
 } # end sub next
 
