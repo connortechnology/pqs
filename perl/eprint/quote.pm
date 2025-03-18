@@ -817,18 +817,11 @@ print STDERR "START SEND QUOTES HERE \n";
     my $html  = misc::load_file($r, '/email/forms/quote.html');
 	$html = ssi::variable_substitution( $r, $log, $dbh, $html, \%quote);
 
-	use MIME::Base64;
-	use PDF::WebKit;
-  	my $kit = PDF::WebKit->new(\$html, page_size => 'Letter');
-	my $pdf = $kit->to_pdf;
+    my $name = "quote-$quote_id";
+    my $pdf = misc::html2pdf($name, $html);
 
-#	misc::save_file(undef, "/usr/local/share/pqs/test1.pdf", $pdf);
-
-	$pdf = encode_base64($pdf);
-
-
-	push @body, ("quote-$quote_id.pdf", $pdf,  'application/pdf', 'base64');
-
+    $pdf = encode_base64($pdf);
+    push @body, ("quote-$quote_id.pdf", $pdf,  'application/pdf', 'base64');
 
 	my $creator = $dbh->selectrow_array(q{
 		SELECT u.strfirstname || ' ' || u.strlastname FROM tbl_customer_users u, tbl_quotes q
