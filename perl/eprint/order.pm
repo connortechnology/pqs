@@ -9,6 +9,7 @@ use Date::Calendar;
 use Mail::Sendmail;
 use MIME::QuotedPrint;
 use Encode;
+use PDF::WebKit;
 
 
 use File::Path;
@@ -37,6 +38,7 @@ require eprint::docket;
 require eprint::print_project;
 require eprint::products;
 
+use eprint::Service::Shipping;
 
 sub delete_order {
     my ($log, $dbh, $id) = @_;
@@ -2353,7 +2355,6 @@ sub send_sales_order {
 
     my $html = ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order );
 
-	use PDF::WebKit;
 	my %opt = (page_size => 'Letter', 
 		margin_right => '0.25in', margin_left=>'0.4in',
 		margin_top => '0.4in', margin_bottom=>'0.4in'
@@ -3177,7 +3178,6 @@ print STDERR "GO PROCESS ORDER \n";
 
         #push @{$$variable{'PROJECTS'}}, $pid, $desc;
 
-		use eprint::Service::Shipping;
 		eprint::Service::Shipping::shipping_summary($r, $log, $dbh, $variable, $pid);
 
         my $hash = { cust_id => $variable->{cust_id} };
