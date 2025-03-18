@@ -30,9 +30,8 @@ use PQS::model::service;
 use PQS::model::materials;
 
 use Compress::LZF qw(:compress :freeze);
-  use Storable              qw(thaw);
-  use MIME::Base64;
-use PDF::WebKit;
+use Storable              qw(thaw);
+use MIME::Base64;
 
 use constant QTY => 1;
 use constant DISPLAY_TIME_DATA => eprint::Config->get(Docket => 'display_time_data');
@@ -2030,11 +2029,9 @@ sub pdf {
 
   close $fh;
 
-  my $html = ssi::variable_substitution(
-    $r, $log, $dbh, $file_data, $variable
-  );
-  my $kit = PDF::WebKit->new(\$html, page_height => '14.33in', page_width => '10.12in');
-  my $data = [$kit->to_pdf()];
+  my $html = ssi::variable_substitution( $r, $log, $dbh, $file_data, $variable);
+  my $name = "docket-$pid";
+  my $data = [misc::html2pdf($name, $html, page_height => '14.33in', page_width => '10.12in')];
   $variable->{Download} = 1;
   $variable->{File_Data} = $data;
 

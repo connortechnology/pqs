@@ -8,9 +8,8 @@ use Date::Calendar::Profiles  qw( $Profiles );
 use Date::Calendar;
 use Mail::Sendmail;
 use MIME::QuotedPrint;
+use MIME::Base64;
 use Encode;
-use PDF::WebKit;
-
 
 use File::Path;
 
@@ -2324,25 +2323,20 @@ sub send_sales_order {
 	my $inv_not = '';
 	my $cc = '';
 
+  my @project_summaries;
 
 
+  my $email_content = misc::load_file($r, '/email/email_template.html');
 
-	use MIME::Base64;
+  $order{ReplacementText} = q{<!--#include virtual="/email/forms/order_with_PDF.html"} . q{-->};
 
-    my @project_summaries;
+  $order{'siteURL'} = configuration::get_value( $log, $dbh, 'siteURL' );
 
+  $email_content = MIME::QuotedPrint::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
+  #$email_content = encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
 
-   	my $email_content = misc::load_file($r, '/email/email_template.html');
-
-   	$order{ReplacementText} = q{<!--#include virtual="/email/forms/order_with_PDF.html"} . q{-->};
-
-    $order{'siteURL'} = configuration::get_value( $log, $dbh, 'siteURL' );
-
-	$email_content = MIME::QuotedPrint::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
-	#$email_content = encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, $email_content, \%order ));
-
-	#my @body = ("", $email_content,  'text/html', 'utf-8');
-	my @body = ("", $email_content,  'text/html', 'quoted-printable');
+  #my @body = ("", $email_content,  'text/html', 'utf-8');
+  my @body = ("", $email_content,  'text/html', 'quoted-printable');
 
 
 #print STDERR "SALES ORDER SHOW PROJECTS \n";
@@ -2351,26 +2345,17 @@ sub send_sales_order {
 #	} @{$order{projects}};
 
 
-    my $email_template = misc::load_file($r, '/email/forms/order.html');
+  my $email_template = misc::load_file($r, '/email/forms/order.html');
+  my $html = ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order );
 
-    my $html = ssi::variable_substitution( $r, $log, $dbh, $email_template, \%order );
+  my %opt = (page_size => 'Letter', 
+    margin_right => '0.25in', margin_left=>'0.4in',
+    margin_top => '0.4in', margin_bottom=>'0.4in'
+  );
 
-	my %opt = (page_size => 'Letter', 
-		margin_right => '0.25in', margin_left=>'0.4in',
-		margin_top => '0.4in', margin_bottom=>'0.4in'
-	);
-
-  	my $kit = PDF::WebKit->new(\$html, %opt);
-
-	my $pdf = $kit->to_pdf;
-
-#	open(my $fh, ">/tmp/test/$order_id.pdf") or die;
-#	print $fh $pdf;
-#	close $fh;
-
-
-
-	$pdf = encode_base64($pdf);
+  my $name = "order-$order_id";
+  my $pdf = misc::html2pdf($name, $html, %opt);
+  $pdf = encode_base64($pdf);
 
 	push @body, ("order-$order_id.pdf", $pdf,  'application/pdf', 'base64');
 
