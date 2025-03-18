@@ -14,7 +14,6 @@ require eprint::obj_customer;
 require misc;
 require eprint::greetings;
 require eprint::user;
-require eprint::order;
 require MIME::QuotedPrint;
 require crypto;
 
@@ -1025,6 +1024,7 @@ sub get_login_info {
     $variable->{Supplier}  = $company->{is_supplier} ? 'Y' : 'N';
 
 	if ( $variable->{user_id} ) {
+require eprint::order;
 		my $order_id = eprint::order::get_unfinished_order(
 				undef, $dbh, $cookie, $variable->{cust_id}, $variable->{user_id} );
 
@@ -1135,6 +1135,7 @@ sub select_customer {
   $variable->{strCompanyName} = $variable->{user}{company}{name};
   $variable->{dollarcredit}  = $variable->{user}{company}{ordercredit} // '0.00';
 
+require eprint::order;
   my $order_id = eprint::order::get_unfinished_order(
     undef, $dbh, $cookie, $variable->{cust_id}, $variable->{user_id} );
 
