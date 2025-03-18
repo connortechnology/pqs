@@ -39,6 +39,10 @@ use POSIX                qw(ceil);
 
 
 use PQS::Imposition::Constants;
+use Compress::LZF         qw(:compress :freeze);
+    use Storable              qw(thaw);
+    use MIME::Base64;
+    use PQS::Imposition::Node;
 
 use eprint::project      qw(:common has_no_bindery get_finished_calliper);
 use eprint::service      qw(:common);
@@ -550,10 +554,6 @@ sub project {
 sub get_imposition {
     my ($dbh, $sid) = @_;
 
-    use Compress::LZF         qw(:compress :freeze);
-    use Storable              qw(thaw);
-    use MIME::Base64;
-    use PQS::Imposition::Node;
 
     my $frozen = $dbh->selectrow_array(q{
         SELECT strvalue FROM tbl_service_specifications
