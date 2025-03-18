@@ -473,4 +473,30 @@ sub nav_get_previous {
     return $id;
 }
 
+sub html2pdf {
+  require PDF::WebKit;
+  my ($name, $html, %options) = @_;
+  $options{page_size} = 'Letter' if ! ($options{page_size} or $options{page_width});
+
+  my $in_file = '/tmp/'.$name.'.html';
+  if ( open my $fh, ">:utf8", $in_file ) {
+    print {$fh} $html;
+    close $fh;
+    #if ( File::Slurp::write_file('/tmp/'.$name.'.html', { atomic => 1, err_mode=>'carp', binmode => ':raw' }, \$html ) ) {
+    my $kit = PDF::WebKit->new($in_file, %options);
+    #my $pdf = $kit->to_pdf;
+    $kit->to_file("/tmp/$name.pdf");
+                
+    #`wkhtmltopdf --encoding utf-8 -q "/tmp/$name.html" "/tmp/$name.pdf"`;
+    my $pdf = File::Slurp::read_file( "/tmp/$name.pdf", err_mode => 'carp' );
+    unlink "/tmp/$name.html";
+    unlink "/tmp/$name.pdf";
+    if ( $pdf ) {
+      return $pdf;
+    } else {
+      $openprint::log->debug("Error making pdf");
+    } # end if has pdf contents
+  } # end if successfully wrote html content
+  return undef;
+}
 1;
