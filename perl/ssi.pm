@@ -263,7 +263,7 @@ sub do_new_substitution {
             or die "Cannot find terminating endloop ($loop).\n";
 
         if (ref $array ne 'ARRAY') {
-         $openprint::log->error("$loop is not an array reference: $!");
+          #$openprint::log->error("$loop is not an array reference: $!");
          return variable_substitution( $r, $log, $dbh, $2, $variable );
          #} else {
          #$openprint::log->error("$loop is an array reference: $!");
