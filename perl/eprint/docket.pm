@@ -29,6 +29,11 @@ require eprint::Service::Collating;
 use PQS::model::service;
 use PQS::model::materials;
 
+use Compress::LZF qw(:compress :freeze);
+  use Storable              qw(thaw);
+  use MIME::Base64;
+use PDF::WebKit;
+
 use constant QTY => 1;
 use constant DISPLAY_TIME_DATA => eprint::Config->get(Docket => 'display_time_data');
 
@@ -1039,9 +1044,6 @@ sub printing {
 
   return {NoPrint => 1}, [] if $type eq 'NoPrint';
 
-  use Compress::LZF qw(:compress :freeze);
-  use Storable              qw(thaw);
-  use MIME::Base64;
 
   if ( $r->param('customovers') ne '' ) {
     my $overs = $r->param('customovers');
@@ -2003,7 +2005,6 @@ sub add_leading_zeros {
   return $hash;
 }
 
-use PDF::WebKit;
 # This will take a docket and display it as a printer friendly pdf
 sub pdf {
   my ($r, $log, $dbh, $variable, $pid, $catID, $qtyIndex) = @_;
