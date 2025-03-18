@@ -279,29 +279,19 @@ sub login_app_process {
 	}
 
 	eval {
+    require Captcha::reCAPTCHA;
 		my $c = Captcha::reCAPTCHA->new;
 		my $challenge = 1;
 		my $response  = $r->param('g-recaptcha-response');
-		my $key = "6LdWLJkqAAAAAO8NEwEMoeumR5L0wB9mCagA3ZrP";
-
-		#print STDERR "START LOGIN APP PROCESS \n\n\n";
-#unless ( $variable->{user_id} ) {
-# Verify submission
+		my $key = '6LdWLJkqAAAAAO8NEwEMoeumR5L0wB9mCagA3ZrP';
 		$result = $c->check_answer_v2($key, $response, $ENV{'REMOTE_ADDR'});
 	};
+  $log->error("Error processing captcha $@") if $@;
 
-	#print STDERR "CONTINUE LOGIN APP PROCESS:  \n\n\n", Dumper($result);
-
-	unless ( $result->{is_valid} ) {
-# Error
+	if (!$result->{is_valid}) {
 		return misc::error( $log, $dbh, $variable, 
 				'Bad Field', 'Your Captcha is incorrect. Please press the back button to try again'  );
 	}
-	#}
-	#
-
-#wsc    $r->param('txtCompanyName' => $r->param('ddmCompany'))
-#wsc    if $r->param('txtCompanyName') eq '';
 
     # perform input field validation
     $error  = '';
@@ -323,8 +313,6 @@ sub login_app_process {
     $error .= 'Missing E-mail Address.<br>' if $r->param('txtEmail') eq '';
     $error .= 'Empty Password.<br>' if $r->param('txtPassword') eq '';
     $error .= 'Passwords do not match.<br>' if $r->param('txtPassword') ne $r->param('txtVerifyPassword');
-
-	
     
     if ($error) {
         return misc::error($log, $dbh, $variable, 'bad field.', $error);
