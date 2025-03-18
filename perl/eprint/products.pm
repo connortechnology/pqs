@@ -21,7 +21,6 @@ use HTML::Entities;
 use ssi;
 
 
-use Set::CrossProduct;
 
 use constant MAX_DISCOUNT => 5;
 
@@ -395,6 +394,7 @@ print STDERR "BUILD SUB: $x, $val : F: $f, N: $n \n";
 		print STDERR "HAVE ALL PRODUCTS", Dumper($all);
 
 
+    require Set::CrossProduct;
 		my $list =  Set::CrossProduct->new($all);
 
 	print STDERR "HAVE PRODUCTS: ", Dumper($all, defined $list);
