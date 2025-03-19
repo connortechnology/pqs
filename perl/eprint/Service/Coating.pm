@@ -57,8 +57,8 @@ sub calc {
 
 print STDERR "HAVE SHEET: W: $sw H: $sh \n";
 
-	my $sides = $specs->{rdbCoatingSides};
-	$sides = 2 if $runstyle =~ /(WT|WF)/;
+	my $sides = int($specs->{rdbCoatingSides});
+  #$sides = 2 if $runstyle =~ /(WT|WF)/;
 
 	#now make a price for each quantity.
 	foreach my $i ( 1 .. 3 ) {
