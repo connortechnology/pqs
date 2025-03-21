@@ -142,9 +142,14 @@ function calc_from_basis_weight( form, id='' ) {
 	var basis_weight = form.elements['basis_weight'+id] ? parseFloat(1*form.elements['basis_weight'+id].value) : parseFloat(1*form.elements['basis_mweight'+id].value);
 	var basis_width = parseFloat(1*form.elements['basis_width'+id].value);
 	var basis_height = parseFloat(1*form.elements['basis_height'+id].value);
-	if ( basis_width && basis_height ) {
+	if (basis_width && basis_height) {
 		var gsm = parseInt((basis_weight/1000)/(basis_width*basis_height)*7030645.0)/10;
 		form.elements['gsm'+id].value = gsm;
+    const type = get_value( form.elements['type'] );
+    console.log(type);
+    if (type == 'Envelope') {
+      gsm *= 2;
+    }
 		var width = parseFloat(1*form.elements['width'+id].value);
 		var height = parseFloat(1*form.elements['height'+id].value);
 		form.elements['mweight'+id].value = (((gsm/703064.5)*(width*height)*10000)/10).round();
@@ -155,6 +160,11 @@ function calc_from_mweight( form, id='' ) {
 	var width = parseFloat(1*form.elements['width'+id].value);
 	var height = parseFloat(1*form.elements['height'+id].value);
 	var gsm = parseInt((mweight/1000)/(width*height)*7030645.0)/10;
+    const type = get_value( form.elements['type'] );
+    console.log(type);
+    if (type == 'Envelope') {
+      gsm /= 2;
+    }
 	form.elements['gsm'+id].value = gsm;
 	var basis_width = parseFloat(1*form.elements['basis_width'+id].value);
 	var basis_height = parseFloat(1*form.elements['basis_height'+id].value);
