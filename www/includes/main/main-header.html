@@ -1,6 +1,9 @@
-
-<?BANNER_AD?>
-
+<?echo(
+  require eprint::banner;
+  if ( configuration::get_value($r->log, $dbh, 'UsesBanners') ) {
+    return 'BANNER'.eprint::banner::select_banner( $r->log, $dbh, @$variable{qw(cust_id user_id)});
+  }
+)?>
 <ul id="nav" style="border-top: 1px solid #1D52A0; border-bottom: 1px solid #1D52A0;">
 	<!--#include virtual="/includes/main/main-nav.html" -->
 </ul>
