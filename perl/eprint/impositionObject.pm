@@ -130,8 +130,8 @@ sub Paper {
     my $Paper = $$self{Paper} = new openprint::Paper($$self{paper}{index});
     @$Paper{'start_width','start_height'} = @$Paper{'width','height'};
     $$Paper{Supplied} = $Paper->clone();
-    $$Paper{width} /= $$self{paper}{width_factor} if $$self{paper}{width_factor};
-    $$Paper{height} /= $$self{paper}{height_factor} if $$self{paper}{height_factor};
+    $$Paper{width} *= $$self{paper}{width_factor} if $$self{paper}{width_factor};
+    $$Paper{height} *= $$self{paper}{height_factor} if $$self{paper}{height_factor};
   }
   return $$self{Paper};
 }
@@ -168,7 +168,7 @@ sub to_string {
   my $Paper = $self->Paper();
 
   if ( ! $_[0]{to_string} ) {
-    if ( $Paper->id() ) {
+    if ( $Paper and $Paper->id() ) {
       $_[0]{to_string} = sprintf('%s %d@ %dx%d+%dx%d=%dout %s %dx%d=%dpages %sx%s on %sx%s%s->%sx%s', ( $Press->id() ? $Press->strid(): 'unknown equipment' ),
         #$_[0]{to_string} = sprintf('%s %d@ %dx%d+%dx%d=%dout %s %dx%d=%dpages %sx%s on %sx%s%s->%sx%s %s', ( $Press->id() ? $Press->strid(): 'unknown equipment' ),
           @$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle'},
