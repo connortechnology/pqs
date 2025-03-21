@@ -153,6 +153,7 @@ Service.prototype = {
         var rv = true;
         if (this.response) rv = this.response(data);
         if (rv) this._fill(data);
+        if ($('status_alert')) $('status_alert').innerHTML = '';
 
         return true;
     },
