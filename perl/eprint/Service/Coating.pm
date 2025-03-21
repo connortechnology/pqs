@@ -163,8 +163,15 @@ sub compare_equipment{
 		callback::call('service_calc_end', $pid, $sid, $make_ready, $run_price);
 
 		my $total = $make_ready + $run_price;
-		$total = $min_charge if $total < $min_charge;
 
+      my $breakdown       = sprintf('On %s MR: $%.2f RUN: %d * %d sides * $%.2f = $%.2f, total: $%.2f',
+        new openprint::Equipment($e)->name(),
+        $make_ready, $j->qty, $j->sides, $service_price, $run_price, $total);
+
+    if ($total < $min_charge) {
+      $breakdown .= ' using minimum charge $'.sprintf('%.2f', $min_charge);
+      $total = $min_charge if $total < $min_charge;
+    }
 
 		$error = "\n Could not Price Equipment $e->{ref} For Service: " .  $j->type
 			unless $total;
@@ -173,9 +180,7 @@ sub compare_equipment{
 							cost            => $total,
 							equipment       => $e,
 							qty             => $j->qty,
-              breakdown       => sprintf('On %s MR: $%.2f RUN: %d * %d sides * $%.2f = $%.2f, total: $%.2f',
-                new openprint::Equipment($e)->name(),
-                $make_ready, $j->qty, $j->sides, $service_price, $run_price, $total),
+              breakdown       => $breakdown,
 						} unless $error;
 
 
