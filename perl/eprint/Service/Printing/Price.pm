@@ -2797,18 +2797,16 @@ sub cut_signatures {
 sub valid_price {
   my $price = shift;
 
-
   $$price{'Valid Price'} = 0;
 
   if ($$price{'Impression Price'} == 0) {
-    Apache2::ServerUtil->server->log_error("Impression price is 0");
+    $openprint::log->debug('Impression price is 0');
     return 0;
   }
   if ( $$price{reject_mv_layout} ) {
-    print STDERR "PRICE REJECTED FOR INVALID MV LAYOUT ", Dumper($price);
+    $openprint::log->error('PRICE REJECTED FOR INVALID MV LAYOUT '. Dumper($price));
     return 0;
   }
-
 
   $$price{'Valid Price'} = 1;
 
