@@ -1594,6 +1594,21 @@ sub return_years {
   return make_drop_down( [ map { $_, $_ } ( $start .. $end ) ], $selected );
 } # end sub return_years
 
+sub write_override {
+  my ( $for, $value, $locked_js, $unlocked_js ) = @_;
+  if ( 0 ) {
+    return sprintf(q`
+      <input type="hidden" id="%1$s" name="%1$s" value="%2$s"/>
+      <img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt="" title="Click to override"/>`,
+        $for,
+        ((defined($value) and sets::isin($value, ['Y', '1' ]) ) ? 'Y' : '' ),
+        ((defined($value) and sets::isin($value, ['Y', '1' ])) ? 'locked' : 'unlocked'),
+        $locked_js, $unlocked_js );
+  } else {
+    return sprintf('<input type="checkbox" id="%1$s" name="%1$s" value="%2$s" onclick="if(!this.checked){%5$s}else{%4$s};" %3$s /> <label class="radio" for="%1$s">Override</label>', $for, $value, ssi::checked( $value eq 'Y' ), $locked_js, $unlocked_js );
+  } # end if
+} # end sub write_override
+
 
 1;
 __END__

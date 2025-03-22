@@ -1,19 +1,25 @@
 <div id="sizer">
-		<div id="expander">
+	<div id="expander">
+		<div id="header"> <!--#include virtual="/includes/main/main-header.html" --> </div>
+		<div id="wrapper1">
+			<div id="wrapper2">
 
-				<div id="header">
-			<!--#include virtual="/includes/main/main-header.html" -->
-				</div>
+				<div class="outer">
+					<div class="float-wrap">
+						<div class="center">
+							<div class="centerbox">
 
-				<div id="wrapper1">
-						<div id="wrapper2">
-								<div class="outer">
+								<div class="textpadder" style="padding-right: 12px;">
 
-										<div class="float-wrap">
-												<div class="center">
-														<div class="centerbox">
+									<div id="headerTabs">
 
-																<div class="textpadder" style="padding-right: 12px;">
+										<div id="quick-project" class="tab">
+											<form name="quick-project" action="/main/proj/proj_hist.html" method="get">
+												<label for="quick-project-id">Search:</label>
+												<input id="quick-project-id" name="pid" size="9" />
+												<input type="submit" value="Go" class="button" />
+											</form>
+										</div>
 
 										<div id="headerTabs">
 
