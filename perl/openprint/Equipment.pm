@@ -28,7 +28,7 @@ sub cache_field {
 }
 my %Specification_cache;
 
-$debug = 0;
+$debug = 1;
 use constant DEBUG_FOLDING => 0;
 
 %fields = (
@@ -61,7 +61,7 @@ use constant DEBUG_FOLDING => 0;
 %find_fields = (
 	Specifications => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.'.$fields{id}.' AND strName=? LIMIT 1)',
 	category		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
-	servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
+	servicetype		=>	'(SELECT strid FROM '.$openprint::ServiceType::table.' WHERE lngindex = ANY(servicetype_id))',
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],

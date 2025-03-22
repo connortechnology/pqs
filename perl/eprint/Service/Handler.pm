@@ -9,6 +9,8 @@ use Apache2::Log       ();
 
 use JSON::XS 2.0     qw(encode_json);
 use HTML::FillInForm ();
+use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
 
 use PQS::DB ();
 use PQS::Constants;
@@ -48,7 +50,7 @@ sub handler {
         POST_MAX        => 8096,
         DISABLE_UPLOADS => 1,
     );
-    my $variable = {};
+    my $variable = \%variable;
 
     # Process the request params.
     $r->parse;
@@ -176,10 +178,10 @@ print STDERR "Forbidden for $pid\n";
     if ($@) {
         my $err = $@;
 
-        $dbh->rollback;
+        #$dbh->rollback;
         $dbh->disconnect;
     
-        $r->log_error($err);
+        $log->error($err);
                 
         if (DEBUG) {
             require Error::StackTrace;
@@ -255,13 +257,6 @@ sub response {
       my $coder = JSON::XS->new->ascii->pretty->allow_nonref;
 
       my $response = $coder->encode( $specs );
-      if (0) {
-      my $response = $coder->encode(
-        $status eq 'calculated' 
-        ? $specs : 
-        { status => $status, error => $specs->{error} }
-      );
-    }
 
       $r->content_type('application/json; charset=utf-8');
       print $response;
@@ -317,12 +312,6 @@ sub show {
   $variable->{project} = project_info($dbh, $pid);
   $variable->{Project} = new openprint::Project($pid);
   $variable->{ServiceType} = $variable->{Project}->ServiceType($sid);
-
-# Display the banner advert.
-  if ( configuration::get_value($r->log, $dbh, 'UsesBanners') ) {
-	  $variable->{BANNER_AD} = eprint::banner::select_banner( $r->log, $dbh, @$variable{qw(cust_id user_id)});
-  }
-
 
   # Display/hide pricing based on customer default.
   $variable->{isServicePricing} = $$openprint::Company{ysnpricingservices};

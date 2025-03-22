@@ -92,10 +92,10 @@ sub new {
 if ( 1 ) {
   # Refresh contents from data or db
 	if ( ( $$self{id} = $id ) or $data ) {
-		#if ( $debug or DEBUG_ALL ) {
-			#my ( $caller, undef, $line ) = caller;
-			#$log->debug("loading $parent $id from $caller:$line");
-		#}
+		if ( $debug or DEBUG_ALL ) {
+			my ( $caller, undef, $line ) = caller;
+			$log->debug("loading $parent $id from $caller:$line");
+		}
 		$self->load($data);
 	} # end if
 }
@@ -160,6 +160,8 @@ sub load {
 		} elsif ( exists $$fields{id} ) {
 			$log->debug("SELECT * FROM $table WHERE $$fields{id}=$$self{id}" ) if $debug;
 			$data = $d->selectrow_hashref('SELECT * FROM '.$table.' WHERE '.$$fields{id}.'=?', {}, $$self{id});
+    } else {
+      $log->error("No ability to identify object");
 		} # end if
 		if ( ! $data ) {
 			if ( $d->errstr ) {
@@ -179,7 +181,7 @@ sub load {
 
 	if ( $data and %$data ) {
 		my %keys = map { (defined $$fields{$_} ? ($_=>$$fields{$_}) : (exists $$data{$_} ? ($_=>$_) : ()) ) } keys %$fields;
-    #$log->debug(join(',', map { $_ .'=>'.$keys{$_} } sort { $a cmp $b} keys %keys));
+    #$log->debug(join(',', map { $_ .'=>'.$keys{$_} } sort { $a cmp $b} keys %keys)) if $debug;
 		@$self{keys %keys} = @$data{ values %keys };
   } else {
     $log->warn('No data for ? '.$self->to_string() . ' ref data: '.ref $data);
