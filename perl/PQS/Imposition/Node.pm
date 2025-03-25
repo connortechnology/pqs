@@ -1,4 +1,4 @@
-package PQS::Imposition::Node; {
+package PQS::Imposition::Node;
 use strict;
 use warnings;
 
@@ -248,27 +248,26 @@ sub work_and {
 # package and be switched out to the appropriate one at imposition creation
 # time.
 sub compare { # Class method
-    my ($n, $p) = @_;
-    my ($x, $y) = ($$n, $$p);
+  my ($n, $p) = @_;
+  my ($x, $y) = ($$n, $$p);
 
-    my $cmp = $card[$x] <=> $card[$y];
-#     compare_cardinality($card[$x], $card[$y]);
-#    my $cmp = compare_cardinality_pp($x, $y);
+  my $cmp = $card[$x] <=> $card[$y];
+  #     compare_cardinality($card[$x], $card[$y]);
+  #    my $cmp = compare_cardinality_pp($x, $y);
 
-    return $cmp unless defined $cmp and $cmp == 0;
+  return $cmp unless defined $cmp and $cmp == 0;
 
-    # Maximize images, minimize rotations, prefer parallel cuts.
-    $cmp ||=  $rot[$y]        <=> $rot[$x]        # Min.
-         ||   @{ $edges[$x] } <=> @{ $edges[$y] } # Max.
-    ;
+  # Maximize images, minimize rotations, prefer parallel cuts.
+  $cmp ||=  $rot[$y]        <=> $rot[$x]        # Min.
+  ||   @{ $edges[$x] } <=> @{ $edges[$y] } # Max.
+  ;
 
-    # If the trees are equal but they have different cut directions we can't
-    # compare them at this level.
-    return undef if $cmp == 0 and $cut[$x] != $cut[$y];
+  # If the trees are equal but they have different cut directions we can't
+  # compare them at this level.
+  return undef if $cmp == 0 and $cut[$x] != $cut[$y];
 
-   return $cmp;
+  return $cmp;
 }
-
 
 # sub compare_cardinality_pp {
 #     my ($n, $p) = map { $card[$_] } @_;
@@ -326,7 +325,5 @@ sub compare { # Class method
 # }
 # 
 # END_C
-
-}
 
 1;
