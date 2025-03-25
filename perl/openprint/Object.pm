@@ -1334,7 +1334,8 @@ sub lock {
 			$_[0]{ac} = sql::start_transaction( $openprint::dbh );
 			$openprint::log->debug("LOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]) if DEBUG_LOCKS;
 			my $table = eval '$'.$type.'::table';
-			$dbh->do( "SELECT * FROM $table WHERE id=".$_[0]{id}. ' FOR UPDATE' ) or $log->error( $dbh->errstr );
+			my %fields= eval '%'.$type.'::fields';
+			$dbh->do( "SELECT * FROM $table WHERE ".$fields{id}.'='.$_[0]{id}. ' FOR UPDATE' ) or $log->error( $dbh->errstr );
 			#$dbh->do( "LOCK TABLE $table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 		} # end if
 		$ac = $_[0]{ac};
