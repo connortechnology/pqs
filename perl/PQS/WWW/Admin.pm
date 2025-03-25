@@ -21,32 +21,40 @@ use session;
 
 use PQS::WWW::Predefined;
 
-use constant PRESS_TYPES => qw(14 38 41 43);
+require openprint;
+require openprint::configuration;
 
-# NOR SHOULD THESE #
+use vars qw( $r %variable %session %param %config $log $dbh $starttime );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*r = \$openprint::r;
+use constant PRESS_TYPES => qw(14 38 41 43);
 
 # Banker's round a number to an optional scale (default 2).
 sub round ($;$) {my($n,$s)=@_;$s=(defined $s)?$s:2;int($n*10**$s+0.5)/10**$s}
 sub precision ($) {($_)=@_;m/-?\d+\.?(\d*)$/ or return;$_=$1;s/0*$//;length$_}
 
-# Database handles are as ubiquitous as print statements, we use a globalised
-# handle variable (localised per request) so we don't have to pass it
-# everywhere. THIS IS NOT THE FINAL WAY IT WILL BE DONE.
-our $dbh;
-
 sub handler {
-    my $r = shift;
+    $r = shift;
 
     # Subclass the Apache request object for a better parameter interface.
     $r = Apache2::Request->new($r);
 
     # Establish a connection to the database and allow everyone in the current
     # request to access it.
-    local $dbh = PQS::DB->connect($r);
+    $dbh = PQS::DB->connect($r);
 
     session::r($r);
     session::log($r->log);
+    $log = $r->log;
     session::dbh($dbh);
+
+    openprint::configuration::init( $r->dir_config() );
+    openprint::session_init();
 
     $r->pnotes(dbh => $dbh);
 
@@ -65,7 +73,6 @@ sub handler {
     # Register a log handler for auditting.
     Apache2::ServerUtil::server->push_handlers("PerlLogHandler", \&PQS::Log::Audit::handler);
 
-
     # Create a template object, it will need to be associated with a template
     # in the dispatched function.
     my $t = Petal->new(
@@ -81,8 +88,6 @@ sub handler {
     # inside this module. We can decide on more complex mappings later.
     my $name = ( split '/', $r->uri )[2];
 
-print STDERR "HAVE NAME: $name \n";
-
     # Get a refrence to the function.
     my $func = qualify_to_ref( $name, __PACKAGE__ );
 
@@ -91,54 +96,46 @@ print STDERR "HAVE NAME: $name \n";
 
     # Unless the user is a valid user, throw them back to the login.
     # TEMPORARY: This will be handled in auth handlers.
-    unless ( valid_user($r, $name) ) {
-print STDERR "NOT VALID USER \n";
-        $r->headers_out->{Location} = "/administrator/";
+    if (!valid_user($r, $name) ) {
+        $r->headers_out->{Location} = '/administrator/';
         $r->status(HTTP_MOVED_TEMPORARILY);
         return HTTP_MOVED_TEMPORARILY;
     }
-
 
     # Dispatch the request and return its status.
     my $status = eval{ *{ $func }{CODE}->($r, $t) };
 
     if ($@) {
-        my $err = $@;
+      my $err = $@;
 
-        $dbh->rollback;
-        $dbh->disconnect;
+      $dbh->rollback;
+      $dbh->disconnect;
 
-        $r->log->error($err);
+      $r->log->error($err);
 
-        if (DEBUG) {
-            require Error::StackTrace;
-            $r->status(SERVER_ERROR);
-            $r->content_type('text/html');
-            print Error::StackTrace::trace($r, $err);
-            return OK;
-        }
+      if (DEBUG) {
+        require Error::StackTrace;
+        $r->status(SERVER_ERROR);
+        $r->content_type('text/html');
+        print Error::StackTrace::trace($r, $err);
+        return OK;
+      }
 
-        return SERVER_ERROR;
+      return SERVER_ERROR;
     }
 
-    $dbh->rollback;
+    #$dbh->rollback;
     $dbh->disconnect;
 
     return $status;
 }
 
 sub valid_user {
-	my $r = shift;
+  return 1 if $openprint::User->type() eq 'A';
 	my $func = shift;
 	my @efunc = qw(item items categories category question modify_question item_paper item_cover_paper item_service );
-
-print STDERR "HAVE FUNC: $func \n";
-	return 1 if valid_admin($r);
-
 	my $f =  grep {$_ eq $func} @efunc;
-	my $v =  valid_employee($r);
-print STDERR "HAVE E: $f VALID: $v \n";
-	return 1 if ($f && $v); 
+	return 1 if ($f && $openprint::User->type() eq 'E'); 
 	return 0;
 }
 
@@ -214,6 +211,7 @@ sub valid_admin {
         $dbh->selectrow_array($sth, undef, $session);
 
 
+  
     # Let apache know the user (even though we're not doing auth) and set some
     # of their information in the request notes.
     $r->user($uid);
