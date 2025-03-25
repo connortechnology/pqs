@@ -310,8 +310,8 @@ sub show {
   $variable->{sid}     = $sid;
   $variable->{service} = $service;
   $variable->{project} = project_info($dbh, $pid);
-  $variable{Project} = new openprint::Project($pid);
-
+  $variable->{Project} = new openprint::Project($pid);
+  $variable->{ServiceType} = $variable->{Project}->ServiceType($sid);
 
   # Display/hide pricing based on customer default.
   $variable->{isServicePricing} = $$openprint::Company{ysnpricingservices};
