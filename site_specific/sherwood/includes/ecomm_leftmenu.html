@@ -27,6 +27,7 @@
 <ul>
       <?echo(
         my $html = '';
+        require PQS::model::categories;
         my $cats = PQS::model::categories::get_all();
         my @prod_menu =  map { $cats->{$_}; } sort { $a cmp $b } keys %{$cats};
         foreach my $prod (@prod_menu) {
