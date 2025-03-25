@@ -14,7 +14,6 @@
     <link href="<?hash_link(/styles/project_create.css)?>" rel="stylesheet" type="text/css" />
 
     <!--#include virtual="/includes/h2-js.html" -->
-	
 </head>
 <body>
 
@@ -34,10 +33,13 @@
 <!--#include virtual="/includes/f2-main.html" -->
     <script src="<?hash_link(/javascripts/proj/service.js)?>"></script>
     <script src="<?hash_link(/javascripts/paper.js)?>"></script>
-	<script>
-    var service = new Service('<?service.ref?>');
-    calc_from_calliper(document.getElementById('calliper'));
-    calc();
-	</script>
-</body>
+    <script>
+      var service = new Service('<?service.ref?>');
+    Event.observe(window, 'load', function() {
+      update_event_bindings();
+      calc_from_calliper(document.getElementById('calliper'));
+      calc(document.getElementById('calliper'));
+          });
+    </script>
+  </body>
 </html>
