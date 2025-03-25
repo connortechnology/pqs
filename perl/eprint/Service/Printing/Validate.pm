@@ -18,7 +18,7 @@ use constant DEFAULT_COVERAGE => eprint::Config->get('Printing' => 'default_cove
 sub munge {
     my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
-    print STDERR "munge start ".Data::Dumper::Dumper($specs)."\n";
+    #$openprint::log->("munge start ".Dumper($specs));
     # 'Detailed' mode signatures aren't allowed to calculate until the user
     # has viewed them (display() function removes 'needs_view' flag).
     if ($specs->{needs_view}) {
@@ -33,14 +33,14 @@ sub munge {
     my $spread    = spread($dbh, $press_type, $project_type, $specs, $pid);
     my $versions  = versions($specs, $qtys[0]);
     my $overrides = overrides($specs, $variable->{user_type});
-    print STDERR "HAVE OVERRIDES: ", Dumper($overrides) if %$overrides;
+    $openprint::log->debug("HAVE OVERRIDES: ", Dumper($overrides)) if %$overrides;
 
     #delete $specs->{$_} for keys %$specs;
 
     $specs->{spread}    = $spread;
     $specs->{versions}  = $versions;
     $specs->{overrides} = $overrides;
-    print STDERR "munge end ".Data::Dumper::Dumper($specs)."\n";
+    #$openprint::log->debug( "munge end ".Dumper($specs));
     return;
 }
 
@@ -384,7 +384,7 @@ sub stock {
       Price => (($$specs{CustomStockPrice}/100) * ($specs->{txtCustomMWeight} / 1000)),
       units => 'lbs'
     };
-      $openprint::log->error("Per sheet price from $$specs{CustomStockPrice} * $$specs{txtCustomMWeight} / (100*1000)=".$stock{Price}{Price});
+      $openprint::log->debug("Per sheet price from $$specs{CustomStockPrice} * $$specs{txtCustomMWeight} / (100*1000)=".$stock{Price}{Price});
 
   } else {
     $stock{name} = $specs->{stock_name} or warn "No stock name selected.";
