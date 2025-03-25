@@ -252,11 +252,14 @@ sub response {
       $openprint::log->debug("Response: ".Data::Dumper::Dump($specs));
       my $coder = JSON::XS->new->ascii->pretty->allow_nonref;
 
+      my $response = $coder->encode( $specs );
+      if (0) {
       my $response = $coder->encode(
         $status eq 'calculated' 
         ? $specs : 
         { status => $status, error => $specs->{error} }
       );
+    }
 
       $r->content_type('application/json; charset=utf-8');
       print $response;
