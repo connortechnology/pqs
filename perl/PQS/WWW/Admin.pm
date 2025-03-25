@@ -81,8 +81,6 @@ sub handler {
     # inside this module. We can decide on more complex mappings later.
     my $name = ( split '/', $r->uri )[2];
 
-print STDERR "HAVE NAME: $name \n";
-
     # Get a refrence to the function.
     my $func = qualify_to_ref( $name, __PACKAGE__ );
 
@@ -97,7 +95,6 @@ print STDERR "NOT VALID USER \n";
         $r->status(HTTP_MOVED_TEMPORARILY);
         return HTTP_MOVED_TEMPORARILY;
     }
-
 
     # Dispatch the request and return its status.
     my $status = eval{ *{ $func }{CODE}->($r, $t) };
@@ -132,12 +129,10 @@ sub valid_user {
 	my $func = shift;
 	my @efunc = qw(item items categories category question modify_question item_paper item_cover_paper item_service );
 
-print STDERR "HAVE FUNC: $func \n";
 	return 1 if valid_admin($r);
 
 	my $f =  grep {$_ eq $func} @efunc;
 	my $v =  valid_employee($r);
-print STDERR "HAVE E: $f VALID: $v \n";
 	return 1 if ($f && $v); 
 	return 0;
 }
@@ -432,19 +427,14 @@ sub item_cover_paper {
         });
 
         foreach my $family ($r->param('i')) {
-print STDERR "INSERT PAPER: $family - $eid T: $table \n";
         	$sh->execute($family);
         	$rl->execute($family);
-
         }
 
-print STDERR "DBH COMMIT HERE \n";
         $dbh->commit();
     }
 
     my $paper = get_paper();
-
-
     my $query = qq{
 		SELECT DISTINCT paper_family(p) as family,
 		(SELECT count(*) FROM product.item_cover_paper e WHERE e.paper = p.lngindex AND e.item =  ? ) as invalid
@@ -828,8 +818,6 @@ sub update_recommendations {
 sub equipment {
     my $r = shift;
     my $t = shift;
-
-print STDERR "START EQUIPMENT NOW $r, $t, \n";
 
     # Get all the valid types for the 'new' option. An equipment type is valid
     # if any service types can be performed on it.
