@@ -3,7 +3,7 @@ package openprint::Equipment;
 our @ISA = qw( openprint::Object );
 require openprint::Object;
 use openprint ();
-require openprint::EquipmentSpecification;
+#require openprint::EquipmentSpecification;
 #require openprint::Fold;
 #require openprint::Location;
 #require openprint::Equipment_Stock_Setting;
@@ -27,7 +27,7 @@ sub cache_field {
 }
 my %Specification_cache;
 
-$debug = 1;
+$debug = 0;
 use constant DEBUG_FOLDING => 0;
 
 %fields = (
@@ -60,7 +60,7 @@ use constant DEBUG_FOLDING => 0;
 %find_fields = (
 	Specifications => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.'.$fields{id}.' AND strName=? LIMIT 1)',
 	category		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
-	servicetype		=>	'(SELECT strid FROM '.$openprint::ServiceType::table.' WHERE lngindex = ANY(servicetype_id))',
+	servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
@@ -389,7 +389,7 @@ sub Specification {
 		$openprint::log->warn("No specifications for ($name) " . $self->name() ) if $s_debug;
 		return;
 	} # end if
-	my $Spec = openprint::misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );
+	my $Spec = misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );
 	$Specification_cache{$key} = $Spec;
 	return $Spec;
 } # end sub specification

@@ -47,7 +47,6 @@ sub warn {
 	$r->log->error('Warning: '.$_[0]);
 }
 
-
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 		$log->debug('Was aborted');
@@ -70,6 +69,7 @@ sub cleanup {
 			$log->debug('Finished cleanup');
 		} # end if
 		$dbh->disconnect();
+    $dbh = undef;
 	} else {
 		$log->debug('No dbh at cleanup');
 	} # end if
@@ -300,7 +300,7 @@ $log->debug("PageContent is $variable{PageContent}");
 
 #$log->warn("No template!" . $r->content_type());
 				$variable{PageContent} = openprint::ssi::variable_substitution( \$variable{PageContent}, \%variable ) if $variable{PageContent} ne '';
-				$log->warn($variable{PageContent}) if Debug;
+				$log->warn('Content: '.$variable{PageContent}) if Debug;
 $log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) ) if Debug;
 				$r->print( $variable{PageContent} );
 $log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if Debug;

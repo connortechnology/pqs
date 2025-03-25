@@ -5,7 +5,6 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 use Carp qw( cluck );
 require Math::Round;
-require POSIX;
 
 use openprint ();
 use vars qw( $log %variable %config );
@@ -29,6 +28,7 @@ require openprint::StockWeight;
 #require openprint::StockMaterial;
 #require openprint::Equipment_Stock_Setting;
 #require openprint::PaperInventory;
+require POSIX;
 require openprint::PaperRecommendation;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
@@ -725,7 +725,6 @@ sub height {
 	return $$self{height};
 } # end if
 
-# It is nearly impossible to accurately figure out the mweight of an envelope, we can do *2, but that's not accurate.
 sub mweight {
 	my $self = shift;
 	if ( @_ ) {
@@ -749,10 +748,10 @@ $openprint::log->debug("Setting mweight to $$self{mweight} from wpsi $wpsi and b
 			} # end if
 		} elsif ($self->basis_mweight()) {
 			$$self{mweight} = Math::Round::round(($$self{basis_mweight}*$$self{width}*$$self{height})/($self->basis_width()*$self->basis_height()));
-      $openprint::log->debug("Auto calcing mweight from basis" . $self->weight() );
+$openprint::log->debug("Auto calcing mweight from basis" . $self->weight() );
 		} elsif ( ! $self->weight() =~ /\D/ ) {
-			# weight of 500sheets of 25x38
-      $openprint::log->debug("Auto calcing mweight from " . $self->weight());
+			# weigiht of 500sheets of 25x38
+$openprint::log->debug("Auto calcing mweight from " . $self->weight() );
 			$$self{mweight} = Math::Round(($self->weight()*$$self{width}*$$self{height})/($self->basis_width()*$self->basis_height()));
 		} # end if
 		$self->wpsi(undef);
@@ -762,8 +761,10 @@ $openprint::log->debug("Setting mweight to $$self{mweight} from wpsi $wpsi and b
 
 sub calliper {
 	my $self = shift;
-  $$self{calliper} = $self->transform(calliper=>shift) if @_;
-	if (!$$self{calliper}) {
+	if ( @_ ) {
+		$$self{calliper} = $self->transform('calliper'=>shift);
+	} # end if
+	if ( ! $$self{calliper} ) {
 		if ( $self->finish() =~ /offset/i ) {
 			if ( Math::Round::nearest(10,$self->basis_mweight()) == 70 ) {
 				$$self{calliper} = 0.005;
@@ -806,19 +807,16 @@ sub size {
 		return sprintf('%s" x %s"', 1*$$self{width}, 1*$$self{height} );
 	} # end if
 } # end sub size
-
 sub size_id {
 	return $_[0]->size();
 }
-
 sub Owner {
 	my ( $self, $Owner ) = @_;
 	if ( defined $Owner ) {
 		$$self{owner_id} = $Owner->id();
 	} # end if
 	return new openprint::Company( $$self{owner_id} );
-} # end sub Owner
-
+} # endn sub Owner
 sub owner {
 	my $self = shift;
 	my $Company;
@@ -838,7 +836,6 @@ sub owner {
 	} # end if
 	return $Company->name();
 } # end sub owner
-
 sub owner_id {
 	my $self = shift;
 	if ( @_ ) {
@@ -846,7 +843,7 @@ sub owner_id {
 		#$$self{owner_id} =~ s/\D//g;
 	} # end if
 	return $$self{owner_id};
-} # end sub owner_id
+} # end sub owner
 
 # This function assumes that the skid contents have already been updated
 sub add_inventory {
@@ -1291,7 +1288,6 @@ sub sheets_per_package {
 	return $$self{sheets_per_package} * $self->factor();
 } # end sheets_per_package
 	
-# GSM is gsm for the item, so of an envelope, not the source sheet
 sub gsm {
 	my $self = shift;
 	if (@_) {
@@ -1303,11 +1299,7 @@ sub gsm {
 		}
 	} 
 	if (!$$self{gsm}) {
-    if ($$self{mweight} and $self->type() ne 'Roll') {
-      my $wpsi = $$self{mweight} / ($$self{width}*$$self{height}*1000);
-			$$self{gsm} = Math::Round::nearest( 0.01, $wpsi * 703064.5 );
-			$openprint::log->warn('calculate gsm for ' . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
-    } elsif ($self->wpsi(undef)) {
+		if ($self->wpsi(undef)) {
 			$$self{gsm} = Math::Round::nearest( 0.01, $$self{wpsi} * 703064.5 );
 			$openprint::log->warn('calculate gsm for ' . $$self{id} . ' ' . $self->to_string() ) if $$self{brand};
 		} else { 
@@ -1341,6 +1333,10 @@ sub wpsi {
       } else {
         $log->debug("Setting wpsi to $$self{wpsi} from basisweight ($$self{basis_mweight}/1000)/($$self{basis_width}*$$self{basis_height}");
       }
+    } elsif ( $$self{mweight} and $$self{width} and $$self{height} ) {
+			$$self{wpsi} = ($$self{mweight} / 1000)/($$self{width}*$$self{height});
+      $$self{wpsi} *= 2 if $self->is_envelope();
+      $log->debug("Setting wpsi to mweight ($$self{mweight} / 1000)/($$self{width}*$$self{height}) = $$self{wpsi}");
     } elsif ( $$self{gsm} and $$self{gsm} ne 'unknown') {
 			$$self{wpsi} = $$self{gsm} / 703064.5;
 $log->debug("Setting wpsi from gsm to $$self{gsm} / 703064.5 = $$self{wpsi}");
@@ -1731,20 +1727,27 @@ sub is_cut {
 	return 0;	
 } # end sub is_cut
 
-# Basis MWEight is the source sheet and mweight/gsm may not be calculable from it.
-# We should not use wpsi as a basis for auto calculation.
 sub basis_mweight {
 	my $self = shift;
 	if ( @_ ) {
 		$$self{basis_mweight} = $_[0] ? $self->transform(basis_mweight=>shift) : $_[0];
 	} # end if
 	if ( ! $$self{basis_mweight} ) {
-    if ( ( $self->weight() =~ /(\d+)lb/i ) or ( $$self{weight} =~ /(\d+)#/i ) ) {
+		my $wpsi = $$self{wpsi};
+		if ( $wpsi ) {
+      #$openprint::log->debug("calcing basis_weight from wpsi: $$self{basis_mweight} = $wpsi * $$self{basis_width} * $$self{basis_height} * 1000");
+      if ($self->is_envelope()) {
+        $openprint::log->debug("halving wpsi because envelope");
+        $wpsi /= 2;
+      }
+			$$self{basis_mweight} = Math::Round::nearest(0.01, $wpsi * $self->basis_width() * $self->basis_height() * 1000 );
+$openprint::log->debug("calcing basis_weight from wpsi: $$self{basis_mweight} = $wpsi * $$self{basis_width} * $$self{basis_height} * 1000");
+    } elsif ( ( $self->weight() =~ /(\d+)lb/i ) or ( $$self{weight} =~ /(\d+)#/i ) ) {
       $$self{basis_mweight} = 2*$1;
 $openprint::log->debug("calcing basis_mweight from weight: $$self{basis_mweight} = $$self{weight} =~ 2*$1");
     } elsif ($$self{mweight} and $self->type() eq 'Sheet' and $$self{width} and $$self{height}) {
 			$$self{basis_mweight} = Math::Round::nearest(1, 1000*($self->basis_width() * $self->basis_height()) * (($$self{mweight} / 1000)/($$self{width}*$$self{height})));
-      $openprint::log->debug("calcing basis_mweight from mweight: $$self{basis_mweight} = ($$self{basis_width} * $$self{basis_height}) * (($$self{mweight} / 1000)/($$self{width}*$$self{height}))");
+$openprint::log->debug("calcing basis_mweight from mweight: $$self{basis_mweight} = ($$self{basis_width} * $$self{basis_height}) * (($$self{mweight} / 1000)/($$self{width}*$$self{height}))");
 
 		} else {
 			#$$self{basis_mweight} = 'Unknown';
@@ -1810,7 +1813,7 @@ sub start_sheet_weight {
 sub units {
   my $self = shift;
   my $type = $self->type();
-	return ($type eq 'Roll' ? 'lb' : 'sheet') . ( (@_ and $_[0] == 1) ? '' : 's' );
+	return ($type eq 'Roll' ? 'lb' : 'sheet') . ( @_ and $_[0] == 1 ? '' : 's' );
 } # end sub units
 
 sub types {
@@ -1966,17 +1969,9 @@ sub check {
   }
 
   $Copy = $Paper->clone();
-  if ( $Paper->type() eq 'Envelope') {
-    # mweight should be greater than calculated
-    if ( POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef)) < -1 ) {
-      $openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) );
-      push @results, "may have invalid mweight current:$$Paper{mweight} ! >= calculated:$$Copy{mweight}";
-    }
-  } else {
-    if ( abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) > 1 ) {
-      $openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) );
-      push @results, "may have invalid mweight current:$$Paper{mweight} != calculated:$$Copy{mweight}";
-    }
+  if ( abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) > 1 ) {
+    $openprint::log->debug("$$Paper{mweight} - $$Copy{mweight} = " . abs(POSIX::ceil($Paper->mweight()) - POSIX::ceil($Copy->mweight(undef))) );
+    push @results, "may have invalid mweight current:$$Paper{mweight} != calculated:$$Copy{mweight}";
 	}
   $Copy = $Paper->clone();
   if ( abs( POSIX::ceil($Paper->basis_mweight()) - POSIX::ceil($Copy->basis_mweight(undef)) ) -1 > 0 ) {
@@ -2014,8 +2009,8 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
 $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_height());
 		push @results, 'may have wrong basis size '.$Paper->basis_width() . 'x' . $Paper->basis_height().'. Should probably be 17x22';
   }
-  if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->c1sc2s() ne 'C1S') ) {
-    push @results, 'appears to be C1S, but is marked C2S.';
+  if ( ( $Paper->finish() =~ /1 side/i ) and ( $Paper->doublesided() ne 'N') ) {
+    push @results, 'appears to be C1S, but is marked double sided.';
   }
 	if ( $Paper->weight() =~ /(\d+) *lb/i or $Paper->weight() =~ /(\d+) *#/) {
 		if ( int($Paper->basis_mweight()) != 2*$1 ) {
@@ -2120,6 +2115,7 @@ sub destroy {
 sub grade {
   my $self = shift;
   $$self{grade} = shift if @_;
+
   if (!$$self{grade}) {
     #1	=>	'1 Gloss-coated stock',
     #2	=>	'2 Matte-coated stock',

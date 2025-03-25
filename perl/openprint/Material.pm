@@ -22,8 +22,8 @@ $serial = 'material_seq';
 
 %fields = (
     id        =>  'lngindex',
-    name      =>  'strname',
-    description    =>  'strdescription',
+    name      =>  'strid',
+    description    =>  'strname',
     supplier_id    =>  'lngsupplierindex',
     supplier    =>  undef,
     category_id    =>  'category_id',
