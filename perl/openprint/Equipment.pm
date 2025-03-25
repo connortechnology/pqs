@@ -1,9 +1,11 @@
 use strict;
+use warnings;
 package openprint::Equipment;
 our @ISA = qw( openprint::Object );
 require openprint::Object;
 use openprint ();
 require openprint::EquipmentSpecification;
+require openprint::ServiceType;
 #require openprint::Fold;
 #require openprint::Location;
 #require openprint::Equipment_Stock_Setting;
