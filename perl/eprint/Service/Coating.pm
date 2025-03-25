@@ -28,17 +28,17 @@ sub calc {
 	# Why come up with your own ideas when you can
 	# steal raymonds. Lets wrap some of the older functions
 	# into nice little packages.
-	local *price = sub {
-        my ($equip, $service, $qty) = @_;
-        my $p = get_price($log, $dbh, $var, $service, $qty, $equip);
-		return $p;
-    };
-	local *fits = sub {
-        my ($width, $height, $cal, $e) = @_;
-		return 1 if $width == 1 and $height == 1;
-        eprint::equipment::equipment_fits(
-			$log, $dbh, $e->{id}, $width, $height, $cal);
-    };
+  local *price = sub {
+    my ($equip, $service, $qty) = @_;
+    my $p = get_price($log, $dbh, $var, $service, $qty, $equip);
+    return $p;
+  };
+
+  local *fits = sub {
+    my ($width, $height, $cal, $e) = @_;
+    return 1 if $width == 1 and $height == 1;
+    eprint::equipment::equipment_fits($log, $dbh, $e->{id}, $width, $height, $cal);
+  };
 
 	# Start by getting the basic specs needed for the pricing.
   my $print = get_print_container($log, $dbh, $pid);
@@ -83,7 +83,7 @@ sub calc {
 		# individual pieces.
 		$qty /= $imp if $imp > 1;
 
-print STDERR "HAVE SHEET 2:w: W: $sw H: $sh \n";
+    #print STDERR "HAVE SHEET 2:w: W: $sw H: $sh \n";
 
 		my @jobs;
 		my $j = COATING_Job->new(
@@ -102,7 +102,6 @@ print STDERR "HAVE SHEET 2:w: W: $sw H: $sh \n";
 		my $total;
 		foreach my $j ( @jobs ) {
 			my $price = price_job( $dbh, $pid, $sid, $j, $specs);
-      $openprint::log->debug(Data::Dumper::Dumper($price));
 			$total += $price->{cost};
       $$specs{"hdnBreakdown$i"} .= $$price{breakdown} if $openprint::User->is_staff();
       $$specs{"ddmEquipment$i"} = $$price{equipment}{id} if $$price{equipment};
@@ -138,15 +137,12 @@ sub compare_equipment{
 	my @e_prices;
 
 	foreach my $e (@eids) {
-    $openprint::log->error($$specs{'chkOverrideEquipment'.$j->qty_index}.' and '. $$specs{'ddmEquipment'.$j->qty_index}." != ".Data::Dumper::Dumper($e));
     if ($$specs{'chkOverrideEquipment'.$j->qty_index} and $$specs{'ddmEquipment'.$j->qty_index} and $$specs{'ddmEquipment'.$j->qty_index} != $$e{id}) {
-      $openprint::log->error("SKipping");
       next;
     }
     if (!fits($j->width, $j->height, $j->calliper, $e)) {
       if ($$specs{'chkOverrideEquipment'.$j->qty_index}) {
         my $equipment = new openprint::Equipment($e);
-        $openprint::log->error($equipment->fits($j->width, $j->height, $j->calliper));
         push @e_prices, {
           equipment       => $e,
           breakdown       => "Doesn't fit: " .$equipment->fits($j->width, $j->height, $j->calliper),
@@ -156,10 +152,7 @@ sub compare_equipment{
     }
 
 		my $min_charge = price($e->{ref}, $j->type.'MinimumCharge');
-
 		my $make_ready = price($e->{ref}, $j->type.'MakeReady');
-
-
     my $service_price = price($e->{ref}, $j->type, $j->qty * $j->sides);
 		my $run_price = $j->qty * $service_price * $j->sides;
 
@@ -186,10 +179,17 @@ sub compare_equipment{
 						};
 	} # end foreach equipment
 
-  my @prices = sort { (defined($$a{cost}) and $a->{cost}) <=> (defined($$b{cost}) and $b->{cost}) } @e_prices;
-  $openprint::log->error(Data::Dumper::Dumper(\@prices));
+  $openprint::log->error("Prices".Data::Dumper::Dumper(\@e_prices));
+  my @prices = sort { 
+    if (defined($a->{cost})) {
+      return defined($b->{cost}) ? $a->{cost} <=> $b->{cost} : 0;
+    }
+    return defined($b->{cost}) ? 1 : 0;
+  } @e_prices;
+  #my @prices = sort { (defined($$a{cost}) and $a->{cost}) <=> (defined($$b{cost}) and $b->{cost}) } @e_prices;
+  #$openprint::log->error("Prices".Data::Dumper::Dumper(\@prices));
 	return $prices[0];
-}
+} # end sub compare_equipment
 
 sub coater {
 	my $dbh = shift;
