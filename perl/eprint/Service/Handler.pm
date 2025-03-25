@@ -24,6 +24,7 @@ require misc;
 require eprint::login;
 require eprint::banner;
 require openprint;
+require openprint::www;
 
 use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *variable = \%openprint::variable;
@@ -42,6 +43,7 @@ use constant PROJECT_VIEW_PAGE  => '/main/proj/proj_view.html';
 
 sub handler {
   $request = shift;
+	$request->push_handlers(PerlCleanupHandler => \&openprint::www::cleanup);
     $r = Apache2::Request->new($request,
         POST_MAX        => 8096,
         DISABLE_UPLOADS => 1,
@@ -190,7 +192,7 @@ print STDERR "Forbidden for $pid\n";
         return SERVER_ERROR;
     }
   
-    $dbh->disconnect;
+    $dbh->disconnect if $dbh;
 
     return OK;
 }
@@ -343,12 +345,10 @@ sub show {
   close $fh or die "Can't close file: $!";
 
   if ($is_openprint) {
-    use openprint::www;
     $request->uri($service->{page});
     openprint::www::handler($request);
     my $output = '';
     return \$output;
-    #$html = openprint::ssi::variable_substitution(\$html, $variable);
   } else {
     use eprint::www;
     eprint::www::word_sub($variable);
