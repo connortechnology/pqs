@@ -826,3 +826,13 @@ input[type=number] {
 button[disabled='disabled'] {
   background-color: grey;
 }
+
+.Service ul,
+.Service ul li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.Service ul li label {
+  float: none;
+}

@@ -748,3 +748,10 @@ input[type=number] {
 #SpecificStock input[type="text"] {
   width: 13em;
 }
+#calliper_pt {
+width: 35px;
+}
+#calliper_mm, 
+#calliper, #size, #width, #height {
+width: 55px;
+}

@@ -73,6 +73,7 @@ marked "critical" and also refer to the desired mod MUST be changed as a group. 
 
 
 .centerbox {
+  float: right;
 	width: 100%;
 	overflow: visible;
 	text-align: left;

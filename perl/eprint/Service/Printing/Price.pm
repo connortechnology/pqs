@@ -876,7 +876,7 @@ sub fill_price_hash {
   $price->{txtImageHeight}      = $imp->{image_height};
   $price->{hdnImageOrientation} = $imp->{image_orientation};
 
-  $price->{imposition} = $price->{hdnImposition}       = $imp->getSetup;
+  $price->{hdnImposition1} = $price->{imposition} = $price->{hdnImposition}       = $imp->getSetup;
   $price->{SpreadRows}          = $imp->{spread_rows};
   $price->{SpreadCols}          = $imp->{spread_cols};
 

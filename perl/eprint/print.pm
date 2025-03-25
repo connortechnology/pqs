@@ -35,8 +35,6 @@ sub view_services {
   || continue_project($dbh, $variable->{user_id});
   $pid =~ tr/0-9//cd;
 
-  print STDERR "VIEW PROJECT: $pid \n";
-
   if (needs_build($pid)) {
     eprint::Build::build($log, $dbh, $pid, $variable, 0);
     $dbh->do(q{update tbl_projects set build = false where lngprojectindex = ?}, undef, $pid); 
@@ -45,8 +43,6 @@ sub view_services {
   if ( $r->param('start') && $r->param('end') ) {
     custom_sort( $dbh, $pid, $r->param('start') ,  $r->param('end') );
   }
-
-  #print STDERR "START VIEW SERVICES :  $variable->{edit} ************************* \n\n";
 
   #Custom Line Item Edit
   if ( $r->param('edit') and $variable->{user_type} =~ /^[AE]$/ ) {
@@ -224,17 +220,13 @@ sub add_custom_sort {
 
 	$dbh->do(q{Update tbl_project_contents set custom_sort = 1000 where lngprojectindex = ?}, undef, $pid);
 
-
-	my $up = $dbh->prepare(q{
-		UPDATE tbl_project_contents set custom_sort = ? WHERE lngserviceindex = ?
-	});
+	my $up = $dbh->prepare(q{ UPDATE tbl_project_contents set custom_sort = ? WHERE lngserviceindex = ?  });
 
 	my $count = 10000;
 	foreach my $c ( @{$variable->{categories}} ) {
 			my $list = $c->{services};
 			
 			map {
-				print STDERR "HAVE S: ", Dumper($_->{id});
 				$up->execute($count, $_->{id});
 				$count += 1000;
 			} @{$list};
@@ -247,7 +239,6 @@ sub add_comment {
 	my ($r, $dbh, $var, $pid, $assigned_to, $comment, $email) = @_;
 	my $log = $r->log;
 	use MIME::QuotedPrint;
-
 
 	if ( $comment ) { 
 		my $ins = $dbh->prepare('INSERT INTO project_comments VALUES ( ?, ?, ?, Now(), ?)');
@@ -289,7 +280,6 @@ sub add_comment {
 				  TO      => join(',',@email),
 				  SUBJECT => 'Project Assignment',
 			);
-print STDERR "EMAIL ", Dumper(%mail);
 			misc::send_email_with_attachment($r, $log, \%mail, @body);
 		}
 	}
@@ -302,13 +292,7 @@ print STDERR "EMAIL ", Dumper(%mail);
 sub continue_project {
     my ($dbh, $user) = @_;
 
-    return $dbh->selectrow_array(q{
-        SELECT lngprojectindex 
-        FROM tbl_projects
-        WHERE lnguserindex = ?
-        ORDER BY dtmlastmodified DESC
-        LIMIT 1
-    }, undef, $user);
+    return $dbh->selectrow_array(q{ SELECT lngprojectindex FROM tbl_projects WHERE lnguserindex = ?  ORDER BY dtmlastmodified DESC LIMIT 1 }, undef, $user);
 }
 
 sub custom_sort {
@@ -323,28 +307,20 @@ sub custom_sort {
 		$end = $end - 10;
 	}
 
-	$dbh->do(q{ UPDATE tbl_project_contents SET custom_sort = ?  where custom_sort = ? AND lngprojectindex = ?
-			}, undef, $end, $start, $pid);
-
+	$dbh->do(q{ UPDATE tbl_project_contents SET custom_sort = ?  where custom_sort = ? AND lngprojectindex = ?  }, undef, $end, $start, $pid);
 
 	#Reset all custom ids in the new order.
 	my $ids = $dbh->selectall_arrayref(q{
 		SELECT lngserviceindex, custom_sort FROM tbl_project_contents WHERE lngprojectindex = ? ORDER by custom_sort
 	}, {Slice => {}}, $pid);
 
-	my $up = $dbh->prepare(q{
-		UPDATE tbl_project_contents set custom_sort = ? WHERE lngserviceindex = ?
-	});
+	my $up = $dbh->prepare(q{ UPDATE tbl_project_contents set custom_sort = ? WHERE lngserviceindex = ?  });
 
 	my $id = 10000;
 	map { 
 		$up->execute($id, $_->{lngserviceindex});
 		$id += 1000;
 	} @{$ids};
-
-print STDERR "PIDS: ", Dumper($ids);
-
-
 }
 
 # Display all the services and pricing for the project.

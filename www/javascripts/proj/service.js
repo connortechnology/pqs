@@ -291,3 +291,7 @@ Timer.prototype = {
     }
 };
 
+function calc() {
+  //new Timer(service.calculate, 4000);
+  service.calculate();
+}

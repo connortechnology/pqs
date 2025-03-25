@@ -19,46 +19,53 @@ sub calc {
 
 	my @quantities = (undef, get_quantities($log, $dbh, $pid));
 
-	return $status unless $specs->{rdbCoatingSides};
+	my $sides = int($specs->{rdbCoatingSides});
+  if (!$sides) {
+    $$specs{"hdnBreakdown1"} = 'Please enter the sides to be coated.<br/>';
+    return $status;
+  }
 
 	# Why come up with your own ideas when you can
 	# steal raymonds. Lets wrap some of the older functions
 	# into nice little packages.
-	local *price = sub {
-        my ($equip, $service, $qty) = @_;
-        my $p = get_price($log, $dbh, $var, $service, $qty, $equip);
-		return $p;
-    };
-	local *fits = sub {
-        my ($width, $height, $cal, $e) = @_;
-		return 1 if $width == 1 and $height == 1;
-        eprint::equipment::equipment_fits(
-			$log, $dbh, $e->{id}, $width, $height, $cal);
-    };
+  local *price = sub {
+    my ($equip, $service, $qty) = @_;
+    my $p = get_price($log, $dbh, $var, $service, $qty, $equip);
+    return $p;
+  };
 
-	# Start be getting the basic specs needed for the pricing.
+  local *fits = sub {
+    my ($width, $height, $cal, $e) = @_;
+    return 1 if $width == 1 and $height == 1;
+    eprint::equipment::equipment_fits($log, $dbh, $e->{id}, $width, $height, $cal);
+  };
+
+	# Start by getting the basic specs needed for the pricing.
   my $print = get_print_container($log, $dbh, $pid);
-  my ( $sw, $sh, $cal, $imp, $runstyle ) = get_specifications(
+  my ( $sw, $sh, $cal, $imp, $runstyle, $press_id ) = get_specifications(
     $log, $dbh, $pid, $print,
-    qw( hdnSheetSizeWidth hdnSheetSizeHeight txtStockCalliper hdnImposition runstyle)
+    qw( hdnSheetSizeWidth hdnSheetSizeHeight txtStockCalliper hdnImposition runstyle press)
   );
 
 	# For now we will let the user override the sheet size going through the coater.
-	if ( $specs->{hdnSheetSizeWidth} ) {;
-		$sw = $specs->{hdnSheetSizeWidth}
+	if ( $specs->{hdnSheetSizeWidth} ) {
+		$sw = $specs->{hdnSheetSizeWidth};
 	} else {
-		$specs->{"hdnSheetSizeWidth"}  = $sw;
+		$specs->{"hdnSheetSizeWidth"} = $sw;
 	}
 	if ( $specs->{hdnSheetSizeHeight} ) {
-		$sh = $specs->{hdnSheetSizeHeight}
+		$sh = $specs->{hdnSheetSizeHeight};
 	} else {
 		$specs->{"hdnSheetSizeHeight"} = $sh;
 	}
+  if ( $specs->{calliper} ) {
+    $cal = $specs->{calliper};
+  } else {
+    $specs->{calliper} = $cal;
+  }
 
-print STDERR "HAVE SHEET: W: $sw H: $sh \n";
-
-	my $sides = int($specs->{rdbCoatingSides});
-  #$sides = 2 if $runstyle =~ /(WT|WF)/;
+  # Get the Coating type so we know what # pricing to use.
+  my $type = $dbh->selectrow_array(q{ SELECT strservicetype FROM tbl_project_contents WHERE lngserviceindex = ?  }, undef, $sid);
 
 	#now make a price for each quantity.
 	foreach my $i ( 1 .. 3 ) {
@@ -66,26 +73,17 @@ print STDERR "HAVE SHEET: W: $sw H: $sh \n";
 		my $qty = $specs->{'txtQuantity'.$i} || $quantities[$i];
 		next unless $qty;
 
-		# Get the supplier so we can give preference to suppliers
-		# who are doing some of the printing.
-		my $s = $dbh->selectrow_array(q{
-        	SELECT strsupplier FROM tbl_equipment WHERE strid = (
-				SELECT strValue FROM tbl_service_specifications
-				 WHERE lngserviceindex = ?
-				 AND   strname = ?
-			)
-       	}, undef, $print, "hdnEquipment$i");
-
-		# Get the Coating type so we know what
-		# pricing to use.
-		my $type = $dbh->selectrow_array(q{ SELECT strservicetype FROM tbl_project_contents WHERE lngserviceindex = ?  }, undef, $sid);
+    my $press = openprint::Equipment->find_one(id=>$press_id) if $press_id;
+		# Get the supplier so we can give preference to suppliers  who are doing some of the printing.
+    my $s = $press->supplier() if $press;
+    $s = 'House' if !$s;
 
 		# This is our oversimplified version of pricing coating
 		# in sheets even though our qty on the coating page is in
 		# individual pieces.
 		$qty /= $imp if $imp > 1;
 
-print STDERR "HAVE SHEET 2:w: W: $sw H: $sh \n";
+    #print STDERR "HAVE SHEET 2:w: W: $sw H: $sh \n";
 
 		my @jobs;
 		my $j = COATING_Job->new(
@@ -93,70 +91,68 @@ print STDERR "HAVE SHEET 2:w: W: $sw H: $sh \n";
 			height 	 => $sh,
 			calliper => $cal,
 			qty  	 => $qty,
-			supplier => $s,
+      qty_index => $i,
+      supplier => $s,
 			type 	 => $type,
 			sides    => $sides
 			);
-print STDERR "HAVE J: " . $j->width . " * \n";
-
 
 		push @jobs, $j;
 
 		my $total;
 		foreach my $j ( @jobs ) {
-			my $price = price_job( $dbh, $pid, $sid, $j);
+			my $price = price_job( $dbh, $pid, $sid, $j, $specs);
 			$total += $price->{cost};
       $$specs{"hdnBreakdown$i"} .= $$price{breakdown} if $openprint::User->is_staff();
+      $$specs{"ddmEquipment$i"} = $$price{equipment}{id} if $$price{equipment};
 		}
 
     @$specs{"txtPrice$i", "txtUnitPrice$i"} = format_pricing($total, $qty);
 		$status = 'calculated' if $specs->{"txtPrice$i"} > 0;
 	} # end foreach qty
 
+      $openprint::log->debug(Data::Dumper::Dumper($specs));
   return $status;
 }
 
 sub price_job {
-	my ($dbh, $pid, $sid, $j ) = @_;
+	my ($dbh, $pid, $sid, $j, $specs ) = @_;
 
-	my @eids = map { coater($dbh, $_) }
-					 eprint::service::valid_equipment(undef, $dbh, $j->type);
+	my @eids = map { coater($openprint::dbh, $_) } eprint::service::valid_equipment(undef, $openprint::dbh, $j->type);
 
-print STDERR "START PRICE JOB: 1 \n";
-	# If our print Supplier is not 'House' then first check for equipment to match
-	# our print supplier.
-	my $price = compare_equipment($pid, $sid, $j, grep { $_->{supplier} ne 'House'
-                                       and $_->{supplier} eq $j->supplier } @eids )
-				if $j->supplier ne 'House';
-print STDERR "START PRICE JOB: 1 \n";
+	# If our print Supplier is not 'House' then first check for equipment to match our print supplier.
+	my $price = compare_equipment($pid, $sid, $j, $specs, grep { $_->{supplier} ne 'House' and $_->{supplier} eq $j->supplier } @eids ) if $j->supplier ne 'House';
 
 	# Next try all of the House equipment.
-	$price = compare_equipment( $pid, $sid, $j, grep { $_->{supplier} eq 'House' } @eids )
-				if $j->supplier eq 'House' or not $price;
-print STDERR "START PRICE JOB: 1 \n";
+	$price = compare_equipment( $pid, $sid, $j, $specs, grep { $_->{supplier} eq 'House' } @eids ) if $j->supplier eq 'House' or not $price;
 
 	# Finally try anything that is left if we still do not have a price.
-	$price = compare_equipment($pid, $sid,  $j, grep { $_->{supplier} ne 'House'
-                                        and $_->{supplier} ne $j->supplier } @eids )
-				if not $price;
+	$price = compare_equipment($pid, $sid,  $j, $specs, grep { $_->{supplier} ne 'House' and $_->{supplier} ne $j->supplier } @eids ) if not $price;
 
 	return $price;
 }
 
 sub compare_equipment{
-	my ( $pid, $sid, $j,  @eids ) = @_;
+	my ( $pid, $sid, $j, $specs, @eids ) = @_;
 	my @e_prices;
 
 	foreach my $e (@eids) {
-
-		next unless fits($j->width, $j->height, $j->calliper, $e);
-		my $error;
+    if ($$specs{'chkOverrideEquipment'.$j->qty_index} and $$specs{'ddmEquipment'.$j->qty_index} and $$specs{'ddmEquipment'.$j->qty_index} != $$e{id}) {
+      next;
+    }
+    if (!fits($j->width, $j->height, $j->calliper, $e)) {
+      if ($$specs{'chkOverrideEquipment'.$j->qty_index}) {
+        my $equipment = new openprint::Equipment($e);
+        push @e_prices, {
+          equipment       => $e,
+          breakdown       => "Doesn't fit: " .$equipment->fits($j->width, $j->height, $j->calliper),
+        };
+      }
+      next;
+    }
 
 		my $min_charge = price($e->{ref}, $j->type.'MinimumCharge');
-
 		my $make_ready = price($e->{ref}, $j->type.'MakeReady');
-
-
     my $service_price = price($e->{ref}, $j->type, $j->qty * $j->sides);
 		my $run_price = $j->qty * $service_price * $j->sides;
 
@@ -164,36 +160,40 @@ sub compare_equipment{
 
 		my $total = $make_ready + $run_price;
 
-      my $breakdown       = sprintf('On %s MR: $%.2f RUN: %d * %d sides * $%.2f = $%.2f, total: $%.2f',
-        new openprint::Equipment($e)->name(),
-        $make_ready, $j->qty, $j->sides, $service_price, $run_price, $total);
+    my $breakdown       = sprintf('On %s MR: $%.2f RUN: %d * %d sides * $%.2f = $%.2f, total: $%.2f',
+      new openprint::Equipment($e)->name(),
+      $make_ready, $j->qty, $j->sides, $service_price, $run_price, $total);
 
     if ($total < $min_charge) {
       $breakdown .= ' using minimum charge $'.sprintf('%.2f', $min_charge);
       $total = $min_charge if $total < $min_charge;
     }
 
-		$error = "\n Could not Price Equipment $e->{ref} For Service: " .  $j->type
-			unless $total;
+		$breakdown .= "\n Could not Price Equipment $e->{ref} For Service: " .  $j->type unless $total;
 
 		push @e_prices, {
 							cost            => $total,
 							equipment       => $e,
 							qty             => $j->qty,
               breakdown       => $breakdown,
-						} unless $error;
-
-
+						};
 	} # end foreach equipment
 
-	return (sort { $a->{cost} <=> $b->{cost} } @e_prices)[0];
-
-}
+  $openprint::log->error("Prices".Data::Dumper::Dumper(\@e_prices));
+  my @prices = sort { 
+    if (defined($a->{cost})) {
+      return defined($b->{cost}) ? $a->{cost} <=> $b->{cost} : 0;
+    }
+    return defined($b->{cost}) ? 1 : 0;
+  } @e_prices;
+  #my @prices = sort { (defined($$a{cost}) and $a->{cost}) <=> (defined($$b{cost}) and $b->{cost}) } @e_prices;
+  #$openprint::log->error("Prices".Data::Dumper::Dumper(\@prices));
+	return $prices[0];
+} # end sub compare_equipment
 
 sub coater {
 	my $dbh = shift;
 	my $eid = shift;
-
 
 	# BASIC INFO
     #
@@ -213,14 +213,13 @@ sub coater {
     my $spec = $dbh->selectall_hashref(q{
         SELECT strname AS name, strvalue AS value
         FROM tbl_equipment_specifications
-        WHERE strname IN ('Maximum Sheet Length', 'Maximum Sheet Width')
+        WHERE strname IN ('Maximum Sheet Length', 'Maximum Sheet Width', 'Minimum Calliper', 'Maximum Calliper')
           AND lngequipmentindex = ?
     }, 'name', undef, $eid);
     $e{max_width}  = $spec->{'Maximum Sheet Width'}{value};
     $e{max_length} = $spec->{'Maximum Sheet Length'}{value};
 
 	return \%e;
-
 }
 
 struct COATING_Job => {
@@ -232,6 +231,7 @@ struct COATING_Job => {
     height    => '$', # float,      # |- Before cutting dimensions
     calliper  => '$', # float,      # |
     qty       => '$', # int,        # Quantity of sheets/bound projects
+    qty_index => '$', # int,        # Quantity Index
     supplier  => '$', # string,     # Supplier of the printed sheet
     press     => '$', # string      # Press the project was printed on.
     note      => '$', # text,       # Freeform text of the type of cut, etc.
@@ -248,9 +248,10 @@ sub display {
 	unless ($specs->{hdnSheetSizeWidth} and $specs->{hdnSheetSizeHeight} ) {
     my $print  = get_print_container($log, $dbh, $pid);
 
-    my @fields = qw(hdnSheetSizeWidth hdnSheetSizeHeight);
+    my @fields = qw(hdnSheetSizeWidth hdnSheetSizeHeight txtStockCalliper);
 
     @$specs{@fields} = get_specifications($log, $dbh, $pid, $print, @fields);
+    $$specs{calliper} = $$specs{txtStockCalliper};
   }
 
 	return {};

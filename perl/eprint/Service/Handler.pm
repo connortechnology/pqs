@@ -33,6 +33,7 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
+my $request;
 
 
 use constant SERVICE_PAGE_PATH  => '/main/proj';
@@ -40,7 +41,8 @@ use constant PROJECT_BUILD_PAGE => '/build';
 use constant PROJECT_VIEW_PAGE  => '/main/proj/proj_view.html';
 
 sub handler {
-    $r = Apache2::Request->new(shift,
+  $request = shift;
+    $r = Apache2::Request->new($request,
         POST_MAX        => 8096,
         DISABLE_UPLOADS => 1,
     );
@@ -68,11 +70,9 @@ sub handler {
       return Apache2::Const::OK;
     }
 
-
     #%openprint::param = %{$variable->{param}} = map {$_ => $r->param($_)} $r->param();
     # Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
     foreach my $key ( $r->param ) {
-
       my @values = $r->param($key);
       $key = substr($key,0,-2) if (substr($key, -2, 2) eq '[]');
       if ( @values > 1 ) {
@@ -115,8 +115,10 @@ sub handler {
 
     # Determine if we're a known service for processing.
     my $service = uri_to_service($r, $dbh);
-
-    $dbh->disconnect and return NOT_FOUND unless $service;
+    if (!$service) {
+      $openprint::log->error("Service not found");
+      $dbh->disconnect and return NOT_FOUND;
+    }
 
 	#map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . " \n"; } $r->param();
 
@@ -128,7 +130,6 @@ sub handler {
       $dbh->disconnect;
       return Apache2::Const::OK;
     }
-
 
     # Make sure the service exists in the project.
     unless ($dbh->selectrow_array(q{
@@ -225,95 +226,95 @@ sub uri_to_service {
 # Show the page if we're doing a GET with just PID and SID, return an JSON
 # object if we're doing a pricing GET, or save the service if we're POSTing.
 sub response {
-    my ($r, $dbh, $variable, $pid, $sid, $service) = @_;
+  my ($r, $dbh, $variable, $pid, $sid, $service) = @_;
 
-    my @params = $r->param;
-    
-    # Just display the page.
-    if (@params <= 2) {
-        my $page = show($r, $dbh, $variable, $pid, $sid, $service);
+  my @params = $r->param;
 
-        $dbh->rollback; # Display should never alter DB.
+  # Just display the page.
+  if (@params <= 2) {
+    my $page = show($r, $dbh, $variable, $pid, $sid, $service);
 
-        $r->content_type('text/html');
-        print $$page;
+    #$dbh->rollback; # Display should never alter DB.
+
+    $r->content_type('text/html');
+    print $$page;
+  } else {
+    my $form   = param_hashref($r);
+    my $specs  = { %$form };
+    print STDERR "Calling price".Data::Dumper::Dumper($specs)."\n";
+    my $status = eprint::service::price($r->log, $dbh, $variable, $pid, $sid, $service, $specs);
+
+    # AJAX pricing request.
+    if ($r->method_number == M_GET) {
+      #$dbh->rollback; # GET requests don't save.
+
+      $specs->{status} = $status; # Send client the status
+      $openprint::log->debug("Response: ".Data::Dumper::Dump($specs));
+      my $coder = JSON::XS->new->ascii->pretty->allow_nonref;
+
+      my $response = $coder->encode( $specs );
+      if (0) {
+      my $response = $coder->encode(
+        $status eq 'calculated' 
+        ? $specs : 
+        { status => $status, error => $specs->{error} }
+      );
     }
+
+      $r->content_type('application/json; charset=utf-8');
+      print $response;
+    }
+    # Form submission (save).
     else {
-        my $form   = param_hashref($r);
-        my $specs  = { %$form };
-        print STDERR "Calling price".Data::Dumper::Dumper($specs)."\n";
-        my $status = eprint::service::price($r->log, $dbh, $variable, $pid, $sid, $service, $specs);
+      print STDERR "Saving $status\n";
+      # Save the service, set it's state, and continue the project.
+      eprint::service::save($r->log, $dbh, $pid, $sid, $service, $form, $specs);
+      eprint::service::set_status($r->log, $dbh, $pid, $status, $sid);
 
-        # AJAX pricing request.
-        if ($r->method_number == M_GET) {
-          #$dbh->rollback; # GET requests don't save.
+      eprint::service::recalc_dependencies($r->log, $dbh, $pid, $sid);
 
-            $specs->{status} = $status; # Send client the status
+      $dbh->commit;
 
-            my $response = encode_json(
-                $status eq 'calculated' 
-                    ? $specs : 
-                    { status => $status, error => $specs->{error} }
-            );
+      my $location = $status eq 'calculated' ? PROJECT_BUILD_PAGE : PROJECT_VIEW_PAGE;
 
-            $r->content_type('application/json; charset=utf-8');
-            print $response;
-        }
-        # Form submission (save).
-        else {
-          print STDERR "Saving $status\n";
-            # Save the service, set it's state, and continue the project.
-            eprint::service::save($r->log, $dbh, $pid, $sid, $service, $form, $specs);
-            eprint::service::set_status($r->log, $dbh, $pid, $status, $sid);
-            
-            eprint::service::recalc_dependencies($r->log, $dbh, $pid, $sid);
+      print STDERR "Location $location $status\n";
+      $location .= "?pid=$pid";
 
-            $dbh->commit;
+      $location = $r->param('Location') if $r->param('Location');
 
-            my $location = $status eq 'calculated' ? PROJECT_BUILD_PAGE : PROJECT_VIEW_PAGE;
-
-            print STDERR "Location $location $status\n";
-			$location .= "?pid=$pid";
-
-			$location = $r->param('Location') if $r->param('Location');
-
-            $r->headers_out->set(Location => "$location");
-            $r->status(HTTP_MOVED_TEMPORARILY);
-        }
+      $r->headers_out->set(Location => "$location");
+      $r->status(HTTP_MOVED_TEMPORARILY);
     }
-    return;
+  }
+  return;
 }
 
 # Build a hash from the passed form elements.
 sub param_hashref {
-    my ($r) = @_;
+  my ($r) = @_;
 
-    my %args;
-    for my $field ($r->param) {
-        my @values = $r->param($field);
+  my %args;
+  for my $field ($r->param) {
+    my @values = $r->param($field);
 
-        $args{$field} = @values == 1 ? $values[0] : \@values;
-    }
+    $args{$field} = @values == 1 ? $values[0] : \@values;
+  }
 
-    return \%args;
+  return \%args;
 }
 
 # Display the service's page.
 sub show {
   my ($r, $dbh, $variable, $pid, $sid, $service) = @_;
 
+  require openprint::Project;
   # Set standard information for every service page.
   $variable->{pid}     = $pid;
   $variable->{sid}     = $sid;
   $variable->{service} = $service;
   $variable->{project} = project_info($dbh, $pid);
-
-  # Display the banner advert.
-  if ( configuration::get_value($r->log, $dbh, 'UsesBanners') ) {
-    $variable->{BANNER_AD} = eprint::banner::select_banner(
-      $r->log, $dbh, @$variable{qw(cust_id user_id)}
-    );
-  }
+  $variable->{Project} = new openprint::Project($pid);
+  $variable->{ServiceType} = $variable->{Project}->ServiceType($sid);
 
   # Display/hide pricing based on customer default.
   $variable->{isServicePricing} = $$openprint::Company{ysnpricingservices};
@@ -323,28 +324,36 @@ sub show {
 
   # If the service has a display() function run it an populate variable with it's return.
   my $display = $service->{can}->('display');
-  my $page = $display 
-  ? $display->($r->log, $dbh, $service->{type}, $pid, $sid, $specs, $variable)
-  : {};
+  my $page = $display ? $display->($r->log, $dbh, $service->{type}, $pid, $sid, $specs, $variable) : {};
 
   $variable->{$_} = $page->{$_} for keys %$page;
 
+  my $is_openprint = (-1 != index($$service{page}, 'openprint'));
   # Open the template page.
-  my $path = $r->document_root . SERVICE_PAGE_PATH;
+  my $path = $r->document_root . ($is_openprint ? '' : SERVICE_PAGE_PATH);
 
   open my $fh, '<', "$path/$service->{page}" or die "Can't find file: $path/$service->{page} -- $!";
   my $html = do { local $/ = undef; <$fh> };
   close $fh or die "Can't close file: $!";
 
-  use eprint::www;
-  eprint::www::word_sub($variable);
+  if ($is_openprint) {
+    use openprint::www;
+    $request->uri($service->{page});
+    openprint::www::handler($request);
+    my $output = '';
+    return \$output;
+    #$html = openprint::ssi::variable_substitution(\$html, $variable);
+  } else {
+    use eprint::www;
+    eprint::www::word_sub($variable);
 
-  # Create the page from the template.
-  $html = ssi::variable_substitution($r, $r->log, $dbh, $html, $variable);
+    # Create the page from the template.
+    $html = ssi::variable_substitution($r, $r->log, $dbh, $html, $variable);
 
-  # Fill in the form with any user specs.
-  my $f = HTML::FillInForm->new();
-  $html = $f->fill(fdat => $specs, scalarref => \$html);
+    # Fill in the form with any user specs.
+    my $f = HTML::FillInForm->new();
+    $html = $f->fill(fdat => $specs, scalarref => \$html);
+  }
 
   return \$html; # Don't copy the large string (yet again).
 }

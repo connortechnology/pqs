@@ -4,18 +4,44 @@
 	<p class="none">&nbsp;</p>
 
 	<? if project.quantity.0 ?>
-		<label for="ddmEquipment1">Equipment for <?txtQuantity1?>:</label>
+		<label for="ddmEquipment1">Equipment for <? project.quantity.0 ?>:</label>
+      <? if ddmEquipmentOptions1 ?>
 		<select id="ddmEquipment1" name="ddmEquipment1" size="1" >
 			<option value="" >Equipment Options</option>
 			<?ddmEquipmentOptions1?>
 		</select>
 		<label for="chkOverrideEquipment1" class="checkbox override"><input type="checkbox" id="chkOverrideEquipment1" name="chkOverrideEquipment1" class="override" value="Y" />Override</label>
+      <? else ddmEquipmentOptions1 ?>
+      <? echo (
+my $html;
+my $options = $$variable{Equipment} ? [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ] : openprint::Equipment->dropdown('servicetype_id any'=>$$variable{ServiceType}->id(), useinestimating=>1);
+if (@{$options}) {
+    if (@{$options} > 2) {
+      $html .= ssi::select(
+        $options,
+        $$variable{"ddmEquipment1"},
+        {
+          prepend=>['', 'select one'],
+          name=>"ddmEquipment1",
+          onchange=>'calc(this.form.name)',
+        } );
+      $html .= write_override(
+          "chkOverrideEquipment1",
+          1,
+          $$variable{"chkOverrideEquipment1"}, '', q`calc('f1');` );
+    } else {
+      $html .= $$options[1];
+    } # end if
+} # end if options
+return $html;
+)?>
+      <? endif ddmEquipmentOptions1 ?>
 	<? endif project.quantity.0 ?>
 	
 	<? if project.quantity.1 ?>
 		<br />
 		
-		<label for="ddmEquipment2">Equipment for <?txtQuantity2?>:</label>
+		<label for="ddmEquipment2">Equipment for <? project.quantity.1 ?>:</label>
 		<select id="ddmEquipment2" name="ddmEquipment2" size="1" >
 			<option value="" >Equipment Options</option>
 			<?ddmEquipmentOptions2?>
@@ -25,13 +51,12 @@
 	<? if project.quantity.2 ?>
 		<br />
 		
-		<label for="ddmEquipment3">Equipment for <?txtQuantity3?>:</label>
+		<label for="ddmEquipment3">Equipment for <? project.quantity.2 ?>:</label>
 		<select id="ddmEquipment3" name="ddmEquipment3" size="1" >
 			<option value="" >Equipment Options</option>
 			<?ddmEquipmentOptions3?>
 		</select>
 		<label for="chkOverrideEquipment3" class="checkbox override"><input type="checkbox" id="chkOverrideEquipment3" name="chkOverrideEquipment3" class="override" value="Y" />Override</label>
 	<? endif project.quantity.2 ?>
-
 	<br />
 </fieldset>

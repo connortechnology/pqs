@@ -6,20 +6,23 @@
 	<p>How many sides will be coated?</p>
 	<label >Sides:</label>
 	<label for="rdbCoatingSides1" class="radio">
-		<input type="radio" id="rdbCoatingSides1" name="rdbCoatingSides" value="1" /> 1 Side
+		<input type="radio" id="rdbCoatingSides1" name="rdbCoatingSides" value="1" on_click_this="calc" /> 1 Side
 	</label>
 	<label for="rdbCoatingSides2" class="radio">
-		<input type="radio" id="rdbCoatingSides2" name="rdbCoatingSides" value="2" />2 Sides
+		<input type="radio" id="rdbCoatingSides2" name="rdbCoatingSides" value="2" on_click_this="calc" />2 Sides
 	</label>
 	<br />
-
-
-
-
 	<p>What is the size of press sheet to be coated?</p>
 	<label for="final_width">Sheet Size:</label>
-	<input id="hdnSheetSizeWidth" name="hdnSheetSizeWidth" size="9" class="smbox" />
-	<input id="hdnSheetSizeHeight" name="hdnSheetSizeHeight" size="9" class="smbox"  />
+  <input id="hdnSheetSizeWidth" name="hdnSheetSizeWidth" size="9" type="number" step="any" min="0" class="smBox" on_input_this="calc"/>
+  <span> x </span>
+	<input id="hdnSheetSizeHeight" name="hdnSheetSizeHeight" size="9" type="number" step="any" min="0" class="smBox" on_input_this="calc"/>
 	<label for="sheet_height" class="post-input">(W&#8243; &#215; H&#8243;)</label>
+	<br />
+	<p>What is the calliper of press sheet to be coated?</p>
+	<label for="calliper">Calliper:</label>
+	<input id="calliper_pt" name="calliper_pt" on_input_this="calc_from_calliper_pt"type="number" step="any" min="0" /> PT
+	<input id="calliper" name="calliper" on_input_this="calc_from_calliper" type="number" step="any" min="0" /> Inches
+	<input id="calliper_mm" name="calliper_mm" on_input_this="calc_from_calliper_mm" type="number" step="any" min="0" /> MM
 	<br />
 </fieldset>

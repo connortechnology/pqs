@@ -1055,7 +1055,7 @@ sub price {
   my $calc   = $service->{can}->('calc');
   if ($calc) {
     $status = eval { 
-      $calc->($log, $dbh, $variable, $pid, $sid, $service_type, $specs)
+      $calc->($log, $dbh, $variable, $pid, $sid, $service_type, $specs);
     };
     if ($@) {
       #if (DEBUG) { die $@ }
@@ -1066,7 +1066,8 @@ sub price {
       return 'error';
     }
     my $elapsed = Time::HiRes::time() - $start_time;
-    print STDERR "Status $status from $service_type elapsed: $elapsed\n";
+    $openprint::log->debug("Status $status from $service_type elapsed: $elapsed");
+    $openprint::log->debug(Data::Dumper::Dumper($specs));
 
     # Unknown statuses are treated as errors.
     unless (grep { $status eq $_ } STATUSES) {
@@ -1079,10 +1080,7 @@ sub price {
     print STDERR "Service $service->{module}::calc() does not exist\n";
   }
 
-  my $override = $dbh->selectrow_array(q{
-    SELECT price_override FROM tbl_project_contents WHERE lngserviceindex = ?
-    }, undef, $sid );
-
+  my $override = $dbh->selectrow_array(q{ SELECT price_override FROM tbl_project_contents WHERE lngserviceindex = ?  }, undef, $sid );
   if ($override ne '') {
     print STDERR "HAVE PRICE OVERRIDE: FOR SID: $sid $override\n";
     $specs->{txtPrice1} = $override 

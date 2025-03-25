@@ -82,7 +82,7 @@ our %EXPORT_TAGS = (
 
 use List::Util qw(sum);
 
-use eprint::service qw(get_specifications);
+require eprint::service;
 
 # The following set of utility functions are a first attempt at abstracting
 # some of most queried database states from the code. They're a pain to write
@@ -537,7 +537,7 @@ sub get_signature_weight {
 
     #For Screen items the weight is in the print container.
     if ( $ptype eq 'ScreenItem' ) {
-        return get_specifications(
+        return eprint::service::get_specifications(
             $log, $dbh, $pid, check_for_service($log, $dbh, $pid, 'Item'),
             'txtScreenPrintingItemWeight'
         );
@@ -547,7 +547,7 @@ sub get_signature_weight {
     my ($mweight,    $sheet_width,  $sheet_height,  $width,      $height, 
         $imposition, $spread_width, $spread_height, $spread_qty, $pad_pages,
 		$forms_in_group                                                    ) = 
-            get_specifications($log, $dbh, $pid, $sid, qw(
+            eprint::service::get_specifications($log, $dbh, $pid, $sid, qw(
                 txtMWeight       hdnSheetSizeWidth  hdnSheetSizeHeight  
                 flat_width       flat_height        txtImposition
                 txtSpreadWidth   txtSpreadHeight    spreads_in_group
@@ -601,13 +601,13 @@ sub get_proof_weight {
           AND strservicetype = 'Proofs'
     }, undef, $pid);
 
-    my $sig = get_specifications($log, $dbh, undef, $sid, 'SignatureIndex');
+    my $sig = eprint::service::get_specifications($log, $dbh, undef, $sid, 'SignatureIndex');
 
     my $i    = 1;
     my $flag = 1;
     while ($flag) {
         my ($width, $height, $qty) = 
-            get_specifications($log, $dbh, $pid, $proof, 
+            eprint::service::get_specifications($log, $dbh, $pid, $proof, 
                 "txtProofWidth-$sig-$i",
                 "txtProofHeight-$sig-$i",
                 "txtProofQuantity-$sig-$i",
@@ -669,7 +669,7 @@ sub get_finished_calliper {
     
     my $sheet_calliper = $variable->{txtStockCalliper};
     if ( ! $sheet_calliper ) {
-        ( $sheet_calliper ) = get_specifications( 
+        ( $sheet_calliper ) = eprint::service::get_specifications( 
             $log, $dbh, undef, $printing_service_index, 'txtStockCalliper' 
         );
     }
@@ -683,7 +683,7 @@ sub get_finished_calliper {
 
         foreach my $index ( @signatures ) {
             my ( $calliper, $spreads, $imposition, $signatures, $sig_size )
-                = get_specifications(
+                = eprint::service::get_specifications(
                     $log, $dbh, undef, $index,
                     qw(txtStockCalliper spreads_in_group hdnImposition
                        txtSignatureQuantity txtSignatureSize          )
@@ -703,7 +703,7 @@ sub get_finished_calliper {
     }
     elsif ( $project_type =~ /Pad/ ) {
         my $print = get_print_container($log, $dbh, $pid);
-        my $pages = get_specifications($log, $dbh, undef, $print, 'pad_sheets') || 1;
+        my $pages = eprint::service::get_specifications($log, $dbh, undef, $print, 'pad_sheets') || 1;
 
         return $pages * $sheet_calliper;
     }
