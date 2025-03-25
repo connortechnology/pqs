@@ -113,7 +113,7 @@ ordered_price	=> undef,
 	take_over		=> q{(SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id)},
 	ordered_on		=>	q{(SELECT created_on FROM Orders WHERE orders.id=order_id)},
 	salesrep_id		=>	'(SELECT salesrep_id FROM Orders WHERE orders.id=order_id)',
-	takenover_on	=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description LIKE 'Taken Over by%')},
+	takenover_on	=>	'(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id='.$table.'.'.$fields{id}.' AND '.$fields{description}.' LIKE \'Taken Over by%\')',
 	approved_on		=>	q{(SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description IN ('Marked Approved','Marked Proofs QA Approved'))},
 	csr_id			=>	'(SELECT salesrep_id FROM Companies WHERE companies.id=company_id)',
 	value			=>	[ 'price1', 'price2', 'price3' ],
@@ -819,6 +819,9 @@ sub servicetype_id {
 			$openprint::log->error("Request for servicetype_id for $s_id, not found ");
 		}
 	} # end if
+  if (!$$self{service_types}{$s_id}) {
+		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, (SELECT lngindex from tbl_service_types where strid= strservicetype) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+  }
 
 	return $$self{service_types}{$s_id};
 } # end sub servicetype_id
