@@ -186,7 +186,7 @@ sub cache_lookup {
 
         # If the equipment or service doesn't exist the can't be any pirce.
         if (!exists $cache{$eid}{$name}) {
-          $openprint::log->debug("No entry for $name for $eid ".Data::Dumper::Dumper($cache{$eid}));
+          #$openprint::log->debug("No entry for $name for $eid ".Data::Dumper::Dumper($cache{$eid}));
           return;
         }
         
@@ -237,7 +237,7 @@ sub get_specifications {
 
     # TEMP: Get from package cache if it's been populated.
     if (@specs && %cache && exists $cache{$eid} ) {
-      $openprint::log->debug("Doing cache lookup for $eid @specs ".Data::Dumper::Dumper($cache{$eid}));
+      #$openprint::log->debug("Doing cache lookup for $eid @specs ".Data::Dumper::Dumper($cache{$eid}));
       return cache_lookup($eid, undef, @specs) 
     }
 
@@ -323,7 +323,7 @@ sub get_specification {
 
     # TEMP: Get from package cache if it's been populated.
     if (%cache and exists $cache{$eid}) {
-      print STDERR "Doing cache lookup for $eid $range $name\n";
+      #print STDERR "Doing cache lookup for $eid $range $name\n";
       return cache_lookup($eid, $range, $name);
     }
 
