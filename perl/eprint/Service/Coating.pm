@@ -245,13 +245,13 @@ struct COATING_Job => {
 sub display {
 	my ($log, $dbh, $service_type, $pid, $sid, $specs) = @_;
 
-	unless ($specs->{hdnSheetSizeWidth} and $specs->{hdnSheetSizeHeight} ) {
+	if (!($specs->{hdnSheetSizeWidth} and $specs->{hdnSheetSizeHeight})) {
     my $print  = get_print_container($log, $dbh, $pid);
-
-    my @fields = qw(hdnSheetSizeWidth hdnSheetSizeHeight txtStockCalliper);
-
-    @$specs{@fields} = get_specifications($log, $dbh, $pid, $print, @fields);
-    $$specs{calliper} = $$specs{txtStockCalliper};
+    if ($print) {
+      my @fields = qw(hdnSheetSizeWidth hdnSheetSizeHeight txtStockCalliper);
+      @$specs{@fields} = get_specifications($log, $dbh, $pid, $print, @fields);
+      $$specs{calliper} = $$specs{txtStockCalliper} if $$specs{txtStockCalliper};
+    }
   }
 
 	return {};
