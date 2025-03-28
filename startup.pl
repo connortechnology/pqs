@@ -25,8 +25,8 @@ use Apache2::Cookie ();
 use Apache2::Upload ();
 
 # The location of Perl modules for this client.
-use lib '/usr/local/share/pqs/perl';
-use lib '/usr/local/share/pqs/perl/API';
+use lib '/var/www/pqs/perl';
+use lib '/var/www/pqs/perl/API';
 
 require eprint::Config;
 require session;
