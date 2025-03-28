@@ -50,18 +50,25 @@ sub calc {
 	# For now we will let the user override the sheet size going through the coater.
 	if ( $specs->{hdnSheetSizeWidth} ) {
 		$sw = $specs->{hdnSheetSizeWidth};
+    delete $$specs{hdnSheetSizeWidth};
 	} else {
 		$specs->{"hdnSheetSizeWidth"} = $sw;
 	}
 	if ( $specs->{hdnSheetSizeHeight} ) {
 		$sh = $specs->{hdnSheetSizeHeight};
+    delete $$specs{hdnSheetSizeHeight};
 	} else {
 		$specs->{"hdnSheetSizeHeight"} = $sh;
 	}
   if ( $specs->{calliper} ) {
     $cal = $specs->{calliper};
+    delete $$specs{calliper};
   } else {
     $specs->{calliper} = $cal;
+  }
+  if (!($sw and $sh)) {
+    $$specs{"hdnBreakdown1"} = 'Please enter the dimensions of the item to be coated.<br/>';
+    return $status;
   }
 
   # Get the Coating type so we know what # pricing to use.
@@ -136,13 +143,14 @@ sub compare_equipment{
 	my ( $pid, $sid, $j, $specs, @eids ) = @_;
 	my @e_prices;
 
+  my $has_equipment_that_fits = 0;
 	foreach my $e (@eids) {
     if ($$specs{'chkOverrideEquipment'.$j->qty_index} and $$specs{'ddmEquipment'.$j->qty_index} and $$specs{'ddmEquipment'.$j->qty_index} != $$e{id}) {
       next;
     }
     if (!fits($j->width, $j->height, $j->calliper, $e)) {
       if ($$specs{'chkOverrideEquipment'.$j->qty_index}) {
-        my $equipment = new openprint::Equipment($e);
+        my $equipment = new openprint::Equipment($$e{id});
         push @e_prices, {
           equipment       => $e,
           breakdown       => "Doesn't fit: " .$equipment->fits($j->width, $j->height, $j->calliper),
@@ -150,6 +158,7 @@ sub compare_equipment{
       }
       next;
     }
+    $has_equipment_that_fits = 1;
 
 		my $min_charge = price($e->{ref}, $j->type.'MinimumCharge');
 		my $make_ready = price($e->{ref}, $j->type.'MakeReady');
@@ -178,6 +187,15 @@ sub compare_equipment{
               breakdown       => $breakdown,
 						};
 	} # end foreach equipment
+
+  if (!$has_equipment_that_fits) {
+    my $breakdown = 'Doesn\'t fit on any equipment:<br/>';
+    foreach my $e (@eids) {
+      my $equipment = new openprint::Equipment($eids[0]{id});
+      $breakdown .= $equipment->name(). ': '.$equipment->fits($j->width, $j->height, $j->calliper). '<br/>';
+    }
+    push @e_prices, { breakdown => $breakdown };
+  }
 
   $openprint::log->error("Prices".Data::Dumper::Dumper(\@e_prices));
   my @prices = sort { 
