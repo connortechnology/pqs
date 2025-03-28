@@ -316,6 +316,12 @@ sub show {
   $variable->{Project} = new openprint::Project($pid);
   $variable->{ServiceType} = $variable->{Project}->ServiceType($sid);
 
+# Display the banner advert.
+  if ( configuration::get_value($r->log, $dbh, 'UsesBanners') ) {
+	  $variable->{BANNER_AD} = eprint::banner::select_banner( $r->log, $dbh, @$variable{qw(cust_id user_id)});
+  }
+
+
   # Display/hide pricing based on customer default.
   $variable->{isServicePricing} = $$openprint::Company{ysnpricingservices};
 
