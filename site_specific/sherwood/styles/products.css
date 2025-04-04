@@ -60,7 +60,9 @@ fieldset input,
 fieldset select,
 div.product input,
 div.product select {
+  /*
 	float: left;
+  */
 	clear: none;
 	display: inline;
 	
