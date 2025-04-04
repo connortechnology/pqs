@@ -24,6 +24,7 @@ sub set_header {
   my ($id, $desc) = @_;
   $dbh->do(q{update categories set header = ? where id = ?},undef,  $desc, $id);
 }
+
 sub set_footer {
   my ($id, $desc) = @_;
   $dbh->do(q{update categories set footer = ? where id = ?},undef,  $desc, $id);
@@ -33,10 +34,6 @@ sub set_productinfo {
   $dbh->do(q{update categories set productinfo = ? where id = ?},undef,  $desc, $id);
 }
 
-
-
-
-
 sub set_active {
   my ($id, $active) = @_;
   $dbh->do(q{update categories set active = ? where id = ?},undef,  $active, $id);
@@ -45,7 +42,6 @@ sub set_parent {
   my ($id, $parent) = @_;
   $dbh->do(q{update categories set parent = ? where id = ?},undef, $parent, $id);
 }
-
 
 sub delete {
   my ($id) = @_;
