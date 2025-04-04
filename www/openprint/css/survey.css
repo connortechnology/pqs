@@ -1,0 +1,47 @@
+table {
+	border: none;
+}
+input[type="radio"] {
+	margin: 0;
+}
+textarea {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+table .Title, table .Description, table .CreatedBy {
+	text-align: left;
+}
+table .questions, table .responses, table .complete {
+	text-align: right;
+	width: 100px;
+}
+
+.View ol li {
+	padding-right: 400px;
+	position: relative;
+	margin: 0 0 20px 0;
+}
+.View ol ul {
+	position: absolute;
+	top:0;
+	right: 0;
+	width: 400px;
+}
+.View ol ul li {
+	padding: 0;
+	margin: 0;
+}
+.View ol ul li label {
+	width: 360px;
+	display: inline-block;
+}
+.Question {
+	height: 100px;
+}
+.Question .text {
+	font-weight: bold;
+}
+.answers {
+}

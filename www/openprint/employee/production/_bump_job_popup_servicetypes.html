@@ -1,0 +1,31 @@
+<? echo (
+	my $html;
+	my @AdditionalServiceTypes = ();
+	foreach my $ServiceType ( $$variable{'Equipment'}->ServiceTypes() ) {
+		next if $ServiceType->name() eq 'NoBindery';
+		next if $ServiceType->id() == $$variable{'Job'}->servicetype_id();
+		next if $ServiceType->name() eq 'Signature' and ! $$variable{'Job'}->servicetype_id();
+		push @AdditionalServiceTypes, $ServiceType;
+	} # end foreach ServiceType
+	if ( @AdditionalServiceTypes ) {
+		$html .= '
+			<p>The equipment supports the following additional services.  Check the box to have a new entry created for that service.</p><br/>
+			<table class="List">
+				<tr><th align="left">Service</th><th width="75">In Docket</th><th width="75">Scheduled</th><th width="50">Copy</th></tr>
+			';
+		foreach my $ServiceType ( @AdditionalServiceTypes ) {
+			$html .= sprintf(q`<tr>
+					<td><label class="radio" for="servicetype_id%1$d">%2$s</label></td>
+					<td align="center">%3$s</td>
+					<td align="center">%4$s</td>
+					<td align="center"><input type="checkbox" name="servicetype_id" id="servicetype_id%1$d" value="%1$d"/></td></tr>
+					`, $ServiceType->id(), $ServiceType->description(),
+					( openprint::Project_Service->find('project_id'=>$$variable{'Job'}->project_id(),'servicetype_id'=>$ServiceType->id()) ? 'Yes' : 'No' ),
+					( openprint::ScheduledJob->find('project_id'=>$$variable{'Job'}->project_id(),'servicetype_id'=>$ServiceType->id()) ? 'Yes' : 'No' ),
+					);
+
+		} # end foreach ServiceType
+		$html .= '</table>';
+	} # end if
+	return $html;
+) ?>

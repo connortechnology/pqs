@@ -1,0 +1,130 @@
+<? if ( $$variable{Signature} ) ?>
+<fieldset id="SignatureGroup<?Signature?>" <? echo ( ( $$variable{Signature} == 1 and ( $$variable{rdbCover} ne 'Different' and $$variable{Backing} ne 'Printed' ) ) 
+? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
+<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ? $$variable{'txtServiceDescription'.$$variable{Signature}} : ( $$variable{Signature} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
+  <div id="templates<?Signature?>" >
+<? echo (
+  if ($$variable{'txtSignatureType'.$$variable{Signature}} eq 'Cover Pages') {
+	  return include('/includes/main/proj/templates/_signatures.html');
+  } elsif ($$variable{'txtSignatureType'.$$variable{Signature}} eq 'Gate Folded Pages') {
+	  return include('/includes/main/proj/templates/_gatefolds.html');
+  }
+) ?>
+  </div>
+<div class="PagesAndSizes">
+	<div>
+		<ul>
+<?if($$variable{Project}->Type()->type() eq 'MultiPage' or $$variable{Project}->Type()->type() eq 'ScratchPads' ) ?>
+		<li id="GroupPageQuantity<?echo($$variable{Signature})?>_container"<?echo( if ($$variable{'OverrideGroupPageQuantity'.$$variable{Signature}} and ! $$variable{'GroupPageQuantity'.$$variable{Signature}} ) { return ' class="error"' }; ) ?>>
+			<label># of Pages</label>
+			<? echo ( join("\n",
+				input( type=>'cardinal', name=>'GroupPageQuantity'.$$variable{Signature}, value=>$$variable{'GroupPageQuantity'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ),
+				write_override( 'OverrideGroupPageQuantity'.$$variable{Signature}, $$variable{'OverrideGroupPageQuantity'.$$variable{Signature}}, '', q`calc('f1');` ),
+			); ) ?>
+		</li>
+    <input type="hidden" name="txtSpreadSize<?Signature?>" value="<?echo($$variable{'txtSpreadSize'.$$variable{Signature}})?>"/>
+		<li class="Description">
+			<label>Description</label>
+			<input type="text" name="txtServiceDescription<?Signature?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{Signature}} ) ?>" />
+		</li>
+<?endif($$variable{Project}->Type()->type() eq 'MultiPage' or $$variable{Project}->Type()->type() eq 'ScratchPads' ) ?>
+		<li class="Dimensions">
+			<label>Flat => Final Size</label>
+			<? echo ( return join("\n",
+				input( type=>'float', id=>'txtWidth'.$$variable{Signature}, name=>'txtWidth'.$$variable{Signature}, value=>$$variable{'txtWidth'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ),
+				'x',
+				input( type=>'float', id=>'txtHeight'.$$variable{Signature}, name=>'txtHeight'.$$variable{Signature}, value=>$$variable{'txtHeight'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ),
+				'=>',
+				input( type=>'float', id=>'txtFinalWidth'.$$variable{Signature}, name=>'txtFinalWidth'.$$variable{Signature}, value=>$$variable{'txtFinalWidth'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ),
+				'x',
+				input( type=>'float', id=>'txtFinalHeight'.$$variable{Signature}, name=>'txtFinalHeight'.$$variable{Signature}, value=>$$variable{'txtFinalHeight'.$$variable{Signature}}, oninput=>'calc(this.form.name);' ),
+				write_override( 'chkOverrideDimensions'.$$variable{Signature}, $$variable{'chkOverrideDimensions'.$$variable{Signature}}, '', q`calc('f1');` ),
+			); ) ?>
+		</li>
+		</ul>
+	</div>
+	<div class="SignatureOptions">
+		<div id="PresentationFolderQuestions<?Signature?>" <? echo (
+			($$variable{'rdbTemplateType'.$$variable{Signature}} and 
+			 sets::isin( $$variable{'rdbTemplateType'.$$variable{Signature}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] )
+			) ? '' : 'style="display:none;"' ) ?>>
+	<? echo (
+		if ( $$variable{Signature} == 1 ) {
+			return include('/includes/main/proj/presentation_folder_printing.html' );
+		} # end if
+		return;
+	) ?>
+		</div>
+		<ul>
+<? if ( $$variable{Signature} == 1 or $$variable{Signature} == 2 ) ?>
+<input type="hidden" name="txtSignatureType<?Signature?>" value="<? echo ( $$variable{'txtSignatureType'.$$variable{Signature}} ) ?>" />
+<? else ( $$variable{Signature} == 1 or $$variable{Signature} == 2 ) ?>
+		<li>
+			<label>Signature Type</label>
+      <select name="txtSignatureType<?Signature?>" on_change_this="signature_type_change">
+<? echo (
+	my @options = (
+		'unknown', 'Please select',
+		'Cover Pages', 'Cover Pages',
+		'Interior Pages',	'Interior Pages',
+		'Gate Folded Pages', 	'Gate Folded Pages',
+		'PerfReplyCard',	'Perforated Reply Card',
+		);
+		make_drop_down( \@options, $$variable{'txtSignatureType'.$$variable{Signature}} );
+) ?>
+			</select>
+		</li>
+<? endif ( $$variable{Signature} == 1 or $$variable{Signature} == 2 ) ?>
+		<li>
+			<label>Customer supplied?</label>
+			<? echo ( radio( 'pages_supplied'.$$variable{Signature},
+						[ 'Y', 'Yes', 'N', 'No' ],
+						$$variable{'pages_supplied'.$$variable{Signature}},
+						{
+							default=>'N', 
+							onclick=>qq`if(this.value=='Y'){\$('Inks$$variable{Signature}').hide();\$('SuppliedFormat$$variable{Signature}').show();\$('BleedsColourBars$$variable{Signature}').hide();}else{\$('Inks$$variable{Signature}').show();\$('SuppliedFormat$$variable{Signature}').hide();\$('BleedsColourBars$$variable{Signature}').show();}`
+						}
+				); ) ?>
+		</li>
+		<li id="SuppliedFormat<?Signature?>" <? echo ( $$variable{'pages_supplied'.$$variable{Signature}} eq 'Y' ? '' : 'style="display:none;"' ) ?>>
+			<label>Supplied format</label>
+			<? echo ( radio( 'supplied_format'.$$variable{Signature}, [ 'Sheets', 'Flat Sheets', 'Folded', 'Folded Pages' ], $$variable{'supplied_format'.$$variable{Signature}}, { default=>'Sheets' } ); ) ?>
+		</li>
+		<?include(_press_proof_approval.html)?>
+		</ul>
+	</div><!--SignaturOptions-->
+</div><!--PagesAndSizes-->
+	<? echo (
+		my $html .= slurp_content( '/includes/main/proj/colours_coatings.html' );
+    $html .= '<div class="BleedsColourBarsStockOverrides">';
+		$html .= slurp_content( '/includes/main/proj/bleeds_colourbars.html' );
+		$html .= slurp_content( '/includes/main/proj/paper_dropdowns.html' );
+		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+			$html .= slurp_content( '/main/project/prin/_overrides.html' );
+		} # end if
+    $html .= '</div>';
+
+		return variable_substitution( \$html, $variable );
+	) ?>
+<hr class="spacer"/>
+<div class="Quantities">
+	<ul>
+	<li>
+		<label>Quantity</label>
+		<? echo ( my $html;
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				$html .= '<span class="'.$$variable{Columns}.'Columns">';
+				$html .= input( type=>'cardinal', id=>'txtQuantity'.$qty_index.$$variable{Signature}, name=>'txtQuantity'.$qty_index.$$variable{Signature}, value=>$$variable{'txtQuantity'.$qty_index.$$variable{Signature}}, oninput=>'calc(this.form.name);' );
+				$html .= '</span>';
+			} # end foreach qty_index
+			return $html;
+		) ?>
+	</li>
+	</ul>
+</div>
+<? echo ( join("\n",
+			button( 'CopySignature'.$$variable{Signature}, { onclick=>qq`copy_group($$variable{Signature});`, text=>'Copy Signature Group' } ),
+			button( 'DelSignature'.$$variable{Signature}, { onclick=>qq`remove_group($$variable{Signature});`, text=>'Remove Signature Group' } ),
+); ) ?>
+</fieldset>
+<? endif ( $$variable{Signature} ) ?>

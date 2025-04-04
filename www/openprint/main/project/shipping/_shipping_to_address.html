@@ -1,0 +1,109 @@
+<fieldset><legend>To</legend>
+	<div class="Address">
+       <ul>
+        <li class="to_company"><label>Company</label>
+			<input type="text" onkeyup="filter_companies('to_company_id', {name:this.value,selected_id:get_ddm_value($('to_company_id'))});" onkeydown="if(event.keyCode==13){this.form.to_company_id.onchange();}"class="filter" />
+            <select id="to_company_id" name="to_company_id" onchange="new Ajax.Request('_select_company.json', { parameters: { to_from: 'To', company_id: this.value } } );">
+                <option value="">select</option>
+                <? echo (
+					if ( ! exists $$variable{to_company_id} ) {
+                        if ( ! $$variable{ToCompanyName} ) {
+                            $$variable{to_company_id} = $session{company_id};
+                        } else {
+                            my $Company = openprint::Company->find_one( 'name ilike' => $$variable{ToCompanyName} );
+                            if ( $Company ) {
+                                $$variable{to_company_id} = $Company->id();
+                            } # end if
+                        } # end if
+                    } # end if
+					make_drop_down( openprint::Company->dropdown( or => { supplier=>'Y', id => $session{company_id} } ), $$variable{to_company_id} );
+				) ?>
+            </select>
+        </li>
+		<li class="to_location"><label>Saved Addresses</label>
+		<? echo ( 
+			my @Locations = openprint::Location->find( type=>'place', company_id=> $$variable{to_company_id} );
+			my $Company = new openprint::Company( $$variable{to_company_id} );
+
+			if ( ( ! @Locations ) and $Company->postalcode() ) {
+				my $Location = openprint::Location->find( type=>'place', postalcode=>$Company->postalcode() );
+				if ( ! $Location ) {
+					$Location = openprint::Location::save_location( {
+						company_id	=> $$variable{to_company_id},
+						postalcode	=> $Company->postalcode(),
+						address		=> join(' ', $Company->address1(), $Company->address2(), ),
+						state		=>	$Company->state(),
+						country		=>	$Company->country(),
+						location	=>	$Company->name(),
+					} );
+					push @Locations, $Location if $Location;
+
+				} # end if
+			}
+
+			ssi::select(
+				[ map { $_->id(), $_->name() . ' @ ' . join(', ', $_->address(), map { $_->name() } $_->Parents() ) } @Locations ],
+			$$variable{to_location_id}, 
+			{
+				name	=>	'to_location_id', 
+				prepend	=>	[ '', 'select' ],
+				onchange=>	q`select_location('To',this.value);`,
+			},
+		 ); ) ?>
+		</li>
+	</ul>
+
+	
+	<ul>
+	<li> 
+		<label>Company</label>
+		<input type="text" id="ToCompanyName" name="ToCompanyName" value="<?ToCompanyName?>" oninput="calc(this.form.name);"/> 
+	</li>
+	<li> 
+		<label>Location</label>
+		<input type="text" id="ToLocation" name="ToLocation" value="<?ToLocation?>" oninput="calc(this.form.name);"/> 
+	</li>
+	<li> 
+		<label>Address</label>
+		<input type="text" id="ToAddress1" name="ToAddress1" value="<?ToAddress1?>" oninput="calc(this.form.name);" /><br/>
+		<input type="text" id="ToAddress2" name="ToAddress2" value="<?ToAddress2?>" oninput="calc(this.form.name);" /> 
+	</li>
+	<li> 
+		<label>City</label>
+		<input type="text" id="ToCity" name="ToCity" value="<?ToCity?>" oninput="calc(this.form.name);"/> 
+	</li>
+	<li> 
+		<label>Country</label>
+		<select id="ToCountry" name="ToCountry" oninput="Country_oninput(this, this.form.ToStateProvince);calc(this.form.name);">
+		<option value=""> Select </option>
+		<? echo ( return_countries( $$variable{ToCountry} ); ) ?>
+		</select>
+	</li>
+	<li> 
+		<label><span id="ToCountry_state">State/Province</span></label>
+		<span id="ToStateProvince_container">
+		<select name="ToStateProvince" id="ToStateProvince" oninput="calc(this.form.name);">
+		<option value=""> Select </option>
+		<? echo ( return_states_and_provinces( $$variable{ToStateProvince} ); ) ?>
+		</select>
+		</span>
+	</li>
+	<li> 
+		<label><span id="ToCountry_postal">Zip/Postal Code</span></label>
+		<input type="text" id="ToPostalCode" name="ToPostalCode" value="<?ToPostalCode?>" oninput="calc(this.form.name);"/>
+	</li>
+	<li> 
+		<label>Phone</label>
+		<input type="tel" id="ToPhone" name="ToPhone" value="<?ToPhone?>" oninput="calc(this.form.name);"/>
+	</li>
+	<li> 
+		<label>Fax</label>
+		<input type="tel" id="ToFax" name="ToFax" value="<?ToFax?>" oninput="calc(this.form.name);"/>
+	</li>
+	<li> 
+		<label>Email</label>
+		<input type="email" id="ToEmail" name="ToEmail" value="<?ToEmail?>" oninput="calc(this.form.name);"/>
+	</li>
+	</ul>
+	</div>
+</fieldset>

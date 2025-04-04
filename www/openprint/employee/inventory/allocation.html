@@ -1,0 +1,17 @@
+<div class="Allocation">
+	<form name="f1" id="f1" action="allocation.html?allocation_id=<? echo ( $$variable{Allocation}->id() ) ?>" method="post">
+		<input type="hidden" name="action" id="action" />
+<p class="buttons"><? echo (  join("\n",
+	button( 'Back', { href=>'allocations.html' } ),
+	button( 'Delete', { onclick=>q`$('action').value='Delete';$('f1').submit();` } ),
+); ) ?></p>
+	<div>
+		<ul>
+			<li><label>Stock</label><? echo ( $$variable{Allocation}->Stock()->link_to() ) ?></li>
+			<li><label>Docket</label><a href="/employee/project/view.html?docket=<? echo ( $$variable{Allocation}{docket} ) ?>"><? echo ( $$variable{Allocation}{docket} ) ?></a></li>
+			<li><label>Allocated On</label><?echo(format_datetime( $$variable{Allocation}{created_on} ) ) ?></li>
+			<li><label>Allocated By</label><?echo($$variable{Allocation}->User()->name())?></li>
+		</ul>
+	</div>	
+	</form>
+</div>

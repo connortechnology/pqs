@@ -1,0 +1,38 @@
+<? eval (
+	@{$$variable{'Stocks'}} = ();
+	foreach my $Stock ( openprint::Paper::sort( openprint::Paper->find( 
+			owner_id		=> $config{owner_id},
+			( $session{'/administrator/equipment/edit.html?Group'} ? ( group_id	=> $session{'/administrator/equipment/edit.html?Group'} ) : () ),
+			( $session{'/administrator/equipment/edit.html?Manufacturer'} ? ( manufacturer_id => $session{'/administrator/equipment/edit.html?Manufacturer'} ) : () ),
+			( $session{'/administrator/equipment/edit.html?Name'} ? ( name_id => $session{'/administrator/equipment/edit.html?Name'} ) : () ),
+			( $session{'/administrator/equipment/edit.html?Finish'} ? ( finish_id => $session{'/administrator/equipment/edit.html?Finish'} ) : () ),
+			( $session{'/administrator/equipment/edit.html?Colour'} ? ( colour_id => $session{'/administrator/equipment/edit.html?Colour'} ) : () ),
+			( $session{'/administrator/equipment/edit.html?Weight'} ? ( weight_id => $session{'/administrator/equipment/edit.html?Weight'} ) : () ), 
+			( $session{'/administrator/equipment/edit.html?material_id'} ? ( material_id => $session{'/administrator/equipment/edit.html?material_id'} ) : () ), 
+			( $session{'/administrator/equipment/edit.html?Types'} ? ( type	=> [ split(',', $session{'/administrator/equipment/edit.html?Types'} ) ] ) : () ),
+		) ) ) {
+		next if ( ! $Stock->recommendations() );
+		next if $$variable{Equipment}->Stock_Setting( $Stock );
+		push @{$$variable{'Stocks'}}, $Stock;
+	} # end foreach
+) ?>
+<? if ( @{$$variable{'Stocks'}} ) ?>
+	<table class="List sortable">
+		<thead>
+			<tr>
+				<th class="description">Description</th>
+				<th class="buttons">&nbsp;</th>
+			</tr>
+		</thead>
+		<tbody>
+<? while ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
+	<tr id="stock_<? echo ( $$variable{'Stock'}->id() ) ?>">
+		<td class="description"><? echo ( $$variable{'Stock'}->to_string() ) ?></td>
+		<td class="buttons"><? echo ( button('add_stock_setting_'.$$variable{'Stock'}->id(), { onclick=>"add_stock_setting( $$variable{Stock}{id} );", text=>'Add' } ); ) ?></td>
+	</tr>
+<? endwhile ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
+		</tbody>
+	</table>
+<? else ( @{$$variable{'Stocks'}} ) ?>
+There were no matching stocks.
+<? endif ( @{$$variable{'Stocks'}} ) ?>

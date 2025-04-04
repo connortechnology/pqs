@@ -1,0 +1,152 @@
+<?include(/includes/error_reporting.html)?>
+<script type="text/javascript" src="<?hash_link('/employee/accounting/credit.js')?>"></script>
+<form id="f1" name="f1" method="post" action="credit.html" enctype="multipart/form-data">
+	<fieldset class="filters"><legend>Select Company</legend>
+		<ul>
+		<li>
+			<label>Account #</label>
+			<input type="text" name="txtSearchAccountNum" />
+			<? echo ( button( 'Go1', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
+		</li>
+		<li>
+			<label>Customer</label>
+            <input type="text" oninput="filter_companies(f1.ddmCustomer, { name: this.value } );" class="filter"/>
+			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
+            <option value="">Select a Customer</option>
+			<? echo ( make_drop_down( openprint::Company->dropdown( 'last_ordered_on is null'=>0), $param{ddmCustomer} ); ) ?>
+            </select>
+            <? echo ( button( 'Go2', { onclick=>q`f1.btnFunction.value='Go';fmCheck(f1);`, text=>'Go' } ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+					input( name=>'import', id=>'import', type=>'file' ),
+					button('Import',{ onclick=>q`var form = $('f1');form.btnFunction.value='Import';form.submit();` } ),
+					button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';form.submit();` } ),
+					); ) ?>
+		</p>
+	</fieldset>
+<? if ( $$variable{CompanyIndex} ) ?>
+	<fieldset>
+	<?include(/account/_sales_edit.html)?>
+	<?include(/includes/_credit_edit.html)?>
+	<p class="buttons">
+		<? echo ( join("\n",
+			button( 'Save', { onclick=>"if(!f1.ddmCustomer.value){alert('Please select a customer');}else{f1.btnFunction.value='Save';f1.submit();};" } ),
+			button( 'Reset', { onclick=>"f1.reset();" } ),
+			); ) ?>
+    </p>
+</fieldset>
+<fieldset><legend>Unpaid Orders</legend>
+<? eval (
+	my %Order_Statuses = map { $_->name(), $$_{id} } openprint::Order_Status->find();
+	$$variable{UnpaidOrders} = [ openprint::Order->find(
+		company_id	=> $param{ddmCustomer},
+		'status_id not in'	=>	[ @Order_Statuses{'Cancelled','Deleted','Incomplete'} ],
+		'owing null_or_>'	=>	0,
+		order		=> $openprint::Order::fields{created_on},
+		) ];
+
+	if ( @{$$variable{UnpaidOrders}} ) {
+		my @Order_Invoices = openprint::Order_Invoice->find(order_id=>[ map { $$_{id} } @{$$variable{UnpaidOrders}} ] );
+		my %Invoices_By_OrderId = misc::make_hash_from_array( 'order_id', @Order_Invoices );
+		my @invoice_ids = map { $$_{invoice_id} } @Order_Invoices;
+
+		my %Invoices_by_id = map { $$_{id}, $_ } openprint::Invoice->find(id=>\@invoice_ids) if @invoice_ids;
+		foreach my $OI ( @Order_Invoices ) {
+			$$OI{Invoice} = $Invoices_by_id{$$OI{invoice_Id}};
+		}
+
+		my %invoice_ids = ();
+		foreach my $Order ( @{$$variable{UnpaidOrders}} ) {
+			$$Order{Invoices} = $Invoices_By_OrderId{$$Order{id}} ? $Invoices_By_OrderId{$$Order{id}} : [];
+		}
+	}
+) ?>
+<? if ( @{$$variable{UnpaidOrders}} ) ?>
+	<table class="List">
+		<tr> 
+			<th class="order_id">Order ID</th>
+			<th class="Docket">Docket</th>
+			<th class="invoice_id">Invoice #</th>
+			<th class="po_id">P.O. #</th>
+			<th class="Date">Date</th>
+			<th class="Status">Status</th>
+			<th class="Price">Total</th>
+			<th class="Price">Balance</th>
+			<th class="checkbox"><input type="checkbox" onclick="select_all(this.form,'PAID',this.checked);"/></th>
+		</tr>
+		<? echo (
+			my $rowclass;
+			my $balance_total = 0;
+			my $total_total = 0;
+			my $html;
+
+			my $ac = sql::start_transaction($dbh);
+			foreach my $Order ( @{$$variable{UnpaidOrders}} ) {
+				next if ! $Order->owing();
+				$html .= sprintf('
+				<tr%1$s> 
+					<td class="order_id"><a href="/main/order/history_details.html?order_id=%2$d">%2$d</a></td>
+					<td class="Docket"><a href="/main/order/history_details.html?order_id=%2$d">%3$d</a></td>
+					<td class="invoice_id">%5$s</td>
+					<td class="po_id">%6$s</td>
+					<td class="Date">%4$s</td>
+					<td class="Status">%9$s</td>
+					<td class="Price">%7$s</td>
+					<td class="Price">%8$s</td>
+					<td class="checkbox"><input type="checkbox" name="PAID" value="%2$d"/></td>
+				</tr>
+				', $rowclass, $Order->id(), $Order->docket(), 
+					format_date($Order->created_on()),
+					join('<br/>', map { $_->Invoice()->link_to() } $Order->Invoices()), $Order->po(), 
+					openprint::Currency::format($Order->total()),
+					openprint::Currency::format($Order->owing()),
+					$Order->status(),
+					);
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+					$balance_total += $Order->owing();
+					$total_total += $Order->total();
+			} # end foreach Order
+			sql::end_transaction( $dbh, $ac );
+			$html .= sprintf('<tr class="totals">
+				<td colspan="2">%d Orders</td>
+				<td colspan="4">Totals</td>
+				<td class="Price">%s</td>
+				<td class="Price">%s</td>
+				<td></td>
+			</tr>',
+			scalar @{$$variable{UnpaidOrders}},
+			openprint::Currency::format($total_total),
+			openprint::Currency::format($balance_total),
+			);
+			return $html;
+		) ?>
+	</table>
+<p class="buttons">
+<?echo(join("\n",
+			button( 'Pay', { onclick=>'click_pay();'} ),
+			button( 'Cancel', {onclick=>'click_cancel();'} ),
+);)?>
+</p>
+<? else ( @{$$variable{UnpaidOrders}} ) ?>
+There are no unpaid orders.
+<? endif ( @{$$variable{UnpaidOrders}} ) ?>
+</fieldset>
+<fieldset><legend>Credit Change History</legend>
+	<table class="List">
+		<tr><th class="DateTime">When</th><th class="User">Who</th><th class="note">Note</th></tr>
+<? echo ( my $html;
+	foreach my $Log ( openprint::Log->find(action_id=>[104,105], object_type=>'openprint::Company', object_id=>$$variable{CompanyIndex}, order=>'id desc',limit=>5 ) ) {
+		$html .= sprintf(q`<tr><td class="DateTime">%s</td><td class="User">%s</td><td class="note">%s</td></tr>`,
+			 format_datetime( $Log->date_time() ),
+			$Log->User()->name(), $Log->note(),
+		);
+	} # end foreach Log
+	return $html;
+) ?>
+	</table>
+</fieldset>
+<? endif ( $$variable{CompanyIndex} ) ?>
+	<input type="hidden" name="btnFunction"/>
+</form>

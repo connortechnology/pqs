@@ -1,0 +1,18 @@
+<? echo (
+	require openprint::Survey_Question;
+	my $Question = openprint::Survey_Question->find_one(
+		( $session{user_id} ? ( 'user_id does not contain'=>$session{user_id} ) : () ),
+		);
+	return 'No more questions.' if ! $Question;
+	
+	my $html = '<ul>'.$Question->html().'</ul>';
+	$html .= input( type=>'hidden', name=>'question_id', value=>$$Question{id} );
+	$html .= '<p class="buttons">';
+	if ( $session{user_id} ) {
+		$html .= button('SubmitLatestSurvey', { onclick=>qq`new Ajax.Updater('latest_survey', '/survey/_latest_survey_question.html', { parameters: \$('survey_form').serialize() } );`, text=>'Submit' } );
+	} else {
+		$html .= button('SubmitLatestSurvey', { onclick=>q`$('survey_form').submit();`, text=>'Submit' } );
+	} # end if
+	$html .= '</p>';
+	return $html;
+) ?>

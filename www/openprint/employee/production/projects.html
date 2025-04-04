@@ -1,0 +1,123 @@
+<script type="text/javascript">
+	function load_projects( form ) {
+		if ( ! form ) form = $('f1');
+		$('ProjectList').innerHTML = 'Loading... please wait.';
+		new Ajax.Updater('ProjectList','/employee/production/_project_list.html', { parameters: form.serialize() } );
+	} // end function
+</script>
+<form id="f1" name="f1" method="post" action="projects.html">
+	<fieldset class="filters"><legend>Enter Docket #</legend>
+		<ul>
+		<li>
+			<label>Docket #</label>
+			<? echo ( join(' ',
+						input(type=>'cardinal',id=>'StartDocket',name=>'StartDocket',
+							value=>( $$variable{StartDocket} ? $$variable{StartDocket} : $param{StartDocket} ), 
+							autofocus=>1, onkeydown=>'if(event.keyCode == 13){load_projects();}' ),
+						'to',
+						input(type=>'cardinal',id=>'EndDocket',name=>'EndDocket',value=>$$variable{EndDocket}, onkeydown=>'if(event.keyCode == 13){load_projects();}'),
+						button( 'Go', { onclick=>q`load_projects();` } ),
+			); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	<fieldset class="filters"><legend>Search Information</legend>
+		<ul>
+			<li>
+				<label>Company</label>
+				<input type="text" oninput="filter_companies(f1.ddmCustomer, {name:this.value,selected_id:get_ddm_value(f1.ddmCustomer)});" class="filter" onkeydown="if(event.keyCode == 13){load_projects();}" />
+				<select name="ddmCustomer" onchange="load_projects();">
+					<option value="">All Companies</option>
+					<? echo ( make_drop_down( openprint::Company->dropdown('last_order_id is null'=>0), $session{'/employee/production/projects.html?ddmCustomer'} ); ) ?>
+				</select>
+				<? echo ( button( 'CompanyGo', { onclick=>'load_projects();', text=>'Go' } ); ) ?>
+			</li>
+			<li>
+				<label>Operator</label>
+				<select name="ddmEmployee" size="1" onchange="load_projects();">
+					<option value="">All Employees</option>
+		<? echo (
+			make_drop_down( openprint::User->dropdown( 'usergroup any'=>['Prepress'], type=>['E','A'], company_id=>$config{owner_id} ),
+			$session{'/employee/production/projects.html?dmEmployee'} );
+		)?>
+					</select>
+			</li>
+			<li>
+				<label>Sales Rep</label>
+				<select name="ddmSalesRep" size="1" onchange="load_projects();">
+					<option value="">All Employees</option>
+		<? echo (
+			$session{'/employee/production/projects.html?ddmSalesRep'} = $session{user_id} if ! $session{'/employee/production/projects.html?ddmSalesRep'};
+			my @Users = openprint::User->find( order=>'lower(firstname),lower(lastname)', type=>['E','A'],'usergroup any'=>['Sales'], company_id=>$config{owner_id} );
+			if ( ! sets::isin( $session{'/employee/production/projects.html?ddmSalesRep'}, [ map { $_->id() } @Users ] ) ) {
+				$session{'/employee/production/projects.html?ddmSalesRep'} = '';
+			} # end if
+			make_drop_down( [ map { $_->id(), $_->name() } @Users ], $session{'/employee/production/projects.html?ddmSalesRep'} );
+		) ?>
+				</select>
+			</li>
+			<li>
+			<label>Project Status</label>
+			<select name="ProjectStatus" multiple="multiple" size="6" onchange="load_projects();">
+		<? echo (
+				my @statuses = (
+					'Pending Deposit',
+					'In Prepress',
+					'Proofs Out',
+					'Waiting For Customer Approval',
+					'Waiting For QA Approval',
+					'Approved',
+					'Printed',
+					'Complete',
+					'Waiting For Pickup',
+					'Picked Up',
+					'Shipped',
+					);
+
+				my @status_filter = split(',', $session{'/employee/production/projects.html?ProjectStatus'} );
+
+				if ( ! @status_filter ) {
+					if ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) {
+						@status_filter = ( 'In Prepress', 'Proofs Out' );
+					} elsif ( openprint::usergroup::is_user_in( ['Press'], $session{'user_id'} ) ) {
+						@status_filter = ( 'Approved' );
+					} elsif ( openprint::usergroup::is_user_in( ['Bindery'], $session{'user_id'} ) ) {
+						@status_filter = ( 'Printed' );
+					} else {
+						@status_filter = @statuses;
+					} # end if
+					$session{'/employee/production/projects.html?ProjectStatus'} = join(',',@status_filter );
+				} # end if
+				return make_drop_down( [ map { $_, $_ } @statuses ], \@status_filter );
+		) ?>
+					</select>
+			</li>
+			<li>
+				<label>Press</label>
+				<select name="ddmPress" onchange="load_projects();">
+					<option value="">All Presses</option>
+		<? echo (
+				make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing', order=>'lower(strname)' ) ], $session{'/employee/production/projects.html?ddmPress'} );
+		) ?>
+				</select>
+			</li>
+			<li>
+				<label>Due Date</label>
+		<? echo ( join(' to ',
+					date_select_session( $r->uri(), 'due_date_start', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ),
+					date_select_session( $r->uri(), 'due_date_end', { onchange=>'load_projects();', with_today=>1, with_clear=>1 } ),
+		); ) ?>
+			</li>
+			<li><label>Contains</label>
+				<? echo ( ssi::select( openprint::ServiceType->dropdown(order=>'lower(name)'), $session{$r->uri().'?servicetype_id'}, { name=>'servicetype_id', prepend=>['','All'], onchange=>'load_projects();' } ); ) ?>
+			</li>
+			<li><label>COD?</label><?echo(radio('cod', [ 'Y', 'Yes','N','No','','Both' ], $session{$r->uri().'?cod'}, { onclick=>'load_projects();' } );)?></li>
+		</ul>
+		<p class="buttons">
+			<? echo ( button('ShowResults', { onclick=>'load_projects();', text=>'Show Results'} ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<br/>
+<div id="ProjectList"><?include('_project_list.html')?></div>
+<script type="text/javascript">document.f1.StartDocket.focus();</script>

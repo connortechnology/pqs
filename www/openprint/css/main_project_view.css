@@ -1,0 +1,16 @@
+.buttons {
+  display: flex;
+  justify-content: space-between;
+
+}
+.buttons .left {
+  margin-right: auto;
+}
+.buttons .right {
+  margin-left: auto;
+}
+@media print {
+  .buttons {
+    display: none;
+  }
+}

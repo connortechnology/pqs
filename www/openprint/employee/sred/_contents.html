@@ -1,0 +1,20 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<ul>
+<? echo (
+	my $html = '';
+	my @Contents = $$variable{'Project'}->Contents( 'order'=>'id');
+	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/sred/_content_view.html' );
+	foreach my $C ( @Contents ) {
+		$$variable{'C'} = $C;
+$html .= '<li id="content-'.$$variable{'C'}{'id'}.'">';
+		$html .= ssi::variable_substitution( \$content, $variable );
+$html .= '</li>';
+	} # end foreach tag_id
+	$$variable{'C'} = new openprint::SRED_Content();
+$html .= '<li id="content-'.$$variable{'C'}{'id'}.'">';
+	$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/sred/_content_edit.html' );
+	$html .= ssi::variable_substitution( \$content, $variable );
+$html .= '</li>';
+	return $html;
+) ?>
+</ul>

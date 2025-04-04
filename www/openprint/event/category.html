@@ -1,0 +1,68 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+<script type="text/javascript">
+	tinyMCE.init({
+		mode : "textareas",
+		theme : "advanced"
+	});
+</script>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<div class="ArticleCategory"><div class="Edit">
+<form name="f1" id="f1" action="category.html" method="post" enctype="multipart/form-data">
+	<fieldset class="filters">
+		<ul>
+			<li><label>Category</label>
+				<select name="category_id" id="category_id" onchange="f1.btnFunction='';f1.submit();">
+					<option value="">select</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Article_Category->find('order'=>'lower(name)') ], $param{'category_id'} ); ) ?>
+				</select>
+			</li>
+		</ul>
+	</fieldset>
+	<fieldset><legend></legend>
+		<? if ( $$variable{'Category'}->deleted() ) ?>
+		<span class="warning">This category has been deleted</span>
+		<? endif ( $$variable{'Category'}->deleted() ) ?>
+		
+		<div class="leftColumn">
+			<div class="content">
+				<ul>
+					<li><label>ID</label><? echo ( $$variable{'Category'}->id() ) ?></li>
+					<li><label>Name</label>
+						<input type="text" id="name" name="name" value="<? echo ( $$variable{'Category'}->name() ) ?>" />
+					</li>
+					<li><label>Position</label>
+						<input type="text" id="position" name="position" value="<? echo ( $$variable{'Category'}->position() ) ?>" />
+					</li>
+					<li>
+						<label for="description">Description</label>
+						<textarea cols="" id="description" name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->description() ) ?></textarea>
+					</li>
+					<li><label>Image Filename</label>
+						<input type="text" id="image_filename" name="image_filename" value="<? echo ( $$variable{'Category'}->image_filename() ) ?>" />
+					</li>
+					<li>
+						<label for="image">Image Upload</label><input type="file" id="filename" name="filename"/>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="rightColumn">
+			<? if ( $$variable{'Category'}->image_filename() ) ?>
+				<img src="<? echo ( $$variable{'Category'}->image_filename() ) ?>" alt="" />
+			<? endif ( $$variable{'Category'}->image_filename() ) ?>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				if ( $$variable{'Category'}->id() ) {
+				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Destroy' );
+				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>
+</div></div>

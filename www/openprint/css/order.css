@@ -1,0 +1,265 @@
+
+/*
+.Order {
+	max-width: 1024px;
+}
+.Order ul {
+}
+.Order li {
+	text-align: left;
+	padding: 0 0 0 130px;
+}
+
+.Order li label:not(.radio):not(.radio-inline) {
+	padding: 0;
+	margin: 0 0 0 -130px;
+	text-align: left;
+	width: 125px;
+	float: left;
+}
+*/
+.Order li input[type="tel"],
+.Order li input[type="email"],
+.Order li input[type="text"]:not(.filter) {
+	width: 95%;
+}
+.Order .Information li select {
+	width: 97%;
+}
+.Order li.RequiredBy select {
+	width: auto;
+}
+.Order li textarea {
+	width: 85%;
+}
+.Order .Header {
+	width: 100%;
+    border-bottom: 1px solid #000088;
+    margin-bottom: 5px;
+display: flex;
+align-items: stretch;
+}
+.Order .Header div {
+flex: 1;
+}
+.Order #Contents:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+.Order div.Header div > fieldset {
+/*
+	border-left: none;
+    border-right: none;
+    border-bottom: none;
+*/
+    margin-bottom: 0;
+    text-align: left;
+height: 100%;
+}
+.Order div.Header #Information {
+	width: 49%;
+}
+.Order div.header #Information:after {
+	content: ".";
+	display: block;
+	height: 0;
+	font-size: 0;
+	clear: both;
+	visibility: hidden;
+}
+
+.Order div.Header #ContactInformation {
+	width: 49%;
+	float: right;
+}
+.Order div.Header #BillingInformation {
+	width: 49%;
+	float: left;
+}
+.Order div.Header #OrderInformation {
+	width: 49%;
+	float: right;
+}
+.Order div.Header fieldset#OrderedBy {
+float: right;
+}
+
+.Order #Totals {
+	float: right;
+}
+.Order div.Information #Totals {
+	display: none;
+}
+.Order #Totals ul li {
+	text-align: right;
+}
+.Order #Totals ul li label {
+text-align: right;
+}
+.Order #AdminOptions {
+    float: left;
+}
+#Totals {
+  width: 300px;
+}
+#Totals li {
+  padding-left: 185px;
+}
+#Totals li.error {
+	padding-left: 0;
+}
+
+#Totals li label {
+  float: left;
+  margin-left: -185px;
+  width: 185px;
+}
+
+
+.Currency {
+	float: right;
+	font-weight: bold;
+}
+
+.Order .Project {
+	padding: 5px;
+}
+.Order .Project:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+.Order .Project h3 {
+	width: 49%;
+	float: left;
+}
+h3 a {
+color: white;
+}
+.Order .Project p.buttons {
+	width: 100%;
+/*
+	float: right;
+*/
+}
+
+.Order .Project div.Header div.Summary {
+	float: left;
+	width: 48%;
+}
+.Order .Project div.Header div.Summary li {
+	padding: 0;
+text-align: left;
+}
+.Order .Project div.Header div.Information {
+	float: right;
+	width: 48%;
+}
+.Order .Project div.Header div.Information ul li.project_id {
+	display: none;
+}
+.Order .Project div.PrintingFinishing, div.Order div.project div.Delivery {
+	display: none;
+}
+.Order #ShippingInformation {
+	float: right;
+	width: 49%;
+}
+.Order .ShippingInformation, .Order .ShippingQuestions {
+	float: left;
+	width: 100%;	
+}
+
+.Order .Project div.ShippingQuantity {
+	float: right;
+	width: 49%;
+}
+.Order .Project div.ShippingAddress {
+	float: left;
+	width: 49%;
+}
+.Order div.same_as_billing {
+    margin-top: -20px;
+    margin-right: 10px;
+    text-align: right;
+	float: right;
+	padding: 0px 5px 0px 5px;
+}
+.Order div.same_as_billing label {
+	float: none;
+	margin: 0px;
+	width: auto;
+	
+}
+
+.Order .Project #ProjectInformation {
+	width: 50%;
+	float: left;
+}
+#txtPurchaseOrder {
+	width: 70%;
+}
+.Order .Project .price {
+	width: 85px;
+	text-align: right;
+}
+.Order .Project .service {
+	width: 100px;
+	text-align: left;
+}
+
+table .Date {
+	text-align: left;
+}
+.quantity {
+	text-align: left;
+	width: 75px;
+}
+#invoice_id {
+	width: 200px;
+}
+.Payments .Price {
+	width: 160px;
+}
+.Payments .Price input {
+	width: 80px;
+}
+.Payments .actions {
+	width: 50px;
+}
+.Payments .DateTime {
+	width: 220px;
+	text-align: left;
+}
+.Payments .payment_id {
+	text-align: left;
+	width: 75px;
+}
+.Payments .type {
+	text-align: left;
+	width: 80px;
+}
+table .project_id {
+	width: 75px;
+	text-align: left;
+}
+table .Price {
+	width: 95px;
+	text-align: right;
+}
+table .description {
+	text-align: left;
+}
+.Order li.amount input[type=text],
+.Order li.amount input[type=number] {
+	width: 150px;
+}
+.reference p {
+	padding: 0;
+}

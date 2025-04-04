@@ -1,0 +1,52 @@
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js)?>"></script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<ul>
+			<li><label>Sets of Numbers</label>
+				<? echo ( input( type=>'cardinal', id=>'SetsOfNumbers', name=>'SetsOfNumbers', value=>$$variable{SetsOfNumbers}, oninput=>'calc(this.form.name);' ); ) ?>
+			</li>
+			<li><label>Colour</label>
+				<select name="colour" id="colour" onchange="calc(this.form.name);">
+					<? echo (
+						my @options = (
+							'', 'select',
+							'Black','Black',
+							'Red', 'Red Ink',
+							'Process', '4 Colour Process',
+							);
+						make_drop_down( \@options, $$variable{colour} );
+					) ?>
+				</select>
+			</li>
+			</ul>
+			<? echo (
+				my $html = '';
+				foreach my $ss_id ( $$variable{Project}->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $ss_id );
+					$$variable{SignatureIndex} = $$sig_specs{SignatureIndex};
+					$html .= '<fieldset><legend>Signature '.$$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription}.'</legend>';
+          $html .= '<ul>';
+					$html .= include( '/includes/main/proj/signature_imposition_with_override.html' );
+					$html .= include( '/includes/main/proj/signature_equipment.html' );
+          $html .= '</ul>';
+					$html .= '</fieldset>';
+				} # end foreach ss_id
+				return $html;
+			) ?>
+			<?include('/includes/main/proj/_comments.html')?>
+			<ul class="pricing">
+			<?include('/includes/main/proj/quantities_prices.html')?>
+			</ul>
+		</fieldset>
+		<hr/>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>">
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="Status" />
+	</form>
+</div>
+

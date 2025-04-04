@@ -1,0 +1,72 @@
+<h3>Stock information for Docket <? echo ( $$variable{'Project'}->docket() ) ?></h3>
+<? eval (
+	@{$$variable{'PurchaseOrders'}} = $$variable{'Project'}->docket() ? openprint::PurchaseOrder_Content->find( 'docket'=>$$variable{'Project'}->docket() ) : ();
+) ?>
+<fieldset><legend>Ordered Stock</legend>
+<? if ( @{$$variable{'PurchaseOrders'}} ) ?>
+	<table class="List">
+		<tr><th width="50" align="left">PO</th><th align="left">Description</th><th width="75" align="left">Quantity</th></tr>
+<? echo (
+	my $html = '';
+	foreach my $PO_Content ( @{$$variable{'PurchaseOrders'}} ) {
+		next if ! sets::isin( $PO_Content->Type()->name(), [ 'Sheet Stock', 'Roll Stock' ] );
+		$html .= sprintf('<tr><td><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$d%4$s</td></tr>', 
+			$PO_Content->po_id(),
+			$PO_Content->description(),
+			$PO_Content->qty(),
+			$PO_Content->units(),
+			);
+	} # end foreach
+	return $html;
+) ?>
+	</table>
+<? else ( @{$$variable{'PurchaseOrders'}} ) ?>
+No stock has been ordered.
+<? endif ( @{$$variable{'PurchaseOrders'}} ) ?>
+</fieldset>
+<fieldset><legend>Allocated Stock</legend>
+<? echo ( 
+	require openprint::PaperAllocation;
+
+	my %paper;
+	my @Allocations = openprint::PaperAllocation->find( docket=>$$variable{'Project'}->docket() );
+	foreach my $Allocation ( @Allocations ) {
+		push @{$paper{$Allocation->paper_id()}}, $Allocation;
+	} # end foreach Allocation
+	
+	return 'No stock has been allocated.' if ! @Allocations;
+
+	my $html = '';
+	foreach my $paper_id ( keys %paper ) {
+		my $Paper = new openprint::Paper( $paper_id );
+		$html .= '<b>'.$Paper->to_string().'</b><br/>';
+		foreach my $Allocation ( @{$paper{$paper_id}} ) {	
+			$html .= 'Quantity: ' . $Allocation->quantity() . $Allocation->units().'<br/>';
+			my @Skids;
+			if ( @Skids = $Allocation->Skids() ) {
+				$html .= 'The following ' . ( $Allocation->Paper()->type() eq 'Roll' ? ' rolls ' : ' skids ' ) . 'have been allocated:<br/>';
+			} else {
+				$html .= 'The following ' . ( $Allocation->Paper()->type() eq 'Roll' ? ' rolls ' : ' skids ' ) . 'are available to be used:<br/>';
+				@Skids = map { new openprint::Skid( $_ ); } sql::execute( undef, undef, 'SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0 ORDER BY skid_id', $Allocation->paper_id() );
+			} # end if
+
+			foreach my $Skid ( @Skids ) {
+				my $Location = $Skid->Location();
+				if ( $Location->id() ) {
+					$html .= '<span style="float:right;width:200px;">';
+					$html .= sprintf('<img id="MAP%d" src="/images/maps/map.gif?location_id=%d&width=200&level=1" alt="" /><br/>', $Skid->id(), $Location->id() );
+					$html .= ssi::writeButton( $log, $dbh, 'Plus'.$Skid->id(), '', q{level_up( $('MAP}.$Skid->id().q{') );}, '', '+' );
+					$html .= ssi::writeButton( $log, $dbh, 'Minus'.$Skid->id(), '', q{level_down( $('MAP}.$Skid->id().q{') );}, '', '-' );
+					$html .= '</span>';
+					$html .= 'Location:' . $Location->name().'<br/>';
+				} # end if
+				$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid: %1$d</a><br/>', $Skid->id() );
+				$html .= sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">RFID: %1$s</a><br/>', $Skid->rfidtag_id() );
+				$html .= '<br class="spacer"/>';
+			} # end foreach
+		} # end foreach Allocation
+		$html .= '<hr class="spacer"/>';
+	} # end foreach paper
+	return $html;
+) ?>
+</fieldset>

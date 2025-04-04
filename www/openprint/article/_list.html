@@ -1,0 +1,50 @@
+<? echo (
+	my @Articles = ();
+	if ( $param{search} ) {
+		my @keywords = split(/\s/, lc $param{search});
+		my %counts;
+		foreach my $Article ( openprint::Article->find( 
+			published			=>	1,
+			category_id		=>	$session{'/article/list.html?category_id'},
+			) ) {
+			my @name_keywords = split(/\s/, lc $Article->name() );
+			my @body_keywords = split(/\s/, lc $Article->body() );
+			my $count = sets::intersection( @keywords, sets::union( @name_keywords, @body_keywords ) );
+			push @{$counts{$count}}, $Article;
+		} # end foreach Article
+		foreach my $k ( keys %counts ) {
+			next if $k == 0;
+			push @Articles, reverse( sort { $a->published_on() cmp $b->published_on() } @{$counts{$k}} );
+		} # end foreach
+	} else {
+		foreach my $Article ( openprint::Article->find( 
+			published			=>	1,
+			( $session{'/article/list.html?category_id'} ? ( category_id =>	$session{'/article/list.html?category_id'} ) : () ),
+			( $session{'/article/list.html?category'} ? ( category =>	$session{'/article/list.html?category'} ) : () ),
+			order	=> 'published_on DESC',
+			limit	=>	$session{'/article/list.html?paging_per_page'}+1,
+			( $param{paging_page} ? ( offset	=>	$session{'/article/list.html?paging_per_page'} * $param{'paging_page'} ) : () ),
+			) ) {
+			push @Articles, $Article;
+		} # end foreach Article
+	} # end if
+
+	if ( @Articles == 0 ) {
+		return 'There are no articles which match your search criteria.';
+	} else {
+		openprint::Article_Asset->find( 'article_id' => [ map { $_->id() } @Articles ] );
+	} # end if
+
+	my $html;
+
+	my $Extra = pop @Articles if @Articles > $session{'/article/list.html?paging_per_page'};
+	foreach my $Article ( @Articles ) {
+		next if ! $Article->can_view();
+		$html .= $Article->html();
+	} # end foreach Article
+
+	if ( $Extra ) {
+		$html .= button( 'More', { 'onclick'=>q`$('ButtonMore').remove();new Ajax.Updater( 'Articles','_list.html', { parameters: { paging_page: `.($param{paging_page}+1).' }, insertion: Insertion.Bottom } );' } );
+	} # end if
+	return $html;
+) ?>

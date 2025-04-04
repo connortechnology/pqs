@@ -1,0 +1,290 @@
+<div class="PageTitle">
+<h1>Equipment</h1>
+<h2>Edit</h2>
+</div>
+<?include('/includes/error_reporting.html')?>
+<form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters"><legend>Search Information</legend>
+		<ul>
+      <li>
+        <label>Category</label>
+        <select name="search_category_id" on_change_this="search_change" class="chosen">
+          <option value="">All</option>
+  <? echo ( make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $param{search_category_id} );) ?>
+        </select>
+      </li>
+      <li>
+        <label>Equipment ID</label>
+        <select name="ddmEquipment" on_change_this="search_change" class="chosen">
+          <option value="">Select Equipment</option>
+  <? echo (
+    my @Equipment = openprint::Equipment->find(
+    ( $param{ddmEquipment} ? ( or=>{deleted=>0, id=>$param{ddmEquipment}}, deleted=>[0,1] ) : () ),
+      order => 'lower(strID)',
+      );
+      make_drop_down( [ map { $_->id(), join(': ', $_->strid(), $_->name() ) } @Equipment ], $$variable{Equipment}->id() );
+  ) ?>
+        </select>
+      </li>
+		</ul>
+		<p class="buttons">
+		<? echo ( join( "\n",
+				button( 'PreviousTop', { onclick=>"f1.btnFunction.value='Previous';fmCheck(f1);", text=>'Previous' } ),
+				button( 'NextTop', { onclick=>"f1.btnFunction.value='Next';fmCheck(f1);", text=>'Next' } ),
+				button( 'NewTop', { href=>'/administrator/equipment/edit.html', text=>'New' } ),
+				( $$variable{Equipment}->deleted() ? (
+				button( 'Destroy', { onclick=>"f1.btnFunction.value='Destroy';fmChange=2;fmCheck(f1);", text=>'Destroy' } ),
+				button( 'UnDelete', { onclick=>"f1.btnFunction.value='UnDelete';fmChange=2;fmCheck(f1);", text=>'UnDelete' } ),
+				) : (
+				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+				) ),
+				button( 'SaveTop', { onclick=>q`$('f2').btnFunction.value='Save';fmChange=3;fmCheck($('f2'));`, text=>'Save' } ),
+				button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
+				button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ),
+				);
+			) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
+	<fieldset><legend>Equipment Information</legend>
+		<div class="leftColumn">
+      <ul>
+			<li><label>Index</label><? hecho ( $$variable{Equipment}->id(); ) ?></li>
+			<li>
+				<label>ID</label>
+				<input type="text" name="strid" value="<? hecho ( $$variable{Equipment}->strid(); ) ?>"/>
+			</li>
+			<li>
+				<label>Name</label>
+				<input type="text" name="name" value="<? hecho ( $$variable{Equipment}->name(); ) ?>" />
+			</li>
+			<li>
+				<label>Category</label>
+				<select name="category_id" multiple="multiple" size="4" class="chosen">
+				<? echo ( make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $$variable{Equipment}->category_id() );) ?>
+				</select>
+			</li>
+			<li>
+				<label>Description</label>
+				<input type="text" name="description" value="<? hecho ( $$variable{Equipment}->description(); ) ?>" />
+			</li>
+			<li class="sort">
+				<label>Sort</label>
+				<input type="text" name="sorting" value="<? echo ( $$variable{Equipment}->sorting(); ) ?>" />
+			</li>
+			<li>
+				<label>Image</label>
+				<input type="text" name="image" value="<? hecho ( $$variable{Equipment}->image(); ) ?>" />
+			</li>
+			<li><label>Operators</label>
+			<div id="Operators"><?include(_operators.html)?></div>
+			</li>
+      </ul>
+		</div>
+		<div class="rightColumn">
+      <ul>
+			<li>
+				<label>Supplier</label>
+				<input type="text" name="supplier" value="<? hecho ( $$variable{Equipment}->supplier(); ) ?>" />
+			</li>
+			<li>
+				<label>Use in estimating</label>
+				<? echo ( radio( 'useinestimating', [ '1', 'Yes', '0', 'No', '', 'By Override' ], $$variable{Equipment}->useinestimating(), { default=>'' } ); ) ?>
+			</li>
+			<li>
+				<label>Service Types</label>
+				<select name="servicetype_id" id="servicetype_id" multiple="multiple" class="chosen">
+					<? echo ( make_drop_down(
+						openprint::ServiceType->dropdown( order=>'lower(name)'),
+						$$variable{Equipment}->servicetype_id(),
+						); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Use in scheduling</label>
+				<? echo ( radio( 'useinscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->useinscheduling(), { default=>'0', onclick=>q`if(this.value=='1'){$('schedulingoptions').show();}else{$('schedulingoptions').hide();}` } ); ) ?>
+			</li>
+	    <li id="schedulingoptions" <? echo ( $$variable{Equipment}->useinscheduling() ? '' : 'style="display:none;"' ) ?>>
+				<label>Smart Scheduling</label>
+				<? echo ( radio( 'smartscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->smartscheduling() ); ) ?>
+	    </li>
+	<? if ( $config{JMFEnabled} eq 'Y' ) ?>
+			<li>
+				<label>Use JMF</label>
+				<? echo ( radio( 'jmf_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{Equipment}->jmf_enabled() ); ) ?>
+			</li>
+	<? endif ( $config{JMFEnabled} eq 'Y' ) ?>
+	<? if ( $config{InstantGateEnabled} eq 'Y' ) ?>
+			<li>
+				<label>Use InstantGate</label>
+				<? echo ( radio( 'instantgate_enabled', [ 'true', 'Yes', 'false', 'No' ], $$variable{Equipment}->instantgate_enabled(), { onclick=>qq`if(this.value=='true'){$('CostCenter').show();}else{$('CostCenter').hide();};` } ); ) ?>
+			</li>
+	<? endif ( $config{InstantGateEnabled} eq 'Y' ) ?>
+	<? if ( $config{InstantGateEnabled} eq 'Y' or $config{JDFEnabled} eq 'Y' ) ?>
+			<li id="CostCenter" <? echo ( 'style="display:none;"' if ! $$variable{Equipment}->instantgate_enabled() ) ?>>
+				<label>Cost Center</label>
+				<input type="text" name="cost_center" value="<? hecho ( $$variable{Equipment}->cost_center(); ) ?>"  />
+			</li>
+	<? endif ( $config{InstantGateEnabled} eq 'Y' or $config{JDFEnabled} eq 'Y' ) ?>
+			<li>
+				<label>JDF ID</label>
+				<input type="text" name="jdf_id" value="<? hecho ( $$variable{Equipment}->jdf_id(); ) ?>"  />
+			</li>
+			<li>
+				<label>JDF Name</label>
+				<input type="text" name="jdf_name" value="<? hecho ( $$variable{Equipment}->jdf_name(); ) ?>"  />
+			</li>
+			<li>
+				<label>Location</label>
+				<select id="location_id" name="location_id">
+					<option value="">select</option>
+          <? echo ( make_drop_down( openprint::Location->dropdown( order=>'parent_id NULLS FIRST, lower(name)', type=>'place', company_id=>$openprint::Owner->id()), $$variable{Equipment}->location_id() ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>CIP3 Integration</label>
+        <?echo(radio('cip3_monitor', ['1','Yes','0','No'], $$variable{Equipment}->cip3_monitor(), { onclick=>q`if(this.value==1){$('CIP3').show();}else{$('CIP3').hide();}`, default=>'0' } );)?>
+			</li>
+      </ul>
+			<ul id="CIP3" <? echo ( $$variable{Equipment}->cip3_monitor() ? '' : 'style="display: none;"' ) ?>>
+				<li>
+					<label>Input Hotfolder</label>
+					<input type="text" name="cip3_in" value="<? hecho ( $$variable{Equipment}->cip3_in(); ) ?>" />
+				</li>
+				<li>
+					<label>Output Hotfolder</label>
+					<input type="text" name="cip3_out" value="<? hecho ( $$variable{Equipment}->cip3_out(); ) ?>" />
+				</li>
+				<li>
+					<label>Hold PPFs?</label>
+          <?echo(radio('cip3_hold', [ '1','Yes','0','No'],  $$variable{Equipment}->cip3_hold() ); ) ?>
+				</li>
+				<li>
+					<label>Merge PPFs?</label>
+          <?echo(radio('cip3_merge', [ '1','Yes','0','No'],  $$variable{Equipment}->cip3_merge() ); ) ?>
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+<? if ( $$variable{Equipment}->id() ) ?>
+<div id="ServicePrices">
+  <fieldset><legend>Service Prices <span id="toggle_service_prices" on_click="toggle_service_prices" title="Toggle visibility of service prices">
+<?echo($session{$r->uri().'?show_service_prices'} ? '-' : '+')?>
+</span></legend>
+  <p class="buttons">
+			<input type="file" name="fileServicePrices"/>
+			<? echo ( join("\n",
+			button( 'ImportServicePrices', { onclick=>"f2.btnFunction.value='Import Service Prices';f2.submit();", text=>'Import' } ),
+			button( 'ExportServicePrices', { onclick=>"f2.btnFunction.value='Export Service Prices';f2.submit();", text=>'Export' } ),
+			); ) ?>
+  </p>
+    <div id="show_service_prices"><?echo($session{$r->uri().'?show_service_prices'} ? include('_service_prices.html') : '' )?></div>
+  </fieldset>
+</div><!--ServicePrices-->
+<fieldset><legend>Specifications <span on_click="toggle_specifications">+</span></legend>
+  <p class="buttons">
+			<input type="file" name="fileSpecifications"/>
+			<? echo ( join("\n",
+			button( 'Import', { onclick=>"f2.btnFunction.value='Import Specifications';f2.submit();", text=>'Import' } ),
+			button( 'Export', { onclick=>"f2.btnFunction.value='Export Specifications';f2.submit();", text=>'Export' } ),
+			); ) ?>
+  </p>
+<div id="show_specifications">
+		Changes made below take effect immediately.<br/>
+		<table id="specifications" class="List sortable">
+			<thead>
+				<tr>
+					<th class="name">Specification</th>
+					<th class="min nosort">Min</th>
+					<th class="max">Max</th>
+					<th class="range_units">Range Units</th>
+					<th class="value">Value</th>
+					<th class="units">Units</th>
+					<th class="interpolate">Interpolate</th>
+					<th class="buttons">
+<? echo (
+	button( 'Add', { onclick=>q`new Ajax.Request('/administrator/equipment/_specification.html', {
+		parameters: {
+			action: 'add',
+			equipment_id: $('ddmEquipment').value,
+		},
+		evalScripts:true,
+		onSuccess: function(response){
+			$('specifications_body').insert({top: response.responseText} );
+			SortableTable.load();
+			}
+	} );`,text=>'Add' } );
+) ?>
+</th>
+				</tr>
+			</thead>
+			<tbody id="specifications_body">
+			<? echo (
+				my $html;
+				@{$$variable{Specifications}} = $$variable{Equipment}->Specifications();
+				my $specification_html = slurp_content( '/administrator/equipment/_specification.html' );
+				while ( $$variable{Specification} = shift @{$$variable{Specifications}} ) {
+					$html .= variable_substitution( \$specification_html, $variable );
+					$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';
+				} # end while
+				return $html;
+			) ?>
+			</tbody>
+		</table>
+</div>
+	</fieldset>
+<? endif ( $$variable{Equipment}->id() ) ?>
+</form>
+<? if ( $$variable{Equipment}->specification('Folding Capable') ) ?>
+	<fieldset><legend>Fold Specifications</legend>
+		Select the # of pages of the folds that you would like to edit.  To add a new fold click Add.
+<form id="f3" name="f3" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
+	<input type="hidden" name="btnFunction"/>
+		<p>
+			<label>Type</label>
+      <select style="width: auto;" id="type" name="type" on_change="load_folds">
+				<option value="">select</option>
+				<option value="all">All</option>
+<? echo (
+	return make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort {
+        ($a =~ /^(\d+)/)[0] <=> ($b =~ /^(\d+)/)[0]
+                            ||
+                    $a  cmp  $b
+} keys %openprint::Estimating::Folding::fold_types ] );
+) ?>
+			</select>
+<? echo ( join("\n",
+			button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{Equipment}->id() ."', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
+			'<input type="file" name="fileFolds"/>',
+			button( 'ExportFolds', { onclick=>"f3.btnFunction.value='Export Folds';f3.submit();", text=>'Export Folds' } ),
+			button( 'ImportFolds', { onclick=>"f3.btnFunction.value='Import Folds';f3.submit();", text=>'Import Folds' } ),
+	);) ?>
+		</p>
+</form>
+		<div id="Folds"> </div>
+	</fieldset>
+<? endif ( $$variable{Equipment}->specification('Folding Capable') ) ?>
+<form id="stock_settings_form" name="stock_settings_form" action="">
+	<input type="hidden" id="equipment_id" name="equipment_id" value="<? echo ( $$variable{Equipment}->id() ) ?>" />
+	<fieldset><legend>Specific Stock Settings</legend>
+		<div id="StockSettings"><?include('_stock_settings.html')?></div>
+		<p class="buttons">
+			<? echo ( button( 'addstocksetting', { onclick=>"popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '500px' } );", text=>'Add' } ); ) ?>
+			<? echo ( button( 'savestocksetting', { onclick=>"new Ajax.Updater('StockSettings','_stock_settings.html?action=save', { parameters: stock_settings_form.serialize() } );", text=>'Save' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<? if ( $$variable{Equipment}->id() ) ?>
+	<? echo ( include_logs( $$variable{Equipment} ); ) ?>
+<? endif ( $$variable{Equipment}->id() ) ?>
+<script src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<script src="<?hash_link(/administrator/equipment/edit.js)?>"></script>
+<script>
+  const equipment_id='<?echo($$variable{Equipment}->id())?>';
+</script>

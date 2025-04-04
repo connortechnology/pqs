@@ -1,0 +1,34 @@
+<?include(/includes/error_reporting.html)?>
+<table>
+	<tr>
+		<th class="hostname">Hostname</th>
+		<th class="ip">IP</th>
+		<th class="mac">Mac</th>
+		<th class="Date assigned_on">Assigned On</th>
+		<th class="comment">Comment</th>
+		<th class="buttons"><? echo ( button('Add', { onclick=>qq`popup_window('_license_host_popup.html?license_id=$$variable{License}{id}');`, text=>'+', title=>'Add' } ); ) ?></th>
+	</tr>
+<? echo ( 
+	my $html;
+	my $rowclass;
+	foreach my $LH ( openprint::License_Host->find( license_id=>$$variable{License}{id}, order=>'created_on' ) ) {
+		my $Host = $LH->Host();
+		$html .= sprintf(q`
+<tr%1$s>
+<td class="hostname"><a href="host.html?host_id=%2$s">%3$s</a></td>
+<td class="ip"><a href="host.html?host_id=%2$s">%4$s</a></td>
+<td class="mac"><a href="host.html?host_id=%2$s">%5$s</a></td>
+<td class="Date assigned_on"><a href="host.html?host_id=%2$s">%6$s</a></td>
+<td class="comment"><a href="host.html?host_id=%2$s">%7$s</a></td>
+<td class="buttons">%8$s</td>
+</tr>`, $rowclass, $LH->host_id(), $Host->hostname(), 
+join('<br/>', map { $_->ip() } $Host->Interfaces() ), 
+join('<br/>', map { $_->mac() } $Host->Interfaces() ), 
+format_date( $LH->created_on() ), $LH->comment(),
+button('del'.$$Host{id}, { onclick=>qq`del_allocation($$Host{id});`, text=>'-', title=>'Delete' } ),
+ );
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach $LH
+	return $html;
+) ?>
+</table>

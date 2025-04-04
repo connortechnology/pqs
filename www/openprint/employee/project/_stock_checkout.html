@@ -1,0 +1,95 @@
+<?eval(
+$$variable{canseepricing} = ($session{user_type} eq 'A' or openprint::usergroup::is_user_in(['InventoryManager','Accounting'], $session{user_id} ) ) ? 1 : 0;
+)?>
+<form id="checkout_form" name="checkout_form">
+	<input type="hidden" name="docket" value="<? echo ( $$variable{Order}->docket() ) ?>" />
+	<input type="hidden" name="action" value="Add" />
+	<table class="List">
+		<tr>
+			<th class="Stock">Stock</th>
+			<th class="Skid">Skid</th>
+			<th class="RFID">RFIDTAG</th>
+			<th class="Location">Location</th>
+			<th class="quantity">Quantity</th>
+			<th class="units"></th>
+		<? if ( $$variable{canseepricing} ) ?>
+			<th class="Price Cost">Cost</th>
+			<th class="Price Value">Value</th>
+		<? endif ( $$variable{canseepricing} ) ?>
+		</tr>
+		<? echo (
+			my $html = '';
+			my %Entries;
+			my $rowclass;
+
+			foreach my $PI ( openprint::PaperInventory->find( docket=>$$variable{Order}->docket(), order=>'updated_on', 'skid_id is null'=>0 ) ) {
+				push @{$Entries{$PI->paper_id()}}, $PI;
+			} # end foreach PI
+			foreach my $paper_id ( sort keys %Entries ) {
+				my $Paper = new openprint::Paper($paper_id);
+
+				my $PI = shift @{$Entries{$paper_id}};
+				my $Skid = $PI->Skid();
+				my $total = -1*$PI->delta();
+				my $value_total = 0;
+
+				$html .= sprintf('<tr%1$s><td rowspan="%2$d" class="Stock"><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>',
+					$rowclass, scalar @{$Entries{$paper_id}}+1, $Paper->id(), $Paper->to_string() );
+
+				$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $Skid->id() );
+				$html .= sprintf('<td class="RFIDTag"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a></td>', $Skid->rfidtag_id(), $Skid->RFIDTag()->id_short() );
+				$html .= sprintf('<td class="Location">%1$s</td><td class="quantity">%2$s</td><td class="units">%3$s</td>',
+						$Skid->Location()->name(),  Number::Format::format_number(-1*$PI->delta()), $PI->units() );
+				if ( $$variable{canseepricing} ) {
+					my $Value = $PI->Value();
+					$html .= sprintf('<td class="Price Cost">%s</td><td class="Price Value">%s</td>',
+							openprint::Currency::format($$Value{cost}).$$Value{units}, openprint::Currency::format($$Value{value}) );
+					$value_total += $$Value{value};
+				}
+				$html .= '</tr>';
+
+				foreach my $PI ( @{$Entries{$paper_id}} ) {
+					my $Skid = $PI->Skid();
+					my $qty = -1*$PI->delta();
+					$total += $qty;
+					$html .= sprintf('<tr%s>',$rowclass);
+					$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $Skid->id() );
+					$html .= sprintf('<td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a></td>', $Skid->rfidtag_id(), $Skid->RFIDTag()->id_short() );
+					$html .= sprintf('<td class="Location">%1$s</td><td class="quantity">%2$s</td><td class="units">%3$s</td>', $Skid->Location()->name(),  Number::Format::format_number($qty), $PI->units() );
+					if ( $$variable{canseepricing} ) {
+						my $Value = $PI->Value();
+						$html .= sprintf('<td class="Price Cost">%s</td><td class="Price Value">%s</td>', openprint::Currency::format($$Value{cost}).$$Value{units}, openprint::Currency::format($$Value{value}) );
+						$value_total += $$Value{value};
+					}
+					$html .= '</tr>';
+				} # end foreach
+				$html .= '<tr class="totals"><td colspan="4">Total</td><td class="quantity">'.Number::Format::format_number($total) .'</td><td>'. $Paper->units() . '</td>';
+				if ( $$variable{canseepricing} ) {
+					$html .= '<td></td><td class="Price">'.openprint::Currency::format( $value_total ). '</td>';
+				}
+				$html .= '</tr><tr><td colspan="'.($$variable{canseepricing}?6:4).'">&nbsp;</td></tr>';
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach paper
+			return $html;
+		) ?>
+			<tr class="unprintable">
+				<td>Checkout Stock</td>
+				<td class="Skid">
+					<? echo ( input( type=>'text', name=>'skid_id', onkeypress=>'return input_handler(this,event);', onkeyup=>q`this.value=this.value.replace(/\s/g,'');`, onkeydown=>qq`if(event.keyCode==13){new Ajax.Updater('StockCheckout','/employee/project/_stock_checkout.html',{ parameters: \$('checkout_form').serialize()} );}` ); ) ?>
+				</td><td class="RFID">
+					<? echo ( input( type=>'text', name=>'rfidtag_id',  onkeypress=>'return input_handler(this,event);', onkeyup=>q`this.value=this.value.replace(/\s/g,'');`, onkeydown=>qq`if(event.keyCode==13){new Ajax.Updater( 'StockCheckout', '/employee/project/_stock_checkout.html', { parameters: \$('checkout_form').serialize()} );};` ); ) ?>
+				</td><td colspan="<? echo ( $$variable{canseepricing} ? '5' : '3' ) ?>">
+					<? echo ( button( 'CheckOut', { onclick=> qq`new Ajax.Updater('StockCheckout','/employee/project/_stock_checkout.html', { parameters: \$('checkout_form').serialize(), evalScripts:true } );`,text=>'Submit' } ); ) ?>
+				</td>
+			</tr>
+	</table>
+</form>
+<?include(/includes/error_reporting.html)?>
+<? echo (
+	if ( $param{rfidtag_id} ) {
+		return q`<script type="text/javascript">$('checkout_form').rfidtag_id.focus();</script>`;
+	} elsif ( $param{skid_id} ) {
+		return q`<script type="text/javascript">$('checkout_form').skid_id.focus();</script>`;
+	}
+	return '';
+) ?>

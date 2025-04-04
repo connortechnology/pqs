@@ -1,0 +1,102 @@
+<? if ( $$variable{uri} =~ /_paper_inventory_entries/ ) ?>
+<?include(/includes/error_reporting.html)?>
+<? endif ( $$variable{uri} =~ /_paper_inventory_entries/ ) ?>
+<?eval (
+	$$variable{can_see_prices} = ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','InventoryManager'], $session{user_id} );
+)?>
+<form id="f2" name="f2" action="_paper_inventory_entries.html">
+		<table class="List">
+			<tr>
+				<th class="Skid">Skid</th>
+				<th class="RFID">RFID</th>
+				<th class="ManufacturersID">Manufacturers ID</th>
+				<th class="po_id">PO ID</th>
+				<th class="Location">Location</th>
+				<th class="last_seen">Last Seen</th>
+				<th class="Quantity">Quantity</th>
+				<th class="Condition">Condition</th>
+				<? if ( $$variable{can_see_prices} ) ?>
+				<th class="Price">Cost</th>
+				<th class="Price">Value</th>
+				<? endif ( $$variable{can_see_prices} ) ?>
+				<th class="buttons">&nbsp;</th>
+			</tr>
+			<? echo (
+				my $html;
+				my $rowclass;
+				$$variable{skid_count} = 0;
+				$$variable{value_total} = 0;
+				foreach my $C ( openprint::SkidContent->find(paper_id=>$variable{Paper}{id}, 'quantity >'=>0, order =>'skid_id') ) {
+					my $Skid = $C->Skid();
+					next if $Skid->deleted();
+					my $RFIDTag = $Skid->RFIDTag();
+					my @PurchaseOrders = $Skid->PurchaseOrders();
+
+					my $last_seen_days = $Skid->last_seen_days();
+					$html .= sprintf('<tr%1$s><td class="Skid"><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
+						<td class="RFID"><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
+						<td class="ManufacturersID"><a href="skid_details.html?skid_id=%2$d">%9$s</a></td>
+						<td class="po_id" title="%11$s">%10$s</td>
+						<td class="Location"><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
+						<td class="last_seen"><a href="skid_details.html?skid_id=%2$d">%7$s</a></td>
+						<td class="Quantity"><a href="skid_details.html?skid_id=%2$d">%5$s%6$s</a></td>
+						<td class="Condition"><a href="skid_details.html?skid_id=%2$d">%8$s</a></td>',
+						$rowclass, $C->skid_id(), $Skid->Location()->name(), 
+						( $RFIDTag->id() ? sprintf('%d (%2$x)', $RFIDTag->id_short(),substr($RFIDTag->id(),1,15)) : '' ), 
+						( defined $C->quantity() ? Number::Format::format_number( $C->quantity() ) : 0 ), $C->Paper()->units(), 
+						( $last_seen_days ? $last_seen_days . ' days' : 'Today' ),
+						$C->Condition()->name(),
+						$Skid->manufacturers_id(),
+						join("\n", 
+							map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>', $_->id() ) } @PurchaseOrders 
+						),
+						join("\n", 
+							map { $_->summary() } @PurchaseOrders 
+						),
+						);
+					if ( $$variable{can_see_prices} ) {
+						my $Cost = $C->Cost();
+						$html .= '<td class="Price">'.openprint::Currency::format( $Cost ? $$Cost{cost} : 0 ) . ($Cost?$$Cost{units}:'/100lb').'</td>';
+						$html .= '<td class="Price">'.openprint::Currency::format( defined $C->value() ? $C->value() : 0 ).'</td>';
+						$$variable{value_total} += $C->value();
+					} # end if
+					$html .= '<td class="buttons">';
+					$html .= button( "label$$C{skid_id}", { onclick=>"open_window('/employee/inventory/paper_label_window.html?skid_id=$$C{skid_id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", text=>'Label' } );
+					$html .= q`</td></tr>`;
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+					$$variable{InventoryTotal} += $$C{quantity};
+					$$variable{skid_count} += 1;
+				} # end foreach SkidContent
+				return $html;
+			) ?>
+			<tr class="totals">
+				<td colspan="5">Totals</td>
+				<td class="last_seen"><? echo ( $$variable{skid_count}. ' ' . ( $$variable{Paper}->type() eq 'Roll' ? 'roll' : 'skid' ) . ( $$variable{skid_count} == 1 ? '' : 's' ); ) ?></td>
+				<td class="Quantity"><? echo ( Number::Format::format_number($$variable{InventoryTotal}).$$variable{Paper}->units(); ) ?></td>
+				<td>&nbsp;</td>
+				<? if ( ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) ) ?>
+				<td>&nbsp;</td>
+				<td class="Price"><? echo ( openprint::Currency::format( $$variable{value_total} ); ) ?></td>
+				<? endif ( ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) ) ?>
+				<td>&nbsp;</td>
+			</tr>
+			<tr class="totals unprintable">
+				<td colspan="3">Enter new inventory:</td>
+				<td class="po_id"></td>
+				<td colspan="2">
+						<? echo (
+							ssi::select( openprint::Location->dropdown(type=>'place', order=>'parent_id NULLS FIRST,lower(name)'), undef, { name=>'Location', id=>'Location', prepend=>['','select'] } );
+						) ?>
+				</td>
+				<td class="Quantity"><? echo ( input( type=>'float', id=>'quantity', name=>'quantity' ); ) ?></td>
+				<td class="Condition"><? echo ( ssi::select( openprint::InventoryCondition->dropdown( order=>'lower(name)'), undef, { id=>'condition_id', name=>'condition_id' } ); ) ?></td>
+				<? if ( ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) ) ?>
+				<td>&nbsp;</td>
+				<td>&nbsp;</td>
+				<? endif ( ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) ) ?>
+				<td class="buttons"><? echo ( button( 'AddInventory', { onclick=>"LoadContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', $('f2') );", text=>'Add' } ); ) ?></td>
+			</tr>
+		</table>
+	<input type="hidden" name="paper_id" value="<? echo ( $$variable{Paper}->id() ) ?>" />
+	<input type="hidden" name="Action" value="Add" />
+</form>

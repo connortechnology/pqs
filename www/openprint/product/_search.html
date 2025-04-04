@@ -1,0 +1,44 @@
+<? eval (
+  if ($param{category}) {
+    my $category = openprint::Product_Category->find_one(name=>openprint::Product_Category->transform(name=>$param{category}));
+    $session{'/product/search.html?category_id'} = $category->id() if $category;
+  }
+
+	@{$$variable{Products}} = ();
+	foreach my $Product ( openprint::Product->find( 
+		date_filter( '/product/search.html?created_on_end','created_on <=' ),
+		date_filter( '/product/search.html?created_on_start','created_on >=' ),
+			( $session{'/product/search.html?category_id'} ? ( category_id => $session{'/product/search.html?category_id'} ) : () ),
+			order				=> 'created_on',
+		) ) {
+		next if ! $Product->can_view();
+		push @{$$variable{Products}}, $Product;
+	} # end foreach Products
+) ?>
+
+<? if ( @{$$variable{Products}} == 0 ) ?>
+	There are no products which match your search criteria. 
+<? else ( @{$$variable{Products}} == 0 ) ?>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Product ( @{$$variable{Products}} ) {
+
+				$html .= sprintf(q` 
+					<div title="%2$s" class="Product%7$s"> %6$s
+						<div class="Name"><a href="/product/view.html?product_id=%1$d">%2$s</a></div>
+						<div class="Description"><a href="/product/view.html?product_id=%1$d">%3$s</a></div>
+						<div class="Category"><a href="/product/view.html?product_id=%1$d">%4$s</a></div>
+						<div class="assets"><a href="/product/view.html?product_id=%1$d">%5$s</a></div>
+					</div>
+					`, $Product->id(), html_escape($Product->name()), html_escape($Product->description()),
+					$Product->Category()->name(),
+					$Product->Album()->Thumbnail()->Asset()->sized_html('large'),
+					undef,
+					$rowclass,
+				);
+				$rowclass = $rowclass ? '' : ' colRow';
+			} # end foreach Products
+			return $html;
+		) ?>
+<? endif ( @{$$variable{Products}} == 0 ) ?>

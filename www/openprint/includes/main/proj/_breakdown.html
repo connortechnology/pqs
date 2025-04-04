@@ -1,0 +1,15 @@
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+<li>
+	<? echo ( my $html;
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			$html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown('$qty_index');", text=>'Breakdown' } );
+			$html .= '</span>';
+			$html .= qq`<div id="hdnBreakdown$qty_index" style="display:none;"></div>
+			<!--<input type="hidden" name="hdnBreakdown$qty_index" />-->
+			`;
+		} # end foreach
+		return $html;
+	) ?>
+</li>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>

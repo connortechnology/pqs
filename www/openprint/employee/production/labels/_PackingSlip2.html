@@ -1,0 +1,283 @@
+<? eval (
+	$$variable{'Label'} = new openprint::Label( $openprint::param{'id'} ) if ! $$variable{'Label'};
+	my $changed = 0;
+	if ( ! $$variable{'Label'}->get_data('date') ) {
+		$$variable{'Label'}->set_data('date'=>Date::Format::time2str($config{'DateFormat'}, time ) );
+		$changed = 1;
+	} # end if
+	if ( ! $$variable{'Label'}->get_data('from') ) {
+		if ( $$variable{'Project'} ) {
+			my $services = $$variable{'Project'}->services();
+
+			foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
+
+				next if $ServiceType->name() eq 'CustomerPickUp';
+				next if ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} );
+
+				my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{$ServiceType->name()}[0] );
+				if ( $$shipping_specs{'FromCompanyName'} or $$shipping_specs{'FromAddress1'} ) {
+					$$variable{'Label'}->set_data('from'=> join("\n",
+							join(',', $$shipping_specs{'FromCompanyName'} ) ,
+							join(',', $$shipping_specs{'FromAddress1'} , $$shipping_specs{'FromAddress2'},
+								@$shipping_specs{'FromCity','FromStateProvince','FromCountry'},
+								@$shipping_specs{'FromPostalCode'} ),
+							) );
+					last;
+				} # end if
+			} # end foreach ST
+			if ( ! $$variable{'Label'}->get_data('from') ) {
+				if ( 0 ) {
+				my $Order = $$variable{'Project'}->Order();
+				$$variable{'Label'}->set_data('from'=> join("\n", $Order->company_name(),
+						join(',', $Order->get('address1','address2') ),
+						join(',', $Order->get('city','state','country') ),
+						$Order->get('postalcode'),
+						) );
+				} else {
+					my $Owner = new openprint::Company( $config{'owner_id'} );
+					$$variable{'Label'}->set_data('from'=> join("\n", $Owner->name(),
+						join(',', $Owner->get('address1','address2') ),
+						join(',', $Owner->get('city','state','country') ),
+						$Owner->get('postalcode'),
+						) );
+				} # end if
+			} # end if
+
+		$changed = 1;
+
+		} # end if
+	} # endif
+
+	if ( ( ! $$variable{'Label'}->get_data('to') ) and $$variable{'Project'} ) {
+		my $services = $$variable{'Project'}->services();
+
+		foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
+
+			next if $ServiceType->name() eq 'CustomerPickUp';
+			next if ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} );
+
+			my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{$ServiceType->name()}[0] );
+			if ( $$shipping_specs{'ToCompanyName'} or $$shipping_specs{'ToAddress1'} ) {
+				$$variable{'Label'}->set_data('to'=> join("\n",
+							join(', ', $$shipping_specs{'ToCompanyName'} ) ,
+							join(', ', $$shipping_specs{'ToAddress1'} , $$shipping_specs{'ToAddress2'},
+								@$shipping_specs{'ToCity','ToStateProvince','ToCountry'},
+								@$shipping_specs{'ToPostalCode'} ),
+							) );
+				last;
+			} # end if
+		} # end foreach ST
+
+		if ( ! $$variable{'Label'}->get_data('to') ) {
+			my $Company = $$variable{'Project'}->Company();
+			$$variable{'Label'}->set_data('to'=> join("\n", $Company->name(),
+						join(', ', $Company->get('address1','address2') ),
+						join(', ', $Company->get('city','state','country') ),
+						$Company->get('postalcode'),
+						) );
+		} # end if ! To
+		$changed = 1;
+	} # end if ! To and Project
+
+	if ( ! $$variable{'Label'}->get_data('description') ) {
+		my $html;
+		if ( $$variable{'Project'} ) {
+			$html .= $$variable{'Project'}->reference();
+		} elsif( $$variable{'docket'} ) {	
+			if ( my @Orders = openprint::Order->find('docket'=>$$variable{'docket'}) ) {
+				foreach my $Project ( $Orders[0]->Projects() ) {
+					$html .= $Project->reference() ."\n";
+				} # end foreach Project
+			} # end if
+		} # end if
+		$$variable{'Label'}->set_data('description'=>$html);
+		$changed = 1;
+	} # end if
+	#if ( 1 ) {
+	if ( ! $$variable{'Label'}->get_data('quantity_lines') ) {
+		if ( $$variable{'Project'} ) {
+			my $qty_index = $$variable{'Project'}->ordered_quantity_index();
+			my $quantity_lines = 0;
+			my $services = $$variable{'Project'}->services();
+			my $carton_total = 0;
+			my $item_total = 0;
+				
+			if ( $$services{'PlainCartons'} ) {
+				foreach my $s_id ( @{$$services{'PlainCartons'}} ) {
+					my $carton_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'PlainCartons'}[0] );
+					if ( my $over = ( $$carton_specs{"txtPackageQuantity$qty_index"} * $$carton_specs{'txtItemsPerPackage'} - $$carton_specs{"txtQuantity$qty_index"} ) ) {
+						$quantity_lines += 1;
+						$$variable{'Label'}->set_data(
+								'qty_'.$quantity_lines		=>	$$carton_specs{"txtPackageQuantity$qty_index"}-1,
+								'items_'.$quantity_lines	=>	$$carton_specs{'txtItemsPerPackage'},
+								'type_'.$quantity_lines		=>	'carton',
+								);
+						$quantity_lines += 1;
+						$$variable{'Label'}->set_data(
+								'qty_'.$quantity_lines		=>	1,
+								'items_'.$quantity_lines	=>	$$carton_specs{'txtItemsPerPackage'} - $over,
+								'type_'.$quantity_lines		=>	'carton',
+								);
+					} else {
+						$quantity_lines += 1;
+						$$variable{'Label'}->set_data(
+								'qty_'.$quantity_lines		=>	$$carton_specs{"txtPackageQuantity$qty_index"},
+								'items_'.$quantity_lines	=>	$$carton_specs{'txtItemsPerPackage'},
+								'type_'.$quantity_lines		=>	'carton',
+								);
+					} # end if
+				} # end foreach
+			} # end if
+			if ( $$services{'BulkSkids'} ) {
+				$quantity_lines += 1;
+				my $skid_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'BulkSkids'}[0] );
+				if ( my $over = ( $$skid_specs{"txtPackageQuantity$qty_index"} * $$skid_specs{'txtItemsPerPackage'} - $$skid_specs{"txtQuantity$qty_index"} ) ) {
+					$quantity_lines += 1;
+					$$variable{'Label'}->set_data(
+							'qty_'.$quantity_lines		=>	$$skid_specs{"txtPackageQuantity$qty_index"}-1,
+							'items_'.$quantity_lines	=>	$$skid_specs{'txtItemsPerPackage'},
+							'type_'.$quantity_lines		=>	'skid',
+							);
+					$quantity_lines += 1;
+					$$variable{'Label'}->set_data(
+							'qty_'.$quantity_lines		=>	1,
+							'items_'.$quantity_lines	=>	$$skid_specs{'txtItemsPerPackage'} - $over,
+							'type_'.$quantity_lines		=>	'skid',
+							);
+				} else {
+					$quantity_lines += 1;
+					$$variable{'Label'}->set_data(
+							'qty_'.$quantity_lines		=>	$$skid_specs{"txtPackageQuantity$qty_index"},
+							'items_'.$quantity_lines	=>	$$skid_specs{'txtItemsPerPackage'},
+							'type_'.$quantity_lines		=>	'skid',
+							);
+				} # end if
+			} # end if
+			$quantity_lines = 1 if ! $quantity_lines;	
+			$$variable{'Label'}->set_data('quantity_lines'=>$quantity_lines);
+		$changed = 1;
+		} # end if
+	} # end if
+	$$variable{'Label'}->save() if $changed;
+) ?>
+<script type="text/javascript">
+// <![CDATA[
+	var tinymce_options = {
+		plugins: "paste",
+		theme : "advanced",
+theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontselect,fontsizeselect,|,bullist,numlist,|,forecolor,backcolor,|,indent,outdent",
+theme_advanced_buttons2 : '',
+theme_advanced_buttons2 : '',
+	};
+
+	tinyMCE.init( tinymce_options );
+	function update_contents() {
+	<? echo (
+		my $html;
+		foreach my $line ( 1 .. $$variable{'Label'}->get_data('quantity_lines') ) {
+			$html .= sprintf(q`$('line_total_%1$d').innerHTML = $('qty_%1$d').innerHTML * $('items_%1$d').innerHTML;`, $line );
+		} # end foreach line
+		return $html;
+	) ?>
+	} // end function update_contents
+// ]]>
+</script>
+<div class="PackingSlip">
+	<form name="PackingSlip" action="" method="get">
+	<table style="height: .5in;">
+		<tr>
+			<td style="font-size: 28PT;">PACKING SLIP</td>
+			<td style="border: 1px solid black;">DATE: 
+				<span id="date"><? echo ( $$variable{'Label'}->get_data('date'); ) ?></span>
+			</td>
+		</tr>
+	</table>
+<script type="text/javascript">
+new Ajax.InPlaceRichEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=date'}, tinymce_options );
+</script>
+	<span style="font-size: 12pt;font-weight: bold;">
+	# <? echo ( $$variable{'Label'}->docket() ) ?>&nbsp;&nbsp;
+<img src="/barcode.png?code=D<? echo ( $$variable{'Label'}->docket() ) ?>+&amp;NoText=1&amp;Height=20" alt="<? echo ( $$variable{'Label'}->docket() ) ?>" />
+	</span>
+	<br/>
+	<table style="height: 1.75in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				TO:<br/>
+				<div id="to" style="height: 1.5in;"><? echo ( $$variable{'Label'}->get_data('to'); ) ?></div>
+			</td>
+			<td style="border: 1px solid black;">
+				FROM:<br/>
+				<div id="from" style="height: 1.5in;"><? echo ( $$variable{'Label'}->get_data('from');) ?></div>
+			</td>
+		</tr>
+	</table>
+<script type="text/javascript">
+new Ajax.InPlaceRichEditor( 'to', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=to',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=to'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=from',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=from'}, tinymce_options );
+</script>
+	<br/>
+	<table style="height: 4in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				DESCRIPTION:<br/>
+				<div id="description" style="height:3.75in;"><? echo ( $$variable{'Label'}->get_data('description'); ) ?></div>
+<script type="text/javascript">
+new Ajax.InPlaceRichEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=description'}, tinymce_options );
+</script>
+			</td>
+			<td style="border: 1px solid black;">
+				QUANTITY:<br/>
+				<div id="quantity" style="height: 3.75in;">
+				<table>
+					<? echo (
+						my $html;
+						foreach my $line ( 1 .. $$variable{'Label'}->get_data('quantity_lines') ) {
+							$html .= sprintf(q`
+								<tr id="line_%1$d"><td><div id="qty_%1$d" class="edit">%2$d</div></td><td>%6$s</td><td width="10">@</td><td><div id="items_%1$d" class="edit">%3$s</div></td><td width="10">=</td><td id="line_total_%1$d">%5$s</td></tr>
+								<script type="text/javascript">
+								new Ajax.InPlaceEditor( 'qty_%1$d', '_label.html?id=%4$d&amp;action=update&amp;field=qty_%1$d',{okButton:false,cancelControl:false,submitOnBlur:true,loadTextURL:'_label.html?id=%4$d&amp;action=getnohtml&amp;field=qty_%1$d',onComplete:update_contents} );
+								new Ajax.InPlaceEditor( 'items_%1$d', '_label.html?id=%4$d&amp;action=update&amp;field=items_%1$d',{okButton:false,cancelControl:false,submitOnBlur:true,loadTextURL:'_label.html?id=%4$d&amp;action=getnohtml&amp;field=items_%1$d',onComplete:update_contents} );
+								</script>
+								`, $line, 
+								( $$variable{'Label'}->get_data('qty_'.$line) ? $$variable{'Label'}->get_data('qty_'.$line) : '&nbsp;' ), 
+								( $$variable{'Label'}->get_data('items_'.$line) ? $$variable{'Label'}->get_data('items_'.$line) : '&nbsp;' ),
+								$$variable{'Label'}->id(),
+								$$variable{'Label'}->get_data('items_'.$line) * $$variable{'Label'}->get_data('qty_'.$line),
+								$$variable{'Label'}->get_data('type_'.$line). ($$variable{'Label'}->get_data('qty_'.$line) == 1 ? '' : 's' ),
+							);
+						} # end foreach
+	
+						return $html;
+					) ?>
+				</table>
+</div>
+			</td>
+		</tr>
+	</table>
+	<br/>
+	<table style="height: .75in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				SIGNATURE:<br/>
+				<br/>
+			</td>
+			<td style="border: 1px solid black;">
+				PRINT (please print your name):<br/>
+				<br/>
+			</td>
+		</tr>
+	</table>
+	<br/>
+	<table style="height: .75in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				DATE:
+			</td>
+			<td style="border: 1px solid black;">
+				TIME:
+			</td>
+		</tr>
+	</table>
+	</form>
+</div>

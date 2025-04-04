@@ -1,0 +1,29 @@
+<? echo ( my $html;
+	my @POC_Types = openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)');
+	$html .= '<table class="List"><tr><th>User</th><th>Total</th><th>Per PO</th>';
+	foreach ( @POC_Types ) {
+		$html .= '<th>'.$_->name().'</th>';
+	} # end
+	$html .= '</tr>';
+
+	foreach my $User ( openprint::User->find( order=>'lower(firstname),lower(lastname)',
+		( $session{'/employee/purchase_order/authorizations.html?company_id'} ? (
+			company_id => $session{'/employee/purchase_order/authorizations.html?company_id'}
+) : ( ) ),
+		( $session{'/employee/purchase_order/authorizations.html?user_id'} ? (
+			id => $session{'/employee/purchase_order/authorizations.html?user_id'}
+) : ( ) ),
+			) ) {
+
+		$html .= '<tr><td class="User">'.$User->name().'</td>';
+		$html .= '<td class="limit">'. input(type=>'float', name=>'limit_total-'.$User->id(), value=>$User->purchasing_total_limit() ).'</td>';
+		$html .= '<td class="limit">'. input(type=>'float', name=>'limit_per_po-'.$User->id(), value=>$User->purchasing_limit() ).'</td>';
+		foreach my $POC_Type ( @POC_Types ) {
+			$html .= '<td class="limit">'. input(type=>'float', name=>'limit-'.$User->id().'-'.$POC_Type->id(), value=>$User->po_limit( $POC_Type->id() ) ).'</td>';
+		} # end foreach POC_Type
+		$html .= "</tr>\n";
+	} # end foreach User
+	$html .= '</table>';
+	return $html;
+) ?>
+

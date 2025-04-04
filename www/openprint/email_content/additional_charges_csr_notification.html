@@ -1,0 +1,52 @@
+<style type="text/css">
+<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/project.css' ); ) ?>
+</style>
+<a href="mailto<? echo ( $$variable{'Operator'}->email() ) ?>"><? hecho ( $$variable{'Operator'}->name() ) ?></a> has added additional charges to the following project.
+These charges may need to be approved before production will continue.
+
+<? echo ( include('/includes/project_header.html'); ) ?>
+<div class="ProjectHeader">
+	<fieldset>
+		<table class="List">
+			<tr>
+				<th align="left">Services</th>
+				<th width="100" align="right">Price</th>
+				<th width="120" align="right">Status</th>
+			</tr>
+			<? if ( @{$$variable{'SERVICES'}} ) ?>
+				<? while ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
+					<? eval ( $$variable{'rowclass'} = ' class="colRowRed"' if $$variable{'status'} eq 'Waiting For Customer Approval'; ) ?>
+					<tr<?rowclass?>>
+						<td><?name?></td>
+						<td align="right"><? if ($$variable{"price$$variable{'OrderedQuantityIndex'}"} ne '-') ?><?CurrencySymbol?><? endif ($$variable{"price$$variable{'OrderedQuantityIndex'}"} ne '-') ?>&nbsp;<? echo ( $$variable{"price$$variable{'OrderedQuantityIndex'}"} ) ?></td>
+						<td align="right"><?status?></td>
+					</tr>
+					<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+				<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
+			<? endif ( @{$$variable{'SERVICES'}} ) ?>
+			<tr class="totals">
+				<td>Unit Prices</td>
+				<td width="100" align="right"><?CurrencySymbol?>&nbsp;<? echo ( $$variable{"UnitPrice$$variable{'OrderedQuantityIndex'}"} ) ?></td>
+				<td>&nbsp;</td>
+			</tr>
+			<tr>
+				<td align="left">Total Before Taxes</td>
+				<td width="100" align="right"> <?CurrencySymbol?>&nbsp;<? echo ( $$variable{"Total$$variable{'OrderedQuantityIndex'}"} ) ?></td>
+				<td>&nbsp;</td>
+			</tr>
+		</table>
+		<span>All prices are in <b><?CurrencyName?></b>.</span>
+		<br/>
+		<span style="float: right;">
+		<? echo (
+			if ( sets::isin( $$variable{'ProjectStatus'}, 'Proofs Out', 'Waiting for Client Approval' ) ) {
+				return ssi::writeButton( $log, $dbh, 'SignOff', 'signoff.gif', '', qq`sign-off.html?ProjectIndex=$$variable{'ProjectIndex'}`, 'Sign Off' );
+			} # end if
+		) ?>
+		</span>
+	</fieldset>
+</div>
+<a href="<? echo ( $config{'ExternalSiteURL'} ) ?>/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">Click here</a> to view this project on the employee side.<br/>
+<br/>
+Use the following link to enter the customer side and approve the order.<br/>
+<a href="<? echo ( $config{'ExternalSiteURL'} ) ?>/main/order/history_details.html?order_id=<?OrderID?>"><? echo ( $config{'ExternalSiteURL'}; ) ?>/main/order/history_details.html?order_id=<?OrderID?></a>

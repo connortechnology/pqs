@@ -1,0 +1,9 @@
+<ul>
+<? echo (
+	if ( exists $param{'item-new'} ) {
+		return join('', map { sprintf('<li>%1$s<span class="informal description" style="display:none;">%2$s</span><span class="informal price" style="display:none;">%3$.2f</span></li>', $_->item(), $_->description(), $_->price() ); } openprint::PurchaseOrder_Content->find('item like'=>$param{'item-new'}.'%','order'=>'lower(item)') );
+	} elsif ( exists $param{'description-new'} ) {
+		return join('', map { '<li>'.$_->description().'</li>' } openprint::PurchaseOrder_Content->find('description like'=>$param{'description-new'},'order'=>'lower(description)') );
+	} # end if
+) ?>
+</ul>

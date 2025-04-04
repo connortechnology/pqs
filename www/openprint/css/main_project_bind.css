@@ -1,0 +1,31 @@
+.Service .postpresscuts input[type="number"] ,
+.Service .postpresscuts input[type="text"] {
+	width: 25px;
+}
+
+.Impositions table {
+    table-layout: auto;
+    width: auto;
+}
+table .Qty {
+    width: 27px;
+}
+table .Imp {
+  /*
+	width: auto;
+	max-width: 30px;
+  */
+}
+.Service table.Impositions input[type="text"],
+.Service table.Impositions input[type="number"] {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+  width: 40px;
+}
+.Impositions table th {
+    font-size: x-small;
+}
+table.Impositions .Imp {
+  width: 300px;
+}

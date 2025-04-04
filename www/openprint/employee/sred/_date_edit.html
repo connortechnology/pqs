@@ -1,0 +1,20 @@
+<? echo ( 
+	my $html;
+	if ( $param{'action'} eq 'edit' ) {
+		$html .= ssi::datetime_select( $param{'field'}, $$variable{'Object'}->get($param{'field'}), { 'with_today'=>$param{'with_today'}, 'with_clear'=>$param{'with_clear'} } );
+		$html .= ssi::button( 'Save'.$param{'field'}.$param{'object_id'}, { 'text'=>'Save',
+			'onclick' => sprintf(q`new Ajax.Updater( '%1$s-%2$d', '_date_edit.html?object_type=%3$s&amp;object_id=%2$d&amp;field=%1$s&amp;action=save', { parameters: Form.serializeElements($('%1$s_year','%1$s_month','%1$s_day','%1$s_hour','%1$s_minute') ) } );`, @param{'field','object_id','object_type'} ),
+			'class'=>'Save',
+		} );
+		$html .= ssi::button( 'Cancel'.$param{'field'}.$param{'object_id'}, { 'text'=>'Cancel',
+			'onclick' => sprintf(q`new Ajax.Updater( '%1$s-%2$d', '_date_edit.html?object_type=%3$s&amp;object_id=%2$d&amp;field=%1$s' );`, @param{'field','object_id','object_type'} ),
+			'class'=>'Cancel',
+		} );
+	} else {
+		$html .= sprintf(q`<span class="editable" onclick="new Ajax.Updater( '%1$s-%2$d', '_date_edit.html?object_type=%3$s&amp;object_id=%2$d&amp;action=edit&field=%1$s' );">`, @param{'field','object_id','object_type'});
+		$html .= Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Object'}->get($param{'field'}) ) );
+		$html .= '</span>';
+	} # end if
+	return $html;
+) ?>
+	

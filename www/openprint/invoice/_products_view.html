@@ -1,0 +1,41 @@
+<? if ( $$variable{Invoice}->Products() > 0 ) ?>
+<fieldset><legend>Products</legend>
+	<table class="List">
+		<tr>
+			<th class="name">Product</th>
+			<th class="description">Description</th>
+			<th class="po">PO Num</th>
+			<th class="Quantity">Qty</th>
+			<th class="Price">Price</th>
+			<th class="Price">Total</th>
+		</tr>
+		<? echo ( 
+			my $html = '';
+			my $rowclass;
+			$$variable{product_total} = 0;
+			foreach my $Invoiced_Product ( $$variable{Invoice}->Products() ) {
+				my $Product = $Invoiced_Product->Product();
+				$html .= sprintf('<tr%1$s>
+						<td class="name"><a href="/product/view.html?product_id=%2$d">%3$s</a></td>
+						<td class="description"><a href="/product/view.html?product_id=%2$d">%4$s</a></td>
+						<td class="po">%5$s</td>
+						<td class="Quantity">%6$s</td>
+						<td class="Price">%7$s</td>
+						<td class="Price">%8$s</td>
+					</tr>', $rowclass, $Product->id(), $Invoiced_Product->name(), $Invoiced_Product->description(), $Invoiced_Product->po(), 
+					$Invoiced_Product->quantity(), 
+					openprint::Currency::format($Invoiced_Product->price()), 
+					openprint::Currency::format($Invoiced_Product->total()),
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$$variable{product_total} += $Invoiced_Product->total();
+			} # end foreach Product
+			return $html;
+		) ?>
+		<tr class="totals">
+			<td colspan="5">Product Total</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{product_total} ); ) ?></td>
+		</tr>
+	</table>
+</fieldset>
+<? endif ( $$variable{Invoice}->Products() > 0 ) ?>

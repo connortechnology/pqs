@@ -1,0 +1,30 @@
+Attached is a copy of your order for reference purposes.<br/>
+<br/>
+All orders are saved in your order history.
+You can access all order information by linking from the attachment.
+With just one click it is easy to reorder.<br/>
+<?if ( ! $$variable{Order}->terms_accepted() ) ?>
+<p>
+Our terms &amp; conditions have not yet been accepted.  The order will not go into production until they have been accepted. Please use the following link:<br/>
+<br/>
+<?echo($$variable{Order}->link_to(); )?><br/>
+<br/>
+</p>
+<?endif ( ! $$variable{Order}->terms_accepted() ) ?>
+<br/>
+If you would like to upload files for this order, you may use our ftp site, or use the following link to use our friendly upload center:<br/>
+<a href="/upload/upload_center.html?Docket=<? echo ( $$variable{Order}->docket(); ) ?>">Upload Center</a><br/>
+
+<br/>
+<p>
+ If you have any questions, please contact
+<? echo (
+	my $Company = $$variable{Order}->Company();
+	if ( $Company->salesrep_id() ) {
+		my $CSR = new openprint::User( $Company->salesrep_id() );
+		return sprintf('<a href="mailto:%s">%s %s</a>.', $CSR->email(), $CSR->firstname(), $CSR->lastname() );
+	} else {
+		return qq`our <a href="/support/help_desk.html">helpdesk</a>.`;
+	} # end if
+) ?>
+</p>

@@ -1,0 +1,34 @@
+<div class="BankInformation">
+	<fieldset><legend>Bank Information</legend>
+		<ul>
+		<li class="required"> 
+			<label for="bank_name">Bank Name</label>
+			<input type="text" id="bank_name" name="bank_name" value="<? hecho ( $param{bank_name} ? $param{bank_name} : $$variable{Company}->bank_name() ) ?>" />
+		</li>
+		<li class="required"> 
+			<label for="bank_branch">Branch #</label>
+			<input type="text" id="bank_branch" name="bank_branch" value="<? hecho ( $param{bank_branch} ? $param{bank_branch} : $$variable{Company}->bank_branch() ) ?>" />
+		</li>
+		<li class="required"> 
+			<label for="bank_account">Bank Account #</label>
+			<input type="text" id="bank_account" name="bank_account" value="<? hecho ( $param{bank_account} ? $param{bank_account} : $$variable{Company}->bank_account() ) ?>" />
+		</li>
+		<li class="required"> 
+			<label for="bank_manager">Account Manager</label>
+			<input type="text" id="bank_manager" name="bank_manager" value="<? hecho ( $param{bank_manager} ? $param{bank_manager} : $$variable{Company}->bank_manager() ) ?>" />
+		</li>
+		<li class="required"> 
+			<label for="bank_phone">Bank Phone</label>
+			<input type="tel" id="bank_phone" name="bank_phone" value="<? hecho ( $param{bank_phone} ? $param{bank_phone} : $$variable{Company}->bank_phone() ) ?>" />
+		</li>
+		<li> 
+			<label for="bank_fax">Bank Fax</label>
+			<input type="tel" id="bank_fax" name="bank_fax" value="<? hecho ( $param{bank_fax} ? $param{bank_fax} : $$variable{Company}->bank_fax() ) ?>" />
+		</li>
+		<li> 
+			<label for="bank_email">Bank E-mail</label>
+			<input type="email" id="bank_email" name="bank_email" value="<? hecho ( $param{bank_email} ? $param{bank_email} : $$variable{Company}->bank_email() ) ?>" />
+		</li>
+		</ul>
+	</fieldset>
+</div>

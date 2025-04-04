@@ -1,0 +1,147 @@
+<? eval (
+	if ( !$$variable{Label}->get_data('year') ) {
+		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
+		$$variable{Label}->set_data(year=>$year+1901);
+	} # end if
+	if ( !$$variable{Label}->get_data('type') ) {
+		$$variable{Label}->set_data(type=>'COMDA CVRS');
+	}
+	if ( !$$variable{Label}->get_data('printed_on') ) {
+		my $printed_on = $$variable{Label}->Project()->printed_on();
+		$printed_on = Date::Format::time2str('%B %o, %Y', time) if ! $printed_on;
+    $$variable{Label}->set_data(printed_on=>$printed_on);
+  }
+	if ( ! $$variable{Label}->get_data('sheets_per_skid') ) {
+		my $Project = $$variable{Label}->Project();
+		my $services = $Project->services();
+		if ( $$services{BulkSkids} ) {
+			my $BulkSkids = $Project->Service($$services{BulkSkids}[0]);
+			my $specs = $BulkSkids->specs();
+			my $sheets = $$specs{'txtItemsPerPackage'.$Project->ordered_quantity_index()};
+			$sheets = 4500 if ! $sheets;
+
+			$$variable{Label}->set_data(
+					sheets_per_skid=>'Packed Maximum '.$sheets. ' sheets per skid'
+					);
+		}
+  }
+	if ( ! $$variable{Label}->get_data('default_reference') ) {
+		$$variable{Label}->set_data(default_reference=>'%year% %type%');
+	}
+) ?>
+<script>
+	var tinymce_options = {
+		mode : "textareas",
+		plugins: "paste",
+		theme : "advanced",
+		theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
+		theme_advanced_buttons2 : '',
+		theme_advanced_buttons2 : '',
+		cleanup : true
+	};
+
+	tinyMCE.init( tinymce_options );
+
+	function setup_editor(field) {
+		new Ajax.InPlaceEditor(field,
+//new Ajax.InPlaceRichEditor(field,
+				'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field='+field,
+				{
+					okButton:true,
+					cancelControl:'button',
+					submitOnBlur:true,
+					rows:1
+					//loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field='+field
+					}, tinymce_options
+				);
+	}
+	function setup_rich_editor(field) {
+		new Ajax.InPlaceRichEditor(field,
+				'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field='+field,
+				{
+					okButton:true,
+					cancelControl:'button',
+					submitOnBlur:true,
+					rows:1
+					//loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field='+field
+					}, tinymce_options
+				);
+	}
+</script>
+<style type="text/css">
+	
+	.Label {
+		font-size: 20pt;
+		text-align: center;
+		height: 14in;
+		max-width: 8.0in;
+		width: 100%;
+		margin: 0;
+		padding-top:1px;
+	}
+	.Label table tr td {
+		vertical-align: top;
+		font-family: Arial, Helvetica, Sans-Serif;
+		padding: 5px;
+		font-size: 20pt;
+	} 
+	.Label table tr td textarea {
+		width: 98%;
+	}
+#year {
+	font-size: 60pt;
+	height:1in;
+	color:black;
+	font-weight: bold;
+	margin: 1in auto 1in auto;
+	max-width: 7.5in;
+	width: 100%;
+	display: block;
+	text-align: center;
+}
+#type {
+	font-size: 60pt;
+	height:1in;
+	color:#444444;
+	font-weight: bold;
+	margin: 1in auto 1in auto;
+	max-width: 8in;
+	width: 100%;
+	display: block;
+	text-align: center;
+}
+#contents {
+	font-size: 60pt;
+	height:4in;
+	color:#444444;
+	font-weight: bold;
+	margin: 1in auto 1in auto;
+	max-width: 7.5in;
+	width: 100%;
+	display: block;
+	text-align: center;
+	border-top: 2px solid black;
+	border-bottom: 2px solid black;
+}
+#printed_on, .docket {
+font-weight: bold;
+font-size: 30pt;
+}
+#sheets_per_skid {
+font-style: italic;
+font-size: 16pt;
+}
+</style>
+<div class="Label">
+	<form name="PackingSlip">
+			<span id="year" onclick="setup_editor('year');"><? hecho ( $$variable{Label}->get_data('year'); ) ?></span>
+			<span id="type" onclick="setup_editor('type');"><? hecho ( $$variable{Label}->get_data('type'); ) ?></span>
+			<span id="contents" onclick="setup_editor('contents');"><? hecho ( $$variable{Label}->get_data('contents'); ) ?></span>
+Printed by Point-One Graphics Inc. Toronto Ontario Canada<br/>
+			<span id="printed_on" onclick="setup_editor('printed_on');"><? hecho ( $$variable{Label}->get_data('printed_on'); ) ?></span>
+			<span class="docket">Docket # <?echo($$variable{Label}->docket())?></span><br/>
+			<span id="sheets_per_skid" onclick="setup_editor('sheets_per_skid');"><? hecho ( $$variable{Label}->get_data('sheets_per_skid'); ) ?></span>
+
+
+	</form>
+</div>

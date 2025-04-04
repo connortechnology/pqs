@@ -1,0 +1,21 @@
+<? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
+<li>
+	<label>Press Type</label>
+	<select id="PrintingType" name="PrintingType" onchange="remove_div('OrderButton');calc(this.form.name);">
+		<? echo (
+				my %printingtypes;
+				foreach my $Press ( openprint::Equipment->find( 'category'=>'Printing', 'useinestimating'=>1 ) ) {
+					my $printing_type = $Press->specification('Printing Type');
+					next if ! $printing_type;
+					my $printing_type_name = $Press->specification('Printing Type Name');
+					$printing_type_name = $printing_type if ! $printing_type_name;
+					$printingtypes{$printing_type} = $printing_type_name;
+				}
+				
+				ssi::make_drop_down( [ '', 'No Preference', map { $_, $printingtypes{$_} } sort keys %printingtypes ], $$variable{'PrintingType'} );
+		) ?>
+	</select>
+</li>
+<? else ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
+<input type="hidden" name="PrintingType" id="PrintingType" value="<?PrintingType?>" />
+<? endif ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>

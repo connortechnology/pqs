@@ -1,0 +1,72 @@
+<form id="form-<? echo ( $$variable{'C'}{id} ) ?>" name="form-<? echo ( $$variable{'C'}{id} ) ?>" method="post" enctype="multipart/form-data" action="/employee/sred/project.html?project_id=<? echo ( $$variable{'Project'}->id() ) ?>">
+	<input type="hidden" name="action" />
+	<input type="hidden" name="content_id" value="<? echo ( $$variable{C}{id} ) ?>" />
+<div class="leftColumn">
+	<ul>
+	<? echo (
+		my $html;
+		my $C = $$variable{'C'};
+		if ( $C->starting() or $C->ending() or $C->duration() ) {
+			$html .= '<li class="when"><label>When</label>';
+			my $format = ($C->all_day_event() or $C->unknown_time() ? $config{'DateFormat'} : $config{'DateTimeFormat'});
+			if ( $C->starting() eq $C->ending() ) {
+				$html .= Date::Format::time2str( $format, Date::Parse::str2time( $C->starting() ) );
+			} else {
+				$html .= 
+					Date::Format::time2str( $format, Date::Parse::str2time( $C->starting() ) ) . ' to ' .
+					Date::Format::time2str( $format, Date::Parse::str2time( $C->ending() ) );
+			} # end if
+			if ( $C->duration() ) {
+				$html .= ' duration: ';
+				my $Duration = $C->Duration();
+				my %values;
+				@values{'days', 'hours', 'minutes'} = $C->Duration()->in_units( 'days', 'hours', 'minutes' );
+				foreach my $unit ( 'days', 'hours', 'minutes' ) {
+					if ( $values{$unit} ) {
+						$html .= ' ' . $values{$unit} . ' ' . $unit;
+					} # end if
+				} # end foreach
+			} # end if
+			$html .= '</li>';
+		} # end if
+		if ( $C->quantity() ) {
+			$html .= sprintf(q`<li><label>Quantity</label>%s%s</li>`, $C->quantity(), $C->quantity_units() );
+		} # end if
+		if ( $C->weight() ) {
+			$html .= sprintf(q`<li><label>Weight</label>%s%s</li>`, $C->weight(), $C->weight_units() );
+		} # end if
+		if ( $C->cost() or $C->total() ) {
+			$html .= sprintf(q`<li><label>Value</label>%s%s = %s</li>`, openprint::Currency::format($C->cost()), $C->cost_units(), openprint::Currency::format( $C->total() ) );
+		} 
+		if ( $C->user_id() ) {
+			$html .= sprintf('<li><label>Who</label>%s</li>', $C->User()->name() ) if $C->user_id();
+		} # end if
+		$html .= sprintf('<li><label>Docket</label>%s</li>', $C->docket() ) if $C->docket();
+		$html .= '</ul>';
+		$html .= '<p class="buttons">';
+		if ( $session{'user_id'} == $C->created_by() or $session{'user_type'} eq 'A' ) {
+			$html .= ssi::button( 'Edit'.$C->id(), { 'text'=>'Edit', 'onclick'=>qq`edit_content( \$('f1'), $$C{id} );`, 'class'=>'Edit' } );
+			$html .= ssi::button( 'Delete'.$C->id(), { 'text'=>'Delete', 'onclick'=>qq`delete_content( \$('f1'), $$C{id} );`, 'class'=>'Delete' } );
+			$html .= ssi::button( 'Copy'.$C->id(), { 'text'=>'Copy', 'onclick'=>qq`copy_content( \$('f1'), $$C{id} );`, 'class'=>'Copy' } );
+		} # end if
+		$html .= '</p>';
+		return $html;
+	) ?>
+</div><div class="rightColumn">
+	<ul>
+<? echo (
+		my $html;
+		my $C = $$variable{'C'};
+		$html .= sprintf('<li><label>Description</label>%2$s</li>', $C->id(), $C->description() );
+		$html .= '<li class="attachments"><label>Attachments</label><div class="assets" id="assets-'.$$C{id}.'">';
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/employee/sred/_assets.html' );
+		$html .= '</div></li></ul>';
+		$html .= '<p class="buttons">';
+		$html .= qq`<input type="file" name="filename-$$C{id}" />`;
+		$html .= ssi::button( 'Upload'.$C->id(), { 'onclick'=>qq`var form = \$('form-$$C{id}');form.elements['action'].value='Upload';form.submit();` ,'text'=>'Upload'} );
+		$html .= '</p>';
+
+		return $html;
+	) ?>
+</div>
+</form>

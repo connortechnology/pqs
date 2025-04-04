@@ -1,0 +1,37 @@
+<div class="PageTitle">
+<h1>PREVENTATIVE ACTION REQUEST (PAR)</h1>
+</div>
+<div id="PAR">
+	<? echo ( button( 'Print', { onclick=>'window.print();', text=>'Print' } ) ) ?>
+	<h3>PAR ID: <span id="par_id"><? echo ( $$variable{'PAR'}->id() ) ?></span></h3>
+	<? echo (
+		my $html;
+		if ( ( ! $param{par_id} ) ) {
+			$html .= '<div id="Part1">';
+			$html .= include('/employee/iso/_par_edit_part1.html');
+			$html .= '</div>';
+			$html .= '<div id="Part1">';
+			$html .= '</div>';
+			$html .= '<div id="Part2">';
+			$html .= '</div>';
+			$html .= '<div id="Part3">';
+			$html .= '</div>';
+			$html .= '<div id="Part4">';
+			$html .= '</div>';
+		} else {
+			$html .= '<div id="Part1">';
+			$html .= include('/employee/iso/_par_view_part1.html');
+			$html .= '</div>';
+			$html .= '<div id="Part2">';
+			$html .= include('/employee/iso/_par_view_part2.html' );
+			$html .= '</div>';
+			$html .= '<div id="Part3">';
+			$html .= include('/employee/iso/_par_view_part3.html' );
+			$html .= '</div>';
+			$html .= '<div id="Part4">';
+			$html .= include('/employee/iso/_par_view_part4.html' );
+			$html .= '</div>';
+		} # end if
+		return $html;
+	) ?>
+</div>

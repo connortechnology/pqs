@@ -1,0 +1,229 @@
+<?include(/includes/error_reporting.html)?>
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<div class="Manifest">
+	<form name="f1" id="f1" method="post" action="manifest_view.html?manifest_id=<? echo ( $$variable{Manifest}->id() ) ?>">
+		<input type="hidden" name="btnFunction" />
+		<p class="buttons">
+			<? echo ( join( "\n",
+				button( 'Back', { href=>'/employee/inventory/manifests.html' } ),
+				$$variable{Manifest}->can_edit() ? (
+					button( 'Verify', { href=>'/employee/inventory/manifest_view.html?action=Verify&amp;manifest_id='.$$variable{Manifest}->id() } ),
+					button( 'Edit', { href=>'/employee/inventory/manifest.html?manifest_id='.$$variable{Manifest}->id() } ),
+					button( 'Apply', { href=>'/employee/inventory/manifest_view.html?action=Apply&amp;manifest_id='.$$variable{Manifest}->id() } ),
+					( $$variable{Manifest}->deleted() ? (
+							button( 'UnDelete', { href=>'/employee/inventory/manifest_view.html?manifest_id='.$$variable{Manifest}->id().'&amp;action=Undelete' } ),
+						) : ( 
+							button( 'Delete', { href=>'/employee/inventory/manifest_view.html?manifest_id='.$$variable{Manifest}->id().'&amp;action=Delete' } ),
+						) ),
+				) : () 
+			); ) ?>
+		</p>
+		<br class="spacer"/>
+		<fieldset>
+			<div class="leftColumn">
+				<ul>
+				<li><label>Manifest #</label><? hecho ( $$variable{Manifest}->name() ) ?></li>
+				<li><label>Vendor</label><?hecho($$variable{Manifest}->Vendor()->name() ) ?></li>
+				<li><label>Currency</label><?echo( $$variable{Manifest}->Currency()->name();)?></li>
+				</ul>
+			</div>
+			<div class="rightColumn">
+				<ul>
+				<li><label>Received On</label><? echo ( format_date( $$variable{Manifest}->received_on() ) ) ?></li>
+				<li><label>Created On</label><? echo ( format_datetime( $$variable{Manifest}->created_on() ); ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Manifest}->updated_on() ); ) ?></li>
+				</ul>
+			</div>
+		</fieldset>
+		<div id="Types">
+		<? echo (
+			my $html = '';
+			my $Currency = $$variable{Manifest}->Currency();
+			$Currency = $openprint::Currency if ! $Currency->id();
+
+			my $grand_value_total = 0;
+			
+			foreach my $Type ( $$variable{Manifest}->Types() ) {
+				my $Paper = $Type->Paper();
+				my $columns = 9;
+				$columns += 1 if $Type->type() eq 'Sheets';
+				$columns += 1 if $$variable{Manifest}->can_see_pricing();
+				my $POC = $Type->PurchaseOrder_Content();
+				$POC = $Type->PurchaseOrder_Content({ignore_fsc=>1}) if !$POC;
+				my $check = $Type->check();
+
+				$html .= sprintf(q`
+					<fieldset>
+						<div class="leftColumn">
+							<ul><li><label>Stock</label><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a><br/>%6$s%7$s</li></ul>
+						</div>
+						<div class="rightColumn">
+							<ul>
+								<li><label>Supplier Invoice#</label>%3$s</li>
+								<li><label>Docket</label><a href="/employee/project/view.html?docket=%4$d">%4$s</a></li>
+								<li><label>Purchase Order</label>%5$s</li>
+						`, $Paper->id(), $Paper->to_string(), $Type->supplier_invoice(), $Type->docket(),
+						( $Type->po_id() ? $Type->PurchaseOrder()->link_to() : '' ),
+						( $check ? '<span class="warning">'.$check.'</span><br/>' : '' ),
+					);
+
+					if ( $$variable{Manifest}->can_see_pricing() ) {
+						$html .= '<li><label>Cost (/CWT)</label>'.$Currency->format($Type->cost());
+						if ( $POC ) {
+							my $PO_Cost = $POC->Cost();
+							$html .= '<br/>' if $Type->cost();
+							$html .= 'From PO: ' . $POC->PurchaseOrder()->Currency()->format( $$PO_Cost{cost} ) . $$PO_Cost{units} . ' = ' . $POC->PurchaseOrder()->Currency()->format($POC->total()) . ' '.$POC->item();
+						}
+						$html .= '</li>';
+					} # end if
+					$html .= sprintf(q`
+						<li><label>Manufacturers Name</label>%s</li>
+						<li><label>Item Count</label>%s</li>
+					</ul>
+				</div>
+				<br class="spacer"/>
+			</fieldset>
+			`, $Type->manufacturers_name(), $Type->item_count() );
+			my $table_header = '
+		<table class="List sortable">
+			<tr>
+				<th class="RFID">RFID</th>
+				<th class="Skid">Skid</th>
+				<th class="ManufacturersID">Manufacturers ID</th>
+				<th class="qty_lbs">lbs</th>
+				<th class="qty_kgs">Kgs</th>
+		';
+			if ( $Type->type() ne 'Roll' ) {
+				$table_header .= '<th class="qty_sheets">Sheets</th>';
+			} # end if
+			if ( $Type->type() ne 'Sheet' ) {
+				$table_header .= '<th class="qty_feet">Feet</th>';
+			} # end if
+			$table_header .= '
+				<th class="in_stock">In Stock</th>
+				<th class="last_seen">Last Seen</th>
+				<th class="Location">Location</th>
+';
+			if ( $$variable{Manifest}->can_see_pricing() ) {
+				$table_header .= '<th class="Price">Value</th>';
+			}
+$html .= '</tr>';
+				my $total = 0;
+				my $value_total = 0;
+				my @Contents = $Type->Contents();
+$log->error("No contents") if ! @Contents;
+				my %SkidContents = ();
+				my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @Contents;
+				if ( @skid_ids ) {
+					foreach my $SC ( openprint::SkidContent->find(skid_id=>\@skid_ids) ) {
+						push @{$SkidContents{$$SC{skid_id}}}, $SC;
+					} # end foreach
+				} # end if
+
+				my $split_at = 45;
+				my $line_count = 0;
+
+				foreach my $C ( sort { $$a{id} <=> $$b{id} } @Contents ) {
+
+					if ( ! $line_count ) {
+						$html .= $table_header;
+					} elsif ( ! ( $line_count % $split_at ) ) {
+						$html .= '</table><br class="page_break"/>';
+						if ( $split_at == 45 ) {
+							$line_count = 0;
+							$split_at = 60;
+						} # end if
+						$html .= $table_header;
+					} # end if
+					$line_count += 1;
+					
+					my $Skid = $C->Skid();
+					$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
+					my $SkidContents = $SkidContents{$$Skid{id}} if $SkidContents{$$Skid{id}};
+					my $RFIDTag = $C->RFIDTag();
+					my $error = $C->check();
+
+					$html .= '<tr id="tr-'.$$C{id}.'">';
+					$html .= sprintf('<td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $RFIDTag->id(), $RFIDTag->id_short() );
+					$html .= '<td class="Skid">';
+					$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $C->skid_id() ) if $C->skid_id();
+					$html .= '</td>';
+					$html .= '<td class="ManufacturersID">';
+					if ( $C->manufacturers_id() ) {
+						$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s</a>', $C->skid_id(), $C->manufacturers_id() );
+					} # end if
+					$html .= '</td>';
+					my $lbs;
+					if ( $Type->type() eq 'Sheet' ) {
+						$lbs = $C->quantity() * $Paper->width() * $Paper->height() * $Paper->wpsi();
+						$html .= '<td class="qty_lbs">'. Number::Format::format_number(Math::Round::nearest( 1,$lbs)) . '</td>';
+						$html .= '<td class="qty_kgs">'.  Number::Format::format_number(Math::Round::nearest( 1, $lbs/2.2046 )) . '</td>';
+						$html .= '<td class="qty_sheets">'.  Number::Format::format_number($$C{quantity}) . '</td>';
+					} else {
+						$lbs = $$C{quantity};
+						$html .= '<td class="qty_lbs">'. Number::Format::format_number(Math::Round::nearest( 1,$lbs )) . '</td>';
+						$html .= '<td class="qty_kgs">'. Number::Format::format_number(Math::Round::nearest( 1, $lbs/2.2046 )). '</td>';
+						$html .= '<td class="qty_feet">'.
+								( ( $Paper->width() and $Paper->wpsi() ) ? ( Number::Format::format_number( Math::Round::nearest( 1, (($lbs/$Paper->wpsi())/$Paper->width())/12 ) ) ) : () )
+								. '</td>';
+					} # end if
+					if ( $SkidContents and @{$SkidContents} ) {
+						$html .= '<td class="in_stock">'. Number::Format::format_number( Math::Round::nearest( 1, $$SkidContents[0]->quantity() ) ) . ' '.$Paper->units().'</td>';
+						$html .= '<td class="last_seen">'. $$SkidContents[0]->Skid()->last_seen_days().' days</td>';
+					} else {
+						$html .= '<td colspan="2">&nbsp;</a>';
+					} # end if
+					$html .= '<td class="Location">'.$C->Location()->name().'</td>';
+					if ( $$variable{Manifest}->can_see_pricing() ) {
+						my $value = $lbs*$Type->cost()/100;
+						$html .= '<td class="Price">'.$Currency->format($value).'</td>';
+						$value_total += $value;
+					}
+					$html .= '</tr>';
+					if ( $error ) {
+						$html .= '<tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="'.$columns.'">'.$error.'</td></tr>';
+					} # end if
+					$total += $C->quantity();
+				} # end foreach C
+
+				$html .= '<tr class="totals"><td>Totals</td><td colspan="2">'.scalar @Contents . ' skids/rolls</td>';
+				if ( $Type->type() eq 'Sheet' ) {
+					my $lbs = $total*$Paper->wpsi()*$Paper->area();
+					$html .= sprintf('<td class="qty_lbs">%1$s</td><td class="qty_kgs">%2$s</td><td class="qty_sheets">%3$s</td>',
+							Number::Format::format_number(Math::Round::nearest(1, $lbs)),
+							Number::Format::format_number(Math::Round::nearest(1, $lbs/2.2046)),
+							Number::Format::format_number($total),
+							);
+				} else { # A Roll
+					$html .= sprintf('<td class="qty_lbs">%1$s</td><td class="qty_kgs">%2$s</td><td class="qty_feet">%3$s</td>',
+						Number::Format::format_number( Math::Round::nearest( 1,$total )), 
+						Number::Format::format_number( Math::Round::nearest( 1,$total/2.2046 )), 
+						( ( $Paper->wpsi() and $Paper->width() ) ? Number::Format::format_number( (($total/$Paper->wpsi())/$Paper->width())/12 ) : 0 ),
+						);
+				} #end if
+				$html .= '<td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '3' : '2' ). '">&nbsp;</td>';
+				if ( $$variable{Manifest}->can_see_pricing() ) {
+					$html .= '<td class="Price">'.$Currency->format($value_total).'</td>';
+					$grand_value_total += $value_total;
+				}
+				$html .= '</tr>';
+				if ( scalar @Contents != $$Type{item_count} ) {
+					$html .= '<tr><td colspan="'.$columns.'" class="warning">Contents and expected content count do not match!</td></tr>';
+				} # end if
+				$html .= '</table>';
+			} # end foreach Type
+			if ( $$variable{Manifest}->can_see_pricing() ) {
+				$html .= '<br/><table>
+<tr class="totals"><td>Manifest total</td><td class="Price">'.$Currency->format($grand_value_total).'</td>
+</tr>
+</table>';
+			}
+
+			return $html;
+		) ?>
+		</div><!--Type-->
+	</form>
+	<?eval($$variable{Object} = $$variable{Manifest};)?>
+	<?include(/employee/assets/_asset_upload.html)?>
+<? echo ( $$variable{Manifest}->id() ? include_logs($$variable{Manifest}) : '' ) ?>
+</div>

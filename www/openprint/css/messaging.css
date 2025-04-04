@@ -1,0 +1,121 @@
+.Message {
+margin: 5px 0px 5px 0px;
+border: 1px solid #eee;
+}
+.Message label {
+	margin: 0;
+}
+.Message a {
+font-weight: normal;
+}
+
+#To {
+}
+#To li {
+	padding: 0;
+	position: relative;
+	float: left;
+	width: 50px;
+	height: 50px;
+	margin: 2px;
+}
+#To li .buttons {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+#To li a.button {
+	height: auto;
+	margin-right: 0;
+	background:none;
+	text-shadow: #000000 3px 3px 2px;
+	width: auto;
+	height: auto;
+	line-height: 10px;
+	border: none;
+	padding: 0 3px;
+}
+#to_filter {
+	width: 40px;
+}
+#user_id {
+	width: 200px;
+}
+.Message ul {
+width: 100%;
+}
+table .actions {
+	width: 20px;
+	text-align: center;
+}
+.Message {
+	padding-left: 300px;
+}
+.Message .Header {
+	width: 100%;
+}
+.Message .Body {
+}
+.Message .Who {
+	width: 300px;
+	margin-left: -300px;
+	float: left;
+}
+.Message .Who .User {
+	width: 200px;
+}
+.Conversation {
+	position: relative;
+	padding-left: 50px;
+	margin: 5px 0;
+	height: 50px;
+}
+.Conversation .from {
+	position: absolute;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+	width: 50px;
+	height: 50px;
+}
+
+.Conversation .buttons {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+.Reply .buttons {
+	position: relative;
+}
+
+.Conversation .View .Message {
+	padding: 0 60px;
+	position: relative;
+}
+.Conversation .View .Message .thumbnail {
+	margin-left: -60px;
+/*
+	position: absolute;
+	top: 0;
+	left: 0;
+*/
+	float: left;
+}
+.Conversation .View .Message #To .thumbnail {
+	float: none;
+	margin-left: 0;
+}
+.Conversation .View .Message .SentOn {
+	position:absolute;
+	top: 0;
+	right: 80px;
+}
+.Message .Body p {
+	padding: 0;
+}
+#new_to_autocomplete {
+	border-bottom: 1px solid #000088;
+	background-color: #DEDCB7;
+	z-index: 1000;
+	
+}

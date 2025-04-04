@@ -1,0 +1,58 @@
+<? if ( openprint::Product->find_one() ) ?>
+	<fieldset><legend>Products</legend>
+		<table class="List">
+			<tr>
+				<th class="product">Product</th>
+				<th class="po">PO Num</th>
+				<th class="Price">Price</th>
+				<th class="Quantity">Qty</th>
+				<th class="Price">Total</th>
+				<th class="buttons">&nbsp;</th>
+			</tr>
+<? if ( $$variable{Invoice}->Products() > 0 ) ?>
+			<? echo ( 
+				my $html = '';
+				$$variable{product_total} = 0;
+				foreach my $Product ( $$variable{Invoice}->Products() ) {
+					$html .= qq`<tr id="Product$$Product{id}">`;
+					$html .= sprintf(q`<td class="product"><input type="text" id="product-description-%1$d" name="product-description-%1$d" value="%2$s" /></td>`, $Product->id(), html_escape($Product->description()) );
+					$html .= sprintf(q`<td class="po"><input type="text" id="product-po-%1$d" name="product-po-%1$d" value="%2$s" /></td>`, $Product->id(), $Product->po() );
+
+					$html .= '<td class="Price">'.input( type=>'float', id=>'product-price-'.$$Product{id}, name=>'product-price-'.$$Product{id}, value=>$Product->price(), onkeyup=>"update_product( '$$Product{id}' );" ) . '</td>';
+					$html .= '<td class="Quantity">'.input( type=>'float', id=>'product-quantity-'.$$Product{id}, name=>'product-quantity-'.$$Product{id}, value=>$$Product{quantity}, onkeyup=>"update_product( '$$Product{quantity}' );" ) . '</td>';
+					$html .= sprintf('<td class="Price" id="product-total-%1$d">%2$s</td>', $Product->id(), openprint::Currency::format( $Product->total() ) );
+					$html .= '<td class="buttons">';
+            $html .= button( 'Remove'.$Product->id(), { 'data-product_id'=>$$Product{id}, 'data-on-click-this'=>'del_product', text=>'-', title=>'Remove' } );
+					$html .= '</td>';
+					$html .= "</tr>\n";
+					$$variable{product_total} += $Product->total();
+				} # end foreach Product
+				return $html;
+			) ?>
+			<tr class="totals">
+				<td colspan="4">Totals</td>
+				<td id="product_total"><? echo ( openprint::Currency::format($$variable{product_total}); ) ?></td>
+				<td class="buttons">&nbsp;</td>
+			</tr>
+<? endif ( $$variable{Invoice}->Products() > 0 ) ?>
+			<tr>
+				<td class="Description">
+					<select id="product-category-id-" name="product-category-id-" onchange="new Ajax.Updater( 'product-id-', '/includes/_products_ddm.html', { parameters: { category_id: this.value } } );">
+					<option value="">all</option>
+					<? echo ( make_drop_down( openprint::Product_Category->dropdown( order =>'lower(name)'), $param{'product-category-id-'} ); ) ?>
+					</select>
+					<select id="product-id-" name="product-id-">
+					<? echo ( make_drop_down( openprint::Product->dropdown( order =>'lower(name)',
+									( $param{'product-category-id-'} ? ( category_id=>$param{'product-category-id-'} ) : () ),
+									), $param{'product-id-'} ); ) ?>
+					</select>
+				</td>
+				<td class="po"><input type="text" id="product-po-" name="product-po-"/></td>
+				<td class="Price"></td>
+				<td class="Quantity"><? echo ( input( type=>'float', id=>'product-quantity-', name=>'product-quantity-' ); ) ?></td>
+				<td class="Price"></td>
+				<td class="buttons"><? echo ( button( 'AddNewProduct', { 'data-on-click-this'=>'add_product', text=>'+' } ); ) ?></td>
+			</tr>
+		</table>
+	</fieldset>
+<? endif ( openprint::Product->find_one() ) ?>

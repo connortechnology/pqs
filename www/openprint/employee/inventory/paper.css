@@ -1,0 +1,66 @@
+form div.header {
+    width: auto;
+	    height: auto;
+		    background: none;
+			}
+
+div.row {
+	width: 100%;
+	margin: 0px;
+	margin-bottom: 5px;
+	clear: both;
+}
+div.row .label {
+	width: 150px;
+	text-align: right;
+	margin: 5px;
+	float: left;
+	clear: left;
+}
+div.row .input {
+	margin: 5px;
+	margin-left: 160px;
+	width: auto;
+	display: block;
+	clear: right;
+}
+div.paper {
+	width: 245px;
+	float: left;
+	p\osition: relative;
+	clear: none;
+	margin: 2px;
+}
+div.paper .label {
+	width: 50px;
+	float: left;
+	p\osition: relative;
+	margin: 0px;
+	clear: none;
+}
+div.paper .input {
+	margin: 0px;
+	clear: none;
+}
+
+.PaperID {
+	float: left;
+	clear: left;
+}
+
+.InStock {
+	float: right;
+	width: 90px;
+	text-align: right;
+}
+.Allocated {
+	float: right;
+	width: 90px;
+	text-align: right;
+}
+.OnOrder {
+	float: right;
+	width: 90px;
+	clear: right;
+	text-align: right;
+}

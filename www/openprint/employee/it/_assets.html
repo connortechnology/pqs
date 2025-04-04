@@ -1,0 +1,17 @@
+<? echo ( 
+	my $html = '';
+	foreach my $A ( $$variable{Host}->Assets() ) {
+		my $Asset = $A->Asset();
+		$html .= sprintf(
+				'<a target="_blank" href="%s" class="thumbnail"><img src="%s" alt="%s"/></a><span class="buttons">%s</span>',
+				$Asset->url(), $Asset->sized_url('medium'), $Asset->name(),
+				join("\n",
+                button( 'delete'.$Asset->id(), {
+									onclick=> qq`jQuery('#assets').load('_assets.html', { host_id: '$$variable{Host}{id}', asset_id: '$$A{asset_id}', action: 'delete' });`,
+									text=>'Delete',
+									} ),
+                )
+				);
+	} # end foreach Asset
+	return $html;
+) ?>

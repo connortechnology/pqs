@@ -1,0 +1,44 @@
+<? eval (
+	$$variable{'StartDate'} = sprintf('%.4d-%.2d-%.2d', @$variable{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+	$$variable{'EndDate'} = sprintf('%.4d-%.2d-%.2d', @$variable{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
+	if ( $$variable{'ProjectID'} ) {
+		$_ = "SELECT Index, strProjectReference, strStatus, to_char(dtmCreationDate, 'MM/DD/YYYY') FROM tbl_Projects ".
+			" WHERE CompanyIndex=$openprint::session{'company_id'}";
+		$_ .= " AND strStatus NOT IN ('uncalculated', 'Unordered', 'Deleted')";
+		$_ .= " AND Index LIKE '$$variable{'ProjectID'}\%'" if $$variable{'ProjectID'};
+		$_ .= " ORDER BY Index DESC";
+		@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, $_ );
+	} else {
+		$_ = "SELECT Index, strProjectReference, strStatus, to_char(dtmCreationDate, 'MM/DD/YYYY') FROM tbl_Projects ".
+			" WHERE CompanyIndex=$openprint::session{'company_id'}";
+		$_ .= " AND strStatus NOT IN ('uncalculated', 'Unordered', 'Deleted')";
+		$_ .= " AND date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}')";
+		$_ .= " ORDER BY Index DESC";
+		@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, $_ );
+	} # end if
+) ?>
+
+<? if ( @{$$variable{'PROJECTS'}} == 0 ) ?>
+	There are no ordered projects that match your search criteria.<br/>
+<? else ( @{$$variable{'PROJECTS'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Project #</b> to select which project to upload files to.<br/><br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th width="75" align="left">Project #</th>
+			<th align="left">Project Reference</th>
+			<th width="85" align="left">Status</td>
+			<th width="80" align="center">Created</th>
+		</tr>
+		<? while ( @$variable{'index', 'reference', 'status', 'creationdate'} = splice @{$$variable{'PROJECTS'}},0,4; ) ?>
+		<tr<?rowclass?>> 
+			<td align="left"><a href="upload.html?ProjectIndex=<?index?>"><?index?></a>&nbsp;</td>
+			<td align="left"><a href="upload.html?ProjectIndex=<?index?>"><?reference?></a>&nbsp;</td>
+			<td align="left">&nbsp;<?status?></td>
+			<td align="center"><?creationdate?>&nbsp;</td>
+		</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq '' ? ' class="colRow"' : '' ) ?>
+		<? endwhile ( @$variable{'index', 'reference', 'status', 'creationdate'} = splice @{$$variable{'PROJECTS'}},0,4; ) ?>
+	</table>
+<? endif ( @{$$variable{'PROJECTS'}} == 0 ) ?>

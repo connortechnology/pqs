@@ -1,0 +1,60 @@
+<script type="text/javascript" src="<? hash_link(/javascripts/fileuploader.js) ?>"></script>
+<link type="text/css" rel="<? hash_link(/css/fileuploader.css) ?>"/>
+<?include(/includes/error_reporting.html)?>
+<div class="PhotoAlbum">
+	<div class="Edit">
+<? if ( $$variable{Album}->can_edit() ) ?>
+		<form id="f1" name="f1" action="/photo_albums/edit.html?album_id=<? echo ( $$variable{Album}->id() ) ?>" enctype="multipart/form-data" method="post">
+			<input type="hidden" name="btnFunction" />
+			<p class="buttons">
+			<? echo (
+				my $html = '';
+				$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};", 'text'=>'Delete Album' } );
+				$html .= button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } );
+				return $html;
+			) ?>
+			</p>
+			<fieldset>
+				<div class="content">
+					<ul>
+						<li><label>Name</label><input type="text" name="name" id="name" value="<? echo ( $$variable{Album}->name() ) ?>" /></li>
+						<li><label>Description</label><textarea name="description" id="description"><? echo ( $$variable{Album}->description() ) ?></textarea></li>
+<? if ( $session{user_type} eq 'A' ) ?>
+						<li><label>Company</label>
+<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+							<select name="company_id" id="company_id" onchange="stop_filter_companies();new Ajax.Updater('user_id', '/includes/_users.html', { parameters: { company_id: this.getValue() } } );">
+								<option value="">no one</option>
+								<? echo (
+	$$variable{company_id} = $param{company_id} ? $param{company_id} : 
+		( $$variable{Album}->id() ? $$variable{Album}->User()->company_id() : $session{company_id} );
+ make_drop_down( openprint::Company->dropdown( id=>$$variable{company_id}), $$variable{company_id} ); ) ?>
+							</select>
+							
+						</li>
+						<li><label>Owner</label>
+							<select name="user_id" id="user_id">
+<option value="">no one</option>
+<? echo ( 
+	my $owner_id = ( $param{user_id} ? $param{user_id} : ( $$variable{Album}->id() ? $$variable{Album}->user_id() : $session{user_id} ) );
+make_drop_down( openprint::User->dropdown( company_id => $$variable{company_id}, order=>'lower(firstname),lower(lastname)'), $owner_id );
+) ?>
+							</select>
+						</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
+						<?include(/includes/_privacy_widget.html)?>
+					</ul>
+				</div>
+			</fieldset>
+			<? if ( $$variable{Album}->id() ) ?>
+			<?include(_album_upload.html)?>
+			<? endif ( $$variable{Album}->id() ) ?>
+			</fieldset>
+		</form>
+	<? if ( $$variable{Album}->id() ) ?>
+	<? echo ( include_logs( $$variable{Album} ); ) ?>
+	<? endif ( $$variable{Album}->id() ) ?>
+<? else ( $$variable{Album}->can_edit() ) ?>
+	You do not have rights to edit this album.
+<? endif ( $$variable{Album}->can_edit() ) ?>
+	</div>
+</div>

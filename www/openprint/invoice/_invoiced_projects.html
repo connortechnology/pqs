@@ -1,0 +1,58 @@
+<? if ( openprint::Project->find_one() ) ?>
+	<fieldset><legend>Projects</legend>
+		<table class="List">
+			<tr>
+				<th class="project">Project</th>
+				<th class="po">PO Num</th>
+				<th class="Price">Price</th>
+				<th class="Quantity">Qty</th>
+				<th class="Price">Total</th>
+				<th class="buttons">&nbsp;</th>
+			</tr>
+<? if ( $$variable{'Invoice'}->Projects() > 0 ) ?>
+			<? echo ( 
+				my $html = '';
+				$$variable{project_total} = 0;
+				foreach my $Project ( $$variable{Invoice}->Projects() ) {
+					$html .= qq`<tr id="Project$$Project{id}">`;
+					$html .= sprintf(q`<td class="project"><input type="text" id="project-description-%1$d" name="project-description-%1$d" value="%2$s" /></td>`, $Project->id(), $Project->description() );
+					$html .= sprintf(q`<td class="po"><input type="text" id="project-po-%1$d" name="project-po-%1$d" value="%2$s" /></td>`, $Project->id(), $Project->po() );
+
+					$html .= '<td class="Price">'.input( type=>'float', id=>'project-price-'.$$Project{id}, name=>'project-price-'.$$Project{id}, value=>$Project->price(), onkeyup=>"update_project( '$$Project{id}' );" ) . '</td>';
+					$html .= '<td class="Quantity">'.input( type=>'float', id=>'project-quantity-'.$$Project{id}, name=>'project-quantity-'.$$Project{id}, value=>$$Project{quantity}, onkeyup=>"update_project( '$$Project{quantity}' );" ) . '</td>';
+					$html .= sprintf('<td class="Price" id="project-total-%1$d">%2$s</td>', $Project->id(), openprint::Currency::format( $Project->total() ) );
+					$html .= '<td class="buttons">';
+					$html .= button( 'Remove'.$Project->id(), { onclick=>qq`new Ajax.Updater('InvoicedProjects','_invoiced_projects.html?action=remove&amp;project_id=$$Project{id}', { method: 'post', parameters: \$('f1').serialize()} );`, text=>'-', title=>'Remove' } );
+					$html .= '</td>';
+					$html .= "</tr>\n";
+					$$variable{project_total} += $Project->total();
+				} # end foreach Project
+				return $html;
+			) ?>
+			<tr class="totals">
+				<td colspan="4">Totals</td>
+				<td id="project_total"><? echo ( openprint::Currency::format($$variable{project_total}); ) ?></td>
+				<td class="buttons">&nbsp;</td>
+			</tr>
+<? endif ( $$variable{'Invoice'}->Projects() > 0 ) ?>
+			<tr>
+				<td class="Description">
+					<select id="project-category-id-" name="project-category-id-" onchange="new Ajax.Updater( 'project-id-', '/includes/_projects_ddm.html', { parameters: { category_id: this.value } } );">
+					<option value="">all</option>
+					<? echo ( make_drop_down( openprint::Project_Category->dropdown( order =>'lower(name)'), $param{'project-category-id-'} ); ) ?>
+					</select>
+					<select id="project-id-" name="project-id-">
+					<? echo ( make_drop_down( openprint::Project->dropdown( order =>'lower(name)'), $param{'project-id-'} ); ) ?>
+					</select>
+				</td>
+				<td class="po"><input type="text" id="project-po-" name="project-po-" value="" onkeyup=""/></td>
+				<td class="Price"></td>
+				<td class="Quantity"><? echo ( input( type=>'float', id=>'project-quantity-', name=>'project-quantity-' ); ) ?></td>
+				<td class="Price"></td>
+				<td class="buttons">
+<? echo ( button( 'AddNewProject', { onclick=>qq`new Ajax.Updater('InvoicedProjects','_invoiced_projects.html?action=add', { method: 'post', parameters: \$('f1').serialize()} );`, text=>'+' } ); ) ?>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+<? endif ( openprint::Project->find_one() ) ?>

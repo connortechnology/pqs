@@ -1,0 +1,14 @@
+<li>
+	<label>Padding</label>
+	<input type="radio" id="PaddingY" name="Padding" value="Y" onclick="add_div('PaddingDiv');remove_div('OrderButton');" <? echo ( ssi::checked( $$variable{'Padding'} eq 'Y' ); ) ?> />
+	<label class="radio" for="PaddingY">Yes</label>
+	<input type="radio" id="PaddingN" name="Padding" value="N" onclick="remove_div('PaddingDiv');remove_div('OrderButton');" <? echo ( ssi::checked( $$variable{'Padding'} ne 'Y' ); ) ?> />
+	<label class="radio" for="PaddingN">No</label>
+</li>
+<li id="PaddingDiv" <? echo ( $$variable{'Padding'} eq 'Y' ? '' : 'style="display: none;"' ) ?>>
+	<label>Cardboard Backing</label>
+	<input type="radio" id="BackingCardboard" name="Backing" value="Cardboard" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'Cardboard' ); ) ?> />
+	<label class="radio" for="BackingCardboard">Yes</label>
+	<input type="radio" id="BackingNone" name="Backing" value="None" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} ne 'Cardboard' ); ) ?> />
+	<label class="radio" for="BackingNone">No</label>
+</li>

@@ -1,0 +1,16 @@
+<? if ( $$variable{changed} ) ?>
+<? echo ( 
+	my @drops = sets::union( @{$$variable{'changed'}} );
+	$r->content_type('text/javascript');
+	my $html = '';
+	$html .= "alert('$variable{error}');" if $variable{error};
+	$html .= "Dialog.alert(\"$variable{alert}\", {width:500, height:100, okLabel: 'close', ok:function(win) {return true;}});" if $variable{alert};
+	foreach my $id ( sort @drops ) {
+		$html .= sprintf(q`new Ajax.Updater('%1$s_div', '_ul_div.html', { parameters: { ul_id: '%1$s' }, evalScripts:true });`, $id);
+	} # end foreach id
+$log->debug($html);
+	return $html;
+) ?>
+	drops.push("<? echo ( join('","', @{$$variable{'changed'}} ) ) ?>");
+	setup_drops();
+<? endif ( $$variable{changed} ) ?>

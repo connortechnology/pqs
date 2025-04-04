@@ -1,0 +1,24 @@
+<script type="text/javascript">
+	function load_categories() {
+		LoadContent('Results','_categories.html', $('f1') );
+	}
+</script>
+<?include('/includes/error_reporting.html')?>
+<form id="f1" name="f1" action="categories.html">
+<fieldset class="filters">
+	<ul>
+	<? if ( @{$$variable{Categories}} = openprint::Product_Category->find( order=>'lower(name)') ) ?>
+		<li><label>Category</label>
+			<select name="category_id" id="category_id" onchange="load_categories();">
+				<option value="">All</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{$$variable{uri}.'?category_id'} ); ) ?>
+			</select>
+		</li>
+        <? endif ( @{$$variable{Categories}} = openprint::Product_Category->find( order=>'lower(name)') ) ?>
+	</ul>
+</fieldset>
+</form>
+<p class="buttons">
+<?echo(button('New', { href=>'category_edit.html' } );)?>
+</p>
+<div id="Results"><?include(_categories.html)?></div>

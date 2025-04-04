@@ -1,0 +1,83 @@
+<? eval (
+	my $uri = '/administrator/materials/list.html';
+    my %filters = (
+		order	=>	'lower(name)',
+		#( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+		#( $session{$uri.'?materialtype_id'} ne '' ? ( 'materialtype_id' => $session{$uri.'?materialtype_id'} ) : () ),
+		( $session{$uri.'?category_id'} ne '' ? ( category_id => $session{$uri.'?category_id'} ) : () ),
+		( $session{$uri.'?equipment_id'} ne '' ? ( 'equipment_id any'=> $session{$uri.'?equipment_id'} ) : () ),
+		);
+	if (  $session{$uri.'?material_name'} ) {
+		if ( ! ( $session{$uri.'?material_name'}  =~ /%/ ) ) {
+			$filters{'name ilike'} = $session{$uri.'?material_name'}.'%';
+		} else {
+			$filters{'name ilike'} = $session{$uri.'?material_name'};
+		}
+	}
+
+    $$variable{Material} = [ openprint::Material->find( %filters ) ];
+) ?>	
+<? if ( @{$$variable{Material}} ) ?>
+	<table class="List sortable table-striped" id="Materials"
+    data-pagination="true"
+    data-search="true"
+    data-show-pagination-switch="true"
+    data-cookie="true"
+    data-cookie-same-site="Strict"
+    data-cookie-id-table="MaterialsTable"
+    data-cookie-expire="2y"
+    data-show-columns="true"
+    data-show-export="true"
+    data-columns-hidden="[]"
+    data-uncheckAll="true"
+    data-click-to-select="true"
+    data-check-on-init="true"
+    data-mobile-responsive="true"
+    data-min-width="562"
+    >
+    <thead>
+		<tr> 
+      <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'material_ids', this.checked);"/></th>
+			<th class="MaterialID" data-field="MaterialID" data-sortable="true">ID #</th>
+			<th class="MaterialName" data-field="MaterialName" data-sortable="true">Name</th>
+			<th class="Description" data-field="Description" data-sortable="true">Description</th>
+			<th class="Categories" data-field="Categories" data-sortable="true">Categories</th>
+			<th class="CompanyName Manufacturer" data-field="Manufacturer" data-sortable="true">Manufacturer</th>
+			<th class="CompanyName Supplier" data-field="Supplier" data-sortable="true">Supplier</th>
+		</tr>
+    </thead>
+    <tbody>
+<? echo (
+	my $html;
+	my $rowclass;
+
+	foreach my $Material ( @{$$variable{Material}} ) {
+		$html .= sprintf(q`
+<tr%1$s> 
+  <td class="checkbox"><input type="checkbox" name="material_ids" value="%2$d"/></td>
+	<td class="MaterialID">%3$s</td>
+	<td class="MaterialName">%4$s</td>
+	<td class="Description">%5$s</td>
+	<td class="Categories">%6$s</td>
+	<td class="CompanyName Manufacturer">%7$s</td>
+	<td class="CompanyName Supplier">%8$s</td>
+</tr>
+`, $rowclass, 
+  $Material->id(),
+	$Material->link_to( $$Material{id} ),
+	$Material->link_to( $$Material{name} ), 
+	$Material->link_to( $$Material{description} ), 
+  $Material->link_to( $Material->Category()->name() ), 
+  $Material->Manufacturer()->name(),
+  $Material->Supplier()->name(),
+ );
+
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach
+	return $html;
+) ?>
+</tbody>
+</table>
+<? else ( @{$$variable{Material}} ) ?>
+There were no results matching your criteria.<br>
+<? endif ( @{$$variable{Material}} ) ?>

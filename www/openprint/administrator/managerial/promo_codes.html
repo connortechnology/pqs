@@ -1,0 +1,37 @@
+<div class="PromoCodes">
+	<form id="f1" name="f1" action="promo_codes.html" method="post">
+		<table>
+			<tr>
+				<th class="code">Code</th>
+				<th class="name">Name</th>
+				<th class="effect">Effect</th>
+			</tr>
+		<? echo ( 
+			my $html;
+			foreach my $PC ( openprint::Promo_Code->find('order'=>'code') ) {
+				$html .= sprintf(q`
+					<tr>	
+						<td class="code"><input type="text" name="code-%1$s" value="%1$s"/></td>
+						<td class="name"><input type="text" name="name-%1$s" value="%2$s"/></td>
+						<td class="effect"><textarea name="effect-%1$s">%3$s</textarea></td>
+					</tr>`,
+					$PC->code(), $PC->name(), $PC->effect(),
+				);
+			} # end foreach
+			return $html;
+		) ?>
+					<tr>	
+						<td class="code"><input type="text" name="code-new" /></td>
+						<td class="name"><input type="text" name="name-new" /></td>
+						<td class="effect"><textarea name="effect-new"></textarea></td>
+					</tr>`,
+		</table>
+		<p class="buttons">
+			<? echo ( join('',
+						ssi::button( 'Save', {'onclick'=>q`var f1=$('f1');f1.elements['action'].value='save';f1.submit();` } ),
+						ssi::button( 'Reset', {'onclick'=>q`$('f1').reset();` } ),
+				); ) ?>
+		</p>
+		<input type="hidden" name="action"/>
+	</form>
+</div>

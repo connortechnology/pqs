@@ -1,0 +1,31 @@
+<a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">Return to Project <?ProjectIndex?></a><br/>
+<br/>
+<div class="error"><?ErrorMessage?></div>
+<div style="float: left; width: 49%;"/>
+	<form method="post" name="f1" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>">
+		<fieldset><legend>Production Feedback</legend>
+			<? echo ( include('/includes/employee/feedback/employee.html'); ) ?>
+			<? echo ( include('/includes/employee/feedback/comments.html'); ) ?>
+			<? echo ( include('/includes/employee/feedback/complete.html'); ) ?>
+			<? echo ( include('/includes/employee/feedback/complete_date.html'); ) ?>
+			<p id="DueDate">
+				<label>Due Date</label>
+				<span class="DateSelector">
+				<? echo ( ssi::date_select( 'duedate', [ @$variable{'duedate_year','duedate_month','duedate_day'} ] ) ) ?>
+				</span>
+			</p>
+			<p class="buttons">
+			<? echo ( join('',
+						ssi::button( 'Save', { onclick=>"f1.submit();", href=>'', text=>'Save' } ),
+						ssi::button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } ),
+						); ) ?>
+			</p>
+		</fieldset>
+		<input type="hidden" name="OrderId" value="<?OrderID?>"/>
+		<input type="hidden" name="Docket" value="<?Docket?>"/>
+		<input type="hidden" name="btnFunction" value="Save"/>
+	</form>
+</div><!-- Column -->
+<div id="Signatures" style="float: right; width: 49%;"/>
+<? echo ( include('/employee/proj/prep/_filmstripping_signatures.html'); ) ?>
+</div><!-- Column -->

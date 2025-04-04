@@ -1,0 +1,6 @@
+<? echo (
+	my $Job = new openprint::ScheduledJob( $param{schedule_id} );
+	my $li = $Job->get_li();
+	$li =~ s/<li id="item_$param{schedule_id}"[^>]*>(.*)<\/li>/$1/g;
+	return $li;
+) ?>

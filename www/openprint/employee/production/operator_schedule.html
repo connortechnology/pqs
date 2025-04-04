@@ -1,0 +1,101 @@
+<script>
+	var dropfunction = function(el){
+		new Ajax.Request( '_operator_drop.json', { parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+	}
+	var drops = new Array();
+	function setup_drops( ) {
+			for ( var i = 0; i < drops.length; i += 1 ) {
+					if ( $(drops[i]) ) {
+							Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
+					} // end if
+			} // end foreach id in drops
+	} // end function setup_drops
+</script>
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="get" action="operator_schedule.html">
+	<input type="hidden" name="func"/>
+	<fieldset class="filters"><legend>Display Criteria</legend>
+		<div class="leftColumn">
+			<ul>
+				<li>
+					<label>Equipment Category</label>
+					<select name="category_id" id="category_id" onchange="f1.submit();">
+						<option value="">All</option>
+					<? echo (
+		make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $session{$r->uri().'?category_id'} );
+		) ?>
+					</select>
+				</li>
+				<li>
+					<label>Equipment</label>
+					<select name="equipment_id" id="equipment_id" multiple="multiple" onchange="this.form.submit();">
+		<? echo ( 
+			@{$$variable{Equipment}} = ();
+			my @presses = openprint::Equipment->find(
+				( $session{$r->uri().'?category_id'} ? ( category_id=>$session{$r->uri().'?category_id'} ) : () ),
+				useinscheduling=>1,
+				order=>'lower(strname)'
+				);
+
+			my @selected_presses = split(',', $session{$r->uri().'?equipment_id'} );
+			foreach (@presses) {
+				push @{$$variable{Equipment}}, $_ if ! @selected_presses or sets::isin( $_->id(), \@selected_presses );
+			} # end foreach press
+		  make_drop_down( [ map { $_->id(), $_->name() } @presses ], \@selected_presses );
+		) ?>
+					</select>
+				</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
+				<li>
+					<label>Operator</label>
+					<select multiple="multiple" id="operator_ids" name="operator_ids">
+					<? echo ( 
+							make_drop_down(openprint::User->dropdown(type=>'E'), [ split ',', $session{$r->uri().'?operator_ids'} ] ); 
+					) ?>
+					</select>
+				</li>
+			</ul>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+				button( 'add', { onclick=>"f1.func.value='Add Shift';f1.submit();", text=>'Add Shift' } ), 
+			); ) ?>
+		</p>
+	</fieldset>
+	<table><thead><tr>
+	<? echo (
+		my $html;
+		foreach my $E ( @{$$variable{Equipment}} ) {
+			$html .= '<td class="PressColumn" style="width:'.int(100/(@{$$variable{Equipment}})).'%;"><a href="/employee/production/operator_schedule.html?equipment_id='.$E->id().'">'.$E->name().'</a></td>';
+		} # end foreach Equipment
+		return $html;
+	) ?>
+	</tr></thead><tbody><tr>
+	<? echo (
+		my $html;
+		my $content = slurp_content('/employee/production/_operator_shift_li.html');
+		foreach my $E ( @{$$variable{Equipment}} ) {
+			$html .= '<td class="PressColumn"><ul>';
+
+			my @EquipmentShifts = openprint::Equipment_Shift->find(equipment_id=>$E->id(), order=>'starttime_seconds');
+			foreach my $Shift ( @EquipmentShifts ) {	
+				$$variable{Shift} = $Shift;
+				$html .= variable_substitution( \$content, $variable );
+			} # end foreach Shift
+
+			$html .= '</ul></td>';
+		} # end foreach press
+		return $html;
+	) ?>
+	</tr></tbody></table>
+</form>
+<script type="text/javascript">
+$j('#equipment_id').chosen();
+$j('#operator_ids').chosen();
+$j('#category_id').chosen();
+</script>

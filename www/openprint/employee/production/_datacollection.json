@@ -1,0 +1,15 @@
+<? echo (
+	if ( $param{docket} ) {
+		my $Order = openprint::Order->find_one(docket=>$param{docket});
+		if ( ! $Order ) {
+			return qq`
+\$('docket_alert').innerHTML='docket not found.';
+`;
+		} # end if
+		my $Company = $Order->Company();
+		return qq`
+\$('docket_alert').innerHTML = '';
+\$('company_name').innerHTML = '$$Company{name}';
+`;
+	} # end if docket
+) ?>

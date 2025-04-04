@@ -1,0 +1,70 @@
+.Feedback input[type="text"],
+.Feedback input[type="number"] {
+	width: 50%;
+}
+
+.TwoColumns {
+	width: 50%;
+	float: left;
+}
+
+.Shipping input[type="number"],
+.Shipping input[type="text"]
+{
+	width: 100px;
+}
+
+#signature {
+    width: 100%;
+    height: 160px;
+    background-color: white;
+}
+
+.CapturedSignatures img {
+	background-color: white;
+
+	
+}
+
+.header .docket {
+	float: left;
+	width: 50%;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+.header .company {
+float: left;
+width: 50%;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+.header .docket  {
+font-size: large;
+font-weight: bold;
+}
+
+.header .company {
+font-size: large;
+font-weight: bold;
+}
+svg.Imposition {
+  width: 320px;
+  height: 240px;
+  color: white;
+}
+svg.Imposition rect.background {
+  background: none;
+  fill: white;
+}
+svg.Imposition rect.sheet {
+  background-color: white;
+  border: 1px solid black;
+  color: white;
+}
+
+.Previews .Preview {
+	width: 50%;
+	float: left;
+}

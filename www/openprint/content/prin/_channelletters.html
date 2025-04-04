@@ -1,0 +1,96 @@
+<div id="SignSpecifications">
+	<fieldset><legend>Sign Specifications</legend>
+		<div class="content">
+			<ul>
+				<li class="letters"><label>Sign Text</label><?echo(input(type=>'text', name=>'letters', value=>$$variable{letters}, oninput=>'calc();' );)?></li>
+				<li class="sign_height"><label>Sign Height</label><? echo ( 
+			my @sizes = ( 9, 12, 15, 18, 24 );
+
+				return join("\n",
+					ssi::select( [ '','select', ( map { $_, $_ . ' inch' } @sizes ), '', 'Other' ], $$variable{letter_height},
+						{ name=>'letter_height_select',
+							onchange=>q`if(this.getValue()==''){$('letter_height').show();}else{$('letter_height').hide();$('letter_height').value=this.getValue();};`, 
+					} ),
+					input( type=>'float', id=>'letter_height', name=>'letter_height', value=>$$variable{letter_height}, ( sets::isin( $$variable{letter_height}, \@sizes ) ? ( style=>'display:none;' ) : () ), placeholder=>'letter height in inches' ),
+					);
+			) ?>
+				<li><label>Font</label><? echo(
+						my @fonts = ( 'Helvetica','Times Bold' );
+						ssi::select( [ ( map { $_, $_ } @fonts), '', 'Custom' ], $$variable{letter_font}, 
+							{ name=>'letter_font', onchange=>'calc();',
+							} ); ) ?>
+				</li>
+				<li><label>Can Finish</label>
+					<? echo (
+						my @finishes = ( 'Painted', 'Pre-primed White' );
+						return ssi::select( [ map { $_, $_ } @finishes ], $$variable{can_finish}, { name=>'can_finish', onchange=> 'calc();' } );
+					) ?>	
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+</div>
+<div id="LEDS">
+	<fieldset><legend>Lighting Options</legend>
+		<div class="content">
+			<ul>
+				<li><label>Include LED's?</label>
+					<?echo(
+						radio('include_leds', [ 'Y', 'Yes', 'N', 'No' ], $$variable{include_leds}, { 
+							default=>'N', 
+							onclick=>q`if(this.value=='Y'){$('led_options').show();}else{$('led_options').hide();};calc();`
+						 } );
+					) ?>
+				</li>
+			</ul>
+			<ul id="led_options"<? echo ( $$variable{include_leds} ne 'Y' ? ' style="display:none;"' : '' ) ?>>
+				<li><label>LED Colour</label>
+					<? echo ( 
+						my @colours = ( 'White', 'RGB' );
+						return radio('led_colour', [ map { $_,$_ } @colours ], $$variable{led_colour}, { default=>'White',  onclick=>'calc();' } );
+					) ?>
+				</li>
+				<li><label>LED density</label>
+					<? echo ( my @options = ( 'high', 'High: 1 per square inch', 'medium', 'Medium: 1 per 4 square inches', 'low', 'Low: 1 per 9 square inches' );
+						ssi::select( \@options, $$variable{led_density}, { name=>'led_density', onchange=>'calc();' } );
+					) ?>
+				</li>
+				<li><label>LED quantity</label>
+					<?echo(input(type=>'cardinal', name=>'led_quantity', value=>$$variable{led_quantity} ); )?>
+				</li>
+				<li><label>Include LED Power Supply?</label>
+					<?echo(radio('led_power_supply', [ 'Y', 'Yes', 'N', 'No' ], $$variable{led_power_supply}, { default=>'Y', onclick=>'calc();' } ); )?>
+				</li>
+				<li><label>Install LEDs?</label>
+					<?echo(radio('led_install', [ 'Y', 'Yes', 'N', 'No' ], $$variable{led_install}, { default=>'Y', onclick=>'calc();' } ); )?>
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+</div><!---LEDS-->
+<div class="Colours">
+	<fieldset><legend>Colours</legend>
+		<div class="content">
+			<ul>
+				<li><label>Can Colour</label>
+					<? echo (
+						my @colours = ( 'Black' );
+						return ssi::select( [ map { $_, $_ } @colours ], $$variable{can_colour}, { name=>'can_colour', onchange=> 'calc();' } );
+					) ?>
+				</li>
+				<li><label>Face Colour</label>
+						<? echo (
+							my @colours = sort ( 'Clear', 'White', 'Black', 'Lemon Yellow', 'Ivory', 'Light Blue' );
+							return ssi::select( [ map { $_, $_ } @colours ], $$variable{face_colour}, { name=>'face_colour', onchange=> 'calc();' } );
+						) ?>
+				</li>
+				<li><label>Trim Colour</label>
+					<? echo (
+						my @colours = sort ( 'Clear', 'White', 'Black', 'Lemon Yellow', 'Ivory', 'Light Blue' );
+						return ssi::select( [ map { $_, $_ } @colours ], $$variable{trim_colour}, { name=>'trim_colour', onchange=> 'calc();' } );
+					) ?>
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+</div>

@@ -1,0 +1,25 @@
+<form name="order_add_product" id="order_add_product">
+	<fieldset><legend>Add Product</legend>
+		<input type="hidden" name="order_id" value="<?echo($$variable{Order}->id())?>"/>
+		<ul>
+			<li><label>Category</label>
+				<select id="product_category_id" name="product_category_id" onchange="new Ajax.Updater( 'product_id', '/includes/_products_ddm.html', { parameters: { category_id: this.value } } );">
+				<option value="">all</option>
+				<? echo ( make_drop_down( openprint::Product_Category->dropdown( order=>'lower(name)'), $param{'product-category-id-'} ); ) ?>
+				</select>
+			</li>
+			<li><label>Description</label>
+				<select id="product_id" name="product_id">
+				<option value="">all</option>
+				<? echo ( make_drop_down( openprint::Product->dropdown( order=>'lower(name)') ); ) ?>
+				</select>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+					button( 'AddNewProduct', { onclick=>qq`new Ajax.Updater('Products','_product_list_edit.html?action=add', { method: 'post', parameters: \$('order_add_product').serialize(), onSuccess: function() {popupWin.destroy();} } );`, text=>'Add' } ),
+					button( 'CancelStartTime', { onclick=>'popupWin.close();', text=> 'Cancel' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+</form>

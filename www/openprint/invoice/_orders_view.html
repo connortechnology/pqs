@@ -1,0 +1,50 @@
+<? if ( @{$$variable{Orders}} = $$variable{Invoice}->Orders() ) ?>
+	<fieldset><legend>Orders</legend>
+		<table class="List">
+			<tr>
+				<th class="order_id">Order ID</th>
+				<th class="docket">Docket</th>
+				<th class="po">PO Num</th>
+				<th class="Date">Created</th>
+				<th class="Status">Status</th>
+				<th class="Price">Total</th>
+				<th class="Price">Owing</th>
+			</tr>
+			<? echo ( 
+				my $html = '';
+				my $rowclass;
+				$$variable{order_total_total} = $$variable{order_owing_total} = 0;
+
+				foreach my $OI ( @{$$variable{Orders}} ) {
+					my $Order = $OI->Order();
+					$html .= sprintf(q`
+<tr id="Order%1$d"%8$s onclick="window.location='%9$s';">
+	<td class="order_id">%1$d</td>
+	<td class="docket">%2$d</td>
+	<td class="po">%3$s</td>
+	<td class="Date">%5$s</td>
+	<td class="Status">%4$s</td>
+	<td class="Price">%6$s</td>
+	<td class="Price">%7$s</td>
+</tr>
+`, 
+						@$Order{'id','docket','po'}, $Order->status(), format_date( $Order->created_on() ), 
+						openprint::Currency::format( $Order->total() ), 
+						openprint::Currency::format( $Order->owing() ),
+						$rowclass,
+						$Order->url_to(),
+					);
+					$$variable{order_total_total} += $Order->total();
+					$$variable{order_owing_total} += $Order->owing();
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end foreach Order
+				return $html;
+			) ?>
+			<tr class="totals">
+				<td colspan="5">Totals</td>
+				<td id="order_id_total"><? echo ( openprint::Currency::format($$variable{order_total_total}); ) ?></td>
+				<td id="order_id_total"><? echo ( openprint::Currency::format($$variable{order_owing_total}); ) ?></td>
+			</tr>
+		</table>
+	</fieldset>
+<? endif ( @{$$variable{Orders}} = $$variable{Invoice}->Orders() ) ?>

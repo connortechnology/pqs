@@ -1,0 +1,32 @@
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend>Collating</legend>
+			<ul>
+				<li><label>Spreads to be collated</label>
+				<? echo ( my $html;
+					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+						$html .= '<span class="'.$$variable{Columns}.'Columns">';
+						$html .= input( type=>'cardinal', name=>'txtSignatureCount'.$qty_index, id=>'txtSignatureCount'.$qty_index, value=>$$variable{'txtSignatureCount'.$qty_index}, onkeyup=>'calc(this.form.name);' );
+						$html .= write_override( 'OverrideSignatureCount'.$qty_index, $$variable{'OverrideSignatureCount'.$qty_index}, '', "calc('f1');" );
+						$html .= '</span>';
+					} # end foreach qty_index
+					return $html;
+				) ?>
+				</li>
+			</ul>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+				<?include('/includes/main/proj/quantities_equipment_prices.html')?>
+			</ul>
+		</fieldset>
+		<hr/>
+        <?include('/includes/main/proj/add_to_project.html')?>
+        <input type="hidden" name="btnFunction" value="Save Service"/>
+        <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+        <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
+        <input type="hidden" name="ContinueProject" value="Y" />
+        <input type="hidden" name="ServiceType" value="<?ServiceTypeType?>" />
+	</form>
+</div>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>

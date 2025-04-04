@@ -1,0 +1,80 @@
+<div class="Support"><div class="Return">
+<?include('/includes/error_reporting.html')?>
+<form method="post" id="f1" name="f1" action="rma.html">
+<fieldset>
+	Please fill out the return authorization form and verify the information below.<br/>
+	<br/>
+	<ul>
+<? if ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ?>
+		<li class="rmanumber">
+		<label>RMA Number</label>
+		<input type="text" name="rmanumber" value="<? echo ( $param{rmanumber} ) ?>" />
+		</li>
+<? endif ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ?>
+		<li class="docket"> 
+			<label>Docket ID</label>
+			<? echo ( input( type=>'cardinal', name=>'docket', value=>$param{docket} ); ) ?>
+		</li>
+		<li class="order_id"> 
+			<label>Order ID</label>
+			<? echo ( input( type=>'cardinal', name=>'order_id', value=>$param{order_id},
+
+						#( $session{user_id} ? ( onkeyup=>q`new Ajax.Request('_order_lookup.json', { parameters{ order_id: this.value } } );` ) : () ),
+						); ) ?>
+		</li>
+<? if ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ?>
+		<li><label>Company</label>
+			<select name="company_id" id="company_id" onchange="$('company').value='';">
+				<option value="">None or new</option>
+<? echo ( make_drop_down( openprint::Company->dropdown('last_order_id is null'=>0), $session{'/support/rma.html?company_id'} ? $session{'/support/rma.html?company_id'} : $session{company_id}) ) ?>
+			</select>
+			or 
+			<input type="text" name="company" id="company" value="<? echo ( $param{company} ) ?>" onkeyup="ddm_select_by_text($('company_id'), this.value, 0);" placeholder="Enter new company here"/>
+		</li>
+<? endif ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ?>
+
+<? if ( openprint::Project->find_one() ) ?>
+		<li> 
+			<label>Project ID</label>
+			<? echo ( input( type=>'cardinal', name=>'project_id', value=>$param{project_id} ); ) ?>
+		</li>
+<? endif ( openprint::Project->find_one() ) ?>
+<? if ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ?>
+		<li> 
+			<label>Type</label>
+<? echo ( radio( 'type', openprint::RMA_Type->dropdown(order=>'lower(name)'), $param{type_id} ); ) ?>
+		</li>
+<? endif ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ?>
+<? if ( openprint::Product->find_one() ) ?>
+		<li><label>Product Serial #</label>
+			<input type="text" name="product_serial" value="<? echo ( $param{product_serial} ) ?>" />
+		</li>
+		<li><label>Product Model #</label>
+			<input type="text" name="product_model" value="<? echo ( $param{product_model} ) ?>" />
+<? echo (
+	my $html;
+	if ( my @Categories = openprint::Product_Category->find() ) {
+		$html .= ssi::select( [ map { $_->id(), $_->name() } @Categories ], undef, { name=>'product_category_id', id=>'product_id',
+			onchange=>q`new Ajax.Updater( 'product_id', '/includes/_products_ddm.html', { parameters: { category_id: this.value } } );`,
+			} );
+	} # end if
+	$html .= ssi::select( openprint::Product->dropdown(order=>'lower(name)'), undef, { name=>'product_id', id=>'product_id' } );
+	return $html;
+) ?>
+		</li>
+<? endif ( openprint::Product->find_one() ) ?>
+		<li> 
+			<label>Description of problem</label>
+			<textarea name="description"><? echo ( $param{description} ) ?></textarea>
+		</li>
+	</ul>
+	<p class="buttons">
+	<? echo ( join("\n",
+				button( 'Submit', { onclick=>"f1.elements['action'].value='Submit';f1.submit();" } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ), 
+	); ) ?>
+	</p>
+</fieldset>
+	<input type="hidden" name="action"/>
+</form>
+</div></div>

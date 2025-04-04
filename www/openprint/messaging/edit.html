@@ -1,0 +1,41 @@
+	<form name="f1" id="f1" action="/messaging/list.html" method="post" enctype="multipart/form-data">
+		<fieldset><legend>Editing Conversation <? echo ( $$variable{Conversation}->id() ? '('.$$variable{Conversation}->id().')' : '' ) ?></legend>
+			<? if ( $$variable{Conversation}->deleted() ) ?>
+			<span class="warning">This conversation has been deleted</span>
+			<? endif ( $$variable{Conversation}->deleted() ) ?>
+			
+			<input type="hidden" name="conversation_id" value="<? echo ( $param{conversation_id} ) ?>" />
+
+			<fieldset><legend></legend>
+				<div class="content">
+					<ul>
+						<li><label>To</label>
+							<div id="To"><?include(_to.html)?></div>
+						</li>
+						<li><label>Subject</label>
+							<input type="text" id="subject" name="subject" />
+						</li>
+						<li>
+							<label for="body">Body</label>
+							<textarea id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{Conversation}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Conversation}->body() ) ?></textarea>
+						</li>
+					</ul>
+				</div>
+			</fieldset>
+			<p class="buttons">
+				<? echo (
+					my $html = '';
+					$html = button( 'Cancel', { href=>'inbox.html' } );
+					
+					if ( $$variable{Conversation}->id() ) {
+						$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+					} # end if
+					$html .= button( 'Save', { onclick=>"f1.elements['action'].value='Save';f1.submit();", text=>'Save (Draft)' } );
+					$html .= button( 'Send', { onclick=>"f1.elements['action'].value='Send';f1.submit();" } );
+					return $html;
+				) ?>
+			</p>
+		</fieldset>
+		<input type="hidden" name="action" />
+	</form>
+</div></div>

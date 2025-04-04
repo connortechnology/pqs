@@ -1,0 +1,59 @@
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<?include(/includes/error_reporting.html)?>
+<div class="Product">
+	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="view.html">
+		<input type="hidden" name="product_id" value="<?echo($$variable{Product}->id())?>"/>
+			<p class="buttons">
+				<? echo ( join( "\n", 
+					( $$variable{Product}->can_edit() ? (
+						button( 'Edit',{ href=>'/product/edit.html?product_id='.$$variable{Product}->id() } ),
+						button( 'Copy',{ href=>'/product/edit.html?product_id='.$$variable{Product}->id().'&btnFunction=Copy' } ),
+						button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);" } ),
+						button( 'New',{ href=>'/product/edit.html' } ),
+					) : () ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<br class="spacer"/><hr/><br class="spacer"/>
+		<div class="leftColumn">
+			<fieldset><legend>Product Information</legend>
+				<ul>
+					<li> 
+						<label>Product ID</label>
+						<? echo ( $$variable{Product}->id(); ) ?>
+					</li>
+					<li> 
+						<label>Product Name</label>
+						<? hecho ( $$variable{Product}->name(); ) ?>
+					</li>
+					<li> 
+						<label>Category</label>
+						<? hecho ( $$variable{Product}->category(); ) ?>
+					</li>
+					<li> 
+						<label>Description</label>
+						<? hecho ( $$variable{Product}->description(); ) ?>
+					</li>
+				</ul>
+			</fieldset>
+		</div>
+		<div class="rightColumn">
+			<?eval($$variable{Object} = $$variable{Product}; )?>
+			<?include(/includes/_specifications_view.html)?>
+		</div>
+		<div class="Photos">
+			<fieldset><legend>Photos</legend>
+			<? eval ( $$variable{Album} = $$variable{Product} ) ?>
+			<?include('/photo_albums/_album_photos.html')?>
+			</fieldset>
+		</div>
+		<br class="spacer"/>
+		<div class="Prices">
+			<fieldset><legend>Prices</legend>
+				<div id="Prices"><?include('_prices_view.html')?>
+				</div>
+			</fieldset>
+		</div>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+</div>

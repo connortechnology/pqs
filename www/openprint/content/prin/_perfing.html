@@ -1,0 +1,11 @@
+<li>
+	<label>Perforating</label>
+	<input type="radio" id="PerfingY" name="Perfing" value="Y" onclick="$('PerfingDiv').show();$('OrderButton').hide();" <? echo ( ssi::checked( $$variable{'Perfing'} eq 'Y' ); ) ?> />
+	<label class="radio" for="PerfingY">Yes</label>
+	<input type="radio" id="PerfingN" name="Perfing" value="N" onclick="$('PerfingDiv').hide();$('OrderButton').hide();" <? echo ( ssi::checked( $$variable{'Perfing'} ne 'Y' ); ) ?> />
+	<label class="radio" for="PerfingN">No</label>
+</li>
+<li id="PerfingDiv" <? echo ( 'style="display:none;"' if $$variable{'Perfing'} ne 'Y' ) ?> >
+	<label for="txtPerfQty"># of Perforations</label>
+	<input type="number" id="txtPerfQty" name="txtPerfQty" value="<?txtPerfQty?>" onkeyup="integerize(this);$('OrderButton').hide();" />
+</li>

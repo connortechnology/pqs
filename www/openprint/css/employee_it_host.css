@@ -1,0 +1,39 @@
+.leftColumn, .rightColumn {
+	min-width: 300px;
+	float: left;
+}
+.leftColumn{
+	width:60%;
+}
+.rightColumn{
+	width:40%;
+}
+p.buttons {
+clear: both;
+}
+
+.Asset {
+	width: 75px;
+	float: left;
+	margin: 2px;
+}
+.Asset img {
+width: 100%;
+}
+
+#assets:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+table .options {
+	width: 100px;
+}
+#map {
+  width: 500px;
+  height: 500px;
+}

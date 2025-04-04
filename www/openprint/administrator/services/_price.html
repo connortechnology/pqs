@@ -1,0 +1,94 @@
+<? echo (
+	my $html;
+	my $Price = $$variable{Price};
+  my $Service = $$variable{Service};
+  use Data::Dumper;
+
+	$html .= sprintf('<tr id="Price-%d">', $$Price{id} );
+
+	if ( @{$$variable{company_ids}} > 2 ) {
+		$html .= sprintf('<td class="Supplier"><select name="supplier_id-%d"><option value=""> all </option>%s</select></td>',
+		$$Price{id}, make_drop_down( $$variable{company_ids}, $Price->supplier_id() ) );
+	} # end if
+
+  my $Configuration;
+  if ($Service->servicetype_id()) {
+    my $module = $Service->ServiceType()->type();
+    if (!$module) {
+      $log->error("No service type set for ".$Service->name());
+    } else {
+      $module = 'openprint::Estimating::'.$module;
+      eval ( 'require '.$module.';' );
+      $log->error("eval error $@") if $@;
+#$log->debug("Has servicetype for $module");
+
+      if (my $function = $module->can('ServicePriceConfiguration')) {
+#$log->debug("Has function for $module");
+        $Configuration = $function->($$Service{name});
+#$openprint::log->debug( Data::Dumper::Dumper($Configuration));
+      }
+    }
+  }
+  #$openprint::log->debug( Data::Dumper::Dumper($Configuration));
+	#my $Configuration = $openprint::Service::Configuration{$$variable{Service}{name}};
+  my $Currency = $$variable{Pricelist}->Currency();
+
+  sub get_units {
+    my $price = shift;
+    my $config = shift;
+    my $field = shift;
+    if (!($config and $$config{$field})) {
+      #$log->debug("Not config or not $field for $$Service{name}");
+      #$openprint::log->debug( Data::Dumper::Dumper($config));
+      return input( type=>'text', name=>join('-', $field, $$price{id} ), value=>$price->$field() );
+    }
+    if (!@{$$config{$field}}) {
+      return '';
+    } elsif (@{$$config{$field}}==1) {
+      return input( type=>'hidden', name=>join('-', $field, $$price{id} ), value=>$$config{$field}[0] ).$$config{$field}[0];
+    }
+    my @values = map { $_, $_ } @{$$config{$field}};
+    if ($$price{$field} and !sets::isin($$price{$field}, $$config{$field})) {
+      push @values, $$price{$field}, 'Invalid value '.$$price{$field};
+    }
+    if ((!defined $$price{$field}) and sets::isin('', $$config{$field})) {
+      $$price{$field} = '';
+    }
+    if (!sets::isin('', $$config{$field})) {
+      unshift @values, '','no units set';
+    }
+#$log->debug("$$price{$field}");
+    return ssi::select( \@values, $$price{$field}, { name=>join('-', $field, $$price{id}) } )
+  }
+
+	$html .= sprintf('
+			<td class="Period">%1$s<br/>%2$s</td>
+			<td class="Range">%3$s - %4$s</td>
+			<td class="Units">%5$s</td>
+			<td class="Cost">%6$s</td>
+			<td class="Markup">%7$s</td>
+			<td class="Price">%8$s</td>
+			<td class="Units">%9$s</td>
+			<td class="Discount">%10$s</td>
+			<td class="Mode">%11$s</td>
+			<td class="buttons">%12$s</td>
+		</tr>',
+		date_select( join('-', 'period_start', $$Price{id} ), $$Price{period_start}, { with_today=>1, with_clear=>1 } ),
+		date_select( join('-', 'period_end', $$Price{id} ), $$Price{period_end}, { with_today=>1, with_clear=>1 } ),
+		input( type=>'float', name=>join('-', 'min', $$Price{id} ), value=>$Price->min() ),
+		input( type=>'float', name=>join('-', 'max', $$Price{id} ), value=>$Price->max() ),
+    get_units($Price, $Configuration, 'range_units'),
+  input( type=>'float', name=>join('-', 'cost', $$Price{id} ), value=>$Currency->format($Price->cost(),5,''), onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
+		input( type=>'float', name=>join('-', 'markup', $$Price{id} ), value=>$Price->markup(), onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
+		input( type=>'float', name=>join('-', 'price', $$Price{id} ), value=>$Currency->format($Price->price(),5,''), onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
+    get_units($Price, $Configuration, 'units'),
+		radio( join('-', 'discountable',$$Price{id} ), [ 'Y', 'Yes', 'N', 'No' ], $Price->discountable(), { default=>'Y' } ),
+		ssi::select( [ '', 'Basic', 'Stepped', 'Stepped', 'Interpolate', 'Interpolate' ], $Price->mode(), { name=>'mode-'.$$Price{id}, id=>'mode-'.$$Price{id} } ),
+		($Price->id() ? 
+		join("\n", 
+			button( 'x'.$Price->id(), { on_click_this=>'del_price', data_pricelist_id=>$$variable{Pricelist}{id}, data_equipment_id=>$$variable{Equipment}{id}, data_service_id=>$$variable{Service}{id}, data_price_id=>$$Price{id}, text=>'X', title=>'Delete', type=>'button' } ),
+			button( 'c'.$Price->id(), { on_click_this=>'copy_price', data_pricelist_id=>$$variable{Pricelist}{id}, data_equipment_id=>$$variable{Equipment}{id}, data_service_id=>$$variable{Service}{id}, data_price_id=>$$Price{id}, text=>'C', title=>'Copy', type=>'button' } ),
+			) : ''),
+	);
+	return $html;
+) ?>

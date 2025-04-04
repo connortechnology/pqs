@@ -1,0 +1,26 @@
+<form id="job_popup_form" name="job_popup_form">
+	<input type="hidden" name="services" value="<? echo ( $param{'services'} ) ?>" />
+	<input type="hidden" name="ul_id" value="<? echo ( $param{'ul_id'} ) ?>" />
+	<input type="hidden" name="action" value="add_services" />
+	Which service do you want to add to this project?<br/>
+	<? echo ( 
+		my $html;
+		foreach my $servicetype_id ( split(',', $param{'servicetype_ids'} ) ) {
+			my $ServiceType = new openprint::ServiceType( $servicetype_id );
+			$html .= sprintf('<input type="checkbox" name="servicetype_id" id="servicetype_id%1$s" value="%1$d"/><label for="servicetype_id%1$d">%2$s</label><br/>', $ServiceType->id(), $ServiceType->name() );
+		} # end foreach 
+		return $html;
+	) ?>
+	<p class="buttons">
+		<? echo (
+				my $html;
+				$html .= ssi::button( 'SavePopup', { onclick=>
+					sprintf(q`new Ajax.Request( '_drop.json', { parameters: job_popup_form.serialize(), onSuccess: function() {popupWin.destroy();}, evalScripts: true } );`,
+						$param{ul_id}, $param{'services'} ),
+					text=> 'Save' } );
+				$html .= ssi::button( 'CancelShift', { onclick=> "new Ajax.Updater( '$param{ul_id}', '_ul.html', { parameters: { ul_id: '$param{ul_id}' }, evalScripts: true } );popupWin.destroy();", text=> 'Cancel' } );
+				return $html;
+		) ?>
+	</p>
+</form>
+

@@ -1,0 +1,23 @@
+<ul>
+<? echo ( 
+	my $html;
+	s/^\s+//, s/\s+$// for $param{privacy_name};
+	my @Companies = openprint::Company->find('name ilike'=>$param{privacy_name}.'%', limit=>10 ) if $param{privacy_name};
+	my @Users = map { openprint::User->find(company_id=>$_->id()) } @Companies;
+	push @Users, openprint::User->find('name ilike'=>$param{privacy_name}.'%',limit=>10, 
+		( $param{user_id} ? ( 'id not in'=>$param{user_id} ) : () ),
+		);
+	foreach my $User (@Users) {
+		my $Asset = $User->Asset();
+		my $thumbnail_url = $Asset->sized_url('thumbnail') if $Asset;
+
+		return sprintf(q`
+			<li id="%1$d" class="User"><span class="thumbnail informal"><img src="%3$s" alt="%4$s" /></span>%2$s</li>`,
+			$User->id(), $User->name(),
+			( $thumbnail_url ? $thumbnail_url : '/images/no_image.gif' ), '',
+			);
+		$html .= $User->html();
+	} # end foreach $User
+	return $html;
+) ?>
+</ul>

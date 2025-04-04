@@ -1,0 +1,10 @@
+<p>
+	<label>Additional Items</label>
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="value"><?Inserts?></span>
+<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>

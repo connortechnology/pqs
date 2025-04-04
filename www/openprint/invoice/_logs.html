@@ -1,0 +1,20 @@
+<div id="Logs">
+	<fieldset><legend>Logs</legend>
+		<table>
+			<thead>
+				<tr><th class="DateTime">When</th><th>Who</th><th>Description</th></tr>
+			</thead>
+			<tbody>
+			<? echo ( 
+				my $html = '';
+				foreach my $Log ( $$variable{Invoice}->Logs() ) {
+					$html .= sprintf('<tr><td class="DateTime">%s</td><td>%s</td><td>%s</td></tr>', 
+						Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time($Log->created_on())),
+						$Log->user_id() ? $Log->User()->name() : 'System', $Log->description() );
+				} # end foreach Log
+				return $html;
+			) ?>
+			</tbody>
+		</table>
+	</fieldset>
+</div>

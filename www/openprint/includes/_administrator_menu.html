@@ -1,0 +1,71 @@
+<? echo (
+my $html;
+my %menu = (
+	Stock	=>	{
+		'/administrator/stock/list.html'			=>	'View/Edit',
+		'/administrator/stock/import_export.html'	=>	'Import/Export',
+		'/administrator/production/pricelists.html'	=>	'Pricelists',
+		'/administrator/stock/filters.html'			=>	'Filters',
+		'/administrator/stock/stock.html'			=>	'',
+	},
+	Managerial	=> {
+							'/administrator/managerial/companies.html'	=>	'Companies',
+							'/administrator/managerial/company_profiles.html'	=>	'Company Profiles',
+							'/administrator/managerial/company_profile_fields.html'	=>	'Company Profile Fields',
+							'/administrator/managerial/users.html'	=>	'Users',
+							'/administrator/managerial/user_profiles.html'	=>	undef,
+							'/administrator/managerial/user_profile_fields.html'	=>	'User Profile Fields',
+							'/administrator/managerial/usergroups.html'	=>	'User Groups',
+							'/administrator/managerial/emails.html'	=>	'Email Accounts',
+							'/administrator/managerial/logs.html'	=>	'Admin Audit Log',
+							'/administrator/managerial/upload_log.html'	=>	'Upload Log',
+							#'/administrator/managerial/authorizations.html'	=>	'Authorizations',
+	},
+	Setup	=>	{
+				'/administrator/equipment/list.html'	=>	'Equipment',
+				'/administrator/equipment/edit.html'	=>	undef,
+				'/administrator/service_types/index.html'	=>	'Service Types',
+				'/administrator/service_types/edit.html'	=>	undef,
+				'/administrator/service_types/categories.html'	=>	'Service Type Categories',
+				'/administrator/services/list.html'	=>	'Services',
+				'/administrator/services/edit.html'	=>	undef,
+				'/administrator/managerial/page_settings.html'	=>	'Page Settings',
+				'/administrator/managerial/payment_options.html'	=>	'Payment Options',
+				'/administrator/production/pricelists.html'	=>	'Pricelists',
+				'/administrator/materials/edit.html'	=>	'Materials',
+				'/product/search.html'	=>	'Products',
+				'/product/edit.html'	=>	undef,
+				'/product/categories.html'	=>	'Product Categories',
+				'/product/category_edit.html'	=>	undef,
+				'/product/category_view.html'	=>	undef,
+				'/administrator/project_types/index.html'	=>	'Project Types',
+				'/administrator/project_types/edit.html'	=>	undef,
+				'/administrator/project_types/categories.html'	=>	'Project Type Categories',
+				'/administrator/project_types/defaults_edit.html'	=>	'Project Defaults',
+				'/administrator/project_types/templates.html'	=>	'Project Templates',
+				'/administrator/production/inks.html'	=>	'Inks',
+				'/administrator/managerial/taxes.html'	=>	'Taxes',
+				'/administrator/managerial/currency.html'	=>	'Currencies',
+				'/administrator/managerial/configuration.html'	=>	'Configuration',
+				'/administrator/managerial/folds.html'	=>	'Folds',
+	},
+);
+foreach my $category ( sort keys %menu ) {
+    my %urls = %{$menu{$category}};
+    my $submenu_html;
+    my $on = 0;
+    foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
+        $on = 1 if $$variable{uri} eq $url;
+		next if ! $urls{$url};
+        my $Page_Setting = openprint::Page_Setting::get( $url );
+        if ( $Page_Setting->can_view() ) {
+			$submenu_html .= sprintf('<li><a href="%s">%s</a></li>', $url, $urls{$url} );
+        } # end if
+    } # end foreach url
+    if ( $submenu_html ) {
+        $html .= join( $submenu_html,
+                sprintf(q`<li id="%1$sMenu" class="%2$s"><a href="#" onclick="toggleMenu($('%1$sMenu'), 'off', 'on');return false;">%1$s</a><ul>`, $category, ( $on ? 'on' : 'off' ) ),'</ul></li>' );
+    }
+} # end foreach category
+    return $html
+) ?>

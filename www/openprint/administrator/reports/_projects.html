@@ -1,0 +1,85 @@
+
+<? eval (
+    my %filters = (
+        'order'=>'id',
+            );
+    $filters{company_id}  = $param{ddmCustomers} if $param{ddmCustomers};
+    $filters{user_id} = $param{ddmEstimator} if $param{ddmEstimator};
+    $filters{status}  = $param{ddmStatus} if $param{ddmStatus};
+    $filters{csr_id}  = $param{ddmEmployees} if $param{ddmEmployees};
+    if ( Date::Calc::check_date( @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} ) ) {
+        $filters{'created_on <='} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
+    } # end if
+    if ( Date::Calc::check_date( @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} ) ) {
+        $filters{'created_on >='} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+    } # end if
+    $filters{type_id} = $param{type_id} if $param{type_id};
+
+    @{$$variable{Projects}} = openprint::Project->find( %filters );
+) ?>	
+<? if ( @{$$variable{Projects}} ) ?>
+	<table class="List">
+		<tr> 
+			<th align="left" width="60">Project #</th>
+			<th class="Company">Company</th>
+<? if ( ! $param{ddmEstimator} ) ?>
+			<th class="User">Estimator</th>
+<? endif ( ! $param{ddmEstimator} ) ?>
+			<th align="left">Reference</th>
+			<th class="Date">Created</th>
+			<th class="Status">Status</th>
+			<th class="Price">Price 1</th>
+			<th class="Price">Price 2</th>
+			<th class="Price">Price 3</th>
+		</tr>
+<? echo ( 
+my $html;
+foreach my $Project ( @{$$variable{Projects}} ) {
+$html .= sprintf('
+		<tr%1$s> 
+			<td><a href="/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>
+			<td class="Company"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s</a></td>',
+			$$variable{rowclass}, $Project->id(), $Project->Company()->name()
+);
+if ( ! $param{ddmEstimator} ){
+			$html .= sprintf('<td class="User"><a href="/main/project/view.html?ProjectIndex=%1$d">%2$s</a></td>',
+$Project->id(), $Project->User()->name() );
+}
+$html .= sprintf('
+			<td><a href="/main/project/view.html?ProjectIndex=%1$d">%2$s</a></td>
+			<td class="Date">%3$s</td>
+			<td class="Status">%4$s</td>
+			<td class="Price">%5$s</td>
+			<td class="Price">%6$s</td>
+			<td class="Price">%7$s</td>
+		</tr>
+		<tr%8$s>', $Project->id(), $Project->summary(), format_date( $Project->created_on() ), $Project->status(),
+ openprint::Currency::format( $Project->price1() ),
+ openprint::Currency::format( $Project->price2() ),
+ openprint::Currency::format( $Project->price3() ),
+	$$variable{rowclass},
+		);	
+if ( ! $param{ddmEstimator} ) {
+		$html .= '<td>&nbsp;</td>';
+}
+		$html .= sprintf('
+			<td colspan="2">&nbsp;</td>
+			<td colspan="6"><a href="/main/project/view.html?ProjectIndex=%1$d">%2$s</a></td>
+		</tr>', $Project->id(), $Project->reference() );
+			$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';
+			$$variable{Total1} += $Project->price1();
+			$$variable{Total2} += $Project->price2();
+			$$variable{Total3} += $Project->price3();
+		} # end foreach Project
+	return $html;
+) ?>
+		<tr class="totals">
+      <td colspan="<?echo($param{ddmEstimator} ? '5' : '6')?>" align="right">Totals (<?echo ( @{$$variable{Projects}} ) ?> projects)</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Total1} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Total2} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{Total3} ); ) ?></td>
+		</tr>
+	</table>
+	<? else ( @{$$variable{Projects}} ) ?>
+	There were no results matching your criteria.<br>
+	<? endif ( @{$$variable{Projects}} ) ?>

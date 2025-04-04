@@ -1,0 +1,33 @@
+<? echo (
+	if ( $$variable{error} ) {
+		return '<tr class="error"><td colspan="8">'.$$variable{error}.'</td></tr>';
+	}
+	return '';
+) ?>
+<tr<?rowclass?> id="S<? echo ( $$variable{Specification}->id(); ) ?>">
+	<td class="name"><span id="SName<? echo ( $$variable{Specification}->id() ) ?>"><? hecho ( $$variable{Specification}->name(); ) ?></span></td>
+	<td class="min"><span id="SMin<? echo ( $$variable{Specification}->id(); ) ?>"><? echo ( $$variable{Specification}->min() ? $$variable{Specification}->min() : '&nbsp;'; ) ?></span></td>
+	<td class="max"><span id="SMax<? echo ( $$variable{Specification}->id(); ) ?>"><? echo ( $$variable{Specification}->max() ? $$variable{Specification}->max() : '&nbsp;'; ) ?></span></td>
+	<td class="range_units"><span id="SRangeUnits<? echo ( $$variable{Specification}->id(); ) ?>"><? echo ( $$variable{Specification}->range_units() ? $$variable{Specification}->range_units() : '&nbsp;'; ) ?></span></td>
+	<td class="value"><span id="SValue<? echo ( $$variable{Specification}->id(); ) ?>"><? echo (
+    ( defined($$variable{Specification}->value()) and ($$variable{Specification}->value() ne '') ) ?  HTML::Entities::encode_entities(''.$$variable{Specification}->value()) : '&nbsp;';
+ ) ?></span></td>
+	<td class="units"><span id="SUnits<? echo ( $$variable{Specification}->id(); ) ?>"><? echo ( $$variable{Specification}->units() ? $$variable{Specification}->units() : '&nbsp;'; ) ?></span></td>
+	<td class="interpolate"><span id="i<? echo ( $$variable{Specification}->id(); ) ?>" onclick="new Ajax.Updater('i<? echo ( $$variable{Specification}->id(); ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=interpolate', {} );"><? echo ( $$variable{Specification}->interpolate() ? 'Yes' : 'No' ) ?></span></td>
+	<td class="buttons">
+	<? echo ( 
+		my $html;
+		$html .= button( 'delete'.$$variable{Specification}->id(), { onclick=>"delete_spec($$variable{Specification}{id});", text=>'Delete' } );
+		$html .= button( 'copy'.$$variable{Specification}->id(), { onclick=>"copy_spec($$variable{Specification}{id});", text=>'Copy' } );
+		return $html;
+) ?>
+	</td>
+</tr>
+<script>
+	  new Ajax.InPlaceEditor( 'SName<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=name',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
+	  new Ajax.InPlaceEditor( 'SMin<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=min',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
+	  new Ajax.InPlaceEditor( 'SMax<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=max',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
+	  new Ajax.InPlaceEditor( 'SValue<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=value',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
+	  new Ajax.InPlaceEditor( 'SUnits<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=units',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
+	  new Ajax.InPlaceEditor( 'SRangeUnits<? echo ( $$variable{Specification}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{Specification}->id() ) ?>&action=update&field=range_units',{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
+</script>

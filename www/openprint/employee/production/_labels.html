@@ -1,0 +1,43 @@
+<table class="List">
+	<tr><th class="Date">Created</th>
+		<th class="Type">Type</th>
+		<th class="Reference">Reference</th>
+		<th class="buttons">&nbsp;</th>
+	</tr>
+<? echo ( 
+	require openprint::Label;
+	my $html = '';
+	my @Labels = openprint::Label->find( docket=>$$variable{Order}->docket(), order=>'id');
+	foreach my $Label ( @Labels ) {
+		$html .= sprintf('
+<tr>
+	<td class="Date"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d&amp;docket=%3$d" title="%4$s">%5$s</a></td>
+	<td class="Type"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d&amp;docket=%3$d">%6$s</a></td>
+	<td class="Reference">%7$s</td><td class="buttons">%8$s</td>
+</tr>', 
+			$Label->id(), $$variable{Project}->id(), $$variable{Order}->docket(),
+			format_datetime( $Label->created_on() ), 
+			format_date( $Label->created_on() ), 
+			$Label->Type()->name(), $Label->reference(),
+			join("\n",
+				button( 'delete'.$Label->id(), { onclick=>qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { parameters:{action:'delete', id: $$Label{id}, project_id: $$variable{Project}{id} } } );`, text=>'X', title=>'Delete' } ),
+				button( 'copy'.$Label->id(), { onclick=>qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { parameters:{action:'copy', id: $$Label{id}, project_id: $$variable{Project}{id} } } );`, text=>'C', title=>'Copy' } ),
+			)
+		 );
+	} # end foreach
+	return $html;
+) ?>
+	<tr class="unprintable">
+		<td>New</td>
+		<td>
+			<select id="new_label_type_id" name="type_id">
+				<option value="">select</option>
+			<? echo ( make_drop_down( openprint::LabelType->dropdown(order=>'lower(name)') ); ) ?>
+			</select>
+		</td>
+		<td><input type="text" name="reference" id="reference" /></td>	
+		<td class="buttons">
+			<? echo ( button( 'AddLabel', { onclick=> q`if(!get_ddm_value(document.LabelForm.type_id)){alert('Please select the label type.');} else {LabelForm.submit();};`, text=>'Add' } ); ) ?>
+		</td>
+	</tr>
+</table>

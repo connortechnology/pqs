@@ -1,0 +1,144 @@
+<?include('/includes/error_reporting.html')?>
+<script type="text/javascript">
+    tinyMCE.init( {
+            mode: "none",
+            plugins: "paste",
+            theme : "advanced",
+            theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,bullist,numlist,outdent,indent,cleanup,html",
+            theme_advanced_buttons2 : '',
+            theme_advanced_buttons3 : '',
+        });
+    var current_editor;
+    function tinymce_on( id ) {
+        if ( current_editor ) {
+            tinymce.execCommand('mceToggleEditor',false,current_editor);
+        } // end if
+        current_editor=id;
+        tinymce.execCommand('mceToggleEditor', true, id );
+    } // end function tinymce_on
+    function job_popup( job_id ) {
+        popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:575, height:525,closeCallback: job_popup_close} );
+    } // end function job_popup
+    function job_popup_close() {
+        tinymce.EditorManager.execCommand('mceRemoveControl',true,'comment');
+        tinymce.EditorManager.execCommand('mceRemoveControl',true,'stock');
+        current_editor=null;
+        return true;
+    } // end function job_popup_close
+
+</script>
+<form id="f1" name="f1" method="post" action="prepress_overview.html">
+	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" name="schedule_id" />
+	<fieldset class="filters">
+		<div class="content">
+			<ul>
+				<li><label>Operator</label>
+					<select name="operator_id" id="operator_id" onchange="this.form.submit();">
+						<option value=""> select </option>
+						<? echo (
+							make_drop_down(
+								openprint::User->dropdown( type=>'E', 'usergroup any'=>'Prepress'), $session{'/employee/production/prepress_overview.html?operator_id'}
+							);
+						) ?>
+					</select>
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+	<div class="unprintable">
+		Please click on the <b>Docket #</b> to view details.<br/>
+	</div><!--unprintable-->
+	<div class="PressScheduleHeader">
+		Pre-Press Overview Generated <? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, time ); ) ?>
+		<br/>
+	</div>
+	Projects highlighted in yellow are scheduled for printing.<br/>
+	<table><thead><tr>
+	<? echo (
+		@{$$variable{'Statuses'}} = ( 'In Prepress', 'Waiting For Customer Approval', 'Waiting For QA Approval' );
+		my $html;
+		foreach my $status ( @{$$variable{'Statuses'}} ) {
+			$html .= '<td class="PressColumn">'.$status.'</td>';
+		} # end foreach
+		return $html;
+		) ?>
+	</tr></thead><tbody><tr>
+	<? echo (
+		my $html;
+		my $ac = sql::start_transaction( $dbh );
+
+		foreach my $status ( @{$$variable{'Statuses'}} ) {
+			$html .= '<td class="PressColumn">';
+			$html .= '<ul>';
+			my @Projects = openprint::Project->find('status'=>$status, 'order'=>'lngdocketnumber',
+				( $param{'operator_id'} ? ( 'operator_id any' => $param{'operator_id'} ) : () ),
+				'docket is null'	=>	0,
+					);
+			openprint::Company->find(id=>[ map { $$_{company_id} } @Projects ]);
+			openprint::OrderedProject->find(project_id=>[ map { $$_{id} } @Projects ]);
+			foreach my $Project ( @Projects) {
+				my $services = $Project->services();
+
+				my $impressions = 0;
+				my $forms = 0;
+				foreach my $sig_id ( $Project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+					if ( ! $$sig_specs{'SignatureQuantity'} ) {
+						$$sig_specs{'SignatureQuantity'} = 1;
+					} # end if
+					if ( ! $$sig_specs{'ImpressionQuantity'} ) {
+						$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
+					} # end if
+					$impressions += $$sig_specs{'ImpressionQuantity'};
+					$forms += $$sig_specs{'SignatureQuantity'};
+				} # end foreach sig
+
+				my $colour = 'blue';
+				if ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'starttime is null'=>0 ) ) {
+					$colour = 'yellow';
+				} # end if
+				if ( $Project->rush() ) {
+					$colour .= ' rush';
+				} # end if
+
+				$html .= sprintf( '<li class="%s">', $colour );
+				$html .= '<div class="Company">';
+				$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $Project->id(), $Project->docket() );
+				my $n = $Project->Company()->name();
+				$n =~ s/The //gi;
+				$html .= ssi::htmlize( $n );
+				$html .= '</div>';
+				$html .= qq`<span class="DueDate">`;
+				if ( ! $Project->requested_date() ) {
+					$html .= 'no requested date</span>';
+				} else {
+					my ( $year, $month, $day ) = split('-', $Project->requested_date() );
+					if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
+						$html .= qq` $day</span>`;
+				} # end if
+				if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
+					$html .= sprintf( q{<div class="Comment" onclick="job_popup( '%1$d' );">%2$s</div>}, $Project->id(), $Project->summary() );
+
+					$html .= sprintf( q{<span id="%1$dForms" class="Forms" onclick="job_popup( '%1$d' );">%2$d%3$s</span>}, $Project->id(), $forms, 'form'.($forms > 1 ? 's' : '') );
+					$html .= sprintf( q{<span class="Impressions" onclick="job_popup( '%1$d' );">%2$d imps</span>}, $Project->id(), $impressions );
+					$html .= '<span class="Services">';
+					$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
+					$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+					$html .= '<span class="Service">trim</span>' if $$services{'Cutting'};
+					$html .= '</span>';
+				} else {
+					$html .= sprintf( '<div class="Comment">%3$s</div>', ssi::htmlize( $Project->summary() ) );
+					$html .= sprintf( '<span class="Forms">%d %s</span>', $forms, $forms > 1 ? ' forms' : ' form' );
+					$html .= sprintf( '<span class="Impressions">%d imps</span>', $impressions );
+				} # end if
+				$html .= '<br/></li>';
+			} # end foreach Project
+			$html .= '</ul>';
+			$html .= '</td>';
+		} # end foreach Status
+		sql::end_transaction( $dbh, $ac );
+		return $html;
+	) ?>
+	</tr></tbody></table>
+</form>

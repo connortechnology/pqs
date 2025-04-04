@@ -1,0 +1,41 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<? eval (
+    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+    $$variable{'Columns'} = 'Three';
+    } else {
+    $$variable{'Columns'} = 'Two';
+    } # end if
+) ?>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<p id="Turnaround">
+				<label>Turnaround</label>
+				<select name="TurnaroundDays" size="1" onchange="remove_div('OrderButton');">
+			<? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+					<option value="5">5 days after approval</option>
+					<option value="4">4 days after approval</option>
+					<option value="2">48 hours after approval</option>
+			<? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+					<option value="4">4 days after approval</option>
+					<option value="2">48 hours after approval</option>
+					<option value="1">24 hours after approval</option>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+				</select>
+			</p>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+		<? echo ( include('/includes/main/proj/quantities_prices.html'); ) ?>
+		</fieldset>
+
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<div id="hdnBreakdown1" style="display:none;"></div>
+		<div id="hdnBreakdown2" style="display:none;"></div>
+		<div id="hdnBreakdown3" style="display:none;"></div>
+	</form>
+</div>

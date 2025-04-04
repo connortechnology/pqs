@@ -1,0 +1,76 @@
+<ul>
+<li>
+	<label>Sheet Size</label>
+	<span class="<?Columns?>Columns">
+		<input type="number" name="StockWidth" value="<?StockWidth?>" min="0" step="any"/> x
+		<input type="number" name="StockHeight" value="<?StockHeight?>" min="0" step="any"/>
+  </span>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+		<input type="hidden" name="hdnSuppliedStockWidth<?QTYIndex?>" />
+		<input type="hidden" name="hdnSuppliedStockHeight<?QTYIndex?>" />
+		<input type="hidden" name="StockWidth<?QTYIndex?>" />
+		<input type="hidden" name="StockHeight<?QTYIndex?>" />
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+        <? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
+</li>
+<li>
+    <label><? echo ( ssi::writeTip( 'Run style' ); ) ?></label>
+	<span class="<?Columns?>Columns">
+	<select name="ddmRunStyle" size="1" onchange="calc(this.form.name);">
+		<option value="">No runstyle selected</option>
+		<? echo ( ssi::make_drop_down( $$variable{RunStyleOptions}, $$variable{ddmRunStyle} ); ) ?>
+	</select>
+  </span>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+<input type="hidden" name="ddmRunStyle<?QTYIndex?>" value="<? echo ( $$variable{'ddmRunStyle'.$$variable{QTYIndex}} ) ?>" />
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+<? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
+</li>
+<? if ( $$variable{txtSignatureType} ) ?>
+<li>
+	<label>Page Quantity</label>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+	<span class="<?Columns?>Columns">
+		<input type="text" id="PageQuantity<?QTYIndex?>" name="PageQuantity<?QTYIndex?>" value="<? echo ( $$variable{'PageQuantity'.$$variable{QTYIndex}} ) ?>" size="3"  onkeyup="calc(this.form.name);" /> Pages
+<input type="text" name="page_columns<?QTYIndex?>" readonly="readonly" size="2"/>x<input type="text" name="page_rows<?QTYIndex?>" readonly="readonly" size="2"/>
+<input type="hidden" name="SpreadRows<?QTYIndex?>" value="<? echo ( $$variable{'SpreadRows'.$$variable{QTYIndex}} ) ?>"/>
+<input type="hidden" name="SpreadCols<?QTYIndex?>" value="<? echo ( $$variable{'SpreadCols'.$$variable{QTYIndex}} ) ?>"/>
+		<input type="checkbox" id="chkOverridePageQuantity<?QTYIndex?>" name="chkOverridePageQuantity<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) calc('f1');" <? echo ( 'checked' if $$variable{"chkOverridePageQuantity$$variable{QTYIndex}"} eq 'Y' ) ?> />
+		<label class="radio" for="chkOverridePageQuantity<?QTYIndex?>">Override</label>
+		<input type="hidden" name="GroupPageQuantity" value="<?GroupPageQuantity?>" />
+		<input type="hidden" name="Group" value="<?Group?>" />
+	</span>
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+        <? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
+</li>
+<? endif ( $$variable{txtSignatureType} ) ?>
+<li>
+  <label><? echo ( writeTip('Imposition'); ) ?></label>
+  <input type="number" size="3" name="txtImposition" value="<?txtImposition?>" min="0" step="1" oninput="this.value=this.value.replace(/\D/,'');calc(this.form.name);" /> out
+	<input type="number" size="3" name="hdnImpositionColumns" value="<?hdnImpositionColumns?>" min="0" step="1" oninput="this.value=this.value.replace(/\D/,'');calc(this.form.name);" /> x
+	<input type="number" size="3" name="hdnImpositionRows" value="<?hdnImpositionRows?>" min="0" step="1" oninput="this.value=this.value.replace(/\D/,'');calc(this.form.name);" /> + 
+	<input type="number" size="3" name="hdnImpositionDutchColumns" value="<?hdnImpositionDutchColumns?>" min="0" step="1" oninput="this.value=this.value.replace(/\D/,'');calc(this.form.name);" /> x
+	<input type="number" size="3" name="hdnImpositionDutchRows" value="<?hdnImpositionDutchRows?>" min="0" step="1" oninput="this.value=this.value.replace(/\D/,'');calc(this.form.name);" /> dutch
+  <br/>
+<? eval ( $$variable{QTYIndex} = 1 ) ?>
+<? while ( $$variable{QTYIndex} <= 3 ) ?>
+<? if ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+<input type="hidden" name="txtImposition<?QTYIndex?>" value="<? echo ( $$variable{'txtImposition'.$$variable{QTYIndex}} ) ?>" />
+<input type="hidden" name="hdnImpositionColumns<?QTYIndex?>" value="<? echo ( $$variable{'hdnImpositionColumns'.$$variable{QTYIndex}} ) ?>" />
+<input type="hidden" name="hdnImpositionRows<?QTYIndex?>" value="<? echo ( $$variable{'hdnImpositionRows'.$$variable{QTYIndex}} ) ?>" />
+<input type="hidden" name="hdnImpositionDutchColumns<?QTYIndex?>" value="<? echo ( $$variable{'hdnImpositionDutchColumns'.$$variable{QTYIndex}} ) ?>"/>
+<input type="hidden" name="hdnImpositionDutchRows<?QTYIndex?>" value="<? echo ( $$variable{'hdnImpositionDutchRows'.$$variable{QTYIndex}} ) ?>"/>
+<? endif ( $$variable{Project}->{'quantity'.$$variable{QTYIndex}} ) ?>
+<? eval ( $$variable{QTYIndex} += 1 ) ?>
+<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
+</li>
+</ul>

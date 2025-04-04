@@ -1,0 +1,29 @@
+<? echo (
+	my $html;
+	my $Object = $$variable{'Object'};
+	if ( ! $Object ) {
+		$log->error("No Object $Object" );
+		return;
+	} # end if
+
+	# Opinions
+	my $Object_Type = openprint::Object_Type->find_one('name'=>ref $Object );
+	if ( ! $Object_Type ) {
+		$log->error("Object type not found " . ref $Object );
+		return;
+	} # end if
+
+	my %Availability = map { $_->opinion_type_id() } openprint::Opinion_Availability->find( 
+		'object_id'=>$Object->id(), 'object_type_id'=>$Object_Type->id() );
+
+	foreach my $Opinion_Type ( openprint::Opinion_Type->find() ) {
+		$html .= ssi::button( 'Opinion'.$Opinion_Type->id(), {
+			onclick=>sprintf(q`new Ajax.Updater('OpinionAvailability', '/includes/_opinion_availability.html', { parameters: { object_id: %d, object_type_id: %d, opinion_type_id: %d } } );`,
+				$Object->id(), $Object_Type->id(), $Opinion_Type->id() ), 
+			class=>($Availability{$Opinion_Type->id()} ? '' : 'disabled'),
+			text => $Opinion_Type->name(),
+		} );
+
+	} # end foreach Opinion
+	return $html;
+) ?>

@@ -1,0 +1,105 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<table class="List sortable">
+	<tr>
+		<th align="left">Stock</th>
+		<th width="120" align="left">Age</th>
+		<th width="120" align="left">Last Seen</th>
+		<th width="200" align="right">Value</th>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		my $total;
+
+		my @location_ids;
+		foreach ( split(',', $session{'/employee/reports/stock.html?location_id'} ) ) {
+			next if $_ eq 'All';
+			push @location_ids, $_;
+		} # end foreach
+
+		my ( $sign, $last_seen ) = $session{'/employee/reports/stock.html?last_seen'} =~ /^([\+\-])(\d+)$/;
+		my @Papers = sort {
+            $_ = lc $a->manufacturer cmp lc $b->manufacturer;
+            return $_ if $_;
+            $_ = lc $a->brand cmp lc $b->brand;
+            return $_ if $_;
+            $_ = lc $a->finish cmp lc $b->finish;
+            return $_ if $_;
+            $_ = $a->weight <=> $b->weight;
+            return $_ if $_;
+            $_ = $$a{width} <=> $$b{width};
+            return $_ if $_;
+            $_ = $$a{height} <=> $$b{height};
+            return $_ if $_;
+		} openprint::Paper->find( 
+			( map { $session{'/employee/reports/stock.html?'.$_} ? ( $_ => $session{'/employee/reports/stock.html?'.$_} ) : () }
+		('owner_id', 'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id') ),
+			( $session{'/employee/reports/stock.html?Type'} ? ( 'type' => [ split(',', $session{'/employee/reports/stock.html?Type'} ) ] ) : () ),
+		);
+
+		foreach my $Paper ( @Papers ) {
+			next if ! $Paper->in_stock();
+			if ( $session{'/employee/reports/stock.html?width'} and $session{'/employee/reports/stock.html?height'} ) {
+				next if $Paper->area() < $session{'/employee/reports/stock.html?width'} * $session{'/employee/reports/stock.html?height'};
+				if ( ! $session{'/employee/reports/stock.html?OrLarger'} ) {
+					next if $Paper->area() != $session{'/employee/reports/stock.html?width'} * $session{'/employee/reports/stock.html?height'};
+				} # end if
+			} elsif ( $session{'/employee/reports/stock.html?width'} ) {
+				next if $Paper->width() < $session{'/employee/reports/stock.html?width'};
+				if ( ! $session{'/employee/reports/stock.html?OrLarger'} ) {
+					next if $Paper->width() != $session{'/employee/reports/stock.html?width'};
+				} # end if
+			} # end if
+
+			my %skid_age;
+			my %last_seen;
+			my %costs;
+			my %inventory;
+			my $skids = 0;
+
+			foreach my $Skid ( $Paper->skids() ) {
+				if ( $sign eq '+' ) {
+					next if $Skid->last_seen_days() < $last_seen;
+				} elsif ( $sign eq '-' ) {
+					next if $Skid->last_seen_days() > $last_seen;
+				} # end if
+
+				if ( @location_ids ) {
+					if ( $Skid->Location()->Root()->id() ) {
+						next if ! sets::isin( $Skid->Location()->Root()->id(), \@location_ids );
+					} elsif( ! sets::isin( 'Unknown', \@location_ids ) ) {
+						next;
+					} # end if
+				} # end if
+
+				$skid_age{$Skid->age_days()} += 1;
+				$last_seen{$Skid->last_seen_days()} += 1;
+
+				# Costs is per Paper, and holds the quantity at that price.
+				my $SC = $Skid->Content($Paper);
+				$costs{$SC->cost()} += $SC->quantity();
+			
+				# Problem here, sheets... quantity is in sheets, not lbs
+				$total += $SC->cost() * $SC->quantity() / 100;
+				$skids += 1;
+			} # end foreach Skid
+			next if ! $skids;
+
+			$html .= sprintf( '<tr%1$s id="Paper%2$d"><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%3$s</a></td><td>%4$s</td><td>%5$s</td><td align="right">%6$s</td>',
+                    $rowclass,
+                    $$Paper{'id'},
+                    $Paper->to_string(),
+                    join('<br/>', map { $_.'days - ' . $skid_age{$_} . ' skid'.($skid_age{$_}>1?'s':'&nbsp;') } keys %skid_age),
+                    join('<br/>', map { $_.'days - ' . $last_seen{$_} . ' skid'.($last_seen{$_}>1?'s':'&nbsp;') } keys %last_seen),
+                    join('<br/>', map { sprintf('%.2f/cwt * %dlbs = %s', $_, $costs{$_}, openprint::Currency::format($costs{$_} * $_/100) ); } keys %costs ),
+                    );
+			$html .= '</tr>',
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			
+		} # end foreach Paper
+
+		$html .= '<tr class="totals"><td colspan="3" align="right">Totals</td><td align="right">'. openprint::Currency::format($total) .'</td></tr>';
+
+		return $html;
+	) ?>
+</table>

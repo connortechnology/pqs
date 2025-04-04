@@ -1,0 +1,12 @@
+
+<style type="text/css"><?include('/css/credit_application.css')?></style>
+<? hecho ( $$variable{Application}->signature() ) ?> has submitted a new credit application.  Click <a href="<? echo ( $config{InternalSecureSiteURL} ) ?>/employee/accounting/credit_application.html?credit_index=<?CreditAppIndex?>">here</a> to view it.<br>
+		<br/>
+<div class="CreditApplication">
+<? echo ( include('/email_content/_company_information.html', $variable ); ) ?>
+<? echo ( include('/email_content/_business_information.html', $variable ); ) ?>
+<? echo ( include('/email_content/_bank_information.html', $variable ); ) ?>
+<? echo ( include('/email_content/_trade_references.html', $variable ); ) ?>
+<? echo ( include('/account/_company_profile_view.html', $variable ); ) ?>
+<? echo ( include('/email_content/_credit_application.html', $variable ); ) ?>
+</div>

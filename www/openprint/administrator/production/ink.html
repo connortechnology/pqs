@@ -1,0 +1,80 @@
+<?include('/includes/error_reporting.html')?>
+<form id="f1" name="f1" method="post" action="ink.html">
+	<fieldset class="filters"><legend>Search</legend>
+		<p> 
+			<label>Ink</label>
+			<select name="ink_id" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
+				<option value="">Select an Ink</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->pmsid() . ' : ' . $_->name() } openprint::Ink->find( order=>'pmsid' ) ], $$variable{Ink}->id() ); ) ?>
+			</select>
+		</p>
+		<p class="buttons">
+			<? echo ( 
+				my $html = '';
+				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'<<' } );
+				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'>>' } );
+				$html .= button( 'New1', { onclick=>"addCheck(f1);", text=>'New' } );
+				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
+				if ( $$variable{Ink}->id() ) {
+					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } );
+					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+				} # end if
+				$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<fieldset><legend>Ink Information</legend>
+		<ul>
+			<li> 
+				<label>PMS ID</label>
+				<input type="text" name="pmsid" value="<? echo ( $$variable{Ink}->pmsid(); ) ?>" />
+			</li>
+			<li>
+				<label>Name</label>
+				<input type="text" name="name" value="<? echo ( $$variable{Ink}->name(); ) ?>" />
+			</li>
+			<li>
+				<label>Material</label>
+				<select name="material_id">
+					<option value="">none</option>
+					<? echo ( make_drop_down( openprint::Material->dropdown( order=>'lower(name)'), $$variable{Ink}->material_id() ); ) ?>
+				</select>
+				<?echo( button('MaterialGo', { onclick=>q`window.location='/administrator/materials/edit.html?material_id='+f1.material_id.value;`, text=>'Go' } ); ) ?>
+			</li>
+			<li>
+				<label>Service Charge</label>
+				<select name="service_id">
+					<option value="">none</option>
+					<? echo ( make_drop_down( openprint::Service->dropdown( order=>'lower(name)'), $$variable{Ink}->service_id() ); ) ?>
+				</select>
+				<?echo(button('ServiceGo', { onclick=>q`window.location='/administrator/services/edit.html?service_id='+f1.service_id.value;`, text=>'Go' } ); ) ?>
+			</li>
+			<li>
+				<label>Mix Charge</label>
+				<select name="mix_service_id">
+					<option value="">none</option>
+					<? echo ( make_drop_down( openprint::Service->dropdown( order=>'lower(name)'), $$variable{Ink}->mix_service_id() ); ) ?>
+				</select>
+				<?echo(button('MixGo', { onclick=>q`window.location='/administrator/services/edit.html?service_id='+f1.mix_service_id.value;`, text=>'Go' } ); ) ?>
+			</li>
+			<li>
+				<label>Washups</label>
+				<? echo ( input( type=>'cardinal', name=>'washups', value=>$$variable{Ink}->washups() ); ) ?>
+			</li>
+			<li>
+				<label>Needs Mixing</label>
+				<? echo ( radio( 'mix', [ '1', 'Yes', '0', 'No' ], $$variable{Ink}->mix(), { default=>'0' } ); ) ?>
+			</li>
+			<li><label>Stock Grades</label>
+				<select id="grades" name="grades" multiple="multiple">
+				<? echo (
+						my @options = ( 1,'Gloss-coated paper',2,'Matte-coated paper',3,'Gloss-coated, web paper', 4, 'Uncoated, white paper', 5, 'Uncoated, yellow paper' );
+						return make_drop_down( \@options, $$variable{Ink}->grades() );
+						) ?>
+				</select>
+			</li>
+		</ul>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>

@@ -1,0 +1,114 @@
+<p>
+	<label>Stock Type</label>
+	<input type="radio" id="UsedStockType-<?SignatureIndex?>Sheet" name="UsedStockType-<?SignatureIndex?>" value="Sheet" <? echo ( 'checked="checked"' if $$variable{"UsedStockType-$$variable{SignatureIndex}"} eq 'Sheet' ) ?> />
+	<label for="UsedStockType-<?SignatureIndex?>Sheet" class="radio">Sheet</label>
+	<input type="radio" id="UsedStockType-<?SignatureIndex?>Roll" name="UsedStockType-<?SignatureIndex?>" value="Roll" <? echo ( 'checked="checked"' if $$variable{"UsedStockType-$$variable{SignatureIndex}"} eq 'Roll' ) ?> />
+	<label for="UsedStockType-<?SignatureIndex?>Roll" class="radio">Roll</label>
+</p>
+<p>
+	<label>Stock Brand</label>
+	<select name="UsedStockBrand-<?SignatureIndex?>" size="1" onchange="UsedPaperBrand_onchange('-<?SignatureIndex?>');">
+		<? echo (
+				my @options = ( '', 'select one',
+					sql::execute( $log, $dbh, q{SELECT shortname, longname FROM PaperNames ORDER BY lower(longname)} )
+					);
+				return ssi::make_drop_down( \@options, 
+					$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ? 
+					$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} :
+					$$variable{"ddmStockBrand"} 
+ );
+				) ?>
+	</select>
+</p>
+<p>
+	<label>Stock Finish</label>
+	<select name="UsedStockFinish-<?SignatureIndex?>" size="1" onchange="UsedPaperFinish_onchange('-<?SignatureIndex?>');">
+		<option value=""> select </option>
+		<? echo (
+				my %finishes;
+				foreach my $Paper ( openprint::Paper->find( 'name'=>$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
+						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} :
+						$$variable{"ddmStockBrand"} ) ) {
+					$finishes{$Paper->finish()} = $Paper->finish();
+				} # end foreach
+				return ssi::make_drop_down( [map { $finishes{$_}, $_ } sort keys %finishes ], 
+					$$variable{"UsedStockFinish-$$variable{'SignatureIndex'}"} ?
+					$$variable{"UsedStockFinish-$$variable{'SignatureIndex'}"} :
+					$$variable{"ddmStockFinish"}
+					);
+                ) ?>
+	</select>
+</p>
+<p>
+	<label>Stock Colour</label>
+	<select name="UsedStockColour-<?SignatureIndex?>" size="1" onchange="UsedPaperColour_onchange('-<?SignatureIndex?>');">
+		<option value=""> select </option>
+		<? echo (
+				my %colours;
+				foreach my $Paper ( openprint::Paper->find( 'name'=>
+						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
+						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} :
+						$$variable{"ddmStockBrand"},
+						'finish'=>
+						$$variable{"UsedStockFinish-$$variable{'SignatureIndex'}"} ?
+						$$variable{"UsedStockFinish-$$variable{'SignatureIndex'}"} :
+						$$variable{"ddmStockFinish"},
+ ) ) {
+					$colours{$Paper->colour()} = $Paper->colour();
+				} # end foreach
+				return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], 
+					$$variable{"UsedStockColour-$$variable{'SignatureIndex'}"} ?
+					$$variable{"UsedStockColour-$$variable{'SignatureIndex'}"} :
+					$$variable{"ddmStockColour"}
+					);
+                ) ?>
+	</select>
+</p>
+<p>
+	<label>Stock Weight</label>
+	<select name="UsedStockWeight-<?SignatureIndex?>" size="1" onchange="UsedPaperWeight_onchange('-<?SignatureIndex?>');">
+		<option value=""> select </option>
+		<? echo (
+				my %colours;
+				foreach my $Paper ( openprint::Paper->find( 'name'=>
+						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
+						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} :
+						$$variable{"ddmStockBrand"},
+						'finish'=>
+						$$variable{"UsedStockFinish-$$variable{'SignatureIndex'}"} ?
+						$$variable{"UsedStockFinish-$$variable{'SignatureIndex'}"} :
+						$$variable{"ddmStockFinish"},
+						'colour'=>
+						$$variable{"UsedStockColour-$$variable{'SignatureIndex'}"} ?
+						$$variable{"UsedStockColour-$$variable{'SignatureIndex'}"} :
+						$$variable{"ddmStockColour"},
+ ) ) {
+					$colours{$Paper->weight()} = $Paper->weight();
+				} # end foreach
+				return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], 
+					$$variable{"UsedStockWeight-$$variable{'SignatureIndex'}"} ?
+					$$variable{"UsedStockWeight-$$variable{'SignatureIndex'}"} :
+					$$variable{"ddmStockWeight"}
+					);
+                ) ?>
+	</select>
+</p>
+<p>
+	<label>Stock Size</label>
+	<select name="UsedStockSheetSize-<?SignatureIndex?>" size="1" onchange="UsedPaperSheetSize_onchange('-<?SignatureIndex?>');">
+		<option value=""> select </option>
+	<? echo (
+		ssi::make_drop_down( [ openprint::paper::get_sheetsizes( undef, 
+				$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ? $$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} : $$variable{"ddmStockBrand"},
+				$$variable{"UsedStockFinish-$$variable{'SignatureIndex'}"} ? $$variable{"UsedStockFinish-$$variable{'SignatureIndex'}"} : $$variable{"ddmStockFinish"},
+				$$variable{"UsedStockColour-$$variable{'SignatureIndex'}"} ? $$variable{"UsedStockColour-$$variable{'SignatureIndex'}"} : $$variable{"ddmStockColour"},
+				$$variable{"UsedStockWeight-$$variable{'SignatureIndex'}"} ? $$variable{"UsedStockWeight-$$variable{'SignatureIndex'}"} : $$variable{"ddmStockWeight"},
+				$$variable{"UsedStockType-$$variable{'SignatureIndex'}"} ? $$variable{"UsedStockType-$$variable{'SignatureIndex'}"} : $$variable{"StockType"},
+				) ], $$variable{"UsedStockSheetSize-$$variable{'SignatureIndex'}"} );
+			) ?>
+	</select>
+</p>
+<p>
+	<label>Stock Quantity</label>
+	<input type="text" name="UsedStockQuantity-<?SignatureIndex?>" value="<? echo ( $$variable{"UsedStockQuantity-$$variable{'SignatureIndex'}"} ) ?>" />
+</p>

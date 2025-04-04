@@ -1,0 +1,28 @@
+<? eval (
+	@{$$variable{'skids'}} = split(',', $param{'skid_id'} );
+) ?>
+<form name="popup_form" id="popup_form">
+	<input type="hidden" name="skid_id" id="skid_id" value="<? echo ( $param{'skid_id'} ) ?>" />
+	<input type="hidden" name="btnFunction" value="move" />
+<fieldset><legend>Move Skids/Rolls To</legend>
+	You are moving <? echo ( @{$$variable{'skids'}} ) ?> skids/rolls.
+	<p>
+		<label>Location</label>
+		<select name="location_id">
+			<? echo ( 
+				my @options = map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)');
+				ssi::make_drop_down( \@options );
+			) ?>
+		</select>
+	</p>
+	<hr/>
+	<p class="buttons">
+	<? echo ( 
+		my $html = '';
+		$html .= ssi::writeButton( $log, $dbh, 'Move', 'move.gif', 'document.popup_form.submit();', '', 'Move' );
+		$html .= ssi::writeButton( $log, $dbh, 'CancelMove', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); 
+		return $html;
+	) ?>
+	</p>
+</fieldset>
+</form>

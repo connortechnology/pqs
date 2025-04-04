@@ -1,0 +1,54 @@
+<? if ( $$variable{Article}->id() ) ?>
+<div class="Article">
+	<div class="View">
+<? if ( $$variable{Article}->can_view() ) ?>
+	<div class="header">
+	<div class="ByLine">
+<? echo ( 
+	my $html;
+	if ( ! $$variable{Article}->anonymous() ) {
+		my $User = $$variable{Article}->Author();
+		if ( $$User{id} ) {
+			$html .= '<div class="By">'.$User->thumbnail_html() . sprintf('<a href="/account/view.html?user_id=%d">%s</a></div>',$User->id(),$User->alias() );
+		} # end if
+	} else {
+		$html .= '<div class="By">Anonymous Contributor</div>';
+	} # end if
+	$html .= '<div class="When">'. $$variable{Article}->published_on_string().'</div>';
+	return $html;
+	) ?>
+	</div>
+	<h1><? echo ( $$variable{Article}->title() ) ?></h1>
+	<p class="buttons">
+		<? echo ( 
+join('',
+	( $$variable{Article}->can_edit() ?
+		(
+			button( 'Edit', { href=>'edit.html?article_id='.$$variable{Article}->id() } ),
+			button( 'Destroy', { href=>'history.html?func=Destroy&amp;article_id='.$$variable{Article}->id() } ),
+		) : () ),
+	);
+) ?>
+	</p>
+	<? if ( $$variable{Article}->source() ) ?>
+		<? echo ( $$variable{Article}->source_content() ) ?>
+		<a href="<? echo ( $$variable{Article}->source() ) ?>" target="_blank">View Original Article</a><br/>
+	<? endif ( $$variable{Article}->source() ) ?>
+	</div><!--header-->
+
+	<div class="body"><? echo ( 
+		my $body = $$variable{Article}->body();
+		variable_substitution( \$body, $variable ); ) ?></div>
+	<? if ( $session{user_id} ) ?>
+		<div id="Opinions"><? echo ( $$variable{Article}->opinions() ) ?></div>
+<? if ( $$variable{Article}->commenting() ) ?>
+		<div id="comments-<? echo ( $$variable{Article}->id() ) ?>" class="Comments"><?include(_comments.html)?></div>
+<? endif ( $$variable{Article}->commenting() ) ?>
+	<? endif ( $session{user_id} ) ?>
+<? else ( $$variable{Article}->can_view() ) ?>
+	You cannot view this article.
+<? endif ( $$variable{Article}->can_view() ) ?>
+</div></div>
+<? else ( $$variable{Article}->id() ) ?>
+No article to view.
+<? endif ( $$variable{Article}->id() ) ?>

@@ -1,0 +1,54 @@
+<? echo (
+	my $Location = new openprint::Location( $param{location_id} );
+	my $City = $Location->ancestor(type=>'city');
+	$City = new openprint::Location() if ! $City;
+	my $State = $Location->ancestor(type=>['state','province']);
+	$State = new openprint::Location() if ! $State;
+	my $Country = $Location->ancestor(type=>'country');
+	$Country = new openprint::Location() if ! $Country;
+
+	return sprintf(q`
+var address_e = $('address');
+if ( address_e ) {
+	address_e.value = '%s';
+} // end if
+var postalcode_e = $('postalcode');
+if ( postalcode_e ) {
+	postalcode_e.value = '%s';
+} // end if
+var city_e = $('city_id');
+if ( city_e ) {
+	if ( city_e.type == 'select-one' ) {
+		ddm_select_by_value( city_e, '%s' );
+		city_e = $('city');
+		if ( city_e ) city_e.value='';
+	} else {
+		city_e.value = '%s';
+	} // end if
+} // end if
+var state_e = $('state_id');
+if ( state_e ) {
+	if ( state_e.type=='select-one' ) {
+		ddm_select_by_value( state_e, '%s' );
+		state_e = $('state');
+		if ( state_e ) state_e.value='';
+	} else {
+		state_e.value ='%s';
+	} // end if
+} // end if
+var country_e = $('country_id');
+if ( country_e ) {
+	if ( country_e.type == 'select-one' ) {
+		ddm_select_by_value( country_e, '%s' );
+		country_e = $('country');
+		if ( country_e ) country_e.value='';
+	} else {
+		country_e.value = '%s';
+	} // end if
+} // end if	
+`, map { $_ =~ s/'/\\'/g; $_;} ( $Location->address(), $Location->postalcode(), 
+ $City->id(), $City->name(),
+ $State->id(), $State->name(),
+ $Country->id(), $Country->name(),
+		) );
+) ?>

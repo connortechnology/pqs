@@ -1,0 +1,31 @@
+<? eval (
+	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
+	@param{'start_year','start_month','start_day'} = Date::Calc::Today() if ! $param{'start_year'};
+	$param{'limit'} = 10 if ! exists $param{'limit'};
+) ?>
+<form name="location_log_form" id="location_log_form">
+<? if ( $$variable{RFIDTag} ) ?>
+	<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{RFIDTag}->id() ) ?>" />
+<? endif ( $$variable{RFIDTag} ) ?>
+<? if ( $$variable{RFIDScanner} ) ?>
+	<input type="hidden" name="scanner_id" value="<? echo ( $$variable{RFIDScanner}->id() ) ?>" />
+<? endif ( $$variable{RFIDScanner} ) ?>
+	<fieldset><legend>Tag Log</legend>
+		<p>
+			<label>Date Filter</label>
+			<span class="DateSelectorCT">
+<? echo ( date_select( 'start', [ @param{'start_year','start_month','start_day'} ], { onchange=>q`LoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form') );`, with_clear=>1, with_today=>1, with_time=>1 } ); ) ?>
+			</span>
+			to 
+			<span class="DateSelectorCT">
+<? echo ( date_select( 'end', [@param{'end_year','end_month','end_day'}], { onchange=> q`LoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form') );`, with_clear=>1, with_today=>1 } ); ) ?>
+			</span>
+			<select name="limit" onchange="LoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form') );"><option value="">All</option><option value="10">10</option><option value="25">25</option><option value="100">100</option><option value="1000">1000</option></select>
+			<? echo ( button( 'LoadLocationLog', { onclick=>q`LoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form') );`, text=> 'Load' } ); ) ?>
+		</p>
+		<p><label>Tag Type</label>
+			<? echo ( ssi::select( openprint::RFIDTagType->dropdown(order=>'lower(name)'), $param{type_id}, { name=>'type_id', onchange=>q`LoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form') );`, prepend=>['','All'] } ); ) ?>
+		</p>
+		<div id="LocationLog"></div>
+	</fieldset>
+</form>

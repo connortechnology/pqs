@@ -1,0 +1,27 @@
+<?include(/includes/error_reporting.html)?>
+<table class="List">
+	<tr><th class="buttons"></th><th class="description">Description</th><th class="Date">Paid On</th><th class="amount">Amount</th></tr>
+<? echo ( my $html;
+	foreach my $Object_Payment ( $$variable{PurchaseOrder}->Payments() ) {
+		my $Payment = $Object_Payment->Payment();
+		$html .= sprintf('<tr><td class="buttons">%s</td><td class="description">%s</td><td class="Date">%s</td><td class="amount">%s</td></tr>',
+			button('DelPayment'.$$Payment{id}, { onclick=>qq`new Ajax.Updater( 'Payments', '_payments_edit.html', { parameters: { po_id: $$variable{PurchaseOrder}{id}, payment_id: $$Payment{id}, action: 'Delete' } } );`, text=>'-', title=>'Delete' } ),
+			$Payment->memo(), format_date( $Payment->received_on() ), $$variable{PurchaseOrder}->Currency()->format( $Payment->amount() ) );
+
+	} # end foreach $Payment
+	$html .= sprintf('<tr><td class="buttons">%s</td><td class="description">%s</td><td class="Date">%s</td><td class="amount">%s</td></tr>',
+		button('AddPayment', { onclick=>qq`add_Payment($$variable{PurchaseOrder}{id});`, text=>'+', title=>'Add' } ),
+		input( type=>'text', name=>'payment_description', id=>'payment_description' ),
+		date_select( 'payment_received_on' ), 
+		input( type=>'float', name=>'payment_amount', id=>'payment_amount' ),
+	);
+	return $html;
+) ?>
+</table>
+<? if ( $param{action} ) ?>
+<script type="text/javascript">
+$('payments_total').innerHTML='<?echo( $$variable{PurchaseOrder}->Currency()->format( $$variable{PurchaseOrder}->payments_total(), 2, '' ) )?>';
+$('total').innerHTML='<?echo( $$variable{PurchaseOrder}->Currency()->format( $$variable{PurchaseOrder}->total(), 2, '' ) )?>';
+update_logs();
+</script>
+<? endif ( $param{action} ) ?>

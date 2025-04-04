@@ -1,0 +1,48 @@
+			<br>
+			Click on a <b>Service ID</b> to edit its pricing.<br>
+			<br>
+			<form name="f1" method="post" enctype="multipart/form-data">
+				<table width="600" border="0" cellspacing="0" cellpadding="0" cols="7">
+					<tr>
+						<td width="150">&nbsp;</td>
+						<td width="75">&nbsp;</td>
+						<td width="160">&nbsp;</td>
+						<td width="65">&nbsp;</td>
+						<td width="50">&nbsp;</td>
+						<td width="50">&nbsp;</td>
+						<td width="50">&nbsp;</td>
+					</tr>
+					<tr> 
+						<th colspan="1" align="left">Service ID</th>
+						<th colspan="3" align="left">Service Name</th>
+						<th colspan="3" align="right"></th>
+					</tr>
+					<? while ( @$variable{'prod_index','prod_name','prod_id'} = splice @{$$variable{'PRODUCTS'}},0,3; ) ?>
+					<tr class="colRow"> 
+						<td colspan="1" class="smTbl"><a href="/administrator/production/services_prices.html?ddmPriceList=<?list_id?>&ddmService=<?prod_index?>">&nbsp;<?prod_id?>&nbsp;</a></td>
+						<td colspan="3" class="smTbl"><?prod_name?>&nbsp;</td>
+						<td colspan="3" class="smTbl" align="right">&nbsp;</td>
+					</tr>
+					<tr> 
+						<td class="smTbl">&nbsp;</td>
+						<td class="smTbl" align="left">&nbsp;Equipment</td>
+						<td class="smTbl" align="center">&nbsp;Range</td>
+						<td class="smTbl" align="left">&nbsp;Units</td>
+						<td class="smTbl" align="right">&nbsp;Cost</td>
+						<td class="smTbl" align="right">&nbsp;Markup</td>
+						<td class="smTbl" align="right">&nbsp;Price</td>
+					</tr>
+					<? while ( @$variable{'equipment','min','max','units','cost','markup','price'} = splice @{$$variable{"PRICES_$$variable{'prod_index'}"}},0,7; ) ?>
+					<tr> 
+						<td class="smTbl">&nbsp;</td>
+						<td class="smTbl"><?equipment?></td>
+						<td class="smTbl" align="center"><?min?>&nbsp;-&nbsp;<?max?></td>
+						<td class="smTbl"><?units?></td>
+						<td class="smTbl" align="right">&nbsp;<?cost?></td>
+						<td class="smTbl" align="right">&nbsp;<?markup?></td>
+						<td class="smTbl" align="right">&nbsp;<?price?></td>
+					</tr>
+					<? endwhile ( @$variable{'equipment','min','max','units','cost','markup','price'} = splice @{$$variable{"PRICES_$$variable{'prod_index'}"}},0,7; ) ?>
+					<? endwhile ( @$variable{'prod_index','prod_name','prod_id'} = splice @{$$variable{'PRODUCTS'}},0,3; ) ?>
+				</table>
+			</form>

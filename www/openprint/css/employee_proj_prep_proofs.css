@@ -1,0 +1,49 @@
+.Size { 
+	text-align: center;
+}
+.Size input[type="number"],
+.Size input[type="text"] {
+	width: 40%;
+}
+table .Quantity, table .Type {
+	text-align: left;
+}
+.error {
+font-weight: bold;
+font-size: x-large;
+}
+
+#ProductionFeedback {
+width: 50%;
+float: left;
+}
+#Signatures {
+width: 50%;
+float: left;
+}
+
+table .size {
+	text-align: right;
+width: 50px;
+}
+table .mtime {
+width: 120px;
+text-align: left;
+padding-left: 5px;
+}
+table .filename {
+	text-align: left;
+}
+
+div.Imposition {
+	float: left;
+	width: 50%;
+}
+div.Press {
+	float: left;
+	width: 50%;
+}
+.Previews img {
+	float: left;
+	width: 50%;
+}

@@ -1,0 +1,7 @@
+<?  echo (
+	if ( $param{'action'} eq 'delete' and ! $variable{'error'} ) {
+		return q`$('wall-`.$param{wall_id}.q`').remove();`;
+	} # end if
+) ?>
+		
+

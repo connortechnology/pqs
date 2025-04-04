@@ -1,0 +1,50 @@
+<? echo (
+	if ( $$variable{'RFIDTag'} and $$variable{'RFIDTag'}->location_id() ) {
+		$$variable{'Selected'} = $$variable{'RFIDTag'}->Location();
+		$$variable{'Location'} = $$variable{'Selected'}->Parent();
+	} elsif ( $$variable{'RFIDScanner'} and $$variable{'RFIDScanner'}->location_id() ) {
+		$$variable{'Selected'} = $$variable{'RFIDScanner'}->Location();
+		$$variable{'Location'} = $$variable{'Selected'}->Parent();
+	} elsif ( $param{'selected_name'} ) {
+		$$variable{'Selected'} = openprint::Location->find_one( 'name lc' => lc $param{'selected_name'} );
+	} elsif ( $param{'selected_id'} ) {
+		$$variable{'Selected'} = new openprint::Location( $param{'selected_id'} );
+		$$variable{'Location'} = $$variable{'Selected'}->Parent();
+	} # end if
+	if ( ! $$variable{'Location'} ) {
+		if ( $param{'location_id'} ) {
+			$$variable{'Location'} = new openprint::Location( $param{'location_id'} );
+		} else {
+			$$variable{'Location'} = new openprint::Location( 1 );
+		} # end if
+	} # end if
+	$$variable{'MapFile'} = $$variable{'Selected'} ? join('/', $$variable{'Location'}->name(), $$variable{'Selected'}->name() ) : $$variable{'Location'}->name();
+
+	my $html;
+	my @path;
+	my $Parent = $$variable{'Location'};
+	do {
+		unshift @path, sprintf(q`<a href="#" onclick="ddm_select_by_value($('location_id'), %1$d ); new Ajax.Updater('Map','_map.html', {method:'get',parameters:{location_id:%1$d}} );return false;">%2$s</a>`, $Parent->id(), $Parent->name() );
+	} while ( $Parent = $Parent->Parent() );
+	$html = join("&nbsp;&gt;\n", @path);
+	return $html;
+) ?>
+	<br class="spacer"/>
+	<img id="MapImage" src="/images/maps/<?MapFile?>.gif" width="200" alt="<? echo ( $$variable{'Location'}->name(); ) ?>." USEMAP="#Map" />
+	<map name="Map">
+	<? echo (
+		my $html;
+		foreach my $Region ( $$variable{'Location'}->children() ) {
+			$html .= q{<area shape="rect" href="#" };
+			$html .= sprintf(q{coords="%1$s" alt="%2$s" title="%2$s"}, $Region->coordinates(), $Region->name() );
+			$html .= sprintf(q{ onmouseover="mouseOver('MapImage','/images/maps/%1$s');"}, $$variable{'Location'}->name() . '/' . $Region->name().'.gif' );
+			$html .= sprintf(q{ onmouseout="mouseOut('MapImage','/images/maps/%1$s');"}, $$variable{'MapFile'}.'.gif' );
+			if ( $$variable{'Selected'} ) {
+				$html .= sprintf(q` onclick="ddm_select_by_value($('location_id'), %1$d );new Ajax.Updater('Map','_map.html', {method:'get',parameters:{location_id:%2$d,selected_id:%3$d}} );"/>`, $Region->id(), ($Region->children() ? ($Region->parent_id(),$Region->id()) : ($Region->parent_id(), $$variable{'Selected'}->id() )) );
+			} else {
+				$html .= sprintf(q` onclick="ddm_select_by_value($('location_id'), %1$d );new Ajax.Updater('Map','_map.html', {method:'get',parameters:{location_id:%2$d,selected_id:%3$d}} );"/>`, $Region->id(), $Region->children() ? ($Region->id(), '') : ($Region->parent_id(), $Region->id() ) );
+			} # end if
+		} # end foreach
+		return $html;
+	) ?>
+	</map>

@@ -1,0 +1,44 @@
+<tr id="Imp-<?form?>-<?qty_index?>-<?index?>" <? echo ( ($$variable{index} == 1 or $$variable{"ImpQty-$$variable{form}-$$variable{qty_index}-$$variable{index}"})  ? '' : 'style="display:none;"' ) ?>>
+	<td class="Qty">
+<? echo ( 
+	my $blah = join('-',@$variable{'form','qty_index','index'});
+	my $onkeyup = "Imposition_onchange(this, '$$variable{form}', '$$variable{qty_index}', '$$variable{index}' );";
+	my $html = input(
+		type	=>	'cardinal',
+		id		=>	'ImpQty-'.$blah, 
+		name	=>	'ImpQty-'.$blah,
+		value	=>	$$variable{'ImpQty-'.$blah},
+		oninput	=>	$onkeyup,
+		title	=>	'# of pieces cut from press sheet',
+		);
+	$html .= '</td><td class="Imp">'.join("\n",
+	input(
+		type	=>	'cardinal',
+		id		=>	'ImpColumns-'.$blah,
+		name	=>	'ImpColumns-'.$blah,
+		value	=>	$$variable{'ImpColumns-'.$blah},
+		oninput	=>	$onkeyup,
+		title   =>	'imposition columns',
+		),
+	'x',
+	input(
+		type	=>	'cardinal',
+		id		=>	'ImpRows-'.$blah,
+		name	=>	'ImpRows-'.$blah,
+		value	=>	$$variable{'ImpRows-'.$blah},
+		oninput	=>	$onkeyup,
+		title   =>	'imposition rows',
+		),
+	'=',
+	input(
+		type	=>	'cardinal',
+		id		=>	'ImpOut-'.$blah,
+		name	=>	'ImpOut-'.$blah,
+		value	=>	$$variable{'ImpOut-'.$blah},
+		onkeyup	=>	$onkeyup,
+		title   =>	'resulting imposition',
+		) );
+	$html .= 'out</td>';
+return $html;
+) ?>
+</tr>

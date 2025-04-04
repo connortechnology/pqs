@@ -1,0 +1,32 @@
+<?include('/includes/error_reporting.html')?>
+<? echo ( 
+	if ( ! ( $$variable{Object} and $$variable{Object}->can_view() ) ) {
+		$log->warn("Can't view");
+		return;
+	}
+	my $html;
+	my @Landscape;
+	my @Portrait;
+	foreach my $Asset ( $$variable{Object}->Assets() ) {
+		if ( $Asset->Asset()->layout() eq 'Portrait' ) {
+			push @Portrait, $Asset;
+		} else {
+			push @Landscape, $Asset;
+		} # end if
+	} # end foreach Asset
+
+	foreach my $Asset ( @Portrait, @Landscape ) {
+		$html .= '<div class="Asset">';
+		if ( $Asset->Asset()->can_edit() ) {
+		$html .= join("\n",
+				'<a href="/employee/assets/view.html?asset_id='.$Asset->Asset()->id().'">',
+				$Asset->Asset()->thumbnail_html(),
+				'</a>' );
+		} else {
+			$html .= $Asset->Asset()->thumbnail_html();
+		}
+		$html .= '</div>';
+	} # end foreach Asset
+	$html .= '<input type="hidden" name="asset_ids" value="'.join(',',map { $_->asset_id() } @Portrait, @Landscape ) . '"/>';
+	return $html;
+) ?>

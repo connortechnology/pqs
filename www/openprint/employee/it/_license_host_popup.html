@@ -1,0 +1,27 @@
+<?include(/includes/error_reporting.html)?>
+<form id="PopupForm" name="PopupForm" method="post" action="licenses.html">
+	<input type="hidden" name="license_id" value="<?echo($$variable{License}{id})?>"/>
+	<input type="hidden" name="action"/>
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+		<li>
+			<label for="ip">Host IP</label>
+			<input type="text" id="ip" name="ip" value="<? echo ( $session{'/employee/it/licenses.html?ip'} ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onkeydown="this.form.hostname.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host($('f1'));}" onchange="this.onkeyup.call(this);this.onkeydown.call(this);"/>
+		</li>
+		<li>
+			<label>Hostname</label>
+			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/licenses.html?hostname'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" />
+		</li>
+		<li><label>MAC</label>
+			<input type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/licenses.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" />
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::button( 'ShowResults', { onclick=>"new Ajax.Updater( 'Results','/employee/it/_license_host_results.html', { parameters: \$('PopupForm').serialize() } );", text=>'Show Results' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results">Choose criteria and click Show Results</div>
+</form>
+<script>document.PopupForm.ip.focus();</script>

@@ -1,0 +1,11 @@
+<ul>
+	<li><label>Material Quantity</label>
+<? echo ( my $html;
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{Columns}.'Columns">';
+		$html .= $$variable{"txtMaterialLength$qty_index"}.' inches';
+		$html .= '</span>';
+	} # end foreach qty_index
+	return $html
+) ?>
+

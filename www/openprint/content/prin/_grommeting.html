@@ -1,0 +1,7 @@
+<li><label>Grommets?</label>
+<? echo ( radio( 'grommeting', ['Y', 'Yes','N','No' ], $$variable{grommeting}, { default=>'N', onclick=>q`if(this.value=='Y'){$('Grommetsli').show();}else{$('Grommetsli').hide();}calc(this.form.name);` } ); ) ?>
+</li>
+<li id="Grommetsli"<?echo($$variable{grommeting} ne 'Y' ? ' style="display:none;"' : '')?>>
+	<label># of Grommets</label>
+	<? echo ( input( type=>'cardinal', name=>'grommets', value=>$$variable{grommets}, onupdate=>'calc(this.form.name);'); ) ?>
+</li>

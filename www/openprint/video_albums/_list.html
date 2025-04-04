@@ -1,0 +1,19 @@
+<? echo (
+	my $html;
+	my @Albums = openprint::Video_Album->find(
+		'order'=>'lower(name)',
+		( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ? 
+			( $session{'/video_albums/list.html?user_id'} ? ( 'user_id' => $session{'/video_albums/list.html?user_id'} ) : () ) :
+			( 'user_id' => $session{'user_id'} )
+		),
+	);
+	$html .= scalar @Albums . ' albums<br/>';
+	foreach my $Album ( @Albums ) {
+		$html .= '<div class="VideoAlbum"><a href="/video_albums/edit.html?album_id='.$Album->id().'">';
+		$html .= sprintf('<img src="%s" alt="%s" /><br/>%s', $Album->thumbnail_url(), $Album->name(), $Album->description() );
+		my @Videos = $Album->Videos();
+		$html .= scalar @Videos . ' video' . (@Videos != 1 ? 's' : '');
+		$html .= '</a></div>';
+	} # end foreach Album
+	return $html;
+) ?>

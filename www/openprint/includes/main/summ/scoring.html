@@ -1,0 +1,31 @@
+<ul>
+<? echo (
+  my $html;
+
+  foreach my $sig_id ( $$variable{Project}->signatures({sort=>1}) ) {
+    my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
+    my $form = $$sig_specs{SignatureIndex};
+
+    $html .= '<li><label>For form ' . $form . '</label></li>';
+$html .='<li><label>Number of scores per item</label>';
+foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		$html .= '<span class="value">'. int($$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"}).' Vertical '.
+		int($$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"}).' Horizontal</span>';
+}
+$html .= '</li>';
+$html .= include('/includes/main/summ/signature_equipment.html', $variable );
+
+    $html .= '<li><label>Imposition</label><div class="value"><table><tr><th class="Qty">Qty</th><th class="Imp">Imposition</th></tr>';
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+
+      foreach my $imp_index ( 1 .. 4 ) {
+        next if ! $$variable{"ImpQty-$form-$qty_index-$imp_index"};
+
+        $html .= sprintf('<tr><td class="Qty">%d</td><td class="Imp">%d x %d + %d x %d = %d out</td></tr>',
+          @variable{map { join('-', $_, $form, $qty_index, $imp_index ) } ( 'ImpQty', 'ImpColumns','ImpRows','ImpDutchColumns','ImpDutchRows','ImpOut' )} );
+      } # end foreach imp_index
+    } # end foreach qty_index
+    $html .= '</table></div></li>';
+  } # end foreach form
+  return $html;
+) ?>

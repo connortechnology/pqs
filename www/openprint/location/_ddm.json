@@ -1,0 +1,61 @@
+<? echo (
+	# type should give the parent's type.  Also need parent's name to give the pattern for child elements.
+	# Find children of the given location
+
+	# parent_id may be empty, in which case, we get all chidlren of that type.
+	my $Parent;
+
+	if ( $param{parent_id} ) {
+		$Parent = openprint::Location->find_one( id=>$param{parent_id} ) if $param{parent_id};
+	} # end if
+	my $type = $param{type} ? $param{type} : $$Parent{type};
+
+	my $json = JSON->new;
+	my $js = 'var ddm; var selected;';
+
+	# I think we can only do one update at a time
+if ( 0 ) {
+	my $options = openprint::Location->dropdown(parent_id=>$$Parent{id} );	
+        unshift @{$options}, 'All';
+        unshift @{$options}, '';
+        $js .= "
+ddm = \$('$param{child_element}');
+if ( ddm ) {
+    selected = ddm.getValue();
+    fill_ddm_from_array( ddm, " . $json->encode( $options ) . " );
+    ddm_select_by_value( ddm, selected, 0 );
+	ddm.onchange();
+} // end if
+";
+
+} else {
+	my ($ddm_name_start, $ddm_name_end) = $param{parent_element} =~ /^(.*)$type(.*)$/;
+	my @parent_ids = ( $$Parent{id} ) if $Parent;
+	# Goes through each child type, populating the dropdowns.
+	while ( $type = openprint::Location->child_type($type) ) {
+		my @Options = openprint::Location->find( 
+				(@parent_ids ? ( parent_id=>\@parent_ids ) : () ),
+				type=>( ( $type eq 'state' and $$Parent{name} eq 'Canada' ) ? ['state','province'] : $type ),
+				);
+# Beacuse... can't get all states otherwise
+# if @parent_ids or $type;
+		my $options = [ map { $_->id(), $_->name() } @Options ];
+		@parent_ids = map { $_->parent_id() } @Options;
+
+		my $ddm_name = $param{$type.'_element'} ? $param{$type.'_element'} : $ddm_name_start.$type.$ddm_name_end;
+	
+		unshift @{$options}, 'All';
+		unshift @{$options}, '';
+		$js .= "
+ddm = \$('$ddm_name');
+if ( ddm ) {
+	selected = ddm.getValue();
+	fill_ddm_from_array( ddm, " . $json->encode( $options ) . " );	
+	ddm_select_by_value( ddm, selected, 0 );
+} // end if
+";
+	} # end while children type
+}
+#$log->debug($js);
+	return $js;
+) ?>

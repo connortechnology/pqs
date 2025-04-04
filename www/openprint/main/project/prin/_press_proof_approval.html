@@ -1,0 +1,3 @@
+<li><label>Press Proof</label><? echo ( radio( 'rdbPressProof'.$$variable{Signature}, [ 'Y', 'Yes', '', 'No' ], $$variable{'rdbPressProof'.$$variable{Signature}} ); ) ?></li>
+<li><label>Press Approval</label><? echo ( radio( 'PressApproval'.$$variable{Signature}, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'PressApproval'.$$variable{Signature}}, {
+		default => $$variable{Project}->Company()->press_approvals() ? $$variable{Project}->Company()->press_approvals()->value() : '' } ); ) ?></li>

@@ -1,0 +1,27 @@
+<div class="Dimensions">
+	<fieldset><legend>Dimensions</legend>
+		<div class="project_size">
+			<select name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(this.form);">
+<? if ( $$variable{'ddmProjectSize'} ) ?>
+				<option value="<?ddmProjectSize?>"><?ddmProjectSize?></option>
+<? else ( $$variable{'ddmProjectSize'} ) ?>
+				<option value="custom">custom</option>
+<? endif ( $$variable{'ddmProjectSize'} ) ?>
+			</select>
+		</div>
+		<div class="dimension_boxes">
+			<? echo (
+				join( "\n",
+				input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0, step=>'0.0001' ),
+				' x ',
+				input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, step=>'any' ),
+				'('. writeTip( 'Finished' ).' - W x H in inches)<br/>',
+				input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0, step=>'any' ),
+				' x ',
+				input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, step=>'any' ),
+				'('. writeTip( 'Flat' ).' - W x H in inches)',
+				);
+			) ?>
+		</div>
+	</fieldset>
+</div>

@@ -1,0 +1,69 @@
+<div class="PageTitle">
+<h1>Products</h1>
+<h2>Search</h2>
+</div>
+<script>
+	function delete_confirm(form) {
+		var number_of_deleted_products = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_products += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_products == 0 ) {
+			alert("To Delete Products, click the checkbox beside the product.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_products + " products from search?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_products() {
+		LoadContent( 'ProductsList', '_search.html', $j('#f1').serialize());
+	} // end function
+</script>	 
+<?include('/includes/error_reporting.html')?>
+<div class="Product"><div class="Search">
+	<form id="f1" name="f1" method="post" action="/product/search.html">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+			<div class="content">
+			<div class="leftColumn">
+				<ul>
+		<? if ( @{$$variable{Categories}} = openprint::Product_Category->find( order=>'lower(name)') ) ?>
+					<li><label>Category</label>
+						<select name="category_id" id="category_id" onchange="load_products();">
+							<option value="">All</option>
+							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{'/product/search.html?category_id'} ); ) ?>
+						</select>
+					</li>
+		<? endif ( @{$$variable{Categories}} = openprint::Product_Category->find( order=>'lower(name)') ) ?>
+		<li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $param{search} ) ?>"/></li>
+				</ul>
+			</div>
+			<div class="rightColumn">
+				<ul>
+		<? if ( $session{user_type} eq 'A' ) ?>
+					<li>
+						<label>Created On</label>
+						<? echo ( date_select_session( '/product/search.html', 'created_on_start', {onchange=>'load_products();'} ); ) ?>
+							to 
+						<? echo ( date_select_session( '/product/search.html', 'created_on_end', {onchange=>'load_products();'} ); ) ?>
+					</li>
+		<? endif ( $session{user_type} eq 'A' ) ?>
+				</ul>
+			</div>
+			</div>
+			<p class="buttons">
+				<? echo ( join("\n",
+					button( 'ShowResults', { onclick=> 'load_products();', text=>'Show Results' } ),
+					( openprint::Product::can_edit() ? button( 'New', { href=> '/product/edit.html', text=>'New Product' } ) : '' ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<div id="ProductsList"><?include('_search.html')?></div>
+	</form>
+	</div>
+</div>

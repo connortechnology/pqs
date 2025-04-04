@@ -1,0 +1,111 @@
+<p>
+You are currently representing <? echo ( $openprint::Company->link_to(); ) ?>.<br/>
+</p>
+To represent another <? echo ( translate('company') ) ?>, please select it from the dropdown and click submit. <br/>
+Any actions you perform will be recorded in the selected <? echo ( translate('company') ) ?>'s history.<br/>
+<form id="f1" name="f1" action="select_company.html" method="post">
+	<fieldset class="SelectCompany">
+    <ul>
+<? if ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
+	<? echo (
+		my $all = $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'] );
+           my @csr_ids = $all ? map { $_->id() } openprint::User->find(
+           'usergroup any'=>'Sales',
+           company_id=>($config{owner_id}?$config{owner_id}:$session{company_id})
+           ) : ( $session{user_id}, $openprint::User->csr_ids() );
+		
+		my $html;
+		if ( @csr_ids ) {
+			$html .= '
+<li class="form-group"><label>Sales Rep</label>';
+		if ( @csr_ids > 4 ) {
+			$html .= ssi::select( 
+				openprint::User->dropdown(id=>\@csr_ids), 
+				[ split(',', $session{'/account/select_company.html?csr_ids'} ) ], 
+				{
+					name=>'csr_ids',
+					prepend=>['','All', $all ? ( 'Unassigned', 'Unassigned' ) : () ],
+					onchange=>q`filter_companies( 'ddmCompany', {salesrep_id:get_ddm_value(this)});`,
+				} );
+		} else {
+			$html .= radio( 'csr_ids',
+				[ '', 'All', ( $all ? ( 'Unassigned', 'Unassigned' ) : () ), @{openprint::User->dropdown(id=>\@csr_ids)} ],
+				[ split(',', $session{'/account/select_company.html?csr_ids'} ) ],
+				{
+					onclick=>q`filter_companies( 'ddmCompany', {salesrep_id:this.value} );`,
+				}
+			 );
+		} # end if
+		$html .= '</li>
+';
+		} # end if
+return $html;
+	) ?>
+<? endif ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
+		<li class="form-group">
+			<label><? echo ( translate('company') ) ?></label>
+			<input class="filter" name="CompanyFilter" type="text" oninput="filter_companies('ddmCompany', {name:this.value, selected_id:get_ddm_value($('ddmCompany'))});" />
+			<select id="ddmCompany" name="ddmCompany" onchange="stop_filter_companies();if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<? echo ( 
+					$$variable{company_dropdown} = openprint::Company->dropdown(
+						or	=> { 
+            id => [ sets::union( 
+            ( $openprint::User->company_id() ? $openprint::User->company_id() : () ),
+            ( $session{company_id} ? $session{company_id} : () ),
+            ) ],
+							salesrep_id=>$session{'/account/select_company.html?csr_ids'} ? $session{'/account/select_company.html?csr_ids'} : [ undef, $session{user_id}, $openprint::User->csr_ids() ],
+							}
+						);
+					#$$variable{company_dropdown} = openprint::Company->dropdown( ) if @{$$variable{company_dropdown}} <= 2;
+					if ( @{$$variable{company_dropdown}} > 2000 ) {
+						return make_drop_down( [ map { $_->id(), $_->name() } ( $openprint::Company ) ], $session{company_id} );
+					} else {
+						make_drop_down( $$variable{company_dropdown}, $session{company_id} );
+					}
+				) ?>
+			</select>
+			<? echo ( button( 'Switch', { onclick=>'f1.submit();' } ); ) ?>
+		</li>
+    <li class="form-group"><label>Last 10</label>
+	<? echo ( 
+		my $html = '';
+
+		my $parser = 'DateTime::Format::Pg';
+		my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 );
+
+		my $datetime = DateTime->new( time_zone => $openprint::TZ, ( year => $year, month=>$month, day=>$day, ));
+
+		my @Entries = openprint::Log->find(
+			user_id=>$session{user_id},
+			action=>'Switch Company',
+			order=>'date_time DESC',
+			'date_time >=' => $parser->format_datetime( $datetime ),
+			);
+		my %companies;
+		if ( @Entries ) {
+			my @Companies = openprint::Company->find( id=>[ map { $_->company_id() } @Entries ] );
+			foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {
+				next if $companies{$$Log{company_id}};
+				next if ! $Log->Company()->can_become();
+				$companies{$$Log{company_id}} = $Log->company_id();
+				$html .= sprintf('<a href="/account/select_company.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a><br/>',
+					$Log->company_id(), $Log->Company()->name(),
+				);
+			} # end foreach
+		}
+		my $User = new openprint::User($session{user_id});
+		if ( ! $companies{$$User{company_id}} ) {
+			$html .= sprintf('<a href="/account/select_company.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a><br/>',
+				$User->company_id(), $User->Company()->name(),
+			);
+		} # end if
+		return $html;
+		) ?>
+		</li>
+    </ul>
+	</fieldset>
+	<input type="hidden" name="btnFunction" value="SelectCompany"/>
+</form>
+<script nonce="<?echo($config{CSP_NONCE})?>">
+  document.f1.CompanyFilter.focus();
+</script>

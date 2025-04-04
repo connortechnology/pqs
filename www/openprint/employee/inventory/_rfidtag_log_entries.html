@@ -1,0 +1,63 @@
+<? echo ( 
+    my @Entries = openprint::RFIDTagHistory->find(
+        ( $param{rfidtag_id} ? ( rfidtag_id   =>  $param{rfidtag_id} ) : () ),
+        ( $param{scanner_id} ? ( scanner_id   =>  $param{scanner_id} ) : () ),
+		date_filter( 'end', 'updated_on <=', \%param ),
+		date_filter( 'start', 'updated_on >=', \%param ),
+        ( $param{type_id} ? ( type_id=>$param{type_id} ) : () ),
+        order  => 'updated_on DESC',
+        limit  => $param{limit},
+        );
+
+    # This is to auto-load the start year
+    if ( ! @Entries ) {
+        @Entries = openprint::RFIDTagHistory->find(
+			( $param{rfidtag_id} ? ( rfidtag_id =>  $param{rfidtag_id} ) : () ),
+			( $param{scanner_id} ? ( scanner_id =>  $param{scanner_id} ) : () ),
+			date_filter( 'end', 'updated_on <=', \%param ),
+			date_filter( 'start', 'updated_on >=', \%param ),
+			limit  => $param{limit},
+			order  => 'updated_on DESC',
+		);
+        if ( @Entries ) {
+            @param{'start_year','start_month','start_day'} = $Entries[@Entries-1]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
+        } # end if
+    } elsif ( ! $param{'start_year'} ) {
+        @param{'start_year','start_month','start_day'} = $Entries[@Entries-1]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
+    } # end if
+
+	return 'No results' if ! @Entries;
+
+	my $Scanner = new openprint::RFIDScanner( $param{scanner_id} ) if $param{scanner_id};
+	my $RFIDTag = new openprint::RFIDTag( $param{rfidtag_id} ) if $param{rfidtag_id};
+
+	my $columns = 3;
+	my $html = '<table class="List"><tr><th class="DateTime">When</th>';
+	
+	if ( ! $RFIDTag ) {
+		$html .= '<th class="RFID">Tag</th>' ;
+		$columns += 1;
+	}
+	if ( ! $Scanner ) {
+		$html .= '<th class="RFIDScanner">Scanner</th>';
+		$columns += 1;
+	} # end if
+	$html .= '<th class="Location">Location</th><th class="Comment">Comment</th></tr>';
+
+	my $rowclass;
+	foreach my $Entry ( @Entries ) {	
+		$html .= '<tr'.$rowclass.'><td class="DateTime">'.format_datetime( $Entry->updated_on() ).'</td>';
+		$html .= '<td class="RFID">'.$Entry->RFIDTag()->link_to().'</td>' if ! $RFIDTag;
+		$html .= '<td class="RFIDScanner">'.$Entry->Scanner()->name().'</td>' if ! $Scanner;
+		$html .= '<td class="Location">'. $Entry->Location()->name(). '</td>';
+			$html .= '<td class="Comment">'. $Entry->comment() .'</td>';
+		$html .= '</tr>';
+		if ( $Entry->RFIDTag()->type() eq 'Skid' ) {
+			my $Skid = $Entry->RFIDTag()->Skid();
+			$html .= '<tr'.$rowclass.'><td></td><td class="RFID">'.$Skid->link_to().'</td><td colspan="' . ($columns-2).'">'.$Skid->description().'</td></tr>';
+		} # end if
+		$rowclass=$rowclass?'':' class="colRow"';
+	} # end foreach Entry
+	$html .= '</table>';
+	return $html;
+) ?>

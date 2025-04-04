@@ -1,0 +1,57 @@
+<? eval (
+	@{$$variable{'Surveys'}} = ();
+	foreach my $Survey ( openprint::Survey->find( 
+		date_filter( '/survey/history.html?created_on_end','created_on <=' ),
+		date_filter( '/survey/history.html?created_on_start','created_on >=' ),
+		order				=> 'id',
+		) ) {
+		push @{$$variable{'Surveys'}}, $Survey;
+	} # end foreach Survey
+) ?>
+
+<? if ( @{$$variable{'Surveys'}} == 0 ) ?>
+	There are no surveys which match your search criteria. 
+<? else ( @{$$variable{'Surveys'}} == 0 ) ?>
+	<table class="List">
+		<tr> 
+			<th class="Title">Title</th>
+			<th class="Description">Description</th>
+			<th class="CreatedBy">Created By</th>
+			<th class="DateTime">Created On</th>
+			<th class="questions">Questions</th>
+			<th class="responses">Responses</th>
+			<th class="complete">% Complete</th>
+		</tr>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Survey ( @{$$variable{'Surveys'}} ) {
+				my $User = new openprint::User( $Survey->created_by() );
+				my @Responses = openprint::Survey_Response->find('user_id'=>$session{'user_id'},'survey_id'=>$Survey->id());
+				my $num_questions = scalar $Survey->Questions();
+				$html .= sprintf(q` 
+				<tr%8$s> 
+					<td class="Title"><a href="/survey/view.html?survey_id=%1$d">%4$s</a></td>
+					<td class="Description"><a href="/survey/view.html?survey_id=%1$d">%5$s</a></td>
+					<td class="Author">%2$s</td>
+					<td class="DateTime"><a href="/survey/view.html?survey_id=%1$d">%3$s</a></td>
+					<td class="questions"><a href="/survey/view.html?survey_id=%1$d">%6$s</a></td>
+					<td class="responses"><a href="/survey/view.html?survey_id=%1$d">%7$s</a></td>
+					<td class="complete"><a href="/survey/view.html?survey_id=%1$d">%9$d%</a></td>	
+				</tr>
+				`, $Survey->id(), $User->thumbnail_html(),
+				format_datetime( $Survey->created_on() ),
+				ssi::html_escape($Survey->name()),
+				$Survey->description(),
+				$num_questions,
+				( $num_questions ? int( scalar $Survey->Responses() / $num_questions ) : 0 ),
+				$rowclass,
+				( $num_questions? 100*(@Responses/$num_questions) : 0 ),
+ 
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Survey
+			return $html;
+		) ?>
+	</table>
+<? endif ( @{$$variable{'Surveys'}} == 0 ) ?>

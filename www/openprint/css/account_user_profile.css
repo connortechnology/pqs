@@ -1,0 +1,100 @@
+.UserProfile {
+}
+.UserProfile:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+#UserInformation {
+	float: left;
+	width: 50%;
+}
+#UserProfile, #ProfilePicture, #Statistics {
+	display: none;
+}
+.UserProfile #LoginInformation {
+	float: left;
+	width: 50%;
+}
+.UserProfile fieldset {
+	padding-left: 0;
+	padding-right: 0;
+}
+.UserProfile fieldset ul li,
+.UserProfile fieldset.filters ul li {
+	padding: 2px 0 2px 175px;
+	text-align: left;
+}
+.UserProfile p.buttons {
+	padding-left: 175px;
+}
+.UserProfile fieldset ul li input[type="text"] {
+	vertical-align: top;
+}
+.UserProfile fieldset ul li label:not(.radio):not(.radio-inline),
+.UserProfile fieldset.filters ul li label:not(.radio):not(.radio-inline) {
+	width: 170px;
+	margin: 0 0 0 -175px;
+	text-align: left;
+}
+#Log {
+	clear: both;
+}
+
+tr .Result {
+	text-align: left;
+}
+tr.ip {
+	width: auto;
+}
+
+.UserProfile ul.UserGroups,
+.UserProfile .AssistantTo ul ,
+.UserProfile .Assistants ul ,
+.UserProfile .marketing_categories ul {
+    width: 100%;
+
+}
+
+
+.UserProfile .AssistantTo li,
+.UserProfile .Assistants li,
+.UserProfile .marketing_categories li {
+    margin: 0;
+    padding: 0;
+    float: left;
+    width: 33%;
+}
+.UserProfile ul.UserGroups li,
+.UserProfile .marketing_categories li {
+    margin: 0;
+    padding: 0;
+    float: left;
+    width: 50%;
+}
+.UserProfile ul.UserGroups li label,
+.UserProfile .AssistantTo li label ,
+.UserProfile .Assistants li label ,
+.UserProfile .marketing_categories li label {
+    float: none;
+    width: auto;
+    margin: 0;
+    width: auto;
+}
+
+
+.UserProfile div.Assistants ,
+.UserProfile div.AssistantTo {
+    width: 50%;
+}
+.UserProfile div.Assistants ,
+.UserProfile div.AssistantTo {
+float: left;
+}
+.wage {
+	display: none;
+}

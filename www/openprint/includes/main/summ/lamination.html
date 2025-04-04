@@ -1,0 +1,8 @@
+<p> 
+	<label>Type on front</label>
+	<? echo ( join("\n", map { '<span class="value">'.$$variable{TypeFront}.'</span>' } $$variable{Project}->quantity_indexes() ); ) ?>
+</p>
+<p> 
+	<label>Type on back</label>
+	<? echo ( join("\n", map { '<span class="value">'.$$variable{TypeFront}.'</span>' } $$variable{Project}->quantity_indexes() ); ) ?>
+</p>

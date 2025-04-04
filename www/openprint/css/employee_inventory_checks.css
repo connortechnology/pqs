@@ -1,0 +1,7 @@
+table .Name { 
+	text-align: left;
+}
+table .Items {
+	width: 100px;
+	text-align: left;
+}

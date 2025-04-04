@@ -1,0 +1,77 @@
+  <? if ( $$variable{'ProjectIndex'} eq '' ) ?>
+  There is no current project. 
+  <? else ( $$variable{'ProjectIndex'} eq '' ) ?>
+  <? echo ( include('/includes/project_header.html'); ) ?>
+  <table class="List">
+    <tr> 
+      <th align="left">Service</th>
+	  <th width="100" align="right">Price1( <?txtQuantity1?>)</th>
+	  <th width="100" align="right">Price2( <?txtQuantity2?>)</th>
+	  <th width="100" align="right">Price3( <?txtQuantity3?>)</th>
+	  <th width="90" align="right">Status</th>
+	</tr>
+    <? while ( @{$$variable{'SERVICES'}} ) ?>
+    <? pop ( index, name, url, price1, price2, price3, status ) = SERVICES ?>
+    <tr> 
+                        <td class="smTbl" height="20">
+<? if ( $$variable{'url'} ne '' ) ?>
+<a href="proj/<?url?>?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?index?>">
+<? endif ( $$variable{'url'} ne '' ) ?>
+<?name?>
+<? if ( $$variable{'url'} ne '' ) ?>
+</a>
+<? endif ( $$variable{'url'} ne '' ) ?>
+&nbsp;</td>
+
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?price1?> </td>
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?price2?> </td>
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?price3?> </td>
+	  <td class="smTbl" align="right" height="20">&nbsp; <?status?> </td>
+	</tr>
+    <? if ( @{$$variable{'SERVICES'}} ) ?>
+    <? pop ( index, name, url, price1, price2, price3, status ) = SERVICES ?>
+    <tr class="colRow"> 
+                        <td class="smTbl" height="20">
+<? if ( $$variable{'url'} ne '' ) ?>
+<a href="proj/<?url?>?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?index?>">
+<? endif ( $$variable{'url'} ne '' ) ?>
+<?name?>
+<? if ( $$variable{'url'} ne '' ) ?>
+</a>
+<? endif ( $$variable{'url'} ne '' ) ?>
+&nbsp;</td>
+
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?price1?> </td>
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?price2?> </td>
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?price3?> </td>
+	  <td class="smTbl" align="right" height="20">&nbsp; <?status?> </td>
+	</tr>
+    <? endif ( @{$$variable{'SERVICES'}} ) ?>
+    <? endwhile ( @{$$variable{'SERVICES'}} ) ?>
+    <tr> 
+      <td colspan="5" height="5"><hr/></td>
+	</tr>
+    <tr> 
+      <td align="left">Unit Prices: </td>
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?UNITPRICE1?> </td>
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?UNITPRICE2?> </td>
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?UNITPRICE3?> </td>
+	  <td class="smTbl" align="right" height="20">&nbsp;</td>
+	</tr>
+    <tr> 
+      <td align="left">Total before taxes: </td>
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?TOTAL1?> </td>
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?TOTAL2?> </td>
+	  <td class="smTbl" align="right" height="20"> <?CurrencySymbol?> &nbsp; <?TOTAL3?> </td>
+	  <td class="smTbl" align="right" height="20">&nbsp;</td>
+	</tr>
+    <tr> 
+      <td colspan="5" height="16"></td>
+	</tr>
+    <tr> 
+      <td colspan="5"><span class="smTbl">All prices in <?CurrencyName?> .</span></td>
+	</tr>
+  </table>
+<br>
+<a href="/administrator/reports/quote_details.html?quote_id=<?QuoteID?>">Back to Quote</a><br>
+  <? endif ( $$variable{'ProjectIndex'} eq '' ) ?>

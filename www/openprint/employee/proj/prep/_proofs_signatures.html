@@ -1,0 +1,104 @@
+<?include('/includes/error_reporting.html')?>
+<form id="f2" name="f2">
+	<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+	<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+	<input type="hidden" name="order_id" value="<?OrderID?>"/>
+	<input type="hidden" name="btnFunction" />
+	<? echo ( 
+		my $html = '';
+
+		my $Project = $$variable{Project};
+
+		my @Presses = openprint::Equipment->find('category any'=>'Printing', useinscheduling=>1, order=>'lower(strname)');
+		openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ); 
+
+		my $qty_index = $Project->ordered_quantity_index();
+
+		foreach my $signature_service_index ( $Project->signatures() ) {
+
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			my $form = $$variable{SignatureIndex} = $$sig_specs{SignatureIndex};
+			$$variable{SignatureServiceIndex} = $signature_service_index;
+			if ( ! $$sig_specs{UsePress} ) {
+				openprint::service::insert_service_spec(
+						$log, $dbh, $$Project{id}, $signature_service_index,
+						'UsePress', $$sig_specs{'ddmPress'.$qty_index} );
+			} # end if
+			
+			my $I = new openprint::Imposition();
+			$I->load($sig_specs, $qty_index, $Project);
+
+			$html .= '<fieldset><legend>Form '. $form . ': ' . $$sig_specs{Reference} .'</legend>';
+#$html .= $$specs{txtServiceDescription} .' ' if $$specs{txtServiceDescription};
+			$html .= openprint::service::summary( $Project, $signature_service_index );
+			$html .= openprint::service::summary( $Project, $signature_service_index, $qty_index );
+			$html .= '<div id="ImpositionImage'.$qty_index.'" class="Imposition" title="';
+			$html .= sprintf( '%s x %s', @$I{'columns','rows'} );
+			$html .= sprintf(' + %s x %s', @$I{'dutch_columns','dutch_rows'}) if $$I{dutch_columns};
+			$html .= ' ' . $I->image_orientation_text();
+			$html .= '">'.$I->to_svg().'</div>';
+			$html .= '
+		<div class="Press"><p>
+			<label>Press</label>
+';
+			$html .= radio( 'UsePress-'.$signature_service_index, [ map { $$_{strid} => $$_{name} } @Presses ], $$sig_specs{UsePress}, { container=>['','<br/>'] } );
+			$html .= '</p></div>
+<br class="spacer"/>
+		<p class="Proofs">
+			<label>Proofs</label>
+			<table class="List">
+				<tr>
+					<th class="Quantity">Quantity</th>
+					<th class="Size">Size</th>
+					<th class="Type">Type</th>
+					<th class="checkbox">&nbsp;</th>
+				</tr>
+';
+			while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice(@{$$variable{'Proofs-'.$form.'-'.$qty_index}},0,6) ) {
+				$html .= sprintf('
+				<tr>
+					<td class="Quantity">%2$d</td>
+					<td class="Size">%3$s x %4$s</td>
+					<td class="Type">%5$s</td>
+					<td class="checkbox"><input type="checkbox" id="chkDelete-%6$d-%1$d" name="chkDelete-%6$d-%1$d"/></td>
+				</tr>', @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'}, $form );
+
+			} # end while
+			if ( $session{user_type} eq 'A' or $openprint::User->Groups('Prepress') ) {
+				$html .= '<tr>
+					<td class="Quantity">'. input( type=>'cardinal', name=>'txtProofQuantity-'.$$sig_specs{SignatureIndex} );
+					$html .= '</td>
+					<td class="Size">'.
+						join(' x ', 
+									input( type=>'float', name=>'txtProofWidth-'.$form ),
+									input( type=>'float', name=>'txtProofHeight-'.$form ),
+									);
+					$html .= '</td>
+					<td class="Type">'.ssi::select(
+						[map { $_->name(), $_->description() } openprint::Service->find( category=>'Proofs', order=>'lower(description)' )],
+						undef, { name=>'ddmProofType-'.$$sig_specs{SignatureIndex},
+prepend => [ '', 'Select Type' ] } );
+
+					$html .= '</td>
+					<td class="checkbox">&nbsp;</td>
+				</tr>';
+				} # end if
+$html .= '
+			</table>
+		</p>
+		<p class="buttons">';
+			if ( $session{user_type} eq 'A' or $openprint::User->Groups('Prepress') ) {
+				$html .= join("\n",
+					button( 'Save', { onclick=>"if(check_input(f2,'$form')){f2.btnFunction.value='Add Proof';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',\$('f2') );}", text=>'Save' } ),
+					button( 'Delete', { onclick=>"f2.btnFunction.value='Delete Proofs';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',\$('f2') );", text=>'Delete Checked' } ),
+				);
+			} # end if
+		$html .= '
+		</p>
+		<br class="spacer"/>
+'.include('/employee/proj/prep/_ppf_upload.html', \%variable).'
+	</fieldset>';
+} #end foreach sig
+return $html;
+) ?>
+</form>

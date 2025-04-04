@@ -1,0 +1,34 @@
+<?include('/includes/error_reporting.html')?>
+<? echo (
+	my $html = '';
+
+	my @Attributes = ( openprint::RADIUS_Check->find( username=>$$variable{username} ), openprint::RADIUS_Reply->find( username=>$$variable{username} ) );
+	if ( @Attributes ) {
+		foreach my $Check ( @Attributes ) {
+			$html .= $Check->attribute() . ' := ' . $Check->value();
+			$html .= button( 'RemoveRadius'.$Check->attribute(), { 
+				onclick	=> qq`new Ajax.Updater( 'mac-$$variable{username}', '/employee/it/_radius_mac_line.html', { parameters: { username: '$$variable{username}', attribute: '$$Check{attribute}', action: 'remove' } } );`, 
+				title	=> 'Remove',
+				text	=>	'X',
+				} );
+			$html .= '<br/>';
+		} # end foreach
+	} else {
+		$html .= "No RADIUS record found for $$variable{username}<br/>";
+	} # end if
+
+	$html .= sprintf('
+		<select id="attribute-%1$s" name="attribute-%1$s" ><option value="">select</option>%2$s</select>
+		<input type="text" id="value-%1$s" name="value-%1$s"/>', $$variable{username},
+		make_drop_down( [ 
+				( map { $_, $openprint::RADIUS_Reply::attributes{$_} } sort keys %openprint::RADIUS_Reply::attributes ),
+				( map { $_, $openprint::RADIUS_Check::attributes{$_} } sort keys %openprint::RADIUS_Check::attributes ) 
+		] )
+		);
+	$html .= button( 'AddRadius', { 
+		onclick	=> qq`new Ajax.Updater( 'mac-$$variable{username}', '/employee/it/_radius_mac_line.html', { parameters: { username: '$$variable{username}', attribute: \$('attribute-$$variable{username}').getValue(), value: \$('value-$$variable{username}').getValue(), action: 'add' } } );`, 
+		text	=> 'Add',
+		} );
+
+	return $html;
+) ?>

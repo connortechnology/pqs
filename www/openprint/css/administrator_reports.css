@@ -1,0 +1,26 @@
+.company_name, .contact_name, .contact_phone, .contact_email, .CSR {
+	text-align: left;
+}
+.projects,
+.last_project,
+.orders,
+.order_value,
+.Date,
+.last_order,
+.payment_cycle {
+	text-align: right;
+}
+.projects,
+.orders {
+	width: 65px;
+}
+.List td.Date {
+	padding-right: 6px;
+}
+.Currency {
+	width: 40px;
+}
+
+.State {
+	text-align: left;
+}

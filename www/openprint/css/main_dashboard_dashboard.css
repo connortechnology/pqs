@@ -1,0 +1,43 @@
+#expander { min-width: 1750px; }
+#sizer {max-width: none; } 
+.lgfield {
+  width: 14em;
+  border: none;
+}
+.rgfield {
+  width: 8em;
+  border: none;
+}
+.smfield {
+  width: 100%;
+  border: none;
+}
+.srfield {
+  width: 5em;
+  border: none;
+}
+.tifield {
+  width: 2em;
+  border: none;
+}
+
+.paddingTop { 
+padding-top: 1em;
+}
+table.List th {
+padding: 0.2em;
+white-space: normal;
+min-width: 1em;
+text-align: center
+ }
+table.List td {
+padding: 0.2em;
+text-align: center
+ }
+select { width: 18em; }
+div.button-bar { margin-top: 3em;}
+
+.filters{
+  display: flex;
+  justify-content: space-between;
+}

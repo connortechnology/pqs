@@ -1,0 +1,88 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<script type="text/javascript">
+function calc( formName, force ) {
+    var form = getFormObj( formName );
+	if ( gettingNewPrice ) {
+		if ( timeout ) {
+			clearTimeout( timeout );
+		} // end if
+		if ( ! force ) {
+			setTimeout( "calc('"+formName+"');", 1000 );
+			return;
+		} // end if
+	} // end if
+	timeout = null;
+	gettingNewPrice = true;
+
+	remove_div('AlertDiv');
+	gettingNewPrice = true;
+	
+	var h = form.serialize(true);
+	h.callback = 'cbShippingResults';
+	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+} // end calc()
+function cbShippingResults( results ) {
+	cbFillResults( results );
+	var form = getFormObj( 'f1' );
+	if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons in order to be shipped.  Would you like to add Plain Cartons to your project?' ) ) {
+		addService( 'f1', 'PlainCartons' );
+	} // end if
+}
+function validate_data(formName) {
+	var form = getFormObj( formName );
+	var text = '';
+	return true;
+} // end function
+</script>
+<div class="Service">
+	<form name="f1" method="post" action="/employee/project/view.html">
+		<fieldset><legend>Shipping Services</legend>
+			<div class="leftColumn">
+				<?include('/main/project/shipping/_shipping_from_address_view.html')?>
+				<?include('/main/project/shipping/_shipping_from_address_hidden.html')?>
+			</div>
+			<div class="rightColumn">
+				<?include('/main/project/shipping/_shipping_to_address_view.html')?>
+				<?include('/main/project/shipping/_shipping_to_address_hidden.html')?>
+			</div>
+			<br class="spacer"/>
+			<fieldset>
+				<ul>
+				<li>
+					<span class="TwoColumns">Quoted</span>
+					<span class="TwoColumns">Actual</span>
+				</li>
+				<li>
+					<label># of items to ship</label>
+					<span class="TwoColumns"><? echo ( $$variable{'txtQuantity'.$$variable{QTYIndex}} ) ?></span>
+					<span class="TwoColumns">
+					<?echo( input(type=>'cardinal', name=>'txtQuantityUsed', value=>$$variable{txtQuantityUsed}, oninput=>'calc(this.form.name);'); )?>
+					</span>
+				</li>
+				<?include('_shipping_packages.html'); ) ?>
+				<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{user_id} ) ) ?>
+				<li>
+					<label>Price (<? echo ( $$variable{Project}->Currency()->symbol() ) ?>)</label>
+					<span class="TwoColumns"><? echo ( $$variable{'txtPrice'.$$variable{QTYIndex}} ) ?></span>
+					<span class="TwoColumns">
+					<? echo ( input( type=>'float', name=>'txtPriceUsed', value=>$$variable{txtPriceUsed} ); )?>
+					</span>
+				</li>
+				<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{user_id} ) ) ?>
+				</ul>
+				<hr/>
+				<?include('/includes/employee/feedback/complete.html') ?>
+				<?include('/includes/employee/feedback/complete_date.html') ?>
+			</fieldset>
+			<?include('_signatures.html')?>
+		</fieldset>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="qty_index" value="Used" />
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<input type="hidden" name="btnFunction" value="Save"/>
+		<input type="hidden" name="NeedPlainCartons" />
+		<input type="hidden" name="Status" />
+	</form>
+</div><!-- Service -->

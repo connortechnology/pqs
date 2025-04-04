@@ -1,0 +1,100 @@
+<div class="PageTitle">
+<h1>Events</h1>
+<h2>Search</h2>
+</div>
+<script>
+<? if ( $session{user_type} and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+	function delete_confirm(form) {
+		var number_of_deleted_events = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_events += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_events == 0 ) {
+			alert("To Delete Events, click the checkbox beside the event.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_events + " events from search?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+<? endif ( $session{user_type} and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+	function load_events( form ) {
+		$('EventsList').innerHTML = 'Please wait...';
+		new Ajax.Updater('EventsList','_search.html', {parameters:Form.serialize(form)});
+	} // end function
+</script>	 
+<? include('/includes/error_reporting.html' ) ?>
+<div class="Event"><div class="Search">
+	<form id="f1" name="f1" method="post" action="/event/search.html">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+			<div class="content">
+			<div class="leftColumn">
+				<ul>
+		<? if ( @{$$variable{Categories}} = openprint::Event_Category->find(order=>'lower(name)') ) ?>
+					<li><label>Type</label>
+						<select name="category_id" id="category_id" onchange="load_events(this.form);">
+							<option value="">All</option>
+              <? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{$r->uri().'?category_id'} ); ) ?>
+						</select>
+					</li>
+		<? endif ( @{$$variable{Categories}} = openprint::Event_Category->find(order=>'lower(name)') ) ?>
+					<li>
+						<label>When</label>
+						<? echo ( date_select_session( '/event/search.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
+							to 
+						<? echo ( date_select_session( '/event/search.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
+					</li>
+					<li><label>Text</label>
+						<input type="text" name="search" value="<? echo ( $param{search} ) ?>"/>
+					</li>
+<? if ( $session{user_id} ) ?>
+					<li><label>Created By</label>
+						<? echo ( ssi::select( openprint::Company->dropdown(), $session{'/event/search.html?company_id'}, { name=>'company_id', onclick=>'load_events(this.form);', prepend=>['','All'] } ); ) ?>
+		
+					</li>
+<? endif ( $session{user_id} ) ?>
+<? if ( $session{user_type} eq 'A' ) ?>
+	<li><label>Template?</label>
+		<? echo ( radio( 'template', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/event/search.html?template'}, { onclick=>'load_events(this.form);' } ); ) ?>
+	</li>
+	<li><label>Template</label>
+		<? echo ( ssi::select( openprint::Event->dropdown(order=>'lower(name)',template=>1), $session{'/event/search.html?template_id'}, { name=>'template_id', prepend=>['', 'All'], onchange=>'load_events(this.form);' } ); ) ?>
+	</li> 
+<? endif ( $session{user_type} eq 'A' ) ?>
+				</ul>
+			</div>
+			<div class="rightColumn">
+				<ul>
+				<li><label>Place</label>
+					<? echo ( ssi::select( openprint::Location->dropdown(order=>'lower(name)', type=>'place' ), '', { name=>'location_id',prepend=>['','All'], onchange=>'load_events(this.form);' } ); ) ?>
+				</li>
+<? echo (
+    openprint::Location::filters('',[
+@session{'/event/search.html?country_id',
+'/event/search.html?state_id',
+'/event/search.html?city_id'}], {onchange=>'load_events(f1);'} );
+) ?>
+					<li><label>Distance</label>
+						<select name="distance">
+							<? echo ( make_drop_down( [ '', '', '25', '25km', '100', '100km' ], $session{'/event/search.html?distance'} ); ) ?>
+						</select>
+					</li>
+				</ul>
+			</div>
+			</div>
+			<p class="buttons">
+				<? echo ( join("\n",
+					button( 'ShowResults', { onclick=>'load_events(f1);', text=>'Show Results' } ),
+					button( 'New', { href=>'/event/edit.html', text=>'New Event' } ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<div id="EventsList"><?include('_search.html')?></div>
+	</form>
+	</div>
+</div>

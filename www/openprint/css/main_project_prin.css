@@ -1,0 +1,167 @@
+.InteriorPages, .CoverPages {
+	width: 50%;
+	float: left;
+}
+.PressProofApprovals {
+	width: 50%;
+	float: left;
+}
+.CoverPages .Dimensions {
+	float: none;
+	width: auto;
+}
+.Inks {
+  padding-top: 23px;
+  margin-bottom: 5px;
+}
+.Inks,
+.dims_and_other,
+.PagesAndSizes {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+}
+.BleedsColourBarsStockOverrides > div,
+.dims_and_other > div,
+.PagesAndSizes > div {
+  flex: 1;
+}
+.BleedsColourBarsStockOverrides > div fieldset,
+.dims_and_other > div fieldset,
+.Inks > div fieldset,
+.PagesAndSizes > div fieldset {
+  height: 100%;
+}
+.project_size,
+.dimension_boxes {
+  float: left;
+  min-width: 360px;
+  margin-top: 5px;
+}
+.BookSpecifications .project_size {
+  float:none;
+}
+.InksFront,
+.InksBack {
+flex: 1;
+}
+.link-outer {
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+}
+
+.BleedsColourBarsStockOverrides {
+display: flex;
+align-items: stretch;
+}
+
+.SignatureGroup .leftColumn ,
+.SignatureGroup .rightColumn {
+width: 50%;
+	float: left;
+}
+.BleedsColourBars ,
+.Service .Overrides ,
+.Stock 
+ {
+	float: left;
+	width: 50%;
+	min-width: 425px;
+}
+.SpotColour {
+	width: 25%;
+  display: inline-block;
+	min-height: 22px;
+}
+.Coverage {
+	width: 25%;
+  display: inline-block;
+}
+.SpotColour label:not(.radio):not(.radio-inline),
+.Coverages label:not(.radio):not(.radio-inline) {
+	clear: none;
+	width: auto;
+	float: none;
+	margin: 0;
+	padding: 0 4px 0 4px;
+	vertical-align: middle;
+}
+.SpotColour label {
+	padding: 0 4px 0 4px;
+}
+.SpotColour label:after {
+	content: "";
+}
+.bleedOption {
+	float: left;
+	width: 100px;
+}
+.SpotColours,
+.ProcessColours,
+.SpecialColour {
+	margin: 5px 0px;
+	padding-left: 165px;
+  clear: both;
+}
+.SpotColours:after,
+.ProcessColours:after {
+  content: ".";
+  display: block;
+  height: 0;
+  font-size: 0;
+  clear: both;
+  visibility: hidden;
+}
+.Inks .checkOption {
+	float: left;
+	width: 165px;
+	margin-left: -165px;
+}
+.SpecialColour .Mileage,
+.SpecialColour .Price
+{
+display: inline-block;
+width: 49%;
+}
+.colourOption {
+	float: left;
+	width: 104px;
+}
+
+.imposition input[name="txtLayoutWidth1"] ,
+.imposition input[name="txtLayoutWidth2"] ,
+.imposition input[name="txtLayoutWidth3"] ,
+.imposition input[name="txtLayoutHeight1"] ,
+.imposition input[name="txtLayoutHeight2"] ,
+.imposition input[name="txtLayoutHeight3"] {
+  width: 85px;
+}
+.templates ul {
+  display: flex;
+  flex-wrap: wrap;
+}
+@media screen and (min-width:1900px) {
+.templates ul:not(:has(li:nth-child(8))) {
+  flex-wrap: nowrap;
+}
+}
+.overs .value {
+  text-align: right;
+}
+.overs .totals {
+	border-top: 1px solid #024293;
+}
+
+#Version_Descriptions .Quantity {
+  text-align: right;
+}
+.calliper input[type="text"],
+.calliper input[type="number"] {
+    width: 45px;
+}
+.basis_weight input[type="text"],
+.basis_weight input[type="number"] {
+    width: 35px;
+}

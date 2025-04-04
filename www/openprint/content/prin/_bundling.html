@@ -1,0 +1,12 @@
+<li>
+	<label>Bundling</label>
+	<input type="radio" id="BundlingY" name="Bundling" value="Y" onclick="$('BundlingDiv').show();$('OrderButton').hide();" <? echo ( 'checked="checked"' if $$variable{'Bundling'} eq 'Y' ) ?> />
+	<label class="radio" for="BundlingY">Yes</label>
+	<input type="radio" id="BundlingN" name="Bundling" value="N" onclick="$('BundlingDiv').hide();$('OrderButton').hide();" <? echo ( 'checked="checked"' if $$variable{'Bundling'} ne 'Y' ) ?> />
+	<label class="radio" for="BundlingN">No</label>
+</li>
+<li id="BundlingDiv" <? echo ( 'style="display:none;"' if $$variable{'Bundling'} ne 'Y' ) ?> >
+	<label for="txtItemsPerBundle">Items per bundle</label>
+	<input type="number" id="txtItemsPerBundle" name="txtItemsPerBundle" value="<?txtItemsPerBundle?>" onkeyup="this.value=this.value.replace(/\D/g,'');$('OrderButton').hide();" />
+</li>
+

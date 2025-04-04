@@ -1,0 +1,44 @@
+
+.Folding table {
+	table-layout: auto;
+	width: auto;
+}
+table .Qty,
+table .Imp {
+	width: 30px;
+}
+table .Type {
+  vertical-align: top;
+}
+table .Type select {
+  max-width: 100%;
+}
+.Folding table .Folds, 
+.Folding table .Angles {
+	width: 30px;
+}
+.Folding table .Speed {
+	width: 115px;
+	vertical-align: middle;
+}
+.Folding table .Speed img {
+	vertical-align: middle;
+}
+
+.Folding fieldset li table input[type="text"],
+.Folding fieldset li table input[type="number"] {
+	width: 100%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+.Folding table .Speed input[type="text"],
+.Folding table .Speed input[type="number"] {
+	width: 75px;
+}
+.Folding table th {
+	font-size: x-small;
+}
+.Folds, .Angles {
+	display: none;
+}

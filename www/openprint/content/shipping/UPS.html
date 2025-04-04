@@ -1,0 +1,45 @@
+<? eval (
+	$$variable{'ProjectIndex'} = openprint::print_project::get_unfinished_project( $log, $dbh, $$variable{'Session'}{_session_id} );
+) ?>
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<script type="text/javascript">
+function validate_data(formName) {
+} // end function
+</script>
+<div class="Service">
+	<form name="f1" method="POST" action="/main/project/view.html">
+		<fieldset><legend>UPS Shipping Services</legend>
+			<ul>
+				<? echo ( include('/includes/main/proj/shipping_packages.html'); ) ?>
+				<? echo ( include('/includes/main/proj/shipping_to_address.html'); ) ?>
+			<li class="required">
+				<label>Service Type</label>
+				<span id="ServiceTypeDiv">
+					Please wait while services types are loaded.
+					<input type="hidden" name="ddmServiceType" value="<?ddmServiceType?>" />
+				</span>
+			</li>
+			<li class="required">
+				<label>Pickup Type</label>
+				<span id="PickupTypeDiv">
+					Please wait while pickup types are loaded.
+					<input type="hidden" name="ddmPickupType" value="<?ddmPickupType?>" />
+				</span>
+			</li>
+			<li>
+				<label><b>Price</b></label>
+				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+				<input name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
+				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+			</li>
+		</ul>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceType" value="UPS">
+	</form>
+	UPS, the UPS brandmark, and the Colour Brown are trademarks of United Parcel Service of America, Inc. All Rights Reserved
+</div><!-- Service -->

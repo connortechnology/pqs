@@ -1,0 +1,56 @@
+<? echo (
+	openprint::StockWeight->find();
+	my $html;
+
+	my @user_types = ('');
+	push @user_types, 'C' if $session{'user_id'};
+	push @user_types, 'E' if $session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $session{'user_type'} eq 'A';
+
+	my %find = (
+			'project_type_id any'	=>	$$variable{'ProjectType'}->id(),
+			'supplied is null or ='			=>	$$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ? 1 : 0,
+			'user_type'			=>	\@user_types,
+	);
+
+	my @StockOptions = misc::trim(split( ',', $config{$$variable{'ProjectType'}->name().'StockOptions'} ));
+	@StockOptions = misc::trim(split( ',', $config{'StockOptions'} )) if ! @StockOptions;
+	@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
+
+	foreach my $option ( @StockOptions ) {
+		my ( $desc,$name ) = split('=>', $option );
+		$name = $desc if ! $name;
+
+		my @Papers = openprint::Paper->find( %find );
+		next if ! @Papers;
+		my @options;
+		if ( $option =~ /Size/ ) {
+			@options = map { $_, $_ } ( sort { 
+					my ( $a_w, $a_h ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+					my ( $b_w, $b_h ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+					if ( $a_w != $b_w ) {
+						return $a_w <=> $b_w;
+					}
+					if ( $a_h != $b_h ) {
+						return $a_w <=> $b_w;
+					}
+					return $a <=> $b;
+				} ( sets::union( map { $_->get( lc $name ); } @Papers ) ) );
+		} else {
+			@options = map { $_, $_ } ( sort ( sets::union( map { $_->get( lc $name ); } @Papers ) ) );
+		} # end if
+		$$variable{'ddmStock'.$name.$$variable{'Signature'}} = $options[0] if @options == 2;
+
+		$find{lc $name} = $$variable{'ddmStock'.$name.$$variable{'Signature'}} if $$variable{'ddmStock'.$name.$$variable{'Signature'}};
+		$html .= sprintf(q`<li class="Stock%2$s"><label>Stock %2$s</label>
+				<select name="ddmStock%1$s%3$s" size="1" onchange="Stock_onchange( this, '%3$s' );">
+				<option value=""> Please select </option>
+				%4$s
+				</select>
+			</li>
+			`, $name, $desc, $$variable{'Signature'}, 
+			make_drop_down( \@options, $$variable{'ddmStock'.$name.$$variable{'Signature'}} ),
+		);
+	} # end foreach option
+	return $html;
+) ?>

@@ -1,0 +1,15 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? echo ( 
+	my $html;
+
+	foreach my $Photo ( $$variable{'Album'}->Photos() ) {
+		$html .= '<div class="Photo">';
+		$html .= sprintf('<a href="view_photo.html?asset_id=%d&amp;album_id=%d"><img src="%s" alt="%s"/></a>', $Photo->asset_id(), $Photo->album_id(), $Photo->thumbnail_url(), $Photo->caption() );
+		$html .= '<br/>';
+			$html .= ssi::button( 'D'.$Photo->asset_id(), { 'onclick'=> 
+				sprintf( q`new Ajax.Updater('Photos', '_photos.html', { parameters: { album_id: %d, asset_id: %d, action: 'delete' } } );`, $$variable{'Album'}->id(), $Photo->asset_id() ),
+, 'text'=>'Delete' } );
+		$html .= '</div>';
+	} # end foreach Photo
+	return $html;
+) ?>

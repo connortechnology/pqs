@@ -1,0 +1,156 @@
+<? eval (
+  my $uri = '/employee/accounting/expenses.html';
+	$$variable{Taxes} = [ openprint::Tax->find(
+		date_filter( $uri.'?invoiced_on_end', 'period_start null_or_<=' ),
+		date_filter( $uri.'?invoiced_on_start', 'period_end null_or_>=' ),
+		date_filter( $uri.'?paid_on_end', 'period_start null_or_<=' ),
+		date_filter( $uri.'?paid_on_start', 'period_end null_or_>=' ),
+		order		=>	'period_start,name',
+	) ];
+	$$variable{subtotal} = $$variable{total} = $$variable{bus_total} = $$variable{business_subtotal} = 0;
+	$$variable{Expenses} = [];
+	if ( $param{expense_id} ) {
+		$$variable{Expenses} = [ openprint::Expense->find( id=>$param{expense_id} ) ];
+	} else {
+	$$variable{Expenses} = [ openprint::Expense->find( 
+			( map { 
+        ( exists $session{$uri.'?'.$_} and $session{$uri.'?'.$_} ne '' ) ? ( $_ => [split(',',$session{$uri.'?'.$_})] ) : ()
+        } ( 'category_id', 'recipient_id', 'account_id','attention','amount','total', 'currency_id', 'business_use' ) ),
+			date_filter( $uri.'?invoiced_on_end', 'invoiced_on <=' ),
+			date_filter( $uri.'?invoiced_on_start', 'invoiced_on >=' ),
+			date_filter( $uri.'?due_on_end', 'due_on <=' ),
+			date_filter( $uri.'?due_on_start', 'due_on >=' ),
+			date_filter( $uri.'?paid_on_end', 'paid_on <=' ),
+			date_filter( $uri.'?paid_on_start', 'paid_on >=' ),
+			date_filter( $uri.'?entered_on_end', 'created_on <=' ),
+			date_filter( $uri.'?entered_on_start', 'created_on >=' ),
+      ($openprint::User->type() eq 'A' ? ( $session{$uri.'?owner_id'} ? (owner_id=>$session{$uri.'?owner_id'}):()) : (owner_id=>$session{owner_id})),
+      ( $session{$uri.'?description'} ? ('description ilike'=>$session{$uri.'?description'}.'%') : () ),
+			order			=> 'paid_on,due_on',
+      deleted   => ($session{$uri.'?deleted'} eq '' ? [0,1] : $session{$uri.'?deleted'}),
+			) ];
+	} # end if
+  $log->debug("Num of expseses" . @{$$variable{Expenses}} );
+	foreach my $Expense ( @{$$variable{Expenses}} ) {
+		$$variable{subtotal} += $Expense->amount();
+		$$variable{business_subtotal} += $Expense->business_use_amount();
+		foreach my $Tax ( @{$$variable{Taxes}} ) {
+			$$variable{tax_totals}{$Tax->id()}{amount} += $Expense->Tax( $Tax )->amount();
+			$$variable{tax_totals}{$Tax->id()}{business} += $Expense->Tax( $Tax )->amount() * ( $Expense->business_use() / 100 );
+		} # end foreach Tax
+		$$variable{total} += $Expense->total();
+		$$variable{bus_total} += $Expense->total() * ( $Expense->business_use() / 100 );
+	} # end foreach Expense
+) ?>
+
+<? if ( @{$$variable{Expenses}} == 0 ) ?>
+	There are no expenses which match your search criteria. 
+<? else ( @{$$variable{Expenses}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Expense ID #</b> to view expense details.<br/>
+		To delete expenses from history check the appropriate expense(s) and click delete.<br/>
+	</div>
+	<table id="ExpensesTable" class="List sortable table-striped"
+    data-pagination="true"
+    data-search="true"
+    data-show-pagination-switch="true"
+    data-cookie="true"
+    data-cookie-same-site="Strict"
+    data-cookie-id-table="ExpensesTable"
+    data-cookie-expire="2y"
+    data-show-columns="true"
+    data-show-export="true"
+    data-uncheckAll="true"
+    data-click-to-select="true"
+    data-check-on-init="true"
+    data-mobile-responsive="true"
+    data-min-width="562"
+    >
+    <!--data-columns-hidden="[]"-->
+
+		<thead>
+			<tr> 
+        <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'expense_ids', this.checked);"/></th>
+				<th class="Company" data-field="Recipient" data-sortable="true">Recipient</th>
+				<th class="Account" data-field="Account" data-sortable="true">Account</th>
+				<th class="Category" data-field="Category" data-sortable="true">Category</th>
+        <th class="Memo" data-field="Memo">Memo</th>
+				<th class="Date" data-field="Invoiced" data-sortable="true">Invoiced</th>
+				<th class="Date" data-field="DueOn" data-sortable="true">Due On</th>
+				<th class="Date" data-field="PaidOn" data-sortable="true">Paid On</th>
+				<th class="Percent">Bus %</th>
+				<th class="Price" data-field="Amount" data-sortable="true">Amount</th>
+				<th class="Price" data-sortable="true">Bus Amount</th>
+        <? echo ( join('', map { sprintf('<th class="Price">%s</th><th class="Price">(%s%)</th>', $_->name(), $_->rate() ) } @{$$variable{Taxes}} );) ?>
+				<th class="Price">Total</th>
+				<th class="Price">Bus Total</th>
+			</tr>
+		</thead>
+    <tbody>
+		<? echo (
+			my $html = '';
+			my $rowclass;
+			foreach my $Expense ( @{$$variable{Expenses}} ) {
+        # Currency can only apply to amount, but not total...
+        my $Currency = $Expense->Currency();
+				$html .= sprintf(q`
+					<tr%1$s> 
+            <td class="checkbox"><input type="checkbox" name="expense_ids" value="%2$d"/></td>
+            <td class="Company"><a href="/employee/accounting/expense.html?expense_id=%2$d">%3$s</a></td>
+            <td class="Account"><a href="/employee/accounting/expense.html?expense_id=%2$d">%4$s</a></td>
+            <td class="Category"><a href="/employee/accounting/expense.html?expense_id=%2$d">%5$s</a></td>
+            <td class="Memo"><a href="/employee/accounting/expense.html?expense_id=%2$d">%15$s</a></td>
+            <td class="Date"><a href="/employee/accounting/expense.html?expense_id=%2$d">%6$s</a></td>
+            <td class="Date"><a href="/employee/accounting/expense.html?expense_id=%2$d">%7$s</a></td>
+            <td class="Date"><a href="/employee/accounting/expense.html?expense_id=%2$d">%8$s</a></td>
+            <td class="Percent">%9$s</td>
+            <td class="Price">%10$s</td>
+            <td class="Price">%11$s</td>
+            %12$s
+            <td class="Price">%13$s</td>
+            <td class="Price">%14$s</td>
+					</tr>
+					`, $rowclass, $Expense->id(), $Expense->Recipient()->name(), 
+					$Expense->account(),
+					$Expense->category(), 
+					format_date($Expense->invoiced_on()),
+					format_date($Expense->due_on()),
+					format_date($Expense->paid_on()),
+					$Expense->business_use(),
+          (openprint::Currency::format( $Currency->convert_from($Expense->amount(), { period=>$Expense->paid_on()}) ).
+              (($Currency->id() != $openprint::Currency->id()) ? '('.$Expense->amount().$Currency->short().')' : '')),
+          openprint::Currency::format( $Currency->convert_from($Expense->business_use_amount(), { period=>$Expense->paid_on()})),
+          join("\n", map { sprintf('<td class="Price">%s</td><td class="Price">%s</td>', 
+                openprint::Currency::format( $Expense->Tax($_)->amount()),
+                openprint::Currency::format( $Expense->Tax($_)->amount() * ( $Expense->business_use()/100 )),
+							) } @{$$variable{Taxes}} ),
+          openprint::Currency::format( $Expense->total()),
+					openprint::Currency::format( $Expense->total() * ( $Expense->business_use()/100 )),
+					$Expense->description(),
+					);
+        $log->debug($Expense->to_string());
+        $rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach
+			return $html;
+		) ?>
+    </tbody>
+    <!--
+    <tfoot>
+		<tr class="totals">
+			<td colspan="8">Totals (<? echo ( scalar @{$$variable{Expenses}} ) ?> rows)</td>
+      <td class="Price"><? echo ( openprint::Currency::format( $$variable{subtotal} ); ) ?></td>
+      <td class="Price"><? echo ( openprint::Currency::format( $$variable{business_subtotal} ); ) ?></td>
+      <? echo (
+          return join("\n", map { sprintf('<td class="Price">%s</td><td class="Price">%s</td>', 
+						openprint::Currency::format( $$variable{tax_totals}{$_->id()}{amount} ),
+						openprint::Currency::format( $$variable{tax_totals}{$_->id()}{business} )
+						) } @{$$variable{Taxes}} );
+      ) ?>
+      <td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?></td>
+      <td class="Price"><? echo (openprint::Currency::format( $$variable{bus_total} ); ) ?></td>
+		</tr>
+    </tfoot>
+    -->
+	</table>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
+<? endif ( @{$$variable{Expenses}} == 0 ) ?>

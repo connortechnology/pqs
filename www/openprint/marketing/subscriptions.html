@@ -1,0 +1,75 @@
+<?include(/includes/error_reporting.html)?>
+<div class="subscriptions">
+	<form id="f1" name="f1" method="post" action="/marketing/subscriptions.html">
+    <?if(!$$variable{User}->email())?>
+    <fieldset><legend>Specify Account</legend>
+      <ul>
+        <li><label>Email Address</label>
+          <input type="email" name="email" />
+        </li>
+      </ul>
+      <p class="buttons">
+      <?echo(button('Submit', { type=>'submit' });)?>
+      </p>
+    </fieldset>
+    <?else(!$$variable{User}->email())?>
+
+    <fieldset><legend>User Account Setup</legend>
+    <? if (!$$variable{User}->password()) ?>
+      <? if ($$variable{User}->id())?>
+      <p>This account exists in our database (as an email contact), but has not been assigned a password.</p>
+      <? endif ($$variable{User}->id())?>
+      <p>Please consider providing a password to secure the account. Please use best practices in choosing the password.</p>
+      <ul>
+        <?include('/includes/_password_part.html')?>
+      </ul>
+    <? endif (!$$variable{User}->password()) ?>
+	<? if ( ! $session{user_id} ) ?>
+<? if ( $config{reCAPTCHA_site_key} ) ?>
+<ul><li><label>Captcha</label>
+    <?echo(
+         require Captcha::reCAPTCHA;
+         my $c = Captcha::reCAPTCHA->new;
+         return $c->get_html_v2($config{reCAPTCHA_site_key});
+         ) ?>
+  </li>
+</ul>
+  <? else ( $config{reCAPTCHA_site_key} ) ?>
+		<div id="Captcha"><?include('/includes/_captcha.html')?></div>
+  <? endif ( $config{reCAPTCHA_site_key} ) ?>
+		<input type="hidden" name="email" value="<?echo($param{email})?>"/>
+		<input type="hidden" name="email_id" value="<?echo($param{email_id})?>"/>
+		<input type="hidden" name="campaign_id" value="<?echo($param{campaign_id})?>"/>
+		<input type="hidden" name="user_id" value="<?echo($param{user_id})?>"/>
+	<? endif ( ! $session{user_id} ) ?>
+    </fieldset>
+		<fieldset><legend>Subscriptions</legend>
+			<p>
+					Editing subscriptions for <? echo ( sprintf('%s &lt;%s&gt;', $$variable{User}->name(), $$variable{User}->email() ); ) ?>:<br/>
+			</p>
+			<ul>
+				<li><label>All email communications from <? echo ( $config{SiteTitle} ) ?></label>
+				<? echo ( radio( 'all', [ 'Y', 'Subscribed', 'N', 'Unsubscribed' ], $$variable{User}->mailinglist(), { default=>'Y' } ); ) ?>
+				</li>
+<?echo( my $html = '';
+    my %Subscriptions = map { $$_{campaign_id} => $_ } openprint::EmailCampaign_Subscription->find(user_id=>$$variable{User}->id()) if $$variable{User}->id();
+    foreach my $Campaign (openprint::EmailCampaign->find(user_id=>undef, runnable=>1)) {
+      $html .= '<li><label>'.html_escape($Campaign->name()).'</label>'.
+        radio( 'campaign_'.$$Campaign{id}, [ '1', 'Subscribed', '0', 'Unsubscribed' ], 
+          (exists($Subscriptions{$$Campaign{id}}) ? '1' : '0'),
+          { default=>'0' } ).
+        '</li>';
+    } # end foreach
+    return $html;
+)?>
+			</ul>
+			<p class="buttons">
+			<? echo ( join("\n",
+         button( 'Save', { type=>'submit', name=>'action', value=>'Save' } ),
+         button( 'Reset', { type=>'reset' } ),
+					); ) ?>
+			</p>
+		</fieldset>
+    <?endif(!$$variable{User}->email())?>
+	</form>
+</div>

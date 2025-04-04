@@ -1,0 +1,12 @@
+<div class="row">
+	<span class="required">*</span>
+	<span class="label"><?ServiceTypeName?> direction</span>
+	<span class="input">
+		<input type="radio" id="rdbDirection-<?SignatureIndex?>Width" name="rdbDirection-<?SignatureIndex?>" value="Width" <? echo ( 'checked' if $$variable{'rdbDirection'} eq 'Width' ) ?> onclick="calc(this.form.name);" />
+		<label for="rdbDirection-<?SignatureIndex?>Width">Width</label>
+		<input type="radio" id="rdbDirection-<?SignatureIndex?>Height" name="rdbDirection-<?SignatureIndex?>" value="Height" <? echo ( 'checked' if $$variable{'rdbDirection'} eq 'Height' ) ?> onclick="calc(this.form.name);" />
+		<label for="rdbDirection-<?SignatureIndex?>Height">Height</label>
+		<input type="checkbox" id="chkOverrideDirection-<?SignatureIndex?>" name="chkOverrideDirection-<?SignatureIndex?>" value="Y" <? echo ( 'checked' if $$variable{"chkOverrideDirection-$$variable{'SignatureIndex'}"} eq 'Y' ) ?> onclick="if ( ! this.checked ) calc(this.form.name);" />
+		<label for="chkOverrideDirection-<?SignatureIndex?>">Override</label>
+	</span>
+</div>

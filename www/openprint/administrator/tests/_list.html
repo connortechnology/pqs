@@ -1,0 +1,38 @@
+<? echo (
+	my @Tests = ();
+		foreach my $Test ( openprint::Test->find( 
+			'order'				=> 'id DESC',
+			) ) {
+			push @Tests, $Test;
+		} # end foreach Test
+
+	if ( @Tests == 0 ) {
+		return 'There are no tests which match your search criteria.';
+	} # end if
+
+	my $rowclass;
+	my $html = q`
+<table class="List">
+	<tr>
+		<th class="id">Id</th>
+		<th class="name">Name</th>
+		<th class="description">Description</th>
+		<th class="mandatory">Mandatory</th>
+	</tr>
+`;
+
+	foreach my $Test ( @Tests ) {
+		$html .= sprintf(q`
+
+	<tr%1$s>
+		<td class="id"><a href="edit.html?test_id=%2$d">%2$d</a></td>
+		<td class="name"><a href="edit.html?test_id=%2$d">%3$s</a></td>
+		<td class="description"><a href="edit.html?test_id=%2$d">%4$s</a></td>
+		<td class="mandatory"><a href="edit.html?test_id=%2$d">%5$s</a></td>
+	</tr>
+`, $rowclass, $Test->id(), $Test->name(), $Test->description(), ( $Test->mandatory() ? 'Yes' : 'No' ) );
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Test
+
+	return $html;
+) ?>

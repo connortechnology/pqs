@@ -1,0 +1,12 @@
+<li> 
+	<label>How many <? echo ( ssi::writeTip( 'negatives' ); ) ?> need <?ServiceTypeName?></label>
+	<? echo ( my $html;
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			$html .= input( name=>'txtNegativeQuantity'.$qty_index, value=>$$variable{'txtNegativeQuantity'.$qty_index}, type=>'cardinal', onkeyup=>q`calc('f1');` );
+			$html .= write_override( 'chkOverrideNegativeQuantity'.$qty_index, $$variable{'chkOverrideNegativeQuantity'.$qty_index}, '', q`calc('f1');` );
+			$html .= '</span>';
+		} # end foreach
+		return $html;
+	) ?>
+</li>

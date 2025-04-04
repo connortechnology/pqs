@@ -1,0 +1,21 @@
+<div class="row">
+	<span class="label"><? echo ( ssi::writeTip('Imposition'); ) ?><span class="smTbl">(Width x Height in Inches)</span></span>
+	<span class="input">
+		<input type="text" name="txtImposition<?QTYIndex?>" value="<? echo ( $$variable{'txtImposition'.$$variable{'QTYIndex'}} ) ?>" size="3"  onkeyup="calc('f1');" />
+		 Out
+		<input type="checkbox" id="chkOverrideImposition<?QTYIndex?>" name="chkOverrideImposition<?QTYIndex?>" value="Y" onclick="if(!this.checked) calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkOverrideImposition'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
+/>
+<label for="chkOverrideImposition<?QTYIndex?>">Override</label><br/>
+		 <input type="text" size="3" readonly="readonly" name="hdnImpositionColumns<?QTYIndex?>" /> x <input type="text" readonly="readonly" size="3" name="hdnImpositionRows<?QTYIndex?>" />
+		 <input type="text" size="3" readonly="readonly" name="hdnImpositionDutchColumns<?QTYIndex?>" /> x <input type="text" readonly="readonly" size="3" name="hdnImpositionDutchRows<?QTYIndex?>" /> dutch
+		<br/>
+		<input type="text" name="txtLayoutWidth<?QTYIndex?>" readonly="readonly" size="9"  onkeyup="calc('f1');" />
+		<input type="text" name="txtLayoutHeight<?QTYIndex?>" readonly="readonly" size="9"  onkeyup="calc('f1');" />
+		<span class="smTbl">&nbsp;(W x H)</span>
+	</span>
+</div>
+<input type="hidden" name="SpreadRows<?QTYIndex?>" value="<? echo ( $$variable{'SpreadRows'.$$variable{'QTYIndex'}} ) ?>" />
+<input type="hidden" name="SpreadCols<?QTYIndex?>" value="<? echo ( $$variable{'SpreadCols'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" name="txtImageWidth<?QTYIndex?>" value="<? echo ( $$variable{'txtImageWidth'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" name="txtImageHeight<?QTYIndex?>" value="<? echo ( $$variable{'txtImageHeight'.$$variable{'QTYIndex'}} ) ?>" />
+

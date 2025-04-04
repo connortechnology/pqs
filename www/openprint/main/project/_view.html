@@ -1,0 +1,548 @@
+<?include(/includes/project_header.html) ?>
+<? echo ( 
+	my $rowclass = '';
+	my $Project = $$variable{Project};
+	my $Project_Type = $Project->Type();
+	my $ProjectCurrency = $Project->Currency();
+	my $services = $Project->services();
+	my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
+  my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''}[0];
+	if ( ! $$services{''}[0] ) {
+		Carp::cluck("No project service for project $$Project{id}");
+	} # end if
+	my @quantity_indexes = $Project->quantity_indexes();
+
+  my $editable = $$variable{editable} = $Project->can_edit() and ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ! $$variable{Quote};
+  my $html = '
+<table class="List Services">
+	<thead>
+		<tr> 
+			<th class="description">Services</th>';
+  if ( $$variable{Project}->Ordered_Product() ) {
+    $html .= '<th class="price">'.$$variable{Project}->Ordered_Product()->quantity() .'</th>';
+  } else {
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+      $html .= '<th class="price">'.$$variable{Project}->quantity( $qty_index ) .'</th>';
+    } # end foreach qty_index
+  } # end if Ordered Product
+  $html .= '<th class="status">Status</th>';
+  $html .= '<th class="unprintable actions">Actions</th>' if $editable;
+  $html .= '
+		</tr>
+	</thead>
+  <tbody>
+';
+
+	@{$$variable{Categories}} = openprint::ServiceType_Category->find( order=>'sorting,name');
+	$$variable{category_totals} = {};
+
+	foreach my $ServiceCategory ( @{$$variable{Categories}} ) {
+		if ( $ServiceCategory->name() eq 'Printing' ) {
+      $html .= '
+<tr class="category '.$ServiceCategory->name().'">
+  <td class="description">'.$ServiceCategory->name().'</td>'.
+  join("\n", (
+        map { '<td class="price"></td>' } $Project->quantities()), '<td class="status"></td>',
+      ($editable ? '<td class="actions unprintable"></td>' : ()),
+      '</tr>');
+
+			my $function_name = 'openprint::Estimating::'.$Project_Type->type();
+			my $summary = '';
+			if ( my $function = $function_name->can('summary') ) {
+				$summary = $function->($Project, $$services{''}[0], $printing_specs);
+			} # end if
+
+			my $Service = $Project->Service( $$services{''}[0] );
+			$summary .= '<br/><span class="Overrides">With Overrides</span>' if $Service->overrides();
+
+			if ( $editable ) {
+				if ( $Project_Type->url() ) {
+					$html .= sprintf('<tr%1$s><td class="description"><a href="/main/project/%2$s?ProjectIndex=%3$d&amp;ServiceIndex=%4$d">%5$s<br/>%6$s%7$s</a></td>', 
+						$rowclass, $Project_Type->url(), $Project->id(), $$services{''}[0], $Project_Type->description(), $summary,
+						( $$printing_specs{alert} ? join( $$printing_specs{alert}, '<span class="error">','</span>' ) : '' ),
+						);
+				} else {
+        $html .= '<tr'.$rowclass.'><td class="description">'.$Project_Type->name().'</td>';
+				} # end if
+			} else {
+					$html .= sprintf('<tr%s><td class="description"><span class="service_name">Printing</span><br/>%s%s</td>', $rowclass,
+							( $$printing_specs{alert} ? join( $$printing_specs{alert}, '<span class="error">','</span>' ) : '' ),
+							$summary );
+			} # end if
+
+			if ( $$services{Signature} ) {
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+				my @totals;
+
+				foreach my $qty_index ( @quantity_indexes ) {
+					$html .= '<td class="price"><span class="price">'.($$printing_specs{"txtPrice$qty_index"} ? $ProjectCurrency->convert_from($$printing_specs{"txtPrice$qty_index"}) : '&nbsp;').'</span>';
+					if ( $$printing_specs{"alert$qty_index"} ) {
+						$html .= '<span class="error">'.$$printing_specs{"alert$qty_index"}.'</span>';
+					}
+					$html .= '</td>';
+				} # end foreach
+				$html .= '<td class="status">'.$statuses{$$services{''}[0]};
+				if ( (!$editable) and ($openprint::User->email() =~ /iconnor/ ) ) {
+					$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $$services{''}[0]);
+					$html .= sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $$services{''}[0] );
+				}
+				$html .= '</td>';
+				delete $statuses{$$services{''}[0]};
+				if ( $editable ) {
+					$html .= '<td class="unprintable actions">';
+					if ( $Project_Type->url() ) {
+						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $$services{''}[0], $Project_Type->url() );
+            if ( $openprint::User->email() =~ /iconnor/ ) {
+              $html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $$services{''}[0]);
+              $html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $$services{''}[0] );
+            }
+					} # end if
+					$html .= '</td>';
+				} # end if
+				$html .= "</tr>\n";
+
+				my @sigs = sort {
+					my $a_specs = openprint::service::get_specs_ref( $Project, $a );
+					my $b_specs = openprint::service::get_specs_ref( $Project, $b );
+					$$a_specs{Group} <=> $$b_specs{Group} || $$a_specs{SignatureIndex} <=> $$b_specs{SignatureIndex};
+				} $Project->signatures();
+
+				while (@sigs) {
+					my $ss_id = shift @sigs;
+					next if $ss_id == $$services{''}[0];
+					my $SigService = $Project->Service( $ss_id );
+
+					my %sig_specs = %{$SigService->specs()};
+
+					my $sig_qty = 1;
+					my $similar_sig_qty = 1;
+					my @hidden_sig_ids = ( $ss_id );
+
+					for ( my $i = 0; $i < @sigs; $i += 1 ) {
+						my $SigService2 = $Project->Service( $sigs[$i] );
+						my $sig_specs2 = $SigService2->specs();
+
+						if (
+								($statuses{$sigs[$i]} eq $statuses{$ss_id})
+								and
+								openprint::Estimating::Printing::compare_signatures( $Project, \%sig_specs, $sig_specs2 )
+							 ) {
+							$similar_sig_qty += 1;
+							
+							if ( ! $session{ShowAllSignatures} ) {
+								$sig_qty += 1;
+								foreach my $qty_index ( @quantity_indexes ) {
+									# Will be converted later
+									$sig_specs{'txtPrice'.$qty_index} += $$sig_specs2{'txtPrice'.$qty_index};
+									$sig_specs{'txtPressSheetQty'.$qty_index} =~ s/\D//g;
+									my $sheet_qty = $$sig_specs2{'txtPressSheetQty'.$qty_index};
+									$sheet_qty =~ s/\D//g;
+									$sig_specs{'txtPressSheetQty'.$qty_index} += $sheet_qty;
+									if ( $sig_specs{'StockType'.$qty_index} eq 'Roll' ) {
+										$sig_specs{'txtPressSheetQty'.$qty_index} .= 'lbs';
+									} else {
+										$sig_specs{'txtPressSheetQty'.$qty_index} .= 'sheets';
+									} # end if
+								} # end foreach $qty_index
+								push @hidden_sig_ids, splice @sigs, $i, 1;
+								$i -= 1;
+								delete $statuses{$$SigService2{service_id}};
+							} # end if MergeSigs
+						} # end if
+					} # end for
+
+					if ( $editable ) {
+						$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s%s%s</a></td>', $rowclass, 'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
+							openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
+							( $SigService->overrides() ? '<br/><span class="Overrides">With Overrides</span>' : '' ),
+							( $sig_specs{alert} ? '<span class="error">'.$sig_specs{alert}.'</span>' : '' ),
+							);
+						foreach my $qty_index ( @quantity_indexes ) {
+							my $price = $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );
+							$html .= sprintf('<td class="price"><a class="price" href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d">%6$s%4$s</a><br/>%5$s', 'prin/Signature.html', 
+									$$Project{id}, $ss_id,
+									openprint::Currency::format( $price ),
+									openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ),
+									( $SigService->overrides($qty_index) ? '<span class="Overrides">With Overrides</span> ' : '' ),
+									);
+							$html .= '</td>';
+							$totals[$qty_index] += $price;
+							$$variable{category_totals}{$$ServiceCategory{id}}[$qty_index] += $price;
+						} # end foreach qty_index
+					} else {
+						$html .= sprintf('<tr%s><td class="description"><b>%d %s</b><br/>%s%s%s</td>', $rowclass, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
+							openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
+							( $SigService->overrides() ? '<br/><span class="Overrides">With Overrides</span>' : '' ),
+							( $sig_specs{alert} ? '<span class="error">'.$sig_specs{alert}.'</span>' : '' ),
+							);
+						foreach my $qty_index ( @quantity_indexes ) {
+							my $price = $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );
+							$html .= sprintf('<td class="price">%3$s%1$s<br/>%2$s', 
+									openprint::Currency::format( $price ),
+									openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ),
+									( $SigService->overrides($qty_index) ? '<span class="Overrides">With Overrides</span> ' : '' ),
+									);
+							$html .= '</td>';
+							$totals[$qty_index] += $price;
+							$$variable{category_totals}{$$ServiceCategory{id}}[$qty_index] += $price;
+						} # end foreach qty_index
+					} # end if editable
+
+					if ( ! $$variable{Quote} ) {
+						$html .= join('', '<td class="status">', $SigService->status(), 
+								( ( !$editable and ($openprint::User->email() =~ /iconnor/) ) ?
+									sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $ss_id )
+									: () ),
+								'</td>' );
+
+						if ( $editable ) {
+							$html .= '<td class="unprintable actions">';
+							if ( $openprint::User->email() =~ /iconnor/ ) {
+								$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $ss_id );
+								$html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $ss_id );
+							#} elsif ( $Project->Type()->url() ) {
+								#$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $ss_id, $Project->Type()->url() );
+							} # end if
+							$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$s">Remove</a>', $Project->id(), join(',',@hidden_sig_ids) );
+							if ( $similar_sig_qty > 1 ) {
+								if ( ! $session{ShowAllSignatures} ) {
+									$html .= sprintf('<br/><a href="/main/project/view.html?ProjectIndex=%1$d&amp;ShowAllSignatures=1">Show All</a>', $Project->id() );
+								} else {
+									$html .= sprintf('<br/><a href="/main/project/view.html?ProjectIndex=%1$d&amp;ShowAllSignatures=0">Hide All</a>', $Project->id() );
+								} # end if
+							} # end if
+							$html .= '</td>';
+						} # end if editable
+					} # end if
+					delete $statuses{$$SigService{service_id}};
+					$html .= '</tr>';
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end while sigs
+			} else {
+				my $service_id = $$services{''}[0];
+				my $Service = $Project->Service( $service_id );
+				my $specs = $Service->specs();
+
+				foreach my $qty_index ( @quantity_indexes ) {
+					$html .= '<td class="price">';
+					if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
+						$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
+					} # end if
+					if ( $Service->overrides( $qty_index ) ) {
+						$html .= '<span class="Overrides">With Overrides</span> ';
+					} # end if
+					my $price = $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} );
+					if ( $session{user_type} eq 'A' or ! $Project->Ordered_Product() ) {
+						$html .= '<span class="price">'.openprint::Currency::format($price).'</span><br/>';
+					} # end if
+					$$variable{category_totals}{$$ServiceCategory{id}}[$qty_index] += $price;
+					my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+					$summary =~ s/\n/<br\/>/g;
+					$html .= $summary;
+					$html .= '</td>';
+				} # end foreach qty_index
+				$html .= '<td class="status">'.$statuses{$service_id};
+				if ( (!$editable) and ($openprint::User->email() =~ /iconnor/ ) ) {
+					$html .= sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $service_id );
+				}
+				$html .= '</td>';
+				delete $statuses{$service_id};
+				if ( $editable ) {
+					$html .= '<td class="unprintable actions">';
+					if ( $openprint::User->email() =~ /iconnor/ ) {
+						$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $service_id );
+						$html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $service_id );
+					} elsif ( $Project->Type()->url() ) {
+						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $service_id, $Project->Type()->url() );
+					} # end if
+					$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$d">Remove</a>', $Project->id(), $service_id );
+					$html .= '</td>';
+				} # end if
+				$html .= "</tr>\n";
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end if $$services{Signature}
+
+		} else {
+      my @service_ids;
+			foreach my $ServiceType ( openprint::ServiceType->find( category_id=>$ServiceCategory->id(), order=>'sorting', view_visible=>1) ) {
+				next if ! $$services{$ServiceType->name()};
+        push @service_ids, @{$$services{$ServiceType->name()}};
+      }
+      next if !@service_ids;
+    $html .= '
+<tr class="category '.$ServiceCategory->name().'">
+  <td class="description">'.$ServiceCategory->name().'</td>'.join("\n", (map { '<td class="price"></td>' } $Project->quantities()), '<td class="status"></td>',($editable ? '<td class="actions unprintable"></td>' : ())).'</tr>';
+
+
+      foreach my $service_id (@service_ids) {
+        my $Service = $Project->Service( $service_id );
+        my $ServiceType = $Service->ServiceType();
+        my $specs = $Service->specs();
+
+        my @summaries;
+        my $summary = openprint::service::summary( $Project->id(), $service_id );
+        if ( ref $summary eq 'ARRAY' ) {
+          @summaries = @{$summary};
+          $summary = shift @summaries;
+        } # end if
+          
+        $html .= qq`<tr$rowclass><td class="description">`;
+        my $do_link = $editable && ( $ServiceType->url() ne '' );
+
+        if ( $do_link ) {
+          $html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s</a>`, $ServiceType->url(), $Project->id(), $service_id, 
+              $Service->name(),
+              $Service->description(),
+              $summary,
+            );
+        } else {
+          $html .= sprintf(q`<b>%4$s</b>%5$s<br/>%6$s`, $ServiceType->url(), $Project->id(), $service_id,
+              $Service->name(),
+              $Service->description(),
+              $summary,
+            );
+        } # end if
+        if ( $Service->overrides( ) ) {
+          $html .= '<br/><span class="Overrides">With Overrides</span>';
+        } # end if
+        $html .= '</td>';
+        foreach my $qty_index ( @quantity_indexes ) {
+          $html .= '<td class="price">';
+          $html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d">`,$ServiceType->url(), $Project->id(), $service_id ) if $do_link;
+
+          if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
+            $html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
+          } # end if
+          if ( $Service->overrides( $qty_index ) ) {
+            $html .= '<span class="Overrides">With Overrides</span> ';
+          } # end if
+          my $price = $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} );
+          if ( $session{user_type} eq 'A' or ! $Project->Ordered_Product() ) {
+            $html .= '<span class="price">'.openprint::Currency::format($price).'</span><br/>';
+          } # end if
+          $$variable{category_totals}{$$ServiceCategory{id}}[$qty_index] += $price;
+          $html .= '</a>' if $do_link;
+          my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+          if ( ref $summary eq 'ARRAY' ) {
+            $$summary[0] =~ s/\n/<br\/>/g;
+            $html .= $$summary[0];
+          } else {
+            $summary =~ s/\n/<br\/>/g;
+            $html .= $summary;
+          } # end if
+          $html .= '</td>';
+        } # end foreach qty_index
+        $html .= '<td class="status">'.$statuses{$service_id};
+      if ( (!$editable) and ($openprint::User->email() =~ /iconnor/ ) ) {
+        $html .= sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $service_id );
+      }
+$html .= '</td>';
+        delete $statuses{$service_id};
+        if ( $editable ) {
+          $html .= '<td class="unprintable actions">';
+          if ( $openprint::User->email() =~ /iconnor/ ) {
+            $html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $service_id );
+            $html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $service_id );
+          } elsif ( $ServiceType->url() ) {
+            $html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $service_id, $ServiceType->url() );
+          } # end if
+          if ( $ServiceType->allow_delete() ) {
+            $html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$d">Remove</a>', $Project->id(), $service_id );
+          }
+          $html .= '</td>';
+        } # end if
+        $html .= "</tr>\n";
+        if ( @summaries ) {
+          for ( my $line = 0; $line < @summaries; $line += 1 ) {
+            $html .= "<tr$rowclass><td class=\"description\">";
+            if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() ) {
+              $html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d">%4$s</a>`, $ServiceType->url(), $Project->id(), $service_id, $summaries[$line] );
+            } else {
+              $html .= sprintf(q`<br/>%1$s`, $summaries[$line] );
+            } # end if
+            $html .= '</td>';
+            foreach my $qty_index ( @quantity_indexes ) {
+              $html .= '<td class="price">';
+              my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+              $$summary[$line+1] =~ s/\n/<br\/>/g;
+              $html .= $$summary[$line+1];
+              $html .= '</td>';
+            } # end foreach qty_index
+            $html .= '<td>&nbsp;</td>';
+            $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+            $html .= '</tr>';
+          } # end foreach summary
+        } # end if summaries
+        if ( $$specs{alert} ) {
+          $html .= qq`<tr$rowclass><td class="error">` . $$specs{alert}. '</td>';
+          foreach my $qty_index ( @quantity_indexes ) {
+            if ( $$specs{"alert$qty_index"} ) {
+              $html .= '<td class="error">'.$$specs{"alert$qty_index"}.'</td>';
+            } else {
+              $html .= '<td></td>';
+            }
+          } 
+          $html .= '<td>&nbsp;</td>';
+          $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+          $html .= '</tr>';
+        } # end if
+        $rowclass = $rowclass ? '' : ' class="colRow"';
+      } # end foreach service_id
+		} # end if Printing or else
+	} # end foreach ServiceType_Category
+
+	foreach my $service_id ( keys %statuses ) {
+		my $Service = $Project->Service( $service_id );
+		my $ServiceType = $Service->ServiceType();
+    next if ! $ServiceType->view_visible();
+		my $specs = $Service->specs();
+
+		my @summaries;
+		my $summary = openprint::service::summary( $Project->id(),$service_id );
+		if ( ref $summary eq 'ARRAY' ) {
+			@summaries = @{$summary};
+			$summary = shift @summaries;
+		} # end if
+			
+		$html .= qq`<tr$rowclass><td class="description">`;
+		my $do_link = $editable && ( $ServiceType->url() ne '' );
+
+		if ( $do_link ) {
+			$html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s</a>`, $ServiceType->url(), $Project->id(), $service_id, 
+				( $$specs{ServiceName} ? $$specs{ServiceName} : $ServiceType->description() ),
+				( $$specs{txtServiceDescription} ? ' - '.$$specs{txtServiceDescription} : '' ),
+				$summary,
+				);
+		} else {
+			$html .= sprintf(q`<b>%4$s</b>%5$s<br/>%6$s`, $ServiceType->url(), $Project->id(), $service_id,
+				( $$specs{ServiceName} ? $$specs{ServiceName} : $ServiceType->description() ),
+				( $$specs{txtServiceDescription} ? ' - '.$$specs{txtServiceDescription} : '' ),
+				$summary,
+				);
+		} # end if
+		if ( $Service->overrides( ) ) {
+			$html .= '<br/><span class="Overrides">With Overrides</span>';
+		} # end if
+		$html .= '</td>';
+		foreach my $qty_index ( @quantity_indexes ) {
+			$html .= '<td class="price">';
+			$html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d">`,$ServiceType->url(), $Project->id(), $service_id ) if $do_link;
+
+			if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
+				$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
+			} # end if
+			if ( $Service->overrides( $qty_index ) ) {
+				$html .= '<span class="Overrides">With Overrides</span> ';
+			} # end if
+			if ( $session{user_type} eq 'A' or ! $Project->Ordered_Product() ) {
+				$html .= '<span class="price">'.openprint::Currency::format( $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} ) ).'</span><br/>';
+			} # end if
+			$html .= '</a>' if $do_link;
+			my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+			if ( ref $summary eq 'ARRAY' ) {
+				$$summary[0] =~ s/\n/<br\/>/g;
+				$html .= $$summary[0];
+			} else {
+				$summary =~ s/\n/<br\/>/g;
+				$html .= $summary;
+			} # end if
+			$html .= '</td>';
+		} # end foreach qty_index
+		$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
+				if ( (!$editable) and ($openprint::User->email() =~ /iconnor/ ) ) {
+					$html .= sprintf(q`<br/><a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $service_id );
+				}
+		delete $statuses{$service_id};
+		if ( $editable ) {
+			$html .= '<td class="unprintable actions">';
+			if ( $openprint::User->email() =~ /iconnor/ ) {
+				$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $service_id );
+				$html .= sprintf(q`<a href="#" onclick="popup_window('/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a><br/>`, $Project->id(), $service_id );
+			} elsif ( $ServiceType->url() ) {
+				$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $service_id, $ServiceType->url() );
+			} # end if
+			if ( $ServiceType->allow_delete() ) {
+				$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$d">Remove</a>', $Project->id(), $service_id );
+			}
+			$html .= '</td>';
+		} # end if
+		$html .= "</tr>\n";
+		if ( @summaries ) {
+			for ( my $line = 0; $line < @summaries; $line += 1 ) {
+				$html .= "<tr$rowclass><td class=\"description\">";
+				if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() ) {
+					$html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d">%4$s</a>`, $ServiceType->url(), $Project->id(), $service_id, $summaries[$line] );
+				} else {
+					$html .= sprintf(q`<br/>%1$s`, $summaries[$line] );
+				} # end if
+				$html .= '</td>';
+				foreach my $qty_index ( @quantity_indexes ) {
+					$html .= '<td class="price">';
+					my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+					$$summary[$line+1] =~ s/\n/<br\/>/g;
+					$html .= $$summary[$line+1];
+					$html .= '</td>';
+				} # end foreach qty_index
+				$html .= '<td>&nbsp;</td>';
+				$html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+				$html .= '</tr>';
+			} # end foreach summary
+		} # end if summaries
+		if ( $$specs{alert} ) {
+			$html .= qq`<tr$rowclass><td class="error" colspan="`. ( scalar(@quantity_indexes) + 1 ) . '">' . $$specs{alert}. '</td>';
+			$html .= '<td>&nbsp;</td>';
+			$html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+			$html .= '</tr>';
+		} # end if
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	}
+  if (($session{user_type} eq 'A') or ! $$variable{Project}->Ordered_Product() ) {
+    $html .= '
+			<tr class="Prices UnitPrices"> 
+				<td class="description">Unit Prices</td>
+';
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+      $html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $$variable{Project}->unit_price($qty_index)), 4).'</td>';
+    } # end foreach qty_index
+    $html .= '<td class="status">&nbsp;</td>';
+    $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+    $html .= '
+			</tr>
+			<tr class="Prices MPrices">
+				<td class="description">Additional M Prices</td>
+';
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+      $html .= '<td class="price">'.openprint::Currency::format($$variable{Project}->Currency()->convert_from( $$variable{Project}->m_price($qty_index)), 4).'</td>';
+    } # end foreach qty_index
+    $html .= '<td class="status">&nbsp;</td>';
+    $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+    $html .= '</tr>
+			<tr class="TotalPrices"> 
+				<td class="description">Total Before Taxes</td>';
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+      $html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $$variable{Project}->price( $qty_index ))).'</td>';
+    } # end foreach
+    $html .= '<td class="status">&nbsp;</td>';
+    $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+    $html .= '</tr>';
+  } # en dif A or ! ordered
+  if ( $$variable{Project}->Ordered_Product() ) {
+    $html .= '
+			<tr class="totals">
+				<td class="description">Ordered Price</td>
+				<td class="price">'. openprint::Currency::format( $$variable{Project}->Currency()->convert_from($$variable{Project}->Ordered_Product()->price() ) ).'</td>
+				<td class="status">&nbsp;</td>';
+    $html .= '<td class="unprintable actions">&nbsp;</td>' if $editable;
+    $html .= '
+			</tr>';
+  }
+  $html .= '
+    </tbody>
+	</table>
+';
+if ( $$variable{Project}->currency_id() != $session{Currency_id} ) {
+  $html .= '<span class="Currency">Project originally quoted in '.$$variable{Project}->Currency()->name().'.</span>';
+}
+$html .= '<span class="Currency">All prices in '.$openprint::Currency->name().'.&nbsp;</span>';
+return $html;
+)?>

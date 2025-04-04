@@ -1,0 +1,62 @@
+<div id="Totals">
+	<div class="content">
+	<ul>
+		<li id="SubTotal">
+			<label>Sub Total</label>
+			<? echo ( openprint::Currency::format( $$variable{Order}->Currency()->convert_from( $$variable{Order}->subtotal() ) ); ) ?>
+		</li>
+                <? echo ( 
+                    my $html;
+                    foreach my $Tax ( $$variable{Order}->Taxes() ) {
+                        $html .= sprintf('<li class="tax"><label>%s (%d%)</label>%s</li>',
+                            $Tax->name(), $Tax->rate(), openprint::Currency::format( $$variable{Order}->Currency()->convert_from( $Tax->amount() ) ),
+                            );
+                    } # end foreach Tax
+                    return $html;
+                ) ?>
+		<? if ( $$variable{Order}->total() ) ?>
+		<li id="Total">
+			<label>Total</label>
+			<? echo ( openprint::Currency::format( $$variable{Order}->Currency()->convert_from( $$variable{Order}->total() ) ); ) ?>
+		</li>
+		<? endif ( $$variable{Order}->total() ) ?>
+		<? if ( $config{ShowAccountingOnOrder} ne 'N' or ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) ) ?>
+		<li>
+			<label>Amount Paid</label>
+            <? echo ( openprint::Currency::format( $$variable{Order}->paid() ); ) ?>
+		</li>
+        <? if ( $$variable{DepositDue} ) ?>
+        <li>
+            <label>Deposit Due</label>
+            <? echo ( openprint::Currency::format( $$variable{DepositDue} ); ) ?>
+        </li>
+        <? endif ( $$variable{DepositDue} ) ?>
+		<? if ( $$variable{Order}->cod_owing() ) ?>
+        <li class="cod">
+            <label>COD Owing</label>
+            <? echo ( 
+                        return openprint::Currency::format( $$variable{Currency}->convert_from( $$variable{Order}->cod_owing() ) );
+             ) ?>
+        </li>
+        <? endif ( $$variable{Order}->cod_owing() ) ?>
+        <li class="amount_owing">
+            <label>Amount Owing</label>
+            <? echo ( openprint::Currency::format( $$variable{Order}->owing() ); ) ?>
+        </li>
+		<? endif ( $config{ShowAccountingOnOrder} ne 'N' or ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) ) ?>
+<? if ( $session{user_type} eq 'A' or $openprint::User->in_Group('Accounting') ) ?>
+<? if ( $$variable{Order}->do_not_pay_commission() ) ?>
+					<li  class="error">Do Not Pay Commission</li>
+<? endif ( $$variable{Order}->do_not_pay_commission() ) ?>
+<? endif ( $session{user_type} eq 'A' or $openprint::User->in_Group('Accounting') ) ?>
+	</ul>
+	</div>
+	<span class="Currency">All prices listed in <? echo ( $$variable{Currency}->name() ) ?>.
+	<? echo ( 
+		if ( openprint::Currency::get_current()->id() != $$variable{Order}->Currency()->id() ) {
+			return 'Order originally in ' . $$variable{Order}->Currency()->name();
+		} # end if
+		return;
+	) ?>
+	</span>
+</div><!--Totals-->

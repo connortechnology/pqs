@@ -1,0 +1,16 @@
+<ul class="psc_questions">
+<li>
+	<label># of items to be cut from this press sheet</label>
+	<? echo ( input( name=>'txtPressSheetComboItems', value=>$$variable{txtPressSheetComboItems}, type=>'integer' ); ) ?>
+</li>
+<li> 
+	<label>What are the <? echo ( writeTip('flat'); )?>
+		dimensions of the combination layout? Layout must include all items to be cut from the press sheet. (in inches)</label>
+	<? echo ( join('x',
+				input( type=>'float', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>q`calc('f1');`, placeholder=>'width' ),
+				input( type=>'float', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>q`calc('f1');`, placeholder=>'height' ),
+	); ) ?>
+</li>
+</ul>
+<input type="hidden" name="txtFinalWidth" value="<?txtFinalWidth?>" />
+<input type="hidden" name="txtFinalHeight" value="<?txtFinalHeight?>" />

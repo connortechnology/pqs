@@ -1,0 +1,13 @@
+<? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
+<p>
+	<label>Printing type</label>
+	<select name="PrintingType">
+		<? echo (
+			my $html;
+			
+			ssi::make_drop_down( [
+'', 'No Preference', sql::execute( undef, undef, q{SELECT DISTINCT strValue, strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} ) ], $$variable{'PrintingType'} );
+		) ?>
+	</select>
+</p>
+<? endif ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>

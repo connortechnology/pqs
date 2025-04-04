@@ -1,0 +1,18 @@
+The attached order has finished production.<br/>
+<br/>
+All orders are saved in your order history on <a href="/index.html"><? echo ( $config{SiteTitle} ) ?></a>.
+You can access all order information by linking from the attachment.<br>
+<br/>
+<p>
+  If you have any questions, please contact
+  <? echo (
+          my $Company = $$variable{'Order'}->Company();
+          if ( $Company->salesrep_id() ) {
+          my $CSR = new openprint::User( $Company->salesrep_id() );
+			  return sprintf('<a href="mailto:%s">%s %s</a>.', $CSR->email(), $CSR->firstname(), $CSR->lastname() );
+          } else {
+			  return qq`our <a href="/support/help_desk.html">helpdesk</a>.`;
+          } # end if
+	  ) ?>
+</p>
+

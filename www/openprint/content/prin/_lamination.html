@@ -1,0 +1,24 @@
+<? if ( openprint::Service->find( name=>'Lamination' ) ) ?>	
+<li> 
+	<label><? echo ( ssi::writeTip('Laminating'); ) ?> type</label>
+	<select name="LaminationType" size="1" onchange="calc(this.form.name);">
+		<option value="">Please select one</option>
+		<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'LaminationType'}); ) ?>
+	</select>
+</li>
+<? else ( openprint::Service->find( name=>'Lamination' ) ) ?>	
+<li> 
+	<label><? echo ( ssi::writeTip('Laminating'); ) ?> for front</label>
+	<select name="LaminationTypeFront" size="1" onchange="calc(this.form.name);">
+		<option value="">Please select one</option>
+		<? echo ( ssi::make_drop_down( [ 'None', 'None', map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'LaminationTypeFront'}); ) ?>
+	</select>
+</li>
+<li> 
+	<label><? echo ( ssi::writeTip('Laminating'); ) ?> for back</label>
+	<select name="LaminationTypeBack" size="1" onchange="calc(this.form.name);">
+		<option value="">Please select one</option>
+		<? echo ( ssi::make_drop_down( [ 'None', 'None', map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'LaminationTypeBack'}); ) ?>
+	</select>
+</li>
+<? endif ( openprint::Service->find( name=>'Lamination' ) ) ?>	

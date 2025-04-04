@@ -1,0 +1,28 @@
+<?include(/includes/error_reporting.html)?>
+<form id="PopupForm" name="PopupForm" method="post" action="sites.html">
+  <input type="hidden" name="site_id" value="<?echo($$variable{Site}->id())?>"/>
+	<input type="hidden" name="action"/>
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+		<li class="ipaddress">
+			<label for="ip">Host IP</label>
+			<input type="text" id="ip" name="ip" value="<? echo ( $session{'/sites/edit.html?ip'} ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onkeydown="this.form.hostname.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host($('PopupForm'));}" onchange="this.onkeyup.call(this);this.onkeydown.call(this);"/>
+		</li>
+		<li class="hostname">
+			<label>Hostname</label>
+			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/sites/edit.html?hostname'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host( $('PopupForm') );}" />
+		</li>
+		<li class="mac">
+      <label>MAC</label>
+			<input type="text" id="mac" name="mac" value="<? echo ( $session{'/sites/edit.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_host( $('PopupForm') );}" />
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"load_host($('PopupForm'));", text=>'Show Results' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results">Choose criteria and click Show Results</div>
+</form>
+<script>document.PopupForm.ip.focus();</script>

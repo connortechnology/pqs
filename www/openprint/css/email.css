@@ -1,0 +1,210 @@
+body {
+	background-color: #ffffff;
+	font-family: Arial, Helvetica, Sans-Serif; 
+	font-size: small;
+	padding: 5px;
+	margin: 0px;
+	max-width: 1024px;
+}
+
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+ul li:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+li {
+    list-style: none;
+	text-align: right;
+}
+li label {
+	text-align: left;
+}
+
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    table-layout: fixed;
+	border: none;
+}
+table.List {
+    border-bottom: 1px solid #000088;
+}
+table.List th {
+    border-bottom: 1px solid #000088;
+    background: transparent;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+table.List td {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    vertical-align: top;
+}
+table.List tr.totals {
+    border-top: 1px solid #000088;
+}
+
+table.List input.text {
+    width: 100%;
+}
+
+
+.Title {
+	background-color: #353c91;
+	color: #ffffff;
+}
+.Title a {
+	color: #ffffff;
+}
+
+table.title {
+	background-color: #e2e4f0;
+	color: #FFFFFF;
+}
+.small {font-family: Arial, Helvetica, Sans-Serif; font-size:11px;}
+a {
+	text-decoration: none;
+	border: none;
+	margin: 0px;
+	padding: 0px;
+}
+a:link { color: #000066; }
+a:active { color: #000066; }
+a:visited { color: #333399; }
+a:hover { color: #6666CC; }
+hr {
+	width: 100%;
+	margin: 1px;
+	padding: 0px;
+	height: 1px;
+	border: 0px;
+	color: #353c91;
+	background-color: #353c91;
+}
+
+.spacer {
+	clear: both;
+	height: 0px;
+}
+br.pagebreak {
+	height: 0;
+	page-break-after: always;
+}
+
+.colRow { background-color: #E3E4F0 }
+.colRowRed {
+    color: red;
+}/* alternating row color in generated tables */
+
+img {
+	border: none;
+	margin: 0px;
+	padding: 0px;
+}
+td.Content {
+	padding: 10px;
+}
+fieldset {
+	border-right: none;
+	border-left: none;
+	border-top: 1px solid #000088;
+	border-bottom: none;
+	padding-bottom: 30px;
+}
+fieldset legend {
+	font-weight: bold;
+	color: #000088;
+}
+fieldset li {
+	padding-right: 5px;
+}
+fieldset label {
+    float: left;
+}
+fieldset label:after {
+    content: ":";
+}
+span.Currency {
+	display: block;
+	margin-top: 10px;
+	width: 100%;
+	text-align: center;
+}
+div.leftColumn {
+	float: left;
+	width: 48%;
+}
+div.rightColumn {
+	float: right;
+	width: 48%;
+}
+.Disclaimer {
+	background-color: white;
+	padding: 5px;
+	border: 1px solid #000088;
+}
+.Disclaimer h1,
+.Disclaimer h2 {
+  text-align: center;
+}
+.Disclaimer p {
+	padding: 0;
+}
+td.Date, th.Date {
+    width: 130px;
+    text-align: right;
+    padding-right: 2px;
+}
+td.DateTime, th.DateTime {
+    width: 150px;
+    text-align: left;
+}
+
+table .Reference {
+	text-align: left;
+}
+table .Docket {
+    width: 60px;
+    text-align: left;
+}
+table .OrderID {
+    width: 100px;
+    text-align: left;
+}
+table .Quantity {
+    width: 80px;
+    text-align: right;
+}
+table .User {
+    min-width: 130px;
+    overflow:hidden;
+    text-align: left;
+}
+table .Company {
+    min-width: 200px;
+    text-align: left;
+    overflow:hidden;
+}
+
+table .Price {
+    width: 120px;
+    text-align: right;
+}
+table .Stock {
+	text-align: left;
+}
+table .Status, table .status {
+	width: 200px;
+	text-align: right;
+}

@@ -1,0 +1,172 @@
+<? eval (
+	if ( $$variable{ProjectType}->name() eq 'GreetingCards' ) {
+		$$variable{FoldType} = '2PanelFold';
+		$$variable{DimensionsDisplay} = 'Finished';
+	} # end if
+) ?>
+<? if ( $$variable{ProjectType}->id() ) ?>
+<?include(/includes/error_reporting.html)?>
+<div class="InstantPricing">
+	<form id="f1" name="f1" method="post" action="/content/prin/Signature.html">
+		<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{ProjectType}->id() ) ?>" />
+		<input type="hidden" id="Status" name="Status" value="<?Status?>" />
+		<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
+		<div id="instant_price_section">
+			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+			<div class="shadow_left"><div class="shadow_right">
+			<div class="Questions"><div class="<? echo ( $$variable{ProjectType}->name() ) ?>">
+<? if ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
+	<div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
+<? endif ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
+<? if ( $dbh and ( ( ! $$variable{ProjectType}->please_call() ) or ( sets::isin( $session{user_type}, ['E','A'] ) ) ) ) ?>
+			<?include(_project_name.html)?>
+			<div class="ProjectSpecifications">
+				<h1><? echo ( $$variable{ProjectType}->description() ) ?> Specifications</h1>
+				<?include(_sizes.html)?>
+				<? if ( $$variable{ProjectType}->name() eq 'Banners' ) ?>
+				<?include(/includes/main/proj/banner_printing.html)?>
+				<input type="hidden" id="Colours" name="Colours" value="4/0" />
+				<? else ( $$variable{ProjectType}->name() eq 'Banners' ) ?>
+				<div class="Colours">
+					<fieldset><legend>Colours</legend>
+						<div class="content">
+							<ul>
+								<? if ( $$variable{ProjectType}->name() eq 'Envelopes' ) ?>
+									<li><label>Colours</label>
+								<select id="Colours" name="Colours" onchange="calc(this.form.name);">
+									<option value="1/0">Black Ink One Side</option>
+									<option value="1/1">Black Ink Both Sides</option>
+									<option value="4/0">4 Colour One Side</option>
+									<option value="4/1">4 Colour/Black</option>
+									<option value="4/4">4 Colour Both Sides</option>
+								</select>
+									</li>
+								<? else ( $$variable{ProjectType}->name() eq 'Envelopes' ) ?>
+
+									<? if ( sets::isin( $$variable{ProjectType}->name(), ['NCR'] ) ) ?>
+									<li><label>Colours</label>
+										<select id="Colours" name="Colours" onchange="calc(this.form.name);">
+											<option value="1/0">Black One Side</option>
+											<option value="1/1">Black Both Sides</option>
+											<option value="4/0">4 Colour One Side</option>
+											<option value="4/4">4 Colour Both Sides</option>
+										</select>
+									</li>
+									<? else ( sets::isin( $$variable{ProjectType}->name(), ['NCR'] ) ) ?>
+									<li><label>Colours</label>
+										<select id="Colours" name="Colours" onchange="calc(this.form.name);">
+											<option value="4/0">4 Colour One Side</option>
+											<option value="4/1">4 Colour/Black</option>
+											<option value="4/4">4 Colour Both Sides</option>
+										</select>
+									</li>
+									<? endif ( sets::isin( $$variable{ProjectType}->name(), ['NCR'] ) ) ?>
+									
+									<? if ( ! sets::isin( $$variable{ProjectType}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
+										<? echo (
+											my $html;
+											my $Aqueous = openprint::ServiceType->find_one( name=>'Aqueous' );
+											if ( $Aqueous and ! sets::isin( $Aqueous->id(), $$variable{ProjectType}->blocked_services() ) ) {
+												$html .= include('_aqueous.html');
+											};
+											my $UV = openprint::ServiceType->find_one( name=>'UVCoating' );
+											if ( $UV and ! sets::isin( $UV->id(), $$variable{ProjectType}->blocked_services() ) ) {
+												$html .= include('_uvcoating.html');
+											};
+											return $html;
+										) ?>
+									<? endif ( ! sets::isin( $$variable{ProjectType}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
+								<? endif ( $$variable{ProjectType}->name() eq 'Envelopes' ) ?>
+							</ul>
+						</div>
+					</fieldset>
+				</div><!--Colours-->
+				<? endif ( $$variable{ProjectType}->name() eq 'Banners' ) ?>
+				<div class="Stock"><fieldset><legend>Stock</legend>
+					<div class="content">
+						<ul>
+						<?include(_paper_dropdowns.html)?>
+						</ul>
+					</div>
+					</fieldset>
+				</div>
+					<? echo (
+						my $html;
+
+						if ( ! sets::isin( $$variable{ProjectType}->name(), ['InkjetOutputs'] ) ) {
+
+							if ( sets::isin( $$variable{ProjectType}->name(), ['NCR'] ) ) {
+								$html .= include('_numbering.html');
+							}
+							if ( sets::isin( $$variable{ProjectType}->name(), ['ScratchPads'] ) ) {
+								$html .= include('_padding.html');
+							}
+							my @blocked_services = $$variable{ProjectType}->blocked_services();
+
+							foreach my $servicetype ( 'Scoring', 'Drilling', 'Grommeting', 'RoundCornering', 'HStands' ) {
+								my $ServiceType = openprint::ServiceType->find_one( name=>$servicetype );
+								if ( $ServiceType ) {
+									if ( ! sets::isin( $$ServiceType{id}, \@blocked_services ) ) {
+										$html .= include('_'.lc($servicetype). '.html');
+									}
+									$log->debug("Blocked services: @blocked_services : $servicetype : $$ServiceType{id} ");
+								}
+							} # end foreach servicetype
+
+						} else {
+							$html .= include('_lamination.html');
+						}
+						if ( sets::isin( $$variable{ProjectType}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ) ) {
+							$html .= include('_shrinkwrapping.html');
+							$html .= include('_bundling.html');
+						}
+						if ( $html ) {
+							return 
+				'<div class="Finishing"><fieldset>
+					<legend>Finishing</legend>
+					<div class="content">
+						<ul>'.
+$html.
+						'</ul>
+					</div>
+					</fieldset>
+				</div><!--Finishing-->';
+						}
+				) ?>
+				<div class="Production">
+					<fieldset><legend>Production</legend>
+						<div class="content">
+							<ul>
+								<? echo ( openprint::ServiceType->find_one(name=>'Design') ? include('_design.html') : ''; ) ?>
+								<?include(_proofs.html)?>
+								<?include(_turnaround.html)?>
+								<?include(_quantity.html)?>
+								<?include(_press_type.html)?>
+							</ul>
+						</div>
+					</fieldset>
+				</div>
+				<?include(_ups.html)?>
+				<br class="spacer"/>
+		  </div><!--ProjectSpecifications-->
+				<div id="AlertDiv" style="display:none;"></div>
+				<?include(_prices.html)?>
+<? endif ( $dbh and ( ( ! $$variable{ProjectType}->please_call() ) or ( sets::isin( $session{user_type}, ['E','A'] ) ) ) ) ?>
+				</div></div><!--Questions-->
+		  </div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+	   </div><!--instant_price_section-->
+<? echo ( 
+	if ( -e $config{SkinPath}.'/content/'.$$variable{ProjectType}->name().'.html' ) {
+		return include('/content/'.$$variable{ProjectType}->name().'.html' );
+	} # end if
+	return '';
+) ?>
+<? endif ( $$variable{ProjectType}->id() ) ?>
+</form>
+	<?include(_specials.html)?>
+</div><!--InstantPricing-->
+<script src="<?hash_link(/javascripts/simpleprinting.js)?>"></script>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
+<script src="<?hash_link(/javascripts/printing.js)?>"></script>
+<script src="<?hash_link(/javascripts/simpleprinting.js)?>"></script>

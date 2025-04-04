@@ -1,0 +1,65 @@
+<script type="text/javascript">
+	function load_projects( form ) {
+		LoadContent('ProjectList','/employee/reports/_prepress_project_list.html', form.serialize() );
+	} // end function
+</script>
+
+<form id="f1" name="f1" method="post" action="prepress_overview.html">
+	<fieldset class="filters">
+		<legend>Select By Docket #</legend>
+		<ul>
+		<li>
+			<label>Docket #</label>
+			<? echo ( my $html;
+				$html .= input( type=>'cardinal', name=>'StartDocket', value=>$variable{StartDocket} );
+				$html .= input( type=>'cardinal', name=>'EndDocket', value=>$variable{EndDocket} );
+				$html .= button( 'Go', { onclick=>'load_projects( document.f1 );' } );
+				return $html;
+			) ?>
+		</li>
+		</ul>
+	</fieldset><fieldset class="filters"><legend>Or Select From the Following</legend>
+		<ul>
+			<li><label>Company</label>
+				<input type="text" oninput="filter_companies( f1.company_id, {name:this.value,salesrep_id:get_ddm_value($('csr_id'))} );" class="filter" />
+				<select name="company_id" id="company_id" onchange="load_projects(this.form);">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::Company->dropdown( 'last_order_id is null'=>0 ), $session{$r->uri().'?company_id'} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Operator</label>
+				<select name="ddmEmployee" size="1" onchange="load_projects(this.form);">
+					<option value="">All Employees</option>
+	<? echo (
+		make_drop_down( openprint::User->dropdown( type=>['E','A'], company_id=>$config{owner_id} ), $param{ddmEmployee} );
+	)?>
+				</select>
+		</li>
+		<li>
+			<label>Press</label>
+			<select name="ddmPress" onchange="load_projects(this.form);">
+				<option value="">All Presses</option>
+<? echo (
+	make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing', order=>'lower(strid)' ) ], $param{ddmPress} );
+) ?>
+			</select>
+		</li>
+		<li>
+			<label>Take Over Date</label>
+			<? echo ( date_select_session($r->uri(), 'takeover_on_start', { with_today=>1, with_clear=>1, onclick=>'load_projects(this.form);' } ); ) ?>
+			to 
+			<? echo ( date_select_session($r->uri(), 'takeover_on_end', { with_today=>1, with_clear=>1, onclick=>'load_projects(this.form);' } ); ) ?>
+		</li>
+	</ul>
+	<p class="buttons">
+		<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+		); ) ?>
+	</p>
+	</fieldset>
+	<hr/>
+</form>
+<br/>
+<div id="ProjectList"><?include('_prepress_project_list.html')?> </div>

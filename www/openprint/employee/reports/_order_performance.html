@@ -1,0 +1,129 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? if ( @{$$variable{'Orders'}} ) ?>
+<? if ( $session{'/employee/reports/order_performance.html?press_id'} ) ?>
+The following had one or more signatures that ran on <? echo ( join(': ', new openprint::Equipment( $session{'/employee/reports/order_performance.html?press_id'} )->get('strid','name') ); ) ?><br/><br/>
+<? endif ( $session{'/employee/reports/order_performance.html?press_id'} ) ?>
+<? echo (
+	require Chart::Clicker;
+	require Chart::Clicker::Data::DataSet;
+	require Chart::Clicker::Data::Series;
+	my $html;
+	my %months_count;
+	my %days_count;
+	my %hours_count;
+	my %dow_count;
+	my %months_value;
+	my %days_value;
+	my %hours_value;
+	my %dow_value;
+	foreach my $Order ( @{$$variable{Orders}} ) {
+		my ( $year, $month, $day, $h, $m ) = $Order->created_on() =~ /^(\d\d\d\d)-(\d\d)-(\d\d) (\d+):(\d+)/;
+		$months_count{$year}{1*$month} += 1;
+		$days_count{$year}{1*$day} += 1;
+		$hours_count{$year}{1*$h} += 1;
+		$dow_count{$year}{Date::Calc::Day_of_Week( $year, $month, $day )} += 1;
+
+		my $total = $Order->Currency()->convert_from( $Order->total() );
+		$months_value{$year}{1*$month} += $total;
+		$days_value{$year}{1*$day} += $total;
+		$hours_value{$year}{1*$h} += $total;
+		$dow_value{$year}{Date::Calc::Day_of_Week( $year, $month, $day )} += $total;
+	} # end foreach Order
+	my $time = time;
+	my @years = sort keys %months_count;
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Order Creation by Month');
+	my $default = $cc->get_context('default');
+	$default->range_axis->format('%.0f');
+	$default->domain_axis->format('%.0f');
+	$default->domain_axis->ticks(11);
+	$default->domain_axis->tick_labels( [ 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' ] );
+
+	foreach my $year ( @years ) {
+		my $series = Chart::Clicker::Data::Series->new({ 
+				map { $_, defined $months_count{$year}{$_} ? $months_count{$year}{$_} : 0 } ( 1 .. 12 )
+				});
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
+	} # end foreach year
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-months-count.png');
+	$html .= qq`<img src="/images/charts/$time-months-count.png" alt=""/>`;
+
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Order Value by Month');
+	my $default = $cc->get_context('default');
+	$default->range_axis->format('%.2f');
+	$default->domain_axis->format('%.0f');
+	$default->domain_axis->ticks(11);
+	$default->domain_axis->tick_labels( [ 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' ] );
+
+	foreach my $year ( @years ) {
+		my $series = Chart::Clicker::Data::Series->new({ 
+		 map { $_, defined $months_value{$year}{$_} ? $months_value{$year}{$_} : 0 } ( 1 .. 12 ) 
+				});
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
+	} # end foreach year
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-months-value.png');
+	$html .= qq`<img src="/images/charts/$time-months-value.png" alt=""/>`;
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Order Creation by Day');
+	my $context = $cc->get_context('default');
+	$context->range_axis->format('%.0f');
+	$context->domain_axis->format('%.0f');
+	$context->domain_axis->ticks(30);
+	foreach my $year ( @years ) {
+		my $series = Chart::Clicker::Data::Series->new({ 
+				map { $_, defined $days_count{$year}{$_} ? $days_count{$year}{$_} : 0 } ( 1 .. 31 )
+				});
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
+	} # end foreach
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-days.png');
+	$html .= qq`<img src="/images/charts/$time-days.png" alt=""/>`;
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Order Creation by Day of Week');
+	my $context = $cc->get_context('default');
+	$context->range_axis->format('%.0f');
+	$context->domain_axis->ticks(6);
+	$context->domain_axis->tick_labels( [ map { Date::Calc::Day_of_Week_Abbreviation($_) } ( 1 .. 7 ) ] );
+	foreach my $year ( @years ) {
+		my $series = Chart::Clicker::Data::Series->new({ 
+				map { $_, defined $dow_count{$year}{$_} ? $dow_count{$year}{$_} : 0 } ( 1 .. 7 ) 
+				});
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
+	} # end foreach
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-dow.png');
+	$html .= qq`<img src="/images/charts/$time-dow.png" alt=""/>`;
+
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Order Creation by Hour');
+	my $context = $cc->get_context('default');
+	$context->range_axis->format('%.0f');
+	$context->domain_axis->format('%.0f');
+	$context->domain_axis->ticks(23);
+	foreach my $year ( @years ) {
+		my $series = Chart::Clicker::Data::Series->new({ 
+		 map { $_, defined $hours_count{$year}{$_} ? $hours_count{$year}{$_} : 0 } ( 0 .. 23 ) 
+				});
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
+	}
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-hours.png');
+	$html .= qq`<img src="/images/charts/$time-hours.png" alt=""/>`;
+	return $html;
+) ?>
+<? else ( @{$$variable{'Orders'}} ) ?>
+There were no orders matching your criteria.  Please try again.
+<? endif ( @{$$variable{'Orders'}} ) ?>

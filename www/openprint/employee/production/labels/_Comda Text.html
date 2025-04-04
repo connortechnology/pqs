@@ -1,0 +1,133 @@
+<? eval (
+	if ( !$$variable{Label}->get_data('side') ) {
+		$$variable{Label}->set_data(side=>'A');
+	} # end if
+	if ( ! $$variable{Label}->get_data('sheets_per_skid') ) {
+		my $Project = $$variable{Label}->Project();
+		my $services = $Project->services();
+		my $sheets = 100;
+		if ( $$services{Bundling} ) {
+			my $Bundling = $Project->Service($$services{Bundling}[0]);
+			my $specs = $Bundling->specs();
+			my $sheets = $$specs{txtItemsPerPackage};
+			$sheets = 100 if ! $sheets;
+
+		}
+		$$variable{Label}->set_data(
+				bundles_message=>'Please make sure all bundles are in exact count of '.$sheets.'.';
+				);
+  }
+	if ( ! $$variable{Label}->get_data('default_reference') ) {
+		$$variable{Label}->set_data(default_reference=>'%year% %type%');
+	}
+) ?>
+<script>
+	var tinymce_options = {
+		mode : "textareas",
+		plugins: "paste",
+		theme : "advanced",
+		theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
+		theme_advanced_buttons2 : '',
+		theme_advanced_buttons2 : '',
+		cleanup : true
+	};
+
+	tinyMCE.init( tinymce_options );
+
+	function setup_editor(field) {
+		new Ajax.InPlaceEditor(field,
+//new Ajax.InPlaceRichEditor(field,
+				'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field='+field,
+				{
+					okButton:true,
+					cancelControl:'button',
+					submitOnBlur:true,
+					rows:1
+					//loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field='+field
+					}, tinymce_options
+				);
+	}
+	function setup_rich_editor(field) {
+		new Ajax.InPlaceRichEditor(field,
+				'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field='+field,
+				{
+					okButton:true,
+					cancelControl:'button',
+					submitOnBlur:true,
+					rows:1
+					//loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field='+field
+					}, tinymce_options
+				);
+	}
+</script>
+<style type="text/css">
+	
+	.Label {
+		font-size: 22pt;
+		text-align: center;
+		height: 14in;
+		width: 8.5in;
+		margin: 0;
+		padding-top:1px;
+	}
+	.Label table tr td {
+		vertical-align: top;
+		font-family: Arial, Helvetica, Sans-Serif;
+		padding: 5px;
+		font-size: 20pt;
+	} 
+	.Label table tr td textarea {
+		width: 98%;
+	}
+#side {
+	font-size: 4in;
+	height:1in;
+	color:black;
+	font-weight: bold;
+	margin: 2in auto 1in auto;
+	width: 8in;
+	display: block;
+	text-align: center;
+}
+#code {
+	font-size: 2in;
+	height:1in;
+	color:#444444;
+	font-weight: bold;
+	margin: 1in auto 1in auto;
+	width: 8in;
+	display: block;
+	text-align: center;
+}
+#contents {
+	font-size: 1in;
+	height:4in;
+	color:#444444;
+	font-weight: bold;
+	margin: 1in auto 1in auto;
+	width: 8in;
+	display: block;
+	text-align: center;
+}
+#printed_by, .docket {
+	font-weight: bold;
+	font-size: 36pt;
+}
+#bundles_message {
+	font-style: italic;
+	font-size: 18pt;
+}
+</style>
+<div class="Label">
+	<form name="PackingSlip">
+			<span id="side" onclick="setup_editor('side');"><? hecho ( $$variable{Label}->get_data('side'); ) ?></span>
+			<span id="type" onclick="setup_editor('type');"><? hecho ( $$variable{Label}->get_data('type'); ) ?></span>
+			<span id="contents" onclick="setup_editor('contents');"><? hecho ( $$variable{Label}->get_data('contents'); ) ?></span>
+Printed by Point-One Graphics Inc. Toronto Ontario Canada<br/>
+			<span id="printed_on" onclick="setup_editor('printed_on');"><? hecho ( $$variable{Label}->get_data('printed_on'); ) ?></span>
+			<span class="docket">Docket # <?echo($$variable{Label}->docket())?></span><br/>
+			<span id="sheets_per_skid" onclick="setup_editor('sheets_per_skid');"><? hecho ( $$variable{Label}->get_data('sheets_per_skid'); ) ?></span>
+
+
+	</form>
+</div>

@@ -1,0 +1,25 @@
+<form name="part3form" id="part3form" action="?" method="post">
+	<h3>Part 3 (To be completed by recipient)</h3>
+	<table>
+		<tr><td colspan="4">CORRECTIVE ACTION</td></tr>
+		<tr><td colspan="4"><textarea name="action" rows="5" onkeyup="textarea_resize(this);"><? echo ( $$variable{CAR}->action(); ) ?></textarea></td></tr>
+		<tr>
+			<td width="10%">Recipient</td>
+			<td width="40%">
+	<? echo ( ssi::select( openprint::User->dropdown( type=>['E','A']), $session{user_id}, { name=>'part3_user_id' } ) ) ?>
+			</td>
+			<td width="10%">Date</td>
+			<td width="40%">
+	<? echo (
+			return date_select( 'part3_signed_on', $$variable{CAR}->issued_on() ? $$variable{CAR}->issued_on() : [Date::Calc::Today()] );
+	) ?>
+			</td>
+		</tr>
+	</table>
+	<input type="hidden" name="car_id" value="<? echo ( $$variable{CAR}->id() ) ?>" />
+<p class="buttons">
+	<? echo (
+		button( 'Save', { type=>'submit', name=>'btnFunction', value=>'Save' } );
+	) ?>
+</p>
+</form>

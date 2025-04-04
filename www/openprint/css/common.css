@@ -1,0 +1,806 @@
+input:invalid {
+	color:red;
+}
+input, textarea {
+	font-size: small;
+}
+textarea {
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+input[type="text"], 
+input[type="file"], 
+input[type="password"], 
+input[type="number"], 
+input[type="email"],
+input[type="tel"] {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    /*
+    height: 30px;
+    font-size: 15px;
+    line-height: 26.5px;
+    */
+  /*
+	-moz-appearance: textfield;
+	border-width: 2px;
+  */
+/*
+	border-style: inset;
+*/
+	vertical-align: top;
+}
+input.phone,
+input[type="tel"] {
+	width: 140px;
+}
+
+select {
+	vertical-align: top;
+/*
+	padding-right: 15px;
+	border-width: 1px;
+	border-style: solid;
+	border-color: rgb(169, 169, 169);
+    border-radius: 0px;
+  height: 32px;
+*/
+  line-height: 32px;
+}
+option {
+	margin: 0;
+	padding: 0;
+}
+
+a {
+	text-decoration : none;
+	outline: 0;
+} 
+
+.deleted ,
+tr.error {
+  background-color: pink;
+}
+.spacer {
+	height: 0;
+	clear: both;
+}
+
+table.List tr:hover {
+  background-color: #afb3e9;
+}
+
+form {
+	margin: 0;
+}
+
+table {
+	border: none;
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+table.List {
+	table-layout: fixed;
+}
+
+table.List tr {
+  margin: 2px 0;
+}
+th {
+  vertical-align: top;
+	border: none;
+	padding: 2px 0;
+  text-align: left;
+	margin: 0;
+}
+td {
+	padding: 2px 0;
+	vertical-align: top;
+	margin: 0;
+}
+.totals td {
+}
+
+.List input[type="text"], .List input[type="number"] {
+	width: 92%;
+}
+
+fieldset {
+	padding: 2px;
+	margin: 2px;
+	padding-bottom: 10px;
+}
+fieldset .toggle {
+position: absolute;
+display: block;
+float: none;
+top: 0;
+padding: 0;
+background-color: #FFFFFF;
+letter-spacing: -0.1em;
+text-align: center;
+color: #00;
+font-weight: bold;
+}
+fieldset:after {
+	content: ".";
+	display: block;
+	height: 0;
+	font-size: 0;
+	clear: both;
+	visibility: hidden;
+}
+
+.leftColumn, .column {
+	float: left;
+	width: 48%;
+	min-width: 465px;
+}
+.rightColumn {
+	float: right;
+	width: 48%;
+	min-width: 465px;
+}
+.column {
+	float: left;
+	width: 50%;
+}
+.PopupWindow {
+	display: none;
+}
+.Popup {
+	position:absolute;
+	visibility: hidden;
+	background-color: #ffffff;
+	border:1px solid black;
+	width: auto;
+	height: auto;
+	padding: 5px;
+	z-index: 100;
+	display: none;
+}
+
+.tipDiv {
+	position:absolute;
+	z-index:2;
+	background-color: #ffffff;
+	width: 350px;
+	border: 1px solid black;
+	height: auto;
+	display: block;
+}
+.tipHead {
+	background-color: #CAB880;
+	color: white;
+	padding: 5px;
+}
+.tipText {
+	padding: 5px;
+}
+.buttons {
+	margin: 0;
+	padding: 0;
+	text-align: left;
+}
+fieldset p:after ,
+ul:after, ul li:after ,
+.content:after,
+.buttons:after {
+	content: "."; 
+	display: block; 
+	height: 0; 
+	font-size: 0;
+	clear: both; 
+	visibility: hidden;
+}
+
+ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+li {
+	list-style: none;
+}
+fieldset p,
+fieldset li {
+	margin: 4px 0 4px 0;
+	padding: 0 0 0 185px;
+	text-align: left;
+}
+fieldset p label:not(.radio):not(.radio-inline) ,
+fieldset ul li label:not(.radio):not(.radio-inline) {
+	width: 180px;
+	margin-left: -185px;
+	float: left;
+	text-align: left;
+}
+fieldset label:not(.radio):not(.radio-inline):after {
+	content: ":";
+}
+fieldset .address2 label:not(.radio):not(.radio-inline):after { 
+	content: '';
+}
+fieldset label.radio {
+	float: none;
+	margin: 0;
+  padding: 2px 6px 2px 2px;
+	width: auto;
+	vertical-align: middle;
+}
+fieldset li select {
+	max-width: 97%;
+}
+.filter select {
+	width: auto;
+	max-width: 97%;
+}
+fieldset p select {
+	width: 70%;
+	vertical-align: top;
+}
+label {
+	outline: 0;
+}
+
+fieldset p textarea, fieldset li textarea {
+	width: 70%;
+}
+fieldset p.buttons {
+  padding: 0;
+  margin-left: 185px;
+	float: none;
+  clear: both;
+}
+p.buttons {
+  clear: both;
+}
+input[type="radio"] {
+  border-color: black;
+}
+input[type="radio"],
+.checkbox input[type="checkbox"],
+input[type="checkbox"] {
+/*
+	margin: 2px 0;
+	padding: 1px 0;
+	vertical-align: middle;
+*/
+}
+input[type="checkbox"] {
+	margin: 2px;
+}
+.dialog table li {
+	padding-left: 140px;
+}
+.dialog table li label:not(.radio):not(.radio-inline) {
+	margin-left: -140px;
+	width: 135px;
+}
+.dialog table input[type="text"]:not(.filter),
+.dialog table input[type="email"],
+.dialog table input[type="url"],
+.dialog table input[type="number"],
+.dialog table textarea {
+    width: 75%;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    resize: vertical;
+}
+.dialog fieldset li select {
+/*
+	width: 70%;
+*/
+}
+.dialog_content {
+	background-color: white;
+	color: black;
+}
+
+.filters {
+	margin: 0;
+	padding: 0;
+	border-right: none;
+	border-left: none;
+	border-bottom: none;
+}
+@media print {
+	.filters {
+		display: none;
+	}
+	.unprintable {
+		display: none;
+	}
+}
+
+.filters p, .filters li {
+	padding: 0 0 0 185px;
+	text-align: left;
+}
+.filters label:not(.radio):not(.radio-inline) {
+	width: 180px;
+	margin-left: -185px;
+}
+.filters input[type="number"] ,
+.filters input[type="text"] {
+	width: 149px;
+}
+.filters select {
+	width: auto;
+	max-width: 100%;
+}
+
+.row {
+	clear: both;
+}
+.label {
+	width: 175px;
+	float: left;
+	p\osition: relative;
+}
+.input {
+	float: left;
+	p\osition: relative;
+}
+
+hr {
+	width: 100%;
+	margin: 1px;
+	padding: 0;
+	height: 1px;
+  /*
+	border: 0;
+  */
+}
+
+.error, .warning, .warning a {
+	color: red;
+}
+
+.colRow,.roweven {
+}/* alternating row color in generated tables */
+.colRowRed {
+	color: red;
+}/* alternating row color in generated tables */
+.highlightOn {
+	background-color: #FF5C51;
+}
+
+/*
+.requiredFieldIndicator {
+	padding:0;
+	width: 8px;
+	height: 10px;
+	font-size: 13pt;
+	font-weight: bold;
+	color: #790000;
+	display: -moz-inline-box;
+	display: inline-block;
+}
+*/
+
+.TipLink {
+	font-weight: normal;
+	color: #22275E;
+}
+.Currency {
+	float: right;
+	font-weight: bold;
+}
+table .Currency {
+	float: none;
+	font-weight: normal;
+}
+img {
+	border: none;
+}
+
+table .DateInput {
+	width: 305px;
+	text-align: right;
+	padding-right: 5px;
+}
+table .Date {
+	width: 145px;
+	text-align: right;
+	padding-right: 5px;
+}
+.DateTime {
+	width: 215px;
+	text-align: left;
+}
+td.Elapsed, th.Elapsed {
+	width: 120px;
+	text-align: left;
+}
+table .Docket {
+	width: 50px;
+	text-align: center;
+}
+table .Stock {
+	text-align: right;
+}
+table .Quantity {
+	width: 80px;
+	text-align: right;
+}
+table .User {
+	width: 150px;
+	text-align: left;
+}
+table .Email {
+	width: 140px;
+	text-align: left;
+}
+/* Hostname is logs */
+table .From,
+table .Result{
+  text-align: left;
+}
+table .Company {
+	width: 200px;
+	text-align: left;
+	overflow:hidden;
+}
+
+table .checkbox {
+  display: table-cell;
+	width: 25px;
+	text-align: center;
+  padding: 2px 0;
+}
+table .cost,
+table .Price {
+	width: 120px;
+	text-align: right;
+}
+table .Commission {
+width: 40px;
+text-align: right;
+}
+table .Price input[type="text"] {
+	text-align: right;
+}
+table .Status, table .status {
+	width: 200px;
+	text-align: right;
+}
+table .description {
+	text-align: left;
+}
+tr .ip {
+	width: 175px;
+	text-align: left;
+}
+tr .mac {
+	width: 150px;
+	text-align: left;
+}
+
+.DateSelector {
+	min-width: 200px;
+	display: inline-block;
+	vertical-align: top;
+}
+.DateSelectorT,
+.DateSelectorC {
+	min-width: 215px;
+	display: inline-block;
+}
+.DateSelectorCT {
+	min-width: 265px;
+	display: inline-block;
+}
+.DateTimeSelector {
+	min-width: 400px;
+	display: inline-block;
+}
+.DateTimeSelectorT {
+	min-width: 400px;
+	display: inline-block;
+}
+.DateSelector select, 
+.DateSelectorC select, 
+.DateSelectorT select, 
+.DateSelectorCT select, 
+.DateTimeSelector select,
+.DateTimeSelectorCT select,
+.DateTimeSelectorC select,
+.DateTimeSelectorT select {
+	width: auto;
+	max-width: none;
+}
+
+
+#CurrencySelection {
+	padding: 5px;
+}
+.red {
+	color: #EE3E33;
+}
+.bold {
+	font-weight: bold;
+}
+#Navigation {
+	float: left;
+	font-size: 16px;
+}
+.PageTitle {
+  position: absolute;
+  top: 0;
+  right: 5px;
+	text-align: right;
+}
+.PageTitle h1 {
+	text-align: right;
+	color: #EE3E33;
+	margin: 0;
+	font-size: 20px;
+}
+.PageTitle h2 {
+	text-align: right;
+	color: #000088;
+	margin-top: 0;
+	font-size: 16px;
+}
+#BugReport fieldset p {
+	padding-left: 85px;
+}
+#BugReport fieldset p label {
+	width: 85px;
+	margin-left: -85px;
+}
+#BugReport textarea {
+  min-height: 275px;
+}
+br.pagebreak {
+	height: 0;
+	page-break-after: always;
+}
+fieldset p input.CompanyFilter {
+	width: auto;
+}
+
+.inplaceeditor-form { /* The form */
+	width: 100%;
+}
+
+.inplaceeditor-form input[type="text"] { /* Input box */
+}
+
+.inplaceeditor-form textarea { /* Textarea, if multiple columns */
+	width: 100%;
+	height: 100%;
+}
+
+.inplaceeditor-form input[type="submit"] { /* The submit button */
+}
+
+.inplaceeditor-form a { /* The cancel link */
+}
+#Versions {
+  /*
+	display: none;
+  */
+}
+.changed,
+input.changed ,
+input.changed:focus {
+	background-color: yellow;
+}
+
+input[type="text"].filter, 
+.Service input[type="text"].filter,
+fieldset p input.filter {
+  line-height: 1.7;
+	width: 40px;
+}
+
+td p {
+	margin: 0;
+	padding: 0;
+}
+
+p.required:before {
+	content: "\00BB";
+}
+
+span.required:after {
+	content: "\00BB";
+}
+.required label:not(.radio):not(.radio-inline):after {
+	content: "\00BB";
+	float: right;
+}
+img.Override {
+	height: 30px;
+  margin-left: 1px;
+}
+
+th.When {
+	text-align: left;
+	width: 200px;
+}
+.List td.When {
+    text-align: right;
+    padding: 2px 10px 2px 0;
+    width: 190px;
+}
+
+.CapturedSignatures {
+}
+.CapturedSignatures li  {
+	vertical-align: top;
+	padding: 0;
+}
+.CapturedSignatures img {
+	vertical-align: top;
+	border: 2px solid #000088;
+}
+.thumbnail {
+  width: 60px;
+}
+.thumbnail img {
+	width: 48px;
+}
+table .status {
+	text-align: left;
+	padding-left: 7px;
+	width: 100px;
+}
+table .order_id {
+	text-align: left;
+	width: 80px;
+}
+table .docket {
+	text-align: left;
+	width: 60px;
+}
+table .project_id {
+	text-align: left;
+	width: 75px;
+}
+table .duedate {
+	text-align: left;
+	width: 75px;
+}
+table .reference {
+	text-align: left;
+}
+a.button.disabled,
+a.button.disabled:hover
+ {
+ background-color: #aaaaaa;
+}
+
+button:hover,
+input[type="submit"]:hover,
+a.button:hover {
+}
+@media print {
+	button,
+	a.button {
+		display: none;
+	}
+}
+
+.filters .company input[type="text"] {
+	width: 40px;
+}
+table .description {
+	text-align: left;
+}
+	
+table .invoices, table .invoice_num {
+	text-align: left;
+	width: 90px;
+}
+table .invoice_id {
+	text-align: left;
+	width: 50px;
+}
+table .hostname ,
+table .Host {
+text-align: left;
+}
+
+td select {
+  max-width: 100%;
+}
+select#ddmCustomer, select#company_id,
+select#supplier_id {
+  width: calc(100% - 46px);
+}
+a.Today, a.Clear {
+	margin-right: 2px;
+}
+table .action_type, table .note {
+	text-align: left;
+}
+table .type {
+	text-align: left;
+}
+.Notifications .Type {
+	width:  200px;
+	text-align: left;
+}
+.Notifications .value {
+	width: 50px;
+}
+.Notifications .buttons {
+width: 30px;
+}
+input#invoice_num {
+width: 200px;
+}
+table .Object {
+	text-align: left;
+}
+.captcha {
+}
+.captcha input[type="text"] {
+	vertical-align: top;
+    width: 50px;
+}
+.captcha img {
+    height: 27px;
+}
+
+#logs_form fieldset li select {
+	width: auto;
+	max-width: 100%;
+}
+#Login .buttons {
+text-align: left;
+}
+.Login input[type="email"],
+.Login input[type="text"],
+.Login input[type="password"] {
+	width: 75%;
+}
+.Login #showpassword {
+}
+input.input-clear {
+	margin-right: -14px;
+}
+span.input-clear {
+text-indent: -1000em;
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    background-image: url(/images/grey_cross_10x10.png);
+    background-repeat: no-repeat;
+    position: relative;
+    left: -0px;
+    top: 5px;
+}
+
+.form-check-inline {
+display: inline;
+padding-left: 0;
+margin-right: .2rem;
+}
+.form-check-inline label {
+  display: inline;
+}
+
+.bootstrap-table .fixed-table-container .table thead th .th-inner {
+  padding: 0;
+}
+select,
+textarea, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"], input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"], .uneditable-input, .control-group .input-prepend span, .control-group .input-append span {
+  border-width: 1px;
+}
+.pagination ul {
+  display: flex;
+}

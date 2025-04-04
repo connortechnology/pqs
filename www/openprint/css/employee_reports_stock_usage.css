@@ -1,0 +1,13 @@
+table .Stock {
+	text-align: left;
+
+}
+
+table .Projects, table .Orders {
+	width: 75px;
+	text-align: left;
+}
+table .Sheets, table .Weight {
+	width: 90px;
+	text-align: right;
+}

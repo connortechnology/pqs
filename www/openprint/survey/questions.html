@@ -1,0 +1,31 @@
+<div class="Survey">
+	<form id="f1" name="f1" method="post" action="questions.html">
+		<input type="hidden" name="btnFunction" value="Submit"/>
+		<? echo (
+			my $html = '';
+			my %Responses = map { $_->question_id(), $_ } openprint::Survey_Response->find('user_id'=>$session{'user_id'} );
+
+			foreach my $Question ( openprint::Survey_Question->find( 'order'=>'sorting' ) ) {
+				$html .= sprintf('<div class="Question"><div class="text">%s</div>', $Question->text() );
+				my $Response = $Responses{$Question->id()};
+				$Response = new openprint::Survey_Response() if ! $Response;
+				$html .= '<div class="answers">';
+				$html .= ssi::radio( 'answer_id-'.$Question->id(), 
+					[ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], 
+					( $Response->answer_id() ? $Response->answer_id() : $Response->answer() ),
+					);
+				$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea></div>
+				<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response
+				</div>', $Question->id() );;
+			} # end foreach Question
+			return $html;
+		) ?>
+		<br/>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'Submit2', 'submit.gif', "f1.submit();", '', 'Submit' ),
+				ssi::writeButton( $log, $dbh, 'Reset2', 'reset.gif', "f1.reset();", '', 'Reset' ),
+			); ) ?>
+		</p>
+	</form>
+</div>

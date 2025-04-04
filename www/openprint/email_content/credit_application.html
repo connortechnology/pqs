@@ -1,0 +1,71 @@
+<style type="text/css"><? echo ( include('/css/credit_application.css' ); ) ?></style>
+<div class="CreditApplication">
+	<div class="Header">
+		<div class="Logo">
+			<table><tr>
+			<td width="70"><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
+			<td align="left">
+				<a href="/index.html"><span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a>
+			</td>
+			</tr></table>
+			<table class="HeaderText">
+				<tr>
+					<td colspan="2"><? echo ( join(' ', $openprint::User->Company()->get('address1','city','state','postalcode') );) ?></td>
+				</tr>
+				<tr>
+					<td>Phone<? echo ( $openprint::User->Company()->phone() ) ?></td>
+					<td>Fax<? echo ( $openprint::User->Company()->fax() ) ?></td>
+				</tr>
+			</table>
+		</div><!--Logo-->
+		<div class="PageTitle">
+			<h1>Credit Application</h1>
+		</div>
+	</div><!--Header-->
+	<div class="Requested">
+		<fieldset><legend>Credit Options Requested</legend>
+			<ul>
+				<li><label>First Order Value</label><? echo ( $$variable{Application}->firstordervalue() ) ?></li>
+				<li><label>Annual Purchases</label><? echo ( $$variable{Application}->annualpurchases() ) ?></li>
+				<li><label>Accounts Payable Contact</label><? echo ( $$variable{Application}->accountspayablecontact() ) ?></li>
+				<li><label>Account Limit</label><? echo ( $$variable{Application}->desired_limit() ) ?></li>
+				<li><label>Terms</label><? echo ( $$variable{Application}->desired_terms() ) ?></li>
+				<li><label>Financial Statement Available?</label>
+				<? echo ( $variable{Application}->financialstatementavailable() eq 'Y' ? 'Yes' : 'No' ) ?></li>
+				<li><label>Signed By</label><? echo ( $$variable{Application}->signature() ) ?></li>
+				<li><label>Submitted On</label><? echo ( format_datetime( $$variable{Application}->created_on() ); ) ?></li>
+			</ul>
+		</fieldset>
+	</div>
+	<br class="spacer"/>
+		<?include('/email_content/_company_information.html') ?>
+	<div class="OwnershipInformation">
+		<?include('/email_content/_business_information.html') ?>
+	</div>
+	<?include('/account/_company_profile_view.html') ?>
+	<?include('/account/_trade_references_view.html') ?>
+	<? echo ( include('/email_content/_bank_information.html', $variable ); ) ?>
+	<br class="spacer"/>
+	<div class="Disclaimer">
+	<? echo ( $config{CreditApplicationDisclaimer} ) ?>
+	</div>
+	<div class="Signatures">
+		<fieldset><legend>Signatures</legend>
+		<ul class="Signature">
+			<li class="SignedBy"><label>Signed By</label><span class="input"></span></li>
+			<li class="Title"><label>Title</label><span class="input"></span></li>
+			<li class="Name"><label>Name In Print</label><span class="input"></span></li>
+			<li class="Date"><label>Date</label><span class="input"></span></li>
+		</ul>
+		<ul class="Signature">
+			<li class="SignedBy"><label>Signed By</label><span class="input"></span></li>
+			<li class="Title"><label>Title</label><span class="input"></span></li>
+			<li class="Name"><label>Name In Print</label><span class="input"></span></li>
+			<li class="Date"><label>Date</label><span class="input"></span></li>
+		</ul>
+		<br class="spacer"/>
+		Signature of Owner(s) or Officer(s) is required.  Two Signatories are required for Partnership.
+		</fieldset>
+	</div>
+	<p class="FaxTo">Please fax to: <? echo ( new openprint::Company($config{owner_id})->fax(); ) ?></p>
+</div>

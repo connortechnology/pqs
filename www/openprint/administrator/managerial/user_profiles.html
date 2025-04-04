@@ -1,0 +1,426 @@
+<div class="PageTitle">
+  <h1>MANAGERIAL</h1>
+  <h2>User Profiles</h2>
+</div>
+<script src="<? hash_link(/javascripts/passwordmeter.js) ?>"></script>
+<script>
+function keepCompany( form ) {
+	var Company = form.ddmCustomer.selectedIndex;
+	var Role = form.ddmUserRole.selectedIndex;
+
+	clearForm(form);
+	form.ddmCustomer.selectedIndex = Company;
+	form.ddmUserRole.selectedIndex= Role;
+	form.company_id.selectedIndex = Company;
+}
+function add_notification() {
+	popup_window('_user_notification_popup.html');
+}
+function search_email_onkeyup(i) {
+  $('search_email_results').innerHTML='';
+  if (this.value.length > 3 ) {
+    new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: i.value}});
+  }
+}
+</script>
+<?include('/includes/error_reporting.html')?>
+Please select a company or user to obtain login information.<br/>
+<br/>
+<div class="UserProfile">
+	<form id="f1" name="f1" method="post" action="user_profiles.html" onsubmit="return fmCheck();">
+		<fieldset class="filters"><legend>Search</legend>
+			<ul>
+				<li><label>Email</label>
+					<input type="email" id="search_email" name="search_email" data-onkey-up="search_email_onkeyup" onkeydown="if(event.keyCode == 13){new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}"/><br/>
+					<span id="search_email_results"></span>
+				</li>	
+				<li>
+					<label>Company Name</label>
+				   <input type="text" oninput="filter_companies( f1.ddmCustomer, {name:this.value} );" 
+				   onkeydown="if(event.keyCode == 13){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='';this.form.submit();}" 
+				   class="filter" />
+					<select name="ddmCustomer" id="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != ''){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();}">
+						<option value="">All</option>
+<? echo ( 
+		$variable{companies_ddm} = openprint::Company->dropdown();
+		if ( @{$variable{companies_ddm}} > 1000 ) {
+			# Too many.  find the selected one and drop all but previous and following 10..
+
+			for ( my $i = 0; $i < @{$variable{companies_ddm}}; $i += 2 ) {
+				if ( $variable{companies_ddm}[$i] == $session{$r->uri().'?company_id'} ) {
+					@{$variable{companies_ddm}} = splice( @{$variable{companies_ddm}}, ( $i > 100 ? $i - 20 : 0 ), 100 );
+					last;
+				}
+			}
+		}
+		make_drop_down( $variable{companies_ddm}, $session{$r->uri().'?company_id'} );
+		 ) ?>
+					</select>
+					<? echo (
+						if ( $$variable{User}->company_id() ) {
+							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Go' } );
+						} elsif ( $param{ddmCustomer} ) {
+							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{ddmCustomer}, text=>'Go' } );
+						}
+						return;
+					) ?>
+				</li>
+				<li>
+					<label>User Type</label>
+					<select name="ddmUserRole" onchange="f1.btnFunction.value='';f1.submit();">
+						<option value="">All User Types</option>
+						<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $param{ddmUserRole} ); ) ?>
+					</select>
+				</li>
+				<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{deleted}, {onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();",inline=>1} ); ) ?></li>
+				<li>
+					<label>User Name</label>
+					<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">
+						<option value="">Select a User</option>
+						<?echo( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Users}} ], $$variable{User}->id() ); ) ?>
+					</select>
+				</li>
+			</ul>
+		</fieldset>
+		<fieldset>
+			<p id="ButtonsTop" class="buttons"> 
+				<? if ( $$variable{EDIT_USER_NUM} ) ?>
+				<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
+				<? endif ( $$variable{EDIT_USER_NUM} ) ?>
+				<? echo ( my $html = '';
+					$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
+					$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
+					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='copy';f1.submit();", text=>'Copy' } );
+					$html .= button( 'New1', { onclick=>"var l=\$('Log');if(l){l.hide();};keepCompany(f1);", text=>'New' } );
+					if ( $$variable{User}->deleted() ) {
+						$html .= button( 'UnDelete1', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+						$html .= button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
+					} else {
+						$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+					} # end if
+					$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
+					$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
+					if ( $$variable{User}->id() ) {
+						$html .= button( 'Become', { href=>'/account/select_user.html?user_id='.$$variable{User}->id() } );
+					} # end if
+				if ( $$variable{User}->id() and (new openprint::User( $session{user_id} ))->email() =~ /^iconnor/ ) {
+					$html .= '<br/>';
+					$html .= button( 'Merge', { onclick=>"f1.btnFunction.value='merge';f1.submit();" } );
+					$html .= '<select name="merge_user_id"><option value=""> none </option>';
+					$html .= make_drop_down( openprint::User->dropdown( 'id !=' => $$variable{User}->id(), company_id=>$$variable{User}->company_id() ), $$variable{User}->id() );
+					$html .= '</select>';
+				} # end if
+				return $html; ) ?>
+			</p>
+		</fieldset>
+		<fieldset><legend>User Information: <? echo ( $$variable{User}->id() ) ?></legend>
+			<? if ( $$variable{User}->Company()->notes() or $$variable{User}->notes() ) ?>
+			<div class="notes">
+				<ul>
+					<? if ( $$variable{User}->Company()->notes() ) ?>
+					<li>
+						<label>Company Notes</label>
+						<b><? echo ( $$variable{User}->Company()->notes() ) ?></b>
+					</li>
+					<? endif ( $$variable{User}->Company()->notes() ) ?>
+					<? if ( $$variable{User}->notes() ) ?>
+						<li>
+							<label>User Notes</label>
+							<b><? echo ( $$variable{User}->notes() ) ?></b>
+						</li>
+					<? endif ( $$variable{User}->notes() ) ?>
+				</ul>
+			</div>
+			<? endif ( $$variable{User}->Company()->notes() or $$variable{User}->notes() ) ?>
+
+			<div class="leftColumn">
+				<ul>
+					<li> 
+						<label>Company</label>
+						<input type="text" oninput="filter_companies( f1.company_id, {name:this.value} );" class="filter"/>
+						<select id="company_id" name="company_id">
+							<option value=""> Select </option>
+							<? echo ( 
+								if ( $$variable{User}->Company()->deleted() ) {
+									unshift @{$variable{companies_ddm}}, $$variable{User}->company_id(), $$variable{User}->Company()->name();
+								} # end if
+								return make_drop_down( $variable{companies_ddm}, $$variable{User}->company_id() );
+							) ?>
+						</select>
+            <? echo (
+            if ( $$variable{User}->company_id() ) {
+              return button( 'GoCompany2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Go' } );
+            }
+            return;
+          ) ?>
+					</li>
+					<li class="salutation">
+						<label>Salutation</label>
+						<? echo ( radio( 'salutation', [ 'Mr.','Mr.','Mrs.','Mrs.','Ms.','Ms.','Miss','Miss' ], $$variable{User}->salutation(), {inline=>1} ); ) ?>
+					</li>
+					<li> 
+						<label>First Name</label>
+						<input type="text" name="firstname" value="<? hecho ( $$variable{User}->firstname() ) ?>" />
+					</li>
+					<li> 
+						<label>Last Name</label>
+						<input type="text" name="lastname" value="<? hecho ( $$variable{User}->lastname() ) ?>" />
+					</li>
+					<li class="title"> 
+						<label>Title</label>
+						<input type="text" name="title" value="<? hecho ( $$variable{User}->title() ) ?>" />
+					</li>
+					<li class="phone"> 
+						<label>Phone</label>
+						<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" /> x
+						<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{User}->extension() ) ?>" />
+					</li>
+					<li class="mobile"> 
+						<label>Mobile</label>
+						<input type="tel" name="mobile" value="<? hecho ( $$variable{User}->mobile() ) ?>" />
+					</li>
+					<li class="sms"> 
+						<label>SMS (email)</label>
+						<input type="text" name="sms" value="<? hecho ( $$variable{User}->sms() ) ?>" />
+					</li>
+					<li class="fax"> 
+						<label>Fax</label>
+						<input type="tel" name="fax" value="<? hecho ( $$variable{User}->fax() ) ?>" />
+					</li>
+				</ul>
+			</div>
+      <div class="LoginCredentials">
+        <fieldset><legend>Login Information</legend> 
+          <ul>
+            <li> 
+              <label>E-mail Address</label>
+              <input type="email" name="email" value="<? hecho ( $$variable{User}->email() ) ?>" />
+              <? echo ( radio( 'email_valid', [ 1, 'Yes', 0, 'No', '', 'Unknown' ], $$variable{User}->email_valid() ); ) ?>
+            </li>
+            <li> 
+              <label>Password</label>
+              <input type="text" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( (($$variable{User}->type() ne 'A') and !$config{encrypt_passwords}) ? $$variable{User}->password() : '' ) ?>" />
+              <span id="psContainer"><span id="psStrength"></span></span>
+            </li>
+            <li>
+              <label for="verifypassword">Verify Password</label>
+              <input type="text" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( (($$variable{User}->type() ne 'A') and !$config{encrypt_passwords}) ? $$variable{User}->password() : '' ) ?>"/>
+              <span id="password_alert"></span>
+            </li>
+            <li><label>Password Last Changed</label>
+              <? echo ( $$variable{User}->password_changed_on() ? Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $$variable{User}->password_changed_on() ) ) : 'never' ) ?>
+            </li>
+            <li> 
+              <label>User must change password on next login?</label>
+              <?echo(radio('change_password', ['Y','Yes','N','No'], $$variable{User}->change_password() ); ) ?>
+            </li>
+          </ul>
+        </fieldset>
+      </div>
+			<div class="Permissions">
+        <fieldset><legend>Permissions</legend>
+          <ul>
+            <li class="mailinglist"> 
+              <label>Add to our Mailing List</label>
+              <? echo( radio(
+                'mailinglist',
+                [ 'Y', 'Yes', 'N', 'No', '', 'Unset' ],
+                $$variable{User}->mailinglist(),
+                { inline=>1 }
+                ); ) ?>
+            </li>
+            <li> 
+              <label>User Type</label>
+              <select name="type">
+                <? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{User}->type() ); ) ?>
+              </select>
+            </li>
+            <li class="administrator"> 
+              <label>Is this account a company administrator?</label>
+              <? echo ( radio( 'administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator(),{ inline=>1} ); ) ?>
+            </li>
+            <li class="web_active"> 
+              <label>Can this account login to the web site?</label>
+              <? echo ( radio( 'web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active(),{ inline=>1} ); ) ?>
+            </li>
+            <li class="ftp_active">
+              <label>Can this account login to the ftp site?</label>
+              <? echo ( radio( 'ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active(),{ inline=>1} ); ) ?>
+            </li>
+            <li class="ftp_root">
+              <label>Limit FTP access to this folder</label>
+              <? echo ( input( type=>'text', name=>'ftp_root', id=>'ftp_root', value=>$$variable{User}->ftp_root() ); ) ?>
+            </li>
+            <li class="greeting"> 
+              <label>Custom Greeting</label>
+              <textarea id="greeting" name="greeting" rows="<? echo ( count_lines( $$variable{User}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->greeting() ) ?></textarea>
+            </li>
+            <li class="notes">
+              <label>Notes</label>
+              <textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{User}->notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->notes() ) ?></textarea>
+            </li>
+            <li><label>Created</label>
+              <? echo ( format_datetime( $$variable{User}->created_on() ); ) ?>
+            </li>
+            <li><label>Updated</label>
+              <? echo ( format_datetime( $$variable{User}->updated_on() ); ) ?>
+            </li>
+          </ul>
+        </fieldset>
+			</div>
+		<? if ( $$variable{User}->type() eq 'E' or $$variable{User}->type() eq 'A' ) ?>
+			<div class="Purchasing">
+        <fieldset><legend>Purchasing</legend>
+          <ul>
+            <li class="commission">
+              <label>Commission Rate</label>
+              <? echo ( input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?> %
+            </li>
+            <li class="wage"> 
+              <label>Wage</label>
+              <? echo ( input( type=>'float', name=>'wage', value=>$$variable{User}->wage() ); ) ?> /Hr
+            </li>
+          </ul>
+          <?if($config{FEATURE_PURCHASE_ORDERS} and ($config{FEATURE_PURCHASE_ORDERS} ne 'N'))?>
+          <ul class="Purchasing">
+            <li class="purchasing_limit">
+              <label>Purchasing Limit (per PO)</label>
+              <? echo ( input( type=>'cardinal', name=>'purchasing_limit', value=>$$variable{User}->purchasing_limit() ); ) ?>
+            </li>
+            <li class="purchasing_total_limit"> 
+              <label>Purchasing Limit (Total)</label>
+              <? echo ( input( type=>'cardinal', name=>'purchasing_total_limit', value=>$$variable{User}->purchasing_total_limit() ); ) ?>
+            </li>
+            <? echo (
+              return join("\n",
+                map { 
+                '<li><label>Limit for ' . $_->name() . '</label>'.input( type=>'cardinal', name=>'po_limit-'.$_->id(), value=>$$variable{User}->po_limit( $_->id() ) ).'</li>' } openprint::PurchaseOrder_ContentType->find( order=>'lower(name)')
+                );
+            ) ?>
+          </ul>
+          <?endif($config{FEATURE_PURCHASE_ORDERS} and ($config{FEATURE_PURCHASE_ORDERS} ne 'N'))?>
+        </fieldset>
+			</div>
+      <div class="Assistants">
+        <fieldset class="Assistants"><legend>Assistants</legend>
+          <ul>
+            <? if ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), ($config{owner_id} ? (company_id=>$config{owner_id}) : () ), type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
+            <li class="csr_ids">
+              <label>Assistant to</label>
+              <select name="csr_ids" size="4" multiple="multiple">
+                <? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{csr_ids}} ], [$$variable{User}->csr_ids()] ); ) ?>
+              </select>
+            </li>
+            <li class="assistant_ids">
+              <label>Assistants</label>
+              <select name="assistant_ids" size="4" multiple="multiple">
+                <? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{csr_ids}} ], [$$variable{User}->assistant_ids()] ); ) ?>
+              </select>
+            </li>
+            <? endif ( @{$$variable{csr_ids}} = openprint::User->find('id !='=>$$variable{User}->id(), ($config{owner_id} ? (company_id=>$config{owner_id}) : () ), type=>['E','A'], 'usergroup any'=>'Sales' ) ) ?>
+          </ul>
+        </fieldset>
+      </div>
+    <? endif ( $$variable{User}->type() eq 'E' or $$variable{User}->type() eq 'A' ) ?>
+
+		<div class="Miscellaneous">
+      <fieldset><legend>Miscellaneous</legend>
+				<ul>
+					<? if ( @{$$variable{user_categories}} = openprint::MarketingCategory->find(order=>'lower(name)') ) ?>
+					<li class="user_categories">
+						<label>User Category</label>
+						<select name="selectUserCategories" multiple="multiple">
+						<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{user_categories}} ], [ openprint::MarketingCategory->find('user_id any'=>$$variable{User}->id()) ] ); ) ?>
+						</select>
+					</li>
+					<? endif ( @{$$variable{user_categories}} = openprint::MarketingCategory->find(order=>'lower(name)') ) ?>
+          <li class="email_quotes notrequired">
+            <label>Email my quotes to myself?</label>
+            <?echo( radio('email_quotes_to_myself', [ 1, 'Yes', 0, 'No' ], $$variable{User}->email_quotes_to_myself() ); ) ?>
+          </li>
+          <? eval ( @{$$variable{QuoteLevels}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
+          <? if ( @{$$variable{QuoteLevels}} > 1 ) ?>
+          <li class="notrequired"><label>Quote Level</label>
+            <? echo ( ssi::select($$variable{QuoteLevels}, $$variable{User}->quote_level(), { name=>'quote_level', id=>'quote_level', prepend=>['','select'] } ); ) ?>
+          </li>
+          <? endif ( @{$$variable{QuoteLevels}} > 1 ) ?>
+				</ul>
+	  	</fieldset>
+		</div>
+    <div class="groups">
+		  <fieldset><legend><a href="/administrator/managerial/usergroups.html">Groups</a></legend>
+        <ul>
+			<? echo (
+				my $html;
+				my @UserGroups = map { $_->id() } $$variable{User}->Groups();
+				foreach my $Group ( openprint::UserGroup->find( order=>'lower(name)' ) ) {
+					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label class="radio" for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), checked( sets::isin( $Group->id(), \@UserGroups ) ) );
+				} # end foreach
+				return $html;
+			) ?>
+        </ul>
+      </fieldset>
+    </div>
+		<? if ( $$variable{DoEmail} ) ?>
+		<?include(/account/_email_settings.html)?>
+		<? endif ( $$variable{DoEmail} ) ?>
+		<?include('/account/_user_profile_edit.html')?>
+		<div class="Notifications">
+      <fieldset><legend>Notifications</legend>
+        <div id="Notifications"><?include(/account/_notifications.html)?></div>
+      </fieldset>
+		</div>
+		<? if ( openprint::ServiceType->find_one() ) ?>
+		<div class="ServiceDefaults">
+		<fieldset><legend>Service Defaults</legend>
+			<?include('_service_defaults.html')?>
+		</fieldset>
+		</div>
+		<? endif ( openprint::ServiceType->find_one() ) ?>
+    <div class="Subscriptions">
+      <fieldset><legend>Subscriptions</legend>
+      <ul>
+        <li><label>All email communications from <? echo ( $config{SiteTitle} ) ?></label>
+        <? echo ( radio( 'all', [ 'Y', 'Subscribed', 'N', 'Unsubscribed' ], $$variable{User}->mailinglist(), { default=>'Y' } ); ) ?>
+        </li>
+<?echo( my $html = '';
+         require openprint::EmailCampaign_Subscription;
+    my %Subscriptions = map { $$_{campaign_id} => $_ } openprint::EmailCampaign_Subscription->find(user_id=>$$variable{User}->id()) if $$variable{User}->id();
+    foreach my $Campaign (openprint::EmailCampaign->find(user_id=>undef, runnable=>1)) {
+      $html .= '<li><label>'.html_escape($Campaign->name()).'</label>'.
+        radio( 'campaign_'.$$Campaign{id}, [ '1', 'Subscribed', '0', 'Unsubscribed' ],
+          (exists($Subscriptions{$$Campaign{id}}) ? '1' : '0'),
+          { default=>'0' } ).
+        '</li>';
+    } # end foreach
+    return $html;
+)?>
+      </ul>
+    </div>
+		<br class="spacer"/>
+		<fieldset>
+			<p id="ButtonsBottom" class="buttons">
+			<? if ( $$variable{EDIT_USER_NUM} ) ?>
+			<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
+			<? endif ( $$variable{EDIT_USER_NUM} ) ?>
+			<? echo ( my $html = '';
+				$html .= button( 'Prev2', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
+				$html .= button( 'Next2', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
+				$html .= button( 'New2', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
+				if ( $$variable{User}->deleted() ) {
+					$html .= button( 'Undelete2', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+					$html .= button( 'Destroy2', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
+				} else {
+					$html .= button( 'Delete2', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+				} # end if
+				$html .= button( 'Save2', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
+				$html .= button( 'Reset2', { onclick=>'f1.reset();', text=>'Reset' } );
+				return $html; ) ?>
+		</p>
+		</fieldset>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+<? if ( $$variable{User}->id() ) ?>
+<? echo ( include_logs( $$variable{User} ); ) ?>
+<? endif ( $$variable{User}->id() ) ?>
+</div>

@@ -1,0 +1,41 @@
+<? eval (
+	my $uri = $$variable{uri} = '/sensors/search.html';
+
+	@{$$variable{Sensors}} = ();
+	foreach my $Sensor ( openprint::Sensor->find( 
+		date_filter( $uri.'?created_on_end','created_on <=' ),
+		date_filter( $uri.'?created_on_start','created_on >=' ),
+			( $session{$uri.'?category_id'} ? ( category_id => $session{$uri.'?category_id'} ) : () ),
+			order				=> 'created_on',
+		) ) {
+		next if ! $Sensor->can_view();
+		push @{$$variable{Sensors}}, $Sensor;
+	} # end foreach Sensors
+) ?>
+
+<? if ( @{$$variable{Sensors}} == 0 ) ?>
+	There are no sensors which match your search criteria. 
+<? else ( @{$$variable{Sensors}} == 0 ) ?>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Sensor ( @{$$variable{Sensors}} ) {
+
+				$html .= sprintf(q` 
+					<div title="%2$s" class="Sensor%7$s"> %6$s
+						<div class="Name"><a href="/sensors/view.html?sensor_id=%1$d">%2$s</a></div>
+						<div class="Description"><a href="/sensors/view.html?sensor_id=%1$d">%3$s</a></div>
+						<div class="Type"><a href="/sensors/view.html?sensor_id=%1$d">%4$s</a></div>
+						<div class="assets"><a href="/sensors/view.html?sensor_id=%1$d">%5$s</a></div>
+					</div>
+					`, $Sensor->id(), html_escape($Sensor->name()), html_escape($Sensor->description()),
+					$Sensor->Category()->name(),
+					$Sensor->Album()->Thumbnail()->Asset()->sized_html('large'),
+					undef,
+					$rowclass,
+				);
+				$rowclass = $rowclass ? '' : ' colRow';
+			} # end foreach Sensors
+			return $html;
+		) ?>
+<? endif ( @{$$variable{Sensors}} == 0 ) ?>

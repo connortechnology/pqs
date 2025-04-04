@@ -1,0 +1,149 @@
+<script src="/javascripts/tiny_mce/tiny_mce.js"></script>
+<script>
+/*
+	 tinyMCE.init({
+	 mode: "specific_textareas",
+	 editor_selector : "mce",
+
+	 theme : "simple"
+	 });
+ */
+</script>
+<?include('/includes/error_reporting.html')?>
+<div class="EmailCampaign">
+<? if ( $$variable{Results} ) ?>
+<b>The following are the results of your email campaign</b><br/>
+<?Results?><br/>
+<hr/>
+<? endif ( $$variable{Results} ) ?>
+<?if($$variable{Campaign}->can_view())?>
+<form id="f1" name="f1" action="email_campaign.html<? echo ( $$variable{Campaign}->id() ? '?campaign_id='.$$variable{Campaign}->id() : '' ) ?>" method="post" enctype="multipart/form-data">
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+				button( 'SaveTop', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } ),
+				button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } ),
+				button( 'ResetTop', { onclick=>'f1.reset();',text=>'Reset' }),
+        ( ($session{user_type} eq 'A' and $$variable{Campaign}->runnable() ) ? button('RunTop', { onclick=>"f1.btnFunction.value='Run';f1.submit();", text=>'Run' }) : ()),
+				button( 'TestTop', { onclick=>"f1.btnFunction.value='Test';f1.submit();",text=>'Test' } ),
+				button( 'ViewRecipientsTop', { onclick=>"popup_window('_recipients.html', { campaign_id:$$variable{Campaign}{id} }, {width: 1000});",text=>'View Recipients' } ),
+				#button( 'ViewRecipientsTop', { onclick=>"f1.btnFunction.value='View Recipients';f1.submit();",text=>'View Recipients' } ),
+				button( 'DownloadRecipientsTop', { onclick=>"f1.btnFunction.value='Download Recipients';f1.submit();",text=>'Download Recipients' } ),
+			); ) ?>
+</p>
+<p>
+      <input type="file" name="import_file"/>
+      <? echo ( join("\n",
+						button( 'Import', { onclick=>"f1.btnFunction.value='Import Recipients';f1.submit();"} ),
+						) ); ?>
+</p>
+<input type="hidden" name="btnFunction"/>
+<fieldset>
+<ul>
+	<li><label>ID</label><? echo ( $$variable{Campaign}->id() ) ?></li>
+	<li><label>Owner</label><?echo(
+			ssi::select(openprint::User->dropdown(company_id=>$openprint::User->company_id()), $$variable{Campaign}->user_id(), { name=>'user_id',prepend=>['','None'] } );
+			) ?>
+	</li>
+	<li><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{Campaign}->name() ) ?>" /></li>
+	<li><label>Query</label>
+		<textarea name="query" rows="<? echo ( count_lines($$variable{Campaign}->query()); ) ?>" onkeyup="textarea_resize(this);" ><? echo ($$variable{Campaign}->query()) ?></textarea>
+	</li>
+	<li><label>Email From</label>
+		<input type="email" name="email_from" value="<? hecho ( $$variable{Campaign}->email_from() ) ?>"  />
+	<?echo (
+			if ( $$variable{Campaign} and ! $$variable{Campaign}->email_from() ) {
+			return '<span class="warning">Without a FROM address, the emails will not be sent.</span>';
+			}
+			return '';
+			) ?>
+	</li>
+	<li>
+		<label>Override To</label>
+		<input type="email" name="email_to" value="<? hecho ( $$variable{Campaign}->email_to() ) ?>"/>
+	</li>
+	<li>
+		<label>Carbon Copy (CC)</label>
+		<input type="email" name="email_cc" value="<? hecho ( $$variable{Campaign}->email_cc() ) ?>"/>
+	</li>
+	<li>
+		<label>Blind Carbon Copy (BCC)</label>
+		<input type="email" name="email_bcc" value="<? hecho ( $$variable{Campaign}->email_bcc() ) ?>"/>
+	</li>
+	<li>
+		<label>Email Subject</label>
+		<input type="text" name="email_subject" value="<? echo ( $$variable{Campaign}->email_subject() ) ?>"/>
+	</li>
+	<li>
+		<label>Template</label>
+		<select name="template_id"><option value="">select</option>
+		<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate->find('order'=>'lower(name)') ], $$variable{Campaign}->template_id() ); ) ?>
+		</select>
+	</li>
+<li><label>Email TEXT Body</label><textarea wrap="physical" name="email_text" rows="<? echo ( count_lines( $$variable{Campaign}->email_text() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( html_escape( $$variable{Campaign}->email_text() ); ) ?></textarea></li>
+<li><label>Email HTML Body</label>
+<textarea wrap="physical" class="mce" name="email_html" rows="<? echo ( count_lines( $$variable{Campaign}->email_html() ) ) ?>" onkeyup="textarea_resize(this);" ><? echo ( html_escape( $$variable{Campaign}->email_html() ); ) ?></textarea>
+</li>
+<li><label>Attachments</label><textarea name="attachments" rows="<? echo ( scalar split("\n", $$variable{Campaign}->attachments() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{Campaign}->attachments() ) ?></textarea></li>
+<li><label>Times to send</label><input type="text" name="timestosend" value="<? echo ( $$variable{Campaign}->timestosend() ) ?>"  /></li>
+<li><label>Time of day to send</label><input type="text" name="timeofday" value="<? echo ( $$variable{Campaign}->timeofday() ) ?>"  /></li>
+<li><label>Interval between emails</label><input type="text" name="interval" value="<? echo ( $$variable{Campaign}->interval() ) ?>"  /></li>
+<li><label>Recipients per Run</label><?echo(input(type=>'cardinal', name=>'recipients_per_run', value=>$$variable{Campaign}->recipients_per_run() );) ?></li>
+<li><label>Active</label>
+<?echo(radio('active', ['Y','yes', 'N', 'No'], $$variable{Campaign}->active(), { default=>'N' } ); )?>
+</li>
+<li><label>Runnable</label>
+<?echo(radio('runnable', ['1','yes', '0', 'No'], $$variable{Campaign}->runnable(), { default=>'0' } ); )?>
+</li>
+<li><label>Last Run</label><? echo ( $$variable{Campaign}->lastrun() ) ?></li>
+<li><label>Next Run</label><? echo ( 
+		datetime_select( 'nextrun', $$variable{Campaign}->nextrun() ? $$variable{Campaign}->nextrun() : '', {with_today=>1} );
+		) ?></li>
+	<li><label>Check User Mailing List setting?</label>
+		<?echo( radio('mailinglist', [1=>'Yes', 0=>'No'], $$variable{Campaign}->mailinglist()); )?>
+	</li>
+</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+				button( 'SaveBottom', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+				button( 'CopyBottom', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } ),
+				button( 'ResetBottom', { onclick=>'f1.reset();',text=>'Reset'}),
+        ( ( $session{user_type} eq 'A' and $$variable{Campaign}->runnable() ) ? button('RunBottom', { onclick=>"f1.btnFunction.value='Run';f1.submit();", text=>'Run' } ) : () ),
+				button( 'TestBottom', { onclick=>"f1.btnFunction.value='Test';f1.submit();",text=>'Test' } ),
+				button( 'ViewRecipientsBottom', { onclick=>"popup_window('_recipients.html', { campaign_id:$$variable{Campaign}{id} }, {width: 1000});",text=>'View Recipients' } ),
+				button( 'DownloadRecipientsBottom', { onclick=>"f1.btnFunction.value='Download Recipients';f1.submit();", text=>'Download Recipients' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+</form>
+<? if ( $$variable{Campaign}{id} ) ?>
+<? echo ( include_logs( $$variable{Campaign} ); ) ?>
+<? endif ( $$variable{Campaign}{id} ) ?>
+
+<script>
+/*
+tinymcce screws up our ssi
+var tinymce_options = {
+mode : "specific_textareas",
+			 editor_selector : "mce",
+
+		plugins: "paste,lists",
+  theme_advanced_toolbar_location : "top",
+  //theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull",
+  //theme_advanced_buttons2 : "bullist,numlist,outdent,indent,sub,sup,charmap",
+  //theme_advanced_buttons3 : "",
+   toolbar: "numlist bullist",
+  auto_resize : true,
+    theme : "advanced"
+  //force_br_newlines : true,
+  //force_p_newlines : false,
+  //forced_root_block : '' // Needed for 3.x
+
+  };
+tinyMCE.init(tinymce_options);
+*/
+</script>
+
+<?endif($$variable{Campaign}->can_view())?>
+</div>

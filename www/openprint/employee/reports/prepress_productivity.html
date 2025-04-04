@@ -1,0 +1,164 @@
+<form id="f1" name="f1" method="post" action="/employee/reports/prepress_productivity.html">
+<fieldset class="filters"><legend>Report Criteria</legend>
+	Choose report criteria and click Show Results.<br/><br/>
+	<ul>
+		<li>
+			<label>Employee</label>
+			<select name="ddmEmployee" size="1">
+				<option value="Prepress">All Prepress Employees</option>
+				<option value="All" <? echo ( 'selected="selected"' if $param{ddmEmployee} eq 'All' ) ?>>All Employees</option>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Prepress', company_id=>$config{owner_id} ), $param{ddmEmployee} ); ) ?>
+			</select>
+		</li>
+		<li>
+			<label>Ordered Date</label>
+			<? echo ( date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_start', with_clear=>1,with_today=>1 ); ) ?>
+			to
+			<? echo ( date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_end', with_clear=>1,with_today=>1 ); ) ?>
+		</li>
+	</ul>
+	<p class="buttons">
+		<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				); ) ?>
+	</p>
+</fieldset>
+<? eval ( 
+		my %sql = ( type=>['E','A'], order=>'lower(lastname),lower(firstname)', company_id=>$config{owner_id} );
+		if ( $param{ddmEmployee} eq 'Prepress' or ! $param{ddmEmployee} ) {
+			$sql{'usergroup any'} = 'Prepress';
+		} elsif ( $param{ddmEmployee} ne 'All' ) {
+			$sql{id} = $param{ddmEmployee};
+		} # end if
+		@{$$variable{'Results'}} = openprint::User->find( %sql );
+		@{$$variable{'Projects'}} = openprint::Project->find( 
+			date_filter( '/employee/reports/prepress_productivity.html?ordered_on_end', 'ordered_on <=',  ),
+			date_filter( '/employee/reports/prepress_productivity.html?ordered_on_start', 'ordered_on >=', ),
+			);
+ ) ?>
+ <? if ( @{$$variable{'Projects'}} ) ?>
+	Total # of Dockets in the time period: <? echo ( @{$$variable{'Projects'}} ) ?>:
+	<? eval ( 
+		my %employees = map { $_->name() => $_ } @{$$variable{Results}};
+
+		foreach my $Project ( @{$$variable{'Projects'}} ) {
+			my $services = $Project->services();
+			my $proofs_service_index = $$services{'Proofs'}[0] if $$services{'Proofs'};
+			$proofs_service_index = $$services{'FilmStripping'}[0] if $$services{'FilmStripping'};
+			next if ! $proofs_service_index;
+			my $proofs_specs = openprint::service::get_specs_ref( $Project, $proofs_service_index );
+			my ( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $Project->id(), $proofs_service_index );
+			if ( ! $operator_id and $$proofs_specs{'txtEmployeeName'} ) {
+				if ( ! $employees{$$proofs_specs{'txtEmployeeName'}} ) {
+					$log->error("Have proofs operator not in employee list: $$proofs_specs{'txtEmployeeName'}");
+				} else {
+				
+					my $operator = $employees{$$proofs_specs{'txtEmployeeName'}};
+					$operator_id = $operator->id();
+					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $Project->id(), $proofs_service_index], 'operator_id', $operator->id() );
+				}
+			} # end if
+			if ( ! $operator_id ) {
+				push @{$$variable{'UnassignedProjects'}}, $Project;
+			} # end if	
+			$$variable{$operator_id}->{'ProjectCount'} += 1;
+
+			my $qty_index = $Project->ordered_quantity_index();
+
+			foreach my $index ( $Project->signatures() ) {
+				my ( $signature_index, $plate_qty ) = openprint::service::get_specifications( $log, $dbh, $Project->id(), $index, 'SignatureIndex', 'txtPlateQuantity'.$qty_index );
+				$$variable{$operator_id}->{'PlateCount'} += $plate_qty;
+
+				my @proofs;
+				foreach my $key ( keys %{$proofs_specs} ) {
+					push @proofs, $$proofs_specs{$key} if $key =~ /^txtProofIndex-$signature_index-\d*-$qty_index$/;
+				} # end foreach
+
+				foreach my $proof_index ( @proofs ) {
+					my ( $quantity, $width, $height, $type ) = @$proofs_specs{
+						"txtProofQuantity-$signature_index-$proof_index-$qty_index",
+						"txtProofWidth-$signature_index-$proof_index-$qty_index",
+						"txtProofHeight-$signature_index-$proof_index-$qty_index",
+						"ddmProofType-$signature_index-$proof_index-$qty_index",
+						};
+					$$variable{$operator_id}->{$type.'Count'} += $quantity;
+					$$variable{$operator_id}->{$type.'Area'} += $quantity * $width * $height;
+				} # end foreach proof
+			} # end foreach signature
+			$$variable{$operator_id}->{'OrderValue'} += $Project->ordered_price();
+		} # end foreach Project
+	) ?>
+<table>
+	<tr>
+		<th align="left">Employee</th>
+		<th align="right">Project</th>
+		<th align="right">Plate</th>
+		<th align="right" colspan="2">Digital Dylux Proofs</th>
+		<th align="right" colspan="2">Epson Proofs</th>
+		<th align="right">Order</th>
+	</tr>
+	<tr>
+		<th align="left">Name</th>
+		<th align="right">Quantity</th>
+		<th align="right">Quantity</th>
+		<th align="right">Quantity</th>
+		<th align="right">Area</th>
+		<th align="right">Quantity</th>
+		<th align="right">Area</th>
+		<th align="right">Value</th>
+	</tr>
+	<tr><td colspan="8"><hr/></td></tr>
+<? while ( $$variable{'User'} = shift @{$$variable{'Results'}}; ) ?>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
+	<tr<?rowclass?>>
+		<td><? hecho ( $$variable{'User'}->name() ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'ProjectCount'} ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'PlateCount'} ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'DigitalDyluxCount'} ) ?></td>
+		<td align="right"><? echo ( Math::Round::nearest( 0.01, $$variable{$$variable{'User'}->id()}->{'DigitalDyluxArea'} ) ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'EpsonProofCount'} ) ?></td>
+		<td align="right"><? echo ( Math::Round::nearest( 0.01, $$variable{$$variable{'User'}->id()}->{'EpsonProofArea'} ) ) ?></td>
+		<td align="right"><? echo ( openprint::Currency::format( $$variable{$$variable{'User'}->id()}->{'OrderValue'} ); ) ?></td>
+	</tr>
+<? endwhile ( $$variable{'User'} = shift @{$$variable{'Results'}}; ) ?>
+<? if ( $$variable{''}->{'ProjectCount'} ) ?>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
+	<tr<?rowclass?>>
+		<td>Unassigned</td>
+		<td align="right"><? echo ( 1*$$variable{''}->{'ProjectCount'} ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{''}->{'PlateCount'} ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{''}->{'DigitalDyluxCount'} ) ?></td>
+		<td align="right"><? echo ( Math::Round::nearest( 0.01, $$variable{''}->{'DigitalDyluxArea'} ); ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{''}->{'EpsonProofCount'} ) ?></td>
+		<td align="right"><? echo ( Math::Round::nearest( 0.01, $$variable{''}->{'EpsonProofArea'} ); ) ?></td>
+		<td align="right"><? echo ( openprint::Currency::format( $$variable{''}->{'OrderValue'} ); ) ?></td>
+	</tr>
+<? endif ( $$variable{''}->{'ProjectCount'} ) ?>
+	<tr><td colspan="8"><hr/></td></tr>
+</table>
+<? if ( $$variable{'UnassignedProjects'} ) ?>
+<br/>
+	<h3>Unassigned Projects</h3>
+<table class="List">
+	<tr>
+		<th valign="top" align="left" width="100">Project</th>
+		<th valign="top" align="left">Reference</th>
+		<th valign="top" align="left">Company</th>
+		<th class="Date">Ordered On</th>
+	</tr>
+<? while ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>
+	<tr<?colrow?>>
+		<td valign="top"><a href="/employee/project/view.html?project_id=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
+		<td valign="top"><? echo ( $$variable{'Project'}->reference() ) ?></td>
+		<td valign="top"><? echo ( ssi::htmlize( $$variable{'Project'}->Company()->name() ); ) ?></td>
+		<td class="Date"><? echo ( format_date( $$variable{'Project'}->ordered_on() ); ) ?></td>
+	</tr>
+<? eval ( $$variable{'colrow'} = $$variable{'colrow'} ? '' : ' class="colRow"' ) ?>
+<? endwhile ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>
+</table>
+
+<? endif ( $$variable{'UnassignedProjects'} ) ?>
+<? else ( @{$$variable{'Projects'}} ) ?>
+There were no results matching the report criteria.
+<? endif ( @{$$variable{'Projects'}} ) ?>

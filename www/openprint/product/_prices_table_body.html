@@ -1,0 +1,15 @@
+<? echo (
+    my $html = include('/includes/error_reporting.html');
+    my @Prices = openprint::ProductPrice->find(
+        product_id      =>  $$variable{Product}->id(),
+        pricelist_id    =>  $$variable{Pricelist}->id(),
+        order=>'min NULLS FIRST,max NULLS FIRST' );
+
+    my $price_html = slurp_content( '/product/_price.html' );
+
+    foreach my $Price ( @Prices ) {
+        $$variable{Price} = $Price;
+        $html .= variable_substitution( \$price_html, $variable );
+    } # end foreach Price
+    return $html;
+) ?>

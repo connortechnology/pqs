@@ -1,0 +1,32 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? echo (
+	my $html;
+	my @Unapproved = $$variable{'Video'}->Comments( {'approved' => 0} );
+	if ( @Unapproved ) {
+		$html .= '<div class="Unapproved">The following comments require approval:<br/>';
+		foreach my $Comment ( @Unapproved ) {
+		$html .= sprintf( q`
+			<div class="comment">At %s %s said:<br/>%s
+			`, Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );
+			$html .= ssi::button( 'ApproveComment'.$Comment->id(), { 'text' => 'Approve', 'onclick' => qq`new Ajax.Updater('comments-$$variable{Article}{id}', '_photo_comments.html', { parameters: { article_id: $$variable{Article}{id}, comment_id: $$Comment{id}, action: 'approve' } } );` } );
+		$html .= '</div>';
+		} # end foreach Comment
+		$html .= '</div>';
+	} # end if
+	foreach my $Comment ( $$variable{'Video'}->Comments( { 'approved' => 1 } ) ) {
+		$html .= sprintf( q`
+			<div class="comment">At %s %s said:<br/>%s</div>
+		`, Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );
+	} # end foreach Comment
+	return $html;
+) ?>
+<div class="comment">
+	<form id="comment-form" name="comment-form" action="list.html" method="post">
+		<fieldset><legend>Add</legend>
+		<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Video'}->asset_id() ) ?>"/>
+		<input type="hidden" name="album_id" value="<? echo ( $$variable{'Video'}->album_id() ) ?>"/>
+		<textarea name="text" id="text"></textarea>
+		<? echo ( ssi::button( 'SaveComment'.$$variable{'Video'}->id(), { 'text' => 'Save', 'onclick' => qq`new Ajax.Updater('Comments', '_photo_comments.html', { parameters: \$('comment-form').serialize() } );` } ); ) ?>
+		</fieldset>
+	</form>
+</div>

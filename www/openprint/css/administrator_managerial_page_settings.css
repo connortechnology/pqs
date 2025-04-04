@@ -1,0 +1,22 @@
+table .url {
+	text-align: left;
+}
+.url input[type="text"] {
+	width: 98%;
+}
+table .cacheable, table .user_level, table .users {
+	width: 120px;
+	text-align: left;
+}
+
+table .usergroups {
+    width: 180px;
+    text-align: left;
+}
+
+.keywords input,
+.description input {
+	width: 80%;
+}
+
+

@@ -1,0 +1,166 @@
+<div class="ProjectType">
+	<fieldset>
+		<legend>Please select the project type</legend>
+<? echo ( 
+    require openprint::ProjectTypeCategory;
+    my @ProjectTypeCategories = openprint::ProjectTypeCategory->find(order=>'sort,lower(name)');
+    my $html = '<div id="ProjectTypes">';
+    foreach my $ProjectTypeCategory ( @ProjectTypeCategories ) {
+        my @ProjectTypes = openprint::ProjectType->find(category_id=>$$ProjectTypeCategory{id}, order=>'sorting,lower(name)');
+        next if ! @ProjectTypes;
+
+        $html .= sprintf('<div class="Category"><h3>%s</h3><ul>', $ProjectTypeCategory->name() );
+		$html .= radio( 'rdbProjectType', 
+					[ map { $_->name(), htmlize( $_->description() ) } @ProjectTypes ],
+					$$variable{Project}->Type()->name(),
+					{ 
+						onclick=>q`project_type_alert(f1, this);calc('f1');`, 
+						container=>['<li>','</li>'],
+					} );
+		$html .= '</ul></div>';
+    } # end foreach Category
+    $html .= "</div>\n";
+    return $html;
+) ?>
+</fieldset>
+</div>
+
+<fieldset>
+	<legend>What quantities would you like to calculate pricing for?</legend>
+	<ul>
+		<? echo ( join("\n", 
+			map { ( qq`<li><label for="Quantity$_">Quantity $_</label>`, input( name=>'quantity'.$_, id=>'quantity'.$_, value=>$$variable{Project}->quantity($_), type=>'cardinal', max=>2147483647 ), '</li>' ) } ( 1 .. 3 ) 
+		); 
+		) ?>
+	</ul>
+</fieldset>
+<? eval ( 
+	@{$$variable{Modes}} = ();
+	push @{$$variable{Modes}}, 'Easy' if $config{EasyMode};
+	#push @{$$variable{Modes}}, 'Simple' if $config{SimpleMode};
+	push @{$$variable{Modes}}, 'Detailed' if $config{DetailedMode};
+) ?>
+<? if ( @{$$variable{Modes}} > 1 ) ?>
+	<fieldset>
+		<legend>How would you like to create your project?</legend>
+		<ul>
+	<? echo ( 
+		my $html;
+		foreach my $mode ( @{$$variable{Modes}} ) {
+			my $detailedSpecifications;
+			if($mode eq 'Detailed') {
+				$detailedSpecifications = q{onclick="$('step2Questions').show();"};
+			} else {
+				$detailedSpecifications = q{onclick="$('step2Questions').hide();"};
+			} # end if
+			$html .= qq{<li><input type="radio" id="rdbMode$mode" name="rdbMode" value="$mode"} . checked($$variable{rdbMode} eq $mode) .' '. $detailedSpecifications . ' />';
+			$html .= qq{<label class="radio" for="rdbMode$mode">} . writeTip($mode.' Specifications') . '</label></li>';
+		} # end foreach
+		return $html;
+	) ?>
+		</ul>
+	</fieldset>
+<? else ( @{$$variable{Modes}} > 1 ) ?>
+	<? echo ( 
+		$$variable{rdbMode} = $$variable{Modes}[0] if @{$$variable{Modes}};
+		$$variable{rdbMode} = 'Detailed' if ! $$variable{rdbMode};
+		return '<input type="hidden" name="rdbMode" value="' . $$variable{rdbMode} . '" />';
+	) ?>
+<? endif ( @{$$variable{Modes}} > 1 ) ?>
+<!-- Step 2 questions -->
+<div id="step2Questions" <? echo ( 'style="display:none;"' if $$variable{rdbMode} ne 'Detailed' ) ?>>
+
+<?echo(
+my $html = '';
+foreach my $category ( openprint::ServiceType_Category->find(order=>'sorting,lower(name)')) {
+  next if $category->name() eq 'Packaging';
+  next if $category->name() eq 'Shipping';
+
+  my @service_types = openprint::ServiceType->find( category_id=>$category->id(), create_visible=>1, order=>'sorting,lower(description)');
+  next if ! @service_types;
+  $html .= '<fieldset><legend>What '.lc $category->name().' services are required for the project?</legend><ul>';
+  foreach my $ServiceType (@service_types) {
+		$html .= sprintf('<li><input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %2$s /> <label for="chkServices%1$s">%3$s</label></li>', 
+				$ServiceType->name(),
+				(sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ? 'checked="checked"' : ''),
+				writeTip( $ServiceType->description() ),
+				);
+			} # end foreach Service Type
+	$html .= '</ul></fieldset>';
+} # end foreach cateoryg
+			return $html;
+		) ?>
+</div>
+<!-- End of Step 2 questions -->
+
+<? echo ( 
+	my $html = '';
+	my @ServiceTypes = openprint::ServiceType->find('category'=>'Packaging','create_visible'=>1,'order'=>'sorting,lower(description)');
+	if ( @ServiceTypes ) {
+		$html .= '<fieldset><legend>How would you like your project packaged?</legend><ul>';
+
+		foreach my $ServiceType ( @ServiceTypes ) {
+			$html .= sprintf(q`
+				<li>
+					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %3$s />
+					<label for="chkServices%1$s">%2$s</label>
+				</li>
+			`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
+		} # end foreach
+		$html .= '</ul></fieldset>';
+	} # end if
+	return $html;
+) ?>
+
+<? echo ( 
+	my $html = '';
+	my @ServiceTypes = openprint::ServiceType->find(category=>'Shipping',create_visible=>1,order=>'sorting,lower(description)');
+
+	if ( @ServiceTypes ) {
+		$html .= '<fieldset><legend>Please select your delivery method</legend><ul>';
+
+		foreach my $ServiceType ( @ServiceTypes ) {
+			$html .= sprintf(q`
+				<li>
+					<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" on_click_this="service_onclick" %3$s />
+					<label for="chkServices%1$s">%2$s</label>
+				</li>
+			`, $ServiceType->name(), writeTip( $ServiceType->description() ), checked( sets::isin( $ServiceType->name(), $$variable{SelectedServices} ) ) );
+		} # end foreach
+		$html .= '</ul></fieldset>';
+	} # end if
+	return $html;
+) ?>
+<fieldset>
+<? eval ( 
+	@{$$variable{design_options}} = ( 'ElectronicFile', 'Electronic File' );
+	if ( openprint::ServiceType->find('name'=>'FilmStripping') ) {
+		push @{$$variable{design_options}}, 'FinalFilm', 'Final Film';
+	} # end if
+) ?>
+	<ul>
+	<? if ( @{$$variable{design_options}} > 2 ) ?>
+		<li class="design" id="Design" <? echo ( sets::isin('NoPrinting', $$variable{SelectedServices} ) ? 'style="display:none;"' : '' ) ?>><label>If you are providing your own design, please specify the supplied format.</label>
+			<select name="ddmDesign" size="1" onchange="ddmDesign_onChange(f1);">
+	<? echo ( make_drop_down( $$variable{design_options}, $$variable{ddmDesign} ); ) ?>
+			</select>
+		</li>
+	<? else ( @{$$variable{design_options}} > 2 ) ?>
+		<input type="hidden" name="ddmDesign" value="ElectronicFile" />
+	<? endif ( @{$$variable{design_options}} > 2 ) ?>
+		<li class="reference"> 
+			<label>Please provide a reference</label>
+			<textarea id="reference" name="reference" rows="<?echo(count_lines(unhtmlize($$variable{Project}->reference()));)?>" onkeyup="textarea_resize( this );"><? echo ( unhtmlize($$variable{Project}->reference()) ) ?></textarea>
+		</li>
+		<li class="comments">
+			<label>Additional comments or instructions</label>
+			<textarea id="comments" name="comments" rows="<?echo(count_lines(unhtmlize($$variable{Project}->comments()));)?>" onkeyup="textarea_resize( this );"><? echo ( unhtmlize($$variable{Project}->comments()); )?></textarea>
+		</li>
+	</ul>
+</fieldset>
+<? echo (
+  if ( sets::isin( $session{user_type}, [ 'E', 'A' ] ) ) {
+    return include('_reprint_options.html');
+	}
+	return;
+)?>

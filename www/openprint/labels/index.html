@@ -1,0 +1,54 @@
+<style>
+	@media print {
+		input {
+			border: none;
+		}
+		textarea {
+			border: none;
+			overflow: auto;
+		}
+		.titleCSS{
+display: none;
+		}
+		.contentCSS {
+margin: 5px;
+border: none;
+top: 0px;
+left: 0px;
+		}
+
+		body {
+margin: 0px;
+		font-size: 9pt;
+		}
+
+		.menubar {
+		}
+
+		.menu {
+display: none;
+		}
+
+		.Header {
+display: none;
+		}
+
+	}
+	textarea{
+		overflow: auto;
+	}
+</style>
+<form name="f1">
+<fieldset class="filter"><legend>Select Label</legend>
+	<p>
+		<label>Label</label>
+			<select name="type_name" size="1" onchange="LoadContent('Label','/labels/_'+this.options[this.selectedIndex].value+'.html');">
+				<option value=""> select </option>
+				<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->name() } openprint::LabelType->find('order'=>'lower(name)') ] ); ) ?>
+			</select>
+	</p>
+</fieldset>
+</form>
+<br/><br/>
+<div id="Label">
+</div>

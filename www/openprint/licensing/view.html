@@ -1,0 +1,100 @@
+<script>
+	function check_inputs( form ) {
+		return true;
+	} //  end function check_inputs
+	function del_allocation( host_id ) {
+		new Ajax.Updater( 'Allocations', '_license_allocations.html', { parameters: { license_id: $('license_id').value, host_id: host_id, action: 'delete' } } );
+	} // end function del_allocation
+</script>
+<div class="License"><div class="Edit">
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="post" action="/licensing/license.html" enctype="multipart/form-data">
+	<input type="hidden" id="license_id" name="license_id" value="<? echo ( $$variable{License}->id() ) ?>" />
+	<input type="hidden" id="action" name="action" />
+	<fieldset><legend>License <? echo ( $$variable{License}->id() ) ?></legend>
+		<div class="content leftColumn">
+			<ul>
+        <li>
+          <label>Owner</label>
+<? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+				<select id="company_id" name="company_id" onchange="stop_filter_companies();load_projects();">
+					<option value="">select</option>
+          <? echo ( make_drop_down( openprint::Company->dropdown(),
+          ($$variable{License}->company_id() ? $$variable{License}->company_id() : $session{company_id}),
+          { encode=>1} ) )?>
+				</select>
+<? else ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+<?echo( $$variable{License}->company_id() ? $$variable{License}->Company()->link_to() : $openprint::Company->link_to())?>
+<? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+        </li>
+        <li><label>features</label>
+<?echo(
+  my $html = '<ul>';
+  my %features = (
+                  cameras => { label=>'Number of Cameras', type=>'cardinal', min=>1 },
+                  motion_detection => { label=>'Motion Detection', type=>'boolean' },
+                  object_detection => { label=>'Object Detection', type=>'boolean' },
+                  facial_recognition => { label=>'Facial Recognition', type=> 'boolean' },
+                  alpr              => { label=>'License Plate Recognition', type=> 'boolean' },
+  );
+  my $license_features = $$variable{License}->features();
+
+  foreach my $feature_key (sort { $a cmp $b } keys %features) {
+    my $feature = $features{$feature_key};
+    $html .= '<li><label>'.$$feature{label}.'</label>
+';
+    if ($$feature{type} eq 'cardinal') {
+      $html .= $$license_features{$feature_key};
+    } elsif ($$feature{type} eq 'boolean') {
+      $html .= $$license_features{$feature_key} ? 'Yes' : 'No',
+    } elsif ($$feature{type} eq 'toggle') {
+      $html .= $$license_features{$feature_key} ? 'Enabled' : 'Disabled',
+    } else {
+      $log->error('Unsupported feature type');
+    }
+    $html .= '</li>';
+  } # end foreach feature
+  return $html.'</ul>';
+)?>
+        </li>
+				<li>
+					<label>Serial/Key</label>
+				  <? echo ( $$variable{License}->hash() ) ?>
+				</li>
+				<li class="max_uses">
+					<label>Max Uses(empty is unlimited)</label>
+					<? echo ( $$variable{License}->max_uses() ) ?>
+				</li>
+				<li class="software_id"><label<Software</label>
+          <? echo ( $$variable{License}->Software()->name() ) ?>
+				</li>
+				<li class="comment"><label>Comment</label>
+					<? echo ( $$variable{License}->comment() ) ?>
+				</li>
+        <?if($$variable{License}->id())?>
+				<li class="created_on"><label>Created On</label><? echo ( format_datetime( $$variable{License}->created_on() ) ) ?></li>
+				<li class="updated_on"><label>Updated On</label><? echo ( format_datetime( $$variable{License}->created_on() ) ) ?></li>
+				<li class="purchased_on"><label>Purchased On</label><? echo ( format_date($$variable{License}->purchased_on()) ) ?></li>
+        <?endif($$variable{License}->id())?>
+        <li class="expires_on"><label>Expires On</label><? echo ( format_date($$variable{License}->expires_on()) ) ?></li>
+				<li class="buttons">
+					<? echo ( 
+						my $html;
+						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
+						if ( $$variable{License}->id() ) {
+							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{License}->id();
+						} # end if
+						return $html;
+					) ?>
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+	<fieldset><legend>Allocated To</legend>
+    <div id="Allocations"><?include(_license_allocations.html)?></div>
+	</fieldset>
+  <? echo ( $$variable{License}->id() ? include_logs( $$variable{License}) : ''; ) ?>
+</form>
+</div></div>

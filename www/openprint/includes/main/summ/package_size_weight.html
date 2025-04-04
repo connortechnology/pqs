@@ -1,0 +1,39 @@
+<p>
+	<label><?ServiceTypeName?> Weight</label>
+	<? echo ( 
+		my $html;
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= '<span class="value">';
+			my $g = $$variable{'txtPackageWeight'.$qty_index}*453.59237;
+			if ( $g > 1000 ) {
+				$html .= sprintf( '%.0flbs (%.0fkg)', $$variable{'txtPackageWeight'.$qty_index}, $g/1000 );
+			} else {
+			$html .= sprintf( '%.0flbs (%.0fg)', $$variable{'txtPackageWeight'.$qty_index}, $g );
+			} # end nif
+			$html .= '</span>';
+		} # end foreach
+		return $html;
+		) ?>
+</p>
+<p>
+    <label>Maximum per</label>
+	<? echo (
+		my $html;
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= sprintf('<span class="value">%s</span>', $$variable{"txtItemsPerPackage$qty_index"} );
+		} # end foreach qty_index
+		return $html;
+	) ?>
+</p>
+<? if ( $$variable{'txtPackageWidth'} and $$variable{'txtPackageHeight'} and $$variable{'txtPackageDepth'} ) ?>
+<p>
+    <label><?ServiceTypeName?> dimensions</label>
+   <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+    <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+    <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
+    <span class="value"><?txtPackageWidth?> x <?txtPackageHeight?> x <?txtPackageDepth?></span>
+    <? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
+    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+    <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+<? endif ( $$variable{'txtPackageWidth'} and $$variable{'txtPackageHeight'} and $$variable{'txtPackageDepth'} ) ?>

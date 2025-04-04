@@ -1,0 +1,33 @@
+<?if($$variable{User}{id})?>
+<table>
+	<th class="Type">Type</th>
+	<th class="Company">Company</th>
+	<th class="value">Yes/No</th>
+	<th class="buttons"><?echo ( button('addnotification', { onclick=>qq`popup_window('/account/_notification_popup.html', {user_id: "$$variable{User}{id}" }, { width: 600 });`, text=>'+', title=>'Add' } ); ) ?></th>
+</tr>
+<? echo ( 
+	my $html;
+	my @Notification_Types = openprint::User_Notification_Type->find( order=>'sort,lower(name)' );
+	my %Notifications;
+	my @Notifications = openprint::User_Notification->find( user_id => $$variable{User}->id() ) if $$variable{User}->id();
+	foreach my $N ( @Notifications ) {
+		push @{$Notifications{$$N{type_id}}}, $N;
+	}
+
+	foreach my $Type ( @Notification_Types ) {
+		if ( $Notifications{$$Type{id}} ) {
+			foreach my $N ( @{$Notifications{$$Type{id}}} ) {
+				$html .= "<tr id=\"notification_$$N{id}\"><td class=\"Type\">$$Type{name}</td>";
+				$html .= '<td class="Company">'.( $N->company_id() ? $N->Company()->name() : 'All' ).'</td>';
+				$html .= '<td class="value">'.input( type=>'text', name=>'notification_'.$N->id(), value=>$$N{value} ).'</td>';
+				$html .= '<td class="buttons">'.button('delete_notification'.$$N{id}, { onclick=>"new Ajax.Updater( 'Notifications', '/account/_notifications.html', { parameters: { id: $$N{id}, user_id: $$variable{User}{id}, action: 'delete' } } );", text=>'-', title=>'Delete' } ).'</td>';
+				$html .= '</tr>';
+			} # end foreach N
+		} else {
+			$html .= qq`<tr><td class="Type">$$Type{name}</td><td class="Company" colspan="3"></td></tr>`;
+		} # end if
+	} # end foreach Type
+	return $html;
+) ?>
+</table>
+<?endif($$variable{User}{id})?>

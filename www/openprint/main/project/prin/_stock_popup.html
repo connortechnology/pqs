@@ -1,0 +1,68 @@
+<form name="f2" id="f2" action="">
+  <input type="hidden" name="callback" value="StockPopup_onchange"/>
+	<input type="hidden" name="ProjectIndex" value="<?echo($param{ProjectIndex})?>"/>
+  <fieldset class="filters"><legend>Filters</legend>
+    <ul>
+<? echo (
+  my $html;
+  my @types = @{$$variable{PaperTypes}} if $$variable{PaperTypes};
+
+  my @user_types = ('');
+  push @user_types, 'C' if $session{user_id};
+  push @user_types, 'E' if $session{user_type} eq 'E';
+  push @user_types, ('A','E') if $session{user_type} eq 'A';
+
+  my $Project = new openprint::Project( $param{ProjectIndex} );
+  my $Type = $param{projecttype_id} ? new openprint::ProjectType( $param{projecttype_id} ) : $Project->Type();
+
+  my %find = (
+      'project_type_id any'	=>	$Type->id(),
+      'supplied is null or ='	=>	$$variable{'rdbSuppliedStock'.$$variable{Signature}} eq 'Y' ? 1 : 0,
+      ( @types ? (type					=>	\@types) : ()),
+      'user_type null or in'=>	\@user_types,
+      'available_to_order is null or >'	=>	0,
+  );
+
+  my @StockOptions = split( ',', $config{$Type->name().'StockOptions'} );
+  @StockOptions = split( ',', $config{StockOptions} ) if ! @StockOptions;
+  @StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
+
+  my @Papers = @{$$variable{Paper}} = openprint::Paper->find( %find );
+
+  foreach my $option ( @StockOptions ) {
+    next if ! $option;
+    my $lc_option = lc $option;
+    my %cache = map { $option.$_->name(), $_ } ('openprint::Stock'.$option)->find() if $option ne 'Size';
+
+    my @options = map { $_, $_ } ( sort ( sets::union( map { $_->$lc_option() ? $_->$lc_option() : () } @Papers ) ) );
+    if ( ! @options ) {
+      $log->debug("No paper options for $lc_option %find");
+    } # end if
+    if ( @options == 2 ) {
+      $$variable{'ddmStock'.$option.$$variable{Signature}} = $options[0];
+    } else {
+      $$variable{'ddmStock'.$option.$$variable{Signature}} = $param{"ddmStock$option"};
+    }
+
+    if ( $$variable{'ddmStock'.$option.$$variable{Signature}} ) {
+#and $cache{$option.$$variable{'ddmStock'.$option.$$variable{Signature}}} ) {
+      @Papers = map { $_->$lc_option() eq $$variable{'ddmStock'.$option.$$variable{Signature}} ? $_ : () } @Papers;
+    } # end if
+    $html .= sprintf(q`<li><label>Stock %1$s</label>
+        <select name="ddmStock%1$s%2$s" size="1" onchange="Stock_onchange( this, '%2$s' );">
+        <option value=""> Please select </option>
+        %3$s
+        </select>
+      </li>
+      `, $option, 'List',
+      make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{Signature}} ),
+    );
+  } # end foreach option
+  return $html;
+) ?>
+      </ul>
+  </fieldset>
+  <fieldset><legend>Stocks</legend>
+    <div id="StockPopupResults"><?include(_stocks.html)?></div>
+  </fieldset>
+</form>

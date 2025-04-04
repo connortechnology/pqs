@@ -1,0 +1,15 @@
+<? echo (
+	if ( $$variable{Shift} ) {
+		my $filters;
+		if ( $$variable{Shift}->name() eq 'Pending' ) {
+			$filters = {'Status'=>['','In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete','Pending Deposit']};
+		} elsif ( $$variable{Shift}->name() eq 'Approved' ) {
+			$filters = {'Status'=>['Approved','Shipped','Picked Up']};
+		} # end if
+		return $$variable{Shift}->get_lis($filters);
+	} # end if
+) ?>
+<script type="text/javascript">
+	setup_drops();
+	setup_dates();
+</script>

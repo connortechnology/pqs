@@ -1,0 +1,14 @@
+<div id="CurrencySelection">
+  <form name="SelectCurrency" action="<? echo ( misc::get_url( $$variable{uri}, \%param, { exclude=>'select_currency_id'} ); ) ?>" method="post">
+  <ul>
+    <li><label>Currency</label>
+    <select name="select_currency_id" onchange="this.form.submit();">
+      <option value="">select one</option>
+      <? echo (
+              make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $openprint::Currency->id());
+              ) ?>
+    </select>
+    </li>
+  </ul>
+  </form>
+</div>

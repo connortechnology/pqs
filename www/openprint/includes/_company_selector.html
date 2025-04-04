@@ -1,0 +1,46 @@
+<?if($session{user_type} eq 'E' or $session{user_type} eq 'A')?>
+<div id="CompanySelection">
+	<form name="SelectCompany" action="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>'ddmCompany' } ); ) ?>" method="post">
+		<ul>
+			<li><label>Company</label>
+				<input name="CompanyFilter" type="text" class="filter" onkeyup="filterDDM(this, this.form.ddmCompany);"/>
+				<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') this.form.btnFunction.value='SelectCompany';this.form.submit();">
+				<option value="">Select a Company</option>
+          <? echo (
+   my $parser = 'DateTime::Format::Pg';
+    my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 );
+
+    my $datetime = DateTime->new( time_zone => $openprint::TZ, ( year => $year, month=>$month, day=>$day, ));
+
+    my @Entries = openprint::Log->find(
+      user_id=>$session{user_id},
+      action=>'Switch Company',
+      order=>'date_time DESC',
+      'date_time >=' => $parser->format_datetime( $datetime ),
+      );
+    my %companies;
+    $companies{$openprint::Company->id()} = $openprint::Company if $openprint::Company->id();
+    $companies{$openprint::User->company_id()} = $openprint::User->Company() if $openprint::User->company_id();
+
+    if ( @Entries ) {
+      my @company_ids = map { $_->company_id() ? $_->company_id() : () } @Entries;
+      if (@company_ids) {
+        my @Companies = openprint::Company->find( id=>\@company_ids);
+
+        foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {
+          next if $companies{$$Log{company_id}};
+          next if ! $Log->Company()->can_become();
+          $companies{$$Log{company_id}} = $Log->company_id();
+        } # end foreach
+      } # end if company_ids
+    }
+    return make_drop_down(openprint::Company->dropdown(id=>[keys %companies]), $session{company_id} ) if %companies;
+    ) ?>
+				</select>
+			</li>
+		</ul>
+		<input type="hidden" name="btnFunction" value="" />
+	</form>
+</div>
+<?endif($session{user_type} eq 'E' or $session{user_type} eq 'A')?>
+

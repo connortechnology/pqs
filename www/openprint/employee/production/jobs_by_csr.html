@@ -1,0 +1,221 @@
+<script type="text/javascript">
+	function complete( e, ul_id, project_id ) {
+		if (!e) e = window.event;
+
+		//IE9 & Other Browsers
+		if (e.stopPropagation) {
+			e.stopPropagation();
+		} else {
+			//IE8 and Lower
+			e.cancelBubble = true;
+		}
+		new Ajax.Updater( ul_id, '_jobs_by_csr_ul.html', { 
+			parameters: { action: 'complete', project_id: project_id }
+		 } );
+		return false;
+	}
+	function calc( ) {
+		var div = $('Results');
+		div.innerHTML = 'Loading...please wait...';
+		new Ajax.Updater( div, '_jobs_by_csr.html', { parameters: $('f1').serialize() } );
+	}
+	tinyMCE.init( {
+            mode: "none",
+            plugins: "paste",
+            theme : "advanced",
+            theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,bullist,numlist,outdent,indent,cleanup,html",
+            theme_advanced_buttons2 : '',
+            theme_advanced_buttons3 : '',
+        });
+	//var current_editor;
+	//function tinymce_on( id ) {
+		//if ( current_editor ) {
+			//tinymce.execCommand('mceToggleEditor',false,current_editor);
+		//} // end if
+		//current_editor=id;
+		//tinymce.execCommand('mceToggleEditor', true, id );
+	//} // end function tinymce_on
+
+	function job_popup( project_id ) {
+		popup_window( '/employee/production/_jobs_by_csr_popup.html', 'project_id='+project_id, {width:575, height:525,closeCallback: job_popup_close} );
+	} // end function job_popup
+	function job_popup_close() {
+		tinymce.EditorManager.execCommand('mceRemoveControl',true,'production_comments');
+		//current_editor=null;
+		return true;
+	} // end function job_popup_close
+
+	var dropfunction = function(el){
+		new Ajax.Request( '_jobs_by_csr_ul.html', { parameters: { csr_id: el.id, projects: Sortable.serialize(el) }, evalScripts: true } );
+	}
+
+    var job_popup_options = {
+		mode: "textareas",
+		editor_selector : "mce",
+        plugins: "paste",
+        theme : "simple",
+    };
+
+</script>
+<? eval (
+	my ( $starttime, $endtime );
+	if ( $session{'/employee/production/jobs_by_csr.html?Equipment'} ) {
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(',', $session{'/employee/production/jobs_by_csr.html?Equipment'} ) ).')' );
+	} else {
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
+	} # end if
+	if ( $endtime ) {
+		my $endtime_seconds = Date::Parse::str2time( $endtime );
+		if ( $endtime_seconds < time ) {
+			$endtime_seconds = time;
+			$endtime = Date::Format::time2str( '%Y-%m-%d', $endtime_seconds );
+		}
+	} # end if
+	if ( ! $session{'/employee/production/jobs_by_csr.html?schedule_start_year'} ) {
+		@session{
+				'/employee/production/jobs_by_csr.html?schedule_start_year',
+				'/employee/production/jobs_by_csr.html?schedule_start_month',
+				'/employee/production/jobs_by_csr.html?schedule_start_day'}
+				= $starttime ? split('-', $starttime ) : Date::Calc::Today();
+	} # end if
+
+	if ( ! $session{'/employee/production/jobs_by_csr.html?schedule_end_year'} ) {
+		@session{
+				'/employee/production/jobs_by_csr.html?schedule_end_year',
+				'/employee/production/jobs_by_csr.html?schedule_end_month',
+				'/employee/production/jobs_by_csr.html?schedule_end_day'}
+				= $endtime ? split('-', $endtime ) : Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
+	} # end if
+) ?>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<form id="f1" name="f1" method="post" action="/employee/production/jobs_by_csr.html">
+	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" name="ProjectIndex" />
+	<input type="hidden" name="ServiceIndex" />
+	<input type="hidden" name="schedule_id" />
+	<fieldset class="filters unprintable"><legend>Display Criteria</legend>
+		<div class="status">
+		<ul>
+			<li><label>Status</label>
+<? echo (
+        my @statuses = @{$$variable{statuses}} = ( 'In Prepress', 'Proofs Out', 'Waiting For Customer Approval', 'Waiting For QA Approval', 'Approved','Printed' );
+		if ( ! $session{'/employee/production/jobs_by_csr.html?status'} ) {
+			$session{'/employee/production/jobs_by_csr.html?status'} = join(',',@statuses);
+		} # end if
+
+		return ssi::select( 
+			[ map { $_, $_ } @statuses ],
+			[ split(',', $session{'/employee/production/jobs_by_csr.html?status'} ) ], 
+			{ size=>scalar @statuses, multiple=>1, onchange=>'calc();', name=>'status' },
+			);
+) ?>
+</li>
+			<li><label>Show Feedback</label>
+			<? echo ( ssi::radio( 'show_feedback', [ 1, 'Yes', 0, 'No', ], $session{'/employee/production/jobs_by_csr.html?show_feedback'}, { onclick=>'calc();', } ); ) ?>
+			</li>
+			<li><label>Customer</label>
+			<? echo ( ssi::select( openprint::Company->dropdown(), [ $session{'/employee/production/jobs_by_csr.html?company_id'} ], { 
+						id			=>	'company_id',
+						name		=>	'company_id',
+						onchange	=>	'calc();',
+						prepend		=>	[ '', 'select' ],
+						} ); ) ?>
+			</li>
+			<li><label>Docket</label>
+				<? echo ( input( type=>'cardinal', name=>'docket', value=>$session{'/employee/production/jobs_by_csr.html?docket'}, pattern=>'[<0-9>]*', filter=>'input_filter(this,/[^\d<>]/g);' ); ) ?>
+			</li>
+	</ul>
+</div>
+<!--
+		<div class="presses">
+		<ul>
+			<li>
+				<label>Category:</label>
+				<select name="category_id" id="category_id" onchange="calc();">
+					<option value="">All</option>
+				<? echo (
+	return ssi::make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/jobs_by_csr.html?category_id'} );
+	) ?>
+				</select>
+</li>
+<li><label>Equipment:</label>
+<? echo ( 
+	@{$$variable{'Equipment'}} = ();
+	my @presses = openprint::Equipment->find('category_id'=>$session{'/employee/production/jobs_by_csr.html?category_id'},'useinscheduling'=>1,'order'=>'sorting,lower(strname)');
+
+	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/jobs_by_csr.html?Equipment'} ) );
+	if ( ! @selected_equipment ) {
+		@selected_equipment = map { $_->id() } @presses;
+		$session{'/employee/production/jobs_by_csr.html?Equipment'} = join(',', @selected_equipment );
+	}
+
+	foreach (@presses) {
+		push @{$$variable{'Equipment'}}, $_ if sets::isin( $_->id(), \@selected_equipment );
+	} # end foreach press
+
+	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'" onchange="calc()";>';
+	$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], \@selected_equipment );
+	return $html;
+) ?>
+			</select>
+		</li></ul>
+		</div>
+-->
+		<div class="csrs">
+			<ul>
+				<li><label>CSR</label>
+<? echo ( 
+	my @Users = @{$$variable{CSRS}} = openprint::User->find('usergroup any'=>'Sales', company_id=>$config{owner_id});
+	$session{'/employee/production/jobs_by_csr.html?salesrep_id'} = join(',', map { $_->id() } @Users ) if ! $session{'/employee/production/jobs_by_csr.html?salesrep_id'};
+	
+	return ssi::select( 
+		[ map {$_->id(),$_->name()} @Users ], 
+		[ split(',', $session{'/employee/production/jobs_by_csr.html?salesrep_id'} ) ], {
+		multiple	=>1, name=>'salesrep_id', size=>scalar @Users,
+		onchange	=>	q`new Ajax.Updater('company_id', '/includes/_company_ddm.html', { parameters: { salesrep_id: get_value( this ), selected_id: get_ddm_value($('company_id')) } } );calc();`,
+		} );
+) ?>
+				</li>
+			</ul>
+		</div>
+<!--
+		<div class="dates">
+		<ul>
+			<li>
+				<label>Date Range:</label>
+					<? echo ( 
+						date_select_session( '/employee/production/jobs_by_csr.html', 'schedule_start', { with_today=>1, onchange=>'calc();' } );
+					) ?>
+				&nbsp;to&nbsp;
+					<? echo ( 
+						date_select_session( '/employee/production/jobs_by_csr.html', 'schedule_end', { with_today=>1, onchange=>'calc();' } );
+					) ?>
+			</li>
+			</ul>
+		</div>
+-->
+		<div class="legend">
+			<ul><li><label>Legend</label>
+				<ul>
+					<li class="multipress">Has forms on other presses</li>
+					<li class="inprepress">In Prepress</li>
+					<li class="complete">Is complete</li>
+					<li class="regular">Regular</li>
+					<li class="rush">Rush</li>
+					<li class="tentative">Tentative</li>
+					<li class="approval">Waiting for client approval</li>
+				</ul>
+			</li>
+			</ul>
+		</div>
+		<p class="buttons">
+			<? echo ( join("\n",
+					button( 'ShowResults', { onclick=>'calc();', text=>'Show Results' } ),
+					button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ), 
+			); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results">
+	<? echo ( include('/employee/production/_jobs_by_csr.html'); ) ?>
+	</div>
+</form>

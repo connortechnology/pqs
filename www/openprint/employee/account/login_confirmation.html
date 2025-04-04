@@ -1,0 +1,22 @@
+<?include('/includes/error_reporting.html')?>
+<? if ( $session{user_id} and $session{user_type} ) ?>
+<?include('/includes/_greeting.html') ?>
+<? if ( $session{Destination} ) ?>
+<br/>
+<br/>
+<b><? echo ( $session{Destination} ) ?></b><br/>
+<? eval ( delete $session{Destination} ) ?>
+<? endif ( $session{Destination} ) ?>
+<br/>
+<b>Has any of your account information changed?</b><br/>
+To change your password or modify your account, please click <a href="/employee/account/profile.html">here</a>. <br/>
+<br/>
+<?include('/employee/index.html') ?>
+<? else ( $session{user_id} and $session{user_type} ) ?>
+<p class="error"><b><?error?></b><br/>
+  <br/>
+  <?details?><br/>
+</p>
+<?include('/employee/account/login.html') ?>
+<? endif ( $session{user_id} and $session{user_type} ) ?>
+

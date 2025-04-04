@@ -1,0 +1,9 @@
+<? echo (
+	$param{docket} = openprint::Order->transform( docket=>$param{docket} );
+	my @Orders = openprint::Order->find(docket=>$param{docket}) if $param{docket};
+	if ( @Orders == 1 ) {
+		return "window.location='/employee/accounting/details.html?order_id=$Orders[0]{id}';";
+	} else {
+		return "load_results();";
+	}
+) ?>

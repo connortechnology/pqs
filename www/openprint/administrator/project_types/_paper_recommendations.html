@@ -1,0 +1,61 @@
+<table class="List">
+	<thead>
+    <tr><th>Paper</th><th class="checkbox"><input type="checkbox" on_click_this="select_all_this" name="paper_id"/></th></tr>
+	</thead>
+<? echo (
+	my $html;
+
+	$$variable{ProjectType} = new openprint::ProjectType( $param{projecttype_id} ) if ! $$variable{ProjectType};
+
+	openprint::StockBrand->find();	
+	openprint::StockFinish->find();	
+	openprint::StockColour->find();	
+	openprint::StockWeight->find();	
+	my $uri = '/administrator/project_types/edit.html';
+
+	if ( $param{recommended} eq '1' or $param{recommended} eq '' ) {
+		my @recommended_papers = openprint::Paper->find( 
+			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+			'project_type_id any' => $$variable{ProjectType}->id(),
+			( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'brand_id', 'finish_id', 'colour_id', 'weight_id', 'group_id', 'material_id' ) ),
+			order	=>'brand,finish,colour,weight,width,height' );
+    my %prices = misc::make_hash_from_array(paper_id=>openprint::PaperPrice->find(paper_id=>[map { $$_{id} } @recommended_papers])) if @recommended_papers;
+
+		foreach my $Paper ( @recommended_papers ) {
+      next if ! exists $prices{$$Paper{id}};
+			$html .= '
+      <tr>
+        <td>'.$Paper->link_to().'</td>
+        <td class="checkbox">
+          <input type="hidden" name="paper_id'.$Paper->id().'" value="1" id="paper_id'.$Paper->id().'"/>
+          <input type="checkbox" name="paper_id" value="'.$Paper->id().'" checked="checked" on_click_this="paper_checkbox_clicked"/>
+        </td>
+      </tr>';
+
+		} # end foreach
+	} # end if recommended
+
+	if ( $param{recommended} eq '0' or $param{recommended} eq '' ) {
+		my @all_papers = openprint::Paper->find(
+			columns	=> '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+			'project_type_id not any' => $$variable{ProjectType}->id(),
+			( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'brand_id', 'finish_id', 'colour_id', 'weight_id', 'group_id', 'material_id' ) ),
+			order	=> 'brand,finish,colour,weight,width,height');
+
+    my %prices = misc::make_hash_from_array(paper_id=>openprint::PaperPrice->find(paper_id=>[map { $$_{id} } @all_papers])) if @all_papers;
+		foreach my $Paper ( @all_papers ) {
+      next if ! exists $prices{$$Paper{id}};
+			#next if $Paper->recommendations();
+			$html .= '
+      <tr>
+        <td>'.$Paper->link_to().'</td>
+        <td class="checkbox">
+          <input type="hidden" name="paper_id'.$Paper->id().'" value="0" id="paper_id'.$Paper->id().'"/>
+          <input type="checkbox" name="paper_id" value="'.$Paper->id().'" on_click_this="paper_checkbox_clicked"/>
+        </td>
+      </tr>';
+		} # end foreach
+	}
+	return $html;
+) ?>
+</table>

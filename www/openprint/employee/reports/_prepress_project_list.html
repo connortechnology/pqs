@@ -1,0 +1,87 @@
+<? eval (
+	my %sql;
+	if ( $param{StartDocket} and $param{EndDocket}) {
+		%sql = (
+			'docket >='	=>	$param{StartDocket},
+			'docket <='	=>	$param{EndDocket},
+			order	=>	'lngdocketnumber',
+		);
+		if (
+			( $session{user_type} ne 'A' )
+			and ! ( openprint::usergroup::is_user_in( ['Estimating', 'Prepress'], $session{user_id} ) )
+		   ) {
+			$sql{company_id} = [ map { $_->id() } openprint::Company->find(salesrep_id=>$session{user_id}) ];
+		} # end if
+		
+	} elsif ( $$variable{StartDocket} ) {
+		$sql{'docket like'} = $$variable{StartDocket}.'%';
+	} else {
+			%sql = (
+				date_filter( '/employee/reports/prepress_overview.html?takeover_on_end', 'take_over <=' ),
+				date_filter( '/employee/reports/prepress_overview.html?takeover_on_start', 'take_over >=' ),
+			);
+
+		$sql{company_id} = $param{company_id} if $param{company_id};
+		$sql{'order_id is null'} = 0;
+		$sql{order} = 'lngDocketnumber';
+	} # end if
+	@{$$variable{PROJECTS}} = openprint::Project->find(%sql);
+) ?>
+<? if ( @{$$variable{PROJECTS}} ) ?>
+	Please click on a <b>Project</b> to view details.<br>
+	<table class="List">
+		<tr> 
+			<th class="project_id">ID</th>
+			<th class="Date">Start Date</th>
+			<th class="Company">Company</th>
+			<th width="100" align="left">Flat</th>
+			<th width="100" align="left">Finished</th>
+			<th width="100" align="left">Runstyle</th>
+			<th width="50" align="left">Impo</th>
+			<th width="65" align="left">Colours</th>
+			<th width="105" align="left">Paper</th>
+			<th width="45" align="right">Press</th>
+		</tr>
+		<? echo (
+			my $html;
+			foreach my $Project ( @{$$variable{PROJECTS}} ) {
+				@$variable{'yy','mm','dd'} = $Project->created_on() =~ /(\d+)-(\d+)-(\d+)/;
+				$$variable{yy} %= 100;
+				$$variable{ID} = sprintf( '%.5d%.1s%.1s%.2d%.2d_%.6s_%.6s', $Project->docket(), $Project->Operator()->get('firstname','lastname'),@$variable{'mm','yy'}, $Project->Company()->name(), $Project->reference() );
+				my $services = $Project->services();
+				next if ! $$services{''}[0];
+				my $proj_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+				foreach my $signature_service_index ( $Project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+					my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+					my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
+					$html .= sprintf( q{<tr%17$s>
+						<td class="project_id"><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%3$s</a>&nbsp;</td>
+						<td class="Date"><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%4$s</a></td>
+						<td class="Company"><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%5$s</a></td>
+						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%8$s&quot; x %9$s&quot;</a></td>
+						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%6$s&quot; x %7$s&quot;</a></td>
+						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%10$s</a></td>
+						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%11$s out</a></td>
+						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%15$d/%16$d</a></td>
+						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%12$s&quot; x %13$s&quot;</a></td>
+						<td align="right"><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%14$s</a></td>
+						}, $Project->get('order_id','id'), $$variable{ID}, 
+						format_date( $Project->started_on() ), 
+						$Project->Company()->name(), 
+						@$proj_specs{'txtFinalWidth','txtFinalHeight'}, 
+						@$sig_specs{'txtWidth','txtHeight', 'ddmRunStyle'.$Project->ordered_quantity_index(),'txtImposition'.$Project->ordered_quantity_index(),
+						'StockWidth'.$Project->ordered_quantity_index(),'StockHeight'.$Project->ordered_quantity_index(),'UsePress'},
+						scalar @side_one_colours, scalar @side_two_colours,
+						$$variable{rowclass},
+					);
+					$html .= "</tr>\n";
+				} # end foreach signature_service_index
+				$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';
+			} # end while
+			return $html;
+		) ?>
+	</table>
+<? else ( @{$$variable{PROJECTS}} ) ?>
+There were no results matching your criteria.
+<? endif ( @{$$variable{PROJECTS}} ) ?>

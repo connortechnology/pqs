@@ -1,0 +1,27 @@
+<? echo (
+	my $html;
+	my %Relations;
+	foreach my $R ( 
+		openprint::User_Relationship->find('user_id1'=>$session{'user_id'} ),
+		openprint::User_Relationship->find('user_id2'=>$session{'user_id'} ),
+		 ) {
+		push @{$Relations{$$R{'type_id'}}}, $R;
+	} # end foreach R
+	if ( ! %Relations ) {
+		return 'No relationships';
+	} # end if
+	foreach my $Type ( openprint::User_Relationship_Type->find('order'=>'sort,lower(name)' ) ) {
+		next if ! $Relations{$$Type{'id'}};
+		
+		$html .= '<h1>'.$$Type{'name'}.'</h1>';
+		$html .= qq`<ul class="$$Type{name}">`;
+		foreach my $R ( @{$Relations{$$Type{'id'}}} ) {
+			$html .= '<li>';
+			$html .= $$R{'user_id1'} == $session{'user_id'} ? $R->User2()->html() : $R->User1()->html(); 
+			$html .= '<p class="buttons">';
+			$html .= '</p></li>';
+		} # end foreach R	
+		$html .= '</ul>';
+	} # end foreach
+	return $html;
+) ?>

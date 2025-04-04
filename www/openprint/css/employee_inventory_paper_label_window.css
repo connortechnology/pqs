@@ -1,0 +1,41 @@
+body {
+	background: none;
+	min-width: 0;
+	max-width: none;
+}
+	
+.Contents {
+}
+.StockDetails {
+	border: 1px solid black; padding: 0px 7px 0px 5px; height: 90px; margin-bottom: 2px;
+}
+.StockQuantity {
+	float: right;
+	width: 50%;
+	text-align: right;
+}
+.StockQuantity label {
+	float: left;
+}
+
+.Allocation {
+padding:0px 7px;
+	clear: both;
+}
+.Allocation img {
+	float: right;
+	margin-bottom: 7px;
+}
+.Allocation .docket {
+	clear: both;
+}
+.Allocation label {
+	font-weight: bold;
+	font-size: small;
+	float: left;
+}
+.Allocation .allocated {
+	font-size: 99pt;
+	text-align: center;
+	clear: both;
+}

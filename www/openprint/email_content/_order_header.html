@@ -1,0 +1,56 @@
+<div class="Header">
+	<div id="OrderInformation">
+	<fieldset><legend>Order Information</legend>
+		<div class="content"><ul>
+			<li><label>Supplier:</label><? echo ( $$variable{Order}->Supplier()->name() ) ?></li>
+			<li><label>P.O.</label>&nbsp;<? echo ( $$variable{'Order'}->po() ) ?></li>
+			<li><label>Order ID</label><? echo ( $$variable{'Order'}->id() ) ?></li>
+		<? if ( $$variable{'Order'}->docket() ) ?>
+			<li><label>Docket</label><? echo ( $$variable{'Order'}->docket(); ) ?></li>
+<? echo ( 
+	my @Invoices = $$variable{Order}->Invoices();
+	return '' if ! @Invoices;
+	my $html = '<li class="invoices"><label>Invoices</label>';
+
+    foreach my $OI ( @Invoices ) {
+        my $Invoice = $OI->Invoice();
+        $html .= $$Invoice{num} . ' on ' . format_date( $Invoice->created_on() );
+		$html .= '<br/>';
+    } # end foreach
+    return $html . '</li>';
+) ?>
+		<? endif ( $$variable{'Order'}->docket() ) ?>
+			<li><label>Created</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Order'}->created_on() ) ); ) ?></li>
+			<li><label>Status</label><? echo ( $$variable{'Order'}->status() ) ?></li>
+		</ul></div>
+	</fieldset>
+	</div><div id="BillingInformation">
+	<fieldset><legend>Billing Information</legend>
+		<div class="content"><ul>
+			<? if ( $$variable{'Order'}->company_name() ) ?>
+			<li><label>Company Name</label><? hecho ( $$variable{'Order'}->company_name() ) ?><br/></li>
+			<? endif ( $$variable{'Order'}->company_name() ) ?>
+<? if ( $$variable{'Order'}->address1() or $$variable{'Order'}->address2() ) ?>
+			<li><label>Address</label>
+			<? if ( $$variable{'Order'}->address1() ) ?><? hecho ( $$variable{'Order'}->address1() ) ?><br/><? endif ( $$variable{'Order'}->address1() ) ?>
+			<? if ( $$variable{'Order'}->address2() ) ?><? hecho ( $$variable{'Order'}->address2() ) ?><br/><? endif ( $$variable{'Order'}->address2() ) ?>
+			<? echo ( misc::build_city_prov_country($$variable{'Order'}->get('city','state','country') ); ) ?><br/>
+			<? if ( $$variable{'Order'}->postalcode() ) ?><? echo ( $$variable{'Order'}->postalcode() ) ?><br/><? endif ( $$variable{'Order'}->postalcode() ) ?>
+			</li>
+<? endif ( $$variable{'Order'}->address1() or $$variable{'Order'}->address2() ) ?>
+			<? if ( $$variable{'Order'}->firstname() or $$variable{'Order'}->lastname() ) ?>
+			<li><label>Name</label><? echo ( join(' ', $$variable{'Order'}->get('salutation','firstname','lastname') ); ) ?><br/></li>
+			<? endif ( $$variable{'Order'}->firstname() or $$variable{'Order'}->lastname() ) ?>
+			<? if ( $$variable{'Order'}->phone() ) ?>
+				<li><label>Phone</label>
+				<? echo ( $$variable{'Order'}->phone() ) ?><? if ( $$variable{'Order'}->extension() ) ?>x<? echo ( $$variable{'Order'}->extension() ) ?><? endif ( $$variable{'Order'}->extension() ) ?><br/>
+				</li>
+			<? endif ( $$variable{'Order'}->phone() ) ?>
+			<? if ( $$variable{'Order'}->fax() ) ?><li><label>Fax</label><? echo ( $$variable{'Order'}->fax() ) ?><br/></li><? endif ( $$variable{'Order'}->fax() ) ?>
+<? if ( $$variable{'Order'}->email() ) ?>
+			<li><label>Email</label><? echo ( $$variable{'Order'}->email() ) ?><br/></li>
+<? endif ( $$variable{'Order'}->email() ) ?>
+		</ul></div>
+	</fieldset>
+	</div>
+</div><!--OrderHeader-->

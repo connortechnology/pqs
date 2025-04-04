@@ -1,0 +1,142 @@
+<?include(/includes/error_reporting.html)?>
+<? eval (
+	my $uri = '/employee/inventory/allocations.html';
+
+	if ( $session{'/employee/inventory/allocations.html?Docket'} ) {
+		@{$$variable{Allocations}} = openprint::PaperAllocation->find( 
+			docket	=>	$session{$uri.'?Docket'},
+			order	=>	'id',
+			);
+	} else {
+		$$variable{Allocations} = [ openprint::PaperAllocation->find( 
+			date_filter( $uri.'?created_on_end', 'created_on <=' ),
+			date_filter( $uri.'?created_on_start', 'created_on >=' ),
+			( $session{$uri.'?company_id'} ? ( company_id=>$session{$uri.'?company_id'} ) : () ),
+			( $session{$uri.'?salesrep_id'} ? ( company_id=>[ map { $$_{id} } openprint::Company->find(salesrep_id=>$session{$uri.'?salesrep_id'} ) ] ) : () ),
+			order		=>	'id',
+			) ];
+	} # end if
+) ?>
+<? if ( @{$$variable{Allocations}} ) ?>
+<form id="PaperAllocationResults" name="PaperAllocationResults" action="allocations.html" method="post">
+	<table class="List">
+		<tr>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'allocation_ids', this.checked );"/></th>
+			<th class="Docket">Docket</th>
+			<th class="status">Status</th>
+			<th class="Company">Company</th>
+			<th class="Stock">Stock</th>
+			<th class="Quantity">Quantity</th>
+			<th class="Quantity">Available</th>
+			<th class="Date">Max Age</th>
+			<th class="Date">Allocated On</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			my $total_rolls;
+			my $total_allocations;
+			my $total_weight;
+			my $total_sheets;
+			my $uri = '/employee/inventory/allocations.html';
+
+			my %allocations;
+			foreach my $Allocation ( @{$$variable{Allocations}} ) {
+				push @{$allocations{ join('-',@$Allocation{'docket','paper_id'} ) }}, $Allocation;
+			} # end foreach Allocation
+			
+			foreach my $key ( sort keys %allocations ) {
+				my $Allocation = $allocations{$key}[0];
+				my $Stock = $Allocation->Paper();
+
+				if ( ! sets::isin( $Stock->type(), split(',', $session{$uri.'?Type'} ) ) ) {
+					next;
+				} # end if
+
+				my $max_age;
+				
+				foreach my $A ( @{$allocations{$key}} ) {
+					if ( $_ = $A->skid_ids() and @{$_} ) {
+						foreach my $Skid ( $A->Skids() ) {
+							my $age = time - Date::Parse::str2time( $Skid->created_on() );
+							if ( $age > $max_age ) {
+								$max_age = $age;
+							} # end if
+						} # end foreach Skid
+					} else {
+						foreach my $SkidContent ( openprint::SkidContent->find( paper_id=>$A->paper_id(),'quantity >'=>0) ) {
+							my $age = time - Date::Parse::str2time( $SkidContent->Skid()->created_on() );
+							if ( $age > $max_age ) {
+								$max_age = $age;
+							} # end if
+						} # end if
+					} # end if
+				} # end foreach allocation
+
+
+				if ( $session{$uri.'?stock_age_start_year'} ) {
+					my $dt = DateTime->new( map { $_ => $session{$uri.'?stock_age_end_'.$_} } ( 'year','month','day' ), TZ=>$openprint::TZ );
+					my $max_age_start = time - $dt->epoch();
+					if ( $max_age_start ) {
+						next if $max_age_start <= $max_age;
+					} # end if
+				} # end if
+				if ( $session{$uri.'?stock_age_end_year'} ) {
+					my $dt = DateTime->new( map { $_ => $session{$uri.'?stock_age_end_'.$_} } ( 'year','month','day' ), TZ=>$openprint::TZ );
+					my $max_age_end = time - $dt->epoch();
+$log->debug("Max end: $max_age_end Max Age $max_age");
+					if ( $max_age_end ) {
+						next if $max_age_end >= $max_age;
+					} # end if
+				} # end if
+
+				my $quantity = 0;
+				foreach my $A ( @{$allocations{$key}} ) {	
+					$quantity += $A->quantity();
+					if ( $A->Paper()->type() eq 'Roll' ) {
+						$total_rolls += @{$A->skid_ids()} if $A->skid_ids();
+						$total_weight += $A->quantity;
+					} else {
+						$total_allocations += @{$A->skid_ids()} if $A->skid_ids();
+						$total_sheets += $A->quantity;
+					} # end if
+				} # end foreach Allocation
+
+
+				my $error = '';
+				if ( $quantity > $Stock->available() ) {
+					$error = 'error';
+				} # end if
+
+				$html .= "<tr class=\"$rowclass $error\">";
+				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocation_ids" value="`.join(',',map { $$_{id} } @{$allocations{$key}} ). '"/></td>';
+				$html .= sprintf( '<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>', $$Allocation{docket} );
+				$html .= sprintf( '<td class="Status"><a href="/employee/project/view.html?docket=%1$d">%2$s</a></td>', $$Allocation{docket}, $Allocation->Order()->status() );
+				$html .= sprintf( '<td class="Company"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, $Allocation->Order()->Company()->name() );
+				$html .= sprintf( '<td class="Stock"><a href="paper_details.html?paper_id=%d">%s</a></td>', $$Allocation{paper_id}, $Allocation->Paper()->to_string() );
+				$html .= sprintf( '<td class="Quantity"><a href="skid_details.html?skid_id=%d">%s %s%s</a></td>', $$Allocation{id}, 
+					( $$Allocation{skid_ids} ? 
+						scalar @{$$Allocation{skid_ids}}. ( $Allocation->Paper()->type() eq 'Roll' ? ' roll' : ' skid' ) . ( @{$$Allocation{skid_ids}} == 1 ? '' : 's' )
+ : '' ),
+					Number::Format::format_number($quantity), $Allocation->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
+				$html .= sprintf( '<td class="Available">%s %s</td>', $Stock->available() . $Stock->units() );
+				$html .= sprintf( '<td class="Date"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, misc::seconds_to_pretty_interval( $max_age ) );
+				$html .= sprintf( '<td class="Date"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, format_datetime($Allocation->created_on()) );
+				$html .= '</tr>';
+				$rowclass = $rowclass ? '' : 'colRow';
+			} # end foreach key "docket-paper_id"
+			$html .= '<tr class="totals"><td colspan="5">Totals</td><td class="Quantity">';
+			$html .= Number::Format::format_number($total_allocations) . 'allocations ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_allocations;
+			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
+			$html .= '</td><td class="Available"></td><td class="Date"></td><td class="Date"></td></tr>';
+			return $html;
+		) ?>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<p class="buttons">
+<? echo ( button( 'delete', { onclick=>q`new Ajax.Updater( 'Results','/employee/inventory/_allocations.html?action=Delete', { parameters: { allocation_id: get_value( $('PaperAllocationResults').allocation_ids ) } } );`, text=>'Delete Checked' } ); ) ?>
+</p>
+<? else ( @{$$variable{Allocations}} ) ?>
+There were no allocations matching your search criteria.
+<? endif ( @{$$variable{Allocations}} ) ?>

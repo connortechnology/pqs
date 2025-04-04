@@ -1,0 +1,10 @@
+table .Week {
+	text-align:left;
+}
+table .Logins,
+table .Projects,
+table .Quotes,
+table .Orders {
+text-align: right;
+}
+

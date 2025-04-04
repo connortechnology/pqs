@@ -1,0 +1,46 @@
+<fieldset><legend>Modification History</legend>
+	<table class="List">
+	<tr>
+		<th class="Company">Company</th>
+		<th class="User">User</th>
+		<th class="DateTime">When</th>
+		<th class="description">Description</th>
+	</tr>
+	<? echo ( 
+		$_ = q{SELECT company_id, user_id, dtmwhen, description FROM Order_Log WHERE order_id=? ORDER BY dtmwhen DESC};
+		@{$$variable{'Log'}} = sql::execute( $log, $dbh, $_, $param{order_id} );
+		my $html;
+		my $rowclass;
+		my $project_url;
+		if ( $variable{uri} =~ /employee/ ) {
+			$project_url = '/employee';
+		} else {
+			$project_url = '/main';
+		} # end if
+		$project_url .= '/project/view.html?project_id=';
+		
+
+	while ( my ( $company_id, $user_id, $when, $description ) = splice( @{$$variable{'Log'}},0,4) ) {
+		if ( $description =~ /^Add Project (\d+)$/ ) {
+			$description = qq`Add <a href="${project_url}$1">Project $1</a>`;
+		} # end if
+
+		$html .= sprintf(q`
+<tr%1$s>
+	<td class="Company">%2$s</td>
+	<td class="User">%3$s</td>
+	<td class="DateTime">%4$s</td>
+	<td class="description">%5$s</td>
+</tr>`,
+				$rowclass, new openprint::Company($company_id)->name(),
+				new openprint::User($user_id)->name(),
+				Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $when ) ),
+				$description,
+			);
+	
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end while
+		return $html;
+	) ?>
+	</table>
+</fieldset>

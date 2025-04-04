@@ -1,0 +1,224 @@
+<? echo (
+	use constant DEBUG => 0;
+	my %specs;
+	$specs{'form'} = $param{'form'};
+	$specs{'signature_id'} = $param{'signature_id'};
+	my $Project = new openprint::Project( $param{'project_id'} );
+	my $ProjectType = $param{'projecttype_id'} ? new openprint::ProjectType( $param{'projecttype_id'} ) : $Project->Type();
+	my @options = misc::trim( split(',', $config{$ProjectType->name().'StockOptions'} ));
+	@options = misc::trim( split(',', $config{'StockOptions'} )) if ! @options;
+	@options = ( 'Brand','Finish','Colour','Weight' ) if ! @options;
+	my @lc_options = map { lc $_ } @options;
+
+	my @user_types = (undef,'');
+	push @user_types, 'C' if $session{'user_id'};
+	push @user_types, 'E' if $session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $session{'user_type'} eq 'A';
+
+	my %find = (
+		'user_type null or in' => \@user_types,
+		( $$ProjectType{id}?(
+							   'project_type_id any'	=>	$ProjectType->id(),
+							  ):(
+							   'width is null' => 0,
+							   )),
+		( exists $param{Supplied} ? ( 'supplied is null or ='			=>	$param{Supplied} ) : () ),
+		);
+	$param{selected} =~ s/^ddmStock(\w+)$param{signature_id}/$1/;
+	my $selected_index = sets::index( $param{selected}, @options );
+	$selected_index = 0 if $selected_index < 0;  # not found
+
+# initially, load all stocks available as per projectype, supplied, and size.
+#if ( $selected_index ) {
+	# I think this is remarked out so that if we get no stocks, we can back up a bit.  Might be better to just reload
+	# This was remarked out because if we return all teh data from the resulting stocks, we will overwrite the selected ddm as well, leaving no options.
+	# We need to just not do that farther down.
+	foreach my $option ( @options ) {
+		next if ( $option eq $options[0] and $param{'selected'} eq 'rdbSuppliedStock' );
+		if ( $param{$option} ) {
+			$find{lc $option} = $param{$option};
+		} # end if
+		last if $option eq $param{'selected'};
+	} # end foreach option
+#}
+
+	my @Stocks = openprint::Paper->find( %find );
+
+	# Find the index of the selected option
+	my $option_index = $selected_index;
+$log->debug("Selected index $selected_index");
+
+if ( 0 ) {
+	if ( $param{'selected'} ne 'rdbSuppliedStock' ) {
+		if ( sets::isin( $param{'selected'}, \@options ) ) {
+			for ( ; $option_index < @options; $option_index += 1 ) {
+				last if $options[$option_index] eq $param{'selected'};
+			} # end for
+		} # end if
+		$option_index += 1;
+	} # end if
+} # end if
+
+	for ( my $i = $option_index; $i < @options; $i += 1 ) {
+		my @removed_Stocks;
+
+		# i should only be 0 when selected is rdbSupplied
+		# So if selected is Finish, $i will be 2?
+		if ( $i and $param{$options[$i-1]} ) {
+#$log->debug(" filtering by $options[$i-1] ");
+			for ( my $stock_index = 0; $stock_index < @Stocks; $stock_index += 1 ) {
+				# This ensure that the stock matches the previous option.  
+				my ( $value ) = $Stocks[$stock_index]->get($lc_options[$i-1]);
+#if ( ! $value ) {
+#$log->warn("No value for $lc_options[$i-1] in " . $Stocks[$stock_index]->to_string() )
+#}
+
+				if ( $value ne $param{$options[$i-1]} ) {
+#$log->debug("Didn't match $value =? " . $param{$options[$i-1]});
+					push @removed_Stocks, splice @Stocks, $stock_index, 1;
+					$stock_index -= 1;
+					next;
+				} # end if
+			} # end for
+		} # end if $i and $param{$options[$i-1]} 
+
+		if ( ! @Stocks ) {
+      #$log->warn("No stocks, adding them back for $i $options[$i-1]");
+			# If we have removed all stocks, then drop the filter, so we get some results.
+
+			# Tell mem again, why we do this?
+			push @Stocks, @removed_Stocks;
+			$param{$options[$i]} = '';
+		} elsif ( DEBUG ) {
+			foreach my $S ( @Stocks ) {
+				$log->debug("Resulting stocks: " . $S->to_string() );
+			}
+		} # end if
+
+		next if $options[$i] eq $param{selected};
+		@{$specs{$options[$i]}} = ();
+		my %data = map { $_->get(lc($options[$i]), lc($options[$i]).'_id' ) } @Stocks;
+		if ( $options[$i] =~ /Size/ ) {
+			@{$specs{$options[$i]}} = sort {
+					my ( $a_w, $a_h ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+					my ( $b_w, $b_h ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+					if ( $a_w != $b_w ) {
+						return $a_w <=> $b_w;
+					}
+					if ( $a_h != $b_h ) {
+						return $a_w <=> $b_w;
+					}
+					return $a <=> $b;
+				} keys %data;
+		} elsif ( $options[$i] =~ /Weight/ ) {
+			@{$specs{$options[$i]}} = sort {
+				my ( $w1 ) = $a =~ /([\d\.]+)/;
+				my ( $w2 ) = $b =~ /([\d\.]+)/;
+				return $w1 <=> $w2;
+			} keys %data;
+		} else {
+			@{$specs{$options[$i]}} = sort keys %data;
+		} # end if Size or other, size gets special treatment for sorting
+	} # end foreach option
+
+  my @presses = openprint::Equipment->find( 'category any'=>'Printing', useinestimating=>1 );
+  if ( @presses ) {
+
+    my $min_width = -1;
+    my $max_width = -1;
+    my $min_height = -1;
+    my $max_height = -1;
+    foreach my $Press ( @presses ) {
+      if ( $_ = $Press->specification('Minimum Sheet Width') and ( $_ < $min_width ) or ( -1 == $min_width ) ) {
+        $min_width = $_;
+      } # end if
+      if ( $_ = $Press->specification('Maximum Sheet Width') and ( $_ > $max_width ) or ( -1 == $max_width ) ) {
+        $max_width = $_;
+      } # end if
+      if ( $_ = $Press->specification('Minimum Sheet Length') and ( $_ < $min_height ) or ( -1 == $min_height ) ) {
+        $min_height = $_;
+      } # end if
+      if ( $_ = $Press->specification('Maximum Sheet Length') and ( $_ > $max_height ) or ( -1 == $max_height ) ) {
+        $max_height = $_;
+      } # end if
+    } # end foreach Press
+
+    if ( $param{'width'} and $min_width < $param{'width'} ) {
+      $min_width = $param{'width'};
+    } # end if
+    if ( $param{'height'} and $min_height < $param{'height'} ) {
+      $min_height = $param{'height'};
+    } # end if
+
+    my %results;
+    foreach my $Stock ( @Stocks ) {
+      next if ! $Stock->width();
+      if ( $Stock->type() eq 'Roll' ) {
+        $results{$Stock->width()} = 1;
+      } elsif ($openprint::config{CutDownStocks} and $openprint::config{CutDownStocks} eq 'N') {
+        $results{$Stock->width().'x'.$Stock->height()} = 1;
+      } else {
+          my ( $width, $height ) = ( $Stock->width(), $Stock->height() );
+          # cuts paper until it fits
+          if ( $max_width and $max_height ) {
+            if ( $Stock->cuttable() ) {
+              while (
+                  ( $width > $max_width or $height > $max_height )
+                  and
+                  ( $width > $max_height or $height > $max_width )
+                  ) {
+                if ( $height > $width ) {
+                  $height /= 2;
+                } else {
+                  $width /= 2;
+                } # end if
+              } # end while
+            } else {
+              next if ( $width > $max_width or $height > $max_height ) and ( $width > $max_height or $height > $max_width );
+            } # end if
+          } # end if
+
+          if ( $min_width and $min_height ) {
+            # while the paper fits on a press
+            while (
+                ( ( $width >= $min_width ) and ( $height >= $min_height ) )
+                or ( ( $width >= $min_height ) and ( $height >= $min_width ) )
+                ) {
+
+              last if $results{$width.'x'.$height};
+              $results{$width.'x'.$height} = 1;
+              last if ! $Stock->cuttable();
+
+              $openprint::log->debug("Cut: $width x $height") if DEBUG;
+              if ( $height > $width ) {
+                $height /= 2;
+              } else {
+                $width /= 2;
+              } # end if
+            } # end while
+          } # end if
+        } # end if type
+      } # end foreach Stock
+
+		@{$specs{'SheetSize'}} = sort {
+			my ( $w1, $h1 ) = split('x', $b );
+			my ( $w2, $h2 ) = split('x', $a );
+      $w1 =~ s/[^\d\.]//g;
+      $w2 =~ s/[^\d\.]//g;
+      $h1 =~ s/[^\d\.]//g;
+      $h2 =~ s/[^\d\.]//g;
+
+			return -1 if $w1 < $w2;
+			return 1 if $w1 > $w2;
+			return -1 if $h1 < $h2;
+			return 1 if $h1 > $h2;
+			return 0;
+		} keys %results;
+	} # end if Presses
+
+	$param{'callback'} = 'cbStockFillResults' if ! $param{'callback'};
+	my $json = JSON->new;
+$log->debug($json->encode( \%specs ));
+	return $json->encode( \%specs ) . "\n";
+  #$param{'callback'}(results);";
+) ?>

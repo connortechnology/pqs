@@ -1,0 +1,13 @@
+<p><label>&nbsp;</label>
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+        <span class="value"><? echo ( 
+require openprint::Estimating::SoftFolding;
+return openprint::Estimating::SoftFolding::summary(@$variable{'Project','ServiceIndex'}, undef );
+ ) ?></span>
+<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+

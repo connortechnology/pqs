@@ -1,0 +1,106 @@
+li input[type="text"] {
+  width: 100%;
+}
+#specifications .buttons {
+    width: 175px;
+    text-align: right;
+}
+#specifications td.name span,
+#specifications td.min span,
+#specifications td.max span,
+#specifications td.units span,
+#specifications td.range_units span,
+#specifications td.value span {
+    width: 100%;
+    display: block;
+}
+#specifications .name {
+    text-align: left;
+}
+#specifications .value {
+    width: auto;
+    text-align: left;
+}
+
+#specifications .units {
+    width: 100px;
+    text-align: left;
+}
+#specifications .interpolate {
+    width: 50px;
+}
+#specifications .min,
+#specifications .max {
+    width: 100px;
+}
+
+.folds input[type="number"],
+.folds input[type="text"],
+.pages input[type="number"],
+.pages input[type="text"],
+.page_width input[type="number"],
+.page_width input[type="text"],
+.page_height input[type="number"],
+.page_height input[type="text"],
+.calliper input[type="number"],
+.calliper input[type="text"],
+.make_ready_time input[type="number"],
+.make_ready_time input[type="text"],
+.make_ready_overs input[type="number"],
+.make_ready_overs input[type="text"],
+.run_overs input[type="number"],
+.run_overs input[type="text"],
+.imposition input[type="text"] ,
+.imposition input[type="number"] {
+	width: 65px;
+}
+.run_overs select ,
+.make_ready_overs select {
+	width: 60%;
+}
+#Folds textarea {
+	width: 100%;
+}
+table .EquipmentID {
+	width: 40px;
+}
+table .EquipmentID,
+table .EquipmentName,
+table .Description,
+table .Services {
+	text-align: left;
+}
+
+.Period,
+.Supplier {
+display: none;
+}
+
+table .PeriodStart, table .PeriodEnd, table .Period {
+  width: 255px;
+  text-align: left;
+}
+table .Range {
+  text-align: center;
+}
+table .Range_Units {
+  text-align: center;
+  width: 200px;
+}
+
+table .Units {
+  text-align: center;
+  width: 200px;
+}
+table .Discount {
+  text-align: center;
+}
+table .Cost,
+table .Price,
+table .Markup {
+  width: 110px;
+  text-align: center;
+}
+#Prices table .buttons {
+  width: 80px;
+}

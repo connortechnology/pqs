@@ -1,0 +1,59 @@
+<div class="UserGroup"><div class="View">
+<?include('/includes/error_reporting.html')?>
+<form id="f1" name="f1" action="usergroups.html" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="command" />
+	<p class="buttons">
+		<? echo ( 
+			button( 'Save', { onclick=>"f1.command.value='Save';f1.submit();" } );
+		) ?>
+	</p>
+	<fieldset><legend>Edit</legend>
+		<div class="content">
+			<div class="leftColumn">
+				<ul>
+					<li><label>ID</label>
+						<input type="hidden" name="id" id="id" value="<? echo ( $$variable{UserGroup}->id() ) ?>" />
+						<? echo ( $$variable{UserGroup}->id() ) ?>
+					</li>
+					<li><label>Name</label>
+						<input type="text" name="name" id="name" value="<? echo ( $$variable{UserGroup}->name() ) ?>" />
+					</li>
+					<li><label>Description</label>
+						<textarea name="description" rows="<?echo( count_lines($$variable{UserGroup}->description()); )?>"><? echo ( $$variable{UserGroup}->description(); ) ?></textarea>
+					</li>
+					<li><label>Duration</label>
+						<input type="text" name="duration" id="duration" value="<? echo ( $$variable{UserGroup}->duration() ) ?>" />
+					</li>
+				</ul>
+			</div>
+			<div class="rightColumn">
+				<? echo (
+					my $Asset = $$variable{UserGroup}->Asset();
+					return '<img src="'.$Asset->url().'"/>' if $Asset->id();
+					return;
+				) ?>
+				<ul>
+					<li><label>New Image</label>
+						<input type="file" name="filename" id="filename" />
+					</li>
+				</ul>
+			</div>
+		</div>
+	</fieldset>
+	Listing of users in <? echo ( $$variable{UserGroup}->name() ) ?><br/>
+	<table class="List sortable">
+		<thead><tr><th class="User">Name</th><th class="Company">Company</th></tr></thead>
+		<tbody>
+		<? echo (
+		my $html;
+		foreach my $User ( $$variable{UserGroup}->Users( order=>'lower(firstname),lower(lastname)') ) {
+			$html .= sprintf(q`<tr><td class="User">%1$s</td><td class="Company">%2$s</td></tr>`, 
+				$User->link_to(), $User->Company()->link_to(),
+				);
+		} # end foreach UG
+		return $html;
+		) ?>
+		</tbody>
+	</table>
+</form>
+</div></div>

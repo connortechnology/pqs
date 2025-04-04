@@ -1,0 +1,60 @@
+<script type="text/javascript">
+	function load_results() {
+		var div = $('Results');
+		if ( div ) LoadContent( div, '/administrator/reports/_customer_login.html', $('f1') );
+	} // end function
+</script>
+
+Choose report criteria and click show results. You may the download the the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br/>
+<br/>
+<form id="f1" name="f1" method="post" action="customer_login.html">
+	<fieldset class="filters">
+		<ul>
+		<li>
+			<label>Sales Reps</label>
+			<select name="salesrep_id" size="1">
+				<option value="">All Employees</option>
+<? echo (
+    make_drop_down( [ ( 'None','Not Assigned' ), map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], company_id=>$config{owner_id}, 'usergroup any'=>'Sales' ) ], $session{'/administrator/reports/customer_login.html?salesrep_id'} );
+) ?>
+			</select>
+		</li>
+		<li> 
+			<label>Registration Date</label>
+			<? echo ( date_select_session( $r->uri(), 'registered_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'registered_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Last Project</label>
+			<? echo ( date_select_session( $r->uri(), 'last_project_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'last_project_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Last Order</label>
+			<? echo ( date_select_session( $r->uri(), 'last_order_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to
+			<? echo ( date_select_session( $r->uri(), 'last_order_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Last Login</label>
+			<? echo ( date_select_session( $r->uri(), 'last_login_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'last_login_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Activated?</label>
+			<? echo ( radio( 'activated', [ 'Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?activated'}, { default=>'' } ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>q`load_results();`, text=>'Show Results' } ),
+				button( 'DownloadCSV', { onclick=>"f1.action='customer_login.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+	); ) ?>
+		</p>
+	</fieldset>
+</form>
+<div id="Results">Select criteria and click Show Results</div>

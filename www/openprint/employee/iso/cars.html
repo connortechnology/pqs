@@ -1,0 +1,73 @@
+<script src="/javascripts/barcode.js"></script>
+<script>
+	function delete_confirm(form) {
+		var number_of_deleted_cars = 0;
+		for ( var index = 0; index < form.elements['cars'].length; index += 1 ) {
+			if ( form.elements['cars'][index].checked ) {
+				number_of_deleted_cars += 1;
+			} // end if
+		} // end for
+		if ( number_of_deleted_cars == 0 ) {
+			alert("To Delete Cars, click the checkbox beside the CAR.");
+		} else if ( number_of_deleted_cars == 1 ) {
+			if ( confirm("Are you sure you wish to delete this CAR?") ) {
+				form.btnFunction.value='Delete';
+				form.submit();
+			} // end if
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_cars + " CARS?") ) {
+				form.btnFunction.value='Delete';
+				form.submit();
+			} // end if
+		} // end if
+	}
+
+	function load_cars( form ) {
+		LoadContent('Results', '/employee/iso/_car_results.html', $j('#f2').serialize());
+	} // end function
+</script>
+<?include('/includes/error_reporting.html')?>
+Please select a CAR to view/edit.<br/>
+<form id="f1" name="f1" method="post" action="car.html">
+	<fieldset class="filters"><legend>Choose CAR</legend>
+		<p>
+			<label for="car_id">CAR ID #</label>
+			<? echo ( join("\n",
+			input( type=>'cardinal', id=>'car_id', name=>'car_id', onkeypress=>'return input_handler(this, event);'),
+			button( 'Go', { onclick=>'f1.submit();', text=>'Go' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="cars.html">
+	<input type="hidden" name="btnFunction" />
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+		<li>
+			<label>Date Issued</label>
+			<? echo ( join(' to ',
+						date_select_session( $r->uri(), 'issued_on_start', { onchange=>q`load_cars('f2');`, with_today=>1, with_clear=>1 } ),
+						date_select_session( $r->uri(), 'issued_on_end', { onchange=>q`load_cars('f2');`, with_today=>1, with_clear=>1 } ),
+			); ) ?>
+		</li>
+		<li>
+			<label>Status</label>
+			<? echo ( radio( 'status', [ 'Open','Open','Closed','Closed','','Both' ], $session{$r->uri().'?status'}, { onclick=>q`load_cars('f2');` } ); ) ?>
+		</li>
+		<li>
+			<label>Docket</label>
+			<?echo(input( type=>'cardinal', name=>'docket', value=>$session{$r->uri().'?docket'}, onkeydown=>"if(event.keyCode == 13){load_cars('f2');}" ); ) ?>
+		</li>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>'load_page();'} ); ) ?></li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'load_cars(f2);', text=>'Show Results' } ),
+				button( 'Download', { onclick=>"f2.btnFunction.value='Download in CSV Format';f2.submit();" } ),
+				button( 'Add', { onclick=>'', href=>'car.html', text=>'Add New CAR' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<script type="text/javascript">$('car_id').focus();</script>
+<div id="Results"><?include('_car_results.html') ?></div>

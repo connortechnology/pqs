@@ -1,0 +1,9 @@
+<?include(/includes/error_reporting.html)?>
+<? echo (
+	my $html;
+	foreach my $Type ( @{$$variable{Types}} ) {
+		$$variable{Type} = $Type;
+		$html .= include( '/employee/inventory/_manifest_type.html' );
+	} # end foreach Type
+	return $html;
+) ?>

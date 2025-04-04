@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /main/project/
+Disallow: /main/order/
+Disallow: /main/quote/
+Disallow: /account/
+Disallow: /administrator/
+Disallow: /employee/
+

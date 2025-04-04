@@ -1,0 +1,148 @@
+<form name="f1" method="post" action="bindery.html">
+<fieldset class="filters"><legend>Report Criteria</legend>
+	Choose report criteria and click Show Results.<br/><br/>
+	<p>
+		<label>Employee</label>
+			<select name="ddmEmployee" size="1">
+				<option value="Bindery">All Bindery Employees</option>
+				<option value="All" <? echo ( 'selected' if $r->param('ddmEmployee') eq 'All' ) ?>>All Employees</option>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $param{ddmEmployee} ); ) ?>
+			</select>
+	</p>
+	<? eval (
+		my @time = localtime(time);
+		if ( $r->param('ddmStartYear') ) {
+			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, $r->param('ddmStartYear'), $r->param('ddmStartMonth'),$r->param('ddmStartDay') );
+		} else {
+			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
+		} # end if
+		if ( $r->param('ddmEndYear') ) {
+			@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, $r->param('ddmEndYear'), $r->param('ddmEndMonth'),$r->param('ddmEndDay') );
+		} else {
+			@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
+		} # end if
+) ?>
+
+	<p>
+		<label>Ordered Date</label>
+			<select name="ddmStartYear"><?StartYears?></select>
+			<select name="ddmStartMonth"><?StartMonths?></select>
+			<select name="ddmStartDay"><?StartDays?></select>
+			to
+			<select name="ddmEndYear"><?EndYears?></select>
+			<select name="ddmEndMonth"><?EndMonths?></select>
+			<select name="ddmEndDay"><?EndDays?></select>
+	</p>
+	<p class="buttons">
+			<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
+			<? echo ( button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ); ) ?>
+	</p>
+</fieldset>
+<? eval ( 
+	$$variable{Projects} = [ openprint::Project->find( 
+		'ordered_on <='=>"$$variable{'End'} 23:59:59",
+		'ordered_on >='=>"$$variable{'Start'} 00:00:00",
+	) ];
+	if ( @{$$variable{'Projects'}} ) {
+		
+		%{$$variable{'BinderyServices'}} = map { $_->type(), $_->description() } openprint::ServiceType->find('view_visible'=>1,'category'=>'Bindery');
+		foreach my $Project ( @{$$variable{'Projects'}} ) {
+			next if sets::isin( $Project->status(), [ 'Incomplete', 'Deleted','Cancelled' ] );
+			my $services = $Project->services();
+			my $qty_index = $Project->ordered_quantity_index();
+			foreach my $id ( keys %{$$variable{'BinderyServices'}} ) {
+				next if ! $$services{$id};
+
+				foreach my $s_id ( @{$$services{$id}} ) {
+					my $Service = $Project->Service( $s_id );
+
+					my $specs = $Service->specs();
+
+					if ( ! $$specs{'txtEmployeeName'} ) {
+						$$specs{'txtEmployeeName'} = $Service->Operator()->name();
+					} # end if
+					if ( ( ! $$specs{'txtEmployeeName'} ) and ( ! sets::isin( $Project, $$variable{'UnassignedProjects'} ) ) ) {
+						push @{$$variable{'UnassignedProjects'}}, $Project;
+					} # end if
+					#$specs{'txtEmployeeName'} = misc::trim( $specs{'txtEmployeeName'} );
+					if ( ! $$variable{$$specs{'txtEmployeeName'}} ) {
+						@{$$variable{$$specs{'txtEmployeeName'}}->{'Projects'}} = ();
+					} # end if
+					if ( ! sets::isin( $Project, $$variable{$$specs{'txtEmployeeName'}}->{'Projects'} ) ) {
+						push @{$$variable{$$specs{'txtEmployeeName'}}->{'Projects'}}, $Project;
+					} # end if
+					$$variable{$$specs{'txtEmployeeName'}}->{$id} += $$specs{"txtPrice$qty_index"};
+					$$variable{'Totals'}->{$id} += $$specs{"txtPrice$qty_index"};
+				} # end foreach service_id
+			} # end foreach Bindery Service
+		} # end foreach Project
+	} # end if
+) ?>
+<table class="List sortable">
+	<tr>
+		<th class="User">Employee</th>
+		<th class="Projects"># of Projects</th>
+		<? echo (
+			my $html;
+			foreach ( sort keys %{$$variable{'BinderyServices'}} ) {
+				$html .= qq`<th align="right">$$variable{'BinderyServices'}{$_}</th>`;
+			} # end foreach
+			return $html;
+		) ?>
+	</tr>
+<? echo (
+	my $html = '';
+	my %params = ( type=>['E','A'], order=>'lower(firstname),lower(lastname)' );
+	if ( $param{'ddmEmployee'} eq 'Bindery' ) {
+		$params{'usergroup any'} = 'Bindery';
+	} elsif ( $param{'ddmEmployee'} ne 'All' ) {
+		$params{'id'} = $param{'ddmEmployee'};
+	} # end if
+	my @Users = openprint::User->find( %params );
+
+	foreach my $User ( @Users ) {
+		
+		$html .= sprintf('<tr><td>%1$s</td><td align="right">%2$d</td>', $User->name(), $$variable{$User->name()} ? scalar @{$$variable{$User->name()}->{'Projects'}} : 0 );
+		foreach ( sort keys %{$$variable{'BinderyServices'}} ) {
+			$html .= sprintf('<td align="right">$ %.2f</td>', $$variable{$User->name()} ? $$variable{$User->name()}->{$_} : 0 );
+		} # end foreach
+	} # end foreach User
+	$html .= '</tr>';
+	return $html;
+) ?>
+	<tr class="totals">
+		<td>Totals</td>
+		<td align="right"><? echo ( scalar @{$$variable{'Projects'}} ) ?></td>
+		<? echo (
+			my $html;
+			foreach ( sort keys %{$$variable{'BinderyServices'}} ) {
+				$html .= sprintf('<td align="right">$ %.2f</td>', $$variable{'Totals'}->{$_});
+			} # end foreach
+			return $html;
+		) ?>
+	</tr>
+</table>
+<? if ( $$variable{'UnassignedProjects'} ) ?>
+<br/>
+	<h3>Unassigned Projects</h3>
+<table class="List sortable">
+	<tr>
+		<th class="project_id">Index</th>
+		<th class="reference">Reference</th>
+		<th class="Company">Company</th>
+		<th class="Date">Ordered On</th>
+	</tr>
+<? while ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>
+	<tr>
+		<td class="project_id"><a href="project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
+		<td class="reference"><? echo ( $$variable{'Project'}->reference() ) ?></td>
+		<td class="Company"><? echo ( htmlize($$variable{'Project'}->Company()->name() ); ) ?></td>
+		<td class="Date"><? echo ( format_date( $$variable{'Project'}->Order()->created_on() ) ) ?></td>
+	</tr>
+<? endwhile ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>
+</table>
+
+<? endif ( $$variable{'UnassignedProjects'} ) ?>
+<? else ( @{$$variable{'Projects'}} ) ?>
+There were no results matching the report criteria.
+<? endif ( @{$$variable{'Projects'}} ) ?>

@@ -1,0 +1,51 @@
+table .plate_count {
+	text-align: right;
+	width: 50px;
+}
+table .Sheets ,
+table .Weight ,
+table .impressions {
+	text-align: right;
+	width: 80px;
+}
+table .form {
+	text-align: left;
+	width: 40px;
+}
+table .company_name {
+	text-align: left;
+}
+table .plate_type {
+	text-align: right;
+	width: 70px;
+}
+table .press {
+	text-align: right;
+	width: 45px;
+}
+
+table .plate_units {
+	text-align: left;
+	width: 70px;
+}
+.company_name, .contact_name, .contact_phone, .contact_email {
+	text-align: left;
+}
+.orders,
+.order_value,
+.Date,
+.payment_cycle {
+	text-align: right;
+}
+#value_start, #value_end {
+	width: 100px;
+}
+.filters {
+	display: block;
+}
+table .status,
+table .credit_card_fee,
+table .csr_commission,
+table .discount {
+	text-align: right;
+}

@@ -1,0 +1,213 @@
+<!--
+Going into this, we know that a file has been uploaded...
+Either we are logged in, and have
+	user_id, company_id
+OR:
+	have txtCustomerName and txtContactName
+-->
+<? eval (
+	if ( $session{user_id} ) {
+		# load txtCompanyName and ContactName
+		my $User = new openprint::User( $session{'user_id'} );
+		my $Company = new openprint::Company( $session{'company_id'} );
+		@$variable{'txtContactName','txtEmailAddress','txtPhoneNumber'} = ( $User->name(), $User->email(), $User->phone() );
+		$$variable{'txtCompanyName'} = $Company->name();
+		$$variable{'txtAddress1'} = $Company->address1();
+		$$variable{'txtAddress2'} = $Company->address2();
+		$$variable{'txtPostalCode'} = $Company->postalcode();
+
+	} else {
+		@$variable{'txtContactName','txtCompanyName','txtEmailAddress','txtPhoneNumber','txtAddress1','txtAddress2','txtPostalCode'} =
+			@param{'txtContactName','txtCompanyName','txtEmailAddress','txtPhoneNumber','txtAddress1','txtAddress2','txtPostalCode'};
+	} # end if
+) ?>
+<? if ( $$variable{'txtContactName'} ) ?><?txtContactName?>,<br /><br /><? endif ( $$variable{'txtContactName'} ) ?>
+This email is a confirmation of your upload to <?echo($config{SiteTitle})?>. Please review the information below.<br /><br />
+
+<fieldset>
+   <legend>Contact Information</legend>
+<div id="contactInformation">
+<? if ( $$variable{'txtCompanyName'} || $$variable{'txtAddress1'} || $$variable{'txtAddress2'} ) ?>
+   <div style="float: left; width: 50%;">
+      <div class="fieldContainer">
+   <? if ( $$variable{'txtCompanyName'} ) ?>
+   		<p>
+  			<label>Company Name</label>
+   			<?txtCompanyName?>
+   		</p>
+   <? endif ( $$variable{'txtCompanyName'} ) ?>
+   <? if ( $$variable{'txtAddress1'} ) ?>
+   		<p>
+   			<label>Address</label>
+   			<?txtAddress1?>
+   		</p>
+   <? endif ( $$variable{'txtAddress1'} ) ?>
+   <? if ( $$variable{'txtAddress2'} ) ?>
+   		<p>
+   			<label>&nbsp;</label>
+   			<?txtAddress2?>
+   		</p>
+   <? endif ( $$variable{'txtAddress2'} ) ?>
+   		<p>
+   			<label>Postal Code</label>
+   			<?txtPostalCode?>
+   		</p>
+      </div>
+	</div>
+<? endif ( $$variable{'txtCompanyName'} || $$variable{'txtAddress1'} || $$variable{'txtAddress2'} ) ?>
+
+	<div style="float: left; width: 50%;">
+	   <div class="fieldContainer">
+<? if ( $$variable{'txtContactName'} ) ?>
+   		<p>
+   			<label>Contact Name</label>
+   			<?txtContactName?>
+   		</p>
+<? endif ( $$variable{'txtContactName'} ) ?>
+<? if ( $$variable{'txtEmailAddress'} ) ?>
+   		<p>
+   			<label>Email Address</label>
+   			<a href="mailto<?txtEmailAddress?>"><?txtEmailAddress?></a>
+   		</p>
+<? endif ( $$variable{'txtEmailAddress'} ) ?>
+<? if ( $$variable{'txtPhoneNumber'} ) ?>
+   		<p>
+   			<label>Phone Number</label>
+   			<?txtPhoneNumber?>
+   		</p>
+<? endif ( $$variable{'txtPhoneNumber'} ) ?>
+      </div>
+	</div>
+</div>
+
+</fieldset>
+<fieldset>
+   <legend>Job Information</legend>
+   <div class="fieldContainer">
+<? if ( $param{'docket'} ) ?>
+        <p>
+            <label>Docket #</label>
+            <? echo ( $param{'docket'} ) ?>
+        </p>
+<? eval ( @{$$variable{'Projects'}} = openprint::Project->find('company_id'=>$session{'company_id'}, 'docket'=>$param{'docket'}, 'order'=>'id'); ) ?>
+<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
+        <p>
+            <label>Project ID</label>
+            <? echo ( $$variable{'Project'}->id() ) ?>
+        </p>
+        <p>
+            <label>Reference</label>
+            <? echo ( $$variable{'Project'}->reference(); ) ?>
+        </p>
+        <p>
+            <label>Description</label>
+            <? echo ( $$variable{'Project'}->summary(); ) ?>
+        </p>
+        <p>
+            <label>Due Date</label>
+            <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->requested_date() ) ); ) ?>
+        </p>
+<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
+<? else ( $param{'docket'} ) ?>
+
+<? if ( $param{'project_id'} ) ?>
+   	<p>
+   		<label>Project ID</label>
+   		<? echo ( $param{'project_id'} ) ?>
+   	</p>
+   	<p>
+   		<label>Reference</label>
+   		<? echo ( 
+   			$$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+   			return $$variable{'Project'}->reference();
+   			) ?>
+   	</p>
+   	<p>
+   		<label>Description</label>
+   		<? echo ( $$variable{'Project'}->summary(); ) ?>
+   	</p>
+		<p>
+			<label>Due Date</label>
+			<? echo ( 
+				if ( $param{'duedate_year'} ) {
+					return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( 
+							sprintf('%.4d-%.2d-%.2d', @param{'duedate_year','duedate_month','duedate_day'} ) ) );
+				} else {
+					return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->requested_date() ) ); 
+				} # end if
+			) ?>
+		</p>
+<? else ( $param{'project_id'} ) ?>
+	<? if ( $param{'txtQuoteNumber'} ) ?>
+		<p>
+			<label>Quote Number</label>
+			<? echo ( $param{'txtQuoteNumber'} ) ?>
+		</p>
+	<? endif ( $param{'txtQuoteNumber'} ) ?>
+	<? if ( $param{'txtQuotedPrice'} ) ?>
+		<p>
+			<label>Quoted Price</label>
+			<? echo ( $param{'txtQuotedPrice'} ) ?>
+		</p>
+	<? endif ( $param{'txtQuotedPrice'} ) ?>
+   	<p>
+   		<label>Description</label>
+   		<? echo ( $param{'txtJobDescription'} ) ?>
+   	</p>
+   	<p>
+   		<label>Due Date</label>
+   		<? echo ( 
+			return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( 
+				sprintf('%.4d-%.2d-%.2d', @param{'duedate_year','duedate_month','duedate_day'} ) ) );
+			) ?>
+   	</p>
+   	<p>
+   		<label>Size</label>
+   		<? echo ( $param{'Size'} ) ?>
+   	</p>
+   	<p>
+   		<label>Quantity</label>
+   		<? echo ( $param{'Quantity'} ) ?>
+   	</p>
+   	<p>
+   		<label>Stock</label>
+   		<? echo ( $param{'Stock'} ) ?>
+   	</p>
+   	<p>
+   		<label>Proofs</label>
+   		<? echo ( $param{'proof_type'} ) ?>
+   	</p>
+<? endif ( $param{'project_id'} ) ?>
+<? endif ( $param{'docket'} ) ?>
+   </div>
+</fieldset>
+<fieldset>
+   <legend>Files</legend>
+   
+   <table border="0" cellpadding="1" cellspacing="0" width="100%">
+      <thead>
+         <tr>
+            <th align="left">Filename</th>
+            <th style="width:200px; text-align:left;">Description</th>
+			<th style="width:100px; text-align:right;">Size</th>
+         </tr>
+      </thead>
+      <tbody>
+<? echo (
+	my $html;
+	foreach my $File ( openprint::File->find('upload_id'=>$param{'serial'} ) ) {
+		$html .= sprintf('<tr>
+<td nowrap="nowrap">%s</td>
+<td style="width:200px; text-align:left;">%s</td>
+<td style="width:10px; text-align:right;">%s</td></tr>', $File->filename(), $File->description(), $File->size_text() );
+	} # end foreach File
+	return $html;
+) ?>
+      </tbody>
+   </table>   
+</fieldset>
+<br /><br />
+If you have any questions or concerns, please do not hesitate to contact us.<br /><br />
+
+Thank You,<br />
+<?echo($config{SiteTitle}?> Staff

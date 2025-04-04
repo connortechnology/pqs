@@ -1,0 +1,12 @@
+<? echo ( join( "\n",
+			ssi::select(
+				[ map { $_, $_ } ( 'Approved', 'Complete', 'Ordered', 'Waiting For Customer Approval' ) ], 
+				$$variable{Service}->status(),
+				{
+				name=>'status',
+				onchange=>qq`window.location='/employee/project/view.html?action=Change%20Status&amp;project_id=$$variable{Project}{id}&amp;service_id=$param{service_id}&amp;status='+this.getValue();`,
+				} ),
+			button( 'Cancel'.$param{index}, {onclick=>
+				qq`new Ajax.Updater( 'status$param{service_id}', '_status.html', { parameters: { project_id: $param{project_id}, service_id: '$param{service_id}' } } );`, text=>'Cancel' } ),
+
+); ) ?>

@@ -1,0 +1,28 @@
+<?include('/includes/error_reporting.html')?>
+<? echo (
+  my @accounting_contacts = $$variable{Company}->accounting_contact_ids();
+	my @Users = openprint::User->find(id=>\@accounting_contacts) if @accounting_contacts;
+	
+	my $html;
+	foreach my $User ( @Users ) {
+		$html .= $User->link_to( sprintf('&quot;%s&quot; &lt;%s&gt;', $User->name(), $User->email() ) );
+    $html .= button( 'X'.$User->id(), { 'data-on-click-this'=>'DelAccountingContact', 'data-user_id'=>$$User{id}, text=>'X' } );
+		$html .= '<br/>';
+	} # end foreach
+	#$html .= '<br/>' if ! @Users;
+	my $company_id = $param{accounting_contact_company_id} ? $param{accounting_contact_company_id} : $$variable{Company}->id();
+	if ( 0 and $session{user_type} eq 'A' ) {
+		$html .= qq`<select name="accounting_contact_company_id" id="accounting_contact_company_id" data-on-change-this="new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { parameters: { company_id: '$$variable{Company}{id}', accounting_contact_company_id: this.value } } );"><option value="">select</option>`;
+		$html .= make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( order=>'lower(name)' ) ], $company_id );
+		$html .= '</select>';
+	} # end if
+
+  my @Users = openprint::User->find(company_id=>$company_id,
+    (@accounting_contacts ? ('id not in'=>\@accounting_contacts) : ())
+  ) if $company_id;
+	if ( @Users ) {
+		$html .= ssi::select( [ map { $_->id(), $_->name() } @Users ], undef, { name=>'new_accounting_contact_id', id=>'new_accounting_contact_id', prepend=>['','select'] } );
+		$html .= button( 'AddAccountingContact', { 'data-on-click-this'=>'AddAccountingContact', text=>'Add' } );
+	} # end if
+	return $html;
+) ?>

@@ -1,0 +1,8 @@
+<div class="Blocklist">
+	<form id="f1" name="f1" action="/account/blocklist.html" method="post">
+	You have the following people blocked.
+	<ul id="Blocked"><? echo ( include('_blocklist_blocked.html'); ) ?></ul>
+	The following people have not had their unblock request accepted.
+	<ul id="Unblocked"><? echo ( include('_blocklist_unblocked.html'); ) ?></ul>
+	</form>
+</div>

@@ -1,0 +1,36 @@
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Yearly Sales</h2>
+</div>
+<form id="f1" name="f1" method="post" action="yearly_sales.html">
+	<input type="hidden" name="btnFunction" />
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		 <p>
+			 <label>Ordered On</label>
+			<? echo ( date_select_session( '/administrator/reports/yearly_sales.html', 'ordered_on_start', { fields => 'year' } ); ) ?>
+			to 
+			<? echo ( date_select_session( '/administrator/reports/yearly_sales.html', 'ordered_on_end', { fields => 'year' } ); ) ?>
+		</p>
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
+		<p>
+			<label>CSR</label>
+			<select name="salesrep_id" size="1">
+			<? echo (
+				my @options = ( '', 'All' );
+				push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], company_id=>$config{owner_id}, 'usergroup any'=>'Sales' );
+				make_drop_down( \@options, $session{'/administrator/reports/yearly_sales.html?salesrep_id'} );
+			) ?>
+
+			 </select>
+		</p>
+		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
+		 <p class="buttons">
+			<? echo ( join("\n",
+				button( 'Go', { onclick=>"LoadContent('Results','_yearly_sales.html', f1.serialize() );", text=>'Show Results' } ),
+				button( 'DownloadCSV', { onclick=>"f1.action='yearly_sales.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' } ),
+				);
+			) ?>
+		 </p>
+	</fieldset>
+</form>
+<div id="Results">Select filters, and click Show Results.</div>

@@ -1,0 +1,63 @@
+<? echo (
+	use IPC::Run3;
+
+	my $File = new openprint::File( $param{file_id} );
+	if ( ! $$File{id} ) {
+		return '<span class="error">File not found.</span>';
+	} # end if
+
+	my $stderr;
+	my $stdout;
+
+	if ( $$File{filename} =~ /.bkf.tar.bz2$/ ) {
+		if ( ! -e $$File{archive} ) {
+			return '<span class="error">Dearchived dir does not exist.</span>';
+		}
+		if ( ! -e $$File{archive}.'/dearchived' ) {
+			if ( !mkdir $$File{archive}.'/dearchived' ) {
+				return '<span class="error">Unable to make dearchived dir.</span>';
+			}
+		}
+		run3( qq`cd "$$File{archive}/dearchived" && bunzip2 < "../$$File{filename}" |/usr/local/bin/mtftar | tar x --transform=\'s/\\\\//g\'`, undef, \$stdout, \$stderr );
+		$log->debug(qq`mtftar Error code: $?: cd "$$File{archive} && /usr/local/bin/mtftar < "$$File{filename}" | tar x" : $stderr $stdout`);
+
+		if ( $? ) {
+			$log->error("Error code: $?: $$File{archive}/$$File{filename} : $stderr");
+			return qq`<span class="error">Error: $?.  File not dearchived. Reason: $stderr</span>`;
+		} # end if
+		$log->debug("Error code: $?: $$File{archive}/$$File{filename} : $stderr");
+		return 'Successfully dearchived to dearchived area';
+	} elsif ( $$File{filename} =~ /.bkf$/ ) {
+		if ( ! -e $$File{archive}.'/dearchived' ) {
+			mkdir $$File{archive}.'/dearchived';
+		}
+		if ( ! chdir "$$File{archive}/dearchived" ) {
+			return qq`<span class="error">Unable to cd to $$File{archive}/dearchived. File not dearchived.</span>`;
+		}
+		run3( qq`/usr/local/bin/mtftar < "../$$File{filename}" | tar x --transform=\'s/\\\\//g\'`, undef, \$stdout, \$stderr );
+		$log->debug(qq`mtftar Error code: $?: cd "$$File{archive} && /usr/local/bin/mtftar < "$$File{filename}" | tar x" : $stderr $stdout`);
+
+		if ( $? ) {
+			$log->error("Error code: $?: $$File{archive}/$$File{filename} : $stderr");
+			return qq`<span class="error">Error: $?.  File not dearchived. Reason: $stderr</span>`;
+		} # end if
+		$log->debug("Error code: $?: $$File{archive}/$$File{filename} : $stderr");
+		return 'Successfully dearchived to dearchived area.';
+	} elsif ( $$File{filename} =~ /_(\w).tar.bz2$/ ) {
+		my $drive = $1;
+		if ( ! -e "/media/$drive/Jobs" ) {
+			return qq`<span class="error">/media/$drive/Jobs doesn't exist.</span>`;
+		}
+		run3( qq`cd "/media/$drive/Jobs" && bunzip2 < "$$File{archive}/$$File{filename}" | tar x `, undef, \$stdout, \$stderr );
+		$log->debug(qq`bunzip2 Error code: $?: cd "/media/$drive/Jobs && bunzip2 < "$$File{filename}" | tar x" : $stderr $stdout`);
+
+		if ( $? ) {
+			$log->error("Error code: $?: $$File{archive}/$$File{filename} : $stderr");
+			return qq`<span class="error">Error: $?.  File not dearchived. Reason: $stderr</span>`;
+		} # end if
+		$log->debug("Error code: $?: $$File{archive}/$$File{filename} : $stderr");
+		return 'Successfully dearchived.';
+	} else {
+		return '<span class="error">Dearchive action not supported on this file.</span>';
+	}
+) ?>

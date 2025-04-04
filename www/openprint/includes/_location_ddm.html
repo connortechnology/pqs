@@ -1,0 +1,8 @@
+<? echo (
+	return make_drop_down( openprint::Location->dropdown(
+		company_id	=>	$param{company_id},
+		( $param{address} ? ( 'address is null' => 0 ) : () ),
+		type	=>	'place',
+		order	=>	'lower(name)',
+	), $param{location_id}, { prepend=>['','select'] } );
+) ?>

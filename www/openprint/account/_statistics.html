@@ -1,0 +1,15 @@
+<div id="Statistics">
+	<fieldset><legend>Statistics</legend>
+		<div class="content">
+			<ul>
+				<li class="created_on"><label>Created on</label><? echo ( format_date( $$variable{'User'}->created_on() ); ) ?></li>
+				<li class="updated_on"><label>Updated on</label><? echo ( format_date( $$variable{'User'}->updated_on() ); ) ?></li>
+				<li class="last_online"><label>Last Online</label><? echo ( $$variable{'User'}->last_logged_in() ? format_date( $$variable{'User'}->last_logged_in() ) : 'never'; ) ?></li>
+				<li class="viewed"><label>Viewed By</label><? echo ( 
+my $count = scalar $$variable{User}->Views();
+return $count . ' '. Lingua::EN::Inflect::PL_N( 'person', $count );
+ ) ?></li>
+			</ul>
+		</div>
+	</fieldset>
+</div>

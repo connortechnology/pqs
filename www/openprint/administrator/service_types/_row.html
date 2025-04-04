@@ -1,0 +1,29 @@
+<? echo (
+	my $Default = $$variable{'Default'};
+	@{$$variable{'ProjectTypes'}} = openprint::ProjectType->find('order'=>'lower(name)') if ! $$variable{'ProjectTypes'};
+	my $html = sprintf(q`<tr id="default_%2$d"%1$s> 
+			<td><select name="projecttype_id-%2$d"><option value=""> all </option>%5$s</select></td>
+			<td><input type="text" name="name-%2$d" value="%3$s" /></td>
+			<td><input type="text" name="value-%2$d" value="%4$s" /></td>
+			<td>%6$s</td>
+		</tr>`, $$variable{'rowclass'}, $Default->get('id','name','value'),
+		ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'ProjectTypes'}} ], $Default->projecttype_id() ),
+		join(' ',
+			ssi::writeButton( $log, $dbh, 'delete'.$Default->id(), 'delete.gif', qq`
+				new Ajax.Request( '_row.html', { parameters: { default_id: $$Default{id}, action: 'delete' }, 
+					onSuccess: function() {
+						var refNode = \$('default_$$Default{id}');
+						refNode.parentNode.removeChild( refNode );
+					} } );
+				`, '', 'X' ),
+			ssi::writeButton( $log, $dbh, 'copy'.$Default->id(), 'copy.gif', qq`
+				new Ajax.Request( '_row.html', { parameters: { default_id: $$Default{id}, action: 'copy' }, 
+					onSuccess: function( transport ) {
+						var refNode = \$('default_$$Default{id}');
+						refNode.insert( {after: transport.responseText } );
+					} } );
+				`, '', 'C' ),
+			),
+		);
+	return $html;
+) ?>

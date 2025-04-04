@@ -1,0 +1,137 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript">
+	var timer;
+	function loadImage( ImageID, file ) {
+		var image = document.images[ImageID];
+		image.src = file;
+	}
+	function mouseOver( ImageID, file ) {
+		if ( timer ) {
+			clearTimeout(timer);
+			timer = 0;
+		} // end if
+		loadImage( ImageID, file);
+	} // end function mouseOver
+	function mouseOut( ImageID, file ) {
+		if ( ! timer ) 
+			timer = setTimeout( "loadImage( '"+ImageID+"', '"+file+"');", 1000 );
+	} // end function mouseOut
+	function check_inputs ( form ) {
+		return true;
+	}
+</script>
+<?include(/includes/error_reporting.html)?>
+<form name="jump" method="get" action="rfidtag_details.html">
+	<fieldset class="filters"><legend>Choose RFIDTag</legend>
+		<p>
+			<label for="rfidtag_id">Tag ID #</label>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" value="<?rfidtag_id?>" onkeyup="this.value=this.value.replace(/\s/,'');" onchange="change_handler(this);" onkeypress="return input_handler(this, event);" onkeydown="if(event.keyCode==13){jump.btnFunction.value='Go';jump.submit();}" />
+			<? echo ( join('',
+				button( 'Go', { onclick=>"if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}", text=>'Go' } ),
+				button( 'Previous', { onclick=>q`if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`, text=>'&lt;&lt;' } ),
+				button( 'Next', { onclick=>q`if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,text=>'&gt;&gt;' } ),
+			); ) ?>
+		</p>
+		<? echo (
+		my $html = '';
+		if ( $$variable{Tags} and @{$$variable{Tags}} ) {
+			$html .= 'The following tags matched the given id<br/>';
+			foreach my $Tag ( @{$$variable{Tags}} ) {
+				$html .= sprintf('<a href="rfidtag_details.html?rfidtag_id=%1$s">%1$s</a><br/>', $Tag->id() );
+			} # end foreach Tag
+		} # end if
+		return $html;
+		) ?>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<form id="f1" name="f1" action="rfidtag_details.html" method="post">
+	<input type="hidden" name="btnFunction" />
+	<fieldset><legend>
+		<? if ( $$variable{RFIDTag}->created_on() ) ?>
+			<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{RFIDTag}->id() ) ?>" />
+		RFIDTag ID: <? echo ( sprintf('%d (%x)', $$variable{RFIDTag}->id(), substr($$variable{RFIDTag}{id},1,15) ); )?>
+		<? else ( $$variable{RFIDTag}->created_on() ) ?>
+		New RFIDTag
+		<? endif ( $$variable{RFIDTag}->created_on() ) ?>
+		</legend>
+
+		<div class="leftColumn">
+			<ul>
+		<? if ( $$variable{RFIDTag}->created_on() ) ?>
+			<li><label>Created</label>
+				<? echo ( format_datetime( $$variable{RFIDTag}->created_on() ); ) ?>
+			</li>
+			<li>
+				<label>Last Updated</label>
+				<? echo ( format_datetime( $$variable{RFIDTag}->updated_on() ); ) ?>
+			</li>
+		<? else ( $$variable{RFIDTag}->created_on() ) ?>
+			<li>
+				<label>ID</label>
+				<input type="text" name="rfidtag_id" />
+			</li>
+		<? endif ( $$variable{RFIDTag}->created_on() ) ?>
+			<li><label onclick="$('type').toggle();$('type_id').toggle();">Type</label>
+				<select id="type_id" name="type_id" onchange="$('type').value='';">
+					<option value="">select</option>
+					<? echo ( make_drop_down( openprint::RFIDTagType->dropdown( order=>'lower(name)' ), $$variable{RFIDTag}->type_id() ); ) ?>
+				</select>
+				<input type="text" name="type" id="type" style="display:none;" onkeyup="$('type_id').selectedIndex=0;" />
+			</li>
+			<? if ( $$variable{RFIDTag}->type() eq 'Skid' ) ?>
+			<li>
+				<label for="skid_id">Skid #</label>
+				<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{RFIDTag}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
+				<? echo ( 
+					my @Skids = openprint::Skid->find( rfidtag_id=>$$variable{RFIDTag}->id(), deleted=>[0,1] );
+					if ( ! @Skids ) {
+						return button( 'SkidAllocate', { href=>'rfidtag_details.html?rfidtag_id='.$$variable{RFIDTag}->id().q`&btnFunction=AllocateSkid`, text=>'Allocate' } );
+					} elsif ( 1 == @Skids ) {
+						$$variable{Skid} = $Skids[0];
+						$$variable{skid_id} = $$variable{Skid}->id();
+						return button( 'SkidGo', { href=>'skid_details.html?skid_id='.$$variable{skid_id}, text=>'Go' } );
+					} else {
+                        my $html = '<br/><span class="error">There are multiple skids with this RFIDTag.  Please correct.</span><br/>';
+                        foreach my $Skid ( @Skids ) {
+                            $html .= sprintf('<a href="skid_details.html?skid_id=%1$d">%1$d</a><br/>', $Skid->id() );
+                        } # end foreach Skid
+                        return $html;
+					} # end if
+				) ?>
+			</li>
+			<? endif ( $$variable{RFIDTag}->type() eq 'Skid' ) ?>
+			<li>
+				<label>Location</label>
+				<select id="location_id" name="location_id">
+					<option value="">select</option>
+					<? echo ( 
+						make_drop_down( openprint::Location->dropdown( type=>'place', company_id=>$config{owner_id}, order=>'parent_id NULLS FIRST,lower(name)'), $$variable{RFIDTag} ? $$variable{RFIDTag}->location_id() : $param{location_id} );
+						) ?>
+				</select>
+			</li>
+			</ul>
+			<p class="buttons">
+				<? echo ( 
+						my $html;
+						$html .= button( 'save', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();};", text=>'Save' } );
+						if ( $$variable{RFIDTag}->id() ) {
+							$html .= button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", text=>'Delete' } ) if $$variable{RFIDTag}->created_on();
+							$html .= button( 'addnew', { onclick=>'', href=>'rfidtag_details.html', text=>'Add New RFIDTag' } );
+						} # end if
+						$html .= button( 'reset', { onclick=>'f1.reset();', text=>'Reset' } );
+						#$html .= button( 'clear', { onclick=>'clearForm(f1);', text=>'Clear' } );
+						return $html;
+				) ?>
+			</p>
+		</div><!-- column -->
+		<div class="rightColumn" id="Map">
+			<?include('_map.html') ?>
+		</div>
+		<br class="spacer"/>
+	</fieldset>
+</form>
+<? if ( $$variable{RFIDTag}->created_on() ) ?>
+<?include(_rfidtag_log.html)?>
+<? endif ( $$variable{RFIDTag}->created_on() ) ?>
+<script type="text/javascript">document.jump.rfidtag_id.focus();</script>

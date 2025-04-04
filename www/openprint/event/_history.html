@@ -1,0 +1,58 @@
+<? eval (
+	@{$$variable{'Events'}} = ();
+	foreach my $Event ( openprint::Event->find( 
+		date_filter( '/event/history.html?starting_on_end', 'starting_on <='),
+		date_filter( '/event/history.html?starting_on_start', 'starting_on >='),
+		( $session{'/event/history.html?category_id'} ? ( category_id => $session{'/event/history.html?category_id'} ) : () ),
+		( $session{'/event/history.html?company_id'} ? ( company_id => $session{'/event/history.html?company_id'} ) : () ),
+		( $session{'/event/history.html?deleted'} ne '' ? ( deleted => $session{'/event/history.html?deleted'} ) : ( deleted=>[0,1] ) ),
+		order				=> 'starting_on',
+		) ) {
+		push @{$$variable{'Events'}}, $Event;
+	} # end foreach Events
+) ?>
+
+<? if ( @{$$variable{'Events'}} == 0 ) ?>
+	There are no events which match your search criteria. 
+<? else ( @{$$variable{'Events'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Events ID #</b> to view event details.<br/>
+		To delete events from history check the appropriate event(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="checkbox"><input type="checkbox" onclick="select_all($('f1'), 'event_id', this.checked );"/></th>
+			<th class="Name">Name</th>
+			<th class="Category">Category</th>
+			<th class="DateTime">When</th>
+		</tr>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Event ( @{$$variable{'Events'}} ) {
+				$html .= sprintf(q` 
+					<tr title="%2$s" %5$s> 
+						<td class="checkbox">%6$s</td>
+						<td class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></td>
+						<td class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></td>
+						<td class="DateTime"><a href="/event/view.html?event_id=%1$d">%4$s</a></td>
+					</tr>
+					`, $Event->id(), html_escape($Event->name()),
+					$Event->Category()->name(),
+					format_datetime( $Event->starting_on() ),
+					$rowclass,
+					checkboxes( 'event_id', [ $$Event{id}, undef ] ),
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Events
+			return $html;
+		) ?>
+	</table>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button('Delete', { onclick=>q`new Ajax.Updater( 'EventsList', '_history.html', { parameters: { func: 'Delete', event_id: $A($('f1').event_id).map(function(x){if(x.checked) return x.value;}) } } );` } ),
+			button('Undelete', { onclick=>q`new Ajax.Updater( 'EventsList', '_history.html', { parameters: { func: 'Undelete', event_id: $A($('f1').event_id).map(function(x){if(x.checked) return x.value;}) } } );` } ), 
+			button('Destroy', { onclick=>q`new Ajax.Updater( 'EventsList', '_history.html', { parameters: { func: 'Destroy', event_id: $A($('f1').event_id).map(function(x){if(x.checked) return x.value;}) } } );` } ),
+			); ) ?>
+		</p>
+<? endif ( @{$$variable{'Events'}} == 0 ) ?>

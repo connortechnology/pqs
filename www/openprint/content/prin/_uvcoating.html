@@ -1,0 +1,23 @@
+<? eval (
+    @{$$variable{uvoptions}} = ( 'None' );
+	foreach my $Service (  openprint::Service->find('name ilike'=>'UV%' ) ) {
+		next if $Service->name() =~ /Minimum/;
+		next if $Service->name() =~ /MakeReady/;
+		my $name = $Service->name();
+		$name =~ s/UV//g;
+		push @{$$variable{uvoptions}}, $name;
+	}
+	$$variable{SideOneCoatingType} = 'None' if ! $$variable{SideOneCoatingType};
+	$$variable{SideTwoCoatingType} = 'None' if ! $$variable{SideTwoCoatingType};
+) ?>
+<li id="UVCoating<?Signature?>" class="UVCoatings">
+	<label>UV Coating</label>
+	<p>
+		<label>On Front</label>
+	<? echo ( radio( 'SideOneCoatingType'.$$variable{Signature}, [ map { $_, $_ } @{$$variable{uvoptions}} ], $$variable{SideOneCoatingType}, { onclick=>'calc(this.form.name);', container=>['<span class="UVOption">', '</span>'] } ); ) ?>
+	</p>
+	<p>
+		<label>On Back</label>
+	<? echo ( radio( 'SideTwoCoatingType'.$$variable{Signature}, [ map { $_, $_ } @{$$variable{uvoptions}} ], $$variable{SideTwoCoatingType}, { onclick=>'calc(this.form.name);', container=>['<span class="UVOption">', '</span>'] } ); ) ?>
+	</p>
+</li>

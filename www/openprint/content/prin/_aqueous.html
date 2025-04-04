@@ -1,0 +1,25 @@
+<li id="Aqueous<?Signature?>" class="Aqueous">
+	<label>Aqueous Coating</label>
+	<p>
+		<input type="radio" id="Aqueous<?Signature?>None" name="Aqueous<?Signature?>" value="None" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( sets::isin( $$variable{'Aqueous'}, ['', 'None'] ) ); ) ?> />
+		<label class="radio" for="Aqueous<?Signature?>None">None</label><br/>
+<? echo (
+	my $html = '';
+	my @Services = openprint::Service->find('category'=>'Coating','order'=>'lower(name)', 'name like'=>'Aqueous%' );
+	foreach my $Service ( @Services ) {
+		my $description = $Service->description();
+		$description =~ s/\s*Aqueous\s*//g;
+		my $id = $Service->name();
+		$id =~ s/\s//g;
+		$html .= sprintf(q`
+		<input type="radio" id="Aqueous%1$s%5$s" name="Aqueous%1$s" value="%2$s" onclick="remove_div('OrderButton');calc(this.form.name);" %4$s />
+		<label class="radio" for="Aqueous%1$s%5$s">%3$s</label>
+		`, $$variable{'Signature'}, $Service->name(), $description,
+		ssi::checked( $$variable{'Aqueous'} eq $Service->name() ),
+			$id,
+		);
+	} # end foreach
+	return $html;
+) ?>
+	</p>
+</li>

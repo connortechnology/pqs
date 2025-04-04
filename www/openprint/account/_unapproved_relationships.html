@@ -1,0 +1,40 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<ul>
+<? echo (
+	my $html;
+
+	my @Relationships = openprint::User_Relationship->find({ 
+		'user_id2'	=>	$session{'user_id'},
+		'approved'	=>	0,
+		} );
+	my @Types = openprint::User_Relationship_Type->find('id'=>[sets::union( map { $_->type_id() } @Relationships )], 'order'=>'lower(name)' );
+
+	my %Unapproved;
+	
+	foreach my $Type ( @Types ) {
+		# First, show approved
+		foreach my $R ( @Relationships ) {
+			next if $R->type_id() != $Type->id();
+			push @{$Unapproved{$$Type{id}}}, $R;
+		} # end foreach Relationship
+	} # end foreach Type
+
+	if ( %Unapproved ) {
+		foreach my $Type ( @Types ) {
+			next if ! ( $Unapproved{$$Type{id}} and @{$Unapproved{$$Type{id}}} );
+			
+			foreach my $R ( @{$Unapproved{$$Type{id}}} ) {
+				$html .= sprintf('<li><span class="buttons">%3$s</span>%1$s claims they are %2$s you</li>',
+						sprintf('<a href="/account/view.html?user_id=%s">%s</a>', $R->user_id1(), $R->User1()->name() ), $R->type(),
+						join('',
+							ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_unapproved_relationships.html', { parameters: { user_id1: $$R{user_id1}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'Deny'} ),
+							ssi::button( 'Approve'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_unapproved_relationships.html', { parameters: { user_id1: $$R{user_id1}, type_id: $$R{type_id}, action: 'approve' } } );`, 'text'=>'Approve'} ),
+							)
+						);
+			} # end foreach Relationship
+		} # end foreach $Type
+	} # end if %UNapproved
+	
+	return $html;
+) ?>
+</ul>

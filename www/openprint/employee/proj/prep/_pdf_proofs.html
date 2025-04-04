@@ -1,0 +1,62 @@
+<? eval (
+	my $docket = $$variable{Project}->docket();
+
+	my @path_globs = (
+		"/media/ARAXIDP4/Jobs/$docket*/UserDefinedFolders/PDF_Proofs/*",
+		"/media/CONDADP4/Jobs/$docket*/UserDefinedFolders/PDF_Proofs/*",
+		);
+
+	my @filenames;
+	foreach my $path ( @path_globs ) {
+		push @filenames, glob $path;
+	} # end foreach path
+	@{$$variable{FILES}} = @filenames;
+) ?>
+<fieldset><legend>Available Proofs</legend>
+	<?include('/includes/error_reporting.html')?>
+	<form id="pdf_proofs" name="pdf_proofs" action="?" method="post">
+		<table class="List">
+			<thead>
+				<tr> 
+					<th class="filename">Filename</th>
+					<th class="mtime">When</th>
+					<th class="size">Size</th>
+					<th class="checkbox"><input type="checkbox" name="checkall" onclick="select_all($('f1'),'chkFiles',this.checked);" /></th>
+				</tr>
+			</thead>
+			<? if ( @{$$variable{FILES}} == 0 ) ?>
+			<tr>
+				 <td colspan="4">No proofs available.</td>
+			</tr>
+			<? else ( @{$$variable{FILES}} == 0 ) ?>
+				<? echo (
+					my $html;
+					my $rowclass;
+
+					foreach my $path ( @{$$variable{FILES}} ) {
+						my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev, $size, $atime,$mtime,$ctime,$blksize,$blocks) = stat($path);
+$log->debug("mtime: $mtime atime: $atime ctime: $ctime");
+						my $file = basename($path);
+							$html .= sprintf(q`
+						<tr%1$s>
+							<td class="filename"><a href="%2$s" title="%3$s">%2$s</a></td>
+							<td class="mtime">%5$s</td>
+							<td class="size">%4$s</td>
+							<td class="checkbox"><input type="checkbox" id="chkFiles%3$s" name="chkFiles" value="%2$s"/></td></tr>`,
+	$rowclass,
+								$file, $path,
+								Number::Format::format_bytes($size),
+							Date::Format::time2str( $config{DateTimeFormat}, $mtime ),
+								$$variable{destdir},	
+								);
+
+						$rowclass = $rowclass ? '' : ' class="colRow"';
+					} # end foreach file
+					return $html;
+				) ?>
+	<? endif ( @{$$variable{FILES}} == 0 ) ?>
+		</table>
+		<p class="buttons"><? echo ( button( 'Delete', { onclick=>'delete_files();' } );) ?></p>
+		<input type="hidden" name="btnFunction" />
+	</form>
+</fieldset>

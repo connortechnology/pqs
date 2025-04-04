@@ -1,0 +1,74 @@
+<? eval (
+	my %search = (
+		'order',			'lower(name)',
+	);
+	$search{'deleted'} = $session{'/employee/purchase_order/items.html?deleted'} if exists $session{'/employee/purchase_order/items.html?deleted'};
+	$search{'vendor_id'} = $session{'/employee/purchase_order/items.html?supplier_id'} if $session{'/employee/purchase_order/items.html?supplier_id'};
+	$search{'type_id in'} = [ split(',', $session{'/employee/purchase_order/items.html?types'} ) ] if $session{'/employee/purchase_order/items.html?types'};
+
+	@{$$variable{'Items'}} = ();
+	foreach my $Item ( openprint::PurchaseOrder_Item->find( %search ) ) {
+		if ( $param{'item_contains'} ) {
+			next if ! ( $Item->name() =~ /$param{'item_contains'}/i );
+		} # end if
+		push @{$$variable{'Items'}}, $Item;
+	} # end foreach Item
+) ?>
+<? if ( @{$$variable{'Items'}} == 0 ) ?>
+	There are no purchase order items matching your search criteria.
+<? else ( @{$$variable{'Items'}} == 0 ) ?>
+<table class="List sortable">
+	<tr>
+<? if ( $session{'user_type'} eq 'A' ) ?>
+		<th class="checkbox"><input type="checkbox" onclick="select_all( $('f1'), 'item_id', this.checked );"/></th>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
+		<th class="id">ID</th>
+		<th class="product">Product #</th>
+		<th class="item_name">Item</th>
+<? if ( ! $session{'/employee/purchase_order/items.html?supplier_id'} ) ?>
+		<th class="supplier">Supplier</th>
+<? endif ( ! $session{'/employee/purchase_order/items.html?supplier_id'} ) ?>
+		<th class="Price">Price</th>
+	</tr>
+	<? echo ( 
+		my $html = '';
+		while ( my $Item = shift @{$$variable{'Items'}} ) {
+			$html .= sprintf(q`<tr id="tr-%1$d">`, $Item->id() );
+			if ( $session{'user_type'} eq 'A' ) {
+				$html .= '<td class="checkbox"><input type="checkbox" name="item_id" value="'.$Item->id().'"/></td>';
+			} # end if
+
+			if ( ! $session{'/employee/purchase_order/items.html?supplier_id'} ) {
+			$html .= sprintf( q`
+				<td class="id"><a href="item.html?item_id=%1$d">%1$d</a></td>
+				<td class="product"><a href="item.html?item_id=%1$d">%2$s</a></td>
+				<td class="item_name"><a href="item.html?item_id=%1$d">%3$s</a></td>
+				<td class="supplier"><a href="item.html?item_id=%1$d">%4$s</a></td>
+				<td class="price"><a href="item.html?item_id=%1$d">%5$s</a></td>
+			</tr>`, $Item->id(), $Item->product(), ssi::htmlize($Item->name()), $Item->Vendor()->name(), openprint::Currency::format( 1*$Item->price() ),
+				);
+			} else {
+			$html .= sprintf( q`
+				<td class="id"><a href="item.html?item_id=%1$d">%1$d</a></td>
+				<td class="product"><a href="item.html?item_id=%1$d">%2$s</a></td>
+				<td class="item_name"><a href="item.html?item_id=%1$d">%3$s</a></td>
+				<td class="price"><a href="item.html?item_id=%1$d">%4$s</a></td>
+			</tr>`, $Item->id(), $Item->product(), $Item->name(), openprint::Currency::format( 1*$Item->price() ),
+				);
+			} # end if
+		} # end while
+		return $html;
+	) ?>
+		
+	</table>
+	<p class="buttons">
+		<? echo (
+			my $html;
+			if ( $session{'user_type'} eq 'A' ) {
+				$html .= ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';f1.submit();", 'text'=>'Delete Selected' } );
+				$html .= ssi::button( 'Merge', { 'onclick'=>"f1.btnFunction.value='Merge';f1.submit();", 'text'=>'Merge Selected' } );
+			} # end if
+			return $html;
+		) ?>
+	</p>
+<? endif ( @{$$variable{'Items'}} == 0 ) ?>

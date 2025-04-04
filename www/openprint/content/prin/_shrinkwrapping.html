@@ -1,0 +1,12 @@
+<li>
+	<label>Shrink Wrapping</label>
+	<input type="radio" id="ShrinkWrappingY" name="ShrinkWrapping" value="Y" onclick="$('ShrinkWrappingDiv').show();$('OrderButton').hide();" <? echo ( 'checked="checked"' if $$variable{'ShrinkWrapping'} eq 'Y' ) ?> />
+	<label class="radio" for="ShrinkWrappingY">Yes</label>
+	<input type="radio" id="ShrinkWrappingN" name="ShrinkWrapping" value="N" onclick="$('ShrinkWrappingDiv').hide();$('OrderButton').hide();" <? echo ( 'checked="checked"' if $$variable{'ShrinkWrapping'} ne 'Y' ) ?> />
+	<label class="radio" for="ShrinkWrappingN">No</label>
+</li>
+<li id="ShrinkWrappingDiv" <? echo ( 'style="display:none;"' if $$variable{'ShrinkWrapping'} ne 'Y' ) ?> >
+	<label for="txtItemsPerShrinkWrap">Items per wrap</label>
+	<input type="number" id="txtItemsPerShrinkWrap" name="txtItemsPerShrinkWrap" value="<?txtItemsPerShrinkWrap?>" onkeyup="$('OrderButton').hide();" />
+</li>
+

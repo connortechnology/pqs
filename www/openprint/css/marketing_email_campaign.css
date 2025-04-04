@@ -1,0 +1,7 @@
+fieldset ul li {
+  padding-left: 210px;
+}
+fieldset ul li label:not(.radio):not(.radio-inline) {
+  margin-left: -210px;
+  width: 205px;
+}

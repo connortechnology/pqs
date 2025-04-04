@@ -1,0 +1,16 @@
+<div id="Information">
+	<fieldset><legend>Information</legend>
+		<div class="content">
+			<ul>
+				<li><label>Quote ID</label><a href="/main/quote/history_details.html?quote_id=<? echo ( $$variable{Quote}->id() ) ?>"><? echo ( $$variable{Quote}->id() ) ?></a></li>
+				<li><label>Created</label><? echo ( Date::Format::time2str($config{'QuoteDateFormat'} ? $config{'QuoteDateFormat'} : $config{'DateTimeFormat'}, Date::Parse::str2time($$variable{Quote}->created_on() ) ); ) ?></li>
+				<li id="Status"><label>Status</label><? echo ( $$variable{Quote}->status(); ) ?></li>
+				<? if ( $$variable{Quote}->reference() ) ?>
+				<li class="reference"><label>Reference</label>
+				<? echo ( $$variable{Quote}->reference() ) ?>
+				</li>
+				<? endif ( $$variable{Quote}->reference() ) ?>
+			</ul>
+		</div>
+	</fieldset>
+</div>

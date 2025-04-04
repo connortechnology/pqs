@@ -1,0 +1,51 @@
+<? echo (
+    my $html;
+    my @Suppliers = openprint::Company->find( offers_credit=>1, order=>'id');
+    foreach my $Supplier ( @Suppliers ) {
+		next if $$variable{Company}->id() == $Supplier->id();
+        my $Credit = $$variable{Company}->Credit($Supplier->id());
+
+        $html .= sprintf(q`
+    <div class="Credit"><fieldset><legend>Credit Information for %2$s:</legend>
+        <ul>
+            <li><label>Terms</label>%3$s Days</li>
+            <li><label>Warn after</label>%4$s Days</li>
+            <li><label>Deny after</label>%5$s Days</li>
+            <li><label>Limit</label><input type="text" name="limit-%1$d" value="%6$s" /></li>
+            <li><label>Current Owing</label>%7$s</li>
+            <li><label>Remaining Credit</label>%8$s</li>
+            <li><label>On Hold</label>%9$s</li>
+            <li><label>Downpayment</label>%10$s %</li>
+            <li><label>COD</label>%11$s %</li>
+            <li><label>Late Payment Amount</label>%12$s%13$s</li>
+            <li><label>Early Payment Amount</label>%14$s%15$s</li>
+            <li><label>Early Payment Days</label>%16$s</li>
+        </ul>
+    </fieldset></div>
+        `, $Supplier->id(), $Supplier->link_to(),
+        input(type=>'cardinal', name=>'terms-'.$$Supplier{id}, value=>$Credit->terms() ),
+        input(type=>'cardinal', name=>'warndays-'.$$Supplier{id}, value=>$Credit->warndays() ),
+        input(type=>'cardinal', name=>'denydays-'.$$Supplier{id}, value=>$Credit->denydays() ),
+        openprint::Currency::format( 1*$Credit->limit() ),
+        openprint::Currency::format( $Credit->debt() ),
+        $Credit->remaining(),
+        radio('hold-'.$Supplier->id(), ['Y','Yes','N','No'], $Credit->hold() ),
+        input(type=>'cardinal', name=>'downpayment-'.$$Supplier{id}, value=>$Credit->downpayment(), max=>100 ),
+        input(type=>'cardinal', name=>'cod-'.$$Supplier{id}, value=>$Credit->cod(), max=>100 ),
+        input(type=>'float', name=>'late_payment_amount-'.$Supplier->id(), value=>$Credit->late_payment_amount() ),
+        ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $Credit->late_payment_units(), { name=>'late_payment_units-'.$Supplier->id() } ),
+        input(type=>'float', name=>'early_payment_amount-'.$Supplier->id(), value=>$Credit->early_payment_amount() ),
+        ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $Credit->early_payment_units(), { name=>'early_payment_units-'.$Supplier->id() } ),
+        input(type=>'cardinal', name=>'early_payment_days-'.$Supplier->id(), value=>$Credit->early_payment_days() ),
+
+);
+    } # end foreach Company
+    if ( @Suppliers == 2 ) {
+        $html .= '<p class="buttons">';
+        $html .= button('Left', { onclick=>"set_credit($Suppliers[1]{id},$Suppliers[0]{id});", text=>'&lt;=' } );
+        $html .= button('Swap', { onclick=>"swap_credit($Suppliers[0]{id},$Suppliers[1]{id});", text=>'&lt;=&gt;' } );
+        $html .= button('Right', { onclick=>"set_credit($Suppliers[0]{id},$Suppliers[1]{id});", text=>'=&gt;' } );
+        $html .= '</p>';
+    } # end if
+    return $html;
+) ?>

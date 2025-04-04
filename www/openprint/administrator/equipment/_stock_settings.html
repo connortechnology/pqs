@@ -1,0 +1,26 @@
+<table class="List">
+		<tr><th class="description">Stock</th><th class="grain">Grain</th><th class="buttons">&nbsp;</th></tr>
+<? echo (
+	my $html;
+	# Prime cache
+	# openprint::Equipment_Stock_Setting->find('equipment_id'=>$$variable{'Equipment'}->id() );
+
+	foreach my $Stock ( openprint::Paper::sort( openprint::Paper->find(
+			'stock_settings_equipment_id any' => $$variable{Equipment}->id(), 
+			) ) ) {
+		my $Setting = openprint::Equipment_Stock_Setting->find_one( stock_id=>$Stock->id(), equipment_id=>$$variable{Equipment}->id() );
+		if ( ! $Setting ) {
+			$log->error("No setting found");
+			next;
+		} # end if
+		$html .= sprintf( '<tr id="setting_%1$d">
+	<td class="description">%2$s</td>
+	<td class="grain"><select id="grain_%1$d" name="grain_%1$d"><option value="">select</option>%3$s</select></td><td class="buttons">%4$s</td></tr>',
+			$Setting->id(), $Setting->Stock()->to_string(), 
+			make_drop_down( [ map { $_, $_ } ( 'Long','Short','Both','Dont Use' ) ], $Setting->grain() ),
+			button('delete_setting_'.$Setting->id(), { onclick=>qq`new Ajax.Updater('StockSettings','_stock_settings.html', { parameters:{action:'delete', equipment_id: $$variable{Equipment}{id}, id: $$Setting{id} } } );`, text=>'Delete' } ),
+			);
+	} # end foreach
+	return $html;
+) ?>
+</table>

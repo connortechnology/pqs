@@ -1,0 +1,32 @@
+<li>
+	<label><? echo ( writeTip('Imposition'); ) ?></label>
+	<? echo ( my $html;
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			$html .= input(
+				name	=>"txtImposition-$$variable{SignatureIndex}-$qty_index", 
+				value	=>$$variable{"txtImposition-$$variable{SignatureIndex}-$qty_index"},
+				onkeyup	=>q`calc('f1');`,
+				type	=>'cardinal',
+			);
+			$html .= ' Out ';
+			$html .= write_override( "chkOverrideImposition-$$variable{SignatureIndex}-$qty_index", $$variable{"chkOverrideImposition-$$variable{SignatureIndex}-$$variable{QTYIndex}"}, '', q`calc('f1')` );
+			$html .= '<br/>';
+			$html .= input(
+				type	=>	'float',
+				name	=>	"txtLayoutWidth-$$variable{SignatureIndex}-$qty_index",
+				value	=>	$$variable{"txtLayoutWidth-$$variable{SignatureIndex}-$qty_index"},
+				readonly=>	'readonly',
+				);
+			$html .= input(
+				type	=>	'float',
+				name	=>	"txtLayoutHeight-$$variable{SignatureIndex}-$qty_index",
+				value	=>	$$variable{"txtLayoutheight-$$variable{SignatureIndex}-$qty_index"},
+				readonly=>	'readonly',
+				);
+			$html .= '(W x H in inches)';
+			$html .= '</span>';
+		} # end foreach qty_index
+		return $html;
+	) ?>
+</li>

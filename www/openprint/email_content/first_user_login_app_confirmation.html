@@ -1,0 +1,24 @@
+Dear <? echo ( join(' ', $$variable{'User'}->get('salutation','firstname','lastname') ); ) ?>,<br/>
+<br/>
+Thank-you for registering on our website.
+<? if ( $config{'NewCustomerAccountActivation'} eq 'Y' and $config{'NewFirstUserAccountActivation'} eq 'Y' ) ?>
+As the initial user, you are the administrator for your company account.  
+You can use the <a href="<? echo ( $config{ExternalSecureSiteURL} ) ?>/account/user_profile.html">User Profile</a> page to create and modify additional logins for the other users within your company.<br/>
+<? else ( $config{'NewCustomerAccountActivation'} eq 'Y' and $config{'NewFirstUserAccountActivation'} eq 'Y' ) ?>
+You will be notified when your account is activated. 
+Once your account is active you will be the administrator for your company account and will be able to use the <a href="<? echo ( $config{ExternalSecureSiteURL} ) ?>/account/user_profile.html">User Profile</a> page to create and modify additional logins for the other users within your company.<br>
+<? endif ( $config{'NewCustomerAccountActivation'} eq 'Y' and $config{'NewFirstUserAccountActivation'} eq 'Y' ) ?>
+<br/>
+<p>
+  If you have any questions, please contact
+  <? echo (
+          my $Company = new openprint::Company( $session{'company_id'} );
+          if ( $Company->salesrep_id() ) {
+          my $CSR = new openprint::User( $Company->salesrep_id() );
+          return sprintf('<a href="mailto:%s">%s %s</a>.', $CSR->email(), $CSR->firstname(), $CSR->lastname() );
+          } else {
+          return qq`our <a href="/support/help_desk.html">helpdesk</a>.`;
+          } # end if
+          ) ?>
+  </p>
+

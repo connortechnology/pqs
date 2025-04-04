@@ -1,0 +1,39 @@
+<div class="templates">
+  <ul>
+    <li>
+      <img src="/images/templates/2PanelFold.png" alt="2 Panel Fold"/><br/>
+		<input type="radio" id="rdbTemplateType4PageFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="4PageFold" on_click_this="selectCoverTemplate" <? echo ( ($$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '4PageFold' or $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq  '' ) ? 'checked="checked"' : '' ) ?> />
+		<label for="rdbTemplateType4PageFold<?Signature?>">2 Panel</label>
+	</li>
+    <li>
+      <img src="/images/templates/SingleGateFold.png" alt="Single Gate Fold"/> <br/>
+		<input type="radio" id="rdbTemplateTypeSingleGateFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="SingleGateFold" on_click_this="selectCoverTemplate" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'SingleGateFold' ? 'checked="checked"' : '' ) ?> /> 
+		<label for="rdbTemplateTypeSingleGateFold<?Signature?>">Single Gate Fold</label>
+	</li>
+    <li>
+      <img src="/images/templates/DoubleGateFold.png" alt="Double Gate Fold" /><br/>
+		<input type="radio" id="rdbTemplateTypeDoubleGateFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="DoubleGateFold" on_click_this="selectCoverTemplate" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'DoubleGateFold' ? 'checked="checked"' : '' ) ?> />
+		<label for="rdbTemplateTypeDoubleGateFold<?Signature?>">Double Gate Fold</label>
+	</li>
+<? if ( openprint::ProjectType->find_one( name=>'PresentationFolders') ) ?>
+	<li>
+    <img src="/images/templates/PresentationFolders/2Panel1Pocket.png" alt=""/> <br/>
+		<input type="radio" id="rdbTemplateTypeSinglePocket<?Signature?>" name="rdbTemplateType<?Signature?>" value="2Panel1Pocket" on_click_this="selectCoverTemplate" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '2Panel1Pocket' ? 'checked="checked"' : '' ) ?> /> 
+		<label for="rdbTemplateTypeSinglePocket<?Signature?>">Single Pocket</label>
+	</li>
+	<li>
+    <img src="/images/templates/PresentationFolders/2Panel2Pocket.png" alt=""/> <br/>
+		<input type="radio" id="rdbTemplateType2Panel2Pocket<?Signature?>" name="rdbTemplateType<?Signature?>" value="2Panel2Pocket" on_click_this="selectCoverTemplate" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '2Panel2Pocket' ? 'checked="checked"' : '' ) ?> /> 
+		<label for="rdbTemplateType2Panel2Pocket<?Signature?>">Double Pocket</label>
+	</li>
+	<li>
+    <img src="/images/templates/PresentationFolders/3Panel2Pocket.png" alt=""/><br/>
+		<input type="radio" id="rdbTemplateType3Panel2Pocket<?Signature?>" name="rdbTemplateType<?Signature?>" value="3Panel2Pocket"
+    on_click_this="selectCoverTemplate"
+    <? echo ( ($$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '3Panel2Pocket' or $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'TriFoldDoublePocket') ? 'checked="checked"' : '' ) ?> />
+		<label for="rdbTemplateType3Panel2Pocket<?Signature?>">TriFold Double Pocket</label>
+	</li>
+<? endif ( openprint::ProjectType->find_one( name=>'PresentationFolders') ) ?>
+  </ul>
+	<br class="spacer"/>
+</div>

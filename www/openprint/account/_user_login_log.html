@@ -1,0 +1,29 @@
+<? if ( $$variable{User}->id() ) ?>
+<fieldset id="Log"><legend>Last 10 Login Attempts</legend>
+    <table class="List">
+        <tr>
+            <th class="DateTime">When</th>
+            <th class="hostname">From</th>
+            <th class="Company">Company</th>
+            <th class="Result">Result</th>
+        </tr>
+<? echo (
+    require openprint::Log;
+    my $html = '';
+
+    foreach my $Log ( openprint::Log->find(user_id=>$$variable{User}->id(),order=>'date_time DESC', limit=>10, 'action_id'=>[2,3,78,79] ) ) {
+        my $Host = $Log->Host();
+
+		my $ips = join('<br/>', map { $_->ip() } $Host->Interfaces() );
+
+        $html .= sprintf('<tr><td class="DateTime">%s</td><td class="hostname" title="%s">%s</td><td class="Company">%s</td><td class="Result">%s</td></tr>',
+            format_datetime( $Log->date_time() ),
+            $ips,
+            sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $$Host{id}, ( $Host->hostname() ? $Host->hostname() : $ips ) ),
+            htmlize( $Log->Company()->name() ),$Log->note() );
+    } # end foreach
+    return $html;
+) ?>
+    </table>
+</fieldset>
+<? endif ( $$variable{User}->id() ) ?>

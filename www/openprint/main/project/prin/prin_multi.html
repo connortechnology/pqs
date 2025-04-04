@@ -1,0 +1,248 @@
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
+<script src="<?hash_link(/javascripts/printing.js)?>"></script>
+<script nonce="<?echo($config{CSP_NONCE})?>">
+	const quantities = new Array();
+	<?QUANTITIES?>
+
+	results_callback = function cbBookResults( results ) {
+		cbFillResults(results);
+		const form = getFormObj('f1');
+		if ( get_value( form.rdbCover ) == 'Self' ) {
+			$('SignatureGroup1').hide();
+		} else {
+			$('SignatureGroup1').show();
+		} // end if
+	} // end function cbBookResults
+
+	function validate_data(formName) {
+		const form = getFormObj(formName);
+		if ( ! form.txtTotalPageQuantity.value > 0 ) {
+			alert("Please enter the total quantity of pages.");
+			return 0;
+		} // end if
+
+		return 1;
+	} // end function
+
+  function signature_type_change(ddm) {
+    if (ddm.value != 'unknown') {
+      const re = /txtSignatureType(\d+)/;
+      const matches = ddm.name.match(re);
+      if (matches) {
+        console.log(matches);
+        const description = ddm.form.elements['txtServiceDescription'+matches[1]];
+
+        if ( description && (
+          description.value == 'Cover Pages' ||
+          description.value == 'Interior Pages' ||
+          description.value == 'Gate Folded Pages' ||
+          description.value == 'PerfReplyCard' ||
+          description.value == 'Cover'
+        )) {
+          description.value = ddm.value;
+        }
+      }
+      if (ddm.value == 'Gate Folded Pages') {
+        $j('#templates'+matches[1]).load('/includes/main/proj/templates/_gatefolds.html?Signature='+matches[1]);
+      } else {
+        $j('#templates'+matches[1]).html('');
+      }
+    } // if ! unkown
+    calc(ddm.form.name);
+  }
+
+	function add_group() {
+		var form = $('f1');
+	   new Ajax.Request( '/main/project/prin/_signature.html', {
+			parameters: { project_id : form.ProjectIndex.value, action: 'add_group' },
+			onSuccess: function(response){
+        new Insertion.Bottom($('SignatureGroups'), response.responseText);
+        update_event_bindings();
+        calc('f1');
+        }
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+			});
+	}
+
+	function copy_group( group_id ) {
+		var form = $('f1');
+		new Ajax.Request( '/main/project/prin/_signature.html', {
+			parameters: { project_id : form.ProjectIndex.value, action: 'copy_group', group_id: group_id },
+			onSuccess: function(response){
+        new Insertion.Bottom($('SignatureGroups'), response.responseText);
+        update_event_bindings();
+        calc('f1');
+        }
+			});
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+	}
+
+	function remove_group( group_id ) {
+		var form = $('f1');
+		new Ajax.Request( '/main/project/prin/_signature.json', {
+			parameters: { project_id : form.ProjectIndex.value, action: 'remove_group', group_id: group_id },
+			onSuccess: function(response){$('SignatureGroups'+group_id).remove();calc('f1');},
+			evalScripts: true
+		} );
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+	}
+</script>
+<?include('/main/project/prin/_templates.html')?>
+<div class="Service">
+<div class="PageTitle">
+<h1>Project <?echo($$variable{Project}->link_to())?></h1>
+<h2>Printing</h2>
+</div>
+<? if ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
+    <div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
+<? endif ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ProjectTypeName?></legend>
+			<div class="ProjectSpecifications">
+			<?include('/includes/main/proj/templates/generic.html')?>
+			<div class="BookSpecifications">
+			<fieldset><legend>Book Specifications</legend>
+				<ul>
+          <li class="project_size"><label>Dimensions</label>
+            <select id="ddmProjectSize" name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(this.form);">
+<? if ( $$variable{ddmProjectSize} ) ?>
+                <option value="<?ddmProjectSize?>"><?ddmProjectSize?></option>
+<? else ( $$variable{ddmProjectSize} ) ?>
+                <option value="custom">custom</option>
+<? endif ( $$variable{ddmProjectSize} ) ?>
+            </select>
+          </li>
+          <li class="finished"><label>Finished</label>
+            <? echo ( join( "\n",
+                input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Final Width in inches' ),
+                ' x ',
+                input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Final Height in inches' ),
+				); ) ?>
+				</li>
+				<li class="spine"><label>Spine</label>
+					<?echo( radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name);' } ); ) ?> </li>
+				<li class="multipage_spread"><label>Spread</label>
+                <? echo ( join( "\n",
+				
+                input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Width in inches' ),
+                ' x ',
+                input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Height in inches' ),
+                );
+            ) ?>
+				</li>
+</ul>
+				<ul id="PagesCover">
+				<li>
+					<label>Total pages</label>
+					<? echo ( input( name=>'txtTotalPageQuantity', value=>$$variable{txtTotalPageQuantity}, type=>'cardinal', oninput=>'calc(this.form.name);' ); ) ?>
+				</li>
+				<li>
+					<label>Cover</label>
+					<? echo ( radio( 'rdbCover', [ map { $_, $_ . ' Cover' } ( 'Self', 'Different' ) ], $$variable{rdbCover}, { onclick=>q`if(this.value=='Self'){$('SignatureGroup1').hide();}else{$('SignatureGroup1').show();};calc(this.form.name);` } ); ) ?>
+				</li>
+				</ul>
+        <ul id="SpiralOptions" style="display:none;">
+        <? if (openprint::Material->find_one(name=>'Clear Acetate Front'))?>
+          <li><label>Clear Acetate Front?</label>
+            <?echo( radio('acetate_front', [Y=>'Yes',N=>'No'], $$variable{acetate_front}, {default=>'N'}); ) ?>
+          </li>
+        <? endif (openprint::Material->find_one(name=>'Clear Acetate Front'))?>
+        <? if (openprint::Material->find_one(name=>'Black Acetate Back'))?>
+          <li><label>Black Acetate Back?</label>
+            <?echo( radio('acetate_back', [Y=>'Yes',N=>'No'], $$variable{acetate_back}, {default=>'N'}); ) ?>
+          </li>
+        <? endif (openprint::Material->find_one(name=>'Black Acetate Back'))?>
+          </ul>
+				<ul id="GateInsert">
+				<li>
+					<label><? echo ( writeTip( 'Gate Folded' ); ) ?> pages</label>
+					<? echo ( input( name=>'txtGateFoldedSpreadQuantity', value=>$$variable{txtGateFoldedSpreadQuantity},  type=>'cardinal', oninput=>'calc(this.form.name);', min=>0 ); ) ?>
+				</li>
+				<li class="supplied_inserts">
+					<label>Supplied Inserts</label>
+					<? echo ( input( name=>'txtInsertQuantity', value=>$$variable{txtInsertQuantity}, type=>'cardinal', min=>0 ); ) ?>
+				</li>
+			<? if ( openprint::ServiceType->find_one( name=>'Tipping') ) ?>
+				<li>
+					<label># of tip-ins</label>
+					<? echo ( input( name=>'TippingQuantity', value=>$$variable{TippingQuantity}, type=>'cardinal', min=>0 ); ) ?>
+				</li>
+			<? endif ( openprint::ServiceType->find_one( name=>'Tipping') ) ?>
+			<? if ( openprint::ServiceType->find_one( name=>'Blowing') ) ?>
+				<li>
+					<label># of blow-ins</label>
+					<? echo ( input( name=>'BlowingQuantity', value=>$$variable{BlowingQuantity}, type=>'cardinal' ); ) ?>
+				</li>
+			<? endif ( openprint::ServiceType->find_one( name=>'Blowing') ) ?>
+				</ul>
+			</fieldset>
+			</div>
+			<div id="OtherSpecifications">
+				<fieldset><legend>Other Specifications</legend>
+					<? echo ( return ''; include('/includes/main/proj/multipage_printing_type.html'); ) ?>
+					<? include('/includes/main/proj/screen_type.html') ?>
+				</fieldset>
+			</div>
+			</div><!--ProjectSpecifications-->
+			<div id="SignatureGroups">
+			<? echo (
+				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{ProjectIndex}, 'Group' );
+				my $ServiceType = openprint::ServiceType->find_one( name=>'Signature');
+
+				if ( ! sets::isin( 1, \@Groups ) ) {
+					# Unshift so that cover is always first
+					unshift @Groups, 1;
+					# Load Defaults
+					if ( $ServiceType ) {
+						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>undef ) ) {
+							$$variable{$Default->name().'1'} = $Default->value();
+						} # end while
+						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ) ) {
+							$$variable{$Default->name().'1'} = $Default->value();
+						} # end while
+					} # end if
+					$$variable{txtServiceDescription1} = 'Cover Pages';
+					$$variable{txtSignatureType1} = 'Cover Pages';
+				} # end if
+
+				if ( ! sets::isin( 2, \@Groups ) ) {
+					# Ensure 1 interior pages
+					push @Groups, 2;
+					# Load Defaults
+					if ( $ServiceType ) {
+						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>undef ) ) {
+							$$variable{$Default->name().'2'} = $Default->value();
+						} # end while
+						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ) ) {
+							$$variable{$Default->name().'2'} = $Default->value();
+						} # end while
+					} # end if
+					$$variable{txtServiceDescription2} = 'Interior Pages';
+					$$variable{txtSignatureType2} = 'Interior Pages';
+				} # end if
+				my $html = '';
+				my $h = slurp_content( '/main/project/prin/_signature.html' );
+				foreach my $Group ( @Groups ) {
+					$$variable{Group} = $$variable{Signature} = $Group;
+					$html .= variable_substitution(\$h, $variable);
+				} # end foreach
+				return $html;
+			) ?>
+			</div>
+		</fieldset>
+		<? echo ( button( 'AddSignature', { on_click=>'add_group', text=>'Add Another Group of Signatures' } ); ) ?>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+    <input type="hidden" name="ServiceType" value="<?echo($$variable{ProjectType}->type())?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ContinueProject" value="Y"/>
+		<input type="hidden" name="remaining_pages" />
+		<input type="hidden" name="next_group_id" />
+		<input type="hidden" name="groups" />
+	</form>
+</div><!--Service-->

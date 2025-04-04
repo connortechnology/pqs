@@ -1,0 +1,36 @@
+<script type="text/javascript">
+	function load_categories() {
+		LoadContent('Results','_categories.html', $('f1') );
+	}
+</script>
+<?include('/includes/error_reporting.html')?>
+<form id="f1" name="f1" action="categories.html">
+<fieldset class="filters">
+	<ul>
+	<? if ( @{$$variable{Categories}} = openprint::Product_Category->find( order=>'lower(name)') ) ?>
+		<li><label>Category</label>
+			<select name="category_id" id="category_id" onchange="load_categories();">
+				<option value="">All</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{$$variable{uri}.'?category_id'} ); ) ?>
+			</select>
+		</li>
+    <?eval(
+    if ( $session{$$variable{uri}.'?category_id'} and ! sets::isin( $session{$$variable{uri}.'?category_id'}, [ map { $_->id() } @{$$variable{Categories}} ] ) ) {
+      delete $session{$$variable{uri}.'?category_id'};
+    }
+    )?>
+  <? else ( @{$$variable{Categories}} = openprint::Product_Category->find( order=>'lower(name)') ) ?>
+  <?eval( delete $session{$$variable{uri}.'?category_id'}; )?>
+  <? endif ( @{$$variable{Categories}} = openprint::Product_Category->find( order=>'lower(name)') ) ?>
+	</ul>
+</fieldset>
+</form>
+<p class="buttons">
+<?echo(
+  if ( openprint::Product_Category->can_edit() ) {
+    return button('New', { href=>'category_edit.html' } );
+  }
+  return;
+)?>
+</p>
+<div id="Results"><?include(_categories.html)?></div>

@@ -1,0 +1,18 @@
+table .name,
+table .conversions {
+  text-align: left;
+}
+table .symbol {
+  width: 60px;
+}
+table .short {
+  width: 100px;
+}
+table .conversions {
+  width: 550px;
+}
+
+.conversions input[type="text"], 
+.conversions input[type="number"] {
+  width: 60px;
+}

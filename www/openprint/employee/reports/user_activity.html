@@ -1,0 +1,59 @@
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>User Activity</h2>
+</div>
+<form id="f1" name="f1" action="/employee/reports/user_activity.html" method="post">
+  <input type="hidden" name="btnFunction"/>
+	<div class="leftColumn">
+		<fieldset class="filters"><legend>Report Criteria</legend>
+			<ul>
+				<li>
+					<label>Company</label>
+					<input type="text" oninput="filter_companies(f1.company_id, {name:this.value});" class="filter"/>
+					<select name="company_id" id="company_id" onchange="if(this.options[this.selectedIndex].value != ''){f1.user_id.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();}">
+						<option value="">All</option>
+						<? echo (
+							$variable{companies_ddm} = openprint::Company->dropdown();
+							if ( @{$variable{companies_ddm}} > 100 ) {
+								# Too many.  find the selected one and drop all but previous and following 10.
+
+								for ( my $i = 0; $i < @{$variable{companies_ddm}}; $i += 2 ) {
+									if ( $variable{companies_ddm}[$i] == $session{$r->uri().'?company_id'} ) {
+										@{$variable{companies_ddm}} = splice( @{$variable{companies_ddm}}, ( $i > 100 ? $i - 20 : 0 ), 100 );
+										last;
+									}
+								}
+							}
+							make_drop_down( $variable{companies_ddm}, $session{$r->uri().'?company_id'} );
+						) ?>
+          </select>
+        </li>
+        <li>
+          <label>User</label>
+          <select name="user_id" id="user_id" onchange="f1.btnFunction.value='';f1.submit();">
+            <option value="">Select a User</option>
+            <? echo ( make_drop_down( openprint::User->dropdown(
+										company_id=>$session{$r->uri().'?company_id'}),
+									$session{$r->uri().'?user_id'} );
+								) ?>
+          </select>
+				</li>
+				<li>
+       		<label>Period</label>
+       		<? echo ( join(' to ',
+            date_select_session($r->uri(), 'period_start', { with_today=>1, with_clear=>1 }),
+            date_select_session($r->uri(), 'period_end', { with_today=>1, with_clear=>1 }),
+            ); ) ?>
+    		</li>
+			</ul>
+		</fieldset>
+	</div>
+	<br class="spacer"/>
+	<p class="buttons">
+		<? echo ( join("\n", 
+					button( 'Show', { onclick=>"LoadContent('Results','/employee/reports/_user_activity.html', f1.serialize() );", text=>'Show Results' } ),
+					button( 'Download', { onclick=>"f1.action='/employee/reports/_user_activity.html?action=download';f1.submit();" } ),
+					);) ?>
+	</p>
+</form>
+<div id="Results"></div>

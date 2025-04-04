@@ -1,0 +1,4 @@
+.country select, .country input[type="text"], 
+.state select, .state input[type="text"] {
+	width: 40%;
+}

@@ -1,0 +1,48 @@
+<div class="PageTitle">
+<h1>Messaging</h1>
+<h2>Inbox</h2>
+</div>
+<script type="text/javascript">
+	function load_messages( form ) {
+		$('MessageList').innerHTML = 'Please wait...';
+		new Ajax.Updater('MessageList','_list.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+	function delete_conversation( conversation_id ) {
+		new Ajax.Updater( 'MessageList', '_list.html', { parameters: { action: 'delete', conversation_id: conversation_id, user_id: '<? echo ( $session{user_id} ) ?>' } } );
+	} // end function delete_message
+</script>	 
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? if ( $session{'user_id'} ) ?>
+<div class="Messaging"><div class="<? echo ( $session{'/messaging/list.html?folder'} ) ?>">
+	<form id="f1" name="f1" method="post" action="/messaging/list.html">
+		<fieldset class="<? echo ( $session{'/messaging/list.html?folder'} ) ?>"><legend><? echo ( $session{'/messaging/list.html?folder'} ) ?></legend>
+			<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+				<ul>
+					<li>
+						<label>When</label>
+						<? echo ( ssi::date_select_session( '/messaging/list.html', 'starting_on_start', {onchange=>'load_messages(this.form);'} ); ) ?>
+							to 
+						<? echo ( ssi::date_select_session( '/messaging/list.html', 'starting_on_end', {onchange=>'load_messages(this.form);'} ); ) ?>
+					</li>
+					<li>
+						<label>Who</label>
+						<input type="text" name="who" id="who" onkeyup="if(this.value.length>2){load_messages(this.form);}" placeholder="minimum 3 characters"/>
+					</li>
+				</ul>
+				<br class="spacer"/>
+				<p class="buttons">
+					<? echo ( join('',
+						ssi::button( 'ShowResults', { onclick=>'load_messages(f1);', text=>'Show Results' } ),
+						ssi::button( 'Reset', { href=>'/messaging/list.html?action=reset', text=>'Reset' } ),
+						ssi::button( 'New', { href=>'/messaging/view.html', text=>'New Message' } ),
+						); ) ?>
+				</p>
+			</fieldset>
+			<div id="MessageList"><? echo ( include('/messaging/_list.html'); ) ?></div>
+		</fieldset>
+	</form>
+	</div>
+</div>
+<? else ( $session{'user_id'} ) ?>
+	Only logged in customers have an list.
+<? endif ( $session{'user_id'} ) ?>

@@ -1,0 +1,56 @@
+<p> 
+	<label>Signature style and quantity</label>
+<? echo (
+	my $html;
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+
+		$html .= '<span class="value">';
+		foreach my $page ( 4, 8, 12, 16, 20,24,28,32,,36,40,44,48, 'GateFolded' ) {
+			if ( $$variable{"txtSignatureQty${page}Page-$qty_index"} ) {
+				$html .= $$variable{"txtSignatureQty${page}Page-$qty_index"} . ' - '. $page .' Page Signature';
+				$html .= 's' if $$variable{"txtSignatureQty${page}Page-$qty_index"} > 1;
+				$html.='<br/>';
+			} # end if
+		} # end foreach page
+	
+
+	$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+</p>
+<p><label>Imposition</label>
+<? echo (
+	my $html;
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+
+		$html .= '<span class="value">';
+		$html .= $$variable{"Imposition$qty_index"}.'out';
+	$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+
+<? if ( $$variable{txtSignatureQtyGateFolded} && $$variable{rdbGateFoldFit} ) ?>	
+<p>
+	<label>Double Gate folded page style</label>
+	<span class="value"><?rdbGateFoldFit?></span>
+</p>	
+<? endif ( $$variable{txtSignatureQtyGateFolded} && $$variable{rdbGateFoldFit} ) ?>
+<? if ( $$variable{txtInsertQuantity} ) ?>
+<p> 
+	<label>Quantity of inserts</label>
+	<span class="value"><?txtInsertQuantity?></span>
+</p>
+<? eval ( $$variable{InsertIndex} = 1; ) ?>
+<? while ( $$variable{InsertIndex} <= $$variable{txtInsertQuantity} ) ?>
+<p> 
+	<label>Insert <?InsertIndex?> falls between</label>
+	<span class="value">Page <? echo ( $$variable{'txtInsertPage1-'.$$variable{InsertIndex}} ) ?> and <? echo ( $$variable{'txtInsertPage2-'.$$variable{InsertIndex}} ) ?></span>
+</p>
+<? eval ( $$variable{InsertIndex} += 1; ) ?>
+<? endwhile ( $$variable{InsertIndex} <= $$variable{txtInsertQuantity} ) ?>
+<? endif ( $$variable{txtInsertQuantity} ) ?>
+<?if($$variable{ServiceType}->name() eq 'SaddleStitching')?>
+<p><label># of stitches</label><?stitches?></p>
+<?endif($$variable{ServiceType}->name() eq 'SaddleStitching')?>

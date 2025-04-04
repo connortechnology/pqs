@@ -1,0 +1,12 @@
+fieldset li {
+	padding-left: 50px;
+}
+fieldset li label:not(.radio):not(.radio-inline) {
+	width: 50px;
+	margin-left: -50px;
+}
+
+fieldset li textarea,
+fieldset li input[type="text"] {
+width: 100%;
+}

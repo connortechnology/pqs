@@ -1,0 +1,29 @@
+<form name="f1" method="post" action="/administrator/account/login_confirmation.html">
+	<fieldset><legend>Login</legend>
+		To login, enter your email address and password below.  Then click Submit.<br/>
+		<p> 
+			<label>E-mail</label>
+			<input type="text" name="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}" />
+		</p>
+		<p> 
+			<label>Password</label>
+			<input type="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData( this.form.email, this );}" />
+		</p>
+		<p>
+			<label>Remember me</label>
+			<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y"  />
+			<label class="radio" for="rdbRememberMeY">Yes</label>
+			<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N"  checked="checked" />
+			<label class="radio" for="rdbRememberMeN">No</label>
+		</p>
+		<p class="buttons">
+				<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'Submit1', 'submit.gif', 'f1.submit();', '', 'Submit' ),
+				ssi::writeButton( $log, $dbh, 'Reset1', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				); ) ?>
+		</p>
+		<input type="hidden" name="Destination" value="<?Destination?>"/>
+		<input type="hidden" name="btnFunction"/>
+	</fieldset>
+</form>
+<script type="text/javascript">document.f1.email.focus();</script>

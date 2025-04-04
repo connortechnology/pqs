@@ -1,0 +1,70 @@
+<? echo (
+	$$variable{Conversations} = [];
+
+	my @Who = $param{who} ? map { ( $_ ? openprint::User->find('name ilike'=>'%'.$_.'%') : () ) } misc::trim( split(',', $param{'who'} ) ) : ();
+	my @who_id = map { $$_{id} } @Who;
+	if ( $param{who} and ! @Who ) {
+		return 'There are no users matching ' . $param{who} . '<br/>';
+	} # end if
+
+	my @Messages = openprint::Message->find(
+		'me_id any'=>$session{user_id},
+		(
+			$param{'who'} ? ( 'to_id any'	=>	\@who_id ) : () ),
+				 #map { ( 'to_id any' => $$_{'id'} ) } @Who ) : 
+		);
+	my @Conversations = openprint::Conversation->find(order=>'id DESC', id=>[ sets::union( map { $$_{conversation_id} ? $$_{conversation_id} : () } @Messages ) ] ) if @Messages;
+	$$variable{Conversations} = \@Conversations;
+	return '';
+) ?>
+
+<? if ( @{$$variable{'Conversations'}} == 0 ) ?>
+	There are no messages which match your search criteria. 
+<? else ( @{$$variable{'Conversations'}} == 0 ) ?>
+		<? echo ( 
+			my $html;
+			foreach my $Conversation ( @{$$variable{'Conversations'}} ) {
+
+
+				# Get unread messages, order so that we can pull the most recent for the last date sent field
+				# Getting the unread list should be way more efficeint than loading all messages.
+				my @Unread = my @Message_To = openprint::Message_To->find(
+						conversation_id => $$Conversation{id},
+						user_id     => $session{user_id},
+						viewed    => 0,
+					);
+
+
+				my $Message;
+				if ( ! @Unread ) {
+					$Message = openprint::Message->find_one(conversation_id=>$$Conversation{id},'to_id any'=>$session{user_id}, order=>'sent_on DESC');
+					next if ! $Message;
+				} else {
+					$Message = $Unread[@Unread-1]->Message();
+				} # end if
+			
+				$html .= sprintf(q` 
+					<div class="Conversation"> 
+						<a href="/messaging/view.html?conversation_id=%1$d">
+						<div class="from thumbnail"><img src="%7$s" alt=""/></div>
+						<div class="subject">%2$s</div>
+						<div class="replies">%3$s</div>
+						<div class="last_sent">Last on %4$s from %5$s</div>
+						</a>
+						<div class="buttons">%6$s</div>
+					</div>
+					`, $Conversation->id(), 
+					ssi::html_escape($Conversation->subject()),
+					 @Unread . ' unread ' . Lingua::EN::Inflect::PL( 'message', scalar @Unread ),
+					
+					$Message->sent_on_string(),
+					join( ', ', map { $$_{user_id} == $session{user_id} ? () : $_->User()->name() } $Message->To() ),
+					join('', 
+						ssi::button( 'delete'.$Conversation->id(), {'onclick'=> 'delete_conversation( '.$Conversation->id().');', 'text'=>'X', 'title'=>'Delete' } ),
+						),
+					$Message->From()->Asset()->thumbnail_url(),
+				);
+			} # end foreach Conversations
+			return $html;
+		) ?>
+<? endif ( @{$$variable{'Conversations'}} == 0 ) ?>

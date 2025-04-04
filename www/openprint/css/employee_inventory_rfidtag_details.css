@@ -1,0 +1,10 @@
+input.text {
+	width: 70%;
+}
+select#Manufacturer, select#Owner, select#Name, select#Finish, select#Colour, select#Weight {
+	width: 70%;
+}
+
+#skid_id {
+	width: 100px;
+}

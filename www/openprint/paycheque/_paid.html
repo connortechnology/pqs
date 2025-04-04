@@ -1,0 +1,40 @@
+<fieldset><legend>Timetracks paid by this paycheque</legend>
+	<table class="List sortable">
+		<tr>
+			<th class="timetrack_id">Timetrack</th>
+			<th class="DateTime">Starting</th>	
+			<th class="DateTime">Ending</th>	
+			<th class="Interval">Interval</th>	
+			<th class="wage">Wage</th>	
+			<th class="buttons">&nbsp;</th>
+		</tr>
+	<? echo (
+		my $html = '';
+		my $total_wage = 0;
+		$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+		foreach my $Timetrack ( openprint::Timetrack->find('paycheque_id'=>$$variable{'Paycheque'}->id(), 'order'=>'starting') ) {
+			my $wage = $Timetrack->elapsed() * $Timetrack->User()->wage() / 3600;
+			$total_wage += $wage;
+			$html .= sprintf( q`
+<tr title="%2$s">
+	<td class="timetrack_id"><a href="/timetrack/edit.html?timetrack_id=%1$d">%1$d</a></td>
+	<td class="DateTime">%3$s</td>
+	<td class="DateTime">%4$s</td>
+	<td class="Interval">%5$s</td>
+	<td class="wage">%6$s</td>
+	<td class="buttons">%7$s</td>
+</tr>
+`,
+				$Timetrack->id(), ssi::html_escape( $Timetrack->description()),
+				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Timetrack->starting() ) ),
+				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Timetrack->ending() ) ),
+				misc::seconds_to_pretty_interval( $Timetrack->elapsed() ),
+				openprint::Currency::format( $wage ),
+				ssi::button( 'del'.$Timetrack->id(), { onclick=>'del_timetrack('.$Timetrack->id().');', text=>'-', title=>'Remove' } ),
+			);
+		} # end foreach Timetrack
+		$html .= '<tr class="totals"><td colspan="4">Total</td><td class="wage">'.openprint::Currency::format($total_wage).'</td><td>&nbsp;</td></tr>';
+		return $html;
+	) ?>
+	</table>
+</fieldset>

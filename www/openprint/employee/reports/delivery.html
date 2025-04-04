@@ -1,0 +1,66 @@
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Delivery</h2>
+</div>
+<script type="text/javascript">
+	function load_projects( form ) {
+		LoadContent('Results','/employee/reports/_delivery_results.html', form.serialize() );
+	} // end function
+</script>
+<form name="f1" method="post" action="delivery.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<ul>
+		<li>
+			<label>Project Status</label>
+			<select name="Status" multiple size="2" onchange="load_projects(this.form);">
+			<? echo ( 
+				my @options = ( 'Shipped','Shipped','Picked Up', 'Picked Up' );
+				my @selected = defined $param{'Status'} ? $param{'Status'} : ( 'Shipped', 'Picked Up' );
+				make_drop_down( \@options, \@selected );
+			 ) ?>
+			</select>
+		</li>
+		<li>
+			<label>CSR</label>
+			<select name="CSR" size="1" onchange="load_projects(this.form);">
+			<? echo ( 
+				my @options = ( '', 'All' );
+				push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
+				make_drop_down( \@options, $param{'CSR'} );
+			 ) ?>
+			</select>
+		</li>
+	<? eval (
+		my @time = localtime(time);
+		if ( ! $r->param('DateStartYear') ) {
+			@$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
+		} else {
+			@$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh,
+			$r->param('DateStartYear'), $r->param('DateStartMonth'),$r->param('DateStartDay') );
+		} # end if
+
+		if ( ! $r->param('DateEndYear') ) {
+			@$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
+		} else {
+			@$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh,
+			$r->param('DateEndYear'), $r->param('DateEndMonth'),$r->param('DateEndDay') );
+		} # end if
+	) ?>
+		<li>
+			<label>Date</label>
+			 <select name="DateStartYear" onchange="setDaysDropDown(this.value,this.form.DateStartMonth.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartYears?></select>
+			 <select name="DateStartMonth" onchange="setDaysDropDown(this.form.DateStartYear.value,this.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartMonths?></select>
+			 <select name="DateStartDay"><?DateStartDays?></select>
+			to 
+			 <select name="DateEndYear" onchange="setDaysDropDown(this.value,this.form.DateEndMonth.value,this.form.DateEndDay,this.form.DateEndDay.value);"><?DateEndYears?></select>
+			 <select name="DateEndMonth" onchange="setDaysDropDown(this.form.DateEndYear.value,this.value,this.form.DateEndDay,this.form.DateEndDay.value);"><?DateEndMonths?></select>
+			<select name="DateEndDay"><?DateEndDays?></select>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( button( 'Go',  { onclick=>q{load_projects(f1);}, text=> 'Show Results' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<br/>
+<div id="Results">Select Report Criteria, and click Show Results.</div>

@@ -1,0 +1,10 @@
+<? echo (
+	if ( $variable{error} ) { 
+		return qq`alert('$variable{error}');`;
+	} # end if
+	if ( $param{func} eq 'Del' ) {
+		return qq`\$('spec-$param{spec_id}').remove();`;
+	} elsif ( $param{func} eq 'Add' ) {
+	return qq`new Ajax.Updater( 'specifications', '/includes/_specification.html', { parameters: { spec_id: $$variable{Spec}{id} }, insertion: Insertion.Bottom } );`;
+	} # end if
+) ?>

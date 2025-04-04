@@ -1,0 +1,38 @@
+<ul>
+<? echo (
+	my $Root = openprint::Product_Category->find_one( name=>'Products' );
+
+	my @Categories = $Root->Categories();
+#openprint::Product_Category->find( name=>'Products' );
+#order => 'lower(name)', 'parent_ids is null'=> 1 );
+
+	my $html;
+	foreach my $Category ( @Categories ) {
+		my @Products = $Category->Products( order=>'sort, lower(name)');
+		my @Categories = $Category->Categories();
+		if ( @Products or @Categories ) {
+			my $on;
+			my $url_to = $Category->url_to();
+
+			my $sub_html = '<ul>';
+			foreach my $SubCategory ( @Categories ) {
+				$on = 1 if $SubCategory->id() == $param{category_id};
+#$log->debug($SubCategory->url_to() . ' ' . $$variable{uri} );
+				$sub_html .= '<li>' . $SubCategory->link_to() . '</li>';
+			} # end foreach $SubCategory
+			$sub_html .= "</ul>\n";
+			$on = 1 if (! $on) and ($param{category_id} == $Category->id());
+
+            $html .= sprintf(q`<li id="ProductCategory%1$d" class="%2$s"><a href="%3$s" onclick="toggleMenu($('ProductCategory%1$d'), 'off', 'on');">%4$s</a>`,
+                    $Category->id(),
+                    ( $on ? 'on' : 'off' ),
+                    $url_to,
+                    $Category->name(),
+                    );
+            $html .= $sub_html;
+            $html .= "</li>\n";
+        } # end if Products
+    } # end foreach Category
+    return $html;
+) ?>
+</ul>

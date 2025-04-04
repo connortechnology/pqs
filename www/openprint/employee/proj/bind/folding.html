@@ -1,0 +1,21 @@
+<?if($$variable{Project}->id())?>
+<a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">Return to Project <?ProjectIndex?></a><br/>
+<form id="f2" name="f2" action="/employee/project/view.html" method="post">
+    <fieldset class="filters">
+      <ul>
+        <li class="docket"><label>Docket #</label>
+        <? echo ( join("\n",
+              input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='view.html?Docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
+              button( 'Go1', { onclick=>q`window.location='view.html?Docket='+$('Docket').value;`, text=>'Go' } ),
+							button( 'GoProofs', { onclick=>q`if($('Docket').value){window.location='/employee/proj/prep/proofs.html?docket='+$('Docket').value;};`, text=>'Go Proofs' } ),
+        ); ) ?>
+        </li>
+      </ul>
+    </fieldset>
+  </form>
+</div>
+<?include('/includes/employee/feedback/timer.js') ?>
+<fieldset><legend>Folding Services</legend>
+	<?include('/includes/employee/feedback/bindery.html') ?>
+</fieldset>
+<?endif($$variable{Project}->id())?>

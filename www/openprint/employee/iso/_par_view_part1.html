@@ -1,0 +1,38 @@
+<?include('/includes/error_reporting.html')?>
+<h3>Part 1 (To be completed by issuer)</h3>
+<table class="View">
+	<tr>
+		<td colspan="2">Issued To</td>
+		<td colspan="3"><? hecho ( new openprint::User( $$variable{PAR}->issued_to_id() )->name(); ) ?></td>
+		<td colspan="2">Issued By</td>
+		<td colspan="3"><? hecho ( new openprint::User( $$variable{PAR}->issued_by_id() )->name(); ) ?></td>
+	</tr>
+	<tr>
+		<td colspan="2">Issue Date</td>
+		<td colspan="3"><? hecho ( $$variable{PAR}->issued_on() ) ?></td>
+		<td colspan="2">Reply Due By</td>
+		<td colspan="3"><? hecho ( $$variable{PAR}->reply_by() ) ?></td>
+	</tr>
+	<tr><td colspan="5">POTENTIAL PROBLEM / NONCONFORMANCE / OPPORTUNITY FOR IMPROVEMENT</td>
+		<td colspan="1">Area</td>
+		<td colspan="4"><? echo ( $$variable{PAR}->Area()->name() ) ?></td>
+	</tr>
+	<tr><td colspan="10"><? hecho ( $$variable{PAR}->problem() ) ?></td></tr>
+	<tr>
+		<td colspan="1">Originator</td>
+		<td colspan="4"><? hecho ( new openprint::User( $$variable{PAR}->part1_user_id() )->name() ) ?></td>
+		<td colspan="2">Date</td>
+		<td colspan="3"><? hecho ( $$variable{PAR}->part1_signed_on() ) ?></td>
+	</tr>
+</table>
+<? if ( $$variable{PAR}->part1_user_id() == $session{user_id} or $session{user_type} eq 'A' ) ?>
+	<p class="buttons">
+		<? echo ( button( 'EditPart1', { onclick=>sprintf(q`new Ajax.Updater('Part1', '_par_edit_part1.html', { parameters: {par_id:%1$d} } );`, $$variable{PAR}->id() ), text=>'Edit' } ); ) ?>.
+	</p>
+<? endif ( $$variable{PAR}->part1_user_id() == $session{user_id} or $session{user_type} eq 'A' ) ?>
+<? if ( ! $$variable{PAR}->part2_user_id() ) ?>
+<script type="text/javascript">
+	new Ajax.Updater( 'Part2', '_par_edit_part2.html', { parameters: {par_id<? echo ( $$variable{PAR}->id() ) ?>} } );
+	$('par_id').innerHTML = <? echo ( $$variable{PAR}->id() ) ?>;
+</script>
+<? endif ( ! $$variable{PAR}->part2_user_id() ) ?>

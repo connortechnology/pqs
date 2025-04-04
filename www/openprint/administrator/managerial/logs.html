@@ -1,0 +1,71 @@
+<form id="searchLog" name="searchLog" action="logs.html" method="post">
+	<fieldset class="filters"><legend>Search</legend>
+		<div class="content">
+			<ul>
+				<li><label>Actions</label>
+					<input type="checkbox" id="all" name="all" onclick="select_all( searchLog, 'log_actions',this.checked);" />
+					<label class="radio" for="all">All</label><br/>
+					<ul id="logactions">
+					<? echo(
+							my $html;
+							foreach my $Action ( openprint::Log_Action->find( order=>'lower(name)' ) ) {
+								$html .= sprintf('
+                <li>
+                  <input type="checkbox" name="log_actions" id="log_action-%1$s" value="%1$s" %3$s />
+                  <label class="radio" for="log_action-%1$s">%2$s</label>
+                </li>', 
+									$Action->id(), $Action->name(), checked( sets::isin( $Action->id(), $param{log_actions} ) ) 
+									);
+							} # end foreach Action
+							return $html;
+						 ) ?>
+					</ul>
+				</li>
+				<li>
+					<label>Object</label>
+					<select name="object_type_id" id="object_type_id">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::Object_Type->dropdown(), $param{object_type_id} ); ) ?>
+					</select>
+				</li>			
+        <li>
+          <label>Company</label>
+          <input type="text" class="filter" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value(this.form.company_id)});" size="4" />
+          <select id="company_id" name="company_id" onchange="jQuery( '#user_id').load( '/includes/_user_ddm.html', { company_id: this.getValue() } );">
+          <option value="">All</option>
+          <? echo ( make_drop_down( openprint::Company->dropdown(
+              'updated_on >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -30)),
+              'last_online is null'=>0),
+              (exists $param{company_id} ? $param{company_id} : $session{company_id} )
+            );
+            ) ?>
+          </select>
+        </li>			
+        <li>
+          <label>User</label>
+          <select name="user_id" id="user_id">
+          <option value="">All</option>
+					<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}), $param{user_id} ); ) ?>
+					</select>
+				</li>			
+				<li>
+					<label>Date</label>
+					<? echo ( join(' to ',
+								date_select_session($r->uri(), 'date_start', {
+									with_today=>1, with_clear=>1,
+									onchange	=>	q`check_time_starting($('searchLog'),'date_start','date_end');`,
+								}),
+								date_select_session($r->uri(), 'date_end', {
+									with_today=>1, with_clear=>1,
+									onchange	=>	q`check_time_starting($('searchLog'),'date_start','date_end');`,
+									} ),
+					); ) ?>
+				</li>
+			</ul>
+		</div>
+		<p class="buttons">
+		<? echo ( button( 'Search', { onclick=>'document.searchLog.submit();' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<?include(/administrator/managerial/_logs.html)?>

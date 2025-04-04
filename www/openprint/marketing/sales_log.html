@@ -1,0 +1,98 @@
+<div class="SalesLog">
+	<form id="add" name="add">
+		<input type="hidden" name="action" value="add"/>
+		<fieldset class="filters"><legend>Add New</legend>
+			<ul>
+				<li>
+          <label>Company</label>
+          <input type="text" oninput="filter_companies( add.company_id, { name:this.value,selected_id:get_ddm_value(add.company_id));" class="filter" />
+          <select name="company_id" onchange="load_users( this.form.elements['user_id'], get_ddm_value(this) );">
+<? echo ( 
+if ( $session{'/marketing/sales_log.html?company_id'} ) {
+	my $Company = new openprint::Company( $session{'/marketing/sales_log.html?company_id'} );
+	return sprintf('<option value="%d" selected="selected">%s</option>', $Company->id(), $Company->name() );
+}
+return; 
+) ?>
+						<option value="">Please wait, loading the rest</option>
+          </select>
+      </li>
+      <li>
+          <label>User</label>
+          <select name="user_id">
+              <option value="">All</option>
+              <? echo ( 
+                      make_drop_down( openprint::User->dropdown( company_id=>$session{'/marketing/sales_log.html?company_id'} ), $session{'/marketing/sales_log.html?user_id'}  ); ) ?>
+
+          </select>
+      </li>
+      <li>
+          <label>Called On (leave clear for now)</label>
+          <? echo ( datetime_select_session( '/marketing/sales_log.html', 'called_on', { with_today=>1 } ); ) ?>
+				</li>
+				<li><label>Notes</label>
+					<textarea name="notes"></textarea>
+				</li>
+			</ul>
+			<p class="buttons">
+				<?echo (
+					join("\n",
+						button('Add', {'data-on-click'=>'add_new'}),
+					);
+				) ?>
+			</p>
+		</fieldset>
+	</form>
+    <form id="f1" name="f1" method="post" action="sales_log.html">
+        <fieldset class="filters"><legend>Filter</legend>
+            <ul>
+<? if ( $session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Employee</label>
+			<select name="employee_id" onchange="load_results();">
+				<option value=""> All </option>
+				<? echo ( make_drop_down( openprint::User->dropdown(type=>['E','A'] ), $param{employee_id} ? $param{employee_id} : $session{user_id} ); ) ?>
+			</select>
+		</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
+                <li>
+                    <label>Company</label>
+                    <input type="text" oninput="filter_companies(f1.company_id, {name:this.value,selected_id:get_ddm_value(f1.company_id)});" onkeydown="if(event.keyCode==13){f1.user_id.selectedIndex=-1;load_results();}" class="filter" />
+                    <select name="company_id" onchange="load_users(this.form.elements['user_id'], get_ddm_value(this));">
+                        <option value="">All Companies</option>
+					<? echo ( $session{'/marketing/sales_log.html?company_id'} ? sprintf('<option value="%d" selected="selected">%s</option>', $session{'/marketing/sales_log.html?company_id'}, new openprint::Company( $session{'/marketing/sales_log.html?company_id'} )->name() ) : '';  ) ?>
+						<option value="">Please wait, loading the rest</option>
+                    </select>
+                </li>
+                <li>
+                    <label>User</label>
+                    <select name="user_id" onchange="load_results();">
+                        <option value="">All</option>
+					<? echo ( sprintf('<option value="%d" selected="selected">%s</option>', $session{'/marketing/sales_log.html?user_id'}, new openprint::User( $session{'/marketing/sales_log.html?user_id'} )->name() ); ) ?>
+						<option value="">Please wait, loading the rest</option>
+            </select>
+        </li>
+				<li>
+					<label>Called On</label>
+					<? echo ( date_select_session( '/marketing/sales_log.html', 'called_on_start', { with_today=>1, with_clear=>1, onchange=>'load_results();' } ); ) ?>
+					to 
+					<? echo ( date_select_session( '/marketing/sales_log.html', 'called_on_end', { with_today=>1, with_clear=>1, onchange=>'load_results();' } ); ) ?>
+				</li>
+            </ul>
+        </fieldset>
+	</form>
+	<div id="Results"><?include(_sales_log.html)?></div>
+</div>
+<script src="sales_log.js"></script>>
+<script>
+	$j('#f1 [name="company_id"]').load('/includes/_company_ddm.html', { selected_id: '<?echo($session{'/marketing/sales_log.html?company_id'})?>' } );
+	$j('#add [name="company_id"]').load('/includes/_company_ddm.html', { selected_id: '<?echo($session{'/marketing/sales_log.html?company_id'})?>' } );
+	$j('#f1 [name="user_id"]').load('/includes/_users.html', {
+			selected_id: '<?echo($session{'/marketing/sales_log.html?user_id'})?>',
+			company_id: '<?echo($session{'/marketing/sales_log.html?company_id'})?>'
+});
+	$j('#add [name="user_id"]').load('/includes/_users.html', {
+			selected_id: '<?echo($session{'/marketing/sales_log.html?user_id'})?>',
+			company_id: '<?echo($session{'/marketing/sales_log.html?company_id'})?>'
+});
+</script>

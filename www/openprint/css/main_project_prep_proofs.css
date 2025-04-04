@@ -1,0 +1,37 @@
+
+.Proofs .quantity {
+	width: 54px;
+	text-align: left;
+}
+.Proofs .quantity input[type="number"] ,
+.Proofs .quantity input[type="text"] {
+	width: 54px;
+}
+.Proofs .dimensions {
+	width: 170px;
+	text-align: center;
+}
+/*
+.Proofs .dimensions input[type="number"] ,
+.Proofs .dimensions input[type="text"] {
+	width: 55px;
+}
+*/
+.Proofs .type {
+	text-align: left;
+}
+
+.Proofs .additional td, .Proofs .totals td, .Proofs .breakdown td {
+	text-align: right;
+}
+.Proofs .Price {
+	width: 110px;
+}
+.Proofs .MR {
+	display: none;
+}
+.Proofs .Price input[type="text"],
+.Proofs .Price input[type="number"] {
+	width: 100%;
+	text-align: right;
+}

@@ -1,0 +1,67 @@
+<div class="templates">
+<? echo (
+	my $ProjectType = $$variable{Project}->Type();
+  my @Templates = openprint::ProjectType_Template->find( projecttype_id=>$ProjectType->id(), order=>'name' );
+  my %types = map {$_->type() => $_->name() } @Templates;
+
+	if ( @Templates == 1 ) {
+    return sprintf('<input type="hidden" name="rdbTemplateType" value="%s"/>', $Templates[0]->name());
+	} elsif ( @Templates == 0 ) {
+		return '';
+	} # end if
+
+	my $html .= include( '/includes/main/proj/templates/project_template_select.html' );
+  $html .= '<ul>';
+	foreach my $type ( sort { $a cmp $b } keys %types ) {
+    if ( -f $config{SkinPath}.'/images/templates/'.$ProjectType->name().'/'.$type.'.svg' ) {
+			$html .= sprintf(q`
+					<li onclick="$('rdbTemplateType%1$s').checked=true;selectProjectTemplate('f1');">
+					<img src="/images/templates/%4$s/%1$s.svg" alt="%2$s"/><br/>
+					<input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %3$s/>
+					<label for="rdbTemplateType%1$s">%2$s</label>
+          </li>`, $type, $types{$type}, checked( $type eq $$variable{rdbTemplateType} ), $ProjectType->name() );
+          } elsif ( -f $config{SkinPath}.'/images/templates/'.$ProjectType->name().'/'.$type.'.png' ) {
+			$html .= sprintf(q`
+					<li onclick="$('rdbTemplateType%1$s').checked=true;selectProjectTemplate('f1');">
+					<img src="/images/templates/%4$s/%1$s.png" alt="%2$s"/><br/>
+					<input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %3$s/>
+					<label for="rdbTemplateType%1$s">%2$s</label>
+          </li>`, $type, $types{$type},
+          checked( $type eq $$variable{rdbTemplateType} ), $ProjectType->name() );
+          } elsif ( -f $config{SkinPath}.'/images/templates/'.$type.'.png' ) {
+			$html .= sprintf(q`
+					<li onclick="$('rdbTemplateType%1$s').checked=true;selectProjectTemplate('f1');">
+					<img src="/images/templates/%1$s.png" alt="%2$s"/><br/>
+					<input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %3$s/>
+					<label for="rdbTemplateType%1$s">%2$s</label>
+          </li>`, $type, $types{$type}, checked( $type eq $$variable{rdbTemplateType} ) );
+          } elsif ( -f $config{SkinPath}.'/images/templates/'.$ProjectType->name().'/'.$type.'.gif' ) {
+          $log->error("Please convert " . $config{SkinPath}.'/images/templates/'.$ProjectType->name().'/'.$type.'.gif to  .png');
+			$html .= sprintf(q`
+					<li onclick="$('rdbTemplateType%1$s').checked=true;selectProjectTemplate('f1');">
+					<img src="/images/templates/%4$s/%1$s.gif" alt="%2$s"/><br/>
+					<input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %3$s/>
+					<label for="rdbTemplateType%1$s">%2$s</label>
+          </li>`, $type, $types{$type}, checked( $type eq $$variable{rdbTemplateType} ), $ProjectType->name() );
+          } elsif ( -f $config{SkinPath}.'/images/templates/'.$type.'.gif' ) {
+          $log->error("Please convert " . $config{SkinPath}.'/images/templates/'.$type.'.gif to  .png');
+			$html .= sprintf(q`
+					<li onclick="$('rdbTemplateType%1$s').checked=true;selectProjectTemplate('f1');">
+					<img src="/images/templates/%1$s.gif" alt="%2$s"/><br/>
+					<input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %3$s/>
+					<label for="rdbTemplateType%1$s">%2$s</label>
+					</li>`, $type, $types{$type}, checked( $type eq $$variable{rdbTemplateType} ) );
+		} else {
+			$log->error("No Project Template image for " . $config{SkinPath}.'/images/templates/'.$ProjectType->name().'/'.$type.'.gif' );
+			$html .= sprintf('
+					<li>
+					<input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %2$s/>
+					<label for="rdbTemplateType%1$s">%1$s</label>
+					</li>', $type, checked( $type eq $$variable{rdbTemplateType} ), $ProjectType->name() );
+		} # end if
+		$html .= "\n";
+	} # end foreach
+	return $html;
+) ?>
+  </ul>
+</div>

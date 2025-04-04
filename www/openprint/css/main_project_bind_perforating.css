@@ -1,0 +1,23 @@
+.Perforating .Signature {
+	float: left;
+	width: 49%;
+}
+.Perforating .Signature input[type="text"],
+.Perforating .Signature input[type="number"] {
+	width: 40px;
+}
+
+@media only screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait) {
+  /* For portrait layouts only */
+.Perforating .Signature,
+.Perforating .Vertical, 
+.Perforating .Horizontal, {
+    width: 100%;
+}
+}
+
+.Service li .Vertical label ,
+.Service li .Horizontal label {
+	margin: 0;
+	width: 80px;
+}

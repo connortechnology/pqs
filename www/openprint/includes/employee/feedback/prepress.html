@@ -1,0 +1,26 @@
+<? echo ( include('/includes/employee/feedback/line.html'); ) ?>
+<form method="post" name="f1" action="/employee/project/view.html">
+	<div><b class="lgTxt">Production Feedback</b></div>
+	<? echo ( include('/includes/employee/feedback/employee.html'); ) ?>
+		<div class="row"> 
+			<span class="label">Total production hours: (hours:minutes:seconds)</span>
+			<span class="input">
+				<input name="txtMakeReadySetupHours" value="<?txtMakeReadySetupHours?>" type="text" size="12" />
+				<input type="hidden" name="tmpMakeReadySetupHoursCounter"/>
+				<input type="hidden" name="tmpMakeReadySetupHoursTime"/>
+				<input type="hidden" name="tmpMakeReadySetupHoursTimerID"/>
+				<input type="hidden" name="tmpMakeReadySetupHoursTimerFlag"/>
+				<script type="text/javascript">
+					writeButton('Start1','start.gif', "starttime('f1','tmpMakeReadySetupHoursCounter','tmpMakeReadySetupHoursTimerID','tmpMakeReadySetupHoursTimerFlag','txtMakeReadySetupHours','tmpMakeReadySetupHoursTime');", '', 'Start' );
+					writeButton('Stop1','stop.gif', "stoptime('f1','tmpMakeReadySetupHoursCounter','tmpMakeReadySetupHoursTimerID','tmpMakeReadySetupHoursTimerFlag','txtMakeReadySetupHours','tmpMakeReadySetupHoursTime');", '', 'Stop' );
+					writeButton('Reset1','reset.gif', "f1.txtMakeReadySetupHours.value='';", '', 'Reset' );
+				</script>
+			</span>
+		</div>
+<? echo ( include('/includes/employee/feedback/downtime_hours.html'); ) ?>
+<? echo ( include('/includes/employee/feedback/comments.html'); ) ?>
+<? echo ( include('/includes/employee/feedback/complete.html'); ) ?>
+<? echo ( include('/includes/employee/feedback/complete_date.html'); ) ?>
+<? echo ( include('/includes/employee/feedback/buttons.html'); ) ?>
+<? echo ( include('/includes/employee/feedback/hidden_fields.html'); ) ?>
+</form>

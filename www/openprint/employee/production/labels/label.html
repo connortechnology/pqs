@@ -1,0 +1,44 @@
+<? eval (
+	$$variable{Label} = new openprint::Label( $param{id} );
+	$$variable{Label}{type_id} = $param{type_id} if ! $$variable{Label}{type_id};
+	$$variable{Label}{reference} = $param{reference} if ! $$variable{Label}{reference};
+	if ( $param{docket} ) {
+		$$variable{Order} = openprint::Order->find_one(docket=>$param{docket});
+		$$variable{Label}->docket( $$variable{Order}->docket() ) if ! $$variable{Label}->docket();
+		my @Projects = $$variable{Order}->Projects();
+		$$variable{Project} = $Projects[0] if @Projects;
+	} elsif ( $param{project_id} ) {
+		$$variable{Project} = new openprint::Project( $param{project_id} );
+		$$variable{Label}->docket( $$variable{Project}->docket() ) if ! $$variable{Label}->docket();
+	} else {
+		$$variable{Project} = $$variable{Label}->Project();
+	} # end if
+
+	if ( $param{type_id} and ! $param{id} ) {
+		$$variable{error} .= $$variable{Label}->save();
+		$$variable{Project}->add_to_log( @session{'company_id','user_id'}, 'Added ' . $$variable{Label}->link_to() );
+		$$variable{Label}->notify_csr();
+	} # end if
+) ?>
+<?echo($$variable{Label}{reference})?>
+<div class="buttons">
+	<? echo ( join("\n",
+		button( 'PDF', { href=>'/employee/production/labels/label.html?action=pdf&amp;id='.$$variable{Label}->id() } ),
+		button( 'Print', { onclick => 'window.print();' } ),
+		button( 'Docket', { href => '/employee/project/view.html?docket='.$$variable{Label}->docket() } ),
+		button( 'PO', { href => "/employee/purchase_order/edit.html?btnFunction=New&amp;label_id=$$variable{Label}{id}", text => 'Generate PO' } ),
+		button( 'Send', { onclick => qq`popup_window('_send_email.html?id=$$variable{Label}{id}');` } ),
+	); ) ?>
+</div>
+<div class="Label">
+	<? echo (
+		if ( ! $$variable{Label}->type_id() ) {
+			return 'Unknown label type.';
+		} else {
+			return include('/employee/production/labels/_'.$$variable{Label}->Type()->name().'.html');
+		} # end if
+	) ?>
+</div>
+<? if ( $$variable{Label}->id() ) ?>
+<? echo ( include_logs( $$variable{Label} ); ) ?>
+<? endif ( $$variable{Label}->id() ) ?>

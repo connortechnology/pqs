@@ -1,0 +1,62 @@
+<? eval (
+	$$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} ) if ! $$variable{'Skid'};
+) ?>
+<div style="padding: 7px;">
+	<img style="float:right;" src="/barcode.png?code=I<? echo ( $$variable{'Skid'}{'id'} ) ?>+&amp;NoText=1&amp;Height=40"/>
+	<b>Skid #</b> <? echo ( $$variable{'Skid'}->id() ) ?><br/>
+	<? echo ( Date::Format::time2str('%d %b %Y %H:%M', Date::Parse::str2time($$variable{'Skid'}->created_on()) );) ?>
+</div>
+<div class="Contents">
+<? echo ( 
+	my $html;
+	foreach my $C ( $$variable{Skid}->Contents() ) {
+		$html .= '<div class="Content">';
+		my $Paper = $C->Paper();
+		$html .= '<div class="StockDetails"><div class="StockQuantity">';
+		my $qty = $C->quantity();
+		$html .= sprintf('<label>Qty:</label><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/>', $qty );
+		$html .= '</div>';
+		my $paper_detail = sprintf('%s %s %s', $Paper->brand(), $Paper->finish(), $Paper->colour() );
+		$paper_detail .= '<br/>';
+		if ( $Paper->type() eq 'Roll' ) {
+			$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );
+		} else {
+			$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, join('x', $Paper->width(), $Paper->height() ) );
+		} # end if
+		if ( length $paper_detail > 80 ) {
+			$html .= '<span style="font-size: x-small;">'.$paper_detail.'</span>';
+		} else {
+			$html .= $paper_detail;
+		} # end if
+		$html .= '<br/><b>'. $qty . ' '. $Paper->units().'</b></div>';
+		my @Allocations = openprint::PaperAllocation->find( paper_id=>$$Paper{id}, 'skid_ids any'=>$$variable{Skid}{id}, order=>'created_on' );
+		my %totals = map { $_->docket(), $_->quantity() } @Allocations;
+
+		foreach my $docket ( sort keys %totals ) {
+			$html .= qq`
+<div class="Allocation">
+	<div class="docket">
+		<label>Docket</label>
+		<img src="/barcode.png?code=D$docket+&amp;NoText=1&amp;Height=30"/>
+	</div>
+	<div class="allocated">
+		<label>Allocated</label>
+		<img src="/barcode.png?code=Q$totals{$docket}+&amp;NoText=1&amp;Height=30"/>
+			$docket
+	</div>
+</div>`;
+		} # end foreach
+		
+		if ( $param{'docket'} ) {
+			$html .= qq`
+<div class="docket">
+	<label>Docket</label>
+	<img src="/barcode.png?code=D$param{docket}+&amp;NoText=1&amp;Height=30">
+	$param{docket}
+</div>`;
+		} # end if docket
+		$html .= '</div>';
+	} # end foreach stock
+	return $html;
+) ?>
+</div>

@@ -1,0 +1,88 @@
+<div class="Timetrack">
+  <?include(/includes/error_reporting.html)?>
+  <? if ( $$variable{Timetrack}->can_view() ) ?>
+  <form name="f1" id="f1" action="view.html" method="post" onsubmit="$j('#buttons').html('Please wait...');return true;">
+    <input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{invoice_id} ) ?>" />
+    <fieldset><legend>Editing timetrack<? echo ( $$variable{Timetrack}->id() ? '('.$$variable{Timetrack}->id().')' : '' ) ?></legend>
+      <div class="content">
+      <? if ( $$variable{Timetrack}->deleted() ) ?>
+      <span class="warning">This timetrack has been deleted</span>
+      <? endif ( $$variable{Timetrack}->deleted() ) ?>
+      
+      <input type="hidden" name="timetrack_id" value="<? echo ( $$variable{Timetrack}->id() ) ?>" />
+      <div class="leftColumn">
+        <ul>
+        <li><label for="company_id">Company</label><?echo( $$variable{Timetrack}->Company()->link_to() )?></li>
+        <li><label for="user_id">Employee</label><?echo($$variable{Timetrack}->User()->link_to() )?></li>
+        <li><label>Date Associated</label><? echo ( $$variable{Timetrack}->date_associated() ? 'yes' : 'no' ) ?></li>
+        <li><label>Time Associated</label><? echo ( $$variable{Timetrack}->time_associated() ? 'yes' : 'no' ) ?></li>
+        <li id="start"><label>Start</label>
+          <? echo ( $$variable{Timetrack}->time_associated() ? format_datetime($$variable{Timetrack}->starting()) : format_date($$variable{Timetrack}->starting()) ) ?>
+        </li>
+        <li id="end"><label>End</label>
+          <? echo ( $$variable{Timetrack}->time_associated() ? format_datetime($$variable{Timetrack}->ending()) : format_date($$variable{Timetrack}->ending()) ) ?>
+        </li>
+        <li><label>Duration</label><?echo($$variable{Timetrack}->duration())?></li>
+        <li><label>Service</label><?echo($$variable{Timetrack}->Service()->name() )?></li>
+        <li><label>Billable</label><? echo ( $$variable{Timetrack}->billable() ? 'yes' : 'no'; ) ?></li>
+        <li><label for="rate">Rate</label>
+          <? echo ($$variable{Timetrack}->rate() .$$variable{Timetrack}->units() )?>
+        </li>
+        <li><label>Currency</label><? echo ( $$variable{Timetrack}->Currency->name(); )?></li>
+        <li>
+          <label>Travel Associated</label>
+          <? echo ( $$variable{Timetrack}->travel_associated() ? 'yes' : 'no' ) ?>
+        </li>
+        <li><label for="distance">Distance (km)</label>
+          <? echo ( $$variable{Timetrack}->distance() ) ?>
+        </li>
+        </ul>
+      </div>
+      <div class="rightColumn">
+        <ul>
+          <li>
+            <label for="description">Description</label>
+            <? echo ( $$variable{Timetrack}->description() ) ?>
+          </li>
+          <li><label>Keywords</label> <? echo ( $$variable{Timetrack}->keywords() ) ?> </li>
+          <li><label for="po">Purchase Order #</label> <? echo ( $$variable{Timetrack}->po() ) ?> </li>
+          <? if ( $$variable{Timetrack}->invoice_id() ) ?>
+          <li>
+            <label>Invoice</label>
+            <a href="/invoice/view.html?invoice_id=<? echo ( $$variable{Timetrack}->invoice_id() ) ?>"><? echo ( $$variable{Timetrack}->invoice_id() ) ?></a>
+          </li>
+          <? endif ( $$variable{Timetrack}->invoice_id() ) ?>
+          <? if ( $$variable{Timetrack}->Paycheques() ) ?>
+          <li>
+            <label>Paycheque</label>
+            <? echo ( join('<br/>', map { sprintf('<a href="/paycheque/edit.html?paycheque_id=%1$d">%1$d</a>', $_ ); } $$variable{Timetrack}->Paycheques() ); ) ?>
+          </li>
+          <? endif ( $$variable{Timetrack}->Paycheques() ) ?>
+          <? if ( $$variable{Timetrack}->id() ) ?>
+          <li><label>Entered</label><?echo(format_datetime($$variable{Timetrack}->created_on()))?></li>
+          <li><label>Updated</label><?echo(format_datetime($$variable{Timetrack}->updated_on()))?></li>
+          <? endif ( $$variable{Timetrack}->id() ) ?>
+        </ul>
+      </div>
+      </div>
+      <br class="spacer"/>
+      <p class="buttons" id="buttons">
+        <? echo (
+          my $html = '';
+          #$html = button( 'Back', { href=>'history.html' } );
+          
+          if ( $$variable{Timetrack}->id() ) {
+            $html .= button( 'Destroy', { onclick => q`if(confirm('Are you sure?')){f1.func.value='Destroy';$('buttons').innerHTML='Please wait...';f1.submit();}` } );
+            $html .= button( 'Copy', { href=>'edit.html?func=Copy&timetrack_id='.$$variable{Timetrack}->id() } );
+          } # end if
+          $html .= button( 'Edit', { href=>'edit.html?timetrack_id='.$$variable{Timetrack}->id() } );
+          return $html;
+        ) ?>
+      </p>
+    </fieldset>
+    <input type="hidden" name="func" />
+  </form>
+  <? else ( $$variable{Timetrack}->can_view() ) ?>
+  <div class="warn">You do not have permission to view this timetrack</div>
+  <? endif ( $$variable{Timetrack}->can_view() ) ?>
+</div>

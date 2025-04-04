@@ -1,0 +1,50 @@
+<div class="CompanyInformation">
+	<fieldset><legend>Company Information</legend>
+		<ul>
+			<li class="name"><label>Company</label>
+				<? hecho ( $$variable{Company}->name() ) ?>i
+			</li>
+			<li class="address1"><label>Address</label>
+				<? hecho ( $$variable{Company}->address1() ) ?>
+			</li>
+			<?if($$variable{Company}->address2())?>
+			<li class="address2"><label></label><? hecho ( $$variable{Company}->address2() ) ?></li>
+			<?endif($$variable{Company}->address2())?>
+			<li class="city"><label>City</label>
+				<? hecho ( $$variable{Company}->city() ) ?>
+			</li>
+			<li class="state"><label>State</label>
+				<? hecho ( 
+				if ( $states::states{$$variable{Company}->state()} ) {
+					return $states::states{$$variable{Company}->state()};
+				} elsif ( $provinces::provinces{$$variable{Company}->state()} ) {
+					return $provinces::provinces{$$variable{Company}->state()};
+				} else {
+					return $$variable{Company}->state()
+				} # end if
+				) ?>
+			</li>
+			<li class="country"><label>Country</label>
+				<? hecho ( 
+				if ( $countries::countries{$$variable{Company}->country()} ) {
+					return $countries::countries{$$variable{Company}->country()};
+				} else { 
+					return $$variable{Company}->country();
+				} # end if ) ?>
+			</li>
+			<li class="postalcode"><label>Postal Code</label>
+				<? hecho ( $$variable{Company}->postalcode() ) ?>
+			</li>
+			<li class="phone"><label>Phone</label><? hecho ( $$variable{User}->phone() ) ?>
+			<? hecho ( 'x' . $$variable{User}->extension() if $$variable{User}->extension() ) ?>
+			</li>
+			<li class="fax"><label>Fax</label>
+			<? hecho ( $$variable{Company}->fax() ) ?>
+			</li>
+			<li class="created_on"><label>Registered on</label>
+			<? echo ( format_datetime( $$variable{Company}->created_on() ); ) ?>
+			</li>
+		</ul>
+	</fieldset>
+</div>
+

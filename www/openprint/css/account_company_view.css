@@ -1,0 +1,44 @@
+
+/* Company Profile Styles */
+div.CompanyProfile div.CompanyInformation, div.CompanyProfile div.Preferences, div.CompanyProfile div.TradeReferences {
+	width: 50%;
+	float: left;
+}
+div.CompanyProfile div.CompanyInformation:after, .CreditInformation:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+div.CompanyProfile div.BusinessInformation, div.CompanyProfile div.BankInformation, .SalesInformation, #CompanyProfile, .AccountInformation {
+	width: 50%;
+	float: right;
+}
+.CompanyProfile .CreditInformation {
+	float: left;
+	width: 50%;
+}
+.Credit {
+	float: left;
+	width: 50%;
+}
+div.CompanyProfile ul {
+}
+div.CompanyProfile ul li {
+	padding: 0 0 0 150px;
+}
+div.CompanyProfile ul li label {
+	margin-left: -150px;
+	width: 145px;
+}
+div.CompanyProfile ul li label.radio {
+	width: auto;
+	margin: 0;
+}
+
+.buttons {
+	clear: both;
+}

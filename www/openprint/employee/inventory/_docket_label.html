@@ -1,0 +1,18 @@
+<? while ( $param{'label_qty'} ) ?>
+	<? eval ( $param{'label_qty'} -= 1; ) ?>
+<!--
+	<div style="width: 4in; height: 4in; border: 1px solid black;">
+-->
+	<div style="padding:0px 7px 0px 7px;">
+		<img style="float: right; margin-bottom: 7px; width: auto;" src="/barcode.png?code=D<? echo ( $param{'docket'} ) ?>+&amp;NoText=1&amp;Height=40"/><b>Docket</b><br class="spacer"/>
+		<div style="font-size: 99pt; text-align: center;"><b><? echo ( $param{'docket'} ) ?></b></div>
+		<div style="font-size: 20pt;">
+		By: <? echo ( $param{'contact'} ) ?><br/>
+		For: <? echo ( $param{'customer'} ) ?><br/>
+		</div>
+	</div>
+<!--
+	</div>
+-->
+	<br class="pagebreak"/>
+<? endwhile ( $param{'label_qty'} ) ?>

@@ -1,0 +1,70 @@
+<?include(/includes/error_reporting.html)?>
+<? if ( @{$$variable{Projects}} ) ?>
+<table class="List">
+	<tr>
+		<th class="project_id">Project</th>
+		<th class="User">Created By</th>
+		<th class="Company">Company</th>
+		<th class="DateTime">Created On</th>
+		<th class="status">Status</th>
+		<th class="Price">Commission</th>
+		<th class="Price">Price 1</th>
+		<th class="Price">Price 2</th>
+		<th class="Price">Price 3</th>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		$$variable{Total1} = $$variable{Total2} = $$variable{Total3} = 0;
+		foreach my $Project ( @{$$variable{Projects}} ) {
+			next if ! exists $$variable{Companies}{$$Project{company_id}};
+			$html .= sprintf(q`
+<tr%1$s>
+	<td class="project_id"><a href="/main/project/view.html?project_id=%2$d">%2$d</a></td>
+	<td class="User"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s</a></td>
+	<td class="Company"><a href="/main/project/view.html?project_id=%2$d">%4$s</a></td>
+	<td class="DateTime"><a href="/main/project/view.html?project_id=%2$d">%6$s</a></td>
+	<td class="status"><a href="/main/project/view.html?project_id=%2$d">%7$s</a></td>
+	<td class="Commission"><a href="/main/project/view.html?project_id=%2$d">%8$s</a></td>
+	<td class="Price"><a href="/main/project/view.html?project_id=%2$d">%9$s</a></td>
+	<td class="Price"><a href="/main/project/view.html?project_id=%2$d">%10$s</a></td>
+	<td class="Price"><a href="/main/project/view.html?project_id=%2$d">%11$s</a></td>
+</tr>
+<tr%1$s>
+	<td colspan="4">%5$s</td>
+	<td colspan="5">%12$s</td>
+</tr>
+`,
+			$rowclass, $Project->id(), $Project->User()->name(), ssi::htmlize($Project->Company()->name()), $Project->reference(),
+			format_datetime( $Project->created_on() ),
+			$Project->status(),
+$Project->csr_commission().'%',
+			openprint::Currency::format(1*$Project->price1()),
+			openprint::Currency::format(1*$Project->price2()),
+			openprint::Currency::format(1*$Project->price3()),
+			$Project->summary(),
+	);
+		
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			$$variable{Total1} += $Project->price1();
+			$$variable{Total2} += $Project->price2();
+			$$variable{Total3} += $Project->price3();
+			$$variable{ReportCount} += 1;
+			$$variable{OrderedCount} += 1 if $Project->docket();
+		} # end foreach Project
+		return $html;
+	) ?>
+	<? if ( $$variable{ReportCount} ) ?>
+	<tr class="totals">
+		<td>Counts</td><td><?ReportCount?> Projects, <?OrderedCount?> Ordered</td>
+		<td>Percentage</td><td><? echo ( Math::Round::nearest(.1,($$variable{OrderedCount}/$$variable{ReportCount})*100 ); ) ?>%</td>
+		<td>Totals</td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{Total1} ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{Total2} ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{Total3} ); ) ?></td>
+	</tr>
+	<? endif ( $$variable{ReportCount} ) ?>
+</table>
+<? else ( @{$$variable{Projects}} ) ?>
+There were no projects matching your criteria.  Please try again.
+<? endif ( @{$$variable{Projects}} ) ?>

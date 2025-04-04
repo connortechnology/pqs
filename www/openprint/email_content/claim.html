@@ -1,0 +1,180 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<title><? echo ( $config{'SiteTitle'} ) ?></title>
+		<style type="text/css">
+		<? include('/css/email.css')?>
+		<? include('/css/claim.css')?>
+		</style>
+		<base href="<? echo ( $config{'ExternalSiteURL'} ) ?>"/>
+	</head>
+	<body>
+		<div class="Claim">
+			<div class="Header">
+				<div class="Logo">
+					<table><tr>
+					<td width="70"><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
+					<td align="left">
+						<a href="/index.html"><span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a>
+					</td>
+					</tr></table>
+					<table class="HeaderText">
+						<tr>
+							<td colspan="2"><? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?></td>
+						</tr>
+						<tr>
+							<td>Phone<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
+							<td>Fax<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
+						</tr>
+					</table>
+				</div>
+				<div class="PageTitle">
+					<h1>CLAIM</h1><br/>
+					CLAIM # [ <? echo ( $$variable{Claim}->id() ) ?> ]<br/>
+					Date: <? echo ( format_date( $$variable{Claim}->created_on() ) ) ?><br/>
+				</div>
+			</div>
+			<div class="Information">
+				<div class="Vendor">
+					<p>
+						<label>VENDOR</label>
+	<? echo (
+		my $html = '';
+		$html .= $$variable{'Claim'}->Contact()->name().'<br/>' if $$variable{'Claim'}->contact_id();
+		$html .= $$variable{'Claim'}->Vendor()->name().'<br/>' if $$variable{'Claim'}->Vendor()->name();
+		$html .= $$variable{'Claim'}->Vendor()->address1().'<br/>' if $$variable{'Claim'}->Vendor()->address1();
+		$html .= $$variable{'Claim'}->Vendor()->address2().'<br/>' if $$variable{'Claim'}->Vendor()->address2();
+		$html .= sprintf('%s %s, %s', $$variable{'Claim'}->Vendor()->get('city','state', 'postalcode')) . '<br/>';
+		$html .= 'Phone: ' . $$variable{'Claim'}->vendor_phone().'<br/>' if $$variable{'Claim'}->vendor_phone();
+		$html .= 'Fax: '.$$variable{'Claim'}->vendor_fax().'<br/>' if $$variable{'Claim'}->vendor_fax();
+		$html .= 'SMS: '.$$variable{'Claim'}->vendor_sms().'<br/>' if $$variable{'Claim'}->vendor_sms();
+		$html .= $$variable{'Claim'}->vendor_email().'<br/>' if $$variable{'Claim'}->vendor_email();
+		return $html;
+	) ?>
+					</p>
+				</div>
+				<div class="Sender">
+					<p><label>Sender</label>
+                <? echo ( 
+                    my $html;
+                    $html .= $$variable{'Claim'}->Creator()->name().'<br/>';
+                    $html .= 'Phone: ' . $$variable{'Claim'}->Creator()->phone().'<br/>' if $$variable{'Claim'}->Creator()->phone();
+                    $html .= 'Fax: ' . $$variable{'Claim'}->Creator()->fax().'<br/>' if $$variable{'Claim'}->Creator()->fax();
+                    $html .= 'Email: ' . $$variable{'Claim'}->Creator()->email().'<br/>' if $$variable{'Claim'}->Creator()->email();
+                    return $html;
+                ) ?>
+					</p>
+				</div>
+				<div class="Dates">
+					<p><label>Filed On</label>
+					<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->filed_on() ) ); ) ?>
+					</p>
+	<? if ( $$variable{'Claim'}->invoiced_on() ) ?>
+					<p><label>Invoiced On</label>
+					<? echo ( 
+						Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->invoiced_on() ) );
+					) ?>
+					</p>
+					<p><label>Invoice #</label>
+					<? echo ( $$variable{'Claim'}->invoice_id() ) ?>
+					</p>
+	<? endif ( $$variable{'Claim'}->invoiced_on() ) ?>
+				</div>
+				<div class="Dockets">
+				<p class="docket"><label>Dockets</label><? echo ( 
+						join( ', ', $$variable{'Claim'}->docket() ? @{$$variable{'Claim'}->docket()} : () ); ) ?></p>
+				</div>
+			</div><!--Information-->
+			<div class="Contents">	
+				<table id="Contents">
+					<tr>
+						<th>DESCRIPTION</th>
+						<th class="Quantity">QUANTITY</th>
+						<th class="Weight">&nbsp;</th>
+						<th width="110">Unit Cost</th>
+						<th width="90">Total</th>
+					</tr>
+					<? echo ( my $html = '';
+						foreach my $C ( $$variable{'Claim'}->Contents() ) {
+							$html .= sprintf('<tr>
+								<td>%4$s</td>
+								<td class="Quantity">%1$s</td>
+								<td class="Weight">%2$s%3$s</td>
+								<td style="text-align: right;">%5$s%6$s</td>
+								<td style="text-align: right;">%7$s</td>
+								</tr>', $C->quantity(),
+								( $C->weight() ?  Number::Format::format_number($C->weight()) : '' ), $C->weight_units(),
+								$C->description(), openprint::Currency::format($C->cost(),2), $C->cost_units(), openprint::Currency::format($C->total()) );
+						} # end foreach C
+						return $html;
+					) ?>
+					<tr class="subtotal">
+						<td colspan="4" class="totals">SUBTOTAL</td>
+						<td class="Price"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->subtotal() ); ) ?></td>
+					</tr>
+	<? echo ( 
+		my $html;
+		foreach my $Tax ( $$variable{Claim}->Taxes() ) {
+			$html .= sprintf('<tr class="tax"><td colspan="4" class="totals">%s (%d%)</td><td class="Price">%s</td></tr>',
+				$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
+				);
+		} # end foreach Tax
+		return $html;
+	) ?>
+					<tr class="total">
+						<td colspan="4">TOTAL</td>
+						<td class="Price"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->total() ); ) ?></td>
+					</tr>
+					<? if ( $$variable{Claim}->total() != $$variable{Claim}->owing() ) ?>
+					<tr class="owing">
+						<td colspan="4">Owing</td>
+						<td class="Price"><? echo ( return openprint::Currency::format( $$variable{Claim}->owing() ); ) ?></td>
+					</tr>
+					<? endif ( $$variable{Claim}->total() != $$variable{Claim}->owing() ) ?>
+				</table>
+			</div><!--Contents-->
+		<div id="Remarks"> <h3>Remarks:</h3> <? echo ( $$variable{'Claim'}->reason() ) ?> </div>
+<? if ( $$variable{'Claim'}->Payments() ) ?>
+<div class="Payments">
+    <fieldset><legend>Payments</legend>
+        <table>
+            <tr><th class="transaction">Transaction/Cheque #</th><th class="Date">When</th><th class="Notes">Notes</th><th class="Price">Amount</th></tr>
+            <? echo ( 
+                my $html = '';
+                $$variable{'payment_total'} = 0;
+                foreach my $P ( $$variable{'Claim'}->Payments() ) {
+                    my $Payment = $P->Payment();
+                    next if $Payment->deleted();
+                    $html .= sprintf('<tr>
+                        <td class="transaction">%2$s</td>
+                        <td class="Date">%3$s</td>
+                        <td class="Notes">%4$s</td>
+                        <td class="Price">%5$s</td></tr>',
+                        $Payment->id(),
+                        $Payment->transaction_id(),
+                        format_date( $Payment->received_on() ),
+                        $Payment->memo(),
+                        ( $P->amount() != $Payment->amount() ? openprint::Currency::format( $P->amount() ).'/'.openprint::Currency::format($Payment->amount()) : openprint::Currency::format( $P->amount() ) ),
+ );
+                    $$variable{'payment_total'} += $P->amount();
+                } # end foreach
+                return $html;
+            ) ?>
+            <tr class="totals">
+                <td colspan="3">Total</td>
+                <td class="Price"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
+            </tr>
+		</table>
+	</fieldset>
+</div>
+<? endif ( $$variable{'Claim'}->Payments() ) ?>
+		<div class="rightColumn" style="text-align: right;">
+			All prices are in <? echo ( $$variable{'Claim'}->Currency()->name() ) ?>.
+		</div>
+        <br class="spacer"/>
+        <div class="Disclaimer">This is a notification of claim.  If there is disagreement, you are requested to advise the sender in writing, either by e-mail or a letter within 5 business days from the date of this claim advice.  An official invoice will be issued if no objection to this claim is filed. After 60 days the amount of claim will be automatically deducted from your account.</div>
+
+		</div><!--Claim-->
+	</body>
+</html>

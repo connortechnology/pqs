@@ -1,0 +1,101 @@
+<? eval (
+	$$variable{'Company'} = $$variable{'Project'}->Company();
+	my $services = $$variable{'Project'}->services();
+	my $Service = $$variable{'Project'}->Service( $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0] );
+	$$variable{'Operator'} = $Service->Operator() if $Service;
+) ?>
+<style type="text/css">
+	ul {
+	list-style: none;
+		width: 100%;
+	margin: 0;
+	padding: 0;
+	}
+	li {
+	list-style: none;
+		text-align: left;
+		font-size: 20pt;
+		border-bottom: 1px solid #353c91;
+	margin: 0;
+	padding: 0 0 0 220px;
+	}
+	li.Customer, li.Docket {
+		font-size: 31pt;
+		vertical-align: top;
+		border: none;
+	}
+	li.Press {
+		height: 100px;
+	}
+	label {
+		text-align: right;
+		font-weight: bold;
+		width: 215px;
+		margin-left: -220px;
+		display: inline-block;
+	}
+	fieldset {
+		margin: 5px;
+		padding: 5px;
+	border: 1px solid #808080;
+	}
+	hr {
+	border: 1px inset #808080;
+	}
+</style>
+<div style="float: left; text-align: center; margin-top:100px;">
+Project #<br/>
+<img src="/barcode.png?code=P<? echo ( $$variable{'Project'}->id() ) ?>+"/>
+</div>
+<div style="float: right; text-align: center; margin-top:100px;">
+Submit<br/>
+<img src="/barcode.png?Code=S10000+"/>
+</div>
+<br class="spacer"/>
+<ul>
+	<li class="Customer">
+		<label>Customer</label>
+		<? echo ( $$variable{'Company'}->name() ) ?>
+	</li>
+	<li class="Docket">
+		<label>Docket</label>
+			<? echo ( $$variable{'Project'}->docket() ) ?>
+			<? echo ( sprintf('%.1s%.1s', $$variable{'Operator'}->get('firstname','lastname') ); ) ?>
+	</li>
+	<li class="Description">
+		<label>Description</label>
+		<? echo ( substr $$variable{'Project'}->reference(), 0, 50; ) ?>
+	</li>
+	<li class="Press">
+		<label>Press</label>
+		<? echo (
+			my @presses;
+			foreach my $signature_service_index ( $$variable{'Project'}->signatures() ) {
+				my $Service = $$variable{'Project'}->Service( $signature_service_index );
+				my $sig_specs = $Service->specs();
+				$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
+				push @presses, $$sig_specs{'UsePress'} if ! sets::isin( $$sig_specs{'UsePress'}, @presses );
+			} # end foreach
+			return join(',', sql::execute( $log, $dbh, q{SELECT strName FROM tbl_Equipment WHERE strID IN ('}.join("','", @presses ).q{')} ) );
+		) ?>
+	</li>
+<ul>
+<br class="spacer"/>
+<? echo (
+	my $html;
+	my $services = $$variable{'Project'}->services();
+	if ( $$services{'BulkSkids'} ) {
+		foreach my $service_index ( @{$$services{'BulkSkids'}} ) {
+			my $Service = $$variable{'Project'}->Service( $service_index );
+			my $specs = $Service->specs();
+			foreach my $skid ( 1 .. $$specs{'txtPackageQuantity'} ) {
+				$html .= qq{<fieldset><legend>Skid $skid</legend>};
+				$html .= q{</fieldset>};
+			} # end foreach
+		} # end foreach
+	} # end if
+	return $html;
+) ?>
+<fieldset><legend>Additional Information</legend>
+<hr/><br/><hr/><br/><hr/><br/><hr/>
+</fieldset>

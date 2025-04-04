@@ -1,0 +1,31 @@
+<div class="Payments">
+	<fieldset><legend>Payment Details</legend>
+		<table class="List">
+			<tr>
+				<th class="description">Description</th>
+				<th class="Date">Paid On</th>
+				<th class="currency">Currency</th>
+				<th class="Price amount">Amount</th>
+			</tr>
+		<? echo ( my $html;
+			foreach my $Object_Payment ( $$variable{PurchaseOrder}->Payments() ) {
+				my $Payment = $Object_Payment->Payment();
+				$html .= sprintf('
+		<tr>
+			<td class="description">%s</td>
+			<td class="Date">%s</td>
+			<td class="currency">%s</td>
+			<td class="amount">%s</td>
+		</tr>',
+					$Payment->memo(),
+					format_date( $Payment->received_on() ),
+					$Payment->Currency()->name(),
+					openprint::Currency::format( $Payment->amount() ),
+		 );
+
+			} # end foreach $Payment
+			return $html;
+		) ?>
+		</table>
+	</fieldset>
+</div>

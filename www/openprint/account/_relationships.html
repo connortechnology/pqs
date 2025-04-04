@@ -1,0 +1,126 @@
+<?include('/includes/error_reporting.html')?>
+<form id="f1" name="f1" action="/account/view.html?user_id=<? echo ( $$variable{User}->id() ) ?>" method="post">
+	<? echo (
+		my $html;
+
+		# Load all relationships at once, parse them out later.  The company stuff is to show all of the couples friends.
+		my @ids = ( $$variable{Company} ? map { $_->id() } openprint::User->find(company_id=>$$variable{Company}->id()) : $$variable{User}{id} );
+		if ( ! @ids ) {
+			$log->error('No ids?');
+			return;
+		} # end if
+		my @Relationships = openprint::User_Relationship->find({ 
+			or => {
+			user_id1 => \@ids,
+			user_id2 => \@ids},
+			});
+		if ( ! @Relationships ) {
+			if ( $$variable{User} == $session{user_id} ) {
+				return q`You have no relationships.  Visit another user's profile to request a relationship with them.`;
+			} else {
+				return;
+			} # end if
+		} # end if
+		my @Types = openprint::User_Relationship_Type->find( id=>[sets::union( map { $_->type_id() } @Relationships )], order=>'lower(name)' );
+
+		my %Approved;
+		my %My_Requests;
+		my %Other_Requests;
+		
+		foreach my $Type ( @Types ) {
+			# First, show approved
+			foreach my $R ( @Relationships ) {
+				next if $R->type_id() != $Type->id();
+				if ( $R->approved() ) {
+					push @{$Approved{$$Type{id}}}, $R;
+				} elsif ( $R->user_id1() == $session{user_id} ) {
+					push @{$My_Requests{$$Type{id}}}, $R;
+				} else {
+					push @{$Other_Requests{$$Type{id}}}, $R;
+				} # end if
+			} # end foreach Relationship
+		} # end foreach Type
+
+		if ( %Approved ) {
+			$html .= '<div id="Approved">';
+			foreach my $Type ( @Types ) {
+				next if ! ( $Approved{$$Type{id}} and @{$Approved{$$Type{id}}} );
+				$html .= "<h2>$$Type{name}</h2><ul>";
+				if ( @{$Approved{$$Type{id}}} > 10 ) {
+					$html .= '<li>'.@{$Approved{$$Type{id}}} . ' people are ' . $Type->name() .' '. ( $$variable{User}->id() == $session{user_id} ? 'you' : $$variable{User}->firstname() ). '</li>';
+				} # end if
+				for ( my $i = 0; $i < @{$Approved{$$Type{id}}} and $i < 10; $i += 1 ) {
+				
+
+					my $R = $Approved{$$Type{id}}[$i];
+					$html .= sprintf('<li>%s<span class="buttons">%s</span></li>',
+							( $$variable{User}->id() == $R->user_id1() ? 
+							  ( $R->User2()->thumbnail_html() ) :
+							  ( $R->User1()->thumbnail_html() ) 
+							),
+							( sets::isin( $session{user_id}, @$R{'user_id1','user_id2'} ) ? ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'X', 'title'=>'Remove Relationship'} ) : () ),
+					
+						);
+				} # end for
+				$html .= '</ul>';
+			} # end foreach $Type
+			$html .= '</div>';
+		} # end if %Approved
+
+if ( ! $$variable{Company} ) {
+		if ( sets::isin( $session{user_id}, \@ids ) ) {
+			$html .= '<div id="Unapproved">';
+			if ( %Other_Requests ) {
+				foreach my $Type ( @Types ) {
+					next if ! ( $Other_Requests{$$Type{id}} and @{$Other_Requests{$$Type{id}}} );
+					$html .= "<h2>Requests to be $$Type{name} you</h2><ul>";
+					
+					foreach my $R ( @{$Other_Requests{$$Type{id}}} ) {
+						# You are the person confirming
+						$html .= sprintf('<li>%s<span class="buttons">%s</span></li>',
+								$R->User1()->thumbnail_html(),
+								join('',
+									ssi::button( 'Approve'.$R->user_id1().'-'.$R->user_id2().'-'.$R->type_id(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'approve' } } );`, text=>'OK', title=>'Approve'} ),
+									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2().'-'.$R->type_id(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, text=>'X',title=>'Deny'} ),
+									)
+								);
+					} # end foreach Relationship
+					$html .= '</ul>';
+					
+				} # end foreach $Type
+			} # end if %other_requests
+			if ( %My_Requests ) {
+				foreach my $Type ( @Types ) {
+					next if ! ( $My_Requests{$$Type{id}} and @{$My_Requests{$$Type{id}}} );
+					$html .= "<h2>You request to be $$Type{name}</h2><ul>";
+					
+					foreach my $R ( @{$My_Requests{$$Type{id}}} ) {
+						$html .= sprintf('<li>%s<span class="buttons">%s</span></li>', 
+								$R->User2()->thumbnail_html(),
+								join('',
+									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2().'-'.$R->type_id(), { 
+										onclick=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: $$variable{User}{id}, user_id1: $$R{user_id1}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 
+										title=>'Delete Relationship',
+										text=>'X'} ),
+									)
+								);
+					} # end foreach Relationship
+					$html .= '</ul>';
+					
+				} # end foreach $Type
+			} # end if %My_Requests
+			$html .= '</div>';
+		} elsif ( $session{user_id} ) { # if ( $session{user_id} != $$variable{User}->id() ) 
+			@Relationships = map { sets::isin( $session{user_id}, [ $_->user_id1(), $_->user_id2() ] ) ? $_ : () } @Relationships;
+			$html .= sprintf(q`<div class="add">You want to be <select name="relationship_type_id" id="relationship_type_id"><option value="">select</option>%1$s</select>%2$s<p class="buttons">%3$s</p></div>`,
+				ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'sort,lower(name)', 
+					( @Relationships ? ( 'id not in'=>[ map { $_->type_id() } @Relationships ] ) : () ),
+					) ),
+				$$variable{User}->name(),
+				ssi::button( 'AddRelationship', { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: '$$variable{User}{id}', user_id1: '$session{user_id}', user_id2: '$$variable{User}{id}', type_id: \$('relationship_type_id').getValue(), action: 'add' } } );`, 'text' => 'Add' } ),
+				);
+		} # end if viewing me or not
+}
+		return $html;
+	) ?>
+</form>

@@ -1,0 +1,158 @@
+<div id="UploadFiles">
+	<div id="uploadInstructions">
+		Uploading files to <?SiteTitle?> is easy and secure. Simply fill in the fields below and click <b>Upload Files</b>.<br />
+	</div>
+<? if ( $session{user_id} ) ?>
+	<fieldset>
+		<legend>Uploaded Files</legend>
+		<hr class="legendUnderline" />
+		<div id="FileList"> <? echo ( include('_files.html'); ) ?> </div>
+	</fieldset>
+<? endif ( $session{user_id} ) ?>
+	<? eval ( @$variable{serial} = sql::execute( $log, $dbh, q{SELECT nextval('uploads_id_seq')} ); ) ?>
+	<form name="upload" method="post" action="upload.htm?serial=<?serial?>" enctype="multipart/form-data" target="UploadFrame">
+<? if ( ! $session{user_id} ) ?>
+		<fieldset><legend>Your Information</legend>
+			<hr class="legendUnderline" />
+			<div class="leftColumn">
+				<p>
+					<label for="txtCompanyName">Company</label>
+					<input type="text" id="txtCompanyName" name="txtCompanyName" />
+				</p>
+				<p>
+					<label for="txtAddress1">Address</label>
+					<input type="text" id="txtAddress1" name="txtAddress1" />
+				</p>
+				<p>
+					<label>&nbsp;</label>
+					<input type="text" id="txtAddress2" name="txtAddress2" />
+				</p>
+				<p>
+					<label>Postal Code</label>
+					<input type="text" id="txtPostalCode" name="txtPostalCode" />
+				</p>
+			</div>
+			<div class="leftColumn">
+				<p>
+					<label for="txtContactName">Name</label>
+					<input type="text" id="txtContactName" name="txtContactName" />
+				</p>
+				<p>
+					<label for="txtEmailAddress">E-mail</label>
+					<input type="email" id="txtEmailAddress" name="txtEmailAddress" />
+				</p>
+				<p>
+					<label for="txtPhoneNumber">Phone #</label>
+					<input type="tel" id="txtPhoneNumber" name="txtPhoneNumber" />
+				</p>
+			</div>
+		</fieldset>
+<? endif ( ! $session{user_id} ) ?>
+
+<? if ( ! ( $param{docket} or $param{project_id} ) ) ?>
+		<fieldset>
+			<legend>Job Information</legend>
+			<hr class="legendUnderline" />
+<? eval (
+	my $Project;
+	if ( $param{ProjectIndex} ) {
+		$Project = new openprint::Project( $param{ProjectIndex} );
+		$param{project_id} = $Project->id();
+	} elsif ( $session{project_id} ) {
+		$Project = new openprint::Project( $session{project_id} );
+	} # end if
+	if ( $Project and ( $Project->status() ne 'uncalculated' ) ) {
+		$$variable{txtQuoteNumber} = $Project->id();
+	} # end if
+	$$variable{Project} = $Project;
+) ?>
+			<p>
+				<label for="txtQuoteNumber">Quote #</label>
+				<? echo ( input( type=>'cardinal', id=>'txtQuoteNumber', name=>'txtQuoteNumber', value=>$$variable{txtQuoteNumber} ); ) ?>
+			</p>
+			<p>
+			<? if ( $$variable{txtQuoteNumber} ) ?>
+				<? echo (
+					new openprint::Project( $$variable{txtQuoteNumber} )->reference();
+				) ?>
+			<? endif ( $$variable{txtQuoteNumber} ) ?>
+				</textarea>
+			</p>
+		</fieldset>
+<? endif ( ! ( $param{docket} or $param{project_id} ) ) ?>
+		<fieldset>
+			<legend>Choose Files</legend>
+			<hr class="legendUnderline" />
+			<div id="stepThreeInstructions">
+				<div id="instructions">
+					<p>Click on the browse button to select a file that you wish to upload.	Then, if you wish, you may enter in a description for the file.	You may upload up to five files at a time.	When the upload is finished, you will be able to upload another five files.</p>
+					<p>Please compress all files using StuffIt or WinZip before uploading.</p>
+				</div>
+				<div id="acceptedFormats">
+					<div class="title">Accepted Formats</div>
+					<div class="formats">Adobe Illustrator, Photoshop, InDesign, Acrobat, Quark Express, and Corel Draw. Other formats may require an additional charge. Please contact us for more information.</div>
+				</div>
+			 </div>
+			<br class="spacer"/>
+			<table id="fileSelection">
+				<tr>
+					<th width="20">&nbsp;</th>
+					<th width="200" nowrap="nowrap" align="left">Select file(s) to upload</th>
+					<th class="description" nowrap="nowrap">Description (optional)</th>
+				</tr>
+				<tr>
+					<td>1.</td>
+					<td><input type="file" name="fileUpload1" id="fileUpload1" /></td>
+					<td class="description"><input type="text" name="txtDescription1" /></td>
+				</tr>
+				<tr>
+					<td>2.</td>
+					<td><input type="file" name="fileUpload2" id="fileUpload2" /></td>
+					<td class="description"><input type="text" name="txtDescription2" /></td>
+				</tr>
+				<tr>
+					<td>3.</td>
+					<td><input type="file" name="fileUpload3" id="fileUpload3" /></td>
+					<td class="description"><input type="text" name="txtDescription3" /></td>
+				</tr>
+				<tr>
+					<td>4.</td>
+					<td><input type="file" name="fileUpload4" id="fileUpload4" /></td>
+					<td class="description"><input type="text" name="txtDescription4" /></td>
+				</tr>
+				<tr>
+					<td>5.</td>
+					<td><input type="file" name="fileUpload5" id="fileUpload5" /></td>
+					<td class="description"><input type="text" name="txtDescription5" /></td>
+				</tr>
+			</table>
+			<span style="float: right;">
+				<? echo ( 
+					button( 'Upload', { onclick=>"if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});document.forms['upload'].submit();}", text=>'Upload Files' } );
+				) ?>					
+			</span>
+			<br class="spacer"/>
+		</fieldset>
+		<input type="hidden" name="project_id" value="<? echo($param{project_id}) ?>"/>
+		<input type="hidden" name="docket" value="<? echo($param{docket}) ?>"/>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+</div><!-- upload files -->
+<script type="text/javascript">
+var tinymce_options = {
+    mode : "textareas",
+ plugins: "paste",
+  theme_advanced_toolbar_location : "top",
+  theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull",
+  theme_advanced_buttons2 : "bullist,numlist,outdent,indent,sub,sup,charmap",
+  theme_advanced_buttons3 : "",
+  force_br_newlines : true,
+  force_p_newlines : false,
+  forced_root_block : '', // Needed for 3.x
+  auto_resize : true,
+    theme : "advanced"
+
+  };
+tinyMCE.init(tinymce_options);
+</script>
+

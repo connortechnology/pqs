@@ -1,0 +1,109 @@
+<script src="<?hash_link('/javascripts/service.js')?>"></script>
+<script src="<?hash_link('/javascripts/proj/paper.js')?>"></script>
+<script src="<?hash_link('/javascripts/printing.js')?>"></script>
+<script nonce="<?echo($config{CSP_NONCE})?>">
+	const quantities = new Array();
+	<?QUANTITIES?>
+	results_callback = function cbBookResults( results ) {
+		cbFillResults(results);
+
+		const form = getFormObj('f1');
+		if ( get_value( form.Backing ) == 'Cardboard' || get_value( form.Backing ) == 'None' ) {
+			$('SignatureGroup1').hide();
+		} else {
+			$('SignatureGroup1').show();
+		} // end if
+		if ( ( form.remaining_pages.value > 0 ) && ! $('SignatureGroup'+form.next_group_id.value) ) {
+			new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', { 
+					parameters: { 'next_group_id' : form.next_group_id.value, },
+					onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);if($('SignatureGroup'+form.next_group_id.value)){calc(form.name);}}
+					//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+					} );
+		} // end if
+	} // end function cbBookResults
+
+	function validate_data(formName) {
+		const form = getFormObj(formName);
+		if ( ! form.PageQuantity.value > 0 ) {
+			alert('Please enter the total quantity of pages.');
+			return 0;
+		} // end if
+
+		return 1;
+	} // end function
+</script>
+<?include('/main/project/prin/_templates.html')?>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ProjectTypeName?></legend>
+		<?include('/includes/main/proj/templates/generic.html') ?>
+		<?include('/includes/main/proj/dimensions.html') ?>
+			<div id="OtherSpecifications">
+			<fieldset><legend>Other Specifications</legend>
+					<?include('/includes/main/proj/multipage_printing_type.html') ?>
+					<?include('/includes/main/proj/screen_type.html') ?>
+			</fieldset>
+			</div>
+			<br class="spacer"/>
+			<fieldset><legend>Pad Specifications</legend>
+				<ul>
+				<li id="NotepadPages">
+					<label>Sheets per pad</label>
+					<? echo ( input( type=>'cardinal', name=>'PageQuantity', value=>$$variable{PageQuantity}, onkeyup=>'calc(this.form.name);' ); ) ?>
+				</li>
+				<input type="hidden" name="txtTotalPageQuantity" value="2" />
+				<li><label>Backing</label>
+					<? echo ( radio( 'Backing', [ map { $_, $_ } ( 'Cardboard', 'Printed', 'None' ) ], $$variable{Backing}, { onclick=>q`if(this.value=='Cardboard' || this.value=='None'){$('SignatureGroup1').hide();}else{$('SignatureGroup1').show();};calc(this.form.name);` } ); ) ?>
+				</li>
+				</ul>
+			</fieldset>
+			<br class="spacer"/>
+			<div id="SignatureGroups">
+			<? echo (
+				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{ProjectIndex}, 'Group' );
+				if ( ! sets::isin( 1, \@Groups ) ) {
+					# Unshift so that cover is always first
+					unshift @Groups, 1;
+					# Load Defaults
+					if ( my $ServiceType = openprint::ServiceType->find_one(name=>'Signature') ) {
+						foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$ServiceType->id(), 'projecttype_id'=>$$variable{Project}->type_id() ) ) {
+							$$variable{$Default->name().'1'} = $Default->value();
+						} # end while
+					} # end if
+					$$variable{txtServiceDescription1} = 'Backing';
+				} # end if
+				$$variable{txtSignatureType1} = 'Backing Pages';
+
+				if ( ! sets::isin( 2, \@Groups ) ) {
+					# Ensure 1 interior pages
+					push @Groups, 2;
+					# Load Defaults
+					if ( my $ServiceType = openprint::ServiceType->find_one( name=>'Signature') ) {
+						foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ) ) {
+							$$variable{$Default->name().'2'} = $Default->value();
+						} # end while
+					} # end if
+					$$variable{txtServiceDescription2} = 'Pad Pages';
+					$$variable{txtSignatureType2} = 'Pad Pages';
+				} # end if
+				my $html = '';
+				my $h = slurp_content( '/main/project/prin/_signature.html' );
+				foreach my $Group ( @Groups ) {
+					$$variable{Group} = $Group;
+					$$variable{Signature} = $Group;
+					$html .= variable_substitution( \$h, $variable );
+				} # end foreach
+				return $html;
+			) ?>
+			</div>
+		</fieldset>
+		<?include(/includes/main/proj/add_to_project.html)?>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+    <input type="hidden" name="ServiceType" value="<?echo($$variable{ProjectType}->type())?>"/>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ContinueProject" value="Y"/>
+		<input type="hidden" name="remaining_pages" />
+		<input type="hidden" name="next_group_id" />
+	</form>
+</div><!--Service-->

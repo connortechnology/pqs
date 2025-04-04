@@ -1,0 +1,33 @@
+<form name="part2form" id="part2form" action="?">
+	<h3>Part 2 (To be completed by recipient)</h3>
+	<table>
+		<tr><td colspan="4">ROOT CAUSE OF PROBLEM (Why did the problem occur?)</td></tr>
+		<tr><td colspan="4">
+			<textarea name="cause" rows="5" onkeyup="textarea_resize(this);"><? echo ( $$variable{CAR}->cause() ) ?></textarea>
+			</td>
+		</tr>
+		<tr>
+			<td width="10%">Recipient</td>
+			<td width="40%">
+<? echo ( ssi::select(
+			openprint::User->dropdown(type=>['E','A']),
+			$$variable{CAR}->part2_user_id() ? $$variable{CAR}->part2_user_id() : $session{user_id},
+			{ name=>'part2_user_id' }
+			);
+) ?>
+			</td>
+			<td width="10%">Date</td>
+			<td width="40%">
+<? echo (
+		return date_select( 'part2_signed_on', $$variable{CAR}->issued_on() ? $$variable{CAR}->issued_on() : [Date::Calc::Today()] );
+) ?>
+			</td>
+		</tr>
+	</table>
+	<input type="hidden" name="car_id" value="<? echo ( $$variable{CAR}->id() ) ?>" />
+	<p class="buttons">
+		<? echo ( 
+			button( 'Save', { type=>'submit', name=>'btnFunction', value=>'Save' } );
+		) ?>
+	</p>
+</form>

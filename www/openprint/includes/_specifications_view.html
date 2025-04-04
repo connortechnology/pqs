@@ -1,0 +1,18 @@
+<fieldset><legend>Specifications</legend>
+	<table class="List" id="specifications">
+<? echo (
+	my $html;
+	my $rowclass;
+	my $template = slurp_content('/includes/_specification_view.html');
+	foreach my $Spec ( $$variable{Object}->Specifications() ) {
+		$html .= variable_substitution( \$template, {
+			Spec        =>  $Spec,
+			rowclass    =>  $rowclass,
+			} );
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach
+	return $html;
+) ?>
+	</table>
+</fieldset>
+

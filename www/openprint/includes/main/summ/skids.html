@@ -1,0 +1,36 @@
+<p>
+	<label>Items per <?ServiceTypeName?></label>
+<? if ( $$variable{'Project'}->quantity(1) ) ?>
+	<span class="value">
+		<?txtItemsPerPackage1?>
+	</span>
+<? endif ( $$variable{'Project'}->quantity(1) ) ?>
+<? if ( $$variable{'Project'}->quantity(2) ) ?>
+	<span class="value">
+		<?txtItemsPerPackage2?>
+	</span>
+<? endif ( $$variable{'Project'}->quantity(2) ) ?>
+<? if ( $$variable{'Project'}->quantity(3) ) ?>
+	<span class="value">
+		<?txtItemsPerPackage3?>
+	</span>
+<? endif ( $$variable{'Project'}->quantity(3) ) ?>
+</p>
+<p>
+    <label><?ServiceTypeName?> quantity</label>
+<? if ( $$variable{'Project'}->quantity(1) ) ?>
+    <span class="value">
+		<?txtPackageQuantity1?>
+	</span>
+<? endif ( $$variable{'Project'}->quantity(1) ) ?>
+<? if ( $$variable{'Project'}->quantity(2) ) ?>
+    <span class="value">
+		<?txtPackageQuantity2?>
+	</span>
+<? endif ( $$variable{'Project'}->quantity(2) ) ?>
+<? if ( $$variable{'Project'}->quantity(3) ) ?>
+    <span class="value">
+		<?txtPackageQuantity3?>
+	</span>
+<? endif ( $$variable{'Project'}->quantity(3) ) ?>
+</p>

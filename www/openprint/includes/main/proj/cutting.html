@@ -1,0 +1,59 @@
+	<? while ( @$variable{'Index','Reference','sheetWidth', 'sheetHeight', 'suppliedWidth', 'suppliedHeight'} = splice @{$$variable{'CuttingGroups'}},0,6; ) ?>
+	<? if ( $$variable{'Reference'} ) ?>
+	<div class="row"> <b><?Reference?></b> </div>
+	<? endif ( $$variable{'Reference'} ) ?>
+	<? if ( $$variable{'sheetWidth'} != $$variable{'suppliedWidth'} or $$variable{'sheetHeight'} != $$variable{'suppliedHeight'} ) ?>
+	<div class="row">
+		<span class="required">*</span>
+    	<span class="label">What is the <a href="#" onMouseOver="tipOn('supplied_press_sheet_size',2,event)" onMouseOut="tipOff('supplied_press_sheet_size')">supplied press sheet size</a>?</span>
+		<span class="input">
+            <input name="txtSuppliedStockWidth<?Index?>" size="9" value="<?suppliedWidth?>"  onKeyUp="calc('f1');" />
+            <input name="txtSuppliedStockHeight<?Index?>" size="9" value="<?suppliedHeight?>"  onKeyUp="calc('f1');" />
+		</span>
+	</div>
+	<div class="row">
+		<span class="required">*</span>
+    	<span class="label">What is the <a href="#" onMouseOver="tipOn('running_press_sheet_size',2,event)" onMouseOut="tipOff('running_press_sheet_size')">running press sheet size</a>?</span>
+		<span class="input">
+            <input name="txtSheetSizeWidth<?Index?>" size="9" value="<?sheetWidth?>"  onKeyUp="calc('f1');" />
+            <input name="txtSheetSizeHeight<?Index?>" size="9" value="<?sheetHeight?>"  onKeyUp="calc('f1');" />
+		</span>
+	</div>
+	<? endif ( $$variable{'sheetWidth'} != $$variable{'suppliedWidth'} or $$variable{'sheetHeight'} != $$variable{'suppliedHeight'} ) ?>
+	<div class="row">
+		<span class="required">*</span>
+    	<span class="label">What is the <a href="#" onMouseOver="tipOn('calliper',2,event)" onMouseOut="tipOff('calliper')">calliper</a> of the stock?</span>
+		<span class="input">
+            <input name="txtStockCalliper<?Index?>" size="9" value="<? echo ( $$variable{'txtStockCalliper'.$$variable{'Index'}} ) ?>"  onKeyUp="calc('f1');" />
+		</span>
+		<br>
+	</div>
+	<div class="row">
+		<span class="required">*</span>
+		<span class="label">Calculated regular cuts</span>
+		<span class="input">
+            <input name="txtCalculatedCuts<?Index?>" size="9" value="<? echo ( $$variable{'txtCalculatedCuts'.$$variable{'Index'}} ) ?>"  onKeyUp="calc('f1');" />
+		</span>
+		<br>
+	</div>
+
+	<? if ( sets::isin( $$variable{'ProjectType'}->name(), ('PressSheetCombination','NoPrintingRequired')) or sets::isin( $openprint::session{'user_type'},'E','A') ) ?>
+	<div class="row">
+		<span class="required">*</span>
+    	<span class="label">How many additional cuts are required?</span>
+		<span class="input">
+            <input name="txtAdditionalCuts<?Index?>" size="9" value="<? echo ( $$variable{'txtAdditionalCuts'.$$variable{'Index'}} ) ?>"  onKeyUp="calc('f1');" />
+		</span>
+		<br>
+	</div>
+	<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ('PressSheetCombination','NoPrintingRequired')) or sets::isin( $openprint::session{'user_type'},'E','A') ) ?>
+	<? if ( $$variable{'hdnCutsPerSheet'} eq '-3' || $$variable{'hdnCutsPerSheet'} eq '-4' ) ?>
+	<div class="row">
+		<span class="required">*</span>
+		<span class="label">What is the <a href="#" onMouseOver="tipOn('calliper',2,event)" onMouseOut="tipOff('calliper')">calliper</a> of the finished project?</span>
+		<span class="input">
+			<input type="text" name="txtFinishedCalliper<?Index?>" size="9" value="<?txtFinishedCalliper?>"  onKeyUp="calc('f1');" />
+		</span>
+	</div>
+	<? endif ( $$variable{'hdnCutsPerSheet'} eq '-3' || $$variable{'hdnCutsPerSheet'} eq '-4' ) ?>
+	<? endwhile ( @$variable{'Index','Reference','sheetWidth', 'sheetHeight', 'suppliedWidth', 'suppliedHeight'} = splice @{$$variable{'CuttingGroups'}},0,6; ) ?>

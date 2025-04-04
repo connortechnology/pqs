@@ -1,0 +1,25 @@
+.pms {
+	width: 75px;
+	text-align: left;
+}
+.name {
+	width: 100px;
+	text-align: left;
+}
+.material,
+.service {
+	text-align: left;
+}
+.washups {
+	width: 50px;
+}
+.washups input {
+	width: 100%;
+}
+.colours {
+	width: 20px;
+}
+.grades {
+	width: 125px;
+	text-align: left;
+}

@@ -1,0 +1,21 @@
+<? echo ( join( "\n",
+			include('/includes/main/summ/multipage_flat_dimensions.html', $variable ),
+			include('/includes/main/summ/colours_coatings.html', $variable ),
+			include('/includes/main/summ/bleed.html', $variable ),
+			include('/includes/main/summ/colour_bars.html', $variable ),
+			include('/includes/main/summ/paper_dropdowns.html', $variable ),
+			include('/includes/main/summ/press_sheet_quantity.html', $variable ),
+			include('/main/summ/prin/_runstyle_and_press.html', $variable ),
+			include('/includes/main/summ/plates.html', $variable ),
+			include('/includes/main/summ/imposition.html', $variable ),
+			include('/includes/main/summ/multipage_signatures.html', $variable ),
+			include('/includes/main/summ/press_approval.html', $variable ),
+); ) ?>
+<p>
+	<label>Breakdown</label>
+	<? echo ( 
+		my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project', 'ServiceIndex'} );
+		return join("\n", map { ('<span class="value">', $$sig_specs{'hdnBreakdown'.$_}, '&nbsp;</span>') } $$variable{Project}->quantity_indexes() );
+	) ?>
+</p>
+

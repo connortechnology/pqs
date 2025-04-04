@@ -1,0 +1,131 @@
+<div class="PageTitle">
+<h1>Administrator Managerial</h1>
+<h2>Users</h2>
+</div>
+<script>
+	LoadContent('Results', '_users.html', $j('#f1').serialize());
+var openprint_load_content_ajax = null;
+
+function load_page() {
+	LoadContent('Results', '_users.html', $j('#f1').serialize());
+/*
+	if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
+	openprint_load_content_ajax = new Ajax.Updater( 'Results', '_users.html', { parameters: $('f1').serialize() } );
+*/
+} 
+</script>
+<form id="f1" name="f1" method="post" action="users.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<ul>
+		<li>
+			<label>ID</label>
+			<? echo ( input( type=>'cardinal', name=>'user_id', onkeydown=>"if(event.keyCode==13){f1.submit();}" ); ) ?>
+			<? echo ( button( 'Go1',{ onclick=>"f1.action='user_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
+		</li>
+		<li>
+			<label>Email</label>
+      <? echo ( input( type=>'email', name=>'email', value=>$param{email}, onkeydown=>'if(event.keyCode==13){f1.submit();}', oninput=>'load_page();' ); ) ?>
+			<? echo ( button( 'Go2',{ onclick=>"f1.action='user_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
+		</li>
+</ul>
+<hr/>
+<ul>
+		<li><label>Company Name</label>
+			<input type="text" oninput="filter_companies( $('company_id'), {name:this.value} );" class="filter" />
+			<select name="company_id" id="company_id" onchange="load_page();">
+				<option value="">All</option>
+				<? echo ( 
+                my $companies = openprint::Company->dropdown(limit=>1000);
+if ( @{$companies} < 1000 ) {
+return make_drop_down($companies, $session{$r->uri().'?company_id'});
+}
+my $html = '';
+if ($session{$r->uri().'?company_id'}) {
+$html .= '<option value="'.$session{$r->uri().'?company_id'}.'" selected="selected">'.(new openprint::Company($session{$r->uri().'?company_id'}))->name().'</option>';
+}
+return $html.'<option value="">Use the filter to populate this dropdown</option>';
+) ?>
+			</select>
+		</li>
+<?echo(
+		my @CSRs = openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales' );
+		return if ! @CSRs;
+
+		join("\n",
+					'<li><label>Sales Rep</label>',
+					ssi::select(
+				[ map { $$_{id}, $_->name() } @CSRs ],
+				$session{$r->uri().'?salesrep_id'},
+				{
+				name=>'salesrep_id',
+				onchange=>'load_page();',
+				prepend=>['','All'],
+				}
+				),
+			checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ), 
+'</li>',
+			);
+ ) ?>
+<?echo(
+	my @Groups = openprint::UserGroup->find();
+	return if ! @Groups;
+	join("\n",
+		'<li><label>Group</label>',
+		ssi::select(
+			[ map { $$_{id}, $$_{name} } @Groups ],
+			$session{$r->uri().'?usergroup_id'},
+			{
+				name=>'usergroup_id',
+				onchange=>'load_page();',
+				prepend=>['','All'],
+			},
+),
+'</li>',
+);
+) ?>
+		<li><label>Notifications</label>
+			<? echo ( ssi::select( openprint::User_Notification_Type->dropdown(), $session{$r->uri().'?notification_type_id'}, {
+						name=>'notification_type_id',
+						prepend=>['','All'],
+						onchange=>'load_page();',
+						} ); ) ?>
+		</li>
+		<li> 
+			<label>Created Date</label>
+			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+		</li>
+		<li>
+			<label>User Type</label>
+			<? echo ( ssi::select( openprint::User_Type->dropdown(), $session{$r->uri().'?type'}, { name=>'type', prepend=>['','All'], onchange=>'load_page();' } ); ) ?>
+		</li>
+		<li><label>Company Admin?</label><? echo ( radio( 'administrator', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?administrator'}, {onclick=>"load_page();"} ); ) ?></li>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"load_page();"} ); ) ?></li>
+		<li><label>Web Active?</label><? echo ( radio( 'web_active', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?web_active'}, {onclick=>'load_page();'} ); ) ?></li>
+		<li><label>FTP Active?</label><? echo ( radio( 'ftp_active', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?ftp_active'}, {onclick=>'load_page();'} ); ) ?></li>
+    <li><label>Limit Results</label>
+      <? echo ( ssi::select([ map { $_ => $_ } ( 20, 1000, 10000 )],
+      ($session{$r->uri().'?limit'} ? $session{$r->uri().'?limit'} : 1000),
+      {name=>'limit'}); ) ?></li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button('ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
+				button('DownloadCSV', { onclick=>"f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' }),
+				#button('DownloadCSV', { onclick=>"f1.action='users.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' }),
+				button('New', { href=>'/administrator/managerial/user_profiles.html' } ),
+				button('Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+); ) ?>
+		</p>
+  <p class="buttons">
+      <input type="file" name="file"/>
+      <? echo ( join("\n",
+      button( 'Import', { onclick=>"f1.btnFunction.value='import';f1.submit();", text=>'Import' } ),
+      #button( 'Export', { onclick=>"f1.btnFunction.value='Export Specifications';f1.submit();", text=>'Export' } ),
+      ); ) ?>
+    </p> 
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>
+	<div id="Results">Click Show Results</div>

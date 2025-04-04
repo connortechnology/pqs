@@ -1,0 +1,15 @@
+<div class="Requested">
+	<fieldset><legend>Credit Options Requested</legend>
+		<ul>
+			<li><label>First Order Value</label><? echo ( $$variable{Application}->firstordervalue() ) ?></li>
+			<li><label>Annual Purchases</label><? echo ( $$variable{Application}->annualpurchases() ) ?></li>
+			<li><label>Accounts Payable Contact</label><? echo ( $$variable{Application}->accountspayablecontact() ) ?></li>
+			<li><label>Account Limit</label><? echo ( $$variable{Application}->desired_limit() ) ?></li>
+			<li><label>Terms</label><? echo ( $$variable{Application}->desired_terms() ) ?></li>
+			<li><label>Financial Statement Available?</label>
+			<? echo ( $variable{Application}->financialstatementavailable() eq 'Y' ? 'Yes' : 'No' ) ?></li>
+			<li><label>Signed By</label><? echo ( $$variable{Application}->signature() ) ?></li>
+			<li><label>Submitted On</label><? echo ( format_datetime( $$variable{Application}->created_on() ); ) ?></li>
+		</ul>
+	</fieldset>
+</div>

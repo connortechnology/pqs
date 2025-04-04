@@ -1,0 +1,60 @@
+<div class="Previews">
+<? echo ( 
+	require openprint::CIP3_PPF;
+	my $front_html;
+	my $back_html;
+
+	my $Project = $$variable{Project};
+	my $services = $Project->services();
+	my $Service = $Project->Service( $$variable{ServiceIndex} );
+	my $sig_specs = $Service->specs();
+	my $signature = $$variable{SignatureIndex};
+
+	my @PPFs = openprint::CIP3_PPF->find(
+				docket		=>	$Project->docket(),
+				signature	=>	$signature,
+				order			=>	'created_on DESC',
+				distinct	=>	1,
+				);
+
+	sub side_html {
+		my $PPF = shift;
+		my $side = shift;
+
+		my $html = '<div class="Preview"><fieldset><legend>'.$side.' created at '.format_datetime($PPF->created_on()).'</legend>';
+		foreach my $preview ( $PPF->previews($side) ) {
+			next if ! $$preview{separations};
+
+			$html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
+				$Project->docket(), $signature, $side,
+				);
+		} # end foreach preview
+		$html .= button('SendPPF'.$PPF->id(), {
+				onclick=>q`new Ajax.Updater('Previews`.$signature.q`'/employee/proj/prin/prin_multi.html?ProjectIndex=`.$Project->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=SendPPF&ppf_id='.$PPF->id().q`');`,
+				text=>'Send CIP'});
+		$html .= button('DeletePPF'.$PPF->id(), {
+				onclick=>q`new Ajax.Updater('Previews`.$signature.q`','/employee/proj/prin/_previews.html?ProjectIndex=`.$Project->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=DeletePPF&ppf_id='.$PPF->id().q`');`,
+				text=>'Delete CIP'}) if $openprint::User->Groups('Prepress') or $openprint::User->type() eq 'A';
+		$html .= '</fieldset></div>';
+		return $html;
+	}
+
+	foreach my $PPF ( @PPFs ) {
+		$PPF->generate_previews();
+
+		if ( $PPF->side() eq 'M' ) {
+			$front_html .= side_html( $PPF, 'Front');
+			$back_html .= side_html( $PPF, 'Back');
+		} elsif ( $PPF->side() eq 'A' or $PPF->side() eq 'Front' ) {
+			$front_html .= side_html($PPF, 'Front');
+		} elsif ( $PPF->side() eq 'B' or $PPF->side() eq 'Back' ) {
+			$back_html .= side_html( $PPF, 'Back');
+		} else {
+			$log->error("Unknown side $$PPF{side} in ppf");
+		} # end if side
+		last if $front_html and $back_html;
+	} # end foreach PPF
+	return $front_html . $back_html;
+) ?>
+</div>
+<br class="spacer"/>

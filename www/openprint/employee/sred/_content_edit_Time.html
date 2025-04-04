@@ -1,0 +1,36 @@
+<? echo (
+	my $C = $$variable{'C'};
+	return sprintf(q`
+				<li><label>All Day</label>%2$s</li>
+				<li><label>Unknown Time</label>%3$s</li>
+				<li><label>Start</label>%4$s</li>
+				<li><label>End</label>%5$s</li>
+				<li><label>Duration</label>
+					<input type="number" name="duration-%1$d_days" id="duration-%1$d_days" size="3" value="%6$d" /> days
+					<span id="duration-%1$d_time">
+					<select name="duration-%1$d_hours" id="duration-%1$d_hours">%7$s</select> :
+					<select name="duration-%1$d_minutes" id="duration-%1$d_minutes">%8$s</select>
+					</span>
+				</li>
+				<li><label>Who</label><select id="user_id-%1$d" name="user_id-%1$d">%9$s</select></li>
+				`, $C->id(),
+				ssi::radio( 'all_day_event-'.$$C{id}, [1,'Yes',0,'No'], 1*($C->all_day_event()), { 'onclick'=>qq`update_duration(this.form,'starting','ending', '-$$C{id}' );`}),
+				ssi::radio( 'unknown_time-'.$$C{id}, [1,'Yes',0,'No'], 1*($C->unknown_time()), { 'onclick'=>qq`update_duration(this.form,'starting','ending', '-$$C{id}' );`}),
+				ssi::datetime_select( 'starting-'.$$C{id}, $C->starting(), {
+							'onchange'=>qq`check_time_starting(this.form,'starting','ending', '-$$C{id}'); update_duration(this.form,'starting','ending', '-$$C{id}');`,
+							'with_time'  =>  ! ( 1*$C->all_day_event() or 1*$C->unknown_time() ),
+							'with_today'	=> 1,
+							'with_clear'	=> 1,
+							} ),
+				ssi::datetime_select( 'ending-'.$$C{id}, $C->ending(), {
+					'onchange'=>qq`update_duration(this.form,'starting','ending', '-$$C{id}');`,
+							'with_time'  =>  ! ( 1*$C->all_day_event() or 1*$C->unknown_time() ),
+							'with_today'	=> 1,
+							'with_clear'	=> 1,
+					} ),
+				$C->duration_days(),
+				ssi::make_drop_down( [ map { $_, $_ } ( 0 .. 24 ) ], $C->duration_hours() ),
+				ssi::make_drop_down( [ map { $_, $_ } ( 0 .. 59 ) ], $C->duration_minutes() ),
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)' ) ], $C->user_id() ? $C->user_id() : $session{'user_id'} ),
+	);
+) ?>

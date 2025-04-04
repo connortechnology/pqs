@@ -1,0 +1,87 @@
+<script type="text/javascript">
+	function filter_products() {
+		new Ajax.Updater( 'Products', '_category_view_products.html?category_id=<? echo ( $$variable{Category}->id(); ) ?>', { parameters: $('f1').serialize() } );
+	}
+</script>
+<form name="f1" id="f1" action="/product/category_view.html?category_id=<? echo ( $$variable{Category}->id(); ) ?>" method="post">
+	<fieldset>
+		<legend> <? echo ( $$variable{Category}->name()) ?> </legend>
+		<?if($$variable{Category}->can_edit())?>
+		<p class="buttons">
+			<? echo ( join("\n",
+			( $$variable{Category}->id() ? (
+				button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } ),
+				button( 'Edit', { href=>'/product/category_edit.html?category_id='.$$variable{Category}->id() } ),
+				) : () ),
+			
+				button( 'New', { href=>'/product/category_edit.html' } ),
+			); ) ?>
+		</p>
+		<?endif($$variable{Category}->can_edit())?>
+	<div class="Category">
+		<div class="Information">
+			<ul>
+				<li><label>Name</label><? hecho ( $$variable{Category}->name(); ) ?></li>
+				<li><label>Description</label><? hecho ( $$variable{Category}->description(); ) ?></li>
+				<li><label>Categories</label><?echo( $$variable{Category}->parent_ids() and @{ $$variable{Category}->parent_ids() } ? join('<br/>', map { $_->name() } $$variable{Category}->Parents() ) : 'none'; ) ?></li>
+			</ul>
+		</div>
+		<?eval( $$variable{Object} = $$variable{Category};)?>
+<?if($$variable{Category}->Specifications())?>
+		<div class="Specifications">
+		<?include(/includes/_specifications_view.html)?>
+        </div>
+<?endif($$variable{Category}->Specifications())?>
+        <div class="rightColumn">
+		<? eval ( $$variable{Album} = $$variable{Category};) ?>
+		<?include(/employee/assets/_assets.html)?>
+        </div>
+		<br class="spacer"/>
+		<? echo (
+			my $html;
+			my @Subs = $$variable{Category}->Categories();
+			if ( @Subs ) {
+				$html .= '<ul class="SubCategories">';
+				foreach my $SubCategory ( @Subs ) {
+					$html .= sprintf('<li><h3>%s</h3>%s</li>',$SubCategory->link_to(),$SubCategory->description() );
+				}
+				$html .= '</ul>';
+			} # end if	
+			return $html;
+		) ?>
+		<br/>
+		<div id="Selector">
+		<? echo (
+			my $html;
+			my @Products = $$variable{Category}->Products();
+			my @product_ids = map { $$_{id} } @Products;
+			$$variable{Quantities} = [];
+			if ( @product_ids ) {
+				my %specifications;
+				foreach my $Spec ( openprint::Object_Specification->find( object_type => 'openprint::Product', object_id=>\@product_ids ) ) {
+					$specifications{$$Spec{name}} = [] if ! $specifications{$$Spec{name}};
+					push @{$specifications{$$Spec{name}}}, $$Spec{value};
+				}
+				foreach my $name ( keys %specifications ) {
+					$specifications{$name} = [ sets::union( @{$specifications{$name}} ) ];
+					delete $specifications{$name} if scalar @{$specifications{$name}} == 1;
+				}
+				foreach my $name ( sort keys %specifications ) {
+					$html .= '<li><label>'.$name.'</label>'.ssi::select( 
+							[ map { $_, $_ } @{$specifications{$name}} ], undef, 
+							{ name=>'spec_filter-'.$name, onchange=>'filter_products();', prepend=>['','All'] } ).'</li>';
+				}
+				my @Prices = openprint::ProductPrice->find( product_id=> \@product_ids );
+				my @quantities = @{$$variable{Quantities}} = sort { $a <=> $b } sets::union( map { $_->min() == $_->max() ? $_->min() : () } @Prices );
+				$html .= '<li><label>Quantity</label>'.ssi::select( [ map { $_, $_ } @quantities ], undef, 
+						{ name => 'quantity', onchange=>'filter_products();', prepend=>['','All'] } );
+				
+			}
+			return '<ul>'.$html.'</ul>' if $html;
+			return;
+		) ?>	
+		</div>
+		<div id="Products"><?include(/product/_category_view_products.html)?></div>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>

@@ -1,0 +1,14 @@
+<? echo (
+	if ( $param{'action'} eq 'delete' ) {
+		if ( my $Location = openprint::Location->find_one('id'=>$param{'location_id'}) ) {
+			if ( $_ = $Location->delete() ) {
+				return qq`alert('Error deleting location: $_');`;
+			} else {
+				return qq`\$('location_$$Location{id}').remove();`;
+			} # end if
+		} else {
+			return q`alert('Unable to find location.');`;
+		} # end if
+	} # end if
+	return '';
+) ?>

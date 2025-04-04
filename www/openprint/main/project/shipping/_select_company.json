@@ -1,0 +1,44 @@
+<? echo (
+	my $Company = new openprint::Company( $param{'company_id'} );
+	my $html = '';
+	my $to_from = lc $param{to_from};
+
+	$html .=qq` 
+		\$('$param{to_from}CompanyName').value = '$$Company{name}';
+		\$('$param{to_from}Address1').value = '$$Company{address1}';
+		\$('$param{to_from}Address2').value = '$$Company{address2}';
+		\$('$param{to_from}City').value = '$$Company{city}';
+		ddm_select_by_value( \$('$param{to_from}Country'), '$$Company{country}' );
+		ddm_select_by_value( \$('$param{to_from}StateProvince'), '$$Company{state}' );
+		\$('$param{to_from}PostalCode').value = '$$Company{postalcode}';
+		\$('$param{to_from}Phone').value = '$$Company{phone}';
+		\$('$param{to_from}Fax').value = '$$Company{fax}';
+		var location_ddm = \$('${to_from}_location_id');
+		if ( location_ddm ) {
+		clear_ddm( location_ddm );
+		add_option( location_ddm, '', 'select' );
+		} else {
+			console.log("Unable to find location ddm '${to_from}_location_id'");
+		}
+	`;
+
+	my @Locations = openprint::Location->find(company_id=>$$Company{id}, type=>'place' ) if $$Company{id};
+
+	my $selected = $Locations[0]->id() if @Locations == 1;
+	foreach my $Location ( @Locations ) {
+		my $name = $Location->name();
+		$name =~ s/'/\\'/g;
+		$html .= "add_option( location_ddm, '$$Location{id}', '$name', '$selected' );\n";
+	} # end foreach Location
+	if ( @Locations == 1 and 0 ) {
+		my $Location= $Locations[0];
+		$html .= "
+			\$('$param{to_from}_location').value = '$$Location{firstname} $$Location{lastname}';
+			\$('$param{to_from}Phone').value = '$$Location{phone}';
+			\$('$param{to_from}Fax').value = '$$Location{fax}';
+			\$('$param{to_from}Email').value = '$$Location{email}';
+		";
+	} # end if
+
+	return $html;
+) ?>

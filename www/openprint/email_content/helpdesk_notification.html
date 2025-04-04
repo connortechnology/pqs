@@ -1,0 +1,27 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	</head>
+	<body>
+		<?rdbSalutation?> <?txtFirstName?> <?txtLastName?> has made a helpdesk submission.<br>
+<br>
+
+		Click <a href="<? echo ( $openprint::config{ExternalSecureSiteURL} ) ?>/employee/support/helpdesk.html?helpdesk_id=<?HelpDeskIndex?>">here</a> to see details.<br>
+<br>
+<br>
+Company Name: <?txtCompanyName?><br>
+Phone: <?txtPhone?><br>
+Extension: <?txtExtension?><br>
+Email Address: <?txtEmail?><br>
+Question: <?txtQuestion-Quote?><br>
+Response Format: 
+<? if ( $$variable{'rdbMethod'} eq 'E' ) ?>
+Email
+<? else ( $$variable{'rdbMethod'} eq 'E' ) ?>
+Phone
+<? endif ( $$variable{'rdbMethod'} eq 'E' ) ?>
+<br>
+	</body>
+</html>
+

@@ -1,0 +1,12 @@
+<? echo (
+	my $id = $$variable{Currency}{id};
+
+  my $C = $$variable{Conversion};
+
+		my $To = new openprint::Currency( $$C{to_id} );
+		$html .= sprintf('1 %s = %s %s %s %s<br/>', $C->From()->name(), $C->amount(), $To->name(),
+			( $$C{period_start} ? 'from '. format_datetime( $$C{period_start} ) : '' ),
+			( $$C{period_end} ? ' until ' . format_datetime( $$C{period_end} ) : '' ),
+		); 
+	return $html;
+) ?>

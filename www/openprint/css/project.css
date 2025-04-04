@@ -1,0 +1,359 @@
+
+.Project .Header {
+  /*
+  margin-bottom: 5px;
+  */
+	width: 100%;
+  flex-wrap: wrap;
+  display: flex;
+  align-items: stretch;
+}
+.Project .Header fieldset {
+height: 100%;
+	margin: 2px;
+  /*
+    margin-bottom: 0;
+    */
+    padding: 6px;
+    text-align: left;
+}
+.Project .Header .ProjectInformation ,
+.Project .Header .OrderInformation,
+.Project .Header .ContactInformation ,
+.Project .Header .Comments ,
+.Project .Header .Description ,
+.Project .Header .Reference {
+    flex: 1;
+    width: 48%;
+    min-width: 375px;
+margin-bottom: 5px;
+}
+.Project .Header .Comments li ,
+.Project .Header .Reference li ,
+.Project .Header .Description li {
+    text-align: left;
+}
+.Reference p {
+
+}
+.Reference br {
+  line-height: 0;
+  height: 0;
+  /*
+  display: none;
+  */
+}
+
+.Project .Header fieldset  {
+}
+.Project .Header fieldset ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.Project .Header fieldset li {
+    text-align: right;
+    padding: 0;
+    margin: 0;
+}
+.Project .Header fieldset li label:not(.radio):not(.radio-inline) {
+    margin: 0;
+    padding: 0;
+    float: left;
+    font-weight: bold;
+    text-align: left;
+    width: auto;
+}
+.Service .row {
+    margin: 0;
+    margin-bottom: 10px;
+	margin-right: 20px;
+    padding: 0px 400px 5px 0;
+    clear: none;
+    width: auto;
+	max-width: 310px;
+    display: inline-block;
+}
+.Service .row:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+.Service .row .required {
+	display: none;
+}
+
+.Service .row span.label {
+    width: auto;
+    text-align: left;
+    float: left;
+    display:inline;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+	margin-right: 10px;
+}
+
+.Service .row span.value {
+    margin: 0;
+    padding: 0;
+    margin-left: 10px;
+    width: 180px;
+    text-align: left;
+    float:left;
+    p\osition: relative;
+}
+.Service .row span.input {
+    width: 390px;
+    margin: 0;
+    margin-right: -400px;
+    margin-bottom: -15px;
+    text-align: left;
+    float:right;
+    height: 100%;
+    padding: 5px 5px 10px 5px;
+    background-color:#BBA971;
+   color: #22275E;
+}
+.Service fieldset {
+}
+.Service fieldset li,
+.Service fieldset p:not(.buttons) {
+	padding-left: 190px;
+}
+.Service fieldset li label:not(.radio):not(.radio-inline),
+.Service fieldset p label:not(.radio):not(.radio-inline) {
+	width: 185px;
+	margin-left: -190px;
+	text-align: left;
+}
+.Service fieldset li select,
+.Service fieldset li input[type="text"],
+.Service fieldset p select,
+.Service fieldset p input[type="text"],
+.Service fieldset p input[type="number"]
+ {
+	width: auto;
+}
+
+.ProjectSummary {
+}
+
+.ProjectSummary .row {
+	margin-bottom: 2px;
+	padding-bottom: 2px;
+}
+.ProjectSummary .row:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+.ProjectSummary .row span.label {
+	margin-right: 1%;
+	text-align: right;
+	float: left;
+}
+
+.ProjectSummary .row span.value {
+	margin-left: 1%;
+	text-align: left;
+	p\osition: relative;
+	float: left;
+	width: 100px;
+}
+.Project .View table tr td input {
+	width: 99%;
+}
+.Project .View table .price {
+	width: 260px;
+	text-align: right;
+}
+@media (max-width: 1024px) {
+  /*
+   * and (orientation:portrait) {
+   * */
+  .Project .View table .price {
+    width: 160px;
+  }
+}
+.Project .View table .price .price {
+}
+.Project table td.description {
+	text-align: left;
+  padding-left: 14px;
+}
+table th.description {
+  padding-left: 4px;
+}
+table .category td.description {
+  padding-left: 6px;
+}
+.Project table .status {
+	text-align: right;
+	width: 90px;
+}
+.Project table tr .actions {
+	text-align: right;
+	width: 75px;
+	padding-left: 2px;
+}
+.Project .View table tr.UnitPrices {
+	border-top: 1px solid black;
+}
+.MPrices {
+	display: none;
+}
+
+.Service #GateFoldFit {
+	float: left;
+	width: 49%;
+}
+.Service #Inserts {
+	float: right;
+	width: 49%;
+}
+.Service fieldset span.checkOption label:not(.radio):not(.radio-inline) {
+	clear: none;
+	width: auto;
+	float: none;
+	margin: 0;
+	padding: 0;
+}
+.Service fieldset {
+	margin: 2px;
+	padding: 4px;
+}
+.Service fieldset li,
+.Service fieldset p {
+	text-align: left;
+}
+.AddToProjectButtons {
+	float: right;
+}
+
+.checkOption {
+	float: left;
+	width: 30%;
+}
+
+fieldset legend label:not(.radio):not(.radio-inline) {
+	font-weight: normal;
+}
+table.ProofsSummary {
+	width: auto;
+	float: right;
+	table-layout: auto;
+}
+table.ProofsSummary td {
+	padding: 0 0 0 2px;
+}
+table.ProofsSummary .quantity, table.ProofsSummary .size {
+	padding-right: 4px;
+}
+.ProofsSummary .size {
+	text-align: center;
+}
+.ProjectSummary .ProofsSummary {
+	float: left;
+}
+#OtherSpecifications {
+	display: none;
+	float: right;
+	width:49%;
+}
+.BookSpecifications {
+	float: left;
+	width:49%;
+}
+.ProjectSpecifications:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+#SignatureGroups .Quantities {
+	display: none;
+}
+.Service .ThreeColumns {
+	width: 32%;
+	float: left;
+  min-width: 300px;
+}
+.Service .OneColumns,
+.Service .TwoColumns {
+	width: 40%;
+	float: left;
+  min-width: 300px;
+}
+.Service .OneColumns {
+  width: auto;
+}
+
+#markup_edit input {
+	width: auto;
+}
+.Dimensions {
+
+}
+.Dimensions .leftColumn {
+	width: 40%;
+min-width: 0;
+}
+.Dimensions .rightColumn {
+	width: 60%;
+min-width: 0;
+}
+.Project select {
+    max-width: 100%;
+}
+
+.StockMessage ,
+.WaitingForCustomerApproval {
+	color: red;
+}
+span.Digital {
+font-weight: bold;
+text-transform: uppercase;
+}
+span.Overrides {
+font-weight: bold;
+}
+@media print {
+#Invoices .button,
+ #Invoices .edit {
+	display: none;
+}
+}
+.Project .Reference p ,
+.Project .Comments p {
+	padding:0;
+}
+.Project .Reference br ,
+.Project .Comments br {
+	line-height: 0;
+	padding:0;
+}
+.Project .Reference ul::after ,
+.Project .Comments ul::after {
+	content:'';
+	display: inline;
+}
+
+.category_totals td {
+  border-top: 1px solid #000088;
+}
+.category_totals td {
+padding-bottom: 25px;
+	font-weight: bold;
+}
+.category_totals td.description {
+	text-align: right;
+}

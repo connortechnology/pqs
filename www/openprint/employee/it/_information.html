@@ -1,0 +1,25 @@
+<?include(/includes/error_reporting.html)?>
+<ul class="information">
+	<? echo (
+		my $html;
+		my @Information = openprint::Host_Info->find(host_id=>$$variable{Host}{id}, order=>'lower(name)');
+		if ( @Information ) {
+			foreach my $I ( @Information ) {
+				$html .= sprintf( q`<li id="information_%d"><span class="name">%s</span> = <span class="value">%s</span><span class="buttons">%s</span></li>`, 
+					$I->id(), $I->name(), $I->value(),
+          button( 'd'.$$I{id}, { 'data-on-click-this'=>'del_information', 'data-id'=>$I->id(), text=>'X', title=>'Delete' } ),
+					);
+			} # end foreach User in Information
+		} else {
+			$html .= '<li>Enter a name and a value to store information about this device.</li>';
+		} # end if
+		return $html;
+	) ?>
+	<li>
+		<? echo ( join("\n",
+			input( type=>'text', name=>'new_info_name', id=>'new_info_name', placeholder=>'name' ),
+			input( type=>'text', name=>'new_info_value', id=>'new_info_value', placeholder=>'value' ),
+			button( 'AddInfo', { on_click=>'add_information', text=>'Add' } ),
+			); ) ?>
+	</li>
+</ul>

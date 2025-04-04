@@ -1,0 +1,27 @@
+<div class="BleedsColourBars" id="BleedsColourBars<?Group?>" >
+<? if ( $$variable{Mode} ne 'Easy' ) ?>
+	<fieldset><legend>Bleeds, Colour Bars, Crop Marks</legend>
+<? endif ( $$variable{Mode} ne 'Easy' ) ?>
+    <ul>
+<? if ( $$variable{ProjectType}->name() eq 'PresentationFolders' ) ?>
+	<input type="hidden" name="BleedLeft<?Signature?>" value="<? echo ( $$variable{'BleedLeft'.$$variable{Signature}} ) ?>"/>
+	<input type="hidden" name="BleedRight<?Signature?>" value="<? echo ( $$variable{'BleedRight'.$$variable{Signature}} ) ?>"/>
+	<input type="hidden" name="BleedTop<?Signature?>" value="<? echo ( $$variable{'BleedTop'.$$variable{Signature}} ) ?>"/>
+	<input type="hidden" name="BleedBottom<?Signature?>" value="<? echo ( $$variable{'BleedBottom'.$$variable{Signature}} ) ?>"/>
+<? else ( $$variable{ProjectType}->name() eq 'PresentationFolders' ) ?>
+	<?include('/includes/main/proj/bleed.html')?>
+<? endif ( $$variable{ProjectType}->name() eq 'PresentationFolders' ) ?>
+		<?include('/includes/main/proj/colour_bars.html')?>
+		<?include('/includes/main/proj/cropmarks.html')?>
+		<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+			<li><label>Add Grip</label><? echo ( radio( 'OverrideAddGrip'.$$variable{Signature}, ['','Yes','N','No'], $$variable{'OverrideAddGrip'.$$variable{Signature}}, { default=>'', onclick=>q`calc('f1');` } ); ) ?></li>
+			<? else ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+			<? if ( $$variable{'OverrideAddGrip'.$$variable{Signature}} ) ?>
+				<li><label>Add Grip</label>No <input type="hidden" name="OverrideAddGrip<?Signature?>" value="N" /></li>
+			<? endif ( $$variable{'OverrideAddGrip'.$$variable{Signature}} ) ?>
+		<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+    </ul>
+<? if ( $$variable{Mode} ne 'Easy' ) ?>
+	</fieldset>
+<? endif ( $$variable{Mode} ne 'Easy' ) ?>
+</div>

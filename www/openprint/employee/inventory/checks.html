@@ -1,0 +1,21 @@
+<?include(/includes/error_reporting.html)?>
+Please select an allocation to view/edit.<br>
+<form id="f1" name="f1" method="post" action="checks.html">
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+		<li>
+			<label>Date</label>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to 
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>q`LoadContent( 'Results', '/employee/inventory/_checks.html', $('f1') );`, text=>'Show Results' } ),
+				button( 'New', { href=>'check.html' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<div id="Results"><?include(_checks.html)?></div>

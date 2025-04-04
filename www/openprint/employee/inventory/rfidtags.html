@@ -1,0 +1,75 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript">
+
+function load(form) {
+	new Ajax.Updater( 'Results','/employee/inventory/_rfidtags_results.html', { parameters: form } );
+} // end function load
+</script>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+Please select a RFID Tag to view/edit.<br>
+<form id="f1" name="f1" method="post" action="rfidtag_details.html">
+	<fieldset class="filters"><legend>Choose RFID Tag</legend>
+		<p>You need to enter at least 3 digits<br/>
+			<label for="rfidtag_id">RFID Tag ID #</label>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.rfidtag_hex.value='';if(event.keyCode == 13){LoadContent('Results','/employee/inventory/_rfidtags_results.html', $('f1'));}"/>
+			Hex:
+			<input type="text" id="rfidtag_hex" name="rfidtag_hex" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.rfidtag_id.value='';if(event.keyCode == 13){LoadContent('Results','/employee/inventory/_rfidtags_results.html', $('f1'));}" />
+			<? echo ( ssi::button( 'Load', { onclick=>"\$('f1').submit();", href=>'', text=>'Load' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="rfidtags.html">
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+		<li>
+			<label>Date Added</label>
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'created_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+			to 
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'created_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Last Updated</label>
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'updated_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+			to 
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'updated_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+		</li>
+		<li>
+            <label>Valid?</label>
+            <input type="radio" id="valid1" name="valid" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?valid'} eq '0' ); ) ?> />
+            <label class="radio" for="valid1">Yes</label>
+            <input type="radio" id="valid0" name="valid" value="0" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?valid'} eq '1' ); ) ?> />
+            <label class="radio" for="valid0">No</label>
+            <input type="radio" id="valid" name="valid" value="" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?valid'} eq '' ); ) ?> />
+            <label class="radio" for="valid">Both</label>
+		</li>
+		<li>
+            <label>Assigned/Unassigned?</label>
+            <input type="checkbox" id="assigned" name="assigned" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?assigned'} ); ) ?> />
+            <label class="radio" for="assigned">Assigned</label>
+            <input type="checkbox" id="notassigned" name="notassigned" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?notassigned'} ); ) ?> />
+            <label class="radio" for="notassigned">Unassigned</label>
+		</li>
+		<li><label>Type</label>
+			<select name="Type">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( openprint::RFIDTagType->dropdown(order=>'lower(name)'), $session{'/employee/inventory/rfidtags.html?Type'} ); ) ?>
+			</select>
+        </li>
+		<li><label>Location</label>
+			<select name="location_id" id="location_id">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( openprint::Location->dropdown(order=>'lower(name)'), $session{'/employee/inventory/rfidtags.html?location_id'} ); ) ?>
+			</select>
+        </li>
+	</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', \$('f2') );", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f2.reset();' } ),
+				button( 'Add', { href=>'rfidtag_details.html', text=>'Add New RFID Tag' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<script type="text/javascript">document.f1.rfidtag_id.focus();</script>
+<div id="Results">Choose criteria and click Show Results</div>

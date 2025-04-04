@@ -1,0 +1,61 @@
+<script type="text/javascript">
+    function calc(formName) {
+		LoadContent( 'Results', '/employee/reports/_lost_orders.html', $(formName) );
+	} // end function
+</script>
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Lost Orders</h2>
+</div>
+<form id="f1" name="f1" action="/employee/reports/lost_orders.html">
+	<input type="hidden" name="action" />
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<ul>
+		<li>
+			<label>CSR</label>
+		<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
+			<select id="salesrep_id" name="salesrep_id" size="1" onchange="filter_companies( f1.company_id, {name:$('company_id').value,salesrep_id:get_ddm_value(this)} );">
+			<? echo (
+					my @options = ( '', 'All' );
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
+					make_drop_down( \@options, $session{$r->uri().'?salesrep_id'} );
+					) ?>
+
+			 </select>
+		<? else ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
+			<? echo ( input( name=>'salesrep_id', type=>'hidden', value=>$session{user_id} ); ) ?>
+			<? echo ( $openprint::User->name() ) ?>
+		<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
+		</li>
+		<li>
+			<label>Company</label>
+			<input type="text" oninput="filter_companies(f1.company_id, {name:this.value,salesrep_id:get_ddm_value($('salesrep_id'))} );" class="filter" />
+			<select name="company_id" id="company_id">
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::Company->dropdown( 'last_order_id is null'=>0 ), $session{$r->uri().'?company_id'} ); ) ?>
+			</select>
+		</li>
+		 <li>
+			 <label>Ordered On</label>
+			 <? echo ( join(' to ',
+						date_select_session($r->uri(), 'created_on_start', { with_today=>1,with_clear=>1 } ),
+						date_select_session($r->uri(), 'created_on_end', { with_today=>1,with_clear=>1 } ), 
+						); ) ?>
+		</li>
+		</ul>
+		 <p class="buttons">
+			 <? echo ( join("\n",
+					 button('Go', { onclick=>"calc('f1');", text=>'Show Results' }),
+					 #button('Download', { onclick=>"f1.elements['action'].value='download';f1.submit();" }),
+); ) ?>
+		 </p>
+	</fieldset>
+</form>
+<div id="Results">
+<? echo ( if ( %param ) {
+return include('_lost_orders.html');
+} else {
+return 'Select Report Criteria and click Show Results';
+}
+) ?>
+</div>

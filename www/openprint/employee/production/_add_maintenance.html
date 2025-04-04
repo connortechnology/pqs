@@ -1,0 +1,43 @@
+<form id="AddDocketForm" name="AddDocketForm" action="<?referer?>" method="post">
+	<input type="hidden" name="btnFunction" value="Add Docket" />
+	<fieldset><legend>Add Maintenance</legend>
+		<ul>
+			<li><label>Comment</label>
+				<textarea id="comment" name="comment" rows="5"></textarea>
+			</li>
+			<li><label>Press</label>
+				<select name="press_id">
+				<? echo ( make_drop_down( openprint::Equipment->dropdown(useinscheduling=>1,order=>'lower(strname)') ) ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Locked</label>
+				<? echo ( radio('locked', [ '1','Yes','0','No' ], 1, { onclick=>q`if(this.value=="1"){$('StartTime').show();}else{$('StartTime').hide();};` } ); ) ?>
+			</li>
+			<li id="StartTime">
+				<label>Start Time</label>
+				<? echo ( 
+				datetime_select( 'starttime', ( $$variable{Job}{starttime} ? $$variable{Job}{starttime} : [Date::Calc::Today()]), { onchange=>q`set_rdb_value($('locked'), 1 );`, with_today=>1 } );
+				) ?>
+			</li>
+			<li class="runtime"><label>Runtime</label>
+			<? echo (
+					my ( $h, $m, $s );
+## goes to 99 because it can be more than a day.
+					return join("\n",
+							ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 99 ) ], sprintf('%.2d', $h ), { name=>'runtime_hours', onchange=>'update_runtime(this);' } ),
+							ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], sprintf('%.2d', $m ), { name=>'runtime_minutes', onchange=>'update_runtime(this);' } ),
+							ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], sprintf('%.2d', $s ), { name=>'runtime_seconds', onchange=>'update_runtime(this);' } ),
+							input( type=>'text',readonly=>'readonly', name=>'runtime' ),
+							);
+			) ?>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+						button( 'Submit', { onclick=> q`$('AddDocketForm').submit();` } ),
+						button( 'Cancel', { onclick=>'popupWin.close();' } ),
+						); ) ?>
+		</p>
+	</fieldset>
+</form>

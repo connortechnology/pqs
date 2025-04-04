@@ -1,0 +1,14 @@
+<div class="row">
+	<span class="required">*</span>
+	<span class="input">
+		<input type="text" name="txtArea" value="<?txtArea?>" size="8"  onKeyUp="calc(this.form.name);"/>
+		<input type="checkbox" id="chkOverrideArea" name="chkOverrideArea" value="Y" onClick="if ( ! this.checked ) calc(this.form.name);" 
+		<? echo ( 'checked' if $$variable{'chkOverrideArea'} eq 'Y' ) ?>
+		/>
+		<label for="chkOverrideArea">Override</label>
+	</span>
+	<span class="label">
+		What is the area of gluing required? (square inches)
+	</span>
+	<br class="spacer"/>
+</div>

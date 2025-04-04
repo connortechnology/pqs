@@ -1,0 +1,9 @@
+<? echo (
+	my @Hosts = openprint::Host->find(
+		( $param{type} ? ( type=>[ split(',', $param{type}) ] ) : () ),
+		( exists $param{owner_id} ? ( owner_id=>$param{owner_id} ) : () ),
+		( exists($param{deleted}) ? (deleted=>$param{deleted}) : () ),
+		order	=>	'lower(hostname)',
+	);
+	return make_drop_down( [ '', 'none', map { $_->id(), $_->name() } @Hosts ], @Hosts == 1 ? $Hosts[0]{id} : $param{selected_id} );
+) ?>

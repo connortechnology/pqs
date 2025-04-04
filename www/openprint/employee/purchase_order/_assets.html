@@ -1,0 +1,41 @@
+<?include('/includes/error_reporting.html')?>
+<h3>Attachments:</h3>
+<table>
+	<thead>
+		<tr>
+			<th class="Name">Name</th>
+			<th class="Filename">Filename</th>
+			<th class="DateTime">Added On</th>
+			<th class="Thumbnail">Thumbnail</th>
+			<th class="actions">&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+<? echo ( 
+my $html;
+foreach my $Object_Asset ( $$variable{'PurchaseOrder'}->Assets() ) {
+	my $Asset = $Object_Asset->Asset();
+	$html .= sprintf('
+		<tr>
+			<td class="Name"><a href="/assets/%1$s" target="_blank">%2$s</a></td>
+			<td class="Filename"><a href="/assets/%1$s" target="_blank">%3$s</a></td>
+			<td class="DateTime"><a href="/assets/%1$s" target="_blank">%4$s</a></td>
+			<td class="Thumbnail"><a href="/assets/%1$s" target="_blank"><img src="%5$s" alt=""/></a></td>
+			<td class="actions">%6$s</td>
+		</tr>
+		', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
+		format_datetime( $Asset->created_on() ),
+		$Asset->sized_url('small'),
+		button( 'd'.$Asset->id(), { onclick=>q`new Ajax.Updater( 'Assets', '_assets.html', { parameters: { po_id: `.$$variable{'PurchaseOrder'}->id().q`, asset_id: `.$Asset->id().q`, action: 'delete' } } );`, text=>'Delete' } ),
+		);
+} # end foreach Asset
+return $html;
+) ?>
+
+		<tr class="unprintable">
+			<td class="Name"><input type="text" id="asset_name" name="asset_name"/></td>
+			<td colspan="3" class="Filename"><input type="file" id="filename" name="filename"/></td>
+			<td><? echo ( button( 'Upload', { onclick=>q`if(!$('filename').value){alert('No file selected.');}else{f1.encoding='multipart/form-data';f1.btnFunction.value='Attach';f1.submit();}` } ); ) ?></td>
+		</tr>
+	</tbody>
+</table>

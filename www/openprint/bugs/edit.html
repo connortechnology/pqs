@@ -1,0 +1,120 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+
+<script type="text/javascript">
+	tinyMCE.init({
+		mode : "textareas",
+		theme : "simple"
+	});
+</script>
+<div class="Bug">
+<form name="f1" id="f1" action="history.html" method="post">
+	<input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{'invoice_id'} ) ?>" />
+	<fieldset><legend>Editing bug<? echo ( $$variable{'Bug'}->id() ? '('.$$variable{'Bug'}->id().')' : '' ) ?></legend>
+		<? if ( $$variable{'Bug'}->deleted() ) ?>
+		<span class="warning">This bug has been deleted</span>
+		<? endif ( $$variable{'Bug'}->deleted() ) ?>
+		
+		<input type="hidden" name="bug_id" value="<? echo ( $openprint::param{'bug_id'} ) ?>" />
+		<div class="leftColumn">
+			<ul>
+			<li><label for="company_id">Company</label>
+				<select id="company_id" name="company_id">
+					<option value=""> select </option>
+					<? echo ( openprint::Company::get_dropdown( $$variable{'Bug'}->company_id() ? $$variable{'Bug'}->company_id() : $session{'company_id'} ); ) ?>
+				</select>
+			</li>
+			<li><label for="user_id">Employee</label>
+				<select id="user_id" name="user_id">
+					<option value=""> select </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Bug'}->id() ? $$variable{'Bug'}->user_id() : $session{'user_id'} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Time Associated</label>
+				<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Bug'}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }update_duration(this.form,'starting','ending');" />
+				<label class="radio" for="time_associated1">Yes</label>
+				<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{'Bug'}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }update_duration(this.form,'starting','ending');" />
+				<label class="radio" for="time_associated0">No</label>
+			</li>
+			<li><label>Start</label>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Bug'}->starting(), 
+						{
+						'onchange'	=>	q`check_time_starting(this.form,'starting','ending'); update_duration(this.form,'starting','ending');`,
+						'showtime'	=>	sets::isin( $$variable{'Bug'}->time_associated(), [ '', 1 ] ) 
+						} ); ) ?>
+			<? echo ( ssi::button( 'Today_start', { onclick=>'set_today( f1.starting_year, f1.starting_month, f1.starting_day, f1.starting_hour, f1.starting_minute );', text=>'T' } ); ) ?>
+</span>
+			</li>
+			<li><label>End</label>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Bug'}->ending(), 
+						{
+						'onchange'	=>	q`update_duration(this.form,'starting','ending');`,
+						'showtime'	=>	sets::isin( $$variable{'Bug'}->time_associated(), [ '', 1 ] ),
+						} ); ) ?>
+			<? echo ( ssi::button( 'Today_end', { onclick=>'set_today( f1.ending_year, f1.ending_month, f1.ending_day, f1.ending_hour, f1.ending_minute );', text=>'T' } ); ) ?>
+</span>
+			</li>
+			<li><label>Duration</label>
+				<span id="duration">
+				</span>
+				<script type="text/javascript">update_duration(document.forms['f1'],'starting','ending');</script>
+			</li>
+			<li><label>Service</label>
+				<select id="service_id" name="service_id">
+					<option value=""> select </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service->find('order'=>'lower(name)') ], $$variable{'Bug'}->service_id() ); ) ?>
+				</select>
+			</li>
+			<li><label for="bug_rate">Override Rate</label>
+				<input type="text" name="rate" id="rate" value="<? echo ( $$variable{'Bug'}->rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			</li>
+			<li>
+				<label>Travel Associated</label>
+				<input type="radio" name="travel_associated" value="1" id="travel_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Bug'}->travel_associated(), [ 1 ] ) ); ) ?> onclick="" />
+				<label class="radio" for="travel_associated1">Yes</label>
+				<input type="radio" name="travel_associated" value="0" id="travel_associated0" <? echo ( ssi::checked( ! $$variable{'Bug'}->travel_associated() ); ) ?> onclick="" />
+				<label class="radio" for="travel_associated0">No</label>
+			</li>
+			<li><label for="distance">Distance (km)</label>
+				<input type="text" name="distance" id="distance" value="<? echo ( $$variable{'Bug'}->distance() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<li>
+				<label for="description">Description</label>
+				<textarea cols="" id="description" name="description" rows="<? echo ( $$variable{'Bug'}->description() ? scalar split("\n", $$variable{'Bug'}->description()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);" style="width: 100%;"><? echo ( $$variable{'Bug'}->description() ) ?></textarea>
+			</li>
+			<? if ( $$variable{'Bug'}->invoice_id() ) ?>
+			<li>
+				<label>Invoice</label>
+				<a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Bug'}->invoice_id() ) ?>"><? echo ( $$variable{'Bug'}->invoice_id() ) ?></a>
+			</li>
+			<? endif ( $$variable{'Bug'}->invoice_id() ) ?>
+			<? if ( $$variable{'Bug'}->paycheque_id() ) ?>
+			<li>
+				<label>Paycheque</label>
+				<a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Bug'}->paycheque_id() ) ?>"><? echo ( $$variable{'Bug'}->paycheque_id() ) ?></a>
+			</li>
+			<? endif ( $$variable{'Bug'}->paycheque_id() ) ?>
+			</ul>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				#$html = ssi::button( 'back', { href=>'history.html', text=>'Back' } );
+				
+				if ( $$variable{'Bug'}->id() ) {
+				$html = ssi::button( 'reset', { onclick=>'f1.reset();check_time_starting(f1);', text=>'Reset' } );
+				$html .= ssi::button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", text=>'Destroy' } );
+				$html .= ssi::button( 'copy', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } );
+				} # end if
+				$html .= ssi::button( 'save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>
+</div>

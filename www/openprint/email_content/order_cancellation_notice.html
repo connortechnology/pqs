@@ -1,0 +1,17 @@
+Docket <? echo ( $$variable{Order}->docket() ) ?> has been cancelled.<br/>
+<br/>
+All stock allocations have been freed and the job has been removed from the press schedule.<br/>
+<br/>
+This order contained the following Projects:<br/>
+<? echo ( 
+	my $html;
+	foreach my $Project ( $$variable{'Order'}->Projects() ) {
+		$html .= sprintf('<a href="/employee/project/view.html?project_id=%1$d">%1$d - %2$s</a><br/>', $Project->id(), $Project->summary() );
+	} # end foreach Project
+	foreach my $Product ( $$variable{'Order'}->Products() ) {
+		$html .= sprintf('<a href="/employee/project/view.html?project_id=%1$d">%1$d - %2$s</a><br/>', $Product->project_id(), $Product->Project()->summary() );
+	} # end foreach Product
+	return $html;
+) ?>
+<br/>
+

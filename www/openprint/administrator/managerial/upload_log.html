@@ -1,0 +1,102 @@
+<form name="searchLog" action="upload_log.html" method="post">
+	<fieldset class="filters"><legend>Search</legend>
+		<ul>
+			<li>
+				<label>Date</label>
+				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { with_today=>1, with_clear=>1 } ); ) ?>
+				to
+				<? echo (datetime_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Company</label>
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" onkeydown="if(event.keyCode==13){searchLog.btnFunction.value='Go';searchLog.submit();}" class="filter" />
+				<select name="company_id" id="company_id" onchange="searchLog.submit();" >
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::Company->dropdown('last_ordered_on is null'=>0), $param{company_id} );) ?>
+				</select>
+			</li>
+			<li><label>Type</label>
+				<? echo ( radio( 'type', [ 'FTP','FTP', 'Web','Web', '', 'All' ], $session{'/administrator/managerial/upload_log.html?type'} ); ) ?>
+			</li>
+			<li><label>Filename</label><input type="text" name="filename" />
+			</li>
+		</ul>
+		<p class="buttons">
+		<? echo ( button( 'Search',{ onclick=>'document.searchLog.submit();'} ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<fieldset><legend>Results</legend>
+	<table class="List">
+		<tr>
+			<th class="DateTime">When</th>
+			<th class="Company">Company</th>
+			<th class="User">User</th>
+			<th class="File">File</th>
+			<th class="Type">Type</th>
+			<th class="Size">Received / Size</th>
+			<th class="Speed">Speed</th>
+			<th class="Status">Status</th>
+		</tr>
+		<? echo (
+			require openprint::Upload;
+			my $html = '';
+			my $rowclass;
+			my @Uploads = openprint::Upload->find(
+				date_filter( '/administrator/managerial/upload_log.html?uploaded_on_end', 'start <=' ),
+				date_filter( '/administrator/managerial/upload_log.html?uploaded_on_start', 'start >=' ),
+				( $session{'/administrator/managerial/upload_log.html?type'} ? ( type=>$session{'/administrator/managerial/upload_log.html?type'} ) : () ),
+				( $session{'/administrator/managerial/upload_log.html?company_id'} ? ( company_id=>$session{'/administrator/managerial/upload_log.html?company_id'} ) : () ),
+				( $param{filename} ? ( 'file_path ilike' => '%'.$param{filename}.'%' ) : () ),
+				limit	=>	1000,
+				order	=>	'start DESC',
+			);
+			my $total = 0;
+
+			my $average_speed = 0;
+			my $average_upload_count = 0;
+
+			foreach my $Upload ( @Uploads ) {
+
+				my $company_name = $Upload->company_id() ? $Upload->Company()->name() : $Upload->company();
+
+				my @files = map { $_->filename() } $Upload->Files();
+				for ( my $i = 0; $i < @files; $i += 1 ) {
+					if ( ( $_ ) = $files[$i] =~ /^\/$company_name(.*)/ ) {
+						$files[$i] = $_;
+					} # end if
+				} # end for
+
+				$html .= sprintf('<tr%s><td class="DateTime">%s</td>
+					<td class="Company">%s</td>
+					<td class="User">%s</td>
+					<td class="File">%s</td>
+					<td class="Type">%s</td>
+					<td class="Size">%s / %s</td>
+					<td class="Speed">%s</td>
+					<td class="Status">%s</td></tr>',
+					$rowclass,
+					format_datetime( $Upload->start() ),
+					$company_name,
+					$Upload->user_id() ? $Upload->User()->name() : '',
+					join('<br/>', map { qq`<a href="/project_files/$company_name/$_">$_</a>` } @files ),
+					$Upload->type(),
+					$Upload->size_text(),
+					$Upload->total_text(),
+					$Upload->speed(),
+					$Upload->finished() ? 'Finished' : 'Incomplete',
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$total += $Upload->size();
+				my $duration = $Upload->duration();
+				my $seconds = $duration->in_units('seconds');
+				if ( $seconds ) {
+					$average_speed += int( $Upload->size() / $seconds );
+					$average_upload_count += 1;
+				} # end if
+			} # end foreach
+			$html .= '<tr class="totals"><td colspan="5">Totals</td><td class="Size">'.misc::format_bytes($total).'</td><td class="Speed">'.misc::format_bytes($average_upload_count?$average_speed/$average_upload_count:0).'</td><td></td></tr>';
+			return $html;
+		) ?>
+	</table>
+</fieldset>

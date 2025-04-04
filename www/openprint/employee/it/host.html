@@ -1,0 +1,205 @@
+<div class="Host"><div class="Edit">
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="post" action="/employee/it/host.html" autocomplete="off">
+	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{Host}->id() ) ?>" />
+	<input type="hidden" id="action" name="action" />
+	<fieldset><legend>Host <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) .($$variable{Host}->deleted() ? ' <span class="warning">Deleted</span>':'')) ?></legend>
+				<p class="buttons">
+					<? echo ( 
+						my $html;
+						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
+						if ( $$variable{Host}->id() ) {
+							if ( $$variable{Host}->deleted() ) {
+								$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+								$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
+							} else {
+								$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+							}
+						} # end if
+						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
+            if ( $$variable{Host}->can_reboot() ) {
+            $html .= button( 'Reboot', { onclick=>"f1.elements['action'].value='reboot';f1.action='/employee/it/host.html';f1.submit();" } );
+            }
+						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
+						if ( $$variable{Host}->can_get_config() ) {
+							$html .= button( 'GetConfig', { onclick=>"f1.elements['action'].value='get_config';f1.submit();", text=>'Get Config' } );
+						}
+						return $html;
+					) ?>
+				</p>
+		<div class="content leftColumn">
+			<ul>
+				<li>
+					<label>Name</label>
+					<input type="text" id="name" name="name" value="<? echo ( $$variable{Host}->name() ) ?>" autocomplete="off" autofill="off"/>
+				</li>
+				<li>
+					<label>Abbreviated Name</label>
+					<input type="text" id="abbr_name" name="abbr_name" value="<? echo ( $$variable{Host}->abbr_name() ) ?>" />
+				</li>
+				<li>
+					<label>Hostname</label>
+					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{Host}->hostname() ) ?>" oninput="to_hostname(this);" />
+				</li>
+				<li><label onclick="toggle_input( $j('#type_id'), $j('#type') );">Type</label>
+					<input type="text" id="type" name="type" style="display:none;" oninput="ddm_select_by_text( $j('#type_id'), this.value, 0 );" />
+					<select name="type_id" id="type_id" onchange="$j('#type').value='';">
+						<option value="">select</option>
+						<? echo ( make_drop_down( openprint::Host_Type->dropdown(order=>'lower(name)'), $$variable{Host}->type_id() ); ) ?>
+					</select>
+          <?echo(button('NewType',{onclick=>q`toggle_input( $j('#type_id'), $j('#type') );`, text=>'New'});)?>
+				</li>
+				<li class="Manufacturer"><label onclick="toggle_input( $j('#manufacturer_id'), $j('#manufacturer') );">Manufacturer</label>
+					<input type="text" id="manufacturer" name="manufacturer" style="display:none;" oninput="ddm_select_by_text( $j('#manufacturer_id'), this.value, 0 );" />
+					<select name="manufacturer_id" id="manufacturer_id" onchange="$j('#manufacturer').value='';">
+						<option value="">select</option>
+						<? echo ( make_drop_down( openprint::Manufacturer->dropdown(order=>'lower(name)'), $$variable{Host}->manufacturer_id() ); ) ?>
+					</select>
+          <?echo(button('NewManufacturer',{onclick=>q`toggle_input( $j('#manufacturer_id'), $j('#manufacturer') );`, text=>'New'});)?>
+				</li>
+				<li class="blacklist">
+					<label>Blacklist</label>
+					<? echo ( radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{Host}->blacklist() ); ) ?>
+				</li>
+				<li class="access_violations">
+					<label>Access violation count</label>
+          <?echo(input(type=>'cardinal', name=>'count', id=>'count', value=>$$variable{Host}->count() ); )?>
+				</li>
+				<li class="whitelist">
+					<label>Whitelist</label>
+					<? echo ( radio( 'whitelist', [ '1','Yes','0','No' ], $$variable{Host}->whitelist() ); ) ?>
+				</li>
+        <? if ( $config{Network_Monitoring} ) ?>
+				<li>
+					<label>Monitor</label>
+					<? echo ( radio( 'monitored', [ '1','Yes','0','No' ], $$variable{Host}->monitored(), { onclick=>q`toggle_monitored(this);`} ); ) ?>
+				</li>
+        <li><label>Ping Frequency</label>
+          <? echo ( input( type=>'cardinal', name=>'min_ping_frequency', value=>$$variable{Host}->min_ping_frequency() ? $$variable{Host}->min_ping_frequency() : $openprint::Host::defaults{min_ping_frequency} ); ) ?> seconds
+        </li>
+        <li><label>Max Ping Time</label>
+          <? echo ( input( type=>'cardinal', name=>'max_ping_time', value=>$$variable{Host}->max_ping_time() ? $$variable{Host}->max_ping_time() : $openprint::Host::defaults{max_ping_time} ); ) ?> milliseconds
+        </li>
+				<li id="offline_seconds"<? echo ( $$variable{Host}->monitored() ? '' : ' style="display: none;"' ) ?>><label>Seconds offline before notification</label>
+					<? echo ( input( type=>'cardinal', name=>'offline_seconds', value=>$$variable{Host}->offline_seconds() ); ) ?>
+				</li>
+				<li id="notify_frequency"<? echo ( $$variable{Host}->monitored() ? '' : ' style="display: none;"' ) ?>><label>Seconds until re-notification</label>
+					<? echo ( input( type=>'cardinal', name=>'notify_frequency', value=>$$variable{Host}->notify_frequency() ); ) ?>
+				</li>
+				<li>
+					<label>Online</label><? echo ( $$variable{Host}->online() ? 'Yes' : 'No' ) ?>
+				</li>
+        <? endif ( $config{Network_Monitoring} ) ?>
+				<li><label>Description</label>
+					<textarea id="description" name="description" rows="<? echo (count_lines($$variable{Host}->description()) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Host}->description() ) ?></textarea>
+				</li>
+				<li><label>Owner</label>
+          <input type="text" id="owner_id_filter" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+          <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
+            <option value="">None</option>
+<? echo ( 
+my @owner_ids = sql::execute(undef, undef, 'SELECT DISTINCT owner_id FROM Hosts');
+make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $$variable{Host}->owner_id() );
+) ?>
+          </select>
+				</li>
+				<li><label>Created On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->updated_on() ); ) ?></li>
+			</ul>
+		</div>
+		<div class="content rightColumn">
+			<div class="thumbnail">
+			<? echo ( $$variable{Host}->thumbnail_html('medium') ) ?>
+			</div>
+<? if ( $$variable{Host}->id() ) ?>
+			<? echo (
+				$$variable{Object} = $$variable{Host};
+				include('/employee/assets/_asset_upload.html');
+      ) ?>
+<? endif ( $$variable{Host}->id() ) ?>
+			<fieldset><legend>Notifications</legend>
+				<div id="notifications"><?include('_notifications.html')?></div>
+			</fieldset>
+<? if ( $$variable{Host}->id() ) ?>
+			<fieldset><legend>Information</legend>
+				<div id="information"><?include('_information.html')?></div>
+			</fieldset>
+			<fieldset class="licenses"><legend>Licenses</legend>
+				<div id="licenses"><?include('_host_licenses.html')?></div>
+			</fieldset>
+			<fieldset><legend>Config</legend>
+				<div id="information"><?include('_host_config.html')?></div>
+			</fieldset>
+<? endif ( $$variable{Host}->id() ) ?>
+		</div>
+		<br class="spacer"/>
+	</fieldset>
+<fieldset><legend>Interfaces</legend>
+	<table id="Interfaces" class="List">
+		<tr>
+			<th class="mac">Mac</th>
+			<th class="vendor">Vendor</th>
+			<th class="ip">IP Address</th>
+			<th class="options">Options</th>
+			<th class="comment">Comment</th>
+<? if ( $config{RADIUS_Support} eq 'Y' ) ?>
+      <th class="radius">RADIUS</th>
+<? endif ( $config{RADIUS_Support} eq 'Y' ) ?>
+			<th class="buttons">
+<? echo ( button( 'AddInterface', { on_click=>'add_interface', text=>'+', title=>'Add Interface' } );) ?>
+      </th>
+		</tr>
+<? echo (
+	my $html;
+	if ( $config{RADIUS_Support} eq 'Y' ) {
+		openprint::RADIUS_Check->connect();
+		if ( ! $openprint::RADIUS_Check::dbh ) {
+			$html .= 'Unable to connect to RADIUS DB server.';	
+		} # end if
+    $$variable{radius_fragment} = slurp_content( '/employee/it/_radius_mac_line.html' );
+	} # end if RADIUS
+
+	my @Interfaces = $$variable{Host}->Interfaces();
+	if ( !@Interfaces ) {
+		my $New = new openprint::Host_Interface();
+		$New->set({dhcp=>1});
+		push @Interfaces, $New;
+	}
+
+  my $interface_line = slurp_content('/employee/it/_interface.html');
+	foreach ( @Interfaces ) {
+    $$variable{Interface} = $_;
+		$html .= variable_substitution(\$interface_line, $variable);
+	} # end foreach Interface
+	return $html;
+) ?>
+	</table>
+</fieldset>
+<? if ( $$variable{Host}->id() ) ?>
+<fieldset class="Where"><legend>Where <?echo( $$variable{Host}->Location()->link_to()) ?></legend>
+    <div class="leftColumn">
+<? echo ( 
+    $$variable{Location} = $$variable{Host}->Location();
+    return include('/location/_location_fields.html');
+) ?>
+<?echo (
+return ssi::select(
+	openprint::Location->dropdown(company_id=>$openprint::Owner->id()),
+	$$variable{Host}->location_id(),
+	{ name=>'location_id' } ) if $openprint::Owner->id();
+) ?>
+  </div>
+  <div class="rightColumn">
+    <div id="map" style="height: 500px; width: 500px;"> </div>
+  </div>
+</fieldset>
+<? endif ( $$variable{Host}->id() ) ?>
+</form>
+<? if ( $$variable{Host}->id() ) ?>
+<? echo ( include_logs( $$variable{Host} ); ) ?>
+<? endif ( $$variable{Host}->id() ) ?>
+</div></div>
+<script src="<?hash_link(/employee/it/host.js)?>"></script>

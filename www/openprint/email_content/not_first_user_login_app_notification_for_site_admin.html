@@ -1,0 +1,21 @@
+<? echo ( join(' ', $$variable{'User'}->get('salutation','firstname','lastname') ); ) ?> has requested a login to an existing company on <? echo ( $config{'SiteTitle'} ) ?>.<br>
+<br>
+Company: <? echo ( $$variable{'Company'}->name() ) ?><br/>
+Address: <? echo ( $$variable{'Company'}->address1() ) ?><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<? echo ( $$variable{'Company'}->address2() ) ?><br/>
+City: <? echo ( $$variable{'Company'}->city() ) ?><br/>
+State: <? echo ( $$variable{'Company'}->state() ) ?><br/>
+Country: <? echo ( $$variable{'Company'}->country() ) ?><br/>
+Postal Code: <? echo ( $$variable{'Company'}->postalcode() ) ?><br/>
+Phone: <? echo ( $$variable{'User'}->phone() ) ?><br/>
+Extension: <? echo ( $$variable{'User'}->extension() ) ?><br/>
+Fax: <? echo ( $$variable{'User'}->fax() ) ?><br/>
+Email: <? echo ( $$variable{'User'}->email() ) ?><br/>
+WebSite: <? echo ( $$variable{'Company'}->url() ) ?><br/>
+Business Type: <? echo ( $$variable{'Company'}->business_type() ) ?><br/>
+Date of registration: <? echo ( $$variable{'Company'}->created_on() ) ?><br/>
+How did they hear about us:	<? echo ( $$variable{'User'}->howdidyouhearaboutus() ) ?>
+<? if ( sets::isin( $$variable{'User'}->howdidyouhearaboutus(), ['Other','CSR'] ) ) ?>
+: <? echo ( $$variable{'User'}->howdidyouhearaboutusother() ) ?>
+<? endif ( sets::isin( $$variable{'User'}->howdidyouhearaboutus(), ['Other','CSR'] ) ) ?>
+<br/>

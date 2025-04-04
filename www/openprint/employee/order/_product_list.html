@@ -1,0 +1,59 @@
+<? if ( @{$$variable{'Products'}} = $$variable{'Order'}->Products(); ) ?>
+<table class="List">
+	<tr>
+		<th align="left">Product</th>
+        <th width="120" align="left">Requested Date</th>
+		<th width="75" align="left">Qty</th>
+		<th width="75" align="right">Price</th>
+	</tr>
+	<? while ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
+	<tr<?rowclass?>> 
+		<td><? echo ( $$variable{'Product'}->Product()->name(); ) ?></td>
+		<td><? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Product'}->requested_for() ) ); ) ?></td>
+		<td align="left"><? echo ( $$variable{'Product'}->quantity(); ) ?></td>
+		<td align="right">
+<? echo (
+	$$variable{'price'} = $$variable{'Order'}->Currency()->convert_from( $$variable{'Product'}->price() );
+
+	my $shipping_html;
+	my @ShippingServices = openprint::ServiceType->find('category'=>'Shipping');
+	$$variable{'Project'} = $$variable{'Product'}->Project();
+	my $services = $$variable{'Product'}->Project()->services();
+	foreach my $ServiceType ( @ShippingServices ) {
+		next if ! $$services{$ServiceType->name()};
+
+		foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
+			my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_index );
+			my $price = $$variable{'Project'}->Currency()->convert_from( $$specs{'txtPrice1'} );
+
+			$$variable{'price'} -= $price;
+;
+			eval('require openprint::Estimating::'.$ServiceType->name().';' );
+			my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs, 1 );') . '<br/>';
+
+			if ( $$specs{'FromAddress1'} or $$specs{'FromCity'} or $$specs{'FromStateProvince'} or $$specs{'FromCountry'} ) {
+            $summary .= 'From: ' . join("\n",
+                    join(',', $$specs{'FromCompany'} ) ,
+                    join(',', $$specs{'FromAddress1'} , $$specs{'FromAddress2'},
+                        @$specs{'FromCity','FromStateProvince','FromCountry'},
+                        @$specs{'FromPostalCode'} ),
+                    ) . '<br/>';
+			} # end if
+			if ( $$specs{'ToAddress1'} or $$specs{'ToCity'} or $$specs{'ToStateProvince'} or $$specs{'ToCountry'} ) {
+            $summary .= 'To: ' . join("\n",
+                    join(',', $$specs{'ToCompany'} ) ,
+                    join(',', $$specs{'ToAddress1'} , $$specs{'ToAddress2'},
+                        @$specs{'ToCity','ToStateProvince','ToCountry'},
+                        @$specs{'ToPostalCode'} ),
+                    ).'<br/>';
+			} # end if
+
+			$shipping_html .= qq`<tr$$variable{'rowclass'}><td>`.$ServiceType->description().qq`</td><td>$summary<br/>$$specs{'alert'}</td><td align="left">&nbsp;</td><td align="right">`.sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $price).'</td></tr>';
+		} # end foreach
+	} # end foreach
+	$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+return sprintf( '%s%.2f</td></tr>', $$variable{'Currency'}->symbol(), $$variable{'price'} ).$shipping_html;
+	) ?>
+	<? endwhile ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
+</table>
+<? endif ( @{$$variable{'Products'}} = $$variable{'Order'}->Products(); ) ?>

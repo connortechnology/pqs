@@ -1,0 +1,9 @@
+<li>
+	<label>Round Corners</label>
+	<? echo ( 
+		return ssi::select( [ '', 'No thank you', '1', '1 corner', '2', '2 corners', '3', '3 corners', '4', '4 corners' ], $$variable{Quantity}, {
+			name=>'Quantity', id=>'Quantity', onchange=>'calc(this.form.name);' } );
+		input( type=>'cardinal', name=>'Quantity', value=>$$variable{Quantity}, onkeyup=>'calc(this.form.name);');
+		) ?>
+</li>
+

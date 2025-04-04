@@ -1,0 +1,420 @@
+<script src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script src="<?hash_link(/administrator/stock/stock.js)?>"></script>
+<script>
+	function newPrice( service, pricelist_id ) {
+		new Ajax.Request( '_price_tr.html',
+			{
+				parameters: {
+					stock_id: '<?stock_id?>',
+					service: service,
+					pricelist_id: pricelist_id,
+					action: 'Add'
+				},
+				onSuccess: function( transport ) {
+					$('prices-'+service+'-'+pricelist_id).insert({top: transport.responseText} );
+				}
+			}
+		);
+	} // end function newPrice
+	function copyPrice( id ) {
+		var form = $('f1');
+		new Ajax.Request( '_price_tr.html', {
+				parameters: {
+					stock_id: '<?stock_id?>',
+					price_id: id,
+					action: 'Copy',
+					equipment_id: get_value( form.elements['equipment_id-'+id] ),
+					min: form.elements['min-'+id].value,
+					max: form.elements['max-'+id].value,
+					cost: form.elements['cost-'+id].value,
+					markup: form.elements['markup-'+id].value,
+					price: form.elements['price-'+id].value,
+					units: form.elements['units-'+id].value,
+					discountable: get_value(form.elements['discountable-'+id])
+				},
+				onSuccess: function( transport ) {
+					$('paperprice-'+ id).insert({after: transport.responseText} );
+				}
+			}
+		);
+	}
+	function delPrice( id ) {
+		new Ajax.Request('_price_tr.html',
+			{
+				parameters: {
+					price_id: id,
+					action: 'Delete'
+				},
+				onSuccess: function( transport ) {
+					if ( transport.responseText ) {
+						alert( transport.responseText );
+					} else {
+						var tr = $('paperprice-'+id); tr.parentNode.removeChild(tr);
+					} // end if
+				}
+			}
+		);
+	}
+
+	function savePrices( form ) {
+		new Ajax.Updater('Prices','_prices.html',
+			{
+				parameters : Form.serialize( form ),
+				onSuccess: function(){$('Prices').removeClassName('changed');}
+			 }
+		);
+	
+	}
+</script>
+<?include('/includes/error_reporting.html')?>
+<div class="Stock">
+<? echo (
+$_ = $$variable{Stock}->check();
+if ( $_ ) {
+	return '<div class="error">'.$_.'</div>';
+}
+return '';
+) ?>
+<form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{Stock}->id(); ) ?>">
+	<p class="buttons">
+		<? echo ( join('',
+		button( 'Prev1', { onclick=>"f1.btnFunction.value='Prev';f1.submit();", text=>'&lt;&lt;' } ),
+		button( 'Next1', { onclick=>"f1.btnFunction.value='Next';f1.submit();", text=>'&gt;&gt;' } ),
+		#button( 'Next1', { onclick=>"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);", text=>'&gt;&gt;' } ),
+		button( 'Add1', { onclick=>"f1.action='stock.html';f1.btnFunction.value='';f1.submit();", text=>'Add New' } ),
+		button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+		button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
+		button( 'Save1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } ),
+		button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
+); ) ?>
+	</p>
+	<br class="spacer"/>
+	<div class="Information">
+		<fieldset><legend>Stock Information: (<? echo ( $$variable{Stock}->id(); ) ?>)</legend>
+			<div class="leftColumn">
+        <ul>
+				<li>
+					<label for="ddmOwner">Owner</label>
+					<input type="text" oninput="filter_companies('ddmOwner', { name: this.value,selected_id: get_ddm_value($('ddmOwner')) } );" class="filter" />
+					<select id="ddmOwner" name="ddmOwner"><option value=""> select </option><? echo ( 
+							my @owner_ids = sql::execute(undef,undef,q`SELECT DISTINCT owner_id FROM Papers`);
+              push @owner_ids, $openprint::Owner->id() if ! @owner_ids or !sets::isin( $openprint::Owner->id(), @owner_ids);
+							make_drop_down( openprint::Company->dropdown( id=>\@owner_ids ), $$variable{Stock}->owner_id() );
+					) ?></select>
+				</li>
+				<li>
+					<label for="txtGroup" onclick="$('Group').toggle();$('txtGroup').toggle();">Group</label>
+					<select id="Group" name="Group" size="1">
+						<option value="">select</option>
+					<? echo (
+							make_drop_down( openprint::StockGroup->dropdown(order=>'lower(name)'), $$variable{Stock}->group_id() );
+							) ?>
+					</select>
+					<input style="display: none;" type="text" id="txtGroup" name="txtGroup" onfocus="if(!this.value){this.value=get_ddm_text(f1.Group);}ddm_select_by_index( f1.Group, 0 );" />
+				</li>
+				<li>
+					<label for="txtManufacturer" onclick="$('ddmManufacturer').toggle();$('txtManufacturer').toggle();">Manufacturer</label>
+					<select id="ddmManufacturer" name="ddmManufacturer" size="1">
+						<option value="">select</option>
+					<? echo (
+							make_drop_down( openprint::Manufacturer->dropdown(order=>'lower(name)'), $$variable{Stock}->manufacturer_id() );
+							) ?>
+					</select>
+					<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmManufacturer);}ddm_select_by_index( f1.ddmManufacturer, 0 );" />
+				</li>
+				<li>
+					<label for="txtSupplier" onclick="$('ddmSupplier').toggle();$('txtSupplier').toggle();">Supplier</label>
+					<select id="ddmSupplier" name="ddmSupplier" size="1">
+						<option value="">select</option>
+					<? echo (
+							make_drop_down( openprint::Company->dropdown(order=>'lower(name)', supplier=>'Y'), $$variable{Stock}->supplier_id() );
+							) ?>
+					</select>
+					<input style="display: none;" type="text" id="txtSupplier" name="txtSupplier" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmSupplier);}ddm_select_by_index( f1.ddmSupplier, 0 );" />
+				</li>
+				<li>
+					<label for="txtBrand" onclick="$('txtBrand').toggle();$('ddmBrand').toggle();">Brand</label>
+					<select id="ddmBrand" name="ddmBrand" size="1" onchange="f1.txtBrand.value='';">
+						<option value="">select</option>
+						<? echo (
+							make_drop_down( openprint::StockBrand->dropdown(order=>'lower(name)'), $$variable{Stock}->brand_id() );
+						) ?>
+					</select>
+					<input style="display: none;" type="text" id="txtBrand" name="txtBrand" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmBrand);}ddm_select_by_index( f1.ddmBrand, 0 );" />
+				</li>
+				<li>
+					<label for="txtFinish" onclick="$('txtFinish').toggle();$('ddmFinish').toggle();">Finish</label>
+					<select id="ddmFinish" name="ddmFinish" size="1" onchange="f1.txtFinish.value='';">
+						<option value="">select</option>
+					<? echo (
+							make_drop_down( openprint::StockFinish->dropdown(order=>'lower(name)'), $$variable{Stock}->finish_id() );
+					) ?>
+					</select>
+					<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmFinish);}ddm_select_by_index( f1.ddmFinish, 0 );" />
+				</li>
+				<li>
+					<label for="txtColour" onclick="$('txtColour').toggle();$('ddmColour').toggle();">Colour</label>
+					<select id="ddmColour" name="ddmColour" size="1" onchange="f1.txtColour.value='';">
+						<option value="">select</option>
+						<? echo (
+							make_drop_down( openprint::StockColour->dropdown(order=>'lower(name)'), $$variable{Stock}->colour_id() );
+						) ?>
+					</select>
+					<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmColour);}ddm_select_by_index( f1.ddmColour, 0 );" />
+				</li>
+				<li>
+					<label for="txtWeight" onclick="$('txtWeight').toggle();$('ddmWeight').toggle();">Weight</label>
+					<select id="ddmWeight" name="ddmWeight" size="1" onchange="f1.txtWeight.value='';">
+						<option value="">select</option>
+					<? echo (
+							make_drop_down( openprint::StockWeight->dropdown(order=>'lower(name)'), $$variable{Stock}->weight_id() );
+							) ?>
+					</select>
+					<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.ddmWeight, 0 );" />
+				</li>
+				<li>
+					<label for="txtQuality" onclick="$('txtQuality').toggle();$('ddmQuality').toggle();">Quality</label>
+					<select id="ddmQuality" name="ddmQuality" size="1">
+						<option value="">select</option>
+					<? echo (
+							make_drop_down( openprint::StockQuality->dropdown(order=>'lower(name)'), $$variable{Stock}->quality_id() );
+							) ?>
+					</select>
+					<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.ddmQuality, 0 ) ;" />
+				</li>
+				<li>
+					<label for="material" onclick="$('material').toggle();$('material_id').toggle();">Material</label>
+					<select id="material_id" name="material_id" size="1" onchange="f1.material.value='';">
+						<option value="">select</option>
+					<? echo (
+							make_drop_down( openprint::StockMaterial->dropdown(order=>'lower(name)'), $$variable{Stock}->material_id() );
+							) ?>
+					</select>
+					<input style="display: none;" type="text" id="material" name="material" onfocus="ddm_select_by_index( f1.material_id, 0 );" />
+				</li>
+				<li>
+					<label for="grade">Grade</label>
+					<select id="grade" name="grade" size="1">
+					<? echo (
+						my @options = ( '', 'select one', map { $_, $openprint::Paper::grades{$_} } ( sort { $a <=> $b } ( keys %openprint::Paper::grades ) ) );
+						make_drop_down( \@options, $$variable{Stock}->grade() );
+					) ?>
+					</select>
+				</li>
+				<li>
+					<label>Calliper</label>
+					<? echo ( input(type=>'float', id=>'calliper_pt', name=>'calliper_pt', 
+								value=> $$variable{Stock}->calliper() * 1000, 
+								oninput=>q`$('calliper').value=this.value/1000;$('calliper_mm').value=do_decimals(this.value/1000*25.4,3);`,
+								); ) ?> inches
+					<? echo ( input(type=>'float', id=>'calliper', name=>'calliper', 
+								value=> $$variable{Stock}->calliper(), 
+								oninput=>q`$('calliper_pt').value=this.value*1000;$('calliper_mm').value=do_decimals(this.value*25.4,3);`,
+								); ) ?> inches
+					<? echo ( input(type=>'float', id=>'calliper_mm', name=>'calliper_mm', 
+									value => Math::Round::nearest( .001, $$variable{Stock}->calliper()*25.4),
+									oninput =>q`$('calliper_pt').value=this.value*39.3701;$('calliper').value=do_decimals( this.value*0.0393701, 4 );`,
+								); ) ?> mm
+				</li>
+				<li>
+					<label>Type</label>
+          <?echo(radio('type', [ map { $_, $_ } ( 'Sheet', 'Roll' ) ], $$variable{Stock}->type(), { onclick=>q`if(this.value=='Sheet'){$('StockHeight').show();$('BasisSize').hide();$('MWeight').show();$('QuantityPerPackageUnits').innerHTML='sheets';$('MinimumOrderUnits').innerHTML='sheets';}else{$('StockHeight').hide();$('BasisSize').show();$('MWeight').hide();$('QuantityPerPackageUnits').innerHTML='lbs';$('MinimumOrderUnits').innerHTML='lbs';};` });)?>
+				</li>
+				<li>
+					<label>Size</label>
+					<? echo ( input(type=>'float', id=>'width', name=>'width', value=>$$variable{Stock}->width(),  oninput=>'gsm_to_mweight( this.form );' ); ) ?>
+					<span id="StockHeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>> x
+					<? echo ( input(type=>'float', id=>'height', name=>'height', value=>$$variable{Stock}->height(), oninput=>'gsm_to_mweight( this.form );' ); ) ?>
+					</span> inches
+				</li>
+				<li id="MWeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>>
+					<label>MWeight</label>
+					<? echo ( input(type=>'float', id=>'mweight', name=>'mweight', value=>$$variable{Stock}->mweight(),  oninput=>'mweight_to_gsm( this.form );' ); ) ?>
+				</li>
+				<li id="BasisSize">
+					<label>Basis Weight</label>
+					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight',
+								value=>$$variable{Stock}->basis_mweight(),
+								onkeyup=>'calc_from_basis_weight(this.form);',
+								oninput=>'calc_from_basis_weight(this.form);',
+								); ) ?>
+					@
+					<? echo ( join(' x ',
+								input(type=>'float', id=>'basis_width', name=>'basis_width',
+									value=>( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ),
+									oninput=>'calc_from_basis_weight(this.form);' ),
+								input(type=>'float', id=>'basis_height', name=>'basis_height',
+									value=>( $$variable{Stock}->basis_height() ? $$variable{Stock}->basis_height() : 38 ),
+									oninput=>'calc_from_basis_weight(this.form);' ),
+						); ) ?>
+				</li>
+				<li>
+					<label>GSM</label>
+					<? echo ( input(type=>'float', id=>'gsm', name=>'gsm', value=>$$variable{Stock}->gsm(), oninput=>'gsm_to_mweight( this.form );' ); ) ?>
+				</li>
+				<li>
+					<label>WPSI</label>
+					<? echo ( input( type=>'float', name=>'wpsi', id=>'wpsi', value=>$$variable{Stock}->wpsi(), step=>'any',
+								oninput=>q`$('gsm').value=do_decimals( this.value*703064.5, 2);gsm_to_mweight(this.form);`,
+								); ) ?>
+				</li>
+				<li>
+					<label>Grain Direction</label>
+					<? echo ( radio( 'grain_direction', [ 'width', 'Width', 'height', 'Height' ], $$variable{Stock}->grain_direction() ); ) ?>
+				</li>
+				<li>
+					<label>Customer Supplied</label>
+					<? echo ( radio( 'supplied', [ '1', 'Yes', '0', 'No', '', 'Both' ], $$variable{Stock}->supplied() ); ) ?>
+				</li>
+				<li>
+					<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{Stock}->units() ) ?></span>)</label>
+					<? echo ( input( type=>'cardinal', name=>'sheets_per_package', value=>$$variable{Stock}->sheets_per_package() ); ) ?>
+				</li>
+        </ul>
+			</div><!--left-->
+			<div class="rightColumn">
+        <ul>
+				<li class="full_packages">
+					<label>Order Full Packages</label>
+					<? echo ( radio( 'full_packages', [ '1', 'Yes', '0', 'No' ], $$variable{Stock}->full_packages() ); ) ?>
+				</li>
+				<li class="minimum_order">
+					<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{Stock}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>)</label>
+					<? echo ( input( type=>'cardinal', id=>'minimum_order', name=>'minimum_order', value=>$$variable{Stock}->minimum_order() ); ) ?>
+				</li>
+				<li class="available_to_order">
+					<label>Available to Order (<span id="MinimumOrderUnits"><? echo ( $$variable{Stock}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>)</label>
+					<? echo ( input( type=>'cardinal', id=>'available_to_order', name=>'available_to_order', value=>$$variable{Stock}->available_to_order() ); ) ?>
+				</li>
+				<li class="fsc_code">
+					<label>FSC Code</label>
+					<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{Stock}->fsc_code(); ) ?>" />
+				</li>
+				<li class="inventory_number">
+					<label>Inventory #</label>
+					<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $$variable{Stock}->inventory_number(); ) ?>" />
+				</li>
+				<li class="message">
+					<label>Message</label>
+					<textarea id="message" name="message" rows="<? echo ( count_lines($$variable{Stock}->message())) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Stock}->message() ) ?></textarea>
+				</li>
+				<li class="cuttable">
+					<label>Can this stock be cut?</label>
+          <?echo(radio('cuttable', ['1','Yes','0','No'], $$variable{Stock}->cuttable());)?>
+				</li>
+				<li class="doublesided">
+					<label>Is this stock double sided?</label>
+          <?echo(radio('doublesided', ['1','Yes','0','No'], $$variable{Stock}->doublesided());)?>
+				</li>
+				<li class="multipart">
+					<label>Does this stock have multiple parts (eg: forms)?</label>
+          <?echo(radio('multipart', ['1','Yes','0','No'], $$variable{Stock}->multipart(), { onclick=>q`if(this.value=='1'){$('parts_div').show();}else{$('parts_div').hide();}` });)?>
+				</li>
+				<li id="parts_div" <? echo ( $$variable{Stock}->multipart() ? '' : 'style="display:none;"' ) ?>>
+					<label>How many parts</label>
+					<input type="number" id="parts" name="parts" value="<? echo ( $$variable{Stock}->parts() ) ?>" />
+				</li>
+				<li class="perfecting">
+					<label>Is this stock stiff enough to perfect without gutters?</label>
+          <?echo(radio('perfecting', ['1','Yes','0','No'], $$variable{Stock}->perfecting());)?>
+				</li>
+				<li class="scoring">
+					<label>Does this stock require folder scoring before folding?</label>
+					<? echo ( radio( 'score_required', ['1','Yes','0','No' ], $$variable{Stock}->score_required(), { default=>'0' } ); ) ?>
+				</li>
+				<li class="diescoring">
+					<label>Does this stock require die scoring before folding?</label>
+					<? echo ( radio( 'die_score_required', [ 1, 'Yes', 0, 'No' ], $$variable{Stock}->die_score_required() ); ) ?>
+				</li>
+				<li class="digital">
+					<label>Is this stock suitable for digital printing?</label>
+					<? echo ( radio( 'digital', [ 1, 'Yes', 0, 'No' ], $$variable{Stock}->digital() ); ) ?>
+				</li>
+				<li class="bladecleaning">
+					<label>Does this stock require blade cleaning after cutting?</label>
+					<? echo ( radio( 'bladecleaning', [ 1, 'Yes', 0, 'No' ], $$variable{Stock}->bladecleaning() ); ) ?>
+				</li>
+				<li class="user_type">
+					<label>Required User Type</label>
+					<select name="user_type" id="user_type">
+					<? echo	( make_drop_down( [ '', 'All', 'C', 'Customer', 'E', 'Employee', 'A', 'Administrator' ], $$variable{Stock}->user_type() ); ) ?>
+					</select>
+				</li>
+        </ul>
+				<hr class="spacer"/>
+        <!--
+				<p> <b>Tax Information</b> </p>
+				<p class="taxexempt1">
+					<label>Federal Tax Exemption?</label>
+						<input type="radio" id="taxexempt1Y" name="taxexempt1" value="1" <? echo ( checked( $$variable{Stock}->taxexempt1() ); ) ?> />
+						<label class="radio" for="taxexempt1Y">Yes</label>
+						<input type="radio" id="taxexempt1N" name="taxexempt1" value="0" <? echo ( checked( ! $$variable{Stock}->taxexempt1() ); ) ?> />
+						<label class="radio" for="taxexempt1N">No</label>
+				</p>
+				<p class="taxexempt2">
+					<label>Prov/State Tax Exemption?</label>
+						<input type="radio" id="taxexempt2Y" name="taxexempt2" value="1" <? echo ( checked( $$variable{Stock}->taxexempt2() ); ) ?> />
+						<label class="radio" for="taxexempt2Y">Yes</label>
+						<input type="radio" id="taxexempt2N" name="taxexempt2" value="0" <? echo ( checked( ! $$variable{Stock}->taxexempt2() ); ) ?> />
+						<label class="radio" for="taxexempt2N">No</label>
+				</p>
+        -->
+        <ul>
+				<li>
+					<label>In Stock</label>
+					<? echo ( $$variable{Stock}->in_stock() . $$variable{Stock}->units(); ) ?>
+				</li>
+				<li>
+					<label>Allocated</label>
+					<? echo ( $$variable{Stock}->allocated() . $$variable{Stock}->units(); ) ?>
+				</li>
+				<li>
+					<label>Available</label>
+					<? echo ( $$variable{Stock}->available() . $$variable{Stock}->units(); ) ?>
+				</li>
+				<li>
+					<label>Ordered</label>
+					<? echo ( $$variable{Stock}->back_ordered() . $$variable{Stock}->units(); ) ?>
+				</li>
+				<li>
+					<label>Created</label>
+					<? echo ( format_datetime( $$variable{Stock}->created_on() ) ) ?>
+				</li>
+        </ul>
+			</div><!-- right-->
+		</fieldset>
+	</div>
+	<div class="Recommendations">
+		<fieldset><legend>Recomended For</legend>
+			<ul>
+				<? echo (
+					my $html;
+					foreach my $ProjectType ( openprint::ProjectType->find(order=>'lower(name)') ) {
+						$html .= sprintf('
+<li>
+  <input type="checkbox" id="chkPRF%1$d" name="chkPRF%1$d" %3$s />
+  <label class="radio-inline" for="chkPRF%1$d">%2$s</label>
+</li>',
+							$ProjectType->id(),
+							htmlize($ProjectType->description()),
+							checked( sets::isin( $ProjectType->id(), [ $$variable{Stock}->recommendations() ] ) ),
+							);
+					} # end foreach
+					return $html;
+				) ?>
+			</ul>
+		</fieldset>
+	</div>
+	<input type="hidden" name="btnFunction" />
+	<? if ( $$variable{stock_id} ) ?>
+	<div class="Pricing">
+		<fieldset><legend>Pricing</legend>
+			<div id="Prices"><?include(_prices.html)?></div>
+		</fieldset>
+	</div>
+	<? endif ( $$variable{stock_id} ) ?>
+</form>
+	<? if ( $$variable{stock_id} ) ?>
+	<? echo ( include_logs( $$variable{Stock} ); ) ?>
+	<? endif ( $$variable{stock_id} ) ?>
+</div><!--Stock-->

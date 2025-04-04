@@ -1,0 +1,7 @@
+<? echo (
+	if ( $param{country} eq 'US' ) {
+		return include('/includes/_states.html');
+	} elsif ( $param{country} eq 'CA' ) {
+		return include('/includes/_provinces.html');
+	} 
+) ?>

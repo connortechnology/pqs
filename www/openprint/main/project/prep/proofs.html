@@ -1,0 +1,125 @@
+<div class="PageTitle">
+	<h1>Prepress</h1>
+	<h2>Proofs</h2>
+</div>
+<div class="Service"><div class="<?ServiceTypeID?>">
+	Please enter the specifications for your proofs. In most cases these are automatically chosen, but if you would like to modify them, check the override and make your changes.
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<p><label>Do you require colour proofs?</label>
+			<? echo ( radio( 'RequireColourProofs', ['Y','Yes','N','No','A','Auto'], $$variable{RequireColourProofs}, { onclick=>'calc(this.form.name);', default=>'A' } ); ) ?>
+		</p>
+		<p><label>Do you require press proofs?</label>
+			<? echo ( radio( 'RequirePressProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequirePressProofs}, { onclick=>'calc(this.form.name);', default=>($$variable{Project}->Company()->add_press_proofs() ? $$variable{Project}->Company()->add_press_proofs()->value() : '' ) } ); ) ?>
+		</p>
+		<!-- The rest is done for each qty -->
+		<? echo ( 
+			my $html = '';
+      my @ddm_options = map { $_->name(), $_->description() } openprint::Service->find(servicetype_id=>$$variable{ServiceType}->id());
+
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				my $quantity = $$variable{Project}->quantity($qty_index);
+				$html .= "<fieldset><legend>The following results are for Quantity $qty_index ($quantity)</legend>";
+
+				foreach my $s_id ( $$variable{Project}->signatures({sort=>1}) ) {
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $s_id );
+					my $signature_index = $$sig_specs{SignatureIndex};
+					if ( $$sig_specs{'txtImposition'.$qty_index} ) {
+						$$variable{Reference} = openprint::service::summary( $$variable{Project}->id(), $s_id );
+						$$variable{Reference} .= '<br/>Running ' . openprint::service::summary( $$variable{Project}->id(), $s_id, $qty_index );
+					} else {
+						next;
+					} # end if
+					$html .= $$variable{Reference};
+
+					$html .= sprintf( q`
+						<table>
+              <thead>
+							<tr>
+								<th class="quantity">Quantity</th>
+								<th class="dimensions">Dimensions</th>
+								<th class="type">Type</th>
+								<th class="Price MR">MR (%1$s)</th>
+								<th class="Price">Service (%1$s)</th>
+								<th class="Units">&nbsp;</th>
+								<th class="Price">Total (%1$s)</th>
+								<th class="Override">&nbsp;</th>
+							</tr>
+              </thead>
+              <tbody>
+							`, $$variable{CurrencySymbol} );
+
+					while ( my ( $proof_index,$proof_quantity,$proof_width,$proof_height,$proof_type ) = splice @{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}},0,5 ) {
+						$html .= sprintf( q`
+							<tr>
+								<td class="quantity">%4$s</td>
+								<td class="dimensions">%5$s x %6$s</td>
+								<td class="type"><select name="ddmProofType-%1$s-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%7$s</select></td>
+								<td class="Price MR">%8$s</td>
+								<td class="Price">%9$s</td>
+								<td class="Units"><span id="ServiceUnits-%1$d-%3$d-%2$d"></span></td>
+								<td class="Price">%10$s</td>
+								<td class="Override"> %11$s <input type="hidden" name="txtProofIndex-%1$s-%3$d-%2$d" value="%3$d"/>
+								</td>
+							</tr>
+							`, $signature_index, $qty_index, $proof_index,
+								input( type=>'cardinal', name=>"txtProofQuantity-$signature_index-$proof_index-$qty_index", value=>$proof_quantity, onkeyup=>'calc(this.form.name);' ),
+								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
+								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
+                make_drop_down( \@ddm_options, $proof_type ),
+								input( type=>'float', name=>"MRPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', decimalplaces=>2 ),
+								input( type=>'float', name=>"ServicePrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01', decimalplaces=>2 ),
+								input( type=>'float', name=>"txtProofUnitPrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01', decimalplaces=>2 ),
+								write_override( 'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index, 
+									$$variable{'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index},
+									'', "calc('f1');" ),
+									);
+					} # end while proofs
+					$html .= sprintf(q`
+						<tr class="additional">
+							<td colspan="4">Additional proofs?</td>
+							<td class="Price" colspan="3">
+								<input type="radio" id="rdbAdditional-%1$s-%2$dY" name="rdbAdditional-%1$d-%2$d" value="Yes" />
+								<label class="radio" for="rdbAdditional-%1$s-%2$dY">Yes</label>
+								<input type="radio" id="rdbAdditional-%1$s-%2$dN" name="rdbAdditional-%1$d-%2$d" value="No" checked="checked" />
+								<label class="radio" for="rdbAdditional-%1$s-%2$dN">No</label>
+							</td>
+							<td class="Override">&nbsp;</td>
+						</tr>
+            </tbody>
+					</table>
+					<br/>
+					`, $signature_index, $qty_index );
+				} # end foreach Signature
+				$html .= sprintf( q`
+					<table>
+						<tr class="totals">
+							<td>Total Service Price (%2$s)</td>
+							<td class="Price">%1$s</td>
+							<td class="Override">&nbsp;</td>
+						</tr>
+						<tr class="breakdown">
+							<td colspan="2">%4$s</td>
+							<td class="Override">&nbsp;</td>
+						</tr>
+					</table>
+					%3$s
+				</fieldset>
+					`, 
+					input( type=>'float', name=>"txtPrice$qty_index", value=>$$variable{"txtPrice$qty_index"}, readonly=>'readonly', step=>'0.01', decimalplaces=>2 ),
+					$$variable{CurrencySymbol},
+					input( type=>'hidden', name=>'txtQuantity'.$qty_index, value=>$$variable{"txtQuantity$qty_index"} ), 
+					sets::isin($session{user_type}, ['A','E'] ) ? 
+					button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown('$qty_index');", text=>'Breakdown' } ) : ''
+					
+					);
+					$html .= qq{<div id="hdnBreakdown$qty_index" style="display: none;"></div>};
+				} # end foreach qty_index
+				$html .= include('/includes/main/proj/add_to_project.html');
+				$html .= include('/includes/main/proj/hdn_fields_prepress.html');
+			
+				return $html;
+			) ?>
+
+	</form>
+</div></div><!--Service-->
+<script src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>

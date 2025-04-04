@@ -1,0 +1,23 @@
+<? eval (
+	$$variable{'Allocation'} = new openprint::PaperAllocation( $param{allocation_id} );
+) ?>
+<div id="Allocate">
+	<form id="allocateform" name="allocateform" action="<?referer?>" method="post">
+	 	<input type="hidden" name="allocation_id" value="<? echo ( $param{'allocation_id'} ) ?>" />
+		<input type="hidden" name="action" id="action" value="Delete Allocation" />
+		<fieldset><legend>Delete Allocation</legend>
+			<ul>
+			<li><label>Reason</label><textarea id="reason" name="reason" onkeyup="textarea_resize(this);" rows="1"></textarea></li>
+			</ul>
+			<hr/>
+			<p class="buttons">
+			<? echo ( 
+				my $html = '';
+				$html .= button( 'DeAllocate',{ onclick=> qq`new Ajax.Updater('Allocations','_paper_allocations.html', { parameters: { allocation_id: '$param{allocation_id}', reason: \$('reason').value, paper_id: '`. $$variable{'Allocation'}->Paper()->id() . q`', action: 'Delete Allocation' }, onSuccess: function(transport){popupWin.destroy();}, evalScripts: true } );`, text=>'Delete' } );
+				$html .= button( 'CancelAllocate', { onclick=>'popupWin.destroy();', text=>'Cancel' } ); 
+				return $html;
+			) ?>
+			</p>
+		</fieldset>
+	</form>
+</div>

@@ -1,0 +1,38 @@
+<? eval (
+	if ( ! $$variable{'Label'} ) {
+		$$variable{'Label'} = new openprint::Label( $openprint::param{'id'} );
+		$$variable{'Label'}->save();
+	} # end if
+) ?>
+<script type="text/javascript">
+// <![CDATA[
+	var tinymce_options = {
+		mode : "textareas",
+		theme : "advanced"
+	};
+	tinyMCE.init( tinymce_options );
+// ]]>
+</script>
+<style type="text/css">
+	#Label {
+		font-size: 22pt;
+	}
+	div#data {
+		vertical-align: top;
+		font-family: Arial, Helvetica, Sans-Serif;
+		padding: 5px;
+		font-size: 20pt;
+		border: 1px solid black;
+	} 
+	textarea {
+		width: 98%;
+	}
+</style>
+<div>
+	<div id="data" style="height: 3.5in;"><? hecho ( $$variable{'Label'}->get_data('data'); ) ?></div>
+<script type="text/javascript">
+new Ajax.InPlaceRichEditor( 'data', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=data',{editOnBlank:0,okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=data'}, tinymce_options );
+</script>
+	<span style="float: right;"># <? echo ( $$variable{'Label'}->docket() ) ?>&nbsp;&nbsp;
+<img src="/barcode.png?code=D<? echo ( $$variable{'Label'}->docket() ) ?>+&amp;NoText=1&amp;Height=15" alt="<? echo ( $$variable{'Label'}->docket() ) ?>" /></span>
+</div>

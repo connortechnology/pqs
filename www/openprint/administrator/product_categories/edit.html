@@ -1,0 +1,47 @@
+<? eval ( $$variable{'Category'} = new openprint::Product_Category( $param{'category_id'} ) if ! $$variable{'Category'} ) ?>
+<form id="f1" name="f1" method="post" enctype="multipart/form-data" action="list.html">
+	<input type="hidden" name="category_id" value="<? echo ( $param{'category_id'} ) ?>" />
+	<fieldset>
+		<legend>
+		<? echo (
+			return $$variable{Category}->id() ? 'Editing Category ' . $$variable{Category}->id() : 'Add New Category';
+		) ?>
+		</legend>
+		<ul>
+		<li>
+			<label>Name</label>
+			<input type="text" name="name" value="<? hecho ( $$variable{'Category'}->name(); ) ?>" />
+		</li>
+<? if ( @{$$variable{ProjectTypes}} = openprint::ProjectType->find( 'order'=>'name' ); ) ?>
+		<li>
+			<label>Project Type</label>
+			<select name="projecttype_id">
+				<option value=""> select </option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{ProjectTypes}} ], $$variable{Category}->projecttype_id() ); ) ?>
+			</select>
+		</li>
+<? endif ( @{$$variable{ProjectTypes}} = openprint::ProjectType->find( 'order'=>'name' ); ) ?>
+		<li>
+			<label>Description</label>
+			<textarea name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description()); ) ?>"><? hecho ( $$variable{'Category'}->description(); ) ?></textarea>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+			ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", href=>'', text=>'Delete' } ),
+			ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", href=>'', text=>'Save' } ),
+			ssi::button( 'Copy', { onclick=>"f1.btnFunction.value='Copy';f1.action='edit.html';f1.submit();", href=>'', text=>'Copy' } ),
+			ssi::button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } ),
+			); ) ?>
+		</p>
+		<p class="buttons">
+				<b>CSV File</b>
+				<input type="file" name="fileImport" />
+	<? echo ( join('',
+				ssi::button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();", href=>'', text=>'Import' } ),
+				ssi::button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.action='edit.html?Download';f1.submit();", href=>'', text=>'Export' } ),
+	); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>

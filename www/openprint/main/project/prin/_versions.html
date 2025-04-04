@@ -1,0 +1,14 @@
+<fieldset id="Versions"><legend>Versions</legend>
+This feature is experimental<br class="spacer"/>
+	<ul>
+    <li><label># of versions</label>
+    <input type="number" step="1" min="1" name="versions" id="versions" value="<?versions?>" oninput="calc('f1');" />
+    </li>
+		<li id="Version_Descriptions">
+			<? if ( $$variable{versions} > 1 ) ?>
+			<?include('_version_descriptions.html') ?>
+			<? endif ( $$variable{versions} > 1 ) ?>
+		</span>
+	</li>
+  </ul>
+</fieldset>

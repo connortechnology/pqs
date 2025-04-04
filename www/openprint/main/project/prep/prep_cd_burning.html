@@ -1,0 +1,18 @@
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/prepress.js') ) ?>"></script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+	<fieldset><legend><?ServiceTypeName?></legend>
+		<ul>
+		<li> 
+			<label>CD quantity</label>
+			<? echo ( input( name=>'txtQuantity', value=>$$variable{txtQuantity}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
+		</li>
+		<? echo ( include('/includes/main/proj/prices_prepress.html'); ) ?>
+		</ul>
+	</fieldset>
+	<hr/>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
+	</form>
+</div>

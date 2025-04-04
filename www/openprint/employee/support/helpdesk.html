@@ -1,0 +1,98 @@
+<form name="f1" method="post" action="helpdesk_search.html" >
+	<input type="hidden" name="HelpdeskIndex" value="<?HelpdeskIndex?>">
+	<fieldset>
+		<div class="leftColumn">
+		<ul>
+			<li><label>ID</label><?HelpdeskIndex?></li>
+			<li> 
+				<label>Submission Date</label>
+				<?sub_date?>
+			</li>
+			<li> 
+				<label>Title</label>
+				<?title?>
+			</li>
+			<li> 
+				<label>First Name</label>
+				<?firstname?>
+			</li>
+			<li> 
+				<label>Last Name</label>
+				<?lastname?>
+			</li>
+			<li> 
+				<label>Phone</label>
+				<?phone?><? if ( $$variable{'extension'} ) ?>x<?extension?><? endif ( $$variable{'extension'} ) ?>
+			</li>
+			<li> 
+				<label>E-mail Address</label>
+				<?email?>
+			</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
+			<li> 
+				<label>Company Name</label>
+				<?company_name?>
+			</li>
+			<li> 
+				<label>Address</label>
+				<?address_one?>
+			</li>
+	<? if ( $$variable{'address_two'} ) ?>
+			<li> 
+				<label>&nbsp;</label>
+				<?address_two?>
+			</li>
+	<? endif ( $$variable{'address_two'} ) ?>
+			<li> 
+				<label>Country</label>
+				<?country?>
+			</li>
+			<li> 
+				<label>State/Province</label>
+				<?state?>
+			</li>
+			<li> 
+				<label>City</label>
+				<?city?>
+			</li>
+			<li> 
+				<label>Zip/Postal Code</label>
+				<?postal_code?>
+			</li>
+			</ul>
+		</div>
+		<br class="spacer"/>
+		<ul>
+		<li> 
+		<label>Description</label>
+			<?description?>
+		</li>
+		<li> 
+		<label>Question or Comment</label>
+			<?question?>
+		</li>
+		<li> 
+			<label>Response Type</label>
+			<?response_type?>
+		</li>
+		<li> 
+			<label>ustomer Service Response</label>
+			<textarea name="txtQuestion-Quote" rows="2" onkeyup="textarea_resize(this);"><?response?></textarea>
+		</li>
+		<li> 
+			<label>Mark as reviewed</label>
+			<? echo ( radio( 'rdbReviewed', ['Y','Yes','N','No'], $$variable{'rdbReviewed'} ? $$variable{'rdbReviewed'} : 'Y' ); ) ?>
+		</li>
+		</ul>
+	<p class="buttons">
+		<? echo ( join("\n",
+			button('Submit', { onclick=>"f1.btnFunction.value='Submit';f1.submit();" } ),
+			button('Reset', { onclick=>'f1.reset();' } ),
+		); ) ?>
+	</p>
+</fieldset>
+<input type="hidden" name="btnFunction"/>
+</form>

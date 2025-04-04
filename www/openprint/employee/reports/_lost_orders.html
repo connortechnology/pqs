@@ -1,0 +1,38 @@
+<?include('/includes/error_reporting.html')?>
+<? if ( @{$$variable{Orders}} ) ?>
+<table class="List sortable">
+	<tr>
+		<th class="Docket">Docket</th>
+		<th class="DateTime">Previous Docket</th>
+		<th class="DateTime">Next Docket</th>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		my $total;
+		my $uri = '/employee/reports/lost_orders.html';
+		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
+
+		while ( my ( $docket, $PreviousOrder, $NextOrder ) = splice(@{$$variable{Orders}}, 0, 3) )  {
+			$html .= sprintf(q`
+				<tr%1$s>
+					<td class="Docket"><a href="/employee/project/view.html?docket=%2$d">%2$d</a></td>
+					<td class="DateTime"><a href="/employee/project/view.html?order_id=%3$d">%4$d %5$s</a></td>
+					<td class="DateTime"><a href="/employee/project/view.html?order_id=%6$d">%7$d %8$s</a></td>
+				</tr>
+				`, $rowclass, $docket, 
+				$PreviousOrder->id(),
+				$PreviousOrder->docket(),
+				format_datetime($PreviousOrder->created_on()),
+				$NextOrder->id(),
+				$NextOrder->docket(),
+				format_datetime($NextOrder->created_on()),
+			);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Order
+		return $html;
+	) ?>
+</table>
+<? else ( @{$$variable{Orders}} ) ?>
+There were no orders matching your criteria.  Please try again.
+<? endif ( @{$$variable{Orders}} ) ?>

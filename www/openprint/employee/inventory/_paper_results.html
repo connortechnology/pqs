@@ -1,0 +1,157 @@
+<? eval (
+		my $uri = '/employee/inventory/paper.html';
+	my %params;
+	if ( $session{$uri.'?Docket'} ) {
+		$params{'allocated_to_docket any'} = $session{'/employee/inventory/paper.html?Docket'};
+	} else {
+		%params = (
+			date_filter( '/employee/inventory/paper.html?added_on_start', 'created_on >=' ),
+			date_filter( '/employee/inventory/paper.html?added_on_end', 'created_on <=' ),
+			type      => [ map { $_ ne 'Unknown' ? $_ : '' } split(',', $session{'/employee/inventory/paper.html?type'} ) ],
+			( $session{'/employee/inventory/paper.html?fsc_code'} ? ( fsc_code	=>	$session{'/employee/inventory/paper.html?fsc_code'} ) : () ),
+			( $param{width} ? ( ($param{OrLarger} ? 'width >=' : 'width') => $param{width} ) : () ),
+			( $param{height} ? ( ($param{OrLarger} ? 'height >=' : 'height') => $param{height} ) : () ),
+			);
+
+		foreach my $filter ( 'owner_id', 'manufacturer_id','brand_id','finish_id','colour_id','weight_id','group_id','quality_id','material_id' ) {
+			next if ! $session{'/employee/inventory/paper.html?'.$filter};
+			if ( $session{'/employee/inventory/paper.html?'.$filter.'_id_exclude'} ) {
+				$params{$filter.' !='} = $session{'/employee/inventory/paper.html?'.$filter};
+			} else {
+				$params{$filter} = $session{'/employee/inventory/paper.html?'.$filter};
+			} # end if
+		} # end foreach filter
+	} # end if docket
+	@{$$variable{Papers}} = sort {
+            $_ = lc $a->manufacturer cmp lc $b->manufacturer;
+            return $_ if $_;
+            $_ = lc $a->brand cmp lc $b->brand;
+            return $_ if $_;
+            $_ = lc $a->finish cmp lc $b->finish;
+            return $_ if $_;
+            $_ = $a->weight <=> $b->weight;
+            return $_ if $_;
+            $_ = $$a{width} <=> $$b{width};
+            return $_ if $_;
+            $_ = $$a{height} <=> $$b{height};
+            return $_ if $_;
+
+        } openprint::Paper->find( %params );
+
+	if ( @{$$variable{Papers}} > 100 ) {
+		openprint::StockBrand->find();
+		openprint::StockFinish->find();
+		openprint::StockColour->find();
+		openprint::StockWeight->find();
+		#openprint::ManifestContent->find();
+		#openprint::Skid->find();
+		#openprint::RFIDTag->find();
+	} # end if
+) ?>
+<? if ( @{$$variable{Papers}} ) ?>
+<form name="PaperResults" action="paper.html" method="post">
+	<table class="List">
+		<tr>
+			<th class="paper_name">Paper</th>
+			<th class="mweight">MWeight</th>
+			<th class="gsm">GSM</th>
+			<th class="on_order">On Order</th>
+			<th class="allocated">Allocated</th>
+			<th class="in_stock">In Stock</th>
+			<th class="available">Available</th>
+			<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) ) ?>
+			<th class="Price">Value</th>
+			<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) ) ?>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			my $available_sheets;
+			my $total_sheets;
+			my $available_lbs;
+			my $total_lbs;
+			my $allocated_lbs;
+			my $allocated_sheets;
+			my $total_value;
+
+			my $Condition = $session{'/employee/inventory/paper.html?condition_id'} ? new openprint::InventoryCondition( $session{'/employee/inventory/paper.html?condition_id'}) : undef;
+			my $result_count = 0;
+
+			foreach my $Paper ( @{$$variable{Papers}} ) {
+				if ( ! $session{'/employee/inventory/paper.html?Docket'} ) {
+					if ( $session{'/employee/inventory/paper.html?in_stock'} eq '0' ) {
+						next if $Paper->in_stock();
+					}  # end if
+					if ( $session{'/employee/inventory/paper.html?in_stock'} eq '1' ) {
+						next if ! $Paper->in_stock();
+						next if $Condition and ! $Paper->in_stock( $Condition );
+					} # end if
+				} # end if
+				next if $session{'/employee/inventory/paper.html?allocated'} eq '1' and ! $Paper->allocated();
+				next if $session{'/employee/inventory/paper.html?allocated'} eq '0' and ( $Paper->in_stock() <= $Paper->allocated() );
+				$result_count += 1;
+				
+
+				$html .= sprintf( '<tr class="%1$s %11$s">
+						<td class="paper_name"><a href="paper_details.html?paper_id=%2$d">%3$s</a></td>
+						<td class="mweight">%4$.2f</td>
+						<td class="gsm">%5$.2f</td>
+						<td class="on_order">%6$d</td>
+						<td class="allocated">%7$s</td>
+						<td class="in_stock">%8$s</td>
+						<td class="available">%9$s</td>',
+					$rowclass,
+					$$Paper{id},
+					$Paper->to_string(),
+					$Paper->mweight(),
+					$Paper->gsm(),
+					$Paper->back_ordered(),
+					$Paper->allocated() ? Number::Format::format_number($Paper->allocated()).$Paper->units() : '',
+					$Paper->in_stock($Condition ? $Condition : () ) ? Number::Format::format_number($Paper->in_stock($Condition ? $Condition : () )).$Paper->units() : 0, #  in stock
+					$Paper->available() ? Number::Format::format_number($Paper->available()).$Paper->units() : '', #  available
+					$Paper->available() < 0 ? 'warning' : '',
+					);
+				if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) ) {
+					my $value = 0;
+					foreach my $SkidContent ( openprint::SkidContent->find(
+								'quantity >'=>1, paper_id=>$$Paper{id}, deleted=>0,
+								) ) {
+						$value += $SkidContent->value();
+					} # end foreach SkidContent
+					$html .= '<td class="Price">'.openprint::Currency::format( $value ).'</td>';
+					$total_value += $value;
+				} # end if
+				$html .= '</tr>',
+				$rowclass = $rowclass ? '' : 'colRow';
+				if ( $Paper->type() eq 'Roll' ) {
+					$available_lbs += $Paper->available();
+					$total_lbs += $Paper->in_stock();
+					$allocated_lbs += $Paper->allocated();
+				} else {
+					$available_sheets += $Paper->available();
+					$total_sheets += $Paper->in_stock();
+					$allocated_sheets += $Paper->allocated();
+				} # end if
+			} # end foreach Paper
+			$html .= '<tr class="totals"><td colspan="3">Totals: ' . $result_count . ' entries</td><td class="on_order"></td><td class="allocated">';
+			$html .= Number::Format::format_number( $allocated_lbs ).'lbs<br/>' if $total_lbs;
+			$html .= Number::Format::format_number( $allocated_sheets ).'sheets<br/>' if $total_sheets;
+			$html .= '</td><td class="in_stock">';
+			$html .= Number::Format::format_number( $total_lbs ).'lbs<br/>' if $total_lbs;
+			$html .= Number::Format::format_number( $total_sheets ).'sheets<br/>' if $total_sheets;
+			$html .= '</td><td class="available">';
+			$html .= Number::Format::format_number( $available_lbs ).'lbs<br/>' if $total_lbs;
+			$html .= Number::Format::format_number( $available_sheets ).'sheets<br/>' if $total_sheets;
+			$html .= '</td>';
+			if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) ) {
+				$html .= '<td class="Price">'.openprint::Currency::format( $total_value ).'</td>';
+			} # end if
+			$html .= '</tr>';
+			return $html;
+		) ?>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<? else ( @{$$variable{Papers}} ) ?>
+There were no papers matching your search criteria.  Please try again.
+<? endif ( @{$$variable{Papers}} ) ?>

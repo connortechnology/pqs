@@ -1,0 +1,29 @@
+<table class="List">
+	<tr> 
+		<th class="Service">Service</th>
+		<th class="FieldName">Field Name</th>
+		<th class="FieldValue">Field Value</th>
+	</tr>
+	<? eval ( 
+		@{$$variable{'ServiceTypes'}} = map { $_->id(), $_->name() } openprint::ServiceType->find('order'=>'lower(name)');
+		@{$$variable{'Defaults'}} = sql::execute( undef, undef, q{SELECT id, servicetype_id, name, value FROM User_Service_Defaults WHERE user_id=? ORDER BY servicetype_id, name, value}, $$variable{'User'}->id() );
+	 ) ?>
+
+	<? while ( @{$$variable{'Defaults'}} ) ?>
+		<? eval ( @$variable{'id','servicetype_id','name','value'} = splice @{$$variable{'Defaults'}},0,4; ) ?>
+		<tr<?rowclass?>> 
+			<td class="Service"><select name="servicetype_id-<?id?>"><option value="">All</option><? echo ( ssi::make_drop_down( $$variable{'ServiceTypes'}, $$variable{'servicetype_id'} ); ) ?></select></td>
+			<td class="FieldName"><input type="text" name="name-<?id?>" value="<?name?>" /></td>
+			<td class="FieldValue"><input type="text" name="value-<?id?>" value="<?value?>" /></td>
+		</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( @{$$variable{'Defaults'}} ) ?>
+	<tr class="totals"> 
+		<td colspan="3">Add New</td>
+	</tr>
+	<tr<?rowclass?>> 
+		<td><select name="servicetype_id-"><option value="">All</option><? echo ( ssi::make_drop_down( $$variable{'ServiceTypes'} ); ) ?></select></td>
+		<td><input type="text" name="name-" /></td>
+		<td><input type="text" name="value-" /></td>
+	</tr>
+</table>

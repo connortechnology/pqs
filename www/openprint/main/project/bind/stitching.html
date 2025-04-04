@@ -1,0 +1,74 @@
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+		<?include('/includes/main/proj/stitching.html')?>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+			<li>
+				<label>Signatures</label>
+			<!-- The rest is done for each qty -->
+			<? eval ( $$variable{QTYIndex} = 1 ) ?>
+			<? while ( $$variable{QTYIndex} <= 3 ) ?>
+			<? if ( $$variable{'txtQuantity'.$$variable{QTYIndex}} ) ?>
+			<span class="<?Columns?>Columns">
+<? echo ( 
+	my $html = '';
+	foreach my $page ( 4, 6, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
+		$html .= input( 
+			name		=>	"txtSignatureQty${page}Page-$$variable{QTYIndex}",
+			value		=>	$$variable{"txtSignatureQty${page}Page-$$variable{QTYIndex}"},
+			type		=>	'cardinal',
+			oninput		=>	'calc(this.form.name);',
+			readonly	=>	!sets::isin( $session{user_type}, ['A','E'] ),
+			) . ' ' . $page . ' Page Signature(s)<br/>';
+	} # end foreach
+	return $html;
+) ?>
+<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+				<input type="checkbox" id="OverridePockets<?QTYIndex?>" name="OverridePockets<?QTYIndex?>" value="Y" onclick="if(!this.checked)calc(this.form.name);" <? echo ( $$variable{'OverridePockets'.$$variable{QTYIndex}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+				<label class="radio" for="OverridePockets<?QTYIndex?>">Override</label>
+<? else ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+	<? if ( $$variable{'OverridePockets'.$$variable{QTYIndex}} eq 'Y' ) ?>
+				<input type="hidden" name="OverridePockets<?QTYIndex?>" value="Y" />Overriden
+	<? endif ( $$variable{'OverridePockets'.$$variable{QTYIndex}} eq 'Y' ) ?>
+<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+			</span>
+			<? endif ( $$variable{'txtQuantity'.$$variable{QTYIndex}} ) ?>
+				<? eval ( $$variable{QTYIndex} += 1 ) ?>
+			<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
+		</li>
+		<li>
+			<label>Imposition</label>
+<? echo (
+	my $html;
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{Columns}.'Columns">';
+		$html .= input( type=>'cardinal', name=>'Imposition'.$qty_index, value=>$$variable{'Imposition'.$qty_index}, oninput=>'calc(this.form.name);' ). 'out';
+		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+			$html .= write_override( 'OverrideImposition'.$qty_index, $$variable{'OverrideImposition'.$qty_index}, '', 'calc(\'f1\');' );
+		} else {
+			$html .= input(type=>'hidden', name=>'OverrideImposition'.$qty_index, value=>$$variable{'OverrideImposition'.$qty_index});
+			$html .= ' Overriden';
+		}
+		$html .= '</span>';
+	} # end foreach qty_index
+		
+	return $html;
+) ?>
+		</li>
+
+        <?include('/includes/main/proj/quantities_equipment_prices.html')?>
+			</ul>
+		</fieldset>
+		<hr/>
+		<?include('/includes/main/proj/add_to_project.html') ?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" id="ServiceType" name="ServiceType" value="<?ServiceTypeType?>" />
+		<input type="hidden" id="Status" name="Status" />
+	</form>
+</div>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>

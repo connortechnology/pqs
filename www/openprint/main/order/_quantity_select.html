@@ -1,0 +1,36 @@
+<? if ( $$variable{Project}->quantity_indexes() > 1) ?>
+<li>
+	<label>Quantity</label>
+	<table class="List">
+		<tr> 
+			<th class="checkbox"></th>
+			<th class="Quantity">Quantity</th>
+<!--
+			<th align="right">Unit Price</th>
+-->
+			<th class="Price">Price</th>
+		</tr>
+		<? echo ( 
+			my $html = '';
+			my @quantity_indexes = $$variable{Project}->quantity_indexes();
+			my $selected = $$variable{Project}->ordered_quantity_index();
+
+			foreach my $qty_index ( @quantity_indexes ) {
+				$html .= '<tr>';
+				$html .= sprintf( q`
+<td class="checkbox">
+	<input type="radio" name="rdbQuantity%1$d" value="%2$d" %3$s onclick="new Ajax.Request('_order.json', { parameters: { order_id: '%4$d', project_id: '%1$d', quantity_index: '%2$d', action: 'select_quantity' } } );"/>
+</td>
+`, $$variable{Project}->id(), $qty_index, checked($selected == $qty_index), $$variable{Order}->id());
+				$html .= sprintf('<td class="Quantity">%d</td>', $$variable{Project}->quantity($qty_index));
+				my $Price = openprint::Currency::convert( $$variable{Project}->Price($qty_index));
+				$html .= sprintf('<td class="Price">%1$s</td>', $$variable{Order}->Currency()->format($$Price{Price}));
+				$html .= '</tr>';
+			} # end foreach qty_index
+			return $html;
+		) ?>
+	</table>
+</li>
+<? else ( $$variable{Project}->quantity_indexes() > 1) ?>
+<? echo ( input( type=>'hidden', name=>'rdbQuantity'.$$variable{Project}->id(), value=>$$variable{Project}->ordered_quantity_index() ); ) ?>
+<? endif ( $$variable{Project}->quantity_indexes() > 1) ?>

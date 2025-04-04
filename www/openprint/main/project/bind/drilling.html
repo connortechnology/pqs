@@ -1,0 +1,58 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend>Drilling</legend>
+			<ul>
+			<li>
+				<label>Finished Calliper</label>
+				<? echo ( input( name=>'txtFinishedCalliper', value=>$$variable{txtFinishedCalliper}, type=>'float', onkeyup=>'calc(this.form.name);', step=>'0.0001' ); ) ?>
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+<? echo ( write_override( 'chkOverrideFinishedCalliper', $$variable{'chkOverrideFinishedCalliper'}, '', q`calc('f1');` );) ?>
+<? else ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+				<input type="hidden" name="chkOverrideFinishedCalliper" value="<? echo ( $$variable{'chkOverrideFinishedCalliper'} ) ?>" />
+<? if ( $$variable{'chkOverrideFinishedCalliper'} eq 'Y' ) ?>
+Overridden
+<? endif ( $$variable{'chkOverrideFinishedCalliper'} eq 'Y' ) ?>
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+			</li>
+			<li>
+				<label># of holes per item</label>
+				<? echo ( input( name=>'txtHoleQty', value=>$$variable{txtHoleQty}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
+			</li>
+			<li>
+				<label>Hole size</label>
+<? if ( $config{DrillingSizes} ) ?>
+<select name="txtHoleSize" onchange="calc(this.form.name);">
+<? echo ( make_drop_down( [ map { split '~', $_ } split(',', $config{DrillingSizes} ) ], $$variable{txtHoleSize} ); ) ?>
+</select>
+<? else ( $config{DrillingSizes} ) ?>
+					<? echo ( input( name=>'txtHoleSize', value=>$$variable{txtHoleSize}, type=>'float', onkeyup=>'calc(this.form.name);' ); ) ?>
+					in inches (ex: 0.125, 0.25)
+<? endif ( $config{DrillingSizes} ) ?>
+			</li>
+			<li>
+				<label>Items per lift</label>
+				<? echo ( input( type=>'cardinal', id=>'ItemsPerLift', name=>'ItemsPerLift', value=>$$variable{ItemsPerLift}, onkeyup=>'calc(this.form.name);' ); ) ?>
+				<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+				<? echo ( write_override( 'OverrideItemsPerLift', $$variable{OverrideItemsPerLift}, '', q`calc('f1');` );) ?>
+				<? else ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+				<input type="hidden" name="OverrideItemsPerLift" value="<?OverrideItemsPerLift" />
+				<? if ( $$variable{'OverrideItemsPerLift'} eq 'Y' ) ?>Overridden<? endif ( $$variable{'OverrideItemsPerLift'} eq 'Y' ) ?>
+				<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+			<li>
+			</ul>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+			<?include(/includes/main/proj/quantities_equipment_prices.html) ?>
+			</ul>
+		</fieldset>
+		<?include(/includes/main/proj/add_to_project.html) ?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" id="Status" name="Status" />
+	</form>
+</div>

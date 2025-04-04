@@ -1,0 +1,58 @@
+<li><label>Full Package Weight</label>
+<? echo (
+	my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= input(
+			name	=>	'txtPackageWeight'.$qty_index,
+			value	=>	$$variable{"txtPackageWeight$qty_index"},
+			type	=>	'float',
+			onkeyup	=>	'calc(this.form.name);' );
+		$html .= ' lbs';
+
+		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+			$html .= sprintf(q`<input type="checkbox" id="chkOverridePackageWeight%1$d" name="chkOverridePackageWeight%1$d" value="Y" onclick="if ( ! this.checked ) { calc(this.form.name); }" %2$s />
+			<label class="radio" for="chkOverridePackageWeight%1$d">Override</label>`, $qty_index, checked( $$variable{'chkOverridePackageWeight'.$qty_index} eq 'Y' ) );
+		} # end if
+		$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+</li>
+<li><label>Package Quantity</label>
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+	<input type="checkbox" id="chkOverridePackageQuantity" name="chkOverridePackageQuantity" value="Y" onclick="if ( ! this.checked ) { calc(this.form.name); }" <? echo ( checked( $$variable{'chkOverridePackageQuantity'} eq 'Y' ); ) ?> /> 
+	<label class="radio" for="chkOverridePackageQuantity">Override</label>
+	<br/>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+<? echo (
+	my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= input(
+			name	=>	'txtPackageQuantity'.$qty_index,
+			value	=>	$$variable{"txtPackageQuantity$qty_index"},
+			type	=>	'cardinal',
+			onkeyup	=>	'calc(this.form.name);' );
+		$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+</li>
+<li><label>Total Weight</label>
+<? echo (
+	my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= input(
+			name	=>	'txtTotalWeight'.$qty_index,
+			value	=>	$$variable{"txtTotalWeight$qty_index"},
+			type	=>	'float',
+			onkeyup	=>	'calc(this.form.name);',
+			readonly	=>	1,
+ );
+		$html .= ' lbs</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+</li>

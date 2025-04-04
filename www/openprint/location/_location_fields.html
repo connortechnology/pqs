@@ -1,0 +1,66 @@
+<ul class="location">
+<? echo (
+	my $Country = $$variable{Location}->ancestor(type=>'country');
+	my $State = $$variable{Location}->ancestor(type=>'state');
+	my $City = $$variable{Location}->ancestor(type=>'city');
+
+	my $html .= '<li class="place"><label>Place</label>';
+	$html .= sprintf(q`<input type="text" id="location" name="location" value="%1$s"/>
+		<div id="location_autocomplete" class="autocomplete" style="display:none;"></div>
+		<script>
+window.addEventListener('DOMContentLoaded', function() {
+  const loc = $j('#location');
+  if (loc && loc.autocomplete)
+    loc.autocomplete( {minChars: 2, onSelect: getSelectedLocation, serviceUrl: '/location/_locations.html?type=place' } );
+});
+		</script>
+`, $$variable{Location}->name() );
+	$html .= '</li>';
+	if ( $session{user_type} eq 'A' ) {
+		$html .= '<li><label>Type</label><select name="location_type_id" id="location_type_id"><option value=""></option>'.
+		make_drop_down( openprint::Location_Type->dropdown(), $$variable{Location}->type_id() ).'</select></li>';
+	} # end if
+
+  if (! ($$variable{Location}->type() and sets::isin( $$variable{Location}->type(), ['city','state','country'] )) ) {
+	$html .= sprintf('
+	<li><label>Address</label><input type="text" name="address" id="address" value="%s" autocomplete="off" autofill="off"/></li>
+	<li><label>Postal/Zip Code</label><input type="text" name="postalcode" id="postalcode" value="%s" /></li>
+	<li class="latitude">
+    <label>Latitude</label>
+    <input type="number" name="latitude" id="latitude" value="%s" step="any" />
+  </li>
+	<li class="longitude">
+    <label>Longitude</label>
+    <input type="number" name="longitude" id="longitude" value="%s" step="any" />
+  </li>
+', $$variable{Location}->get('address','postalcode','latitude','longitude') );
+} elsif (sets::isin( $$variable{Location}->type(), ['state','country'])) {
+$html .= sprintf('<li><label>Short</label><input type="text" name="short" id="short" value="%s" /></li>',
+$$variable{Location}->short());
+}
+
+	$html .= '</ul><ul class="ancestors">';
+	if ( $$variable{Location}->type() ne 'country' ) {
+		$html .= q`<li class="country"><label for="country_id">Country</label>
+			<select id="country_id" name="country_id" onchange="Location_onchange( this, 'country' );$('country').value='';"><option value=""> </option>`;
+			$html .= make_drop_down( openprint::Location->dropdown( type=>'country' ), $Country ? $Country->id() : () );
+		$html .= q`</select> or other <input type="text" name="country" id="country" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( $('country_id'), this.value, 0 );}" autocomplete="off" autofill="off"/>`;
+		$html .= '</li>';
+		if ( $$variable{Location}->type() ne 'state' ) {
+			$html .= q`<li class="state"><label>State/Province</label>
+		<select id="state_id" name="state_id" onchange="Location_onchange( this, 'state' );$('state').value='';"><option value=""> </option>`;
+			$html .= make_drop_down( openprint::Location->dropdown( type=>'state' ), $State ? $State->id() : () );
+			$html .= q`</select> or other <input type="text" name="state" id="state" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( $('state_id'), this.value, 0 );}"/>`;
+
+			$html .= '</li>';
+			if ( $$variable{Location}->type() ne 'city' ) {
+				$html .= q`<li class="city"><label>City</label><select id="city_id" name="city_id" onchange="$('city').value='';"><option value=""> </option>`;
+				$html .= make_drop_down( openprint::Location->dropdown( type=>'city'), $City ? $City->id() : () );
+				$html .= q`</select> or other <input type="text" name="city" id="city" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( $('city_id'), this.value, 0 );}"/>`; 
+				$html .= '</li>';
+			} # end if ! city
+		} # end if ! state
+	} # end if ! country
+	return $html;
+) ?>
+</ul>

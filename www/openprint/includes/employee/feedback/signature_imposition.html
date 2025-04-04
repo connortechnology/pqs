@@ -1,0 +1,18 @@
+<div class="Imposition">
+	<p>
+		<label>Runstyle</label>
+		<select name="UsedRunStyle-<?SignatureIndex?>">
+			<option value=""> select </option>
+			<? echo ( ssi::make_drop_down( [ 'Sheet Work','Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting', 'Perfecting', 'Web', 'Web' ], $$variable{'UsedRunStyle-'.$$variable{'SignatureIndex'}} ) ) ?>
+		</select>
+	</p>
+	<p>
+		<label>Imposition</label>
+		<input type="number" name="UsedImposition-<?SignatureIndex?>" value="<? echo ( $$variable{"UsedImposition-$$variable{'SignatureIndex'}"} ) ?>"/>out
+
+		<input type="number" name="UsedColumns-<?SignatureIndex?>" value="<? echo ( $$variable{"UsedColumns-$$variable{'SignatureIndex'}"} ) ?>"/>x
+		<input type="number" name="UsedRows-<?SignatureIndex?>" value="<? echo ( $$variable{"UsedRows-$$variable{'SignatureIndex'}"} ) ?>"/>+
+		<input type="number" name="UsedDutchColumns-<?SignatureIndex?>" value="<? echo ( $$variable{"UsedDutchColumns-$$variable{'SignatureIndex'}"} ) ?>"/>x
+		<input type="number" name="UsedDutchRows-<?SignatureIndex?>" value="<? echo ( $$variable{"UsedDutchRows-$$variable{'SignatureIndex'}"} ) ?>"/>
+	</p>
+</div>

@@ -1,0 +1,10 @@
+<?echo(
+  use JSON -convert_blessed_universally;
+
+  my $json = JSON->new->allow_nonref->convert_blessed;
+
+  require JSON;
+  my $user = openprint::User->find_one(email=>$param{email});
+  $user = undef if (!$user->can_view());
+  return $json->encode($user);
+)?>

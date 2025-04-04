@@ -1,0 +1,187 @@
+<? eval (
+	$$variable{Project} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{Project};
+) ?>
+<div class="Header">
+<? if ( $session{user_type} eq 'A' or $openprint::User->in_Group('Accounting') ) ?>
+<? if ( $$variable{Project}->Order()->do_not_pay_commission() ) ?>
+					<h1 class="error">Do Not Pay Commission</h1>
+<? endif ( $$variable{Project}->Order()->do_not_pay_commission() ) ?>
+<? endif ( $session{user_type} eq 'A' or $openprint::User->in_Group('Accounting') ) ?>
+	<div class="ProjectInformation">
+		<fieldset><legend>Project Information</legend>
+			<div class="content">
+				<ul>
+					<li><label>Project #</label><? echo ( $$variable{Project}->link_to() ) ?></li>
+					<li class="<? echo ( $_ = $$variable{Project}->status(); $_  =~ s/ //g; return $_; ) ?>">
+						<label>Status</label>
+						<? echo ( $$variable{Project}->status() ) ?>
+					</li>
+				<? if ( $$variable{Project}->docket() ) ?>
+					<? if ( $$variable{Project}->Order()->downpayment() > 0 ) ?>
+					<li>
+						<label>Required Downpayment</label>
+						<? echo ( $$variable{Project}->Order()->downpayment_percent() ) ?>%
+					</li>
+					<? endif ( $$variable{Project}->Order()->downpayment() > 0 ) ?>
+					<? if ( $$variable{Project}->Order()->cod_percent() ) ?>
+					<li>
+						<label>Required COD</label>
+						<? echo ( $$variable{Project}->Order()->cod_owing_percent() ) ?>% remaining
+						<? if ( $$variable{Project}->Order()->cod_owing_percent() <= 1 ) ?>
+						<b>Job is PAID</b>
+						<? endif ( $$variable{Project}->Order()->cod_owing_percent() <= 1 ) ?>
+					</li>
+					<? endif ( $$variable{Project}->Order()->cod_percent() ) ?>
+				<? endif ( $$variable{Project}->docket() ) ?>
+					<li> 
+						<label>Creation Date</label>
+						<span title="<? echo ( format_datetime( $$variable{Project}->created_on() ); ) ?>">
+						<? echo ( format_date( $$variable{Project}->created_on() ); ) ?></span>
+					</li>
+					<li><label>Last Updated</label>
+					<span title="<? echo ( format_datetime( $$variable{Project}->updated_on() ); ) ?>">
+					<? echo ( format_date( $$variable{Project}->updated_on() ); ) ?></span>
+					</li>
+					<li><label>Last Calculated</label>
+					<span title="<? echo ( format_datetime( $$variable{Project}->calculated_on() ); ) ?>">
+					<? echo ( format_date( $$variable{Project}->calculated_on() ); ) ?></span>
+					</li>
+					<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+<? if ( 0 and openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
+					<li><label>Pricing Markup</label>
+					<span id="markup_view">
+					<? echo ( 1*$$variable{Project}->markup() ) ?>%
+					<? echo ( button( 'EditMarkup', { onclick=>q`$('markup_edit').show();$('markup_view').hide();`, text=> 'Edit' } ); ) ?>
+					</span>
+					<span id="markup_edit" style="display:none;">
+					<input type="number" name="markup" value="<? echo ( $$variable{Project}->markup() ) ?>" />%
+					<? echo ( button( 'SaveMarkup', { onclick=>"f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", text=>'Save' } ); ) ?>
+					<? echo ( button( 'CancelMarkup', { onclick=>"f1.markup.value='$$variable{Project}{markup}';\$('markup_edit').hide();\$('markup_view').show();", text=>'Cancel' } ); ) ?>
+					</span>
+					</li>
+<? endif ( 0 and openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
+					<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+				<? if ( $$variable{Project}->docket() ) ?>
+					<? if ( $$variable{Project}->shippingtype() ) ?>
+					<li> 
+						<label>Shipping Type</label>
+						<span class="shippingTypeValue"><? echo ( $$variable{Project}->shippingtype() ) ?></span>
+					</li>
+					<? endif ( $$variable{Project}->shippingtype() ) ?>
+					<? if ( $$variable{Project}->due_date() ) ?>
+					<li>
+							<label>Due Date</label>
+							<? echo ( format_date( $$variable{Project}->due_date() ); ) ?>
+					</li>
+					<? else ( $$variable{Project}->due_date() ) ?>
+						<? if ( $$variable{Project}->requested_date() ) ?>
+						<li class="RequiredDate">
+							<label>Requested Date</label>
+							<? echo ( format_date( $$variable{Project}->requested_date() ); ) ?>
+						</li>
+						<? endif ( $$variable{Project}->requested_date() ) ?>
+					<? endif ( $$variable{Project}->due_date() ) ?>
+<? echo (
+	my $services = $$variable{Project}->services();
+	my $ProofsService = $$variable{Project}->Service( $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] );
+
+
+  my @Roles = openprint::Operator_Role->find( servicetype_id=>$ProofsService->servicetype_id(), order=>'sorting, lower(name)' );
+  if ( ! @Roles ) {
+    @Roles = openprint::Operator_Role->find( servicetype_id=>undef, order=>'lower(name)' );
+  }
+  my %Operators = map { $$_{role_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$ProofsService{service_id} );
+
+	my @operator_ids = sets::union( map { $Operators{$$_{id}}{user_id} } @Roles );
+	return 
+	'<li><label>Prepress Operator'.(@operator_ids!=1?'s':'').'</label>'.
+	join(', ', map { new openprint::User($_)->link_to() } @operator_ids ).
+	'</li>';
+) ?>
+					<? endif ( $$variable{Project}->docket() ) ?>
+					<? if ( $$variable{Project}->predefined() and $session{'user_type'} eq 'A' ) ?>
+					<li>
+						<label>Predefined For</label>
+						<? echo (
+							my $html = '';
+							foreach my $Product ( openprint::Product->find('project_id'=>$$variable{Project}->id()) ) {
+								$html .= $Product->name() . '<br/>';
+							} # end foreach Product
+							return $html;
+						) ?>
+					</li>
+					<? endif ( $$variable{Project}->predefined() and $session{'user_type'} eq 'A' ) ?>
+					<? if ( $$variable{Project}->reprint() and $$variable{Project}->reprint() ne 'N' ) ?>
+					<li class="reprint"><label>Reprint Reason</label>
+					<? echo ( $$variable{Project}->reprint_reason() ) ?>
+					<br/><? echo ( $$variable{Project}->reprint_description() ) ?>
+					</li>
+					<? endif ( $$variable{Project}->reprint() and $$variable{Project}->reprint() ne 'N' ) ?>
+				</ul>
+			</div>
+		</fieldset>
+	</div>
+	<? if ( $$variable{Project}->docket() ) ?>
+		<? eval ( $$variable{Order} = $$variable{Project}->Order() if ! $$variable{Order}; ) ?>
+	<div class="OrderInformation">
+		<fieldset><legend>Order Information</legend>
+			<div class="content">
+				<ul>
+					<li><label>Docket Number</label>
+					<a href="/main/order/history_details.html?order_id=<? echo ( $$variable{Project}->order_id() ) ?>"><? echo ( $$variable{Project}->docket() ) ?></a>
+					</li>
+					<li><label>Ordered Quantity</label><? echo ( $$variable{Project}->ordered_quantity() ) ?></li>
+					<li><label>Invoices</label><div id="Invoices"><?include('/employee/accounting/_order_invoices.html')?></div></li>
+				</ul>
+			</div>
+		</fieldset>
+	</div>
+	<? endif ( $$variable{Project}->docket() ) ?>
+	<div class="ContactInformation">
+		<fieldset><legend>Contact Information</legend>
+			<div class="content">
+				<ul>
+					<li><label>Company</label><? echo ( $$variable{Project}->Company()->link_to() ) ?></li>
+					<li><label>Name</label><? echo ( $$variable{Project}->User()->name() ) ?></li>
+					<li><label>Phone</label><? echo ( $$variable{Project}->User()->phone() ) ?></li>
+					<li><label>Email</label><a href="mailto:<? echo ( $$variable{Project}->User()->email() ) ?>"><? echo ( $$variable{Project}->User()->email() ) ?></a></li>
+					<? if ( $$variable{Project}->Company()->salesrep_id() ) ?>
+					<li>
+						<label>Customer Service Rep</label>
+						<a href="mailto:<? echo ( $$variable{Project}->Company()->CSR()->email() ) ?>"><? echo ( $$variable{Project}->Company()->CSR()->name() ) ?></a>
+					</li>
+					<? endif ( $$variable{Project}->Company()->salesrep_id() ) ?>
+				</ul>
+			</div>
+		</fieldset>
+	</div>
+	<div class="Description">
+		<fieldset><legend>Description</legend>
+			<div class="content">
+				<ul><li id="summary">
+			<? echo ( $$variable{Project}->summary() ) ?>
+				</li></ul>
+			</div>
+		</fieldset>
+	</div>
+	<div class="Reference">
+		<fieldset><legend>Reference</legend>
+			<div class="content">
+				<ul><li id="reference">
+			<? echo ( $$variable{Project}->reference(); ) ?>
+				</li></ul>
+			</div>
+		</fieldset>
+	</div>
+	<? if ( $$variable{Project}->comments() ) ?>
+	<div class="Comments">
+		<fieldset><legend>Comments</legend>
+			<div class="content">
+				<ul><li>
+			<? echo ( $$variable{Project}->comments(); ) ?>
+				</li></ul>
+			</div>
+		</fieldset>
+	</div>
+	<? endif ( $$variable{Project}->comments() ) ?>
+</div><!--Project-->

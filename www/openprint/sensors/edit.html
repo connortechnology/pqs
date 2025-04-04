@@ -1,0 +1,121 @@
+<?include(/includes/error_reporting.html)?>
+<script type="text/javascript" src="<?hash_link(edit.js)?>"></script>
+<div class="Sensor">
+	Please select a sensor to view/edit. 
+	<form name="search" id="search" action="edit.html">
+		<fieldset class="filters"><legend>Search Information</legend>
+			<ul>
+				<li> 
+					<label>Sensor</label>
+					<select name="sensor_id" onchange="if(this.options[this.selectedIndex].value != ''){form.submit();}">
+						<option value="">select</option>
+						<? echo (
+								make_drop_down( EnviroTrack::Sensor->dropdown( order=>'lower(name)' ), $$variable{Sensor}->id() );
+						) ?>
+					</select>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="edit.html">
+		<input type="hidden" name="sensor_id" value="<?echo($$variable{Sensor}->id())?>"/>
+		<p class="buttons">
+			<? echo ( join( "\n", 
+					button( 'Prev1', { onclick=>"f1.elements['action'].value='<<';fmCheck(f1);", text=>'&lt;&lt;' } ),
+					button( 'Next1', { onclick=>"f1.elements['action'].value='>>';fmCheck(f1);", text=>'&gt;&gt;' } ),
+					button( 'New1', { href=>'/sensor/edit.html', text=>'New' } ),
+					button( 'Save1', { onclick=>"f1.elements['action'].value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+				( $$variable{Sensor}->id() ? (
+					button( 'Copy1', { onclick=>"f1.elements['action'].value='Copy';fmCheck(f1);", text=>'Copy' } ),
+					button( 'Delete1', { onclick=>"f1.elements['action'].value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+				) : () ),
+					button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
+				); ) ?>
+		</p>
+<!--
+		<p class="buttons">
+			<b>CSV File</b>
+			<input type="file" name="fileImport" />
+			<? echo ( join("\n",
+				button( 'ImportDefinitions', { onclick=>"f1.elements['action'].value='Import Definitions';f1.action='edit.html';f1.submit();", text=>'Import Definitions' } ),
+				button( 'ExportDefinitions', { onclick=>"f1.elements['action'].value='Export Definitions';f1.action='edit.html?Download';f1.submit();", text=>'Export Definitions' } ),
+				button( 'ImportSpecifications', { onclick=>"f1.elements['action'].value='Import Specifications';f1.action='edit.html';f1.submit();", text=>'Import Specifications' } ),
+				button( 'ExportSpecifications', { onclick=>"f1.elements['action'].value='Export Specifications';f1.action='edit.html?Download';f1.submit();", text=>'Export Specifications' } ),
+			); ) ?>
+		</p>
+-->
+		<div class="leftColumn">
+			<fieldset><legend>Sensor Information</legend>
+				<? if ( $$variable{Sensor}->deleted() ) ?>
+				<div class="warning">This sensor has been deleted.</div>
+				<? endif ( $$variable{Sensor}->deleted() ) ?>
+				<ul>
+					<li> 
+						<label>Sensor ID</label>
+						<? echo ( $$variable{Sensor}->id(); ) ?>
+					</li>
+					<li> 
+						<label>Sensor Name</label>
+						<input type="text" name="name" value="<? hecho ( $$variable{Sensor}->name(); ) ?>" />
+					</li>
+					<li> 
+						<label onclick="$j('#type_id').toggle();$j('#type').toggle();">Type</label>
+						<select name="type_id" id="type_id" onchange="$j('#type').value='';">
+							<option value="">Select a type</option>
+							<? echo (
+								make_drop_down( EnviroTrack::Sensor_Type->dropdown( order=>'lower(name)'), $$variable{Sensor}->type_id() );
+							) ?>
+						</select>
+						<input type="text" id="type" name="type" style="display:none;" oninput="ddm_select_by_text( $j('#type_id'), this.value, 0 );" />
+						<?echo(button('NewType',{onclick=>q`toggle_input( $j('#type_id'), $j('#type') );`, text=>'New'});)?>
+					</li>
+					<li class="url"><label>Url/IP</label><?echo(input(name=>'url',type=>'url', value=>$$variable{Sensor}->url());)?></li>
+					<li class="username"><label>Username</label><?echo(input(name=>'username',type=>'username', value=>$$variable{Sensor}->username());)?></li>
+					<li class="password"><label>Password</label><?echo(input(name=>'password',type=>'password', value=>$$variable{Sensor}->password());)?></li>
+					<li> 
+						<label>Description</label>
+            <textarea id="description" name="description" rows="<?echo(count_lines($$variable{Sensor}->description());)?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Sensor}->description(); ) ?></textarea>
+					</li>
+<!--
+					<li>
+						<label>Sort</label>
+						<input type="number" name="sort" value="<? echo ( 1*$$variable{Sensor}->sort(); ) ?>" />
+					</li>
+-->
+<? if ( $$variable{Sensor}->id() ) ?>
+					<li><label>Created On</label>
+						<? echo ( format_datetime( $variable{Sensor}->created_on() ); ) ?>
+					</li>
+<? endif ( $$variable{Sensor}->id() ) ?>
+				</ul>
+			</fieldset>
+		</div><!--left-->
+    <div class="rightColumn">
+      <fieldset><legend>Inputs</legend><div id="inputs">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Label</th><th>Min</th><th>Max</th>
+                <th class="buttons"><?echo(button('add_input', { onclick=>'add_input('.$$variable{Sensor}->id().');', text=>'+'});)?></tr>
+            </thead>
+            <tbody id="inputs_body">
+        <?echo(
+         my $html;
+         my $input_text = slurp_content('_input.html');
+         foreach my $Input ( $$variable{Sensor}->Inputs() ) {
+           $$variable{Input} = $Input;
+           $html .= variable_substitution( \$input_text, $variable );
+         }
+         return $html;
+         )?>
+          </tbody>
+        </table>
+        </div>
+      </fieldset>
+    </div>
+		<br class="spacer"/>
+		<input type="hidden" name="action"/>
+	</form>
+<? if ( $$variable{Sensor}->id() ) ?>
+<? echo ( include_logs( $$variable{Sensor} ); ) ?>
+<? endif ( $$variable{Sensor}->id() ) ?>
+</div>

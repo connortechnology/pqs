@@ -1,0 +1,29 @@
+<script type="text/javascript" src="<?hash_link(/administrator/managerial/profile.js)?>"></script>
+<div class="UserProfileFields">
+	<form id="f1" name="f1" action="user_profile_fields.html" method="post">
+		<input type="hidden" name="action" id="action" />
+		<p class="buttons">
+		<? echo ( button( 'Save', { onclick=>q`$('action').value='Save';$('f1').submit();` } ); ) ?>
+		</p>
+		Use dragndrop for sorting.
+		<table class="List">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Description</th>
+					<th>Type</th>
+					<th>Values</th>
+					<th>Default Value</th>
+					<th class="required">Required</th>
+					<th class="searchable">Searchable</th>
+					<th class="search_default">Search Default</th>
+					<th class="match">Match</th>
+					<th class="viewable">Viewable</th>
+					<th class="registration">Registration</th>
+					<th class="buttons"><? echo ( button( 'New', { onclick=>'newField();' } ); ) ?></th>
+				</tr>
+			</thead>
+			<tbody id="fields"><?include('_user_fields_tbody.html') ?></tbody>
+		</table>
+	</form>
+</div>

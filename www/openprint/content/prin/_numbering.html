@@ -1,0 +1,25 @@
+<li>
+	<label>Numbering</label>
+	<input type="radio" id="NumberingY" name="Numbering" value="Y" onclick="add_div('NumberingDiv');remove_div('OrderButton');calc('f1');" <? echo ( ssi::checked( $$variable{'Numbering'} eq 'Y' ); ) ?> />
+	<label class="radio" for="NumberingY">Yes</label>
+	<input type="radio" id="NumberingN" name="Numbering" value="N" onclick="remove_div('NumberingDiv');remove_div('OrderButton');calc('f1');" <? echo ( ssi::checked( $$variable{'Numbering'} ne 'Y' ); ) ?> />
+	<label class="radio" for="NumberingN">No</label>
+</li>
+<div id="NumberingDiv" <? echo ( $$variable{'Numbering'} eq 'Y' ? '' : 'style="display: none;"' ) ?>>
+	<li><label>Sets of Numbers</label>
+		<input type="number" id="SetsOfNumbers" name="SetsOfNumbers" value="<?SetsOfNumbers?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />
+	</li>
+	<li><label>Number Colour</label>
+		<select name="colour" id="colour" onchange="calc(this.form.name);">
+			<? echo (
+				my @options = (
+					'', 'select',
+					'Black','Black',
+					'Red', 'Red Ink',
+					'Process', '4 Colour Process',
+					);
+				return ssi::make_drop_down( \@options, $$variable{'colour'} );
+			) ?>
+		</select>
+	</li>
+</div>

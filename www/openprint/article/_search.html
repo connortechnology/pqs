@@ -1,0 +1,65 @@
+<? eval (
+	@{$$variable{'Articles'}} = ();
+	foreach my $Article ( openprint::Article->find( 
+		date_filter( '/article/search.html?created_on_start','created_on >=' ),
+		date_filter( '/article/search.html?created_on_end','created_on <=' ),
+		date_filter( '/article/search.html?published_on_end','published_on <=' ),
+		date_filter( '/article/search.html?published_on_start','published_on >=' ),
+		( $session{'/article/search.html?published'} ne '' ? ( published => $session{'/article/search.html?published'} ) : ( $session{user_id} ? () : ( published=>1 ) ) ),
+		( $session{'/article/search.html?company_id'} ? ( company_id	=> $session{'/article/search.html?company_id'} ) : () ),
+		( $session{'/article/search.html?author_id'} ? ( created_by => $session{'/article/search.html?author_id'} ) : () ), 
+		( $session{'/article/search.html?category_id'} ? ( category_id => $session{'/article/search.html?category_id'} ) : () ),
+		( $session{'/article/search.html?title'} ? ( 'title ilike' => '%'.$session{'/article/search.html?title'}.'%' ) : () ),
+		order				=> 'published_on DESC',
+		) ) {
+		next if ! $Article->can_view();
+		push @{$$variable{'Articles'}}, $Article;
+	} # end foreach Article
+) ?>
+
+<? if ( @{$$variable{'Articles'}} == 0 ) ?>
+	There are no articles which match your search criteria. 
+<? else ( @{$$variable{'Articles'}} == 0 ) ?>
+	<table class="List">
+		<tr> 
+<? if ( $session{user_type} eq 'A' ) ?>
+			<th class="checkbox"><input type="checkbox" onclick="select_all($('f1'), 'article_id', this.checked );"/></th>
+<? endif ( $session{user_type} eq 'A' ) ?>
+			<th class="Author">Author</th>
+			<th class="Category">Category</th>
+			<th class="DateTime">Created On</th>
+			<th class="DateTime">Published On</th>
+			<th class="Title">Title</th>
+		</tr>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Article ( @{$$variable{'Articles'}} ) {
+				next if $Article->anonymous() and $session{'/article/search.html?author_id'};
+				next if ! $Article->can_view();
+				my $Author = $Article->Author();
+
+				$html .= sprintf(q`<tr title="%s" %s>`,  ssi::html_escape($Article->summary()), $rowclass );
+				if ( $session{user_type} eq 'A' ) {
+					$html .= sprintf('<td class="checkbox"><input type="checkbox" name="article_id" value="%1$d"/></td>', $Article->id() );
+				} # end if
+				$html .= sprintf(q` 
+					<td class="Author"><a href="/article/view.html?article_id=%1$d">%2$s</a></td>
+					<td class="Category"><a href="/article/view.html?article_id=%1$d">%3$s</a></td>
+					<td class="DateTime"><a href="/article/view.html?article_id=%1$d">%4$s</a></td>
+					<td class="DateTime"><a href="/article/view.html?article_id=%1$d">%5$s</a></td>
+					<td class="Title"><a href="/article/view.html?article_id=%1$d">%6$s</a></td>
+				</tr>
+				`, $Article->id(), 
+				($Article->anonymous() ? 'Anonymous Contributor' : ( $Author->name() ? htmlize( $Author->name() ) : ' ' ) ),
+				$Article->Category()->name(),
+				format_datetime( $Article->created_on() ),
+				( $Article->published() ? format_datetime( $Article->published_on() ) : '' ),
+				escape_quotes($Article->title()),
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Article
+			return $html;
+		) ?>
+	</table>
+<? endif ( @{$$variable{'Articles'}} == 0 ) ?>

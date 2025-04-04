@@ -1,0 +1,12 @@
+<? echo (
+	return q`alert('`.$$variable{'error'}.q`');` if $$variable{'error'};
+	if ( $param{'action'} eq 'Delete Message' ) {
+		if ( ! sets::isin( $session{'user_id'}, [ map { $_->user_id() } $$variable{'Message'}->To() ]  ) ) {
+			return qq`
+				\$('message_$$variable{Message}{id}').remove();
+			`;
+		} # end if
+	} elsif ( $param{'action'} eq 'reply' ) {
+	} # end if
+	return q`new Ajax.Updater( 'Messages', '_messages.html', { parameters: { last_message_id: $('last_message_id').value, conversation_id: `.$$variable{'Conversation'}->id().q` }, insertion: Insertion.Bottom  } );`;
+) ?>

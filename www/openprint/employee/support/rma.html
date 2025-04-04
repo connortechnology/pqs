@@ -1,0 +1,241 @@
+<script type="text/javascript">
+	function submit_handler(form) {
+		form.submit();
+	} // end function
+</script>  
+<div class="Support"><div class="RMA">
+<?include('/includes/error_reporting.html')?>
+	<form id="f1" name="f1" method="post" action="rma.html">
+		<input type="hidden" name="status_id"/>
+<p class="buttons">
+<? echo ( join("\n",
+		button('Save', { onclick=>q`f1.elements['action'].value='Save';submit_handler(f1);` } ),
+		button('Clear', { onclick=>q`clearForm('f1');` } ),
+	
+map {
+	my $button_id = $_->name();
+	$button_id =~ s/\s//g;
+	button( $button_id, { 
+		onclick	=>	qq`f1.elements['status_id'].value='$$_{id}';f1.elements['action'].value='ChangeStatus';submit_handler(f1);`,
+		text	=>	$$_{name},
+		} );
+} openprint::RMA_Status->find( current_status_id => $$variable{RMA}->status_id(), order => 'sort' ),
+); ) ?>
+</p>
+		<div class="Information">
+		<fieldset><legend>RMA <? echo ( $$variable{RMA}->rmanumber() ? $$variable{RMA}->rmanumber() : 'Request ' . $$variable{RMA}->id() ) ?></legend>
+			<ul>
+			<li class="rmanumber"><label>RMA #</label>
+				<? if ( ($session{user_type} eq 'A') or ! $$variable{RMA}->rmanumber() ) ?>
+				<input type="text" name="rmanumber" value="<? echo ( $$variable{RMA}->rmanumber() ) ?>" />
+				<? else ( ($session{user_type} eq 'A') or ! $$variable{RMA}->rmanumber() ) ?>
+				<? echo ( $$variable{RMA}->rmanumber() ) ?>
+				<? endif ( ($session{user_type} eq 'A') or ! $$variable{RMA}->rmanumber() ) ?>
+			</li>
+			<li class="status"> 
+				<label>Status</label>
+				<? echo ( $$variable{RMA}->status() ) ?>
+			</li>
+			<li class="created_on"> 
+				<label>Submission Date</label>
+				<? echo ( format_datetime( $variable{RMA}->created_on() ); ) ?>
+			</li>
+			<li class="received_on"> 
+				<label>Date Received</label>
+				<? echo ( 
+					if ( ($session{user_type} eq 'A') or ! $variable{RMA}->received_on() ) {
+						return date_select( 'received_on', $variable{RMA}->received_on(), { with_today=>1 } );
+					} else {
+						return format_datetime( $variable{RMA}->received_on() );
+					} # end if
+				) ?>
+			</li>
+			<li class="order_id"> 
+				<label>Order #</label>
+				<? echo (
+						if ( ( $session{user_type} eq 'A' ) or ! $$variable{RMA}->order_id() ) {
+							return input( type=>'text', name=>'order_id', value=>$$variable{RMA}->order_id() );
+						} else {
+							return sprintf('<a href="/main/order/history_details.html?order_id=%1$s">%1$s</a>', $$variable{RMA}->order_id() );
+						} 
+				) ?>
+			</li>
+			<li class="ordered_on"> 
+				<label>Order Date</label>
+				<? echo ( format_datetime( $variable{RMA}->Order()->created_on() ); ) ?>
+			</li>
+			<li class="po_num"> 
+				<label>PO #</label>
+				<? echo (
+					if ( ( $session{user_type} eq 'A' ) or ! $$variable{RMA}->po_id() ) {
+						return input( type=>'text', name=>'po_num', value=>$$variable{RMA}->PurchaseOrder()->num() );
+					} # end if
+					sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s</a>', $$variable{RMA}->po_id(), $$variable{RMA}->PurchaseOrder()->num() );
+				) ?>
+			</li>
+			<li class="invoice_num"> 
+				<label>Invoice #</label>
+				<? echo (
+					if ( ( $session{user_type} eq 'A' ) or ! $$variable{RMA}->invoice_id() ) {
+						return input( type=>'text', name=>'invoice_num', value=>$$variable{RMA}->Invoice()->num() );
+					} # end if
+					sprintf('<a href="/invoice/view.html?invoice_id=%1$d">%2$s</a>', $$variable{RMA}->invoice_id(), $$variable{RMA}->Invoice()->num() );
+				) ?>
+				<? echo ( $variable{RMA}->Order()->invoice_id(); ) ?>
+			</li>
+			<li class="docket">
+				<label>Docket #: (click to view)</label>
+				<a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&amp;order_id=<?OrderID?>"><?ProjectReference?></a>
+			</li>
+			<li class="Company">
+				<label>Company Name</label>
+				<? echo ( 
+					if ( $$variable{RMA}->company_id() and $session{user_type} ne 'A' ) {
+						return $$variable{RMA}->Company()->name()
+					} else {
+						return ssi::select( openprint::Company->dropdown(), [ $$variable{RMA}->company_id() ], 
+							{ name=>'company_id', prepend=>['','select'],
+								onchange=>q`new Ajax.Updater( 'shipto_address_id', '/includes/_address_ddm.html', { parameters: { company_id: get_ddm_value(this) } } );`,
+							} );
+					} # end if
+				) ?>
+			</li>
+			<li class="CompanyAddress"><label>Ship To</label>
+				<? echo ( 
+					if ( $$variable{RMA}->shipto_address_id() and ( $session{user_type} ne 'A' ) ) {
+						return $$variable{RMA}->Address()->Location()->where_link();
+					} else {
+						my $html;
+						require openprint::Address;
+						my @Addresses = openprint::Address->find(company_id=>$$variable{RMA}->company_id(),order=>'name' );
+	
+
+						$html .= ssi::select( 
+							[ ('', 'New'), map { $_->id(), $_->to_string() } @Addresses ], 
+							[ $$variable{RMA}->shipto_address_id() ? $$variable{RMA}->shipto_address_id() : ( @Addresses >= 1 ? $Addresses[0]->id() : '' ) ],
+							{ 
+								name=>'shipto_address_id', 
+								id=>'shipto_address_id', 
+								onchange=>q`if(get_value(this)==''){new Ajax.Updater('location_fields', '/location/_location_fields.html', { } );} else { $('location_fields').innerHTML='';};`,
+							}
+							);
+						$html .= '<div id="location_fields">';
+						if ( ! ( ( @Addresses == 1 ) or $$variable{RMA}->shipto_address_id() ) ) {
+							$$variable{Location} = $$variable{RMA}->Address()->Location();
+							$html .= ssi::include( '/location/_location_fields.html' );
+						} # end if
+						$html .= '</div>';
+						return $html;
+					} # end if
+				) ?>
+			</li>
+			<li class="product_category"><label>Category</label>
+			<? echo (
+				if ( $$variable{RMA}->product_id() and ( $session{user_type} ne 'A' ) ) {
+					return $$variable{RMA}->Product()->category();
+				} else {
+					return ssi::select( openprint::Product_Category->dropdown(order=>'lower(name)'), [ $$variable{RMA}->Product()->category_id() ], {
+						name=>'product_category_id', prepend=>['','select'],
+						onchange=>q`new Ajax.Updater('product_id', '/includes/_products_ddm.html', { parameters: { category_id: get_value(this) } } );`,
+						} );
+				} # end if
+			) ?>
+			</li>
+			<li class="model"><label>Model</label>
+				<? echo (
+				if ( $$variable{RMA}->product_id() and ( $session{user_type} ne 'A' ) ) {
+					return $$variable{RMA}->Product()->name();
+				} else {
+					return ssi::select( openprint::Product->dropdown('order'=>'lower(name)'), [ $$variable{RMA}->product_id()], 
+						{ name=>'product_id', id=>'product_id', prepend=>['','select'], } );
+				} # end if
+				) ?>
+			</li>
+			<li class="serial"><label>Serial</label>
+			<? echo ( 
+				if ( ( $session{user_type} eq 'A' ) or ! $$variable{RMA}->serialnumber() ) {
+					return input(type=>'text', name=>'serialnumber', value=>$$variable{RMA}->serialnumber() );
+				} # end if
+				return $$variable{RMA}->serialnumber();
+			) ?>
+			</li>
+			<li class="accessories"><label>Accessories</label>
+			<? echo ( 
+				if ( ( $session{user_type} eq 'A' ) or ! $$variable{RMA}->accessories() ) {
+				return '<textarea name="accessories">'.$$variable{RMA}->accessories().'</textarea>';
+				} 
+				return $$variable{RMA}->accessories();
+			) ?>
+			</li>
+			<li class="description">
+				<label>Description of problem</label>
+			<? echo ( 
+				if ( ( $session{user_type} eq 'A' ) or ! $$variable{RMA}->accessories() ) {
+				return '<textarea name="description">'. $$variable{RMA}->description() . '</textarea>';
+				} 
+				$$variable{RMA}->description();
+			) ?>
+			</li>
+			<li class="comments">
+				<label>Comments</label>
+			<? echo ( 
+				if ( ( $session{user_type} eq 'A' ) or ! $$variable{RMA}->accessories() ) {
+
+				return '<textarea name="comments">'.$$variable{RMA}->comments().'</textarea>';
+				} 
+				$$variable{RMA}->comments();
+			) ?>
+			</li>
+			<li class="type"> 
+				<label>Type of Request</label>
+				<? echo ( $$variable{RMA}->type() ) ?>
+			</li>
+			<li class="warranty"><label>Warranty</label>
+				<? echo ( radio( 'warranty', [ 1, 'Yes', 0, 'No' ], $$variable{RMA}->warranty() ); ) ?>
+			</li>
+<? if ( $session{user_type} eq 'A' ) ?>
+			<li class="priority"><label>Priority</label>
+				<? echo ( ssi::select( openprint::RMA_Priority->dropdown(order=>'sort,lower(name)'), $variable{RMA}->priority_id(), { name=>'priority_id', prepend=>['','select'] } ); ) ?>
+			</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
+		</ul>
+	</fieldset>
+	</div>
+	<div class="Faults" id="Faults"><?include('_faults.html')?></div>
+	<div class="Upgrades" id="Upgrades"><?include('_upgrades.html')?></div>
+	<div class="Tests" id="Tests"><?include('_tests.html')?></div>
+	<div class="Parts" id="Parts"><?include('_parts.html')?></div>
+
+		<input type="hidden" name="rma_id" value="<? echo ( $$variable{RMA}->id() ) ?>"/>
+		<input type="hidden" name="action"/>
+	</form>
+<? if ( $$variable{RMA}->id() ) ?>
+	<div class="Logs">
+		<fieldset><legend>Logs</legend>
+			<table>
+				<tr>
+					<th class="User">User</th>
+					<th class="DateTime">When</th>
+					<th class="description">Description</th>
+				</tr>
+		<? echo ( my $html; my $rowclass;
+			foreach my $Log ( openprint::RMA_Log->find(rma_id=>$$variable{RMA}->id(), order=>'created_on' ) ) {
+				$html .= sprintf(q`
+<tr%s>
+	<td class="User">%s</td>
+	<td class="DateTime">%s</td>
+	<td class="description">%s</td>
+</tr>`, $rowclass, $Log->User()->name(), 
+format_datetime( $Log->created_on() ),
+$Log->description() 
+);
+				$rowclass = $rowclass ? '' : ' class="colRow"'; 
+			} # end foreach Log
+			return $html;
+		) ?>
+			</table>
+		</fieldset>
+	</div><!--Logs-->
+<? endif ( $$variable{RMA}->id() ) ?>
+</div>
+</div>

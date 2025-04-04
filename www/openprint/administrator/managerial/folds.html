@@ -1,0 +1,112 @@
+<div class="PageTitle">
+<h1>Administrator Managerial</h1>
+<h2>Folds</h2>
+</div>
+<script>
+addEventListener('DOMContentLoaded', (event) => {
+  $j('#FoldsTable').bootstrapTable({ });
+});
+
+var load_page_ajax = null;
+function load_page() {
+  if ( load_page_ajax ) load_page_ajax.abort();
+  load_page_ajax = $j.ajax({
+    url: '_folds.html',
+    data: $j('#f1').serialize(),
+    success: function(data) {
+      load_page_ajax = null;
+      $j('#Folds').html(data)
+      $j('#FoldsTable').bootstrapTable({ });
+    }
+  });
+} 
+function popup_fold(fold_id) {
+  window.location.href='fold.html?fold_id='+fold_id;
+  return;
+  popup_window('/administrator/equipment/_fold.html?fold_id='+fold_id, null, { width: '1000px' });
+}
+function add_fold() {
+  const equipment_id = $j('#equipment_id').val();
+  if (!equipment_id) {
+    alert('Please select the equipment to add the fold to.');
+    return;
+  }
+  window.location.href='fold.html?action=add&equipment_id='+equipment_id;
+  return;
+  new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id='+equipment_id, {
+    onSuccess: function(response){
+      new Insertion.Top($('Folds'), response.responseText);
+      SortableTable.load();
+    }
+  });
+}
+function add_fold_spec(btn) {
+  const form_id = btn.form.fold_id;
+  new Ajax.Request('/administrator/equipment/_fold_specification.html?action=add&fold_id='+fold_id, {
+    onSuccess: function(response){
+      new Insertion.Bottom($('FoldSpecifications'+fold_id), response.responseText);
+      SortableTable.load();
+    }
+  });
+}
+function delete_folds() {
+  console.log('delete folds');
+  jQuery('#Folds').load('/administrator/managerial/_folds.html?action=delete', {
+    fold_id: get_value( document.getElementById('f1').fold_id )
+  } );
+}
+</script>
+<form id="f1" name="f1" method="post" action="folds.html">
+  <input type="hidden" name="btnFunction"/>
+	<fieldset class="filters"><legend>Report Criteria</legend>
+      <ul class="column">
+      <li>
+        <label>Equipment</label>
+        <select id="equipment_id" name="equipment_id" onchange="load_page();" class="chosen" multiple="multiple">
+          <option value="">All Equipment</option>
+  <? echo (
+my $servicetype = openprint::ServiceType->find_one(name=>'Folding');
+if ($servicetype) {
+                  make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype_id any'=>$servicetype->id() ) ],
+                  [split(',',$session{$r->uri().'?equipment_id'})] );
+                  }
+  ) ?>
+        </select>
+      </li>
+      <li><label>Type</label>
+        <select id="type" name="type" onchange="load_page();" class="chosen" multiple="multiple">
+          <option value="">All</option>
+  <? echo ( 
+    make_drop_down( [ 
+    map { $openprint::Estimating::Folding::fold_types{$_} ? ( $_=>$openprint::Estimating::Folding::fold_types{$_}) : () } 
+                  @openprint::Estimating::Folding::folds ],
+                  [split(',',$session{$r->uri().'?type'})]);
+  ) ?>
+        </select>
+      </li>
+      <li><label>Imposition</label>
+        <input type="number" step="1" min="1" name="imposition" value="<?echo($session{$r->uri().'?imposition'})?>" on_change="load_page"/>
+      </li>
+      </ul>
+      <ul class="column">
+        <li><label>Stitching</label>
+          <?echo(radio('stitching', ['1'=>'yes', '0'=>'no',''=>'Both'], $session{$r->uri().'?stitching'}, {on_click=>'load_page'});)?>
+        </li>
+        <li><label>Perfect Bind</label>
+          <?echo(radio('perfectbind', ['1'=>'yes', '0'=>'no',''=>'Both'], $session{$r->uri().'?perfectbind'}, {on_click=>'load_page'});)?>
+        </li>
+        <li><label>Spine Paste</label>
+          <?echo(radio('spinepaste', ['1'=>'yes', '0'=>'no',''=>'Both'], $session{$r->uri().'?spinepaste'}, {on_click=>'load_page'});)?>
+        </li>
+      </ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { on_click=>'load_page', text=>'Show Results' } ),
+        button( 'AddFold', { on_click=>'add_fold', text=>'Add' } ),
+        #button( 'ExportFolds', { onclick=>"f1.btnFunction.value='Export Folds';f1.submit();", text=>'Export Folds' } ),
+        button( 'delete', { on_click=>'delete_folds', text=>'Delete Checked' } ),
+      ); ) ?>
+		</p>
+	</fieldset>
+	<div id="Folds"><?include(_folds.html)?></div>
+</form>

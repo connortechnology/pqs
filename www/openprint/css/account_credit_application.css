@@ -1,0 +1,53 @@
+
+/* Company Profile Styles */
+.CreditApplication .CompanyInformation,
+.CreditApplication .Preferences,
+.CreditApplication .CreditInformation,
+.CreditApplication .TradeReferences,
+.CreditApplication .Application, 
+.CreditApplication .BankInformation ,
+.CreditApplication .BusinessInformation,
+.CreditApplication #CompanyProfile {
+	width: 49%;
+	float: left;
+	min-width: 400px;
+}
+.CreditApplication .BankInformation ,
+.CreditApplication .BusinessInformation {
+	min-height: 217px;
+}
+
+.CreditApplication .CompanyInformation:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+.CreditApplication fieldset ul {
+}
+.CreditApplication fieldset ul li {
+	padding: 0px 0px 0px 200px;
+}
+.CreditApplication fieldset ul li label:not(.radio):not(.radio-inline) {
+	margin-left: -200px;
+	width: 195px;
+	float: left;
+}
+.CreditApplication fieldset li select {
+	width: 92%;
+}
+.CreditApplication fieldset li input[type="tel"] ,
+.CreditApplication fieldset li input[type="email"] ,
+.CreditApplication fieldset li input[type="text"] {
+	width: 90%;
+	min-width: 200px;
+}
+.CreditApplication .TradeReference {
+	margin-top: 5px;
+}
+#StartYear {
+	width: 50px;
+}

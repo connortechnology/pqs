@@ -1,0 +1,43 @@
+.Payments .payment_id {
+	width: 40px;
+	text-align: left;
+}
+.Payments .Date {
+	width: 220px;
+	text-align: left;
+}
+.Payments .Method {
+	width: 140px;
+	text-align: left;
+}
+.Payments .TransactionID {
+	text-align: left;
+	width: 100px;
+}
+.Payments .Memo {
+	text-align: left;
+}
+.Payments .buttons {
+	width: 60px;
+	text-align: right;
+}
+.Payments table input {
+	width: 100%;
+}
+.amount_owing {
+	font-size: large;
+	font-weight: bold;
+	border: 1px solid black;
+}
+
+#Totals {
+	width: 275px;
+}
+#Totals li {
+	padding-left: 175px;
+
+}
+#Totals li label {
+	margin-left: -175px;
+	width: 175px;
+}

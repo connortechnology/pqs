@@ -1,0 +1,7 @@
+<li>
+	<label>Proofs</label>
+	<select id="proof_type" name="proof_type" onchange="remove_div('OrderButton');calc(this.form.name);">
+<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service->find('category'=>'Proofs') ], $$variable{'proof_type'} ); ) ?>
+	</select>
+</li>
+

@@ -1,0 +1,88 @@
+<div class="CreditApplications">
+<form id="f1" name="f1" method="post" action="credit_applications.html">
+	<fieldset class="filters"><legend>Search</legend>
+		<ul>
+		<li>
+			<label>Company</label>
+			<input type="text" oninput="filter_companies(f1.ddmCompany, {name:this.value} );" class="filter"/>
+			<select name="ddmCompany">
+				<option value=""> All Companies </option>
+				<? echo ( 
+					make_drop_down( openprint::Company->dropdown( 'credit_app_on is null'=>0 ), $param{ddmCompany} );
+	) ?>
+			</select>
+		</li>
+		<li>
+			<label>Status</label>
+			<select name="ddmStatus">
+				<option value="" /> All </option>
+				<? echo (
+					make_drop_down( [ map { $_, $_ } ( 'Approved','Declined','Reviewed','Non-Reviewed' ) ], $$variable{'ddmStatus'} );
+				) ?>
+			</select>
+		</li>
+		<li>
+			<label>Application Date</label>
+			<? echo (
+				join(' to ',
+                date_select_session($r->uri(), 'created_on_start', { with_today=>1, with_clear=>1} ),
+                date_select_session($r->uri(), 'created_on_end', { with_today=>1, with_clear=>1} ),
+				);
+			) ?>
+	</li>
+	</ul>
+	<p class="buttons">
+		<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"f1.btnFunction.value='Show Results';f1.submit();", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>"f1.reset();" } ),
+				); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<hr/>
+<br/>
+<? eval (
+	@{$variable{'CreditApps'}} = openprint::Credit_Application->find(
+  date_filter( $r->uri().'?created_on_end', 'created_on <=' ),
+  date_filter( $r->uri().'?created_on_start', 'created_on >=' ),
+  ( $session{$r->uri().'?status'} ? ( status	=>	$session{$r->uri().'?status'} ) : () ),
+		( $param{ddmCompany} ? ( company_id	=>	$param{ddmCompany} ) : () ),
+		order	=>	$openprint::Credit_Application::fields{created_on},
+	);
+) ?>
+<? if ( @{$$variable{'CreditApps'}} ) ?>
+<br>
+The following Credit Applications matched your criteria<br>
+<br>
+<table class="List sortable">
+	<tr>
+		<th class="Company">Company</th>
+		<th class="User">Submitted By</th>
+		<th class="Date">Date</th>
+		<th class="status">Status</th>
+	</tr>
+	<? echo (
+		my $html;
+		my $rowclass;
+
+		foreach my $Application ( @{$$variable{'CreditApps'}} ) {
+			$html .= sprintf(q`
+<tr%1$s>
+	<td class="Company"><a href="credit_application.html?credit_index=%2$d">%3$s</a></td>
+	<td class="User"><a href="credit_application.html?credit_index=%2$d">%4$s</td>
+	<td class="Date"><a href="credit_application.html?credit_index=%2$d">%5$s</a></td>
+	<td class="status"><a href="credit_application.html?credit_index=%2$d">%6$s</a></td>
+</tr>`,
+	$rowclass, $Application->id(), $Application->Company()->name(), $Application->signature(), 
+format_date( $Application->created_on() ),
+$Application->status(),
+);
+	$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach App
+	return $html
+) ?>
+</table>
+<? else ( @{$$variable{'CreditApps'}} ) ?>
+There are no credit apps matching your criteria.
+<? endif ( @{$$variable{'CreditApps'}} ) ?>
+</div>

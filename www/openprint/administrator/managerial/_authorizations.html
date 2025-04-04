@@ -1,0 +1,32 @@
+<? eval (
+	my $url = '/administrator/managerial/authorizations.html';
+	my %search = (
+		( $session{$url.'?object_type_id'} ? ( object_type_id	=>	$session{$url.'?object_type_id'} ) : () ),
+		order	=>		'id desc',
+	);
+
+	$$variable{Authorizations} = [];
+	foreach my $Auth ( openprint::Authorization->find( %search ) ) {
+		push @{$$variable{Authorizations}}, $Auth;
+	} # end foreach Authorizations
+) ?>
+<table class="List sortable">
+	<tr>
+		<th class="ObjectType">Object Type</th>
+		<th class="Object">Object</th>
+		<th class="Mode">Mode</th>
+		<th class="Setting">Setting</th>
+	</tr>
+	<? echo ( 
+		my $html = '';
+		$$variable{object_types} = openprint::Object_Type->dropdown() if ! $$variable{object_types};
+		
+		my $line = slurp_content('/administrator/managerial/_authorization.html');
+
+		foreach my $Auth ( new openprint::Authorization(), @{$$variable{Authorizations}} ) {
+			$$variable{Auth} = $Auth;
+			$html .= variable_substitution( $r, $log, $dbh, \$line, $variable );
+		} # end while
+		return $html;
+	) ?>
+</table>

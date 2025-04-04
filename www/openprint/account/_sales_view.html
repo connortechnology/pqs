@@ -1,0 +1,38 @@
+<div class="SalesInformation">
+  <fieldset><legend>Sales Information</legend>
+    <ul>
+      <li><label>Price List</label><? echo ( $$variable{Company}->Pricelist()->name() ) ?></li>
+      <li class="discount"><label>Pricing Discount</label> <? echo ( $$variable{Company}->discount() ) ?>%</li>
+      <li><label>Sales Rep</label><? echo ( $$variable{Company}->salesrep_id() ? $$variable{Company}->CSR()->name() : 'none assigned') ?> </li>
+  <? if ( $$variable{Company}->id() ) ?>
+      <? eval (
+          @{$$variable{'Orders'}} = openprint::Order->find(company_id=>$$variable{Company}->id(),order=>'id DESC');
+      ) ?>
+      <li class="Orders"><label># of Orders</label>
+        <a href="/main/order/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( @{$$variable{'Orders'}} ) ?></a>
+        <? if ( @{$$variable{'Orders'}} ) ?>
+        Last on:
+        <a href="/main/order/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( format_date( $$variable{'Orders'}[0]->created_on() ); ) ?></a>
+        <? endif ( @{$$variable{'Orders'}} ) ?>
+      </li>
+      <? eval ( @{$$variable{'Projects'}} = openprint::Project->find(company_id=>$$variable{Company}->id(),order=>'id DESC'); ) ?>
+      <li class="Projects"><label># of Projects</label>
+        <a href="/main/project/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( @{$$variable{'Projects'}} ) ?></a>
+        <? if ( @{$$variable{'Projects'}} ) ?>
+        Last on:
+        <a href="/main/project/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( format_date( $$variable{'Projects'}[0]->created_on() ); ) ?></a>
+        <? endif ( @{$$variable{'Projects'}} ) ?>
+      </li>
+      <li>
+        <label>Accounting Contacts</label>
+        <span id="AccountingContacts"><? echo (
+my @accounting_contacts = sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{Company}->id() );
+my @Users = openprint::User->find( id=>\@accounting_contacts, order=>'lower(firstname),lower(lastname)' ) if @accounting_contacts;
+return join('<br/>', map { $_->name() } @Users );
+) ?>
+</span>
+      </li>
+    <? endif ( $$variable{Company}->id() ) ?>
+    </ul>
+  </fieldset>
+</div>

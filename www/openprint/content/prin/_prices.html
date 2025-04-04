@@ -1,0 +1,55 @@
+<div class="Prices">
+	<ul>
+		<li class="unitprice">
+			<label>Price each <? echo ( $openprint::Currency->symbol() ) ?></label>
+			<input type="number" id="txtUnitPrice1" name="txtUnitPrice1" readonly="readonly" />
+		</li>
+		<li class="totalprice">
+			<label>Production Cost <? echo ( $openprint::Currency->symbol() ) ?></label>
+			<input type="text" id="ProductionPrice1" name="ProductionPrice1" readonly="readonly" />
+		</li>
+		<li id="ShippingPrice">
+			<label>Delivery Cost <? echo ( $openprint::Currency->symbol() ) ?></label>
+			<input type="text" id="ShippingPrice1" name="ShippingPrice1" readonly="readonly" />
+		</li>
+		<li class="project_id">
+			<label>Quote #</label>
+			<input type="text" id="ProjectIndex" name="ProjectIndex" readonly="readonly" value="<? echo ( $param{project_id} ) ?>" />
+		</li>
+	</ul>
+	Price quoted is an approximate estimate. All orders will be + or - 5%.<br/>
+	If exact quantities are required - please add 5% the required quantity.
+	<br class="spacer"/>
+</div><!--Prices-->
+<p class="buttons">
+<? echo ( 
+	if ( sets::isin( $session{user_type},['A','E'] ) ) { 
+		return button( 'Breakdown',  { onclick=>"breakdown_window(document.f1.ProjectIndex.value);", text=> 'Detailed Pricing' } ); 
+	} else {
+		return '';
+	} # end if
+) ?>
+<? echo ( button( 'Calculate', { onclick=>"calc('f1',1);", text=>'Calculate',class=>'Calculate'}); ) ?>
+</p>
+<div id="subtotal">
+	<ul>
+		<li>
+			<label>Sub Total <? echo ( $openprint::Currency->symbol() ) ?></label>
+			<input type="text" id="txtPrice1" name="txtPrice1" readonly="readonly" value="<?txtPrice1?>" />
+		</li>
+	</ul>
+	<? echo (
+		return 'All prices listed in ' .$openprint::Currency->name .' and are subject to applicable taxes.';
+	) ?>
+</div>
+<p class="buttons" id="OrderButton" <? echo ( 'style="display:none;"' if $$variable{Status} ne 'Unordered' ) ?> >
+<? echo ( 
+	my $html;
+	if ( $config{AllowEmailQuotes} or sets::isin( $session{user_type}, ['E','A'] ) ) {
+		$html .= button( 'Quote', { onclick=>'click_quote( document.f1 );', text=> 'Email Quote', class=>'rightarrow' } );
+	} # end if
+	$html .= button( 'Order', { onclick=>'click_order( document.f1 );', text=> 'Place Order', class=>'rightarrow'}) if $config{AllowOrdering} ne 'false';
+	return $html;
+) ?>
+</p>
+<input type="hidden" name="btnFunction" id="btnFunction" />

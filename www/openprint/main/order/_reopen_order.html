@@ -1,0 +1,21 @@
+<?include(/includes/error_reporting.html)?>
+<? if ( $$variable{Order} ) ?>
+<form id="ReOpenForm" name="ReOpenForm" action="/main/order/history_details.html" method="post">
+	<input type="hidden" name="order_id" value="<? echo ( $$variable{Order}->id()) ?>"/>
+	<input type="hidden" name="action" value="reopen"/>
+	<fieldset>
+		<textarea name="reason" placeholder="Enter a reason for the reopen"></textarea>
+		<p class="buttons">
+		<? echo ( join("\n",
+			button('ReOpenSubmit', { onclick=> q`if($('ReOpenForm').elements['reason'].value){$('ReOpenForm').submit();}else{alert('Please give a reason.');};`,text=>'ReOpen'}),
+			button('CancelReopen', { onclick=>'popupWin.close();', text=>'Cancel'}),
+			); ) ?>
+	</p>
+	</fieldset>
+</form>
+<? else ( $$variable{Order} ) ?>
+<div class="error">Order not found.</div>
+<p class="buttons">
+<? echo ( button('CancelReopen', {onclick=>'popupWin.close();', text=>'Cancel'});) ?>
+</p>
+<? endif ( $$variable{Order} ) ?>

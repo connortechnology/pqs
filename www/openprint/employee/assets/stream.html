@@ -1,0 +1,82 @@
+<script type="text/javascript">
+<!--
+	function load_page( form ) {
+		var div = $('Results');
+		div.innerHTML = 'Please wait, loading.....';
+		new Ajax.Updater( 'Results', '_stream.html', { method: 'get', parameters: form.serialize() } );
+	} // end function load
+-->
+</script>
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
+<div class="Assets"><div class="Stream">
+<p>
+Vote on these pictures to say whether you think each one is a &quot;do&quot; or a &quot;don't&quot;. To add your own pictures to this section, select the &quot;add to do/don't&quot; option when viewing pictures in your profile albums.
+</p>
+<form id="f1" name="f1" action="stream.html" method="post">
+	<input type="hidden" name="action"/>
+<? echo (
+		my @My_Opinions = openprint::Opinion->find('user_id'=>$session{'user_id'}, 'object_type'=>'openprint::Asset');
+		my %My_Opinions = map { $$_{object_id}, $_ } @My_Opinions;
+
+		my $DoDont = openprint::Photo_Album->find_one('name'=>'Do/Dont', 'user_id is null' => 1);
+		if ( ! $DoDont ) {
+			return 'No DoDont album.';
+		} # end if
+
+		my @Assets = openprint::Asset->find( 'order'	=>	'id desc', 'id in' => [ map { $_->asset_id() } $DoDont->Photos() ] );
+		if ( ! @Assets ) {
+			return  'No more images to rate.';
+		} # end if
+		my $Asset;
+		my $asset_index = 0;
+		if ( $param{'asset_id'} ) {
+			for ( my $i = 0; $i < @Assets; $i += 1 ) {
+				if ( $Assets[$i]{'id'} == $param{'asset_id'} ) {
+					$Asset = $Assets[$i];
+					$asset_index = $i;
+					last;
+				} # end if
+			} # end foreach A
+
+			if ( ! $Asset ) {
+				return 'Specified image is not available.';
+			} # end if
+		} else {
+			for ( my $i = 0; $i < @Assets; $i += 1 ) {
+				next if $My_Opinions{$Assets[$i]{'id'}};
+				$asset_index = $i;
+				$Asset = $Assets[$i];
+				last;
+			} # end foreach A
+			$Asset = $Assets[0] if ! $Asset;
+		} # end if
+			
+		my $html = sprintf('<input type="hidden" name="asset_id" value="%d"/><img src="%s" alt="%s"/>', $Asset->id(), $Asset->url(), $Asset->caption() );
+
+		if ( $My_Opinions{$Asset->id()} ) {
+			my @All_Opinions = openprint::Opinion->find('object_type'=>'openprint::Asset', 'object_id'=>$Asset->id() );
+			my %All_Opinions;
+			foreach my $O ( @All_Opinions ) {
+				push @{$All_Opinions{$$O{'opinion_type_id'}}}, $O;
+			} # end foreach
+			$html .= '<div class="Results">'. join(', ', map { int(100*@{$All_Opinions{$_}}/@All_Opinions) .'% ' . (new openprint::Opinion_Type($_))->name() } keys %All_Opinions) . '</div>';
+		} else {
+			$html .= sprintf('<p class="buttons">%s</p>',
+				join('',
+					ssi::button( 'Do', { 'onclick'=>q`f1.elements['action'].value='Do';f1.submit();` } ),
+					ssi::button( 'Don\'t', { 'onclick'=>q`f1.elements['action'].value='Dont';f1.submit();` } ),
+				) );
+		} # end if
+		if ( $asset_index > 0 ) {
+			$html .= ssi::button('Previous', { href=>'/employee/assets/stream.html?asset_id='.$Assets[$asset_index-1]{'id'} } );
+		} # end if
+		if ( $asset_index < (@Assets-1) ) {
+			$html .= ssi::button('Next', { href=>'/employee/assets/stream.html?asset_id='.$Assets[$asset_index+1]{'id'} } );
+		} else {
+			$html .= ssi::button('First', { href=>'/employee/assets/stream.html?asset_id='.$Assets[0]{'id'} } );
+		} # end if
+		return $html;
+	) ?>
+</form>
+</div>
+</div>

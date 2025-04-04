@@ -1,0 +1,35 @@
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend>HStands Services</legend>
+			<ul>
+				<li><label>Quantity</label>
+				<? echo ( my $html = '';
+					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+						$html .= '<span class="'.$$variable{Columns}.'Columns">';
+						$html .= input( name=>"txtQuantity$qty_index", value=>$$variable{'txtQuantity'.$qty_index}, type=>'cardinal', onkeyup=>"calc('f1');" );
+						$html .= '</span>';
+					} # end foreach
+					return $html;
+				) ?>
+				</li>
+			</ul>
+		</fieldset>
+	
+		<?include(/main/content/prin/_hstands.html)?>
+		<fieldset>
+			<ul>
+			<? echo ( join("\n",
+					include('/includes/main/proj/_markup.html'),
+					include('/includes/main/proj/_unit_price.html'),
+					include('/includes/main/proj/_mprice.html'),
+					include('/includes/main/proj/_service_price.html'),
+					include('/includes/main/proj/_breakdown.html'),
+				); ) ?>
+			</ul>
+		</fieldset>
+		<hr/>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<?include('/includes/main/proj/hdn_fields_all.html')?>
+	</form>
+</div><!--Service-->

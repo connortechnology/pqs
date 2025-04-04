@@ -1,0 +1,97 @@
+<?include(/includes/error_reporting.html)?>
+<? if ( openprint::PaymentType->find() ) ?>
+<form id="f1" name="f1" method="post" action="make.html">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="order_id" value="<? echo ( $$variable{Order}->id() ) ?>" />
+<? if ( $param{order_id} ) ?>
+<div class="Order">
+<? echo ( do_css_links( '/order.css' ); ) ?>
+<?include('/includes/order_header.html')?>
+</div>
+<br class="spacer"/>
+<? endif ( $param{order_id} ) ?>
+
+	<fieldset>
+		<div class="content"><ul>
+		<li><label>Payment Type</label>
+		<? echo (
+			my @Types = openprint::PaymentType->find();
+			if ( @Types ) {
+				if ( @Types > 1 ) {
+					return ssi::select( openprint::PaymentType->dropdown( order=>'lower(name)'), $$variable{Payment}->type_id(), { name=>'type_id', id=>'type_id' } );
+				} else {
+					return input( type=>'hidden', name=>'type_id', value=>$Types[0]->id() ).' '.$Types[0]->name();
+				} # end if
+$$variable{PaymentType} = $Types[0];
+} else {
+$$variable{PaymentType} = new openprint::PaymentType();
+
+			} # end if
+		) ?>
+		<!--<img src="https://fpdbs.paypal.com/dynamicimageweb?cmd=_dynamic-image&buttontype=ecmark" alt="Paypal" style="margin-right:7px;"/><span style="font-size:11px; font-family: Arial, Verdana;">The safer, easier way to pay.</span>-->
+		</li>
+		<li><label>Amount (<? echo ( openprint::Currency::get_current()->short(); ) ?>)</label>
+			<? echo ( input(type=>'float', id=>'amount', name=>'amount', value=>$$variable{Order}->balance() ); ) ?>
+		</li>
+		</ul></div>
+	</fieldset>
+<?if($$variable{PaymentType} eq 'PayPal')?>	
+<?if SECURETOKENID?>
+ <fieldset style="border:1px solid #000;">
+
+<iframe src="https://payflowlink.paypal.com?
+MODE=LIVE&SECURETOKENID=<?SECURETOKENID?>&SECURETOKEN=<?SECURETOKEN?>"
+name="test_iframe" scrolling="no" width="570px" height="540px" frameborder="0"></iframe>
+ <!-- PayPal Logo --><img src="https://www.paypalobjects.com/webstatic/en_CA/mktg/logo-image/bdg_secured_by_pp_2line.png" border="0"  style="float:right; z-index:100;" alt="Secured by PayPal"><!-- PayPal Logo -->
+ </fieldset>
+<?endif SECURETOKENID?>
+<?else($$variable{PaymentType} eq 'PayPal')?>	
+	<fieldset id="CreditCardDetails"><legend>Credit Card Details</legend>
+		<div class="content"><ul>
+		<li><label>Credit Card Type</label>
+			<select name="cc_type" id="cc_type">
+				<? echo ( 
+					my @options = (
+						'VISA', 'VISA',
+					);
+					return make_drop_down( \@options );
+				) ?>
+			</select>
+		</li>
+		<li><label>First Name</label>
+			<input type="text" id="firstname" name="firstname" value="<? echo ( $openprint::User->firstname() ) ?>" />
+		</li>
+		<li><label>Last Name</label>
+			<input type="text" id="lastname" name="lastname" value="<? echo ( $openprint::User->lastname() ) ?>" />
+		</li>
+		<li><label>Credit Card #</label>
+			<? echo ( join( 'CVV@', input( type=>'cardinal', id=>'cc_number', name=>'cc_number' ),
+			input( type=>'cardinal', id=>'cc_cvv2', name=>'cc_cvv2' ),
+			); ) ?>
+		</li>
+		<li><label>Expiry Date</label>
+			<span class="DateSelector">
+			<select id="exp_month" name="exp_month" />
+				<? echo ( 
+					make_drop_down( [ map { sprintf('%.2d',$_), sprintf('%.2d',$_) } ( 1 .. 12 ) ] );
+				) ?>
+			</select>
+			<select id="exp_year" name="exp_year" />
+				<? echo ( 
+					return_years( (localtime(time))[5] + 1900, (localtime(time))[5] + 1910 );
+				) ?>
+			</select>
+			</span>
+		</li>
+		<ul>
+		<p class="buttons">
+			<? echo ( button( 'SubmitPayment', { onclick=>"f1.btnFunction.value='Submit';f1.submit();", text=>'Submit' } ); ) ?>
+			<? echo ( button( 'CancelPayment', { href=>$ENV{REFERRER}, text=>'Cancel' } ); ) ?>
+		</p>
+		</div>
+	</fieldset>
+<?endif($$variable{PaymentType} eq 'PayPal')?>	
+</form>
+<? else ( openprint::PaymentType->find() ) ?>
+	We are unable to accept online payments at this time.
+<? endif ( openprint::PaymentType->find() ) ?>

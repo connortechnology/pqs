@@ -1,0 +1,429 @@
+<? eval (
+	my ( $starttime, $endtime );
+	if ( $session{$r->uri().'?Equipment'} ) {
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(',', $session{$r->uri().'?Equipment'} ) ).')' );
+	} else {
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
+	} # end if
+	if ( $endtime ) {
+		my $endtime_seconds = Date::Parse::str2time( $endtime );
+		if ( $endtime_seconds < time ) {
+			$endtime_seconds = time;
+			$endtime = Date::Format::time2str( '%Y-%m-%d', $endtime_seconds );
+		}
+	} # end if
+	if ( ! $session{$r->uri().'?schedule_start_year'} ) {
+		@session{
+				$r->uri().'?schedule_start_year',
+				$r->uri().'?schedule_start_month',
+				$r->uri().'?schedule_start_day'}
+				= $starttime ? split('-', $starttime ) : Date::Calc::Today();
+	} # end if
+
+	if ( ! $session{$r->uri().'?schedule_end_year'} ) {
+		@session{
+				$r->uri().'?schedule_end_year',
+				$r->uri().'?schedule_end_month',
+				$r->uri().'?schedule_end_day'}
+				= $endtime ? split('-', $endtime ) : Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
+	} # end if
+) ?>
+<?include('/includes/error_reporting.html')?>
+<script>
+
+var drops = new Array();
+</script>
+<form id="f1" name="f1" method="get" action="/employee/production/print_overview.html">
+	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" name="ProjectIndex" />
+	<input type="hidden" name="ServiceIndex" />
+	<input type="hidden" name="schedule_id" />
+	<fieldset class="filters unprintable"><legend>Display Criteria</legend>
+    <div class="container">
+		<div class="presses">
+		<ul>
+			<li>
+				<label>Category</label>
+				<select name="category_id" id="category_id" onchange="f1.submit();">
+					<option value="">All</option>
+				<? echo (
+	make_drop_down( openprint::Equipment_Category->dropdown( order=>'lower(name)'), $session{$r->uri().'?category_id'} );
+	) ?>
+				</select>
+			</li>
+<li><label>Equipment</label>
+<? echo ( 
+	@{$$variable{Equipment}} = ();
+	my @presses = openprint::Equipment->find(
+		( $session{$r->uri().'?category_id'} ? 
+		  ( 'category_id @>' => [ split(',', $session{$r->uri().'?category_id'} ) ] ) : ()
+		),
+		 useinscheduling=>1, order=>'sorting,lower(strname)'
+		);
+	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{$r->uri().'?Equipment'} ) );
+	if ( ! @selected_equipment ) {
+		@selected_equipment = map { $_->id() } @presses;
+		$session{$r->uri().'?Equipment'} = join(',', @selected_equipment );
+	}
+
+	foreach (@presses) {
+		push @{$$variable{Equipment}}, $_ if sets::isin( $_->id(), \@selected_equipment );
+	} # end foreach press
+
+	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'">';
+	$html .= make_drop_down( [ map { $_->id(), $_->name() } @presses ], \@selected_equipment );
+	return $html;
+) ?>
+			</select>
+		</li></ul>
+		</div>
+		<div class="dates">
+		<ul>
+			<li>
+				<label>Date Range</label>
+					<? echo ( 
+						date_select_session( $r->uri(), 'schedule_start', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
+					) ?>
+				to
+					<? echo ( 
+						date_select_session( $r->uri(), 'schedule_end', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
+					) ?>
+			</li>
+			<li>
+				<label>Scale</label>
+				<select id="scale" name="scale" onchange="this.form.submit();">
+					<? echo ( 
+						my @options = ( 
+							''		=>	'Overview',	
+							'10'	=>	'10px / hour',
+							'20'	=>	'20px / hour',
+							'30'	=>	'30px / hour',
+							'40'	=>	'40px / hour',
+						);
+						return make_drop_down( \@options, $session{$r->uri().'?scale'} );
+					) ?>
+				</select>
+			</li>
+			<li>
+				<label>Views</label>
+				<? echo ( join("\n",
+					button( 'Today', { href=>$r->uri().'?action=Today', text=>'Today' } ),
+					button( 'twoday', { href=>$r->uri().'?action=2day', text=>'2day' } ),
+					button( 'threeday', { href=>$r->uri().'?action=3day', text=>'3day' } ),
+					button( '1week', { href=>$r->uri().'?action=1week', text=>'1week' } ),
+					);
+				) ?>
+			</li>
+			<li><label>Show Production</label>
+			<? echo ( radio( 'show_feedback', [ 1, 'Yes', 0, 'No', ], $session{$r->uri().'?show_feedback'} ); ) ?>
+			</li>
+			</ul>
+		</div>
+		<div class="legend">
+			<ul><li><label>Legend</label>
+				<ul>
+					<li class="multipress">Has forms on other presses</li>
+					<li class="inprepress">In Prepress</li>
+					<li class="complete">Is complete</li>
+					<li class="regular">Regular</li>
+					<li class="rush">Rush</li>
+					<li class="tentative">Tentative</li>
+					<li class="approval">Waiting for client approval</li>
+				</ul>
+			</li>
+			</ul>
+		</div>
+    </div>
+		<p class="buttons">
+			<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
+			<? echo ( button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ); ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
+			<? echo ( button( 'AddDocket', { onclick=>"popup_window('_add_docket.html', '', { width: 600, height: 500 } );", text=>'Add Docket' } ); ) ?>
+			<? echo ( button( 'AddMaintenance', { onclick=>"popup_window('_add_maintenance.html', '', { width: 600, height: 400 } );", text=>'Add Maintenance' } ); ) ?>
+			<? echo (
+				if ( @{$$variable{Equipment}} == 1 ) {
+					return button( 'ReFlow', { href=>$r->uri().'?Equipment='.$$variable{Equipment}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
+				} # end if
+				return;
+			) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
+		</p>
+	</fieldset>
+	<div class="unprintable">
+		Please click on the <b>Docket #</b> to view details.<br/>
+	</div><!--unprintable-->
+<div class="schedule">
+	<div class="PressScheduleHeader">
+		Press Schedule For 
+		<? echo (
+			my $html = Date::Calc::Date_to_Text( 
+					@session{$r->uri().'?schedule_start_year',
+					$r->uri().'?schedule_start_month',
+					$r->uri().'?schedule_start_day'} );
+
+			my @end_date = @session{map{$r->uri().'?schedule_end_'.$_} ('year','month','day') };
+			if ( Date::Calc::Date_to_Days(@end_date) > Date::Calc::Date_to_Days(Date::Calc::Today()) ) {
+				$html .= ' to '. Date::Calc::Date_to_Text(@end_date);
+			}
+			return $html;
+) ?>
+		<br/>
+	</div>
+	Projects highlighted in yellow have forms on other presses.<br/>
+	<? echo (
+		my $html;
+$html .= '<style type="text/css">
+	.PressColumn {
+		width: '.int(100/@{$$variable{Equipment}}).'%;
+	}
+</style>
+';
+		@{$$variable{drops}} = ();
+
+		my $parser = 'DateTime::Format::Pg';
+
+		my $start_dt = new DateTime(
+				time_zone=>$openprint::TZ,
+				map { $_ => $session{$r->uri().'?schedule_start_'.$_} } ( 'year', 'month', 'day' ),
+				);
+		my $end_dt = new DateTime(
+				time_zone=>$openprint::TZ,
+				map { $_ => $session{$r->uri().'?schedule_end_'.$_} } ( 'year', 'month', 'day' ),
+				);
+
+		my $ac = sql::start_transaction( $dbh );
+
+		my @Jobs = openprint::ScheduledJob->find( 
+			equipment_id=>[ map { $_->id() } @{$$variable{Equipment}} ],
+			'starttime <='	=> $parser->format_datetime( $end_dt ),
+			'starttime >='	=> $parser->format_datetime( $start_dt ),
+		);
+
+		my @project_ids = sets::union( map { $$_{project_id} ? $$_{project_id} : () } @Jobs ) if @Jobs;
+		my @Projects = openprint::Project->find( id=>\@project_ids ) if @project_ids;
+		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} ? $$_{company_id} : () } @Projects ) ] ) if @Projects;
+
+		# Why does this need to be ACCESS exclusive?  Something that changes it should be.... 
+		# perhaps the idea is that if any canges are in progress, we want to wait for them to finish,
+ 		# but if changes are happening, then any lock we try to get will hol... so this just prevent concurrent views
+		# However, the problem is that this can implement shifts.. perhaps we should wait until we need to implement shifts...
+		# Ok, but we actually only create shifts, not adjust jobs... so only need to lock the shifts	
+		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+
+		foreach my $E ( @{$$variable{Equipment}} ) {
+			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ). '">';
+
+			$html .= '<a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'('.$E->strid().')</a>';
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
+				$html .= button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`', { width: 500, height: 400 } );`, text=>'E', title=>'Edit' } );
+			} # end if
+			$html .= '<br/><div id="message'.$E->id().'" class="message">';
+			$html .= $E->message();
+			$html .= '</div>';
+		  $html .= '</div>';
+		}
+	  $html .= '<br class="spacer"/>';
+
+		foreach my $E ( @{$$variable{Equipment}} ) {
+			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ). '">';
+			my ( $year, $month, $day ) = @session{$r->uri().'?schedule_start_year',
+					$r->uri().'?schedule_start_month',
+					$r->uri().'?schedule_start_day'};
+			my $end = Date::Calc::Delta_Days( 
+				@session{
+				$r->uri().'?schedule_start_year',
+				$r->uri().'?schedule_start_month',
+				$r->uri().'?schedule_start_day',
+				$r->uri().'?schedule_end_year',
+				$r->uri().'?schedule_end_month',
+				$r->uri().'?schedule_end_day'}
+				) + 1;
+
+
+			# When its time to add shifts, we add in sets, until we find an already-implemented shift.
+			my @Equipment_Shifts = $E->Equipment_Shifts();
+			my %Equipment_Shifts = map { $_->id(), $_ } @Equipment_Shifts;
+foreach my $ES ( @Equipment_Shifts ) {
+$log->debug( "Available ES: " . $ES->to_string() );
+}
+
+			# Showing over 100 days makes the browser crawl forever. So limit it.
+			$end = 100 if $end > 100;
+			# Get the shifts on this day.
+			my $st = $start_dt;
+			my $et = $st + DateTime::Duration->new( days=>$end );
+
+			# Get all the shifts in the time span
+			my @Shifts = openprint::Shift->find( 
+				equipment_id 		=>	$$E{id},
+				'starttime <'		=>	$parser->format_datetime( $et ),
+				'starttime >='	=>	$parser->format_datetime( $st ),
+				order						=>	'starttime',
+				);
+
+			if ( ! @Shifts ) {
+				$log->debug("No shifts found, implementing some");
+				@Shifts = openprint::Shift::get_Shifts( $E, $st, $et, @Equipment_Shifts );
+			} # end if
+
+			if ( ! @Shifts ) {
+				$html .= 'No Shifts defined.</div>';
+				next;
+			} # end if
+
+			# First, need to find the first Equipment Shift to show.  
+			# Easy, will be given by the first shift in our list of shifts
+			# What about multi-day schedules?
+			my $ES = $Shifts[0]->Equipment_Shift();
+			$log->debug("First ES: " . $ES->to_string() );
+
+			# Step two: Make sure all the shifts are there.
+			# We do this by running through them, comparing the shift_id to the expected ES
+			# We start at 1 because we already looked for 0 and found it.  Micro-optimisation
+foreach my $S ( @Shifts ) {
+$log->debug("Shifts are: " . $S->to_string());
+}
+			my $Next_ES = $ES->Next();
+			$log->debug("Next ES: " . $Next_ES->to_string() );
+
+			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {
+				my $Shift = $Shifts[$shift_index-1];
+				my $Next_Shift = $Shifts[$shift_index];
+$log->debug("Shift: " . $Shift->to_string());
+$log->debug("Nextt: " . $Next_Shift->to_string());
+
+				$Shift->check_and_fix();
+
+				# By putting emanantise here....
+				# emanantise will figure out what the next shift should look like, and add it if neccessary.
+				my $next_shift_start_time = $Shift->endtime_seconds() + $ES->distance();
+				$log->debug("DIstance: " . $ES->distance() . " from " . $Shift->endtime() . " to " . $Next_Shift->starttime() );
+				$log->debug("gap? " . $Next_Shift->starttime_seconds() . ' - ' . $Shift->endtime_seconds() . ' = ' . ( $Next_Shift->starttime_seconds() - $Shift->endtime_seconds() ) );
+				if ( $Next_Shift->starttime_seconds() - $Shift->endtime_seconds() > 0 ) {
+# If there is a gap, check for jobs that may have slipped between
+					my @Lost_Jobs = openprint::ScheduledJob->find(
+							'starttime <'=>$Next_Shift->starttime(),
+							'starttime >'=>$Shift->endtime(),
+							equipment_id=>$$E{id} );
+					if ( @Lost_Jobs ) {
+						$log->debug("Bumping lost jobs");
+						# Bumping to next shift.
+						my $starttime = $Next_Shift->starttime_seconds();
+						foreach my $Job ( @Lost_Jobs ) {
+							$_ = $Job->save({starttime_seconds=>$starttime});
+							die $_ if $_;	
+							$starttime += 1;
+						}
+#openprint::employee_production::reorder_jobs( @Lost_Jobs, $Next_Shift->Jobs() );
+					}
+				}
+
+	# If there is only 1 shift, then we don't need to do this.
+if ( 0 ) {
+				while( $_ = $Next_ES->compare( $next_shift_start_time ) ) {
+					if ( $_ > 0 ) {
+$log->error("Last time $next_shift_start_time $_, adding an hour");
+						# We have not yet reached the starttime of the next shift.  They may be gaps between shifts.
+						# Add an hour until we get there.
+						$next_shift_start_time += 3600;
+					} else { # $_ < 0
+$log->error("Went past, going back an hour $next_shift_start_time $_, adding an hour");
+						# We have passed the ES, So the ES must be missing.
+						#$next_shift_start_time -= 3600;
+						last;
+					}
+					last if $next_shift_start_time > $Shifts[$shift_index]->starttime_seconds();
+				}
+}
+				$log->debug("Calling emanananteise with next start time: $next_shift_start_time " . Date::Format::time2str($config{DateTimeFormat}, $next_shift_start_time));
+				my $New_Next_Shift = $Next_ES->emanantise( $next_shift_start_time );
+				if ( $New_Next_Shift ) {
+					# emanantise returned a shift
+
+					if ( $New_Next_Shift->id() != $Next_Shift->id() ) {
+
+						if ( $New_Next_Shift->starttime_seconds() < $next_shift_start_time ) {
+							# Actually this is valid... if we ask for 12:01,but shift begins at 12:00
+							$log->error("Brekaing because new shift is < $next_shift_start_time");
+							last;
+						}
+# It's different than the one we already have?
+						$log->debug("Adding new shift; previous: " . $Shifts[$shift_index-1]->to_string() );
+						$log->debug("Adding new shift; current: " . $Shifts[$shift_index]->to_string() );
+						$log->debug("Adding new shift; next: " . $New_Next_Shift->to_string() );
+						splice @Shifts, $shift_index, 0, $New_Next_Shift;
+#foreach my $S ( @Shifts ) {
+#$log->debug("Shifts are: " . $S->to_string());
+#}
+						# Reset counter, and go again
+						$shift_index -= 1;
+						next;
+					} 
+					$New_Next_Shift->check_and_fix();
+					last if $New_Next_Shift->starttime_dt() > $et;
+				} else {
+					$log->error( " Failed to match the shift for " . $ES->Next()->to_string() );
+				} # end if
+
+				$Next_ES = $Next_ES->Next();
+			} # end for each Shift
+			
+			# List of Shifts may end before our specified date range is up, so start at the last shift and fill in.
+			my $LastShift = $Shifts[@Shifts-1];
+			while ( $LastShift->endtime_seconds() < $et->epoch() ) {
+$log->debug("LastShift $$LastShift{endtime} < $et");
+				my $ES = $LastShift->Equipment_Shift()->Next();
+				my $distance = $LastShift->Equipment_Shift()->distance();
+				$distance = 1 if ! $distance;
+
+				my $last_time = $LastShift->endtime_seconds() + $distance;
+				my $NewShift = $ES->emanantise( $last_time );
+				if ( !$NewShift ) {
+					$log->error("Error getting shift for $last_time ");
+					last;
+}elsif ( $NewShift->id() == $LastShift->id() ) {
+					$log->error("Error shift for $last_time same shift");
+					last;
+
+				}
+				
+				push @Shifts, $NewShift;
+				$LastShift = $NewShift;
+			} # end while
+			foreach my $Shift ( @Shifts ) {	
+				push @{$$variable{drops}}, $Shift->ul_id() if ($Shift->operator_ids() and @{$Shift->operator_ids()}) or ! $E->smartscheduling();
+				$html .= $Shift->get_ul( );
+			} # end foreach Shift
+
+			$html .= '</div>';
+		} # end foreach press
+		sql::end_transaction( $dbh, $ac );
+		$html .= '</div><!--end schedule-->';
+		$html .= q`
+<div class="unprintable">
+  <hr class="spacer"/>
+  <div class="PendingApproved">
+    <div id="PendingApproved">`;
+		$html .= include( '/employee/production/_pending_approved.html' );
+		$html .= '</div></div></div>';
+		$html .= q`
+<div class="unprintable">
+	<hr class="spacer"/>
+	<div class="Pending"><div id="Pending">
+`
+	. include( '/employee/production/_pending.html' ).
+		'</div>
+  </div>
+</div>';
+		return $html;
+	) ?>
+</form>
+<br class="spacer"/>
+<script src="<?hash_link(/employee/production/print_overview.js)?>"></script>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
+<script>
+	drops.push("<? echo ( join('","', @{$$variable{drops}} ) ) ?>");
+	setup_drops();
+	setup_dates();
+</script>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>

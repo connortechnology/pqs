@@ -1,0 +1,29 @@
+<fieldset><legend>Modification History</legend>
+	<table class="List" style="table-layout: auto;">
+	<tr>
+		<th align="left">Company</th>
+		<th align="left">User</th>
+		<th class="DateTime">When</th>
+		<th align="left">Description</th>
+	</tr>
+	<? echo ( 
+	require openprint::Quote_Log;
+		my $html;
+		my $rowclass;
+		foreach my $Log ( openprint::Quote_Log->find(quote_id=>$param{quote_id},order=>'created_on DESC') ) {
+			$html .= sprintf(q`
+	<tr%1$s>
+		<td>%2$s</td>
+		<td>%3$s</td>
+		<td class="DateTime">%4$s</td>
+		<td>%5$s</td>
+	</tr>`, $rowclass, $Log->Company()->name(), $Log->User()->name(), 
+		Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time($$Log{created_on}) ),
+		$Log->description_html()
+);
+	$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Log
+	return $html;
+) ?>
+	</table>
+</fieldset>

@@ -1,0 +1,46 @@
+
+table .last_seen {
+	width: 80px;
+}
+table .buttons {
+	width: 100px;
+}
+
+.List .Skid input {
+	width: 65px;
+}
+table .Skid {
+	width: 85px;
+}
+
+.qty_lbs, .qty_feet, .qty_sheets {
+	width: 65px;
+	text-align: right;
+}
+.qty_kgs {
+	width: 55px;
+	text-align: right;
+}
+.ManufacturersId {
+	min-width: 160px;
+}
+@media print {
+	.qty_kgs {
+		width: 45px;
+	}
+	table .Skid {
+		width: 55px;
+	}
+	table .RFID {
+width: 45px;
+}
+table .Price {
+width: 75px;
+}
+table .in_stock {
+width: 60px;
+}
+table .last_seen {
+width: 60px;
+}
+}

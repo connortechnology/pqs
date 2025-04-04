@@ -1,0 +1,24 @@
+<? echo (
+	my $C = $$variable{'C'};
+	my $html;
+	$html .= sprintf('<tr id="line-%1$d">', $C->id() );
+	$html .= '<td rowspan="2">'.ssi::writeButton( $log, $dbh, 'Del'.$$variable{'C'}->id(), 'del.gif', "del_content( \$('f1'), $$variable{'C'}{id} );", '', 'Delete' )."</td>\n";
+	$html .= sprintf(q`<td rowspan="2">%2$s<input type="hidden" id="type-%1$d" name="type-%1$d" value="%2$s"/></td>`, $$C{'id'}, $C->Type()->name() );
+	$html .= sprintf(q`<td rowspan="2"><textarea class="mce" id="description-%1$d" name="description-%1$d" rows="2" cols="">%2$s</textarea></td>`, $$variable{'C'}->id(), $$variable{'C'}->description() );
+	$html .= sprintf(q`<td class="Quantity"><input type="text" id="quantity-%1$d" name="quantity-%1$d" value="%2$s" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form );}" onkeyup="this.value=this.value.replace(/\D/g,'');" /></td>`, $$variable{'C'}->id(), $$variable{'C'}->quantity() );
+	$html .= sprintf(q`
+	<td class="Weight">
+		<input type="text" id="weight-%1$d" name="weight-%1$d" value="%2$d" onkeyup="this.value=this.value.replace(/\D/g,'');calc_price(this);update_totals($('f1'));" />
+		<select name="weight_units-%1$d" id="weight_units-%1$d" onchange="calc_price(this);update_totals($('f1'));">%3$s</select>
+	</td>
+	`, $$variable{'C'}->id(), $$variable{'C'}->weight(), ssi::make_drop_down( [ '','', 'lb', 'lb', 'Kg', 'Kg' ], $$variable{'C'}{'weight_units'} ) );
+	$html .= sprintf(q`
+		<td class="Cost">
+			<input type="text" id="cost-%1$d" name="cost-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);update_totals($('f1'));" />
+			<select name="cost_units-%1$d" id="cost_units-%1$d" onchange="calc_price(this);update_totals($('f1'));">%3$s</select>
+		</td>`, $$variable{'C'}->id(), $$variable{'C'}->cost(), ssi::make_drop_down( [ '/100lb', '/100lb', '/Kg', '/Kg', ,'/1000', '/1000', 'Each', 'Each' ], $$variable{'C'}{'cost_units'} ) );
+	$html .= sprintf(q`<td class="Price"><input type="text" id="total-%1$d" name="total-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>`, $$variable{'C'}->id(), $$variable{'C'}->total() );
+	$html .= "</tr>\n";
+	$html .= '<tr><td colspan="4" class="alert" id="alert-'.$$variable{'C'}{id}.'"></td></tr>';
+	return $html;
+) ?>

@@ -1,0 +1,7 @@
+.MakeReadyPrice input,
+.BlanketPrice input,
+.ServicePrice input,
+.MaterialPrice input,
+.SignaturePrice input {
+	text-align: right;
+}

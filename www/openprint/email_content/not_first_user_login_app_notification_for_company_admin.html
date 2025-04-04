@@ -1,0 +1,20 @@
+Dear <?AdminSalutation?> <?AdminFirstName?> <?AdminLastName?>,<br>
+<br>
+<? echo ( join(' ', $$variable{'User'}->get('salutation','firstname','lastname') ); ) ?> has applied for a login to your company account.
+As administrator of your company's account, it is your responsibility to active this account.
+To link to the user's profile and select activation status <a href="/account/user_profile.html?ddmUser=<? echo ( $$variable{'User'}->id() ) ?>">CLICK HERE</a>.<br/>
+		
+<p>
+  If you have any questions, please contact
+  <? echo (
+          my $Company = new openprint::Company( $session{'company_id'} );
+          if ( $Company->salesrep_id() ) {
+			  my $CSR = new openprint::User( $Company->salesrep_id() );
+			  return sprintf('<a href="mailto:%s">%s %s</a>.', $CSR->email(), $CSR->firstname(), $CSR->lastname() );
+          } else {
+          return qq`our <a href="support/help_desk.html">helpdesk</a>.`;
+          } # end if
+          ) ?>
+  </p>
+
+<br>

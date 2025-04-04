@@ -1,0 +1,40 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? echo (
+	my $html;
+	if ( $variable{'docket'} ) {
+		my $docket_total = 0;
+		@{$$variable{'Types'}} = openprint::Performance_Point_Type->find() if ! $$variable{'Types'};
+		%{$$variable{'Points'}} = map { $_->type_id(), $_ } openprint::Performance_Point->find( 'equipment_id'=>$$variable{'Shift'}->equipment_id() ) if ! $$variable{'Points'};
+		my %Records = map { $_->type_id(), $_ } openprint::Performance_Record->find( 'report_id'=>$$variable{'Report'}->id(), 'docket'=>$$variable{'docket'} );
+
+		$html .= '<fieldset><legend>Points for docket '.$$variable{'docket'}.'</legend>';
+		$html .= '<table>
+					<tr>
+						<th class="type">Type</th>
+						<th class="value">Value</th>
+						<th class="units">Units</th>
+						<th class="quantity">Quantity</th>
+						<th class="total">Total</th>
+					</tr>';
+		foreach my $Type ( @{$$variable{'Types'}} ) {
+			my $Point = $$variable{'Points'}{$Type->id()};
+			next if ! $Point;
+			my $Record = $Records{$Type->id()} ? $Records{$Type->id()} : new openprint::Performance_Record();
+			$html .= sprintf(q`<tr>
+				<td class="type">%3$s</td>
+				<td class="value"><span id="value-%1$d-%2$d">%4$d</span> points</td>
+				<td class="units">%5$s</td>
+				<td class="quantity"><input type="number" name="quantity-%1$d-%2$d" value="%6$s" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_line(this);"/></td>
+				<td class="total" id="total-%1$d-%2$d">%7$s</td></tr>`,
+				$$variable{'docket'}, $Type->id(), $Type->name(), $Point->value(), $Point->units(), $Record->quantity(), 1*$Record->total()
+				);
+			$docket_total += $Record->total();
+
+		} # end foreach Type
+		$html .= '<tr class="totals"><td colspan="4">Docket Total</td><td id="total-'.$variable{'docket'}.'" class="total">'.$docket_total.'</td></tr></table>';
+		$html .= '</fieldset>';
+	} else {
+		$log->warn("No docket");
+	} # end if docket
+	return $html;
+) ?>

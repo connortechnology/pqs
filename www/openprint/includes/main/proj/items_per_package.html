@@ -1,0 +1,17 @@
+<li class="items_per">
+	<label><? echo (
+	if ( sets::isin( $$variable{'ServiceTypeName'}, ['Banding','Cross Banding'] ) ) {
+		return 'Items per band';
+	} else {
+		return 'Items per ' . $$variable{'ServiceTypeName'};
+	} # end if
+) ?></label>
+	<? echo ( input( name=>'txtItemsPerPackage', value=>$$variable{txtItemsPerPackage}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
+</li>
+<li class="accurate_count">
+	<label>Accurate count</label>
+	<input type="radio" name="AccurateCount" id="AccurateCountY" value="Y" <? echo ( $$variable{'AccurateCount'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+	<label class="radio" for="AccurateCountY">Yes</label>
+	<input type="radio" name="AccurateCount" id="AccurateCountN" value="N" <? echo ( $$variable{'AccurateCount'} eq 'N' ? 'checked="checked"' : '' ) ?> />
+	<label class="radio" for="AccurateCountN">No</label>
+</li>

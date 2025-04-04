@@ -1,0 +1,9 @@
+<tr<?rowclass?> id="spec-<? echo ( $$variable{Spec}->id() ) ?>">
+    <td class="name"><input type="text" id="spec_name-<? echo ( $$variable{Spec}->id() ) ?>" name="spec_name-<? echo ( $$variable{Spec}->id() ) ?>" value="<? hecho ( $$variable{Spec}->name() ) ?>" /></td>
+    <td class="value"><input type="text" id="spec_value-<? echo ( $$variable{Spec}->id() ) ?>" name="spec_value-<? echo ( $$variable{Spec}->id() ) ?>" value="<? hecho ( $$variable{Spec}->value() ) ?>" /></td>
+    <td class="buttons">
+<? echo (
+	button( 'DelSpec'.$$variable{Spec}->id(), { onclick=>"new Ajax.Request( '/includes/_specifications.json', { parameters:{ func:'Del',spec_id:$$variable{Spec}{id}} } );", text=>'-',title=>'Delete' } );
+) ?>
+</td>
+</tr>

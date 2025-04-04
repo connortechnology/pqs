@@ -1,0 +1,44 @@
+<script src="<?hash_link(/javascripts/printing.js)?>"></script>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
+<script>
+	const quantities=new Array();
+	<?QUANTITIES?>
+	const projectType = "<?ProjectTypeID?>";
+</script>
+<? echo ( include('/main/project/prin/_templates.html'); ) ?>
+<script src="/javascripts/proj/calc_presentation_folder.js"></script>
+<script>
+	function calc( formName, force ) {
+		calc_print( formName, force );
+	}
+</script>
+<script src="/javascripts/presentation_folders.js"></script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
+		<fieldset><legend><?ProjectTypeName?></legend>
+			<? echo ( include('/includes/main/proj/templates/presentation_folders.html'); ) ?>
+			<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+			<? echo ( include('/includes/main/proj/presentation_folder_printing.html'); ) ?>
+      <br class="spacer"/>
+			<? echo ( include('/includes/main/proj/printing_type.html'); ) ?>
+			<? echo ( include('/includes/main/proj/colours_coatings.html'); ) ?>
+<br class="spacer"/>
+			<? echo ( include('/includes/main/proj/bleeds_colourbars.html'); ) ?>
+			<? echo ( include('/includes/main/proj/paper_dropdowns.html'); ) ?>
+		</fieldset>
+<fieldset><legend>Results</legend>
+		<? echo ( include('/includes/main/proj/printing_results.html'); ) ?>
+</fieldset>
+		<? echo ( include('/includes/main/proj/press_approval.html'); ) ?>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_printing.html'); ) ?>
+		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>" />
+		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>" />
+		<input type="hidden" name="ProjectType" value="<?ProjectTypeID?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+	</form>
+</div><!-- Service -->
+<script> selectProjectTemplate( 'f1' ); </script>
+

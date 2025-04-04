@@ -1,0 +1,26 @@
+<?include('/includes/error_reporting.html')?>
+You are now logged in as <? echo ( $variable{User}->name() ) ?>.<br/>
+<br/>
+<fieldset><legend>Last 10 Login Attempts</legend>
+	<table class="List">
+		<tr>
+			<th class="When">When</th>
+			<th class="User">Who</th>
+			<th class="From">From</th>
+			<th class="Type">Type</th>
+			<th class="Result">Result</th>
+		</tr>
+		<? echo ( 
+			my $html = '';
+			foreach my $Log ( openprint::Log->find( company_id=>$session{company_id}, action_id=>[2,3,78,79], order=>'date_time DESC',limit=>10 ) ) {
+				 $html .= sprintf('<tr><td class="When">%s</td><td class="User"><a href="/account/view.html?user_id=%d">%s</a></td><td class="From">%s</td><td class="Type">%s</td><td class="Result">%s</td></tr>',
+					Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),
+					$Log->user_id(), $Log->User()->name(),
+					$Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->Action()->description(),$Log->note() );
+
+			} # end foreach
+			return $html;
+		) ?>
+	</table>
+</fieldset>
+

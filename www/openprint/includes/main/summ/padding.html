@@ -1,0 +1,24 @@
+<? if ( $$variable{'rdbCardboardBacking'} ) ?>
+<p> 
+	<label>Cardboard backing?</label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="value"><?rdbCardboardBacking?></span>
+	<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+<? endif ( $$variable{'rdbCardboardBacking'} ) ?>
+<? if ( $$variable{'rdbDTape'} ) ?>
+<p> 
+	<label>&quot;D&quot; Tape?</label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="value"><?rdbDTape?></span>
+	<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+<? endif ( $$variable{'rdbDTape'} ) ?>

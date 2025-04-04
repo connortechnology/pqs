@@ -1,0 +1,14 @@
+<? echo (
+	my $html = '';
+	if ( $$variable{'error'} ) {
+		$html .= qq`alert('$$variable{error}');`;
+	} # end if
+
+	if ( $param{'action'} eq 'delete' and ! $$variable{'error'} ) {
+		$html .= qq`
+			var div = document.getElementById('$param{name}');
+			if ( div ) div.remove();
+			`;
+	} # end if
+	return $html;
+) ?>

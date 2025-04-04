@@ -1,0 +1,17 @@
+#Service_TypesList {
+	display: table;
+	width: 100%;
+	border-bottom: 1px solid #000088;
+}
+.Service_Type {
+	display:table-row;
+}
+.Service_Type .Name,
+.Service_Type .Description,
+.Service_Type .Category {
+	display: table-cell;
+}
+.Service_Type.header div {
+	border-bottom: 1px solid #000088;
+	font-weight: bold;
+}

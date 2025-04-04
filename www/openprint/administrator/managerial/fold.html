@@ -1,0 +1,204 @@
+<?include('/includes/error_reporting.html')?>
+<script>
+  function input_changed(input) {
+      if (input.value!=this.defaultValue){this.addClassName('changed');}
+    }
+  function body_onLoad() {
+      document.querySelectorAll('input[type="number"]').forEach(function(el) {
+          el.oninput = input_changed.bind(el, el);
+        });
+      document.querySelectorAll('select').forEach(function(el) {
+          el.onchange = input_changed.bind(el, el);
+        });
+      document.querySelectorAll('input[type="radio"] input[type="checkbox"]').forEach(function(el) {
+          el.onclick = input_changed.bind(el, el);
+        });
+    }
+  function add_fold_spec(btn) {
+      const fold_id = btn.form.fold_id.value;
+      new Ajax.Request('/administrator/equipment/_fold_specification.html?action=add&fold_id='+fold_id, {
+          onSuccess: function(response){
+              new Insertion.Bottom($('FoldSpecifications'), response.responseText);
+              SortableTable.load();
+            }
+        });
+    }
+  function delete_fold_spec( id ) {
+      new Ajax.Request('/openprint/administrator/equipment/_fold_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('FoldSpecification-'+id); tr.parentNode.removeChild(tr);} } );
+    } // end function delete_fold_spec
+</script>
+<form id="Fold" action="fold.html" method="post">
+  <input type="hidden" name="fold_id" value="<? echo ( $$variable{Fold}->id() ) ?>"/>
+	<div class="leftColumn">
+		<fieldset><legend>Fold</legend>
+			<ul>
+      <li>
+        <label>Equipment</label>
+        <select id="equipment_id" name="equipment_id">
+          <option value="">All Equipment</option>
+  <? echo (
+           make_drop_down( [ map { $_->id(), $_->strid().': ' . $_->name() } openprint::Equipment->find( order => 'lower(strID)', 'servicetype any'=>'Folding' ) ], $$variable{Fold}{equipment_id} );
+  ) ?>
+        </select>
+        <?echo($$variable{Fold}->Equipment()->link_to('Go');)?>
+      </li>
+		<li>
+			<label>Type</label>
+			<select id="fold-<? echo ( $$variable{Fold}->id() ) ?>-type" name="type">
+				<option value=""> select one </option>
+					<? echo ( make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types ], $$variable{Fold}->type() ); ) ?>
+			</select>
+		</li>
+		<li>
+			<label>Description</label>
+			<input type="text" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-name" name="name" value="<? echo ( $$variable{Fold}->name() ) ?>"/>
+		</li>
+		<li class="folds">
+			<label>Folds</label>
+			<? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-folds', name=>'folds', value=>$$variable{Fold}->folds() ); ) ?> folds + 
+			<? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-angles', name=>'angles', value=>$$variable{Fold}->angles() ); ) ?> angles
+		</li>
+		<li class="pages">
+			<label>Pages</label>
+			<? echo ( join("\n",
+						input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-pages', name=>'pages', value=>$$variable{Fold}->pages()),
+			':',
+			input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-page_columns', name=>'page_columns', value=>$$variable{Fold}->page_columns() ),
+			'x',
+			input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-page_rows', name=>'page_rows', value=>$$variable{Fold}->page_rows() ),
+			); )?>
+		</li>
+		<li class="spine_direction">
+			<label>Spine Direction</label>
+<?echo(ssi::select(
+			['','Either','Vertical','Vertical','Horizontal','Horizontal','With Grain', 'With Grain'], 
+			$$variable{Fold}->spine_direction(),
+			{
+				name => 'spine_direction',
+				id=>join('-', 'fold', $$variable{Fold}->id(), 'spine_direction'),
+			}
+);)?>
+		</li>
+		<li class="imposition">
+			<label>Imposition</label>
+			Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition', name=>'min_imposition', value=>$$variable{Fold}->min_imposition() ); ) ?>
+      Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition', name=>'max_imposition', value=>$$variable{Fold}->max_imposition()); ) ?>
+		</li>
+		<li class="imposition">
+			<label>Imposition Columns</label>
+      Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition_columns', name=>'min_imposition_columns', value=>$$variable{Fold}->min_imposition_columns()); ) ?>
+      Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition_columns', name=>'max_imposition_columns', value=>$$variable{Fold}->max_imposition_columns()); ) ?>
+		</li>
+		<li class="imposition">
+			<label>Imposition Rows</label>
+      Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition_rows', name=>'min_imposition_rows', value=>$$variable{Fold}->min_imposition_rows()); ) ?>
+      Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition_rows', name=>'max_imposition_rows', value=>$$variable{Fold}->max_imposition_rows()); ) ?>
+		</li>
+		<li class="page_width">
+			<label>Page Width</label>
+      Min: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-min_width', name=>'min_width', value=>$$variable{Fold}->min_width()); ) ?>
+      Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_width', name=>'max_width', value=>$$variable{Fold}->max_width()); ) ?> inches
+		</li>
+		<li class="page_height">
+			<label>Page Height</label>
+      Min: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-min_height', name=>'min_height', value=>$$variable{Fold}->min_height()); ) ?>
+      Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_height', name=>'max_height', value=>$$variable{Fold}->max_height()); ) ?> inches
+		</li>
+		<li class="orientation"><label>Orientation</label>
+			<? echo (
+        checkboxes( 'orientation', [ map { $_, $_ } ( 'Landscape','Portrait','Square' ) ],
+      [ split(',',$$variable{Fold}->orientation())]
+      ); ) ?>
+		</li>
+		<li class="calliper">
+			<label>Calliper</label>
+			Min: <? echo ( input( type=>'float', name=>'min_calliper', value=>$$variable{Fold}->min_calliper(), step=>'0.00001', min=>'0.0000', max=>'0.1' ); ) ?>
+			Max: <? echo ( input( type=>'float', name=>'max_calliper', value=>$$variable{Fold}->max_calliper(), step=>'0.00001', min=>'0.0000', max=>'0.1' ); ) ?> inches
+		</li>
+		<li class="printing_type">
+			<label>Printing Type</label>
+			<input type="text" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-printing_type" name="printing_type" value="<? echo ( $$variable{Fold}->printing_type() ) ?>" />
+		</li>
+		</ul>
+		</fieldset>
+	</div>
+	<div class="rightColumn">
+		<fieldset>
+      <ul>
+		<li class="make_ready_time">
+			<label>Make Ready Time</label>
+			<? echo ( input( type=>'text', id=>'fold-'.$$variable{Fold}->id().'-makeready_time', name=>'makeready_time', value=>$$variable{Fold}->makeready_time()); ) ?> minutes
+		</li>
+		<li class="make_ready_overs">
+			<label>Make Ready Overs</label>
+      <? echo ( input( type=>'number', id=>'fold-'.$$variable{Fold}->id().'-makeready_overs', name=>'makeready_overs', value=>$$variable{Fold}->makeready_overs(), min=>0, step=>'any' ); ) ?>
+			<select id="fold-<? echo ( $$variable{Fold}->id() ) ?>-makeready_overs_units" name="makeready_overs_units" >
+				<option value="Sheets" <? echo ( $$variable{Fold}->makeready_overs_units() eq 'Sheets' ? 'selected="selected"' : '' ) ?>>Sheets</option>
+				<option value="Percent" <? echo ( $$variable{Fold}->makeready_overs_units() eq 'Percent' ? 'selected="selected"' : '' ) ?>>Percent</option>
+			</select>
+		</li>
+		<li class="run_overs">
+			<label>Run Overs</label>
+      <? echo ( input( type=>'number',min=>0, step=>'any', id=>'fold-'.$$variable{Fold}->id().'-run_overs', name=>'run_overs', value=>$$variable{Fold}->run_overs()); ) ?>
+			<select id="fold-<? echo ( $$variable{Fold}->id() ) ?>-run_overs_units" name="run_overs_units">
+				<option value="Sheets" <? echo ( $$variable{Fold}->run_overs_units() eq 'Sheets' ? 'selected="selected"' : '' ) ?>>Sheets</option>
+				<option value="Percent" <? echo ( $$variable{Fold}->run_overs_units() eq 'Percent' ? 'selected="selected"' : '' ) ?>>Percent</option>
+			</select>
+		</li>
+		<li><label>Comments</label>
+			<textarea name="comments" id="comments-<? echo ( $$variable{Fold}->id() ) ?>" rows="<?echo(count_lines($$variable{Fold}->comments(), { width=>30 } );)?>"><? echo ( $$variable{Fold}->comments() ) ?></textarea>
+		</li>
+		</fieldset>
+		<fieldset><legend>Binding Options</legend>
+      <ul>
+        <li><label>Inline Cutting</label>
+          <?echo ( radio( 'cutting', ['1','Yes','0','No', '', 'Either' ], $$variable{Fold}->cutting(), { id=>$$variable{Fold}->id() } ); ) ?>
+        </li>
+        <li><label>Stitching</label>
+          <? echo ( radio( 'stitching', ['1','Yes','0','No', '', 'Either'], $$variable{Fold}->stitching(), {id=>$$variable{Fold}->id() } ); ) ?>
+        </li>
+        <li><label>Perfect Bind</label>
+          <? echo ( radio( 'perfectbind', ['1','Yes','0','No', '', 'Either'], $$variable{Fold}->perfectbind(), {id=>$$variable{Fold}->id() } ); ) ?>
+        </li>
+        <li><label>Spine Paste</label>
+          <? echo ( radio( 'spinepaste', ['1','Yes','0','No', '', 'Either'], $$variable{Fold}->spinepaste(), { id=>$$variable{Fold}->id() } ); ) ?>
+        </li>
+      </ul>
+		</fieldset>
+		<fieldset><legend>Runspeeds</legend>
+      <label>Min/Max Units</label><?echo( ssi::select( [ map { $_, $_ } ( 'unknown', 'gsm','calliper','impressions')], $$variable{Fold}{runspeed_units}, { name=>'runspeed_units' } ); ) ?>
+		<table id="FoldSpecifications" class="FoldRunSpeed List sortable">
+			<thead>
+				<tr>
+					<th align="left">Min</th>
+					<th align="left">Max</th>
+					<th align="left">Runspeed</th>
+					<th align="left">Units</th>
+					<th align="left">Interpolate</th>
+					<th class="buttons"><? echo ( button( 'AddFoldSpec'.$$variable{Fold}->id(), { on_click_this=>'add_fold_spec', text=>'Add' } ); ) ?></th>
+				</tr>
+			</thead>
+			<tbody>
+			<? echo (
+				my $html = '';
+				my @specs = $$variable{Fold}->Specifications();
+				foreach my $spec ( @specs ) {
+          $$variable{Specification} = $spec;
+					$html .= include( '/administrator/equipment/_fold_specification.html', $variable );
+				} # end while
+				return $html;
+			) ?>
+			</tbody>
+		</table>
+		</fieldset>
+	</div>
+  <p class="buttons">	
+<? echo ( 
+	return join("\n",
+     button( 'action', {type=>'submit', value=>'save'}),
+     button( 'action', {type=>'submit', value=>'copy'}),
+     button( 'action', {type=>'submit', value=>'delete'}),
+       );
+ ) ?>
+  </p>
+</form>

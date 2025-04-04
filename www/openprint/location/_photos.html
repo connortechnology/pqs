@@ -1,0 +1,21 @@
+<ul>
+<? echo (
+	my $html;
+	foreach my $Photo ( $$variable{'Location'}->Photos() ) {
+		$html .= sprintf('<li>
+<a href="/photo_albums/view_photo.html?album_id=%3$d&amp;asset_id=%4$d" class="thumbnail"><img src="%1$s" alt="%2$s"/></a>
+<span class="buttons">%5$s</span>
+</li>', 
+			$Photo->thumbnail_url(), $Photo->name(), @$Photo{'album_id','asset_id'},
+			ssi::button( 'del'.$Photo->asset_id(), { onclick=>qq`new Ajax.Updater('Photos', '_photos.html', { parameters: { action: 'delete', asset_id: $$Photo{asset_id}, location_id: $$variable{Location}{id} } } );`, text=>'X', title=>'Delete' } ),
+ );
+	} # end foreach Photo
+	return $html;
+)?>
+</ul>
+<? if ( $session{'user_id'} ) ?>
+<p class="buttons">
+	Select file: <input type="file" name="filename" id="filename" />
+	<? echo ( ssi::button( 'Upload', { 'onclick'=>q`var form = $('f1'); form.elements['action'].value='Upload';form.submit();` } ); ) ?>
+</p>
+<? endif ( $session{'user_id'} ) ?>

@@ -1,0 +1,47 @@
+<script type="text/javascript">
+	function load_contents( form ) {
+		$('Results').innerHTML = 'Please wait...';
+		new Ajax.Updater('Results','/employee/reports/_project_log.html', {parameters:Form.serialize(form)});
+	} // end function
+</script>
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Project Log</h2>
+</div>
+<form id="f1" name="f1" method="post" action="/employee/reports/project_log.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+<ul>
+		<li>
+			<label>Company</label>
+			<input type="text" oninput="filter_companies( f1.company_id, {name:this.value} );" class="filter" />
+			<select name="company_id" id="company_id">
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::Company->dropdown( 'last_project_id is null'=>0 ), $session{$r->uri().'?company_id'} ); ) ?>
+			</select>
+		</li>
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+		<li>
+			<label>User</label>
+			<select name="user_id" size="1">
+			<? echo (
+					my @options = ( '', 'All' );
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type =>['E','A'], order=>'lower(firstname),lower(lastname)');
+					make_drop_down( \@options, $session{'/employee/reports/project_log.html?user_id'} );
+					) ?>
+
+			 </select>
+		</li>
+		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+		<li>
+			<label>Created On</label>
+			<? echo ( date_select_session('/employee/reports/project_log.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?> to
+			<? echo ( date_select_session('/employee/reports/project_log.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		</ul>
+		 <p class="buttons">
+			 <? echo ( button( 'Go', { onclick=>'load_contents(f1);', text=>'Show Results' } ); ) ?>
+		 </p>
+	</fieldset>
+</form>
+<div id="Results">
+</div>

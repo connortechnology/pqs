@@ -1,0 +1,56 @@
+<? eval ( 
+	$$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'};
+	my $Project = new openprint::Project( $openprint::param{'ProjectIndex'} );
+	$$variable{'Project'} = $Project if ! $$variable{'Project'};
+) ?>
+<div class="error"><?ErrorMessage?></div>
+<? if ( $$variable{'information'} ) ?>
+<div class="error"><?information?></div>
+<? endif ( $$variable{'information'} ) ?>
+
+<form id="f2" name="f2">
+	<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+	<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+	<input type="hidden" name="order_id" value="<?OrderID?>"/>
+	<input type="hidden" name="btnFunction" value=""/>
+	<? eval ( 
+		@{$$variable{'Presses'}} = map { $_->strid(), $_->name() } openprint::Equipment->find('category'=>'Printing', order=>'lower(strid)' );
+		openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ); 
+
+		@{$$variable{'SignatureIndices'}} = $$variable{'Project'}->signatures();
+	) ?>
+	<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureIndices'}} ) ?>
+	<? eval ( $$variable{'SignatureSpecs'} = openprint::service::get_specs_ref( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?>
+	<fieldset><legend>Signature
+		<? echo ( $$variable{'SignatureSpecs'}{'Reference'} ) ?>
+		</legend>
+		<? echo ( 
+			my $specs = $$variable{'SignatureSpecs'};
+			my $html;
+			$html .= $$specs{'txtServiceDescription'} .' ' if $$specs{'txtServiceDescription'};
+			$html .= openprint::service::summary( $$variable{'Project'}, $$variable{'SignatureServiceIndex'} );
+			$html .= openprint::service::summary( $$variable{'Project'}, $$variable{'SignatureServiceIndex'}, $$variable{'Project'}->ordered_quantity_index() );
+		 	return $html;
+		) ?>
+		<p>
+			<label>Press</label>
+			<? eval ( @{$$variable{'tempPresses'}} = @{$$variable{'Presses'}} ) ?>
+			<? while ( @$variable{'id','name'} = splice @{$$variable{'tempPresses'}},0,2; ) ?>
+			<input type="radio" id="UsePress-<?SignatureServiceIndex?>-<?id?>" name="UsePress-<?SignatureServiceIndex?>" value="<?id?>" <? echo ( 'checked="checked"' if $$variable{'SignatureSpecs'}{'UsePress'} eq $$variable{'id'} ) ?> />
+			<label class="radio" for="UsePress-<?SignatureServiceIndex?>-<?id?>"><?name?></label><br/>
+			<? endwhile ( @$variable{'id','name'} = splice @{$$variable{'tempPresses'}},0,2; ) ?>
+		</p>
+		<span style="float: right;">
+		<? echo ( 
+		if ( openprint::usergroup::is_user_in( ['Prepress'], $openprint::session{'user_id'} ) ) {
+		return join('',
+					ssi::writeButton( $log, $dbh, 'Save','save.gif', "if(check_input(f2,'$$variable{SignatureSpecs}{SignatureIndex}')){f2.btnFunction.value='Add Proof';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',Serialize(f2) );}", '', 'Save' ),
+		);
+		} # end if
+			return '';
+		) ?>
+		</span>
+		<br class="spacer"/>
+	</fieldset>
+	<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureIndices'}} ) ?>
+</form>

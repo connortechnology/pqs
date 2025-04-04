@@ -1,0 +1,5 @@
+
+fieldset input[type="number"],
+fieldset input[type="text"] {
+	width: 100px;
+}

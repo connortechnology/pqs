@@ -1,0 +1,79 @@
+<form id="f1" name="f1" action="view.html" method="post">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="asset_id" value="<? echo ( $$variable{Asset}->id() ) ?>" />
+	<p class="buttons">
+<? echo ( 
+	my $html = '';
+	if ( $$variable{Asset}->can_edit() ) {
+		$html .= button( 'Edit', { href=> 'edit.html?asset_id='.$$variable{Asset}->id() } );
+		if ( $$variable{Asset}->deleted() ) {
+			$html .= button( 'Destroy', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();" } );
+			$html .= button( 'Undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();" } );
+		} else {
+			$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
+		} # end if
+		$html .= button( 'New', { href=>'edit.html' } );
+	} # end if
+	return $html;
+) ?>
+	</p>
+	<?include('/includes/error_reporting.html')?>
+	<div class="Asset"><div class="View">
+			<div class="PageTitle">
+				<h1>Asset</h1><br/>
+				Asset # [ <? echo ( $$variable{Asset}->id() ) ?> ]
+			</div>
+			<fieldset>
+				<div class="content">
+					<div class="leftColumn">
+						<ul>
+							<li><label>Created On</label>
+							<? echo ( format_date( $$variable{Asset}->created_on() ) ) ?>
+							</li>
+							<li><label>Name</label>
+							<? echo ( $$variable{Asset}->name() ) ?>
+							</li>
+							<li><label>Description</label>
+							<? echo ( $$variable{Asset}->description() ) ?>
+							</li>
+							<li><label>Public?</label><?echo( $$variable{Asset}->public() ? 'Yes' : 'No' )?></li>
+						</ul>
+						<table><tr><th>Version</th><th>URL</th><th class="size">File Size</th></tr>
+							<? echo (
+								my $html;
+								foreach my $size ( '', 'large','medium','small', 'thumbnail' ) {
+									$html .= sprintf( '<tr><td>%1$s</td><td><a href="%2$s" target="_blank">%2$s</a></td><td class="size">%3$s</td></tr>', ($size?$size:'Original'),
+										$config{ExternalSiteURL}.$$variable{Asset}->sized_url($size),
+										misc::format_bytes( -s $variable{Asset}->sized_path($size) ),
+										);
+								} # end foreach size
+								return $html;
+							) ?>
+							</table>
+					</div>
+					<div class="rightColumn">
+						<ul>
+							<li><label>Filename</label>
+							<? echo ( 
+								my $html = $$variable{Asset}->filename() ;
+								$html .= $$variable{Asset}->sized_html('medium');
+								return $html;
+							) ?>
+							</li>
+							<li><label>Attribution</label>
+							<? echo ( $$variable{Asset}->attribution() ) ?>
+							</li>
+							<li><label>License</label>
+							<? echo ( $$variable{Asset}->license() ) ?>
+							</li>
+							<li><label>Used in</label>
+							<? echo ( join(',', map { $_->Object()->link_to() } openprint::Object_Asset->find( asset_id=>$$variable{Asset}->id()) ); ) ?>
+							<? echo ( join(',', map { sprintf('<a href="/article/view.html?article_id=%1$d">Article %1$d</a>', $_->article_id() ); } openprint::Article_Asset->find('asset_id'=>$$variable{Asset}->id()) ); ) ?>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</fieldset>
+		</div><!--View-->
+	</div><!--Asset-->
+</form>

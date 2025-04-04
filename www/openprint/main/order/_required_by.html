@@ -1,0 +1,6 @@
+<li class="RequiredBy">
+	<label>Required By</label>
+	<?echo(date_select( 'requested_for'.$$variable{Project}->id(), 
+				$$variable{Project}->requested_for() ? $$variable{Project}->requested_for() : [ Date::Calc::Add_Delta_Days( Date::Calc::Today(), 14 ) ],
+				); ) ?>
+</li>

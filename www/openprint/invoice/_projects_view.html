@@ -1,0 +1,41 @@
+<? if ( $$variable{Invoice}->Projects() > 0 ) ?>
+<fieldset><legend>Projects</legend>
+	<table class="List">
+		<tr>
+			<th class="name">Project</th>
+			<th class="description">Description</th>
+			<th class="po">PO Num</th>
+			<th class="Quantity">Qty</th>
+			<th class="Price">Price</th>
+			<th class="Price">Total</th>
+		</tr>
+		<? echo ( 
+			my $html = '';
+			my $rowclass;
+			$$variable{project_total} = 0;
+			foreach my $Invoiced_Project ( $$variable{Invoice}->Projects() ) {
+				my $Product = $Invoiced_Project->Project();
+				$html .= sprintf('<tr%1$s>
+						<td class="name"><a href="/main/project/view.html?project_id=%2$d">%3$s</a></td>
+						<td class="description"><a href="/main/product/view.html?project_id=%2$d">%4$s</a></td>
+						<td class="po">%5$s</td>
+						<td class="Quantity">%6$s</td>
+						<td class="Price">%7$s</td>
+						<td class="Price">%8$s</td>
+					</tr>', $rowclass, $Project->id(), $Project->name(), $Project->description(), $Project->Order()->po(), 
+					$Invoiced_Project->quantity(), 
+					openprint::Currency::format($Invoiced_Project->price()), 
+					openprint::Currency::format($Invoiced_Project->total()),
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$$variable{project_total} += $Invoiced_Project->total();
+			} # end foreach Product
+			return $html;
+		) ?>
+		<tr class="totals">
+			<td colspan="5">Totals</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{project_total} ); ) ?></td>
+		</tr>
+	</table>
+</fieldset>
+<? endif ( $$variable{Invoice}->Projects() > 0 ) ?>

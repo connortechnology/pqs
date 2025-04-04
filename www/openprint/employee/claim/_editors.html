@@ -1,0 +1,24 @@
+<? echo (
+my $html = '';
+$html .= $$variable{'Claim'}->Creator()->name() . '<br/>';
+foreach my $e_id ($$variable{'Claim'}->editor_id() ? @{$$variable{'Claim'}->editor_id()} : () ) {
+	my $User = new openprint::User( $e_id );
+	$html .= $User->name();
+	$html .= ssi::writeButton( $log, $dbh, 'd'.$e_id, 'x.gif', "new Ajax.Updater( 'editors', '_editors.html', { parameters: { claim_id: $$variable{'Claim'}{id}, editor_id: $e_id, action:'remove'} } );", '', 'X' );
+	$html .= '<br/>';
+} # end foreach
+return $html;
+) ?>
+<select id="new_editor_id" name="new_editor_id">
+	<option value=""> select </option>
+<? echo ( 
+	my @Users;
+	foreach my $U ( openprint::User->find( 'company_id'=>new openprint::User( $session{'user_id'} )->company_id(), 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)' ) ) {
+		next if sets::isin( $U->id(), $$variable{'Claim'}->editor_id() );
+		next if $U->id() == $session{'user_id'};
+		push @Users, $U;
+	} # end foraech
+	return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ] );
+) ?>
+</select>
+<? echo ( ssi::writeButton( $log, $dbh, 'editorsadd', 'add.gif', "new Ajax.Updater( 'editors', '_editors.html', { parameters: { claim_id: $$variable{'Claim'}{id}, editor_id: \$('new_editor_id').value, action:'add'} } );", '', 'Add' ); ) ?>

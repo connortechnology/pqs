@@ -1,0 +1,198 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script type="text/javascript">
+	// override this so we don't refresh paper dropdowns on load
+	function calc( formName ) {
+		var f1 = $(formName);
+		if ( ! f1 ) {
+			alert('No form. Tell Isaac about this please.');
+		} 
+		LoadContent( 'Results',	'/employee/inventory/_paper_results.html', f1 );
+	} // end function calc
+</script>
+<?include('/includes/error_reporting.html')?>
+Please select a Paper to view/edit.<br>
+<form id="f1" name="f1" method="post" action="paper.html">
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+		<li>
+			<label>Docket</label>
+			<? echo ( input( type=>'cardinal', id=>'Docket', name=>'Docket', value=>$session{$r->uri().'?Docket'}, onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){LoadContent('Results','/employee/inventory/_paper_results.html',$('f1'));}` ); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	<fieldset class="filters"><legend>Or</legend>
+		<ul>
+			<li>
+				<label>Owner</label>
+				<select id="owner_id" name="owner_id" size="1" onchange="filter_onChange(this,'');">
+				<option value=""> All </option>
+				<? echo ( 
+					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( id=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], order=>'lower(name)' ) ], $session{$r->uri().'?owner_id'} );
+				) ?>
+				</select>
+				<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="filter_onChange(this,'');" <? echo ( checked( $session{$r->uri().'?owner_id_exclude'} ); ) ?> />
+				<label class="radio" for="owner_id_exclude">Exclude</label>
+			</li>
+<? echo (
+	my $html;
+
+	my %find = (
+			( $session{$r->uri().'?type'} ? ( type => [ split( ',', $session{'/employee/inventory/paper.html?type'} ) ] ) : () ),
+	);
+	if ( $session{$r->uri().'?owner_id'} ) {
+		if ( $session{$r->uri().'?owner_id_exclude'} ) {
+			$find{'owner_id !='} = $session{$r->uri().'?owner_id'};
+		} else {
+			$find{owner_id} = $session{$r->uri().'?owner_id'};
+		} # end if
+	} # end if
+
+	my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
+
+	my @Papers = openprint::Paper->find( %find );
+	my %filter_validations;
+
+	foreach my $option ( @StockOptions ) {
+		my $lower_option = lc $option;
+		my $option_id  = $lower_option.'_id';
+
+		if ( $session{$r->uri().'?'.$option_id} ) {
+$log->debug("Looking for $option id => " . $session{$r->uri().'?'.$option_id} );
+			if ( ! ('openprint::Stock'.$option)->find_one( id => $session{$r->uri().'?'.$option_id} ) ) {
+				# Clear filter if it no longer ixists
+$log->debug("Deleting filter because it no longer exists $option id => " . $session{$r->uri().'?'.$option_id} );
+				delete $session{$r->uri().'?'.$option_id};
+			}
+		} else {
+			my @blah = ('openprint::Stock'.$option)->find();
+$log->debug("Caching all $option results:" . @blah );
+		}
+	}
+
+	my %filters;
+	for ( my $stock_index = 0; $stock_index < @Papers; $stock_index += 1 ) {
+		my $Stock = $Papers[$stock_index];
+
+		foreach my $option ( @StockOptions ) {
+			my $lower_option = lc $option;
+			my $option_id  = $lower_option.'_id';
+
+			# Load up the filter
+			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
+
+			if ( $session{$r->uri().'?'.$option_id} ) {
+				if ( $$Stock{$option_id} eq $session{$r->uri().'?'.$option_id} ) {
+					$filter_validations{$option} = 1;
+				} else {
+					splice @Papers, $stock_index, 1;
+					$stock_index -= 1;
+					last;
+				} # end if
+			} # end if
+		} # end foreach option
+	} # end foreach $Stock
+#$log->debug( Data::Dumper::Dumper( \%filters ) );
+
+	foreach my $option ( @StockOptions ) {
+		next if ! $filters{$option};
+		my $lower_option = lc $option;
+		my $option_id  = $lower_option.'_id';
+		my @options = map { $filters{$option}{$_}, $_ } ( sort { lc $a cmp lc $b } keys %{$filters{$option}} );
+#$log->debug("options : @options ");
+		# Don't do this because even if there is only 1 entry, papers can be unassigned.
+		#$session{$r->uri().'?'.$option} = $options[0] if ( @options == 2 );
+
+		$html .= sprintf(q`<li><label>%1$s</label>
+				<select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
+				<option value=""> All </option> %4$s </select>
+			</li>`, $option, $lower_option, $$variable{Signature},
+			make_drop_down( \@options, $session{$r->uri().'?'.$option_id} ),
+		);
+	} # end foreach option
+	$$variable{Paper} = \@Papers;
+	return $html;
+) ?>
+		<li><label>Size</label>
+		<select name="width" size="1" onchange="calc('f1');">
+			<option value="">All</option>
+			<? echo ( 
+					my %data;
+					my $found = 0;
+					foreach my $Stock ( @{$$variable{Paper}} ) {
+						$data{$Stock->width()} = $Stock->width();
+						$found = 1 if $Stock->width() == $session{$r->uri().'?width'};
+					} # end foreach
+					$session{$r->uri().'?width'} = undef if ! $found;
+					return make_drop_down( [map { $_, $_ } sort keys %data ], $session{$r->uri().'?width'} );
+				) ?>
+			</select> x
+			<select name="height" size="1" onchange="calc('f1');">
+			<option value="">All</option>
+			<? echo ( 
+					my %data;
+					my $found = 0;
+					foreach my $Stock ( @{$$variable{Paper}} ) {
+						$data{$Stock->width()} = $Stock->height();
+						$found = 1 if $Stock->width() == $session{$r->uri().'?height'};
+					} # end foreach
+					$session{$r->uri().'?height'} = undef if ! $found;
+					return make_drop_down( [map { $_, $_ } sort keys %data ], $session{$r->uri().'?height'} );
+				) ?>
+			</select>
+			<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" <? echo ( checked( $session{$r->uri().'?OrLarger'} ); ) ?> /><label class="radio" for="OrLarger">or larger</label>
+		</li>
+		<li>
+			<label>Type</label>
+			<? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{$r->uri().'?type'} ) ] ); ) ?>
+		</li>
+		<li>
+			<label>Date Added</label>
+			<? echo ( date_select_session($r->uri().'', 'added_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to 
+			<? echo ( date_select_session($r->uri().'', 'added_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>FSC Code</label>
+			<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $session{$r->uri().'?fsc_code'} ) ?>" />
+		</li>
+		<li>
+			<label>In/Out of Stock</label>
+			<? echo ( radio( 'in_stock', [ '1', 'In Stock', '0', 'Out of Stock', '', 'Both' ], $session{$r->uri().'?in_stock'} ); ) ?>
+		</li>
+		<li><label>Allocated</label>
+			<? echo ( radio( 'allocated', [ '1','Yes','0','No','','Both' ], $session{$r->uri().'?allocated'} ); ) ?>
+		</li>
+		<li><label>Condition</label><? echo ( ssi::select( openprint::InventoryCondition->dropdown(order=>'lower(name)'), $session{$r->uri().'?condition_id'}, { name=>'condition_id', prepend=>['','all'] } ); ) ?>
+		</li>
+		<li>
+			<label>Has Value</label>
+			<? echo ( radio( 'has_value', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?has_value'} ); ) ?>
+		</li>
+		</ul>
+
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				$html .= button( 'ShowResults', { onclick=>"LoadContent('Results','/employee/inventory/_paper_results.html', f1.serialize() );", text=>'Show Results' } );
+				$html .= button( 'Add', { onclick=>'', href=>'paper_details.html', text=>'Add New Paper' } );
+				if ( openprint::usergroup::is_user_in( ['InventoryManager','Accounting'], $session{user_id} ) ) {
+					$html .= button( 'DownloadInventory', { onclick=>"f1.btnFunction.value='Download Inventory';f1.action='paper.html?Download';f1.submit();", text=>'Download Inventory' } );
+					$html .= button( 'DownloadLog', { onclick=>"f1.btnFunction.value='Download Log';f1.action='paper.html?Download';f1.submit();", text=>'Download Log' } );
+					$html .= button( 'Consumption', { onclick=>"f1.btnFunction.value='Consumption Report';f1.action='paper.html?Download';f1.submit();", text=>'Consumption Report' } ) if $session{email} =~ /iconnor/;
+				} # end if
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<div id="Results">
+<? echo (
+     if ( map { $session{$r->uri().'?'.$_} ? $session{$r->uri().'?'.$_} : () } ( qw{ brand_id finish_id colour_id weight_id } ) ) {
+        return include('/employee/inventory/_paper_results.html');
+    }
+
+) ?>
+
+Select search criteria and click Show Results.</div>

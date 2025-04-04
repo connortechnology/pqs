@@ -1,0 +1,8 @@
+Corrective Action Request <? echo ( $$variable{CAR}{id} ) ?> has been changed.<br/>
+Use the following link to view it:<br/>
+<br/>
+<a href="<? echo ( $openprint::config{InternalSiteURL} ) ?>/employee/iso/car.html?car_id=<? echo ( $$variable{CAR}{id} ) ?>">CAR <? echo ( $$variable{CAR}{id} ) ?></a><br/>
+<br/>
+Recent Changes:<br/>
+<? echo ( include_logs_view( $$variable{CAR} ); ) ?>
+

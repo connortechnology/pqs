@@ -1,0 +1,47 @@
+<? echo (
+	my $error;
+	$param{rfidtag_id} = openprint::RFIDTag->transform('id', $param{rfidtag_id} );
+$log->debug("after trnasform $param{rfidtag_id}" );
+	my $length = length $param{rfidtag_id};
+	my $RFID;
+
+	if ( $length < 15 ) {
+		$RFID = openprint::RFIDTag->find_one( 'id like'=>'2%'.$param{rfidtag_id} );
+	} elsif ( $length > 15 ) {
+		$error .= 'invalid RFIDTag, too long.<br/>';
+	} else {
+		if ( substr( $param{rfidtag_id}, 0, 1 ) != 2 ) {
+			$error .= 'Invalid RFIDTag, first digit should be a 2 for a skid/roll.<br/>';
+		} else {
+			$RFID = openprint::RFIDTag->find_one( id=>$param{rfidtag_id} );
+		} # end if
+	} # end if
+	if ( $error ) {
+		return qq`alert('$error');`;
+	} # end if
+	if ( ! $RFID ) {
+		return;
+	} # end if
+
+	my $Skid = $RFID->Skid();
+
+	if ( openprint::ManifestContent->find_one( type_id=>$param{type_id}, skid_id=>$$Skid{id} ) ) {
+		return "alert('Tag is already in this manifest');\n";
+	} elsif ( my $MC = openprint::ManifestContent->find_one( skid_id=>$$Skid{id} ) ) {
+		return "alert('Tag is already in another manifest.');\n";
+	} # end if
+
+	return sprintf( q`
+	if ( $('skid_id%1$s').value && ( $('skid_id%1$s').value != '%2$d' ) ) {
+		alert('RFID is already assigned to skid %2$d');
+		return;
+	} else {
+		$('skid_id%1$s').value = '%2$d';
+	}
+ddm_select_by_value( $('location_id%1$s'), '%3$d' );
+add_content( $('f1'), '-%1$s-' );
+`, $param{type_id},
+	$$Skid{id},
+	$RFID->location_id(),
+);
+) ?>

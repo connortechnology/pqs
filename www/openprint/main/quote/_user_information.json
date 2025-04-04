@@ -1,0 +1,22 @@
+<? echo ( 
+	my $html = '';
+	my $User = new openprint::User($param{user_id});
+	my %data = (
+		#'ForSalutation'	=>	$User->salutation(),
+		'ForFirstName'	=>	$User->firstname(),
+		'ForLastName'	=>	$User->lastname(),
+		'ForEmail'	=>	$User->email(),
+		'ForTitle'	=>	$User->title(),
+		'ForPhone'	=>	$User->phone(),
+		#'ForExtension'	=>	$User->extension(),
+		'ForFax'	=>	$User->fax(),
+	);
+
+	$html .= join("\n", 
+		map { sprintf( q{$j('#%s').val('%s');}, $_, $data{$_} ) } keys %data
+	);
+	#$html .= sprintf( q{set_rdb_value($('f1').ForSalutation,'%s');}, $User->salutation() );
+	$html .= sprintf( q{$j('#ForSalutation%1$s').checked=true;}, $User->salutation() );
+
+	return $html;
+) ?>

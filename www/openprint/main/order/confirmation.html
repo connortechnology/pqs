@@ -1,0 +1,34 @@
+<div class="PageTitle">
+<h1>Order</h1>
+<h2>Confirmed</h2>
+</div>
+<? if ( $param{btnFunction} eq 'Complete' ) ?>
+<b>
+Thank you. Your order and information have been received. You will receive a copy of the order via e-mail shortly.<br/>
+<br/>
+<? if ( $$variable{'Order'} ) ?>
+You may now upload the file(s) pertaining to this order: <? echo ( button( 'UploadFiles', { href=>'/upload/upload_center.html?docket='.$$variable{Order}->docket(), text=>'Upload Files' } ); ) ?><br/>
+<br/>
+<? endif ( $$variable{'Order'} ) ?>
+</b>
+<? endif ( $param{btnFunction} eq 'Complete' ) ?>
+<? if ( $param{btnFunction} eq 'Close' ) ?>
+Order has been closed.
+<? endif ( $param{btnFunction} eq 'Close' ) ?>
+
+
+<br/>
+<? if ( $$variable{'Downpayment'} > 0 ) ?>
+	We will require a downpayment of $<?Downpayment?> before we will initiate production of your order.<br/>
+	<br/>
+	Please contact us to arrange payment. <br/>
+	<br/>
+	<? if ( $config{'PaymentProcessor'} ) ?>
+	If you would like to make this downpayment online please click <a href="/main/payment/payment_make.html?order_id=<?order_id?>">here</a>.
+	<? endif ( $config{'PaymentProcessor'} ) ?>
+<? endif ( $$variable{'Downpayment'} > 0 ) ?>
+<? if ( $$variable{'COD'} > 0 ) ?>
+We will require a payment of $<?Downpayment?> upon delivery of your order.<br/>
+<br/>
+Please contact us to arrange payment. <br/>
+<? endif ( $$variable{'COD'} > 0 ) ?>

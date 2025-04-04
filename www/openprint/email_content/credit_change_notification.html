@@ -1,0 +1,18 @@
+Dear <? echo ( $$variable{'Application'}->signature() ) ?>,<br/>
+<br/>
+<? if ( $$variable{'Application'}->status() eq 'Approved' ) ?>
+Your credit application has been approved.
+<? else ( $$variable{'Application'}->status() eq 'Approved' ) ?>
+Your credit application has been denied.
+<? endif ( $$variable{'Application'}->status() eq 'Approved' ) ?>
+
+You have been granted Net <? echo ( $$variable{'Credit'}->denydays() ) ?> Day terms for <? echo ( $config{'SiteTitle'} ) ?>, with a credit limit of $ <? echo ( $$variable{'Credit'}->limit() )?>.<br/>
+<br/>
+<? if ( $$variable{'Credit'}->downpayment() ) ?>
+Orders will require a <? echo ( $$variable{'Credit'}->downpayment() ) ?>% deposit before production begins.<br/>
+<? endif ( $$variable{'Credit'}->downpayment() ) ?>
+<? if ( $$variable{'Credit'}->cod() ) ?>
+Orders will require <? echo ( $$variable{'Credit'}->cod() ) ?>% payment on delivery.<br/>
+<? endif ( $$variable{'Credit'}->cod() ) ?>
+<br/>
+If you have any questions, please contact our <a href="<? echo ( $config{ExternalSiteURL} ) ?>/support/help_desk.html">helpdesk</a>.<br/>

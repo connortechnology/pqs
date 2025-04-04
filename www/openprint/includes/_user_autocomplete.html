@@ -1,0 +1,60 @@
+<ul>
+<? echo ( 
+	my $html;
+	s/^\s+//, s/\s+$// for $param{user_name};
+
+	my %user_ids;
+	if ( $param{user_id} ) {
+		foreach my $id ( ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : $param{user_id} ) {
+			my ( $user_id, $company_id ) = $id =~ /^(\d*)_(\d+)$/ ;
+			$user_ids{$user_id} = $user_id;
+		} # end foreach id
+	} # end if
+
+	my @Companies = openprint::Company->find('name ilike'=>'%'.$param{user_name}.'%',limit=>10,'id not in'=>$session{company_id});
+
+	foreach my $Company (@Companies) {
+		my @Users = map { $user_ids{$$_{id}} ? () : $_ } $Company->Users();
+		if ( @Users > 1 ) {
+			$html .= sprintf(q`<li id="_%1$d" class="Company"><span class="informal">Everyone in %2$s</span></li>`, $Company->id(), $Company->name() );
+		} # end if
+		foreach my $User ( @Users ) {
+			next if $user_ids{$$User{id}};
+			$user_ids{$$User{id}} = $$User{id};
+			if ( ! $User->can_view() ) {
+				$log->debug('Cant view ' . $User->to_string() );
+				next;
+			} # end if
+			my $Asset = $User->Asset();
+			my $thumbnail_url = $Asset->thumbnail_url();
+
+			$html .= sprintf(q`
+				<li id="%2$d_%1$d" class="User"><span class="thumbnail informal"><img src="%4$s" alt="%5$s" /></span>%3$s</li>`,
+				$Company->id(), 
+				$User->id(), $User->name(),
+				( $thumbnail_url ? $thumbnail_url : '/images/no_image.gif' ), '',
+				);
+			#$html .= $User->html();
+		} # end foreach $User
+	} # end foreach $Company
+
+	my @Users = openprint::User->find(
+			( $param{user_type} ? type => $param{user_type} : () ),
+			'name ilike'=>'%'.$param{'user_name'}.'%',limit=>10, 'id not in'=>[ $session{user_id}, @user_ids ] );
+	foreach my $User (@Users) {
+		next if ! $User->can_view();
+		my $Asset = $User->Asset();
+		my $thumbnail_url = $Asset->thumbnail_url();
+
+		$html .= sprintf(q`
+			<li id="%2$d_%1$d" class="User"><span class="thumbnail informal"><img src="%4$s" alt="%5$s" /></span>%3$s</li>`,
+			$User->company_id(),
+			$User->id(), $User->name(),
+			( $thumbnail_url ? $thumbnail_url : '/images/no_image.gif' ), '',
+			);
+		#$html .= $User->html();
+	} # end foreach $User
+	return $html;
+
+) ?>
+</ul>

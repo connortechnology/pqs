@@ -1,0 +1,191 @@
+@media only screen and (max-device-width: 480px) {
+}
+@media screen and (min-device-width: 481px) {
+	body {
+		min-width: 780px;
+		max-width: none;
+	} 
+}
+
+.dialog fieldset li ,
+.dialog fieldset p {
+    padding-left: 100px;
+}
+.dialog fieldset p label:not(.radio):not(.radio-inline),
+.dialog fieldset li label:not(.radio):not(.radio-inline) {
+    width: 95px;
+    margin-left: -100px;
+}
+.dialog p.buttons {
+  margin-left: 0;
+}
+
+fieldset li p,
+.dialog fieldset li p {
+	padding-left: 0;
+}
+
+div.PopupWindow fieldset p {
+	padding-left: 0px;
+}
+div.PopupWindow fieldset p label:not(.radio):not(.radio-inline) {
+	width: 100%;
+	margin: 0px;
+	text-align: left;
+}
+
+#Allocate p, #CheckOut p {
+	padding-left: 100px;
+}
+#Allocate label,
+#CheckOut label {
+	width: 100px;
+	margin-left: -95px;
+}
+#JobForm li {
+	padding: 2px 0 2px 95px;
+	text-align: left;
+}
+#JobForm label {
+	width: 90px;
+	margin-left: -95px;
+}
+
+#JobForm label.radio,
+#Allocate label.radio,
+#CheckOut label.radio {
+	vertical-align: middle;
+	width: auto;
+	margin-left: 0px;
+}
+#JobForm #comment, 
+#JobForm #stock {
+	min-height: 40px;
+}
+
+#JobForm textarea {
+    width: 90%;
+}
+#JobForm .runtime input {
+	width: 75px;
+}
+
+.Manifest #PurchaseOrders ul {
+	list-style: none;
+	padding: 0px;
+	margin: 0px;
+}
+.Signature .Previews img {
+	width: 100%;
+}
+.Manifest table .InStock, .Manifest table .LastSeen {
+	text-align: right;
+	width: 90px;
+}
+
+.Project .View table .Price {
+	width: 300px;
+}
+table tr .name {
+	text-align: left;
+	width: 160px;
+}
+
+table .options {
+	text-align: left;
+	width: 220px;
+}
+
+#Results table tr.totals {
+	margin-bottom: 20px;
+}
+table .RFID, table .RFIDTag {
+	width: 95px;
+	text-align: left;
+}
+table .Skid {
+	width: 70px;
+	text-align: left;
+}
+@media print {
+	body #Header {
+display: none;
+	}
+}
+.Project .View table .status {
+	width: 200px;
+}
+input#StartDocket, input#EndDocket, input#Docket {
+    width: 70px;
+}
+
+table .invoice_id {
+	width: 90px;
+	text-align: left;
+}
+table .Project {
+	width: 80px;
+	text-align: left;
+}
+.po_id {
+	width: 70px;
+	text-align: left;
+}
+table .order_id {
+	text-align: left;
+	width: 80px;
+}
+table .docket {
+	text-align: left;
+	width: 60px;
+}
+table .form {
+	text-align: left;
+	width: 40px;
+}
+table .quantity {
+	text-align: left;
+	width: 80px;
+}
+table .Equipment {
+	text-align: left;
+	width: 100px;
+	padding-left: 5px;
+}
+table .version {
+	text-align: left;
+}
+table .Signature {
+	width: 100px;
+}
+
+fieldset li select {
+	width: auto;
+	max-width: 100%;
+}
+.payment_id {
+	width: 50px;
+}
+#Payments table .Date {
+	width: 200px;
+}
+td textarea {
+	width: 100%;
+}
+.News .thumbnail {
+	display: none;
+}
+.News h1 {
+	font-size: 1.2em;
+	margin: 6px 0 0 0;
+}
+.Description {
+	text-align: left;
+}
+tr.unauthorized {
+	background-color: yellow;
+}
+.DocketNavigation {
+float: left;
+	width: 75%;
+}

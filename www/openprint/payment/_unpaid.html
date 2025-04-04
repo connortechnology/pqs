@@ -1,0 +1,72 @@
+<fieldset><legend>Unpaid Invoices</legend>
+	<table id="unpaid" class="List sortable">
+		<thead>
+		<tr>
+			<th class="Invoice">Invoice</th>
+			<th class="Date">Early Payment Date</th>
+			<th class="Price">Early Total</th>
+			<th class="Date">Due Date</th>
+			<th class="Price">Total</th>
+			<th class="Price">Remaining</th>
+			<th class="Currency">Currency</th>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+			</thead>
+		<tbody>
+		<? echo (
+			my $html = '';
+			my @Invoices;
+			foreach my $I ( openprint::Invoice->find(
+        invoicer_id => $$variable{Payment}->recipient_id(),
+				invoicee_id => $$variable{Payment}->payor_id(),
+				order       => 'id',
+			) ) {
+				push @Invoices, $I if $I->owing() > 0;
+			} # end foreach $I
+			my ( $total_total, $owing_total ) = ( 0, 0 );
+			foreach my $I ( @Invoices ) {
+        my $Currency = $I->Currency();
+				my $total = $I->total();
+				#my $total = $Currency->convert_from( $I->total(), $Currency );
+        my $owing = $Currency->convert_from( ($I->is_early() ? $I->owing_early() : $I->owing()), $Currency );
+        my $owing = ($I->is_early() ? $I->owing_early() : $I->owing());
+				$total_total += $total;
+				$owing_total += $owing;
+		
+				$html .= sprintf(q`<tr>
+<td class="Invoice">%1$s</td>
+<td class="Date">%2$s</td>
+<td class="Price">%3$s</td>
+<td class="Date">%4$s</td>
+<td class="Price">%5$s</td>
+<td class="Price">%6$s</td>
+<td class="Currency">%7$s</td>
+<td class="buttons">%8$s</td>
+</tr>`, 
+	$I->link_to(),
+	format_date( $I->early_payment_date() ),
+	$openprint::Currency->format( $I->owing_early() ),
+	format_date( $I->due_on() ),
+	$openprint::Currency->format( $total ),
+	$openprint::Currency->format( $owing ),
+  $Currency->short(),
+	button( 'add'.$I->id(), { onclick=>'pay_invoice('.$I->id().');', text=>'+', title=>'Add to Payment' } ),
+);
+			} # end foreach $I
+			$html .= sprintf('
+</tbody>
+<tfoot>
+  <tr class="totals">
+    <td colspan="4">Totals</td>
+    <td class="Price">%s</td>
+    <td class="Price">%s</td>
+    <td>&nbsp;</td><td>&nbsp;</td>
+  </tr>
+</tfoot>',
+				$openprint::Currency->format($total_total),
+				$openprint::Currency->format($owing_total),
+				);
+			return $html;
+		) ?>
+	</table>
+</fieldset>

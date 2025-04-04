@@ -1,0 +1,12 @@
+<p>
+	<label><b>1000 Price (<?CurrencySymbol?>)</b></label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+		<input name="MPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
+	</span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>

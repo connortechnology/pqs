@@ -1,0 +1,62 @@
+<? eval ( 
+    my %filters = (
+            'order'=>'id',
+            );
+    $filters{'status'} = $param{'ddmStatus'} if $param{'ddmStatus'};
+    $filters{'company_id'} = $param{'ddmCustomers'} if $param{'ddmCustomers'};
+    $filters{'salesrep_id'} = $param{'salesrep_id'} if $param{'salesrep_id'};
+    $filters{'currency_id'} = $param{'currency_id'} if $param{'currency_id'};
+    $filters{'total_start'} = $param{'total_start'} if $param{'total_start'};
+    $filters{'total_end'} = $param{'total_end'} if $param{'total_end'};
+    if ( Date::Calc::check_date( @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} ) ) {
+        $filters{'created_on <='} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
+    } # end if
+    if ( Date::Calc::check_date( @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} ) ) {
+        $filters{'created_on >='} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+    } # end if
+
+    $variable{'Quotes'} = [ openprint::Quote->find( %filters ) ];
+
+) ?>	
+<? if ( @{$$variable{'Quotes'}} ) ?>
+	<table class="List sortable">
+		<tr> 
+			<th class="quote_id">Quote ID</th>
+			<th class="Date">Date</th>
+			<th align="left">Prepared By</th>
+			<th class="Company">Company</th>
+			<th align="left">Prepared For</th>
+			<th class="Status">Status</th>
+			<th class="Price">Total1</th>
+			<th class="Price">Total2</th>
+			<th class="Price">Total3</th>
+		</tr>
+		<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}}; ) ?>
+		<tr<?rowclass?>> 
+			<td class="quote_id"><a href="/main/quote/history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>"><? echo ( $$variable{'Quote'}->id() ) ?></a></td>
+			<td class="Date"><? echo ( format_date( $$variable{'Quote'}->created_on() ) ) ?></td>
+			<td align="left"><? echo ( $$variable{'Quote'}->by_name() ) ?></td>
+			<td class="Company"><? echo ( $$variable{'Quote'}->Company()->name() ) ?></td>
+			<td align="left"><? echo ( $$variable{'Quote'}->for_name() ) ?></td>
+			<td class="Status"><? echo ( $$variable{'Quote'}->status() ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total1() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total2() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total3() ); ) ?></td>
+		</tr>
+		<? eval ( 
+			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; 
+			$$variable{'Total1'} += $$variable{'Quote'}->total1();
+			$$variable{'Total2'} += $$variable{'Quote'}->total2();
+			$$variable{'Total3'} += $$variable{'Quote'}->total3();
+		) ?>
+		<? endwhile ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}}; ) ?>
+		<tr class="totals"> 
+			<td colspan="6">Report Totals</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total1'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total2'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total3'} ); ) ?></td>
+		</tr>
+	</table>
+<? else ( @{$$variable{'Quotes'}} ) ?>
+There were no results matching your criteria.
+<? endif ( @{$$variable{'Quotes'}} ) ?>

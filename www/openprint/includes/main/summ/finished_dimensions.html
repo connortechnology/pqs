@@ -1,0 +1,10 @@
+<p> 
+	<label>Finished Dimensions</label>
+<? echo ( 
+	my $html;
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= sprintf(qq{<span class="value">%s&quot; x %s&quot; <span class="smTbl">(W x H)</span></span>\n}, @$variable{'txtFinalWidth','txtFinalHeight'} );
+	} # end foreach
+	return $html;
+) ?>
+</p>

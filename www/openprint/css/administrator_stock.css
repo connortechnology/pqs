@@ -1,0 +1,97 @@
+.filters p, .filters li {
+	padding: 0 0 0 175px;
+}
+.filters label:not(.radio):not(.radio-inline) {
+	width: 170px;
+	margin-left: -175px;
+}
+.Recommendations ul {
+}
+.Recommendations ul li {
+    padding:0;
+    width: 25%;
+    float: left;
+	text-align: left;
+}
+/*
+.Recommendations label.radio {
+	margin-left: 2px;
+}
+*/
+.full_packages,
+.minimum_order,
+.fsc_code,
+.inventory_number,
+.message,
+.cuttable,
+.parts_div,
+.doublesided,
+.multipart,
+.perfecting,
+.scoring, 
+.diescoring,
+.digital,
+.bladecleaning,
+.taxexempt1,
+.taxexempt2,
+.available_to_order {
+    text-align: right;
+}
+
+.full_packages label:not(.radio):not(.radio-inline),
+.minimum_order label:not(.radio):not(.radio-inline),
+.available_to_order label:not(.radio):not(.radio-inline),
+.fsc_code label:not(.radio):not(.radio-inline),
+.inventory_number label:not(.radio):not(.radio-inline),
+.message label:not(.radio):not(.radio-inline),
+.cuttable label:not(.radio):not(.radio-inline),
+.parts_div label:not(.radio):not(.radio-inline),
+.doublesided label:not(.radio):not(.radio-inline),
+.multipart label:not(.radio):not(.radio-inline),
+.perfecting label:not(.radio):not(.radio-inline),
+.scoring label:not(.radio):not(.radio-inline),
+.diescoring label:not(.radio):not(.radio-inline),
+.digital label:not(.radio):not(.radio-inline),
+.bladecleaning label:not(.radio):not(.radio-inline),
+.taxexempt1 label:not(.radio):not(.radio-inline),
+.taxexempt2 label:not(.radio):not(.radio-inline) {
+    width: auto;
+    text-align: left;
+}
+p.minimum_order, p.fsc_code, p.inventory_number, p.message, p.available_to_order {
+	padding-left: 200px;
+}
+p.minimum_order label, p.fsc_code label, p.inventory_number label, p.message label, p.available_to_order label {
+    width: 200px;
+	margin-left: -200px;
+    text-align: left;
+}
+
+.manufacturer, .brand, .finish, .colour, .weight {
+	text-align: left;
+}
+.size,
+.calliper, .mweight, .gsm {
+	text-align: right;
+}
+.pricing, .spp_min {
+	width: 90px;
+	text-align: right;
+}
+
+#calliper_mm, #calliper, #size, #mweight, #width, #height {
+width: 70px;
+}
+#BasisSize input {
+	width: 60px;
+}
+#message {
+	width: 100%;
+}
+.dialog table .Range input[type="text"],
+.dialog table .Range input[type="number"] {
+	width: 40%;
+}
+#Prices td select {
+  width: 100%;
+}

@@ -1,0 +1,18 @@
+<p>
+Your account status has changed!
+</p>
+<p>
+An administrator has edited your account and removed your reseller status.  You will no longer be able to send quotes to third parties, or add markups to the projects.
+</p>
+<p>
+  If you have any questions, please contact
+  <? echo (
+          my $Company = $$variable{'Company'};
+          if ( $Company->salesrep_id() ) {
+          my $CSR = new openprint::User( $Company->salesrep_id() );
+          return sprintf('<a href="mailto:%s">%s %s</a>.', $CSR->email(), $CSR->firstname(), $CSR->lastname() );
+          } else {
+          return qq`our <a href="$openprint::config{'ExternalSiteURL'}/support/help_desk.html">helpdesk</a>.`;
+          } # end if
+          ) ?>
+  </p>

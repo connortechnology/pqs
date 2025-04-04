@@ -1,0 +1,45 @@
+<fieldset><legend>Specifications</legend>
+	<table class="List">
+		<tr>
+			<th class="Name">Specification</th>
+			<th class="Equipment">Equipment</th>
+			<th class="Min">Min</th>
+			<th class="Max">Max</th>
+			<th class="Value">Value</th>
+			<th class="Units">Units</th>
+			<th class="interpolate">Interpolate</th>
+		</tr>
+		<? echo ( 
+			my $html = '';
+			my $rowclass;
+			$$variable{Equipment} = [ map { $_->id(), $_->strid() . $_->name() } openprint::Equipment->find( order=>'lower(strid)') ] if ! $$variable{Equipment} or ref $$variable{Equipment} ne 'ARRAY';
+      my @specifications = sort {
+      $a->name() cmp $b->name()
+      ||
+      $a->Equipment()->name() cmp $b->Equipment()->name
+      } $$variable{Material}->Specifications();
+
+			foreach my $Spec ( @specifications, { } ) {
+				$html .= sprintf( q`
+				<tr%1$s> 
+					<td class="Name"><input type="text" name="txtSpecificationName%2$s" value="%3$s" /></td>
+					<td class="Equipment"><select name="spec_equipment_id-%2$s"><option value="">All</option>%4$s</select></td>
+					<td class="Min">%5$s</td>
+					<td class="Max">%6$s</td>
+					<td class="Value"><input type="text" name="txtSpecificationValue%2$s" value="%7$s" /></td>
+					<td class="Units"><input type="text" name="txtSpecificationUnits%2$s" value="%8$s" /></td>
+					<td class="interpolate">%9$s</td>
+				</tr>
+			`, $rowclass, $$Spec{id}, $$Spec{name}, 
+			make_drop_down( $$variable{Equipment}, $$Spec{equipment_id} ),
+			input( type=>'float', name=>'txtSpecificationMin'.$$Spec{id}, value=>$$Spec{min} ),
+			input( type=>'float', name=>'txtSpecificationMax'.$$Spec{id}, value=>$$Spec{max} ),
+			HTML::Entities::encode_entities($$Spec{value}), $$Spec{units},
+			radio( 'interpolate'.$$Spec{id}, [ '1','Yes', '0', 'No' ], $$Spec{interpolate}, { default=>$openprint::MaterialSpecification::defaults{interpolate} } ),
+			);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Spec
+			return $html;
+		) ?>
+	</table>
+</fieldset>

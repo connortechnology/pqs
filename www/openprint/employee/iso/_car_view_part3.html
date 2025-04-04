@@ -1,0 +1,22 @@
+<?include('/includes/error_reporting.html')?>
+<h3>Part 3 (To be completed by recipient)</h3>
+<table class="View">
+	<tr><td colspan="4">CORRECTIVE ACTION</td></tr>
+	<tr><td colspan="4"><? hecho ( $$variable{CAR}->action() ) ?></td></tr>
+	<tr>
+		<td>Recipient</td>
+		<td><? hecho ( new openprint::User( $$variable{CAR}->part3_user_id())->name() ) ?></td>
+		<td>Date</td>
+		<td><? hecho ( $$variable{CAR}->part3_signed_on() ) ?></td>
+	</tr>
+</table>
+<? if ( ($$variable{CAR}->issued_to_id() == $session{user_id} ) or ($$variable{CAR}->part3_user_id() == $session{user_id}) or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
+	<p class="buttons">
+		<? echo ( button( 'EditPart3', { onclick=>sprintf(q`new Ajax.Updater('Part3', '/employee/iso/_car_edit_part3.html', { parameters: {car_id:%1$d} } );`, $$variable{CAR}->id() ), text=>'Edit' } ); ) ?>.
+	</p>
+<? endif ( ($$variable{CAR}->issued_to_id() == $session{user_id} ) or ($$variable{CAR}->part3_user_id() == $session{user_id}) or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
+<? if ( ( ! $$variable{CAR}->part4_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
+<script type="text/javascript">
+	new Ajax.Updater( 'Part4', '/employee/iso/_car_edit_part4.html', { parameters: {car_id: <? echo ( $$variable{CAR}->id() ) ?>} } );
+</script>
+<? endif ( ( ! $$variable{CAR}->part4_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>

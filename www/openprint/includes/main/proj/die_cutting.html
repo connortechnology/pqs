@@ -1,0 +1,48 @@
+<li><label>Who supplies the die</label>
+	<? echo (
+		my @options = 'Y';
+		my $Company = new openprint::Company($$variable{Project}->company_id() );
+		if ( $config{owner_id} == $$Company{id} ) {
+			push @options, 'The client';
+		} elsif ( $$Company{id} ) {
+			push @options, $Company->name();
+		} else {
+			push @options, 'You';
+		} # end if
+		push @options, ( 'N', new openprint::Company( $config{owner_id} )->name() );
+		return radio( 'rdbSuppliedDie-'.$$variable{SignatureIndex}, \@options, 
+			( $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} or $$variable{rdbSuppliedDie} ), 
+			{
+				onclick=>qq`if(this.value=='Y'){\$('CustomDie$$variable{SignatureIndex}').hide();}else{\$('CustomDie$$variable{SignatureIndex}').show();} calc(this.form.name);` } );
+	) ?>	
+</li>
+	<li class="complexity"><label>Die Type</label>
+		<? echo ( radio( 'Complexity-'.$$variable{SignatureIndex}, [ map { $_, $_ } ( 'Simple','Average','Complex' ) ], $$variable{'Complexity-'.$$variable{SignatureIndex}}, { onclick=>'calc(this.form.name);' } ); ) ?>
+  </li>
+</ul>
+<ul id="CustomDie<?SignatureIndex?>" style="<? echo ( 'display: none;' if $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} eq 'Y' ) ?>" >
+	<li><label>Die size? (Inches)</label>
+		<? echo ( join("\n",
+			input( type=>'float', name=>'txtDieWidth-'.$$variable{SignatureIndex}, value=>$$variable{txtDieWidth}, oninput=>'calc(this.form.name);', placeholder=>'width' ),
+			' x ',
+			input( type=>'float', name=>'txtDieHeight-'.$$variable{SignatureIndex}, value=>$$variable{txtDieHeight}, oninput=>'calc(this.form.name);', placeholder=>'height' ),
+			write_override( 'chkOverrideDimensions-'.$$variable{SignatureIndex}, $$variable{'chkOverrideDimensions-'.$$variable{SignatureIndex}}, '', q`calc('f1');` ),
+		); ) ?>
+		<? echo ( input( type=>'float', name=>'txtSteelRuleLength-'.$$variable{SignatureIndex}, value=>$$variable{'txtSteelRuleLength-'.$$variable{SignatureIndex}}, oninput=>'calc(this.form.name);' ); ) ?>
+		Linear Inches
+	</li>
+	<li class="DieRuleBends"><label>Die Rule Bends</label>
+		<?echo( input( name=>'txtDieCutBends-'.$$variable{SignatureIndex}, value=>$$variable{'txtDieCutBends-'.$$variable{SignatureIndex}}, oninput=>'calc(this.form.name);'); )?>
+		How many bends are included in your die cut image. (ie. Circles - 4 Bends, Half Moon - 2 Bends, Five Point Star Burst - 10 bends.)
+	</li>
+	<li class="DieCutPunches"><label>Die Cut Punches</label>
+		<?echo( input( name=>'txtDieCutPunches-'.$$variable{SignatureIndex}, value=>$$variable{'txtDieCutPunches-'.$$variable{SignatureIndex}}, oninput=>'calc(this.form.name);'); )?>
+		Does your die cut image require any die cut areas smaller 
+			than 1&quot; in diameter? If yes, please specify how many areas need to 
+			be die cut punched to a diameter of 1&quot; or less.
+	</li>
+</ul>
+<ul>
+<li><label># of holes to clear</label>
+<? echo ( input( type=>'cardinal', name=>'txtHoleClearingHoles-'.$$variable{SignatureIndex}, value=>$$variable{'txtHoleClearingHoles-'.$$variable{SignatureIndex}}, oninput=>'calc(this.form.name);' ); ) ?>
+</li>

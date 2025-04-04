@@ -1,0 +1,134 @@
+		<script language="javascript">
+			var projectType = "<?ProjectTypeID?>";
+
+			function selectProjectTemplate(formName) {
+				var form = getFormObj( formName );
+				var type = get_rdb_value ( form, 'rdbTemplateType' );
+				clear_ddm(form.ddmPredefinedProject);
+				if ( options[type] ) {
+					for ( var x = 0; x < options[type].length; x++ ) {
+						var value = options[type][x].value;
+						var text = options[type][x].text;
+					//	alert("T!: " + text + "," + value);
+						add_option( form.ddmPredefinedProject, options[type][x].text, options[type][x].value );
+					} // end of
+				} else {
+					alert("There are no Pre-designed project specifications for the selected project template at this time.\n\nPlease select another project template or return to the previous page and create your project with your own basic or detailed specifications.");
+				} // end if
+			} // end function
+			function validate_data(form) {
+				return 1;
+			} // end furction
+
+		</script>
+			<form name="f1" method="POST" action="/main/project/view.html">
+			<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
+			<? echo ( include('/includes/main/proj/project_name.html'); ) ?>
+			<? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Brochures' ) ?>			
+			<? echo ( include('/includes/main/proj/templates/brochures.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Brochures' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Flyers' ) ?>
+			<? echo ( include('/includes/main/proj/templates/flyers.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Flyers' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Cards' ) ?>
+			<? echo ( include('/includes/main/proj/templates/cards.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Cards' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Posters' ) ?>
+			<? echo ( include('/includes/main/proj/templates/posters.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Posters' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Pamphlets/Leaflets' ) ?>
+			<? echo ( include('/includes/main/proj/templates/brochures.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Pamphlets/Leaflets' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'NewsLetters' ) ?>
+			<? echo ( include('/includes/main/proj/templates/newsletters.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'NewsLetters' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'BusinessCards' ) ?>
+			<? echo ( include('/includes/main/proj/templates/business_cards.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'BusinessCards' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Packaging' ) ?>
+			<? echo ( include('/includes/main/proj/templates/packaging.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Packaging' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+			<? echo ( include('/includes/main/proj/templates/presentation_folders.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Letterhead' ) ?>
+			<? echo ( include('/includes/main/proj/templates/letterhead.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Letterhead' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Scratch/WritingPads' ) ?>
+			<? echo ( include('/includes/main/proj/templates/scratch_pads.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Scratch/WritingPads' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'MultiVersion' ) ?>
+			<? echo ( include('/includes/main/proj/templates/multi_version.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'MultiVersion' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Labels' ) ?>
+			<? echo ( include('/includes/main/proj/templates/labels.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Labels' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Tags/Tickets' ) ?>
+			<? echo ( include('/includes/main/proj/templates/tags_tickets.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Tags/Tickets' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Maps' ) ?>
+			<? echo ( include('/includes/main/proj/templates/maps.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Maps' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Inserts' ) ?>
+			<? echo ( include('/includes/main/proj/templates/inserts.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Inserts' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Forms' ) ?>
+			<? echo ( include('/includes/main/proj/templates/forms.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Forms' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Covers' ) ?>
+			<? echo ( include('/includes/main/proj/templates/covers.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Covers' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Books' ) ?>
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Books' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Catalogues' ) ?>
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Catalogues' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Reports' ) ?>
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Reports' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Booklets' ) ?>
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Booklets' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Manuals' ) ?>
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Manuals' ) ?>
+			<? if ( $$variable{'ProjectTypeID'} eq 'Magazines' ) ?>
+			<? echo ( include('/includes/main/proj/templates/multipage.html'); ) ?>
+			<? endif ( $$variable{'ProjectTypeID'} eq 'Magazines' ) ?>
+
+			<? echo ( include('/includes/main/proj/predefined_projects.html'); ) ?>
+			
+                <table width="600" border="0" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td width="10">&nbsp;</td>
+
+                    <td width="310">Please click &quot;Save &amp; Continue&quot; if you have provided all the relevant project information.</td>
+                    <td width="20">&nbsp;</td>
+                    <td width="260"><a href="#" onClick="f1.reset();return false" onMouseOver="btnOn('b2')" onMouseOut="btnOff('b2')"><img src="/images/buttons/off/reset.gif" width="42" height="19" border="0" name="b2"> </a><a href="#" onClick="submit_handler('f1');return false;" onMouseOver="btnOn('b1')" onMouseOut="btnOff('b1')"><img src="/images/buttons/off/save_and_continue.gif" width="94" height="19" border="0" name="b1"></a></td>
+                  </tr>
+                </table>
+			<input type="hidden" name="btnFunction" value="PredefinedProject" />
+            <input type="hidden" name="txtQuantity1" value="<?txtQuantity1?>" />
+            <input type="hidden" name="txtQuantity2" value="<?txtQuantity2?>" />
+            <input type="hidden" name="txtQuantity3" value="<?txtQuantity3?>" />
+            <input type="hidden" name="txtProjectReference" value="<?txtProjectReference?>" \>
+            <input type="hidden" name="txtComments" value="<?txtComments?>" \>
+
+			<input type="hidden" name="rdbShipping" value="<?rdbShipping?>" >
+			<input type="hidden" name="rdbGraphicDesign" value="<?rdbGraphicDesign?>" >
+
+
+  <? while ( @{$$variable{'PackagingServiceTypes'}} ) ?>
+      <? if ( $$variable{'id'} = pop @{$$variable{'PackagingServiceTypes'}}; ) ?>
+
+	  	<input type="hidden" name="chkPackagingServices" value="<?id?>" \>
+
+      <? endif ( $$variable{'id'} = pop @{$$variable{'PackagingServiceTypes'}}; ) ?>
+  <? endwhile ( @{$$variable{'PackagingServiceTypes'}} ) ?>
+
+			</form>
+		<script language="javascript">
+			<?PROJECT_OPTIONS?>
+		</script>

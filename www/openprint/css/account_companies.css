@@ -1,0 +1,36 @@
+.Companies {
+	border-bottom: 1px solid #000088;
+	display: table;
+	width: 100%;
+}
+ .Company { 
+	display: table-row;
+	width: 100%;
+	cursor: pointer;
+}
+.Company:hover { color: #6666CC;   }
+
+.Companies .header div {
+	border-bottom: 1px solid #000088;
+	cursor: auto;
+}
+.Company .Account,
+.Company .CompanyName,
+.Company .Entered,
+.Company .CSR,
+.Company .Address,
+.Company .Phone,
+.Company .LastCalled ,
+.Company .LastOrdered {
+	display: table-cell;
+}
+
+.Company .Account {
+	width: 60px;
+}
+.Company .CompanyName {
+	text-align: left;
+	width: auto;
+}
+.Company .Phone {
+}

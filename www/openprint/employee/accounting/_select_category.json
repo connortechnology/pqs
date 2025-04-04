@@ -1,0 +1,7 @@
+<? echo (
+	my @category_ids = sql::execute( undef, undef, 'SELECT DISTINCT category_id FROM Expenses WHERE recipient_id=?', $param{recipient_id} ) if $param{recipient_id};
+	if ( @category_ids == 1 ) {
+		return qq`ddm_select_by_value( \$('category_id'), $category_ids[0] );`;
+	}
+	return;
+) ?>

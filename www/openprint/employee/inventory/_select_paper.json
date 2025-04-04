@@ -1,0 +1,12 @@
+<? echo (
+	$r->content_type('text/javascript');
+	my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
+	my $Paper = new openprint::Paper( $openprint::param{'paper_id'} );
+	$Paper->weight();
+
+	my $html = '';
+	$html .= "
+		ddm_select_by_value( \$('Owner'), $$Paper{'owner_id'} );
+	";
+	return $html;
+) ?>

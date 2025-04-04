@@ -1,0 +1,15 @@
+<? echo (
+	my @Items = openprint::PurchaseOrder_Item->find(
+		company_id=>new openprint::User( $session{user_id} )->company_id(),
+		( $param{name_ilike} ? ( 'name ilike' => '%'.join('%',split(/\s+/,$param{'name_ilike'})).'%' ) : ( 'name !='=>'') ),
+		( $param{product_ilike} ? ( 'product ilike' => '%'.join('%',split(/\s+/,$param{'product_ilike'})).'%' ) : ( 'product !='=>'') ),
+		( $param{vendor_id} ? ( vendor_id => $param{vendor_id} ) : () ),
+		( $param{type_id} ? ( type_id => $param{type_id} ) : () ),
+		'order'	=>	'lower(name)',
+	);
+	make_drop_down( [ '', 'select', map { $_->id(), $_->price() ? sprintf('%s %s %s as of %s', $_->product(), $_->name(), 
+				openprint::Currency::format($_->price()), 
+				Date::Format::time2str($config{DateFormat}, Date::Parse::str2time( $_->updated_on() ) ),
+				) : $_->name() 
+			} @Items ], @Items == 1 ? $Items[0]{id} : $param{selected_id} );
+) ?>

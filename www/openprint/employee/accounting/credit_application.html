@@ -1,0 +1,150 @@
+<script type="text/javascript">
+	function status_onclick( e ) {
+		if ( e.value == 'Approved' ) {
+			approve( e.form );
+		} else if ( e.value == 'Declined' ) {
+			decline( e.form );
+		} // end if
+	} // end function status_onclick
+	function approve( form ) {
+		form.denydays.value = '<? echo ( $$variable{Application}->desired_terms() ) ?>';
+		form.warndays.value = parseInt('<? echo ( $$variable{Application}->desired_terms() ) ?>'/2);
+		form.limit.value = '<? echo ( $$variable{Application}->desired_limit() ) ?>';
+		form.downpayment.value = '0';
+		form.cod.value = '0';
+	} // end function approve( form )
+	function decline( form ) {
+		form.denydays.value = '<? echo ( $$variable{Credit}->denydays() ) ?>';
+		form.warndays.value = '<? echo ( $$variable{Credit}->warndays() ) ?>';
+		form.limit.value = '<? echo ( $$variable{Credit}->limit() ) ?>';
+		form.downpayment.value = '<? echo ( $$variable{Credit}->downpayment() ) ?>';
+		form.cod.value='<? echo ( $$variable{Credit}->cod() ) ?>';
+	} // end function decline( form )
+	function submit_check( form ) {
+		if ( ! ( form.status[0].checked || form.status[1].checked ) ) {
+			alert( 'You must either approve or decline the credit application.' );
+		} else {
+			form.submit();
+		} // end if
+	} // end function submit_check( form )
+</script>
+<?include('/includes/error_reporting.html')?>
+<? if ( $$variable{Application}->id() ) ?>
+	<div class="CreditApplication">
+		<div class="Header">
+            <div class="Logo">
+                <table><tr>
+                <td width="70"><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
+                <td align="left">
+                    <a href="/index.html"><span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a>
+                </td>
+                </tr></table>
+                <table class="HeaderText">
+                    <tr>
+                        <td colspan="2"><? echo ( join(' ', $openprint::User->Company()->get('address1','city','state','postalcode') );) ?></td>
+                    </tr>
+                    <tr>
+                        <td>Phone<? echo ( $openprint::User->Company()->phone() ) ?></td>
+                        <td>Fax<? echo ( $openprint::User->Company()->fax() ) ?></td>
+                    </tr>
+                </table>
+            </div><!--Logo-->
+			<div class="PageTitle">
+				<h1>Credit Application</h1>
+			</div>
+		</div><!--Header-->
+		<form id="f1" name="f1" method="post" action="credit_application.html<? echo ( $param{credit_index} ? '?credit_index='.$param{credit_index} : '' ) ?>">
+			<input type="hidden" name="btnFunction"/>
+			<div class="unprintable">
+				<br/>
+				Select whether to approve or decline the credit application, edit as neccessary, and click Submit.<br/>
+				<br/>
+				<div class="Granted">
+					<fieldset>
+						<ul>
+							<li><label>Status</label>
+								<? echo ( radio( 'status', [ 'Approved', 'Approved', 'Declined', 'Declined' ], $$variable{Application}->status(), { onclick=>'status_onclick(this);' } ); ) ?>
+							</li>
+							<li><label>Deny orders after</label>
+								<input type="number" id="denydays" name="denydays" value="<? echo ( $$variable{Application}->granted_terms() ) ?>"/> Days </li>
+							<li><label>Warn after</label>
+								<input type="number" id="warndays" name="warndays" value="<? echo ( $$variable{Application}->granted_terms()/2 ) ?>"/> Days </li>
+							<li><label>Credit Limit</label>
+								<input type="number" id="limit" name="limit" value="<? echo ( $$variable{Application}->granted_limit() ) ?>" /></li>
+							<li><label>Required Downpayment Amount</label>
+								<input type="number" id="downpayment" name="downpayment" value="<? echo ( $$variable{Application}->granted_downpayment() ) ?>"/> %
+							</li>
+							<li><label>COD Amount</label>
+								<input type="number" id="cod" name="cod" value="<? echo ( $$variable{Application}->granted_cod() ) ?>"/> %
+							</li>
+						</ul>
+						<p class="buttons">
+						<? echo ( join("\n",
+									button( 'Save', { onclick=>"f1.btnFunction.value='Save';submit_check(f1);" } ),
+									button( 'SendToMe', { onclick=>"f1.btnFunction.value='SendToMe';f1.submit();" } ),
+									button( 'Resend', { onclick=>"f1.btnFunction.value='Resend';f1.submit();" } ),
+							); ) ?> 
+						</p>
+					</fieldset>
+				</div><!--Granted-->
+				<div class="Requested">
+					<fieldset><legend>Credit Options Requested</legend>
+						<ul>
+							<li><label>First Order Value</label><? echo ( $$variable{Application}->firstordervalue() ) ?></li>
+							<li><label>Annual Purchases</label><? echo ( $$variable{Application}->annualpurchases() ) ?></li>
+							<li><label>Accounts Payable Contact</label><? echo ( $$variable{Application}->accountspayablecontact() ) ?></li>
+							<li><label>Account Limit</label><? echo ( $$variable{Application}->desired_limit() ) ?></li>
+							<li><label>Terms</label><? echo ( $$variable{Application}->desired_terms() ) ?></li>
+							<li><label>Financial Statement Available?</label>
+							<? echo ( $variable{Application}->financialstatementavailable() eq 'Y' ? 'Yes' : 'No' ) ?></li>
+							<li><label>Signed By</label><? echo ( $$variable{Application}->signature() ) ?></li>
+							<li><label>Submitted On</label><? echo ( format_datetime( $$variable{Application}->created_on() ); ) ?></li>
+						</ul>
+					</fieldset>
+				</div>
+				<div class="Current">
+					<fieldset><legend>Current Credit Information</legend>
+						<ul> 
+							<li><label>Deny orders after</label><? echo ( $$variable{Credit}->denydays() ne '' ? $$variable{Credit}->denydays().'Days' : 'none' ) ?></li>
+							<li><label>Warn after</label><? echo ( $$variable{Credit}->warndays() ne '' ? $$variable{Credit}->warndays().'Days' : 'none' ) ?></li>
+							<li><label>Credit Limit</label><? echo ( 1*$$variable{Credit}->limit() ) ?></li>
+							<li><label>Required Downpayment Amount</label><? echo ( 1*$$variable{Credit}->downpayment() ) ?>%</li>
+							<li><label>COD Amount</label><? echo ( 1*$$variable{Credit}->cod() ) ?>%</li>
+						</ul>
+					</fieldset>
+				</div>
+			</div>
+		</form>
+		<br class="spacer"/>
+			<?include('/email_content/_company_information.html') ?>
+		<div class="OwnershipInformation">
+			<?include('/email_content/_business_information.html') ?>
+		</div>
+			<?include('/account/_company_profile_view.html') ?>
+			<?include('/account/_trade_references_view.html') ?>
+			<?include('/email_content/_bank_information.html') ?>
+		<div class="Disclaimer">
+		<? echo ( $config{CreditApplicationDisclaimer} ) ?>
+		</div>
+		<div class="Signatures">
+			<fieldset><legend>Signatures</legend>
+			<ul class="Signature">
+				<li class="SignedBy"><label>Signed By</label><span class="input"></span></li>
+				<li class="Title"><label>Title</label><span class="input"></span></li>
+				<li class="Name"><label>Name In Print</label><span class="input"></span></li>
+				<li class="Date"><label>Date</label><span class="input"></span></li>
+			</ul>
+			<ul class="Signature">
+				<li class="SignedBy"><label>Signed By</label><span class="input"></span></li>
+				<li class="Title"><label>Title</label><span class="input"></span></li>
+				<li class="Name"><label>Name In Print</label><span class="input"></span></li>
+				<li class="Date"><label>Date</label><span class="input"></span></li>
+			</ul>
+			Signature of Owner(s) or Officer(s) is required.  Two Signatories are required for Partnership.
+			</fieldset>
+		</div>
+		<p class="FaxTo">Please fax to: <? echo ( new openprint::Company($config{owner_id})->fax(); ) ?></p>
+	</div>
+<? else ( $$variable{Application}->id() ) ?>
+	No Credit Application specified.<br/>
+<? endif ( $$variable{Application}->id() ) ?>

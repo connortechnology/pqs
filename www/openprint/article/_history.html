@@ -1,0 +1,64 @@
+<? eval (
+	@{$$variable{'Articles'}} = ();
+	foreach my $Article ( openprint::Article->find( 
+		date_filter( '/article/history.html?created_on_end','created_on <=' ),
+		date_filter( '/article/history.html?created_on_start','created_on >=' ),
+		date_filter( '/article/history.html?published_on_end','published_on <=' ),
+		date_filter( '/article/history.html?published_on_start','published_on >=' ),
+		( $session{'/article/history.html?published'} ne '' ? ( published => $session{'/article/history.html?published'} ) : () ),
+		( $session{'/article/history.html?deleted'} ne '' ? ( deleted => $session{'/article/history.html?deleted'} ) : ( deleted=>[0,1] ) ),
+		( $session{'/article/history.html?company_id'} ? ( company_id	=> $session{'/article/history.html?company_id'} ) : () ),
+		( $session{'/article/history.html?employee_id'} ? ( employee_id => $session{'/article/history.html?employee_id'} ) : () ), 
+		( $session{'/article/history.html?category_id'} ? ( category_id => $session{'/article/history.html?category_id'} ) : () ),
+		( $session{'/article/history.html?author_id'} ? ( created_by => $session{'/article/history.html?author_id'} ) : () ),
+		order				=> 'published_on DESC',
+		) ) {
+		push @{$$variable{'Articles'}}, $Article;
+	} # end foreach Article
+) ?>
+
+<? if ( @{$$variable{'Articles'}} == 0 ) ?>
+	There are no articles which match your search criteria. 
+<? else ( @{$$variable{'Articles'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Article ID #</b> to view article details.<br/>
+		To delete articles from history check the appropriate article(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="checkbox"><input type="checkbox" onclick="select_all($('f1'), 'article_id', this.checked );"/></th>
+			<th class="Author">Author</th>
+			<th class="Category">Category</th>
+			<th class="DateTime">Created On</th>
+			<th class="DateTime">Published On</th>
+			<th class="Title">Title</th>
+		</tr>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Article ( @{$$variable{'Articles'}} ) {
+				my $Author = $Article->Author();
+
+				$html .= sprintf(q` 
+				<tr title="%2$s" %8$s> 
+					<td class="checkbox"><input type="checkbox" name="article_id" value="%1$d"/></td>
+					<td class="Author"><a href="/article/view.html?article_id=%1$d">%3$s</a></td>
+					<td class="Category"><a href="/article/view.html?article_id=%1$d">%4$s</a></td>
+					<td class="DateTime"><a href="/article/view.html?article_id=%1$d">%5$s</a></td>
+					<td class="DateTime"><a href="/article/view.html?article_id=%1$d">%6$s</a></td>
+					<td class="Title"><a href="/article/view.html?article_id=%1$d">%7$s</a></td>
+				</tr>
+				`, $Article->id(), html_escape($Article->summary()),
+				( $Author->name() ? htmlize( $Author->name() ) : ' ' ),
+				$Article->Category()->name(),
+				format_datetime( $Article->created_on() ),
+				format_datetime( $Article->published() ),
+				escape_quotes($Article->title()),
+				$rowclass,
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Article
+			return $html;
+		) ?>
+	</table>
+<? endif ( @{$$variable{'Articles'}} == 0 ) ?>

@@ -1,0 +1,11 @@
+<li>
+	<label>Scoring</label>
+	<?echo(radio('Scoring', ['Y','Yes','N','No'], $$variable{'Scoring'}, { onclick=>q`if(this.value=='Y'){$('ScoringDiv').show();$('OrderButton').hide();}else{$('ScoringDiv').hide();$('OrderButton').hide();};` } ); ) ?>
+</li>
+<li id="ScoringDiv" <? echo ( 'style="display:none;"' if $$variable{'Scoring'} ne 'Y' ) ?> >
+	<label for="txtScoreQty"># of Scores</label>
+	<? echo ( input( type=>'cardinal', name=>'txtScoreQty', value=>$$variable{txtScoreQty}, oninput=>q`$('chkOverrideScoreQty').checked=true;$('OrderButton').hide();` ); ) ?>
+	<input type="checkbox" id="chkOverrideScoreQty" name="chkOverrideScoreQty" value="Y" <? echo ( checked( $$variable{'chkOverrideScoreQty'} eq 'Y' ); ) ?> onclick="$('OrderButton').hide();" />
+	<label class="radio" for="chkOverrideScoreQty">Override</label>
+</li>
+

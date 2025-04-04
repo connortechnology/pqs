@@ -1,0 +1,65 @@
+<form name="AddDocketForm" action="/employee/production/print_overview.html" method="post">
+	<input type="hidden" name="btnFunction" value="Add Docket" />
+	<fieldset><legend>Create New Docket</legend>
+		<ul>
+			<li><label>Company</label>
+				<input class="filter" type="text" oninput="filter_companies('add_docket_company_id', {name:this.value,selected_id:get_ddm_value($('add_docket_company_id'))});" />
+				<select name="company_id" id="add_docket_company_id">
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$session{company_id}, 'last_order_id is null'=>0}), $session{company_id} ) ) ?>
+				</select>
+			</li>
+			<li><label>Comment</label>
+				<textarea id="comment" name="comment" rows="5"></textarea>
+			</li>
+			<li><label>Forms</label>
+				<?echo( input(type=>'cardinal', name=>'forms', value=>'1'); )?>
+			</li>
+			<li><label>Press</label>
+				<select name="press_id" onchange="new Ajax.Updater('shift_id', '_equipment_shifts.html?equipment_id='+this.value+'&'+$('shift_id').value);new Ajax.Updater('servicetype_id', '_job_service_dropdown.html?equipment_id='+this.value+'&'+$('servicetype_id').value);">
+			<? echo (
+				$$variable{Equipment} = new openprint::Equipment( ( split(',',$session{'/employee/production/print_overview.html?Equipment'}) == 1 ? $session{'/employee/production/print_overview.html?Equipment'} : undef ) );
+					make_drop_down( 
+						openprint::Equipment->dropdown(
+							useinscheduling=>1, order=>'lower(strname)'),
+						$$variable{Equipment}{id},
+						); ) ?>
+				</select>
+			</li>
+			<li><label>Date</label>
+				<?echo( date_select('starttime', [Date::Calc::Today()]);) ?>
+			</li>
+			<li><label>Shift</label>
+<?eval(
+	# We want to default to the next shift for today
+		$$variable{NextShift} = openprint::Shift->find_one( 'starttime >' => 'NOW()', equipment_id=>$$variable{Equipment}{id}, order=>'starttime asc');
+$log->debug("Next SWhift: " . $$variable{NextShift}->to_string() );
+)?>
+				<select id="shift_id" name="shift_id"><?include(_equipment_shifts.html)?></select>
+			</li>
+			<li><label>Service</label><select id="servicetype_id" name="servicetype_id"><?include(_job_service_dropdown.html)?></select></li>
+			<li><label>Impressions</label>
+				<? echo ( input( type=>'cardinal', name=>'impressions' ); ) ?>
+			</li>
+			<li class="runtime"><label>Runtime</label>
+	 <? echo (
+			 my ( $h, $m, $s ) = ( 1, 0, 0 );
+	## goes to 99 because it can be more than a day.
+			 return join("\n",
+				 ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 99 ) ], sprintf('%.2d', $h ), { name=>'runtime_hours', onchange=>'update_runtime(this);' } ),
+				 ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], sprintf('%.2d', $m ), { name=>'runtime_minutes', onchange=>'update_runtime(this);' } ),
+				 ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], sprintf('%.2d', $s ), { name=>'runtime_seconds', onchange=>'update_runtime(this);' } ),
+				 input( type=>'text',readonly=>'readonly', name=>'runtime', value=>'1:00:00' ),
+				 );
+			 ) ?>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+						button( 'Submit', { onclick=>'AddDocketForm.submit();' } ),
+						button( 'Cancel', { onclick=> 'popupWin.close();', } ),
+		); ) ?>
+		</p>
+	</fieldset>
+</form>
+<script> tinymce_on('comment');</script>

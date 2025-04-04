@@ -1,0 +1,6 @@
+<iframe src="<?echo(
+        my @hosts = $$variable{Site}->Hosts();
+        my @interfaces = $hosts[0]->Interfaces();
+        return 'https://'.$hosts[0]->hostname().'/index.php?username=admin&password=CloudMule!';
+        )?>" width="100%" height="100%" frameborder="0" sandbox="allow-forms allow-scripts allow-same-origin">
+</iframe>

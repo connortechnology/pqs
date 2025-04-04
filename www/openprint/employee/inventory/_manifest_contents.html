@@ -1,0 +1,104 @@
+<?include(/includes/error_reporting.html)?>
+<?eval(
+	$variable{location_dropdown} = openprint::Location->dropdown(company_id=>$openprint::Owner->id(), order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{location_dropdown};
+)?>
+<table id="Contents-<?type_id?>" class="List sortable">
+	<tr>
+		<th class="RFID">RFID</th>
+		<th class="Skid">Skid</th>
+		<th class="ManufacturersID">Manufacturers ID</th>
+		<th class="qty_lbs">Qty (lbs)</th>
+		<th class="qty_kgs">Qty (kgs)</th>
+<? echo (
+	my $html;
+	if ( $$variable{Type}->type() ne 'Roll' ) {
+		$html .= '<th class="qty_sheets">Qty (shts)</th>';
+	} # end if
+	if ( $$variable{Type}->type() ne 'Sheet' ) {
+		$html .= '<th class="qty_feet">Qty (feet)</th>';
+	} # end if
+	return $html;
+) ?>
+		<th class="in_stock">In Stock</th>
+		<th class="last_seen">Last Seen</th>
+		<th class="Location">Location</th>
+		<th class="Manifest">Manifests</th>
+		<th class="buttons">&nbsp;</th>
+	</tr>
+	<tr id="new-<?type_id?>">
+		<td class="RFID"><input type="text" id="rfidtag_id-<?type_id?>-" name="rfidtag_id-<?type_id?>-" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode==13){add_content(this.form,'<?type_id?>');}" /></td>
+		<td class="Skid"><? echo ( input( type=>'cardinal', id=>join('-', 'skid_id', $$variable{type_id}, '' ), name=>join('-', 'skid_id', $$variable{type_id}, '' ), onkeypress=>'return input_handler(this,event);', onkeydown=>"if(event.keyCode==13){add_content(this.form,$$variable{type_id});}" ); ) ?></td>
+		<td class="ManufacturersID"><? echo ( input( type=>'text', id=>join('-','manufacturers_id',$$variable{type_id}, '' ), name=>join('-','manufacturers_id', $$variable{type_id}, '' ), onkeydown=>"if(event.keyCode == 13){add_content(this.form, $$variable{type_id} );}" ); ) ?></td>
+		<td class="qty_lbs">
+<? echo ( input( type=>'cardinal', id=>'qty_lbs-'.$$variable{type_id}.'-', name=>'qty_lbs-'.$$variable{type_id}.'-', onkeyup=>"from_lbs(this,'$$variable{type_id}','');" ); ) ?>
+		</td>
+		<td class="qty_kgs">
+<? echo ( input( type=>'float', id=>'qty_kgs-'.$$variable{type_id}.'-', name=>'qty_kgs-'.$$variable{type_id}.'-', onkeyup=>"from_kg(this,'$$variable{type_id}','');" ); ) ?>
+</td>
+<? echo (
+	if ( $$variable{Type}->type() ne 'Sheet' ) {
+		return '<td class="qty_feet">'.
+input( type=>'cardinal', id=>'qty_feet-'.$$variable{type_id}.'-', name=>'qty_feet-'.$$variable{type_id}.'-', onkeyup=>"from_feet(this,'$$variable{type_id}','');" ).'</td>';
+	} # end if
+) ?>
+<? echo (
+	if ( $$variable{Type}->type() ne 'Roll' ) {
+		return '<td class="qty_sheets">'.
+input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_sheets-'.$$variable{type_id}.'-', onkeyup=>"from_sheets(this,'$$variable{type_id}','');" ).'</td>';
+	} # end if
+) ?>
+		<td class="in_stock">&nbsp;</td>
+		<td class="last_seen">&nbsp;</td>
+		<td class="Location"><? echo ( ssi::select( $variable{location_dropdown}, 
+					( $variable{'location_id-'.$$variable{type_id}.'-'} ? $variable{'location_id-'.$$variable{type_id}.'-'} : 
+( $openprint::Host ? $openprint::Host->location_id() : () ) ),
+					{ name=>'location_id-'.$$variable{type_id}.'-', id=>'location_id-'.$$variable{type_id}.'-', prepend=>['','select'] } ))?></td>
+		<td colspan="2" class="buttons"><? echo ( button( 'Add'.$$variable{type_id}, { onclick=>"add_content( \$('f1'), $$variable{type_id} );", text=>'Add' } ); ) ?></td>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $total = 0;
+		my $content = slurp_content( '/employee/inventory/_manifest_content.html' );
+		my @Contents = $$variable{Type}->Contents();
+		my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @Contents;
+		%{$$variable{SkidContents}} = ();
+		if ( @skid_ids ) {
+			foreach my $SC ( openprint::SkidContent->find(skid_id=>\@skid_ids, 'deleted in'=>[0,1]) ) {
+				push @{$$variable{SkidContents}{$$SC{skid_id}}}, $SC;
+			} # end foreach
+		} # end if
+
+		foreach my $C ( sort { $$a{id} <=> $$b{id} } @Contents ) {
+			$$variable{C} = $C;
+			$html .= variable_substitution( \$content, $variable );
+			$total += $C->quantity();
+		} # end foreach tag_id
+
+		my $Paper = $$variable{Type}->Paper();
+
+		$html .= sprintf('<tr id="totals-%1$d" class="totals"><td>Totals:</td><td colspan="2" id="skidcount-%1$d">%2$d skids/rolls</td>', $$variable{type_id}, scalar @Contents );
+		if ( $$variable{Type}->type() eq 'Sheet' ) {
+			my $lbs = $total*$Paper->wpsi()*$Paper->width()*$Paper->height();
+
+			$html .= sprintf('<td id="totallbs-%1$d">%2$slbs</td><td id="totalkgs-%1$d">%3$skg</td><td id="totalsheets-%1$d" class="qty_sheets">%4$s</td>',
+					$$variable{type_id}, Number::Format::format_number($lbs), 
+					Number::Format::format_number($lbs/2.2046),
+					Number::Format::format_number($total)
+			);
+		} else { # A Roll
+			$html .= sprintf('<td id="totallbs-%1$d">%2$slbs</td><td id="totalkgs-%1$d">%3$skg</td><td id="totalfeet-%1$d" class="qty_feet">%4$sfeet</td>',
+				$$variable{type_id}, 
+				Number::Format::format_number($total), 
+				Number::Format::format_number($total/2.2046), 
+				Number::Format::format_number( ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ) ),
+					);
+		} #end if
+		$html .= '<td colspan="5">&nbsp;</td></tr>';
+		if ( scalar @Contents != $$variable{Type}{item_count} ) {
+			$html .= '<tr><td colspan="11" class="warning">Contents and expected content count do not match!';
+			$html .= ' Please enter the expected # of items for this stock type.' if ! $$variable{Type}{item_count};
+			$html .= '</td></tr>';
+		} # end if
+		return $html;
+	) ?>
+</table>

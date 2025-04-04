@@ -1,0 +1,53 @@
+<html>
+	<body>
+Thank you for using <? echo ( $$variable{Invoice}->Invoicer()->business_name() ) ?>.  Your current invoice (#<? echo ( $$variable{Invoice}->id() ) ?>) is attached.  <br/>
+ <br/>
+This invoice has been sent to the following contacts at <? echo ( $$variable{Invoice}->Invoicee()->business_name() ) ?>:<br/>
+<? echo (
+	my $html = '';
+	foreach my $C ( $$variable{Invoice}->Invoicee()->AccountingContacts() ) {
+		$html .= sprintf('"%s" &lt;%s&gt;<br/>', $C->name(), $C->email() );
+	} # end foreach
+	return $html;
+) ?>
+ <br/>
+<? echo ( 
+  my $email;
+  if ( $$variable{Invoice}->Invoicee()->salesrep_id() ) {
+    $email = $$variable{Invoice}->Invoicee()->CSR()->email();
+  } else {
+    $email =  $config{AccountingEmail};
+  }
+  if ( $email ) {
+    return '
+If you have any questions or comments regarding your invoice,
+or our online billing system, please send us an e-mail at 
+<a href="mailto://'.$email.'">'.$email.'</a>.<br/>
+As always, your concerns will be addressed in a prompt and confidential manner.<br/>
+';
+  }
+)?>
+ <br/>
+Thank you,<br/>
+<?echo($$variable{Invoice}->Invoicee()->CSR()->name())?><br/>
+ 
+<hr>
+CONFIDENTIALITY CAUTION AND DISCLAIMER<br/>
+<br/>
+This message is intended for the use of the individual or entity
+to which it is addressed and contains information that is private
+and confidential.  The information may also be subject to legal
+privilege.  If the reader of this message is not the intended
+recipient or the employee or agent responsible for delivering the
+message to the intended recipient, you are hereby notified that any
+dissemination, distribution or copying of this email is strictly
+prohibited.  If you have received this communication in error, please
+notify us immediately at (647)883-5483, delete the original message
+and destroy any copies made or forwarded.  If you are the intended
+recipient of this message, we remind you that electronic mail on the
+internet may not be secure and that those messages were not and
+future messages will not be encrypted or otherwise protected, unless
+specifically requested, in which case, special arrangements will be
+made.
+	</body>
+</html>

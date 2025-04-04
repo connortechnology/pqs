@@ -1,0 +1,169 @@
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script>
+  results_callback = function cbFoldingResults(results) {
+    const form = getFormObj('f1');
+
+    cbFillResults(results);
+		const re = /FoldQty\-(\d+)\-(\d+)\-(\d+)/;
+		for ( let index = 0, len = form.elements.length; index < len; index += 1 ) {
+			const key = form.elements[index].id;
+
+			const matches = re.exec( key );
+			if ( matches ) {
+				const f = $('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
+				if ( f ) {
+					const value = form.elements[index].value;
+					// always leave the first or any with a value
+					if ( matches[3] == 1 || value > 0 ) {
+						f.show();
+					//} else {
+						//f.hide();
+					} // end if
+				} else {
+					alert('debug mesage: No html for fold ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
+				} // end if f
+			} // end if matches
+		} // end foreach pair
+	} // end function cbFoldingResults
+
+function show_extra_fold( signature, qty_index ) {
+	const f = $('Fold-'+signature+'-'+qty_index+'-'+'2');
+	f.show();
+}
+function Fold_onchange( element, signature, qty_index, index ) {
+	const spec = signature + '-' + qty_index + '-' + index;
+	const next_index = 1+parseInt(index);
+	const do_calc = 1;
+
+	if ( element.type == 'select-one' ) {
+		if ( ! element.value ) {
+			$('FoldQty-'+spec).value = '';
+		} else {
+			$('FoldFolds-'+spec).value = '';
+			$('FoldAngles-'+spec).value = '';
+			if ( ! $('FoldQty-'+spec).value ) {
+				$('FoldQty-'+spec).value = 1;
+			} // end if
+		} // end if
+	} else { // must be the qty field
+	} // end if
+
+	if ( ! $('FoldQty-'+spec).value ) {
+		// This appears to hide the fold if the qty is empty... but it doesn't seem to work.
+		// and it's bollocks. Basically we the fold we are editing is empty, then hide the next one.  But the next one might be valid.
+	} else {
+		$('Fold-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
+	} // end if
+	if ( do_calc ) 
+		calc(element.form.name);
+} // end function
+</script>
+<div class="Service <?ServiceTypeID?>">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+		<? echo ( 
+			my $html;
+			my $Project = $$variable{Project};
+			my $services = $Project->services();
+			my $fragment = slurp_content( '/main/project/bind/_fold.html' );
+
+			foreach my $ss_id ( $Project->signatures({sort=>1}) ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+        $html .= "<fieldset><legend>For Form $$sig_specs{SignatureIndex}:</legend>";
+        $html .= '<ul><li>'.openprint::service::summary( $Project, $ss_id ).'</li>';
+				$html .= '<li><label>Printed</label>';
+
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					$html .= '<div class="'.$$variable{Columns}.'Columns">';
+					if ( $$sig_specs{"txtImposition$qty_index"} ) {
+						$html .= openprint::service::summary( $Project, $ss_id, $qty_index );
+					} else {
+            $html .= '&nbsp;';
+					} # end if
+					$html .= '</div>';
+				} # end foreach qty_index
+				$html .= '</li>';
+				$html .= '<li><label>Equipment</label>';
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					$html .= '<span class="'.$$variable{Columns}.'Columns">';
+					if ( $$sig_specs{"txtImposition$qty_index"} ) {
+          $html .= ssi::select( 
+            $$variable{EquipmentArray},
+            $$variable{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"},
+            {
+              name=>"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index",
+              prepend=>['','No Folding'],
+              onchange=>'calc(this.form.name);',
+            } );
+
+						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+							$html .= sprintf('
+<label class="radio-inline" for="chkOverrideEquipment-%1$d-%2$d">
+<input type="checkbox" id="chkOverrideEquipment-%1$d-%2$d" name="chkOverrideEquipment-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" />
+Override</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{'chkOverrideEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} eq 'Y' ? 'checked="checked"' : '' );
+						} elsif ( $$variable{'chkOverrideEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} eq 'Y' ) {
+							$html .= sprintf('<input type="hidden" name="chkOverrideEquipment-%1$d-%2$d" value="Y" />Overriden', $$sig_specs{SignatureIndex}, $qty_index );
+						} # end if
+					} else { $html .= '&nbsp;';
+					} # end if imposition
+					$html .= '</span>';
+				} # end foreach qty_index
+				$html .= '</li>';
+				$html .= '<li><label>Fold Types</label>';
+				foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+					$html .= '<div class="'.$$variable{Columns}.'Columns">';
+					if ( $$sig_specs{"txtImposition$qty_index"} ) {
+						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+							$html .= sprintf('
+              <label class="radio-inline" for="chkOverrideFold-%1$d-%2$d">
+              <input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if (this.checked) { show_extra_fold(%1$d,%2$d); }; calc(this.form.name);" />
+                Override Folds</label>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
+							$html .= sprintf('
+              <label class="radio-inline" for="chkOverrideLimits-%1$d-%2$d">
+              <input type="checkbox" id="chkOverrideLimits-%1$d-%2$d" name="chkOverrideLimits-%1$d-%2$d" %3$s value="Y" onclick="calc(this.form.name);" />
+                Ignore Equipment Limits</label><br/>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"chkOverrideLimits-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
+						} else {
+							if ( $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
+								$html .= sprintf('<input type="hidden" name="chkOverrideFold-%1$d-%2$d" value="Y" /> Folds Overriden', $$sig_specs{SignatureIndex}, $qty_index );
+							}
+							if ( $$variable{"chkOverrideLimits-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
+								$html .= sprintf('<input type="hidden" name="chkOverrideLimits-%1$d-%2$d" value="Y" /> Equipment Limits Ignored', $$sig_specs{SignatureIndex}, $qty_index );
+							}
+							$html .= '<br/>';	
+						} # end if
+						$$variable{SignatureIndex} = $$sig_specs{SignatureIndex};
+						$$variable{QTYIndex} = $qty_index;
+
+						$html .= '<table><tr><th class="Qty">Qty</th><th class="Imp">Imp</th><th class="Type">Type</th><th class="Folds">Folds</th><th class="Angles">Angles</th><th class="Speed">Speed</th></tr>';
+						foreach my $index ( 1 .. 4 ) {
+							$$variable{index} = $index;
+							$html .= variable_substitution( \$fragment, $variable );
+						} # end foreach
+						$html .= '</table>';
+					} else { $html .= '&nbsp;';
+					} # end if imposition
+
+					$html .= '</div>';
+				} # end foreach qty_index
+				$html .= '</li>';
+				$html .= '</ul></fieldset>';
+			} # end foreach signature
+			return $html;
+			) ?>
+			<hr/>
+			<ul>
+        <?include('/includes/main/proj/_quantities.html') ?>
+        <?include('/includes/main/proj/_service_price.html') ?>
+        <?include('/includes/main/proj/_breakdown.html') ?>
+			</ul>
+		</fieldset>
+		<br class="spacer"/>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="Status" value="<?Status?>" />
+	</form>
+</div>

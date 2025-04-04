@@ -1,0 +1,62 @@
+<? eval (
+  my $uri = '/employee/accounting/expense_rules.html';
+	$$variable{Rules} = [];
+	if ( $param{expense_rule_id} ) {
+		$$variable{Rules} = [ openprint::Expense_Rule->find( id=>$param{expense_rule_id} ) ];
+	} else {
+	$$variable{Rules} = [ openprint::Expense_Rule->find( 
+			( map { 
+        ( exists $session{$uri.'?'.$_} and $session{$uri.'?'.$_} ne '' ) ? ( $_ => $session{$uri.'?'.$_} ) : ()
+        }
+        ( 'category_id', 'recipient_id', 'account_id','attention','amount','total', 'currency_id', 'business_use' ) ),
+        ((exists $session{$uri.'?name'} and $session{$uri.'?name'} ne '' ) ? ('name ilike'=>'%'.$session{$uri.'?name'}.'%') : ()),
+			date_filter( $uri.'?created_on_end', 'created_on <=' ),
+			date_filter( $uri.'?created_on_start', 'created_on >=' ),
+			#owner_id		=> $session{company_id},
+			order			=> 'lower(name)',
+			) ];
+	} # end if
+) ?>
+
+<? if ( @{$$variable{Rules}} == 0 ) ?>
+	There are no expense rules which match your search criteria. 
+<? else ( @{$$variable{Rules}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Expense ID #</b> to view expense_rule details.<br/>
+		To delete expense_rules from history check the appropriate expense(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<thead>
+			<tr> 
+				<th class="Name">Name</th>
+				<th class="Category">Category</th>
+				<th class="Date">Created</th>
+				<th class="Rules">Rules</th>
+				<th class="Actions">Actions</th>
+			</tr>
+		</thead>
+		<? echo (
+			my $html = '';
+			my $rowclass;
+			foreach my $Rule ( @{$$variable{Rules}} ) {
+				$html .= sprintf(q`
+					<tr%1$s> 
+					<td class="Name"><a href="/employee/accounting/expense_rule.html?expense_rule_id=%2$d">%3$s</a></td>
+					<td class="Category"><a href="/employee/accounting/expense_rule.html?expense_rule_id=%2$d">%5$s</a></td>
+					<td class="Date"><a href="/employee/accounting/expense_rule.html?expense_rule_id=%2$d">%6$s</a></td>
+					<td class="Rules">%7$s</td>
+					<td class="Actions">%8$s</td>
+					</tr>
+					`, $rowclass, $Rule->id(), $Rule->name(), 
+          '',
+					$Rule->category(), 
+					format_date($Rule->created_on()),
+					$Rule->rules_json(),
+					$Rule->action_json(),
+					);
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach
+			return $html;
+		) ?>
+	</table>
+<? endif ( @{$$variable{Rules}} == 0 ) ?>

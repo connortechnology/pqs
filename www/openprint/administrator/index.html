@@ -1,0 +1,11 @@
+<? if ( $session{'user_type'} ne 'A' ) ?>
+<? echo ( include('/administrator/account/login.html'); ) ?>
+<? else ( $session{'user_type'} ne 'A' ) ?>
+	Welcome <? echo (
+	my $User = new openprint::User( $session{'user_id'} );
+	return $User->name();
+) ?>
+<br/>
+<br/>
+	You are already logged in.<br/>
+<? endif ( $session{'user_type'} ne 'A' ) ?>

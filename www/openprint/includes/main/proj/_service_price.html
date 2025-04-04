@@ -1,0 +1,29 @@
+<li class="serviceprice">
+	<label>Service Price (<?CurrencySymbol?>)</label>
+	<? echo (
+    my $html;
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			if ( (!openprint::usergroup::exists('Price Overrides')) or openprint::usergroup::is_user_in(['Price Overrides'], $session{user_id}) ) {
+				$html .= input( type=>'float', name=>"txtPrice$qty_index",
+					value=>$$variable{'txtPrice'.$qty_index}, 
+					oninput=>q`calc(this.form.name);`, step=>'0.01',
+          #( $$variable{'OverridePrice'.$qty_index} ? () : (readonly=>'readonly')),
+          );
+				$html .= write_override( 'OverridePrice'.$qty_index, $$variable{'OverridePrice'.$qty_index},'',"calc('f1');" );
+			} else {
+				$html .= input( type=>'float', name=>"txtPrice$qty_index",
+					value=>$$variable{'txtPrice'.$qty_index}, 
+					onfocus=>'this.blur();', step=>'0.01');
+				if ( $$variable{'OverridePrice'.$qty_index} eq 'Y' ) {
+					$html .= input( type=>'hidden', name=>"OverridePrice$qty_index", value=>'Y', );
+					$html .= 'Overridden';
+				} else {
+					$html .= input( type=>'hidden', name=>"OverridePrice$qty_index", value=>'N', );
+				} # end if
+			} # end if
+			$html .= '</span>';
+	} # end foreach
+	return $html;
+) ?>
+</li>

@@ -1,0 +1,13 @@
+<div class="Project">
+	<div class="View">
+		<? echo ( include('/includes/project_header.html', $variable ); )?>
+		<div class="ProjectServices">
+		<? echo ( 
+			if ( $$variable{'QuotedProject'}->template_id() ) {
+				return include( '/main/project/view_'.$$variable{'QuotedProject'}->Template()->name().'.html', $variable );
+			} # end if
+			return '';
+		) ?>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,19 @@
+body {
+	font-family: Arial, Helvetica, Sans-Serif;
+margin: 0;
+}
+.docketText {
+	font-size:8pt; color: #000000;}
+	.headerText {font-size:8pt;}
+	.bigheaderText { font-size:10pt;}
+	.hugeText { font-size:12pt;}
+#OutsideBindery {
+border: 2px solid black;
+margin: 10px 0;
+padding: 2px;
+}
+table p {
+margin: 0;
+display: inline;
+}
+

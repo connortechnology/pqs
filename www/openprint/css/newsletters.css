@@ -1,0 +1,86 @@
+
+.Art_Heading {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9pt;
+	font-style: normal;
+	font-weight: bold;
+	color: #E50E00;
+	text-decoration: none;
+	line-height: 12pt;
+}
+.Art_Body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9pt;
+	color: #333333;
+	text-decoration: none;
+	line-height: 12pt;
+}
+td.Art_Body {
+	padding-left: 5px;
+}
+.ReadTheArticle {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 7pt;
+	font-weight: bold;
+	text-decoration: none;
+}
+a:hover {
+	color: #E91002;
+	text-decoration: none;
+}
+a:link {
+	color: #4730AA;
+	text-decoration: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0px;
+	border: none;
+	margin: 0px;
+	padding: 0px;
+}
+table tbody {
+	margin: 0px;
+	padding: 0px;
+}
+table tr {
+	padding: 0px;
+	margin: 0px;
+	border: none;
+}
+table tr td {
+	padding: 0px;
+	margin: 0px;
+	border: none;
+}
+#Table_02 .rule {
+	color: #B9CED2;
+	background-color: #FFFFFF;
+	text-decoration: none;
+	border-top-width: 1px;
+	border-top-style: dashed;
+	border-top-color: #B9CED2;
+	border-right-color: #B9CED2;
+	border-bottom-color: #B9CED2;
+	border-left-color: #B9CED2;
+	height: 1px;
+	width: 100%;
+}
+.SmallText {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 7pt;
+	color: #333333;
+	text-decoration: none;
+	line-height: 11pt;
+	font-weight: bold;
+}
+img {
+	margin: 0px;
+	border: none;
+	padding: 0px;
+	display: block;
+}
+
+#ContentInner {
+width:570px; float: left;
+}

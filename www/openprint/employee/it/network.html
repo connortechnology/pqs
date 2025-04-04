@@ -1,0 +1,96 @@
+<script type="text/javascript" src="<?hash_link(/employee/it/host.js)?>"></script>
+<div class="Host"><div class="Edit">
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="post" action="/employee/it/network.html" enctype="multipart/form-data">
+	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{Host}->id() ) ?>" />
+	<input type="hidden" id="action" name="action" />
+				<p class="buttons">
+					<? echo ( 
+						my $html;
+						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
+						if ( $$variable{Host}->id() ) {
+							if ( $$variable{Host}->deleted() ) {
+								$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+								$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
+							} else {
+								$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+							}
+						} # end if
+						return $html;
+					) ?>
+				</p>
+	<fieldset><legend>Network <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) .($$variable{Host}->deleted() ? ' <span class="warning">Deleted</span>':'')) ?></legend>
+		<div class="content leftColumn">
+			<ul>
+				<li>
+					<label>Name</label>
+					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{Host}->hostname() ) ?>" oninput="to_hostname(this);" />
+				</li>
+        <input type="hidden" name="type" value="Network"/>
+        <? if ( $config{Network_Monitoring} ) ?>
+				<li>
+					<label>Monitor</label>
+					<? echo ( radio( 'monitored', [ '1','Yes','0','No' ], $$variable{Host}->monitored(), { onclick=>q`toggle_monitored(this);`} ); ) ?>
+				</li>
+        <li><label>Ping Frequency</label>
+          <? echo ( input( type=>'cardinal', name=>'min_ping_frequency', value=>$$variable{Host}->min_ping_frequency() ? $$variable{Host}->min_ping_frequency() : $openprint::Host::defaults{min_ping_frequency} ); ) ?> seconds
+        </li>
+        <? endif ( $config{Network_Monitoring} ) ?>
+				<li><label>Description</label>
+					<textarea id="description" name="description" rows="<? echo (count_lines($$variable{Host}->description()) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Host}->description() ) ?></textarea>
+				</li>
+				<li><label>Owner</label>
+          <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+          <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
+            <option value="">None</option>
+<? echo ( 
+my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM Hosts');
+make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $$variable{Host}->owner_id() );
+) ?>
+          </select>
+				</li>
+				<li><label>Created On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->updated_on() ); ) ?></li>
+			</ul>
+		</div>
+		<div class="content rightColumn">
+			<fieldset><legend>Notifications</legend>
+				<div id="notifications"><?include('_notifications.html')?></div>
+			</fieldset>
+		</div>
+		<br class="spacer"/>
+	</fieldset>
+<fieldset><legend>Interfaces</legend>
+	<table id="Interfaces" class="List">
+		<tr>
+			<th class="ip">Subnet</th>
+			<th class="options">Options</th>
+			<th class="comment">Comment</th>
+			<th class="buttons">
+<? echo ( button( 'AddInterface', { onclick=>qq`add_subnet();`, text=>'+', title=>'Add Subnet' } );) ?>
+      </th>
+		</tr>
+<? echo (
+	my $html;
+	my @Interfaces = $$variable{Host}->Interfaces();
+	if ( !@Interfaces ) {
+		my $New = new openprint::Host_Interface();
+		$New->set({dhcp=>1});
+		push @Interfaces, $New;
+	};
+
+  my $subnet_line = slurp_content('/employee/it/_subnet.html');
+	foreach ( @Interfaces ) {
+    $$variable{Interface} = $_;
+		$html .= variable_substitution(\$subnet_line, $variable);
+	} # end foreach Interface
+	return $html;
+) ?>
+	</table>
+</fieldset>
+</form>
+<? if ( $$variable{Host}->id() ) ?>
+<? echo ( include_logs( $$variable{Host} ); ) ?>
+<? endif ( $$variable{Host}->id() ) ?>
+</div></div>

@@ -1,0 +1,32 @@
+<div class="VideoAlbum">
+	<div class="View">
+<? if ( $$variable{'Album'}->can_view() ) ?>
+		<form id="f1" name="f1" action="/video_albums/list.html" enctype="multipart/form-data" method="post">
+			<input type="hidden" name="album_id" value="<? echo ( $$variable{'Album'}->id() ) ?>" />
+			<input type="hidden" name="btnFunction" />
+			<p class="buttons">
+			<? echo (
+				my $html = '';
+				if ( $$variable{'Album'}->user_id() == $session{'user_id'} ) {
+					$html .= ssi::button( 'Delete', { 'onlick' => "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};" } );
+					$html .= ssi::button( 'Edit', { 'href' => '/video_albums/edit.html?album_id='.$$variable{'Album'}->id() } );
+				} # end if
+				return $html;
+			) ?>
+			</p>
+			<fieldset>
+				<div class="content">
+					<ul>
+						<li><label>Name</label><? echo ( $$variable{'Album'}->name() ) ?></li>
+					</ul>
+				</div>
+			</fieldset>
+			<fieldset><legend>Videos</legend>
+				<div id="Videos"><? echo ( include('_videos.html'); ) ?></div>
+			</fieldset>
+		</form>
+<? else ( $$variable{'Album'}->can_view() ) ?>
+	You don't have rights to view this album.
+<? endif ( $$variable{'Album'}->can_view() ) ?>
+	</div>
+</div>

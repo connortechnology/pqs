@@ -1,0 +1,56 @@
+<?include('/includes/error_reporting.html')?>
+<? if ( sets::isin( $session{user_type},['E','A'] ) ) ?>
+	<? if ( $param{ddmCompany} ) ?>
+		Any actions you perform during the course of this login will be stored in <? echo ( $openprint::Company->link_to() ) ?>'s history.<br/>
+		<br/>
+		<? if ( $openprint::Company->salesrep_id() ) ?>
+		The CSR for <? echo ( $openprint::Company->link_to() ) ?> is <? echo ( $openprint::Company->CSR()->link_to() ) ?>.<br/>
+		<? else ( $openprint::Company->salesrep_id() ) ?>
+		There is no CSR assigned for <? echo ( $openprint::Company->link_to() ) ?>.<br/>
+		<? endif ( $openprint::Company->salesrep_id() ) ?>
+		<? echo (
+			if ( $openprint::Company->notes() ) {
+				return '<br/>Notes on account: '.$openprint::Company->notes() . '<br/>';
+			}
+			return;
+		) ?>
+		<br/>
+		Prices will be displayed in <? echo ( $openprint::Currency->name() ) ?>.<br/>
+		<br/>
+		<div id="LoginLog">
+		<fieldset><legend>Last 10 Login Attempts</legend>
+			<table class="List">
+				<tr>
+					<th class="When">When</th>
+					<th class="User">Who</th>
+					<th class="From">From</th>
+					<th class="Type">Type</th>
+					<th class="Result">Result</th>
+				</tr>
+				<? echo ( 
+					my $html = '';
+					foreach my $Log ( openprint::Log->find( company_id=>$session{company_id}, action_id=>[2,3,78,79], order=>'date_time DESC',limit=>10 ) ) {
+						 $html .= sprintf('
+<tr>
+  <td class="When">%s</td>
+  <td class="User"><a href="/account/view.html?user_id=%d">%s</a></td>
+  <td class="From">%s</td>
+  <td class="Type">%s</td>
+  <td class="Result">%s</td>
+</tr>',
+							#format_datetime($Log->date_time()),
+Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),
+							$Log->user_id(), $Log->User()->name(),
+
+							( $Log->Host()->can_view() ? $Log->Host()->link_to() : $Log->Host()->name() ),
+							$Log->Action()->description(),$Log->note() );
+
+					} # end foreach
+					return $html;
+				) ?>
+			</table>
+		</fieldset>
+		</div>
+	<? endif ( $param{ddmCompany} ) ?>
+	<?include('_select_company.html')?>
+<? endif ( sets::isin( $session{user_type},['E','A'] ) ) ?>

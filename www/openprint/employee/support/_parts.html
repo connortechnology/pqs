@@ -1,0 +1,43 @@
+<? echo ( include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html' ); ) ?>
+<? if ( $$variable{RMA}->id() ) ?>
+<fieldset><legend>Parts</legend>
+	<table class="List">
+		<tr>
+			<th class="Category">Category</th>
+			<th class="Part">Part</th>
+			<th class="Serial">Serial Num</th>
+			<th class="quantity">Quantity</th>
+			<th class="buttons"></th>
+		</tr>
+<? echo ( my $html; my $rowclass;
+	foreach my $Part ( openprint::RMA_Part->find(rma_id=>$$variable{RMA}->id(), order=>'id' ) ) {
+		$html .= sprintf(q`
+<tr%s>
+<td class="Category">%s</td>
+<td class="Part">%s</td>
+<td class="Serial">%s</td>
+<td class="quantity">%s</td>
+			<td class="buttons"></td>
+</tr>`, $rowclass, $Part->Product()->category(), $Part->Product()->name(), $Part->serialnumber(), 
+		$Part->quantity(),
+);
+		$rowclass = $rowclass ? '' : ' class="colRow"'; 
+	} # end foreach Part
+	return $html;
+) ?>
+		<tr class="new">
+			<td class="Category"><? echo ( ssi::select( openprint::Product_Category->dropdown(order=>'lower(name)'), [], {
+						name=>'parts_category_id', prepend=>['','select'],
+						onchange=>q`new Ajax.Updater('parts_product_id', '/includes/_products_ddm.html', { parameters: { category_id: get_value(this) } } );`,
+						} ); ) ?>
+			</td>
+			<td class="Part">
+				<? echo ( ssi::select( openprint::Product->dropdown(order=>'lower(name)'), [ $param{test_id} ], { id=>'parts_product_id', name=>'parts_product_id', prepend=>['','select'] } ); ) ?>
+			</td>
+			<td class="Serial"><input type="text" name="parts_serialnumber" placeholder="" value="<? echo ( $param{parts_serialnumber} ) ?>"/></td>
+			<td class="quantity"><? echo ( input( type=>'cardinal', name=>'parts_quantity', value=>$param{parts_quantity} ? $param{parts_quantity} : 1 ); ) ?></td>
+			<td class="buttons"><? echo ( button( 'AddPart', { onclick=>qq`new Ajax.Updater('Parts', '_parts.html', { parameters: getValues( 'f1', [ 'parts_product_id', 'category_id', 'parts_serialnumber', 'parts_quantity' ], { action: 'Add', rma_id: '$$variable{RMA}{id}' } ) } );`, text=>'Add' } ); ) ?></td>
+		</tr>
+	</table>
+</fieldset>
+<? endif ( $$variable{RMA}->id() ) ?>

@@ -1,0 +1,114 @@
+<div class="PageTitle">
+<h1>Articles</h1>
+<h2>Search</h2>
+</div>
+<script>
+	function delete_confirm(form) {
+		var number_of_deleted_articles = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_articles += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_articles == 0 ) {
+			alert("To Delete Articles, click the checkbox beside the article.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_articles + " articles from search?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_articles() {
+		var form = $('f1');
+		$('ArticleList').innerHTML = 'Please wait...';
+		new Ajax.Updater('ArticleList','_search.html', {parameters:Form.serialize(form)});
+	} // end function
+</script>	 
+<?include('/includes/error_reporting.html')?>
+<div class="Article"><div class="Search">
+	<form id="f1" name="f1" method="post" action="/article/search.html">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+			<div class="content">
+			<div class="leftColumn">
+				<ul>
+<? if ( $session{user_type} and sets::isin($session{user_type}, ['E','A'] ) ) ?>
+			<li>
+				<label><? translate ( company ) ?></label>
+				<select name="company_id" id="company_id" onchange="load_articles(this.form);">
+					<option value="">All</option>
+					<? echo ( openprint::Company::get_dropdown( $session{'/article/search.html?company_id'} ); ) ?>
+				</select>
+			</li>
+<? endif ( $session{user_type} and sets::isin($session{user_type}, ['E','A'] ) ) ?>
+<? if ( @{$$variable{Categories}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
+			<li><label>Category</label>
+				<select name="category_id" id="category_id" onchange="load_articles();">
+					<option value="">All</option>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{'/article/search.html?category_id'} ); ) ?>
+				</select>
+			</li>
+<? endif ( @{$$variable{Categories}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
+<? if ( 0 ) ?>
+			<li>
+				<label>Created</label>
+<? echo ( date_select_session( '/article/search.html', 'created_on_start', {onchange=>'load_articles();',with_today=>1,with_clear=>1} ); ) ?>
+					to 
+<? echo ( date_select_session( '/article/search.html', 'created_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear=>1} ); ) ?>
+			</li>
+<? endif ( 0 ) ?>
+			<li>
+				<label>Published</label>
+<? echo ( date_select_session( '/article/search.html', 'published_on_start', {onchange=>'load_articles();',with_today=>1,with_clear=>1} ); ) ?>
+					to 
+<? echo ( date_select_session( '/article/search.html', 'published_on_end', {onchange=>'load_articles();',with_today=>1,with_clear=>1} ); ) ?>
+			</li>
+			</ul>
+			</div>
+			<div class="rightColumn">
+				<ul>
+<? if ( $session{user_type} and sets::isin($session{user_type}, ['E','A'] ) ) ?>
+					<li><label>Published?</label>
+					<? echo ( radio( 'published', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/search.html?published'}, {onclick=>'load_articles();'} ); ) ?>
+					</li>
+<? endif ( $session{user_type} and sets::isin($session{user_type}, ['E','A'] ) ) ?>
+					<li>
+						<label>Author</label>
+						<select name="author_id" id="author_id" onchange="load_articles();">
+							<option value="">All</option>
+							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } map { new openprint::User($_) } sql::execute( undef, undef, 'SELECT DISTINCT created_by FROM articles WHERE published=true and deleted=false and anonymous=false') ], $session{'/article/search.html?author_id'} ); ) ?>
+						</select>
+					</li>
+					<li><label>Title</label>
+						<input type="text" name="title" placeholder="text search" value="<? echo ( $session{'/article/search.html?title'} ) ?>" />
+					</li>
+				</ul>
+			</div>
+			</div>
+			<p class="buttons">
+				<? echo ( join('',
+					button( 'ShowResults', { onclick=>'load_articles();', text=>'Show Results'} ),
+					button( 'Reset', { href=>'/article/search.html?action=Reset', text=>'Reset'} ),
+					( $session{user_id} ? (
+					button( 'New', {href=>'/article/edit.html', text=>'New Article'} ),
+					) : () ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<div id="ArticleList"><?include('_search.html')?></div>
+		<p class="buttons">
+			<? echo ( 
+				if ( $session{user_type} eq 'A' ) {
+					return join("\n",
+						button('Delete', { onclick=>q`new Ajax.Updater( 'ArticleList', '_search.html', { parameters: { action: 'Delete', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ),
+						button('Destroy', { onclick=>q`new Ajax.Updater( 'ArticleList', '_search.html', { parameters: { action: 'Destroy', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ),
+						);
+				} # end if
+				return '';
+			) ?>
+		</p>
+	</form>
+	</div>
+</div>

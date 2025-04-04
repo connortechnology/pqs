@@ -1,0 +1,25 @@
+<form name="StartTimeForm" onsubmit="return saveStartTime( StartTimeForm.schedule_id.value, StartTimeForm.StartTime.value );">
+	<input type="hidden" name="id" value="<? echo ( $param{'id'} ) ?>" />
+	<p>
+		<label>Start Time</p>
+		<? echo ( 
+			my @rows = openprint::press_schedule->find('id'=>$param{'id'});
+			if ( @rows ) {
+				$$variable{'row'} = $rows[0];
+				return ssi::datetime_select( 'starttime', $rows[0]{'starttime'}, { 'onchange'=>q`set_rdb_value($('locked'), 1 );` } );
+			} # end if
+			return;
+		) ?>
+	</p>
+	<p>
+		<label>Locked</label>
+		<input type="radio" id="locked1" name="locked" value="1" <? echo ( ssi::checked( $$variable{'row'}{'locked'} ); ) ?> />
+		<label class="radio" for="locked1">Yes</label>
+		<input type="radio" id="locked0" name="locked" value="0" <? echo ( ssi::checked( ! $$variable{'row'}{'locked'} ); ) ?> />
+		<label class="radio" for="locked0">No</label>
+	</p>
+	<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'SaveStartTime', 'save.gif', q`new Ajax.Request('_li_change.json',{parameters:StartTimeForm.serialize(), onSuccess:function(){contentWin.destroy();}});`, '', 'Save' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'CancelStartTime', 'cancel.gif', "contentWin.destroy();", '', 'Cancel' ); ) ?>
+	</p>
+</form>

@@ -1,0 +1,49 @@
+<? eval (
+	@{$$variable{'Bugs'}} = ();
+	foreach my $Bug ( openprint::Bug->find( 
+		ssi::date_filter( '/bugs/history.html?created_on_end', 'created_on <=' ),
+		ssi::date_filter( '/bugs/history.html?created_on_start', 'created_on >=' ),
+		( $session{'/bugs/history.html?company_id'} ? ( 'company_id'	=> $session{'/bugs/history.html?company_id'} ) : () ),
+		( $session{'/bugs/history.html?user_id'} ? ( 'user_id'	=> $session{'/bugs/history.html?user_id'} ) : () ),
+		'order'				=> 'id desc',
+		) ) {
+		push @{$$variable{'Bugs'}}, $Bug;
+	} # end foreach Bug
+
+) ?>
+
+<? if ( @{$$variable{'Bugs'}} == 0 ) ?>
+	There are no bugs which match your search criteria. 
+<? else ( @{$$variable{'Bugs'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Bug ID #</b> to view bug details.<br/>
+		To delete bugs from history check the appropriate bug(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="EmployeeName">Employee</th>
+			<th class="Company">Company</th>
+			<th class="DateTime">Created On</th>
+			<th class="DateTime">Updated On</th>
+		</tr>
+		<? echo ( my $html;
+			my $rowclass;
+			foreach my $Bug ( @{$$variable{Bugs}} ) {
+
+				$html .= sprintf( '
+<tr title="%3$s" %1$s>
+	<td class="EmployeeName">%4$s</td>
+	<td class="Company">%5$s</td>
+	<td class="DateTime CreatedOn">%6$s</td>
+	<td align="DateTime UpdatedOn">%7$s</td>
+</tr>',
+					$rowclass, $$Bug{id}, escape_quotes( $Bug->description() ), $Bug->link_to( $Bug->Created_By()->name() ), 
+					$Bug->link_to( $Bug->Company()->name() ), format_datetime( $Bug->created_on() ),
+					format_datetime( $Bug->updated_on() ),
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Bug
+			return $html;
+		) ?>
+	</table>
+<? endif ( @{$$variable{'Bugs'}} == 0 ) ?>

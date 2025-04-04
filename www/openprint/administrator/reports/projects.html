@@ -1,0 +1,80 @@
+<div class="PageTitle">
+<h1>ADMINISTRATOR REPORTS</h1>
+<h2>Projects</h2>
+</div>
+<form id="f1" name="f1" method="post" action="projects.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<p>
+			<label>Project ID</label>
+			<input type="number" name="ProjectIndex" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<? echo ( writeButton( $log, $dbh, 'Go1','go.gif',"f1.action='/main/project/view.html';f1.submit();", '', 'Go' ); ) ?>	
+		</p>
+		<p>
+			<label>Company</label>
+			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" class="filter" />
+			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();" >
+				<option value=""> Select a Customer</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)')], $param{'ddmCustomers'} ); ) ?>
+			</select>
+		</p>
+		<p>
+			<label>Estimator</label>
+			<select name="ddmEstimator" size="1"> 
+				<option value="">All Estimators</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)') ], $$variable{'ddmEstimator'} ); ) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Status</label>
+			<select name="ddmStatus" size="1">
+				<option value="">All</option>
+<? echo ( 
+    fill_drop_down( $log, $dbh, 'SELECT name,name FROM Project_statuses ORDER BY sort,name', $param{'ddmStatus'} );
+) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Type</label>
+			<select name="type_id" size="1">
+				<option value="">All</option>
+<? echo ( 
+    make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find('order'=>'lower(name)') ], $param{'type_id'} );
+) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Sales Reps</label>
+			<select name="ddmEmployees" size="1">
+				<option value="">All Employees</option>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales']), $$variable{'ddmEmployees'} ); ) ?>
+			</select>
+		</p>
+<? eval (
+get_start_end_dates( $log, $dbh, $variable, @param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
+) ?>
+		<p> 
+			<label>Created Date</label>
+			<span class="DateSelector">
+				<select name="ddmStartMonth" onchange="setDaysDropDown(this.form.ddmStartYear.value,this.value,this.form.ddmStartDay,this.form.ddmStartDay.value);"><?startmonths?></select>
+				<select name="ddmStartDay"><?startdays?></select>
+				<select name="ddmStartYear" onchange="setDaysDropDown(this.value,this.form.ddmStartMonth.value,this.form.ddmStartDay,this.form.ddmStartDay.value);"><?startyears?></select> to
+			</span>
+			<span class="DateSelector">
+				<select name="ddmEndMonth" onchange="setDaysDropDown(this.form.ddmEndYear.value,this.value,this.form.ddmEndDay,this.form.ddmEndDay.value);"><?endmonths?></select>
+				<select name="ddmEndDay"><?enddays?></select>
+				<select name="ddmEndYear" onchange="setDaysDropDown(this.value,this.form.ddmEndMonth.value,this.form.ddmEndDay,this.form.ddmEndDay.value);"><?endyears?></select>
+			</span>
+		</p>
+		<p><label>Limit</label><select name="limit"><? echo ( make_drop_down( [ ( 100, 100, '', 'All' ) ], $param{'limit'} ); ) ?></select>
+		</p>
+		<p class="buttons">
+			<? echo ( join('',
+				writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "new Ajax.Updater( 'Results', '_projects.html', { parameters: \$('f1').serialize() } );", '', 'Show Results' ),
+				writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='projects.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
+				writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
+); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results">Click Show Results</div>
+	<input type="hidden" name="btnFunction"/>
+</form>

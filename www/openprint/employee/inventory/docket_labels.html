@@ -1,0 +1,28 @@
+<style type="text/css">
+@media print {
+#Header {
+	display: none;
+}
+}
+#Label {
+	width: 4in;
+}
+</style> 
+<form name="f1" method="post">
+	<div class="unprintable">
+		<fieldset><legend>Paper Reservation Labels</legend>
+		<span style="float: right;">
+			<? echo (  join('',
+				ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print();', '', 'Print' ),
+				ssi::writeButton( $log, $dbh, 'close', 'close.gif', 'window.close();', '', 'Close' ),
+			); ) ?>
+		</span>
+		<br class="spacer"/>
+		<p><label>Customer</label><input type="text" name="customer" onkeyup="new Ajax.Updater( 'Label', '_docket_label.html', { method: 'get', parameters: this.form.serialize() } );" /></p>
+		<p><label>Contact</label><input type="text" name="contact" value="<? echo ( new openprint::User( $openprint::session{'user_id'} )->name(); ) ?>" onkeyup="new Ajax.Updater( 'Label', '_docket_label.html', { method: 'get', parameters: this.form.serialize() } );" /></p>
+		<p><label>Docket</label><input type="text" name="docket" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater( 'Label', '_docket_label.html', { method: 'get', parameters: this.form.serialize() } );" /></p>
+		<p><label># of Labels</label><input type="text" name="label_qty" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater( 'Label', '_docket_label.html', { method: 'get', parameters: this.form.serialize() } );" /></p>
+		</fieldset>
+	</div>
+</form>
+<div id="Label"></div>

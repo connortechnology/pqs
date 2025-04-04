@@ -1,0 +1,34 @@
+<? echo (
+	$r->content_type('text/javascript');
+	my $Item = new openprint::PurchaseOrder_Item( $param{'item_id'} );
+
+	my $html;
+
+	if ( $Item->type() eq 'Roll Stock' ) {
+		my ( $type, $name );
+        if ( $Item->name() =~ /^(FSC|PEFC\/SFI)? ?(.+)$/ ) {
+            ( $type, $name ) = ( $1, $2 );
+        } else {
+            $name = $Item->name();
+        } # end if
+		$html .= sprintf( q`$('name-%1$d').value = '%2$s';`, $param{'content_id'}, $name );
+		$html .= sprintf( q`ddm_select_by_value( $('stocktype-%1$d'), '%2$s');`, $param{'content_id'}, $type );
+	} elsif ( $Item->type() eq 'Sheet Stock' ) {
+		my ( $mweight, $type, $name ) = $Item->name() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
+        if ( ! sets::isin( $type, [ '', 'FSC', 'PEFC/SFI' ] ) ) {
+            $name = $type . ' ' . $name;
+            $type = '';
+        } # end if
+		$html .= sprintf( q`$('mweight-%1$d').value = '%2$s';`, $param{'content_id'}, $mweight );
+		$html .= sprintf( q`$('name-%1$d').value = '%2$s';`, $param{'content_id'}, $name );
+		$html .= sprintf( q`ddm_select_by_value( $('stocktype-%1$d'), '%2$s');`, $param{'content_id'}, $type );
+	} # end if
+
+
+	$html .= sprintf( q`$('product-%1$d').value = '%2$s';`, $param{'content_id'}, $Item->product() ) if $Item->product();
+	$html .= sprintf( q`$('price-%1$d').value = '%2$s';`, $param{'content_id'}, $Item->price() ) if $Item->price();
+	$html .= sprintf( q`$('item-%1$d').value = '%2$s';
+		calc_price($('item_id-%1$d'));
+		`, $param{'content_id'}, $Item->name() );
+	return $html;
+) ?>

@@ -1,0 +1,63 @@
+<script type="text/javascript">
+  tinyMCE.init({
+	theme : "advanced",
+	plugins : "tabfocus,paste",
+	mode: "specific_textareas",
+	editor_selector : "mce",
+	theme_advanced_toolbar_location : "external",
+	theme_advanced_toolbar_align : "left",
+	theme_advanced_resizing : "true",
+	theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull",
+	theme_advanced_buttons2 : "formatselect,bullist,numlist,outdent,indent",
+	theme_advanced_buttons3 : "",
+	auto_resize : true,
+	tab_focus : ':prev,:next'
+
+  });
+</script>
+<form id="f1" name="f1" action="view.html<? echo ( $$variable{Asset}->id() ? '?asset_id='.$$variable{Asset}->id() : '' ) ?>" method="post" enctype="multipart/form-data">
+	<?include('/includes/error_reporting.html')?>
+	<p class="buttons" id="buttons">
+<? echo ( 
+	my $html = '';
+	$html .= button( 'Save', { onclick=>"\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", text=> $$variable{Asset}->id() ? 'Save' : 'Create Asset' } );
+	if ( $$variable{Asset}->id() ) {
+		$html .= button( 'Delete', { onclick=>"\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();" } );
+	}  # end if
+	return $html;
+) ?>
+	</p>
+	<div class="Asset"><div class="Edit">
+		<div class="PageTitle">
+		<h1>ASSET (<? echo ( $$variable{Asset}->id() ) ?>)</h1>
+		</div>
+		<fieldset>
+			<div class="content">
+				<ul>
+					<li><label></label>
+						<img src="<? echo ( $$variable{Asset}->url() ) ?>"/>
+					</li>
+					<li><label>Name</label>
+						<input type="text" name="name" id="name" value="<? echo ( $$variable{Asset}->name() ) ?>" />
+					</li>
+					<li><label>Description</label>
+						<textarea name="description" id="description"><? hecho ( $$variable{Asset}->description() ) ?></textarea>
+					</li>
+<? if ( ! $$variable{Asset}->filename() ) ?>
+					<li><label>File</label>
+						<input type="file" id="filename" name="filename"/>
+					</li>
+<? endif ( ! $$variable{Asset}->filename() ) ?>
+					<li><label>Attribution</label>
+						<input type="text" name="attribution" id="attribution" value="<? echo ( $$variable{Asset}->attribution() ) ?>" />
+					</li>
+					<li><label>License</label>
+						<textarea name="license" id="license"><? hecho ( $$variable{Asset}->description() ) ?></textarea>
+					</li>
+					<li><label>Public?</label><?echo( radio('public', [ '1', 'Yes', '0', 'No' ], $$variable{Asset}->public() ); )?></li>
+				</ul>
+			</div>
+		</div><!--Edit-->
+	</div><!--Asset-->
+	<input type="hidden" name="btnFunction" />
+</form>

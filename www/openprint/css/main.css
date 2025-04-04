@@ -1,0 +1,133 @@
+
+.label {
+	width: 175px;
+	float: left;
+	p\osition: relative;
+}
+.input {
+	float: left;
+	p\osition: relative;
+}
+
+/* Help Desk Styles */ 
+
+.HelpDesk {
+   width: 500px;
+   padding-right: 20px;
+   float: left; 
+}
+
+/* User Profile styles */
+.UserProfile fieldset select {
+   width: auto;
+}
+
+/* Create Stage1 styles */
+.ReprintOptions fieldset select {
+   width: auto;
+}
+
+#missingPasswordMessage, #missingLoginMessage, #forgotPassword_missingEmailMessage {
+  font-size: 7.5pt;
+  font-weight: normal;
+  color: #ff0000;
+	display: block;
+}
+ul.redbox {
+  list-style-image: url(/images/bullet.png);
+}
+#SiteMap ul {
+	float: left;
+	font-weight: bold;
+	width: 25%;
+	height: 140px;
+  list-style-image: url(/images/bullet.png);
+}
+#SiteMap ul li {
+	font-weight: normal;
+}
+#QuickLogin {
+	margin-bottom: 10px;
+	margin-top: 10px;
+}
+#QuickLogin {
+}
+#QuickLogin fieldset {
+	border: none;
+	padding: 5px;
+}
+#QuickLogin fieldset legend {
+	margin-left: 0px;
+	padding: 0px;
+	font-size: 16px;
+}
+#QuickLogin fieldset input {
+	width: 90%;
+}
+#AlertDiv {
+  overflow: auto;
+	font-weight: bold;
+	color: red;
+}
+
+#Login {
+}
+
+#Login:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+#Login fieldset {
+    width: 50%;
+    border: none;
+    padding: 20px 0px 0px 0px;
+    margin: 0px;
+}
+
+#Login fieldset.Register {
+    float: right;
+}
+
+#Login fieldset.Login {
+    float: left;
+}
+#Login fieldset legend {
+    font-size: large;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+}
+#Login fieldset .body {
+    text-align: left;
+    margin: 0px;
+    padding: 5px;
+}
+#Login fieldset .body p {
+	text-align: left;
+}
+#Login input[type="email"],
+#Login input[type="password"],
+#Login input[type="number"] {
+    width: 93%;
+}
+
+.Disclaimer {
+	background-color: white;
+	padding: 5px;
+}
+.Disclaimer h1, .Disclaimer h2 {
+text-align: center;
+}
+.Disclaimer p {
+	padding: 0;
+}
+.AcceptTerms {
+	font-weight: bold;
+	background-color: white;
+	padding: 5px;
+	margin: 5px 0px 5px 0px;
+}

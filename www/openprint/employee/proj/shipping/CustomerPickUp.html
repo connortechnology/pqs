@@ -1,0 +1,114 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<script type="text/javascript">
+function calc( formName ) {
+	if ( gettingNewPrice ) {
+		if ( timeout ) {
+			clearTimeout( timeout );
+		} // end if
+		if ( ! force ) {
+			setTimeout( "calc('"+formName+"');", 1000 );
+			return;
+		} // end if
+	} // end if
+	timeout = null;
+	gettingNewPrice = true;
+	remove_div('AlertDiv');
+	var form = getFormObj( formName );
+	var h = $H(form.serialize(true));
+	h.set('ServiceType', 'CustomerPickUp');
+	h.set('callback','cbFillUPSResults');
+	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+} // end calc()
+function cbFillUPSResults( results ) {
+	cbFillResults( results );
+	var form = getFormObj( 'f1' );
+	if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons.  Would you like to add cartons to your project?' ) ) {
+		addService( 'f1', 'PlainCartons' );
+	} // end if
+}
+function validate_data(formName) {
+	var form = getFormObj( formName );
+	var text = '';
+	return true;
+} // end function
+function submit_handler() {
+    var form = $('f1');
+    form.signature.value = escape(top.getSignature());
+    form.submit();
+}
+</script>
+<form id="f2" name="f2" action="/employee/project/view.html" method="post">
+  <fieldset class="filters">
+    <ul>
+      <li class="docket"><label>Docket #</label>
+      <? echo ( join("\n",
+            input( type=>'cardinal', name=>'docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='/employee/project/view.html?docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
+            button( 'Go1', { onclick=>q`window.location='/employee/project/view.html?docket='+$('Docket').value;`, text=>'Go' } ),
+            button( 'GoProofs', { onclick=>q`if($('Docket').value){window.location='/employee/proj/prep/proofs.html?docket='+$('Docket').value;};`, text=>'Go Proofs' } ),
+            $$variable{Project}->id() ?
+              button('Return', { href=>'/employee/project/view.html?ProjectIndex='.$$variable{ProjectIndex}, text=>'Return to Docket '.$$variable{Project}->docket() } ) : (),
+      ); ) ?>
+      </li>
+    </ul>
+  </fieldset>
+</form>
+<div class="Service Shipping CustomerPickup">
+	<form id="f1" name="f1" method="post" action="/employee/project/view.html" onsubmit="form_submit();">
+		<fieldset><legend>Customer Pickup</legend>
+			<ul>
+				<li>
+					<label># of items to pickup</label>
+					<span class="TwoColumns">Quoted:
+					<? echo ( $$variable{'txtQuantity'.$$variable{QTYIndex}} ) ?>
+					</span>
+					<span class="TwoColumns">Actual:
+					<?echo(
+							input( type=>'cardinal', 
+								name=>'txtQuantityUsed', 
+								value=>$$variable{txtQuantityUsed} ? $$variable{txtQuantityUsed} : $$variable{'txtQuantity'.$$variable{QTYIndex}},
+								onkeyup=>'calc(this.form.name);',
+								); ) ?>
+					</span>
+				</li>
+				<?include('_shipping_packages.html')?>
+				<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{user_id} ) ) ?>
+				<li>
+					<label>Price (<? echo ( $$variable{Project}->Currency()->symbol() ) ?>)</label>
+					<input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{QTYIndex}} ) ?>" />
+				</li>
+				<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{user_id} ) ) ?>
+			<div class="TwoColumns">
+	<?include(/includes/employee/feedback/comments.html)?>
+			</div>
+			<div class="TwoColumns">
+	<?include(/includes/employee/feedback/complete.html)?>
+	<?include(/includes/employee/feedback/complete_date.html)?>
+			</div>
+			<br class="spacer"/>
+			</ul>
+				<?include('_signatures.html')?>
+<div class="SignatureArea">
+<fieldset><legend>Signature</legend>
+<embed id="signature" src="/images/signature.svg?v=4" type="image/svg+xml"/>
+<input type="hidden" name="signature"/>
+</fieldset>
+</div>
+		</fieldset>
+<? echo (
+	join("\n",
+		( $openprint::User->email() =~ /iconnor/ ? button( 'ServiceDump', { onclick=>qq`popup_window('/main/project/_service_dump.html', { project_id: $$variable{ProjectIndex}, service_id: $$variable{ServiceIndex} } );` } ) : () ),
+	);
+)?>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="qty_index" value="Used" />
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<input type="hidden" name="btnFunction" value="Save"/>
+		<input type="hidden" name="NeedPlainCartons" />
+		<input type="hidden" name="Status" />
+	</form>
+		<fieldset><legend>Production Feedback</legend><div id="ProductionFeedback">
+		<?include(/employee/proj/prin/_production_feedback.html)?>
+		</div></fieldset>
+</div><!-- Service -->

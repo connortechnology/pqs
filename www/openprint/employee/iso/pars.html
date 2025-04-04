@@ -1,0 +1,69 @@
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript">
+	function delete_confirm(form) {
+		var number_of_deleted_pars = 0;
+		for ( var index = 0; index < form.elements['pars'].length; index += 1 ) {
+			if ( form.elements['pars'][index].checked ) {
+				number_of_deleted_pars += 1;
+			} // end if
+		} // end for
+		if ( number_of_deleted_pars == 0 ) {
+			alert("To Delete Cars, click the checkbox beside the PAR.");
+		} else if ( number_of_deleted_pars == 1 ) {
+			if ( confirm("Are you sure you wish to delete this PAR?") ) {
+				form.btnFunction.value='Delete';
+				form.submit();
+			} // end if
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_pars + " PARS?") ) {
+				form.btnFunction.value='Delete';
+				form.submit();
+			} // end if
+		} // end if
+	}
+
+	 function load_pars( form ) {
+		 LoadContent('Results', '_par_results.html', form);
+	 } // end function
+</script>
+<?include('/includes/error_reporting.html')?>
+<hr/>
+Please select a PAR to view/edit.<br/>
+<form id="f1" name="f1" method="post" action="par.html">
+	<fieldset class="filters"><legend>Choose PAR</legend>
+		<p>
+			<label for="par_id">PAR ID #</label>
+			<?echo( join("\n",
+						input( type=>'cardinal', id=>'par_id', name=>'par_id', onkeypress=>'return input_handler(this, event);'),
+						button( 'Go', { onclick=>'f1.submit();', text=>'Go' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="pars.html">
+	<input type="hidden" name="btnFunction" />
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+			<li>
+				<label>Date Issued</label>
+				<? echo ( join(' to ',
+							date_select_session( $r->uri(), 'issued_on_start', { onchange=>q`load_pars('f2');`, with_today=>1,with_clear=>1 } ),
+							date_select_session( $r->uri(), 'issued_on_end', { onchange=>q`load_pars('f2');`, with_today=>1, with_clear=>1 } ),
+						); ) ?>
+			</li>
+			<li>
+				<label>Status</label>
+				<? echo ( radio( 'status', [ 'Open','Open','Closed','Closed','','Both' ], $session{$r->uri().'?status'}, { onclick=>q`load_pars('f2');` } ); ) ?>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'load_pars(f2);', text=>'Show Results' } ),
+				button( 'Download', { onclick=>"f2.btnFunction.value='Download in CSV Format';f2.submit();" } ),
+				button( 'Add', { href=>'par.html', text=>'Add New PAR' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<script type="text/javascript">$('par_id').focus();</script>
+<div id="Results"><?include('_par_results.html')?></div>

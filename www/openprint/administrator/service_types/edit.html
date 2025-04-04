@@ -1,0 +1,113 @@
+<?include('/includes/error_reporting.html')?>
+<p class="error">Please do not make changes here unless you know what you are doing!</p>
+<form id="f1" name="f1" method="post" action="edit.html" enctype="multipart/form-data">
+	<fieldset class="filters"><legend>Search</legend>
+		<ul>
+			<li><label>Category</label>
+				<select name="SearchCategory" onchange="form.btnFunction.value='';f1.submit();">
+					<option value=""> All </option>
+					<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown( order=>'sorting,name'), $param{SearchCategory} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Service Type</label>
+				<select name="ServiceType_id" onchange="form.btnFunction.value='';f1.submit();">
+					<option value="">Select a Service Type</option>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() . ': ' . $_->description() } openprint::ServiceType->find(
+						( $param{SearchCategory} ? ( category_id=>$param{SearchCategory} ) : () ), 
+						  order=>'lower(name)') ], $$variable{ServiceType}->id() ); ) ?>
+				</select>
+			</li>
+		</ul>
+		<p class="buttons"> 
+			<? echo ( join("\n",
+				button( 'Previous1', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'<<' } ),
+				button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'>>' } ),
+				button( 'New1', { onclick=>"addCheck(f1);", text=>'New' } ),
+				button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+				button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+				button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } ),
+				button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+  <fieldset><legend>Edit ServiceType <?echo($$variable{ServiceType}->id())?></legend>
+		<ul>
+		<li> 
+			<label>Name</label>
+			<input type="text" name="name" value="<? echo ( $$variable{ServiceType}->name() ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}" />
+		</li>
+		<li> 
+			<label>Description</label>
+			<input type="text" id="description" name="description" value="<? echo ( $$variable{ServiceType}->description() ) ?>" /> 
+		</li>
+		<li> 
+			<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category</label>
+			<input style="display:none;" type="text" id="new_category" name="new_category"/>	
+			<select id="category_id" name="category_id">
+				<option value=""> None </option>
+				<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown( order=>'sorting,name'), $$variable{ServiceType}->category_id() ); ) ?>
+			</select>
+		</li>
+<? if ( $openprint::User->email() =~ /iconnor/ ) ?>
+		<li> 
+			<label>Type</label>
+<?echo (
+ return ssi::select([map {$_=>$_}
+sort { $a cmp $b } qw(AdditionalProofs  Coating CornerStitching  FilmStripping  Mounting      PlateMaking     Sewing          ThreeKnifeTrim
+Aqueous           Counting         Folding        MultiPage     PolyBagging     Shipping        Tipping
+Blowing           CustomService    Gluing         NoBindery     Prepress        ShrinkWrapping  Turnaround
+Bundling          CustomerPickUp   Grommeting     NoPrinting    Printing        SinglePage      UPS
+CDBurning         Cutting          HStands        Numbering     Project         Skids           UVCoating
+CanadaPost        DTaping          HandAssembly   Packaging     Proofs          SoftFolding
+ChannelLetters    DieCutting       Imposition     Padding       RoundCornering  SpinePaste
+ClipSealing       Drilling         Inkjetting     Paper         Scanning        Spiral
+Collating         Embossing        Lamination     PerfectBound  Scoring         Stitching
+CopyDot           ExtraBurns       ManualLabour   Perforating   ScratchPads     Stripping
+VariableData
+)], $$variable{ServiceType}->type(), {name=>'type', prepend=>['','choose one']});
+)?>
+
+		</li>
+		<li> 
+			<label>URL</label>
+			<input type="url" name="url" value="<? echo ( $$variable{ServiceType}->url() ) ?>" /> 
+		</li>
+<? endif ( $openprint::User->email() =~ /iconnor/ ) ?>
+		<li>
+			<label>Visible in Project Create</label>
+			<? echo ( radio( 'create_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->create_visible() ); ) ?>
+		</li>
+		<li>
+			<label>Visible in Project View</label>
+			<? echo ( radio( 'view_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->view_visible() ); ) ?>
+		</li>
+		<li>
+			<label>Visible in Project Summary</label>
+			<? echo ( radio( 'summary_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->summary_visible() ); ) ?>
+		</li>
+		<li>
+			<label>Allow removal from Project</label>
+			<? echo ( radio( 'allow_delete', [ '1','Yes','0','No' ], $$variable{ServiceType}->allow_delete() ); ) ?>
+		</li>
+		<li> 
+			<label>Sort</label>
+			<? echo ( input( type=>'integer', name=>'sorting', value=>$$variable{ServiceType}->sorting() ); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	<fieldset><legend>Defaults</legend>
+		<div id="Defaults">
+		<?include('_defaults.html')?>
+		</div>
+	</fieldset>
+<fieldset><legend>Service Prices</legend>
+		<?include('_service_prices.html')?>
+</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<? if ( $$variable{ServiceType}->id() ) ?>
+<? echo ( include_logs( $$variable{ServiceType} ); ) ?>
+<? endif ( $$variable{ServiceType}->id() ) ?>
+
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>

@@ -1,0 +1,66 @@
+<script type="text/javascript" src="/javascripts/fileuploader.js"></script>
+<link type="text/css" rel="/css/fileuploader.css"/>
+<div class="VideoAlbum">
+	<div class="Edit">
+		<form id="f1" name="f1" action="/video_albums/list.html" enctype="multipart/form-data" method="post">
+			<input type="hidden" name="album_id" value="<? echo ( $$variable{'Album'}->id() ) ?>" />
+			<input type="hidden" name="btnFunction" />
+			<p class="buttons">
+			<? echo (
+				my $html = '';
+				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};", '', 'Delete' );
+				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				return $html;
+			) ?>
+			</p>
+			<fieldset>
+				<div class="content">
+					<ul>
+						<li><label>Name</label><input type="text" name="name" id="name" value="<? echo ( $$variable{'Album'}->name() ) ?>" /></li>
+					</ul>
+				</div>
+			</fieldset>
+			<? if ( $$variable{'Album'}->id() ) ?>
+			<fieldset><legend>Videos</legend>
+				<div id="Videos"><? echo ( include('_videos.html'); ) ?>
+				</div>
+			</fieldset>
+			<fieldset><legend>Upload Option 1</legend>
+			<div id="file_uploader">
+			<noscript><p>Please enable JavaScript to use file uploader.</p></noscript>
+			</div>
+			</fieldset>
+			<? endif ( $$variable{'Album'}->id() ) ?>
+			<fieldset><legend>Upload Option 2</legend>
+				<div class="content">
+					<ul>
+						<li><label>Select file</label><input type="file" name="filename"/></li>
+<!--
+						<? echo ( ssi::writeButton($log, $dbh, 'Upload', 'upload.gif', "f1.btnFunction.value='Attach';f1.submit();", '', 'Upload' ); ) ?>
+-->
+					</ul>
+				</div>
+				<? echo ( $config{'VideoUploadDisclaimer'} ) ?>
+			</fieldset>
+		</form>
+	</div>
+</div>
+<script type="text/javascript">
+var uploader = new qq.FileUploader({
+    // pass the dom node (ex. $(selector)[0] for jQuery users)
+    element: $('file_uploader'),
+    // path to server-side upload script
+    action: '/upload.htm',
+	limit: 5,
+	allowedExtensions: ['jpg', 'jpeg', 'png', 'gif'],
+	sizeLimit: 2147483647,
+	params: {
+		album_id: <? echo ( $$variable{'Album'}->id() ) ?>,
+		UploadType: 'Video_in_Album'
+	},
+	onComplete: function(id, fileName){
+		Ajax.Updater( 'Videos', '_videos.html', { parameters: { album_id: <? echo ( $$variable{'Album'}->id() ) ?> } } );
+	}
+
+});
+</script>

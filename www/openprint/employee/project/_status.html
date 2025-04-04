@@ -1,0 +1,46 @@
+<span title="Click to change" onclick="new Ajax.Updater('status<?index?>', '/employee/project/_status_dropdown.html', { parameters: { project_id: <?ProjectIndex?>, service_id: '<?index?>'} } );"><?status?><br/></span>
+<?include('/includes/error_reporting.html')?>
+<? echo ( 
+	my $html;
+	my @service_ids = split( ',', $$variable{index} );
+	if ( ! @service_ids ) {
+		$log->error( 'No service_ids in project ' . $$variable{Project}->id() . ' index: ' . $$variable{index} );
+		return;
+	} 
+	my $Service = $$variable{Project}->Service( $service_ids[0] );
+	if ( ! $Service ) {
+		$log->error( 'No Project Service in project ' . $$variable{Project}->id() . ' index: ' . $$variable{index} );
+		return;
+	} 
+
+	# If there is a scheduled equipment for this service type
+	if ( openprint::Equipment->find(useinscheduling=>1,'servicetype_id @>'=> $Service->servicetype_id()) ) {
+		if ( my $Job = openprint::ScheduledJob->find_one('service_id @>'=> \@service_ids) ) {
+			if ( ! $Job->starttime() ) {
+				$html = 'Scheduled in pending';
+			} else {
+				$html = 'Scheduled for ' . format_datetime( $Job->starttime() );
+			} # end if
+			$html .= ' on ' . $Job->Equipment()->strid() . ' ' . $Job->Equipment()->name() . '<br/>';
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
+				$html .= button( 'RemoveFromPressSchedule'.$$variable{index}, { onclick=> 
+					sprintf(q`new Ajax.Updater('status%1$s', '/employee/project/_status.html', { parameters: { project_id: %2$d, service_id: '%1$s', action: 'removefromschedule' } } );`, @$variable{'index','ProjectIndex'} ), text=>'Remove From Schedule' } );
+			} # end if
+		} elsif ( $$variable{status} eq 'Ordered' ) {
+			$html = 'Not scheduled<br/>';
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
+				$html .= button( 'AddToPressSchedule'.$$variable{index}, { onclick=>
+					sprintf( q`popup_window( '/employee/project/_add_to_schedule.html', 'project_id=%1$d&amp;service_id=%2$s' );`, @$variable{'ProjectIndex','index'} ), text=>'Add To Schedule' } );
+			} # end if
+		} # end if
+	} elsif ( sets::isin( $Service->ServiceType()->name(), [ 'Shipping','CustomerPickUp' ] ) ) {
+		require openprint::SignatureCapture;
+		my @Signatures = openprint::SignatureCapture->find(
+				project_id    =>  $$variable{ProjectIndex},
+				service_id    =>  $$variable{index},
+				order         =>  'id',
+				);
+		$html .= join('', map { sprintf(q`<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature" class="thumbnail"/>`, $_->id(), $_->file_path() ); } @Signatures );
+	} # end if
+	return $html;
+) ?>

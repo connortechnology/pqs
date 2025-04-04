@@ -1,0 +1,26 @@
+<? echo (
+	return if ! $$variable{Project}->id();	
+	my $html;
+	my @Files = openprint::File->find(project_id=>$$variable{Project}->id());
+	if ( @Files ) {
+		$html .= '<fieldset><legend>Files</legend><div id="Files">';
+		$html .= '<table class="List"><tr><th class="filename">Filename</th><th class="DateTime">Created On</th><th class="buttons">&nbsp;</th></tr>';
+		foreach my $File ( @Files ) {
+			if ( ! $File->archive() ) {
+				if ( -f $config{ProjectFilesPath}.$File->filename() ) {
+					$html .= sprintf('<tr><td class="filename">%2$s</td><td class="DateTime">%3$s</td><td class="buttons"></td></tr>', 
+						$$File{id}, $File->filename(), format_datetime( $File->created_on() ) );
+				} else {
+					#$File->delete();
+				} # end if
+			} elsif ( -f $File->archive().$File->filename() ) {
+				$html .= sprintf('<tr><td class="filename">%2$s</td><td class="DateTime">%3$s</td><td class="buttons">%4$s</td></tr><tr><td colspan="3" id="action-%1$d"></td></tr>',
+				$$File{id}, $File->filename(), format_datetime( $File->created_on() ),
+				button( 'Dearchive'.$$File{id}, { onclick=>qq`dearchive('$$File{id}');`, text=>'Dearchive' } ),
+				);
+			} # end if
+		} # end foreach File
+		$html .= '</table></div></fieldset>';
+	} # end if
+	return $html;
+) ?>

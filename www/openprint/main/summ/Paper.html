@@ -1,0 +1,23 @@
+<p>
+<? echo ( 
+	my $html = '';
+
+	my $specs = $$variable{ServiceSpecifications};
+
+	my @Stocks = openprint::Estimating::Paper::get_stocks( $$variable{Project}, $$variable{ServiceIndex}, $specs );
+
+	foreach my $SE ( @Stocks ) {
+		my $Stock = $$SE{Stock};
+		$html .= '<p><label>'.$Stock->to_string().'</label>';
+		
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= join("\n",'<span class="value">',
+				openprint::Estimating::Paper::se_quantity_summary( $SE, $specs, $qty_index ),
+				openprint::Estimating::Paper::se_price_summary( $SE, $specs, $qty_index ),
+				'</span>',
+				);
+		} # end foreach qty_index
+	} # end foreach SE
+	return $html;
+) ?>
+</p>

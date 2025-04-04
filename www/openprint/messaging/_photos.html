@@ -1,0 +1,19 @@
+<form name="f1" id="f1" action="/event/view.html?event_id=<? echo ( $$variable{'Event'}->id() ) ?>" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="btnFunction" value="Upload"/>
+	<ul>
+<? echo (
+	my $html;
+	foreach my $Photo ( $$variable{'Event'}->Photos() ) {
+		$html .= sprintf('<li><img src="%1$s" alt="%2$s"/><br/>', 
+			$Photo->thumbnail_url(), $Photo->name() );
+		$html .= ssi::writeButton( $log, $dbh, 'del'.$Photo->asset_id(), 'delete.gif', qq`new Ajax.Updater('Photos', '_photos.html', { parameters: { action: 'delete', asset_id: $$Photo{asset_id}, event_id: $$variable{Event}{id} } } );`, '', 'X' );
+		$html .= '</li>';
+	} # end foreach Photo
+	return $html;
+)?>
+	</ul>
+	<p class="buttons">
+			Select file: <input type="file" name="filename" id="filename" />
+			<? echo ( ssi::writeButton($log, $dbh, 'Upload', 'upload.gif', q`$('f1').submit();`, '', 'Upload' ); ) ?>
+	</p>
+</form>

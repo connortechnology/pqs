@@ -1,0 +1,43 @@
+<? eval (
+	$$variable{'Material'} = new openprint::Material( $log, $dbh, $$variable{'MaterialIndex'} ) if ! $$variable{'Material'};
+) ?>	
+<fieldset><legend>Specifications</legend>
+		<table class="List">
+			<tr>
+				<th>Specification</th>
+				<th width="10%">Min</th>
+				<th width="10%">Max</th>
+				<th width="10%">Value</th>
+				<th width="10%">Units</th>
+				<th width="90">Interpolate</th>
+			</tr>
+			<? eval ( @{$$variable{'Specifications'}} = $$variable{'Material'}->Specifications(); ) ?>
+			<? while ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
+			<tr<?rowclass?>> 
+				<td><input type="text" name="txtSpecificationName<? echo ( $$variable{'Spec'}->id() ) ?>" value="<? echo ( $$variable{'Spec'}->name(); ) ?>" /></td>
+				<td><input type="text" name="txtSpecificationMin<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->min(); ) ?>" /></td>
+				<td><input type="text" name="txtSpecificationMax<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->max(); ) ?>" /></td>
+				<td><input type="text" name="txtSpecificationValue<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( HTML::Entities::encode_entities($$variable{'Spec'}->value()); ) ?>" /></td>
+				<td><input type="text" name="txtSpecificationUnits<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->units(); ) ?>" /></td>
+				<td>
+					<input type="radio" id="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>true" name="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>" value="true" <? echo ( 'checked="checked"' if $$variable{'Spec'}->interpolate() ) ?> />
+					<label class="radio" for="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>true">Yes</label>
+					<input type="radio" id="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>false" name="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>" value="false" <? echo ( 'checked="checked"' if ! $$variable{'Spec'}->interpolate() ) ?> />
+					<label class="radio" for="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>false">No</label>
+				</td>
+			</tr>
+			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+			<? endwhile ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
+			<tr> 
+				<td><input type="text" name="txtSpecificationNameNew" /></td>
+				<td><input type="text" name="txtSpecificationMinNew" /></td>
+				<td><input type="text" name="txtSpecificationMaxNew" /></td>
+				<td><input type="text" name="txtSpecificationValueNew" /></td>
+				<td><input type="text" name="txtSpecificationUnitsNew" /></td>
+				<td>
+					<input type="radio" id="interpolateNewtrue" name="interpolateNew" value="true"/><label class="radio" for="interpolateNewtrue">Yes</label>
+					<input type="radio" id="interpolateNewfalse" name="interpolateNew" value="false"/><label class="radio" for="interpolateNewfalse">No</label>
+				</td>
+			</tr>
+		</table>
+	</fieldset>

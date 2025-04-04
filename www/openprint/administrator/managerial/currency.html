@@ -1,0 +1,69 @@
+<script>
+	function set_conversion( from_id ) {
+		var form = jQuery('#f1')[0];
+		var to_id = get_ddm_value(form.elements['to-'+from_id]);
+
+		if ( ! form.elements['amount-'+from_id].value ) {
+			alert('Please enter an amount.');
+			form.elements['amount-'+from_id].focus();
+			return;
+		}
+
+		jQuery( '#Conversions'+from_id).load( '_currency_conversions.html',  
+				{ 	
+					currency_id: from_id, 
+					to_id: to_id, 
+					amount: form.elements['amount-'+from_id].value, 
+					btnFunction: 'Add'
+				}, function(){ 
+						jQuery('#Conversions'+to_id).load('_currency_conversions.html', { currency_id: to_id });
+					} 
+			);
+	} // end function set_conversion
+</script>
+<form id="f1" name="f1" method="post" action="currency.html">
+	To set a currency conversion, select the destination currency and the rate, and click Set Conversion. The opposite conversion will be automatically calculated.
+	<table class="List">
+		<tr>
+			<th class="name">Long Name</th>
+			<th class="short">Short Name</th>
+			<th class="symbol">Symbol</th>
+      <th class="precision">Precision</th>
+			<th class="conversions">Conversions</th>
+		</tr>
+		<? echo (
+			my $html = '';
+			my $rowclass = '';
+			foreach my $Currency ( openprint::Currency->find(order=>'lower(name)') ) {
+				$html .= sprintf(q`
+		<tr%1$s> 
+			<td class="name"><input type="text" name="name-%2$d" value="%3$s"/></td>
+			<td class="short"><input type="text" name="short-%2$d" value="%4$s"/></td>
+			<td class="symbol"><input type="text" name="symbol-%2$d" value="%5$s"/></td>
+      <td class="precision"><input type="number" name="precision-%2$d" value="%6$d" min="0" max="8"/></td>
+			<td class="conversions" id="Conversions%2$d">%7$s</td>
+		</tr>`, $rowclass, @$Currency{'id','name','short','symbol','precision'},
+        include('/administrator/managerial/_current_currency_conversions.html', { Currency=>$Currency } ),
+				);
+			} # end foreach
+			return $html
+		) ?>	
+		<tr class="totals"> 
+			<td colspan="5"><b>Add a Currency</b></td>
+		</tr>
+		<tr> 
+			<td class="name"><input type="text" name="name"/></td>
+			<td class="short"><input type="text" name="short"/></td>
+			<td class="symbol"><input type="text" name="symbol"/></td>
+			<td class="precision"><input type="number" name="precision" min="0" max="8"/></td>
+			<td>&nbsp;</td>
+		</tr>
+	</table>
+	<p class="buttons">
+    <? echo ( join( "\n",
+      button( 'Submit', { onclick=>"f1.btnFunction.value='Save';f1.submit();"} ),
+      button( 'Reset', { onclick=>'f1.reset();' } ),
+    ); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction"/>
+</form>

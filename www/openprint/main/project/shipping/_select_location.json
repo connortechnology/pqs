@@ -1,0 +1,22 @@
+<? echo (
+	my $Location = new openprint::Location( $param{location_id} );
+	my $Country = $Location->ancestor(type=>'country');
+	my $State = $Location->ancestor(type=>'state');
+	my $City = $Location->ancestor(type=>'city');
+
+	my $html = '';
+		#\$('$param{to_from}Phone').value = '$$Location{phone}';
+		#\$('$param{to_from}Fax').value = '$$Location{fax}';
+		#\$('$param{to_from}Email').value = '$$Location{email}';
+	$html .= "
+		\$('$param{to_from}Location').value = '$$Location{name}';
+		\$('$param{to_from}Address1').value = '$$Location{address}';
+		\$('$param{to_from}Address2').value = '';
+		\$('$param{to_from}City').value = '$$City{name}';
+		ddm_select_by_value( \$('$param{to_from}Country'), '$$Country{short}' );
+		ddm_select_by_value( \$('$param{to_from}StateProvince'), '$$State{short}' );
+		\$('$param{to_from}PostalCode').value = '$$Location{postalcode}';
+	";
+
+	return $html;
+) ?>

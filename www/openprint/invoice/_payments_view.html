@@ -1,0 +1,34 @@
+<? if ( $$variable{Invoice}->Payments() ) ?>
+<div class="Payments">
+	<fieldset><legend>Payments</legend>
+		<table>
+			<tr><th class="payment_id">ID</th><th class="transaction">Transaction/Cheque #</th><th class="DateTime">When</th><th class="Notes">Notes</th><th class="Price">Amount</th></tr>
+			<? echo ( 
+				my $html = '';
+				$$variable{payment_total} = 0;
+				foreach my $P ( $$variable{Invoice}->Payments() ) {
+					my $Payment = $P->Payment();
+					$html .= sprintf('<tr><td class="payment_id"><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td>
+						<td class="transaction"><a href="/payment/edit.html?payment_id=%1$d">%2$s</a></td>
+						<td class="DateTime">%3$s</td>
+						<td class="Notes">%4$s</td>
+						<td class="Price">%5$s</td></tr>',
+						$Payment->id(),
+						$Payment->transaction_id(),
+						format_date( $Payment->received_on() ),
+						$Payment->memo(),
+						( $P->amount() != $Payment->amount() ? openprint::Currency::format( $P->amount() ).'/'.openprint::Currency::format($Payment->amount()) : openprint::Currency::format( $P->amount() ) ),
+ );
+					$$variable{payment_total} += $P->amount();
+				} # end foreach
+				return $html;
+			) ?>
+			<tr class="totals">
+				<td colspan="4">Total</td>
+				<td class="Price"><? echo ( openprint::Currency::format( $$variable{payment_total} ); ) ?></td>
+			</tr>
+		</table>
+	</fieldset>
+</div>
+<? endif ( $$variable{Invoice}->Payments() ) ?>
+

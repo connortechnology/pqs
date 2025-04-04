@@ -1,0 +1,15 @@
+<h1>Your magic link</h1>
+<p>
+<a href="<?echo( $config{ExternalSiteURL} )?>/account/login.html?action=login&amp;email=<?hecho($$variable{User}->email())?>&amp;auth_code=<?echo(URI::Encode::uri_encode($$variable{auth_code}))?>">
+  Please click here to login in <?echo($config{sitename}?' to '.$config{site} : '' )?>
+</a>
+</p>
+
+<p>
+or copy and paste this in your browser
+</p>
+<p>
+<a href="<?echo( $config{ExternalSiteURL} )?>/account/login.html?action=login&amp;email=<?hecho($$variable{User}->email())?>&amp;auth_code=<?echo(URI::Encode::uri_encode($$variable{auth_code}))?>">
+  <?echo($config{siteURL})?>/account/login.html?action=login&amp;email=<?hecho($$variable{User}->email())?>&amp;auth_code=<?echo(URI::Encode::uri_encode($$variable{auth_code}))?>
+</a>
+</p>

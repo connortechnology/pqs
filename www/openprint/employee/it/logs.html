@@ -1,0 +1,56 @@
+<script type="text/javascript">
+function load_page() {
+	new Ajax.Updater( 'Results', '_logs.html', { parameters: $('searchLog').serialize() } );
+}
+</script>
+<form id="searchLog" name="searchLog" action="logs.html" method="post">
+	<fieldset class="filters"><legend>Search</legend>
+		<ul>
+			<li><label>Actions:<br/>
+				<a href="javascript:void(0);" onclick="select_all( searchLog, 'log_actions', true );return false;">Select All</a> | <a href="javascript:void(0);" onclick="select_all( searchLog, 'log_actions', false );return false;">Clear All</a></label>
+				<ul class="Actions">
+				<? echo(
+					my $html;
+					foreach my $Action ( openprint::Log_Action->find(order=>'lower(name)') ) {
+						$html .= sprintf('<li><input type="checkbox" name="log_actions" id="log_action-%1$s" value="%1$s" %3$s /><label class="radio" for="log_action-%1$s">%2$s</label></li>', 
+							$Action->id(), $Action->name(), checked( sets::isin( $Action->id(), $param{log_actions} ) ) 
+							);
+
+					} # end foreach Action
+					return $html;
+				) ?>
+				</ul>
+			</li>
+			<li>
+				<label>Company</label>
+				<input type="text" onkeyup="filterDDM(this, this.form.company_id);" class="filter" />
+				<select name="company_id">
+				<option value="">All</option>
+				<? echo ( openprint::Company::get_dropdown( exists $param{company_id} ? $param{company_id} : $session{company_id} ); ) ?>
+				</select>
+			</li>			
+			<li>
+				<label>User</label>
+				<select name="user_id">
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, order=>'lower(firstname),lower(lastname)'), $param{user_id} ); ) ?>
+				</select>
+			</li>			
+			<li>
+				<label>Date</label>
+				<? echo ( datetime_select_session( '/employee/it/logs.html', 'date_time_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to
+				<? echo ( datetime_select_session( '/employee/it/logs.html', 'date_time_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+		</ul>
+		<p class="buttons">
+		<? echo ( button( 'Search', { onclick=>'load_page();' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<fieldset>
+	<legend>Events</legend>
+	<div id="Results">
+
+	</div>
+</fieldset>

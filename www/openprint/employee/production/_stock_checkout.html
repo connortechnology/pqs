@@ -1,0 +1,62 @@
+<?include(/includes/error_reporting.html)?>
+<script type="text/javascript">
+var skid_ajax = null;
+function validate_skid( e, p ) {
+    if ( skid_ajax ) { skid_ajax.transport.abort(); }
+	if(e.value){
+		skid_ajax = new Ajax.Request('/employee/production/_check_for_skid.json', {
+			parameters: p, 
+			evalScripts: true,
+			onSuccess:function(){skid_ajax = null;}
+		} );
+	}
+	function stock_checkout_submit() {
+		new Ajax.Updater('StockCheckout','_stock_checkout.html', { parameters: $('checkout_form').serialize(); } );
+	}
+}
+</script>
+<form id="checkout_form" name="checkout_form">
+	<input type="hidden" name="docket" value="<? echo ( $$variable{Project}->docket() ) ?>" />
+	<input type="hidden" name="project_id" value="<? echo ( $$variable{Project}->id() ) ?>" />
+	<input type="hidden" name="action" value="Add" />
+	<fieldset><legend>Checked Out Stock</legend>
+		<table class="List">
+			<tr><th class="Skid">Skid</th><th class="RFID">RFID Tag</th><th class="Quantity">Quantity</th></tr>
+			<tr>
+				<td class="Skid">
+					<? echo (
+						input( 
+							type=>'cardinal', id=>'skid_id', name=>'skid_id', 
+							onkeypress=>'return input_handler(this,event);',
+							onkeydown=>'if(event.keyCode==13){stock_checkout_submit();}',
+							onkeyup=>'validate_skid(this,{skid_id: this.value});',
+						);
+					) ?>
+				</td><td class="RFID">
+					<? echo ( input(
+						type=>'text', id=>'rfidtag_id', name=>'rfidtag_id',
+						onkeypress=>'return input_handler(this,event);',
+						onkeydown=>'if(event.keyCode==13){stock_checkout_submit();}',
+						onkeyup=>'validate_skid(this,{rfidtag_id: this.value});',
+					);
+					) ?>
+				</td><td class="Quantity">
+					<? echo ( button( 'Submit', { onclick=> 'stock_checkout_submit();' } ); ) ?>
+				</td>
+			</tr>
+			<? echo ( 
+				my $html = '';
+				my $rowclass = '';
+				if ( $$variable{Project}->docket() ) {
+					foreach my $PI ( openprint::PaperInventory->find( project_id=>$$variable{Project}{id} ) ) {
+						$html .= sprintf('<tr%5$s><td>%1$d</td><td>%2$s</td><td>%3$d%4$s</td></tr>', $PI->skid_id(), $PI->Skid()->rfidtag_id(), -1*$PI->delta(), ($PI->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets'), $rowclass );
+						$html .= '<tr><td colspan="3">' . join('<br/>', map { $_->Paper()->to_string() } $PI->Skid()->Contents() ) . '</td></tr>';
+						$rowclass = $rowclass ? '' : ' class="colRow"';
+					} # end foreach PI
+				} # end if
+				return $html;
+			) ?>
+		</table>
+	</fieldset>
+</form>
+<script type="text/javascript">document.forms['checkout_form'].skid_id.focus();</script>

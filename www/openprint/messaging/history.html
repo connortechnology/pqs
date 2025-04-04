@@ -1,0 +1,74 @@
+<div class="PageTitle">
+<h1>Messaging</h1>
+<h2>History</h2>
+</div>
+<script type="text/javascript">
+	function delete_confirm(form) {
+		var number_of_deleted_messages = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_messages += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_messages == 0 ) {
+			alert("To delete, click the checkbox beside the message.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_messages + " messages from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_messages( form ) {
+		$('EventsList').innerHTML = 'Please wait...';
+		new Ajax.Updater('EventsList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+</script>	 
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? if ( $session{'user_id'} ) ?>
+<div class="Events"><div class="History">
+	<form id="f1" name="f1" method="post" action="/messaging/history.html">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+			<div class="leftColumn">
+				<ul>
+<? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+			<li>
+				<label>Company</label>
+				<select name="from_id" id="from_id" onchange="load_messages(this.form);">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('order'=>'lower(firstname),lower(lastname)') ], $session{'/messaging/history.html?from_id'} ); ) ?>
+				</select>
+			</li>
+<? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+			<li>
+				<label>Created On</label>
+<? echo ( ssi::date_select_session( '/messaging/history.html', 'created_on_start', {onchange=>'load_messages(this.form);'} ); ) ?>
+					to 
+<? echo ( ssi::date_select_session( '/messaging/history.html', 'created_on_end', {onchange=>'load_messages(this.form);'} ); ) ?>
+			</li>
+			<li>
+				<label>Sent On</label>
+<? echo ( ssi::date_select_session( '/messaging/history.html', 'sent_on_start', {onchange=>'load_messages(this.form);'} ); ) ?>
+					to 
+<? echo ( ssi::date_select_session( '/messaging/history.html', 'sent_on_end', {onchange=>'load_messages(this.form);'} ); ) ?>
+			</li>
+				</ul>
+			</div>
+			<br class="spacer"/>
+			<p class="buttons">
+				<? echo ( join('',
+					ssi::button( 'ShowResults', { onclick=>"load_messages(f1);", href=>'', text=>'Show Results' } ),
+					ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
+					ssi::button( 'New', { onclick=>'', href=>'/messaging/edit.html', text=>'New Event' } ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<div id="EventsList"><? echo ( include('_history.html'); ) ?></div>
+	</form>
+	</div>
+</div>
+<? else ( $session{'user_id'} ) ?>
+	Only logged in customers have a messaging history.
+<? endif ( $session{'user_id'} ) ?>

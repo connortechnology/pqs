@@ -1,0 +1,86 @@
+<table class="List">
+	<tr>
+<? if ( ! $$variable{Project} ) ?>
+		<th class="docket">Docket</th>
+		<th class="project_id">Project</th>
+<? endif ( ! $$variable{Project} ) ?>
+		<th class="Host">Host</th>
+		<th class="User">User</th>
+		<th class="DateTime">When</th>
+		<th class="Description">Description</th>
+	</tr>
+	<? echo ( 
+		my $html;
+		my $ordered;
+		my $prepress_start;
+		my $scheduled_end;
+		my $scheduled_start;
+
+		my @Companies = openprint::Company->find_filtered( 'last_ordered_on is null'=>0 ) if ! openprint::Company->can_view_all();
+
+		my $uri = '/employee/project/modification_log.html';
+
+		my @project_ids;
+		if ( $session{$uri.'?StartDocket'} ) {
+			@project_ids = map { $_->id() } openprint::Project->find( docket=>$session{$uri.'?StartDocket'} );
+		}
+
+		my @ProjectLog = openprint::Project_Log->find(
+			( $$variable{Project} ? (
+					( project_id=>$$variable{Project}->id() ),
+				) : (
+					( $session{$uri.'?StartDocket'} ? ( project_id=>\@project_ids ) : () ),
+					( $$variable{project_id} ? ( project_id=>$$variable{project_id} ) : () ),
+					date_filter( $uri.'?action_date_end', 'created_on <=' ),
+					date_filter( $uri.'?action_date_start', 'created_on >=' ),
+					( $session{$uri.'?operator_id'} ? ( user_id=>$session{$uri.'?operator_id'} ) : () ),
+					( $session{$uri.'?host_id'} ? ( host_id=>$session{$uri.'?host_id'} ) : () ),
+					( $session{$uri.'?salesrep_id'} ? ( salesrep_id=>$session{$uri.'?salesrep_id'} ) : () ),
+					( $session{$uri.'?company_id'} ? ( company_id=>$session{$uri.'?company_id'} ) : () ),
+					( $session{$uri.'?search'} ? ( 'description ilike'=>'%'.$session{$uri.'?search'}.'%' ) : () ),
+					( @Companies ? ( company_id=>[ map { $_->id() } @Companies ] ) : () ),
+				) ),
+			order	=>	'dtmTimestamp DESC'
+			
+			);
+
+		my $rowclass;
+		foreach my $Log ( @ProjectLog ) {
+			if ( $$variable{Project} ) {
+				if ( $Log->description =~ /^Scheduled/ ) {
+					if ( ! $scheduled_end ) {
+						$scheduled_end = $Log->created_on();
+					} # end if
+					$scheduled_start = $Log->created_on();
+				} # end if
+				if ( ( ! $ordered ) and ( $Log->description =~ /^Add to Order/ ) ) {
+					$ordered = $Log->created_on();
+				} # end if
+				if ( ( $Log->description =~ /^Taken Over/ ) or ( $Log->description =~ /^Marked Proofs/ ) ) {
+					$prepress_start = $Log->created_on();
+				} # end if
+			} # end if
+			$html .= sprintf( '<tr%1$s>', $rowclass );
+			if ( ! $$variable{Project} ) {
+				$html .= sprintf( '<td class="docket"><a href="/employee/project/view.html?docket=%1$d">%1$d</a></td>', $Log->Project()->docket() );
+				$html .= sprintf( '<td class="project_id"><a href="/employee/project/view.html?project_id=%1$d">%1$d</a></td>', $Log->project_id() );
+			} 
+				$html .= sprintf( '<td class="Host">%1$s</td>', $Log->Host()->hostname() );
+				$html .= sprintf( '<td class="User">%1$s</td><td class="DateTime">%2$s</td><td class="Description">%3$s</td></tr>', 
+					new openprint::User( $Log->user_id )->name(), format_datetime( $Log->created_on() ), $Log->description_html() );
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach
+
+		if ( $$variable{Project} ) {
+						$scheduled_end = Date::Parse::str2time( $scheduled_end ) if $scheduled_end;
+						$scheduled_start = Date::Parse::str2time( $scheduled_start ) if $scheduled_start;
+						$ordered = Date::Parse::str2time( $ordered ) if $ordered;
+						$prepress_start = Date::Parse::str2time( $prepress_start ) if $prepress_start;
+			$html .= '<tr class="totals">';
+			$html .= '<td colspan="2">Time spent before prepress action:</td><td colspan="2">'. misc::seconds_to_pretty_interval( $prepress_start - $ordered) . '</td></tr>';
+			$html .= '<tr><td colspan="2">Time spent before first scheduled:</td><td colspan="2">'. misc::seconds_to_pretty_interval( $scheduled_start - $ordered) . '</td></tr>';
+			$html .= '<tr><td colspan="2">Time spent before last scheduled:</td><td colspan="2">'. misc::seconds_to_pretty_interval( $scheduled_end - $ordered) . '</td></tr>';
+		} # end if
+		return $html;
+	) ?>
+</table>

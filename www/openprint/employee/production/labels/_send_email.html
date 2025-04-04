@@ -1,0 +1,21 @@
+<form id="send_email_form" name="send_email_form" action="label.html?id=<? echo ( $param{'id'} ) ?>" method="post">
+	<input type="hidden" name="function" value="Send" />
+	<fieldset><legend>Send Packing Slip</legend>
+		<ul>
+			<li><label>From</label><input type="email" name="from" id="from" value="<? echo ( new openprint::User( $session{'user_id'} )->email() ) ?>" /></li>
+			<li><label>To</label><input type="email" name="to" id="to" value="<? echo (
+my $Order = openprint::Order->find_one( docket=>$$variable{'Label'}->docket());
+return sprintf('&quot;%s %s&quot; <%s>', $Order->get('firstname','lastname','email') ) if $Order;
+return;
+) ?>" /></li>
+			<li><label>Subject</label><input type="text" name="subject" id="subject" value="<? echo ( $$variable{'Label'}->Type()->name() . ' for docket ' . $$variable{'Label'}->docket() ) ?>" /></li>
+			<li><label>Body</label><textarea name="body" id="body" onkeyup="textarea_resize(this);"></textarea></li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'Send', { onclick=>q`$('send_email_form').submit();` } ),
+				button( 'Cancel', { onclick=>'popupWin.destroy();' } ),	
+			); ) ?>
+		</p>
+	</fieldset>
+</form>

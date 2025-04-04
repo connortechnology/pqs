@@ -1,0 +1,97 @@
+<? if ( $$variable{Paycheque}->id() ) ?>
+<script type="text/javascript">
+	function add_timetrack( timetrack_id ) {
+		new Ajax.Updater( 'Paid', '_paid.html', { 
+				parameters: { 
+					paycheque_id: <? echo ( $$variable{Paycheque}->id() ) ?>,
+					timetrack_id: timetrack_id 
+				},
+				onSuccess: function(transport) {
+					new Ajax.Updater( 'Unpaid', '_unpaid.html', {
+						parameters: { paycheque_id: <? echo ( $$variable{Paycheque}->id() ) ?> }
+						} );
+				},
+				onFailure: function(transport) {
+					alert('failure to pay');
+				}
+		} );
+	} // end function add_timetrack( invoice_id)
+	function del_timetrack( timetrack_id ) {
+		new Ajax.Updater( 'Unpaid', '_unpaid.html', {
+				parameters: {
+					paycheque_id: <? echo ( $$variable{Paycheque}->id() ) ?>,
+					timetrack_id: timetrack_id
+				},
+				onSuccess: function(transport) {
+					new Ajax.Updater( 'Paid', '_paid.html', {
+						parameters: { paycheque_id: <? echo ( $$variable{Paycheque}->id() ) ?> }
+						} );
+				},
+				onFailure: function(transport) {
+					alert('failure to unpay');
+				}
+			} );
+	} // end function del_timetrack(invoice_id)
+
+</script>
+<? endif ( $$variable{Paycheque}->id() ) ?>
+<?include('/includes/error_reporting.html')?>
+<form name="f1" id="f1" action="edit.html?paycheque_id=<? echo ( $$variable{Paycheque}->id() ) ?>" method="post">
+	<input type="hidden" name="btnFunction" />
+	<fieldset><legend>Editing Paycheque <? echo ( $$variable{Paycheque}->id() ) ?></legend>
+		<div class="leftColumn">
+			<ul>
+			<li><label for="employer_id">Employer</label>
+				<select id="employer_id" name="employer_id">
+					<option value=""> select </option>
+					<? echo ( make_drop_down( openprint::Company->dropdown(), $$variable{Paycheque}->employer_id() ? $$variable{Paycheque}->employer_id() : $session{company_id} ); ) ?>
+				</select>
+			</li>
+			<li><label for="employee_id">Employee</label>
+				<select id="employee_id" name="employee_id">
+					<option value=""> select </option>
+					<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$session{company_id} ), ( $$variable{Paycheque}->employee_id() ? $$variable{Paycheque}->employee_id() : $session{user_id} ) ); ) ?>
+				</select>
+			</li>
+			<li><label>Paid On</label>
+			<? echo ( date_select( 'paid_on', $$variable{Paycheque}->paid_on(), { with_today=>1 } ); ) ?>
+			</li>
+			<li><label for="total">Total</label>
+				<?echo( input( type=>'float', name=>'total', id=>'total', value=>$$variable{Paycheque}->total() ); ) ?>
+				<select name="currency_id" id="currency_id">
+					<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)'), $$variable{Paycheque}->currency_id() ? $$variable{Paycheque}->currency_id() : $session{Currency_id} ); ) ?>
+				</select>
+			</li>
+		</div>
+		<div class="rightColumn">
+			<p>
+				<label for="internal_notes">Internal Notes</label>
+				<textarea cols="40" id="internal_notes" name="internal_notes" rows="<? echo ( ssi::count_lines($$variable{Paycheque}->internal_notes()); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Paycheque}->internal_notes() ) ?></textarea>
+			</p>
+			<p>
+				<label for="external_notes">External Notes</label>
+				<textarea cols="40" id="external_notes" name="external_notes" rows="<? echo ( ssi::count_lines($$variable{Paycheque}->external_notes()); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Paycheque}->external_notes() ) ?></textarea>
+			</p>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'back', { href=>'history.html', text=>'Back' } ),
+				( $$variable{Paycheque}->id() ?
+				  button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", text=>'Destroy' } )
+				: () ),
+				button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+<? if ( $$variable{Paycheque}->id() ) ?>
+	<div class="leftColumn" id="Paid">
+		<?include('_paid.html')?>
+	</fieldset>
+	</div>
+	<div class="rightColumn" id="Unpaid">
+		<?include('_unpaid.html')?>
+	</div>
+<? endif ( $$variable{Paycheque}->id() ) ?>
+	<br class="spacer"/>
+</form>

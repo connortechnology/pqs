@@ -1,0 +1,28 @@
+<?include('/includes/error_reporting.html')?>
+<table class="List">
+	<tr>
+		<th class="name">Name</th>
+		<th class="description">Description</th>
+		<th class="num_project_types"># of Service Types</th>
+	</tr>
+<? echo (
+	my $html = '';
+	my $rowclass;
+	foreach my $Category ( openprint::ServiceType_Category->find( order => 'sorting,lower(name)' ) ) {
+		$html .= sprintf(q`
+<tr%1$s>
+	<td class="name"><a href="category.html?category_id=%2$d">%3$s</a></td>
+	<td class="description"><a href="category.html?category_id=%2$d">%4$s</a></td>
+	<td class="num_project_types"><a href="category.html?category_id=%2$d">%5$d</a></td>
+</tr>
+`, $rowclass, $Category->id(), $Category->name(), $Category->description(), scalar $Category->ServiceTypes() );
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach
+
+	return $html;
+) ?>
+</table>
+<? eval ( delete $param{category_id}; ) ?>
+<p class="buttons">
+<?echo(button('New', { href=>'category.html' } );)?>
+</p>

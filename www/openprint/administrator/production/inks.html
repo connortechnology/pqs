@@ -1,0 +1,79 @@
+<?include('/includes/error_reporting.html')?>
+<script>
+	function load_ddm( type, ink_id ) {
+		new Ajax.Updater( type+'_id-'+ink_id, '_'+type+'_id_ddm.html', { parameters: { ink_id: ink_id } } );
+		$(type+'_id-'+ink_id).onclick="";
+	} // end function load_ddm
+
+	function load_results() {
+		LoadContent('Results', '_inks.html', $j('#f2').serialize());
+	}
+</script>
+<div class="PageTitle">
+<h1>Inks</h1>
+</div>
+<form id="f2" name="f2" method="post" action="inks.html">
+	<fieldset class="filters"><legend></legend>
+		<div class="content">
+		<ul>
+			<li><label>PMS</label><input type="text" name="pmsid" onkeydown="if(event.keyCode==13){load_results();}" value="<? echo ( $session{'/administrator/production/inks.html?pmsid'} ) ?>" /></li>
+			<li><label>Name</label><input type="text" name="name" onkeydown="if(event.keyCode==13){load_results();}" value="<? echo ( $session{'/administrator/production/inks.html?name'} ) ?>"/></li>
+			<li><label>Grade</label>
+				<select id="grade" name="grade" size="1" onchange="load_results();">
+				<? echo (
+						my @options = ( '', 'select one',1,'Gloss-coated',2,'Matte-coated',3,'Gloss-coated, web', 4, 'Uncoated, white', 5, 'Uncoated, yellow' );
+						return make_drop_down( \@options, $session{'/administrator/production/inks.html'} );
+						) ?>
+				</select>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Checked' } ),
+				button( 'NewTop', { href=>'ink.html', text=>'Add New' } ),
+				); ) ?>
+		</p>
+		</div>
+	</fieldset>
+</form>
+<form id="f1" name="f1" method="post" action="inks.html" enctype="multipart/form-data">
+	<fieldset>
+		<div id="Results"><?include('_inks.html')?>
+		</div>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Checked' } ),
+				button( 'NewBottom', { href=>'ink.html', text=>'Add New' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<fieldset><legend>Import/Export</legend>
+		<p>
+			Colour definition files <b>must</b> be in a comma separated values (CSV) format and the columns must be in the 
+			following order:</p>
+		<p>
+			PMSID, ServiceID, MaterialID, Colour Name, Washes, Equipment, Service Cost, Service Markup, Material Cost, Material Markup
+		</p>
+		<p>
+			Click <a href="colour_example.csv">here</a> to view an example of data in CSV format.
+		</p>
+		<p>
+			First, select a file containing your new database in CSV format. Then click on the import button.
+		</p>
+		<p>
+			Clicking on the export button will download the current colour definitions in CSV format.<br/>
+			You can then open this in a spreadsheet program such as Microsoft Excel.
+		</p>
+		<p>
+			<label><b>File:</b></label>
+			<input type="file" name="fileColour"/>
+		</p>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button('Import', { onclick=>"f1.action='inks.html';f1.btnFunction.value='Import Colours';f1.submit();", text=> 'Import' } ),
+				button('Export', { onclick=>"f1.action='inks.html?Download';f1.btnFunction.value='Export Colours';f1.submit();", text=> 'Export' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>

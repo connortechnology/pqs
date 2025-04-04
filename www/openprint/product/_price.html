@@ -1,0 +1,35 @@
+<? echo (
+	my $html;
+	my $Price = $$variable{Price};
+
+	$html .= sprintf('<tr id="Price-%d">', $$Price{id} );
+
+	if ( $$variable{company_ids} and @{$$variable{company_ids}} > 2 ) {
+		$html .= sprintf('<td class="Supplier"><select name="supplier_id-%d"><option value=""> all </option>%s</select></td>',
+		$$Price{id}, make_drop_down( $$variable{company_ids}, $Price->supplier_id() ) );
+	} # end if
+
+	$html .= sprintf('
+			<td class="Range">%1$s - %2$s</td>
+			<td class="Units">%3$s</td>
+			<td class="Cost">%4$s</td>
+			<td class="Markup">%5$s</td>
+			<td class="Price">%6$s</td>
+			<td class="Discount">%7$s</td>
+			<td class="buttons">%8$s</td>
+		</tr>',
+		input( type=>'float', name=>join('-', 'min', $$Price{id} ), value=>$Price->min(), oninput=>'check_price(this);' ),
+		input( type=>'float', name=>join('-', 'max', $$Price{id} ), value=>$Price->max(), oninput=>'check_price(this);' ),
+		input( type=>'text', name=>join('-', 'units', $$Price{id} ), value=>$Price->units(), oninput=>'check_price(this);' ),
+		input( type=>'float', name=>join('-', 'cost', $$Price{id} ), value=>$Price->cost(), onkeyup=>'calc_from_cost(this);check_price(this);', oninput=>'this.onkeyup();' ),
+		input( type=>'float', name=>join('-', 'markup', $$Price{id} ), value=>$Price->markup(), onkeyup=>'calc_from_markup(this);check_price(this);', oninput=>'this.onkeyup();' ),
+		input( type=>'float', name=>join('-', 'price', $$Price{id} ), value=>$Price->price(), onkeyup=>'calc_from_price(this);check_price(this);', oninput=>'this.onkeyup();' ),
+		radio( join('-', 'discountable',$$Price{id} ), [ '1', 'Yes', '0', 'No' ], $Price->discountable(), { default=>'1', onchange=>'check_price(this);' } ),
+		($Price->id() ? 
+		join("\n", 
+			button( 'x'.$Price->id(), { onclick=>qq`del_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, text=>'-', title=>'Delete' } ),
+			button( 'c'.$Price->id(), { onclick=>qq`copy_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, text=>'C', title=>'Copy' } ),
+			) : ''),
+	);
+	return $html;
+) ?>

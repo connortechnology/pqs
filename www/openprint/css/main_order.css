@@ -1,0 +1,56 @@
+@import 'order.css';
+.History #order_id, .History #Docket, .History #invoice {
+	width: 120px;
+}
+/* Order history styles */
+.Order .History fieldset li label:not(.radio):not(.radio-inline) {
+    width: 30%;
+}
+.Order .History fieldset p,
+.Order .History fieldset li {
+    padding-left: 100px;
+}
+.Order .History fieldset p label:not(.radio):not(.radio-inline),
+.Order .History fieldset li label:not(.radio):not(.radio-inline) {
+    margin-left: -100px;
+    width: 95px;
+}
+.Order .History p.buttons {
+  margin: 0;
+}
+.Order .History #JumpTo {
+    width: 30%;
+    float: left;
+	min-width: 275px;
+}
+.Order .History #Filter {
+    width: 68%;
+    float: right;
+}
+
+.ShippingQuestions input[type="number"] {
+	width: 40%;
+}
+
+.EditButton {
+float :left;
+}
+.RemoveButton {
+float :right;
+}
+
+div.navigation {
+	margin-top: -60px;
+}
+
+.Payments table .buttons {
+	width: 60px;
+}
+
+p.buttons {
+  float: right;
+  margin: 10px 0;
+}
+.controls {
+display: flex;
+}

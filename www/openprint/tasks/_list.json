@@ -1,0 +1,15 @@
+<? echo (
+  my $uri = '/tasks/list.html';
+
+  my $json = JSON->new->allow_nonref->convert_blessed;
+
+  $$variable{Tasks} = [openprint::Task->find(
+    date_filter( $uri.'?created_on_end', 'created_on <=' ),
+    date_filter( $uri.'?created_on_start', 'created_on >=' ),
+    date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+    date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
+    (map { ( $session{$uri.'?'.$_} ? ( $_=>$session{$uri.'?'.$_} ) : () ) } ( 'department_id', 'type_id', 'action_id', 'assigned_to' )),
+      order=>$param{order} ? $param{order} : 'id'
+  )];
+  return $json->encode($$variable{Tasks});
+)?>

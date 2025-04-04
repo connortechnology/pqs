@@ -1,0 +1,51 @@
+<?include('/includes/error_reporting.html')?>
+<? echo ( 
+	my $html;
+	my @To = $$variable{Conversation}->To();
+	if ( @To ) {
+		$html .= '<ul>';
+		foreach my $To ( $$variable{'Conversation'}->To() ) {
+			next if $$To{user_id} == $session{user_id};
+			my $User = $To->User();
+			$html .= sprintf('<li id="to_id-%1$d"><input type="hidden" name="to_id" value="%1$d">%2$s<span class="buttons">%3$s</span></li>',
+				$User->id(), $User->icon(), button( 'X'.$User->id(), { onclick=>"delete_to($$User{id});", text=>'X', title=>'Remove' } ) );
+		} # end foreach user
+		$html .= '</ul>';
+	} # end if @To
+	return $html;
+) ?>
+<!--
+<input type="text" id="to_filter" name="to_filter"/>
+-->
+<ul class="filters">
+<li><label>Type</label>
+<? echo ( 
+	ssi::select( openprint::User_Type->dropdown(), $param{user_type}, { 
+		name=>'user_type', 
+		onchange=>q`new Ajax.Updater( 'new_to_autocomplete', { parameters: { user_type: this.getValue(), user_name: $('user_name'}.value } );`,
+	 } );
+) ?>
+</li>
+</ul>
+	<input type="text" id="user_name" name="user_name" placeholder="enter name of new person to add (min 3 characterss)"/>
+	<div id="new_to_autocomplete" class="autocomplete" style="display:none;"></div>
+	<script type="text/javascript">
+	new Ajax.Autocompleter('user_name','new_to_autocomplete', '/includes/_user_autocomplete.html', { minChars: 3,afterUpdateElement : add_to, callback: add_to_id, parameters: 'user_type='+$('user_type'}.getValue } );
+	</script>
+<!--
+<select name="new_to_id" id="new_to_id" onchange="add_to(this.getValue());">
+	<option value="">select</option>
+	<? echo ( 
+return '';
+		# List of friends, not frenemies.
+		my @to_ids = map { $_->user_id1() == $session{'user_id'} ? $_->user_id2() : $_->user_id1() } openprint::User_Relationship->find( 
+			'custom'=>[ '(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ],
+			'user_id2 not in' => [ map { $_->user_id() } $$variable{'Conversation'}->To() ],
+			'user_id1 not in' => [ map { $_->user_id() } $$variable{'Conversation'}->To() ],
+			'distinct' => 1,
+			);
+		my @To = map { new openprint::User( $_ ); } sets::union( @to_ids );
+		return ssi::make_drop_down( [ map { $_->id(), $_->name() } sort { $a->name() <=> $b->name() } @To ], );
+	) ?>
+</select>
+-->

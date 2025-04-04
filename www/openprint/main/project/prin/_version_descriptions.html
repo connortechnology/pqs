@@ -1,0 +1,53 @@
+<? eval (
+	if ( $param{versions} ) {
+		# Coming from Ajax
+		@$variable{keys %param} = @param{keys %param};
+		$$variable{Project} = new openprint::Project( $param{ProjectIndex} );
+	} # end if
+) ?>
+<table>
+	<tr>
+		<th class="Id">#</th><th class="Description">Description</th>
+<? echo (
+	my $html = '';
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		$html .= '<th class="Quantity">Quantity ' . $qty_index . '</th>';
+	} # end foreach
+	return $html;
+) ?>
+	</tr>
+<? echo ( 
+	my $html = '';
+	my %total_qty = 0;
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		foreach my $version ( 1 .. $$variable{versions} ) {
+			$total_qty{$qty_index} += $$variable{"version-$version-quantity$qty_index"};
+		} # end foreach version
+		$openprint::log->debug("Totals: " . $total_qty{$qty_index} );
+	} # end foreach
+
+	foreach my $version ( 1 .. $$variable{versions} ) {
+		$html .= sprintf('
+    <tr>
+      <td class="Id">%1$d</td>
+      <td class="Description"><input type="text" name="version-%1$d-description" id="version-%1$d-description" value="%2$s" /></td>', $version, $$variable{"version-$version-description"} );
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+
+			if ( ! $$variable{"version-$version-quantity$qty_index"} ) {
+				$$variable{"version-$version-quantity$qty_index"} = $$variable{Project}->quantity($qty_index) - $total_qty{$qty_index};
+				$total_qty{$qty_index} += $$variable{"version-$version-quantity$qty_index"};
+			} # end if
+
+			$html .= sprintf('<td class="Quantity"><input type="text" name="version-%1$d-quantity%2$d" id="version-%1$d-quantity%2$d" value="%3$d" on_input_this="version_qty_change"/></td>', $version, $qty_index, $$variable{"version-$version-quantity$qty_index"} );
+		} # end foreach qty_index
+		$html .= '</tr>';
+	} # end foreach version
+	$html .= '<tr class="totals"><td>&nbsp;</td><td>Remaining</td>';
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+	#if ( $total_qty{$qty_index} < $$variable{Project}->quantity( $qty_index ) ) {
+		$html .= '<td>'.($$variable{Project}->quantity( $qty_index ) - $total_qty{$qty_index}).'</td>';
+	} # end foreach qty
+	$html .= '</tr>';	
+	return $html;
+) ?>
+</table>

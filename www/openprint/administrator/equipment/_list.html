@@ -1,0 +1,63 @@
+<? eval (
+	my $uri = '/administrator/equipment/list.html';
+    my %filters = (
+		order	=>	'lower(strid)',
+		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+		( $session{$uri.'?useinestimating'} ne '' ? ( useinestimating => $session{$uri.'?useinestimating'} ) : () ),
+		( $session{$uri.'?servicetype_id'} ne '' ? ( 'servicetype_id any' => $session{$uri.'?servicetype_id'} ) : () ),
+		( $session{$uri.'?category_id'} ne '' ? ( 'category_id any' => $session{$uri.'?category_id'} ) : () ),
+		date_filter( $uri.'?created_on_end', 'created_on <=' ),
+		date_filter( $uri.'?created_on_start', 'created_on >=' ),
+		);
+	if (  $session{$uri.'?equipment_name'} ) {
+		if ( ! ( $session{$uri.'?equipment_name'}  =~ /%/ ) ) {
+			$filters{'name ilike'} = $session{$uri.'?equipment_name'}.'%';
+		} else {
+			$filters{'name ilike'} = $session{$uri.'?equipment_name'};
+		}
+	}
+
+    $$variable{Equipment} = [ openprint::Equipment->find( %filters ) ];
+) ?>	
+<? if ( @{$$variable{Equipment}} ) ?>
+	<table class="List sortable">
+		<tr> 
+			<th class="EquipmentID">ID #</th>
+			<th class="EquipmentName">Name</th>
+			<th class="Description">Description</th>
+			<th class="Categories">Categories</th>
+			<th class="Services">Services</th>
+			<th class="Date">Created</th>
+		</tr>
+<? echo (
+	my $html;
+	my $rowclass;
+	my %ServiceTypes = map { $$_{id}, $_ } openprint::ServiceType->find();
+
+	foreach my $Equipment ( @{$$variable{Equipment}} ) {
+		$html .= sprintf(q`
+<tr%1$s> 
+	<td class="EquipmentID">%2$s</td>
+	<td class="EquipmentName">%3$s</td>
+	<td class="Description">%4$s</td>
+	<td class="Categories">%5$s</td>
+	<td class="Services">%6$s</td>
+	<td class="Date">%7$s</td>
+</tr>
+`, $rowclass, 
+	$Equipment->link_to( $$Equipment{id} ),
+	$Equipment->link_to( $$Equipment{strid} ), 
+	$Equipment->link_to( $$Equipment{name} ), 
+  $Equipment->link_to( join(',', $Equipment->categories()) ), 
+	join(',', sort { $a cmp $b } map { $ServiceTypes{$_} ? $ServiceTypes{$_}->name() : () } @{$Equipment->servicetype_id()} ),
+	format_date( $$Equipment{created_on} ),
+ );
+
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach
+	return $html;
+) ?>
+</table>
+<? else ( @{$$variable{Equipment}} ) ?>
+There were no results matching your criteria.<br>
+<? endif ( @{$$variable{Equipment}} ) ?>

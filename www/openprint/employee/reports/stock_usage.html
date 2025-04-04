@@ -1,0 +1,157 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script type="text/javascript">
+function load() {
+        new Ajax.Updater('Results','/employee/reports/_stock_usage.html', {
+                onLoading:function(){ $('Results').innerHTML='Loading...'; },
+                //onSuccess:function(){ TableKit.Sortable.reload('ResultsTable'); },
+                parameters:Form.serialize($('f1')),
+                evalScripts:true, 
+});
+}
+</script>
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Stock Usage</h2>
+</div>
+<?include('/includes/error_reporting.html')?>
+<form id="f1" name="f1" method="post" action="stock_usage.html">
+	<input type="hidden" name="action"/>
+    <fieldset class="filters"><legend>Search Criteria</legend>
+        <div class="leftColumn">
+			<ul>
+            <li>
+                <label>Company</label>
+				<input name="company_filter" class="filter" type="text" oninput="filter_companies('company_id', { name: this.value,selected_id: get_ddm_value($('company_id'))) } );" />
+                <select id="company_id" name="company_id" size="1" onchange="">
+                <option value=""> All </option>
+				<? echo ( make_drop_down( openprint::Company->dropdown('last_order_id is null'=>0), $session{'/employee/reports/stock_usage.html?company_id'} ); ) ?>
+                </select>
+            </li>
+            <li>
+                <label>Created Date</label>
+<? echo ( date_select_session( '/employee/reports/stock_usage.html', 'ordered_on_start' ); ) ?>
+                    to
+<? echo ( date_select_session( '/employee/reports/stock_usage.html', 'ordered_on_end' ); ) ?>
+            </li>
+			<li><label>Projects/Orders</label>
+				<? echo ( radio( 'projects_orders', [ map { $_, $_ } ( 'Projects', 'Orders' ) ], $session{$r->uri().'?projects_orders'} ); ) ?>
+			</li>
+			</ul>
+        </div>
+        <div class="rightColumn">
+			<ul>
+            <li><label>Type</label>
+    <? echo (
+        $session{'/employee/reports/stock_usage.html?type'} = 'Roll,Sheet' if ! $session{'/employee/reports/stock_usage.html?type'};
+		checkboxes( 'type', [ 'Sheet', 'Sheet', 'Roll', 'Roll' ], [split( ',', $session{'/employee/reports/stock_usage.html?type'} )], { onclick=>'f1.submit();' } );
+    ) ?>
+            </li>
+			<li><label>Customer Supplied</label>
+				<? echo ( radio( 'customer_supplied', ['Y','Yes','N','No','','Both'], $session{$r->uri().'?customer_supplied'} ); ) ?>
+			</li>
+<? echo (
+    my $html;
+    my %find = (
+			( $session{'/employee/reports/stock_usage.html?type'} ? ( type => [ split( ',', $session{'/employee/reports/stock_usage.html?type'} ) ] ) : () ),
+    );
+	if ( $session{'/employee/reports/stock_usage.html?owner_id'} ) {
+		if ( $session{'/employee/reports/stock_usage.html?owner_id_exclude'} ) {
+			$find{'owner_id !='} = $session{'/employee/reports/stock_usage.html?owner_id'};
+		} else {
+			$find{owner_id} = $session{'/employee/reports/stock_usage.html?owner_id'};
+		} # end if
+	} # end if
+
+    my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
+
+    my @Papers = openprint::Paper->find( %find );
+	my %filter_validations;
+	openprint::Paper::init_cache();
+
+	my %filters;
+	for ( my $stock_index = 0; $stock_index < @Papers; $stock_index += 1 ) {
+		my $Stock = $Papers[$stock_index];
+		next if ! $Stock->in_stock();
+
+		foreach my $option ( @StockOptions ) {
+			my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+
+			# Load up the filter
+			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
+
+			if ( $session{'/employee/reports/stock_usage.html?'.$option_id} ) {
+				if ( $$Stock{$option_id} eq $session{'/employee/reports/stock_usage.html?'.$option_id} ) {
+					$filter_validations{$option} = 1;
+				} else {
+					splice @Papers, $stock_index, 1; $stock_index -= 1;
+					last;
+				} # end if
+			} # end if
+		} # end foreach option
+	} # end foreach $Stock
+
+    foreach my $option ( @StockOptions ) {
+		next if ! $filters{$option};
+        my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
+        $html .= sprintf(q`<li><label>%1$s</label>
+                <select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
+                <option value=""> All </option> %4$s </select>
+            </li>`, $option, lc $option, $$variable{'Signature'},
+            make_drop_down( \@options, $session{'/employee/reports/stock_usage.html?'.$option} ),
+        );
+    } # end foreach option
+
+	$$variable{Paper} = \@Papers;
+	return $html;
+) ?>
+
+        <li>
+            <label>Size</label>
+            <select name="width" size="1" onchange="" >
+                <option value="">All</option>
+            <? echo ( 
+                    my %data;
+                    foreach my $Stock ( @{$$variable{Paper}} ) {
+                        $data{$Stock->width()} = $Stock->width();
+                    } # end foreach
+                    make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/reports/stock_usage.html?width'} );
+                ) ?>
+            </select> x
+            <select name="height" size="1" onchange="" >
+                <option value="">All</option>
+            <? echo ( 
+                my %data;
+                    foreach my $Stock ( @{$$variable{Paper}} ) {
+                        $data{$Stock->height()} = $Stock->height();
+                    } # end foreach
+                    make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/reports/stock_usage.html?height'} );
+                ) ?>
+            </select>
+            <input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="" /><label class="radio" for="OrLarger">or larger</label>
+        </li>
+        <li>
+            <label>MWeight</label>
+			<? echo ( input( type=>'float', id=>'mweight', name=>'mweight' ); ) ?> lbs
+        </li>
+<!--
+        <p>
+            <label>Basis Weight</label>
+            <input type="text" id="basis_weight" name="basis_weight" style="width: auto;" size="13" onkeyup="this.value=this.value.replace(/\D/g,'');"/>lbs
+        </p>
+-->
+        <li>
+            <label>FSC Code</label>
+            <input type="text" id="fsc_code" name="fsc_code" />
+        </li>
+		</ul>
+        </div>
+        <p class="buttons">
+            <? echo ( join("\n",
+                button( 'ShowResults', { onclick=>'load();', text=>'Show Results' } ),
+				button( 'Download', { onclick=>"f1.elements['action'].value='download';f1.submit();" } ),
+                button( 'Reset', { onclick=>'f1.reset();' } ),
+                ); ) ?>
+        </p>
+    </fieldset>
+</form>
+<div id="Results"><?include(_stock_usage.html)?></div>

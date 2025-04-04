@@ -1,0 +1,25 @@
+<form action="/employee/purchase_order/view.html?po_id=<?echo($$variable{PurchaseOrder}->id())?>" method="post">
+  <fieldset><legend>Record Payment for PO <?echo($$variable{PurchaseOrder}->id())?></legend>
+		<ul>
+			<li><label>Amount</label>
+					<?echo(input(type=>'float', name=>'amount', value=>$$variable{PurchaseOrder}->total() ); )?>
+			</li>
+			<li><label>Date</label>
+				<? echo ( date_select('paid_on', [Date::Calc::Today()]); ) ?>
+			</li>
+      <li><label for="transaction_id">Transaction ID</label>
+        <input type="text" name="transaction_id" id="transaction_id" value="<? echo ( $$variable{Payment}->transaction_id() ) ?>" />
+      </li>
+      <li>
+        <label for="memo">Memo</label>
+        <textarea id="memo" name="memo" rows="<? echo ( count_lines( $$variable{Payment}->memo() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Payment}->memo() ) ?></textarea>
+      </li>
+		</ul>
+  </fieldset>
+	<p class="buttons">
+		<?echo( join("\n",
+			button('Save', { name=>'btnFunction', value=>'SavePayment', type=>'submit' } ),
+			button('Close', { onclick=>'popupWin.close();', text=>'Close' } ),
+		); ) ?>
+	</p>
+</form>

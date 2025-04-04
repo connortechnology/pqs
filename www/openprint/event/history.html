@@ -1,0 +1,78 @@
+<div class="PageTitle">
+<h1>Events</h1>
+<h2>History</h2>
+</div>
+<script type="text/javascript">
+	function delete_confirm(form) {
+		var number_of_deleted_events = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_events += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_events == 0 ) {
+			alert("To Delete Eventss, click the checkbox beside the event.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_events + " events from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_events( form ) {
+		$('EventsList').innerHTML = 'Please wait...';
+		new Ajax.Updater('EventsList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+</script>	 
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<div class="Events"><div class="History">
+	<form id="f1" name="f1" method="post" action="/event/history.html">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+			<div class="leftColumn">
+				<ul>
+<? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+			<li>
+				<label>Company</label>
+				<select name="company_id" id="company_id" onchange="load_events(this.form);">
+					<option value="">All</option>
+					<? echo ( openprint::Company::get_dropdown( $session{'/event/history.html?company_id'} ); ) ?>
+				</select>
+			</li>
+<? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
+			<li><label>Category</label>
+				<select name="category_id" id="category_id" onchange="load_events(this.form);">
+					<option value="">All</option>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/event/history.html?category_id'} ); ) ?>
+				</select>
+			</li>
+<? endif ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
+			<li>
+				<label>When</label>
+				<? echo ( date_select_session( '/event/history.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
+					to 
+				<? echo ( date_select_session( '/event/history.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
+			</li>
+<? if ( sets::isin($session{user_type}, ['E','A'] ) ) ?>
+					<li><label>Deleted?</label>
+					<? echo ( radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/event/history.html?deleted'}, {onclick=>'load_events(this.form);'} ); ) ?>
+					</li>
+<? endif ( sets::isin($session{user_type}, ['E','A'] ) ) ?>
+
+				</ul>
+			</div>
+			<br class="spacer"/>
+			<p class="buttons">
+				<? echo ( join("\n",
+					button( 'ShowResults', { 'onclick'=>'load_events(f1);', 'text'=>'Show Results' } ),
+					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+					button( 'New', { href=> '/event/edit.html', text=> 'New Event' } ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<div id="EventsList"><?include('_history.html')?></div>
+	</form>
+	</div>
+</div>

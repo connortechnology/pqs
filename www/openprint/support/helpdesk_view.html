@@ -1,0 +1,98 @@
+<form name="f1" method="post" action="helpdesk_search.html" >
+	<input type="hidden" name="helpdesk_id" value="<?echo( $variable{Helpdesk}->id() )?>">
+	<fieldset>
+		<div class="leftColumn">
+		<ul>
+			<li><label>ID</label><? echo ( $$variable{Helpdesk}->id() )?></li>
+			<li> 
+				<label>Submission Date</label>
+				<? echo ( format_datetime( $$variable{Helpdesk}->created_on() ); ) ?>
+			</li>
+			<li> 
+				<label>Title</label>
+				<? echo ( $$variable{Helpdesk}->title() )?>
+			</li>
+			<li> 
+				<label>First Name</label>
+				<? echo ( $$variable{Helpdesk}->firstname() )?>
+			</li>
+			<li> 
+				<label>Last Name</label>
+				<? echo ( $$variable{Helpdesk}->lastname() )?>
+			</li>
+			<li> 
+				<label>Phone</label>
+				<? echo ( $$variable{Helpdesk}->phone() ) ?><? if ( $$variable{Helpdesk}->extension() ) ?>x<? echo ( $$variable{Helpdesk}->extension() )?><? endif ( $$variable{Helpdesk}->extension() ) ?>
+			</li>
+			<li> 
+				<label>E-mail Address</label>
+				<? echo ( $$variable{Helpdesk}->email() ) ?>
+			</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
+			<li> 
+				<label>Company Name</label>
+				<? echo ( $$variable{Helpdesk}->company_name() ) ?>
+			</li>
+			<li> 
+				<label>Address</label>
+				<? echo ( $$variable{Helpdesk}->address1() ) ?>
+			</li>
+	<? if ( $$variable{Helpdesk}->address2() ) ?>
+			<li> 
+				<label>&nbsp;</label>
+				<? echo ( $$variable{Helpdesk}->address2() ) ?>
+			</li>
+	<? endif ( $$variable{Helpdesk}->address2() ) ?>
+			<li> 
+				<label>Country</label>
+				<? echo ( $$variable{Helpdesk}->country() ) ?>
+			</li>
+			<li> 
+				<label>State/Province</label>
+				<? echo ( $$variable{Helpdesk}->state() ) ?>
+			</li>
+			<li> 
+				<label>City</label>
+				<? echo ( $$variable{Helpdesk}->city() ) ?>
+			</li>
+			<li> 
+				<label>Zip/Postal Code</label>
+				<? echo ( $$variable{Helpdesk}->postal_code() ) ?>
+			</li>
+			</ul>
+		</div>
+		<br class="spacer"/>
+		<ul>
+		<li> 
+		<label>Description</label>
+			<? echo ( $$variable{Helpdesk}->description() ) ?>
+		</li>
+		<li> 
+		<label>Question or Comment</label>
+			<? echo ( $$variable{Helpdesk}->question() ) ?>
+		</li>
+		<li> 
+			<label>Response Type</label>
+			<? echo ( $$variable{Helpdesk}->response_type() ) ?>
+		</li>
+		<li> 
+			<label>Customer Service Response</label>
+			<? echo ( $$variable{Helpdesk}->response() ) ?>
+		</li>
+		<li> 
+			<label>Reviewed</label>
+			<? echo ( $$variable{Helpdesk}->reviewed() ? 'Yes' : 'No'; ) ?>
+		</li>
+		</ul>
+	<p class="buttons">
+		<? echo ( join("\n",
+			button('Submit', { onclick=>"f1.btnFunction.value='Submit';f1.submit();" } ),
+			button('Reset', { onclick=>'f1.reset();' } ),
+		); ) ?>
+	</p>
+</fieldset>
+<input type="hidden" name="btnFunction"/>
+</form>

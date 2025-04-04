@@ -1,0 +1,164 @@
+<? eval (
+    $$variable{Label} = new openprint::Label( $param{id} ) if ! $$variable{Label};
+    if ( ! $$variable{Label}->get_data('from') ) {
+		if ( $$variable{Project} ) {
+            if ( my @services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{Project}->id(), 'Shipping' ) ) {
+                my $shipping_specs = openprint::service::get_specs_ref( $$variable{Project}, $services[0] );
+                $$variable{Label}->set_data('from'=> eval "openprint::Estimating::$$shipping_specs{ServiceType}::from( \$shipping_specs );" );
+            } else {
+				my $Supplier = openprint::Company->find_one('supplier'=>'Y', 'order'=>'Index');
+				if ( $Supplier ) {
+					if ( my $address = $Supplier->get_shipping_address() ) {
+
+					$$variable{Label}->set_data('from'=> join("\n", $Supplier->get('name'),
+							join(',', $address->get('Address1','Address2') ),
+							join(',', $address->get('City','StateProvince','PostalCode') ),
+							$address->get('Country'),
+							) );
+					} # end if address
+				} # end if supplier
+			} # end if has shipping
+		} # end if has project
+    } # endif
+
+	if ( ! $$variable{Label}->get_data('to') ) {
+		if ( $$variable{Project} ) {
+            if ( my @services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{Project}->id(), 'Shipping' ) ) {
+                my $shipping_specs = openprint::service::get_specs_ref( $$variable{Project}, $services[0] );
+                $$variable{Label}->set_data('to'=> eval "openprint::Estimating::$$shipping_specs{ServiceType}::to( \$shipping_specs );" );
+            } else {
+                my $Order = $$variable{Project}->Order();
+                $$variable{Label}->set_data('to'=> join("\n", $Order->company_name(),
+                        join(',', $Order->get('address1','address2') ),
+                        join(',', $Order->get('city','state','country') ),
+                        $Order->get('postalcode'),
+                        ) );
+            } # end if
+        } # end if
+    } # end if
+
+	if ( ! $$variable{Label}->get_data('description') ) {
+        my $html;
+        if ( $$variable{Project} ) {
+            $html .= $$variable{Project}->reference();
+        } elsif( $$variable{docket} ) {
+            if ( my @Orders = openprint::Order->find('docket'=>$$variable{docket}) ) {
+                foreach my $Project ( $Orders[0]->Projects() ) {
+                    $html .= $Project->reference() ."\n";
+                } # end foreach Project
+            } # end if
+        } # end if
+        $$variable{Label}->set_data('description'=>$html);
+    } # end if
+
+	if ( ! $$variable{Label}->get_data('skids') ) {
+		my $services = $$variable{Project}->services();
+		if ( $$services{BulkSkids} ) {
+			my $skid_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{BulkSkids}[0] );
+			$$variable{Label}->set_data('skids'=> $$skid_specs{'txtPackageQuantity'.$$variable{Project}->ordered_quantity_index()} );
+		} else {
+			$$variable{Label}->set_data('skids'=> 1 );
+		} # end if
+	} # end if
+
+
+	$$variable{Label}->save();
+) ?>
+<script type="text/javascript">
+    var tinymce_options = {
+        plugins: "paste",
+        theme : "advanced",
+theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontselect,fontsizeselect,|,bullist,numlist,|,forecolor,backcolor,|,indent,outdent",
+theme_advanced_buttons2 : '',
+theme_advanced_buttons2 : '',
+theme_advanced_font_sizes : 'xx-small=1,x-small=2,small=3,medium=4,large=5,x-large=6,xx-large=7', // Changes the menu names
+font_size_style_values : "8pt,12pt,18pt,22pt,36pt,72pt,144pt", // Changes the values for 1,2,3,4,5,6,7 into pixel values.
+	cleanup : true
+    };
+
+    tinyMCE.init( tinymce_options );
+    function update_contents() {
+    <? echo (
+        my $html;
+        foreach my $line ( 1 .. $$variable{Label}->get_data('quantity_lines') ) {
+            $html .= sprintf(q`$('line_total_%1$d').innerHTML = $('qty_%1$d').innerHTML * $('items_%1$d').innerHTML;`, $line );
+        } # end foreach line
+        return $html;
+    ) ?>
+    } // end function update_contents
+</script>
+
+
+   <style type="text/css">
+        table.SkidTag {
+            table-layout: fixed;
+            width: 100%;
+			height: 7.0in;
+			border: none;
+			border-collapse: collapse;
+			border-spacing: 0px;
+        }
+        table tr {
+			border: 1px solid black;
+        }
+        table tr td {
+            vertical-align: top;
+            font-family: Arial, Helvetica, Sans-Serif;
+            padding: 5px;
+            font-size: 20pt;
+        }
+        table tr td textarea {
+            width: 98%;
+        }
+		tr.from {
+			border: none;
+			height: 1.5in;
+		} 
+		tr.From td {
+            font-size: 12pt;
+		} 
+		tr.shipto {
+		}
+		tr.description, tr.skidcount {
+			height: 1in;
+		} 
+div.skid_number, div.skid_count {
+	width: 1in;
+	display: inline-block;
+	text-align: center;
+}
+br.pagebreak {
+    height: 0px;
+    page-break-after: always;
+}
+    </style>
+<? eval ( $$variable{Skid} = 1 ) ?>
+<? while ( $$variable{Skid} <= $$variable{Label}->get_data('skids') ) ?>
+<table class="SkidTag">
+	<tr class="from">
+		<td width="200px;">FROM</td>
+		<td><div id="from<?Skid?>"><? echo ( $$variable{Label}->get_data('from'); ) ?></div></td>
+	</tr>
+	<tr class="shipto">
+		<td width="200px;">SHIP TO</td>
+		<td><div id="to<?Skid?>"><? echo ( $$variable{Label}->get_data('to'); ) ?></div></td>
+	</tr>
+	<tr class="description">
+		<td><? echo ( $$variable{Label}->docket() ) ?></td>
+		<td><div id="description<?Skid?>"><? echo ( $$variable{Label}->get_data('description'); ) ?></div></td>
+	</tr>
+	<tr class="skidcount">
+		<td>&nbsp;</td>
+		<td><div class="skid_number" id="skid_number<?Skid?>"><?Skid?></div> OF <div class="skid_count" id="skids<?Skid?>"><? echo ( $$variable{Label}->get_data('skids'); ) ?></div> SKIDS</td>
+	</tr>
+</table>
+<script type="text/javascript">
+function reload(){ window.location='/employee/production/labels/label.html?id=<? echo ( $$variable{Label}->id() ) ?>'; }
+new Ajax.InPlaceRichEditor( 'from<?Skid?>', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=from',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10,onComplete: reload}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'to<?Skid?>', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=to',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10,onComplete: reload}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'description<?Skid?>', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,onComplete: reload}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'skids<?Skid?>', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=skids',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10, onComplete: reload }, tinymce_options );
+</script>
+<br class="pagebreak">
+<? eval ( $$variable{Skid} += 1 ) ?>
+<? endwhile ( $$variable{Skid} <= $$variable{Label}->get_data('skids') ) ?>

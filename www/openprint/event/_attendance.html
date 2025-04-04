@@ -1,0 +1,27 @@
+<?include(/includes/error_reporting.html)?>
+<? echo (
+	my $html .= $$variable{Event}->attendance( $variable{User} );
+	return $html if ! $$variable{User}->id();
+
+	my $myAttendance = openprint::Event_Attendance->find_one( { event_id=>$$variable{Event}{id}, user_id=>$variable{User}->id() } );
+	if ( $myAttendance ) {
+		if ( $$myAttendance{attending} eq '1' ) {
+			# IF we are the only person, there will already be a message saying that we are attending.
+			if ( $$variable{Event}->Attendance() != 1 ) {
+				$html .= 'You are attending.';
+			} # end if
+		} elsif ( $$myAttendance{attending} eq '0' ) {
+			$html .= 'You are not attending.';
+		} else {
+			$html .= 'You might attend.';
+		} # end if
+		$html .= ssi::radio( 'attending', [ '1', 'Yes', undef, 'Maybe', '0', 'No' ], $$myAttendance{attending}, 
+			{ onclick=>qq`new Ajax.Updater( 'Attendance', '_attendance.html', { parameters: { event_id: $$variable{Event}{id}, attending: get_rdb_value( \$('f1').attending ), user_id: $variable{User}{id} } } );` } );
+	} else {
+		$html .= 'Attending: ';
+		$html .= ssi::radio( 'attending', [ '1', 'Yes', '', 'Maybe', '0', 'No' ], undef,
+			{ onclick=>qq`new Ajax.Updater( 'Attendance', '_attendance.html', { parameters: { event_id: $$variable{Event}{id}, attending: get_rdb_value( \$('f1').attending ), user_id: $variable{User}{id} } } );` } );
+	} # end if
+	
+	return $html;
+) ?>

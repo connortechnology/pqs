@@ -1,0 +1,154 @@
+<script src="<?hash_link('/javascripts/service.js')?>"></script>
+<script>
+  results_callback = function cbDieCuttingResults( results ) {
+      if (!results) {
+          console.log("No results!");
+          return;
+        }
+
+      const form = getFormObj('f1');
+
+      const re = /ImpQty-(\d+)-(\d+)-(\d+)/;
+      for (const [key, value] of Object.entries(results)) {
+          const matches = re.exec( key );
+          if ( matches ) {
+              var f = $('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
+              if ( f ) {
+                  if ( matches[3] == 1 || value > 0 ) {
+                      f.show();
+                    } else {
+                        f.hide();
+                      } // end if
+                } else {
+                    alert('debug mesage: No html for imp ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
+                  } // end if f
+            } // end if matches
+        } // end foreach pair
+      cbFillResults(results);
+    } // end function
+  function show_extra_imposition( signature, qty_index ) {
+      const f = $j('#Imp-'+signature+'-'+qty_index+'-'+'2');
+      f.show();
+    }
+function Imposition_onchange( element, signature, qty_index, index ) {
+    const spec = signature + '-' + qty_index + '-' + index;
+    const next_index = 1+parseInt(index);
+    var do_calc = 1;
+
+    if ( element.type == 'select-one' ) {
+        if ( ! element.value ) {
+            $('ImpQty-'+spec).value = '';
+          } else {
+              if ( ! $('ImpQty-'+spec).value ) {
+                  $('ImpQty-'+spec).value = 1;
+                } // end if
+            } // end if
+      } else { // must be the qty field
+        } // end if
+
+    if ( ! $('ImpQty-'+spec).value ) {
+      } else {
+          $('Imp-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
+        } // end if
+    if ( do_calc ) 
+      calc(element.form.name);
+  } // end function
+</script>
+<div class="Service <?ServiceTypeID?>">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend>Die Cutting</legend>
+			<div class="Signatures">
+			<? echo ( 
+				my $html;
+
+				my $fragment = slurp_content( '/main/project/bind/_imposition.html' );
+
+				foreach my $sig_id ( $$variable{Project}->signatures({sort=>1}) ) {
+					$$variable{SignatureServiceIndex} = $sig_id;
+
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
+					@$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtServiceDescription'};
+					my $form = $$variable{form} = $$sig_specs{SignatureIndex};
+					$html .= '<fieldset class="Signature">';
+					$html .= '<legend>Form '. $form . ' '.$$sig_specs{txtServiceDescription}.'</legend><p>'. openprint::service::summary( $$variable{ProjectIndex}, $sig_id ) . '</p>';
+					$html .= '<ul>
+						<li>
+							<label>Die Cutting Needed</label>';
+
+					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onclick=>qq`if(get_rdb_value(f1.elements['Needed-$form']) == 'Y' ) { \$('DieCutting-$form').show();}else{\$('DieCutting-$form').hide();};calc(this.form.name);` } );
+					$html .= qq`</li>
+				</ul>
+				<div id="DieCutting-$form" `. ( $$variable{'Needed-'.$form} ne 'Y' ? 'style="display:none;"' : '' ). '><ul>';
+				$html .= include('/includes/main/proj/die_cutting.html');
+				$html .= include('/includes/main/proj/signature_equipment.html');
+                $html .= '<li><label>Imposition</label>';
+                foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+                    $html .= '<div class="'.$$variable{Columns}.'Columns">';
+                    if ( $$sig_specs{"txtImposition$qty_index"} ) {
+if ( 1 ) {
+                        if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+							$html .= write_override( "OverrideImposition-$form-$qty_index", $$variable{"OverrideImposition-$form-$qty_index"}, , qq`show_extra_imposition($form,$qty_index);`, q`calc('f1');` );
+							$html .= 'Override';
+
+						} elsif ( $$variable{"OverrideImposition-$form-$qty_index"} ) {
+                            $html .= sprintf('<input type="hidden" name="OverrideImposition-%1$d-%2$d" value="Y" /> Overriden<br/>', $form, $qty_index );
+                        } # end if
+}
+                        $$variable{qty_index} = $qty_index;
+
+                        $html .= '<table class="Impositions"><tr><th class="Qty">Qty</th><th class="Imp">Columns x Rows = Imposition</th></tr>';
+                        foreach my $index ( 1 .. 4 ) {
+                            $$variable{index} = $index;
+                            $html .= variable_substitution( \$fragment, $variable );
+                        } # end foreach
+                        $html .= '</table>';
+                    } else { $html .= '&nbsp;';
+                    } # end if imposition
+
+                    $html .= '</div>';
+
+                } # end foreach qty_index
+                $html .= '</li>';
+				$html .= '</ul>
+				</div>
+				</fieldset>';
+			} # end foreach sig_id
+			return $html;
+			) ?>
+			</div><!--Signatures-->
+
+			<?include('/includes/main/proj/_comments.html') ?>
+		<ul class="pricing">
+<li id="DiePrice">
+	<label>Die Price (<?CurrencySymbol?>)</label>
+<? echo (
+	my $html;
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		$html .= qq`<span class="$$variable{Columns}Columns">`;
+		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+			$html .= input( type=>'float', name=>'DiePrice'.$qty_index, value=>$$variable{'DiePrice'.$qty_index}, onkeyup=>'calc(this.form.name);' );
+			$html .= write_override( 'OverrideDiePrice'.$qty_index, $$variable{'OverrideDiePrice'.$qty_index}, '', 'calc(this.form.name);' );
+		} else {
+			$html .= $$variable{'DiePrice'.$qty_index};
+		} # end if
+		$html .= '</span>';
+	} # end foreach
+	return $html;
+) ?>
+</li>
+			<?include('/includes/main/proj/_quantities.html') ?>
+			<?include('/includes/main/proj/_unit_price.html') ?>
+			<?include('/includes/main/proj/_service_price.html') ?>
+			<?include('/includes/main/proj/_breakdown.html') ?>
+			</ul>
+		</fieldset>
+		<hr/>
+    <?include('/includes/main/proj/add_to_project.html')?>
+    <input type="hidden" name="btnFunction" value="Save Service"/>
+    <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+    <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
+    <input type="hidden" name="ContinueProject" value="Y" />
+    <input type="hidden" name="ServiceType" value="<?ServiceTypeType?>" />
+		<input type="hidden" name="Status" value="<?Status?>" />
+	</form>
+</div>

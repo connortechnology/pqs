@@ -1,0 +1,24 @@
+<div class="Feeds">
+	<div class="List">
+		<form name="f1" action="f1" method="post" action="list.html">
+			<fieldset class="filters">
+				<div class="content">
+					<ul>
+						<li><label>Company</label>
+							<select name="company_id" id="company_id" onchange="new Ajax.Updater( 'Results', '_list.html', { parameters: { company_id: $('company_id').getValue() } } );">
+								<option value="">all</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)' ) ], $session{'/administrator/feeds/list.html?company_id'} ); ) ?>
+							</select>
+						</li>
+					</ul>
+				</div>
+				<p class="buttons">
+					<? echo ( join('', 
+						ssi::button('New', { href=>'edit.html' } ),
+					); ) ?>
+				</p>
+			</fieldset>
+			<div id="Results"><? echo ( include('_list.html'); ) ?></div>
+		</form>
+	</div>
+</div>

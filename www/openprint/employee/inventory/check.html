@@ -1,0 +1,130 @@
+<?include(/includes/error_reporting.html)?>
+<script type="text/javascript">
+function del_entry( id ) {
+	new Ajax.Request( '_check_entry_actions.json', { parameters: { id: id, action: 'delete' } } );
+}
+function load_entries( param ) {
+$('Entries').innerHTML='Loading...';
+	new Ajax.Updater( 'Entries', '_check_entries.html?check_id=<?echo($$variable{Check}->id())?>'+(param?'&'+param:''), { parameters: $('f2').serialize() } );
+}
+var auto_refresh_timeout;
+
+if ( auto_refresh_timeout ) clearTimeout( auto_refresh_timeout );
+
+function auto_refresh() {
+	load_entries();
+	auto_refresh_timeout = setTimeout("auto_refresh();", 5000 );
+}
+
+function start_auto_refresh() {
+	if ( auto_refresh_timeout ) clearTimeout( auto_refresh_timeout );
+	auto_refresh_timeout = setTimeout("auto_refresh();", 5000 );
+}
+function stop_auto_refresh() {
+	if ( auto_refresh_timeout ) clearTimeout( auto_refresh_timeout );
+}
+function lookup_item(e) {
+	
+	new Ajax.Updater( 'alert', '_check_lookup_item.html', { parameters: e.name+'='+e.value } );
+}
+</script>
+<form id="f1" name="f1" method="post" enctype="multipart/form-data" action="check.html?check_id=<?echo($$variable{Check}->id())?>">
+	<input type="hidden" name="action"/>
+	<fieldset><legend>Edit Inventory Check</legend>
+		<div class="column">
+			<ul>
+				<li class="started_on"><label>Started On</label>
+				<? echo ( date_select( 'started_on', $$variable{Check}->started_on() ? $$variable{Check}->started_on() : [ Date::Calc::Today() ] ); ) ?>
+				</li>
+				<li class="ended_on"><label>Ended On</label>
+				<? echo ( date_select( 'ended_on', $$variable{Check}->ended_on() ? $$variable{Check}->ended_on() : [ Date::Calc::Today() ] ); ) ?>
+				</li>
+				<li class="name"><label>Name</label><input type="text" name="name" value="<?echo($$variable{Check}->name())?>"/></li>
+				<li><label>Contains</label><? echo ( checkboxes( 'contains', [ map { $_, $_.'s' } ( 'Roll', 'Sheet' ) ], [split(',',$$variable{Check}->contains())] ); ) ?>
+				<li><label>Scanner</label>
+					<?echo(ssi::select( openprint::RFIDScanner->dropdown(), $$variable{Check}->scanner_id(), { 
+						name=>'scanner_id',
+						prepend=>['','None','All','All'],
+						} );
+					) ?>
+				</li>
+				<li><label>Location</label>
+					<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form);">
+						<? echo ( 
+								my @options =   ('','All', map { $_->id(), $_->name() } openprint::Location->find(type=>'place', company_id=>$openprint::Owner->id(), order=>'parent_id NULLS FIRST,lower(name)') );
+								make_drop_down( \@options, $$variable{Check}->location_id() );
+						) ?>
+						</select>
+				</li>
+			</ul>
+		</div><!-- column -->
+		<p class="buttons">
+			<? echo ( join("\n",
+				
+				 button( 'Save', { onclick=>"f1.elements['action'].value='Save';f1.submit();" } ),
+				( $$variable{Check}->id() ?
+				(
+				 button( 'Apply', { onclick=>"if(confirm('Warning, this will adjust inventory to match this check.')){f1.elements['action'].value='Apply';f1.submit();};" } ),
+				 button( 'Download', { onclick=>"f1.elements['action'].value='Download';f1.submit();", text=>'Download' } ),
+				 button( 'Fudge', { onclick=>"f1.elements['action'].value='Fudge';f1.submit();", text=>'Fudge' } ),
+				 button( 'Test', { onclick=>"f1.elements['action'].value='Test';f1.submit();" } ),
+					#if ( $$variable{Check}->deleted() ) {
+						#$html .= button( 'Destroy', { onclick=>"f1.elements['action'].value='Destroy';f1.submit();" } );
+						#$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
+					#} else {
+						 button( 'delete', { onclick=>"f1.elements['action'].value='Delete';f1.submit();", text=>'Delete' } ),
+						 button( 'clear', { onclick=>"f1.elements['action'].value='Clear';f1.submit();", text=>'Clear' } ),
+					#} # end if
+					'<br/>', input( type=>'file', name=>'import' ),
+					button( 'Import', { onclick=>q`f1.elements['action'].value='Import';f1.submit();` } ),
+					'<br/>',
+					ssi::select( openprint::Inventory_Check->dropdown( 'id !=' => $$variable{Check}->id() ), undef, { name=>'merge_check_id', prepend=>['','select'] } ),
+					button( 'Merge', { onclick=>q`f1.elements['action'].value='Merge';f1.submit();` } ),
+					'<br/>',
+					button( 'DelDupes', { onclick=>q`f1.elements['action'].value='Delete Duplicates';f1.submit();`, text=>'Delete Duplicates'} ),
+				) : () ),
+			);
+			) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" enctype="multipart/form-data" action="check.html?check_id=<?echo($$variable{Check}->id())?>">
+<? if ( $$variable{Check}{id} ) ?>
+<fieldset><legend>Contents</legend>
+	<fieldset><legend>Filter</legend>
+		<ul>
+			<li><label>Has Skid/Roll?</label><?echo(radio('has_skid', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_skid'}, { onclick=>'load_entries();' } );)?></li>
+			<li><label>Has Quantity?</label><?echo(radio('has_quantity', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_quantity'}, { onclick=>'load_entries();' } );)?></li>
+<?if( openprint::Skid->can_see_pricing() ) ?>
+			<li><label>Has Price?</label><?echo(radio('has_price', ['1','Yes','0','No','','Both'], $session{$r->uri().'?has_price'}, { onclick=>'load_entries();' } );)?></li>
+<?endif( openprint::Skid->can_see_pricing() ) ?>
+			<li><label>Scanner</label>
+				<?echo(ssi::select( openprint::RFIDScanner->dropdown(), $session{$r->uri().'?scanner_id'}, { 
+					name=>'scanner_id',
+					prepend=>['','All'],
+					onchange=>'load_entries();',
+					} );
+				) ?>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+						'Auto Refresh: ' . radio('auto_refresh', [ '1','On','0','Off' ], $session{'/employee/inventory/check.html?auto_refresh'}, {
+							onclick=>q`if(this.value=='1'){start_auto_refresh();}else{stop_auto_refresh();};`,
+} ),
+				button('Refresh', { onclick=>'load_entries();' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+	<div id="Entries"><?include(_check_entries.html)?></div>
+</fieldset>
+<hr/>
+<fieldset><legend onclick="toggleContent( 'SystemContents', '/employee/inventory/_check_system_contents.html', new Array('ic_id',<?echo($$variable{Check}->id())?>) );">System Contents not in Check <span class="unprintable"> - click to hide/show</span></legend>
+	<div id="SystemContents">
+<?if($session{$r->uri().'?show_system_contents'})?>
+<?include(_check_system_contents.html)?>
+<?endif($session{$r->uri().'?show_system_contents'})?>
+</div>
+</fieldset>
+<? endif ( $$variable{Check}{id} ) ?>
+</form>

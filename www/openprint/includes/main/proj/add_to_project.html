@@ -1,0 +1,25 @@
+<div id="AddToProject">
+  <p id="AlertDiv" style="display:none;"></p>
+<input type="hidden" name="alert" id="alert"/>
+<span id="Alert"></span>
+<p id="InformationDiv" style="display:none;">
+	<span id="information"></span>
+</p>
+<p class="buttons">
+	<label>When you are satisfied with the specifications, click 
+<? if ( $$variable{ServiceIndex} ) ?>Save and Continue<? else ( $$variable{ServiceIndex} ) ?>Close<? endif ( $$variable{ServiceIndex} ) ?>.</label>
+	<span class="AddToProjectButtons">
+		<? echo (
+			my $html;
+			if ( $$variable{ServiceIndex} ) {
+				$html .= button( 'Recalculate', { onclick=>q`calc('f1',true);` } );
+				$html .= button( 'Save', { onclick=>q`submit_handler('f1');`, text=>'Save and Continue' } );
+				$html .= button( 'Reset', { onclick=>q`f1.reset();calc('f1');` } );
+			} else {
+				$html .= button( 'Close', { onclick=>q`window.close();` } );
+			} # end if
+			return $html;
+		) ?>
+	</span>
+</p>
+</div>

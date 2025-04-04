@@ -1,0 +1,189 @@
+<? eval (
+	my $uri = '/main/order/history.html';
+	if ( $param{order_id} ) {
+		$param{order_id} = openprint::Order->transform( 'id', $param{order_id} );
+		if ( $param{order_id} ) {
+			$$variable{Orders} = [ openprint::Order->find( id=>$param{order_id}, company_id=>$session{company_id} ) ];
+			if ( sets::isin( $session{user_type}, ['A','E'] ) and ! @{$$variable{Orders}} ) {
+				$$variable{Orders} = [ openprint::Order->find( id=>$param{order_id} ) ];
+			} # end if
+		} # end if
+	} elsif ( $param{Docket} ) {
+		$param{Docket} = openprint::Order->transform( 'docket', $param{Docket} );
+		if ( $param{Docket} ) {
+			$$variable{Orders} = [ openprint::Order->find( docket=>$param{Docket}, company_id=>$session{company_id} ) ];
+			if ( sets::isin( $session{user_type}, ['A','E'] ) and ! @{$$variable{Orders}} ) {
+				$$variable{Orders} = [ openprint::Order->find( docket=>$param{Docket} ) ];
+			} # end if
+		} # end if
+	} elsif ( $param{invoice} ) {
+		$param{invoice} = openprint::Invoice->transform( 'num', $param{invoice} );
+		my @Invoices = openprint::Invoice->find(
+			'num ilike'	=>	( $param{invoice} =~ /%/ ? $param{invoice} : '%'.$param{invoice}.'%' ),
+			invoicee_id	=>	$session{company_id},
+		);
+		if ( ( ! @Invoices ) and ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ) {
+			@Invoices = openprint::Invoice->find( 'num ilike' =>  ( $param{invoice} =~ /%/ ? $param{invoice} : '%'.$param{invoice}.'%' ) );
+		} # end if
+
+		if ( @Invoices ) {
+			foreach my $I ( @Invoices ) {
+				push @{$$variable{Orders}}, openprint::Order->find( invoice_id => $$I{id} );
+			}
+		} else {
+			$$variable{Orders} = [];
+		} # end if	
+	} else {
+		@{$$variable{Orders}} = openprint::Order->find(
+			date_filter($uri.'?created_on_end', 'created_on <=' ),
+			date_filter($uri.'?created_on_start', 'created_on >=' ),
+			( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'status_id','company_id','user_id','salesrep_id' ) ),
+			order				=>	'id DESC',
+      limit       => 1000,
+		);
+	} # end if
+
+	$$variable{ReportTotal} = 0;
+	$$variable{ReportBalance} = 0;
+	$$variable{CommissionTotal} = 0;
+	$$variable{CreditCardTotal} = 0;
+
+  $variable{Taxes} = [ openprint::Tax->find(
+      date_filter($uri.'?created_on_end', 'period_start null_or_<='),
+      date_filter($uri.'?created_on_start', 'period_end null_or_>='),
+      order   =>  'period_start,name',
+    ) ];
+	foreach my $Order ( @{$$variable{Orders}} ) {
+		foreach my $Tax ( @{$variable{Taxes}} ) {
+			my $OT = $Order->Tax( $Tax );
+			next if ! $$OT{tax_id};
+			$variable{tax_totals}{$Tax->id()} += $OT->amount();
+		} # end foreach Tax
+	} # end foreach Order
+
+) ?>
+
+<? if ( @{$$variable{Orders}} ) ?>
+<form id="f2" name="f2"/>
+	<div class="unprintable">
+		<br/>
+		Please click on an <b>Order ID #</b> to view an order's details. <br/>Lines in red are waiting for customer approval.<br/>
+	</div>
+	<br/>
+	<table class="List">
+		<thead>
+			<tr> 
+        <th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'order_id', this.checked );"/></th>
+				<th class="order_id">Order ID</th>
+				<th class="docket">Docket</th>
+				<th class="invoices">Invoices</th>
+				<th class="User">Ordered By</th>
+				<th class="Date">Created</th>
+				<th class="Date">Requested For</th>
+				<th class="Status">Status</th>
+				<th class="Price">Subtotal</th>
+				<? echo ( 
+						return join("\n", map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) : () } @{$$variable{Taxes}} );
+						) ?>
+				<th class="Price">Total</th>
+				<th class="Price">Balance</th>
+				<th class="Price">Commission</th>
+				<th class="Price">Credit Card</th>
+			</tr>
+		</thead>
+		<? echo (
+			my $html; my $rowclass;
+
+			foreach my $Order ( @{$$variable{Orders}} ) {
+				my $Currency = $Order->Currency();
+				$$variable{total} = $Order->total();
+				$$variable{balance} = $Order->balance();
+				if ( $openprint::Currency->id() != $Order->currency_id() ) {
+					if ( my $rate = $Currency->conversions( $session{Currency_id} ) ) {
+						$$variable{total} = $$variable{total} * $rate;
+						$$variable{balance} = $$variable{balance} * $rate;
+					} # end if
+				} # end if
+				my $csr_commission = $Currency->convert_from($Order->csr_commission());
+				my $credit_card_fee = $Currency->convert_from($Order->credit_card_fee());
+				my $subtotal = $Currency->convert_from($Order->subtotal());
+
+				if ( $Order->status() ne 'Cancelled' ) {
+					$$variable{ReportSubTotal} += $subtotal;
+					$$variable{ReportTotal} += $$variable{total};
+					$$variable{ReportBalance} += $$variable{balance};
+					$$variable{CreditCardTotal} += $credit_card_fee;
+					$$variable{CommissionTotal} += $csr_commission;
+		
+				} else {
+					$$variable{balance} = '0.00';
+				} # end if
+				$rowclass = ' class="colRowRed"' if $Order->status() eq 'Waiting For Customer Approval';
+				$html .= sprintf( q`
+<tr%1$s> 
+  <td class="checkbox"><input type="checkbox" name="order_id" value="%2$d" /></td>
+	<td class="order_id"><a href="history_details.html?order_id=%2$d">%2$d</a></td>
+	<td class="docket"><a href="history_details.html?order_id=%2$d">%3$s</a></td>
+	<td class="invoices"><a href="history_details.html?order_id=%2$d">%4$s</a></td>
+	<td class="User"><a href="history_details.html?order_id=%2$d">%5$s</a></td>
+	<td class="Date"><a href="history_details.html?order_id=%2$d">%6$s</a></td>
+	<td class="Date"><a href="history_details.html?order_id=%2$d">%7$s</a></td>
+	<td class="Status"><a href="history_details.html?order_id=%2$d">%8$s</a></td>
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%9$s</a></td>
+%10$s
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%11$s</a></td>
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%12$s</a></td>
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%13$s</a></td>
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%14$s</a></td>
+</tr>
+<tr%1$s>
+	<td colspan="4">&nbsp;</td>
+	<td colspan="%16$d">%15$s</td>
+</tr>`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->name(), 
+format_date( $Order->created_on() ),
+join('<br/>', map { $$_{requested_for} ? format_date( $$_{requested_for} ) : () } $Order->Ordered_Projects() ),
+$Order->status(), 
+openprint::Currency::format( $subtotal ),
+join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format($Order->Tax($_)->amount()) ) : () } @{$$variable{Taxes}} ),
+openprint::Currency::format( $$variable{total} ),
+openprint::Currency::format( $$variable{balance} ),
+openprint::Currency::format( $csr_commission ),
+openprint::Currency::format( $credit_card_fee ),
+join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->Projects() ),
+9+misc::sum(map { exists $$variable{tax_totals}{$_->id()} ? 1 : 0 } @{$$variable{Taxes}} ),
+);
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Order
+		return $html;
+	) ?>
+		<tr class="totals">
+			<td colspan="8" align="right"><b>Report Totals</b></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportSubTotal} ); ) ?></td>
+			<? echo (
+					return join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{tax_totals}{$_->id()} ) ) : () } @{$$variable{Taxes}} );
+					) ?>
+
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportTotal} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{ReportBalance} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{CommissionTotal} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{CreditCardTotal} ); ) ?></td>
+		</tr>
+	</table>
+	<br/>
+	<span class="Currency">All prices listed in <? echo ( $openprint::Currency->name() ) ?>.</span>
+  <p class="buttons">
+    <? echo (
+      my $uri = '/main/order/history.html';
+      join("\n",
+        ($session{$uri.'?deleted'} eq '1' ? (
+        (($openprint::User->type() eq 'A') ? (button('destroy', {onclick=>q`order_action('destroy');`, text=>'Destroy Checked'})) : ()),
+        (button('undelete', {onclick=>q`order_action('undelete');`, text=>'Undelete Checked'})),
+        ) : (
+          button('delete', {onclick=>q`order_action('delete');`, text=>'Delete Checked'}),
+        ) ) ); 
+    ) ?>
+  </p>
+</form>
+<? else ( @{$$variable{Orders}} ) ?>
+There are no orders which match your search criteria.
+<? endif ( @{$$variable{Orders}} ) ?>

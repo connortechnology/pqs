@@ -1,0 +1,61 @@
+<script>
+function load_backup( form, options ) {
+  var p = form.serialize(true);
+  if ( options && options.order )
+    p.order = options.order;
+
+  LoadContent( 'Results', '/employee/it/_backups.html', p );
+} // end function load
+</script>
+<?include('/includes/error_reporting.html') ?>
+Please select a backup to view/edit.<br/>
+<form id="f1" name="f1" method="post" action="backups.html">
+	<input type="hidden" name="action"/>
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+      <li><label>Type</label>
+        <? echo ( ssi::select(
+              [ map { $_, $openprint::Backup::types{$_} } sort { $a cmp $b } keys %openprint::Backup::types],
+              $session{$r->uri().'?type'},
+              { name=>'type', prepend=>['','All'] }
+              ); ) ?>
+      </li>
+      <li><label>Owner</label>
+        <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+        <select id="owner_id" name="owner_id" onchange="stop_filter_companies();">
+          <option value="">All</option>
+<? echo ( 
+my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM Backups');
+make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $session{'/employee/it/backups.html?owner_id'} );
+) ?>
+        </select>
+      </li>
+      <li>
+        <label>Date Added</label>
+        <? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+        to 
+        <? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+      </li>
+      <li>
+        <label>Last Updated</label>
+        <? echo ( date_select_session( $r->uri(), 'updated_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
+        to 
+        <? echo ( date_select_session( $r->uri(), 'updated_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
+      </li>
+      <li><label>Enabled</label>
+        <? echo ( radio( 'enabled', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{$r->uri().'?enabled'} ); ) ?>
+      </li>
+      <li><label>Deleted</label>
+        <? echo ( radio( 'deleted', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{$r->uri().'?deleted'} ); ) ?>
+      </li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"load_backup( \$('f1') );", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				button( 'Add', { href=>'backup.html', text=>'Add New Backup' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results"> <?include('/employee/it/_backups.html')?> </div>
+</form>

@@ -1,0 +1,65 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? if ( $$variable{'ProjectIndex'} eq '' ) ?>
+There is no current project. 
+<? else ( $$variable{'ProjectIndex'} eq '' ) ?>
+	<form name="f1" method="post" enctype="multipart/form-data" action="/employee/production/upload_pdfs.html?ProjectIndex=<?ProjectIndex?>">
+		<? if ( @{$$variable{'PDFS'}} ) ?>
+		The following pdfs have been uploaded:<br/>
+		<table class="List">
+			<tr> 
+				<th width="300" align="left">Filename</th>
+				<th align="left">Description</th>
+				<th width="50" align="right">Delete</th>
+			</tr>
+			<? while ( @$variable{'filename','description'} = splice @{$$variable{'PDFS'}},0,2; ) ?>
+			<tr<?rowclass?>> 
+				<td><a href="/pdfs/<?CompanyName?>/<?Docket?>/<?filename?>"><?filename?></a></td>
+				<td><?description?></td>
+				<td align="center"><input type="checkbox" name="chkFiles" value="<?filename?>"></td>
+			</tr>
+			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
+			<? endwhile ( @$variable{'filename','description'} = splice @{$$variable{'PDFS'}},0,2; ) ?>
+		</table>
+		<span style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif',"f1.btnFunction.value='Delete';f1.submit();", '', 'Delete Checked' ); ) ?></td>
+		</span>
+	<? else ( @{$$variable{'PDFS'}} ) ?>
+		No pdfs have been uploaded.
+	<? endif ( @{$$variable{'PDFS'}} ) ?>
+	<hr class="spacer"/>
+	<table class="List">
+		<tr> 
+			<th align="left">Choose a file for upload</th>
+			<th align="left">Optional description</th>
+		</tr>
+		<tr> 
+			<td><input type="file" name="fileUpload1" onChange="fmChange=1"> </td>
+			<td><input type="text" name="txtDescription1" /></td>
+		</tr>
+		<tr> 
+			<td> <input type="file" name="fileUpload2"  onChange="fmChange=1"> </td>
+			<td> <input type="text" name="txtDescription2" /> </td>
+		</tr>
+		<tr> 
+			<td> <input type="file" name="fileUpload3"  onChange="fmChange=1"> </td>
+			<td> <input type="text" name="txtDescription3" /> </td>
+		</tr>
+		<tr> 
+			<td> <input type="file" name="fileUpload4"  onChange="fmChange=1"> </td>
+			<td> <input type="text" name="txtDescription4" /> </td>
+		</tr>
+		<tr> 
+			<td><input type="file" name="fileUpload5"  onChange="fmChange=1"> </td>
+			<td><input type="text" name="txtDescription5" /> </td>
+		</tr>
+	</table>
+	<span style="float: right;">
+		<? echo ( join('',
+			ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', "f1.btnFunction.value='Upload Files';f1.submit();", '', 'Upload Files' ),
+			ssi::writeButton( $log, $dbh, 'Close', 'close.gif', "window.close();", '', 'Close Window' ),
+			); ) ?>
+	</span>
+	<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<? endif ( $$variable{'ProjectIndex'} eq '' ) ?>

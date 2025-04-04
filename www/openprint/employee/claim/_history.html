@@ -1,0 +1,119 @@
+<? eval (
+	if ( $param{claim_id} ) {
+		$$variable{Claims} = [ openprint::Claim->find( 
+			id			=>	$param{claim_id}, 
+			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
+			deleted		=>	[1,0],
+			order		=>	'id desc') ];
+	} elsif ( $param{docket} ) {
+		$$variable{Claims} = [ openprint::Claim->find( 
+			docket		=>	$param{docket}, 
+			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
+			order		=>	'id desc') ];
+	} elsif ( $param{manifest_id} ) {
+		$$variable{Claims} = [ openprint::Claim->find( 
+			manifest_id	=>	$param{manifest_id}, 
+			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
+			order		=>	'id desc') ];
+	} else {
+		my %search = (
+			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
+			date_filter( '/employee/claim/history.html?created_on_end', 'created_on <=' ),
+			date_filter( '/employee/claim/history.html?created_on_start', 'created_on >=' ),
+			date_filter( '/employee/claim/history.html?updated_on_end', 'updated_on <=' ),
+			date_filter( '/employee/claim/history.html?updated_on_start', 'updated_on >=' ),
+			order	=>		'id desc',
+		);
+		$search{supplier_id} = $session{'/employee/claim/history.html?supplier_id'} if $session{'/employee/claim/history.html?supplier_id'};
+		$search{created_by} = $session{'/employee/claim/history.html?created_by'} if $session{'/employee/claim/history.html?created_by'};
+
+		$$variable{Claims} = [];
+		foreach my $Claim ( openprint::Claim->find( %search ) ) {
+			next if $session{'/employee/claim/history.html?status'} eq 'Y' and $Claim->status() ne '1';
+			next if $session{'/employee/claim/history.html?status'} eq 'N' and $Claim->status() ne '0';
+			next if $session{'/employee/claim/history.html?status'} eq 'U' and $Claim->status() ne '';
+			if ( $param{contains} ) {
+				my $next = 1;
+				foreach my $C ( $Claim->Contents() ) {
+					if ( $C->description() =~ /$param{contains}/i ) {
+						$next = 0;
+						last;
+					} # end if
+				} # end foreach
+				next if $next;
+			} # end if
+			push @{$$variable{Claims}}, $Claim;
+		} # end foreach Claim
+	} # end if
+) ?>
+<? if ( @{$$variable{'Claims'}} == 0 ) ?>
+	There are no claims matching your search criteria.
+<? else ( @{$$variable{'Claims'}} == 0 ) ?>
+	<p>Please click on a <b>Claim #</b> to view details.</p>
+<table class="List">
+	<tr>
+<? if ( $session{'user_type'} eq 'A' ) ?>
+		<th class="checkbox"><input type="checkbox" onclick="select_all( $('f2'), 'claim_id', this.checked );"/></th>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
+		<th class="claim_id">ID</th>
+		<th class="DateTime">Created/Updated</th>
+		<th class="Company">Vendor</th>
+		<th class="User">Created By</th>
+		<th class="Date">Dates</th>
+		<th class="Docket">Docket</th>
+		<th class="Price">Total</th>
+	</tr>
+	<? echo ( 
+		my $html = '';
+		my $report_total = 0;
+		my $rowclass;
+		my $Currency = openprint::Currency::get_current();
+		foreach my $Claim ( @{$$variable{Claims}} ) {
+			$html .= sprintf(q`<tr%2$s id="tr-%1$d-1">`, $Claim->id(), $rowclass );
+			if ( $session{user_type} eq 'A' ) {
+				$html .= '<td class="checkbox"><input type="checkbox" id="claim_id" name="claim_id" value="'.$Claim->id().'"/></td>';
+			} # end if
+			my $total = $Claim->Currency()->convert_from( $Claim->total() );
+
+			$html .= sprintf( q`
+				<td class="claim_id"><a href="view.html?claim_id=%1$d">%1$d</a></td>
+				<td class="DateTime"><a href="view.html?claim_id=%1$d">%2$s<br/>%3$s</a></td>
+				<td class="Company"><a href="view.html?claim_id=%1$d">%4$s</a></td>
+				<td class="User"><a href="view.html?claim_id=%1$d">%5$s</a></td>
+				<td class="Date"><a href="view.html?claim_id=%1$d">%6$s</a></td>
+				<td class="Docket"><a href="view.html?claim_id=%1$d">%7$s</a></td>
+				<td class="Price">%8$s</td>
+			</tr>`, $Claim->id(), 
+				format_datetime( $Claim->created_on() ), 
+				format_datetime( $Claim->updated_on() ), 
+				$Claim->Vendor()->name(), $Claim->Creator()->name(), 
+				join('<br/>',
+					($Claim->filed_on() ? ( 'Filed on:' . format_date( $Claim->filed_on() ) ) : () ),
+					($Claim->sent_to_accounts_on() ? ( 'Sent to accounts on: ' . format_date( $Claim->sent_to_accounts_on() ) ) : () ),
+					($Claim->invoiced_on() ? ( 'Invoiced on: '. format_date( $Claim->invoiced_on() ) ) : () ),
+					($Claim->cancelled_on() ? ( 'Cancelled On: ' . format_date( $Claim->cancelled_on() ) ) : () ),
+					($Claim->paid_on() ? ( 'Paid On: ' . format_date( $Claim->paid_on() ) ) : () ),
+				),
+				join('<br/>', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ ); } $Claim->docket() ? @{$Claim->docket()} : () ),
+				openprint::Currency::format($total), 
+				);
+			$report_total += $total;
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end while
+		$html .= '<tr class="totals"><td colspan="'.($session{'user_type'} eq 'A' ? '7' : '6' ).'">Total (' . $Currency->name().') :</td><td class="Price">';
+		$html .= openprint::Currency::format( $report_total );
+		$html .= '</td></tr>';
+		return $html;
+	) ?>
+		
+	</table>
+	<p class="buttons">
+		<? echo (
+			my $html;
+			if ( $session{user_type} eq 'A' ) {
+				$html .= button( 'Delete', { onclick=>q`f2.btnFunction.value='Delete';f2.submit();`, text=>'Delete Selected' } );
+			} # end if
+			return $html;
+		) ?>
+	</p>
+<? endif ( @{$$variable{'Claims'}} == 0 ) ?>

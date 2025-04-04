@@ -1,0 +1,37 @@
+<? echo (
+	my @Messages = ();
+	if ( $param{'last_message_id'} ) {
+		@Messages = openprint::Message->find('conversation_id'=>$$variable{'Conversation'}->id(),'order'=>'id', 'id >'=>$param{'last_message_id'} );
+	} elsif ( $$variable{'Conversation'}->id() ) {
+		@Messages = openprint::Message->find('conversation_id'=>$$variable{'Conversation'}->id(),'order'=>'id' );
+	} # end if
+
+	my $html = '';
+	foreach my $Message ( @Messages ) {
+		next if ! sets::isin( $session{'user_id'}, [ map { $$_{'user_id'} } $Message->To() ] );
+		$html .= sprintf(q`
+<div class="Message" id="message_%2$d">
+	<div class="From">%4$s</div>
+	<div class="buttons">%7$s</div>
+	<div class="SentOn">%3$s</div>
+	<div class="Subject">%5$s</div>
+	<div class="Body">%6$s</div>
+</div>
+`, $$variable{'Conversation'}->id(), $Message->id(),
+		$Message->sent_on_string(),
+		$Message->From()->icon(), $Message->From()->name(), $Message->body(),
+		ssi::button( 'delete', { 'onclick'=>"new Ajax.Request('_view.json', { parameters: { message_id: $$Message{id}, action: 'Delete Message' } } );", 'text'=>'X', 'title'=>'Delete' } ),
+);
+		my $To = openprint::Message_To->find_one(message_id=>$$Message{id}, user_id=>$session{user_id} );
+		if ( ! $To ) {
+			$log->error("Invaluid message to!!!!");
+		}
+		$To->save({viewed=>1}) if ! $To->viewed();
+		$variable{'Message'} = $Message;
+
+	} # end foreach Message
+	if ( @Messages ) {
+		$html .= q`<script type="text/javascript">$('last_message_id').value='`.$Messages[@Messages-1]->id().q`';</script>`;
+	} # en dif
+	return $html;
+) ?>

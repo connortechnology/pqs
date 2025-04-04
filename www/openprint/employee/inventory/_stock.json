@@ -1,0 +1,95 @@
+<? echo (
+	my $debug = 0;
+	my %specs;
+	$specs{form} = $param{form};
+	$specs{id} = $param{id} if $param{id};
+	my @options = ( 'Owner', 'Group','Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','type','width','height' );
+	my %find = ();
+    foreach my $option ( @options ) {
+		my $lc_option = lc $option;
+        if ( $param{$option.$param{id}} ) {
+			if ( $param{$option.'_exclude'.$param{id}} ) {
+				$find{$lc_option.' !='} = $param{$option.$param{id}};
+			} else {
+				$find{$lc_option} = $param{$option.$param{id}};
+			} # end if
+        } elsif ( $param{$lc_option.'_id'.$param{id}} ) {
+			if ( $param{$lc_option.'_id_exclude'.$param{id}} ) {
+				$find{$lc_option.'_id !='} = $param{$lc_option.'_id'.$param{id}};
+			} else {
+				$find{$lc_option.'_id'} = $param{$lc_option.'_id'.$param{id}};
+			} # end if
+        } # end if
+		last if sets::isin( $param{selected}, [ $option.$param{id}, $option.'_exclude'.$param{id} ] );
+		last if sets::isin( $param{selected}, [ $lc_option.'_id'.$param{id}, $lc_option.'_id_exclude'.$param{id} ] );
+    } # end foreach option
+
+	my @Stocks = openprint::Paper->find( \%find );
+
+	# Find the index of the selected option
+	my $option_index = 0;
+	if ( sets::isin( $param{selected}, \@options ) or sets::isin( $param{selected}, [ map { lc $_.'_id'.$param{id} } @options ] ) ) {
+		for ( ; $option_index < @options; $option_index += 1 ) {
+			last if $options[$option_index] . $param{id} eq $param{selected};
+			last if ( lc $options[$option_index] . '_id' . $param{id} ) eq $param{selected};
+		} # end for
+	} # end if
+$log->debug("Selected: " . $options[$option_index]);
+	$option_index += 1 if $param{selected} ne 'rdbSuppliedStock';
+
+	for ( my $i = $option_index; $i < @options; $i += 1 ) {
+		my $lc_option = lc $options[$i];
+		my @removed_Stocks;
+
+		if ( $i and $param{$options[$i-1].$param{id}} ) {
+			for ( my $stock_index = 0; $stock_index < @Stocks; $stock_index += 1 ) {
+				# This ensures that the stock matches the previous option.  
+				my ( $value ) = $Stocks[$stock_index]->get(lc $options[$i-1]);
+
+				if ( $value ne $param{$options[$i-1].$param{id}} ) {
+					push @removed_Stocks, splice @Stocks, $stock_index, 1;
+					$stock_index -= 1;
+					next;
+				} # end if
+			} # end for
+		} # end if $i and $param{$options[$i-1]} 
+
+		if ( ! @Stocks ) {
+			# If we have removed all stocks, then drop the filter, so we get some results.
+			push @Stocks, @removed_Stocks;
+			$param{$options[$i].$param{id}} = '';
+		} # end if
+
+		@{$specs{$lc_option}} = ();
+		my %data;
+		if ( exists $openprint::Paper::fields{$lc_option.'_id'} ) {
+			%data = map { $_->get($lc_option, $lc_option.'_id' ) } @Stocks;
+		} else {
+			%data = map { $_->get($lc_option, $lc_option ) } @Stocks;
+		} # end if
+		if ( $options[$i] =~ /Size/ ) {
+			@{$specs{$options[$i]}} = map { $data{$_}, $_ } 
+				 sort {
+					my ( $a_w, $a_h ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+					my ( $b_w, $b_h ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+					if ( $a_w != $b_w ) {
+						return $a_w <=> $b_w;
+					}
+					if ( $a_h != $b_h ) {
+						return $a_w <=> $b_w;
+					}
+					return $a <=> $b;
+				}
+			keys %data;
+		} elsif ( $options[$i] eq 'width' or $options[$i] eq 'height' ) {
+			@{$specs{$lc_option}} = map { $data{$_} ? ( $data{$_}, $_ ) : () } sort { $a <=> $b } keys %data
+		} else {
+			@{$specs{$lc_option}} = map { $data{$_} ? ( $data{$_}, $_ ) : () } sort keys %data;
+		} # end if Size or other, size gets special treatment for sorting
+	} # end foreach option
+
+	$param{callback} = 'cbStockFillResults' if ! $param{callback};
+	my $json = JSON->new;
+#$log->debug($json->encode( \%specs ));
+	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{callback}(results);";
+) ?>

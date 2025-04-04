@@ -1,0 +1,49 @@
+<script type="text/javascript">
+    function confirm_delete( form, payment_id ) {
+        if ( confirm( "Are you sure you want to delete this payment?" ) ) {
+            form.btnFunction.value = 'Delete Payment';
+            form.payment_id.value = payment_id;
+            form.submit();
+        } // end if
+    } // end function confirm_delete()
+</script>
+<?include('/includes/error_reporting.html')?>
+<div class="Order"><div class="View">
+	<form name="f1" action="order_details.html?order_id=<? echo ( $$variable{Order}->id() )?>" method="post">
+	<p class="buttons">
+		<? echo ( my $html = '';
+			$html .= button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", href=>'', text=>'Delete' } );
+			if ( $$variable{Order}->status() ne 'Cancelled' ) {
+				$html .= button( 'Cancel', { onclick=>"f1.btnFunction.value='Cancel';f1.submit();", href=>'', text=>'Cancel' } );
+				$html .= button( 'Resend', { onclick=>"f1.btnFunction.value='Resend';f1.submit();", href=>'', text=>'Resend' } );
+			} # end if
+			return $html;
+		) ?>
+	<br class="spacer"/>
+	<input class="filter" type="text" oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" />
+
+	<select id="company_id" name="company_id">
+	<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$$variable{Order}->company_id(), 'last_order_id is null'=>0}), $$variable{Order}->company_id() ) ) ?>
+	</select>
+	<? echo ( button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", href=>'', text=>'Change Company' } ); ) ?>
+	</p>
+	<?include('/includes/order_header.html')?>
+	<br class="spacer"/>
+	<?include('/includes/order_project_list.html')?>
+	<?include('/main/order/_product_list.html')?>
+	<span style="float: left;">
+		<? if ( $$variable{AdministratorName} ) ?>
+		<b>Administrator Name</b> <?AdministratorName?><br>
+		<? endif ( $$variable{AdministratorName} ) ?>
+		<? if ( $$variable{AdministratorComments} ) ?>
+		<b>Administrator Comments</b> <?AdministratorComments?><br>
+		<? endif ( $$variable{AdministratorComments} ) ?>
+	</span>
+	<?include('/main/order/_totals.html')?>
+	<br class="spacer"/>
+	<?include('/includes/_order_payments.html')?>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+	<hr/>
+	<?include('/main/order/_view_log.html')?>
+</div></div>

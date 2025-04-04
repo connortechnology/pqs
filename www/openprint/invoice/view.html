@@ -1,0 +1,185 @@
+<div class="Invoice"><div class="View">
+  <div class="PageTitle">
+    <h1>Invoice #<? echo ( $$variable{Invoice}->num() ) ?></h1>
+    <? echo ( $$variable{Invoice}->Invoicer()->gst_number() ? '<h2>HST # ' . $$variable{Invoice}->Invoicer()->gst_number().'</h2>' : '' ) ?>
+  </div>
+  <?include(/includes/error_reporting.html)?>
+  <form name="f1" id="f1" action="view.html?invoice_id=<? echo ( $$variable{Invoice}->id() ) ?>" method="post">
+    <input type="hidden" name="btnFunction" />
+    <p class="buttons">
+      <? echo (
+        my $html = '';
+        $html = button( 'Back', { href=>'history.html' } );
+        if ( $$variable{Invoice}->id() ) {
+          if ( $$variable{Invoice}->deleted() ) {
+            $html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
+            $html .= button( 'Undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();" } );
+          } else {
+            if ( Date::Parse::str2time($$variable{Invoice}->due_on()) < time ) {
+              $html .= button( 'interest', { onclick=>"f1.btnFunction.value='Calculate Interest';f1.submit();", text=>'Calculate Interest' } );
+            } # end if
+            $html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
+            $html .= button( 'Edit', { href=>'edit.html?invoice_id='.$$variable{Invoice}->id() } );
+            if ( $$variable{Invoice}->posted() ) {
+              $html .= button( 'unpost', { onclick=>"f1.btnFunction.value='UnPost';f1.submit();",text=>'UnPost' } );
+              if ( $$variable{Invoice}->can_send() ) {
+                $html .= button( 'Send', { onclick=>q`f1.btnFunction.value='Send';f1.submit();` } );
+                $html .= button( 'SendMe', { onclick=>q`f1.btnFunction.value='Send To Me';f1.submit();`, text=>'Send To Me' } );
+                $html .= button( 'ViewEmail', { href=>'_view_email.html?invoice_id='.$$variable{Invoice}->id(), text=>'View Email' } );
+              } # end if
+            } else {
+              $html .= button( 'post', { onclick=>"f1.btnFunction.value='Post';f1.submit();",text=>'Post' } );
+            } # end if
+            $html .= button( 'Print', { onclick=>'window.print();' } );
+          } # end if
+        } # end if
+        return $html;
+      ) ?>
+    </p>
+  </form>
+
+<fieldset>
+  <div class="Header">
+    <div class="Invoicee">
+      <? echo (
+        my $Invoicee = $$variable{Invoice}->Invoicee();
+        my $html = '';
+        $html .= $Invoicee->link_to( ($Invoicee->business_name() ? $Invoicee->business_name() : $Invoicee->name()) ).'<br/>';
+        $html .= $Invoicee->address1().'<br/>';
+        $html .= $Invoicee->address2().'<br/>' if $Invoicee->address2();
+        $html .= '<div class="city_state_country">'.join(', ', map { $_ ? $_ : () } ( $Invoicee->city(),
+             shift @{[
+              ( ( ( $Invoicee->country() eq 'US' ) and $states::states{$Invoicee->state()} ) ? $states::states{$Invoicee->state()} : () ),
+              ( ( ( $Invoicee->country() eq 'CA' ) and $provinces::provinces{$Invoicee->state()} ) ? $provinces::provinces{$Invoicee->state()} : () ),
+              $Invoicee->state()
+              ]},
+              $countries::countries{$Invoicee->country()} ? $countries::countries{$Invoicee->country()} : $Invoicee->country() ) ).'</div>';
+        $html .= $Invoicee->postalcode().'<br/>' if $Invoicee->postalcode();
+        return $html;
+      ) ?>
+    </div>
+    <div class="Invoicer">
+      <? echo (
+        my $Invoicer = $$variable{Invoice}->Invoicer();
+        my $html = '';
+        $html .= ( $Invoicer->business_name() ? $Invoicer->business_name() : $Invoicer->name() ).'<br/>';
+        $html .= $Invoicer->address1().'<br/>';
+        $html .= $Invoicer->address2().'<br/>' if $Invoicer->address2();
+        $html .= '<div class="city_state_country">'.join(', ', map { $_ ? $_ : () } ( $Invoicer->city(),
+             shift @{[
+              ( ( ( $Invoicer->country() eq 'US' ) and $states::states{$Invoicer->state()} ) ? $states::states{$Invoicer->state()} : () ),
+              ( ( ( $Invoicer->country() eq 'CA' ) and $provinces::provinces{$Invoicer->state()} ) ? $provinces::provinces{$Invoicer->state()} : () ),
+              $Invoicer->state()
+              ]},
+              $countries::countries{$Invoicer->country()} ? $countries::countries{$Invoicer->country()} : $Invoicer->country() ) ).'</div>';
+        $html .= $Invoicer->postalcode().'<br/>' if $Invoicer->postalcode();
+        return $html;
+      ) ?>
+    </div>
+  </div>
+	<br class="spacer"/>
+</fieldset>
+<? eval (
+$$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Invoice}->id(), order=>'starting') ];
+) ?>
+<? if ( @{$$variable{Timetracks}} ) ?>
+<div class="Services">
+	<fieldset><legend>Services</legend>
+		<table class="List">
+			<tr>
+				<th class="Date">Employee / Date</th>
+				<th class="Service">Description</th>
+				<th class="PO">PO #</th>
+				<th class="Interval">Interval</th>
+				<th class="Rate">Rate</th>	
+				<th class="Price">Price</th>
+			</tr>
+			<? echo (
+				my $html = '';
+				$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
+				$$variable{elapsed_total} = $$variable{service_total} = 0;
+				my $rowclass = '';
+				foreach my $Timetrack ( @{$$variable{Timetracks}} ) {
+					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
+          my $formatted_start = format_date( $Timetrack->starting() );
+          my $formatted_end = format_date( $Timetrack->ending() );
+
+					$html .= sprintf('<td class="Date">%s</td>', $Timetrack->Employee()->link_to() );
+          $html .= sprintf('<td class="Service">%s</td>', $Timetrack->link_to( $Timetrack->Service()->name() ) );
+					$html .= '<td class="PO">'.html_escape($Timetrack->po()) . '</td>';
+					$html .= '<td class="Interval">'.$Timetrack->elapsed_formatted().'</td>';
+					my $price = $Timetrack->Price();
+					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$price{price} ), $$price{units} );
+					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$price{total} ) );
+					$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
+          if ( $Timetrack->date_associated() ) {
+            $html .= '<td>'. $formatted_start . ( ( $formatted_start ne $formatted_end ) ? ( '<br/>through<br/>' .  $formatted_end ) : '' ) .  '</td>';
+          } else {
+            $html .= '<td></td>';
+          }
+
+          $html .= '<td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '</tr>';
+					$$variable{service_total} += $$price{total};
+					$$variable{elapsed_total} += $Timetrack->elapsed();
+					$rowclass = $rowclass ? '' : 'class="colRow"';
+				} # end foreach Timetrack
+				return $html;
+			) ?>
+<?if(!$$variable{Invoice}{subtotal_override})?>
+			<tr class="totals">
+				<td colspan="3">Service subtotal</td>
+				<td class="Interval"><?echo(misc::seconds2hms($$variable{elapsed_total});)?></td>
+				<td class="Rate">&nbsp;</td>
+				<td class="Price"><? echo ( openprint::Currency::format( $$variable{service_total} ); ) ?></td>
+			</tr>
+<?endif(!$$variable{Invoice}{subtotal_override})?>
+		</table>
+	</fieldset>
+</div>
+<? endif ( @{$$variable{Timetracks}} ) ?>
+<div id="Products">
+<?include( '/invoice/_products_view.html' ) ?>
+</div>
+<?include( '/invoice/_orders_view.html' ) ?>
+    <div class="Notes">
+      <fieldset><legend>Notes</legend>
+        <ul>
+          <li class="Date CreatedOn"><label>Created On</label><? echo ( format_date( $$variable{Invoice}->created_on() ); ) ?></li>
+          <li class="Date PostedOn"><label>Posted On</label><? echo ( format_date( $$variable{Invoice}->posted_on() ); ) ?></li>
+          <li class="Date DueOn"><label>Due On</label><? echo ( format_date( $$variable{Invoice}->due_on() ); ) ?></li>
+          <li class="ExternalNotes"><label>Notes</label><? echo ( $$variable{Invoice}->external_notes() ) ?></td></tr>
+<?echo(
+  my $Credit = $$variable{Invoice}->Invoicee()->Credit( $$variable{Invoice}{invoicer_id} );
+  if ($$Credit{terms}) {
+    my $html = '<li class="terms"><label>Invoice Terms</label>';
+    $html .= 'Net ' . $$Credit{terms}. ' days';
+    if ( $$variable{Invoice}->monthly_interest() > 0 ) {
+     $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
+    }
+    $html .= '</li>';
+    return $html;
+  }
+  return;
+)?>
+        </ul>
+      </fieldset>
+    </div>
+<?include(_totals.html)?>
+<? if ( $$variable{Invoice}->owing() ) ?>
+	<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+	<div class="Overdue">NOTICE:  This invoice is now overdue.  Please make payment or contact us to make an arrangement.</div>
+	<? endif ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+	<? if ( $$variable{Invoice}->interest() ) ?>
+	<div class="HasInterest">Late payment interest charges have been added to this invoice and are reflected in the amount owing.</div>
+	<? endif ( $$variable{Invoice}->interest() ) ?>
+	<?include(_payment_options.html)?>
+<? endif ( $$variable{Invoice}->owing() ) ?>
+<?include('/invoice/_payments_view.html') ?>
+<? if ( $$variable{Invoice}->id() ) ?>
+	<? echo ( include_logs( $$variable{Invoice} ); ) ?>
+<? endif ( $$variable{Invoice}->id() ) ?>
+</div></div>
+<style>
+<?echo( include($ENV{SkinPath}.'/'.$$variable{Invoice}->Invoicer()->name().'/css/invoice.css'); )?>
+</style>

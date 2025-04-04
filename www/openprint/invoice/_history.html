@@ -1,0 +1,138 @@
+<? if ( @{$$variable{Invoices}} == 0 ) ?>
+	There are no invoices which match your search criteria. 
+<? else ( @{$$variable{Invoices}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Invoice ID #</b> to view invoice details.<br/>
+		To delete invoices from history check the appropriate invoice(s) and click delete.<br/>
+	</div>
+	<table class="List sortable">
+		<tr> 
+			<th class="invoice_id">ID</th>
+			<th class="invoice_num">Num</th>
+			<th class="Date created_on">Created</th>
+			<th class="Date due_on">Due</th>
+			<th class="Date sent_on">Sent On</th>
+			<th class="Date paid_on">Paid On</th>
+			<th class="Company">Company</th>
+			<th class="Price subtotal">SubTotal</th>
+			<? echo ( 
+				return join("\n", map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) : () } @{$$variable{Taxes}} );
+			) ?>
+			<th class="Price total">Total</th>
+			<th class="Interest Price">Interest</th>
+			<th class="Price Paid">Paid</th>
+			<th class="Price Value">Paid Value</th>
+			<th class="Price Owing">Owing</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Invoice ( @{$$variable{Invoices}} ) {
+        my $Currency = $Invoice->Currency();
+
+				if ( ! $Invoice->can_view() ) {
+          $html .= sprintf(q`<tr%1$s title="%4$s">
+              <td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
+              <td class="invoice_num"><a href="/invoice/view.html?invoice_id=%2$d">%3$s</a></td>
+              <td class="Date created_on"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
+              <td class="Date due_on"><a href="/invoice/view.html?invoice_id=%2$d">%6$s</a></td>
+              <td class="Date sent_on"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
+              <td class="Date paid_on"><a href="/invoice/view.html?invoice_id=%2$d">%8$s</a></td>
+              <td class="Company"><a href="/invoice/view.html?invoice_id=%2$d">%9$s</a></td>
+              <td colspan="%9$d">You may not see any further details</td>
+              </tr>`,
+              $rowclass, $Invoice->id(), $Invoice->num(), $Invoice->internal_notes().$Invoice->external_notes(),
+              format_date( $Invoice->created_on() ),
+              format_date( $Invoice->due_on() ),
+              format_date( $Invoice->sent_on() ),
+              format_date( $Invoice->paid_on() ),
+              htmlize( $Invoice->Invoicee()->name() ),
+            4 + scalar @{$$variable{Taxes}},
+              );
+				} else {
+          $html .= sprintf(q`<tr%1$s title="%4$s"> 
+						<td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
+						<td class="invoice_num"><a href="/invoice/view.html?invoice_id=%2$d">%3$s</a></td>
+						<td class="Date created_on"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
+						<td class="Date due_on"><a href="/invoice/view.html?invoice_id=%2$d">%6$s</a></td>
+						<td class="Date sent_on"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
+						<td class="Date paid_on"><a href="/invoice/view.html?invoice_id=%2$d">%8$s</a></td>
+						<td class="Company"><a href="/invoice/view.html?invoice_id=%2$d">%9$s</a></td>
+						<td class="Price subtotal">%10$s</td>
+						%11$s
+						<td class="Price total">%12$s</td>
+						<td class="Price Interest">%13$s</td>
+						<td class="Price Paid">%14$s</td>
+						<td class="Price Value">%15$s</td>
+						<td class="Price Owing">%16$s</td>
+						</tr>`, $rowclass, $Invoice->id(), $Invoice->num(), $Invoice->internal_notes().$Invoice->external_notes(), 
+						format_date( $Invoice->created_on() ),
+						format_date( $Invoice->due_on() ),
+            $Invoice->sent_on() ? format_date( $Invoice->sent_on() ) : '',
+            ($Invoice->paid_on() ? format_date($Invoice->paid_on()).' ' : '').$Invoice->paid_days().' days',
+						htmlize( $Invoice->Invoicee()->name() ),
+            ( 
+            ( $$Invoice{currency_id} != $session{Currency_id} ) ?
+            join('<br/>',
+            $Currency->format($Invoice->subtotal()) . $Currency->short(), 
+            '~'.(
+              $Invoice->owing() > 0 ? 
+              $Currency->format( $Currency->convert_from($Invoice->subtotal(), { period=>$Invoice->created_on()} ) ) . $openprint::Currency->short()
+              :
+              $Invoice->paid_value()
+             )
+              ) : 
+						openprint::Currency::format( $Invoice->subtotal() ),
+            ),
+						join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->Tax( $_ )->amount() ) ) : () } @{$$variable{Taxes}} ),
+            openprint::Currency::format(
+            $Invoice->owing() > 0 ?
+            $Invoice->Currency()->convert_from($Invoice->total())
+            :
+            $Invoice->paid_value()
+            ),
+						openprint::Currency::format( $Invoice->interest() ),
+						openprint::Currency::format( $Invoice->paid() ),
+						openprint::Currency::format( $Invoice->paid_value() ),
+            join('<br/>~',
+            openprint::Currency::format( $Invoice->owing() ).$Currency->short(),
+              openprint::Currency::format( $Currency->convert_from($Invoice->owing())).$openprint::Currency->short(),
+              )
+						);
+				} # end if can view
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach
+			return $html;
+		) ?>
+			<tr class="totals">
+        <td class="invoice_id"></td>
+        <td class="invoice_num"></td>
+        <td class="Date created_on"></td>
+        <td class="Date due_on"></td>
+        <td class="Date sent_on"></td>
+        <td class="Date paid_on"></td>
+			<td>Totals</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{subtotal} ); ) ?></td>	
+			<? echo (
+				return join("\n", map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{tax_totals}{$_->id()} ) ) : () } @{$$variable{Taxes}} );
+			) ?>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?></td>	
+			<td class="Interest Price"><? echo ( openprint::Currency::format( $$variable{interest_total} ); ) ?></td>	
+			<td class="Paid Price"><? echo ( openprint::Currency::format( $$variable{paid_total} ); ) ?></td>	
+			<td class="Price Value"><? echo ( openprint::Currency::format( $$variable{paidvalue_total} ); ) ?></td>	
+			<td class="Owing Price"><? echo ( openprint::Currency::format( $$variable{owing_total} ); ) ?>
+       <? echo( 
+          if ( $$variable{owing_total} != $$variable{owing_total_value} ) {
+            return '<br/>~' . $openprint::Currency->format($$variable{owing_total_value}) . $openprint::Currency->short();
+          }
+          return;
+          )?>
+      </td>	
+		</tr>
+	</table>
+	<span class="Currency">All prices listed in <? hecho ( $openprint::Currency->name(); ) ?></span>
+	<br class="spacer"/>
+<p class="buttons">
+<? echo ( button('Delete',{ onclick=>'delete_confirm(document.f1);' }); ) ?>
+</p>
+<? endif ( @{$$variable{Invoices}} == 0 ) ?>

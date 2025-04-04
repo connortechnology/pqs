@@ -1,0 +1,22 @@
+table .buttons,
+table .finished_width,
+table .finished_height,
+table .flat_width,
+table .flat_height {
+	width: 80px;
+}
+table .buttons input,
+table .finished_width input,
+table .finished_height input,
+table .flat_width input,
+table .flat_height input {
+	text-align: right;
+}
+
+input[type="number"], textarea {
+    width: 100%;
+box-sizing: border-box;
+-moz-box-sizing: border-box;
+-webkit-box-sizing: border-box;
+}
+

@@ -1,0 +1,41 @@
+<?include('/includes/error_reporting.html')?>
+<? echo (
+	my $html;
+	if ( $session{user_type} eq 'A' or $session{user_id} == $$variable{Survey}->created_by() ) {
+		my @Unapproved = $$variable{Survey}->Comments( {'approved' => 0} );
+		if ( @Unapproved ) {
+			$html .= '<div class="Unapproved">The following comments require approval:<br/>';
+			foreach my $Comment ( @Unapproved ) {
+				$html .= sprintf( q`
+					<div class="comment">At %s %s said:<br/>%s`,
+					format_datetime( $Comment->created_on() ),
+					$Comment->User()->name(), $Comment->text() );
+
+					$html .= button( 'ApproveComment'.$Comment->id(), { text => 'Approve', onclick => qq`new Ajax.Updater('Comments', '_comments.html', { parameters: { survey_id: $$variable{Survey}{id}, comment_id: $$Comment{id}, action: 'approve' } } );` } );
+
+				$html .= '</div>';
+			} # end foreach Comment
+			$html .= '</div>';
+		} # end if Comments needing approval
+	} # end if can approve
+
+	foreach my $Comment ( $$variable{Survey}->Comments( { 'approved' => 1 } ) ) {
+		$html .= sprintf( q`<div class="comment">At %s %s said:<br/>%s`, 
+					format_datetime( $Comment->created_on() ),
+$Comment->User()->name(), $Comment->text() );
+		if ( $Comment->can_delete() ) {
+			$html .= button( 'RemoveComment'.$Comment->id(), { text => 'Remove', onclick => qq`new Ajax.Updater('Comments', '_comments.html', { parameters: { survey_id: $$variable{Survey}{id}, comment_id: $$Comment{id}, action: 'remove' } } );` } );
+		} # end if
+		$html .= '</div>';
+	} # end foreach Comment
+	return $html;
+) ?>
+<div class="comment">
+	<form id="comment-form" name="comment-form" action="list.html" method="post">
+		<fieldset><legend>Add</legend>
+		<input type="hidden" name="survey_id" value="<? echo ( $$variable{Survey}->id() ) ?>"/>
+		<textarea name="text" id="text"></textarea>
+		<? echo ( button( 'SaveComment'.$$variable{Survey}->id(), { text => 'Save', onclick => qq`new Ajax.Updater('Comments', '_comments.html', { parameters: \$('comment-form').serialize() } );` } ); ) ?>
+		</fieldset>
+	</form>
+</div>

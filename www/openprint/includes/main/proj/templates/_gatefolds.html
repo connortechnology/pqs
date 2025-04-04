@@ -1,0 +1,20 @@
+<?eval(
+if (!$$variable{Signature}) {
+  $$variable{Signature} = $param{Signature};
+}
+)?>
+<div class="templates">
+  <ul>
+    <li>
+      <img src="/images/templates/SingleGateFold.png" alt="Single Gate Fold"/> <br/>
+		<input type="radio" id="rdbTemplateTypeSingleGateFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="SingleGateFold" onclick="var div = $('PresentationFolderQuestions');if(div){div.hide();};selectProjectTemplate('f1');" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'SingleGateFold' ? 'checked="checked"' : '' ) ?> /> 
+		<label for="rdbTemplateTypeSingleGateFold<?Signature?>">Single Gate Fold</label>
+	</li>
+    <li>
+      <img src="/images/templates/DoubleGateFold.png" alt="Double Gate Fold" /><br/>
+		<input type="radio" id="rdbTemplateTypeDoubleGateFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="DoubleGateFold" onclick="var div=$('PresentationFolderQuestions');if(div){div.hide();};selectProjectTemplate('f1');" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'DoubleGateFold' ? 'checked="checked"' : '' ) ?> />
+		<label for="rdbTemplateTypeDoubleGateFold<?Signature?>">Double Gate Fold</label>
+	</li>
+  </ul>
+	<br class="spacer"/>
+</div>

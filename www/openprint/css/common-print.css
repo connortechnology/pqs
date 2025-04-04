@@ -1,0 +1,67 @@
+body {
+	background: none;
+	min-width: 100%;
+	max-width: 100%;
+	font-size: x-small;
+	margin: 0;
+	padding: 0;
+}
+#Content {
+	padding: 5px 10px 0 10px;
+	margin: 55px 0 0 0;
+	background: none;
+}
+body #Header {
+	position: relative;
+	background: none;
+	width: 100%;
+	height: 55px;
+}
+body #Header #Logo {
+	width: 190px;
+	background: none;
+	color: #000000;
+	float: none;
+	padding: 0;
+}
+body #Header #Logo a {
+	background: none;
+	color: #000000;
+}
+.PageTitle {
+	margin-top: -55px;
+	width: auto;
+	float: right;
+}
+.PageTitle h1 {
+	font-size: 26px;
+	margin: 0;
+}
+.PageTitle h2 {
+	font-size: 16px;
+	margin: 0;
+}
+
+#Menu,.Menu,
+#QuickLogin, #DidYouKnow,#CurrencySelection,
+.unprintable,
+.error, .warning, .information,.buttons,
+.filters,
+.Service div.templates,
+#trustlogo,
+.ServerInfo {
+	display: none;
+}
+
+.colRow {
+	background-color: #dddddd;
+}
+#logs_form {
+	display: none;
+}
+.leftColumn, .rightColumn {
+min-width: 0;
+}
+.AssetSearch , #fine-uploader {
+display:none;
+}

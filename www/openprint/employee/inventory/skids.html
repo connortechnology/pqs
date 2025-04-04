@@ -1,0 +1,307 @@
+<script src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<?include(/includes/error_reporting.html)?>
+<script>
+	function submit_handler() {
+		calc();
+	}
+	function calc() {
+		LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f1') );
+	}
+</script>
+Please select a Skid/Roll to view/edit.<br/>
+<form id="f1" name="f1" method="post" action="skids.html">
+	<div class="leftColumn">
+		<fieldset class="filters"><legend>Choose Skid</legend>
+			<ul>
+				<li class="skid_id"><label for="skid_id">Skid ID</label>
+					<? echo ( join("\n",
+								input( type=>'cardinal', id=>'skid_id', name=>'skid_id', onchange=>'change_handler(this);', 
+									onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}',
+									max=>2147483647,
+								),
+								button( 'GoSkid', { onclick=>'calc();',text=>'Go' } ),
+								); ) ?>
+				</li>
+				<li class="rfid_id"><label for="rfid_id">RFID ID</label>
+					<? echo ( join("\n",
+								input( type=>'cardinal', id=>'rfid_id', name=>'rfid_id', onchange=>'change_handler(this);', 
+									onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
+								button( 'GoRFID', { onclick=>'calc();',text=>'Go' } ),
+								); ) ?>
+				</li>
+				<li class="manufacturers_id"><label for="manufacturers_id">Manufacturers ID</label>
+					<? echo ( join("\n",
+								input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', 
+									onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
+								button( 'GoManufacturers', { onclick=>'calc();',text=>'Go' } ),
+								); ) ?>
+				</li>
+			</ul>
+		</fieldset>
+	</div>
+	<div class="rightColumn">
+		<fieldset class="filters"><legend>Search Criteria</legend>
+			<ul>
+			<li><label>Docket</label>
+				<? echo ( join("\n",
+							input( type=>'cardinal', name=>'Docket', value=>$session{$r->uri().'?Docket'}, onchange=>'change_handler(this);', 
+								onkeypress=>'return input_handler(this,event);', 
+								onkeydown=>q`if(event.keyCode==13){calc();}` ),
+							button( 'GoDocket', { onclick=>q`calc();`,text=>'Go' } ),
+							); ) ?>
+			</li>
+			<li>
+				<label>Verification</label>
+				<? echo ( join("\n",
+							input( type=>'text', name=>'verification_code', value=>$session{$r->uri().'?verification_code'}, 
+								onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){calc();}` ),
+							button( 'Go3', { onclick=>q`calc();`, text=>'Go' } ),
+				); ) ?>
+			</li>
+			</ul>
+		</fieldset>
+		</div>
+		<br class="spacer"/>
+		<fieldset>
+	<div class="leftColumn">
+		<ul>
+			<li>
+				<label>Received On</label>
+	<? echo ( date_select_session( $r->uri(), 'received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to 
+	<? echo ( date_select_session( $r->uri(), 'received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Date Entered</label>
+	<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to 
+	<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Last Updated</label>
+	<? echo ( date_select_session( $r->uri(), 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to 
+	<? echo ( date_select_session( $r->uri(), 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Last Seen (RFID)</label>
+	<? echo ( date_select_session( $r->uri(), 'last_seen_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to
+	<? echo ( date_select_session( $r->uri(), 'last_seen_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>As Of</label>
+	<? echo ( date_select_session( $r->uri(), 'as_of', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Purpose</label>
+				<select name="purpose_id">
+					<option value=""> all </option>
+					<? echo (
+						make_drop_down( openprint::StockPurpose->dropdown(order=>'lower(name)'), $session{$r->uri().'?purpose_id'});
+					) ?>
+				</select>
+			</li>
+			<li>
+				<label>Empty?</label>
+				<? echo ( radio( 'empty', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?empty'}, { onclick=>'calc();' } ); ) ?>
+			</li>
+			<li>
+				<label>Has Contents?</label>
+				<? echo ( radio( 'contents', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?contents'}, { onclick=>'calc();' } ); ) ?>
+			</li>
+			<li>
+				<label>Has Manifest?</label>
+				<? echo ( radio( 'hasmanifest', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?hasmanifest'}, { onclick=>'calc();' } ); ) ?>
+			</li>
+			<li>
+				<label>Allocated?</label>
+				<? echo ( radio( 'allocated', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?allocated'}, { onclick=>'calc();' } ); ) ?>
+			</li>
+			<li>
+				<label>Checked Out?</label>
+				<? echo ( radio( 'checked_out', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?checked_out'}, { onclick=>'calc();' } ); ) ?>
+			</li>
+			<li>
+				<label>Has Manufacturers ID</label>
+				<? echo ( radio( 'hasmanufacturers', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?hasmanufacturers'}, { onclick=>'calc();' } ); ) ?>
+			</li>
+			<li>
+				<label>With/Without RFID?</label>
+				<? echo ( radio( 'rfid', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?rfid'}, { onclick=>'calc();' } ); ) ?>
+			</li>
+			<li>
+				<label>Valid/Invalid RFID?</label>
+				<? echo ( radio( 'rfid_valid', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?rfid_valid'}, { onclick=>'calc();' } ); ) ?>
+			</li>
+			<li><label>Location</label>
+				<select name="location_id" onchange="calc();">
+					<? echo ( 
+						my @options = ('','All', 'None', 'None',	map { $_->id(), $_->name() } openprint::Location->find(type=>'place',order=>'parent_id NULLS FIRST,lower(name)', company_id=>$openprint::Owner->id()) );
+						make_drop_down( \@options, $session{$r->uri().'?location_id'} );
+					) ?>
+				</select>
+			</li>
+			<li><label>Condition</label>
+				<select name="condition_id" onchange="calc();">
+					<? echo ( 
+						my @options = ('','All', map { $_->id(), $_->name() } openprint::InventoryCondition->find( order=>'lower(name)') );
+						make_drop_down( \@options, $session{$r->uri().'?condition_id'} );
+					) ?>
+				</select>
+			</li>
+				<li>
+					<label>Deleted</label>
+					<? echo ( radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{$r->uri().'?deleted'} ); ) ?>
+				</li>
+		<li>
+			<label>Has Value</label>
+			<? echo ( radio( 'has_value', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?has_value'} ); ) ?>
+		</li>
+			<li>
+				<label>Inventory Check</label>
+				<?echo( join("\n",
+							ssi::select( openprint::Inventory_Check->dropdown(), $session{$r->uri().'?inventory_check_id'}, { name=>'inventory_check_id', prepend=>['','All'] } ),
+					checkboxes('inventory_check_id_exclude', [ '1', 'Exclude' ], $session{$r->uri().'?inventory_check_id_exclude'} ),
+	); ) ?>
+
+			</li>
+			</ul>
+	</div>
+	<div class="rightColumn">
+			<ul>
+				<li>
+					<label>Owner</label>
+					<select id="owner_id" name="owner_id" size="1" onchange="filter_onChange(this,'');">
+					<option value=""> All </option>
+					<? echo ( 
+						make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( id=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], order=>'lower(name)' ) ], $session{$r->uri().'?owner_id'} );
+					) ?>
+					</select>
+					<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="filter_onChange(this,'');" <? echo ( checked( $session{$r->uri().'?owner_id_exclude'} ); ) ?> />
+					<label class="radio" for="owner_id_exclude">Exclude</label>
+				</li>
+	<? echo (
+		my $html;
+
+		my %find = (
+				( $session{$r->uri().'?type'} ? ( type => [ split( ',', $session{'/employee/inventory/skids.html?type'} ) ] ) : () ),
+		);
+		if ( $session{$r->uri().'?owner_id'} ) {
+			if ( $session{$r->uri().'?owner_id_exclude'} ) {
+				$find{'owner_id !='} = $session{$r->uri().'?owner_id'};
+			} else {
+				$find{owner_id} = $session{$r->uri().'?owner_id'};
+			} # end if
+		} # end if
+
+		my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
+
+		openprint::Manufacturer->find();
+		openprint::StockBrand->find();
+		openprint::StockFinish->find();
+		openprint::StockColour->find();
+		openprint::StockWeight->find();
+		openprint::StockQuality->find();
+		openprint::StockMaterial->find();
+		my @Papers = openprint::Paper->find( %find );
+		if ( ! @Papers ) {
+			$log->error("No papers in skids find was %find");
+		}
+		my %filter_validations;
+
+		# contains a mapping from Brand to PointOne Coated to brand_id for POintONe Coated?
+		my %filters;
+		for ( my $stock_index = 0; $stock_index < @Papers; $stock_index += 1 ) {
+			my $Stock = $Papers[$stock_index];
+
+			foreach my $option ( @StockOptions ) {
+				my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+
+				# Load up the filter
+				$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
+				if ( $session{$r->uri().'?'.$option_id} ) {
+					if ( $$Stock{$option_id} eq $session{$r->uri().'?'.$option_id} ) {
+						$filter_validations{$option} = 1;
+					} else {
+						splice @Papers, $stock_index, 1;
+						$stock_index -= 1;
+						last;
+					} # end if
+				} # end if
+			} # end foreach option
+		} # end foreach $Stock
+
+		foreach my $option ( @StockOptions ) {
+			next if ! $filters{$option}; # This is so that if we have no settings for Quality, we don't even show it.
+
+			my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+			my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
+
+			# Don't do this because even if there is only 1 entry, papers can be unassigned.
+			#$session{$r->uri().'?'.$option} = $options[0] if ( @options == 2 );
+
+			$html .= sprintf(q`<li><label>%1$s</label>
+					<select name="%2$s_id" id="%2$s_id" size="1" onchange="filter_onChange(this,'');">
+					<option value=""> All </option>%3$s</select>
+				</li>`, $option, $lower_option,
+				make_drop_down( \@options, $session{$r->uri().'?'.$option_id} ),
+			);
+		} # end foreach option
+		$$variable{Paper} = \@Papers;
+		return $html;
+	) ?>
+			<li><label>Type</label>
+				<? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{$r->uri().'?type'} ) ], { onclick=>'calc();' } ); ) ?>
+			</li>
+			<li><label>Size</label>
+			<select name="width" size="1" onchange="calc('f1');">
+				<option value="">All</option>
+				<? echo ( 
+						my %data;
+						my $found = 0;
+						foreach my $Stock ( @{$$variable{'Paper'}} ) {
+							$data{$Stock->width()} = $Stock->width();
+							$found = 1 if $Stock->width() == $session{$r->uri().'?width'};
+						} # end foreach
+						$session{$r->uri().'?width'} = undef if ! $found;
+						return make_drop_down( [map { $_, $_ } sort keys %data ], $session{$r->uri().'?width'} );
+					) ?>
+				</select> x
+				<select name="height" size="1" onchange="calc('f1');">
+				<option value="">All</option>
+				<? echo ( 
+						my %data;
+						my $found = 0;
+						foreach my $Stock ( @{$$variable{Paper}} ) {
+							$data{$Stock->width()} = $Stock->height();
+							$found = 1 if $Stock->width() == $session{$r->uri().'?height'};
+						} # end foreach
+						$session{$r->uri().'?height'} = undef if ! $found;
+						return make_drop_down( [map { $_, $_ } sort keys %data ], $session{$r->uri().'?height'} );
+					) ?>
+				</select>
+				<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" <? echo ( checked( $session{$r->uri().'?OrLarger'} ); ) ?> /><label class="radio" for="OrLarger">or larger</label>
+			</li>
+			<li>
+				<label>FSC Code</label>
+				<input type="text" name="fsc_code" value="<? echo ( $session{$r->uri().'?fsc_code'} ) ?>" />
+			</li>
+		</ul>
+	</div>
+	<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'calc();', text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f2.reset();' } ),
+				button( 'Add', { href=>'skid_details.html', text=>'Add New Skid' } ),
+				( openprint::usergroup::is_user_in( ['InventoryManager','Accounting'], $session{user_id} ) ?
+					button( 'DownloadInventory', { onclick=>"f1.btnFunction.value='Download Inventory';f1.submit();", text=>'Download Inventory' } ) : ()
+				),
+				); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>
+<script type="text/javascript">document.f1.skid_id.focus();</script>
+<div id="Results">Choose criteria and click Show Results</div>

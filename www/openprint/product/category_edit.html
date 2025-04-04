@@ -1,0 +1,73 @@
+<?if($$variable{Category}->can_edit())?>
+<form name="f1" id="f1" action="/product/category_edit.html?category_id=<? echo ( $$variable{Category}->id(); ) ?>" method="post">
+	<fieldset>
+		<legend>
+		<? echo (
+			return $param{category_id} ? 'Editing Category '. $$variable{Category}->name() : 'Add New Category';
+		) ?>
+		</legend>
+		<p class="buttons">
+			<? echo ( join("\n",
+( $$variable{Category}->id() ? (
+			button( 'Copy', { onclick=>"f1.btnFunction.value='Copy';f1.submit();" } ),
+			button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } ),
+) : () ),
+			button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } ),
+			button( 'Reset', { onclick=>'f1.reset();' } ),
+			); ) ?>
+		</p>
+		<div class="leftColumn">
+      <ul>
+        <li><label>Id</label><?echo( $$variable{Category}->id() . ( $$variable{Category}->deleted() ? ' deleted' : '' )) ?></li>
+        <li>
+          <label>Name</label>
+          <input type="text" id="name" name="name" value="<? hecho ( $$variable{Category}->name(); ) ?>"  />
+        </li>
+        <li>
+          <label>Description</label>
+          <textarea id="description" name="description" rows="4" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Category}->description(); ) ?></textarea>
+        </li>
+        <li><label>Parent Categories</label>
+          <? echo ( ssi::select( 
+                openprint::Product_Category->dropdown( order=>'lower(name)',
+                ( $$variable{Category}->id() ? ( 'id !='=>$$variable{Category}->id()) : () ) ),
+                $$variable{Category}->parent_ids(),
+                {
+                  name=>'parent_ids',
+                  multiple=>'multiple',
+                } ); ) ?>
+        </li>
+        <li>
+          <label>Sort</label>
+          <? echo ( input( type=>"integer", id=>"sort", name=>"sort", value=>$$variable{Category}->sort() ); ) ?>
+        </li>
+      </ul>
+		<div id="Products">
+			<ul>
+			<? echo (
+				my $html = '';
+				foreach my $Product ( $$variable{Category}->Products() ) {
+					$html .= sprintf('<li>%s</li>', $Product->link_to() );
+				} # end foreach	
+				return $html;
+			) ?>
+			</ul>
+		</div>
+		</div>
+		<div class="rightColumn" style="overflow: hidden;">
+      <div style="overflow: hidden;">
+        <?eval($$variable{Object}=$$variable{Category};)?>
+        <?include(/includes/_specifications_container.html)?>
+      </div>
+      <div>
+      <? eval ( $$variable{Album} = $$variable{Category};) ?>
+      <? eval ( #$$variable{Album} = $$variable{Category}->Album();) ?>
+      <?include(/photo_albums/_album_upload.html)?>
+      </div>
+    </div>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>
+<?else($$variable{Category}->can_edit())?>
+<div class="error">You do not have permission to edit this category.</div>
+<?endif($$variable{Category}->can_edit())?>

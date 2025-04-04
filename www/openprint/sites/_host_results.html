@@ -1,0 +1,79 @@
+<?include(/includes/error_reporting.html)?>
+<? eval (
+	my @Hosts;
+	if ( $param{mac} and $param{mac} !~ /%/ ) {
+		@Hosts = openprint::Host->find(
+			order => 'lower(hostname)',
+			'mac_any'=> $param{mac},
+			limit	=>	10,
+		);
+	} else {
+		@Hosts = openprint::Host->find(
+			order => 'lower(hostname)',
+			( $param{ip} ? ( ( $param{ip} =~ /\// ) ? ( 'ip <<=' => $param{ip} ) : ( 'ip any'=> $param{ip} ) ) : () ),
+			( $param{hostname} ? ( 'hostname ilike' => ( $param{hostname} =~ /%/ ? $param{hostname} : $param{hostname}.'%' ) ) : () ),
+			limit	=>	100,
+			);
+	} # end if
+
+	my $mac_search;
+	if ( $param{mac} and $param{mac} =~ /%/ ) {
+		$mac_search = lc $param{mac};
+		$mac_search =~ s/%/\.\*/g;
+$log->debug("Enable mac search for $mac_search");
+	} # end $mac_search
+
+	$$variable{Hosts} = [];
+	foreach my $Host ( @Hosts ) {
+		
+		if ( $mac_search ) {
+			next if ! $Host->mac();
+			my $next = 1;
+			
+			foreach my $m ( @{$Host->mac()} ) {
+				my $mac = lc $m;
+				$mac =~ s/://g;
+				if ( $mac =~ /$mac_search/ ) {
+					$next = 0;
+					last;
+				} # end if
+			} # end foreach mac
+			next if $next;
+		} # end if
+		push @{$$variable{Hosts}}, $Host;
+	} # end foreach Host
+) ?>
+Click on line to allocate
+<table class="List">
+	<thead>
+		<tr>
+			<th class="name">Name</th>
+			<th class="ip">IP</th>
+			<th class="mac">Mac</th>
+			<th class="description">Description</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Host ( @{$$variable{'Hosts'}} ) {
+				$html .= sprintf(q`
+					<tr%1$s onclick="add_allocation('%2$d');">
+						<td class="name">%3$s</td>
+						<td class="ip">%4$s</td>
+						<td class="mac">%5$s</td>
+						<td class="description">%6$s</td>
+					</tr>
+					`, $rowclass, $Host->id(), $Host->hostname(),
+					join('<br/>', map { $_->ip() } $Host->Interfaces() ), 
+					join('<br/>', map { $_->mac() } $Host->Interfaces() ), 
+					$Host->description(), $$variable{Site}->id(),
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Host
+			return $html;
+		) ?>
+		<tr>
+	</tbody>
+</table>

@@ -1,0 +1,171 @@
+<? if ( $param{action} ne 'Download' ) ?>
+<table class="List">
+	<tr>
+		<th class="DateTime">When</th>
+		<th class="User">Who</th>
+		<th class="Skid">Skid</th>
+		<th class="RFID">RFID</th>
+		<th class="Quantity">Amount</th>
+		<th class="Quantity">Allocated</th>
+		<th class="Quantity">In Stock</th>
+		<th class="Location">Location</th>
+		<th class="Docket">Docket</th>
+	</tr>
+	<? echo (
+		my $html;
+		my $url = '/employee/inventory/inventory_log.html';
+		my %sql = (
+			date_filter( $url.'?updated_on_start', 'updated_on >=' ),
+			date_filter( $url.'?updated_on_end', 'updated_on <=' ),
+			( $session{$url.'?employee_id'} ? ( user_id=>$session{$url.'?employee_id'} ) : () ),
+				( $session{$url.'?delta_upper'} ? ( 'delta <=' => $session{$url.'?delta_upper'} ) : () ),
+				( $session{$url.'?delta_lower'} ? ( 'delta >=' => $session{$url.'?delta_lower'} ) : () ),
+			order	=>	'updated_on',
+			);
+		if ( $param{docket} ) {
+			$sql{docket} = $param{docket};
+		} # end if
+		if ( $param{project_id} ) {
+			$sql{project_id} = $param{project_id};
+		} # end if
+
+		my %locations = map { $_, $_ } split(',', $session{$url.'?location_id'} );
+		my %types = map { $_, $_ } split(',', $session{$url.'?Type'} );
+		
+		my $rowclass;
+		my $total = 0;
+		foreach my $PI ( openprint::PaperInventory->find(%sql) ) {
+			if ( $PI->delta < 0 and ! $session{$url.'?outs'} ) {
+				$log->debug("Next cuz it's an out." . $PI->to_string() );
+				next;
+			} # end if
+			if ( $PI->delta > 0 and ! $session{$url.'?ins'} ) {
+				$log->debug("Next cuz it's an out." . $PI->to_string() );
+				next;
+			} # end if
+			my $Paper = $PI->Paper();
+			if ( $Paper->type() and ! $types{ $Paper->type() } ) {
+				$log->debug("Next cuz type not in types" . join(',', keys %types ) );
+				next;
+			}
+			if ( ( ! $Paper->type() ) and ! $types{Unknown} ) {
+				$log->debug("Next cuz not type in types");
+				next;
+			} # end if
+			my $Skid = $PI->Skid();
+			if ( ( ! $locations{All} ) and ! $locations{ $Skid->Location()->Root()->id()} ) {
+				$log->debug("Not in locations " . join(',', keys %locations ) );
+				next;
+			} # end if
+			
+			$html .= sprintf( '
+<tr%1$s>
+	<td class="DateTime">%2$s</td>
+	<td class="User"><a href="skid_details.html?skid_id=%4$d">%3$s</a></td>
+	<td class="Skid"><a href="skid_details.html?skid_id=%4$d">%4$d</a></td>
+	<td class="RFID">%5$s</td>
+	<td class="Quantity">%8$d</td>
+	<td class="Quantity">%9$s</td>
+	<td class="Quantity">%10$d</td>
+	<td class="Location">%11$s</td>
+	<td class="Docket">%12$s</td>
+</tr>
+<tr%1$s>
+	<td colspan="4" class="paper_name"><a href="paper_details.html?paper_id=%6$d">%7$s</a></td>
+	<td>&nbsp;</td>
+	<td colspan="4" class="Comment">%13$s</td>
+</tr>
+',
+				$rowclass,
+				format_datetime( $PI->updated_on ),
+				$PI->User()->name(),
+				$PI->skid_id,
+( $Skid->rfidtag_id() ? sprintf('<a href="rfidtag_details.html?rfidtag_id=%s">%d (%x)</a>', $Skid->rfidtag_id(), $Skid->RFIDTag()->id_short(),substr($Skid->RFIDTag()->id(),1,15)) : '' ),
+				$Paper->id(),
+				$Paper->to_string(),
+				$PI->delta,
+				join('<br/>', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),$_->docket() ) } openprint::PaperAllocation->find('skid_ids any'=>$PI->skid_id, paper_id=>$PI->paper_id)),
+				$PI->instock,
+				$Skid->Location()->name(),
+				sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $PI->docket() ),
+				$PI->comment_html(),
+				);
+			$total += $PI->delta;
+
+			if ( $session{'/employee/inventory/inventory_log.html?show_manifests'} ) {
+				
+				my $days = $session{$url.'?manifests_within_days'};
+				my @Manifests = openprint::Manifest->find(
+						created_on_start=>Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time($PI->updated_on() ) - $days*(60*60*24 )),
+						created_on_end	=>Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time($PI->updated_on() ) + $days*(60*60*24 )),
+						);
+
+				my $within_lbs = $session{$url.'?manifests_within_lbs'};
+				$within_lbs =~ s/\D//g;
+
+				my $manifest_total = $PI->delta() < 0 ? -1*$PI->delta() : $PI->delta();
+
+			# Always looks for exact match first.
+				my @Types = openprint::Manifest_Content_Type->find(
+						manifest_id=>[ map { $_->id() } @Manifests ],
+						paper_id=>$PI->paper_id(),
+						total_quantity	=>	$manifest_total,
+						order	=>	'manifest_id',
+						);
+				@Types = openprint::Manifest_Content_Type->find(
+						manifest_id=>[ map { $_->id() } @Manifests ],
+						paper_id=>$PI->paper_id(),
+						( $within_lbs ? (
+										 'total_quantity_<=' =>	$manifest_total+$within_lbs,
+										 'total_quantity_>=' =>	$manifest_total-$within_lbs,
+										) : ( ) ),
+						order	=>	'manifest_id',
+						) if ! @Types;
+				@Types = openprint::Manifest_Content_Type->find(
+						manifest_id=>[ map { $_->id() } @Manifests ],
+						( $within_lbs ? (
+										 'total_quantity_<=' =>	$manifest_total+$within_lbs,
+										 'total_quantity_>=' =>	$manifest_total-$within_lbs,
+										) : ( ) ),
+						order	=>	'manifest_id',
+						) if ! @Types;
+
+				if ( @Types ) {
+					# Foudn a match
+					my $matched;
+					foreach my $Type ( @Types ) {
+						my @Contents = openprint::ManifestContent->find(
+								manifest_id=>[ map { $_->id() } @Manifests ],
+								type_id => $$Type{id},
+								);
+						my $manifest_total = misc::sum( map { $_->quantity() } @Contents );
+						if ( $manifest_total==$total ) {
+							$matched = $Type;
+						} # end if
+						my $class = ' class="'.($manifest_total==$total?'matched':''). ( $rowclass ? ' colRow' : '' ).'"';
+						
+						$html .= sprintf('
+<tr%1$s>
+  <td>%5$s</td>
+  <td>Manifest:</td>
+  <td><a href="/employee/inventory/manifest_view.html?manifest_id=%2$d">%3$s</a></td>
+  <td class="Paper"><a href="/employee/inventory/paper.html?paper_id=%6$d">%7$s</a></td>
+  <td class="Quantity">%4$d</td>
+  <td colspan="5">&nbsp;</td>
+</tr>',
+								$class, $Type->manifest_id(), $Type->Manifest()->name(), $manifest_total,
+								format_datetime( $Type->Manifest()->created_on() ),
+								$Type->paper_id(), 
+( $session{$url.'?show_stock_on_manifests'} ? $Type->Paper()->to_string() : '' ),
+								);
+					} # end foreach Type
+				} # end if
+
+			} # end if show manifests
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end while
+		$html .= sprintf( '<tr class="totals"><td colspan="3">&nbsp;</td><td>Totals</td><td class="Quantity">%d</td><td colspan="4">&nbsp;</td></tr>', $total );
+		return $html;
+	) ?>
+</table>
+<? endif ( $param{action} ne 'Download' ) ?>

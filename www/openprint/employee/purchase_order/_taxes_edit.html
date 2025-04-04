@@ -1,0 +1,35 @@
+<? echo ( 
+	my $html = include('/includes/error_reporting.html');
+	my %tax_ids;
+	if ( $$variable{PurchaseOrder}->Taxes() ) {
+		foreach my $Tax ( $$variable{PurchaseOrder}->Taxes() ) {
+			$tax_ids{$$Tax{tax_id}} = $Tax;
+			$html .= sprintf('<div class="tax" id="tax-%1$d"><label>
+					%7$s
+					%2$s (<span id="tax_rate-%1$d">%3$d</span>%)
+				<input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" />
+				</label><div class="amount">%4$s<span id="tax_amount-%1$d">%5$.2f</span></div></div>', $Tax->tax_id(),
+				$Tax->name(), $Tax->rate(), $$variable{PurchaseOrder}->Currency()->symbol(), $Tax->amount(),
+				checked( $Tax->charge() ),
+				button('deletetax'.$Tax->id(), { onclick=>"delete_tax($$Tax{tax_id});", text=>'-', title=>'Delete Tax' } ),
+				);
+		} # end foreach Tax
+	} # end if
+	my @Available_Taxes = map { $tax_ids{$$_{id}} ? () : $_ } openprint::Tax->find(
+			order=>'lower(name)',
+			'period_start is null or <'=>$$variable{PurchaseOrder}->created_on(),
+			'period_end is null or >'=>$$variable{PurchaseOrder}->created_on(),
+		);
+	$html .= '<div class="tax"><label>';
+	$html .= ssi::select( [ map { $$_{id}, $$_{state} . ' ' .$$_{name} . '('.$$_{rate}.'%)' } @Available_Taxes], undef, { prepend=>['','add tax'], onchange=>'add_tax(this.value);' } );
+	$html .= '</label></div>';
+	if ( $param{action} ) {
+		$html .= '
+	<script>
+	tax_ids = ['.join(',', keys %tax_ids).'];
+	update_totals($(\'f1\'));
+	update_logs();
+	</script>';
+	}
+	return $html;
+) ?>

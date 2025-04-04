@@ -1,0 +1,25 @@
+<script src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
+		<fieldset><legend><?ServiceTypeName?> Services</legend>
+			<ul>
+        <li><label>Quantity to count</label>
+          <?echo( input( type=>'cardinal', onclick=>'calc(\'f1\');', name=>'txtSignatureCount', value=>$$variable{txtSignatureCount}); ) ?>
+        </li>
+      </ul>
+			  <?include('/includes/main/proj/_comments.html')?>
+      <ul class="pricing">
+			  <?include('/includes/main/proj/quantities_prices.html')?>
+			</ul>
+		</fieldset>
+		<hr/>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>">
+		<input type="hidden" name="ContinueProject" value="Y" />
+	</form>
+</div>
+

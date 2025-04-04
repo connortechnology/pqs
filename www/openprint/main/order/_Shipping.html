@@ -1,0 +1,24 @@
+<? eval (
+    $$variable{ProjectIndex} = $$variable{Project}->id() if !  $$variable{ProjectIndex};
+    my $services = $$variable{Project}->services();
+
+    if ( $param{ServiceTypeName} and ! $param{service_id} ) {
+        if ( ! $$services{$param{ServiceTypeName}} ) {
+            my $new_service_index = $$variable{Project}->add_service( $param{ServiceTypeName} );
+            push @{$$services{$param{ServiceTypeName}}}, $new_service_index;
+            $param{service_id} = $new_service_index;
+        } else {
+            $param{service_id} = $$services{$param{ServiceTypeName}}[0];
+        } # end if
+    } # end if
+) ?>
+<fieldset><legend>Shipping</legend>
+	<div class="ShippingQuantity">
+		<div class="content">
+			<ul> 
+			<?include(_project_shipping_quantity.html) ?>
+			</ul>
+		</div>
+	</div>
+	<div class="ShippingAddress"><?include(_project_shipping_address.html) ?></div>
+</fieldset>

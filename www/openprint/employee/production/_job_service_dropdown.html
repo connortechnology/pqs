@@ -1,0 +1,6 @@
+<?echo(
+		my @ServiceTypes = openprint::ServiceType->find( id=>$$variable{Equipment}->servicetype_id(), order=>'lower(name)' ) if @{$$variable{Equipment}->servicetype_id()};
+		my $selected = $param{service_id};
+		$selected = $ServiceTypes[0]{id} if @ServiceTypes == 1;
+		make_drop_down( [map { $$_{id}, $$_{name} } @ServiceTypes], $selected );
+)?>

@@ -1,0 +1,83 @@
+<div class="PageTitle">
+<h1>ACCOUNT</h1>
+<h2>Login</h2>
+</div>
+<?include('/includes/error_reporting.html')?>
+<? if ( ! $openprint::dbh ) ?>
+Sorry, we are having trouble connecting to the database. Our admins will be automatically notified.  Please try again later.
+<? else ( ! $openprint::dbh ) ?>
+<br/>
+<? if ( $session{user_id} ) ?>
+	<p><? include(/includes/_greeting.html) ?></p>
+	<? if ( $session{Destination} ) ?>
+	<b><? echo ( $session{Destination} ) ?></b><br/><br/>
+	<? eval ( delete $session{Destination} ) ?>
+	<? endif ( $session{Destination} ) ?>
+	<? if ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ?>
+	<? include(/account/_select_company.html) ?>
+	<? endif ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ?>
+	<? echo ( 
+		my $html = '';
+		my $Me = $openprint::User;
+
+		my @csr_ids = $Me->csr_ids();
+		if ( @csr_ids ) {
+			$html .= join('<br/>',
+					'You are assisting the following CSRs:', 
+					( map { $_->link_to() } openprint::User->find(id=>\@csr_ids, order=>'lower(firstname),lower(lastname)') ),
+					'',
+				);
+		} 
+		my @assistant_ids = $Me->assistant_ids();
+		if ( @assistant_ids ) {
+			$html .= join('<br/>',
+					'The following people are assisting you and have access to your accounts:', 
+					( map { $_->link_to() } openprint::User->find(id=>\@assistant_ids, order=>'lower(firstname),lower(lastname)') ),
+					''
+				);
+		} 
+		return $html;
+	) ?>
+	<div id="lastLogins">
+	<? include(/includes/login_log.html) ?>
+	</div>
+	<? echo (
+if ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) {
+		my $now = DateTime->now();
+		my $weekago = $now->clone->subtract( weeks => 1);
+
+		my @action_ids = map { $$_{id} } openprint::Log_Action->find(name=>['Save Material','Save Service']);
+		my @Logs = openprint::Log->find(
+				action_id=>\@action_ids,
+				'date_time >=' => DateTime::Format::Pg->format_datetime( $weekago ),
+				order=>'date_time',
+				) if @action_ids;
+		if ( @Logs ) {
+			my $html = 'The following recent actions may have an effect on pricing.<br/>
+<table class="List sortable"><tr>
+	<th class="DateTime">When</th>
+	<th class="User">User</th>
+	<th class="Object">Thing</th>
+	<th class="description">Description</th></tr>';
+			my $rowclass = '';
+			foreach my $Log ( @Logs ) {
+				$html .= sprintf('<tr%s>
+<td class="DateTime">%s</td>
+<td class="User">%s</td>
+<td class="Object">%s</td><td class="description">%s</td></tr>',
+						$rowclass, 
+format_datetime( $Log->date_time() ), 
+$Log->User()->link_to(), 
+						$Log->Object()->link_to( $Log->Object_Type()->human() . ' ' . $Log->Object()->name() ), $Log->note() );
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			}
+			return $html;
+		}
+		}
+		return;
+	)?>
+
+<? else ( $session{user_id} ) ?>
+	<? include(/includes/customer_login.html) ?>
+<? endif ( $session{user_id} ) ?>
+<? endif ( ! $openprint::dbh ) ?>

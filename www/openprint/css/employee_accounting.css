@@ -1,0 +1,18 @@
+.Accounting .Search .leftColumn {
+	width: 35%;
+	min-width: 290px;
+}
+.Accounting .Search .rightColumn {
+	width: 65%;
+}
+
+#ddmCustomer {
+	width: 80%;
+}
+
+input#project_id,
+input#docket,
+input#order_id,
+input#invoice_id {
+	width: 100px;
+}

@@ -1,0 +1,16 @@
+<div class="error"><?error?></div>
+<h3>Part 4 (To be complete by Quality System Management Representative)</h3>
+<table class="View">
+	<tr><td colspan="4">VERIFICATION OF CORRECTIVE ACTION EFFECTIVENESS</td></tr>
+	<tr><td colspan="4"><? hecho ( $$variable{'CAR'}->effectiveness() ) ?></td></tr>
+	<tr><td>QS Mgt Rep / Designate</td>
+		<td><? hecho ( new openprint::User( $$variable{'CAR'}->part4_user_id())->name() ) ?></td>
+		<td>Date</td>
+		<td><? hecho ( $$variable{'CAR'}->part4_signed_on() ) ?></td>
+	</tr>
+</table>
+<? if ( $$variable{'CAR'}->part4_user_id() == $openprint::session{'user_id'} or $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
+<p class="buttons">
+	<? echo ( button( 'EditPart4', { onclick=>sprintf(q`new Ajax.Updater('Part4', '/employee/iso/_car_edit_part4.html', { parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), text=>'Edit' } ); ) ?>.
+</p>
+<? endif ( $$variable{'CAR'}->part4_user_id() == $openprint::session{'user_id'} or $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>

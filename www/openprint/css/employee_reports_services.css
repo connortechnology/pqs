@@ -1,0 +1,14 @@
+table {
+margin-bottom: 20px;
+}
+#Results table th ,
+#Results table td {
+text-align: right;
+}
+#Results table th.Service {
+width: 120px;
+}
+#Results table th.Order {
+	text-align: left;
+}
+

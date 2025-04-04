@@ -1,0 +1,45 @@
+li input[type="text"] {
+  width: 100%;
+}
+
+.folds input[type="number"],
+.folds input[type="text"],
+.pages input[type="number"],
+.pages input[type="text"],
+.page_width input[type="number"],
+.page_width input[type="text"],
+.page_height input[type="number"],
+.page_height input[type="text"],
+.calliper input[type="number"],
+.calliper input[type="text"],
+.make_ready_time input[type="number"],
+.make_ready_time input[type="text"],
+.make_ready_overs input[type="number"],
+.make_ready_overs input[type="text"],
+.run_overs input[type="number"],
+.run_overs input[type="text"],
+.imposition input[type="text"] ,
+.imposition input[type="number"] {
+	width: 75px;
+}
+.run_overs select ,
+.make_ready_overs select {
+	width: 60%;
+}
+#Folds textarea {
+	width: 100%;
+}
+table .EquipmentID {
+	width: 40px;
+}
+table .EquipmentID,
+table .EquipmentName,
+table .Description,
+table .Services {
+	text-align: left;
+}
+p.buttons {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+}

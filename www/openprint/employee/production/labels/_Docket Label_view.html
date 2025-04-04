@@ -1,0 +1,96 @@
+<? eval (
+    if ( $param{id} ) {
+        $$variable{Order} = $$variable{Label}->Order();
+    } else {
+        $$variable{Order} = openprint::Order->find_one(docket=>$param{docket}) if $param{docket};
+    } # end if
+
+    if ( ! $$variable{Order} ) {
+        $variable{error} = 'Docket ' . $param{docket} . ' not found.<br/>';
+    } else {
+		@{$$variable{Projects}} = $$variable{Order}->Projects();
+		$$variable{Company} = $$variable{Order}->Company();
+
+		my @operators;
+		foreach my $Project ( @{$$variable{Projects}} ) {
+
+			my $services = $Project->services();
+			push @operators, sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngserviceindex=?}, $Project->id(), $$services{Proofs} ? $$services{Proofs}[0] : $$services{FilmStripping}[0] );
+		} # end foreach Project
+		@{$$variable{Operators}} = map { new openprint::User($_) } sets::union( @operators );
+    } # end if
+) ?>
+<style type="text/css">
+	table.Docket .label {
+		text-align: right;
+		font-weight: bold;
+		padding-right: 5px;
+	}
+	table.Docket .value {
+		text-align: left;
+	}
+	table.Docket {
+		width: 100%;
+	}
+	table.Docket tr {
+	}
+	table.Docket th {
+		font-size: 30pt;
+		vertical-align: top;
+		width: auto;
+		border-bottom: 1px solid #353c91;
+	}
+	table.Docket td {
+		width: auto;
+		font-size: 20pt;
+		vertical-align: top;
+		border-bottom: 1px solid #353c91;
+	}
+	input {
+		display: none;
+	}
+</style>
+<div style="float: left; text-align: center;">
+Project #<br/>
+<img src="/barcode.png?code=D<? echo ( $$variable{Label}->docket() ) ?>+"/>
+</div>
+<div style="float: right; text-align: center;">
+Submit<br/>
+<img src="/barcode.png?Code=S10000+"/>
+</div>
+<br class="spacer"/>
+<table class="Docket">
+	<tr>
+		<th class="label">Customer</th>
+		<th class="value"><? echo ( $$variable{Company}->name() ) ?></th>
+	</tr>
+	<tr>
+		<th class="label">Docket</th>
+		<th class="value">
+			<? echo ( $$variable{Order}->docket() ) ?> <? echo ( join(',', map { sprintf('%.1s%.1s', $_->get('firstname','lastname') ) } @{$$variable{Operators}} ); ) ?>
+		</th>
+	</tr>
+	<tr>
+		<td class="label">Description</td>
+		<td class="value"><? echo ( join('<br/>', map { substr $_->reference(), 0, 50 } @{$$variable{Projects}} ); ) ?></td>
+	</tr>
+	<tr>
+		<td style="border: none;" class="label">Press</td>
+		<td class="value" style="border: none;">
+		<? echo ( 
+            my @presses;
+            foreach my $Project ( @{$$variable{Projects}} ) {
+            foreach my $signature_service_index ( $Project->signatures() ) {
+                my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+                $$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
+                push @presses, $$sig_specs{'UsePress'} if ! sets::isin( $$sig_specs{'UsePress'}, \@presses );
+            } # end foreach
+            } # end foreach Project
+            return join(',', sql::execute( $log, $dbh, q{SELECT strName FROM tbl_Equipment WHERE strID IN ('}.join("','", @presses ).q{')} ) );
+		) ?>
+		<br/>
+		<br/>
+		</td>
+	</tr>
+</table>
+<br/>

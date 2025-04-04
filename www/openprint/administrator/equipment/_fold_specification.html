@@ -1,0 +1,23 @@
+<? eval (
+	$$variable{foldok} = '';
+) ?>
+<tr <? if ( $$variable{foldok} ) ?>style="background-color: red;"<? endif ( $$variable{foldok} ) ?> id="FoldSpecification-<? echo ( $$variable{Specification}->id(); ) ?>" >
+	<td class="min"><input type="number" min="0" step="1" name="min-<? echo ( $$variable{Specification}->id() ) ?>"
+                                                        id="min-<? echo ( $$variable{Specification}->id() ) ?>"
+                                                        value="<? echo ($$variable{Specification}->min() ) ?>"/></td>
+	<td class="max"><input type="number" min="0" step="1" name="max-<? echo ( $$variable{Specification}->id(); ) ?>"
+                                                       id="max-<? echo ( $$variable{Specification}->id(); ) ?>"
+                                                       value="<? echo ($$variable{Specification}->max() ) ?>"/></td>
+	<td class="runspeed"><input type="number" min="0" step="1" name="runspeed-<? echo ( $$variable{Specification}->id(); ) ?>"
+                                            id="runspeed-<? echo ( $$variable{Specification}->id(); ) ?>"
+                                            value="<? echo ( $$variable{Specification}->runspeed(); ) ?>" /></td>
+	<td class="units"><select name="units-<? echo ( $$variable{Specification}->id(); ) ?>" id="units-<? echo ( $$variable{Specification}->id(); ) ?>">
+      <? echo (make_drop_down([map {$_=>$_} ('gsm','inches per hour')], $$variable{Specification}->units()); ) ?></td>
+
+	<td class="interpolate">
+    <?echo( radio('interpolate-'. $$variable{Specification}->id(), ['1'=>'Yes','0'=>'No'], $$variable{Specification}->interpolate() ); ) ?>
+  </td>
+	<td class="buttons">
+	<? echo ( button( 'deletefoldspec'.$$variable{Specification}->id(), { onclick=>"delete_fold_spec($$variable{Specification}{id});", text=>'Delete' } ); ) ?>
+	</td>
+</tr>

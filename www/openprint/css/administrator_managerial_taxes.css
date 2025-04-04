@@ -1,0 +1,19 @@
+.Taxes table .name {
+	text-align: left;
+}
+.Taxes table .period {
+	text-align: left;
+	width: 670px;
+}
+.Taxes table .state {
+	text-align: left;
+	width: 150px;
+}
+.Taxes table .country {
+	text-align: left;
+	width: 170px;
+}
+.Taxes table .rate {
+	text-align: left;
+	width: 50px;
+}

@@ -1,0 +1,184 @@
+/* base_css/invoice.css */
+div.Invoicee {
+	float: left;
+	width: 40%;
+  margin-bottom: 10px;
+}
+div.Invoicer,
+#Totals {
+	float: right;
+	min-width: 270px;
+	width: 40%;
+  margin-bottom: 10px;
+}
+div.Payments {
+	float: left;
+	width: 40%;
+}
+.Payments .Price {
+	width: 150px;
+}
+div.Notes {
+  float:left;
+  width: 55%;
+}
+
+#Invoice div.PageTitle {
+	float: right;
+	margin-top: -90px;
+}
+.Interval, .Quantity {
+	width: 50px;
+}
+td.DateTime, th.DateTime {
+	width: 115px;
+}
+td.Date, th.Date {
+	width: 130px;
+	text-align: left;
+}
+table .Price {
+	width: 115px;
+	text-align: right;
+}
+table .Price input {
+	text-align: right;
+}
+td.Rate, th.Rate {
+	width: 160px;
+	text-align: right;
+}
+
+th.EmployeeName {
+	text-align: left;
+	width: 80px;
+}
+
+.Invoice fieldset {
+	width: 100%;
+	margin: 5px 0;
+	padding: 5px 0;
+}
+#Totals fieldset legend {
+	margin-right: 0px;
+	margin-left: auto;
+}
+#Totals ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+.Notes ul li,
+#Totals ul li {
+	list-style: none;
+	margin: 4px 1px;
+	padding: 0px 0px 0px 170px;
+}
+#Totals ul li {
+	text-align: right;
+}
+#Totals ul li label:not(.radio):not(.radio-inline),
+.Notes ul li label:not(.radio):not(.radio-inline) {
+	text-align: right;
+	width: 165px;
+	margin-left: -170px;
+	float: left;
+}
+#Totals ul li.total,
+#Totals ul li.interest, 
+#Totals ul li.owing {
+	font-weight: bold;
+}
+#Totals ul li.owing {
+	font-size: large;
+	margin: 10px 0px 10px 0px;
+}
+#Logs {
+	width: 100%;
+float: left;
+}
+.Invoice table .po {
+	text-align: left;
+}
+@media print {
+	.Invoice table {
+		font-size: small;
+	}
+	.Invoice table td.Price, th.Price {
+		width: 100px;
+	}
+	.Invoice table td.Rate, th.Rate {
+		width: 160px;
+	}
+	.Invoice table td.Date, th.Date {
+		width: 140px;
+	}
+	.Invoice table td.DateTime, th.DateTime {
+		width: 140px;
+	}
+	#Totals ul li.owing {
+		font-size: large;
+	}
+  /*
+	td.Owing, th.Owing {
+	display: none;
+	}
+  */
+	.Invoice #Logs {
+	display: none;
+	} 
+}
+#Totals:after,
+div.Notes:after {
+	content: ".";
+	display: block;
+	height: 0;
+    font-size: 0;
+	clear: both;
+	visibility: hidden;
+}
+.invoice_id {
+	width: 50px;
+}
+table .buttons {
+	width: 25px;
+}
+.totals td {
+	font-weight: bold;
+	text-align: right;
+}
+.PaymentOptions {
+	font-size: small;
+	margin-bottom: 5px;
+	float: left;
+}
+#early_payment_amount,
+#monthly_interest {
+	width: 40px;
+}
+.Overdue, .HasInterest {
+	padding: 5px;
+  border: 1px solid black;
+	margin: 5px;
+	clear: both;
+}
+
+#Products {
+  margin-bottom: 10px;
+}
+
+.DueOn label, .DueOn {
+  font-weight: bold;
+}
+.Notes ul li, .Notes ul li label:not(.radio):not(.radio-inline) {
+  text-align: left;
+}
+
+table.List td {
+  padding: 4px 0;
+}
+
+.Overdue, .HasInterest {
+  text-align: center;
+  font-weight: bold;
+}

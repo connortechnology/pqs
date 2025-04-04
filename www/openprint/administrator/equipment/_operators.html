@@ -1,0 +1,19 @@
+<div class="operators">
+<? echo (
+	my @EOs = openprint::Equipment_Operator->find( equipment_id=>$$variable{Equipment}->id() );
+	my $html .= join("\n", 
+			map { sprintf('<div id="operator-%d">%s<span class="buttons">%s</span></div>', $_->user_id(), $_->Operator()->link_to(), 	button('del_operator-'.$$_{user_id}, { onclick=>qq`del_operator( $$_{user_id} );`, text=>'X', title=>'Delete' } ) ) } @EOs
+		 );
+
+	$html .= '<div>'.
+			join("\n",
+				ssi::select( openprint::User->dropdown( type=>'E', 
+						( @EOs ? ( 'id not in'=>[map { $_->user_id() } @EOs] ) : () ),
+						 ), '', { name=>'operator_id', id=>'operator_id', prepend=>[ '', 'select'] } ),
+				'<span class="buttons">',
+				button( 'addoperator', { onclick=>q`add_operator($('operator_id').value);`, title=>'Add', text=>'+' } ),
+				'</span>',
+			) . '</div>';
+	return $html;
+) ?>
+</div>

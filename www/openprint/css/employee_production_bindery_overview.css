@@ -1,0 +1,37 @@
+.Company {
+}
+.Description {
+	text-align: left;
+	padding-right: 10px;
+}
+.Docket  {
+	width: 50px;
+}
+.Service {
+	width: 60px;
+	text-align: center;
+}
+.DueDate {
+	width: 110px;
+}
+@media print {
+	.Company {
+		font-size: 11pt;
+	}
+	.Description {
+		padding-right: 10px;
+		font-size: 11pt;
+	}
+	.Docket  {
+		width: 50px;
+		font-size: 11pt;
+	}
+	.Service {
+		width: 40px;
+		font-size: 11pt;
+	}
+	.DueDate {
+		width: 80px;
+		font-size: 11pt;
+	}
+}

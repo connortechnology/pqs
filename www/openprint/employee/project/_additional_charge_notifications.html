@@ -1,0 +1,30 @@
+<?include(/includes/error_reporting.html)?>
+<fieldset><legend>Additional Charges Actions</legend>
+	<p class="buttons">
+	<? echo ( button( 'Approve'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Approve');`, text=>'Approve New Charges' } ); )?>
+	</p>
+	To approve the additional charges, click Approve:<br class="spacer"/>
+	<div class="leftColumn">
+		<textarea name="additionalchargecomments"><?echo($param{additionalchargecomments})?></textarea>
+	</div>
+	<div class="rightColumn">
+		Notifications will be sent to:<br/>
+	<? echo ( 
+	my $html;
+	foreach my $U ( $$variable{Order}->AdditionalChargeNotifications() ) {
+		if ( ! $U->id() ) {
+$log->warn("No id in Order Notifications " . $U->to_string() );
+			next;
+		}
+		$html .= checkboxes( 'notify_user_id', [ $U->id(), 
+		 sprintf('&quot;%s %s&quot; &lt;%s&gt;<br/>', $U->firstname(), $U->lastname(), $U->email() ) ], $U->id() );
+	} # end foreach U
+	return $html;
+	) ?>
+		Additional recipients (separate with a comma):<input type="email" name="AdditionalEmailRecipients" />
+		<? echo ( button( 'AdditionalChargeNotifyAdd'.$$variable{Project}{id}, { onclick=>qq`add_to_notifications('$$variable{formname}',$$variable{Project}{id});`, text=>'Add' } );) ?>
+		<p class="buttons">
+		<? echo ( button( 'AdditionalChargeNotify'.$$variable{Project}{id}, { onclick=>qq`send_notifications('$$variable{formname}',$$variable{Project}{id});`, text=>'Send' } );) ?>
+		</p>
+	</div>
+</fieldset>

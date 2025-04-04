@@ -1,0 +1,37 @@
+<form id="invitations" name="invitations" onsubmit="return false;">
+<fieldset><legend>Invitations</legend>
+	<ul>
+		<li><label>By Name</label>
+			<input type="text" name="user_name" id="user_name"/><br/>
+			<div id="user_name_autocomplete" class="autocomplete" style="display:none;"></div>
+			<script type="text/javascript">
+			new Ajax.Autocompleter('user_name','user_name_autocomplete', '/includes/_user_autocomplete.html', { minChars: 2,afterUpdateElement : invitation_set_users, tokens: [',',';',' ','\n'], callback: invitation_add_user_ids } );
+			</script>
+		</li>
+		<li><label>By Relationship</label>
+			<select name="relationship_ip" onchange="invite_by_relationship(this);"><option value="">none</option>
+				<? echo ( ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'lower(name)') ) ) ?>
+			</select>
+		</li>
+<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+		<li><label>By Email</label>
+			<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){invite_by_email(this);}" />
+		</li>
+<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+	</ul>
+	<p class="buttons">
+		<? echo ( ssi::button('AddByEmail', { onclick=>q`invite_by_email($('email'));`,text=>'Add' } ); ) ?>
+	</p>
+	<ul>
+		<li class="Invited"><label>Invited</label>
+		<div id="invitation_users"><? echo ( include('/event/_invitation_users.html'); ) ?></div>
+		</li>
+	</ul>
+	<p class="buttons">
+	<? echo ( join('',
+			ssi::button( 'Send', { href=>'view.html?function=Send&amp;event_id='.$$variable{Event}->id() } ),
+			ssi::button( 'Close', { href=>'view.html?event_id='.$$variable{Event}->id() } ),
+			); ) ?>
+	</p>
+</fieldset>
+</form>

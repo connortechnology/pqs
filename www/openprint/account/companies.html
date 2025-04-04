@@ -1,0 +1,109 @@
+<div class="PageTitle">
+<h2>Companies</h2>
+</div>
+<script nonce="<?echo($config{CSP_NONCE})?>">
+function load_page() {
+	new Ajax.Updater( 'Results', '_companies.html', { parameters: $('f1').serialize() } );
+} 
+</script>
+<form id="f1" name="f1" method="post" action="companies.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+	<div class="leftColumn">
+		<ul>
+		<li>
+			<label>Name contains</label>
+			<? echo ( input( type=>'text', name=>'company_name', oninput=>q`if(this.value.length>3){load_page();};`, onkeydown=>"load_page();" ); ) ?>
+		</li>
+<? if ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
+		<li>
+			<label>Sales Rep</label>
+			<select name="salesrep_id" size="1" onchange="load_page();"> 
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$config{owner_id}, type=>['E','A'], ( $session{user_type}eq'A'?(): (id=>[$session{user_id},$openprint::User->csr_ids()])), 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
+			</select>
+			<? echo ( checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ); ) ?>
+		</li>
+<? endif ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
+		<li> 
+			<label>Created Date</label>
+			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+		</li>
+        <li>
+             <label>Last Ordered On</label>
+            <? echo ( date_select_session( $r->uri(), 'last_ordered_on_start', { with_today=>1,with_clear=>1 } ); ) ?>
+            to
+            <? echo ( date_select_session( $r->uri(), 'last_ordered_on_end', { with_today=>1,with_clear=>1 } ); ) ?>
+        </li>
+        <li>
+             <label>Last Called On</label>
+            <? echo ( date_select_session( $r->uri(), 'last_called_on_start', { with_today=>1,with_clear=>1 } ); ) ?>
+            to
+            <? echo ( date_select_session( $r->uri(), 'last_called_on_end', { with_today=>1,with_clear=>1 } ); ) ?>
+        </li>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>'load_page();'} ); ) ?></li>
+		<? if ( openprint::MarketingCategory->find_one() ) ?>
+		<li><label>Marketing Category</label><? echo ( ssi::select( openprint::MarketingCategory->dropdown(), $session{$r->uri().'?marketing_category_id'}, { onclick=>'load_page();', name=>'marketing_category_id' } ); ) ?></li>
+		<? endif ( openprint::MarketingCategory->find_one() ) ?>
+		<li><label>Country</label><? echo ( ssi::select( [ map { $_->id(), $_->name() } openprint::Location->find(type=>'country', order=>'lower(name)') ], $session{$r->uri().'?country'}, { name=>'country_id', prepend=>['','All'] } ); ) ?></li>
+	
+		</ul>
+	</div>
+	<div class="rightColumn">
+	<ul>
+	<? echo ( 
+    my $html = '';
+    
+    foreach my $Field ( openprint::Company_Profile_Field->find( searchable=>1, order=>'sort,name' ) ) {
+$log->debug("Profile field: " . $Field->to_string() );
+        $html .= '<li><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
+        my $value = $session{'/account/companies.html?field-'.$Field->id()};
+
+        if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
+            while ( my ( $v, $t ) = splice ( @{$Field->values()}, 0, 2 ) ) {
+$log->debug( "Value: $v, text: $t");
+                $html .= sprintf( q`<input type="checkbox" name="field-%1$d" id="field-%1$d%2$s" value="%2$s" %3$s />
+                    <label class="radio" for="field-%1$d%2$s">%4$s</label>
+                    `, $Field->id(), $v, checked( sets::isin( $v, [ split(',', $value ) ] ) ), $t
+                    );
+            } # end foreach value
+        } elsif ( $Field->type() eq 'date' ) {
+            my ( $start, $end ) = @{$Field->values()} if $Field->values();
+            $html .= date_select_session( '/account/companies.html', 'field-'.$Field->id().'_start', { start=>$start, end=>$end } );
+            $html .= ' to ';
+            $html .= date_select_session( '/account/companies.html', 'field-'.$Field->id().'_end', { start=>$start, end=>$end } );
+        } elsif ( sets::isin( $Field->type(), [ 'country', 'state', 'city' ] ) ) {
+            my $ChildField = openprint::User_Profile_Field->find_one( type=>openprint::Location->child_type( $Field->type() ) );
+            if ( $ChildField ) {
+                $html .= sprintf(q`<select id="field-%1$d" name="field-%1$d" onchange="Location_onchange( this, this.form.elements['field-%2$d'], '%3$s' );"><option value=""> </option>`, $Field->id(), $ChildField->id(), $ChildField->name() );
+            } else {
+                $html .= sprintf(q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>`, $Field->id() );
+            } # end if
+            $html .= make_drop_down( openprint::Location->dropdown( type=>$Field->type(), order=>'lower(name)'), $value );
+            $html .= '</select>';
+        } elsif ( $Field->type() eq 'select-one' ) {
+            $html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value=""> </option>`, $Field->id() );
+            $html .= make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value );
+            $html .= '</select>';
+        } elsif ( sets::isin( $Field->type(), [ 'text','number' ] ) ) {
+            $html .= sprintf( q`<input type="%3$s" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value, $$Field{'type'} );
+        } # end if
+        $html .= "</span></li>\n";
+    } # end foreach Field
+    return $html;
+) ?>
+				</ul>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
+				#button( 'DownloadCSV', { onclick=>"f1.action='projects.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+				button( 'Reset', { onclick=>"f1.reset();", text=>'Reset' } ),
+); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results">Make a selection or Click Show Results</div>
+	<input type="hidden" name="btnFunction"/>
+</form>

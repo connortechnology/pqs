@@ -1,0 +1,8 @@
+<? if ( $$variable{'Mode'} ne 'Easy' ) ?>
+<li>
+	<label>Crop mark space</label>
+	<? echo ( input( type=>'float', name=>'txtCropMarkSpace'.$$variable{Signature}, value=>$$variable{'txtCropMarkSpace'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);', min=>0 ); ) ?> inches
+</li>
+<? else ( $$variable{'Mode'} ne 'Easy' ) ?>
+<input type="hidden" name="txtCropMarkSpace<?Signature?>" value="<? echo ( $$variable{'txtCropMarkSpace'.$$variable{'Signature'}} ) ?>" />
+<? endif ( $$variable{'Mode'} ne 'Easy' ) ?>

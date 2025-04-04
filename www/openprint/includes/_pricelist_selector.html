@@ -1,0 +1,13 @@
+<div id="PricelistSelection">
+	<form name="SelectPricelist" action="<? echo ( misc::get_url( $r->uri(), \%param, { exclude=>'pricelist_id' } ); ) ?>" method="post">
+		<ul>
+			<li><label>Pricelist</label>
+        <select name="pricelist_id" onchange="if(this.options[this.selectedIndex].value != '') {this.form.btnFunction.value='SelectPricelist';this.form.submit();};">
+          <option value="">select</option>
+          <? echo ( make_drop_down( openprint::Pricelist->dropdown( order=>'lower(name)'), $session{Pricelist_id} ); ) ?>
+        </select>
+      </li>
+		</ul>
+		<input type="hidden" name="btnFunction" />
+	</form>
+</div>

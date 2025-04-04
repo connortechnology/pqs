@@ -1,0 +1,60 @@
+<?include(/includes/error_reporting.html)?>
+Please select a task to view/edit.<br/>
+<form id="f1" name="f1" method="post" action="list.html">
+	<input type="hidden" name="action"/>
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+		<li class="Company">
+			<label>Company</label>
+			<? echo ( ssi::select( openprint::Company->dropdown(order=>'lower(name)'),
+      $session{$r->uri().'?company_id'}, {name=>'company_id', prepend=>['','All'] } );
+      ) ?>
+		</li>
+		<li>
+			<label>Date Added</label>
+      <? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to 
+      <? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Last Updated</label>
+      <? echo ( date_select_session( $r->uri(), 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to 
+      <? echo ( date_select_session( $r->uri(), 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+    <li>
+        <label>Department</label>
+<? echo (
+   return ssi::select( openprint::Department->dropdown(),
+   $session{$r->uri().'?department_id'},
+   {name=>'department_id',
+   onchange=>'load_results();',
+   prepend=>[''=>'All']
+   });
+) ?>
+      </li>
+    <li>
+        <label>Assigned To</label>
+<? echo (
+return ssi::select( openprint::User->dropdown(type=>'E'),
+     $session{$r->uri().'?assigned_to'},
+     {
+     name=>'assigned_to',
+     prepend=>[''=>'All'],
+     onchange=>'load_results();',
+     });
+) ?>
+      </li>
+		</ul>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"load_results( \$('f1') );", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				button( 'Add', { href=>'edit.html', text=>'Add New Task' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results">Choose criteria and click Show Results</div>
+</form>
+<script src="<?hash_link(/tasks/list.js)?>"></script>

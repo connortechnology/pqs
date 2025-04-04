@@ -1,0 +1,99 @@
+<? if ( $$variable{uri} =~ /_paper_allocations/ ) ?>
+<?include('/includes/error_reporting.html')?>
+<? endif ( $$variable{uri} =~ /_paper_allocations/ ) ?>
+<? eval (
+	return if ! ( $param{skid_id} or $variable{Paper} );
+	my %search;
+	$search{'skid_ids any'} = $param{'skid_id'} if $param{'skid_id'};
+	$search{paper_id} = $variable{Paper}{id} if $variable{Paper};
+	$search{order} = 'created_on';
+	$$variable{Allocations} = [ openprint::PaperAllocation->find(%search) ];
+) ?>
+<? if ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
+
+	<table class="List">
+		<tr>
+			<th class="Skid"><? echo ( 
+				return 'Skid' if $variable{Paper};
+				return 'Paper' if $param{'skid_id'};
+			) ?></th>
+			<? if ( $config{'RFID'} eq 'Y' ) ?>
+			<th class="RFID">RFID</th>
+			<? endif ( $config{'RFID'} eq 'Y' ) ?>
+			<th class="ManufacturersID">Manufacturers ID</th>
+			<th class="Location">Location</th>
+			<th class="User">Who</th>
+			<th class="DateTime">When</th>
+			<th class="Docket">Docket</th>
+			<th class="Quantity">Amount</th>
+			<th class="Quantity">Available</th>
+			<th class="Condition">Condition</th>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+		<? echo (
+			my $html;
+
+			my $rowclass;
+			foreach my $PA ( @{$$variable{'Allocations'}} ) {
+				$html .= sprintf( '<tr%1$s>', $rowclass );
+			
+				my @Skids = $PA->Skids();
+
+				if ( $param{skid_id} ) {
+					$html .= sprintf('<td class="Skid"><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $PA->paper_id(), $PA->Paper()->to_string() );
+				} elsif ( @Skids ) {
+					$html .= '<td class="Skid">'.join('<br/>',map{ sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->id() ) } @Skids ).'</td>';
+				} else {
+					$html .= '<td class="Skid">&nbsp;</td>';
+				} # end if
+				if ( $config{'RFID'} eq 'Y' ) {
+					$html .= '<td class="RFID">'.join('<br/>',map{ 
+( $_->rfidtag_id() ? sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$d">%2$d (%3$x)</a>', $_->rfidtag_id(), $_->RFIDTag()->id_short(),substr($_->RFIDTag()->id(),1,15)) : '' )
+} @Skids ).'</td>';
+				} # end if
+
+				$html .= '<td class="ManufacturersID">'.join('<br/>',map{ sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%d">%s</a>', $_->id(), $_->manufacturers_id() ) } @Skids ).'</td>';
+	
+				$html .= '<td class="Location">'.join('<br/>',map{ $_->Location()->name() } @Skids ).'</td>';
+				$html .= sprintf( '<td class="User">%s</td>', $PA->User()->link_to() );
+				$html .= sprintf( '<td class="DateTime">%s</td>', format_datetime( $PA->created_on() ) );
+				$html .= sprintf('<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>
+<td class="Quantity">%2$s</td><td class="Quantity">%3$s</td><td class="Condition">%4$s</td><td class="buttons">',
+					( $PA->docket() ? $PA->docket() : 'unknown' ),
+					Number::Format::format_number($PA->quantity()).$PA->units(),
+					Number::Format::format_number($PA->Paper()->available()).$PA->units(),
+					$PA->Condition()->name(),
+					);
+				$html .= button( 'Delete'.$$PA{id}, { onclick=>qq`popup_window('_deallocate_popup.html?allocation_id=$$PA{id}', '', { width: 400 } );`, text=>'Delete' } );
+				$html .= '</td></tr>',
+
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$$variable{'TotalAllocated'} += $PA->quantity();
+			} # end while
+			return $html;
+		) ?>
+		<tr class="totals">
+			<td>&nbsp;</td>
+			<? if ( $config{'RFID'} eq 'Y' ) ?>
+			<td>&nbsp;</td>
+			<? endif ( $config{'RFID'} eq 'Y' ) ?>
+			<td colspan="5">Totals</td>
+			<td class="Quantity"><? echo ( Number::Format::format_number($$variable{TotalAllocated}).$$variable{Paper}->units(); ) ?></td>
+			<td class="Quantity">&nbsp;</td>
+			<td class="Condition">&nbsp;</td>
+			<td class="buttons">&nbsp;</td>
+		</tr>
+	</table>
+<? else ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
+There are no allocations.
+<? endif ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
+<script type="text/javascript">
+	$('Allocated').innerHTML = '<? echo ( join(' ', 
+				Number::Format::format_number(int($$variable{Paper}->allocated())).$$variable{Paper}->units(),
+				( $$variable{Paper}->type() eq 'Sheet' ? Number::Format::format_number(int($$variable{Paper}->allocated()*$$variable{Paper}->sheet_weight())).'lbs' : () ),
+); ) ?>';
+	$('Available').innerHTML = '<? echo ( join(' ',
+				Number::Format::format_number(int($$variable{Paper}->available())).$$variable{Paper}->units(),
+				( $$variable{Paper}->type() eq 'Sheet' ? Number::Format::format_number(int($$variable{Paper}->available()*$$variable{Paper}->sheet_weight())).'lbs' : () ),
+); ) ?>';
+</script>

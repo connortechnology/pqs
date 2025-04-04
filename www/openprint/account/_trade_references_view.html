@@ -1,0 +1,33 @@
+<div class="TradeReferences">
+	<fieldset><legend>Trade References</legend>
+		<? eval ( @{$$variable{indices}} = ( 1 .. 3 ); ) ?>
+		<? while ( $$variable{index} = shift @{$$variable{indices}} ) ?>
+		<? eval ( $$variable{Company}->load_tradereferences( $$variable{index}, $variable ); ) ?>
+		<div class="TradeReference">
+			<ul>
+				<li class="CompanyName">
+					<label>Company Name</label>
+					<span class="input"><? hecho ( $$variable{'tradereference'.$$variable{index}.'_companyname'} ) ?></span>
+				</li>
+				<li class="Contact">
+					<label>Contact</label>
+					<span class="input"><? hecho ( $$variable{'tradereference'.$$variable{index}.'_contact'} ) ?></span>
+				</li>
+				<li class="Phone">
+					<label>Phone</label>
+					<span class="input"><? hecho ( $$variable{'tradereference'.$$variable{index}.'_phone'} ) ?></span>
+				</li>
+				<li class="Fax">
+					<label>Fax</label>
+					<span class="input"><? hecho ( $$variable{'tradereference'.$$variable{index}.'_fax'} ) ?></span>
+				</li>
+				<li class="Email">
+					<label>E-mail Address</label>
+					<span class="input"><? hecho ( $$variable{'tradereference'.$$variable{index}.'_email'} ) ?></span>
+				</li>
+			</ul>
+		</div>
+		<? endwhile ( $$variable{index} = shift @{$$variable{indices}} ) ?>
+   </fieldset>
+</div><!--Tradereferences-->
+

@@ -1,0 +1,86 @@
+<? echo ( 
+	my $html = '';
+	$html .= qq`<script type="text/javascript">alert('$variable{error}');</script>` if $variable{error};
+	$html .= qq`<script type="text/javascript">alert('$variable{alert}');</script>` if $variable{alert};
+
+	foreach my $Project ( @{$$variable{Projects}} ) {
+
+		my $colour;
+		if ( sets::isin( $Project->status(), ['In Prepress', 'Proofs Out','Waiting For QA Approval'] ) ) {
+            $colour = 'inprepress';
+        } elsif ( sets::isin( $Project->status(), ['Printed', 'Complete','Waiting For Pickup', 'Picked Up', 'Shipped'] ) ) {
+            $colour = 'complete';
+        } elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
+            $colour = 'approval';
+        } # end if
+        if ( $Project->rush() ) {
+            $colour .= ' rush';
+        } # end if
+
+		$html .= qq`<li id="p_$$Project{id}" class="$colour" onclick="job_popup($$Project{id});"><span class="Company">`;
+
+		my $n = $Project->Order()->Company()->name();
+		$n =~ s/The //gi;
+		$html .= ssi::htmlize( $n );
+
+		$html .= '</span>';
+		$html .= ' (<span class="CSR">'.$Project->Order()->Company()->CSR()->firstname().'</span>)';
+
+		if ( @{$Project->operator_ids()} ) {
+			$html .= ' (<span class="PrepressOperator">'.join(', ', map { $_->firstname() } $Project->Operators() ).'</span>)';
+		} # end if
+		$html .= sprintf(q`<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a>`, @$Project{'id','docket'} );
+		if ( $Project->reprint() eq 'Y' ) {
+			$html .= ' REPRINT'. $Project->reprint_reason();
+		} # end if
+		$html .= qq`<span class="DueDate">`;
+		my ( $due_year, $due_month, $due_day );
+		my ( $y,$m,$d) = Date::Calc::Today();
+		if ( ! $Project->due_date() ) {
+			$html .= 'no duedate</span>';
+		} else {
+			( $due_year, $due_month, $due_day ) = split('-', $Project->due_date() );
+			
+			if ( $due_month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $due_month ),0, 3); } # end if
+			$html .= qq` $due_day`;
+			if ( $due_year and ( $due_year < $y ) ) {
+				$html .= ' '.$due_year;
+			} # end if
+			$html .= '</span>';
+		} # end if duedate
+		$html .= '<div class="reference">'.$Project->reference().'</div>';
+		$html .= qq`<div class="comments">$$Project{production_comments}</div>`;
+
+		if ( $session{'/employee/production/jobs_by_csr.html?show_feedback'} ) {
+			my @Data = openprint::ProductionFeedback->find(project_id=>$$Project{id},order=>'starting_on');
+			if ( @Data ) {
+				$html .= '<div class="Feedback"><fieldset><legend>Production Feedback</legend>
+					<table><tr><th class="form">Form</th><th class="version">Version</th><th class="quantity">Quantity</th><th class="comment">Comment</th><th class="DateTime">Finished On</th></tr>
+					';
+				foreach my $Feedback ( @Data ) {
+					my $specs = $Feedback->Service()->specs();
+					$html .= sprintf('<tr><td class="form">%s</td><td class="version">%s</td><td class="quantity">%s</td><td class="comment">%s</td><td class="DateTime">%s</td></tr>',
+							$$specs{SignatureIndex},
+							$Feedback->version(), $Feedback->quantity(), $Feedback->comment(),
+							(Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time($Feedback->ending_on())),
+							) );
+				} # end foreach Feedback
+				$html .= '</table></fieldset></div>';
+			} # end if
+		} # end if show Feedback
+
+		$html .= '<div class="buttons">';
+		if ( $Project->due_date() and ( Date::Calc::Delta_Days( 
+( $due_year, $due_month, $due_day ),
+( $y, $m, $d ),
+ ) > 30 ) ) {
+			$html .= ssi::button( 'Complete'.$$Project{id}, { onclick=> "complete( event, '$$variable{ul_id}',$$Project{id});", text=> 'C', title=>'Mark Complete' } );
+		} else {
+			$html .= ssi::button( 'Complete'.$$Project{id}, { onclick=> "if(confirm('Are you sure')){return complete(event,'$$variable{ul_id}', $$Project{id} ); }", text=> 'C', title=>'Mark Complete' } );
+		} # end if
+		$html .= '</div>';
+
+		$html .= '</li>';
+	} # end foreach Project
+	return $html;
+) ?>

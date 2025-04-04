@@ -1,0 +1,21 @@
+<?include(/includes/error_reporting.html)?>
+<ul>
+<? echo ( 
+	my $html;
+	my @user_ids = $$variable{'Event'}->invited_user_ids();
+$log->debug("User_Ids @user_ids");
+	my @Users = openprint::User->find(id=>\@user_ids, order=>'firstname,lastname') if @user_ids;
+	foreach my $User ( @Users ) {
+		$html .= sprintf(q`
+			<li class="User"><input type="hidden" name="invitation_user_id" id="invitation_user_id%2$d_%1$s" value="%2$d_%1$s"/>%3$s<span class="buttons">%4$s</span></li>`,
+			$User->company_id(), $User->id(), $User->thumbnail_html(), 
+			( $$variable{Event}->can_edit()  ?
+			( ssi::button( 'Delete'.$User->id(), { 
+						   onclick=>qq`invitation_remove_user( '$$User{id}_$$User{company_id}', \$('invitation_user_id$$User{id}_$$User{company_id}').form );`,
+						   text=>'X', title=>'Remove'} ) ) : () ),
+
+			);
+	} # end foreach User
+	return $html;
+) ?>
+</ul>

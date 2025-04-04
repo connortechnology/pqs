@@ -1,0 +1,11 @@
+<? if ( @{$$variable{Contents}} > 1 ) ?>
+	<? echo ( include('/main/order/_shipping_type_select.html', $variable ); ) ?>
+<? endif ( @{$$variable{Contents}} > 1 ) ?>
+<? echo ( include('/main/order/_project_header.html', $variable ); ) ?>
+<? echo (
+    if ( $$variable{Project}->style_id() ) {
+        include( '/main/project/view_'.$$variable{Project}->Template()->name() . '.html', $variable );
+    } else {
+        include( '/main/order/_project_details.html', $variable );
+    } # end if
+) ?>

@@ -1,0 +1,44 @@
+<form id="f1" name="f1" method="post" action="lexicon.html">
+	<table class="List">
+		<tr>
+			<th class="word">Word</th>
+			<th class="language">Language</th>
+			<th class="tranlation">Translated Word</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			my %Lexicon;
+			foreach my $L ( openprint::Lexicon->find('order'=>'lower(word)') {
+				push @{$Lexicon{$L->word()}}, $L;
+			} # end foreach L
+
+			foreach my $word ( keys %Lexicon ) {
+				$html .= sprintf(q`
+		<tr%1$s> 
+			<td class="word"><input type="text" name="word-%2$d" value="%3$s" /></td>
+			<td class="language"><input type="text" name="language-%2$d" value="%4$s" /></td>
+			<td class="translation"><input type="text" name="translation-%2$d" value="%5$s" /></td>
+		</tr>`, $rowclass, $Lexi
+				);
+			} # end foreach
+			return $html
+		) ?>	
+		<tr class="totals"> 
+			<td colspan="4"><b>Add a Currency</b></td>
+		</tr>
+		<tr> 
+			<td class="name"><input type="text" name="name"/></td>
+			<td class="short"><input type="text" name="short"/></td>
+			<td class="symbol"><input type="text" name="symbol"/></td>
+			<td>&nbsp;</td>
+		</tr>
+	</table>
+	<p class="buttons">
+			<? echo ( join( '',
+				ssi::button( 'Submit', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();"} ),
+				ssi::button( 'Reset', { 'onclick'=>"f1.reset();" } ),
+			); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction"/>
+</form>

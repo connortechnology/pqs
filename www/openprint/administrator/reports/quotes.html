@@ -1,0 +1,81 @@
+<div class="PageTitle">
+<h1>ADMINISTRATOR REPORTS</h1>
+<h2>Quotes</h2>
+</div>
+Choose report criteria and click show results. 
+You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br>
+<br>
+<form id="f1" name="f1" method="post" action="quotes.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<p>
+			<label>Quote ID</label>
+			<input type="text" size="10" name="quote_id" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<? echo ( button( 'Go1', { onclick=>"f1.action='../quote/view.html';f1.submit();", text=>'Go' } ); ) ?>	
+		</p>
+		<p>
+			<label>Company</label>
+			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" size="4" />
+			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value=""> Select a Customer</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)')], $param{'ddmCustomers'} ); ) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Status</label>
+			<select name="ddmStatus" size="1">
+				<option value="">All</option>
+<? echo ( 
+	my @options = ( 'Incomplete','Complete','Re-Opened' );
+	make_drop_down( [ map { $_, $_ } \@options ], $param{'ddmStatus'} );
+) ?>
+			</select>
+		</p>
+		<p>
+			<label>Currency</label>
+			<select name="currency_id" size="1">
+			<option value="">All Currencies</option>
+<? echo ( 
+make_drop_down( openprint::Currency->dropdown(order=>'lower(name)'), $param{currency_id} );
+) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Sales Reps</label>
+			<select name="salesrep_id" size="1">
+				<option value="">All Employees</option>
+			<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales'], order=>'lower(firstname),lower(lastname)'), $param{salesrep_id} ); ) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Date Quoted</label>
+			<span class="DateSelector">
+				<select name="ddmStartMonth" onchange="setDaysDropDown(this.form.ddmStartYear.value,this.value,this.form.ddmStartDay,this.form.ddmStartDay.value);"><?startmonths?></select>
+				<select name="ddmStartDay"><?startdays?></select>
+				<select name="ddmStartYear" onchange="setDaysDropDown(this.value,this.form.ddmStartMonth.value,this.form.ddmStartDay,this.form.ddmStartDay.value);"><?startyears?></select> to
+			</span>
+			<span class="DateSelector">
+				<select name="ddmEndMonth" onchange="setDaysDropDown(this.form.ddmEndYear.value,this.value,this.form.ddmEndDay,this.form.ddmEndDay.value);"><?endmonths?></select>
+				<select name="ddmEndDay"><?enddays?></select>
+				<select name="ddmEndYear" onchange="setDaysDropDown(this.value,this.form.ddmEndMonth.value,this.form.ddmEndDay,this.form.ddmEndDay.value);"><?endyears?></select>
+			</span>
+		</p>
+		<p> 
+			<label>Range Total</label>
+			<input type="text" name="total_start" size="12" value="<? echo ( $param{'total_start'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g, '');" />
+			to
+			<input type="text" name="total_end" size="12" value="<? echo ( $param{'total_end'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g, '');" />
+		</p>
+
+		<p class="buttons">
+			<? echo (
+				my $html;	
+				$html .= button( 'ShowResults', { onclick=>"new Ajax.Updater( 'Results', '_quotes.html', { parameters: \$('f1').serialize() } );", text=>'Show Results' } );
+				$html .= button( 'DownloadCSV', { onclick=>"f1.action='quotes.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' } );
+				$html .= button( 'Reset', { onclick=>"f1.reset();", text=>'Reset' } );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<div id="Results"></div>
+	<input type="hidden" name="btnFunction"/>
+</form>

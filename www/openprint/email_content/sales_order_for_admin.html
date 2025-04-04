@@ -1,0 +1,8 @@
+<style type="text/css"><?include('/css/order.css')?></style>
+<div class="Order">
+<? echo ( join("\n",
+include('/email_content/sales_order_header.html', $variable ),
+include('/main/order/_contents.html', $variable ),
+include('/main/order/_totals.html', $variable ),
+); ) ?>
+</div>

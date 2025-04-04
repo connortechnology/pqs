@@ -1,0 +1,30 @@
+<p>
+	<label><b>Service Price</b></label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+		$<input name="txtPrice<?QTYIndex?>" size="9" />
+		<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+		<input type="checkbox" id="OverridePrice<?QTYIndex?>" name="OverridePrice<?QTYIndex?>" value="Y" onclick="if(!this.checked)calc(this.form.name);" />
+		<label for="OverridePrice<?QTYIndex?>">Override</label>
+		<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+	</span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+<b><?CurrencyName?></b>
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+<p><label>&nbsp;</label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+<? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ); ) ?>
+    </span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</p>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>

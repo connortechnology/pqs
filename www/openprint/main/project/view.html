@@ -1,0 +1,218 @@
+<div class="PageTitle">
+	<h1>PROJECTS</h1>
+	<h2>View Project</h2>
+</div>
+<script>
+	function open_project_docket() {
+		window.open('/main/project/docket_sheet.html?ProjectIndex=<?echo($$variable{Project}{id})?>','projectdocket','newWin,width=610,top=50,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
+	}
+  function calc_from_cost( element, index ) {
+    element.value = element.value.replace(/[^\d\.\-]/,'');
+    const cost = parseFloat(1*element.value);
+
+    const markup = parseFloat(1*element.form.elements['Markup'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
+    element.form.elements['txtPrice'+index].value = do_decimals( cost * ( 1 + markup ), 2 );
+  } // end function calc_from_cost
+
+  function calc_from_markup( element, index ) {
+    element.value = element.value.replace(/[^\d\.\-]/,'');
+    const markup = parseFloat(1*element.value);
+    const cost = parseFloat(1*element.form.elements['Cost'+index].value.replace(/[^\d\-\.]/g, '' ));
+    const newvalue = cost * ( markup/100 + 1 );
+    element.form.elements['txtPrice'+index].value = do_decimals( newvalue, 2 );
+  } // end function calc_from_markup
+  function calc_from_price( element, index ) {
+    element.value = element.value.replace(/[^\d\.\-]/,'');
+    const cost = parseFloat(element.form.elements['Cost'+index].value.replace(/[^\d\-\.]/g, '' ) );
+    if ( cost ) {
+      const price = parseFloat(element.value);
+      element.form.elements['Markup'+index].value = do_decimals( ((price / cost)-1)*100, 2 );
+    } // end if
+  } // end function calc_from_price
+</script>
+<div class="Project"><div class="View">
+<?include(/includes/error_reporting.html)?>
+	<? if ( ! $$variable{Project}->id() ) ?>
+	There is no current project. 
+	<? else ( ! $$variable{Project}->id() ) ?>
+	<? if ( $$variable{Project}->can_view() ) ?>
+
+	<? if ( $$variable{Project}->company_id() != $session{company_id} ) ?>
+	<div class="warning unprintable">Warning: You are logged in as <? echo ( $openprint::Company->name() ) ?> but this project belongs to <a href="view.html?project_id=<?echo($$variable{Project}{id})?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<?echo($$variable{Project}->company_id())?>"><? echo ( $$variable{Project}->Company()->name() ) ?></a>!</div>
+	<? endif ( $$variable{Project}->company_id() != $session{company_id} ) ?>
+	<form id="f1" name="f1" method="post" action="view.html">
+		<input type="hidden" name="btnFunction" value=""/>
+		<input type="hidden" name="ProjectIndex" value="<?echo($$variable{Project}{id})?>"/>
+		<p class="unprintable">
+			Please confirm services, prices and quantities before clicking &quot;Add to 
+      Quote&quot; or &quot;Add to Order&quot;.<br/>
+      If changes are required, please use the &quot;Edit&quot; or &quot;Remove&quot; links.<br/>
+		</p>
+		<div class="buttons">
+			<div class="left">
+				<? echo ( my $html;
+
+				if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
+					$html .= button( 'Summary', { href=>'/main/project/summary.html?ProjectIndex='.$$variable{Project}{id} } );
+				} # end if
+				if ( $$variable{Project}->can_edit() and ( ( ! $$variable{Project}->order_id() ) or ( sets::isin( $$variable{Project}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) ) {
+					$html .= join("\n",
+						button( 'Edit', { href=>'/main/project/create_edit.html?ProjectIndex='.$$variable{Project}{id} } ),
+						( $$variable{Project}->deleted() ?
+							button( 'UnDelete', { onclick=>"f1.btnFunction.value='Undelete Project';f1.submit();", text=>'Undelete' } )
+							:
+							button( 'Delete', { onclick=>"f1.btnFunction.value='Delete Project';f1.submit();", text=>'Delete' } ),
+						)
+					);
+				} # end if
+				$html .= button( 'Copy', { href=>'/main/project/reuse.html?project_id='.$$variable{Project}{id} } );
+        if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
+          my @QuoteLevels = sql::execute( undef, undef, 'SELECT id, name FROM QuoteLevels ORDER BY sorting ASC,lower(name)' );
+          if ( @QuoteLevels > 1 ) {
+            $html .= '<label>Style</label><select name="quote_level" onchange="this.form.submit();">';
+            
+            $html .= make_drop_down( \@QuoteLevels, $$variable{Project}->style_id() );
+            $html .= '</select>';
+          } # end if
+        } # end if
+				return $html;
+			) ?>
+			</div>
+			<div class="right">
+				<? echo (
+					my $html = '';
+					if ( ( sets::isin( $$variable{Project}->status(), ['Unordered','uncalculated','Calculating','Deleted'] ) or $$variable{Project}->Order()->status() eq 'Re-Opened' ) and $$variable{Project}->can_edit() ) {
+						$html .= button( 'RecalculateProject', { onclick=>"f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", text=>'Recalculate' } );
+					} # end if
+					if ( $session{ShowAllSignatures} ) {
+						$html .= button( 'HideAll', { href=>qq`/main/project/view.html?project_id=$$variable{Project}{id}&amp;ShowAllSignatures=0`, text=>'Hide Similar Signatures' } );
+					} else {
+						$html .= button( 'ShowAll', { href=>qq`/main/project/view.html?project_id=$$variable{Project}{id}&amp;ShowAllSignatures=1`, text=>'Show All Signatures' } );
+					} # end if
+					if ( ( ! sets::isin( $$variable{Project}->status(), [ 'uncalculated', 'Calculating' ] ) ) and ! $$variable{Project}->order_id() ) {
+						my $last_calculated = Date::Parse::str2time( $$variable{Project}->calculated_on() );
+						if ( $config{QuoteValidDays} and ( time - $last_calculated ) > $config{QuoteValidDays} * 24*60*60 ) {
+							$$variable{error} = 'This quote is too old.  It will have to be recalculated before it can be ordered or quoted again.<br/>';
+						} else {
+							$html .= button( 'AddToQuote', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", text=>'Add To Quote' } );
+							$html .= button( 'AddToOrder', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", text=>'Add To Order' } );
+						} # end if
+						if ( ( $session{user_type} eq 'A' ) and ! $$variable{Project}->predefined() ) {
+							$html .= button( 'Predefined', { onclick=>"f1.action='view.html';f1.btnFunction.value='Make Predefined';f1.submit();", text=>'Make into a Product' } );
+						} # end if
+					} # end if
+					if ( $$variable{Project}->order_id() and sets::isin( $$variable{Project}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
+						$html .= button( 'ContinueOrder', { href=>'/main/order/information.html?order_id='.$$variable{Project}->order_id(), text=>'Continue Order' } );
+					} # end if
+          if ($$variable{Project}->order_id()) {
+						$html .= button( 'Docket', { onclick=>'open_project_docket();' } );
+					} # end if
+					if ( sets::isin( $$variable{Project}->status(), [ 'Proofs Out','Approved','Printed','Complete' ] ) ) {
+					$html .= button( 'ViewPDFs', { onclick=>"f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", text=>'View PDFs' } );
+				} # end if
+				if ( sets::isin( $$variable{Project}->status(), [ 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ] ) ) {
+					$html .= button( 'Upload', { href=>'/upload/upload_center.html?project_id='.$$variable{Project}{id}, text=>'Upload Files' } );
+				} # end if
+				$html .= button( 'Print', { onclick=>'window.print();' } );
+				if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+					$html .= button( 'JDF', { href=>'/main/project/view.html?btnFunction=Export%20JDF&amp;ProjectIndex='.$$variable{Project}{id} } ) if $$variable{Project}->docket();
+					$html .= button( 'Log', { onclick=>qq`popup_window('_view_log.html?project_id=$$variable{Project}{id}', '', { width:800, height:600 } );`, text=>'View Log' } );
+				} # end if
+				return $html;
+			) ?>
+		</div>
+	</div>
+<?include(/includes/error_reporting.html)?>
+<? echo (
+  @$variable{QuoteLevel} = sql::execute( undef, undef, 'SELECT name FROM QuoteLevels WHERE id=?', $$variable{Project}->style_id() ) if $$variable{Project}->style_id();
+  if ($$variable{QuoteLevel}) {
+    $_ = include( '/main/project/view_'.$$variable{QuoteLevel}.'.html');
+    return $_ if $_;
+  }
+  return include('_view.html');
+) ?>
+
+<? if ( $$variable{Project}->can_edit() and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
+	<table class="List">
+		<tr class="totals unprintable">
+			<td class="description"><input type="text" name="txtServiceName" placeholder="enter custom service line description here"/></td>
+			<? echo (
+				return join("\n", map { '<td class="price">'.input( type=>'float', name=>'txtPrice'.$_, placeholder=>'custom price' ).'</td>' } $$variable{Project}->quantity_indexes() );
+			) ?>
+			<td class="status">&nbsp;</td>
+			<? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
+			<td class="unprintable actions"><? echo ( button( 'AddToProject', { onclick=>q`f1.action='/main/project/view.html';f1.btnFunction.value='Modify Project';f1.submit();`, text=>'Add' } ); ) ?></td>
+			<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
+		</tr>
+	</table>
+<? endif ( $$variable{Project}->can_edit() and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
+<?if ( $session{user_type} eq 'A' ) ?>
+<fieldset><legend>Summaries</legend>
+<table class="List Services">
+<? echo (
+  my $html;
+  my $rowclass;
+	foreach my $Category ( @{$$variable{Categories}} ) {
+    next if ( !($$variable{category_totals}{$$Category{id}}[0] or $$variable{category_totals}{$$Category{id}}[1] or $$variable{category_totals}{$$Category{id}}[2]) );
+		$html .= '<tr'.$rowclass.'><td class="description">'.$Category->name() . ' total</td>';
+		$html .= join("\n", map {
+						'<td class="price">'.openprint::Currency::format( $$variable{category_totals}{$$Category{id}}[$_] ).'</td>'
+						} $$variable{Project}->quantity_indexes()
+						);
+$html .= '<td class="status">&nbsp;</td>';
+				if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) {
+				$html .= '<td class="unprintable actions">&nbsp;</td>';
+}
+
+			$html .= '</tr>';
+      $rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach category
+	return $html;
+) ?>
+</table>
+</fieldset>
+<?endif ( $session{user_type} eq 'A' ) ?>
+<? if ( $$variable{Project}->docket() ) ?>
+<p>This project has already been sent to production and cannot 
+be modified or ordered at this time. You can reuse your project under a different 
+name and then make changes. If you have any questions please click on our <a href="/support/help_desk.html">helpdesk</a>.<br/>
+</p>
+<br class="spacer"/>
+<? endif ( $$variable{Project}->docket() ) ?>
+
+</form>
+<?include(_commissions_discounts.html)?>
+<div class="Disclaimer"><? echo ( $config{ProjectViewDisclaimer} ) ?></div>
+<? if ( $$variable{Project}->can_edit() ) ?>
+<script>
+const tinymce_options = {
+    mode : "textareas",
+ plugins: "paste,lists",
+  theme_advanced_toolbar_location : "top",
+  //theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull",
+  //theme_advanced_buttons2 : "bullist,numlist,outdent,indent,sub,sup,charmap",
+  //theme_advanced_buttons3 : "",
+	 toolbar: "numlist bullist",
+  auto_resize : true,
+    theme : "advanced",
+  //force_br_newlines : true,
+	//force_p_newlines : false,
+	//forced_root_block : '' // Needed for 3.x
+
+  };
+tinyMCE.init(tinymce_options);
+  if (document.getElementById('reference'))
+new Ajax.InPlaceRichEditor( 'reference', '/main/project/_update.html?project_id=<?echo($$variable{Project}->id())?>&action=update&field=reference',{
+	okButton:true,
+	cancelButton:true,
+	cancelControl:'button',
+	submitOnBlur:false,
+	tinymceToElementSize: true
+	}, tinymce_options );
+</script>
+<? endif ( $$variable{Project}->can_edit() ) ?>
+	<? else ( $$variable{Project}->can_view() ) ?>
+		<div class="error">You may not view this project.</div>
+	<? endif ( $$variable{Project}->can_view() ) ?>
+	<? endif ( ! $$variable{Project}->id() ) ?>
+</div><!--View--></div><!--Project-->

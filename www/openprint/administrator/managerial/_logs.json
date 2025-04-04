@@ -1,0 +1,3 @@
+<? if ( $$variable{error} ) ?>
+alert('<? echo ( $$variable{error} ) ?>');
+<? endif ( $$variable{error} ) ?>

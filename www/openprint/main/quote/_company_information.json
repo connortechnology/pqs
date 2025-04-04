@@ -1,0 +1,27 @@
+<? echo ( 
+	my $html = '';
+	my $Company = new openprint::Company( $param{'company_id'} );
+	my %data = (
+		'ForCompanyName'	=> $Company->name(),
+		'ForAddress1'		=> $Company->address1(),
+		'ForAddress2'		=> $Company->address2(),
+		'ForCity'			=> $Company->city(),
+		'ForCountry'		=> $Company->country(),
+		'ForPostalCode'		=> $Company->postalcode(),
+		'ForStateProvince'	=> $Company->state(),
+	);
+
+	$html .= join('', map { sprintf( q{$('%s').value = '%s';}, $_, $data{$_} ) } keys %data);
+	
+	$html .= q{clear_ddm($('user_id'));};
+	my @Users = openprint::User->find(company_id=>$Company->id(), order=>'lower(firstname),lower(lastname)' ) if $Company->id();
+	if ( @Users ) {
+		foreach my $User ( @Users ) {
+			$html .= sprintf( q`add_option($('user_id'), %d, '%s' );`, $User->id(), $User->name() );
+		} # end foreach
+
+		$param{user_id} = $Users[0]->id();
+		$html .= include( '/main/quote/_user_information.json' );
+	} # end if
+	return $html;
+) ?>

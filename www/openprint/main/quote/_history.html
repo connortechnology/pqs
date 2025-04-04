@@ -1,0 +1,207 @@
+<? eval (
+	if ( @{$$variable{Quotes}} >= 1000 ) {
+		@{$$variable{Quotes}} = splice( @{$$variable{Quotes}}, 0, 1000 );
+		$$variable{error} .= 'Too many results.  Only showing the first 1000. Use CSV Download to see all.';
+	} elsif ( @{$$variable{Quotes}} >= 20 ) {
+		my %Projects;
+		foreach my $QP ( openprint::QuotedProject->find( quote_id=>[ map { $$_{id} } @{$$variable{Quotes}} ] ) ) {
+			push @{$Projects{$$QP{quote_id}}}, $QP;
+		} # end foreach QP
+		foreach my $Quote ( @{$$variable{Quotes}} ) {
+			$Quote->Quoted_Projects( $Projects{$$Quote{id}} );
+		} # end foreach
+	} # end if
+	$$variable{Currency} = new openprint::Currency( $session{Currency_id} );
+) ?>
+<?include(/includes/error_reporting.html)?>
+<? if ( @{$$variable{Quotes}} == 0 ) ?>
+
+	<? 	if ( sets::isin( $session{user_type}, ['A','E'] ) and $param{QuoteID} ) ?>
+		<? eval (
+				@{$$variable{Quotes}} = openprint::Quote->find( 'id like' => '%'.$param{QuoteID}.'%' );
+		) ?>
+		There were no quotes matching your search criteria for your currently selected Company.<br/>
+		<? if ( @{$$variable{Quotes}} > 0 ) ?>
+			The following are results belonging to other companies:<br/>
+			<table class="List">
+				<tr> 
+					<th class="quote_id">Quote ID</th>
+					<th class="CompanyName">Company</th>
+					<th class="QuotedFor">Quoted For</th>
+					<th class="Date">Date</th>
+					<th class="Price">Total1</th>
+					<th class="Price">Total2</th>
+					<th class="Price">Total3</th>
+				</tr>
+				<? echo (
+					my $html;
+					my $rowclass;
+					foreach my $Quote ( @{$$variable{Quotes}} ) {
+            $html .= sprintf(q`
+<tr%1$s> 
+	<td class="quote_id"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%2$d</a></td>
+	<td class="CompanyName"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%4$s</a></td>
+	<td class="User QuotedBy"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%5$s</a></td>
+	<td class="User QuotedFor"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%6$s</a></td>
+	<td class="Date"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%7$s</a></td>
+	<td class="Price"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%8$s</a></td>
+	<td class="Price"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%9$s</a></td>
+	<td class="Price"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%10$s</a></td>
+</tr>
+<tr%1$s>
+	<td>&nbsp;</td>
+	<td colspan="6">%11$s</td>
+  <td class="checkbox"></td>
+</tr>`, $rowclass, $Quote->id(), $Quote->company_id(), html_escape( $Quote->Company()->name() ),
+					$Quote->User()->name(),
+					html_escape( $Quote->for_name() ), 
+					format_date( $Quote->created_on() ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
+					$Quote->description(),
+);
+						$rowclass = $rowclass ? '' : ' class="colRow"';
+					} # end foreach Quote
+					return $html;
+				) ?>
+			</table>
+		<? endif ( @{$$variable{Quotes}} > 0 ) ?>
+		
+	<? else ( sets::isin( $session{user_type}, ['A','E'] ) and $param{QuoteID} ) ?>
+		There are no quotes which match your search criteria. 
+	<? endif ( sets::isin( $session{user_type}, ['A','E'] ) and $param{QuoteID} ) ?>
+<? else ( @{$$variable{Quotes}} == 0 ) ?>
+<form method="post" action="history.html" name="f2" id="f2">
+	<div class="unprintable">
+		Please click on a <b>Quote ID # </b>to view its details.<br/>
+		To delete quotes from history check the appropriate quote(s) and click delete.<br/>
+		<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="quote_id">Quote ID</th>
+<? if ( ! $session{$$variable{uri}.'?company_id'} ) ?>
+      <th class="CompanyName">Company</th>
+			<th class="CSR">Sales Rep</th>
+<? endif ( ! $session{$$variable{uri}.'?company_id'} ) ?>
+			<th class="User QuotedBy">Quoted By</th>
+			<th class="User QuotedFor">Quoted For</th>
+			<th class="Reference">Reference</th>
+			<th class="Date">Date</th>
+			<th class="Price">Total1</th>
+			<th class="Price">Total2</th>
+			<th class="Price">Total3</th>
+			<th class="checkbox"><input type="checkbox" name="quote_id" data-on-click-this="select_all_this" value="0"/></th>
+		</tr>
+<? echo (
+	my $html;
+	my $rowclass;
+	my $total = 0;
+	foreach my $Quote ( @{$$variable{Quotes}} ) {
+		$total += 1;
+		if ( $Quote->can_view() ) {
+			if ( ! $session{$$variable{uri}.'?company_id'} ) {
+				$html .= sprintf(q`
+				<tr%1$s>
+					<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
+					<td class="CompanyName"%4%s><a href="history_details.html?quote_id=%2$d">%3$s</a></td>
+          <td class="User CSR">%13$s</td>
+					<td class="User QuotedBy"><a href="history_details.html?quote_id=%2$d">%5$s</a></td>
+					<td class="User QuotedFor"><a href="history_details.html?quote_id=%2$d">%6$s</a></td>
+					<td class="Reference"><a href="history_details.html?quote_id=%2$d">%7$s</a></td>
+					<td class="Date"><a href="history_details.html?quote_id=%2$d">%8$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%9$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%10$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%11$s</a></td>
+					<td class="checkbox"><input type="checkbox" name="quote_id" value="%2$d" /></td>
+				</tr>
+				<tr%1$s>
+					<td>&nbsp;</td>
+					<td colspan="9">%12$s</td>
+          <td class="checkbox"></td>
+				</tr>`, $rowclass, $Quote->id(),
+					html_escape( $Quote->Company->name() ), ($session{$$variable{uri}.'?company_id'} ? ' style="display: none"' : ''),
+					html_escape( $Quote->for_name() ),
+          html_escape( $Quote->by_name() ),
+          html_escape( $Quote->reference() ),
+					format_date( $Quote->created_on() ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
+					$Quote->description(),
+					html_escape($Quote->Company()->CSR()->name()),
+				);
+			} else {
+				$html .= sprintf(q`
+				<tr%1$s> 
+					<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
+					<td class="User QuotedBy"><a href="history_details.html?quote_id=%2$d">%3$s</a></td>
+					<td class="User QuotedFor"><a href="history_details.html?quote_id=%2$d">%4$s</a></td>
+					<td class="Reference"><a href="history_details.html?quote_id=%2$d">%5$s</a></td>
+					<td class="Date"><a href="history_details.html?quote_id=%2$d">%6$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%7$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%8$s</a></td>
+					<td class="Price"><a href="history_details.html?quote_id=%2$d">%9$s</a></td>
+					<td class="checkbox"><input type="checkbox" name="quote_id" value="%2$d" /></td>
+				</tr>
+				<tr%1$s>
+					<td>&nbsp;</td>
+					<td colspan="7">%10$s</td>
+          <td class="checkbox"></td>
+				</tr>`, $rowclass, $Quote->id(), 
+          html_escape( $Quote->by_name() ),
+					html_escape( $Quote->for_name() ),
+          html_escape( $Quote->reference() ),
+					format_date( $Quote->created_on() ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
+					$Quote->description(),
+				);
+			}
+		} else {
+			$html .= sprintf(q`
+<tr%1$s>
+    <td class="quote_id">%2$d</td>
+    <td class="QuotedFor">%3$s</td>
+    <td class="User">%4$s</td>
+    <td class="Date">%5$s</td>
+    <td class="warning" colspan="3">You may not view this quote</td>
+    <td class="checkbox"></td>
+</tr>
+<tr%1$s>
+    <td>&nbsp;</td>
+    <td colspan="6">%6$s</td>
+    <td></td>
+</tr>`, $rowclass, $Quote->id(),
+    html_escape( $Quote->for_name() ),
+    $Quote->User()->name(),
+    format_date( $Quote->created_on() ),
+    $Quote->description(),
+);
+
+		} # end if can_view
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Quote
+  $html .= '</table>
+  ';
+  $html .= $total .= ' quote' . ($total==1 ? '' : 's').'<br/>';
+	return $html;
+) ?>
+	<p class="buttons">
+  <? echo ( return join("\n",
+     ( $session{'/main/quote/history.html?deleted'} eq '1' ) ? (
+       ($openprint::User->type() eq 'A' ? (
+         button( 'Destroy', { onclick=>q`f2.btnFunction.value='destroy';delete_confirm(f2);`, text=>'Destroy Checked' } ),
+        ) : () ),
+  button( 'Undelete', { onclick=>q`f2.btnFunction.value='undelete';f2.submit();`, text=>'Undelete Checked' } ),
+  ) : (
+  button( 'Delete', { onclick=>q`f2.btnFunction.value='Delete';delete_confirm(f2);`, text=>'Delete Checked' } ),
+  )
+  ); ) ?>
+  </p>
+	<input type="hidden" name="btnFunction" />
+</form>
+<span class="Currency">All prices listed in <? echo ( $$variable{Currency}->name(); ) ?>.</span>
+<? endif ( @{$$variable{Quotes}} == 0 ) ?>

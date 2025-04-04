@@ -1,0 +1,19 @@
+<p> 
+	<label>Pages / Cover</label>
+<? echo (
+	join("\n", map { qq{<span class="value">$$variable{'txtTotalPageQuantity'} pg $$variable{rdbCover} Cover</span>} } ( $$variable{'Project'}->quantity_indexes() ) );
+) ?>
+</p>
+<? if ( $$variable{'txtGateFoldedSpreadQuantity'} ) ?>
+<p> 
+	<label>Gate folded spread quantity</label>
+<? echo (
+	my $html;
+	foreach my $qty ( $$variable{'Project'}->quantities() ) {
+		next if ! $qty;
+		$html .= qq{<span class="value">$$variable{'txtGateFoldedSpreadQuantity'}</span>};
+	} # end foreach
+	return $html;
+) ?>
+</p>
+<? endif ( $$variable{'txtGateFoldedSpreadQuantity'} ) ?>

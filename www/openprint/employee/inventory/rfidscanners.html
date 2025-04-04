@@ -1,0 +1,37 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<? include('/includes/error_reporting.html' ) ?>
+Please select an RFID Scanner to view/edit.<br/>
+<form id="f1" name="f1" method="post" action="rfidscanner_details.html">
+	<fieldset class="filters"><legend>Choose RFID Scanner</legend>
+		<p>
+			<label for="rfidscanner_id">RFID Scanner ID #</label>
+			<input type="text" id="rfidscanner_id" name="rfidscanner_id" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<? echo ( button( 'Go', { onclick=>'f1.submit();', href=>'', text=>'Go' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="rfid_scanners.html">
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<p>
+			<label>Date Added</label>
+<? echo ( date_select_session( '/employee/inventory/rfidscanners.html', 'created_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+			to 
+<? echo ( date_select_session( '/employee/inventory/rfidscanners.html', 'created_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+		</p>
+		<p>
+			<label>Last Updated</label>
+<? echo ( date_select_session( '/employee/inventory/rfidscanners.html', 'updated_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+			to 
+<? echo ( date_select_session( '/employee/inventory/rfidscanners.html', 'updated_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+		</p>
+		<p class="buttons">
+			<? echo ( join('',
+				button( 'ShowResults', { onclick=>q`LoadContent( 'Results', '/employee/inventory/_rfidscanners.html', $('f2'));`, text=>'Show Results' } ),
+				button( 'Reset', { 'onclick'=>'f2.reset();' } ),
+				button( 'Add', { 'href'=>'rfidscanner_details.html', 'text'=>'Add New RFID Scanner' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<div id="Results"><? echo ( include('_rfidscanners.html'); ) ?></div>
+<script type="text/javascript">document.f1.rfidscanner_id.focus();</script>

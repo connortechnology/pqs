@@ -1,0 +1,238 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<title><? echo ( $config{'SiteTitle'} ) ?></title>
+		<style type="text/css">
+		<?include(/css/email.css)?>
+		<?include(/css/purchase_order.css)?>
+		</style>
+		<base href="<? echo ( $config{ExternalSiteURL} ) ?>"/>
+	</head>
+	<body>
+		<div class="PO">
+			<div class="Header">
+				<div class="Logo">
+					<?include(/includes/logo.html)?>
+					<table class="HeaderText">
+						<tr>
+							<td colspan="2">
+					<? echo ( join(' ', $openprint::User->Company()->get('address1','city','state','postalcode') );) ?>
+							</td>
+						</tr>
+						<tr>
+							<td>Phone<? echo ( $openprint::User->Company()->phone() ) ?></td>
+							<td>Fax<? echo ( $openprint::User->Company()->fax() ) ?></td>
+						</tr>
+					</table>
+				</div>
+				<div class="PageTitle">
+					<h1>PURCHASE ORDER</h1><br/>
+					P.O. # [ <? echo ( $$variable{PurchaseOrder}->id() ) ?> ]<br/>
+					Date: 
+					<? echo ( format_date( $$variable{PurchaseOrder}->created_on() ); ) ?><br/>
+				</div>
+			</div>
+			<div class="Vendor">
+			<p>
+				<label>VENDOR</label>
+		<? echo (
+		my $html = '';
+		$html .= $$variable{PurchaseOrder}->vendor_contact().'<br/>' if $$variable{PurchaseOrder}->vendor_contact();
+		$html .= $$variable{PurchaseOrder}->vendor_name().'<br/>' if $$variable{PurchaseOrder}->vendor_name();
+		$html .= $$variable{PurchaseOrder}->vendor_address1().'<br/>' if $$variable{PurchaseOrder}->vendor_address1();
+		$html .= $$variable{PurchaseOrder}->vendor_address2().'<br/>' if $$variable{PurchaseOrder}->vendor_address2();
+		$html .= sprintf('%s %s, %s', $$variable{PurchaseOrder}->get('vendor_city','vendor_state', 'vendor_postalcode')) . '<br/>';
+		$html .= 'Phone: ' . $$variable{PurchaseOrder}->vendor_phone().'<br/>' if $$variable{PurchaseOrder}->vendor_phone();
+		$html .= 'Fax: '.$$variable{PurchaseOrder}->vendor_fax().'<br/>' if $$variable{PurchaseOrder}->vendor_fax();
+		$html .= join('<br/>', split(/[;,]/, $$variable{PurchaseOrder}->vendor_email())).'<br/>' if $$variable{PurchaseOrder}->vendor_email();
+		return $html;
+		) ?>
+			</p>
+			</div>
+			<div class="ShipTo">
+				<p>
+					<label>SHIP TO</label>
+		<? echo (
+		my $html = '';
+		$html .= $$variable{PurchaseOrder}->shipto_contact().'<br/>' if $$variable{PurchaseOrder}->shipto_contact();
+		$html .= $$variable{PurchaseOrder}->shipto_name().'<br/>' if $$variable{PurchaseOrder}->shipto_name();
+		$html .= $$variable{PurchaseOrder}->shipto_address1().'<br/>' if $$variable{PurchaseOrder}->shipto_address1();
+		$html .= $$variable{PurchaseOrder}->shipto_address2().'<br/>' if $$variable{PurchaseOrder}->shipto_address2();
+		$html .= sprintf('%s %s, %s', $$variable{PurchaseOrder}->get('shipto_city','shipto_state', 'shipto_postalcode')) . '<br/>';
+		$html .= 'Phone: ' . $$variable{PurchaseOrder}->shipto_phone().'<br/>' if $$variable{PurchaseOrder}->shipto_phone();
+		$html .= 'Fax: ' . $$variable{PurchaseOrder}->shipto_fax().'<br/>' if $$variable{PurchaseOrder}->shipto_fax();
+		$html .= $$variable{PurchaseOrder}->shipto_email().'<br/>' if $$variable{PurchaseOrder}->shipto_email();
+		return $html;
+		) ?>
+				</p>
+			</div>
+<? if ( $$variable{PurchaseOrder}->notifications() ) ?>
+        <div id="Notifications">
+            <p><label>NOTIFY</label>
+            <? echo (
+                my $html = '';
+                foreach my $U ( openprint::User->find( id=>[$$variable{PurchaseOrder}->notifications()], order=>'lower(firstname),lower(lastname)' ) ) {
+                    $html .= sprintf( q{<a href="mailto:%1$s">%2$s &lt;%1$s&gt;</a><br/>}, $U->email(), $U->name() );
+                } # end foreach
+                return $html;
+            ) ?>
+            </p>
+        </div>
+<? endif ( $$variable{PurchaseOrder}->notifications() ) ?>
+        <div id="DocketSummary"><p><label>DOCKET</label>
+<? echo ( my $html;
+    foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
+        $html .= $C->docket().'<br/>' if $C->docket();
+    } # end foreach C
+    return $html;
+) ?></p>
+        </div>
+			<br class="spacer"/><br/>
+			<table class="Shipping">
+				<tr>
+					<th class="method">Shipping Method</th>
+					<th class="terms">Shipping Terms</th>
+					<th class="delivery_date">Delivery Date</th>
+				</tr>
+				<tr>
+					<td class="method"><? echo ( $$variable{PurchaseOrder}->shipping_method() ) ?></td>
+					<td class="terms"><? echo ( $$variable{PurchaseOrder}->shipping_terms() ) ?></td>
+					<td class="delivery_date">
+						<? echo ( $$variable{PurchaseOrder}->delivered_on_switch() ne 'DATE' ? $$variable{PurchaseOrder}->delivered_on_switch().'<br/>' : '' ) ?>
+						<? echo ( format_date( $$variable{PurchaseOrder}->delivered_on() ) ) ?>
+					</td>
+				</tr>
+			</table>
+			<div class="items">
+				<div class="head">
+					<div class="quantity">QTY</div>
+					<div class="product">PRODUCT#</div>
+					<div class="description">ITEM / DESCRIPTION</div>
+					<div class="docket">DOCKET</div>
+					<div class="price">UNIT PRICE</div>
+					<div class="line_total">LINE TOTAL</div>
+				</div>
+		<? echo ( my $html = '';
+		foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
+			$html .= '<div class="item">';
+			if ( $C->Type()->name() eq 'Roll Stock' ) {
+				$html .= sprintf('<div class="quantity">%s lbs</div>', Number::Format::format_number($C->qty()) );
+			} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
+				$html .= sprintf('<div class="quantity">%s sheets</div>', Number::Format::format_number($C->qty()) );
+			} else {
+				$html .= sprintf('<div class="quantity">%s</div>', Number::Format::format_number($C->qty()) );
+			} # end if
+
+$html .= sprintf('
+            <div class="product">%1$s</div>
+            <div class="description">%2$s<br/>%3$s</div>
+            <div class="docket">%4$s</div>
+            ', $C->product(), $C->item(), ( $C->item() eq $C->description() ? '' : $C->description() ), $C->docket(),
+            );
+
+			$html .= '<div class="price">';
+			if ( $C->type() eq 'Roll Stock' ) {
+				$html .= openprint::Currency::format($C->price(),2) . '/100lb';
+			} elsif ( $C->type() eq 'Sheet Stock' ) {
+				$html .= openprint::Currency::format($C->price(),2) . '/100lb<br/>';
+				$html .= openprint::Currency::format($C->mprice(),2) . '/1000';
+			} else {
+				$html .= openprint::Currency::format($C->price(),4);
+			} # end if
+			$html .= '</div>';
+			$html .= join('', '<div class="line_total">', openprint::Currency::format($C->total()), '</div></div>' );
+		} # end foreach C
+		return $html;
+	) ?>
+</div>
+<div class="totals">	
+		<div class="subtotal">
+			<label>SUBTOTAL</label>
+			<div class="amount"><? echo ( openprint::Currency::format( $$variable{PurchaseOrder}->subtotal() ); ) ?></div>
+		</div>
+		<? echo ( 
+			my $html;
+			foreach my $Tax ( $$variable{PurchaseOrder}->Taxes() ) {
+				$html .= sprintf('<div class="tax"><label>%s (%d%)</label><div class="amount">%s</div></div>',
+					$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
+					);
+			} # end foreach Tax
+			return $html;
+		) ?>
+		<div class="payments_total">
+			<label>Payments</label>
+			<div class="amount"><? echo ( openprint::Currency::format( $$variable{PurchaseOrder}->payments_total() ); ) ?></div>
+		</div>
+		<div class="total">
+			<label>TOTAL</label>
+			<div class="amount"><? echo ( openprint::Currency::format( $$variable{PurchaseOrder}->total() ); ) ?></div>
+		</div>
+	</div>
+<?include(/employee/purchase_order/_payments_view.html)?>
+			<div class="leftColumn">
+				<ol>
+					<li> Please send your invoice with a copy of delivery note signed by receiving party.</li>
+					<li> Please indicate this Purchase Order # in your invoice, packing slip / delivery note.</li>
+					<li> Please notify us immediately if you are unable to ship as specified.</li>
+				</ol>
+			</div>
+			<div class="rightColumn" style="text-align: right;">
+			All prices are in <? echo ( $$variable{PurchaseOrder}->Currency()->name() ) ?>.
+			<br/><br/>
+		<? if ( $$variable{PurchaseOrder}->authorized() ) ?>
+				<div class="AuthorizedBy"><? echo ( $$variable{PurchaseOrder}->Authorized_By()->name() ) ?></div>
+				<div class="AuthorizedOn"><? echo ( format_date($$variable{PurchaseOrder}->authorized_on()) ) ?><br/></div>
+				<br class="spacer"/>
+				<hr/>
+				<div class="AuthorizedBy"><i>Authorized<? if ( $$variable{PurchaseOrder}->authorized_by() ) ?> by<? endif ( $$variable{PurchaseOrder}->authorized_by() ) ?></i></div>
+				<div class="AuthorizedOn"><i>Date</i></div>
+		<? endif ( $$variable{PurchaseOrder}->authorized() ) ?>
+			</div>
+			<br class="spacer"/>
+<? echo (
+	my @Assets = map { $_->Asset() } $$variable{PurchaseOrder}->Assets();
+	return if ! @Assets;
+	my $html = '
+<h3>Attachments:</h3>
+<table>
+    <thead>
+        <tr>
+            <th class="Name">Name</th>
+            <th class="Filename">Filename</th>
+            <th class="DateTime">Added On</th>
+            <th class="Thumbnail">Thumbnail</th>
+        </tr>
+    </thead>
+    <tbody>';
+foreach my $Asset ( @Assets ) {
+    $html .= sprintf('
+        <tr>
+            <td class="Name"><a href="/assets/%1$s" target="_blank">%2$s</a></td>
+            <td class="Filename"><a href="/assets/%1$s" target="_blank">%3$s</a></td>
+            <td class="DateTime"><a href="/assets/%1$s" target="_blank">%4$s</a></td>
+            <td class="Thumbnail"><a href="/assets/%1$s" target="_blank"><img src="%5$s" alt=""/></a></td>
+        </tr>
+        ', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
+        format_datetime( $Asset->created_on() ),
+        $Asset->sized_url('small'),
+        );
+} # end foreach Asset
+	$html .='
+    </tbody>
+</table>
+';
+return $html;
+) ?>
+<? if ( ! $$variable{PurchaseOrder}->authorized() ) ?>
+<div id="not_approved"><img src="/images/not_approved.png"/></div>
+<? endif ( ! $$variable{PurchaseOrder}->authorized() ) ?>
+<? if ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
+<div id="do_not_pay"><img src="/images/do_not_pay.png"/></div>
+<? endif ( $$variable{PurchaseOrder}->do_not_pay() ) ?>
+<? if ( $$variable{PurchaseOrder}->cancelled() ) ?>
+<div id="cancelled"><img src="/images/cancelled.png"/></div>
+<? endif ( $$variable{PurchaseOrder}->cancelled() ) ?>
+		</div><!--PO-->
+	</body>
+</html>

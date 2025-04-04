@@ -1,0 +1,3 @@
+<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() . ':' . $_->description() } openprint::Product->find(
+	( $param{'category_id'} ? ( 'category_id'=>$param{'category_id'} ) : () ),
+	,'order'=>'lower(name)') ] ); ) ?>

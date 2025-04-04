@@ -1,0 +1,64 @@
+<form method="post" name="f1" action="custom.html">
+    <table width="600" border="0" cellspacing="0" cellpadding="0">
+      <tr> 
+        <td width="180"><b>Search</b> Report Name</td>
+        <td> 
+          <select name="ddmStoredReport" size=1 onChange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+            <option value=""> Select </option>
+        <?ddmStoredReport?>
+          </select>
+        </td>
+      </tr>
+    </table>
+<fieldset class="filters">
+	<p class="buttons">
+	<? echo ( join('', 
+		ssi::writeButton( $log, $dbh, 'Prev', 'prev.gif', "f1.btnFunction.value='Prev';fmCheck(f1);", '', '<<' ),
+		ssi::writeButton( $log, $dbh, 'Next', 'next.gif', "f1.btnFunction.value='Next';fmCheck(f1);", '', '>>' ),
+		ssi::writeButton( $log, $dbh, 'New', 'new.gif', "f1.btnFunction.value='New';addCheck(f1);", '', 'New' ),
+		ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';fmCheck(f1);", '', 'Delete' ),
+		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';fmCheck(f1);", '', 'Save' ),
+		ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
+);
+) ?>
+</p>
+</fieldset>
+    <table>
+      <tr> 
+        <td height="20" width="180"></td>
+        <td height="20"></td>
+      </tr>
+      <tr> 
+        <td height="30">Report Name</td>
+        <td height="30"> 
+          <input type="text" name="strReportName" value="<?strReportName?>" size="65" class="form">
+        </td>
+      </tr>
+      <tr> 
+        <td height="10"></td>
+        <td height="10"></td>
+      </tr>
+      <tr> 
+        <td height="30" valign="top">SQL Command Text</td>
+        <td height="30"> 
+          <textarea name="strSQLCommand" ROWS="6" COLS="65"><?strSQLCommand?></textarea>
+        </td>
+      </tr>
+      <tr> 
+        <td height="20" valign="top"></td>
+        <td height="20"></td>
+      </tr>
+    </table>
+<p class="buttons">
+	<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'show.gif', "f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' ); ) ?>
+	<? echo ( ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download' ); ) ?>
+		
+</p>
+    <input type="hidden" name="btnFunction"/>
+</form>
+    <br>
+<? if ( $$variable{'RESULTS'} ) ?>
+<fieldset><legend>Requested Results</legend>
+  <?RESULTS?> 
+</fieldset>
+<? endif ( $$variable{'RESULTS'} ) ?>

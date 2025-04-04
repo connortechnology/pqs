@@ -1,0 +1,7 @@
+<? echo (
+	my $selected_id = $param{'selected_id'};
+	delete $param{'selected_id'};
+	$param{'order'} = 'lower(strid)' if ! $param{order};
+	my @Equipment = openprint::Equipment->find( %param );
+	make_drop_down( [ '', 'select', map { $_->id(), $_->strid() . ' : '.$_->name() } @Equipment ], @Equipment == 1 ? $Equipment[0]{'id'} : $selected_id );
+) ?>

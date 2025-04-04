@@ -1,0 +1,34 @@
+<style type="text/css">
+<?include('/css/quote.css')?>
+</style>
+Attached is a copy of a quote. It has custom entries in it as follows:</br>
+<br/>
+<?echo(
+my $html;
+foreach my $Project ( $$variable{Quote}->Projects() ) {
+	my $services = $Project->services();
+	next if ! ( $$services{CustomService} and @{$$services{CustomService}} );
+	$html .= '<div class="Project"><h3>'.$Project->link_to('Project ' . $$Project{id}).'</h3><br/>';
+	$html .= $Project->reference();
+	$html .= '
+<table class="List Services">
+  <tr>
+		<th class="description">Service</th>'.join('',map { '<th class="price">Quantity ' . $_ . ' ' . $Project->quantity($_).'</th>' } $Project->quantity_indexes() ).'</tr>';
+	foreach my $service_id ( @{$$services{CustomService}} ) {
+		my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+		$html .= '<tr><td>'.$$specs{ServiceName}.'</td>'.join('',map { '<td class="price">'.$Project->Currency()->format($$specs{"txtPrice$_"}).'</td>' } $Project->quantity_indexes() ).'</tr>';
+	} # end foreach
+	$html .= '</table></div>';
+}
+return $html;
+) ?>
+<br/>
+<br/>
+<div class="Quote">
+<div class="Header">
+<?include('/includes/quote_header.html')?>
+<?include('/includes/quote_prepared_by.html')?>
+<?include('/includes/quote_prepared_for.html')?>
+</div>
+</div>
+<br class="spacer"/>

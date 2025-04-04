@@ -1,0 +1,17 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="/javascripts/proj/prepress.js"></script>
+<div class="PageTitle">
+    <h1>Prepress</h1>
+    <h2><?ServiceTypeName?></h2>
+</div>
+<div class="Service"><div class="<?ServiceTypeID?>">
+<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
+<form name="f1" id="f1" method="post" action="/main/project/view.html">
+	<fieldset><legend><?ServiceTypeName?></legend>
+		<? echo ( include('/includes/main/proj/prepress_hours.html'); ) ?>
+		<? echo ( include('/includes/main/proj/prices_prepress.html'); ) ?>
+	</fieldset>
+	<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+	<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
+</form>
+</div></div>

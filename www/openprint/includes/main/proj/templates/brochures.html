@@ -1,0 +1,78 @@
+<div class="templates">
+	<p onclick="$('rdbTemplateTypeNoFold').checked();">
+		<img src="/images/templates/NoFold.gif" alt=""/>
+		<input type="radio" id="rdbTemplateTypeNoFold" name="rdbTemplateType" value="NoFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'NoFold' ) ?> /> 
+		<label for="rdbTemplateTypeNoFold">No Fold</label>
+    </p>
+    <p>
+		<img src="/images/templates/2PanelFold.gif" alt=""/>
+		<input type="radio" id="rdbTemplateType2PanelFold" name="rdbTemplateType" value="2PanelFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '2PanelFold' ) ?> />
+		<label for="rdbTemplateType2PanelFold">2 Panel</label>
+    </p>
+    <p>
+		<img src="/images/templates/DoubleGateFold.gif" alt=""/>
+		<input type="radio" id="rdbTemplateTypeDoubleGateFold" name="rdbTemplateType" value="DoubleGateFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'DoubleGateFold' ) ?> /> 
+		<label for="rdbTemplateTypeDoubleGateFold">Double Gate Fold</label>
+    </p>
+    <p>
+		<img src="/images/templates/3PanelFolds.gif" alt=""/>
+		<input type="radio" id="rdbTemplateType3PanelFold" name="rdbTemplateType" value="3PanelFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '3PanelFold' ) ?> /> 
+		<label for="rdbTemplateType3PanelFold">3 Panel</label>
+		<input type="radio" id="rdbTemplateType3PanelZFold" name="rdbTemplateType" value="3PanelZFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '3PanelZFold' ) ?> />
+		<label for="rdbTemplateType3PanelZFold">3 Panel Z</label>
+	</p>
+	
+ <? eval ( %{$$variable{'Templates'}} = sql::execute( undef, undef, q{SELECT DISTINCT type,1 FROM projecttemplate WHERE projecttype_id=? ORDER BY type}, $$variable{'Project'}->type_id() ); ) ?>
+<? if ( $$variable{'Templates'}{'12pg3PanelZFold'} ) ?>
+    <p>
+		<img src="/images/templates/12pg3PanelZFold.gif" alt=""/>
+		<input type="radio" id="rdbTemplateType12pg3PanelZFold" name="rdbTemplateType" value="12pg3PanelZFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '12pg3PanelZFold' ) ?> /> 
+		<label for="rdbTemplateType12pg3PanelZFold">Half + 3 Panel Z</label>
+	</p>
+<? endif ( $$variable{'Templates'}{'12pg3PanelZFold'} ) ?>
+<? if ( $$variable{'Templates'}{'12pg3PanelRollFold'} ) ?>
+    <p>
+		<img src="/images/templates/12pg3PanelRollFold.gif" alt=""/>
+		<input type="radio" id="rdbTemplateType12pg3PanelRollFold" name="rdbTemplateType" value="12pg3PanelRollFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '12pg3PanelRollFold' ) ?> /> 
+		<label for="rdbTemplateType12pg3PanelRollFold">Half + 3 Panel Roll</label>
+	</p>
+<? endif ( $$variable{'Templates'}{'12pg3PanelRollFold'} ) ?>
+<? if ( $$variable{'Templates'}{'8PageFold'} ) ?>
+    <p>
+		<img src="/images/templates/8PageFold.gif" alt=""/>
+		<input type="radio" id="rdbTemplateType8PageFold" name="rdbTemplateType" value="8PageFold" onclick="selectProjectTemplate(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '8PageFold' ) ?> /> 
+		<label for="rdbTemplateType8PageFold">8 Page Fold</label>
+	</p>
+<? endif ( $$variable{'Templates'}{'8PageFold'} ) ?>
+    <p>
+		<img src="/images/templates//4PanelFolds.gif" alt=""/>
+		<input type="radio" id="rdbTemplateType4PanelFold" name="rdbTemplateType" value="4PanelFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '4PanelFold' ) ?> /> 
+		<label for="rdbTemplateType4PanelFold">4 Panel</label>
+		<input type="radio" id="rdbTemplateType4PanelZFold" name="rdbTemplateType" value="4PanelZFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '4PanelZFold' ) ?> />
+		<label for="rdbTemplateType4PanelZFold">4 Panel Z</label>
+	</p>
+    <p>
+		<img src="/images/templates/5PanelFolds.gif" alt=""/>
+		<input type="radio" id="rdbTemplateType5PanelFold" name="rdbTemplateType" value="5PanelFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '5PanelFold' ) ?> /> 
+		<label for="rdbTemplateType5PanelFold">5 Panel</label>
+		<input type="radio" id="rdbTemplateType5PanelZFold" name="rdbTemplateType" value="5PanelZFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '5PanelZFold' ) ?> />
+		<label for="rdbTemplateType5PanelZFold">5 Panel Z</label>
+	</p>
+    <p>
+		<img src="/images/templates/6PanelFolds.gif" alt=""/>
+		<input type="radio" id="rdbTemplateType6PanelFold" name="rdbTemplateType" value="6PanelFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '6PanelFold' ) ?> /> 
+		<label for="rdbTemplateType6PanelFold">6 Panel</label>
+		<input type="radio" id="rdbTemplateType6PanelZFold" name="rdbTemplateType" value="6PanelZFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq '6PanelZFold' ) ?> />
+		<label for="rdbTemplateType6PanelZFold">6 Panel Z</label>
+	</p>
+    <p>
+		<img src="/images/templates/MapFold.gif" alt=""/>
+		<input type="radio" id="rdbTemplateTypeMapFold" name="rdbTemplateType" value="MapFold" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'MapFold' ) ?> /> 
+		<label for="rdbTemplateTypeMapFold">Map Fold</label>
+	</p>
+    <p>
+		<img src="/images/templates/MapFold.gif" alt=""/>
+		<input type="radio" id="rdbTemplateTypeAdditionalFoldTypes" name="rdbTemplateType" value="AdditionalFoldTypes" onclick="selectProjectTemplate('f1');" <? echo ( 'checked="checked"' if $$variable{'rdbTemplateType'} eq 'AdditionalFoldTypes' ) ?> /> 
+		<label for="rdbTemplateTypeAdditionalFoldTypes">Additional Fold Types</label>
+	</p>
+</div>

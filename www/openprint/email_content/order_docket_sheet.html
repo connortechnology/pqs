@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+		<title><? echo ( $config{SiteTitle} ) ?> -->Docket Summary</title>
+		<style>
+			<?include(/css/docket.css)?>
+		</style>
+		<base href="<? echo ( $config{ExternalSiteURL} ) ?>"/>
+	</head>
+	<body>
+	<? if ( $$variable{Project}->order_id() ) ?>
+    <? echo ( include('/includes/docket.html', $variable); )?>
+	<? else ( $$variable{Project}->order_id() ) ?>
+		This Project has not been ordered yet. <?OrderId?>
+	<? endif ( $$variable{Project}->order_id() ) ?>
+	</body>
+</html>

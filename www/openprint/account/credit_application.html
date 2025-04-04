@@ -1,0 +1,75 @@
+<div class="PageTitle">
+<h1>ACCOUNT</h1>
+<h2>Credit Application</h2>
+</div>
+<? if ( $session{'company_id'} == 0 ) ?>
+	You must register for a login, and be logged in before you can apply for credit.<br>
+	<?include('/includes/customer_login.html')?>
+<? else ( $session{'company_id'} == 0 ) ?>
+	<? if ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
+Thank you. Your information has been received. Someone will contact you in the immediate future.
+	<? else ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
+	<br/>
+	<?include('/includes/error_reporting.html') ?>
+	<p class="required">
+	 denotes required information.<br/><br/>
+	</p>
+	<form id="f1" name="f1" method="post" action="<?SecureSiteURL?>/account/credit_application.html">
+		<div class="CreditApplication">
+			<?include('/account/_business_information.html') ?>
+			<?include('/account/_bank_information.html') ?>
+			<?include('/account/_trade_references.html') ?>
+			<?include('/account/_company_profile_edit.html') ?>
+			<div class="Application">
+			<fieldset><legend>Application</legend>
+				I/We do hereby authorize <? echo ( $openprint::config{SiteTitle} ) ?> to verify all or part of the above listed confidential disclosures, and to verify the credit status of existing lines of credit as listed on this application. Further, I/We agree to pay according to terms printed on any invoices for any purchase(s) including discounts, net price and late charges.<br/>
+				<br/>
+				<ul>
+				<li>
+					<label for="FirstOrderValue">Value of first order (est)</label>
+					<input type="text" id="FirstOrderValue" name="FirstOrderValue" value="<? hecho ( $param{'FirstOrderValue'} ) ?>"/>
+				</li>
+				<li>
+					<label for="AnnualPurchases">Annual Purchases (est)</label>
+					<input type="text" id="AnnualPurchases" name="AnnualPurchases" value="<? hecho ( $param{'AnnualPurchases'} ) ?>"/>
+				</li>
+				<li>
+					<label for="DesiredCreditLimit">Credit Limit Desired</label>
+					<input type="text" id="DesiredCreditLimit" name="DesiredCreditLimit" value="<? hecho ( $param{'DesiredCreditLimit'} ) ?>" />
+				</li>
+				<li>
+					<label>Terms Desired</label>
+					<select id="DesiredTerms" name="DesiredTerms" size="1">
+						<? echo ( make_drop_down( [ 15,'15 Days', 30, '30 Days', 60, '60 Days', 90, '90 Days' ], $param{'DesiredTerms'} ); ) ?>
+					</select>
+				</li>
+				<li class="required">
+					<label for="AccountsPayableContact">Accounts Payable</label>
+					<input type="text" id="AccountsPayableContact" name="AccountsPayableContact" value="<? hecho ( $param{'AccountsPayableContact'} ) ?>" />
+				</li>
+				<li>
+					<label>Financial Statement Available?</label>
+					<? echo ( radio( 'FinancialStatementAvailable', ['Y','Yes','N','No'], $param{'FinancialStatementAvailable'} ); ) ?>
+				</li>
+				</ul>
+				<?SiteTitle?> reserves the right to revoke/cancel credit status at their own discretion without prior notification. By submitting this 
+				application, I/We confirm that the above information is correct and I/We are authorized on behalf of the company to disclose the submitted information.
+				<br/>
+				<br/>
+				<ul>
+				<li class="required">
+					<label for="Signature">Name - First/Last</label>
+					<input type="text" id="Signature" name="Signature" value="<? echo ( $param{'Signature'} ) ?>" />
+				</li>
+				</ul>
+				<p class="buttons">
+					<? echo ( button( 'Submit1', { onclick=>'f1.submit();', text=>'Submit' } ); ) ?>
+					<? echo ( button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ); ) ?>
+				</p>
+			</fieldset>
+			</div>
+		</div><!-- CreditApplication -->
+		<input type="hidden" name="btnFunction" value="Apply"/>
+	</form>
+	<? endif ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
+<? endif ( $session{'company_id'} == 0 ) ?>

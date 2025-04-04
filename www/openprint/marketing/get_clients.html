@@ -1,0 +1,16 @@
+<?include(/includes/error_reporting.html)?>
+<? echo (
+	my $html;
+	
+	my @Available_Companies = openprint::Company->find( salesrep_id=>undef, order=>'lower(name)' );
+
+	return 'There are ' . @Available_Companies . ' companies available for assignment.';
+) ?>
+<? echo (
+	join("\n",
+		( $variable{todays_count} ? '' : button('get_clients', { href=>'/marketing/get_clients.html?action=get', text=>'Get ' . $config{ClientLotteryChunkSize} . ' clients' } ) ),
+	);
+) ?>
+<p>
+Use the new <a href="/account/companies.html">Companies page</a> to help find and manage these companies.<br/>
+</p>

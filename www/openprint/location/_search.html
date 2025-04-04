@@ -1,0 +1,61 @@
+<? eval (
+	@{$$variable{Locations}} = ();
+	my $uri = '/location/search.html';
+	foreach my $Location ( openprint::Location->find( 
+			'name is null'	=>	0,
+			'name !='	=>	'',
+			( $session{$uri.'?type_id'} ? ( type_id => $session{$uri.'?type_id'} ) : () ),
+			( $param{search} ? ( 'name ilike'=> ( $param{search} =~ /%/ ? $param{search} : '%'.$param{search}.'%' ) ) : () ),
+		#ssi::date_filter( $uri.'?starting_on_end','starting_on <=' ),
+		#ssi::date_filter( $uri.'?starting_on_start','starting_on >=' ),
+			#( $session{$uri.'?category_id'} ? ( category_id => $session{$uri.'?category_id'} ) : () ),
+			( $session{$uri.'?company_id'} ? ( company_id => $session{$uri.'?company_id'} ) : () ),
+		) ) {
+		#next if ! $Location->can_view();
+		if ( $session{$uri.'?country_id'} ) {
+			if ( $$Location{type} eq 'country' and $$Location{id} == $session{$uri.'?country_id'} ) {
+			} else {
+				my $Country = $Location->ancestor('type','country');
+				if ( (!$Country) or ( $Country->id() != $session{$uri.'?country_id'} ) ) {
+					next;
+				} # end if
+			} # end if
+		} # end if
+		if ( $session{$uri.'?state_id'} ) {
+			if ( $$Location{type} eq 'state' and $$Location{id} == $session{$uri.'?state_id'} ) {
+			} else {
+				my $State = $Location->ancestor('type','state');
+				if ( (!$State) or ( $State->id() != $session{$uri.'?state_id'} ) ) {
+					next;
+				} # end if
+			} # end if
+		} # end if
+		if ( $session{$uri.'?city_id'} ) {
+			if ( $$Location{type} eq 'city' and $$Location{id} == $session{$uri.'?city_id'} ) {
+			} else {
+				my $City = $Location->ancestor('type','city');
+				if ( ( !$City ) or $City->id() != $session{$uri.'?city_id'} ) {
+					next;
+				} elsif ( my $State = $Location->ancestor('type','state') ) {
+					my $Location_State = new openprint::Location( $session{$uri.'?city_id'} )->ancestor('type','state');
+					if ( $Location_State and $State->id() != $Location_State->id() ) {
+						next;
+					} # end if
+				} # end if
+			} # end if
+		} # end if
+		push @{$$variable{Locations}}, $Location;
+	} # end foreach Locations
+) ?>
+
+<? if ( @{$$variable{Locations}} == 0 ) ?>
+	There are no locations which match your search criteria. 
+<? else ( @{$$variable{Locations}} == 0 ) ?>
+	<? echo ( 
+		my $html;
+		foreach my $Location ( @{$$variable{Locations}} ) {
+			$html .= $Location->html();
+		} # end foreach Locations
+		return $html;
+	) ?>
+<? endif ( @{$$variable{Locations}} == 0 ) ?>

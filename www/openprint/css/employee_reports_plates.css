@@ -1,0 +1,7 @@
+table .Plate {
+	text-align: left;
+}
+table .Press ,
+table .Count {
+	text-align: right;
+}

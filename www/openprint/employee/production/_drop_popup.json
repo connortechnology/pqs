@@ -1,0 +1,1 @@
+popup_window( '_drop_popup.html', 'ul_id=<? echo ( $param{'ul_id'} ) ?>&services=<? echo ( URI::Escape::uri_escape($param{'services'}) ) ?>&servicetype_ids=<? echo ( join(',', @{$variable{'servicetypes_to_add'}} ); ) ?>' );

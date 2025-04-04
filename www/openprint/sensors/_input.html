@@ -1,0 +1,18 @@
+<?echo(
+my $Input = $$variable{Input};
+return sprintf(
+  '<tr id="i%d">
+    <td class="name">%s</td>
+    <td class="label">%s</td>
+    <td class="min">%s</td>
+    <td class="max">%s</td>
+    <td class="buttons">%s</td>
+  </tr>',
+  $$Input{id},
+        input(name=>'name'.$$Input{id}, value=>$$Input{name}, type=>'text' ),
+        input(name=>'label'.$$Input{id}, value=>$$Input{label}, type=>'text' ),
+        input(name=>'min'.$$Input{id}, value=>$$Input{min}, type=>'float' ),
+        input(name=>'max'.$$Input{id}, value=>$$Input{max}, type=>'float' ),
+  button('delete'.$$Input{id}, { onclick=>"delete_input($$Input{id});", text=>'X' } ),
+  );
+)?>

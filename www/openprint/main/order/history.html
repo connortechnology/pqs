@@ -1,0 +1,97 @@
+<div class="PageTitle">
+<h1>Orders</h1>
+<h2>History</h2>
+</div>
+<? if ( $session{user_id} ) ?>
+<form id="f1" name="f1" action="history.html" method="post">
+	<div class="Order"><div class="History">
+		<div id="JumpTo">
+		<fieldset class="filters unprintable"><legend>Enter Order ID</legend>
+			<ul>
+			<li>
+				<label for="order_id">Order ID</label>
+				<? echo ( join("\n",
+					input( type=>'cardinal', id=>'order_id', name=>'order_id', onkeydown=>'if(event.keyCode == 13){f1.submit();}' ),
+					button( 'Go1', { on_click=>'load_orders', text=>'Go' } ),
+				); ) ?>
+			</li>
+			<li>
+				<label>Docket</label>
+				<? echo ( join("\n",
+					input( type=>'cardinal', id=>'Docket', name=>'Docket', onkeydown=>'if(event.keyCode == 13){f1.submit();}' ),
+					button( 'Go2', { on_click=>'load_orders', text=>'Go' } ),
+				); ) ?>
+			</li>
+			<li>
+				<label>Invoice</label>
+				<? echo ( join("\n",
+					input( type=>'text', id=>'invoice', name=>'invoice', onkeydown=>'if(event.keyCode == 13){f1.submit();}' ),
+					button( 'Go3', { on_click=>'load_orders', text=>'Go' } ),
+				); ) ?>
+			</li>
+			</ul>
+		</fieldset>
+		</div>
+		<div id="Filter">
+		<fieldset class="filters unprintable"><legend>or Select Search Criteria</legend>
+			<ul>
+				<li>
+					<label>Status</label>
+					<select name="status_id" on_change="load_orders">
+						<option value="">All</option>
+						<? echo ( make_drop_down( openprint::Order_Status->dropdown(), [ split(',', $session{$r->uri().'?status_id'} )] );) ?>
+					</select>
+				</li>
+<? if ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ?>
+				<li>
+					<label>Company</label>
+					<input class="filter" type="text" oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" />
+					<select name="company_id" id="company_id" on_change="load_orders">
+						<option value="">All</option>
+<? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$session{company_id}, 'last_order_id is null'=>0}), $session{$r->uri().'?company_id'} ) ) ?>
+					</select>
+				</li>
+				<li><label>Sales Rep</label>
+					<select name="salesrep_id" size="1" on_change="load_orders">
+						<option value="">All Employees</option>
+						<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales']), $session{$r->uri().'?salesrep_id'} ); ) ?>
+					</select>
+					</li>
+<? endif ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ?>
+			<li>
+				<label>Ordered by</label>
+				<select id="user_id" name="user_id" size="1" on_change="load_orders">
+					<option value="">All</option>
+					<? echo ( 
+						make_drop_down( openprint::User->dropdown(company_id => $session{company_id}), $session{$r->uri().'?ddmOrderedBy'} );
+					) ?>
+				</select>
+			</li>
+			<li> 
+				<label>Created</label>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { on_change=>'load_orders',with_clear=>1,with_today=>1 } ); ) ?>
+				to
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { on_change=>'load_orders',with_clear=>1,with_today=>1 } ); ) ?>
+			</li>
+			</ul>
+			<br class="spacer"/>
+			<p class="buttons">
+				<? echo ( join( "\n",
+					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					button( 'New', { href=>'/main/order/information.html', text=>'New' } ),
+					button( 'Reset', { onclick=>'f1.reset();' } ),
+				); ) ?>
+			</p>
+		</fieldset>
+		</div>
+	</div>
+	</div>
+	<hr class="spacer"/>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<div id="Results"><?include('_history.html')?></div>
+<script src="<? hash_link( /main/order/history.js ) ?>"></script>
+<? else ( $session{user_id} ) ?>
+Only logged in customers have an order history. 
+<? endif ( $session{user_id} ) ?>
+

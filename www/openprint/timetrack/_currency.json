@@ -1,0 +1,4 @@
+<?echo (
+	my $Company = openprint::Company->find_one( id=>$param{company_id} );
+	return JSON::to_json( { currency_id => $Company->currency_id() } );
+)?>

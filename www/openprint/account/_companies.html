@@ -1,0 +1,101 @@
+<? echo (
+
+	my $uri = '/account/companies.html';
+    my %filters = (
+		order	=>	'lower(name)',
+		( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'} . '%' ) : () ),
+		( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
+		( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
+		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+		date_filter( $uri.'?created_on_end', 'created_on <=' ),
+		date_filter( $uri.'?created_on_start', 'created_on >=' ),
+		date_filter( $uri.'?last_ordered_on_end', 'last_ordered_on <=' ),
+		date_filter( $uri.'?last_ordered_on_start', 'last_ordered_on >=' ),
+		date_filter( $uri.'?last_called_on_end', 'last_called_on <=' ),
+		date_filter( $uri.'?last_called_on_start', 'last_called_on >=' ),
+		);
+	if ( $session{$uri.'?country_id'} ) {
+		my $Country = new openprint::Location( $session{$uri.'?country_id'} );
+		$filters{country} = $Country->short();
+	}
+
+   foreach my $Field ( openprint::Company_Profile_Field->find() ) {
+		if ( $Field->type() eq 'location' ) {
+			# Can use multiple inputs
+		} # end if
+		next if ! $session{'/account/companies.html?field-'.$$Field{id}};
+
+		if ( ! $openprint::Company::find_fields{'profile_field-'.$$Field{id}} ) {
+			$openprint::Company::find_fields{'profile_field-'.$$Field{id}} = '(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id='.$$Field{id}.')';
+		} # end if
+		if ( $Field->match() eq 'exact' ) {
+			if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
+				$param{'profile_field-'.$$Field{'id'}} = [ split(',',$session{'/account/companies.html?field-'.$Field->id()} ) ];
+			} else {
+				$param{'profile_field-'.$$Field{'id'}} = $session{'/account/companies.html?field-'.$Field->id()};
+			} # end if
+		} # end if
+	} # end foreach Profile Field
+
+	if ( $session{user_type} ne 'A' ) {
+		my $Me = new openprint::User( $session{user_id} );
+		my @salesrep_ids = ( $session{user_id}, $Me->csr_ids() );
+		if ( ( ! $filters{salesrep_id} ) or ! sets::isin( $filters{salesrep_id}, \@salesrep_ids ) ) {
+			$filters{salesrep_id} = \@salesrep_ids;
+		} # end if
+	} # end if
+	if ( $session{$uri.'?salesrep_id_exclude'} ) {
+		my @csr_ids = map { $_->id() } openprint::User->find( 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
+		@csr_ids = sets::exclude( [ split(',', $session{$uri.'?salesrep_id'} ) ], \@csr_ids ) if $session{$uri.'?salesrep_id'};
+		$filters{'salesrep_id not in'} = \@csr_ids;
+	} # end if
+
+    $$variable{Companies} = [ openprint::Company->find( %filters ) ];
+	if ( @{$$variable{Companies}} ) {
+		my $html .= '
+<div class="Companies">
+			<div class="Company header">
+				<div class="Account">Account #</div>
+				<div class="CompanyName">Name</div>
+				<div class="Entered Date">Entered</div>
+				<div class="LastOrdered Date">Last Ordered</div>
+				<div class="LastCalled Date">Last Called</div>
+			';
+		if ( ! $session{$uri.'?salesrep_id'} ) {
+			$html .= '<div class="CSR">CSR</div>';
+		}
+		if ( ! $session{$uri.'?country_id'} ) {
+			$html .= '<div class="Country">Country</div>';
+		}
+		$html .= '</div>';
+		my $rowclass;
+		foreach my $Company ( @{$$variable{Companies}} ) {
+			$html .= sprintf(q`
+		<div class="Company %1$s" onclick="window.location.href='%2$s';"> 
+			<div class="Account">%3$s</div>
+			<div class="CompanyName">%4$s</div>
+			<div class="Entered Date">%5$s</div>
+			<div class="LastOrdered Date">%6$s</div>
+			<div class="LastCalled Date">%7$s</div>
+		`, $rowclass, '/account/company_profile.html?company_id='.$$Company{id}, $$Company{accountnumber}, $$Company{name}, 
+			format_date( $$Company{created_on} ), 
+			( $Company->last_ordered_on() ? format_date( $Company->last_ordered_on() ) : 'never' ),
+			( $Company->last_called_on() ? format_date( $Company->last_called_on() ) : 'never' ), 
+		);
+			if ( ! $session{$uri.'?salesrep_id'} ) {
+				$html .= sprintf('<div class="CSR">%s</div>', $Company->CSR()->name() );
+			} 
+			if ( ! $session{$uri.'?country_id'} ) {
+				$html .= sprintf('<div class="Country">%s</div>', $countries::countries{$Company->country()} );
+			}
+			$html .= '</div>';
+
+			$rowclass = $rowclass ? '' : ' colRow';
+		} # end foreach
+			$html .= '</div>';
+			
+		return $html;
+	} else {
+		return 'There were no results matching your criteria.<br/>';
+	} 
+) ?>

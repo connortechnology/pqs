@@ -1,0 +1,174 @@
+<? echo (
+	my @Users;
+
+	my @blocked_user_ids = map { $_->blockee } openprint::Blocklist->find(blocker=>$session{user_id});
+	push @blocked_user_ids, map { $_->blocker } openprint::Blocklist->find(blockee=>$session{user_id});
+
+	if ( $param{'company_name'} ) {
+		if ( ! ( $param{'company_name'} =~ /%/ ) ) {
+			$param{'company_name'} = '%'.$param{'company_name'}.'%';
+		} # end if
+		my @Companies = openprint::Company->find('name ilike'=>$param{'company_name'});
+		if ( @Companies ) {
+			@Users = openprint::User->find('company_id in'=> [ map { $$_{'id'} } @Companies ],
+				order	=>	'lower(firstname),lower(lastname)',
+				( @blocked_user_ids ? ( 'id not in'	=>	\@blocked_user_ids ) : () ),
+				);
+		} # end if
+	} elsif ( $param{name} ) {
+		if ( ! ( $param{name} =~ /%/ ) ) {
+			$param{name} .= '%';
+		} # end if
+		@Users = openprint::User->find(
+			'name ilike'=>	$param{'name'},
+			order		=>	'lower(firstname),lower(lastname)',
+			( @blocked_user_ids ? ( 'id not in'	=>	\@blocked_user_ids ) : () ),
+			);
+	} else {
+
+		my %param = (
+			date_filter( '/account/search.html?created_on_end', 'created_on <=' ),
+			date_filter( '/account/search.html?created_on_start', 'created_on >=' ),
+			date_filter( '/account/search.html?last_online_start', 'last_online >=' ),
+			date_filter( '/account/search.html?last_online_end', 'last_online <=' ),
+			order	=>	'(SELECT name FROM companies WHERE companies.id=company_id),lower(firstname),lower(lastname)',
+			( @blocked_user_ids ? ( 'id not in'	=>	\@blocked_user_ids ) : () ),
+		);
+
+		foreach my $Field ( openprint::User_Profile_Field->find() ) {
+			if ( $Field->type() eq 'location' ) {
+				# Can use multiple inputs
+			} # end if
+			next if ! $session{'/account/search.html?field-'.$$Field{id}};
+
+			if ( ! $openprint::User::find_fields{'profile_field-'.$$Field{id}} ) {
+				$openprint::User::find_fields{'profile_field-'.$$Field{id}} = '(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id='.$$Field{id}.')';
+			} # end if
+			if ( $Field->match() eq 'exact' ) {
+				if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
+					$param{'profile_field-'.$$Field{'id'}} = [ split(',',$session{'/account/search.html?field-'.$Field->id()} ) ];
+				} else {
+					$param{'profile_field-'.$$Field{'id'}} = $session{'/account/search.html?field-'.$Field->id()};
+				} # end if
+			} # end if
+		} # end foreach Profile Field
+
+		my ( $my_lat, $my_long );
+
+		# distance calcs need our lat & long.. so I think this is supposed to get it.. I think this is unneccessary
+		if ( $session{'/account/search.html?distance'} ) {
+			my $Field = openprint::User_Profile_Field->find_one('name'=>'postalcode');
+
+			if ( $session{'/account/search.html?field-'.$Field->id()} ) {
+				my $Location = openprint::Location->find_one('postalcode'=>$session{'/account/search.html?field-'.$Field->id()});
+				if ( ! $Location ) {
+					$Location = new openprint::Location();
+					# Set country?
+					$Location->postalcode( $session{'/account/search.html?field-'.$Field->id()} );
+				} # end if
+				if ( ! ( $Location->longitude() and $Location->latitude() ) ) {
+					if ( $Location->get_latitude_and_longitude() ) {
+						# Save it so as to cache the coords.
+						$Location->save();
+					} # end if
+				} # end if
+				( $my_lat, $my_long ) = $Location->get('latitude','longitude');
+			} else {
+			} # end if
+			if ( ! ( $my_lat and $my_long ) ) {
+				$variable{'error'} .= 'Unable to determine where you are/want to be.';
+			} # end if
+		} # end if distance
+		
+		foreach my $U ( openprint::User->find( %param ) ) {
+			if ( $session{'/account/search.html?distance'} and $my_lat and $my_long ) {
+				my $Location = $U->Location();
+				if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
+					if ( $Location->get_latitude_and_longitude() ) {
+						$Location->save();
+					} # end if
+				} # end if
+				next if ! ( $Location->latitude() and $Location->longitude() );
+				my $distance = $Location->distance( $my_lat, $my_long, $Location->latitude(), $Location->longitude(), 'K' ) ;
+				$log->debug("Distance between me and " . $U->name() . " is $distance" );
+				next if ( $distance > $session{'/account/search.html?distance'} );
+			} # end if
+			if ( $session{'/account/search.html?photos'} ne '' ) {
+				my $photos = 0;
+				foreach my $Album ( openprint::Photo_Album->find('user_id' => $U->id() ) ) {
+					if ( $Album->Photos() ) {
+						$photos = 1;
+						last;
+					} # end if
+				} # end foreach Album
+				next if $photos and $session{'/account/search.html?photos'} eq '0';
+				next if (!$photos) and $session{'/account/search.html?photos'} eq '1';
+			} # end if
+			push @Users, $U;
+		} # end foreach User
+
+	} # end if
+
+	my $html;
+	if ( $variable{'error'} ) {
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/error_reporting.html');
+	} # end if
+
+	if ( ! @Users ) {
+		return 'No results found.';
+	} elsif ( @Users == 1 and $Users[0]{'id'} == $session{'user_id'} ) {
+		return 'No results found, other than your account.';
+	} # end if
+
+	my $count = 0;
+	foreach my $User ( @Users ) {
+		$count += 1;
+		next if $count <= $session{'/account/search.html?paging_per_page'} * $param{'paging_page'};
+		last if $count > $session{'/account/search.html?paging_per_page'} * ($param{'paging_page'}+1);
+		my $Profile = $User->Profile();
+		$html .= '<div class="Result">';
+		$html .= sprintf(q`<div class="Info">
+								<div class="Name"><a href="/account/view.html?user_id=%1$d">%2$s</a></div>
+								<div class="Badges">%4$s</div>
+								<div class="Address">%3$s</div>
+							</div>`, $User->id(), $User->alias(), 
+							join(', ',
+								( $Profile->city() ? (new openprint::Location( $Profile->city() ))->name() : () ),
+								( $Profile->state() ? (new openprint::Location( $Profile->state() ))->name() : () ),
+								( $Profile->country() ? (new openprint::Location( $Profile->country() ))->name() : () ),
+							),
+							join('', map { $_->Asset()->thumbnail_html() } openprint::UserGroup->find( 'user_id any'=>$User->id(), 'asset_id is null'=>0 )),
+				);
+		my $age = 0;
+		my $birthday = $Profile->date_of_birth();
+
+		if ( $birthday and $birthday ne '--' ) {
+			my @Birthday = split('-', $birthday );
+			$age = @Birthday == 3 ? (
+				Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0
+				) : ( 0 );
+		} # end if 
+
+		$html .= sprintf(q`
+				<div class="User">
+					<a class="thumbnail" href="/account/view.html?user_id=%1$d"><img src="%2$s" alt="%3$s" /></a>
+					<div class="Tagline">%4$s</div>
+					<div class="Details">%5$s %6$s</div>
+					<div class="Joined"><label>Joined</label>%7$s</div>
+					<div class="LastOn"><label>Last On</label>%8$s</div>
+				</div>`,
+				$User->id(),
+				$User->Asset()->sized_url('thumbnail'), '',
+				$Profile->Tagline(),
+				$age ? $age.'yr old': '',
+				$Profile->Gender() ? $Profile->Gender() : 'indeterminate gender',
+				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
+				( $User->last_logged_in() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->last_logged_in() ) ) : 'never' ),
+			);
+		$html .= '</div>';
+	} # end foreach User
+	if ( $count > ( $session{'/account/search.html?paging_per_page'} * ( $param{'paging_page'} + 1 ) ) ) {
+		$html .= button( 'More', { onclick=>q`$('ButtonMore').remove();new Ajax.Updater( 'Results','_search.html', { parameters: { paging_page: `.($param{'paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
+	} # end if
+	return $html;
+) ?>

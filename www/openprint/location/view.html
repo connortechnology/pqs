@@ -1,0 +1,120 @@
+<?include('/includes/error_reporting.html')?>
+<div class="Location"><div class="View">
+<? if ( $$variable{Location}->id() ) ?>
+<? echo (
+  if ($session{user_type} eq 'E' or $session{user_type} eq 'A') {
+  	my @Duplicates = openprint::Location->find(name=>$$variable{Location}->name(), parent_id=>$$variable{Location}->parent_id(), 'id !='=>$$variable{Location}->id() );
+	  if ( @Duplicates ) {
+	    return "There are the following duplicates:<br/>" . join('<br/>', map { $_->to_string() } @Duplicates );
+	  }
+  }
+	return;
+) ?>
+	<form id="f1" name="f1" action="/location/view.html?location_id=<? echo ( $$variable{Location}->id() ) ?>" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="action"/>
+	<fieldset>
+<? if ( $session{user_type} eq 'A' ) ?>
+<legend>Viewing Location<? echo ( $$variable{Location}->id() ? ' ('.$$variable{Location}->id().')' : '' ) ?></legend>
+<? endif ( $session{user_type} eq 'A' ) ?>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				$$variable{Object} = $$variable{Album} = $$variable{Location};
+				if ( $$variable{Location}->can_edit() ) {
+					if ( $$variable{Location}->deleted() ) {
+						$html .= button( 'UnDelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
+						$html .= button( 'Destroy', { onclick => "if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+					} else {
+						$html .= button( 'Delete', { onclick=>"f1.elements['action'].value='Delete';f1.submit();" } );
+					} # end if
+					$html .= button( 'Edit', { href=>'edit.html?location_id='.$$variable{Location}->id() } );
+				} # end if
+				return $html;
+			) ?>
+		</p>
+		<h1><? echo ( $$variable{Location}->name() ) ?></h1>
+		<? if ( $$variable{Location}->deleted() ) ?>
+		<span class="warning">This location has been deleted</span>
+		<? endif ( $$variable{Location}->deleted() ) ?>
+		<? echo (
+			my $html;
+			
+			my $Asset = $$variable{Location}->Asset();
+			if ( $Asset and $Asset->id() ) {
+				$html .= '<img class="Asset" src="'. $Asset->url().'" alt="" />';
+			} # end if
+			return $html;
+		) ?>
+		<fieldset><legend>All about it</legend>
+			<div class="content">
+				<ul>
+					<li class="info"><label for="description">Description</label><? echo ( $$variable{Location}->description() ) ?></li>
+					<li class="type"><label for="type">Type</label><? echo ( $$variable{Location}->type() ) ?></li>
+          <?if($$variable{Location}->company_id())?>
+          <li class="owner"><label for="owner">Owner</label><? echo ( $$variable{Location}->Company()->link_to() ) ?></li>
+          <?endif($$variable{Location}->company_id())?>
+          <?if($$variable{Location}->short())?>
+					<li class="short"><label for="short">Short</label><? echo ( $$variable{Location}->short() ) ?></li>
+          <?endif($$variable{Location}->short())?>
+				</ul>
+			</div>
+		</fieldset>
+		<fieldset><legend>Where</legend>
+			<div class="content">
+				<div class="leftColumn">
+				<ul>
+					<li><label>Location</label>
+						<? echo ( 
+							my $html = $$variable{Location}->where_link();
+							if ( $session{user_id} ) {
+								my $MyLocation = $openprint::User->Location();
+								if ( $MyLocation and $MyLocation->id() and ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
+									$MyLocation->get_latitude_and_longitude();
+								} # end if
+								if ( $MyLocation and $MyLocation->latitude() and $MyLocation->longitude() and $$variable{Location}->latitude() and $$variable{Location}->longitude() ) {
+									my $distance = openprint::Location::distance( $$variable{Location}->latitude(), $$variable{Location}->longitude(), $MyLocation->latitude(), $MyLocation->longitude(), 'K' );
+									if ( $distance ) {
+										$html .= '<br/>'.int($distance).'km from you.';
+									} # end if
+								} # end if
+							} # end if
+							return $html;
+						) ?>
+					</li>
+          <?if($$variable{Location}->latitude() and $$variable{Location}->longitude())?>
+          <li><label>Lat &amp; Long</label><?echo ($$variable{Location}->latitude().', '.$$variable{Location}->longitude())?></li>
+          <?endif($$variable{Location}->latitude() and $$variable{Location}->longitude())?>
+				</ul>
+				<div id="Opinions"><? echo ( $$variable{Location}->opinions('Opinions') ) ?></div>
+				<div id="Comments"><?include(/includes/_comments.html)?></div>
+				</div>
+					<div class="rightColumn">
+					<? echo ( my $html;
+						my $Location = $$variable{Location};
+						if ( $Location ) {
+							if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
+								$Location->save() if $Location->get_latitude_and_longitude();
+							} # end if
+							if ( $Location->latitude() and $Location->longitude() ) {
+								$html .= $Location->googlemap_html();
+							}  # end if
+						} 
+						return $html;
+					) ?>
+				</div>
+			</div>
+		</fieldset>
+	<?include(/photo_albums/_album_upload.html)?>
+	<div id="EventsList">
+		<fieldset><legend>Upcoming Events</legend>
+		<div id="Events">
+			<?include(_events.html)?>
+		</div>
+		</fieldset>
+	</div>
+	</fieldset>
+	</form>
+<? else ( $$variable{Location}->id() ) ?>
+No location specified.
+<? endif ( $$variable{Location}->id() ) ?>
+</div></div>

@@ -1,0 +1,35 @@
+<? echo (
+	my $html;
+	my $Pricelist = $$variable{Pricelist};
+	my $Equipment = $$variable{Equipment};
+  my $Service = $$variable{Service};
+
+	$html .= '<fieldset class="Equipment">';
+	$html .= sprintf( '<a href="/administrator/equipment/edit.html?ddmEquipment=%d">%s</a><br/>',$Equipment->id(), $Equipment->strid().': '.$Equipment->name().' '.$Equipment->description() );
+	$html .= '<table class="List"><thead><tr>';
+	$html .= '<th class="Supplier">Supplier</th>' if @{$$variable{company_ids}} > 2;
+	$html .= '
+				<th class="Period">Period</th>
+				<th class="Range">Discount Range</th>
+				<th class="Range_Units">Discount Units</th>
+				<th class="Cost">Cost</th>
+				<th class="Markup">Mark up</th>
+				<th class="Price">Price</th>
+				<th class="Units">Units</th>
+				<th class="Discount">Discount?</th>
+				<th class="Mode">Mode</th>
+				<th class="buttons">
+	'.
+  button( 'a'.$$Pricelist{id}.'_'.$$Equipment{id}, {
+   on_click_this=>'add_new_price',
+    data_pricelist_id=>$$Pricelist{id}, data_equipment_id=>$$Equipment{id}, data_service_id=>$$Service{id},
+    text=>'+', title=>'Add New Price to '.$Equipment->strid() }
+    ) . qq`</th>
+      </tr></thead><tbody id="prices-$$Pricelist{id}-$$Equipment{id}-$$Service{id}">
+			`;
+	$$variable{Equipment} = $Equipment;
+	$$variable{Pricelist} = $Pricelist;
+	$html .= include( '/administrator/services/_prices_table_body.html', $variable );
+	$html .= '</tbody></table></fieldset><!--Equipment-->';
+	return $html;
+) ?>

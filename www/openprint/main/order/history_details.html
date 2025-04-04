@@ -1,0 +1,179 @@
+<script>
+function confirm_delete(form, payment_id) {
+	if ( confirm("Are you sure you want to delete this payment?") ) {
+		form.btnFunction.value = 'Delete Payment';
+		form.payment_id.value = payment_id;
+		form.submit();
+	} // end if
+} // end function confirm_delete()
+
+function confirm_cancel(form) {
+	if ( confirm("Are you sure you want to cancel this order?") ) {
+		form.btnFunction.value = 'Cancel';
+		form.submit();
+	} // end if
+} // end function confirm_delete()
+</script>
+
+<div class="PageTitle">
+<h1>Order History</h1>
+<h2>Viewing Order <?order_id?></h2>
+</div>
+<? echo ( do_css_links( '/order.css' ); ) ?>
+
+<!--
+<div class="navigation">
+	<form id="f2" name="f2" method="get" action="/main/order/history_details.html">
+		<fieldset class="filters">
+			<div class="content">
+				<ul>
+					<li>
+						<label>Docket #</label>
+						<? echo (
+							input( type=>'cardinal', id=>'docket', name=>'docket', value=>$param{docket}, onkeypress=>q`$('order_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){$('f2').submit();}`);
+						) ?>
+					</li>
+					<li>
+						<label>Order ID</label>
+						<? echo ( 
+							input( type=>'cardinal', id=>'order_id', name=>'order_id', value=>$param{order_id}, onkeypress=>q`$('docket').value='';$('docket').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){$('f2').submit();}` );
+						) ?>
+					</li>
+				</ul>
+			</div>
+		</fieldset>
+	</form>
+</div>
+-->
+
+<?include(/includes/error_reporting.html)?>
+
+<? if ( $$variable{Order}->company_id() != $session{company_id} and ! $openprint::User->Groups('Accounting') ) ?>
+<div class="warning unprintable">
+	Warning: You are logged in as <? echo ( $openprint::Company->name() ) ?>
+	but this order belongs to <a href="history_details.html?order_id=<?echo($$variable{Order}->id())?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<?echo($$variable{Order}->company_id())?>"><? echo ( $$variable{Order}->Company()->name() ) ?></a>!
+</div>
+<? endif ( $$variable{Order}->company_id() != $session{company_id} and ! $openprint::User->Groups('Accounting') ) ?>
+
+<form name="f1" id="f1" method="post" action="history_details.html">
+	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" name="order_id" value="<?order_id?>"/>
+	<p class="buttons">
+		<? echo ( 
+			my $html;
+			my $Order = $$variable{Order};
+
+			if ( $Order->status() eq 'Re-Opened' ) {
+				if ( $Order->can_edit() ) {
+					$html .= button( 'Continue', { href=>'information.html?order_id='.$$variable{order_id} } );
+					$html .= button( 'Cancel',{ onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $Order->status() ne 'Cancelled';
+					$html .= button( 'Close', { href=>'/main/order/confirmation.html?btnFunction=Close&order_id='.$Order->id(), text=>'Close' } );
+				}
+			} elsif ( $Order->status() eq 'Incomplete' or ! $Order->status() ) {
+				if ( $Order->can_edit() ) {
+					$html .= button( 'Continue', { href=>'information.html?order_id='.$$variable{order_id} } );
+					$html .= button( 'Cancel', { onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $Order->status() ne 'Cancelled';
+				}
+			} elsif ( sets::isin( $Order->status(), [ 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval','Waiting For QA Approval','Picked Up' ] ) ) {
+				$html .= button( 'UploadCenter', { href=>'/upload/upload_center.html?docket='.$Order->docket(), text=>'Upload Files' } ) if $Order->status() ne 'Cancelled';
+				#$html .= button('reOrder', { onclick=>"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", text=>'ReOrder' } ); 
+				$html .= button( 'Resend', { href=>"/main/order/history_details.html?order_id=$$Order{id}&amp;btnFunction=Resend", text=>'Resend' } ) if $Order->status() ne 'Cancelled'; 
+				if ( $Order->can_invoice() ) {
+					$html .= button( 'Invoice', { href=>'/invoice/edit.html?order_id='.$Order->id(), text=>'Create Invoice' } );
+				} # end if
+
+				if ( $Order->can_reopen() ) {
+					if ( $Order->Invoices() ) {
+						$html .= button('ReOpen', { onclick=>"popup_window('/main/order/_reopen_order.html?order_id=$$Order{id}');", text=>'ReOpen'});
+					} else {
+						$html .= button('ReOpen', { onclick=>"f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();", text=>'ReOpen' });
+					}
+				}
+
+				if ( sets::isin( $session{user_type}, ['A', 'E'] ) or ( $Order->status() eq 'Pending Deposit' ) ) {
+					$html .= button('Cancel', { onclick=>"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", text=>'Cancel' } ) if $Order->status() ne 'Cancelled';
+				} # end if
+			} # end if
+
+			if ( $Order->owing() > 0 ) {
+				if ( $openprint::User->Groups('Accounting') ) {
+					$html .= button('Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" });
+				} else {
+					my @Payments = openprint::PaymentType->find();
+					if ( @Payments ) {
+						if ( @Payments == 1 and $Payments[0]->name() eq 'PayPal' ) {
+							$html .= '<a href="/payment/make.html?order_id='.$Order->id().'&amp;btnFunction=SetExpressCheckOut"><img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif" alt="ExpressCheckOut"/></a>';
+						} else {
+							$html .= button( 'MakePayment', { href=>'/payment/make.html?order_id='.$Order->id(), text=>'Make Payment' } ); 
+						} # end if
+					} # end if PaymentTypes
+				} # end if Accounting or User
+			} # end if Owing
+			
+			$html .= button('Print', { onclick=>'window.print();' });
+			if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+				$html .= button('Log', { onclick=>"popup_window('_view_log.html?order_id=".$Order->id()."', '', { width: 800 } );", text=>'View Log' } );
+
+				if ( $openprint::User->Groups('Accounting') ) {
+					my @Suppliers = openprint::Company->find( supplier =>'Y', offers_credit =>1, order=>'lower(name)' );
+					if ( @Suppliers > 1 ) {
+						$html .= button('ChangeSupplier', { onclick=>q`f1.btnFunction.value='ChangeSupplier';f1.submit();`, text=>'Change Supplier to' });
+						$html .= ssi::select(
+								[ map { $_->id(), $_->name() } @Suppliers ],
+								$Order->supplier_id(),
+								{ name=>'supplier_id', prepend=>['','select'] }
+								);
+					} # end if Suppliers > 1
+				} # end if Accounting
+			} # end if E or A
+			return $html;
+		) ?>
+	</p>
+	<b>Attention</b> <br/>
+	Items listed in red have changed price from the time this order was originally generated.<br/>
+	<br/>
+	<div class="Order"><div class="View">
+		<?include('/includes/order_header.html')?>
+		<? if ( $config{OrderMode} eq 'Simple' ) ?>
+		  <?include('/main/order/_contents.html')?>
+		<? else ( $config{OrderMode} eq 'Simple' ) ?>
+		  <?include('/includes/order_project_list.html')?>
+		  <?include('_product_list.html')?>
+		<? endif ( $config{OrderMode} eq 'Simple' ) ?>
+		<div id="AdminOptions"><ul>
+			<? if ( $$variable{Order}->administrator_name() ) ?>
+			<li><label>Representative</label><? echo ( $$variable{Order}->administrator_name() ) ?></li>
+			<? endif ( $$variable{Order}->administrator_name() ) ?>
+			<? if ( $$variable{Order}->administrator_comments() ) ?>
+			<li><label>Representative Comments</label><? echo ( $$variable{Order}->administrator_comments() ) ?></li>
+			<? endif ( $$variable{Order}->administrator_comments() ) ?>
+		</ul></div>
+		<?include('_totals.html')?>
+		<br class="spacer"/>
+		<?include('/includes/_order_payments.html')?>
+		<div class="Disclaimer">
+    <? echo (
+		my $html = $config{OrderViewDisclaimer};
+		if ( $html ) {
+			$html .= '<div class="AcceptTerms">';
+			if ( $$variable{Order}->terms_accepted() ) {
+				$html .= '<br/>Terms have been accepted.';
+			} else {
+				$html .= '<span class="unprintable">The terms and conditions have not yet been accepted.<br/></span>';
+				if ( $openprint::User->company_id() == $session{company_id} and $openprint::User->company_id() == $$variable{Order}->company_id() ) {
+					$html .= '<input type="checkbox" id="accept_terms" name="accept_terms" value="1" />
+					By checking the box and clicking Accept you agree to accept the listed terms and conditions.';
+
+					$html .= button( 'Accept', { onclick=>"f1.btnFunction.value='AcceptTerms';f1.submit();" } );
+				} else {
+					$html .= 'You cannot accept the terms on behalf of ' . $$variable{Order}->Company()->name().'<br/>';
+				} # end if
+			} # end if 
+			$html .= '</div>';
+		} # end if html
+		return $html;
+		) ?>
+		</div>
+		</div><!--View-->
+	</div><!--Order-->
+</form>

@@ -1,0 +1,42 @@
+<div class="Header">
+	<div class="Summary">
+		<fieldset>
+			<legend>Description</legend>
+			<div class="content">
+				<ul><li><? echo ( $$variable{Project}->summary() ) ?></li></ul>
+			</div>
+		</fieldset>
+	</div>
+	<div class="Information">
+		<fieldset><legend>Project Information</legend>
+			<div class="content">
+				<ul>
+					<li class="reference">
+						<label>Reference</label>
+						<? if ( sets::isin($$variable{Order}->status(), [ '', 'Incomplete','Re-Opened']) and ! $$variable{Project}->reference() ) ?>
+						<textarea name="Reference<? echo ( $$variable{Project}->id() ) ?>" cols="" rows="<? echo ( count_lines( $$variable{Project}->reference() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Project}->reference() ) ?></textarea>
+						<? else ( sets::isin($$variable{Order}->status(), [ '', 'Incomplete','Re-Opened']) and ! $$variable{Project}->reference() ) ?>
+						<? echo ( $$variable{Project}->reference() ) ?>
+						<? endif ( sets::isin($$variable{Order}->status(), [ '', 'Incomplete','Re-Opened']) and ! $$variable{Project}->reference() ) ?>
+					</li>
+					<li class="project_id"><label>Project Number</label><? echo ( sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d">%1$d</a>', $$variable{Project}->id() ); ) ?></li>
+<? if ( $$variable{Project}->ordered_quantity() ) ?>
+					<li><label>Quantity</label><? echo ( $$variable{Project}->ordered_quantity() ) ?></li>
+<? endif ( $$variable{Project}->ordered_quantity() ) ?>
+<? if ( @{$$variable{Contents}} > 1 ) ?>
+		<? if ( sets::isin( $$variable{Order}->status(),[ 'Incomplete','Re-Opened' ] ) and ( $$variable{Project}->quantity_indexes() > 1 ) ) ?>
+		<? echo ( include('_quantity_select.html', $variable ); ) ?>
+		<? endif ( sets::isin( $$variable{Order}->status(),[ 'Incomplete','Re-Opened' ] ) and ( $$variable{Project}->quantity_indexes() > 1 ) ) ?>
+<? endif ( @{$$variable{Contents}} > 1 ) ?>
+		<? if ( ($$variable{Order}->status() eq 'Re-Opened' ) or ( ($$variable{Order}->status() eq 'Incomplete' ) and ! $$variable{Project}->requested_date() ) ) ?>
+		  <? echo ( include('_required_by.html', $variable ); ) ?>
+		<? else ( ($$variable{Order}->status() eq 'Re-Opened' ) or ( ($$variable{Order}->status() eq 'Incomplete' ) and ! $$variable{Project}->requested_date() ) ) ?>
+			<? if ( $$variable{Project}->requested_date() ) ?>
+			<li class="requested_for"><label>Requested For</label><? echo ( format_date($$variable{Project}->requested_date()) ) ?></li>
+			<? endif ( $$variable{Project}->requested_date() ) ?>
+		<? endif ( ($$variable{Order}->status() eq 'Re-Opened' ) or ( ($$variable{Order}->status() eq 'Incomplete' ) and ! $$variable{Project}->requested_date() ) ) ?>
+				</ul>
+			</div>
+		</fieldset>
+	</div>
+</div><!--Header-->

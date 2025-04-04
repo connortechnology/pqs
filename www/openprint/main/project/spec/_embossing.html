@@ -1,0 +1,32 @@
+<ul><li><label>Who supplies the die</label>
+	<? echo (
+		my @options = 'Y';
+		my $Company = new openprint::Company($$variable{Project}->company_id() );
+		if ( $config{owner_id} == $$Company{id} ) {
+			push @options, 'The client';
+		} elsif ( $$Company{id} ) {
+			push @options, $Company->name();
+		} else {
+			push @options, 'You';
+		} # end if
+		push @options, ( 'N', new openprint::Company( $config{owner_id} )->name() );
+		return radio( 'rdbSuppliedDie-'.$$variable{SignatureIndex}, \@options, 
+			( $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} or $$variable{rdbSuppliedDie} ), 
+			{
+				onclick=>qq`calc(this.form.name);` } );
+	) ?>	
+</li>
+</ul>
+<ul id="CustomDie<?SignatureIndex?>">
+	<li><label>Die size? (Inches)</label>
+		<? echo ( join("\n",
+			input( type=>'float', name=>'txtDieWidth-'.$$variable{SignatureIndex}, value=>$$variable{txtDieWidth}, oninput=>'calc(this.form.name);', placeholder=>'width' ),
+			' x ',
+			input( type=>'float', name=>'txtDieHeight-'.$$variable{SignatureIndex}, value=>$$variable{txtDieHeight}, oninput=>'calc(this.form.name);', placeholder=>'height' ),
+			write_override( 'chkOverrideDimensions-'.$$variable{SignatureIndex}, $$variable{'chkOverrideDimensions-'.$$variable{SignatureIndex}}, '', q`calc('f1');` ),
+		); ) ?>
+	</li>
+	<li><label>Complexity</label>
+		<? echo ( radio( 'complexity-'.$$variable{SignatureIndex}, [ map { $_, $_ } ( 'Simple','Average','Complex' ) ], $$variable{'complexity-'.$$variable{SignatureIndex}}, { onclick=>'calc(this.form.name);' } ); ) ?>
+	</li>
+</ul>

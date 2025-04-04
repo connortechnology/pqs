@@ -1,0 +1,41 @@
+<?echo(
+  if ( $param{action} eq 'add subnet' ) {
+    my $I = $$variable{Interface} = new openprint::Host_Interface();
+    $$I{host_id} = $param{host_id};
+    $variable{error} .= $I->save();
+    my $html =  include('/employee/it/_subnet.html');
+    return qq`
+\$j('#Interfaces tr:last').after('
+$html
+');
+`;
+  } elsif ( $param{action} eq 'add interface' ) {
+    my $I = $$variable{Interface} = new openprint::Host_Interface();
+    $$I{host_id} = $param{host_id};
+    $variable{error} .= $I->save();
+    my $html =  include('/employee/it/_interface.html');
+    return qq`
+\$j('#Interfaces tr:last').after('
+$html
+');
+`;
+  } elsif ( $param{action} eq 'delete interface' ) {
+		if ( ! $param{interface_id} ) {
+			return qq`alert('No id for interface');`;
+		}
+		my $Host_Interface = new openprint::Host_Interface( $param{interface_id} );
+		if ( ! $Host_Interface->id() ) {
+			return qq`alert('No Interface found');`;
+		}
+		
+		my $error = $Host_Interface->delete();
+		if ( ! $error ) {
+			return qq`
+			var line = \$('hi-$param{interface_id}');
+			if ( line ) line.remove();
+			`;
+		} else {
+			return qq`alert('Error deleting Interface: $error')`;
+		} 
+	}
+) ?>

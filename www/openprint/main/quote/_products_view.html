@@ -1,0 +1,46 @@
+<?include('/includes/error_reporting.html')?>
+<? if ( $$variable{Quote}->Products() ) ?>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="thumbnail">&nbsp;</th>
+			<th class="description">Product / Service</th>
+			<th class="quantity">Quantity</th>
+			<th class="price">Cost</th>
+			<th class="markup">Markup</th>
+			<th class="newprice">Price</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			my $subtotal = 0;
+			foreach my $Product ( $$variable{Quote}->Products() ) {
+				$html .= sprintf('<tr%1$s>
+									<td class="thumbnail">%9$s</td>
+									<td class="description">%3$s</td>
+									<td class="quantity">%4$s</td>
+									<td class="price">%5$s%6$s</td>
+									<td class="markup">%7$s</td>
+									<td class="newprice">%8$s</td>
+        </tr>', $rowclass, $Product->id(), $Product->name() . ($Product->description() ne $Product->name() ? ' ' . $Product->description() : '' ) . ('<div class="comments">'.$Product->comments().'</div>'), 
+									Number::Format::format_number($Product->quantity()), 
+									openprint::Currency::format( $Product->price() ), 
+                  $Product->units(),
+									1*$Product->markup().'%', 
+									openprint::Currency::format( $Product->total() ),
+						$Product->Product()->thumbnail_html(),
+					);
+				$subtotal += $Product->total();
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Product
+		$html .= '<tr class="totals">';
+		$html .= '<td colspan="5">Subtotal</td><td class="newprice">';
+		$html .= openprint::Currency::format( $subtotal );
+		$html .= '</td></tr>';
+			return $html;
+		) ?>
+	</tbody>
+</table>
+<? endif ( $$variable{Quote}->Products() ) ?>

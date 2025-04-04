@@ -1,0 +1,45 @@
+<? eval (
+	my $zm_dbh = sql::open_sql( $log,
+		  database  => $config{'zm_db_name'},
+		  driver    => $config{'zm_db_driver'},
+		  host      => $config{'zm_db_hostname'},
+		  login     => $config{'zm_db_username'},
+		  password  => $config{'zm_db_password'},
+		) if $config{'zm_db_name'};
+	return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
+	require openprint::ZM_Monitor;
+	$openprint::ZM_Monitor::dbh = $zm_dbh;
+	$$variable{Monitors} = [ openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 ) ];
+	$zm_dbh->disconnect();
+) ?>
+<script type="text/javascript">
+	function stop_stream( camera_id ) {
+		new Ajax.Updater( 'Available', '/employee/it/_cameras_available.html', { parameters: { camera_id: camera_id } } );
+		var camera = $('camera_'+camera_id);
+		if ( camera ) camera.remove();
+	} // end function stop_stream( camera_id )
+	function start_stream( camera_id ) {
+		new Ajax.Updater( 'Viewing', '/employee/it/_cameras_viewing.html', { parameters: { camera_id: camera_id } } );
+		var camera = $('camera_'+camera_id);
+		if ( camera ) camera.remove();
+	} // end function start_stream( camera_id )
+	function resize_image( camera_id, size ) {
+		var camera_li = $('camera_'+camera_id);
+		var size_array = size.split('x');
+		camera_li.setStyle({width: size_array[0]+'px'});
+		var stream = $('stream_'+camera_id);
+		stream.setStyle({width: size_array[0]+'px', height: size_array[1]+'px'});
+		// sets the session variable to keep the size across reloads
+		new Ajax.Request('/employee/it/_camera.json', { parameters: { monitor_id: camera_id, width: size_array[0], height: size_array[1] } } );
+	} // end function resize_image
+</script>
+<div class="ZM_Monitors">
+<div class="Montage">
+	<fieldset><legend onclick="toggleContent( 'Viewing', '/employee/it/_cameras_viewing.html', null, null );">Streams Viewing</legend>
+		<div id="Viewing"><?include('/employee/it/_cameras_viewing.html')?></div>
+	</fieldset>
+	<fieldset><legend onclick="toggleContent( 'Available', '/employee/it/_cameras_available.html', null, null );">Available Streams</legend>
+		<div id="Available"><?include('/employee/it/_cameras_available.html')?></div>
+	</fieldset>
+</div><!--Montage-->
+</div>

@@ -1,0 +1,37 @@
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<?include('/includes/main/proj/required_fields.html') ?>
+		<fieldset><legend><?ServiceTypeName?> Services</legend>
+<p>What type of variable data  printing do you require for your project? Please input the quantity of streams for each variable data type.</p>
+
+<ul>
+  <li>
+      <label for="VariableBWTextStreamQty">B&amp;W Text Stream Quantity</label>
+      <input id="VariableBWTextStreamQty" name="VariableBWTextStreamQty" value="<?VariableBWTextStreamQty?>" type="number" min=0 step=1 oninput="calc('f1');"/>
+  </li>
+  <li>
+      <label for="VariableColourTextStreamQty">Colour Text Stream Quantity</label>
+      <input id="VariableColourTextStreamQty" name="VariableColourTextStreamQty" value="<?VariableColourTextStreamQty?>" type="number" min=0 step=1 oninput="calc('f1');"/>
+  </li>
+</ul>
+      <p>If any of your variable data contain address information and you would like them verified as per our current mailing address database, please input the quantity of text streams that require verification.</p>
+<ul>
+  <li>
+      <label for="VariableDataVerificationQty">Verified Text Stream Quantity</label>
+      <input id="VariableDataVerificationQty" name="VariableDataVerificationQty" value="<?VariableDataVerificationQty?>" type="number" min=0 step=1 oninput="calc('f1');"/>
+  </li>
+</ul>
+			<ul>
+			<?include('/includes/main/proj/quantities_equipment_prices.html')?>
+			</ul>
+		</fieldset>
+		<hr/>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>">
+		<input type="hidden" name="ContinueProject" value="Y" />
+	</form>
+</div>
+<script src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>

@@ -1,0 +1,166 @@
+<script>
+	function page_load( div_id, form ) {
+		LoadContent( div_id, '/employee/purchase_order/_history.html', form.serialize() );
+	} // end function load
+	function open_decline_window( form ) {
+		var po_ids;
+		if ( ! form.po_id.length ) {
+			if ( form.po_id && form.po_id.checked ) {
+				po_ids = new Array();
+				po_ids[po_ids.length] = form.po_id.value;
+			} // end if
+		} else {
+			po_ids = $A(form.po_id).filter(function(e){return e.checked}).map(function(e){return e.value});
+		} // end if
+		if ( ! po_ids.length ) {
+			alert('Please select a purchase order to decline.');
+		} else {
+			popup_window('_po_decline_popup.html?po_id='+po_ids.join(','), '', { width: 400 } );
+		} // end if
+	} // end function open_decline_window()
+	function filter_vendors ( ddm ) {
+		new Ajax.Updater( ddm.form.supplier_id, '/employee/purchase_order/_vendor_dropdown.html', { 
+			parameters: { vendor_category_id: get_ddm_value(ddm), supplier_id: get_ddm_value(ddm.form.supplier_id) }
+			} );
+	} // end function filter_vendors
+</script>
+<div class="PurchaseOrder">
+	<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" action="/employee/purchase_order/history.html" method="post">
+	<fieldset class="filters"><legend>Select Search Criteria</legend>
+		<ul>
+			<li><label>PO #</label>
+				<? echo ( join("\n",
+							input(type=>'cardinal',id=>'po_id', name=>'po_id', onkeydown=>q`if(event.keyCode==13){page_load('Results', $('f1') );}` ),
+							button( 'Go3', { onclick=>q`page_load('Results', $('f1'));`,text=>'Go' } ),
+							); ) ?>
+			</li>
+			<li><label>Manifest</label>
+				<input type="text" id="manifest_id" name="manifest_id" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" />
+				<? echo ( button( 'Go2', { onclick=>q`page_load('Results', $('f1'));`, text=>'Go' } ); ) ?>
+			</li>
+			<li><label>Docket</label>
+				<? echo ( input( type=>'text', id=>'docket', name=>'docket', onkeydown=>q`if(event.keyCode == 13){page_load('Results', $('f1') );}`, value=>$session{$r->uri().'?docket'} ); ) ?>
+			</li>
+		</ul>
+		<hr/>
+		<ul>
+<? if ( $session{user_type} eq 'A' ) ?>
+			<li><label>Vendee</label>
+				<input type="text" onkeyup="filter_companies('vendee_id', {name:this.value,selected_id:get_ddm_value($('vendee_id'))});" class="filter" onkeydown="if(event.keyCode == 13){$('vendee_id').onchange();}"/>
+        <select name="vendee_id" id="vendee_id" onchange="stop_filter_companies();page_load('Results',$('f1'));">
+					<option value="">All</option>
+					<? echo ( make_drop_down(openprint::Company->dropdown(), $session{$r->uri().'?vendee_id'}); ) ?>
+				</select>
+			</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
+<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $session{user_id} ) ) ?>
+			<li><label>Created By</label>
+				<select id="created_by" name="created_by" onchange="page_load('Results',$('f1'));">
+				<? echo ( include('_po_created_by_options.html'); ) ?>
+				</select>
+				<input type="checkbox" name="created_by_deleted" id="created_by_deleted" value="1" onclick="new Ajax.Updater($('created_by'), '_po_created_by_options.html', { parameters: { 'created_by_deleted' : this.value } } );" /><label class="radio" for="created_by_deleted">Show Deleted Users</label>
+			</li>
+			<li><label>Authorized By</label>
+				<select id="authorized_by" name="authorized_by" onchange="page_load('Results',$('f1'));">
+				<? echo ( include('_po_created_by_options.html'); ) ?>
+				</select>
+				<input type="checkbox" name="authorized_by_deleted" id="authorized_by_deleted" value="1" onclick="new Ajax.Updater($('authorized_by'), '_po_created_by_options.html', { parameters: { 'created_by_deleted' : this.value } } );" /><label class="radio" for="authorized_by_deleted">Show Deleted Users</label>
+			</li>
+<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $session{user_id} ) ) ?>
+			<li><label>Vendor</label>
+				<select name="vendor_category_id" id="vendor_category_id" onchange="filter_vendors(this);" >
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::Company_Category->dropdown( order=>'lower(name)'), $session{$r->uri().'?vendor_category_id'} ); ) ?>
+				</select>
+				<input type="text" onkeyup="filter_companies('supplier_id', {name:this.value,selected_id:get_ddm_value($('supplier_id'))});" class="filter" onkeydown="if(event.keyCode == 13){$('supplier_id').onchange();}"/>
+				<select name="supplier_id" id="supplier_id" onchange="stop_filter_companies();if ( get_ddm_value($('supplier_id')) ) { new Ajax.Updater( 'item_id', '_item_filter.html', { parameters: { supplier_id: $F('supplier_id') } } ); $('item_filter').show(); } else { $('item_filter').hide(); };page_load('Results',$('f1'));">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::Company->dropdown(
+								order=>'lower(name)', 
+								( $session{$r->uri().'?vendor_category_id'} ? ( 
+								category_id	=> $session{$r->uri().'?vendor_category_id'} ) : () ),
+								supplier=>'Y'), $session{$r->uri().'?supplier_id'} ); ) ?>
+				</select>
+			</li>
+			<li id="item_filter" <? echo ( $session{'/employee/purchase_order/history.html?supplier_id'} ? '' : 'style="display:none;"' ) ?>><label>Item</label>
+				<select name="item_id" id="item_id" onchange="page_load('Results',$('f1'));">
+					<?include('_item_filter.html')?>
+				</select>
+			</li>
+			<li>
+				<label>Created On</label>
+	<? echo ( date_select_session( $r->uri(), 'starting_start',  { onchange=> "page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
+				to
+	<? echo ( date_select_session( $r->uri(), 'starting_end', { onchange=>"page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Paid On</label>
+	<? echo ( date_select_session( $r->uri(), 'paid_on_start',  { onchange=> "page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
+				to
+	<? echo ( date_select_session( $r->uri(), 'paid_on_end', { onchange=>"page_load('Results',\$('f1'));", with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Authorization</label>
+				<? echo ( radio( 'authorized', [ 'Y','Authorized', 'N', 'Declined', 'U', 'Unauthorized', '', 'All' ],
+							$session{$r->uri().'?authorized'},
+							{ onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+			</li>
+			<li>
+				<label>Deleted</label>
+				<? echo ( radio( 'deleted', [ '1','Yes','0','No' ], $session{$r->uri().'?deleted'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'0' } ); ) ?>
+			</li>
+			<li>
+				<label>Cancelled</label>
+				<? echo ( radio( 'cancelled', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?cancelled'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+			</li>
+			<li>
+				<label>Has Manifest</label>
+				<? echo ( radio( 'has_manifest', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?has_manifest'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+			</li>
+			<li>
+				<label>Has Attachments</label>
+				<? echo ( radio( 'has_attachments', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?has_attachments'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+			</li>
+			<li>
+				<label>Is Paid</label>
+				<? echo ( radio( 'paid', [ '1','Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?paid'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
+			</li>
+			<li><label>Department</label>
+				<select name="department_id" onchange="page_load('Results',$('f1'));">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::PurchaseOrder_Department->dropdown( order=>'lower(name)'), $session{$r->uri().'?department_id'} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Types</label>
+				<? echo (
+					my $html;
+					foreach my $Type ( openprint::PurchaseOrder_ContentType->find( order=>'name') ) {
+						$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);"/>
+								<label class="radio" for="types%1$s">%2$s</label>`,
+								$Type->id(), $Type->name(), checked( sets::isin( $Type->id(), [ split(',', $session{$r->uri().'?types'} ) ] ) or ! exists $session{$r->uri().'?types'} ) );
+					} # end foreach Type
+					$html .= sprintf(q`<input type="checkbox" id="types" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types">%2$s</label>`, 
+						' ', 'None', checked( sets::isin( ' ', [ split(',',$session{$r->uri().'?types'} ) ] ) or ! exists $session{$r->uri().'?types'} ) );
+					return $html;
+				) ?>
+			</li>
+			<li>
+				<label>Contains</label>
+				<input type="text" id="contains" name="contains" oninput="if(event.keyCode == 13){page_load('Results', $('f1') );}" />
+			</li>
+		</ul>
+		<p class="buttons">
+				<? echo ( join( "\n",
+				button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+				button( 'Download', { onclick=>q`f1.btnFunction.value='Download';f1.submit();`, text=>'Download' } ),
+				button( 'Add', { href=>'/employee/purchase_order/edit.html', 'text'=>'Add New' } ),
+				button( 'Reset', { href=>'/employee/purchase_order/history.html?btnFunction=reset' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+	<div id="Results"><?include(/employee/purchase_order/_history.html)?></div>
+</form>
+</div>

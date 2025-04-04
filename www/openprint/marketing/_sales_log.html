@@ -1,0 +1,32 @@
+<fieldset id="Log"><legend>Last 10 Calls</legend>
+    <table class="List Sortable">
+		<thead>
+        <tr>
+            <th class="DateTime">When</th>
+            <th class="Company">Company</th>
+            <th class="User">User</th>
+            <th class="Notes">Notes</th>
+        </tr>
+        </thead>
+		<tbody id="sales_log_body">
+<? echo (
+    require openprint::Sales_Log;
+    my $html = '';
+	$$variable{companies} = openprint::Company::dropdown() if ! $$variable{companies};
+	my %company_ids = @{$$variable{companies}};
+    my $line_html = slurp_content('_sales_log_line.html' );
+
+    foreach my $Log ( openprint::Sales_Log->find(
+		salesrep_id => ( $session{user_type} eq 'A' ? $session{'/marketing/sales_log.html?employee_id'} : $session{user_id} ),
+		( $session{'/marketing/sales_log.html?company_id'} ? ( company_id=>$session{'/marketing/sales_log.html?company_id'} ) : () ),
+		( $session{'/marketing/sales_log.html?company_id'} ? ( company_id=>$session{'/marketing/sales_log.html?company_id'} ) : ( company_id=>[keys %company_ids] ) ),
+		( $session{'/marketing/sales_log.html?user_id'} ? ( company_id=>$session{'/marketing/sales_log.html?company_id'} ) : () ),
+		order=>'date_time DESC' ) ) {
+		$$variable{Log} = $Log;
+		$html .= variable_substitution( \$line_html, $variable );
+    } # end foreach Log
+    return $html;
+) ?>
+            </tbody>
+    </table>
+</fieldset>

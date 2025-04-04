@@ -1,0 +1,109 @@
+<? echo (
+	my $html;
+	my @csr_ids;
+	if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
+		@csr_ids = ( $session{user_id} );
+	} elsif ( $param{salesrep_id} ) {
+		@csr_ids = ( $param{salesrep_id} );
+	} else {
+		@csr_ids = map { $_->id() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
+	} # end if
+
+	my ( $y, $m, $d ) = Date::Calc::Today();
+	if ( ! $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} ) {
+		$session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} = $y;
+	} # end if
+	if ( ! $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
+		$session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} = $y;
+	} # end if
+
+	my @years = ( $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} .. $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} );
+
+	foreach my $csr_id ( @csr_ids ) {
+		my $CSR = new openprint::User( $csr_id );
+		my %totals;
+		$html .= '<h3>Results for ' . $CSR->name() . '</h3>
+			<table class="List">
+        <thead>
+          <tr>
+            <th class="Company">Company</th>
+            <th class="User">Contact Name</th>
+            <th class="Phone">Contact Phone</th>
+            <th class="contact_email">Contact Email</th>';
+		
+    foreach my $year ( @years ) {
+      $totals{$year} = ();
+      $html .= '<th align="Orders">Orders ' . $year . '</th>';
+      $html .= '<th align="Price OrderValue">Value ' . $year . '</th>';
+      $html .= '<th align="Price PaymentCycle">Payment Cycle ' . $year . '</th>';
+    } # end foreach year
+    $html .= '<th class="last_order">Last Order</th></tr>
+        </thead>
+        <tbody>
+';
+		my $rowclass;
+		my @Companies = openprint::Company->find(salesrep_id=>$csr_id, order=>'lower(name)');
+		foreach my $Company ( @Companies ) {
+			my $Contact = openprint::User->find_one( company_id=>$Company->id(), administrator=>1, web_active=>1, order=>'id');
+            $Contact = openprint::User->find_one( company_id=>$Company->id(), web_active=>1, order=>'id') if ! $Contact;
+            $Contact = openprint::User->find_one( company_id=>$Company->id(), order=>'id') if ! $Contact;
+            $Contact = new openprint::User() if ! $Contact;
+
+			$html .= sprintf(q`
+<tr%1$s>
+	<td class="Company">%2$s</td>
+	<td class="contact_name">%3$s</td>
+	<td class="contact_phone">%4$s</td>
+	<td class="contact_email">%5$s</td>
+`, $rowclass, $Company->name(), $Contact->name(), $Contact->phone(), $Contact->email(),
+ );
+
+			foreach my $year ( @years ) {
+				my $order_total;
+				my $payment_cycle;
+
+				my @Orders = openprint::Order->find( 
+						'company_id' => $Company->id(),
+						'created_on <=' => sprintf('%.4d-12-31 23:59:59', $year ),
+						'created_on >=' => sprintf('%.4d-01-01 00:00:00', $year ),
+						'status' => ['Complete','Picked Up', 'Shipped','Waiting For QA Approval','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+						);
+				last if $dbh->errstr();
+				foreach my $Order ( @Orders ) {
+					$order_total += $Order->Currency()->convert_from( $Order->total() );
+					$payment_cycle += $Order->payment_days();
+				} # end foreach Order
+				$payment_cycle = int( $payment_cycle / scalar @Orders ) if @Orders;
+				$html .= sprintf(q`<td align="right">%1$s</td><td align="right">%2$s</td><td align="right">%3$d days</td>`,
+						Number::Format::format_number( scalar @Orders ), 
+						openprint::Currency::format( $order_total ),
+						$payment_cycle,
+						);
+				$totals{$year}[0] += scalar @Orders;
+				$totals{$year}[1] += $order_total;
+				$totals{$year}[2] += $payment_cycle;
+			} # end foreach year
+			my $LastOrder = openprint::Order->find_one( 
+					company_id => $Company->id(),
+					status => ['Complete','Picked Up', 'Shipped','Waiting For QA Approval','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+					order	=>	$openprint::Order::fields{id}.' DESC',
+					);
+			$html .= sprintf('<td class="last_order">%s</td>', $LastOrder ? Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($LastOrder->created_on()) ):'' );
+			$html .= '</tr>';
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Company
+		$html .= '<tr class="totals"><td colspan="4">'.scalar @Companies.' Companies</td>';
+			foreach my $year ( @years ) {
+				$html .= sprintf(q`<td>%1$s</td><td>%2$s</td><td>%3$d days</td>`,
+						Number::Format::format_number( $totals{$year}[0] ), 
+						openprint::Currency::format( $totals{$year}[1] ),
+						@Companies ? $totals{$year}[2]/scalar @Companies : 0,
+						);
+			} # end foreach
+		
+		$html .= '<td></td></tr>
+        </tbody>
+      </table>';
+	} # end foreach CSR
+	return $html;
+) ?>

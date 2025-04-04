@@ -1,0 +1,288 @@
+<? eval (
+	my $changed = 0;
+	if ( ! $$variable{Label}->get_data('date') ) {
+		$$variable{Label}->set_data(date=>Date::Format::time2str($config{DateFormat}, time));
+		$changed = 1;
+	} # end if
+	if ( !$$variable{Label}->get_data('from') ) {
+		if ( $$variable{Project} ) {
+			my $services = $$variable{Project}->services();
+
+			foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
+
+				next if $ServiceType->name() eq 'CustomerPickUp';
+				next if ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} );
+
+				my $shipping_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{$ServiceType->name()}[0] );
+				if ( $$shipping_specs{FromCompanyName} or $$shipping_specs{FromAddress1} ) {
+					$$variable{Label}->set_data( from => join("\n",
+							join(',', $$shipping_specs{FromCompanyName} ) ,
+							join(',', $$shipping_specs{FromAddress1} , $$shipping_specs{FromAddress2},
+								@$shipping_specs{'FromCity','FromStateProvince','FromCountry'},
+								@$shipping_specs{FromPostalCode} ),
+							) );
+					last;
+				} # end if
+			} # end foreach ST
+
+			if ( ! $$variable{Label}->get_data('from') ) {
+				if ( 0 ) {
+				my $Order = $$variable{Project}->Order();
+				$$variable{Label}->set_data('from'=> join("\n", $Order->company_name(),
+						join(',', $Order->get('address1','address2') ),
+						join(',', $Order->get('city','state','country') ),
+						$Order->get('postalcode'),
+						) );
+				} else {
+
+					my %Locations = map { $$_{id}, $_ } openprint::Location->find(company_id=>$openprint::User->company_id());
+					my $Location;
+					my @HI = openprint::Host_Interface->find( ip=>$_[1] = $ENV{REMOTE_ADDR} );
+					foreach my $HI ( @HI ) {
+						next if ! $HI->Host()->location_id();
+						next if ! $Locations{$HI->Host()->location_id()};
+						$Location = $Locations{$HI->Host()->location_id()};
+						last;
+					}	
+					if ( $Location ) {
+						$$variable{Label}->set_data( from_location_id=>$Location->id());
+						$$variable{Label}->set_data( from=>$Location->address_formatted() );
+					} else {
+					my $Owner = new openprint::Company( $config{owner_id} );
+					$$variable{Label}->set_data('from'=> join("\n", $Owner->name(),
+                        join(',', $Owner->get('address1','address2') ),
+                        join(',', $Owner->get('city','state','country') ),
+                        $Owner->get('postalcode'),
+                        ) );
+					}
+				} # end if
+			} # end if
+		} # end if
+		$changed = 1;
+	} # endif
+	if ( ( ! $$variable{Label}->get_data('to') ) and $$variable{Project} ) {
+		my $services = $$variable{Project}->services();
+
+		foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
+
+			next if $ServiceType->name() eq 'CustomerPickUp';
+			next if ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} );
+
+			my $shipping_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{$ServiceType->name()}[0] );
+			if ( $$shipping_specs{ToCompanyName} or $$shipping_specs{ToAddress1} ) {
+				$$variable{Label}->set_data('to'=> join("\n",
+							join(', ', $$shipping_specs{ToCompanyName} ) ,
+							join(', ', $$shipping_specs{ToAddress1} , $$shipping_specs{ToAddress2},
+								@$shipping_specs{'ToCity','ToStateProvince','ToCountry'},
+								@$shipping_specs{ToPostalCode} ),
+							) );
+				last;
+			} # end if
+		} # end foreach ST
+
+		if ( ! $$variable{Label}->get_data('to_company_id') ) {
+			$$variable{Label}->set_data(to_company_id=>$$variable{Project}->company_id());
+		}
+		if ( ! $$variable{Label}->get_data('to') ) {
+			my $Company = $$variable{Project}->Company();
+			$$variable{Label}->set_data( to => join("\n", $Company->name(),
+						join(', ', $Company->get('address1','address2') ),
+						join(', ', $Company->get('city','state','country') ),
+						$Company->get('postalcode'),
+						) );
+		} # end if ! To
+		$changed = 1;
+	} # end if ! To and Project
+
+	if ( ! $$variable{Label}->get_data('description') ) {
+		my $html;
+		if ( $$variable{Project} ) {
+			$html .= $$variable{Project}->reference();
+		} elsif( $$variable{docket} ) {	
+			if ( my @Orders = openprint::Order->find('docket'=>$$variable{docket}) ) {
+				foreach my $Project ( $Orders[0]->Projects() ) {
+					$html .= $Project->reference() ."\n";
+				} # end foreach Project
+			} # end if
+		} # end if
+		$$variable{Label}->set_data(description=>$html);
+		$changed = 1;
+	} # end if
+	if ( ! $$variable{Label}->get_data('quantity') ) {
+		my $html;
+		if ( $$variable{Project} ) {
+			my $services = $$variable{Project}->services();
+			my $carton_total = 0;
+			my $item_total = 0;
+				
+			if ( $$services{PlainCartons} ) {
+				foreach my $s_id ( @{$$services{PlainCartons}} ) {
+					my $carton_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{PlainCartons}[0] );
+					$html .= sprintf('%d boxes @ %dlbs', @$carton_specs{'txtPackageQuantity'.$$variable{Project}->ordered_quantity_index(),'txtItemsPerPackage'} );
+					$html .= '<br/>';
+					$carton_total += $$carton_specs{'txtPackageQuantity'.$$variable{Project}->ordered_quantity_index()};
+					my $items = $$carton_specs{'txtPackageQuantity'.$$variable{Project}->ordered_quantity_index()} * $$carton_specs{txtItemsPerPackage};
+					$item_total += $items;
+				} # end foreach
+			} # end if
+			if ( $$services{BulkSkids} ) {
+				my $skid_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{BulkSkids}[0] );
+				$html .= sprintf('Total: %d skid%s', $$skid_specs{'txtPackageQuantity'.$$variable{Project}->ordered_quantity_index()}, $$skid_specs{'txtPackageQuantity'.$$variable{Project}->ordered_quantity_index()} == 0 ? '' : 's' );
+			} else {
+				$html .= sprintf('Total: %d BOXES %dlbs', $carton_total, $item_total );
+			} # end if
+		} else {	
+		} # end if
+		$$variable{Label}->set_data('quantity'=>$html);
+		$changed = 1;
+	} # end if
+	$variable{error} .= $$variable{Label}->save() if $changed;
+) ?>
+<script type="text/javascript">
+	var tinymce_options = {
+		mode : "textareas",
+		plugins: "paste",
+		theme : "advanced",
+		theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
+		theme_advanced_buttons2 : '',
+		theme_advanced_buttons2 : '',
+		cleanup : true
+	};
+
+	tinyMCE.init( tinymce_options );
+
+	function company_onchange( company_ddm, location_ddm ) {
+		new Ajax.Updater( location_ddm, '/includes/_location_ddm.html', {
+			parameters: {
+					company_id: get_ddm_value( company_ddm ),
+					address	: 1,
+					location_id: get_ddm_value( $(location_ddm) )
+				}
+		} );
+		new Ajax.Updater( '', '_label.html', {
+			parameters: { 
+				action: 'update',
+				id: <? echo ( $$variable{Label}->id() ) ?>,
+				field: company_ddm.name,
+				value: get_ddm_value( company_ddm )
+			}
+		} );
+	} // end function company_onchange
+
+	function location_onchange( field, element ) {
+		new Ajax.Updater( field, '_label.html', { 
+			parameters: { 
+				action: 'update',
+				id: <? echo ( $$variable{Label}->id() ) ?>,
+				field: field,
+				location_id: element.value,
+			}
+		} );
+	}
+</script>
+<?include(/includes/error_reporting.html)?>
+<div class="PackingSlip">
+	<form name="PackingSlip" id="PackingSlip_form" action="label.html" method="post">
+	<table style="height: .5in;">
+		<tr>
+			<td style="font-size: 28PT;">PACKING SLIP</td>
+			<td style="border: 1px solid black;">DATE: 
+				<span id="date"><? echo ( $$variable{Label}->get_data('date'); ) ?></span>
+<script type="text/javascript">
+new Ajax.InPlaceRichEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=date',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:1}, tinymce_options );
+</script>
+			</td>
+		</tr>
+	</table>
+	<span style="font-size: 12pt;font-weight: bold;">
+	# <a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{Project}->id() ) ?>"><? echo ( $$variable{Label}->docket() ) ?></a>&nbsp;&nbsp;
+<img src="/barcode.png?code=D<? echo ( $$variable{Label}->docket() ) ?>+&amp;NoText=1&amp;Height=20" alt="<? echo ( $$variable{Label}->docket() ) ?>" />
+	</span>
+	<br/>
+	<table style="height: 1.75in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				TO:<?echo(
+join("\n",
+		input(type=>'text', oninput=>q`filter_companies('to_company_id', {name:this.value,selected_id:get_ddm_value($('to_company_id'))});`, class=>'filter' ),
+		ssi::select(
+			openprint::Company->dropdown( or => { id=>$$variable{Project}->company_id(), supplier=>'Y' } ),
+			$$variable{Label}->get_data('to_company_id'),
+			{ name=>'to_company_id', id=>'to_company_id', prepend=>['','select'], onchange=>q`company_onchange(this,'to_location_id');` }
+			),
+		ssi::select( 
+			openprint::Location->dropdown(company_id=>$$variable{Label}->get_data('to_company_id'),type=>'place', 'address is null'=>0),
+			$$variable{Label}->get_data('to_location_id'),
+			{ name=>'to_location_id', id=>'to_location_id', prepend=>['','select'], onchange=>q`location_onchange('to',this);` } ),
+		);
+) ?>
+				<br/>
+				<div id="to" style="height: 1.5in;"><? echo ( $$variable{Label}->get_data('to'); ) ?></div>
+<script type="text/javascript">
+new Ajax.InPlaceRichEditor( 'to', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=to',{okButton:true,cancelControl:'button',submitOnBlur:true}, tinymce_options );
+</script>
+			</td>
+			<td style="border: 1px solid black;">
+				FROM:<?echo(
+join("\n",
+    input(type=>'text', oninput=>q`filter_companies('from_company_id', {name:this.value,selected_id:get_ddm_value($('from_company_id'))});`, class=>'filter' ),
+    ssi::select(
+      openprint::Company->dropdown( or => { id=>$$variable{Project}->company_id(), supplier=>'Y' } ),
+      $$variable{Label}->get_data('from_company_id'),
+      { name=>'from_company_id', id=>'from_company_id', prepend=>['','select'], onchange=>q`company_onchange(this,'from_location_id');` }
+      ),
+    ssi::select(
+      openprint::Location->dropdown(company_id=>$$variable{Label}->get_data('from_company_id'),type=>'place', 'address is null'=>0),
+      $$variable{Label}->get_data('from_location_id'),
+      { name=>'from_location_id', id=>'from_location_id', prepend=>['','select'], onchange=>q`location_onchange('from',this);` } ),
+    );
+) ?>
+				<div id="from" style="height: 1.5in;"><? echo ( $$variable{Label}->get_data('from');) ?></div>
+<script type="text/javascript">
+new Ajax.InPlaceRichEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=from',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
+</script>
+			</td>
+		</tr>
+	</table>
+	<table style="height: 5in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				DESCRIPTION:<br/>
+				<div id="description" style="height:3.75in;"><? echo ( $$variable{Label}->get_data('description'); ) ?></div>
+<script type="text/javascript">
+new Ajax.InPlaceRichEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
+</script>
+			</td>
+			<td style="border: 1px solid black;">
+				QUANTITY:<br/>
+				<div id="quantity" style="height: 3.75in;"><? echo ($$variable{Label}->get_data('quantity'); ) ?></div>
+<script type="text/javascript">
+new Ajax.InPlaceRichEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
+</script>
+			</td>
+		</tr>
+	</table>
+	<table style="height: .5in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				SIGNATURE:<br/>
+				<br/>
+			</td>
+			<td style="border: 1px solid black;">
+				PRINT (please print your name):<br/>
+				<br/>
+			</td>
+		</tr>
+	</table>
+	<table style="height: .5in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				DATE:
+			</td>
+			<td style="border: 1px solid black;">
+				TIME:
+			</td>
+		</tr>
+	</table>
+	</form>
+</div>

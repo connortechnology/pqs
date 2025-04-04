@@ -1,0 +1,25 @@
+<? echo (
+	if ( exists $param{clear} ) {
+		my @keys = sets::exclude( [ 'user_id', 'company_id', '_session_id', 'ip', 'lastupdated', 'user_type' ], [ keys %session ] );
+		delete @session{@keys};
+	} 
+) ?>
+<? echo ( button('Clear', { href=>'/session.html?clear' } ); ) ?>
+<fieldset><legend>Session:</legend>
+<? echo ( 
+	my $html;
+	foreach my $k ( sort keys %session ) {
+		$html .= "$k = $session{$k}<br/>\n";
+	}
+	return $html;
+) ?>
+</fieldset>
+<fieldset><legend>Environment</legend>
+<? echo ( 
+	my $html;
+	foreach my $k ( sort keys %ENV ) {
+		$html .= "$k = $ENV{$k}<br/>\n";
+	}
+	return $html;
+) ?>
+</fieldset>

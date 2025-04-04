@@ -1,0 +1,20 @@
+<? echo (
+	my @Categories = openprint::Product_Category->find( 'order' => 'lower(name)' );
+
+	my $html;
+	foreach my $Category ( @Categories ) {
+		my @Products = $Category->Products( order=>'sort, lower(name)');
+		if ( @Products ) {
+			$html .= '<div class="Category"><div class="content"><h3>'.$Category->name().'</h3>';
+			$html .= '<p>'.$Category->description().'</p>' if $Category->description();
+			$html .= '</div>';
+			$html .= '<ul>';
+			foreach my $Product ( @Products ) {
+				$html .= '<li>' . $Product->link_to() . '</li>';
+			} # end foreach Product
+			$html .= "</ul>\n";
+			$html .= "</div><!--category-->";
+		} # end if Products
+	} # end foreach Category
+	return $html;
+) ?>

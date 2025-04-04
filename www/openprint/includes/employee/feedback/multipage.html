@@ -1,0 +1,14 @@
+<? echo ( include('/includes/employee/feedback/line.html'); ) ?>
+<? echo ( include('/includes/employee/feedback/style.html'); ) ?>
+<form method="POST" name="f1" action="/employee/project/view.html">
+	<table width="600" border="0" cellspacing="0" cellpadding="0" cols="3">
+		<tr> 
+			<td width="320" valign="top"><b class="lgTxt">Production Feedback</b></td>
+			<td width="20">&nbsp;</td>
+			<td width="260" colspan="2"></td>
+		</tr>
+	</table>
+	<? echo ( include('/includes/employee/feedback/press_completion.html'); ) ?>
+	<? echo ( include('/includes/employee/feedback/buttons.html'); ) ?>
+	<? echo ( include('/includes/employee/feedback/hidden_fields.html'); ) ?>
+</form>

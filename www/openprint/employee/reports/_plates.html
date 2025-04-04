@@ -1,0 +1,122 @@
+<?include('/includes/error_reporting.html')?>
+<? if ( @{$$variable{Data}} ) ?>
+<?if($session{'/employee/reports/plates.html?format'} eq 'Separate')?>
+
+<table class="List">
+	<tr>
+	<th class="Plate">Plate</th>
+	<th class="Price">Quoted Cost</th>
+<? echo (
+	my $html;
+
+	my $uri = '/employee/reports/plates.html';
+
+	my @Presses = openprint::Equipment->find('category any'=>'Printing');
+  my %Presses_by_id = map { $$_{id}, $_ } @Presses;
+  my %Presses_by_strid = map { $$_{strid}, $_ } @Presses;
+
+  my @press_ids = split( ',', $session{$uri.'?press_id'} );
+  my %press_names = map { $Presses_by_id{$_} ? ( $Presses_by_id{$_}{strid} => $_ ) : () } @press_ids;
+	my @press_names = sort { $a cmp $b } keys %press_names;
+
+	my %total_count;
+	my %total_price;
+	my $rowclass;
+
+	foreach my $press ( @press_names ) {
+		$html .= qq`<th class="Count">$press Count</th><th class="Price">$press Total</th>`;
+	}
+	$html .= '</tr>';
+	foreach my $plate ( keys %{$$variable{PlateCounts}} ) {
+		foreach my $cost ( sort { $a <=> $b } ( keys %{$$variable{PlateCounts}{$plate}} ) ) {
+			$html .= join('','<tr'.$rowclass.'><td class="Plate">',
+					$plate, '</td><td class="Price">', openprint::Currency::format($cost), '</td>' );
+			foreach my $press ( @press_names ) {
+				if ( $$variable{PlateCounts}{$plate}{$cost}{$press} ) {
+					my $count = $$variable{PlateCounts}{$plate}{$cost}{$press};
+
+					$html .= join('', '<td class="Count">',
+						Number::Format::format_number($count),
+						'</td><td class="Price">',
+						openprint::Currency::format($cost*$count),
+						'</td>',
+					);
+					$total_count{$press} += $count;
+					$total_price{$press} += $count*$cost;
+				} else {
+					$html .= '<td></td><td></td>';
+				} # end if
+			} # end foreach press
+			$rowclass=$rowclass?'':' class="colRow"';
+			$html .= '</tr>';
+		} # end foreach cost
+	} # end foreach plate
+	$html .= '<tr class="totals"><td colspan="2">Totals</td>';
+	foreach my $press ( @press_names ) {
+		if ( $total_count{$press} ) {
+			$html .= join('', 
+					'<td class="Count">',
+					Number::Format::format_number($total_count{$press}),
+					'</td><td class="Price">',
+					openprint::Currency::format($total_price{$press}),
+					'</td>');
+		} else {
+			$html .= '<td></td><td></td>';
+		} # end if has data for this press
+	} # end foreach press
+	$html .= '</tr>';
+	$html .= '</table>';
+
+	return $html;
+) ?>
+</table>
+<?else($session{'/employee/reports/plates.html?format'} eq 'Separate')?>
+<table class="List sortable">
+	<tr>
+		<th class="Plate">Plate</th>
+		<th class="Price">Quoted Cost</th>
+		<th class="Press">Press</th>
+		<th class="Count">Count</th>
+		<th class="Price">Total</th>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		my $total_count = 0;
+		my $total_cost = 0;
+		my $uri = '/employee/reports/plates.html';
+
+		#Press, $plate, $price, $count
+		while ( my ( $plate, $cost, $press, $count, $total ) = splice( @{$$variable{Data}}, 0, 5 ) ) {
+$log->debug("plate: $plate cost:$cost press:$press count:$count total:$total");
+			$total_count += $count;
+			$total_cost += $total;
+			$html .= sprintf(q`
+				<tr%1$s>
+					<td class="Plate">%3$s</td>
+					<td class="Price">%5$s</td>
+					<td class="Press">%2$s</td>
+					<td class="Count">%4$s</td>
+					<td class="Price">%6$s</td>
+				</tr>
+				`, $rowclass, 
+				$press, $plate,
+				Number::Format::format_number($count),
+				openprint::Currency::format($cost),
+				openprint::Currency::format($total),
+			);
+			$rowclass=$rowclass?'':' class="colRow"';
+		} # end while
+		$html .= join('','<tr class="totals"><td colspan="3">Totals</td><td class="Count">',
+				Number::Format::format_number($total_count),
+				'</td><td class="Price">',
+				openprint::Currency::format($total_cost),
+				'</td></tr>');
+		return $html;
+	) ?>
+</table>
+<?endif($session{'/employee/reports/plates.html?format'} eq 'Separate')?>
+<span class="Currency">All prices shown are in <? echo ( $openprint::Currency->name() ) ?>.</span>
+<? else ( @{$$variable{Data}} ) ?>
+There were no orders matching your criteria.  Please try again.
+<? endif ( @{$$variable{Data}} ) ?>

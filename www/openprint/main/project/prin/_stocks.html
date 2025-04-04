@@ -1,0 +1,101 @@
+<? eval (
+	my $Project = new openprint::Project( $param{project_id} );
+	my $ProjectType = $param{projecttype_id} ? new openprint::ProjectType( $param{projecttype_id} ) : $Project->Type();
+
+	my @user_types = ('');
+    push @user_types, 'C' if $session{user_id};
+    push @user_types, 'E' if $session{user_type} eq 'E';
+    push @user_types, ('A','E') if $session{user_type} eq 'A';
+
+	$$variable{Stocks} = [ openprint::Paper->find( 
+			( $param{group_id} ? ( group_id	=> $param{group_id} ) : () ),
+			( $param{owner_id} ? ( owner_id	=> $param{owner_id} ) : () ),
+			( $param{manufacturer_id} ? ( manufacturer_id => $param{manufacturer_id} ) : () ),
+			( $param{brand_id} ? ( brand_id	=> $param{brand_id} ) : () ),
+      ( $param{ddmStockBrand} ? ( brand	=> $param{ddmStockBrand} ) : () ),
+      ( $param{ddmStockBrandList} ? ( brand	=> $param{ddmStockBrandList} ) : () ),
+			( $param{finish_id} ? ( finish_id => $param{finish_id} ) : () ),
+			( $param{ddmStockFinish} ? ( finish => $param{ddmStockFinish} ) : () ),
+			( $param{ddmStockFinishList} ? ( finish => $param{ddmStockFinishList} ) : () ),
+			( $param{colour_id} ? ( colour_id => $param{colour_id} ) : () ),
+			( $param{ddmStockColour} ? ( colour => $param{ddmStockColour} ) : () ),
+			( $param{ddmStockColourList} ? ( colour => $param{ddmStockColourList} ) : () ),
+			( $param{weight_id} ? ( weight_id => $param{weight_id} ) : () ), 
+			( $param{ddmStockWeight} ? ( weight => $param{ddmStockWeight} ) : () ), 
+			( $param{ddmStockWeightList} ? ( weight => $param{ddmStockWeightList} ) : () ), 
+			( $param{quality_id} ? ( quality_id => $param{quality_id} ) : () ),
+			( $param{material_id} ? ( material_id => $param{material_id} ) : () ),
+			( $param{types} ? ( type => [ split(',', $param{types} ) ] ) : () ),
+			( $param{fsc_code} ? ( fsc_code	=> $param{fsc_code} ) : () ),
+			'user_type null or in' => \@user_types,
+			($ProjectType->id()?('project_type_id any'    =>  $ProjectType->id()) : ()),
+		) ];
+) ?>
+<? if ( @{$$variable{Stocks}} ) ?>
+	<table class="List sortable" style="table-layout: auto;">
+		<thead>
+			<tr>
+		<? if ( $$variable{InventoryNumbers} and @{$$variable{InventoryNumbers}} > 1 ) ?>
+        <th class="inventory">Inventory #</th>
+		<? endif ( $$variable{InventoryNumbers} and @{$$variable{InventoryNumbers}} > 1 ) ?>
+		<? if ( $$variable{Groups} and @{$$variable{Groups}} ) ?>
+        <th class="group">Groups</th>
+		<? endif ( $$variable{Groups} and @{$$variable{Groups}} ) ?>
+		<? if ( $$variable{manufacturers} and @{$$variable{manufacturers}} ) ?>
+				<th class="manufacturer">Manufacturer</th>
+		<? endif ( $$variable{manufacturers} and @{$$variable{manufacturers}} ) ?>
+				<th class="brand">Brand</th>
+				<th class="finish">Finish</th>
+				<th class="colour">Colour</th>
+				<th class="weight">Weight</th>
+				<th class="quality">Quality</th>
+				<th class="size">Size</th>
+				<th class="calliper">Calliper</th>
+				<th class="mweight">MWeight</th>
+				<th class="gsm">GSM</th>
+				<th class="spp_min">SPP/Min</th>
+				<th class="pricing">Pricing CWT</th>
+			</tr>
+		</thead>
+		<tbody>
+<?echo (
+  my $html = '';
+  foreach my $Stock (@{$$variable{Stocks}}) {
+    $html .= '<tr>';
+    #<!--<td class="checkbox"><input type="checkbox" id="chkStock'.$$Stock{id}.'" name="chkStock" value="'. $$Stock{id} .'"/></td>-->
+
+    if ( $$variable{InventoryNumbers} and @{$$variable{InventoryNumbers}} > 1 ) {
+      $html .= '<td class="inventory">'.$Stock->link_to($Stock->inventory_number() ).'</td>';
+    }
+    if ( $$variable{Groups} and @{$$variable{Groups}} ) {
+      $html .= '<td class="group">'.$Stock->link_to($Stock->group()).'</td>';
+    }
+    if ( $$variable{manufacturers} and @{$$variable{manufacturers}} ) {
+      $html .= '<td class="manufacturer">'.$Stock->link_to($Stock->manufacturer() ).'</td>';
+    }
+    $html .= '<td class="brand">'.$Stock->link_to($Stock->brand()).'</td>';
+
+    $html .= '<td class="finish">'.$Stock->link_to( $Stock->finish() ).'</td>';
+    $html .= '<td class="colour">'.$Stock->link_to( $Stock->colour() ) .'</td>';
+    $html .= '<td class="weight">'.$Stock->link_to( $Stock->weight() ) .'</td>';
+    $html .= '<td class="quality">'.$Stock->link_to( $Stock->quality() ) .'</td>';
+    $html .= '<td class="size">'.$Stock->link_to( $Stock->size() ) .'</td>';
+    $html .= '<td class="calliper">'.$Stock->link_to( $Stock->calliper() ).'</td>';
+    $html .= '<td class="mweight">'.$Stock->link_to( sprintf('%.2f', $Stock->mweight() ) ) .'</td>';
+    $html .= '<td class="gsm">'.$Stock->link_to( sprintf('%.2f', $Stock->gsm()) ) .'</td>';
+    $html .= '<td class="spp_min">'.$Stock->link_to($Stock->sheets_per_package().'/'.$Stock->minimum_order() ) .'</td>';
+    $html .= '<td class="pricing">'.$Stock->link_to(
+      join('<br/>', map {
+      sprintf('%s %s %s $%s*%s%=$%s', $_->Pricelist()->name(), $_->service(), join(' ', ($_->min() ? '>'.$_->min() : ''), ($_->max() ? '<'.$_->max() : '')),
+        1*$_->cost(), 1*$_->markup(), 1*$_->price() ); }
+          openprint::PaperPrice->find(paper_id=>$Stock->id(), order=>$openprint::PaperPrice::fields{pricelist_id}.',service' ))
+).'</td>
+  </tr>';
+  } # end foreach
+  return $html;
+  ) ?>
+		</tbody>
+	</table>
+<? else ( @{$$variable{Stocks}} ) ?>
+There were no matching stocks.
+<? endif ( @{$$variable{Stocks}} ) ?>

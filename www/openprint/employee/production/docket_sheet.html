@@ -1,0 +1,7 @@
+<? echo ( 
+	if ( $$variable{Project}->order_id() ) {
+		return ssi::include('/includes/docket.html');
+	} else {
+		return 'This Project has not been ordered yet.';
+	} # end if
+) ?>

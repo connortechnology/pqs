@@ -1,0 +1,43 @@
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<p id="Turnaround">
+				<label>Turnaround</label>
+				<select name="TurnaroundDays" size="1" onchange="remove_div('OrderButton');calc('f1');">
+					<option value="">select</option>
+<? echo (
+	my $Service = openprint::Service->find_one('name'=>'Turnaround'.$$variable{Project}->Type()->name());
+	$Service = openprint::Service->find_one('name'=>'Turnaround') if ! $Service;
+	if ( $Service ) {
+		my @Prices = openprint::ServicePrice->find( 'service_id'=>$$Service{id}, 'pricelist_id'=>$session{Pricelist_id}, 'order'=>'min DESC NULLS LAST,max DESC NULLS LAST' );
+		my @options;
+		foreach my $Price ( @Prices ) {
+			if ( $Price->min() == $Price->max() ) {
+				if ( $Price->min() == 1 ) {
+					push @options, int($Price->min()), '24 hours after approval';
+				} else {
+					push @options, int($Price->min()), int($Price->min()) . ' days after approval';
+				}
+			} else {
+				push @options, int($Price->min()).'-'.int($Price->max()), int($Price->min()).'-'.int($Price->max()) . ' days after approval';
+			} # end if
+		} # end foreach $Price
+		return make_drop_down( \@options, $$variable{TurnaroundDays} );
+	} # end if Service
+) ?>
+				</select>
+			</p>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+		<?include('/includes/main/proj/quantities_prices.html')?>
+		</fieldset>
+
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+	</form>
+</div>

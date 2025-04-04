@@ -1,0 +1,40 @@
+<div class="LoginLog">
+<fieldset id="LoginLog"><legend>Last 5 Login Attempts</legend>
+	<table class="List sortable">
+		<thead>
+			<tr>
+				<th class="DateTime">When</th>
+				<th class="From">From</th>
+				<th class="Result">Result</th>
+			</tr>
+		</thead>
+		<tbody>
+<? echo (
+	require openprint::Log;
+	my $html = '';
+	my $rowclass;
+
+	foreach my $Log ( openprint::Log->find( { company_id=>$session{company_id}, user_id=>$session{user_id}, order=>'date_time DESC', limit=>5, action_id=>[2,3,78,79] } ) ) {
+		$html .= sprintf('
+    <tr%s>
+      <td class="DateTime">%s</td>
+      <td class="from" title="%s">%s</td>
+      <td class="result">%s</td>
+    </tr>',
+			$rowclass,
+Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),
+			#format_datetime($Log->date_time()),
+			$Log->ip_address(), 
+			sets::isin( $session{user_type}, ['E','A'] ) ?
+				sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $Log->host_id(), $Log->hostname() ? $Log->hostname(): $Log->ip_address() ) :
+				( $Log->hostname() ? $Log->hostname(): $Log->ip_address() ),
+				$Log->note() ? $Log->note() : $Log->Action()->name(),
+				);
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach
+	return $html;
+) ?>
+		</tbody>
+	</table>
+</fieldset>
+</div>

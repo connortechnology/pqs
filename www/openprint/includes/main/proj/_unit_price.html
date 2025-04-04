@@ -1,0 +1,8 @@
+<li class="unitprice">
+	<label>Unit Price (<?CurrencySymbol?>)</label>
+		<?echo( join("\n", map {
+	'<span class="'.$$variable{Columns}.'Columns">'.
+	input( type=>'float', name=>'txtUnitPrice'.$_, value=>$$variable{"txtUnitPrice$_"}, readonly=>'readonly', onfocus=>'this.blur();' ).
+	'</span>' } $$variable{Project}->quantity_indexes() );
+	) ?>
+</li>

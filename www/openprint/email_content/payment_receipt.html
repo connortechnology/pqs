@@ -1,0 +1,51 @@
+Thank you for your payment!<br/>
+<br/>
+<fieldset><legend>Payment Details</legend>
+<ul>
+	<li><label>Received From</label><? echo ( $$variable{Payment}->Payor()->name() ) ?></li>
+	<li><label>Received On</label><? echo ( format_date( $$variable{Payment}->received_on() ) )?></li>
+	<li><label>Amount</label><? echo ( $$variable{Payment}->Currency()->format( $$variable{Payment}->amount() ) ) ?></li>
+	<li><label>Method</label><? echo ( $$variable{Payment}->method() ) ?></li>
+	<li><label>Cheque/Transaction</label><? echo ( $$variable{Payment}->transaction_id() ) ?></li>
+</ul>
+
+<? echo (
+	my @IPs = $$variable{Payment}->Invoices();
+	return '' if ! @IPs;
+	my $rowclass;
+	my $html = '<br/><br/>This payment has been applied to the following invoices:<br/>
+		<table class="List">
+      <tr>
+        <th class="invoice_id">Invoice</th>
+        <th class="Date">Posted On</th>
+        <th class="Date">Due On</th>
+        <th class="Price Total">Invoice Total</th>
+        <th class="Price Total">Interest</th>
+        <th class="Price Owing">Remaining Owing</th></tr>
+	';
+	foreach my $IP ( @IPs ) {
+		my $Invoice = $IP->Invoice();
+		$html .= sprintf('
+<tr%1$s>
+<td class="invoice_id">%2$s</td>
+<td class="Date">%3$s</td>
+<td class="Date">%4$s</td>
+<td class="Price Total">%5$s</td>
+<td class="Price Interest">%6$s</td>
+<td class="Price Owing">%7$s</td>
+</tr>
+', $rowclass, 
+$Invoice->link_to( $Invoice->num() ),
+$Invoice->link_to( format_date( $Invoice->posted_on() ) ),
+$Invoice->link_to( format_date( $Invoice->due_on() ) ),
+$Invoice->link_to( $Invoice->Currency()->format( $Invoice->total() ) ),
+$Invoice->link_to( $Invoice->Currency()->format( $Invoice->interest() ) ),
+$Invoice->link_to( $Invoice->Currency()->format( $Invoice->is_early() ? $Invoice->early_owing() : $Invoice->owing() ) ),
+);
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+
+	} # eend foreach
+	$html .= '</table>';
+	return $html;
+) ?>
+</fieldset>

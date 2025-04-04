@@ -1,0 +1,182 @@
+<div class="PageTitle">
+	<h1>Accounting</h1>
+	<h2>Expenses</h2>
+</div>
+<script>
+	function delete_confirm(form) {
+		var number_of_deleted_expensess = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_expensess += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_expensess == 0 ) {
+			alert("To delete Expenses, click the checkbox beside the expenses.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_expensess + " expensess from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+
+	function load_expenses( form ) {
+    $j('#ExpenseList').html('Loading');
+    load_page_ajax = $j.ajax({
+      url: '_expenses.html',
+      data: $j('#f1').serialize(),
+      success: function(data) {
+        load_page_ajax = null;
+        $j('#ExpenseList').html(data);
+        $j('#ExpensesTable').bootstrapTable({ });
+      }
+    });
+  }
+
+  function reset() {
+    const f1 = document.getElementById('f1');
+    for (let i=0, len = f1.elements.length; i<len; i++) {
+      const element = f1.elements[i];
+      set_value( element, '' );
+    }
+    load_page();
+  }
+
+  addEventListener('DOMContentLoaded', (event) => {
+    $j('#ExpensesTable').bootstrapTable({ });
+  });
+</script>
+<? include(/includes/error_reporting.html) ?>
+<form id="f1" name="f1" method="post" action="/employee/accounting/expenses.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+		<div class="leftColumn">
+			<div class="content">
+				<ul>
+					<li>
+						<label>Invoiced On</label>
+            <? echo ( date_select_session($r->uri(), 'invoiced_on_start', { onchange=>q`check_time_starting($('f1'), 'invoiced_on_start','invoiced_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+							to 
+              <? echo ( date_select_session($r->uri(), 'invoiced_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+					</li>
+					<li>
+						<label>Due On</label>
+            <? echo ( date_select_session($r->uri(), 'due_on_start', { onchange=>q`check_time_starting($('f1'), 'due_on_start','due_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+							to 
+		<? echo ( date_select_session($r->uri(), 'due_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+					</li>
+					<li>
+						<label>Paid On</label>
+		<? echo ( date_select_session($r->uri(), 'paid_on_start', { onchange=>q`check_time_starting($('f1'), 'paid_on_start','paid_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+							to 
+		<? echo ( date_select_session($r->uri(), 'paid_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+					</li>
+					<li>
+						<label>Entered On</label>
+		<? echo ( date_select_session($r->uri(), 'entered_on_start', { onchange=>q`check_time_starting($('f1'), 'entered_on_start','entered_on_end');load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+							to 
+		<? echo ( date_select_session($r->uri(), 'entered_on_end', { onchange=>q`load_expenses($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+					</li>
+					<li>
+						<label>Deleted</label>
+            <? echo ( radio(deleted=>[ '1', 'Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, { onclick=>'load_expenses(this.form);' } ); ) ?>
+					</li>
+          <li>
+            <label>Description</label>
+            <? echo ( input(type=>'text', name=>'description', value=>$session{$r->uri().'?description'}) )?>
+          </li>
+				</ul>
+			</div>
+		</div>
+		<div class="rightColumn">
+			<div class="content">
+				<ul>
+<? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+          <li><label>Company</label>
+            <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+            <select id="owner_id" name="owner_id" onchange="stop_filter_companies();load_expenses();">
+              <option value="">All</option>
+    <? echo ( make_drop_down( openprint::Company->dropdown(or=>{id=>$openprint::Company->id(), offers_credit=>1}), $session{$r->uri().'?owner_id'}, {encode=>1} ) ) ?>
+            </select>
+          </li>
+<? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+					<li>
+						<label>Currency</label>
+						<select name="currency_id" id="currency_id" onchange="load_expenses(this.form);">
+							<option value="">all</option>
+              <? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)'), 
+              [split(',', $session{$r->uri().'?currency_id'})]
+              ); ) ?>
+						</select>
+					</li>
+					<li>
+						<label>Category</label>
+						<select name="category_id" id="category_id" onchange="load_expenses(this.form);">
+							<option value="">all</option>
+              <? echo ( make_drop_down( openprint::Expense_Category->dropdown(order=>'lower(name)'),
+              [ split(',', $session{$r->uri().'?category_id'})],
+              ); ) ?>
+						</select>
+					</li>
+					<li>
+						<label>Recipient</label>
+            <input type="text" onkeyup="filter_companies('recipient_id', {name:this.value,selected_id:get_ddm_value($('recipient_id'))});" class="filter" />
+						<select name="recipient_id" id="recipient_id" onchange="load_expenses(this.form);">
+							<option value="">all</option>
+              <? echo (
+               make_drop_down(
+                 openprint::Company->dropdown(
+                   order=>'lower(name)',
+                   'last_expense_on >=' => DateTime::Format::Pg->format_datetime(
+                     DateTime->now()->subtract(years=>2)
+                     )),
+                     [split(',', $session{$r->uri().'?recipient_id'})],
+                     ); ) ?>
+						</select>
+					</li>
+					<li>
+						<label>Account</label>
+              <? echo ( 
+              my @values = split(',', $session{$r->uri().'?account_id'});
+
+              ssi::select( openprint::Expense_Account->dropdown(order=>'lower(name)'),
+              \@values,
+              {
+                name=>'account_id',
+                id=>'account_id',
+                onchange=>'load_expenses(this.form);',
+                prepend=>['', 'all'],
+                ( @values > 1 ? ( multiple=>'multiple' ) : () ),
+              },
+              ); ) ?>
+					</li>
+					<li>
+						<label>Attention</label>
+            <? echo ( radio('attention', [ '1', 'Yes','0', 'No', '', 'Both' ], $session{$r->uri().'?attention'}, { onclick=>'load_expenses(this.form);' } ); ) ?>
+					</li>
+					<li><label>Amount</label>
+            <? echo ( input( type=>'float', name=>'amount', value=>$session{$r->uri().'?amount'}, oninput=>'load_expenses(this.form);' ); ) ?>
+					</li>
+					<li><label>Total</label>
+            <? echo ( input( type=>'float', name=>'total', value=>$session{$r->uri().'?total'}, oninput=>'load_expenses(this.form);' ); ) ?>
+					</li>
+					<li><label>Business %</label>
+            <? echo ( input( type=>'float', name=>'business_use', value=>$session{$r->uri().'?business_use'}, oninput=>'load_expenses(this.form);' ); ) ?>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"load_expenses(\$('f1'));", text=> 'Show Results' } ),
+				button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();" } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				button( 'New', { href=>'expense.html', text=>'New Expense' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="ExpenseList"><?include('_expenses.html')?></div>
+</form>

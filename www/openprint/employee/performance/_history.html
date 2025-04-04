@@ -1,0 +1,55 @@
+<? eval (
+	@{$$variable{'Shifts'}} = ();
+	foreach my $Shift ( openprint::Shift->find( 
+		( $session{'/employee/performance/history.html?operator_id'} ? ( 'operator_id'=>$session{'/employee/performance/history.html?operator_id'} ) : () ),
+		( $session{'/employee/performance/history.html?equipment_id'} ? ( 'equipment_id in'=>[ split(',',$session{'/employee/performance/history.html?equipment_id'} ) ] ) : () ),
+		ssi::date_filter( '/employee/performance/history.html?starttime_start', 'starttime >=' ),
+		ssi::date_filter( '/employee/performance/history.html?starttime_end', 'starttime <=' ),
+		'starttime <=' => sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Today() ),
+		'order'	=>	'starttime',
+		) ) {
+		push @{$$variable{'Shifts'}}, $Shift;
+	} # end foreach Shift
+) ?>
+<? if ( @{$$variable{'Shifts'}} == 0 ) ?>
+	There are no shifts matching your search criteria.
+<? else ( @{$$variable{'Shifts'}} == 0 ) ?>
+	<p>Please click on a <b>Shift #</b> to view details.</p>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="Shift">Shift</th>
+			<th class="Points">Points</th>
+		</tr>
+	</thead>
+	<tbody>
+	<? echo ( 
+		my $html = '';
+		my $rowclass;
+		my $total;
+
+		foreach my $Shift ( @{$$variable{'Shifts'}} ) {
+			my $Report = openprint::Performance_Report->find_one('shift_id'=>$Shift->id());
+			if ( $session{'/employee/performance/history.html?unreported'} ) {
+			next if $session{'/employee/performance/history.html?unreported'} eq 'Y' and ! $Report;
+			next if $session{'/employee/performance/history.html?unreported'} eq 'N' and $Report;
+			} # end if
+			$Report = new openprint::Performance_Report() if ! $Report;
+
+			$html .= sprintf(q`<tr%1$s id="tr-%2$d">
+				<td class="ID"><a href="/employee/performance/edit.html?shift_id=%2$d">%3$s</a></td>
+				<td class="Points">%4$d</td>
+				</tr>
+			`, $rowclass, $Shift->id(), $Shift->to_string(), $Report->total(),
+				);
+			$html .= '</td></tr>';
+
+			$total += $Report->total();
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach
+		$html .= '<tr class="totals"><td>Totals</td><td>'.$total.'</td></tr>';
+		return $html;
+	) ?>
+		</tbody>	
+	</table>
+<? endif ( @{$$variable{'Shifts'}} == 0 ) ?>

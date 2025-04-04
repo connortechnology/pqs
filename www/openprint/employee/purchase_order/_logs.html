@@ -1,0 +1,20 @@
+<fieldset><legend>Logs</legend>
+	<table class="List">
+		<tr>
+			<th class="who">Who</th>
+			<th class="when">When</th>
+			<th class="description">Description</th>
+		</tr>
+		<tr>
+			<td colspan="2">Reason for edit</td>
+			<td><textarea id="reason" name="reason" onkeyup="textarea_resize(this);"></textarea></td>
+		</tr>
+		<? echo (
+			my $html = '';
+			foreach my $L ( $$variable{PurchaseOrder}->Logs() ) {
+				$html .= sprintf('<tr><td class="who">%s</td><td class="when">%s</td><td class="description">%s</td></tr>',  $L->User()->name(), format_date( $L->created_on() ), $L->reason() );
+			} # end foreach
+			return $html;
+		) ?>
+	</table>
+</fieldset>

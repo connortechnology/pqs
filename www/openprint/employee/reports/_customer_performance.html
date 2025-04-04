@@ -1,0 +1,262 @@
+<? echo (
+	my $html;
+	my $uri = '/employee/reports/customer_performance.html';
+
+	my $do_not_ordered_since = 1 if (
+		Date::Calc::check_date( @session{map { $uri.'?not_ordered_on_start_'.$_ } ( 'year','month','day' )} )
+		or
+		Date::Calc::check_date( @session{map { $uri.'?not_ordered_on_end_'.$_ } ( 'year','month','day' )} )
+		);
+
+	my $do_ordered_since = 1 if (
+		Date::Calc::check_date( @session{map { $uri.'?ordered_on_start_'.$_ } ( 'year','month','day' ) } )
+		or
+		Date::Calc::check_date( @session{map { $uri.'?ordered_on_end_'.$_ } ( 'year','month','day' ) } )
+		);
+
+	my @status_ids = map { $$_{id} } openprint::Order_Status->find(
+			name=>['Complete','Picked Up', 'Shipped','Waiting For QA Approval',
+			'Waiting For Customer Approval','Order Submitted','In Production',
+			'Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ]);
+
+	my @csr_ids;
+	if ( ( $session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
+		@csr_ids = ( $session{user_id} );
+	} elsif ( $param{salesrep_id} ) {
+		@csr_ids = ( $param{salesrep_id} );
+	} else {
+		@csr_ids = map { $_->id() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
+	} # end if
+
+  my $company_sql = openprint::Company->find_sql(
+				(@csr_ids ? (salesrep_id=>\@csr_ids) : () ),
+        order=>'lower(name)',
+				( $session{$uri.'?country'} ? ( country=>$session{$uri.'?country'} ) : () ),
+				);
+  $$company_sql{sql} =~ s/\*/id/;
+
+	my @Companies = openprint::Company->find(
+				(@csr_ids ? (salesrep_id=>\@csr_ids) : () ),
+        order=>'lower(name)',
+				( $session{$uri.'?country'} ? ( country=>$session{$uri.'?country'} ) : () ),
+				);
+  my @company_ids = map { $$_{id} } @Companies;
+  my %Companies_By_CSR = misc::make_hash_from_array('salesrep_id', @Companies);
+			my %admin_users = map { $$_{company_id}, $_ } openprint::User->find(
+					'company_id in'	=>	$company_sql,
+        #company_id=>\@company_ids,
+        administrator=>'Y',order=>'id DESC',limit=>1);
+			my %active_users = map { $$_{company_id}, $_ } openprint::User->find(
+					'company_id in'	=>	$company_sql,
+#company_id=>\@company_ids,
+          web_active=>'Y',order=>'id DESC',limit=>1);
+			my %inactive_users = map { $$_{company_id}, $_ } openprint::User->find(
+					'company_id in'	=>	$company_sql,
+#company_id=>\@company_ids,
+web_active=>'N',order=>'id DESC',limit=>1);
+
+			my %orders_by_company;
+			my @Orders = openprint::Order->find(
+					'company_id in'	=> $company_sql,
+					#company_id	=>	\@company_ids,
+					date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
+					date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
+					status_id => \@status_ids,
+					) if @company_ids;
+			my @order_ids = map { $$_{id} } @Orders;
+			my ($min_order_id, $max_order_id ) = (undef,undef);
+			foreach my $Order ( @Orders ) {
+				$min_order_id = $$Order{id} if (!defined($min_order_id)) or ($min_order_id > $$Order{id});
+				$max_order_id = $$Order{id} if (!defined($max_order_id)) or ($max_order_id < $$Order{id});
+			}
+$log->debug("Min $min_order_id Max: $max_order_id");
+			my @invoice_ids;
+			my %OI_By_Invoice_Id;
+			my %OI_By_Order_Id;
+			my ( $min_invoice_id, $max_invoice_id ) = ( undef, undef );
+
+			foreach ( openprint::Order_Invoice->find(
+            order_id=>\@order_ids,
+						#'order_id <=' => $max_order_id,
+						#'order_id >=' => $min_order_id,
+						order=>'order_id') ) {
+
+				$OI_By_Invoice_Id{$$_{invoice_id}} = [] if !$OI_By_Invoice_Id{$$_{invoice_id}};
+				push @{$OI_By_Invoice_Id{$$_{invoice_id}}}, $_;
+
+				$OI_By_Order_Id{$$_{order_id}} = [] if !$OI_By_Order_Id{$$_{order_id}};
+				push @{$OI_By_Order_Id{$$_{order_id}}}, $_;
+
+				push @invoice_ids, $$_{invoice_id};
+				$min_invoice_id = $$_{invoice_id} if (!defined($min_invoice_id)) or ($min_invoice_id < $$_{invoice_id});
+				$max_invoice_id = $$_{invoice_id} if (!defined($max_invoice_id)) or ($max_invoice_id > $$_{invoice_id});
+			} # end foreach Order_Invoice
+
+			foreach my $Invoice ( openprint::Invoice->find(
+					'id <=' => $max_invoice_id,
+					'id >=' => $min_invoice_id,
+#id=>\@invoice_ids
+					) ) {
+				if ( $OI_By_Invoice_Id{$$Invoice{id}} ) {
+					foreach my $OI ( @{$OI_By_Invoice_Id{$$Invoice{id}}} ) {
+						$$OI{Invoice} = $Invoice;
+            $log->debug("Setting invoice for $$OI{invoice_id} order $$OI{order_id} = $$OI{Invoice}");
+					} # end foreach OI
+          } else {
+          $log->debug("NO OI_BY_INVOICE_ID for $$Invoice{id}");
+					foreach my $OI ( @{$OI_By_Invoice_Id{$$Invoice{id}}} ) {
+						$$OI{Invoice} = new openprint::Invoice();
+            }
+
+				} # end if have ois for this invoice
+			}
+$log->debug('Done loading Invoices');
+			my %Payments = misc::make_hash_from_array('order_id',
+					openprint::Payment->find(
+						'order_id <=' => $max_order_id,
+						'order_id >=' => $min_order_id,
+						order=>$openprint::Payment::fields{received_on}.' DESC'),
+					);
+
+			foreach my $Order ( @Orders ) {
+				$$Order{Invoices} = $OI_By_Order_Id{$$Order{id}} ? $OI_By_Order_Id{$$Order{id}} : [];
+        #$log->debug("Invoices for order $$Order{id} ? " . @{$$Order{Invoices}});
+        #foreach my $OI ( @{$$Order{Invoices}} ) {
+        #$log->debug("Invoice for order $$Order{id} $$OI{invoice_id} ? " . $$OI{Invoice});
+        #}
+
+				$$Order{Payments} = $Payments{$$Order{id}} ? $Payments{$$Order{id}} : [];
+				$orders_by_company{$$Order{company_id}} = [] if ! $orders_by_company{$$Order{company_id}};
+				push @{ $orders_by_company{$$Order{company_id}} }, $Order;
+			}
+
+$log->debug('Done loading Payments');
+
+			my %not_ordered_since;
+			my @Orders_Since = openprint::Order->find(
+					'company_id in'	=>	$company_sql,
+					#company_id	=>	\@company_ids,
+					date_filter( $uri.'?not_ordered_on_end', 'created_on <=' ),
+					date_filter( $uri.'?not_ordered_on_start', 'created_on >=' ),
+					status_id => \@status_ids,
+					) if $do_not_ordered_since;
+			foreach my $Order ( @Orders_Since ) {
+				$not_ordered_since{$$Order{company_id}} = 1;
+			}
+$log->debug('Done loading Orders Since');
+
+			my %quotes_by_company = misc::make_hash_from_array('company_id',
+					openprint::Quote->find(
+					'company_id in'	=>	$company_sql,
+						#company_id	=>	\@company_ids,
+						date_filter( $uri.'?ordered_on_end', 'created_on <=' ),
+						date_filter( $uri.'?ordered_on_start', 'created_on >=' ),
+            limit => 10000,
+						) );
+$log->debug('Done loading Quotes');
+
+	foreach my $csr_id ( @csr_ids ) {
+		my $CSR = new openprint::User($csr_id);
+		$html .= '<h3>Results for ' . $CSR->name() . '</h3>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="company_name">Company</th>
+			<th class="country">Country</th>
+			<th class="contact_name">Contact Name</th>
+			<th class="contact_phone">Contact Phone</th>
+			<th class="contact_email">Contact Email</th>
+			<th class="orders"># of Orders</th>
+			<th class="order_value">Order Value</th>
+			<th class="Date LastOrder">Date of Last Order</th>
+			<th class="Date LastQuote">Date of Last Quote</th>
+			<th class="payment_cycle">Payment Cycle</th>
+			<th class="discount">Discount/Markup</th>
+			<th class="credit_card_fee">Credit Card Fee</th>
+			<th class="csr_commission">CSR Commission</th>
+		</tr>
+	</thead>
+<tbody>
+';
+		my $rowclass;
+
+		if ( $Companies_By_CSR{$csr_id} ) {
+			my @company_ids = map { $$_{id} } @{$Companies_By_CSR{$csr_id}};
+
+			foreach my $Company ( @{$Companies_By_CSR{$csr_id}} ) {
+      if ( $$Company{salesrep_id} != $csr_id ) {
+      $log->  error('ERROR');
+      }
+
+      next if $do_ordered_since and ! $orders_by_company{$$Company{id}};
+      next if $do_not_ordered_since and $not_ordered_since{$$Company{id}};
+
+      if ( $session{$uri.'?has_discount'} ne '' ) {
+        next if ( ($session{$uri.'?has_discount'} eq 'Y') and !(1*$Company->discount()) );
+        next if ( ($session{$uri.'?has_discount'} eq 'N') and (1*$Company->discount()) ) ;
+      }
+      if ( $session{$uri.'?has_credit_card_fee'} ne '' ) {
+        next if ( ($session{$uri.'?has_credit_card_fee'} eq 'Y') and !(1*$Company->credit_card_fee()) );
+        next if ( ($session{$uri.'?has_credit_card_fee'} eq 'N') and (1*$Company->credit_card_fee()) ) ;
+      }
+      if ( $session{$uri.'?has_csr_commission'} ne '' ) {
+        next if ( ($session{$uri.'?has_csr_commission'} eq 'Y') and !(1*$Company->csr_commission()) );
+        next if ( ($session{$uri.'?has_csr_commission'} eq 'N') and (1*$Company->csr_commission()) ) ;
+      }
+
+      my $order_total = 0;
+      my $payment_cycle = 0;
+      foreach my $Order ( @{ $orders_by_company{$$Company{id}} } ) {
+        $order_total += $Order->Currency()->convert_from( $Order->total() );
+        $payment_cycle += $Order->payment_days();
+      } # end foreach Order
+
+      $payment_cycle = @{ $orders_by_company{$$Company{id}} } ? int( $payment_cycle / scalar @{ $orders_by_company{$$Company{id}} } ) : 0;
+      if ( $param{payment_cycle} ) {
+        if ( $payment_cycle > $param{payment_cycle} ) {
+          next;
+        } # end if
+      } # end if
+
+      my $Contact = $admin_users{$$Company{id}};
+      $Contact = $active_users{$$Company{id}} if ! $Contact;
+      $Contact = $inactive_users{$$Company{id}} if ! $Contact;
+      $Contact = new openprint::User() if ! $Contact;
+
+      my $LastOrder = $orders_by_company{$$Company{id}}[ @{ $orders_by_company{$$Company{id}} } -1 ] if $orders_by_company{$$Company{id}} and @{ $orders_by_company{$$Company{id}} };
+      my $LastQuote = $quotes_by_company{$$Company{id}}[ @{ $quotes_by_company{$$Company{id}} } -1 ] if $quotes_by_company{$$Company{id}} and @{ $quotes_by_company{$$Company{id}} };
+
+      $html .= sprintf(q`
+	<tr%1$s><td class="company_name">%2$s</td>
+		<td class="country">%3$s</td>
+		<td class="contact_name">%4$s</td>
+		<td class="contact_phone">%5$s</td>
+		<td class="contact_email">%6$s</td>
+		<td class="orders">%7$s</td>
+		<td class="order_value">%8$s</td>
+		<td class="Date LastOrder">%9$s</td>
+		<td class="Date LastQuote">%10$s</td>
+		<td class="payment_cycle">%11$s days</td>
+		<td class="discount">%12$s%</td>
+		<td class="credit_card_fee">%13$s%</td>
+		<td class="csr_commission">%14$s%</td>
+	</tr>`,
+						$rowclass, $Company->link_to(), $Company->country(),
+						$Contact->link_to(), $Contact->phone(), $Contact->email(),
+						Number::Format::format_number( scalar @{ $orders_by_company{$$Company{id}} } ), 
+						openprint::Currency::format( $order_total ),
+						( $LastOrder ? format_date( $LastOrder->created_on() ) : '' ),
+						( $LastQuote ? format_date( $LastQuote->created_on() ) : '' ),
+						$payment_cycle,
+						1*$Company->discount(),
+						1*$Company->credit_card_fee(),
+						1*$Company->csr_commission(),
+						);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Company
+		} # end if companies
+		$html .= '</tbody>';
+		$html .= '</table>';
+	} # end foreach CSR
+	return $html;
+) ?>

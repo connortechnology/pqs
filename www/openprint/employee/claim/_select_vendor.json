@@ -1,0 +1,31 @@
+<? echo (
+	$r->content_type('text/javascript');
+	my $Vendor = new openprint::Company( $param{'supplier_id'} );
+	my $vendor_info = "$$Vendor{name}<br/>$$Vendor{address1}<br/>$$Vendor{address2}<br/>$$Vendor{city} $$Vendor{state} $$Vendor{country}<br/>$$Vendor{postalcode}<br/>PHONE: $$Vendor{phone}<br/>FAX: $$Vendor{fax}<br/>";
+	my $html .= "
+		\$('vendor_name').value = '$$Vendor{name}';
+		\$('vendor_address1').value = '$$Vendor{address1}';
+		\$('vendor_address2').value = '$$Vendor{address2}';
+		\$('vendor_city').value = '$$Vendor{city}';
+		ddm_select_by_value( \$('vendor_country'), '$$Vendor{country}' );
+		ddm_select_by_value( \$('vendor_state'), '$$Vendor{state}' );
+		\$('vendor_postalcode').value = '$$Vendor{postalcode}';
+		\$('vendor_phone').value = '$$Vendor{phone}';
+		\$('vendor_fax').value = '$$Vendor{fax}';
+		var contact_ddm = \$('contact_id');
+		clear_ddm( contact_ddm );
+		add_option( contact_ddm, '', 'select' );
+	";
+	my @Users = openprint::User->find('company_id'=>$param{'supplier_id'},'order'=>'lower(firstname),lower(lastname)' );
+	my $selected = $Users[0]->id() if @Users == 1;
+	foreach my $User ( @Users ) {
+		my $name = $User->name();
+		$name =~ s/'/\\'/g;
+		$html .= "add_option( contact_ddm, '$$User{id}', '$name', '$selected' );\n";
+	} # end foreach User
+	if ( @Users == 1 ) {
+		my $User= $Users[0];
+		$html .= "new Ajax.Request('_select_contact.json', {method:'get', parameters: { contact_id: $$User{id} } } );";
+	} # end if
+	return $html;
+) ?>

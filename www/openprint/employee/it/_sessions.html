@@ -1,0 +1,86 @@
+<? echo (
+	my $html = '';
+	$session{'/employee/it/sessions.html?order'} = 'lower(sessionname)' if ! $session{'/employee/it/sessions.html?order'};
+
+	my @Sessions = openprint::Session->find(
+		date_filter('/employee/it/sessions.html?created_on_end', 'created_on <=' ),
+		date_filter('/employee/it/sessions.html?created_on_start', 'created_on >=' ),
+	);
+	$html .= @Sessions . ' total sessions.<br/>';
+
+	$html .= q`<table class="List">
+			<thead>
+				<tr>
+					<th class="checkbox"><input type="checkbox" onclick="select_all($('f1'),'session_id',this.checked);"</th>
+					<th class="session_id">ID</th>
+					<th class="ip" onclick="load_session(f1, {order:'ip'});">IP</th>
+					<th class="Company" onclick="load_session(f1, {order:'Company'});">Company</th>
+					<th class="UserType" onclick="load_session(f1, {order:'UserType'});">UserType</th>
+					<th class="User" onclick="load_session(f1, {order:'User'});">User</th>
+					<th class="DateTime Age">Age</th>
+					<th class="Freshness">Freshness</th>
+				</tr>
+			</thead>
+			<tbody>`;
+	my $rowclass;
+
+	my $updated_start = Date::Calc::Mktime( @param{
+			map { 'updated_on_start_'.$_ } ( 'year','month','day' ) }, 0,0,0 ) if Date::Calc::check_date( @param{'updated_on_start_year','updated_on_start_month','updated_on_start_day'} );
+	my $updated_end = Date::Calc::Mktime( @param{
+			map { 'updated_on_end_'.$_ } ( 'year', 'month','day') }, 0, 0, 0 ) if Date::Calc::check_date( @param{'updated_on_end_year','updated_on_end_month','updated_on_end_day'} );
+
+	foreach my $Session ( @Sessions ) {
+		my $session_id = $Session->id();
+		$session_id =~ s/\s//g;
+		my %s;
+		if ( ! eval q`tie %s, 'Apache::Session::Postgres', $session_id, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
+			$log->warn("Error fetching Session: $session_id: $@");
+			next;
+		} # end if
+		if ( $session{'/employee/it/sessions.html?company_id'} and $s{company_id} != $session{'/employee/it/sessions.html?company_id'} ) {
+			next;
+		} # end if
+		if ( $session{'/employee/it/sessions.html?user_type'} and $s{user_type} ne $session{'/employee/it/sessions.html?user_type'} ) {
+			next;
+		} # end if
+		if ( $session{'/employee/it/sessions.html?user_id'} and $s{user_id} != $session{'/employee/it/sessions.html?user_id'} ) {
+			next;
+		} # end if
+		if ( $session{'/employee/it/sessions.html?ip'} and $s{ip} ne $session{'/employee/it/sessions.html?ip'} ) {
+			next;
+		} # end if
+		next if $updated_start and $updated_start > $s{lastupdated};
+		next if $updated_end and $updated_end < $s{lastupdated};
+
+		my @Hosts = openprint::Host->find( 'ip any'=>$s{ip});
+
+		$html .= sprintf('
+			<tr%9$s>
+				<td class="checkbox"><input type="checkbox" name="session_id" value="%1$s"/></td>
+				<td class="session_id"><a href="/employee/it/session.html?session_id=%1$s">%2$s</a></td>
+				<td class="ip"><a href="/employee/it/session.html?session_id=%1$s">%3$s</a></td>
+				<td class="Company"><a href="/employee/it/session.html?session_id=%1$s">%4$s</a></td>
+				<td class="UserType"><a href="/employee/it/session.html?session_id=%1$s">%5$s</a></td>
+				<td class="User"><a href="/employee/it/session.html?session_id=%1$s">%6$s</a></td>
+				<td class="DateTime Age"><a href="/employee/it/session.html?session_id=%1$s">%7$s</a></td>
+				<td class="Freshness"><a href="/employee/it/session.html?session_id=%1$s">%8$s</a></td>
+			</tr>
+			', $s{_session_id}, $s{_session_id}, 
+ join('<br/>', map { $s{ip} . ' ' . $_->hostname() } @Hosts ),
+	new openprint::Company( $s{company_id} )->name(),
+			$s{user_type}, new openprint::User( $s{user_id} )->name(), 
+			format_datetime( $Session->created_on() ),
+			misc::seconds_to_pretty_interval( time - $s{lastupdated} ),
+			$rowclass,
+			
+			);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Session
+	return $html;
+) ?>
+		<tr>
+	</tbody>
+</table>
+<p class="buttons">
+<? echo ( button( 'delete', { onclick=>q`new Ajax.Updater( 'Results','/employee/it/_sessions.html?action=Delete', { parameters: { session_id: get_value( $('f1').elements['session_id'] ) } } );`, text=>'Delete Checked' } ); ) ?>
+</p>

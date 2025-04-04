@@ -1,0 +1,37 @@
+<p class="buttons">
+	<input type="file" name="fileImport">
+	<? echo ( button( 'Import', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Import';f1.submit();", text=>'Import' } ); ) ?>
+	<? echo ( button( 'Export', { onclick=>"f1.action='edit.html?Download';f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ); ) ?>
+</p>
+
+<div class="ServiceTypes">
+	<table class="List">
+		<tr> 
+			<th align="left">Project Type</th>
+			<th align="left">Field Name</th>
+			<th align="left">Field Value</th>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+		<? echo ( 
+			my $html = '';
+			my $rowclass;
+			@{$$variable{'ProjectTypes'}} = openprint::ProjectType->find( order=>'lower(name)' );
+			my $row = slurp_content( '/administrator/service_types/_row.html' );
+
+			foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$$variable{ServiceType}->id(), order=>'projecttype_id,'.$openprint::ServiceType_Default::fields{'name'}) ) {
+				$html .= ssi::variable_substitution( \$row, { Default=>$Default, rowclass=>$rowclass, ProjectTypes => $$variable{ProjectTypes} } );
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Default
+			return $html;
+		) ?>
+		<tr class="totals"> 
+			<td colspan="4">Add New</td>
+		</tr>
+		<tr> 
+			<td><select name="projecttype_id-"><option value=""> all </option><? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'ProjectTypes'}} ] ); ) ?></select></td>
+			<td><input type="text" name="name-" /></td>
+			<td><input type="text" name="value-" /></td>
+			<td class="buttons">&nbsp;</td>
+		</tr>
+	</table>
+</div>

@@ -1,0 +1,19 @@
+<?include(/includes/error_reporting.html)?>
+<ul>
+<? echo ( 
+	my $html;
+	my @user_ids = sets::exclude([$session{user_id}], $$variable{Privacy}->user_id());
+	foreach my $User ( map { new openprint::User( $_ ) } @user_ids ) {
+		$html .= sprintf(q`
+			<li class="User">
+			<input type="hidden" name="privacy_user_id" value="%1$d"/>
+			<span class="buttons">%4$s</span><a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>%3$s</li>`, $User->id(), $User->Asset()->sized_url('thumbnail'), $User->name(),
+			( button( 'Delete'.$User->id(), { 
+						   onclick=>qq`privacy_remove_user( $$User{id} );`,
+						   text=>'X', title=>'Remove'} ) ),
+
+			);
+	} # end foreach User
+	return $html;
+) ?>
+</ul>

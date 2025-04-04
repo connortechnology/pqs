@@ -1,0 +1,8 @@
+<? echo ( 
+	my $html;
+	foreach my $Field ( openprint::Company_Profile_Field->find(order=>'sort,lower(name)') ) {
+		$$variable{Field} = $Field;
+		$html .= include('/administrator/managerial/_field_tr.html');
+	} # end foreach Field
+	return $html;
+) ?>

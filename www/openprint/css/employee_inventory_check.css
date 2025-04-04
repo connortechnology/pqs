@@ -1,0 +1,24 @@
+table .Skid {
+	width: 100px;
+}
+.Width, .Diameter {
+	width: 60px;
+	text-align: left;
+
+}
+.Notes {
+	text-align: left;
+}
+table .Quantity {
+	text-align: left;
+}
+table .Price {
+	width: 120px;
+}
+
+fieldset p select {
+	width: auto;
+}
+.name input[type="text"] {
+	width: 300px;
+}

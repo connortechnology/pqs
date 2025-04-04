@@ -1,0 +1,56 @@
+<li>
+	<label>Package Type</label>
+	<? echo ( my $html;
+		my @PackageTypes = openprint::Material->find( category=>$$variable{ServiceTypeID}, order=>'lower(name)' );
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+			if ( @PackageTypes > 1 ) {
+				$html .= ssi::select(
+					[ '', 'select', map { $_->id(), $_->name() } @PackageTypes ], $$variable{'ddmPackageType'.$qty_index},
+					{
+					name	=>	"ddmPackageType$qty_index",
+					size	=>	1,
+					onchange=>	'calc(this.form.name);',
+					} 
+				);
+				$html .= write_override( "OverridePackageType$qty_index", $$variable{'OverridePackageType'.$qty_index}, '', q`calc('f1');` );
+			} elsif ( @PackageTypes ) {
+				$html .= input( type=>'hidden', name=>'ddmPackageType'.$qty_index, value=>$PackageTypes[0]->id() );
+				$html .= $PackageTypes[0]->name();
+			} # end if
+			$html .= '</span>';
+		} # end foreach $qty_index
+		return $html;
+	) ?>
+</li>
+<li>
+	<input type="hidden" name="txtPackageWidth" />
+	<input type="hidden" name="txtPackageHeight" />
+	<input type="hidden" name="txtPackageDepth" />
+	<label>Weight of Package</label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+	<input name="txtPackageWeight<?QTYIndex?>" value="<? echo ( $$variable{'txtPackageWeight'.$$variable{'QTYIndex'}} ) ?>" type="number" readonly="readonly" /> lbs
+	</span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</li>
+<li>
+    <label>Maximum Quantity per Package</label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+	<input name="txtItemsPerPackage<?QTYIndex?>" value="<? echo ( $$variable{'txtItemsPerPackage'.$$variable{'QTYIndex'}} ) ?>" type="number" onkeyup="calc(this.form.name);" />
+	<input type="checkbox" id="OverrideItemsPerPackage<?QTYIndex?>" name="OverrideItemsPerPackage<?QTYIndex?>" value="Y" onclick="if (this.checked == false) calc(this.form.name);" 
+	<? echo ( $$variable{'OverrideItemsPerPackage'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?>
+	/>
+	<label class="radio" for="OverrideItemsPerPackage<?QTYIndex?>">Override</label>
+	</span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</li>

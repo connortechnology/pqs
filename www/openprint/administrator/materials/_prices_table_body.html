@@ -1,0 +1,19 @@
+<? echo (
+	my $html = '';
+	my @Prices = openprint::MaterialPrice->find(
+		material_id		=>	$$variable{Material}->id(),
+		pricelist_id	=>	$$variable{Pricelist}->id(),
+		equipment_id	=>	( $$variable{Equipment}->id() ? $$variable{Equipment}->id() : undef ),
+    order=>$openprint::MaterialPrice::fields{min}.' NULLS FIRST,'.
+    $openprint::MaterialPrice::fields{max}.' NULLS FIRST'
+    #,period_start NULLS FIRST, period_end NULLS FIRST'
+    );
+
+	my $price_html = slurp_content( '/administrator/materials/_price.html' );
+
+	foreach my $Price ( @Prices ) {
+		$$variable{Price} = $Price;
+		$html .= variable_substitution( \$price_html, $variable );
+	} # end foreach Price
+	return $html;
+) ?>

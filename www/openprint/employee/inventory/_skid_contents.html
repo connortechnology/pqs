@@ -1,0 +1,71 @@
+<?eval(
+	$$variable{can_see_pricing} = openprint::Skid->can_see_pricing();
+)?>
+<fieldset><legend>Current Contents</legend>
+<? if ( ! $$variable{Skid}->Contents() ) ?>
+	Skid is empty
+<? else ( ! $$variable{Skid}->Contents() ) ?>
+<table class="List">
+	<tr>
+		<th class="Owner">Owner</th><th class="Quantity">Quantity</th><th class="Condition">Condition</th><th class="Purpose">Purpose</th><th class="inches">Inches</th>
+		<? if ( $$variable{can_see_pricing} ) ?>
+		<th class="Cost">Cost</th>
+		<th class="Value">Value</th>
+		<? endif ( $$variable{can_see_pricing} ) ?>
+	</tr>
+<? echo ( 
+	my $html;
+	foreach my $C ( $$variable{Skid}->Contents() ) {
+		my $Paper = $C->Paper();
+		my $paper_id = $Paper->id();
+
+		my $available = 0;
+		foreach my $skid_id ( @{$$variable{skid_ids}} ) {
+			my $Skid = new openprint::Skid( $skid_id );
+			$available += $Skid->allocateable($Paper);
+		} # end foreach
+
+		$html .= '<tr>';
+		if ( $$variable{can_see_pricing} ) {
+			$html .= sprintf('<td colspan="7"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
+		} else {
+			$html .= sprintf('<td colspan="5"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
+		} # end if
+		$html .= '</tr><tr>';
+		$html .= '<td class="Owner">'.$Paper->Owner()->name().'</td>';
+		$html .= sprintf('<td class="Quantity"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), (
+			$C->quantity() ? Number::Format::format_number($C->quantity()).$Paper->units() : 'none' ) );
+		$html .= sprintf('<td class="Condition">%s</td>', $C->condition() );
+		$html .= sprintf('<td class="Purpose">%s</td>', $C->purpose() );
+		if ( $Paper->type() eq 'Sheet') {
+			$html .= sprintf('<td class="inches"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->calliper() ? sprintf('%.1f', Number::Format::format_number($C->quantity()*$Paper->calliper())) : 'unknown' );
+		} elsif ( $$Paper{type} eq 'Roll' ) {
+			$html .= sprintf('<td class="inches"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), ( $$Paper{width} and $Paper->calliper() and $$C{quantity} ) ? sprintf('%.1f', $$variable{Skid}->diameter() ) : 'unknown' );
+		} else {
+			$html .= sprintf('<td class="inches"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), 'unknown' );
+		}
+
+		if ( $$variable{can_see_pricing} ) {
+			my $Cost = $C->Cost();
+			openprint::Currency::convert( $Cost ) if $Cost;
+			$html .= '<td class="Cost">' . openprint::Currency::format( 1*$$Cost{cost} ) . $$Cost{units}.'</td>';
+			$html .= '<td class="Value">' . openprint::Currency::format( 1*$C->value() ).'</td>';
+			$html .= '</tr><tr>';
+			$html .= '<td colspan="7">';
+		} else {
+		$html .= '</tr><tr>';
+		$html .= '<td colspan="5">';
+		} # end if
+		$html .= button( "CheckIn$$C{id}", { onclick=>"checkin_window( $paper_id, '$$variable{skid_id}' );", href=>'', text=>'Check In' } );
+		$html .= button( "CheckOut$$C{id}", { onclick=>"checkout_window( $paper_id, '$$variable{skid_id}' );", href=>'', text=>'Check Out' } );
+		$html .= button( "Allocate$$C{id}", { onclick=>"allocate_window( $paper_id, '$$variable{skid_id}', $available );", href=>'', text=>'Allocate' } );
+		$html .= button( "Delete$$C{id}", { href=>sprintf('/employee/inventory/skid_details.html?skid_id=%d&amp;content_id=%d&amp;btnFunction=DeletePaper', $$variable{Skid}->id(), $C->id() ), text=>'Delete' } );
+		$html .= button( "Select$$C{id}", { onclick=>"\$('AddPaper').show();new Ajax.Updater({success: 'AddPaper'},'/employee/inventory/_add_paper_show.html?paper_id=$paper_id&amp;skid_id=$$variable{Skid}{id}',{method:'get'} );", href=>'', text=>'Select' } );
+		$html .= '</td>';
+		$html .= '</tr>';
+	} # end foreach C
+	return $html;
+) ?>
+	</table>
+<? endif ( ! $$variable{Skid}->Contents() ) ?>
+</fieldset>

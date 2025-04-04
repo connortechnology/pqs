@@ -1,0 +1,23 @@
+<form name="part4form" id="part4form">
+<h3>Part 4 (To be complete by Quality System Management Representative)</h3>
+<table>
+	<tr><td colspan="4">VERIFICATION OF CORRECTIVE ACTION EFFECTIVENESS</td></tr>
+	<tr><td colspan="4"><textarea name="effectiveness" rows="<? echo ( count_lines( $$variable{MAR}->effectiveness() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{MAR}->effectiveness(); ) ?></textarea></td></tr>
+	<tr><td width="10%">QS Mgt Rep / Designate</td>
+		<td width="40%">
+<? echo ( ssi::select( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $$variable{MAR}->part4_user_id() ?  $$variable{MAR}->part4_user_id() : $session{user_id}, { name=>'part4_user_id' } ); ) ?>
+	</td>
+	<td width="10%">Date</td>
+	<td width="40%">
+<? echo ( date_select( 'part4_signed_on', $$variable{MAR}->part4_signed_on() ? $$variable{MAR}->part4_signed_on() : [ Date::Calc::Today() ] ); ) ?>
+	</td>
+	</tr>
+</table>
+	<input type="hidden" name="mar_id" value="<? echo ( $$variable{MAR}->id() ) ?>" />
+	<input type="hidden" name="btnFunction" value="Save" />
+</form>
+<p class="buttons">
+	<? echo ( join("\n",
+		button( 'SavePart4', { onclick=>"new Ajax.Updater('Part4','_mar_view_part4.html', {parameters: \$('part4form').serialize() } );", text=>'Save' } ),
+		); ) ?>
+</p>

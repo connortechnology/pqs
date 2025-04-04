@@ -1,0 +1,21 @@
+ Dear <? echo ( join(' ', $$variable{'User'}->get('salutation','firstname','lastname') ); ) ?>,<br/>
+<br/>
+Thank-you for registering.
+<? if ( $openprint::config{'NewNonFirstUserAccountActivation'} eq 'Y' ) ?>
+Your account has been activated and you have been automatically logged in.<br/>
+<? else ( $openprint::config{'NewNonFirstUserAccountActivation'} eq 'Y' ) ?>
+Because your company was already registered, an administrator appointed for your company will need to activate your account.  You will be notified when your account is activated.<br/>
+<? endif ( $openprint::config{'NewNonFirstUserAccountActivation'} eq 'Y' ) ?>
+<br/>
+<p>
+  If you have any questions, please contact
+  <? echo (
+          my $Company = new openprint::Company( $openprint::session{'company_id'} );
+          if ( $Company->salesrep_id() ) {
+          my $CSR = new openprint::User( $Company->salesrep_id() );
+          return sprintf('<a href="mailto:%s">%s %s</a>.', $CSR->email(), $CSR->firstname(), $CSR->lastname() );
+          } else {
+          return qq`our <a href="support/help_desk.html">helpdesk</a>.`;
+          } # end if
+          ) ?>
+  </p>

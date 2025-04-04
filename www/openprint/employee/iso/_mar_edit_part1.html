@@ -1,0 +1,58 @@
+<form name="part1form" id="part1form" action="">
+<h3>Part 1 (To be completed by issuer)</h3>
+<table class="View" style="table-layout:fixed;">
+	<tr>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+	</tr>
+	<tr>
+		<td colspan="1">Assigned To</td>
+		<td colspan="4">
+<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
+<? echo ( ssi::select( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $$variable{MAR}->issued_to_id(), { name=>'issued_to_id', prepend=>['','select'] } ); ) ?>
+<? else ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
+<? echo ( $$variable{MAR}->issued_to()->name() ) ?>
+<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
+		</td>
+		<td colspan="1">Issued By</td>
+		<td colspan="4"><? echo ( ssi::select( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $$variable{MAR}->issued_by_id() ? $$variable{MAR}->issued_by_id() : $session{user_id}, { name=>'issued_by_id' } ); ) ?></td>
+	</tr>
+	<tr>
+		<td colspan="1">Issue Date</td>
+		<td colspan="4"><? echo ( date_select( 'issued_on', $$variable{MAR}->issued_on() ? $$variable{MAR}->issued_on() : [ Date::Calc::Today() ] ) ) ?></td>
+		<td colspan="1">Reply By</td>
+		<td colspan="4">
+<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
+		<? echo ( date_select( 'reply_by', $$variable{MAR}->reply_by() ? $$variable{MAR}->reply_by() : [ Date::Calc::Today() ] ) ) ?>
+<? else ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
+<? echo ( $$variable{MAR}->reply_by() ) ?>
+<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
+		</td>
+	</tr>
+	<tr><td colspan="10">PROBLEM/NONCONFORMANCE DESCRIPTION</td></tr>
+	<tr><td colspan="10"><textarea name="problem" rows="5" onkeyup="textarea_resize(this);"><? echo ( $$variable{MAR}->problem() ) ?></textarea></td></tr>
+	<tr><td colspan="1">Press</td><td colspan="9">
+	<? echo ( ssi::select( openprint::Equipment->dropdown(order=>'sorting,lower(strname)'), $$variable{MAR}->equipment_id(), { name=>'equipment_id', prepend=>['','select'] } ); ) ?></td>
+	</tr>
+</table>
+	<input type="hidden" name="mar_id" value="<?echo($$variable{MAR}->id())?>" />
+	<input type="hidden" name="btnFunction" value="Save" />
+</form>
+<p class="buttons">
+	<? echo ( join('',
+		button( 'Save', { onclick=>"if(check_part1(\$('part1form'))){new Ajax.Updater('Part1','/employee/iso/_mar_view_part1.html',
+		{
+			parameters: \$('part1form').serialize(),
+			evalScripts: true,
+		} );}" } ),
+		); ) ?>
+</p>

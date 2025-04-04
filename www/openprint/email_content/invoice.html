@@ -1,0 +1,183 @@
+<div class="Invoice">
+  <div class="Header">
+    <div class="PageTitle">
+      <h1>Invoice #<? echo ( $$variable{Invoice}->num() ) ?></h1>
+    </div>
+		<div class="Invoicer">
+	<fieldset>
+			<? echo (
+				my $Invoicer = $$variable{Invoice}->Invoicer();
+				my $html = '';
+        $html .= '<div class="name">'.( $Invoicer->business_name() ? $Invoicer->business_name() : $Invoicer->name() ).'</div>';
+        $html .= '<div class="address">';
+        $html .= '<div class="address1">'.$Invoicer->address1().'</div>';
+        $html .= '<div class="address2">'.$Invoicer->address2().'</div>' if $Invoicer->address2();
+        $html .= '<div class="city_state_country">'.join(', ', map { $_ ? $_ : () } ( $Invoicer->city(),
+           shift @{[
+            ( ( ( $Invoicer->country() eq 'US' ) and $states::states{$Invoicer->state()} ) ? $states::states{$Invoicer->state()} : () ),
+            ( ( ( $Invoicer->country() eq 'CA' ) and $provinces::provinces{$Invoicer->state()} ) ? $provinces::provinces{$Invoicer->state()} : () ),
+            $Invoicer->state()
+            ]},
+            $countries::countries{$Invoicer->country()} ? $countries::countries{$Invoicer->country()} : $Invoicer->country() ) ).'</div>';
+        $html .= '<div class="postalcode">'.$Invoicer->postalcode().'</div>' if $Invoicer->postalcode();
+        $html .= '<div class="tax">HST #'.$Invoicer->gst_number().'</div>' if $Invoicer->gst_number();
+        $html .= '</div>';
+				return $html;
+			) ?>
+	</fieldset>
+		</div>
+		<div class="Invoicee">
+	<fieldset>
+			<? echo (
+				my $Invoicee = $$variable{Invoice}->Invoicee();
+				my $html = '';
+        $html .= '<div class="name">'.( $Invoicee->business_name() ? $Invoicee->business_name() : $Invoicee->name() ).'</div>';
+        $html .= '<div class="address">';
+        $html .= '<div class="address1">'.$Invoicee->address1().'</div>';
+        $html .= '<div class="address2">'.$Invoicee->address2().'</div>' if $Invoicee->address2();
+        $html .= '<div class="city_state_country">'.join(', ', map { $_ ? $_ : () } ( $Invoicee->city(),
+           shift @{[
+            ( ( ( $Invoicee->country() eq 'US' ) and $states::states{$Invoicee->state()} ) ? $states::states{$Invoicee->state()} : () ),
+            ( ( ( $Invoicee->country() eq 'CA' ) and $provinces::provinces{$Invoicee->state()} ) ? $provinces::provinces{$Invoicee->state()} : () ),
+            $Invoicee->state()
+            ]},
+            $countries::countries{$Invoicee->country()} ? $countries::countries{$Invoicee->country()} : $Invoicee->country() ) ).'</div>';
+
+        $html .= '<div class="postalCode">'.$Invoicee->postalcode().'</div>' if $Invoicee->postalcode();
+        $html .= '</div>';
+				return $html;
+			) ?>
+	</fieldset>
+      </div>
+    </div>
+    <div class="Services">
+	<? echo (
+		my @Timetracks = openprint::Timetrack->find(invoice_id=>$$variable{Invoice}->id(), order=>'starting');
+		return '' if ! @Timetracks;
+		my $html = '<fieldset><legend>Services</legend>';
+		$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
+		$$variable{service_total} = 0;
+		my $rowclass = '';
+
+		my $count = 0;
+		$html .= '<table class="List">
+			<tr>
+				<th class="Date">Date / Employee</th>
+				<th class="Service">Description</th>
+				<th class="PO">PO #</th>
+				<th class="Interval">Interval</th>
+				<th class="Rate">Rate</th>	
+				<th class="Price">Price</th>
+			</tr>';
+				while ( ( $count < 35 ) and ( my $Timetrack = shift @Timetracks ) ) {
+          my $formatted_starting = format_date( $Timetrack->starting() );
+          my $formatted_ending = format_date( $Timetrack->ending() );
+
+					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
+					$html .= sprintf('<td class="Date">%s</td>',($Timetrack->user_id() ? $Timetrack->Employee()->name() : '&nbsp;' ) );
+					$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
+					$html .= '<td class="PO">'.html_escape( $Timetrack->po() ).'</td>';
+					$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
+          $$variable{interval_total} += $Timetrack->elapsed();
+					my $Price = $Timetrack->Price();
+					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{price} ), $$Price{units} );
+					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{total} ) );
+					$html .= sprintf('</tr><tr %2$s>', $Timetrack->id(), $rowclass );
+					$html .= '<td class="Date">';
+          if ( $Timetrack->date_associated() ) {
+            $html .= $formatted_starting . (
+              ( $formatted_starting ne $formatted_ending ) ? '<br/>through<br/>' .  $formatted_ending : '' );
+          }
+          $html .= '</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '</tr>';
+					$$variable{service_total} += $$Price{total};
+					$rowclass = $rowclass ? '' : 'class="colRow"';
+					my @desc = split('<p>', $Timetrack->description() );
+					#$count += scalar @desc;
+				} # end foreach Timetrack
+				if ( @Timetracks ) {
+					$html  .= '</table></fieldset><fieldset><legend>Services Continued</legend>';
+					$html .= '<table class="List">
+						<tr>
+							<th class="Date">Date</th>
+							<th class="Service">Description</th>
+							<th class="PO">PO #</th>
+							<th class="Interval">Interval</th>
+							<th class="Rate">Rate</th>	
+							<th class="Price">Price</th>
+						</tr>';
+					while ( my $Timetrack = shift @Timetracks ) {
+						$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
+						$html .= sprintf('<td class="Date">%s</td>', format_date( $Timetrack->starting() ). ( $Timetrack->elapsed() > 60*60*24 ? '<br/>through<br/>' . 
+format_date( $Timetrack->ending() ) : '' ) );
+						$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
+						$html .= '<td class="PO">'.html_escape( $Timetrack->po() ).'</td>';
+						$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
+            $$variable{interval_total} += $Timetrack->elapsed();
+						my $Price = $Timetrack->Price();
+						$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{price} ), $$Price{units} );
+						$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{total} ) );
+						$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
+						$html .= '<td>&nbsp;</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td class="Price">&nbsp;</td>';
+						$html .= '</tr>';
+						$$variable{service_total} += $$Price{total};
+						$rowclass = $rowclass ? '' : 'class="colRow"';
+					} # end foreach Timetrack
+				} # end if more Timetracks
+          if ( ! $$variable{Invoice}{subtotal_override} ) {
+				$html .= '
+			<tr class="totals">
+        <td class="Date"></td>
+        <td class="Service"></td>
+        <td class="PO"></td>
+        <td class="Interval">'. misc::seconds_to_pretty_interval($$variable{interval_total}).'</td>
+				<td class="Rate">Service Total</td>
+				<td class="Price">'.openprint::Currency::format( $$variable{service_total} ).'</td>
+			</tr>
+';
+}
+$html .= '
+		</table>
+	</fieldset>';
+				return $html;
+			) ?>
+    </div>
+    <div id="Products">
+	<?include(/invoice/_products_view.html)?>
+  </div>
+  <div class="Notes">
+    <fieldset><legend>Notes</legend>
+      <ul>
+        <li class="PostedOn"><label>Posted On</label><? echo ( format_date( $$variable{Invoice}->posted_on() ); ) ?></li>
+
+        <li class="DueOn"><label>Due On</label><? echo ( format_date( $$variable{Invoice}->due_on() ); ) ?></li>
+        <? if ( $$variable{Invoice}->external_notes() ) ?>
+        <li class="ExternalNotes"><label>Notes</label><? echo ( $$variable{Invoice}->external_notes() ) ?></li>
+        <? endif ( $$variable{Invoice}->external_notes() ) ?>
+<?echo(
+  my $Credit = $$variable{Invoice}->Invoicee()->Credit( $$variable{Invoice}{invoicer_id} );
+  if ($$Credit{terms}) {
+    my $html = '<li class="terms"><label>Invoice Terms</label>Net ' . $$Credit{terms}. ' days.' if $$Credit{terms};
+    if ( $$variable{Invoice}->monthly_interest() > 0 ) {
+     $html .= ' Interest on overdue amounts will acrue at the rate of '.$$variable{Invoice}->monthly_interest() .'% per month from the due date.';
+    }
+    $html .= '</li>';
+    return $html;
+  }
+  return;
+)?>
+      </ul>
+    </fieldset>
+  </div>
+<?include('/invoice/_totals.html')?>
+<? if ( $$variable{Invoice}->owing() ) ?>
+	<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+	<div class="Overdue">NOTICE:  This invoice is now overdue.  Please make payment or contact us to make an arrangement.</div>
+	<? endif ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+	<? if ( $$variable{Invoice}->interest() ) ?>
+	<div class="HasInterest">Late payment interest charges have been added to this invoice and are reflected in the amount owing.</div>
+	<? endif ( $$variable{Invoice}->interest() ) ?>
+	<?include(/invoice/_payment_options.html)?>
+<? endif ( $$variable{Invoice}->owing() ) ?>
+<?include('/invoice/_payments_view.html') ?>
+</div>

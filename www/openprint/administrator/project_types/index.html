@@ -1,0 +1,68 @@
+<div class="PageTitle">
+<h1>Project Types</h1>
+<h2>Search</h2>
+</div>
+<script>
+	function delete_confirm(form) {
+		var number_of_deleted_products = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_products += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_products == 0 ) {
+			alert("To Delete Project_Types, click the checkbox beside the service type.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_products + " service types?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_products( form ) {
+		$('Project_TypesList').innerHTML = 'Please wait...';
+		new Ajax.Updater('Project_TypesList','_index.html', {parameters:Form.serialize(form)});
+	} // end function
+</script>	 
+<?include('/includes/error_reporting.html')?>
+<div class="Project_Types"><div class="Search">
+	<form id="f1" name="f1" method="post" action="/administrator/project_types/index.html" enctype="multipart/form-data">
+		<input type="hidden" name="btnFunction"/>
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+			<div class="content">
+				<div class="leftColumn">
+					<ul>
+						<? if ( @{$$variable{Categories}} = openprint::ProjectTypeCategory->find( order=>'lower(name)') ) ?>
+						<li><label>Category</label>
+							<select name="category_id" id="category_id" onchange="load_products(this.form);">
+								<option value="">All</option>
+								<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{'/administrator/project_types/index.html?category_id'} ); ) ?>
+							</select>
+						</li>
+						<? endif ( @{$$variable{Categories}} = openprint::ProjectTypeCategory->find( order=>'lower(name)') ) ?>
+						<li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $param{search} ) ?>"/></li>
+					</ul>
+				</div>
+			</div>
+			<p class="buttons">
+				<? echo ( join("\n",
+					button( 'ShowResults', { onclick=> 'load_products(f1);', text=>'Show Results' } ),
+					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+					button( 'New', { href=> '/administrator/project_types/edit.html', text=>'New Project Type' } ),
+					); ) ?>
+			</p>
+		<p class="buttons">
+			<b>CSV File</b>
+			<input type="file" name="fileImport" />
+<? echo ( join("\n",
+			button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.submit();", text=>'Import' } ),
+			button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ),
+); ) ?>
+		</p>
+		</fieldset>
+		<div id="Project_TypesList"><?include('_index.html')?></div>
+	</form>
+	</div>
+</div>

@@ -1,0 +1,30 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<form id="split_form" name="split_form">
+	<input type="hidden" name="schedule_id" value="<? echo ( $$variable{Job}->id() ) ?>" />
+	<input type="hidden" name="action" value="split" />
+	<fieldset><legend>Split Job Forms</legend>
+		<div class="content">
+			<ul>
+				<li><label>Forms currently in this job</label>
+					<? echo ( $$variable{'Job'}->forms() ) ?>
+					<input type="hidden" name="current_form_count" id="current_form_count" value="<? echo ( $$variable{'Job'}->forms() ) ?>" />
+				</li>
+				<li><label>Forms to split off</label>
+					<? echo ( ssi::input( type=>'cardinal', name=>'new_form_count', id=>'new_form_count', value=>1, onkeyup=>'this.form.remaining_form_count.value=this.form.current_form_count.value-this.value;'); ) ?>
+				</li>
+				<li><label>Forms to remaining</label>
+					<? echo ( ssi::input( type=>'cardinal', name=>'remaining_form_count', id=>'remaining_form_count', value=>$$variable{Job}->forms() - 1,  
+					onkeyup=>'this.form.new_form_count.value=this.form.current_form_count.value-this.value;' ); ) ?>
+				</li> 
+			</ul>
+		</div>
+	</fieldset>
+		<p class="buttons">
+			<? echo ( join('',
+						ssi::button( 'SaveSplit', { onclick=>q`new Ajax.Updater('`.$$variable{'Job'}->Shift()->ul_id().q`', '_ul.html',{parameters:split_form.serialize(), onSuccess:function(){popupWin.destroy();}, evalScripts: true });`, text=>'Save' } ),
+						ssi::button( 'CancelSplit', { onclick=>'popupWin.destroy();', text=>'Cancel' }),
+			); ) ?>
+		</p>
+</form>
+<script type="text/javascript">document.forms['split_form'].new_form_count.focus();</script>
+

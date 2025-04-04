@@ -1,0 +1,16 @@
+<? echo (
+	$r->content_type('text/javascript');
+	if ( $param{'contact_id'} ) {
+		my $Contact = new openprint::User( $param{'contact_id'} );
+		if ( ! $$Contact{id} ) {
+			$log->error("Contact ($param{'contact_id'}) not found.");
+		} else {
+			return "
+				\$('vendor_contact').value = '$$Contact{firstname} $$Contact{lastname}';
+				\$('vendor_phone').value = '$$Contact{phone}';
+				\$('vendor_fax').value = '$$Contact{fax}';
+				\$('vendor_email').value = '$$Contact{email}';
+			";
+		} # end if
+	} # end if
+) ?>

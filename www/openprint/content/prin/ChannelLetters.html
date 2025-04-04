@@ -1,0 +1,48 @@
+<?include(/includes/error_reporting.html)?>
+<? if ( $$variable{ProjectType}->id() ) ?>
+<div class="InstantPricing">
+	<form id="f1" name="f1" method="post" action="/content/prin/Signature.html">
+		<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{ProjectType}->id() ) ?>" />
+		<input type="hidden" id="Status" name="Status" value="<?Status?>" />
+		<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
+		<div id="instant_price_section">
+			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+			<div class="shadow_left"><div class="shadow_right">
+			<div class="Questions"><div class="<? echo ( $$variable{ProjectType}->name() ) ?>">
+<? if ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
+	<div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
+<? endif ( ( ! $dbh ) or $$variable{ProjectType}->please_call() ) ?>
+<? if ( $dbh and ( ( ! $$variable{ProjectType}->please_call() ) or ( sets::isin( $session{user_type}, ['E','A'] ) ) ) ) ?>
+			<?include(_project_name.html)?>
+			<div class="ProjectSpecifications">
+				<h1><? echo ( $$variable{ProjectType}->description() ) ?> Specifications</h1>
+				<?include(_channelletters.html)?>
+				<div class="Production">
+					<fieldset><legend>Production</legend>
+						<div class="content">
+							<ul>
+								<?include(_turnaround.html)?>
+								<?include(_quantity.html)?>
+							</ul>
+						</div>
+					</fieldset>
+				</div>
+				<?include(_ups.html)?>
+				<div id="AlertDiv" style="display:none;"></div>
+				<br class="spacer"/>
+		  </div><!--ProjectSpecifications-->
+				<?include(_prices.html)?>
+<? endif ( $dbh and ( ( ! $$variable{ProjectType}->please_call() ) or ( sets::isin( $session{user_type}, ['E','A'] ) ) ) ) ?>
+				</div></div><!--Questions-->
+		  </div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+	   </div><!--instant_price_section-->
+<? echo ( 
+	if ( -e $config{SkinPath}.'/content/'.$$variable{ProjectType}->name().'.html' ) {
+		return include('/content/'.$$variable{ProjectType}->name().'.html' );
+	} # end if
+	return '';
+) ?>
+<? endif ( $$variable{ProjectType}->id() ) ?>
+</form>
+		<?include(_specials.html)?>
+	</div><!--InstantPricing-->

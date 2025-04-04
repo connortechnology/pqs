@@ -1,0 +1,52 @@
+<? echo ( include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html' ); ) ?>
+<? if ( $$variable{RMA}->id() ) ?>
+<fieldset><legend>Tests</legend>
+	<table class="List">
+		<tr>
+			<th class="Technician">Technician</th>
+			<th class="Test">Test</th>
+			<th class="Remarks">Remarks</th>
+			<th class="DateTime">Test Date</th>
+			<th class="Result">Result</th>
+			<th class="buttons"></th>
+		</tr>
+<? echo ( my $html; my $rowclass;
+	foreach my $Test ( openprint::Test_Result->find(rma_id=>$$variable{RMA}->id(), order=>'id' ) ) {
+		$html .= sprintf(q`
+<tr%s>
+<td class="Technician">%s</td>
+<td class="Test">%s</td>
+<td class="Remarks">%s</td>
+<td class="DateTime">%s</td>
+<td class="Result">%s</td>
+			<td class="buttons"></td>
+</tr>`, $rowclass, $Test->Technician()->name(), $Test->test(), 
+		$Test->remarks(),
+		format_datetime($Test->tested_on()),
+$Test->result(), 
+);
+		$rowclass = $rowclass ? '' : ' class="colRow"'; 
+	} # end foreach Test
+	return $html;
+) ?>
+		<tr class="new">
+			<td class="Technician"><? echo (
+				if ( $session{user_type} eq 'A' ) {
+					return ssi::select( openprint::User->dropdown(order=>'lower(firstname),lower(lastname)',type=>'E'), [], { name=>'test_user_id' } );
+				} else {
+					return '';
+				}
+			) ?></td>
+			<td class="Test"><select name="test_id"><option value="">select</option>
+				<? echo ( make_drop_down( openprint::Test->dropdown(order=>'lower(name)'), $param{test_id} ); ) ?>
+				</select>
+				<input type="text" name="test" placeholder="new test"/>
+			</td>
+			<td class="Remarks"><textarea name="test_remarks" placeholder="" onkeyup="textarea_resize(this);"><? echo ( $param{test_remarks} ) ?></textarea></td>
+			<td class="DateTime"></td>
+			<td class="Result"><? echo ( ssi::select( [ 'PASSED', 'PASSED', 'FAIL', 'FAIL' ] , [ $param{result} ], { name=>'result' } ); ) ?></td>
+			<td class="buttons"><? echo ( button( 'AddTest', { onclick=>qq`new Ajax.Updater('Tests', '_tests.html', { parameters: getValues( 'f1', [ 'test_id', 'test', 'test_remarks', 'result', 'test_user_id' ], { action: 'Add', rma_id: '$$variable{RMA}{id}' } ) } );`, text=>'Add' } ); ) ?></td>
+		</tr>
+	</table>
+</fieldset>
+<? endif ( $$variable{RMA}->id() ) ?>

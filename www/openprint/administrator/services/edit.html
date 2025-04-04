@@ -1,0 +1,130 @@
+<?include('/includes/error_reporting.html')?>
+<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<div class="Service">
+<form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters"><legend>Search</legend>
+		<ul>
+		<li> 
+			<label>Category</label>
+			<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
+				<option value="">All Categories</option>
+				<? echo ( make_drop_down( openprint::ServiceCategory->dropdown(), $session{$r->uri().'?ddmSearchCategory'} ); ) ?>
+			</select>
+		</li>
+<?if(@{$$variable{Equipment}} = openprint::Equipment->find(order=>'lower(strid)'))?>
+		<li><label>Equipment</label>
+			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
+				<option value="">All</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $session{$r->uri().'?equipment_id'} ); ) ?>
+			</select>
+      <?if($session{$r->uri().'?equipment_id'})?>
+      <a href="/administrator/equipment/edit.html?ddmEquipment=<?echo($session{$r->uri().'?equipment_id'})?>">Go</a>
+      <?endif($session{$r->uri().'?equipment_id'})?>
+		</li>
+<?endif(@{$$variable{Equipment}} = openprint::Equipment->find(order=>'lower(strid)'))?>
+		<li> 
+			<label>Service</label>
+			<select name="service_id" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
+				<option value="">Select a Service</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() . ($_->name() ne $_->description() ? ' : '.$_->description() : '' ) } openprint::Service->find(
+							( $session{$r->uri().'?ddmSearchCategory'} ? ( category_id=>$session{$r->uri().'?ddmSearchCategory'} ) : () ),
+							( $session{$r->uri().'?equipment_id'} ? ( 'equipment_id any'=> $session{$r->uri().'?equipment_id'} ) : () ),
+							order=>'lower(name)') ], $$variable{Service}->id() ); ) ?>
+			</select>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( 
+				my $html = '';
+				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
+				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
+				$html .= button( 'New1', { href=>'/administrator/services/edit.html', text=>'New' } );
+				$html .= button( 'Save1', { onclick=>q`f2.btnFunction.value='Save';f2.submit();`, text=>'Save' } );
+				if ( $$variable{Service}->id() ) {
+					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } );
+					if ( $$variable{Service}->deleted() ) {
+						$html .= button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';fmChange=2;fmCheck(f1);", text=>'Destroy' } );
+						$html .= button( 'Undelete1', { onclick=>"f2.btnFunction.value='Undelete';fmChange=2;fmCheck(f2);", text=>'Undelete' } );
+					} else {
+						$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+					}
+				} # end if
+				$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
+				return $html;
+			) ?>
+		</p>
+<? if ( $openprint::User->email() =~ 'iconnor@' ) ?>
+		<p class="buttons">
+				<input type="file" name="file"/>
+				<? echo ( join("\n",
+				button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.submit();", text=>'Import' } ),
+				button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ),
+				); ) ?>
+		</p>
+<? endif ( $openprint::User->email() =~ 'iconnor@' ) ?>
+
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="edit.html">
+	<input type="hidden" name="service_id" value="<?echo($$variable{Service}->id())?>"/>
+	<div class="leftColumn">
+	<fieldset><legend>Service Information</legend>
+		<ul>
+			<li><label>Id</label><? echo ( $$variable{Service}->id() ) ?></li>
+			<li> 
+				<label>Service Name</label>
+				<input type="text" name="name" value="<? echo ( $$variable{Service}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
+			</li>
+			<li> 
+				<label>Service Type</label>
+				<select id="servicetype_id" name="servicetype_id">
+					<option value="">All/Unspecified</option>
+					<? echo ( make_drop_down( openprint::ServiceType->dropdown(order=>'lower(description)'), $$variable{Service}->servicetype_id() ); ) ?>
+				</select>
+			</li>
+			<li> 
+				<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category</label>
+				<input style="display:none;" type="text" id="new_category" name="new_category" value=""/>	
+				<select id="category_id" name="category_id">
+					<option value="">Select a category</option>
+					<? echo ( make_drop_down( openprint::ServiceCategory->dropdown(order=>'lower(name)'), $$variable{Service}->category_id() ); ) ?>
+				</select>
+			</li>
+			<li> 
+				<label>Description</label>
+				<input type="text" id="description" name="description" value="<? echo ( $$variable{Service}->description(); ) ?>" />
+			</li>
+			<li>
+				<label>Activity Code</label>
+				<input type="text" name="activity_code" value="<? echo ( $$variable{Service}->activity_code(); ) ?>" />
+			</li>
+		</ul>
+	</fieldset>
+	</div>
+	<div class="rightColumn">
+	<fieldset><legend>Purchasing Information</legend>
+		<ul>
+		<li class="tax_exempt"> 
+			<label>Federal Tax Exempt?</label>
+			<? echo ( radio( 'taxexempt1', [ 'Y','Yes', 'N', 'No' ], $$variable{Service}->taxexempt1(), { default=>'N' } ); ) ?>
+		</li>
+		<li class="tax_exempt"> 
+			<label>State/Province Exempt?</label>
+			<? echo ( radio( 'taxexempt2', [ 'Y','Yes', 'N', 'No' ], $$variable{Service}->taxexempt1(), { default=>'N' } ); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	</div>
+	<br class="spacer"/>
+	<? if ( $$variable{Service}->id() ) ?>
+	<div id="Prices">
+		<?include(_prices.html)?>
+	</div>
+	<? endif ( $$variable{Service}->id() ) ?>
+	<input type="hidden" name="btnFunction"/>
+</form>
+</div>
+<? if ( $$variable{Service}->id() ) ?>
+<? echo ( include_logs( $$variable{Service} ); ) ?>
+<? endif ( $$variable{Service}->id() ) ?>

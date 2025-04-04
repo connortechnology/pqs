@@ -1,0 +1,80 @@
+.ProductionOverview table {
+	border: 1px solid black;
+}
+.ProductionOverview td, th {
+	border: 1px solid black;
+	text-align: center;
+	text-transform: uppercase;
+	padding: 4px 2px;
+}
+.docketmessage {
+background-color: black;
+color:white;
+display:inline;
+text-transform: uppercase;
+-webkit-print-color-adjust: exact !important;
+padding: 4px;
+font-size: x-large;
+
+}
+.Operator {
+	width: 40px;
+	max-width: 90px;
+}
+.Skids {
+	max-width: 100px;
+}
+.Trim {
+	max-width: 100px;
+}
+table .Company {
+text-align: center;
+}
+
+.multibindery,
+.multipress,
+.scheduled {
+  background-color: #ffff99;
+}
+.PressColumn .regular, .PressColumn .unscheduled, .regular, .unscheduled {
+  background-color: #ffffff;
+}
+.inprepress {
+  background-color: #caffc4;
+}
+.inshipping {
+  background-color: #d7f5ff;
+}
+.approval {
+  background-color: #ffff99;
+}
+.rush {
+  background-color: #FF0000;
+}
+.legend li.rush {
+width: 196px;
+}
+
+.legend {
+  width: 30%;
+  float: left;
+}
+.legend li {
+  padding-left: 70px;
+}
+.legend li label {
+  margin-left: -70px;
+  width: 65px;
+}
+.legend li ul {
+
+}
+.legend li li {
+  padding:0px;
+  width: 200px;
+}
+.legend li li label {
+  margin:0;
+  width: auto;
+}
+

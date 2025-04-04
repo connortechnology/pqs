@@ -1,0 +1,8 @@
+<li class="mprice">
+	<label>1000 Price (<?CurrencySymbol?>)</label>
+		<?echo( join("\n", map {
+	'<span class="'.$$variable{Columns}.'Columns">'.
+	input( type=>'float', name=>'MPrice'.$_, readonly=>'readonly', onfocus=>'this.blur();' ).
+	'</span>' } $$variable{Project}->quantity_indexes() );
+	) ?>
+</li>

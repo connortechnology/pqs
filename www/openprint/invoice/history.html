@@ -1,0 +1,133 @@
+<div class="PageTitle">
+	<h1>Invoices</h1>
+	<h2>History</h2>
+</div>
+<script>
+	function delete_confirm(form) {
+		var number_of_deleted_invoices = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_invoices += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_invoices == 0 ) {
+			alert("To Delete Invoices, click the checkbox beside the invoice.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_invoices + " invoices from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_invoices( form ) {
+		$('InvoiceList').innerHTML = 'Please wait...';
+		new Ajax.Updater('InvoiceList','_history.html', {parameters:form.serialize()});
+	} // end function
+</script>	 
+<?include('/includes/error_reporting.html')?>
+<? if ( $session{user_id} ) ?>
+<form id="f1" name="f1" method="post" action="/invoice/history.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters unprintable">
+		<ul>
+		<li>
+			<label>Invoice Num</label>
+			<? echo ( join('',
+			input(  type=>'text', name=>'invoice_num', id=>'invoice_num', value=>$param{invoice_num}, onkeydown=>"if(event.keyCode==13){load_invoices( this.form );}" ),
+			button( 'Go1', { onclick=>"load_invoices( \$('f1') );", text => 'Go' } ),
+			); ) ?>
+		</li>
+		<li>
+			<label>Go to ID</label>
+			<? echo ( join('',
+			input(  type=>'cardinal', name=>'invoice_id', id=>'invoice_id', onkeydown=>"if(event.keyCode==13){load_invoices( this.form );}" ),
+			button( 'Go2', { onclick=>"load_invoices( \$('f1') );", text => 'Go' } ),
+			); ) ?>
+		</li>
+		<li>
+			<label>PO</label>
+			<? echo ( join('',
+			input(  type=>'cardinal', name=>'po_id', id=>'po_id', onkeydown=>"if(event.keyCode==13){load_invoices( this.form );}" ),
+			button( 'Go3', { onclick=>"load_invoices( \$('f1') );", text => 'Go' } ),
+			); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+		<div class="leftColumn">
+			<ul>
+      <? if ( $session{user_type} eq 'A' ) ?>
+        <li><label>Invoicer</label>
+						<? echo ( ssi::select( 
+       openprint::Company->dropdown( offers_credit=>1 ), 
+       $session{$r->uri().'?invoicer_id'}, {
+       name=>'invoicer_id', prepend=>['','All'], onchange=>q`load_invoices($('f1'));`,
+       }); ) ?>
+			</li>
+      <? endif ( $session{user_type} eq 'A' ) ?>
+			<li>
+				<label>Invoicee</label>
+				<input class="filter" type="text" oninput="filter_companies('invoicee_id', { name: this.value,selected_id: get_ddm_value($('invoicee_id')) } );" />
+				<select name="invoicee_id" id="invoicee_id" onchange="load_invoices(this.form);">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::Company->dropdown( or => { 'last_invoice_id is null'=>0, 'last_order_id is null'=>0 } ), $session{'/invoice/history.html?invoicee_id'} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Created</label>
+<? echo ( date_select_session('/invoice/history.html', 'created_on_start', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 }); ) ?>
+					to 
+<? echo ( date_select_session('/invoice/history.html', 'created_on_end', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 }); ) ?>
+			</li>
+			<li>
+				<label>Due</label>
+<? echo ( date_select_session( '/invoice/history.html', 'due_on_start', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+					to 
+<? echo ( date_select_session( '/invoice/history.html', 'due_on_end', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Paid On</label>
+<? echo ( date_select_session( '/invoice/history.html', 'paid_on_start', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+					to 
+<? echo ( date_select_session( '/invoice/history.html', 'paid_on_end', { onchange=>q`load_invoices($('f1'));`, with_today=>1,with_clear=>1 } ); ) ?>
+			</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
+			<li><label>Paid?</label>
+				<? echo ( radio( 'paid', [ '1','Yes','0','No','','Both'], $session{'/invoice/history.html?paid'}, { onclick=>'load_invoices(this.form);' } ); ) ?>
+			</li>
+			<li><label>Bad Debt?</label>
+				<? echo ( radio( 'bad_debt', [ '1','Yes','0','No','','Both'], $session{'/invoice/history.html?bad_debt'}, { onclick=>'load_invoices(this.form);' } ); ) ?>
+			</li>
+<? if ( openprint::Product->find_one() ) ?>
+			<li><label>Contains Product</label><? echo ( ssi::select( openprint::Product->dropdown(order=>'lower(name)'), $session{$r->uri().'?product_id'}, { name=>'product_id', onchange=>'load_invoices(this.form);',prepend=>['','All'] } ); ) ?></li>
+<? endif ( openprint::Product->find_one() ) ?>
+      <li><label>Currency</label>
+        <?echo(ssi::select( openprint::Currency->dropdown(), $session{$r->uri().'?currency_id'}, { name=>'currency_id', onchange=>'load_invoices(this.form);', prepend=>['','All'] } ); ) ?></li>
+			</ul>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				$html .= button( 'ShowResults', { onclick=>"f1.invoice_id.value='';load_invoices(f1);", text=>'Show Results' } );
+				$html .= button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();", text=>'Download' } );
+				$html .= button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } );
+				$html .= button( 'New', { href=>'edit.html', text=>'New Invoice' } );
+				if ( openprint::Invoice->can_send() ) {
+				$html .= button( 'AccountStatement', { onclick=>"if(!\$('invoicee_id').value){alert('Please select a company');} else {f1.btnFunction.value='Account Statement';f1.submit();}", text=>'Account Statement' } );
+				}
+        $html .= button( 'interest', { onclick=>"f1.btnFunction.value='Calculate Interest';f1.submit();", text=>'Calculate Interest' } );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<div id="InvoiceList"><?include('_history.html')?></div>
+</form>
+<? else ( $session{user_id} ) ?>
+	Only logged in users have an invoice history.
+<? endif ( $session{user_id} ) ?>

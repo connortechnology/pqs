@@ -1,0 +1,54 @@
+
+.spacer {
+	clear: both;
+}
+
+form {
+	margin: 0px;
+}
+
+body {
+	font-size: 8px;
+}
+
+input {
+	margin: 0px;
+	padding: 0px;
+	border: 1px solid black;
+	font-size: 8px;
+}
+select {
+	margin: 0px;
+	padding: 0px;
+	font-size: 8px;
+	width: 100%;
+}
+option {
+	width: 100%;
+}
+
+div.row {
+}
+div.row span.label {
+	float: left;
+	width: 33%;
+
+}
+div.row span.input {
+	float: left;
+	width: 67%;
+}
+div.row span.buttons {
+	float: left;
+	width: 67%;
+	margin-left: 33%;
+}
+a {
+	font-size: 8px;
+}
+table tr th {
+	font-size: 8px;
+}
+p label {
+	width: 40px;
+}

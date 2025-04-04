@@ -1,0 +1,7 @@
+<? echo (
+	my @Addresses = openprint::Address->find(company_id=>$param{company_id});
+	return ssi::make_drop_down( 
+		[ ('', 'New'), map { $_->id(), $_->to_string() } @Addresses ],
+		[ @Addresses == 1 ? $Addresses[0]->id() : () ],
+		);
+) ?>

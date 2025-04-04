@@ -1,0 +1,199 @@
+div.Popup {
+	position:absolute;
+	visibility: hidden;
+	background-color: #ffffff;
+	border:1px solid;
+	width: auto;
+	padding: 5px;
+	z-index: 100;
+}
+div.row {
+	clear: none;
+	width: 100%;
+	font-weight: normal;
+	font-size: 10px;
+	margin:0px;
+	padding: 0px;
+	margin-bottom: 4px;
+	height: auto;
+	float: left;
+		p\osition: relative;
+}
+
+.PressScheduleHeader {
+	border-top: solid 1px;
+	border-bottom: solid 1px;
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+	background-color: #E3E4F0;
+	font-weight: bold;
+	font-size: 16px;
+}
+A.buttonOff {
+	margin: 0px;
+	padding: 0px;
+	padding-left: 2px;
+	padding-right: 2px;
+	border: 1px solid black;
+}
+A.buttonOn {
+	margin: 0px;
+	padding: 0px;
+	padding-left: 2px;
+	padding-right: 2px;
+	border: 1px solid black;
+}
+
+	ul.Schedule {
+		padding: 0px;
+		margin: 0px;
+		border: 1px outset;
+		list-style: none none inside;
+		text-indent: 0px;
+		width: 100%;
+	margin-bottom: 2px;
+		height: 22px;
+	}
+ul.Schedule:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+/* Hides from IE-mac \*/
+* html ul.Schedule {height: 1%;}
+* ul.Schedule {display: block;}
+/* End hide from IE-mac */
+
+ul.Schedule	li {
+		padding: 0px;
+		margin: 0px;
+		border: 1px outset;
+		border-bottom: none;
+		list-style: none;
+		text-indent: 0px;
+		background-color: #ffffff;
+		z-index: 0;
+		float: left;
+		height: 20px;
+	}
+	li br {
+		clear: both;
+	}
+	ul.Schedule li.yellow {
+		background-color: #ffff99;
+	}
+	ul.Schedule li.blue {
+	}
+	ul.Schedule li.green {
+		background-color: #99ff99;
+	}
+	ul.Schedule li.pink {
+		background-color: #FAC6FF;
+	}
+	ul.Schedule li.red {
+		background-color: #FF0000;
+	}
+	.When {
+		background-color: #ffb4da;
+		font-weight: bold;
+		font-size: 14px;
+	   margin: 0px;
+	   margin-left: 1px;
+	   margin-right: 1px;
+	   padding: 0px;
+	}
+	.When span {
+		padding: 2px;
+		width: auto;
+	}
+	.docket {
+		float: right;
+		p\osition: relative;
+		margin-left: 5px;
+	}
+	.Company {
+		width: 100%;
+		font-weight: bold;
+		font-size: 14px;
+		overflow: hidden;
+		height: 14px;
+		float: left;
+	}
+	.Forms {
+		float: left;
+		margin-right: 5px;
+		display: inline;
+	}
+	.DueDate {
+		font-weight: bold;
+		float: right;
+		margin-left: 5px;
+		display: inline;
+	}
+	.Impressions {
+		float: right;
+		margin-left: 5px;
+		display: inline;
+	}
+	.Buttons {
+		float: right;
+		margin-right: 5px;
+		display: inline;
+	}
+	.commands {
+		border-top: 1px solid #000000;
+	}
+	.Comment {
+		padding-left: 6px;
+		padding-right: 6px;
+	}
+	.TotalImpressions {
+		margin-left: auto;
+		margin-right: auto;
+		float: left;
+		p\osition: relative;
+	}
+	.Operator, .assign {
+		float: right;
+	}
+	.sizer {
+		border-left:outset; 
+		border-right:outset; 
+width: 1px; 
+float: right;
+height:100%;
+cursor: e-resize; 
+	} 
+	@media print {
+		.assign {
+			display: none;
+		}
+		.TotalImpressions {
+			display: none;	
+		}
+		.Comment {
+			border: none;
+		}
+		ul {
+			border: 1px solid black;
+			margin: 2px;
+		}
+		li { 
+			margin: 0px;
+			padding: 1px;
+		}
+		td { 
+			padding: 0px;
+			margin: 0px;
+		}
+		span {
+			margin: 0px;
+			padding: 0px;
+			width: auto;
+		}
+	}

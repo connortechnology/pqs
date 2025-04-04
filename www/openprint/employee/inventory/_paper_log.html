@@ -1,0 +1,114 @@
+<? eval (
+	$$variable{Paper} = new openprint::Paper( $param{paper_id} ) if ! $$variable{Paper};
+	if ( $param{ddmStartYear} ) {
+		@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+	} elsif ( $session{'/employee/inventory/paper_details.html?ddmStartYear'} ) {
+		@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, @session{
+			'/employee/inventory/paper_details.html?ddmStartYear',
+			'/employee/inventory/paper_details.html?ddmStartMonth',
+			'/employee/inventory/paper_details.html?ddmStartDay'}
+			);
+	} else {
+		@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, 
+			Date::Calc::Add_Delta_Days( Date::Calc::Today(), -7 ),
+			);
+	} # end if
+	if ( $param{'ddmEndYear'} ) {
+		@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
+	} else {
+		@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+	} # end if
+	$param{limit} = 10 if ! exists $param{limit};
+
+	my @PI = openprint::PaperInventory->find(
+		paper_id	=>	$param{paper_id},
+		'updated_on <='	=>	$$variable{End} . ' 23:59:59',
+		'updated_on >='	=>	$$variable{Start} . ' 00:00:00',
+		limit				=>	$session{'/employee/inventory/paper_details.html?limit'},
+		order				=>	'updated_on',
+	);
+	if ( (! @PI) and ! $param{ddmStartYear} ) {
+		@PI = openprint::PaperInventory->find(paper_id=>$param{paper_id}, limit=>1, order=>'updated_on DESC');
+		if ( @PI ) {
+			my ( $y, $m, $d ) = $PI[0]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
+			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, $y, $m, $d );
+			@PI = openprint::PaperInventory->find(
+				'paper_id'	=>	$param{'paper_id'},
+				'updated_on <='	=>	$$variable{'End'} . ' 23:59:59',
+				'updated_on >='	=>	$$variable{'Start'} . ' 00:00:00',
+				order			=>	'updated_on',
+				);
+		} # end if
+	} # end if
+	$$variable{'PI'} = \@PI;
+) ?>
+<form name="LogForm" id="LogForm" action="_paper_log.html">
+	<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>"/>
+	<p class="unprintable">
+		<label>Date</label>
+		<span class="DateSelector">
+			<select name="ddmStartYear" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm') );"><?StartYears?></select>
+			<select name="ddmStartMonth" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm') );"><?StartMonths?></select>
+			<select name="ddmStartDay" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm') );"><?StartDays?></select>
+		</span>
+			to
+		<span class="DateSelector">
+			<select name="ddmEndYear" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm') );"><?EndYears?></select>
+			<select name="ddmEndMonth" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm') );"><?EndMonths?></select>
+			<select name="ddmEndDay" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm') );"><?EndDays?></select>
+		</span>
+		<span class="DateSelector">
+		Limit 
+		<select name="limit" onchange="LoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm') );">
+			<? echo ( ssi::make_drop_down( [ 10, 10, 25, 25,100, 100, 0, 'All' ], $session{'/employee/inventory/paper_details.html?limit'} ); ) ?>
+		</select>
+		entries
+		</span>
+	</p>
+	<hr/>
+	<table class="List">
+		<tr>
+			<th class="Skid">Skid</th>
+			<th class="RFID">RFID</th>
+			<th class="ManufacturersID">Manufacturers ID</th>
+			<th class="DateTime">Date</th>
+			<th class="Employee">Employee</th>
+			<th class="Comment">Comment</th>
+			<th class="Quantity">Amount</th>
+			<th class="Quantity">In Stock</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $total = 0;		
+			my $rowclass;
+			foreach my $PI ( @{$$variable{PI}} ) {
+				$html .= sprintf( '
+<tr%1$s>
+	<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%4$d">%4$d</a></td>
+	<td class="RFID">%5$s</td>
+	<td class="ManufacturersID"><a href="/employee/inventory/skid_details.html?skid_id=%4$d">%10$s</a></td>
+	<td class="DateTime">%2$s</td>
+	<td class="Employee">%3$s</td>
+	<td class="Comment">%9$s</td>
+	<td class="Quantity">%6$s%8$s</td>
+	<td class="Quantity">%7$s%8$s</td>
+</tr>',
+					$rowclass,
+					format_datetime($PI->updated_on()),
+					$PI->User()->name(),
+					$PI->skid_id(),
+					( $PI->Skid()->rfidtag_id() ? $PI->Skid()->RFIDTag()->link_to( sprintf('%d (%2$x)', $PI->Skid()->RFIDTag()->id_short(),substr($PI->Skid()->rfidtag_id(),1,15)) ) : '' ),
+					( defined $PI->delta() ? Number::Format::format_number( $PI->delta() ) : 0 ),
+					( defined $PI->instock() ? Number::Format::format_number( $PI->instock() ) : 0 ),
+					$PI->units(),
+					$PI->comment_html(),
+					$PI->Skid()->manufacturers_id(),
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$total += $PI->delta();
+			} # end foreach
+			$html .= '<tr class="totals"><td colspan="6">Totals</td><td class="Quantity">' . Number::Format::format_number( $total ) . $$variable{'Paper'}->units() .'</td><td>&nbsp;</td></tr>';
+			return $html;
+		) ?>
+	</table>
+</form>

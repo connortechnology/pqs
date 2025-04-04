@@ -1,0 +1,33 @@
+<?include('/includes/main/proj/_quantities.html')?>
+<? echo (
+
+my $options;
+	if ( $$variable{Equipment} ) {
+  $options = [map { $_->id(), $_->name() } @{$$variable{Equipment}}];
+  } elsif ( $$variable{EquipmentArray}) {
+  $options = openprint::Equipment->dropdown( 'servicetype_id any'=>$$variable{ServiceType}->id(), useinestimating=>1);
+  }
+  return '' if (!($options and @{$options}));
+
+	my $html = '<li class="equipment"><label>Equipment</label>';
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{Columns}.'Columns">';
+		$html .=qq` 
+	<select name="ddmEquipment$qty_index" size="1" onchange="calc(this.form.name);">
+	<option value="">Equipment Options</option>
+`;
+		$html .= make_drop_down( $options, $$variable{'ddmEquipment'.$qty_index} ? $$variable{'ddmEquipment'.$qty_index} : $$variable{'Equipment'.$qty_index} );
+    $html .= '</select>';
+    $html .= write_override( 'chkOverrideEquipment'.$qty_index, $$variable{"chkOverrideEquipment$qty_index"}, '', q`calc('f1');` );
+    $html .= '</span>';
+	} # end foreach qty_index
+	$html .= '</li>';
+	return $html;
+) ?>
+<? echo ( join( "\n",
+			include('/includes/main/proj/_unit_price.html'),
+			include('/includes/main/proj/_mprice.html'),
+			include('/includes/main/proj/_markup.html'),
+			include('/includes/main/proj/_service_price.html'),
+			include('/includes/main/proj/_breakdown.html'),
+		); ) ?>

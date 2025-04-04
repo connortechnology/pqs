@@ -1,0 +1,142 @@
+<script type="text/javascript">
+	var timer;
+	function loadImage( ImageID, file ) {
+		var image = document.images[ImageID];
+		image.src = file;
+	}
+	function mouseOver( ImageID, file ) {
+		if ( timer ) {
+			clearTimeout(timer);
+			timer = 0;
+		} // end if
+		loadImage( ImageID, file);
+	} // end function mouseOver
+	function mouseOut( ImageID, file ) {
+		if ( ! timer ) 
+			timer = setTimeout( "loadImage( '"+ImageID+"', '"+file+"');", 1000 );
+	} // end function mouseOut
+	function check_inputs ( form ) {
+		return true;
+	}
+</script>
+<? include('/includes/error_reporting.html') ?>
+<form name="jump" method="get" action="rfidscanner_details.html">
+	<fieldset class="filters"><legend>Choose RFIDScanner</legend>
+		<ul>
+		<li>
+			<label for="rfidscanner_id">Scanner ID #</label>
+			<? echo ( input( type=>'cardinal', name=>'rfidscanner_id', value=>$param{rfidscanner_id}, onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);' ); ) ?>
+			<? echo ( join('',
+				button( 'Go', { onclick=>"if(!jump.rfidscanner_id.value){jump.rfidscanner_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}", text=>'Go' } ),
+				button( 'Previous', { onclick=>q`if(!jump.rfidscanner_id.value){jump.rfidscanner_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,text=>'&lt;&lt;' } ),
+				button( 'Next', { onclick=>q`if(!jump.rfidscanner_id.value){jump.rfidscanner_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,text=>'&gt;&gt;' } ),
+			); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<form id="f1" name="f1" action="rfidscanner_details.html" method="post">
+	<input type="hidden" name="btnFunction" />
+	<fieldset><legend>
+		<? if ( $$variable{'RFIDScanner'}->id() ) ?>
+			<input type="hidden" name="rfidscanner_id" value="<? echo ( $$variable{'RFIDScanner'}->id() ) ?>" />
+		RFIDScanner ID: <? echo ( $$variable{'RFIDScanner'}->id() ) ?>
+		<? else ( $$variable{'RFIDScanner'}->id() ) ?>
+		New RFIDScanner
+		<? endif ( $$variable{'RFIDScanner'}->id() ) ?>
+		</legend>
+
+		<div class="leftColumn">
+			<ul>
+		<? if ( $$variable{'RFIDScanner'}->id() ) ?>
+			<li>
+				<label>Created</label>
+				<? echo ( format_datetime( $$variable{RFIDScanner}->created_on() ); ) ?> 
+			</li>
+			<li>
+				<label>Last Updated</label>
+				<? echo ( format_datetime( $$variable{RFIDScanner}->updated_on() ); ) ?> 
+			</li>
+		<? endif ( $$variable{'RFIDScanner'}->id() ) ?>
+			<li>
+				<label>Name</label>
+				<input type="text" name="name" value="<? echo ( $$variable{'RFIDScanner'}->name() ) ?>" />
+			</li>
+			<li>
+				<label>IP Address</label>
+				<input type="text" name="ipaddr" value="<? echo ( $$variable{'RFIDScanner'}->ipaddr() ) ?>" />
+			</li>
+			<li>
+				<label>Other Data</label>
+				<? if ( $$variable{'RFIDScanner'}->type() eq 'Truck Location' ) ?>
+				<select name="other">
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::RFIDScanner->find( order=>'name') ], $$variable{RFIDScanner}->other() ); ) ?>
+				</select>
+				<? else ( $$variable{'RFIDScanner'}->type() eq 'Truck Location' ) ?>
+				<input type="text" name="other" value="<? echo ( $$variable{'RFIDScanner'}->other() ) ?>" />
+				<? endif ( $$variable{'RFIDScanner'}->type() eq 'Truck Location' ) ?>
+			</li>
+			<li><label>Type</label>
+				<select name="type" id="type">
+					<option value="">select</option>
+					<? echo ( make_drop_down( [ map { $_, $_ } @openprint::RFIDScanner::types ], $$variable{RFIDScanner}->type() );) ?>
+				</select>
+			</li>
+			<li id="Location">
+				<label>Location</label>
+				<select id="location_id" name="location_id">
+					<option value="">select</option>
+					<? echo ( 
+						make_drop_down( openprint::Location->dropdown( order=>'lower(name)'), $$variable{RFIDScanner} ? $$variable{RFIDScanner}->location_id() : $param{location_id} );
+						) ?>
+				</select>
+			</li>
+			<li>
+				<label>Monitor</label>
+				<input type="radio" id="monitor1" name="monitor" value="1" <? echo ( checked( $$variable{'RFIDScanner'}->monitor() ) ) ?> />
+				<label class="radio" for="monitor1">Yes</label>
+				<input type="radio" id="monitor0" name="monitor" value="0" <? echo ( checked( ! $$variable{'RFIDScanner'}->monitor() ) ) ?> />
+				<label class="radio" for="monitor0">No</label>
+			</li>
+			</ul>
+			<p class="buttons">
+				<? echo ( 
+						my $html;
+						$html .= button( 'save', { onclick=>"if(check_inputs(f1)){f1.btnFunction.value='Save';f1.submit();}", text=>'Save' } );
+						if ( $$variable{'RFIDScanner'}->id() ) {
+							$html .= button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.action='rfidscanners.html';f1.btnFunction.value='Delete';f1.submit();}", text=>'Delete' } );
+							$html .= button( 'addnew', { href=>'rfidscanner_details.html', text=>'Add New RFIDScanner' } );
+						} # end if
+						$html .= button( 'reset', { onclick=>'f1.reset();', text=>'Reset' } );
+						#$html .= button( 'clear', { onclick=>'clearForm(f1);', text=>'Clear' } );
+						return $html;
+				) ?>
+			</p>
+		</div><!-- column -->
+		<div class="rightColumn" id="Map">
+			<?include('_map.html')?>
+		</div>
+		<br class="spacer"/>
+	</fieldset>
+</form>
+<? if ( $$variable{'RFIDScanner'}->id() ) ?>
+<!--
+<form name="f2" id="f2">
+	<input type="hidden" name="rfidscanner_id" value="<? echo ( $$variable{'RFIDScanner'}->id() ) ?>" />
+	<fieldset><legend>Location Log</legend>
+		<p>
+			<label>Date Filter</label>
+			<? echo ( date_select( 'location_log_start', $session{'/employee/inventory/rfid_scanner_details.html?location_log_start'} ); ) ?>
+			to 
+			<? echo ( date_select( 'location_log_end', $session{'/employee/inventory/rfid_scanner_details.html?location_log_end'} ); ) ?>
+			<select name="limit" style="width:auto;"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
+			<? echo ( button( 'LoadLog', { onclick=>q`LoadContent( 'Log','_rfidscanner_log.html', $('f2') );`, text=>'Load' } ); ) ?>
+		</p>
+		<div id="Log"><? include('_rfidscanner_log.html') ?></div>
+	</fieldset>
+</form>
+-->
+<?include(_rfidtag_log.html)?>
+<? endif ( $$variable{'RFIDScanner'}->id() ) ?>
+<script type="text/javascript">document.jump.rfidscanner_id.focus();</script>

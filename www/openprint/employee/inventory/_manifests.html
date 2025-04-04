@@ -1,0 +1,315 @@
+<? eval (
+	require openprint::Manifest;
+  my $uri = '/employee/inventory/manifests.html';
+
+	if ( $param{manifest_name} ) {
+		if ( length $param{manifest_name} <= 2 ) {
+			$$variable{Manifests} = [];
+			$variable{error} .= 'You must specify at least 2 digits of the manifest #<br/>';
+			return;
+		} # end if
+		if ( ! ( $param{manifest_name} =~ /%/ ) ) {
+			$param{manifest_name} = '%'.$param{manifest_name}.'%';
+		} # end if
+
+		$$variable{Manifests} = [ openprint::Manifest->find( 
+			'name like'	=>	$param{manifest_name},
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
+			) ];
+	} elsif ( $param{po_id} ) {
+		$$variable{Manifests} = [ openprint::Manifest->find( 
+			'po_id any'	=>	$param{po_id},
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
+			) ];
+	} elsif ( $param{skid_id} ) {
+		$$variable{Manifests} = [ openprint::Manifest->find( 
+			skid_id	=>	$param{skid_id},
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
+			) ];
+	} elsif ( $param{rfidtag_id} ) {
+		my @RFIDs = openprint::RFIDTag->find( 'id like' => '%'.$param{rfidtag_id}.'%' );
+
+		$$variable{Manifests} = [ openprint::Manifest->find( 
+			'rfidtag_id &&' =>	[ map { $_->id() } @RFIDs ],
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
+			) ];
+	} elsif ( $param{manufacturers_id} ) {
+		$$variable{Manifests} = [ openprint::Manifest->find( 
+			'manufacturers_id any'	=>	$param{manufacturers_id},
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
+			) ];
+	} elsif ( $param{docket} ) {
+		$$variable{Manifests} = [ openprint::Manifest->find( 
+			'docket any'	=>	$param{docket},
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
+			) ];
+	} else {
+		my %search = (
+			( $param{'manifest like'} ? ( 'name ilike'	=> $param{'manifest like'} ) : () ),
+			date_filter($uri.'?received_on_end', 'received_on <=' ),
+			date_filter($uri.'?received_on_start', 'received_on >=' ),
+			date_filter($uri.'?created_on_end', 'created_on <=' ),
+			date_filter($uri.'?created_on_start', 'created_on >=' ),
+			date_filter($uri.'?updated_on_end', 'updated_on <=' ),
+			date_filter($uri.'?updated_on_start', 'updated_on >=' ),
+			order		=>	'received_on DESC',
+      limit  => '1000',
+			( $session{$uri.'?deleted'} ? ( deleted => [ split(',', $session{$uri.'?deleted'} ) ] ) : () ),
+			( $session{$uri.'?po_confirmed'} ne '' ? ( 'po_unconfirmed_type_ids exists' => !$session{$uri.'?po_confirmed'}) : () ),
+		);
+		if ( $session{$uri.'?type'} ) {
+            my @types = split(',',$session{$uri.'?type'} );
+            if ( @types ) {
+                if ( sets::isin( 'Unknown', \@types ) ) {
+					$search{'type &&'}      = [ map { $_ ne 'Unknown' ? $_ : undef } @types ];
+                } else {
+					$search{'type &&'}      = \@types;
+                } # end if
+            } # end if
+        }
+
+# speed up by caching these skids
+		openprint::Skid->find(
+			date_filter($uri.'?received_on_end', 'received_on <=' ),
+			date_filter($uri.'?received_on_start', 'received_on >=' ),
+			date_filter($uri.'?created_on_end', 'created_on <=' ),
+			date_filter($uri.'?created_on_start', 'created_on >=' ),
+			date_filter($uri.'?updated_on_end', 'updated_on <=' ),
+			date_filter($uri.'?updated_on_start', 'updated_on >=' ),
+		);
+
+		$search{supplier_id} = $session{$uri.'?supplier_id'} if $session{$uri.'?supplier_id'};
+		$$variable{Manifests} = [ openprint::Manifest->find( %search ) ];
+	} # end if
+  $$variable{canseepricing} = $openprint::session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} );
+) ?>
+<?include(/includes/error_reporting.html)?>
+<? if ( @{$$variable{Manifests}} ) ?>
+<form id="ManifestResults" name="ManifestResults" action="manifests.html" method="post">
+	<table id="ResultsTable" class="List">
+    <thead class="sortable">
+			<tr>
+				<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'manifest_id', this.checked );"/></th>
+				<th class="manifest_num">Manifest #</th>
+				<th class="po_id">PO ID</th>
+				<th class="Docket">Docket</th>
+				<th class="Company">Vendor</th>
+				<th class="Date">Received On</th>
+				<th class="contents">Contents</th>
+				<? if ( $$variable{canseepricing} ) ?>
+				<th class="Price">Value</th>
+				<? endif ( $$variable{canseepricing} ) ?>
+			</tr>
+		</thead>
+		<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			my $value_total = 0;
+      my $uri = '/employee/inventory/manifests.html';
+			my $ac = sql::start_transaction( $dbh );
+
+			my @manifest_ids = map { $$_{id} } @{$$variable{Manifests}};
+	
+			my @ManifestContentTypes = openprint::Manifest_Content_Type->find(manifest_id=>\@manifest_ids);
+
+			my @po_ids = map { $_->po_id() } @ManifestContentTypes;
+			my @POs	= openprint::PurchaseOrder->find(id=>\@po_ids);
+
+			my %POCs = misc::make_hash_from_array( 'po_id', 
+				openprint::PurchaseOrder_Content->find(po_id=>\@po_ids, order=>'id') ) if @POs;
+
+			foreach my $PO ( @POs ) {
+				$PO->Contents($POCs{$$PO{id}});
+			}
+
+			my %ManifestCTs = misc::make_hash_from_array('manifest_id', @ManifestContentTypes);
+			my %Manifest_Types = map { $$_{id} => $_ } @ManifestContentTypes;
+		
+			my @MContents = openprint::ManifestContent->find(manifest_id=>\@manifest_ids);
+			my %MContents = misc::make_hash_from_array('manifest_id', @MContents);
+
+			my %SkidContents = ();
+			my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @MContents;
+			if ( @skid_ids ) {
+				openprint::Skid->find(id=>\@skid_ids);
+				foreach my $SC ( openprint::SkidContent->find(skid_id=>\@skid_ids) ) {
+					push @{$SkidContents{$$SC{skid_id}}}, $SC;
+				} # end foreach
+			} # end if
+
+			foreach my $Manifest ( @{$$variable{Manifests}} ) {
+				$r->print('');
+				if ( $r->connection()->aborted() ) {
+					$log->warn("ABORTED");
+					return;
+				} # end if
+
+				if ( $MContents{$$Manifest{id}} ) {
+					$Manifest->Contents($MContents{$$Manifest{id}});
+					foreach my $MC ( @{$MContents{$$Manifest{id}}} ) {
+						$MC->Type($Manifest_Types{$$MC{type_id}});
+					}
+				} else { 
+					$Manifest->Contents([]);
+				}
+				$$Manifest{Types} = $ManifestCTs{$$Manifest{id}} if $ManifestCTs{$$Manifest{id}};
+
+				if ( $session{$uri.'?delivery'} ) {
+					my $under = 0;
+					my $over = 0;
+
+					# First, see if any have po_ids, skip the ones that dont
+					foreach my $Type ( $Manifest->Types() ) {
+						next if ! $Type->po_id();
+
+						my $PO_Content = $Type->PurchaseOrder_Content();
+						$PO_Content = $Type->PurchaseOrder_Content({ignore_fsc=>1}) if !$PO_Content;
+						next if ! $PO_Content;
+
+						my $quantity = 0;
+						my $min_roll_size;
+
+						# Get QTY
+						foreach my $C ( $Manifest->Contents() ) {
+							next if $C->type_id() != $Type->id();
+							$quantity += $C->quantity();
+							$min_roll_size = $C->quantity() if (!defined $min_roll_size) or ($min_roll_size < $C->quantity());
+						} # end foreach Content
+
+						if ( ($PO_Content->qty() + $min_roll_size) < $quantity ) {
+							$over = 1;
+						} elsif ( $PO_Content->qty() > $quantity ) {
+							$under = 1;
+						} # end if
+					} # end foreach Type
+					next if ( $session{$uri.'?delivery'} eq 'over' ) and ! $over;
+					next if ( $session{$uri.'?delivery'} eq 'under' ) and ! $under;
+					next if ( $session{$uri.'?delivery'} eq 'exact' ) and ( $under or $over );
+				} # end if under or over
+
+				my %manifest_skids;
+				my %manifest_weight;
+				my %real_skids;
+				my %real_weight;
+
+				my $value = 0;
+
+				# Why? We are counting the # of skids and weight on the manifest
+				# Supposedly to compare to the actual skid contents
+				foreach my $MC ( $Manifest->Contents() ) {
+					$manifest_skids{$MC->Type()->paper_id()} += 1;
+					$manifest_weight{$MC->Type()->paper_id()} += $MC->quantity();
+
+					my $Skid = $MC->Skid();
+					my @SkidContents = $SkidContents{$$MC{skid_id}} ? @{$SkidContents{$$MC{skid_id}}} : ();
+					$Skid->Contents( \@SkidContents );
+					
+					foreach my $C ( @SkidContents ) {
+						$real_skids{$C->paper_id} += 1;
+						$real_weight{$C->paper_id} += $MC->quantity();
+					} # end foreach paper on skid
+					$value += $MC->value();	
+$log->debug("Value from $$MC{manifest_id} $value");
+				} # end foreach MC
+
+				my $error = $Manifest->check();
+				next if $error and $session{$uri.'?has_errors'} eq '0';
+				next if (!$error) and $session{$uri.'?has_errors'} eq '1';
+
+				$html .= sprintf(q`<tr%9$s>
+				<td class="checkbox"><input type="checkbox" name="manifest_id" value="%1$s"/></td>
+				<td class="manifest_num"><a href="manifest_view.html?manifest_id=%1$s">%2$s</a></td>
+				<td class="po_id"><a href="manifest_view.html?manifest_id=%1$s">%3$s</a></td>
+				<td class="Docket"><a href="manifest_view.html?manifest_id=%1$s">%4$s</a></td>
+				<td class="Company"><a href="manifest_view.html?manifest_id=%1$s">%5$s</a></td>
+				<td class="Date"><a href="manifest_view.html?manifest_id=%1$s">%6$s<br/><span title="Updated:%8$s">%7$s</span></a></td>`, 
+					$$Manifest{id}, $$Manifest{name},join('<br/>', $Manifest->po_ids() ), 
+					join('<br/>', $Manifest->dockets() ), $Manifest->Vendor()->name(),
+					format_date( $Manifest->received_on() ),
+					format_date( $Manifest->updated_on() ),
+					format_datetime( $Manifest->updated_on() ),
+$rowclass,
+					);
+
+				$html .= '<td class="contents">';
+
+				foreach my $paper_id ( keys %manifest_weight ) {
+					my $Paper = new openprint::Paper( $paper_id );
+					$html .= sprintf('%s : %d%s : %d %s%s', $Paper->to_string(), $manifest_weight{$paper_id}, $Paper->units(), $manifest_skids{$paper_id},
+  ( $Paper->type() eq 'Roll' ? 'roll' : 'skid' ), ( $manifest_skids{$paper_id} ==1 ? '' : 's' ) );
+					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
+						my %types = map { $$_{paper_id}, $_ } @{$ManifestCTs{$$Manifest{id}}} if $ManifestCTs{$$Manifest{id}};
+						my $Type = $types{$paper_id?$paper_id:undef};
+						if ( $Type ) {
+							my $POC = $Type->PurchaseOrder_Content();
+							$POC = $Type->PurchaseOrder_Content({ignore_fsc=>1}) if !$POC;
+
+							$html .= ' @ ' . ( $POC ? openprint::Currency::format( $POC->price() ) : '0.00' ). '/100lbs';
+						} # end if
+					} # end if
+					$html .= '<br/>';
+				} # end foreach
+
+				if ( $error ) {
+					$html .= '<span class="warning">' . $error . '</span>';
+				} # end if
+
+				if ( %real_skids and ( misc::sum( map { $manifest_skids{$_} } keys %manifest_skids ) != misc::sum( map { $real_skids{$_} } keys %real_skids ) ) ) {
+					$html .= '<span class="warning"><br/>Actual skid contents<br/>';
+					foreach my $paper_id ( keys %real_weight ) {
+						my $Paper = new openprint::Paper( $paper_id );
+						$html .= sprintf('%s : %d%s : %d %s%s<br/>', $Paper->to_string(), $real_weight{$paper_id}, $Paper->units(), $real_skids{$paper_id}, ( $Paper->type() eq 'Roll' ? 'roll' : 'skid' ), ($real_skids{$paper_id} ==1 ? '' : 's' ) );
+					} # end foreach
+					$html .= '</span>';
+				} # end if
+				
+				$html .= '</td>';	
+				if ( $$variable{canseepricing} ) {
+$log->debug("Value from $$Manifest{id} $value");
+					$html .= '<td class="Price">'.openprint::Currency::format($value).'</td>';
+					$value_total += $value;
+				} # end if
+				$html .= '</tr>';
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+$log->debug("$value_total");
+			} # end foreach Manifest
+			sql::end_transaction( $dbh, $ac );
+			$html .= '</tbody>';
+			if ( $$variable{canseepricing} ) {
+				$html .= '<tfoot><tr class="totals">
+            <td class="checkbox"><input type="checkbox" onclick="select_all( this.form, \'manifest_id\', this.checked );"/></td>
+            <td colspan="6">Totals</td><td class="Price">'.openprint::Currency::format( $value_total ).'</td></tr></tfoot>';
+			} # end if
+			return $html;
+		) ?>
+	</table>
+<script> TableKit.reloadTable('ResultsTable'); </script>
+	<input type="hidden" name="btnFunction"/>
+	<p class="buttons">
+		<? echo (
+      my $uri = '/employee/inventory/manifests.html';
+     join("\n",
+   $session{$uri.'?deleted'} eq '1' ? (
+     button( 'destroy', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=destroy', { manifest_id: get_value( $('ManifestResults').manifest_id ) } );`, text=>'Destroy Checked' } ),
+      button( 'undelete', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=undelete', { manifest_id: get_value( $('ManifestResults').manifest_id ) } );`, text=>'Undelete Checked' } ),
+      ) : (
+					button( 'Delete', { onclick=>q`ManifestResults.btnFunction.value='delete';ManifestResults.submit();`, text=>'Delete Checked' } ),
+			) ); ) ?>
+	</p>
+</form>
+<? else ( @{$$variable{Manifests}} ) ?>
+There were no manifests matching your search criteria.
+<? endif ( @{$$variable{Manifests}} ) ?>

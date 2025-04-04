@@ -1,0 +1,20 @@
+<? eval (
+	@$variable{
+		'ProductDueDateYear'.$$variable{'OrderedProduct'}->id(), 
+		'ProductDueDateMonth'.$$variable{'OrderedProduct'}->id(), 
+		'ProductDueDateDay'.$$variable{'OrderedProduct'}->id(),
+		} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 14 );
+) ?>
+	
+<p>
+	<label>Required By</label>
+	<select style="width: auto;" name="ProductDueDateMonth<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" size="1" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.form.ProductDueDateYear<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value,this.form.ProductDueDateMonth<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value);" onfocus="on(this.options[this.selectedIndex]);on(this)" onblur="off(this.options[this.selectedIndex]);off(this)">
+    <? echo ( ssi::getmonths( $$variable{'ProductDueDateMonth'.$$variable{'OrderedProduct'}->id()} ); ) ?>
+	</select>
+	<select style="width: auto;" name="ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" size="1" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.form.ProductDueDateYear<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value,this.form.ProductDueDateMonth<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value);" onfocus="on(this.options[this.selectedIndex]);on(this)" onblur="off(this.options[this.selectedIndex]);off(this)">
+    <? echo ( ssi::getdays( $$variable{'ProductDueDateDay'.$$variable{'OrderedProduct'}->id()} ); ) ?>
+	</select>
+	<select style="width: auto;" name="ProductDueDateYear<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" size="1" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.form.ProductDueDateYear<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value,this.form.ProductDueDateMonth<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>, this.form.ProductDueDateDay<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>.value);" onfocus="on(this.options[this.selectedIndex]);on(this)" onblur="off(this.options[this.selectedIndex]);off(this)">
+		<? echo ( ssi::getyears((localtime(time))[5]+1900, (localtime(time))[5]-100, $$variable{'ProductDueDateYear'.$$variable{'OrderedProduct'}->id()} ); ) ?>
+	</select>
+</p>

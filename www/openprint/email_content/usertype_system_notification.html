@@ -1,0 +1,11 @@
+<? echo ( join(' ', $$variable{'User'}->get('firstname','lastname') ); ) ?>'s usertype has been changed by <? echo ( join(' ', ( new openprint::User( $openprint::session{user_id} )->get('firstname','lastname') ) ); ) ?>.  <? echo ( $$variable{'User'}->firstname(); ) ?> is now
+<? if ( $$variable{'UserType'} eq 'C' ) ?>
+a Customer
+<? endif ( $$variable{'UserType'} eq 'C' ) ?>
+<? if ( $$variable{'UserType'} eq 'E' ) ?>
+an Employee
+<? endif ( $$variable{'UserType'} eq 'E' ) ?>
+<? if ( $$variable{'UserType'} eq 'A' ) ?>
+an Administrator
+<? endif ( $$variable{'UserType'} eq 'A' ) ?>
+.

@@ -1,0 +1,74 @@
+<? eval (
+  my $uri = '/employee/it/backups.html';
+	my @Backups;
+
+  $session{$uri.'?order'} = 'lower(name)' if ! $session{$uri.'?order'};
+  @Backups = openprint::Backup->find(
+    order	=> $session{$uri.'?order'} ? $session{$uri.'?order'} : 'lower(name)',
+    ( $session{$uri.'?name'} ? ( 'name ilike' => ( $session{$uri.'?name'} =~ /%/ ? $session{$uri.'?name'} : $session{$uri.'?name'}.'%' ) ) : () ),
+    ( $session{$uri.'?enabled'} ne '' ? ( enabled=>$session{$uri.'?enabled'} ) : () ),
+    ( $session{$uri.'?has_name'} ne '' ? ( 'name is null' => ! $session{$uri.'?has_name'} ) : () ),
+    ( $session{$uri.'?type'} ne '' ? ( type => $session{$uri.'?type'} ) : () ),
+    ( $session{$uri.'?owner_id'} ne '' ? ( owner_id => $session{$uri.'?owner_id'} ) : () ),
+    ( $session{$uri.'?deleted'} ? ( deleted=>$session{$uri.'?deleted'} ) : () ),
+    date_filter( $uri.'?created_on_end', 'created_on <=' ),
+    date_filter( $uri.'?created_on_start', 'created_on >=' ),
+    date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+    date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
+    );
+
+	@{$$variable{Backups}} = @Backups;
+) ?>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="checkbox">&nbsp;</th>
+			<th class="name">Name</th>
+			<th class="hostname">Host</th>
+			<th class="type">Type</th>
+			<th class="enabled">Enabled</th>
+			<th class="DateTime">Last Ran</th>
+			<th class="Space">Disk Usage</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+      my $total_diskspace = 0;
+			foreach my $Backup ( @{$$variable{Backups}} ) {
+        my $Host = $Backup->Host();
+
+				$html .= sprintf('
+					<tr%8$s>
+						<td class="checkbox"><input type="checkbox" id="backup_id" name="backup_id" value="%1$d"/></td>
+						<td class="name"><a href="/employee/it/backup.html?backup_id=%1$d">%2$s</a></td>
+						<td class="hostname"><a href="/employee/it/backup.html?backup_id=%1$d">%3$s</a></td>
+						<td class="type"><a href="/employee/it/backup.html?backup_id=%1$d">%4$s</a></td>
+						<td class="enabled"><a href="/employee/it/backup.html?backup_id=%1$d">%5$s</a></td>
+						<td class="DateTime"><a href="/employee/it/backup.html?backup_id=%1$d">%7$s</a></td>
+						<td class="Space"><a href="/employee/it/backup.html?backup_id=%1$d">%6$s</a></td>
+          </tr>
+					', $Backup->id(), $Backup->name(), 
+          $Host->hostname() . ' ' . ($Host->online() ? '<span class="online">online</span>' : '<span class="offline">offline</span>'),
+          $openprint::Backup::types{$Backup->type()},
+          ($Backup->enabled() ? 'yes':'no'),
+          ($Backup->size() ?Number::Format::format_bytes($Backup->size()) : '0'),
+          format_datetime( $Backup->lastran_on() ),
+					$rowclass,
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+        $total_diskspace += $Backup->size();
+			} # end foreach Backup
+			$html .= '<tr class="totals"><td colspan="6"># of backups: ' . @{$$variable{Backups}} . '</td>
+        <td class="Space">'.Number::Format::format_bytes($total_diskspace).'</td>
+      </tr>';
+			return $html;
+		) ?>
+	</tbody>
+</table>
+<p class="buttons">
+<? echo ( button( 'delete', {
+  onclick=>q`jQuery('#Results').load('/employee/it/_backups.html?action=Delete', { backup_id: get_value( $('f1').backup_id ) } );`, text=>'Delete Checked' } );
+) ?>
+</p>

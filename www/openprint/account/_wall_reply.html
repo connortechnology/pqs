@@ -1,0 +1,4 @@
+<div class="Reply" id="reply-<? echo ( $param{'wall_id'} ) ?>">
+<textarea id="message-<? echo ( $param{'wall_id'} ) ?>" name="message-<? echo ( $param{'wall_id'} ) ?>" rows="1" onkeyup="textarea_resize(this);"></textarea>
+	<p class="buttons"><? echo ( ssi::button( 'ReplyWall'.$param{'wall_id'}, { 'onclick'=>qq`new Ajax.Updater( 'Wall', '/account/_wall.html', { parameters: { user_id: '$$variable{User}{id}', message: \$('message-$param{wall_id}').value, reply_to: $param{'wall_id'} } } );`, 'text'=>'Reply' } ); ) ?></p>
+</div>

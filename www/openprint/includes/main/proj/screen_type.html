@@ -1,0 +1,6 @@
+<? if ( openprint::Service->find('name'=>'FM Screening' ) ) ?>
+<li>
+	<label>Screen Type</label>
+	<? echo ( radio( 'ScreenType', ['AM', 'AM', 'FM','FM' ], $$variable{ScreenType}, { onclick=>q`calc('f1');`, default=>'AM' } ); ) ?>
+</li>
+<? endif ( openprint::Service->find('name'=>'FM Screening' ) ) ?>

@@ -1,0 +1,49 @@
+<script>
+	function copy_template(id) {
+      new Ajax.Updater( 'T'+id, '_template_line.html', {
+          parameters: {
+              template_id:    id,
+              action:         'C'
+            },
+          insertion: 'after',
+        } );
+    }
+  function delete_template(id) {
+      new Ajax.Updater( 'T'+id, '_template_line.html', {
+          parameters: {
+              template_id:    id,
+              action:         'X'
+            }
+        } );
+    }
+  function select_project_type(ddm) {
+      LoadContent('Templates', '_templates.html', ddm.form.serialize());
+      history.replaceState({}, "", "?ddmProjectType="+$j(ddm).val());
+    }
+</script>
+<form id="f1" name="f1" method="post" action="templates.html" enctype="multipart/form-data">
+	<input type="hidden" name="btnFunction" value=""/>
+	<fieldset class="filters">
+		<ul>
+		<li>
+			<label>Project Type</label>
+      <select id="ddmProjectType" name="ddmProjectType" size="1" on_change_this="select_project_type">
+				<option value="">select one</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)') ], $param{ddmProjectType} ) ) ?>
+			</select>
+		</li>
+		</ul>
+		<p class="buttons">
+			<input type="file" name="fileImport">
+			<? echo ( button( 'Import', { onclick=>"f1.action='templates.html';f1.btnFunction.value='Import Templates';f1.submit();", text=>'Import' } ); ) ?>
+			<? echo ( button( 'Export', { onclick=>"f1.action='templates.html?Download';f1.btnFunction.value='Export Templates';f1.submit();", text=>'Export' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<?include(/includes/error_reporting.html)?>
+<br class="spacer"/>
+<div id="Templates">
+<? if ( $param{ddmProjectType} ) ?>
+<?include(_templates.html)?>
+<? endif ( $param{ddmProjectType} ) ?>
+</div>

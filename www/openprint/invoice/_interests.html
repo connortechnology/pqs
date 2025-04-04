@@ -1,0 +1,47 @@
+<?include('/includes/error_reporting.html') ?>
+<? eval ( @{$$variable{Interests}} = $$variable{Invoice}->Interests(); ) ?>
+<? if ( @{$$variable{Interests}} ) ?>
+<fieldset><legend>Interest</legend>
+	<table>
+		<tr>
+      <th class="DateTime When">When</th>
+      <th class="Description">Description</th>
+      <th class="Price">Amount</th>
+      <th class="buttons">&nbsp;</th>
+    </tr>
+		<? echo ( 
+			my $html = '';
+			$$variable{interest_total} = 0;
+			foreach my $Interest ( @{$$variable{Interests}} ) {
+				$html .= sprintf('
+<tr>
+  <td class="DateTime When">%2$s</td>
+  <td class="Description">%3$s</td>
+  <td class="Price">%4$s</td>
+  <td class="buttons">%5$s</td>
+</tr>', $Interest->id(), $Interest->compounded_on(), $Interest->description(), openprint::Currency::format( $Interest->amount() ),
+  button('deleteInterest'.$Interest->id(), {
+  'data-onclick-this'=>'del_interest', 'data-interest_id'=>$Interest->id(),
+    text=>'X', title=>'Delete' } ),
+					);
+				$$variable{interest_total} += $Interest->amount();
+			} # end foreach
+			return $html;
+		) ?>
+		<tr class="totals">
+			<td colspan="2">Total</td>
+      <td class="Price"><? echo ( openprint::Currency::format( $$variable{interest_total} ); ) ?></td>
+      <td></td>
+		</tr>
+	</table>
+</fieldset>
+<? endif ( @{$$variable{Interests}} ) ?>
+<script>
+var div;
+if ( div = document.getElementById('Interest_Total') ) {
+  div.innerHTML = '<? echo ( openprint::Currency::format( $$variable{interest_total} ); ) ?>';
+}
+if ( div = document.getElementById('Owing') ) {
+  div.innerHTML = '<? echo ( openprint::Currency::format( $$variable{Invoice}->owing() ); ) ?>';
+}
+</script>

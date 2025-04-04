@@ -1,0 +1,55 @@
+Hi <? echo ( $$variable{User}->name() ) ?>,
+<? echo ( $$variable{Event}->Created_By()->name() ) ?> has invited you to an event called <? echo ( sprintf('<a href="/event/view.html?event_id=%d">%s</a>',
+$$variable{Event}->id(),$$variable{Event}->name() ); ) ?>.<br/>
+
+<div class="Message">$$variable{message}</div>
+
+        <? echo (
+            my $html;
+            my $Asset = $$variable{Event}->Asset();
+
+            if ( $Asset->id() ) {
+                my $Album = $$variable{Event}->Album();
+                $html .= sprintf(q`<a class="Asset" href="#" onclick="photo_popup(%d, %d);">%s</a>`, $Asset->id(), $Album->id(), $Asset->html() );
+            } # end if
+			return $html;
+		) ?><br/>
+<fieldset><legend>All about it</legend>
+	<div class="content">
+<ul>
+	<li><label>When</label> <? echo ( $$variable{Event}->time_string(); ) ?></li>
+	<li class="category"><label>Category</label><? echo ( $$variable{Event}->Category()->name() ) ?></li>
+<? if ( $$variable{Event}->info() ) ?>
+	<li class="info">
+		<label>More info</label>
+		<? echo ( $$variable{Event}->info() ) ?>
+	</li>
+<? endif ( $$variable{Event}->info() ) ?>
+</ul>
+</div>
+</fieldset>
+<fieldset><legend>Where</legend>
+	<div class="content">
+		<ul>
+			<li><label>Location</label>
+				<? echo ( 
+						my $html .= $$variable{Event}->where();
+						my $MyLocation = $$variable{User}->Location();
+						my $Location = $$variable{Event}->Location();
+						if ( $Location and $MyLocation and $Location->latitude() and $Location->longitude() and $MyLocation->latitude() and $MyLocation->longitude() ) {
+							my $distance = openprint::Location::distance( @$MyLocation{'latitude','longitude'}, @$Location{'latitude','longitude'}, 'K' ) ;
+							$html .= '<br/>'.int($distance).'km from you.' if $distance;
+						} # end if
+						return $html;
+				) ?>
+			</li>
+		</ul>
+	</div>
+</fieldset>
+<br/>
+<? if ( $$variable{User}->id() ) ?>
+<a href="/event/view.html?event_id=<? echo ( $$variable{Event}->id() ) ?>&user_id=<? echo ( $variable{User}->id() ) ?>">View the event page and rsvp now</a>
+<? else ( $$variable{User}->id() ) ?>
+If you're not already a <a href="/event/view.html?event_id=<? echo ( $$variable{Event}->id() ) ?>">Pleasurable Things</a> member, you can still view the event page and rsvp, then remember to create an account so you stay in the loop on events, conversations, and other good things!
+
+<? endif ( $$variable{User}->id() ) ?>

@@ -1,0 +1,32 @@
+<form name="part4form" id="part4form">
+	<h3>Part 4 (To be complete by Quality System Management Representative)</h3>
+	<table>
+		<tr><td colspan="4">VERIFICATION OF CORRECTIVE ACTION EFFECTIVENESS</td></tr>
+		<tr><td colspan="4">
+			<textarea name="effectiveness" rows="5" style="width:99%;" oninput="textarea_resize(this);"><? echo ( $$variable{CAR}->effectiveness(); ) ?></textarea>
+			</td>
+		</tr>
+		<tr><td width="10%">QS Mgt Rep / Designate</td>
+			<td width="40%">
+	<? echo ( ssi::select(
+						openprint::User->dropdown(type=>['E','A']),
+						($$variable{CAR}->part4_user_id() ? $$variable{CAR}->part4_user_id() : $session{user_id}),
+						{ name=>'part4_user_id' }
+						);
+	) ?>
+		</td>
+		<td width="10%">Date</td>
+		<td width="40%">
+	<? echo (
+				return date_select( 'part4_signed_on', $$variable{CAR}->issued_on() ? $$variable{CAR}->issued_on() : [Date::Calc::Today()] );
+	) ?>
+		</td>
+		</tr>
+	</table>
+	<input type="hidden" name="car_id" value="<? echo ( $$variable{'CAR'}->id() ) ?>" />
+	<p class="buttons">
+		<? echo (
+			button( 'Save', { name=>'btnFunction', type=>'submit', value=>'Save' } );
+		) ?>
+	</p>
+</form>

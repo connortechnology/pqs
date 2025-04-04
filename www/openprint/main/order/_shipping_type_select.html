@@ -1,0 +1,34 @@
+<? echo (
+	my $html;
+	my $services = $$variable{Project}->services();
+	my @ShippingTypes = openprint::ServiceType->find('category'=>'Shipping','order'=>'lower(name)');
+	
+	$html .= sprintf('<input type="hidden" name="OrderedQuantity%d" value="%d"/>', $$variable{Project}->id(), $$variable{Project}->ordered_quantity() );
+	$html .= qq`<div class="ShippingInformation">
+	<fieldset><legend>Shipping Information</legend>
+		<div class="content">
+			<ul><li><label>Shipping Type</label>`;
+
+	foreach my $ShippingType ( @ShippingTypes ) {
+		$html .= sprintf(q`
+<input type="checkbox" id="ShippingType%1$d%2$s" name="ShippingType%1$d" value="%2$s" onclick="if( !this.checked) {$('ShippingQuestions%1$d%2$s').innerHTML='';} else if ( ! $('ShippingQuestions%1$d%2$s').innerHTML ) { new Ajax.Updater('ShippingQuestions%1$d%2$s','/main/order/_%2$s.html', { parameters:{ project_id: %1$d, service_id: %5$d, ServiceTypeName: '%2$s' } } ); }" %4$s />
+<label class="radio" for="ShippingType%1$d%2$s">%3$s</label>`,
+			$$variable{Project}->id(), $ShippingType->type(), $ShippingType->description(), 
+			checked( $$services{$ShippingType->name()} ), 
+			( $$services{$ShippingType->name()} ? $$services{$ShippingType->name()}[0] : 0 ),
+			);
+	} # end foreach
+	$html .= '</li></ul></div></fieldset></div>';
+	foreach my $ShippingType ( @ShippingTypes ) {
+		$html .= sprintf('<div class="ShippingQuestions" id="ShippingQuestions%1$d%2$s">', $$variable{Project}->id(), $ShippingType->name() );
+		my $h = slurp_content( '/main/order/_'.$ShippingType->type().'.html');
+		foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
+			$$variable{ServiceIndex} = $service_id;
+			$$variable{ShippingType} = $ShippingType->type();
+			$html .= ssi::variable_substitution( \$h, $variable );
+		} # end foreach service_id
+		$html .= '</div>';
+	 } # end foreach ShippingType
+	
+	return $html;
+) ?>

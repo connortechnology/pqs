@@ -1,0 +1,76 @@
+<? if ( $param{btnFunction} eq 'Send' ) ?>
+	<? eval (
+		require openprint::Bug;
+		my $Bug = $$variable{Bug} = new openprint::Bug();
+		$Bug->save({
+			description	=>	join("\n", @param{'comment','page','server'} ),
+			} 
+		);
+
+		$param{comment} = htmlize($param{comment});
+			
+		$param{page} = htmlize($param{page});
+		my $body = qq` 
+			<fieldset><legend>Bug Report</legend>
+				<p><label>Server</label>$param{server}</p>
+				<p><label>Page</label><a href="$param{page}">$param{page}</a></p>
+				<p><label>When</label> $param{when}</p>
+				<p><label>Name</label> $param{user}</p>
+				<p><label>Company</label> $param{company}</p>
+				<p><label>Comment</label> $param{comment}</p>
+			</fieldset>
+		`;
+
+	my $Email = new openprint::Email();
+	$Email->send(
+			FROM   => $openprint::User,
+			TO     => $config{TechSupportEmail},
+			SUBJECT => 'Bug Report',
+			HTML_BODY =>	$body,
+	);
+
+	) ?>
+	Your report has been saved as support request <? echo ( $$variable{Bug}->link_to() ) ?>.<br/>
+		<? echo ( button( 'Close', {  onclick=>'popupWin.destroy();' } ); ) ?>
+<? else ( $param{btnFunction} eq 'Send' ) ?>
+<div id="BugReport">
+	<form name="bug_report" id="bug_report">
+		<fieldset><legend>Bug Report</legend>
+			<p>
+				<label>Server</label>
+				<input type="text" name="server" value="<? echo ( $ENV{SERVER_NAME} ) ?>" />
+			</p>
+			<p>
+				<label>Page</label>
+				<input type="url" name="page" value="<? echo ( $ENV{HTTP_REFERER} ) ?>" />
+			</p>
+			<p>
+				<label>When</label>
+				<input type="text" name="when" value="<? echo ( localtime ) ?>" />
+			</p>
+			<p>
+				<label>Name</label>
+				<input type="text" name="user" value="<? echo ( join(' ', $openprint::User->get( 'firstname','lastname' ) ); ) ?>" />
+			</p>
+			<p>
+				<label>Company</label>
+				<input type="text" name="company" value="<? echo ( $openprint::Company->name(); ) ?>" />
+			</p>
+			<p>
+				<label>Description</label>
+				<textarea name="comment" rows="10" onkeyup="textarea_resize(this);">
+<? if ( $session{project_id} ) ?>
+Current Project ID: <? echo ( $session{project_id} ) ?>
+<? echo ( unhtmlize( new openprint::Project( $session{project_id} )->summary() ); ) ?>
+<? endif ( $session{project_id} ) ?>
+				</textarea>
+			</p>
+			<p class="buttons">
+				<? echo ( button( 'BugSend', { onclick=>q`LoadContent('BugReport','/_bug_report.html', $('bug_report').serialize() );`, text=>'Send' } ); ) ?>
+				<? echo ( button( 'BugCancel', { onclick=>'popupWin.destroy();', text=> 'Cancel' } ); ) ?>
+			</p>
+		</fieldset>
+		<input type="hidden" name="btnFunction" value="Send"/>
+	</form>
+</div>
+<? endif ( $param{btnFunction} eq 'Send' ) ?>

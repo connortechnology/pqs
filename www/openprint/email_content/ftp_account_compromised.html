@@ -1,0 +1,52 @@
+This following FTP account has been compromised.  As such it has been disabled.<br/>
+<br/>
+It will need to have it's password changed, and FTP access turned back on before it can be used for FTP again.<br/>
+<br/>
+
+<fieldset>
+	<legend>Contact Information</legend>
+	<div id="contactInformation">
+		<div class="leftColumn" style="float: left; width: 50%;">
+			<div class="fieldContainer">
+				<p>
+					<label>Company Name:</label>
+					<? echo ( $$variable{'Company'}->name() ) ?>
+				</p>
+				<p>
+					<label>Address:</label>
+					<? echo ( $$variable{'Company'}->address1() ) ?><br/>
+<? if ( $$variable{'Company'}->address2() ) ?>
+					<? echo ( $$variable{'Company'}->address2() ) ?><br/>
+<? endif ( $$variable{'Company'}->address2() ) ?>
+				</p>
+<? if ( $$variable{'Company'}->postal_code() ) ?>
+				<p>
+					<label>Postal Code:</label>
+					<? echo ( $$variable{'Company'}->postal_code() ) ?>
+				</p>
+<? endif ( $$variable{'Company'}->postal_code() ) ?>
+			</div>
+		</div>
+		<div class="rightColumn" style="float: left; width: 50%;">
+			<div class="fieldContainer">
+				<p>
+					<label>CSR:</label>
+					<? echo ( $$variable{'Company'}->CSR()->name() ) ?>
+				</p>
+				<p>
+					<label>Contact Name:</label>
+					<? echo ( $$variable{'User'}->name() ) ?>
+				</p>
+				<p>
+					<label>Email Address:</label>
+					<a href="mailto:<? echo ( $$variable{'User'}->email() ) ?>"><? echo ( $$variable{'User'}->email() ) ?></a>
+				</p>
+				<p>
+					<label>Phone Number:</label>
+					<? echo ( $$variable{'User'}->phone() ) ?>
+					<? if ( $$variable{'User'}->extension() ) ?>x<? echo ( $$variable{'User'}->extension() ) ?><? endif ( $$variable{'User'}->extension() ) ?>
+				</p>
+			</div>
+		</div>
+	</div>
+</fieldset>

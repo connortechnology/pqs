@@ -1,0 +1,26 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? echo ( 
+	my $html;
+	foreach my $Video ( $$variable{'Album'}->Videos() ) {
+		$html .= '<div class="Video">';
+		$html .= sprintf('<a href="view_video.html?asset_id=%d&amp;album_id=%d"><img src="%s" alt="%s"/></a>', $Video->asset_id(), $Video->album_id(), $Video->thumbnail_url(), $Video->caption() );
+		$html .= "<br/>\n";
+		my $deletable = 1;
+		if ( $Video->asset_id() != $$variable{'Album'}->thumbnail_id() ) {
+			$html .= ssi::writeButton( $log, $dbh, 'SAT'.$Video->asset_id(), 'sat.gif', 
+				sprintf( q`new Ajax.Updater('Videos', '_videos.html', { parameters: { album_id: %d, asset_id: %d, action: 'set as thumbnail' } } );`, $$variable{'Album'}->id(), $Video->asset_id() ),
+				'', 'Set as album thumbnail' );
+			$html .= '<br/>';
+		} else {
+			$deletable = 0;
+		} # end if
+		if ( $deletable ) {
+			$html .= ssi::writeButton( $log, $dbh, 'D'.$Video->asset_id(), 'd.gif', 
+				sprintf( q`new Ajax.Updater('Videos', '_videos.html', { parameters: { album_id: %d, asset_id: %d, action: 'delete' } } );`, $$variable{'Album'}->id(), $Video->asset_id() ),
+, '', 'Delete' );
+			$html .= '<br/>';
+		} # end if
+		$html .= "</div>\n";
+	} # end foreach Video
+	return $html;
+) ?>

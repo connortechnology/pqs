@@ -1,0 +1,251 @@
+<? if ( $$variable{PurchaseOrder}->can_edit() ) ?>
+<script src="<?hash_link(/employee/purchase_order/edit.js)?>"></script>
+<script>
+var po_id = '<?echo($$variable{PurchaseOrder}->id())?>';
+var tax_ids = [ <? echo ( join(',', map { $_->tax_id() } $$variable{PurchaseOrder}->Taxes() ); ) ?> ];
+  tinyMCE.init({
+	theme : "advanced",
+	mode: "specific_textareas",
+	editor_selector : "mce",
+	plugins: "paste",
+	theme_advanced_toolbar_location : "top",
+	theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull",
+	theme_advanced_buttons2 : "bullist,numlist,outdent,indent,sub,sup,charmap",
+	theme_advanced_buttons3 : "",
+	auto_resize : true,
+  });
+</script>
+<form id="f1" name="f1" action="edit.html?po_id=<? echo ( $$variable{PurchaseOrder}->id() ) ?>" method="post">
+	<?include('/includes/error_reporting.html')?>
+	<input type="hidden" name="btnFunction" />
+	<div class="PO">
+		<p class="buttons" id="buttons">
+		<? echo ( 
+			my $html = '';
+			if ( $$variable{PurchaseOrder}->id() ) {
+				$html .= button( 'Save', { onclick=>"\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();" } );
+			} else {
+				$html .= button( 'Save', { onclick=>"\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", text=>'Create New' } );
+			} # end if
+			return $html;
+		) ?>
+		</p>
+		<div class="PageTitle">
+		<h1>PURCHASE ORDER (<? echo ( $$variable{PurchaseOrder}->id() ) ?>)</h1>
+		</div>
+		<div class="Information">
+		<?include(_vendor.html)?>
+		<div class="ShipTo">
+		<fieldset><legend>SHIP TO</legend>
+			<ul>
+			<li><label for="shipto_contact">Contact</label><input type="text" name="shipto_contact" id="shipto_contact" value="<? echo ( $$variable{PurchaseOrder}->shipto_contact() ) ?>" /></li>
+			<li><label for="shipto_name">Name</label><input type="text" name="shipto_name" id="shipto_name" value="<? echo ( $$variable{PurchaseOrder}->shipto_name() ) ?>" /></li>
+			<li><label for="shipto_address1">Address</label><input type="text" name="shipto_address1" id="shipto_address1" value="<? echo ( $$variable{PurchaseOrder}->shipto_address1() ) ?>" />
+			<input type="text" name="shipto_address2" id="shipto_address2" value="<? echo ( $$variable{PurchaseOrder}->shipto_address2() ) ?>" /></li>
+			<li><label for="shipto_country">Country</label>
+				<select id="shipto_country" name="shipto_country" onchange="Country_onchange(this,this.form.shipto_state);update_taxes(this.form);">
+					<option value=""> select </option>
+					<? echo ( return_countries($$variable{PurchaseOrder}->shipto_country()); ) ?>
+				</select>
+			</li>
+			<li><label for="shipto_state"><span id="shipto_country_state"><? echo (
+					if ( $$variable{PurchaseOrder}->shipto_country() eq 'US' ) {
+						return 'State';
+					} elsif ( $$variable{PurchaseOrder}->shipto_country() eq 'CA' ) {
+						return 'Province';
+					} else {
+						return 'State/Province';
+					} # end if
+				) ?></span></label>
+				<select id="shipto_state" name="shipto_state" onchange="update_taxes(this.form);">
+					<option value=""> select </option>
+					<? echo (
+						if ( $$variable{PurchaseOrder}->shipto_country() eq 'US' ) {
+							return make_drop_down( \@states::states, $$variable{PurchaseOrder}->shipto_state() );
+						} elsif ( $$variable{PurchaseOrder}->shipto_country() eq 'CA' ) {
+							return make_drop_down( \@provinces::provinces, $$variable{PurchaseOrder}->shipto_state() );
+						} else {
+							return return_states_and_provinces($$variable{PurchaseOrder}->shipto_state());
+						} # end if
+					) ?>
+				</select>
+			</li>
+			<li><label for="shipto_city">City</label><input type="text" name="shipto_city" id="shipto_city" value="<? echo ( $$variable{PurchaseOrder}->shipto_city() ) ?>" /></li>
+			<li><label for="shipto_postalcode"><span id="shipto_country_postal"><? echo (
+					if ( $$variable{PurchaseOrder}->shipto_country() eq 'US' ) {
+						   return 'Zip Code';
+					} elsif ( $$variable{PurchaseOrder}->shipto_country() eq 'CA' ) {
+						   return 'Postal Code';
+					   } else {
+						   return 'Zip/Postal Code';
+					   } # end if
+					) ?></span>
+				</label><input type="text" name="shipto_postalcode" id="shipto_postalcode" value="<? echo ( $$variable{PurchaseOrder}->shipto_postalcode() ) ?>" /></li>
+			<li><label for="shipto_phone">Phone</label><input type="tel" name="shipto_phone" id="shipto_phone" value="<? echo ( $$variable{PurchaseOrder}->shipto_phone() ) ?>" /></li>
+			<li><label for="shipto_mobile">Mobile</label><input type="tel" name="shipto_mobile" id="shipto_mobile" value="<? echo ( $$variable{PurchaseOrder}->shipto_mobile() ) ?>" /></li>
+			<li><label for="shipto_fax">Fax</label><input type="tel" name="shipto_fax" id="shipto_fax" value="<? echo ( $$variable{PurchaseOrder}->shipto_fax() ) ?>" /></li>
+			<li><label for="shipto_sms">SMS</label><input type="tel" name="shipto_sms" id="shipto_sms" value="<? echo ( $$variable{PurchaseOrder}->shipto_sms() ) ?>" /></li>
+			<li><label for="shipto_email">Email</label><input type="email" name="shipto_email" id="shipto_email" value="<? echo ( $$variable{PurchaseOrder}->shipto_email() ) ?>" /></li>
+<? if ( $$variable{PurchaseOrder}->id() ) ?>
+			<li><label>Also Notify</label>
+				<div id="notification_div"><?include(_notifications.html)?></div>
+			</li>
+<? endif ( $$variable{PurchaseOrder}->id() ) ?>
+				</ul>
+			</fieldset>
+		</div><!--ShipTo-->
+	</div><!--Information-->
+		<br class="spacer"/>
+		<table>
+			<tr class="Shipping">
+				<th class="method">Shipping Method</th>
+				<th class="terms">Shipping Terms</th>
+				<th class="delivery_date">Delivery Date</th>
+			</tr>
+			<tr>
+				<td class="ShippingMethod"><textarea name="shipping_method" id="shipping_method" rows="<? echo ( count_lines( $$variable{PurchaseOrder}->shipping_method()); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{PurchaseOrder}->shipping_method() ) ?></textarea></td>
+				<td class="ShippingTerms"><textarea name="shipping_terms" id="shipping_terms" rows="<? echo ( count_lines( $$variable{PurchaseOrder}->shipping_terms()); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{PurchaseOrder}->shipping_terms() ) ?></textarea></td>
+				<td class="DeliveryDate">
+					<input type="radio" id="delivered_on_switchNIGHTTRUCK" name="delivered_on_switch" value="NIGHT TRUCK" <? echo ( checked( $$variable{PurchaseOrder}->delivered_on_switch() eq 'NIGHT TRUCK' ) ) ?> onclick="$('delivered_on_div').hide();" />
+					<label for="delivered_on_switchNIGHTTRUCK" class="radio">NIGHT TRUCK</label>
+					<input type="radio" id="delivered_on_switchASAP" name="delivered_on_switch" value="ASAP" <? echo ( checked( $$variable{PurchaseOrder}->delivered_on_switch() eq 'ASAP' ) ) ?> onclick="$('delivered_on_div').hide();" />
+					<label for="delivered_on_switchASAP" class="radio">ASAP</label>
+					<input type="radio" id="delivered_on_switchDATE" name="delivered_on_switch" value="DATE" <? echo ( checked( $$variable{PurchaseOrder}->delivered_on_switch() eq 'DATE' ) ) ?> onclick="$('delivered_on_div').show();" />
+					<label for="delivered_on_switchDATE" class="radio">DATE</label>
+					<div id="delivered_on_div" <? echo ( $$variable{PurchaseOrder}->delivered_on() ? '' : 'style="display:none;"' ) ?>>
+						<input type="hidden" id="delivered_on" name="delivered_on" value="<? echo ( $$variable{PurchaseOrder}->delivered_on() ? $$variable{PurchaseOrder}->delivered_on() : join('-', Date::Calc::Today() ); ) ?>" />
+						<span id="delivered_on_display"><? echo ( Date::Format::time2str( $config{DateFormat}, $$variable{PurchaseOrder}->delivered_on() ? Date::Parse::str2time( $$variable{PurchaseOrder}->delivered_on() ) : time ); ) ?></span>
+	<img src="/javascripts/jscalendar/img.gif" id="DateButton" style="cursor: pointer;width: 20px;" title="Date selector" alt="Calendar"/>
+						<script type="text/javascript">
+							Calendar.setup({
+								inputField	:	'delivered_on',	// id of the input field
+								displayArea	:	'delivered_on_display',	// id of the input field
+								ifFormat	:	'%Y-%m-%d',		// format of the input field
+								daFormat	:	'<? echo ( $config{DateFormat} ) ?>',
+								align		:	'Tl',
+								showsTime	:	false,			// will display a time selector
+								//displayArea :	'JumpToDate$$row{serviceindex}',
+								singleClick :	false,			// double-click mode
+								//onClose	 :	setduedate
+								button		:	'DateButton',
+							});
+						</script>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<br/>
+		<div id="similar_pos"></div>
+<? if ( $$variable{PurchaseOrder}->id() ) ?>
+<div class="items" id="items">
+	<div class="head">
+		<div class="buttons">&nbsp;</div>
+		<div class="quantity">QTY</div>
+		<div class="product">PRODUCT #</div>
+		<div class="description">ITEM / DESCRIPTION</div>
+		<div class="docket">DOCKET</div>
+		<div class="dept">DEPT</div>
+		<div class="price">UNIT PRICE</div>
+		<div class="line_total">LINE TOTAL</div>
+	</div>
+<? echo ( 
+	my $html = '';
+	my $line = slurp_content('/employee/purchase_order/_po_content_line.html');
+	foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
+		$$variable{C} = $C;
+		$html .= variable_substitution( \$line, $variable );
+	} # end foreach C
+	return $html;
+) ?>
+</div>
+	<div class="item unprintable" id="line-new">
+		<div class="buttons"><? echo ( button( 'Add', { onclick=>'add_item();', text=>'+', title=>'Add' } );) ?></div>
+		<div class="select_type">
+			<select name="type_id-new" id="type_id-new">
+				<option value=""> select one </option>
+<? echo (make_drop_down( openprint::PurchaseOrder_ContentType->dropdown( order=>'lower(name)') ); ) ?>
+			</select>
+		</div>
+		<div class="instructions">Click on Add to add a new line to this PO.</div>
+	</div>
+<div class="totals">
+	<div class="subtotal">
+		<label>SUBTOTAL</label>
+		<div class="amount">
+		<? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{PurchaseOrder}->Currency()->symbol(), $$variable{PurchaseOrder}->subtotal() ); ) ?>
+		</div>
+	</div>
+	<div id="Taxes"><?include(_taxes_edit.html)?></div>
+	<div class="payments_total">
+		<label>Payments</label>
+		<div class="amount">
+		<? echo ( sprintf('%s<span id="payments_total">%.2f</span>', $$variable{PurchaseOrder}->Currency()->symbol(), $$variable{PurchaseOrder}->payments_total() );) ?>
+		</div>
+	</div>
+	<div class="total">
+		<label>Total</label><div class="amount">
+		<? echo ( sprintf('%s<span id="total">%.2f</span>', $$variable{PurchaseOrder}->Currency()->symbol(), $$variable{PurchaseOrder}->total() ); ) ?></div>
+	</div>
+</div>
+		<div class="Payments">
+			<fieldset><legend>Payment Details</legend>
+				<div id="Payments"><?include(_payments_edit.html)?></div>
+			</fieldset>
+		</div>
+		<div id="Assets" class="unprintable"><?include(_assets.html)?></div>
+
+		<div class="leftColumn">
+			<ol>
+				<li> Please send your invoice with a copy of delivery note signed by receiving party.</li>
+				<li> Please indicate this Purchase Order # in your invoice, packing slip / delivery note.</li>
+				<li> Please notify us immediately if you are unable to ship as specified.</li>
+			</ol>
+			<br class="spacer"/>
+		</div>
+		<div class="rightColumn" style="text-align: right;">
+			Currency:
+				<? echo ( ssi::select(
+							openprint::Currency->dropdown(order=>'lower(name)'),
+							($$variable{PurchaseOrder}->currency_id() ? $$variable{PurchaseOrder}->currency_id() : $session{Currency_id}),
+							{name=>'currency_id', id=>'currency_id', prepend=>['','select one']}
+							); ) ?>
+			<br/>
+			<br/>
+			<div class="leftColumn"><i>Prepared by: 
+<? echo (
+		if ( $session{user_type} eq 'A' ) {
+			return ssi::select(
+					openprint::User->dropdown(type=>['E','A'], company_id=>$$openprint::Owner{id}),
+					( $$variable{PurchaseOrder}->created_by() ? $$variable{PurchaseOrder}->created_by() : $openprint::User->id() ),
+					{
+						name=>'created_by'
+						}
+					);
+		}
+		return $$variable{PurchaseOrder}->Creator()->name();
+) ?>
+			</i><br/></div>
+		<? if ( $$variable{PurchaseOrder}->authorized() ) ?>
+			<br/>
+			<br class="spacer"/>
+			<hr/>
+			<div class="leftColumn"><i>Authorized by: <? echo ( $$variable{PurchaseOrder}->Authorized_By()->name() ) ?></i></div>
+			<div class="rightColumn"><i>Date: <? echo ( format_date($$variable{PurchaseOrder}->authorized_on()) ) ?></i></div>
+		<? endif ( $$variable{PurchaseOrder}->authorized() ) ?>
+		<? if ( $$variable{PurchaseOrder}->authorized() eq '0' ) ?>
+			<br/>
+			<br class="spacer"/>
+			<hr/>
+			<div class="leftColumn"><i>Declined by: <? echo ( $$variable{PurchaseOrder}->Authorized_By()->name() ) ?></i></div>
+			<div class="rightColumn"><i>Date:</i> <? echo ( format_date($$variable{PurchaseOrder}->authorized_on()); ) ?></div>
+		<? endif ( $$variable{PurchaseOrder}->authorized() eq '0' ) ?>
+			<br class="spacer"/>
+		</div>
+		<br class="spacer"/><br/>
+		<div id="Logs"><?include(_logs.html)?></div>
+<? endif ( $$variable{PurchaseOrder}->id() ) ?>
+	</div><!--PO-->
+</form>
+<? else ( $$variable{PurchaseOrder}->can_edit() ) ?>
+You do not have rights to edit this PO
+<? endif ( $$variable{PurchaseOrder}->can_edit() ) ?>

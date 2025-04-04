@@ -1,0 +1,30 @@
+<? eval (
+) ?>
+<table class="List">
+	<tr>
+		<th align="left">Name</th><th align="left">Created On</th><th align="right">Updated On</th>
+	</tr>
+	<? echo (
+		my $html;
+		my $rowclass;
+
+		my @Templates = openprint::EmailTemplate->find(order=>'lower(name)');
+		foreach my $Template ( @Templates ) {
+			$html .= sprintf(q`
+				<tr%1$s>
+					<td><a href="email_template.html?template_id=%2$d">%3$s</a></td>
+					<td class="DateTime"><a href="email_template.html?template_id=%2$d">%4$s</a></td>
+					<td class="DateTIme"><a href="email_template.html?template_id=%2$d">%5$s</a></td>
+				</tr>`,
+					$rowclass, $$Template{id}, ssi::html_escape( $$Template{name} ),
+					Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $$Template{created_on} ) ),
+					Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $$Template{updated_on} ) ),
+			);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach
+		return $html;
+	) ?>
+</table>
+<p class="buttons">
+<? echo ( ssi::button( 'New', { href=>'email_template.html' } ); ) ?>
+</p>

@@ -1,0 +1,15 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/production_feedback.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/includes/employee/feedback/paper.js)?>"></script>
+<div class="Service">
+	<h3>Production Feedback <? if ( $$variable{'DocketNumber'} ) ?>for docket #:&nbsp;<a href="/employee/project/view.html?project_id=<? echo ( $$variable{'Project'}->id() ) ?>"><?DocketNumber?></a><? endif ( $$variable{'DocketNumber'} ) ?></h3>
+	<? echo (
+		my $html = '';
+		foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
+			$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
+			$$variable{'ServiceIndex'} = $$variable{'service_id'} = $ss_id;
+			$html .= include('/employee/proj/prin/_signature.html');
+		} # end foreach
+		return $html;
+	) ?>
+</div>

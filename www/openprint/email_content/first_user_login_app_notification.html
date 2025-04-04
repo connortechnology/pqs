@@ -1,0 +1,27 @@
+<? echo ( join(' ' , $$variable{'User'}->get('salutation','firstname','lastname') ); ) ?> has requested a login and created a new company on <? echo ( $config{'SiteTitle'} ) ?>.<br/>
+<br/>
+Please Click <a href="<? echo ( $config{ExternalSecureSiteURL} ) ?>/administrator/managerial/user_profiles.html?ddmUser=<? echo ( $$variable{'User'}->id() ) ?>">here</a> to view/edit the user's profile.<br/>
+Please Click <a href="<? echo ( $config{ExternalSecureSiteURL} ) ?>/administrator/managerial/company_profiles.html?ddmCustomer=<? echo ( $$variable{'Company'}->id() ) ?>">here</a> to view/edit the company profile.<br/>
+<br>
+Company:		<? echo ( $$variable{'Company'}->name() ) ?><br/>
+Address:		<? echo ( $$variable{'Company'}->address1() ) ?><br/>
+						<? echo ( $$variable{'Company'}->address2() ) ?><br/>
+City:			 <? echo ( $$variable{'Company'}->city() ) ?><br/>
+State:			<? echo ( $$variable{'Company'}->state() ) ?><br/>
+Country:		<? echo ( $$variable{'Company'}->country() ) ?><br/>
+Postal Code:		<? echo ( $$variable{'Company'}->postalcode() ) ?><br/>
+Phone:			<? echo ( $$variable{'User'}->phone() ) ?><br/>
+Extension:	<? echo ( $$variable{'User'}->extension() ) ?><br/>
+Fax:				<? echo ( $$variable{'User'}->fax() ) ?><br/>
+Email:			<a href="mailto:<? echo ( $$variable{'User'}->email() ) ?>"><? echo ( $$variable{'User'}->email() ) ?></a><br/>
+<? if ( $$variable{'Company'}->url() ) ?>
+WebSite:		<a href="<? echo ( $$variable{'Company'}->url() ) ?>"><? echo ( $$variable{'Company'}->url() ) ?></a><br/>
+<? endif ( $$variable{'Company'}->url() ) ?>
+Business Type:			 <? echo ( $$variable{'Company'}->business_type() ) ?><br/>
+Date of registration:	 <? echo ( $$variable{'Company'}->created_on() ) ?><br/>
+How did they hear about us:	<? echo ( $$variable{'User'}->howdidyouhearaboutus() ) ?>
+<? if ( sets::isin( $$variable{'User'}->howdidyouhearaboutus(), ['Other','CSR'] ) ) ?>
+: <? echo ( $$variable{'User'}->howdidyouhearaboutusother() ) ?>
+<? endif ( sets::isin( $$variable{'User'}->howdidyouhearaboutus(), ['Other','CSR'] ) ) ?>
+<br/>
+<?include(/account/_user_profile_view.html)?>

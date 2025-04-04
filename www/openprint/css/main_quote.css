@@ -1,0 +1,59 @@
+@import 'quote.css';
+@import 'project.css';
+
+table .changes {
+	text-align: right;
+	width: 120px;
+}
+.Quote .Information li input[type="text"],
+.Quote .Information li input[type="email"],
+.Quote .Information li input[type="tel"],
+.Quote .Information li textarea {
+  width: 92%;
+	resize: vertical;
+}
+div.Quote div.Information fieldset ul li select {
+    width: 92%;
+}
+div.Quote div.Information fieldset ul li select#for_company_id,
+div.Quote div.Information fieldset ul li select#user_id {
+	width: 75%;
+}
+.company_id input,
+.contact input {
+	width: 40px;
+}
+.quote_id {
+	width: 95px;
+}
+.Quote .Information li.company_id input[type="text"],
+.Quote .Information li.contact input[type="text"] {
+	width: 40px;
+}
+
+
+input#ByPhone, input#ForPhone {
+	width: 120px;
+}
+input#ByExtension, input#ForExtension {
+	width: 40px;
+}
+.History select#company_id {
+	width: auto;
+}
+.filters input[name="total_end"],
+.filters input[name="total_start"]{
+  width: 75px;
+}
+div.Quote div.Header li.currency,
+div.Quote div.Header li.reference,
+div.Quote div.Header li.comments {
+  width: 50%;
+  float: left;
+}
+table .thumbnail {
+  width: 150px;
+  display: table-cell;
+  padding: 1px;
+  border-radius: 0;
+}

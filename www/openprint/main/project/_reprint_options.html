@@ -1,0 +1,29 @@
+<div class="ReprintOptions">
+  <fieldset>
+    <legend>Reprint Options</legend>
+    <ul>
+      <li>
+        <label>Is this a reprint?</label>
+        <? echo ( radio( 'reprint', [ 'Y', 'Yes', 'N', 'No' ], $$variable{Project}->reprint(), { default=>'N', onclick=>q`setReason(this.value,$('reprintReasonSection'));` } ); ) ?>
+      </li>
+      <li id="reprintReasonSection"<?echo($$variable{Project}->reprint() ne 'Y' ? 'style="display: none;"' :'')?>>
+        <label>Reason</label>
+        <select name="reprint_reason">
+          <option value=""> select </option>
+        <? echo ( make_drop_down( [
+            'Customer','Customer',
+            'Docket','Docket',
+            'Prepress','Prepress',
+            'Printing','Printing',
+            'Bindery','Bindery',
+            'Shipping','Shipping',
+            'Supplier - Service','Supplier - Service',
+            'Supplier - Material', 'Supplier - Material',
+            'Other', 'Other',
+            ], $$variable{Project}{reprint_reason} );) ?>
+        </select>
+        <textarea name="reprint_description"><?echo($$variable{Project}->reprint_description())?></textarea>
+      </li>
+    </ul>
+  </fieldset>
+</div>

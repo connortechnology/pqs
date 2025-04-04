@@ -1,0 +1,102 @@
+<form id="JobForm" name="JobForm">
+	<input type="hidden" name="schedule_id" value="<? echo ( $param{schedule_id} ) ?>" />
+	<fieldset><legend>Job Scheduling Information</legend>
+		<ul>
+<?echo(
+	my $Project = $$variable{Job}->Project();
+	if ( $$Project{id} ) {
+			return '<li><label>Project</label>'.$$Project{id}.'</li>';
+	}
+return;
+)?>
+			<li><label>Service</label><?echo(
+				if ( ! $$variable{Job}->servicetype_id() ) {
+				$$variable{Equipment} = $$variable{Job}->Equipment();
+				return '<select name="servicetype_id">'.include('_job_service_dropdown.html').'</select>';
+				} else {
+				 return $$variable{Job}->ServiceType()->name();
+				}
+			)?></li>
+			<li title="Click to edit comment">
+				<label onclick="tinymce_on('comment');">Comment</label>
+				<div id="comment" onclick="tinymce_on('comment');"><? echo ( $$variable{Job}->comment() ) ?></div>
+				<? if ( ! $$variable{Job}->comment() ) ?>
+				<span id="comment_click_to_edit" onclick="tinymce_on('comment');$('comment_click_to_edit').remove();">Click to edit</span>
+				<? endif ( ! $$variable{Job}->comment() ) ?>
+			</li>
+			<li title="Click to edit stock information">
+				<label onclick="tinymce_on('stock');">Stock</label>
+				<div id="stock" onclick="tinymce_on('stock');"><? echo ( $$variable{Job}->stock() ) ?></div>
+				<? if ( ! $$variable{Job}->stock() ) ?>
+				<span id="stock_click_to_edit" onclick="tinymce_on('stock');$('stock_click_to_edit').remove();">Click to edit</span>
+				<? endif ( ! $$variable{Job}->stock() ) ?>
+			</li>
+	<? if ( $$variable{Job}->Equipment()->smartscheduling() or ! $$variable{Job}->project_id() ) ?>
+			<li>
+				<label>Locked</label>
+				<? echo ( radio(
+							'locked',
+							[ '1', 'Yes', '0', 'No' ],
+							$$variable{Job}{locked}, {
+							onclick=>q`$('StartTime').toggle();`, default=>'0'
+							} ); ) ?>
+			</li>
+	<? endif ( $$variable{Job}->Equipment()->smartscheduling() or ! $$variable{Job}->project_id() ) ?>
+			<li id="StartTime">
+				<label>Start Time</label>
+				<? echo ( 
+					datetime_select( 'starttime', 
+						($$variable{Job}{starttime} ? $$variable{Job}{starttime} : ''),
+						{ onchange=>q`set_rdb_value($('JobForm').locked, 1 );`, with_today=>1 }
+						);
+				) ?>
+			</li>
+			<li>
+				<label>Tentative</label>
+				<? echo ( radio( 'tentative', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{tentative}, { default=>'0' } ); ) ?>
+			</li>
+	<? if ( $$variable{Job}->project_id() ) ?>
+			<li>
+				<label>Impressions</label>
+				<? echo ( input( type=>'cardinal', name=>'impressions', value=>$$variable{Job}->impressions() ); ) ?>
+			</li>
+			<li>
+				<label>Speed</label>
+				<? echo ( input( type=>'cardinal', name=>'speed', value=>$$variable{Job}->speed() ); ) ?>
+			</li>
+	<? endif ( $$variable{Job}->project_id() ) ?>
+			<li class="runtime">
+				<label>Runtime</label>
+				<? echo (
+					my ( $h, $m, $s ) = $$variable{Job}->runtime() =~ /(\d+):(\d+):?(\d+)?/;
+	## goes to 99 because it can be more than a day.
+					return join("\n",
+						ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 99 ) ], sprintf('%.2d', $h ), { name=>'runtime_hours', onchange=>'update_runtime(this);' } ),
+						ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], sprintf('%.2d', $m ), { name=>'runtime_minutes', onchange=>'update_runtime(this);' } ),
+						ssi::select( [ map { $_, $_ } map { sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], sprintf('%.2d', $s ), { name=>'runtime_seconds', onchange=>'update_runtime(this);' } ),
+						input( type=>'text',readonly=>'readonly', name=>'runtime', value=>$$variable{Job}->runtime() ),
+						);
+				) ?>
+			</li>
+	<? if ( $$variable{Job}->project_id() ) ?>
+			<li>
+				<label>Forms</label>
+				<? echo ( input( type=>'cardinal', name=>'forms', value=>$$variable{Job}->forms() ); ) ?>
+			</li>
+	<? endif ( $$variable{Job}->project_id() ) ?>
+	<? if ( $$variable{Job}->Equipment()->specification('DoStockVerification') eq 'Y' ) ?>
+			<li>
+				<label>Stock Verified</label>
+				<? echo ( radio( 'stock_verified', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{stock_verified}, { default=>'0' } ); ) ?>
+			</li>
+	<? endif ( $$variable{Job}->Equipment()->specification('DoStockVerification') eq 'Y' ) ?>
+		</ul>
+	</fieldset>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'SaveStartTime', { onclick=>q`tinyMCE.triggerSave();new Ajax.Request('_li_change.json',{parameters:$('JobForm').serialize(), onSuccess:function(){popupWin.close();}});`, text=>'Save' } ),
+				button( 'CancelStartTime', { onclick=>'tinyMCE.triggerSave();popupWin.close();', text=>'Cancel' } ) 
+			); ) ?>
+		</p>
+	<input type="hidden" name="action" value="SaveJob" />
+</form>

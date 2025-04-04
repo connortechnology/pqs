@@ -1,0 +1,27 @@
+<fieldset>Captured Signatures</fieldset>
+	<ul class="CapturedSignatures">
+<? echo (
+	require openprint::SignatureCapture;
+	my @Signatures = openprint::SignatureCapture->find(
+		'project_id'    =>  $$variable{'Project'}->id(),
+		'service_id'    =>  $$variable{'ServiceIndex'},
+		'order'         =>  'id',
+		);
+	my $html;
+	foreach my $S ( @Signatures ) {
+		$html .= '<li>';
+		$html  .= sprintf(q`
+			<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature"/>
+			`, $S->id(), $S->file_path() );
+		if ( $S->additional_image_data() ) {
+			$html  .= sprintf(q`
+			<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature"/>
+			`, $S->id(), $S->additional_file_path() );
+		} # end if
+		$html .= 'Captured at: ' . Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $S->created_on() ) );
+		$html .= '</li>';
+	} # end foreach S
+	return $html;
+) ?>
+	</ul>
+</fieldset>

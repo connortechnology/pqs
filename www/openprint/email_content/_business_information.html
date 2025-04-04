@@ -1,0 +1,50 @@
+<div class="BusinessInformation">
+	<fieldset><legend>Business Information</legend>
+		<ul>
+			<li class="business_name"> 
+				<label>Legal Name</label>
+				<? hecho ( $$variable{'Company'}->business_name() ) ?>
+			</li>
+			<li class="legal_form"> 
+				<label>Legal Form</label>
+				<? echo ( $$variable{'Company'}->business_form() ) ?>
+			</li>
+			<li class="business_type"> 
+				<label>Business Type</label>
+		<? hecho ( $$variable{'Company'}->business_type() ) ?>
+			</li>
+			<li class="year_established"> 
+				<label>Year Established</label>
+		<? echo ( 
+					$$variable{'Company'}->established() =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
+					return $1;
+				) ?>
+			</li>
+			<li class="president_owner"> 
+				<label>President/CEO/Owner</label>
+				<? hecho ( $$variable{'Company'}->president_owner() ) ?>
+			</li>
+			<li class="gst_number"> 
+				<label>
+					<? if ( $session{'Country'} eq 'US' ) ?>Federal ID #/SSN #<? endif ( $session{'Country'} eq 'US' ) ?>
+					<? if ( $session{'Country'} eq 'CA' ) ?>GST #<? endif ( $session{'Country'} eq 'CA' ) ?>
+					
+				</label>
+				<? hecho ( $$variable{'Company'}->gst_number() ) ?>
+			</li>
+			<li class="pst_number"> 
+				<label>
+				<? echo (
+					if ( $session{'Country'} eq 'US' ) {
+						return 'State Tax #:';
+					} elsif ( $session{'Country'} eq 'CA' ) {
+						return 'Provincial Tax #:';
+					} else {
+						return 'State/Provincial Tax #:';
+					} # end if
+				) ?> </label>
+				<? hecho ( $$variable{'Company'}->pst_number() ) ?>
+			</li>
+		</ul>
+	</fieldset>
+</div>

@@ -1,0 +1,62 @@
+<script type="text/javascript">
+	function delete_type( type_id ) {
+		new Ajax.Request( '_type.html', { 
+			parameters: { function: 'remove', type_id: type_id }, 
+			, evalScripts: true
+		 } );
+	} // end function delete-type
+</script>
+<div class="Performance"><div class="Setup">
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
+	<form id="f1" name="f1" action="setup.html" method="post">
+		<input type="hidden" name="function" />
+		<div class="buttons">
+			<? echo ( join('',
+				ssi::button('Save', { 'onclick'=>q`f1.function.value='Save';f1.submit();` } ),
+			); ) ?>
+		</div>
+		<fieldset><legend></legend>
+			<div class="content">
+				<ul>
+					<li></li>
+				</ul>
+			</div>
+		</fieldset>
+				
+	<? echo (
+		my $html;
+		my $rowclass;
+		foreach my $Type ( openprint::Performance_Point_Type->find('order'=>'lower(name)') ) {
+			
+			my @Equipment = openprint::Equipment->find(
+					'useinscheduling'=>1,
+					( $Type->category() ? ( 'category any'=>$Type->category() ) : () ), 
+					'order'=>'lower(strid)');
+			$html .= sprintf('<fieldset id="type-%d"><legend>%s</legend><p class="buttons">%s</p>', $Type->id(), $Type->name(),
+					ssi::button( 'delete'.$Type->id(), { 'text'=>'Delete', 'onclick'=>qq`delete_type( $$Type{id} );` } ),
+				);
+			$html .= '
+		<table class="List">
+			<tr>
+				<th class="Equipment">Equipment</th><th class="value">Point Value</th><th class="units">Units</th><th class="max">Maximum</th>
+			</tr>
+';
+			foreach my $Equipment ( @Equipment ) {
+				my $Point = new openprint::Performance_Point({'equipment_id'=>$$Equipment{'id'},'type_id'=> $$Type{'id'}});
+				$html .= sprintf(q`<tr%1$s>
+										<td class="Equipment">%4$s</td>
+										<td class="value"><input type="text" id="value-%2$d-%3$d" name="value-%2$d-%3$d" value="%5$s" /></td>
+										<td class="units"><select id="units-%2$d-%3$d" name="units-%2$d-%3$d">%6$s</select></td>
+										<td class="max"><input type="text" id="max_value-%2$d-%3$d" name="max_value-%2$d-%3$d" value="%7$s" /></td>
+									</tr>
+								`, $rowclass, $Type->id(), $Equipment->id(), $Equipment->name(), $Point->value(),
+								ssi::make_drop_down( [ map { $_, $_ } ( 'Each', '/Colour', '/1000', '/Hr' ) ], $Point->units() ),
+								$Point->max_value(),
+					);
+			} # end foreach Equipment
+			$html .= '</table></fieldset>';
+		} # end foreach Type
+		return $html;
+	) ?>
+	</form>
+</div></div>

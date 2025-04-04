@@ -1,0 +1,3 @@
+<? echo ( ssi::make_drop_down( openprint::Product->dropdown(order=>'lower(name)',
+( $param{category_id} ? ( category_id => $param{category_id} ) : () ),
+), $param{selected}, { prepend=>[ '','select' ] } ); ) ?>

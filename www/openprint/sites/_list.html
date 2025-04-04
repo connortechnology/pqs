@@ -1,0 +1,58 @@
+<? echo (
+  my $uri = '/sites/list.html';
+
+  $$variable{Sites} = [openprint::Site->find(
+    date_filter( $r->uri().'?created_on_end', 'created_on <=' ),
+    date_filter( $r->uri().'?created_on_start', 'created_on >=' ),
+    date_filter( $r->uri().'?updated_on_end', 'updated_on <=' ),
+    date_filter( $r->uri().'?updated_on_start', 'updated_on >=' ),
+      #( @Sites ? ( host_id => [ map { $_->id() } @Sites ] ) : () ),
+      #( $session{'/sites/edits.html?software_id'} ? ( software_id=>$session{'/sites/edits.html?software_id'} ) : () ),
+  )];
+	return;
+) ?>
+<table class="List sortable">
+	<thead>
+		<tr>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'site_id', this.checked );"/></th>
+			<th class="CompanyName">Owner</th>
+			<th class="SiteName">Name</th>
+			<th class="created_on">Created</th>
+			<th class="hosts">Hosts</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Site ( @{$$variable{Sites}} ) {
+				$html .= sprintf('
+					<tr%1$s>
+						<td class="checkbox"><input type="checkbox" id="site_id" name="site_id" value="%2$d"/></td>
+						<td class="CompanyName"><a href="/sites/edit.html?site_id=%2$d">%3$s</a></td>
+						<td class="SiteName"><a href="/sites/edit.html?site_id=%2$d">%4$s</a></td>
+						<td class="created_on"><a href="/sites/edit.html?site_id=%2$d">%5$s</a></td>
+						<td class="hosts"><a href="/sites/edit.html?site_id=%2$d">%6$s</a></td>
+					</tr>
+					', 
+					$rowclass,
+          $Site->id(), $Site->Owner()->name(), $Site->name(),
+					format_date( $Site->created_on() ),
+					join('<br/>', map { $_->hostname() } $Site->Hosts() ),
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Site
+      $html .= '
+         <tr class="totals">
+           <td class="checkbox"><input type="checkbox" onclick="select_all( this.form, \'site_id\', this.checked );"/></td>
+           <td>Totals:</td>
+           <td colspan="3">'.@{$$variable{Sites}}.' sites</td>
+        </tr>';
+			return $html;
+		) ?>
+		<tr>
+	</tbody>
+</table>
+<p class="buttons">
+<? echo ( button( 'delete', { 'data-on-click'=>'delete_checked', text=>'Delete Checked' } ); ) ?>
+</p>

@@ -1,0 +1,110 @@
+<div id="VendorInformation">
+	<fieldset><legend>VENDOR</legend>
+		<ul>
+		<li><label>Select</label>
+			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" onkeydown="if(event.keyCode == 13){update_vendor();" class="filter"/>
+			<select id="supplier_id" name="supplier_id" onchange="update_vendor();">
+				<option value="">select</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( order=>'lower(name)', supplier=>'Y') ], $$variable{PurchaseOrder}->supplier_id() ); ) ?>
+			</select>
+		</li>
+		<li id="contacts" <? echo ( $$variable{PurchaseOrder}->supplier_id() ? '' : ' style="display:none;"' ) ?>><label>Available Contacts</label>
+			<select id="contact_id" name="contact_id" onchange="new Ajax.Request('/employee/purchase_order/_po_select_contact.json', { parameters: { contact_id: this.value } } );">
+				<option value="">select</option>
+				<? echo ( 
+					if ( $$variable{PurchaseOrder}->supplier_id() ) {
+						my @Users = openprint::User->find(company_id=>$$variable{PurchaseOrder}->supplier_id(),'order'=>'lower(firstname),lower(lastname)' );
+						my $selected;
+						if ( ( ! $$variable{PurchaseOrder}->contact_id() ) and ( $$variable{PurchaseOrder}->vendor_contact() ) ) {
+							foreach my $U ( @Users ) {
+								if ( lc $U->name() eq lc $$variable{PurchaseOrder}->vendor_contact() ) {
+									$selected = $$U{id};
+									last;
+								} # end if
+							}
+						} elsif ( @Users == 1 ) {
+							$selected = $Users[0]{id};
+						}
+							
+						return make_drop_down( [ map { $_->id(), $_->name() } @Users ], $selected ? $selected : undef );
+					} # end if
+					return;
+				) ?>
+			</select>
+		</li>
+		<li><label for="vendor_contact">Contact</label><input type="text" name="vendor_contact" id="vendor_contact" value="<? echo ( $$variable{PurchaseOrder}->vendor_contact() ) ?>" /></li>
+		<li><label for="vendor_name">Name</label><input type="text" name="vendor_name" id="vendor_name" value="<? echo ( $$variable{PurchaseOrder}->vendor_name() ) ?>" /></li>
+		<li><label for="vendor_address1">Address</label><input type="text" name="vendor_address1" id="vendor_address1" value="<? echo ( $$variable{PurchaseOrder}->vendor_address1() ) ?>" />
+		<input type="text" name="vendor_address2" id="vendor_address2" value="<? echo ( $$variable{PurchaseOrder}->vendor_address2() ) ?>" /></li>
+		<li><label for="vendor_country">Country</label>
+			<select id="vendor_country" name="vendor_country" onchange="Country_onchange( this, this.form.vendor_state );<? if ( $$variable{PurchaseOrder}->id() ) ?>update_taxes( this.form );<? endif ( $$variable{PurchaseOrder}->id() ) ?>">
+				<option value=""> select </option>
+				<? echo ( return_countries($$variable{PurchaseOrder}->vendor_country() ); ) ?>
+			</select>
+		</li>
+		<li><label for="vendor_state"><span id="vendor_country_state"><? echo (
+				if ( $$variable{PurchaseOrder}->vendor_country() eq 'US' ) {
+					return 'State';
+				} elsif ( $$variable{PurchaseOrder}->vendor_country() eq 'CA' ) {
+					return 'Province';
+				} else {
+					return 'State/Province';
+				} # end if
+			) ?></span></label>
+			<select id="vendor_state" name="vendor_state" <? if ( $$variable{PurchaseOrder}->id() ) ?>onchange="update_taxes( this.form );"<? endif ( $$variable{PurchaseOrder}->id() ) ?>>
+				<option value=""> Select </option>
+				<? echo ( 
+					if ( $$variable{PurchaseOrder}->vendor_country() eq 'US' ) {
+						return return_states( $$variable{PurchaseOrder}->vendor_state() );
+					} elsif ( $$variable{PurchaseOrder}->vendor_country() eq 'CA' ) {
+						return return_provinces( $$variable{PurchaseOrder}->vendor_state() );
+					} else {
+						return ssi::return_states_and_provinces($$variable{PurchaseOrder}->vendor_state());
+					} # end if
+				) ?>
+			</select>
+		</li>
+		<li><label for="vendor_city">City</label><input type="text" name="vendor_city" id="vendor_city" value="<? echo ( $$variable{PurchaseOrder}->vendor_city() ) ?>" /></li>
+		<li><label for="vendor_postalcode"><span id="vendor_country_postal"><? echo (
+				   if ( $$variable{PurchaseOrder}->vendor_country() eq 'US' ) {
+					   return 'Zip Code';
+				   } elsif ( $$variable{PurchaseOrder}->vendor_country() eq 'CA' ) {
+					   return 'Postal Code';
+				   } else {
+					   return 'Zip/Postal Code';
+				   } # end if
+				) ?></span></label><input type="text" name="vendor_postalcode" id="vendor_postalcode" value="<? echo ( $$variable{PurchaseOrder}->vendor_postalcode() ) ?>" /></li>
+		<li><label for="vendor_phone">Phone</label><input type="tel" name="vendor_phone" id="vendor_phone" value="<? echo ( $$variable{PurchaseOrder}->vendor_phone() ) ?>" /></li>
+		<li><label for="vendor_fax">Fax</label><input type="tel" name="vendor_fax" id="vendor_fax" value="<? echo ( $$variable{PurchaseOrder}->vendor_fax() ) ?>" /></li>
+		<li><label for="vendor_sms">SMS</label><input type="tel" name="vendor_sms" id="vendor_sms" value="<? echo ( $$variable{PurchaseOrder}->vendor_sms() ) ?>" /></li>
+		<li><label for="vendor_email">Email</label><input type="email" name="vendor_email" id="vendor_email" value="<? echo ( $$variable{PurchaseOrder}->vendor_email() ) ?>" /></li>
+		</ul>
+		<? echo (
+				my $PO = $$variable{PurchaseOrder};
+
+				return '' if ! $PO->supplier_id();
+				my $Supplier = $PO->Supplier();
+				my @changes = $Supplier->changes({
+						country=>$$PO{vendor_country},
+						postalcode=>$$PO{vendor_postalcode},
+						address1=>$$PO{vendor_address1},
+						address2=>$$PO{vendor_address2},
+						city=>$$PO{vendor_city},
+						state=>$$PO{vendor_state},
+						});
+				if ( @changes ) {
+				  return join("<br/>\n",
+							'<div class="warning">This vendor\'s address information does not match this purchase order.  The current record for '.$Supplier->name() . ' is as follows:',
+							(
+							 join(', ', $Supplier->address1(), ($Supplier->address2()?$Supplier->address2():()) ),
+							 join(', ', $Supplier->city(), ($Supplier->country() eq 'US' ? $states::states{$Supplier->state()} : $provinces::provinces{$Supplier->state()}), $Supplier->postalcode() ),
+							 $countries::countries{$$Supplier{country}},
+							),
+              "The differences are @changes",
+							button('VendorUpdate', { onclick=>'update_vendor();', text=>'Update' } ),
+						'</div>');
+				}
+				return '';
+		)?>
+	</fieldset>
+</div>

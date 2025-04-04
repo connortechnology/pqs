@@ -1,0 +1,26 @@
+<?echo(
+#$r->content_type('text/javascript');
+	my $html = '';
+	if ( $variable{error} ) {
+		$log->error($variable{error});
+		$html .= qq`alert('$variable{error}');`;
+	} # end if
+
+
+	if ( $param{action} eq 'confirm_po_content' ) {
+		my $Manifest_Content_Type = new openprint::Manifest_Content_Type( $param{manifest_content_type_id} );
+		my $POC = $Manifest_Content_Type->PurchaseOrder_Content();	
+		if ( $POC->id() ) {
+			$html .= sprintf(q`$('cost-%d').value = '%s';`, $Manifest_Content_Type->id(), $POC->price() );
+			$html .= sprintf(q`$('PO_%d').innerHTML = '<br/>From PO: %s';`, $$Manifest_Content_Type{id}, $POC->item() ? $POC->item() : $POC->description() );
+		} # end if
+  } elsif ( $param{action} eq 'unconfirm_po_content' ) {
+    my $Manifest_Content_Type = new openprint::Manifest_Content_Type( $param{manifest_content_type_id} );
+    my $POC = $Manifest_Content_Type->PurchaseOrder_Content();
+    $html .= sprintf(q`$('cost-%d').value = '%s';`, $Manifest_Content_Type->id(), $POC->price() );
+    $html .= sprintf(q`$('PO_%d').innerHTML = '<br/>From PO: %s';`, $$Manifest_Content_Type{id}, $POC->item() ? $POC->item() : $POC->description() );
+
+	} # end if
+  $log->debug($html);
+	return $html;
+) ?>

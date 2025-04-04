@@ -1,0 +1,116 @@
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Job Size</h2>
+</div>
+<form id="f1" name="f1" action="/employee/reports/production_performance.html" method="post">
+	<div class="leftColumn">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<ul>
+		<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) ?>
+		<li>
+			<label>CSR</label>
+			<select name="csr_id" id="csr_id" size="1" onchange="filter_companies( f1.company_id, {name:$('company_id').value, salesrep_id:get_ddm_value(this)} );" >
+			<? echo (
+					my @options = ( '', 'All' );
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
+					make_drop_down( \@options, $session{'/employee/reports/production_performance.html?csr_id'} );
+					) ?>
+
+			 </select>
+		</li>
+		<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) ?>
+		<li>
+			<label>Company</label>
+			<input type="text" oninput="filter_companies( f1.company_id, {name:this.value,salesrep_id:get_ddm_value($('csr_id'))} );" class="filter" />
+			<select name="company_id" id="company_id">
+			<option value="">All</option>
+			<? echo ( make_drop_down( openprint::Company->dropdown( 'last_order_id is null'=>0 ), $session{$r->uri().'?company_id'} ); ) ?>
+			</select>
+		</li>
+		<li>
+			<label>Status</label>
+			<select name="status_id" multiple="multiple" size="4" >
+			<? echo (
+					my $options = openprint::Order_Status->dropdown();
+					my %options = @{$options};
+					make_drop_down( $options, $param{status_id} ? $param{status_id} : [ keys %options ] );
+					) ?>
+			</select>
+		</li>
+		 <li>
+			 <label>Ordered</label>
+			<? echo ( join(' to ',
+						date_select_session('/employee/reports/production_performance.html', 'ordered_on_start', { with_today=>1, with_clear=>1,
+							onchange	=>	q`check_time_starting($('f1'),'ordered_on_start','ordered_on_end');`,
+							} ),
+						date_select_session('/employee/reports/production_performance.html', 'ordered_on_end', { with_today=>1, with_clear=>1,
+						onchange	=>	q`check_time_starting($('f1'),'ordered_on_start','ordered_on_end');`,
+						} ),
+						); ) ?>
+		</li>
+<!--
+		 <li>
+			 <label>Completed</label>
+			<? echo ( date_select_session('/employee/reports/production_performance.html', 'completed_on_start' ); ) ?>
+			to 
+			<? echo ( date_select_session('/employee/reports/production_performance.html', 'completed_on_end' ); ) ?>
+		</li>
+-->
+		<li>
+			<label>Press</label>
+			<select id="press_id" name="press_id" multiple="multiple">
+				<? echo ( 
+						my @Equipment = openprint::Equipment->find('category any'=>'Printing', order=>'lower(strid)');
+						make_drop_down( 
+							[ map { $_->id(), $_->strid() . ': ' . $_->name() } @Equipment ],
+							[ $session{$r->uri().'?press_id'} ? split(',', $session{$r->uri().'?press_id'} ) : ( map { $$_{id} } @Equipment ) ],
+							); ) ?>
+			</select>
+		</li>
+		<li>
+			<label>Runstyle</label>
+			<?echo(ssi::select(
+						[ map { $_ => $_ } @openprint::Imposition::RunStyles],
+						[split(',', $session{$r->uri().'?runstyles'})],
+						{
+							name=>'runstyles',	
+							multiple=>'multiple',
+							size=>'5',
+							} );
+					)?>
+		</li>
+		<li>
+			<label>Reprint</label>
+			<? echo ( radio( 'reprint', ['Y','Yes','N','No','','All'], $param{reprint}, { default=>'' } ); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	</div>
+	<div class="rightColumn">
+		<fieldset><legend>Columns</legend>
+			<input type="hidden" name="columns" value="all"/>
+			<ul>
+				<? echo ( 
+						my @columns = ( 'plates', 'Plate Information',
+							'production', 'Production Timeline',
+							'services', 'Service Costs',
+							'stock', 'Stock Information '.$openprint::Owner->name().' Supplied',
+							'stock_customer_supplied', 'Stock Information Customer Supplied',
+							);
+						my %columns = @columns;
+						checkboxes( 'columns', \@columns,
+							[ exists $session{$r->uri().'?columns'} ? split(',', $session{$r->uri().'?columns'} ) : keys %columns ],
+							{ container=>['<li>', '</li>' ] } );
+						) ?>
+			</ul>
+		</fieldset>
+	</div>
+	<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join("\n", 
+						button( 'Show', { onclick=>"LoadContent('Results','/employee/reports/_production_performance.html', f1.serialize() );", text=>'Show Results' } ),
+						button( 'Download', { onclick=>"f1.action='/employee/reports/production_performance.html?action=download';f1.submit();" } ),
+						);) ?>
+		</p>
+</form>
+<div id="Results"><?include('/employee/reports/_production_performance.html')?></div>

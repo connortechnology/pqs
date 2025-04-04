@@ -1,0 +1,41 @@
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Turnaround</h2>
+</div>
+<script type="text/javascript">
+	function load_projects( form ) {
+        new Ajax.Updater('Results','/employee/reports/_turnaround.html', {
+                onLoading:function(){ $('Results').innerHTML='Loading...'; },
+                onSuccess:function(){ TableKit.Sortable.reload('ResultsTable'); },
+                parameters:Form.serialize(form)});
+                //evalScripts:true, 
+	} // end function
+</script>
+<form id="f1" name="f1" method="post" action="turnaround.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<ul>
+		<li>
+			<label>CSR</label>
+			<select name="CSR" size="1" onchange="load_projects(this.form);">
+			<? echo ( 
+				my @options = ( '', 'All' );
+				push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'],'usergroup any'=>'Sales',company_id=>$config{owner_id} );
+				make_drop_down( \@options, $param{'CSR'} );
+			 ) ?>
+			
+			</select>
+		</li>
+		<li>
+			<label>Due Date</label>
+			<? echo ( date_select_session( '/employee/reports/turnaround.html', 'due_date_start', { with_today=>1 } ); ) ?>
+			to 
+			<? echo ( date_select_session( '/employee/reports/turnaround.html', 'due_date_end', { with_today=>1 } ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( button( 'Go', { onclick=> q{load_projects(f1);}, text=> 'Show Results' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<br/>
+<div id="Results">Select Report Criteria, and click Show Results.</div>

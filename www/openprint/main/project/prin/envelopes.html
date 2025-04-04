@@ -1,0 +1,45 @@
+<div class="PageTitle">
+<h1>Printing</h1>
+</div>
+<script type="text/javascript" src="<?hash_link('/javascripts/printing.js')?>"></script>
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js') ?>"></script>
+<script type="text/javascript" src="<?hash_link('/javascripts/proj/paper.js') ?>"></script>
+<script type="text/javascript">
+	var quantities=new Array();
+	<?QUANTITIES?>
+	<?TemplateSizes?>
+	var projectType = '<?ProjectTypeID?>';
+	function calc( formName, force ) {
+		calc_print( formName, force );
+	}
+</script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<? echo ( include('/includes/main/proj/hdn_fields_printing.html'); ) ?>
+		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
+		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
+		<fieldset><legend><?ProjectTypeName?></legend>
+			<input type="hidden" id="txtWidth" name="txtWidth" value="<?txtWidth?>" />
+			<input type="hidden" id="txtHeight" name="txtHeight" value="<?txtHeight?>" />
+			<input type="hidden" id="txtFinalWidth" name="txtFinalWidth" value="<?txtFinalWidth?>" />
+			<input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="<?txtFinalHeight?>" />
+			<?include('/includes/main/proj/paper_dropdowns.html')?>
+			<br class="spacer"/>
+			<?include('/includes/main/proj/printing_type.html')?>
+			<?include('/includes/main/proj/screen_type.html')?>
+			<?include('/includes/main/proj/colours_coatings.html')?>
+			<br class="spacer"/>
+			<?include('/includes/main/proj/bleeds_colourbars.html')?>	
+			<br class="spacer"/>
+		</fieldset>
+		<!-- End of Input - Start of Results -->
+		<fieldset><legend>Results</legend>
+			<?include('/includes/main/proj/printing_results.html')?>
+		</fieldset>
+		<!-- End of Results -->
+		<hr/>
+		<?include('/includes/main/proj/press_approval.html')?>
+		<?include('/includes/main/proj/add_to_project.html')?>
+	</form>
+</div><!-- Service -->
+<script type="text/javascript">addLoadEvent( function () {selectProjectTemplate( 'f1' )});</script>

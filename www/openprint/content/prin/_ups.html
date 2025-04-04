@@ -1,0 +1,59 @@
+<div class="Delivery">
+	<h1>Delivery Information</h1>
+	<fieldset><legend>Delivery Information</legend>
+		<div class="content">
+			<ul>
+				<li>
+					<label>Pick-Up or Delivery</label>
+					<input type="radio" name="UPSShipping" id="UPSShippingN" value="N" onclick="$('ShippingInformation').hide();$('UPSOptions').hide();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'UPSShipping'} ne 'Y' ); ) ?> />
+					<label class="radio" for="UPSShippingN">Pickup</label>
+					<input type="radio" name="UPSShipping" id="UPSShippingY" value="Y" onclick="$('UPSOptions').show();$('ShippingInformation').show();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'UPSShipping'} eq 'Y' ); ) ?> />
+					<label class="radio" for="UPSShippingY">Delivery</label>
+				</li>
+			</ul>
+		<div id="ShippingInformation" <? echo ( $$variable{'UPSShipping'} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
+			<div id="UPSOptions" <? echo ( $$variable{'UPSShipping'} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
+				<ul>
+					<li class="ToCountry">
+						<label>Country</label>
+						<select id="ToCountry" name="ToCountry" onchange="Country_onchange(this);calc(this.form.name);">
+						<option value=""> Select </option>
+						<? echo ( ssi::return_countries( $$variable{'ToCountry'} ); ) ?>
+						</select>
+					</li>
+					<li class="ToPostalCode">
+						<label><span id="ToCountry_postal">
+							<? echo (
+							   if ( $$variable{'ToCountry'} eq 'US' ) {
+									   return 'Zip Code';
+							   } elsif ( $$variable{'ToCountry'} eq 'CA' ) {
+									   return 'Postal Code';
+							   } else {
+									   return 'Zip/Postal Code';
+							   } # end if
+							) ?></span></label>
+						<input type="text" id="ToPostalCode" name="ToPostalCode" value="<?ToPostalCode?>" onkeyup="calc(this.form.name);"/>
+					</li>
+<? if ( openprint::ServiceType->find_one(name=>'UPS') ) ?>
+					<li class="ServiceTypes">
+						<label>Service Type</label>
+						<span id="ServiceTypeDiv">
+							Please wait while service types are loaded.
+							<input type="hidden" id="ddmServiceType" name="ddmServiceType" value="<?ddmServiceType?>" />
+						</span>
+					</li>
+					<li class="PickupTypes">
+						<label>Pickup Type</label>
+						<span id="PickupTypeDiv">
+							Please wait while pickup types are loaded.
+							<input type="hidden" id="ddmPickupType" name="ddmPickupType" value="<?ddmPickupType?>" />
+						</span>
+					</li>
+					<li>UPS, the UPS brandmark, and the Colour Brown are trademarks of United Parcel Service of America, Inc. All Rights Reserved</li>
+<? endif ( openprint::ServiceType->find_one(name=>'UPS') ) ?>
+				</ul>
+			</div>
+			</div>
+		</div><!--ShippingInformation-->
+	</fieldset>
+</div>

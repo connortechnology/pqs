@@ -1,0 +1,167 @@
+<script type="text/javascript" src="/javascripts/paper.js"></script>
+<script type="text/javascript">
+function calc() {
+LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.serialize() );
+}
+</script>
+<?include('/includes/error_reporting.html') ?>
+<form id="f1" name="f1" method="post" action="stock.html">
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<div class="leftColumn">
+			<ul>
+			<li>
+				<label>Owner</label>
+				<select name="owner_id" size="1" onchange="f1.submit();">
+				<option value=""> All </option>
+				<? echo ( 
+					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(name)' ) ], exists $session{'/employee/reports/stock.html?Owner'} ? $session{'/employee/reports/stock.html?Owner'} : $session{'company_id'} );
+				) ?>
+				</select>
+			</li>
+			<li>
+				<label>Last seen</label>
+				<select name="last_seen" onchange="f1.submit();">
+					<? echo (
+						#$session{'/employee/reports/stock.html?last_seen'} = 31 if ! defined $session{'/employee/reports/stock.html?last_seen'};
+						my @options = (
+							'',	 'Ever',
+							'-14',	'Less than 2 Weeks',
+							'+14',	'More than 2 Weeks',
+							'-31',	'Less than 1 Month',
+							'+31',	'More than 1 Month',
+							'-365',	'Less than 1 Year',
+							'+365',	'More than 1 Year',
+						);
+						make_drop_down( \@options, $session{'/employee/reports/stock.html?last_seen'} );
+					) ?>
+				</select>
+			</p>
+		</div>
+		<div class="rightColumn">
+			<ul>
+			<li><label>Type</label>
+	<? echo (
+		$session{'/employee/reports/stock.html?type'} = 'Roll' if ! $session{'/employee/reports/stock.html?type'};
+		checkboxes( 'type', [ 'Sheet', 'Sheet', 'Roll', 'Roll' ], [split( ',', $session{'/employee/reports/stock.html?type'} )], { onclick=>'f1.submit();' } );
+	) ?>
+			</li>
+			</ul>
+		</div>
+		<br class="spacer"/>
+		<hr/>
+		<div class="leftColumn">
+<ul>
+<? echo (
+	my $html;
+	my %find = (
+			( $session{'/employee/reports/stock.html?type'} ? ( type => [ split( ',', $session{'/employee/reports/stock.html?type'} ) ] ) : () ),
+	);
+	if ( $session{'/employee/reports/stock.html?owner_id'} ) {
+		if ( $session{'/employee/reports/stock.html?owner_id_exclude'} ) {
+			$find{'owner_id !='} = $session{'/employee/reports/stock.html?owner_id'};
+		} else {
+			$find{owner_id} = $session{'/employee/reports/stock.html?owner_id'};
+		} # end if
+	} # end if
+
+	my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
+
+	my @Papers = openprint::Paper->find( %find );
+	my %filter_validations;
+	openprint::Paper::init_cache();
+
+	my %filters;
+	for ( my $stock_index = 0; $stock_index < @Papers; $stock_index += 1 ) {
+		my $Stock = $Papers[$stock_index];
+		next if ! $Stock->in_stock();
+
+		foreach my $option ( @StockOptions ) {
+			my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+
+			# Load up the filter
+			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
+
+			if ( $session{'/employee/reports/stock.html?'.$option_id} ) {
+				if ( $$Stock{$option_id} eq $session{'/employee/reports/stock.html?'.$option_id} ) {
+					$filter_validations{$option} = 1;
+				} else {
+					splice @Papers, $stock_index, 1; $stock_index -= 1;
+					last;
+				} # end if
+			} # end if
+		} # end foreach option
+	} # end foreach $Stock
+
+	foreach my $option ( @StockOptions ) {
+		next if ! $filters{$option};
+		my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
+		$html .= sprintf(q`<li><label>%1$s</label>
+				<select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
+				<option value=""> All </option> %4$s </select>
+			</li>`, $option, lc $option, $$variable{'Signature'},
+			ssi::make_drop_down( \@options, $session{'/employee/reports/stock.html?'.$option} ),
+		);
+	} # end foreach option
+	$$variable{Paper} = \@Papers;
+	return $html;
+) ?>
+</ul>
+		</div>
+		<div class="rightColumn">
+		<p>
+			<label>Size</label>
+			<select name="width" size="1" onchange="" >
+				<option value="">All</option>
+				<? echo ( 
+					my %data;
+					foreach my $Stock ( @{$$variable{'Paper'}} ) {
+						$data{$Stock->width()} = $Stock->width();
+					} # end foreach
+					make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/reports/stock.html?width'} );
+				) ?>
+			</select> x
+			<select name="height" size="1" onchange="" >
+				<option value="">All</option>
+				<? echo ( 
+					my %data;
+					foreach my $Stock ( @{$$variable{'Paper'}} ) {
+						$data{$Stock->height()} = $Stock->height();
+					} # end foreach
+					make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/reports/stock.html?height'} );
+				) ?>
+			</select>
+			<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="" /><label class="radio" for="OrLarger">or larger</label>
+		</p>
+		<p>
+			<label>FSC Code</label>
+			<input type="text" name="fsc_code" style="width: auto;" size="13" onkeyup=""/>
+		</p>
+		<p>
+			<label>Location</label>
+			<select id="location_id" name="location_id" multiple="multiple" onchange="f1.submit();">
+				<? echo ( 
+					my @Locations = openprint::Location->find( type=>'place', order=>'parent_id NULLS FIRST,lower(name)');
+					my @options =	('All','All','Unknown','Unknown', map { $_->id(), $_->name() } @Locations);
+					my @selected = split(',', $session{'/employee/reports/stock.html?location_id'} );
+					if ( ! @selected ) {
+						foreach my $L ( @Locations ) {
+							next if $L->name() eq 'Missing';
+							push @selected, $L->id();
+						} # end foreach $L
+						 $session{'/employee/reports/stock.html?location_id'} = join(',', @selected);
+					} # end if
+					make_drop_down( \@options, \@selected );
+				) ?>
+			</select>
+		</p>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.serialize() );", text=>'Show Results' } ),
+				button( 'Reset', { onclick=> 'f1.reset();' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<div id="Results">Select search criteria and click Show Results</div>

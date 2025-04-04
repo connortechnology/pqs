@@ -1,0 +1,89 @@
+<div class="Press">
+  <ul>
+	<li>
+		<label>Press</label>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
+		<select name="UsePress-<?SignatureIndex?>">
+			<option value=""> select </option>
+		<? echo ( 
+			make_drop_down( [ map { $_->strid(), $_->strid() } openprint::Equipment->find('category any'=>'Printing', order=>'lower(strid)', useinscheduling=>1) ], $$variable{"UsePress-$$variable{SignatureIndex}"} );
+			) ?>
+		</select>
+<? else ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
+<? echo ( $$variable{"UsePress-$$variable{SignatureIndex}"} ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
+	</li>
+<? echo (
+	my $Service = $$variable{Service} = $$variable{Project}->Service( $$variable{ServiceIndex} );
+  my @Roles = openprint::Operator_Role->find( servicetype_id=>$Service->servicetype_id(), order=>'lower(name)' );
+  if ( ! @Roles ) {
+    @Roles = openprint::Operator_Role->find( servicetype_id=>undef, order=>'lower(name)' );
+  }
+  my %Operators = map { $$_{role_id}, $_ } openprint::Project_Service_Operator->find( service_id=>$$Service{service_id} );
+
+  my $html;
+  foreach my $Role ( @Roles ) {
+    $html .= sprintf( q`<li><label>%2$s</label>`, $$Role{id}, $$Role{name} );
+
+		my $Operator = $Operators{$$Role{id}};
+$log->debug("Operator for $$Role{name} " . ( $Operator ? $Operator->User()->name() : 'none' ) );
+
+		if ( openprint::usergroup::is_user_in( ['Scheduling','PressManager'], $session{user_id}) ) {
+			$html .= ssi::select( [ '','select', map {$_->id(), $_->name()} openprint::User->find( 'usergroup any'=>'Printing') ],
+					[ $Operator ? $Operator->user_id() : undef ],
+					{
+						name=>join('-', 'operator_id',$$variable{SignatureIndex}, $$Role{id} ),
+					} );
+		} else {
+			my $html = $Operator ? $Operator->name() : '';
+			if ( $Operator and ( $Operator->user_id() != $session{user_id} ) ) {
+				$html .= '<br/>You are not logged in as the assigned operator.';
+			} # end if
+		} # end if
+		$html .= '</li>';
+	
+	} #end foreach Role
+	return $html;
+) ?>
+	<li>
+		<label>Comments</label>
+		<textarea name="txtEmployeeComments-<?SignatureIndex?>" cols="41" rows="5" wrap="VIRTUAL"><? echo ( $$variable{"txtEmployeeComments-$$variable{SignatureIndex}"} ) ?></textarea>
+	</li>
+	<li>
+		<label>Completed</label>
+<? eval ( 
+		my ( $y, $m, $d ) = Date::Calc::Today();
+		@$variable{'years','months','days'} = get_dates( undef, undef, 
+			$$variable{"ddmPressCompletionDateYear-$$variable{SignatureIndex}"}?$$variable{"ddmPressCompletionDateYear-$$variable{SignatureIndex}"}:$y,
+			$$variable{"ddmPressCompletionDateMonth-$$variable{SignatureIndex}"}?$$variable{"ddmPressCompletionDateMonth-$$variable{SignatureIndex}"}:$m,
+			$$variable{"ddmPressCompletionDateDay-$$variable{SignatureIndex}"}?$$variable{"ddmPressCompletionDateDay-$$variable{SignatureIndex}"}:$d,
+			); ) ?>
+		<span class="DateSelector">
+		<select name="ddmPressCompletionDateMonth-<?SignatureIndex?>" size="1" onchange="setDaysDropDown(document.f1.elements['ddmPressCompletionDateYear-<?SignatureIndex?>'].value, this.value, document.f1.elements['ddmPressCompletionDateDay-<?SignatureIndex?>'], document.f1.elements['ddmPressCompletionDateDay-<?SignatureIndex?>'].value);"><?months?></select>
+		<select name="ddmPressCompletionDateDay-<?SignatureIndex?>" size="1" onchange="setDaysDropDown(document.f1.elements['ddmPressCompletionDateYear-<?SignatureIndex?>'].value, document.f1.elements['ddmPressCompletionDateMonth-<?SignatureIndex?>'],this, this.value);"><?days?></select>
+		<select name="ddmPressCompletionDateYear-<?SignatureIndex?>" size="1"><?years?></select>
+		</span>
+	</li>
+	<li>
+		<label>Complete</label>
+		<?echo( radio(
+					'rdbPressComplete-'.$$variable{SignatureIndex},
+					[ 'Yes', 'Yes', 'No', 'No' ],
+					$$variable{"rdbPressComplete-$$variable{SignatureIndex}"},
+					{ default => $$variable{Service}->status() eq 'Complete' ? 'Yes' : 'No' }
+					); ) ?>
+	</li>
+	<li><label>Schedule</label>
+<? echo ( 
+	my @schedule = openprint::ScheduledJob->find( project_id=>$$variable{Project}->id(), 'service_id @>'=>$$variable{ServiceIndex} );
+	if ( @schedule ) {
+		if ( ! $schedule[0]{starttime} ) {
+			return 'Pending Schedule';
+		} # end if
+		return'Scheduled to run at ' . $schedule[0]{starttime};
+	} # end if
+	return 'Not scheduled.';
+) ?>
+	</li>
+  </ul>
+</div>

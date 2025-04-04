@@ -1,0 +1,40 @@
+<? echo ( 
+	return if ! $$variable{Type}->po_id();
+	my $PO = $$variable{Type}->PurchaseOrder();
+	my $POC = $$variable{Type}->PurchaseOrder_Content();
+	$POC = $$variable{Type}->PurchaseOrder_Content({ignore_fsc=>1}) if ! $POC;
+
+	my $html = '';
+
+	if ( $$variable{Type}->po_content_id() ) {
+		$html .= '<p><label>Confirmed</label>' . ( $POC->item() ? $POC->item() : $POC->description() );
+		$html .= ' ' . Number::Format::format_number($POC->qty()).$POC->units();
+		if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
+			$html .= ' @ ' . openprint::Currency::format( $POC->price() );
+		} # end if
+		$html .= button('unconfirm'.$$POC{id}, { onclick=>qq`unconfirm_po_content($$variable{Type}{id},$$POC{id});`, text=>'Unconfirm' } ) . '</p>';
+		$html .= '</p>';
+	} elsif ( $POC and $POC->id() ) {
+		$html .= '<p><label>Guessed</label>' . ( $POC->item() ? $POC->item() : $POC->description() );
+		$html .= ' ' . ( $POC->qty() ? Number::Format::format_number($POC->qty()) : 0 ).$POC->units();
+		if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
+			$html .= ' @ ' . openprint::Currency::format( $POC->price() );
+		} # end if
+		$html .= ' for docket ' . $POC->docket(). ' ';
+		$html .= button('confirm'.$$POC{id}, { onclick=>qq`confirm_po_content($$variable{Type}{id},$$POC{id});`, text=>'Confirm' } ) . '</p>';
+	} else {
+		$html .= '<p><label>Select one</label>';
+		foreach my $C ( $PO->Contents() ) {
+			$html .= $C->item() ? $C->item() : $C->description();
+			$html .= ' ' . Number::Format::format_number($C->qty()).$C->units();
+			if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
+				$html .= openprint::Currency::format( $C->price() );
+			} # end if
+			$html .= ' for docket ' . $C->docket(). ' ';
+			$html .= button('confirm'.$$C{id}, { onclick=>qq`confirm_po_content($$variable{Type}{id},$$C{id});`, text=>'Select' } ) . '<br/>';
+
+		} # end foreach C
+		$html .= '</p>';
+	} # end if
+	return $html;
+) ?>

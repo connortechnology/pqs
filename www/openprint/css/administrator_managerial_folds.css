@@ -1,0 +1,32 @@
+.Equipment {
+	text-align: left;
+}
+.Pages, .Folds, .Angles {
+	width: 50px;
+	text-align: center;
+}
+.Fold, .Type {
+	text-align: left;
+}
+.Speed {
+	width: 340px;
+}
+
+.MRMinutes,
+.MinImposition,
+.MaxImposition {
+	width: 50px;
+	text-align: center;
+}
+
+.dialog table li {
+  padding-left: 120px;
+}
+.dialog table li label:not(.radio) {
+  margin-left: -120px;
+  width: 120px;
+}
+
+.dialog table li input[type="number"] {
+  width: 50px;
+}

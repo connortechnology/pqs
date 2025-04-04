@@ -1,0 +1,69 @@
+<div class="PageTitle">
+<h1>Order</h1>
+<h2>Submit</h2>
+</div>
+<? echo ( do_css_links( '/order.css' ); ) ?>
+<div class="Order"><div class="Submit">
+	<?include(/includes/error_reporting.html)?>
+	<form method="post" id="f1" name="f1" action="confirmation.html">
+		<?include(/includes/order_header.html)?>
+
+		<? if ( $config{OrderMode} eq 'Simple' ) ?>
+			<?include(/main/order/_contents.html)?>
+		<? else ( $config{OrderMode} eq 'Simple' ) ?>
+			<?include(/includes/order_project_list.html)?>
+			<?include(_product_list.html)?>
+		<? endif ( $config{OrderMode} eq 'Simple' ) ?>
+		<? if ( sets::isin( $session{user_type}, ['A', 'E'] ) ) ?>
+		<div id="AdminOptions"><ul>
+			<li>
+				<label>Representative</label>
+				<input type="text" name="AdministratorName" value="<?AdministratorName?>" />
+			</li>
+			<li>
+				<label>Comments</label>
+				<textarea name="AdministratorComments" cols="30" rows="<? echo ( count_lines( $$variable{AdministratorComments} ) ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
+			</li>
+		</ul></div>
+		<? endif ( sets::isin( $session{user_type}, ['A', 'E'] ) ) ?>
+		<?include(_totals.html)?>
+		<br class="spacer"/>
+		<div class="Disclaimer">
+	<? echo ( 
+		if ( ( $session{company_id} == $$variable{Order}->company_id() ) and ( $openprint::User->company_id() == $session{company_id} ) ) {
+			my $html;
+			$html .= $config{OrderViewDisclaimer};
+			$html .= '
+			<div class="AcceptTerms">
+				<input type="checkbox" id="accept_terms" name="accept_terms" value="1" />
+				By checking the box and clicking Complete Order you agree to accept the listed terms and conditions.
+			</div>';
+			return $html;
+		} # end if
+		return '';
+	) ?>
+</div>
+		<p class="buttons">
+		<? echo ( 
+			return join("\n",
+				button( 'Back', { href=>'/main/order/information.html?order_id='.$variable{Order}->id(), class=>'Back' } ),
+				( $session{user_type} eq 'A' ? button( 'Close', { onclick=>q`f1.btnFunction.value='Close';f1.submit();`, text=>'Close', class=>'Close' } ) : () ),
+				button( 'Complete', { onclick=>'f1.submit();', text=>'Complete Order', class=>'Complete' } ),
+			);	
+		) ?>
+		</p>
+		<input type="hidden" name="order_id" value="<?order_id?>"/>
+		<input type="hidden" name="btnFunction" value="Complete"/>
+	</form>
+</div>
+</div>
+<script>
+<? echo (
+    my $html;
+    if ( my $owing = $$variable{Order}->cod_owing_percent() ) {
+        $html .= qq`alert('This is a COD job.  $owing% remains to be paid.');\n`;
+    }
+    return $html;
+) ?>    
+</script>
+

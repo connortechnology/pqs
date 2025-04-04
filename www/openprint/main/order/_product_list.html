@@ -1,0 +1,107 @@
+<? echo (
+	my $html;
+
+	my @Products = $$variable{Order}->Products();
+	if ( @Products ) {
+		my @ShippingServices = openprint::ServiceType->find(category=>'Shipping');
+
+		$html .= '
+<table class="List">
+	<thead>
+		<tr>
+			<th class="Product">Product</th>
+			<th class="Description">Description</th>
+			<th class="Date Requested">Requested Date</th>
+			<th class="Quantity">Qty</th>
+			<th class="Price">Price</th>
+			<th class="Price">Total</th>
+		</tr>
+	</thead>
+  <tbody>';
+
+		foreach my $Ordered_Product ( @Products ) {
+			my $Product = $Ordered_Product->Product();
+
+		$html .= sprintf(q`
+    <tr%s>
+        <td class="Product">%s</td>
+        <td class="Description">%s</td>
+        <td class="Date Requested">%s</td>
+        <td class="Quantity">%s</td>
+        <td class="Price">`,
+				$$variable{rowclass}, $Product->link_to(), $Product->description(),
+			format_date($Ordered_Product->requested_for()), $Ordered_Product->quantity(),
+		);
+    $$variable{price} = $$variable{Order}->Currency()->convert_from($Ordered_Product->total());
+    my $shipping_html;
+
+		if ( $$Ordered_Product{project_id} ) {
+			my $Project = $Ordered_Product->Project();
+			my $services = $Project->services();
+
+			foreach my $ServiceType ( @ShippingServices ) {
+				next if ! $$services{$ServiceType->name()};
+
+				foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $service_index );
+
+					my $shipping_price = $Project->Currency()->convert_from( $$specs{txtPrice1} );
+					my $summary;
+
+					$$variable{price} -= $shipping_price;
+		
+					require 'openprint/Estimating/'.$ServiceType->name().'.pm';
+					my $module = 'openprint::Estimating::'.$ServiceType->name();
+					if ( my $function = $module->can('summary') ) {
+
+						$summary = $function->( $Project, $service_index, $specs, 1 ) . '<br/>';
+
+						if ( $$specs{FromAddress1} or $$specs{FromCity} or $$specs{FromStateProvince} or $$specs{FromCountry} ) {
+							$summary .= 'From: ' . join("\n",
+								join(',', $$specs{FromCompany} ),
+								join(',', $$specs{FromAddress1} , $$specs{FromAddress2},
+									@$specs{'FromCity','FromStateProvince','FromCountry'},
+									@$specs{FromPostalCode} ),
+								) . '<br/>';
+						} # end if
+
+						if ( $$specs{ToAddress1} or $$specs{ToCity} or $$specs{ToStateProvince} or $$specs{ToCountry} ) {
+							$summary .= 'To: ' . join("\n",
+								join(',', $$specs{ToCompany} ) ,
+								join(',', $$specs{ToAddress1} , $$specs{ToAddress2},
+									@$specs{'ToCity','ToStateProvince','ToCountry'},
+									@$specs{ToPostalCode} ),
+								).'<br/>';
+						} # end if
+					} # end if can summary
+
+					$shipping_html .= sprintf(q`
+<tr%s>
+	<td class="Product">%s</td>
+	<td class="Description">%s</td>
+	<td class="Date Requested"></td>
+	<td class="Quantity">&nbsp;</td>
+	<td class="Price">%s</td>
+	<td></td>
+</tr>`,
+						$$variable{rowclass}, $ServiceType->description(), $summary.'<br/>'.$$specs{alert},
+						openprint::Currency::format($shipping_price),
+					);
+				} # end foreach service
+			} # end foreach ServiceType
+		} # end if has project_id
+
+		$$variable{total} += $Ordered_Product->total();
+		$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';
+
+		$html .= sprintf('%s</td><td class="Price">%s</td></tr>', 
+			openprint::Currency::format($$variable{price}),
+			openprint::Currency::format($Ordered_Product->total()),
+			).$shipping_html;
+	} # end foreach Product
+		$html .= '</tbody>
+</table>
+';
+	} # end if products
+	return $html;
+) ?>

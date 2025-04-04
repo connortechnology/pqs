@@ -1,0 +1,70 @@
+<script type="text/javascript">
+/* <![CDATA[ */  /* so (X)HTML validators ignore the javascript. */
+	function togglePrintingType( element ) {
+		var form = element.form;
+		var div;
+		var display = 'inline';
+		if ( element.value == 'Digital' ) {
+			display = 'none';
+		} // end if
+			
+		if ( div = $('CyanSpotColourSideOne') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('YellowSpotColourSideOne') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('MagentaSpotColourSideOne') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('CyanSpotColourSideTwo') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('YellowSpotColourSideTwo') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('MagentaSpotColourSideTwo') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('SpecialColoursSideOne') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('SpecialColoursSideOneLabel') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('CoatingsSideOne') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('SpecialColoursSideTwo') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('SpecialColoursSideTwoLabel') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('CoatingsSideTwo') ) {
+			div.style.display = display;
+		} // end if
+
+		if ( div = $('ColourBars') ) {
+			div.style.display = display;
+		} // end if
+		if ( div = $('Plates') ) {
+			div.style.display = display;
+		} // end if
+		calc(form.name);
+	}
+/* ]]> */  /* so (X)HTML validators ignore the javascript. */
+</script>
+<? eval (
+	@{$$variable{'Types'}} = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} );
+) ?>
+<? if ( 1 < @{$$variable{'Types'}} ) ?>
+<li>
+	<label>Printing type</label>
+	<select name="PrintingType" onchange="calc(this.form.name);">
+		<? echo (
+			ssi::make_drop_down( [ '', 'No Preference', map { $_, $_ } @{$$variable{'Types'}} ], $$variable{'PrintingType'} );
+		) ?>
+	</select>
+</li>
+<? endif ( 1 < @{$$variable{'Types'}} ) ?>

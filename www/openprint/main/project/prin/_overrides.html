@@ -1,0 +1,63 @@
+<div class="Overrides">
+<fieldset><legend>Overrides</legend>
+	<ul>
+	<li>
+		<label>Stock Format</label>
+		<? echo ( radio( 'StockType-'.$$variable{Signature}, [ '', 'Auto', 'Roll', 'Roll', 'Sheet','Sheet' ], $$variable{'StockType-'.$$variable{Signature}} ); ) ?>
+	</li>
+	<li>
+		<label>Runstyle</label>
+		<select name="ddmRunStyle-<?Signature?>" size="1" onchange="calc(this.form.name);">
+			<option value="">Auto</option>
+			<? echo ( make_drop_down( $$variable{RunStyleOptions}, $$variable{"ddmRunStyle-$$variable{Signature}"} ); ) ?>
+		</select>
+	</li>
+	<li>
+		<label>Press</label>
+		<select name="ddmPress-<?Signature?>" size="1" onchange="calc(this.form.name);">
+			<option value="">Auto</option>
+			<? echo ( make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing',
+							'useinestimating is null or ='=>1,
+							order=>'lower(strname)') ], $$variable{"ddmPress-$$variable{Signature}"} );
+					) ?>
+		</select>
+	</li>
+	<li>
+		<label>Plate Changes</label>
+		<? echo ( join("\n",
+					input( type=>'cardinal', name=>'txtPlateChangeQuantity-'.$$variable{Signature}, value=>$$variable{'txtPlateChangeQuantity-'.$$variable{Signature}} ),
+					ssi::select(
+					[
+					 '1/0' => '1/0 change',
+					 '1/1' => '1/1 change',
+					 '4/0' => '4/0 change',
+					 '4/4' => '4/4 change',
+					], $$variable{'PlateChangeType-'.$$variable{Signature}}, { name=>'PlateChangeType-'.$$variable{Signature}, onchange=>'calc(this.form.name);' }
+					),
+		); ) ?>
+	</li>
+	<li>
+		<label>Form Page Quantity</label>
+    <? echo ( input( type=>'cardinal', name=>'PageQuantity-'.$$variable{Signature}, value=>$$variable{'PageQuantity-'.$$variable{Signature}}, oninput=>q`calc('f1');`, placeholder=>'auto' ); ) ?>
+	</li>
+<? echo ( my $html;
+	my @PrintingTypes = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} );
+	if ( @PrintingTypes > 1 ) {
+		$html .= join("\n",
+				'<li><label>Printing type</label>',
+				ssi::select(
+					[ '', 'Auto', map { $_, $_ } @PrintingTypes ],
+					$$variable{"PrintingType-$$variable{Signature}"},
+					{
+					name=>"PrintingType-$$variable{Signature}",
+					size=>1,
+					onchange=>'calc(this.form.name);'
+					} ),
+				'</li>'
+				);
+		} # end if
+	return $html;
+) ?>
+	</ul>
+</fieldset>
+</div>

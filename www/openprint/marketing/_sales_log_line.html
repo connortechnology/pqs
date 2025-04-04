@@ -1,0 +1,11 @@
+<? echo (
+	my $html = include('/includes/error_reporting.html');	
+	my $Log = $$variable{Log};
+	$html .= sprintf('<tr><td class="DateTime">%s</td><td class="Company">%s</td><td class="User">%s</td><td class="Notes">%s</td></tr>',
+		format_datetime( $Log->date_time() ),
+		$Log->Company()->link_to(),
+		$Log->User()->link_to(),
+		$Log->notes(),
+		);
+	return $html;
+) ?>

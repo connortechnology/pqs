@@ -1,0 +1,23 @@
+<? echo ( 
+	if ( exists $param{skid_id} ) {
+		$param{skid_id} =~ s/\D//g;
+		my $Skid = openprint::Skid->find_one( id=>$param{skid_id} );
+		if ( $Skid ) {
+			return q`$('skid_id').style.color = 'green';$('rfidtag_id').value='`.$Skid->rfidtag_id().q`';`;
+		} else {
+			return q`$('skid_id').style.color = 'red';`;
+		} # end if
+	} elsif ( $param{rfidtag_id} ) {
+		$param{rfidtag_id} =~ s/\D//g;
+		my $RFIDTag = new openprint::RFIDTag( $param{rfidtag_id} );
+		if ( $RFIDTag->id() ) {
+			return q`$('rfidtag_id').style.color = 'green';$('skid_id').value='`.$RFIDTag->Skid()->id().q`';`;
+		} else {
+			my @Tags = openprint::RFIDTag->find( 'id ilike'=>'%'.$param{rfidtag_id} );
+			if ( @Tags == 1 ) {
+				return q`$('rfidtag_id').style.color = 'green';$('skid_id').value='`.$Tags[0]->Skid()->id().q`';`;
+			} # end if
+			return q`$('rfidtag_id').style.color = 'red';`;
+		} # end if
+	} # end if
+) ?>

@@ -1,0 +1,181 @@
+<? eval (
+	$$variable{ServiceIndex} = $param{service_id} if $param{service_id} and ! $$variable{ServiceIndex};
+	$$variable{Project} = new openprint::Project( $param{project_id} ) if $param{project_id} and ! $$variable{Project};
+	if ( ! $$variable{ProjectIndex} ) {
+		$$variable{ProjectIndex} = $$variable{Project}->id();
+	} # end if
+	my $Company = new openprint::Company( $session{company_id} );
+
+	my $specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
+
+	if ( ! ( $$specs{ToCompanyName} and $$specs{ToAddress1} and $$specs{ToCity} and $$specs{ToCountry} ) ) {
+		my %shipping_fields = (
+			'ToCompanyName'     =>  'CompanyName',
+			'ToSalutation'      =>  'Salutation',
+			'ToFirstName'       =>  'FirstName',
+			'ToLastName'        =>  'LastName',
+			'ToAddress1'        =>  'Address1',
+			'ToAddress2'        =>  'Address2',
+			'ToCity'            =>  'City',
+			'ToStateProvince'   =>  'StateProvince',
+			'ToCountry'         =>  'Country',
+			'ToPostalCode'      =>  'PostalCode',
+			'ToPhone'           =>  'Phone',
+			'ToExtension'       =>  'Extension',
+			'ToFax'             =>  'Fax',
+			'ToEmail'           =>  'Email',
+			);
+
+# Load from customer
+		my $shipping_address = $Company->get_shipping_address();
+		my %shipping_specs;
+		@shipping_specs{ keys %shipping_fields } = htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields} ) );
+		foreach my $spec ( keys %shipping_fields ) {
+			$$specs{$spec} = $shipping_specs{$spec} if ! $$specs{$spec};
+		} # end foreach
+	} # end if
+		my %shipping_fields = (
+			'ToCompanyName'     =>  'ToCompanyName',
+			'ToSalutation'      =>  'ToSalutation',
+			'ToFirstName'       =>  'ToFirstName',
+			'ToLastName'        =>  'ToLastName',
+			'ToAddress1'        =>  'ToAddress1',
+			'ToAddress2'        =>  'ToAddress2',
+			'ToCity'            =>  'ToCity',
+			'ToStateProvince'   =>  'ToStateProvince',
+			'ToCountry'         =>  'ToCountry',
+			'ToPostalCode'      =>  'ToPostalCode',
+			'ToPhone'           =>  'ToPhone',
+			'ToExtension'       =>  'ToExtension',
+			'ToFax'             =>  'ToFax',
+			'ToEmail'           =>  'ToEmail',
+		);
+	$$specs{ToCompanyName} = $Company->business_name() if ! $$specs{ToCompanyName};
+	$$specs{ToCompanyName} = $Company->name() if ! $$specs{ToCompanyName};
+	$$specs{ToAddress1} = $Company->address1() if ! $$specs{ToAddress1};
+	$$specs{ToAddress2} = $Company->address2() if ! $$specs{ToAddress2};
+	$$specs{ToCity} = $Company->city() if ! $$specs{ToCity};
+	$$specs{ToStateProvince} = $Company->state() if ! $$specs{ToStateProvince};
+	$$specs{ToCountry} = $Company->country() if ! $$specs{ToCountry};
+	$$specs{ToPostalCode} = $Company->postalcode() if ! $$specs{ToPostalCode};
+	
+	foreach my $spec ( keys %shipping_fields ) {
+		$$variable{"$spec-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} = $$specs{$spec};
+	} # end foreach
+	my %UserSpecs = (
+			'ToEmail'       =>  'email',
+			'ToSalutation'  =>  'salutation',
+			'ToFirstName'   =>  'firstname',
+			'ToLastName'    =>  'lastname',
+			'ToPhone'       =>  'phone',
+			'ToExtension'   =>  'extension',
+			);
+	if ( ! ( $$specs{ToEmail} and $$specs{ToPhone} ) ) {
+		my $User = new openprint::User( $session{user_id} );
+		foreach my $spec ( keys %UserSpecs ) {
+			$$specs{$spec} = $$User{$UserSpecs{$spec}} if ! $$specs{$spec};
+		} # end foreach
+	} # end if
+
+	foreach my $spec ( keys %UserSpecs ) {
+		$$variable{"$spec-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} = $$specs{$spec};
+	} # end foreach
+) ?>
+<fieldset><legend>Destination Address</legend>
+	<div class="same_as_billing"><label for="same_as_billing-<?ProjectIndex?>-<?ServiceIndex?>">Same as Billing</label> <input type="checkbox" name="same_as_billing-<?ProjectIndex?>-<?ServiceIndex?>" id="same_as_billing-<?ProjectIndex?>-<?ServiceIndex?>" onclick="same_as_billing(this.checked, '-<?ProjectIndex?>-<?ServiceIndex?>' );" /></div>
+	<div class="content">
+		<ul> 
+			<li class="company_name required">
+				<label>Company Name</label>
+				<input type="text" id="ToCompanyName-<?ProjectIndex?>-<?ServiceIndex?>" name="ToCompanyName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCompanyName-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+			</li>
+			<li class="salutation">
+				<label>Salutation</label>
+				<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mr." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} eq 'Mr.' ) ?> onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+				<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr.">Mr. </label>
+				<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mrs." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} eq 'Mrs.' ) ?> onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+				<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs.">Mrs. </label>
+				<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Ms." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} eq 'Ms.' ) ?> onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+				<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms.">Ms. </label>
+				<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss" name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Miss" <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} eq 'Miss' ) ?> onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+				<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss">Miss</label>
+			</li>
+			<li>
+				<label>First Name</label>
+				<input type="text" name="ToFirstName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFirstName-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+			</li>
+			<li>
+				<label>Last Name</label>
+				<input type="text" name="ToLastName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToLastName-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+			</li>
+			<li class="required"> 
+				<label>Address</label>
+				<input type="text" name="ToAddress1-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress1-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+			</li>
+			<li class="address2"> 
+				<input type="text" name="ToAddress2-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress2-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+			</li>
+			<li class="required"> 
+				<label>Country</label>
+					<select name="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>" onchange="Country_onchange(this, this.form.elements['ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>'] );same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );">
+						<option value=""> Select </option>
+						<? echo ( 
+							make_drop_down( \@countries::countries, $$variable{'ToCountry-'.$$variable{ProjectIndex}.'-'.$$variable{ServiceIndex}} );
+						) ?> 
+					</select>
+			</li>
+			<li class="required"> 
+				<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_state">
+<? echo (
+if ( $$variable{"ToCountry-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} eq 'US' ) {
+    return 'State';
+} elsif ( $$variable{"ToCountry-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} eq 'CA' ) {
+    return 'Province';
+} else {
+    return 'State/Province';
+} # end if
+) ?>
+
+</span></label>
+				<select name="ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>" onchange="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );">
+					<option value=""> Select </option>
+					<? echo ( join('',
+						make_drop_down( \@states::states, $$variable{"ToStateProvince-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ),
+						make_drop_down( \@provinces::provinces, $$variable{"ToStateProvince-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ),
+					);
+					) ?> 
+				</select>
+			</li>
+			<li class="required"> 
+				<label>City</label>
+				<input type="text" name="ToCity-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCity-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+			</li>
+			<li class="required"> 
+				<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_postal">
+<? echo (
+if ( $$variable{"ToCountry-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} eq 'US' ) {
+    return 'Zip Code';
+} elsif ( $$variable{"ToCountry-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} eq 'CA' ) {
+    return 'Postal Code';
+} else {
+    return 'Zip/Postal Code';
+} # end if
+) ?>
+</span></label>
+				<input type="text" name="ToPostalCode-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPostalCode-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+			</li>
+			<li class="required"> 
+				<label>Phone</label>
+				<input type="tel" name="ToPhone-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPhone-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} . ($$variable{"ToExtension-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ? $$variable{"ToExtension-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} : '' ) ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+			</li>
+			<li> 
+				<label>Fax</label>
+				<input type="tel" name="ToFax-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFax-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+			</li>
+			<li> 
+				<label>E-mail</label>
+				<input type="email" name="ToEmail-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToEmail-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+			</li>
+		</ul>
+	</div>
+</fieldset>

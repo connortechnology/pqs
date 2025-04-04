@@ -1,0 +1,112 @@
+<div class="Payments">
+  <fieldset><legend>Payments</legend>
+<? echo ( 
+	my $html;
+	my @Payments = openprint::Payment->find(order_id=>$$variable{Order}->id(), completed=>1, order=>'id');
+	if ( @Payments or ! sets::isin($$variable{Order}->status(), ['Incomplete','Cancelled']) ) {
+		my $rowclass;
+
+		if ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and $openprint::User->Groups('Accounting') ) ) {
+			$html .= q`
+<table class="List">
+	<thead>
+		<tr>
+			<th class="payment_id">Ref #</th>
+			<th class="type">Type</th>
+			<th class="TransactionID">Transaction</th>
+			<th class="description">Description</th>
+			<th class="DateInput">Received On</th>
+      <th class="Currency">Currency</th>
+			<th class="Price">Amount</th>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+	</thead>
+`;
+			if ( @Payments ) {
+		$html .= '
+	<tbody>
+';
+				foreach my $Payment ( @Payments ) {
+					$html .= sprintf(q`
+<tr%1$s>
+	<td class="payment_id">%2$d</td>
+	<td class="type">%3$s</td>
+	<td class="TransactionID">%4$s</td>
+	<td class="description">%5$s</td>
+	<td class="DateInput">%6$s</td>
+  <td class="Currency">%7$s</td>
+	<td class="Price">%8$s</td>
+	<td class="buttons">%9$s</td>
+</tr>
+				`, $rowclass, $Payment->id(), $Payment->method(), $Payment->transaction_id(), $Payment->memo(), 
+				format_datetime($Payment->created_on()),
+				$Payment->Currency()->format($Payment->amount()),
+				$Payment->Currency()->short(),
+				button('Delete'.$Payment->id(), { onclick=>qq`confirm_delete(document.f1,'$$Payment{id}');`, text=>'Delete' } ),
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Payment
+			$html .= '</tbody>
+'
+		} # end if payments
+		$html .= sprintf('
+			<tfoot>
+        <tr class="totals unprintable">
+            <td>New</td>
+						<td class="Method">%s</td>
+            <td class="TransactionID"><input type="text" name="transaction_id"/></td>
+            <td class="description"><input type="text" name="memo"/></td>
+						<td class="DateInput">%s</td>
+            <td class="Currency">%s</td>
+            <td class="Price">%s</td>
+            <td class="buttons">%s</td>
+        </tr>
+			</tfoot>
+',
+			ssi::select( [ map { $_, $_ } ( '', 'Cash','Cheque','Email Transfer','Paypal','Work In Trade' ) ], undef, { id=>'method', name=>'method' } ),
+			date_select('received_on', [ Date::Calc::Today() ] ),
+			ssi::select( [map{$_->id(), $_->symbol().' ' . $_->short() } openprint::Currency->find(order=>'lower(name)') ], $variable{Order}->currency_id(), { name=>'payment_currency_id' } ),
+			input( type=>'float', name=>'amount', id=>'amount', value=>$$variable{Order}->owing() ),
+			button('AddPayment', { onclick=>"f1.btnFunction.value='Save Payment';f1.submit();", text=>'Add' }),
+			);
+			$html .= '</table>';
+} else {
+	$html .= '
+<table class="List">
+	<thead>
+		<tr>
+			<th class="payment_id">Ref #</th>
+			<th class="type">Type</th>
+			<th class="TransactionID">Transaction</th>
+			<th class="description">Description</th>
+			<th class="DateInput">Date</th>
+      <th class="Currency">Currency</th>
+			<th class="Price">Amount</th>
+		</tr>
+	</thead><tbody>';
+			foreach my $Payment ( @Payments ) {
+				$html .= sprintf(q`
+<tr%1$s>
+	<td class="payment_id">%2$d</td>
+	<td class="type">%3$s</td>
+	<td class="TransactionID">%4$s</td>
+	<td class="description">%5$s</td>
+	<td class="DateTime">%6$s</td>
+	<td class="Currency">%7$s</td>
+	<td class="Price">%8$s</td>
+</tr>
+					`, $rowclass, $Payment->id(), $Payment->method(), $Payment->transaction_id(), $Payment->memo(), 
+					format_datetime($Payment->created_on()),
+					$Payment->Currency()->format($Payment->amount()),
+					$Payment->Currency()->short(),
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Payment
+	    $html .= '</tbody></table>';
+		} # end if access granted
+	} # end if has payments or completed
+  return $html;
+) ?>
+	</fieldset>
+	<input type="hidden" name="payment_id" />
+</div>

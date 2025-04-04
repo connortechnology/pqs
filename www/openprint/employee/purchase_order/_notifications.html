@@ -1,0 +1,29 @@
+<input type="hidden" id="notifications" name="notifications" value="<? echo ( join(',', $$variable{'PurchaseOrder'}->notifications() ); ) ?>" />
+<ul class="notifications">
+	<? echo (
+		my $html;
+		if ( $$variable{'PurchaseOrder'}->notifications() ) {
+			foreach my $U ( openprint::User->find('id'=>[$$variable{'PurchaseOrder'}->notifications()],'order' => 'lower(firstname),lower(lastname)' ) ) {
+				$html .= sprintf( q{<li id="notification_%d"><span class="name">%s</span><span class="buttons">%s</span></li>}, $U->id(), $U->name(), 
+					ssi::button( 'd'.$U->id(), { 'onclick'=>qq`new Ajax.Updater('notification_div','_notifications.html', { parameters: { action: 'delete', po_id : '$$variable{PurchaseOrder}{id}', notification_id: $$U{id}}, evalScripts: true } );`, 'text', 'X' } ),
+					);
+			} # end while
+		} # end if
+		return $html;
+	) ?>
+	<li>
+		<select name="new_notification_id" id="new_notification_id">
+			<option value=""> select one </option>
+		<? echo ( 
+			return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
+		'order' => 'lower(firstname),lower(lastname)',
+				'id'=>[ sets::exclude(
+						[$$variable{'PurchaseOrder'}->notifications()], 
+						[ map { $_->id() } openprint::User->find( 'company_id'=>new openprint::User($session{'user_id'})->company_id() ) ]
+					) ],
+		 ) ] );
+		) ?>
+		</select>
+		<? echo ( ssi::button( 'AddNotification', { 'onclick'=>qq`new Ajax.Updater('notification_div', '_notifications.html', { parameters: { action: 'add', po_id: '$$variable{PurchaseOrder}{id}', notifications: \$('notifications').value, new_notification_id: \$('new_notification_id').value } } );`, 'text'=>'Add' } ); ) ?>
+	</li>
+</ul>

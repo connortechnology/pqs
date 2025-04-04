@@ -1,0 +1,197 @@
+<script type="text/javascript">
+function return_str_to_html(str){
+	var form = $('f1');
+	form.signature.value = escape(str);
+	form.elements['action'].value = 'Submit';
+	form.submit();
+}
+function form_submit() {
+	var form = $('f1');
+
+	if ( ! form.docket.value ) {
+		alert('Please enter a docket #');
+		return false;
+	} else if ( ! form.form.value ) {
+		alert('Please enter form or click entire project.');
+		return false;
+	} // end if
+	form.signature.value = escape(top.getSignature());
+	form.elements['action'].value = 'Submit';
+	form.submit();
+}
+function switch_inputs(e) {
+	if ( current_input ) {
+		current_input.removeClassName('Focused');
+	}
+	current_input = e;
+	current_input.addClassName('Focused');
+}
+
+function load_log() {
+	LoadContent( 'Log', '_datacollection.html', $('LogForm') );
+}
+
+function sig_popup(signature_id) {
+	popup_window( '/employee/production/_signature_popup.html?signature_id='+signature_id, null, { width: 700 } );
+}
+
+function category_onchange(ddm) {
+	new Ajax.Updater( 'equipment_id', '/includes/_equipment.html', { parameters: { 'category_id any': ddm.value, selected_id: $('equipment_id').value } } );
+	new Ajax.Updater( 'user_id', '/includes/_users.html', { parameters: { 'usergroup any': ddm.options[ddm.selectedIndex].text, type: [ 'E','A' ], selected_id: $('user_id').value } } );
+} // end function category_onchange
+
+	var current_input;
+</script>
+<?include(/includes/error_reporting.html)?>
+<div class="DataCollection">
+<form id="f1" name="f1" class="sigPad" action="/employee/production/datacollection.html" method="post">
+	<input type="hidden" name="action"/>
+
+<fieldset><legend>Data Collection</legend>
+	<div class="leftColumn">
+		<ul>
+			<li><label>Docket</label>
+				<? echo ( input(type=>'cardinal', name=>'docket', id=>'docket', onfocus=>'switch_inputs(this);', onkeyup=>q`if(this.value.length>=2){new Ajax.Request('_datacollection.json', { parameters: { docket: this.value } } );}`, value=>$param{docket} ); ) ?>
+				<span class="error" id="docket_alert"></span>
+			</li>
+			<li><label>Company</label><span id="company_name"><? echo ( 
+				if ( $param{docket} ) {
+					my $Order = openprint::Order->find_one(docket=>$param{docket});
+					return $Order->Company()->name() if $Order;
+				} # end if
+				return '';
+			) ?></span></li>
+			<li><label>Category</label>
+			<select name="category_id" id="category_id" onchange="category_onchange(this);">
+				<option value="">All</option>
+<? echo (
+	make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $session{'/employee/production/datacollection.html?category_id'} );
+) ?>
+			</select>
+			</li>		
+			<li><label>Operator</label><select name="user_id" id="user_id"><option value="">select</option>
+				<? echo ( make_drop_down( openprint::User->dropdown(company_id=>$config{owner_id}, order=>'lower(firstname),lower(lastname)',type=>['E','A'] ), 
+$session{'/employee/production/datacollection.html?user_id'} ? $session{'/employee/production/datacollection.html?user_id'} : $session{user_id} ); ) ?>
+				</select>
+			</li>
+			<li><label>Form</label>
+				<? echo ( join("\n",
+							input(type=>'cardinal', name=>'form', id=>'form', onfocus=>'switch_inputs(this);', value=>$param{form} ),
+							button( 'EntireProject', { onclick=>q`$('form').value='Entire Project';`, text=>'All' } ),
+				); ) ?>
+			</li>
+			<li><label>Version</label>
+				<? echo ( input(type=>'text', name=>'version', id=>'version', onfocus=>'switch_inputs(this);', value=>$param{version} ); ) ?></li>
+			<li><label>Quantity</label>
+				<? echo ( input(type=>'cardinal', name=>'quantity', id=>'quantity', onfocus=>'switch_inputs(this);', value=>$param{quantity} ); ) ?></li>
+			<li><label>Equipment</label>
+				<select name="equipment_id" id="equipment_id">
+					<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $session{'/employee/production/datacollection.html?equipment_id'} ); ) ?>
+				</select>
+			</li>
+			<li><label>Comment</label><textarea name="comment" id="comment"></textarea></li>
+		</ul>
+	</div>
+	<div class="rightColumn">
+			<? echo ( 
+				my $ipoo = $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i;
+$ipoo = 0;
+				my $event = $ipoo ? 'ontouch' : 'onclick';
+				return join('<br/>',
+				join("\n", map { button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 1 .. 3 ) ),
+				join("\n", map { button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 4 .. 6 ) ),
+				join("\n", map { button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 7 .. 9 ) ),
+				join("\n", 
+					button('C', { $event=>qq`current_input.value = '';`, title=>'Clear' } ),
+					button('0', { $event=>qq`current_input.value += '0';` } ),
+					button('D', { $event=>qq`current_input.value = current_input.value.substr(0,current_input.value.length-1);`,title=>'Delete' } ),
+				),
+				join("\n", 
+					button('Minus', { $event=>qq`current_input.value += '-';`, text=>'-' } ),
+					button('Plus', { $event=>qq`current_input.value += '+';`, text=>'+' } ),
+					button('Refresh', { $event=>qq`window.location.reload();`, text=>'R', title=>'Refresh' } ),
+				),
+				join("\n", 
+					button('Multiply', { $event=>qq`current_input.value += '*';`, text=>'*' } ),
+					button('Divide', { $event=>qq`current_input.value += '/';`, text=>'/' } ),
+					button('Equals', { $event=>qq`current_input.value = eval(current_input.value);`, text=>'=' } ),
+				),
+			); ) ?>
+	</div>
+</fieldset>
+<div class="SignatureArea">
+<fieldset><legend>Signature</legend>
+<embed id="signature" src="/images/signature.svg?v=4" type="image/svg+xml"/>
+<input type="hidden" name="signature"/>
+</fieldset>
+</div>
+<p class="buttons">
+<? echo ( join('',
+			button('Clear', { onclick=>q`top.clearSignature();$('signature').value='';` } ),
+			button('Submit', { onclick=>'form_submit();' } ),
+			); ) ?>
+</p>
+</form>
+<br class="spacer"/>
+<form id="LogForm" name="LogForm" action="">
+<fieldset class="filters"><legend>Log</legend>
+	<ul>
+		<li><label>When</label>
+			<span class="DateselectorT">
+			<? echo ( 
+				date_select_session( '/employee/production/datacollection.html', 'when_start', { onchange=>q`load_log();`, with_today=>1 } );
+			) ?>
+			</span>to
+			<span class="DateselectorT">
+			<? echo ( 
+				date_select_session( '/employee/production/datacollection.html', 'when_end', { onchange=>q`load_log();`, with_today=>1 } );
+			) ?>
+			</span>
+		</li>
+		<li><label>Equipment</label>
+			<select name="equipment_id" onchange="load_log();">
+				<option value="">All</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $session{'/employee/production/datacollection.html?equipment_id'} ); ) ?>
+			</select>
+		</li>
+		<li><label>Company</label>
+			<input class="filter" type="text" oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" onkeydown="if(event.keyCode == 13){load_log();}" />
+			<select id="company_id" name="company_id" onchange="load_log();">
+				<option value="">All</option>
+			<? echo ( make_drop_down( openprint::Company->dropdown( 'last_order_id is null'=>0 ), $session{'/employee/production/datacallection.html?company_id'} ); ) ?>
+			</select>
+		</li>
+		<li>
+			<label>Operator</label>
+			<select name="employee_id" size="1" onchange="load_log();">
+				<option value="">All Employees</option>
+	<? echo (
+		make_drop_down( openprint::User->dropdown( order=>'lower(firstname),lower(lastname)', type=>['E','A'] ),
+		$session{'/employee/production/datacollection.html?employee_id'} );
+	)?>
+			</select>
+		</li>
+		<li><label>Quantity</label>
+			<? echo ( input( type=>'cardinal', name=>'quantity_start', id=>'quantity_start', onkeydown=>'if(event.keyCode==13){load_log();}' ); ) ?> to
+			<? echo ( input( type=>'cardinal', name=>'quantity_end', id=>'quantity_end', onkeydown=>'if(event.keyCode==13){load_log();}' ); ) ?>
+		</li>
+		<li><label>Limit Results</label>
+			<select name="limit" size="1" onchange="load_log();">
+				<? echo ( make_drop_down( [ '', 'All', 10,10, 100, 100, 1000, 1000 ], $session{'/employee/production/datacollection.html?limit'} ); ) ?>
+			</select>
+		</li>
+	</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+						button( 'ShowResults', { onclick=>'load_log();', text=>'Show Results' } ),
+			); ) ?>
+	</p>
+	<div id="Log"></div>
+</fieldset>
+</form>
+</div>
+<script type="text/javascript"> document.f1.docket.focus(); 
+	Event.observe($('signature'),'touchmove', function(event) { event.preventDefault() }); // turns off
+	new Ajax.Updater( 'Log', '/employee/production/_datacollection.html' );
+</script>
+

@@ -1,0 +1,14 @@
+<? echo ( 
+	my $html = '';
+	
+	foreach my $A ( $$variable{'Question'}->Available_Answers() ) {
+		$html .= sprintf('<li id="answer_%d">%s<span class="buttons">%s</span></li>',
+			$A->answer_id(), $A->Answer()->text(),
+			ssi::button('DelAnswer-'.$$variable{'Question'}->id(), {
+				'onclick'=>sprintf(q`new Ajax.Updater('answers-%1$d', '_answers_edit.html', { parameters: { action: 'delete', question_id: %1$d, answer_id: %2$d } } );`, $$variable{'Question'}->id(), $A->answer_id() ),
+				'text'	=>	'-',
+				} ),
+			);
+	} # end foreach A
+	return $html;
+) ?>

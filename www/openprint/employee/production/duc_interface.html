@@ -1,0 +1,260 @@
+<? eval (
+	if ( $r->param('btnFunction') eq 'Add' ) {
+		my @schedule = split ',', $r->param('Schedule');
+		my $project_id = $r->param('Project');
+		my $form = $r->param('Signature');
+		my $Project = new openprint::Project( $project_id );
+		
+
+		if ( ( ! $project_id ) and $project_id ne '' ) {
+			$Project->save();
+			$Project->company_id( $openprint::session{'company_id'} );
+			$Project->reference( 'Dummy Docket' );
+			$Project->status( 'Approved' );
+			$Project->design( 'ElectronicFile' );
+			$Project->save();
+
+			openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
+			$project_id = $Project->id();
+			$form = 0;
+		} # end if dummy docket
+		
+		if ( $form == -1 ) {
+			my $new_service_index = $Project->add_serice( undef, 'uncalcalated', {
+					txtSignatureType		=> 'Signature',
+					txtServiceDescription	=> 'Additional Signature',
+					} );
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'Signature' ) );
+			push @schedule, $project_id, $new_service_index, $r->param('Equipment'), $r->param('Weekday'), $r->param('Time');
+
+		} else {
+			foreach my $signature_service_index ( $Project->signatures() ) {
+				my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_id, $signature_service_index );
+				if ( $specs{'SignatureIndex'} == $form ) {
+					push @schedule, $project_id, $signature_service_index, $r->param('Equipment'), $r->param('Weekday'), $r->param('Time');
+				} # end if
+			} # end foreach signature
+		} # end if
+		$$variable{'Schedule'} = join(',', @schedule );	
+		if ( $$variable{'Schedule'} eq $r->param('Schedule') ) {
+			$$variable{'error'} .= "Form $form not found.  Not added to schedule.";
+		} # end if
+		my ($time) = sql::execute( $log, $dbh, q{SELECT starttime FROM Equipment_Shifts WHERE equipment_id=? AND name=?}, $r->param('Equipment'), $r->param('Time') );
+		
+	}
+) ?>
+<? eval ( 
+	if ( $r->param('btnFunction') eq 'Delete' ) {
+		my @schedule = split ',', $r->param('Schedule');
+		my @new_schedule;
+		while ( my ( $project_id, $service_id, $equipment_id, $weekday, $time ) = splice @schedule, 0, 5 ) {
+			push @new_schedule, $project_id, $service_id, $equipment_id, $weekday, $time if $service_id != $r->param('remove');
+		} # end while
+		$$variable{'Schedule'} = join(',', @new_schedule );	
+		
+	}
+) ?>
+<? eval ( if ( $r->param('btnFunction') eq 'Schedule' ) {
+		my %schedule;
+		my ( $year, $month, $day ) = Date::Calc::Today();
+		my %equipment = map { $_->id(), $_->strid() } openprint::Equipment->find();
+		my %service_types = map { $_->name(), $_->id() } openprint::ServiceType->find('category'=>'Bindery');
+
+		my %days;
+		foreach ( 1 .. 7 ) {
+			my $dow = Date::Calc::Day_of_Week_to_Text(Date::Calc::Day_of_Week($year,$month,$day));
+			$days{uc $dow} = "$year-$month-$day";
+			( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
+		} # end foreach
+		
+		my @data = split ',', $r->param('Schedule');
+		while ( my ( $project_id, $service_id, $press, $day, $shift ) = splice @data,0, 5 ) {
+			my $Project = new openprint::Project( $project_id );
+			my ($time) = sql::execute( $log, $dbh, q{SELECT starttime FROM Equipment_Shifts WHERE equipment_id=? AND name=?}, $press, $shift );
+			if ( ! $time ) {
+				$$variable{'error'} .= "Shift $shift does not exist for $equipment{$press}<br/>";
+				next;
+			} # end if
+			$time = join(' ', $days{uc $day}, $time );
+
+			my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_id, $service_id );
+			if ( $specs{'UsePress'} ne $equipment{$press} ) {
+				# Set press, and update runtime.
+				new openprint::Project( $project_id )->add_to_log(
+				@openprint::session{'company_id','user_id'}, "Press for signature $specs{'SignatureIndex'} changed from $specs{'UsePress'} to $equipment{$press}" );
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $equipment{$press} );
+			} # end if
+			
+			push @{$schedule{$press}}, join(',', $project_id, $service_id, $time );
+			sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_id, $service_id );
+		} # end foreach
+
+		my ( $start_time, $last_time );
+		foreach my $press ( keys %schedule ) {
+			my @schedule = @{$schedule{$press}};
+			foreach my $sched ( @schedule ) {
+				my ( $project_id, $service_id, $time ) = split ',', $sched;
+				if ( ( ! $last_time ) or $time gt $last_time ) { $last_time = $time; }
+				if ( ( ! $start_time ) or $time lt $start_time ) { $start_time = $time; }
+			} # end foreach
+
+			# Move jobs out of the way
+			my ( $s_date, $s_time ) = split ' ', $last_time;
+			# This works because last_time is always the start of a shift
+			my ( $next_shift ) = sql::execute( $log, $dbh, q{SELECT ?::timestamp + duration FROM Equipment_Shifts WHERE equipment_id=? AND starttime=?}, $last_time, $press, $s_time );
+
+			my @services = sql::execute( $log, $dbh, q{SELECT ProjectIndex, ServiceIndex FROM Schedule WHERE Equipment_id=? AND (starttime between ? AND ?) ORDER BY starttime}, $press, $start_time, $next_shift );
+			$start_time = $next_shift;
+			while ( my ( $project_id, $service_id ) = splice @services, 0, 2 ) {
+				sql::update( $log, $dbh, 'Schedule', "ProjectIndex=$project_id AND ServiceIndex=$service_id", 'StartTime', $start_time );
+				my $Project = new openprint::Project( $project_id );
+				$Project->add_to_log( @openprint::session{'company_id','user_id'},"Rescheduled to print on $start_time" );
+				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+'1 second' FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_id, $service_id );
+				if ( ! $start_time ) {
+					sql::update( $log, $dbh, 'Schedule', "ProjectIndex=$project_id AND ServiceIndex=$service_id", 
+							'RunTime',		openprint::service::get_runtime( $Project, $service_id ),
+							);
+					( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+RunTime FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_id, $service_id );
+				} # end if
+			} # end foreach
+
+			# insert specified jobs
+			foreach my $job ( @schedule ) {
+				my ($project_id, $service_id, $start_time ) = split ',', $job;
+				while (1) {
+					( $_ ) = sql::execute( $log, $dbh, q{SELECT starttime + '1 second'::interval from Schedule WHERE equipment_id=? AND starttime=?}, $press, $start_time );
+					last if ( ! $_ );
+					$start_time = $_;
+				} # end while
+				my $Project = new openprint::Project( $project_id );
+				sql::insert( $log, $dbh, 'Schedule', 
+					'ProjectIndex', $project_id,
+					'ServiceIndex', $service_id,
+					'StartTime',	$start_time,
+					'equipment_id', $press,
+					'RunTime',		openprint::service::get_runtime( $Project, $service_id ),
+					);
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on $start_time" );
+				( $start_time ) = sql::execute( $log, $dbh, q{SELECT starttime + '1 second' from Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_id, $service_id );
+
+				sql::execute( $log, $dbh, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $project_id );
+				my %services = $Project->get_services();
+				foreach my $service_type ( keys %services ) {
+					if ( $service_types{$service_type} ) {
+
+						sql::insert( $log, $dbh, 'Bindery_Schedule',
+								'ProjectIndex', $project_id,
+								'ServiceIndex', $services{$service_type}[0],
+								'ServiceType_id', $service_types{$service_type},
+								'StartTime',    $start_time,
+								'RunTime',  openprint::service::get_runtime( $Project, $services{$service_type}[0] ),
+								);
+					} # end if
+				} # end foreach
+
+			}  # end foreach job
+		} # end foreach press
+	} # end if
+) ?>
+</script>
+<script type="text/javascript" src="/javascripts/barcode.js?version=1.0"></script>
+<script type="text/javascript">
+	var Equipment = new Array();
+	var rowclass;
+
+<? echo ( 
+	my $html;
+	my @Equipment = openprint::Equipment->find('category any'=>'Printing');
+	%{$$variable{'EquipmentIDs'}} = map { $_->id(), $_->strid() } @Equipment;
+	%{$$variable{'EquipmentNames'}} = map { $_->id(), $_->name() } @Equipment;
+	foreach my $id ( keys %{$$variable{'EquipmentIDs'}} ) {
+		$html .= qq{Equipment[$id] = "$$variable{'EquipmentNames'}{$id} ($$variable{'EquipmentIDs'}{$id})";\n};
+	} # end foreach
+	return $html;
+) ?>
+
+	function submit_handler( form ) {
+		if ( ! form.Project.value ) {
+			alert('Enter Project!');
+			return;
+		} else if ( ! form.Signature.value ) {
+			alert('Enter Form!' );
+			return;
+		} else if ( ! form.Equipment.value ) {
+			alert( 'Enter Press!' );
+			return;
+		} else if ( ! form.Weekday.value ) {
+			alert( 'Enter Weekday!' );
+			return;
+		} else if ( ! form.Time.value ) {
+			alert( 'Enter Shift!' );
+			return;
+		} // end if
+		form.btnFunction.value='Add';
+		form.submit();
+		return;
+	} // end function submit_handler
+</script>
+<div class="error"><?error?></div>
+<form name="f1" id="f1" method="Post">
+	<table class="List">
+		<tr>
+			<th align="left">Project</th>
+			<th align="left">Form</th>
+			<th align="left">Press</th>
+			<th align="left">Day</th>
+			<th align="left">Shift</th>
+			<th>&nbsp;</th>
+		</tr>
+		<tr>
+			<td width="150"><input type="text" name="Project" onKeyPress="return input_handler( this, event );" /></td>
+			<td width="50"><input size="2" type="text" name="Signature" onKeyPress="return input_handler( this, event );"/></td>
+			<td width="200"><input size="2" type="text" name="Equipment" onKeyPress="return input_handler( this, event );"/><span id="EquipmentName">&nbsp;</span></td>
+			<td width="150"><input type="text" name="Weekday" onKeyPress="return input_handler( this, event );"/></td>
+			<td width="100"><input size="2" type="text" name="Time" onKeyPress="return input_handler( this, event );"/></td>
+			<td><? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', 'submit_handler( document.f1 );', '', 'Submit'); ) ?></td>
+		</tr>
+	</table>
+	<input type="hidden" name="Schedule" value="<?Schedule?>"/>
+	<input type="hidden" name="Submit" />
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="remove" />
+<? echo ( button( 'Generate', { onclick=>"f1.btnFunction.value='Schedule';f1.submit();", text=>'Generate Schedule' } ); ) ?>
+</form>
+<br class="spacer"/>
+<script type="text/javascript">document.f1.Project.focus();</script>
+<div id="ScheduleDiv">
+<? if ( $$variable{'Schedule'} ) ?>
+	<table class="List">
+		<tr><th align="left">Project</th><th align="left">Form</th><th align="left">Press</th><th align="left">Day</th><th align="left">Shift</th><th>&nbsp;</th></tr>
+	<? echo (
+		my $html;
+		my $rowclass;
+		my @data = split(',', $$variable{'Schedule'} );
+		while ( my ( $project_id, $service_id, $equipment_id, $weekday, $time ) = splice @data, 0, 5 ) {
+			my $Project = new openprint::Project( $project_id );
+			my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_id, $service_id );
+			$html .= qq`<tr$rowclass><td>P$project_id</td><td>F$specs{'SignatureIndex'}</td><td>$$variable{'EquipmentNames'}{$equipment_id} ($$variable{'EquipmentIDs'}{$equipment_id})`;
+			if ( $specs{'UsePress'} and $specs{'UsePress'} ne $$variable{'EquipmentIDs'}{$equipment_id} ) {
+				$html .= qq`<br/><span class="warning">Will change press from $specs{'UsePress'} to $$variable{'EquipmentIDs'}{$equipment_id}</span>`;
+			} # end if
+			if ( $specs{'ddmPress'} and $specs{'ddmPress'} ne $$variable{'EquipmentIDs'}{$equipment_id} ) {
+				$html .= qq`<br/><span class="warning">Running press is not quoted press: $specs{'ddmPress'}</span>`;
+			} # end if
+			if ( ! sql::execute( $log, $dbh, q{SELECT starttime FROM Equipment_Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $time ) ) {
+				$html .= qq`<br/><span class="error">Shift $time does not exist for $$variable{'EquipmentIDs'}{$equipment_id}</span>`;
+			
+			} # end if
+			if ( 'Waiting For Customer Approval' eq $Project->status() ) {
+				$html .= qq`<br/><span class="warning">Project is still waiting for customer approval</span>`;
+			} # end if
+			$html .= qq`</td><td>$weekday</td><td>$time</td><td>`;
+			$html .= button( "Remove$service_id", { onclick=>"f1.remove.value=$service_id;f1.btnFunction.value='Delete';f1.submit();", text=>'remove' } );
+			$html .= '</td></tr>';
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end while
+		return $html;
+	) ?>
+	</table>
+<? endif ( $$variable{'Schedule'} ) ?>
+</div>

@@ -1,0 +1,5 @@
+<li><label>Design</label>
+	<select name="Design_txtQuantity" size="1" onchange="remove_div('OrderButton');calc(this.form.name);">
+		<? echo ( ssi::make_drop_down( [ 0, 'none', 1, '1 Hour', 2, '2 Hours', 3, '3 Hours', 5, '5 Hours' ], $variable{Design_txtQuantity} ); ) ?>
+	</select>
+</li>

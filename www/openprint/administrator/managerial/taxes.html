@@ -1,0 +1,72 @@
+<div class="Taxes">
+<form method="post" action="taxes.html" id="f1" name="f1">
+	<table class="List sortable">
+		<tr>
+			<th class="checkbox">&nbsp;</th>
+			<th class="name">Name</th>
+			<th class="period">Period</th>
+			<th class="country">Country</th>
+			<th class="state">State/Province</th>
+			<th class="rate">Rate (%)</th>
+		</tr>
+		<? eval ( $$variable{TAXES} = [ openprint::Tax->find(order=>'lower(state),period_start') ]; ) ?>
+		<? while ( $$variable{Tax} = shift @{$$variable{TAXES}}; ) ?>
+		<tr>
+			<td class="checkbox"><input type="checkbox" id="tax_ids<? echo ( $$variable{Tax}->id() ) ?>" name="tax_ids" value="<? echo ( $$variable{Tax}->id() ) ?>" /></td>
+			<td class="name"><input type="text" id="name-<? echo ( $$variable{Tax}->id() ) ?>" name="name-<? echo ( $$variable{Tax}->id() ) ?>" value="<? echo ( $$variable{Tax}->name() ) ?>" /></td>
+			<td class="period">
+				<? echo ( date_select( 'period_start-'.$$variable{Tax}->id(), [ split('-',$$variable{Tax}->period_start())], { with_today=>1 } ); ) ?> to 
+				<? echo ( date_select( 'period_end-'.$$variable{Tax}->id(), [ split('-',$$variable{Tax}->period_end())], { with_today=>1 } ); ) ?>
+			</td>
+			<td class="country"><? echo ( $countries::countries{$$variable{Tax}->country()} ? $countries::countries{$$variable{Tax}->country()} : $$variable{Tax}->country() ) ?></td>
+			<td class="state"><? echo (
+				if ( $$variable{Tax}->country() eq 'CA' and $provinces::provinces{$$variable{Tax}->state()} ) {
+					return $provinces::provinces{$$variable{Tax}->state()};
+				} elsif ( $$variable{Tax}->country() eq 'US' and $states::states{$$variable{Tax}->state()} ) {
+					return $states::states{$$variable{Tax}->state()};
+				} else {
+					return $$variable{Tax}->state();
+				} # end if
+				) ?></td>
+			<td class="rate"><? echo ( input( type=>'float', name=>'rate-'.$$variable{Tax}->id(), value=>$$variable{Tax}->rate() ); ) ?></td>
+		</tr>
+		<? endwhile ( $$variable{Tax} = shift @{$$variable{TAXES}}; ) ?>
+		<tr class="new">
+			<td class="checkbox">&nbsp;</td>
+			<td class="name"><input type="text" id="name-New" name="name-New" /></td>
+			<td class="period">
+				<? echo (date_select( 'period_start-New',[], { with_today=>1 } ); ) ?> to 
+				<? echo (date_select( 'period_end-New',[], { with_today=>1 } ); ) ?>
+			</td>
+			<td class="country"><select name="country-New" onchange="jQuery('#state-New').load( '/includes/_states_provinces.html', { country: this.getValue() } );">
+				<?echo(return_countries($param{'country-New'} ? $param{'country-New'} : $openprint::Company->country() );)?></select></td>
+			<td class="state"><select name="state-New" id="state-New">
+				<? echo (
+						if ( $param{'country-New'} ) {
+							if ( $param{'country-New'} eq 'CA' ) {
+								return_provinces();
+							} elsif ( $param{'country-New'} eq 'US' ) {
+								return_states();
+							} 
+						} else {
+							if ( $openprint::Company->country() eq 'CA' ) {
+								return_provinces();
+							} elsif ( $openprint::Company->country() eq 'US' ) {
+							  return_states();
+							}
+						}
+				) ?>
+				</select></td>
+			<td class="rate"><? echo ( input( type=>'float', name=>'rate-New' ); ) ?></td>
+		</tr>
+	</table>
+	<p class="buttons"> <? echo ( join("\n",
+			button( 'Save', { onclick=>"f1.elements['action'].value='Save';f1.submit();", text=>'Save' } ),
+			button( 'Delete', { onclick=>"f1.elements['action'].value='Delete';f1.submit();", text=>'Delete Checked' } ),
+			button( 'Download', { href=>'/administrator/managerial/taxes.html?action=Download', text=>'Download' } ),
+			button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+	); ) ?>
+	</p>
+	<input type="hidden" name="action"/>
+</form>
+</div>

@@ -1,0 +1,65 @@
+<div class="Service <?ServiceTypeID?>">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+        <fieldset><legend><?ServiceTypeName?></legend>
+			<? echo (
+				my $html = '';
+				my @tooth_options = map { $_, $_.' Tooth' } ( 3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,20,25,35,50 );
+				
+				foreach my $sig_id ( $$variable{Project}->signatures( { sort=>1 } ) ) {
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
+					my $signature_index = $$sig_specs{SignatureIndex};
+					
+					$html .= '<div class="Signature">';
+					$html .= 'Information for ' . $$sig_specs{txtServiceDescription} .':' if $$sig_specs{txtServiceDescription};
+					$html .= '<ul><li><label>Perforation Quantity</label><br/>';
+					$html .= '<div class="Vertical"><label>Vertical</label>';
+					$html .= input( 
+						id		=> "txtVerticalQty-$signature_index",
+						name	=> "txtVerticalQty-$signature_index",
+						value	=> $$variable{"txtVerticalQty-$signature_index"},
+						type	=> 'cardinal',
+						oninput	=> 'calc(this.form.name);',
+						);
+	
+					$html .= ssi::select( \@tooth_options, $$variable{'VerticalTeeth-'.$signature_index}, {
+							name=>'VerticalTeeth-'.$signature_index, onchange=>'calc(this.form.name);', prepend=>['','select']
+							} );
+					$html .= '</div><div class="Horizontal"><label>Horizontal</label>';
+					$html .= input( 
+						id		=> 'txtHorizontalQty-'.$signature_index,
+						name	=> 'txtHorizontalQty-'.$signature_index,
+						value	=> $$variable{"txtHorizontalQty-$signature_index"},
+						type	=> 'cardinal',
+						oninput	=> 'calc(this.form.name);',
+						);
+		
+					$html .= ssi::select( \@tooth_options, $$variable{'HorizontalTeeth-'.$signature_index}, {
+							name=>'HorizontalTeeth-'.$signature_index, onchange=>'calc(this.form.name);', prepend=>['','select']
+							});
+					$html .= '</div></li>';
+          my @complexityoptions = map { openprint::Service->find_one(name=>'PerforatingMakeReady'.$_) ? $_ : () } ( 'Simple','Average', 'Complex' );
+          if (@complexityoptions) {
+            $html .= '<li class="complexity"><label>Complexity</label>';
+            $html .= radio('complexity', [map { $_=>$_ } @complexityoptions], $$variable{complexity}, {onclick=>'calc(\'f1\');'});
+            $html .= '</li>';
+          }
+          $html .= '</ul></div>';
+				} # end foreach signature
+				return $html;
+			) ?>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<?include(/includes/main/proj/scoring_results.html) ?>
+			<ul>
+			<?include(/includes/main/proj/quantities_prices.html) ?>
+			</ul>
+		</fieldset>
+		<?include(/includes/main/proj/add_to_project.html) ?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+	</form>
+</div>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>

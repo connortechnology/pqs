@@ -1,0 +1,105 @@
+<? echo (
+  my $uri = '/tasks/list.html';
+
+  $$variable{Tasks} = [openprint::Task->find(
+    date_filter( $uri.'?created_on_end', 'created_on <=' ),
+    date_filter( $uri.'?created_on_start', 'created_on >=' ),
+    date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+    date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
+      (map {
+      ( $session{$uri.'?'.$_} ? ( $_=>$session{$uri.'?'.$_} ) : () )
+      } ( 'department_id', 'type_id', 'action_id', 'assigned_to' )),
+      order=>$param{order} ? $param{order} : 'id desc',
+      limit=>100,
+  )];
+	return;
+) ?>
+<table class="List sortable table"
+       data-pagination="true"
+       data-show-pagination-switch="true"
+       data-page-list="[5, 10, 25, 50, 100, 200, 500, 1000, All]"
+       data-pagination="true"
+       data-show-pagination-switch="true"
+       id="tasksTable"
+       data-search="true"
+        data-cookie="true"
+        data-cookie-same-site="Strict"
+        data-cookie-id-table="TasksTable"
+        data-cookie-expire="2y"
+        data-click-to-select="true"
+        data-remember-order="false"
+        data-show-columns="true"
+        data-show-export="true"
+        data-uncheckAll="true"
+        data-toolbar="#toolbar"
+        data-server-sort="true"
+        data-show-fullscreen="true"
+        data-click-to-select="true"
+        data-maintain-meta-data="true"
+        data-buttons-class="btn btn-normal"
+        data-show-jump-to="true"
+        data-show-refresh="true"
+        data-columns-hidden="['Archived','Emailed','Monitor','Id','Name'.'Frames','AlarmFrames','TotScore','AvgScore']"
+        data-check-on-init="true"
+        data-mobile-responsive="true"
+        data-min-width="562"
+  >
+	<thead>
+		<tr>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'task_id', this.checked );"/></th>
+			<th class="TaskId">Id</th>
+			<th class="CompanyName">Company</th>
+			<th class="Department">Department</th>
+			<th class="ActionName">Action</th>
+			<th class="TaskName">Title</th>
+			<th class="CompanyId">Rb Id</th>
+			<th class="deadline">Deadline</th>
+			<th class="User AssignedTo">Assigned To</th>
+			<th class="User ModifiedBy">Modified By</th>
+			<th class="DateTime created_on">Created At</th>
+			<th class="DateTime modified_on">Modified At</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Task ( @{$$variable{Tasks}} ) {
+				$html .= sprintf('
+					<tr%1$s>
+						<td class="checkbox"><input type="checkbox" id="task_id" name="task_id" value="%2$d"/></td>
+						<td class="TaskId"><a href="/tasks/edit.html?task_id=%2$d">%2$d</a></td>
+						<td class="CompanyName"><a href="/tasks/edit.html?task_id=%2$d">%3$s</a></td>
+						<td class="Department"><a href="/tasks/edit.html?task_id=%2$d">%4$s</a></td>
+						<td class="Action"><a href="/tasks/edit.html?task_id=%2$d">%5$s</a></td>
+						<td class="TaskName"><a href="/tasks/edit.html?task_id=%2$d">%6$s</a></td>
+						<td class="CompanyId"><a href="/tasks/edit.html?task_id=%2$d">%7$s</a></td>
+            <td class="deadline"><a href="/tasks/edit.html?task_id=%2$d">%8$s</a></td>
+						<td class="User AssignedTo"><a href="/tasks/edit.html?task_id=%2$d">%9$s</a></td>
+						<td class="User ModifiedBy"><a href="/tasks/edit.html?task_id=%2$d">%10$s</a></td>
+						<td class="DateTime created_on"><a href="/tasks/edit.html?task_id=%2$d">%11$s</a></td>
+						<td class="DateTime modified_on"><a href="/tasks/edit.html?task_id=%2$d">%12$s</a></td>
+					</tr>
+					', 
+					$rowclass,
+          $Task->id(), $Task->Owner()->name(), $Task->department(), $Task->action(), $Task->title(),
+          $Task->rb_id(), $Task->deadline(), $Task->assigned_to(), $Task->UpdatedBy()->name(),
+					format_datetime( $Task->created_on() ),
+					format_datetime( $Task->updated_on() ),
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Task
+      $html .= '
+         <tr class="totals">
+           <td class="checkbox"><input type="checkbox" onclick="select_all( this.form, \'task_id\', this.checked );"/></td>
+           <td>Totals:</td>
+           <td colspan="3">'.@{$$variable{Tasks}}.' tasks</td>
+        </tr>';
+			return $html;
+		) ?>
+		<tr>
+	</tbody>
+</table>
+<p class="buttons">
+<? echo ( button( 'delete', { 'data-on-click'=>'delete_checked', text=>'Delete Checked' } ); ) ?>
+</p>

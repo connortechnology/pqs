@@ -1,0 +1,248 @@
+<?include('/includes/error_reporting.html') ?>
+<? if ( @{$$variable{Data}} ) ?>
+<? eval (
+	@{$$variable{ServiceType_Categories}} = openprint::ServiceType_Category->find( order=>'sorting,lower(name)' );
+)?>
+<table class="List">
+	<tr>
+		<th class="order_id">Order</th>
+		<th class="docket">Docket</th>
+		<th class="project_id">Project</th>
+		<th class="Company">Company</th>
+		<th class="Date">Ordered</th>
+<? echo ( 
+if ( $$variable{columns}{services} ) {
+  return join("\n", map { '<th class="'.$$_{name}.'">'.$$_{name}.'</th>' } @{$$variable{ServiceType_Categories}});
+}
+return;
+)?>
+<?if($$variable{columns}{plates})?>
+		<th class="plate_count">Plates</th>
+		<th class="Price plate_cost">Plate Cost</th>
+		<th class="Price plate_price">Plate Price</th>
+<?endif($$variable{columns}{plates})?>
+<?if($$variable{columns}{production})?>
+		<th class="Date">Operator Assigned</th>
+		<th class="Date">Printed</th>
+		<th class="Date">Completed</th>
+		<th class="Date">Shipped</th>
+		<th class="Date">Invoiced</th>
+<?endif($$variable{columns}{production})?>
+<?if($$variable{columns}{stock} or $$variable{columns}{stock_customer_supplied})?>
+		<th class="Sheets">Used Stock Sheets</th>
+		<th class="Weight">Used Stock Weight</th>
+		<th class="Price StockCost">Used Stock Cost</th>
+		<th class="Sheets">Ordered Stock Sheets</th>
+		<th class="Weight">Ordered Stock Weight</th>
+		<th class="Price StockCost">Ordered Stock Cost</th>
+		<th class="Sheets">Received Stock Sheets</th>
+		<th class="Weight">Received Stock Weight</th>
+		<th class="Price StockCost">Received Stock Cost</th>
+		<th class="Sheets">Quoted Stock Sheets</th>
+		<th class="Weight">Quoted Stock Weight</th>
+		<th class="Price StockCharge">Quoted Stock Price</th>
+<?endif($$variable{columns}{stock} or $$variable{columns}{stock_customer_supplied})?>
+		<th class="status">Status</th>
+		<th class="Impressions">Impressions</th>
+		<th class="RunStyles">RunStyles</th>
+		<th class="Price">Job Value</th>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		my $job_total = 0;
+		my $used_stock_weight_total = 0;
+		my $used_stock_sheets_total = 0;
+		my $used_stock_value_total = 0;
+
+		my $ordered_stock_weight_total = 0;
+		my $ordered_stock_sheets_total = 0;
+		my $ordered_stock_value_total = 0;
+
+		my $stock_weight_quoted_total = 0;
+		my $received_stock_weight_total = 0;
+		my $received_stock_sheets_total = 0;
+
+		my $stock_weight_quoted_total = 0;
+		my $stock_sheets_quoted_total = 0;
+		my $stock_used_total = 0;
+		my $stock_quoted_total = 0;
+
+		my $lines = 0;
+
+		my $link_to = '/employee/project/view.html';
+
+		while ( @{$$variable{Data}} ) {
+		
+			my ( $order_id, $docket, $project_id, $company, $ordered_on, $status, $job_value, $impressions, $runstyles ) = splice @{$$variable{Data}}, 0, 9;
+
+			$html .= sprintf(q`
+				<tr%1$s>
+					<td class="order_id"><a href="%3$s?order_id=%2$d">%2$d</a></td>
+					<td class="docket"><a href="%3$s?order_id=%2$d">%4$d</a></td>
+					<td class="project_id"><a href="%3$s?order_id=%2$d">%5$d</a></td>
+					<td class="Company"><a href="%3$s?order_id=%2$d">%6$s</a></td>
+					<td class="Date"><a href="%3$s?order_id=%2$d">%7$s</a></td>
+`,
+				$rowclass, $order_id, $link_to, $docket, $project_id, htmlize($company),
+				format_datetime( $ordered_on ), 
+				);
+			$html .= join("\n", map { '<td class="'.$$_{name}.'">'.openprint::Currency::format(shift @{$$variable{Data}}).'</td>' } @{$$variable{ServiceType_Categories}} ) if $$variable{columns}{services};
+			if ( $$variable{columns}{plates} ) {
+				my ( $plates, $plate_cost, $plate_price ) = splice @{$$variable{Data}}, 0, 3;
+				$html .= sprintf(q`
+					<td class="plate_count"><a href="%3$s?order_id=%2$d">%4$s</a></td>
+					<td class="Price plate_cost"><a href="%3$s?order_id=%2$d">%5$s</a></td>
+					<td class="Price plate_price"><a href="%3$s?order_id=%2$d">%6$s</a></td>
+`,
+				$rowclass, $order_id, $link_to,
+				$plates, openprint::Currency::format( $plate_cost ),
+				openprint::Currency::format( $plate_price ),
+				);
+			}
+			if ( $$variable{columns}{production} ) {
+				my ( $takeover_on, $printed_on, $completed_on, $shipped_on, $invoiced_on ) = splice @{$$variable{Data}}, 0, 5;
+				if ( ( ! $printed_on ) and $completed_on ) {
+					my $Project = new openprint::Project( $project_id );
+					$printed_on = $Project->shipped_on();
+					$printed_on = $Project->completed_on() if ! $printed_on;
+				}
+
+				$html .= sprintf(q`
+						<td class="Date"><a href="%3$s?order_id=%2$d">%4$s</a></td>
+						<td class="Date"><a href="%3$s?order_id=%2$d">%5$s</a></td>
+						<td class="Date"><a href="%3$s?order_id=%2$d">%6$s</a></td>
+						<td class="Date"><a href="%3$s?order_id=%2$d">%7$s</a></td>
+						<td class="Date"><a href="%3$s?order_id=%2$d">%8$s</a></td>
+						`,
+						$rowclass, $order_id, $link_to,
+						format_datetime( $takeover_on ), 
+						format_datetime( $printed_on ), 
+						format_datetime( $completed_on ), 
+						format_datetime( $shipped_on ), 
+						format_datetime( $invoiced_on ), 
+						);
+			}
+			
+			if ( $$variable{columns}{stock} or $$variable{columns}{stock_customer_supplied}) {
+				my ( $used_sheets, $used_weight, $used_value,
+						$ordered_sheets, $ordered_weight, $ordered_value,
+						$received_sheets, $received_weight, $received_value,
+						$quoted_sheets, $quoted_weight, $quoted_value ) = splice @{$$variable{Data}}, 0, 12;
+				my $class = '';
+				if ( 
+						( $ordered_weight*.95 > $quoted_weight*1.05 ) 
+						or 
+						( $ordered_value*.95 > $received_value*1.05 ) 
+						or 
+						( $ordered_value*.95 > $quoted_value*1.05 )
+						or 
+						( $received_weight*.95 > $quoted_weight*1.05 )
+					) {
+					$class = ' warning';
+				}
+
+				$html .= sprintf(q`
+						<td class="Sheets%16$s">%4$s</td>
+						<td class="Weight%16$s">%5$s</td>
+						<td class="Price UsedValue%16$s"><a href="%3$s?order_id=%2$d">%6$s</a></td>
+						<td class="Sheets%16$s">%7$s</td>
+						<td class="Weight%16$s">%8$s</td>
+						<td class="Price StockCost%16$s"><a href="%3$s?order_id=%2$d">%9$s</a></td>
+						<td class="Sheets%16$s">%10$s</td>
+						<td class="Weight%16$s">%11$s</td>
+						<td class="Price StockCharge%16$s"><a href="%3$s?order_id=%2$d">%12$s</a></td>
+						<td class="Sheets%16$s">%13$s</td>
+						<td class="Weight%16$s">%14$s</td>
+						<td class="Price StockCharge%16$s"><a href="%3$s?order_id=%2$d">%15$s</a></td>
+						`,
+						$rowclass, $order_id, $link_to,
+						Number::Format::format_number( $used_sheets ),
+						Number::Format::format_number( $used_weight ),
+						openprint::Currency::format( $used_value ),
+						Number::Format::format_number( $ordered_sheets ),
+						Number::Format::format_number( $ordered_weight ),
+						openprint::Currency::format( $ordered_value ),
+						Number::Format::format_number( $received_sheets ),
+						Number::Format::format_number( $received_weight ),
+						openprint::Currency::format( $received_value ),
+						Number::Format::format_number( $quoted_sheets ),
+						Number::Format::format_number( $quoted_weight ),
+						openprint::Currency::format( $quoted_value ),
+						$class,
+				);
+				$used_stock_sheets_total += $used_sheets;
+				$used_stock_weight_total += $used_weight;
+				$used_stock_value_total += $used_value;
+				$ordered_stock_value_total += $ordered_value;
+				$received_stock_sheets_total += $received_sheets;
+				$received_stock_weight_total += $received_weight;
+				$stock_sheets_quoted_total += $quoted_sheets;
+				$stock_weight_quoted_total += $quoted_weight;
+				$stock_used_total += $received_value;
+				$stock_quoted_total += $quoted_value;
+			}
+			$job_total += $job_value;
+			$html .= sprintf(q`
+					<td class="status"><a href="%3$s?order_id=%2$d">%4$s</a></td>
+					<td class="Impressions">%5$s</td>
+					<td class="RunStyles">%6$s</td>
+					<td class="Price"><a href="%3$s?order_id=%2$d">%7$s</a></td>
+				</tr>
+				`, $rowclass, $order_id, $link_to,
+				$status,
+				Number::Format::format_number($impressions),
+				$runstyles,
+				openprint::Currency::format($job_value),
+			);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			$lines += 1;
+		} # end foreach Order
+
+		my $columns = 3;
+		$columns += scalar @{$$variable{ServiceType_Categories}} if $$variable{columns}{services};
+		$columns += 2 if $$variable{columns}{plates};	
+		$columns += 5 if $$variable{columns}{production};	
+		$html .= sprintf(q`<tr class="totals">
+			<td>Total</td>
+			<td>%d</td>
+			<td colspan="%d"></td>
+		`, $lines, $columns );
+
+		if ( $$variable{columns}{stock} or $$variable{columns}{stock_customer_supplied} ) {
+			$html .= sprintf('
+<td class="Sheets">%s</td>
+<td class="Weight">%s</td>
+<td class="Price">%s</td>
+<td class="Sheets">%s</td>
+<td class="Weight">%s</td>
+<td class="Price">%s</td>
+<td class="Sheets">%s</td>
+<td class="Weight">%s</td>
+<td class="Price">%s</td>
+<td class="Sheets">%s</td>
+<td class="Weight">%s</td>
+<td class="Price">%s</td>', 
+						Number::Format::format_number( $used_stock_sheets_total ),
+						Number::Format::format_number( $used_stock_weight_total ),
+						openprint::Currency::format( $used_stock_value_total ), 
+						Number::Format::format_number( $ordered_stock_sheets_total ),
+						Number::Format::format_number( $ordered_stock_weight_total ),
+						openprint::Currency::format( $ordered_stock_value_total ), 
+						Number::Format::format_number( $received_stock_sheets_total ),
+						Number::Format::format_number( $received_stock_weight_total ),
+						openprint::Currency::format( $stock_used_total ), 
+						Number::Format::format_number( $stock_sheets_quoted_total ),
+						Number::Format::format_number( $stock_weight_quoted_total ),
+					openprint::Currency::format( $stock_quoted_total ), 
+			);
+		}
+		$html .= sprintf(q`<td class="status"></td><td class="Impressions"></td><td class="RunStyle"></td><td class="Price">%s</td>`, openprint::Currency::format( $job_total ) );
+		$html .= '</tr>';
+		return $html;
+	) ?>
+</table>
+<span class="Currency">All prices shown are in <? echo ( openprint::Currency::get_current()->name() ) ?>.</span>
+<? else ( @{$$variable{Data}} ) ?>
+There were no data matching your criteria.  Please try again.
+<? endif ( @{$$variable{Data}} ) ?>

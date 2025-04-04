@@ -1,0 +1,62 @@
+<? eval (
+	$$variable{Albums} = [];
+	foreach my $Album ( openprint::Photo_Album->find( 
+		ssi::date_filter( '/photo_albums/history.html?created_on_end', 'created_on <=' ),
+		ssi::date_filter( '/photo_albums/history.html?created_on_start', 'created_on >=' ),
+( sets::isin( $session{user_type}, ['E','A'] ) ? (
+		( $session{$r->uri().'?user_id'} ? ( user_id=>$session{$r->uri().'?user_id'} ) : () ),
+		( ( ( defined $session{$r->uri().'?deleted'} ) and ( $session{$r->uri().'?deleted'} eq '' ) ) ? ( deleted=>[0,1] ) : ( deleted=>$session{$r->uri().'?deleted'} ) ),
+) : () ),
+		order				=> 'created_on',
+		) ) {
+		push @{$$variable{Albums}}, $Album;
+	} # end foreach Photo_Albums
+
+	if ( @{$$variable{Albums}} ) {
+		my %Albums_by_Id = misc::make_hash_from_array('id', @{$$variable{Albums}});
+
+		my @Photos = openprint::Photo_in_Album->find(album_id=>[ keys %Albums_by_Id ], order=>'asset_id');
+		my %Photos_by_AlbumId = misc::make_hash_from_array('album_id', @Photos);
+		foreach my $Album ( @{$$variable{Albums}} ) {	
+			$Album->Photos( $Photos_by_AlbumId{$$Album{id}} ) if $Photos_by_AlbumId{$$Album{id}};
+		}
+	}
+) ?>
+
+<? if ( @{$$variable{Albums}} == 0 ) ?>
+	There are no photo_albums which match your search criteria. 
+<? else ( @{$$variable{Albums}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on an <b>Album ID #</b> to view album details.<br/>
+		To delete albums check the appropriate album(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="thumbnail">&nbsp;</th>
+			<th class="Name">Name</th>
+			<th class="DateTime">Created</th>
+			<th class="Photos"># of Photos</th>
+		</tr>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Album ( @{$$variable{Albums}} ) {
+				$html .= sprintf(q` 
+					<tr title="%2$s" %5$s> 
+						<td class="thumbnail">%4$s</td>
+						<td class="Name"><a href="/photo_albums/view.html?album_id=%1$d">%2$s</a></td>
+						<td class="DateTime"><a href="/photo_albums/view.html?album_id=%1$d">%3$s</a></td>
+						<td class="Photos"><a href="/photo_albums/view.html?album_id=%1$d">%6$d photos</a></td>
+					</tr>
+					`, $Album->id(), html_escape($Album->name()),
+					format_datetime($Album->created_on()),
+					$Album->thumbnail_html(),
+					$rowclass,
+					scalar $Album->Photos(),
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Albums
+			return $html;
+		) ?>
+	</table>
+<? endif ( @{$$variable{Albums}} == 0 ) ?>

@@ -1,0 +1,37 @@
+<? echo (
+	
+	my @dockets = map { $_ ? $_ : () } split(  /\D/, $param{docket} );
+	return if ! @dockets;
+	my $html = '';
+
+	foreach my $Project ( openprint::Project->find(docket=>\@dockets, order=>'id' ) ) {
+		if ( sets::isin( $Project->status(), [ 'Complete', 'Picked Up', 'Shipped', 'Printed','Waiting For Pickup' ] ) ) {
+			$html .= "Docket $param{docket} appears to be " . $Project->status() . '<br/>';
+		} # end if
+	} # end foreach Project
+
+	my @Contents;
+	foreach my $PO_C ( openprint::PurchaseOrder_Content->find( docket=>\@dockets, order=>'po_id DESC' ) ) {
+		next if $PO_C->PurchaseOrder()->deleted();
+		next if $PO_C->po_id() == $param{po_id};
+		push @Contents, $PO_C;
+	} # end foreach PO_C
+
+	if ( @Contents ) {
+		$html .= 'POs for docket ' . $param{'docket'} . ':<br/><table class="List"><tr><th width="75">PO #</th><th width="100">Quantity</th><th>Description</th></tr>';
+		foreach my $PO_C ( @Contents ) {
+			if ( $PO_C->Type()->name() eq 'Roll Stock' ) {
+				$html .= sprintf('<tr><td>%1$d</td><td>%2$dlbs</td><td>%3$s</td></tr>',$PO_C->po_id(), $PO_C->qty(), $PO_C->item() );
+			} elsif ( $PO_C->Type()->name() eq 'Sheet Stock' ) {
+				$html .= sprintf('<tr><td>%1$d</td><td>%2$dsheets</td><td>%3$s</td></tr>',$PO_C->po_id(), $PO_C->qty(), $PO_C->item() );
+			} else {
+				$html .= sprintf('<tr><td>%1$d</td><td>%2$d</td><td>%3$s</td></tr>',$PO_C->po_id(), $PO_C->qty(), $PO_C->item() );
+			} # end if
+		} # end foreach
+		$html .= '</table>';
+	} else {
+		$html .= 'No other POs for docket ' . join(',', @dockets ) . '<br/>';
+	} # end if
+	return $html;
+) ?>
+<br/>

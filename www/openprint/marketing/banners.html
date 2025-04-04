@@ -1,0 +1,22 @@
+<div class="Banners">
+	<form name="f1" id="f1" method="post" enctype="multipart/form-data">
+		<fieldset class="filters"><legend>Search</legend>
+		<ul>
+			<li><label>Supplier</label>
+				<select name="supplier_id" id="supplier_id">
+					<option value="">select</option>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('supplier'=>'Y', order=>'lower(name)') ], $session{'/employee/marketing/banners.html?supplier_id'} ); ) ?>
+				</select>
+			<li>
+			<li><label>Category</label>
+				<select name="category_id" id="category_id">
+					<option value="">select</option>
+					<? echo ( make_drop_down( openprint::MarketingCategory->dropdown(order=>'lower(name)'), $session{'/employee/marketing/banners.html?category_id'} ); ) ?>
+				</select>
+			<li>
+		</ul>
+		</fieldset>
+		<div id="Results"><? echo ( include('_banners.html'); ) ?></div>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+</div>

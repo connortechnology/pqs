@@ -1,0 +1,41 @@
+<div class="PresentationFolderQuestions">
+	<fieldset><legend>Presentation Folder Options</legend>
+	<ul>
+	<li>
+		<label>Number of panels</label>
+		<span class="checkOption">
+		<input type="radio" id="rdbPanels2<?Signature?>" name="rdbPanels<?Signature?>" value="2" onclick="$('PocketCenter<?Signature?>').hide();calc(this.form.name);" <? echo ( $$variable{'rdbPanels'.$$variable{'Signature'}} == 2 ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbPanels2<?Signature?>">2</label>
+		</span>
+		<span class="checkOption">
+		<input type="radio" id="rdbPanels3<?Signature?>" name="rdbPanels<?Signature?>" value="3" onclick="$('PocketCenter<?Signature?>').show();calc(this.form.name);" <? echo ( $$variable{'rdbPanels'.$$variable{'Signature'}} == 3 ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbPanels3<?Signature?>">3</label>
+		</span>
+		<span class="checkOption">
+		<input type="radio" id="rdbPanels4<?Signature?>" name="rdbPanels<?Signature?>" value="4" onclick="$('PocketCenter<?Signature?>').show();calc(this.form.name);" <? echo ( $$variable{'rdbPanels'.$$variable{'Signature'}} == 4 ? 'checked="checked"' : '' ) ?> />
+		<label class="radio" for="rdbPanels4<?Signature?>">4</label>
+		</span>
+	</li>
+	<li>
+		<label>Pocket size</label>
+    <?echo(radio('rdbPocketSize'.$$variable{Signature}, [3,'3&quot;', 4, '4&quot;', 'Other','Other'], $$variable{'PocketSize'.$$variable{'Signature'}}, { default=>'Other', onclick=>'calc(this.form.name);', 'class'=>'checkOption' } ))?>
+			<?echo(input(type=>'float', name=>'PocketSize'.$$variable{Signature}, value=>$$variable{'PocketSize'.$$variable{Signature}}, oninput=>qq`$('rdbPocketSizeOther$$variable{Signature}').checked=true;calc(this.form.name);`);)?>
+	</li>
+	<li>
+		<label>Pocket location</label>
+		<span class="checkOption">
+			<input type="checkbox" id="chkPocketLeft<?Signature?>" name="chkPocketLeft<?Signature?>" value="Left" onclick="calc(this.form.name);" <? echo ( $$variable{'chkPocketLeft'.$$variable{'Signature'}} eq 'Left' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="chkPocketLeft<?Signature?>">Left</label>
+		</span>
+		<span class="checkOption" id="PocketCenter<?Signature?>" <? echo ( $$variable{'rdbPanels'.$$variable{'Signature'}} != 2 ? '' : 'style="display:none;"' ) ?>>
+			<input type="checkbox" id="chkPocketCenter<?Signature?>" name="chkPocketCenter<?Signature?>" value="Center" onclick="calc(this.form.name);" <? echo ( $$variable{'chkPocketCenter'.$$variable{'Signature'}} eq 'Center' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="chkPocketCenter<?Signature?>">Center</label>
+		</span>
+		<span class="checkOption">
+			<input type="checkbox" id="chkPocketRight<?Signature?>" name="chkPocketRight<?Signature?>" value="Right" onclick="calc(this.form.name);" <? echo ( $$variable{'chkPocketRight'.$$variable{'Signature'}} eq 'Right' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="chkPocketRight<?Signature?>">Right</label>
+		</span>
+	</li>
+	</ul>
+	</fieldset>
+</div>

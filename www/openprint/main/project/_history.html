@@ -1,0 +1,226 @@
+<? eval (
+	my $uri = $$variable{uri} = '/main/project/history.html';
+	if ( $param{project_id} ) {
+		if ( $param{project_id} =~ /\%/ ) {
+			$$variable{Projects} = [ openprint::Project->find(
+				company_id	  => $session{company_id},
+				'id like'	   => $param{project_id},
+				order		   => 'id DESC',
+			) ];
+		} else {
+			$param{project_id} = openprint::Project->transform(id=>$param{project_id});
+			$$variable{Projects} = [ openprint::Project->find( 
+				company_id		=> $session{company_id},
+				id						=> $param{project_id},
+				order					=> 'id DESC',
+			) ] if $param{project_id};
+		}
+	} else {
+		my %sql = (
+			date_filter( $uri.'?created_on_end', 'created_on <=' ),
+			date_filter( $uri.'?created_on_start', 'created_on >=' ),
+			date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
+			date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
+
+			( sets::isin( $session{user_type}, [ 'A', 'E' ] ) ? ( 
+				$session{$uri.'?company_id'} ? ( company_id => $session{$uri.'?company_id'} ) : ()
+			) : ( 
+				company_id		=>  $session{company_id}
+			) ),
+			( $session{$uri.'?servicetype_id'} ? ( 'servicetype_id	any'=> $session{$uri.'?servicetype_id'} ) : () ),
+			order				=> 'id DESC',
+      limit=>1000,
+		);
+		$sql{status} = [ split(',', $session{$uri.'?ddmStatus'} ) ] if $session{$uri.'?ddmStatus'};
+		$sql{type_id} = $session{$uri.'?type_id'} if $session{$uri.'?type_id'};
+		$sql{predefined} = $session{$uri.'?predefined'} if $session{$uri.'?predefined'};
+		$sql{'reference ilike'} = '%'.$param{reference}.'%' if $param{reference};
+		$sql{user_id} = $session{$uri.'?user_id'} if $session{$uri.'?user_id'};
+		$sql{salesrep_id} = $session{$uri.'?salesrep_id'} if $session{$uri.'?salesrep_id'};
+
+		$$variable{Projects} = [ openprint::Project->find(%sql) ];
+	} # end if
+
+	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
+) ?>
+
+<? if ( @{$$variable{Projects}} == 0 ) ?>
+	<? if ( sets::isin( $session{user_type}, ['A','E'] ) and $param{project_id} ) ?>
+		<? eval (
+
+			if ( $param{project_id} =~ /\%/ ) {
+				$$variable{Projects} = [ openprint::Project->find(
+					'id like'     => $param{project_id},
+					order         => 'id DESC',
+				) ];
+			} else {
+
+				$$variable{Projects} = [ openprint::Project->find( id=>$param{project_id}, order=>'id DESC' ) ];
+			}
+		) ?>
+		There were no projects matching your search criteria for your currently selected Company.<br/>
+		<? if ( @{$$variable{Projects}} > 0 ) ?>
+			The following are results belonging to other companies:<br/>
+	<table class="List">
+		<thead>
+			<tr> 
+				<th class="project_id">Project #</th>
+				<th class="Company">Company</th>
+				<th class="description">Description</th>
+				<th class="Price">Price 1</th>
+				<th class="Price">Price 2</th>
+				<th class="Price">Price 3</th>
+				<th class="status">Status</th>
+				<th class="Date">Created</th>
+			</tr>
+		</thead>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Project ( @{$$variable{Projects}} ) {
+				$html .= sprintf(q`
+<tr%1$s> 
+	<td class="project_id"><a href="/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>
+	<td class="Company"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s</a></td>
+	<td class="description"><a href="/main/project/view.html?ProjectIndex=%2$d">%4$s</a></td>
+	<td class="Price">%5$s</td>
+	<td class="Price">%6$s</td>
+	<td class="Price">%7$s</td>
+	<td class="status">%8$s</td>
+	<td class="Date">%9$s</td>
+</tr>
+<tr%1$s> 
+	<td>&nbsp;</td>
+	<td colspan="6"><a href="/main/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
+	<td class="User">%11$s</td>
+</tr>`,
+					$rowclass, $Project->id(), $Project->Company()->name(), $Project->reference(), 
+					( $Project->quantity(1) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(1) ) ) : '' ),
+					( $Project->quantity(2) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(2) ) ) : '' ),
+					( $Project->quantity(3) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(3) ) ) : '' ),
+					$Project->status(), format_date( $Project->created_on() ),
+					$Project->summary(),
+					$Project->User()->name(),
+				);
+				$rowclass = $rowclass ? ' class="colRow"' : '';
+			} # end foreach Project
+			return $html;
+		) ?>
+	</table>
+	<span class="Currency">All prices listed in <? echo ( $openprint::Currency->name(); ) ?></span>
+	<br class="spacer"/>
+		<? endif ( @{$$variable{Projects}} > 0 ) ?>
+	<? else ( sets::isin( $session{user_type}, ['A','E'] ) and $param{project_id} ) ?>
+	There are no projects which match your search criteria. 
+	<? endif ( sets::isin( $session{user_type}, ['A','E'] ) and $param{project_id} ) ?>
+<? else ( @{$$variable{Projects}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Project ID #</b> to view project details.<br/>
+		To delete projects from history check the appropriate project(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="project_id">Project #</th>
+<? if ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+			<th class="Company">Company</th>
+<? endif ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+			<th class="description">Description</th>
+			<th class="Price">Price 1</th>
+			<th class="Price">Price 2</th>
+			<th class="Price">Price 3</th>
+			<th class="status">Status</th>
+			<th class="Date">Created</th>
+			<th class="checkbox"><input type="checkbox" name="checkall" value="" onclick="select_all(this.form,'project_id',this.checked);" /></th>
+		</tr>
+		<? echo (
+			my @html;
+			my $rowclass;
+			my $has_Products = openprint::Product->find_one();
+      my $count = 0;
+
+			foreach my $Project ( @{$$variable{Projects}} ) {
+if ( $Project->can_view() ) {
+$count += 1;
+				push @html, sprintf(q`
+<tr%1$s> 
+	<td class="project_id"><a href="/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>`, $rowclass, $Project->id() );
+
+				if ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) {
+					push @html, sprintf( '<td class="Company"><a href="/main/project/view.html?ProjectIndex=%1$d">%2$s</a></td>', $Project->id(), $Project->Company()->name() );
+				} # end if
+	push @html, sprintf( q`
+	<td class="description"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s</a></td>
+	<td class="Price">%4$s</td>
+	<td class="Price">%5$s</td>
+	<td class="Price">%6$s</td>
+	<td class="status">%7$s</td>
+	<td class="Date" title="%9$s">%8$s</td>
+	<td class="checkbox"><input type="checkbox" name="project_id" value="%2$d"/></td>
+</tr>
+<tr%1$s> 
+	<td colspan="%10$d">&nbsp;</td>
+	<td colspan="5"><a href="/main/project/view.html?ProjectIndex=%2$d">%11$s</a></td>
+  <td class="User">%12$s</td>
+  <td class="checkbox"></td>
+</tr>`,
+					$rowclass, $Project->id(), $Project->reference(), 
+					( $Project->quantity(1) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(1) ) ) : '' ),
+					( $Project->quantity(2) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(2) ) ) : '' ),
+					( $Project->quantity(3) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(3) ) ) : '' ),
+					$Project->status(),
+					format_date($Project->created_on() ),
+					format_datetime($Project->created_on() ),
+					( ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '2' : '1' ),
+					$Project->summary(), 
+					$Project->User()->name(),
+				);
+} else {
+                push @html, sprintf(q`
+<tr%1$s>
+    <td class="project_id">%2$d</td>`, $rowclass, $Project->id() );
+
+                if ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) {
+                    push @html, sprintf( '<td class="Company"><a href="/main/project/view.html?ProjectIndex=%1$d">%2$s</a></td>', $Project->id(), $Project->Company()->name() );
+                } # end if
+    push @html, sprintf( q`
+    <td class="description">%3$s</td>
+    <td class="Price" colspan="3">You are not allowed to view this project.</td>
+    <td class="status">%4$s</td>
+    <td class="Date" title="%6$s">%5$s</td>
+    <td class="checkbox"></td>
+</tr>
+<tr%1$s>
+    <td colspan="%7$d">&nbsp;</td>
+    <td colspan="5">%8$s</td>
+    <td class="User">%9$s</td>
+    <td class="checkbox"></td>
+</tr>`,
+                    $rowclass, $Project->id(), $Project->reference(),
+                    $Project->status(),
+					format_date($Project->created_on() ),
+					format_datetime($Project->created_on() ),
+                    ( ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '2' : '1' ),
+                    $Project->summary(),
+										$Project->User()->name(),
+                );
+
+}
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Project
+    push @html, '<tr class="totals">
+      <td colspan="'.(((!$session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '9' : '8' ).'">'.$count.' projects</td></tr>';
+			return join( "\n", @html );
+		) ?>
+	</table>
+	<span class="Currency">All prices listed in <? echo ( $openprint::Currency->name(); ) ?></span>
+	<br class="spacer"/>
+<p class="buttons">
+<? echo ( 
+	my $html = button( 'Delete', { onclick=>'delete_confirm(document.f2);' } );
+	if ( sets::isin( $session{user_type}, [ 'E','A' ] ) ) {
+		$html .= button('Copy', { onclick=>q`popup_window('_copy_popup.html',f2.serialize());` });
+	} # end if
+	return $html;
+) ?>
+</p>
+<? endif ( @{$$variable{Projects}} == 0 ) ?>

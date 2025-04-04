@@ -1,0 +1,24 @@
+<? eval ( 
+	if ( ( ! $$variable{'HoleDrilling'} ) and ( $$variable{'ProjectType'}->name() eq 'Calendars' ) ) {
+		$$variable{'HoleDrilling'} = 'Y';
+	} # end if
+ ) ?>
+<li>
+	<label>Hole Drilling</label>
+	<input type="radio" id="HoleDrillingY" name="HoleDrilling" value="Y" onclick="$('HoleDrillingDiv').show();$('OrderButton').hide();calc('f1');" <? echo ( $$variable{'HoleDrilling'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+	<label class="radio" for="HoleDrillingY">Yes</label>
+	<input type="radio" id="HoleDrillingN" name="HoleDrilling" value="N" onclick="$('HoleDrillingDiv').hide();$('OrderButton').hide();calc('f1');" <? echo ( $$variable{'HoleDrilling'} ne 'Y' ? 'checked="checked"' : '' ) ?> />
+	<label class="radio" for="HoleDrillingN">No</label>
+</li>
+<li id="HoleDrillingDiv" <? echo ( 'style="display:none;"' if $$variable{'HoleDrilling'} ne 'Y' ) ?> >
+	<label for="txtHoleQty"># of Holes</label>
+	<input type="number" id="txtHoleQty" name="txtHoleQty" value="<?txtHoleQty?>" onkeyup="$('OrderButton').hide();" />
+	<br class="spacer"/>
+	<label>Hole Size</label>
+	<select id="txtHoleSize" name="txtHoleSize">
+		<option value=".125">1/8 inch</option>
+		<option value=".25">1/4 inch</option>
+		<option value=".5">1/2 inch</option>
+	</select>
+</li>
+

@@ -1,0 +1,25 @@
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<? eval (
+    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+    $$variable{'Columns'} = 'Three';
+    } else {
+    $$variable{'Columns'} = 'Two';
+    } # end if
+) ?>
+<div class="Service">
+	<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
+	<form name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend>Copy Dot</legend>
+			<ul>
+		<? echo ( include('/includes/main/proj/negative_quantity.html'); ) ?>
+			</ul>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+			<? echo ( include('/includes/main/proj/prices.html'); ) ?>
+			</ul>
+		</fieldset>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
+	</form>
+</div>

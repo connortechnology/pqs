@@ -1,0 +1,12 @@
+.Scoring .Signature {
+	float: left;
+	width: 49%;
+}
+.Scoring .Signature input[type="number"] {
+	width: 40px;
+}
+@media only screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait) {
+.Scoring .Signature {
+	width: 100%;
+}
+}

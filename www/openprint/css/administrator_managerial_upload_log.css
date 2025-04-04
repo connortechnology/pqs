@@ -1,0 +1,23 @@
+
+table .Status {
+    width: 80px;
+}
+.Size {
+    text-align: right;
+    width: 150px;
+}
+.File {
+	text-align: left;
+}
+
+table .DateTime {
+	width: 125px;
+}
+table .Type {
+	text-align: right;
+	width: 50px;
+}
+table .Speed {
+	text-align: right;
+	width: 80px;
+}

@@ -1,0 +1,18 @@
+<form id="f2" name="f2" action="/employee/project/view.html" method="post">
+  <fieldset class="filters">
+    <ul>
+      <li class="docket"><label>Docket #</label>
+      <? echo ( join("\n",
+            input( type=>'cardinal', name=>'docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='/employee/project/view.html?docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
+            button( 'Go1', { onclick=>q`window.location='/employee/project/view.html?docket='+$('Docket').value;`, text=>'Go' } ),
+            button( 'GoProofs', { onclick=>q`if($('Docket').value){window.location='/employee/proj/prep/proofs.html?docket='+$('Docket').value;};`, text=>'Go Proofs' } ),
+            $$variable{Project}->id() ?
+              button('Return', { href=>'/employee/project/view.html?ProjectIndex='.$$variable{ProjectIndex}, text=>'Return to Docket '.$$variable{Project}->docket() } ) : (),
+      ); ) ?>
+      </li>
+    </ul>
+  </fieldset>
+</form>
+<fieldset><legend><?ServiceName?></legend>
+<?include('/includes/employee/feedback/packaging.html')?>
+</fieldset>

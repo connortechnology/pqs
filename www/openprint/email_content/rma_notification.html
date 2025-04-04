@@ -1,0 +1,13 @@
+<?Salutation?> <?FirstName?> <?LastName?> has requested an RMA.<br/>
+<ul>
+<li class="order_id"><label>Order ID</label><? echo ( $$variable{Order}->id() ) ?></li>
+<li class="docket"><label>Docket</label><? echo ( $$variable{Order}->docket() ) ?></li>
+<li class="Company"><label>Company</label><? echo ( $$variable{Order}->Company()->name() ) ?></li>
+<li class="description"><label>Description of Problem</label><? echo ( $$variable{RMA}->description() ) ?></li>
+<? if ( $$variable{RMA}->project_id() ) ?>
+<li class="reference"><label>Project Reference</label><? echo ( $$variable{Project}->reference() ) ?></li>
+<? endif ( $$variable{RMA}->project_id() ) ?>
+<li class="type"><label>Type Requested</label><? echo ( $$variable{RMA}->type() ) ?></li>
+</ul>
+<br/>
+Click <a href="/employee/support/return.html?rma_id=<? echo ( $$variable{RMA}->id() ) ?>">here</a> to view details.

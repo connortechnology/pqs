@@ -1,0 +1,21 @@
+<?if($param{id})?>
+<fieldset><legend>Matching rules</legend>
+  <?echo(
+  my $Expense = openprint::Expense->find_one(id=>$param{id});
+  if ( !$Expense ) {
+    $log->error("No expense found for id $param{id}");
+    return '';
+  }
+  my $html = '';
+  foreach my $Rule ( openprint::Expense_Rule->find() ) {
+    if ( $Rule->match({
+      desc=>$$Expense{description},
+      date=>$$Expense{paid_on},
+    }) ) {
+      $html .= $Rule->to_string().'<br/>';
+    } # end if matched
+  } # end foreach Rule
+  return $html;
+)?>
+</fieldset>
+<?endif($param{id})?>

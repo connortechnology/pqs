@@ -1,0 +1,41 @@
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" action="email.html" method="post">
+	<input type="hidden" name="action" />
+	<fieldset><legend>Information</legend>
+		<div class="content">
+			<ul>
+				<li><label>Email Address</label>
+					<input type="email" name="username" id="username" value="<? echo ( $$variable{Email}->username(); ) ?>" />
+				</li>
+				<li><label>Name</label>
+					<input type="text" name="name" id="name" value="<? echo ( $$variable{Email}->name(); ) ?>" />
+				</li>
+				<li><label>Maildir</label>
+					<input type="text" name="maildir" id="maildir" value="<? echo ( $$variable{Email}->maildir(); ) ?>" />
+				</li>
+				<li><label>Quota (-1 means infinite)</label>
+					<?echo( input( type=>'integer', name=>'quota', id=>'quota', value=>$$variable{Email}->quota() ); )?>
+				</li>
+				<li><label>Active</label>
+					<?echo(radio('active', [ 1, 'Yes', 0, 'No' ], $$variable{Email}->active() ); ) ?>
+				</li>
+<?if($$variable{Email}->id())?>
+				<li><label>Created</label>
+					<?echo(format_datetime( $$variable{Email}->created_on() ); ) ?>
+				</li>
+				<li><label>Updated</label>
+					<?echo(format_datetime( $$variable{Email}->updated_on() ); ) ?>
+				</li>
+<?endif($$variable{Email}->id())?>
+			</ul>
+		</div>
+	</fieldset>
+<?include(/account/_email_settings.html)?>
+<br class="spacer"/>
+	<p class="buttons">
+		<? echo ( join("\n",
+			button( 'save', { onclick=>q`f1.elements['action'].value='Save';f1.submit();`, text=>'Save' } ),
+			( $$variable{Email}->id() ? button( 'delete', { onclick=>q`f1.elements['action'].value='Delete';f1.submit();`, text=> 'Delete' } ) : () ),
+			);) ?>
+	</p>
+</form>

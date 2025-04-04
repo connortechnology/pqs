@@ -1,0 +1,62 @@
+<div class="PackingSlip">
+	<table style="height: .5in;">
+		<tr>
+			<td style="font-size: 28PT;">PACKING SLIP</td>
+			<td style="border: 1px solid black;">DATE: 
+				<span id="date"><? echo ( $$variable{'Label'}->get_data('date'); ) ?></span>
+			</td>
+		</tr>
+	</table>
+	<span style="font-size: 12pt;font-weight: bold;">
+	# <? echo ( $$variable{'Label'}->docket() ) ?>&nbsp;&nbsp;
+<img src="/barcode.png?code=D<? echo ( $$variable{'Label'}->docket() ) ?>+&amp;NoText=1&amp;Height=20" alt="<? echo ( $$variable{'Label'}->docket() ) ?>" />
+	</span>
+	<br/>
+	<table style="height: 1.75in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				TO:<br/>
+				<div id="to" style="height: 1.5in;"><? echo ( $$variable{'Label'}->get_data('to'); ) ?></div>
+			</td>
+			<td style="border: 1px solid black;">
+				FROM:<br/>
+				<div id="from" style="height: 1.5in;"><? echo ( $$variable{'Label'}->get_data('from');) ?></div>
+			</td>
+		</tr>
+	</table>
+	<table style="height: 5in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				DESCRIPTION:<br/>
+				<div id="description" style="height:3.75in;"><? echo ( $$variable{'Label'}->get_data('description'); ) ?></div>
+			</td>
+			<td style="border: 1px solid black;">
+				QUANTITY:<br/>
+				<div id="quantity" style="height: 3.75in;"><? echo ($$variable{'Label'}->get_data('quantity'); ) ?></div>
+			</td>
+		</tr>
+	</table>
+	<table style="height: .5in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				SIGNATURE:<br/>
+				<br/>
+			</td>
+			<td style="border: 1px solid black;">
+				PRINT (please print your name):<br/>
+				<br/>
+			</td>
+		</tr>
+	</table>
+	<table style="height: .5in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				DATE:
+			</td>
+			<td style="border: 1px solid black;">
+				TIME:
+			</td>
+		</tr>
+	</table>
+	</form>
+</div>

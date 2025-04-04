@@ -1,0 +1,39 @@
+<form id="pf_form-<?service_id?>" name="pf_form-<?service_id?>" method="post">
+	<input type="hidden" id="project_id-<?service_id?>" name="project_id-<?service_id?>" value="<? echo ( $$variable{'Project'}->id() ) ?>"/>
+	<table class="List">
+		<tr>
+			<th class="DateTime">Starting</th>
+			<th class="DateTime">Ending</th>
+			<th class="Elapsed">Duration</th>	
+			<th class="User">Who</th>
+			<th class="comment">Comment</th>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		foreach my $PF ( openprint::ProductionFeedback->find( order=>'starting_on', project_id=>$$variable{Project}->id(), service_id=>$$variable{service_id} ) ) {
+			$html .= sprintf('<tr%1$s><td class="DateTime">%2$s</td><td class="DateTime">%3$s</td><td class="Elapsed">%4$s</td><td class="User">%5$s</td><td class="comment">%6$s</td><td class="buttons"></td>',
+				$rowclass,
+				format_datetime($PF->starting_on()),
+				format_datetime($PF->ending_on()),
+				misc::seconds_to_pretty_interval( Date::Parse::str2time( $PF->ending_on() ) - Date::Parse::str2time( $PF->starting_on() ) ),
+				$PF->User()->name(),
+				$PF->comment(),
+			);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach PF
+		return $html;
+	) ?>
+		<tr class="totals">
+			<td class="DateTime" id="starting-<?service_id?>"></td>
+			<td class="DateTime" id="ending-<?service_id?>"></td>
+			<td class="Elapsed" id="duration-<?service_id?>"></td>
+			<td class="User" id="user-<?service_id?>"><? echo ( new openprint::User( $session{user_id} )->name(); ) ?></td>
+			<td class="comment"><textarea id="comment-<?service_id?>" name="comment-<?service_id?>" onkeyup="textarea_resize(this,{min_rows: 1});" rows="1" cols=""></textarea></td>
+			<td class="buttons">
+				<? echo ( button( 'Start'.$$variable{service_id}, { onclick=>qq`stop_onclick('$$variable{service_id}');`, text=>'Start' } ); ) ?>
+			</td>
+		</tr>
+	</table>
+</form>

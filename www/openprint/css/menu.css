@@ -1,0 +1,83 @@
+	
+#menubar {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+#menubar li {
+	width: 100%;
+	height: auto;
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+#menubar li a {
+	color: white;
+	padding: 5px;
+	padding-left: 15px;
+	font-weight: bold;
+	font-size: 13px;
+	display: -moz-inline-box;
+	display: inline-block;
+	outline: 0;
+	width: 170px;
+}
+
+#menubar li ul li {
+	background-color: #BBA971;
+	border-bottom: 1px solid #D3C18A;
+    list-style: none;
+}
+#menubar li ul li a{
+	outline: 0;
+}
+	
+
+#menubar li.off ul, #menubar li.on ul {
+    /*put the subnavs below and hide them all*/
+    display: none;
+    padding: 0px;
+    margin: 0px;
+    list-style: none;
+	border-top: 1px solid #F27B74;
+}
+
+#menubar li.off {
+	background-color: #EE3E33;
+	border-bottom: 1px solid #F27B74;
+}
+#menubar li.on {
+	border-bottom: none;
+	background-color: #FF5C51;
+}
+#menubar li.off:hover {
+	background-color: #FF5C51;
+}
+#menubar li.on ul {
+    /*display the current topic*/
+    display: block;
+    list-style: none;
+    padding: 0px;
+    margin:0px;
+}
+
+
+#menubar li ul li:hover {
+	background-color: #CAB880;
+}
+
+#menubar li.on ul {
+    /*  display the other topics when
+    *              their parent is hovered 
+    display: block;
+    z-index: 6000;
+    */
+}
+
+#menubar li.off:hover a {
+}
+#menubar li.off a:hover {
+}
+#menubar li:hover a {
+}
+

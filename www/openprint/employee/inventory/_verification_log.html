@@ -1,0 +1,22 @@
+<table class="List">
+	<tr>
+		<th class="DateTime">When</th>
+		<th class="User">Who</th>
+		<th align="left" width="70">Code</th>
+	</tr>
+	<? echo (
+		my $html;
+		my @Vs = openprint::Skid_Verification->find('skid_id'=>$$variable{'Skid'}->id(),'order'=>'created_on' );
+		my $rowclass;
+		foreach my $V ( @Vs ) {
+			$html .= sprintf( '<tr%s><td class="DateTime">%s</td><td class="User">%s</td><td>%s</td></tr>',
+				$rowclass,
+				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($V->created_on() ) ),
+				$V->User()->name(),
+				$V->code(),
+				);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach
+		return $html;
+	) ?>
+</table>

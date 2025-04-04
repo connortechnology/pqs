@@ -1,0 +1,276 @@
+<? include('/includes/error_reporting.html') ?>
+<div class="UserProfile">
+	<form id="f1" name="f1" method="post" action="profile.html">
+		<fieldset class="filters">
+		<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+      <legend>Choose User</legend>
+			<ul>
+        <li>
+          <label>Company</label>
+          <input type="text" onkeyup="filter_companies('company_id', {name:this.value, selected_id:get_ddm_value($('company_id'))});" class="filter" />
+          <select id="company_id" name="company_id" onchange="stop_filter_companies();f1.submit();">
+            <option value="">select</option>
+            <? echo ( make_drop_down( openprint::Company->dropdown(
+  or=>{id=>$openprint::Company->id(),id=>$openprint::User->company_id()}
+  ), $param{company_id} ? $param{company_id} : $session{company_id}); ) ?>
+          </select>
+          <? echo ( button( 'Go1', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
+        </li>
+        <li>
+          <label>User</label>
+          <select name="user_id" id="user_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+            <option value="">select</option>
+            <? echo ( 
+              my %params = (
+                company_id	=>	$param{company_id}, 
+                order		=>	'lower(firstname),lower(lastname)'
+              );
+              if ( $session{user_type} ne 'A' ) {
+                $params{type} = ['C','E'];
+              } # end if
+              make_drop_down( openprint::User->dropdown( %params ), $param{user_id} ? $param{user_id} : $session{user_id} ); ) ?>
+          </select>
+          <? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
+        </li>
+			</ul>
+		<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+			<p class="buttons">
+				<? echo ( 
+					my $html;
+					if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) {
+						$html .= button( 'New1', { onclick=>'addCheck(f1);', text=>'New' } ),
+					} # end if
+					$html .= button( 'Submit1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
+					$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
+					return $html;
+				) ?>
+			</p>
+		</fieldset>
+	<p class="required"> denotes required information.<br/></p>
+	<div class="column">
+		<fieldset><legend>User Information for user #<? echo ( $$variable{User}->id() ) ?></legend>
+		<ul>
+			<? if ( $$variable{User}->Company()->notes() ) ?>
+			<li class="company_notes"><label>Company Notes</label><? echo ( $$variable{User}->Company()->notes() ) ?></li>
+			<? endif ( $$variable{User}->Company()->notes() ) ?>
+			<? if ( $$variable{User}->notes() ) ?>
+			<li class="user_notes"><label>User Notes</label><? echo ( $$variable{User}->notes() ) ?></li>
+			<? endif ( $$variable{User}->notes() ) ?>
+			<li> 
+				<label for="title">Title</label>
+				<input type="text" id="title" name="title" value="<? hecho ( $$variable{User}->title() ) ?>" />
+			</li>
+			<li class="required"> 
+				<label for="firstname">First Name</label>
+				<input type="text" id="firstname" name="firstname" value="<? hecho ( $$variable{User}->firstname() ) ?>" />
+			</li>
+			<li class="required"> 
+				<label for="lastname">Last Name</label>
+				<input type="text" id="lastname" name="lastname" value="<? hecho ( $$variable{User}->lastname() ) ?>" />
+			</li>
+			<li>
+				<label>Salutation</label>
+        <? echo ( radio( 'salutation', [ map { $_, $_ } ( 'Mr.', 'Mrs.', 'Ms.', 'Miss' ) ], $$variable{User}->salutation(), { inline=>1 } ); ) ?>
+			</li>
+			<li class="required"> 
+				<label for="phone">Phone</label>
+				<input type="tel" class="phone" id="phone" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" > x
+				<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{User}->extension() ) ?>" />
+			</li>
+			<li> 
+				<label for="mobile">Mobile</label>
+				<input type="tel" class="phone" id="mobile" name="mobile" value="<? hecho ( $$variable{User}->mobile() ) ?>" />
+			</li>
+			<li> 
+				<label for="sms">SMS (email)</label>
+				<input type="email" id="sms" name="sms" value="<? hecho ( $$variable{User}->sms() ) ?>" />
+			</li>
+			<li> 
+				<label for="fax">Fax</label>
+				<input type="tel" class="phone" id="fax" name="fax" value="<? hecho ( $$variable{User}->fax() ) ?>" />
+			</li>
+			<li> 
+				<label>Mailing List</label>
+				<? echo( radio('mailinglist', [ 'Y', 'Yes', 'N', 'No', '', 'Unset' ], $$variable{User}->mailinglist()); ) ?>
+			</li>
+		<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+				<li>
+					<label>Company administrator?</label>
+					<? echo ( radio( 'administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator() ); ) ?>
+				</li>
+				<li>
+					<label>Web site login?</label>
+					<? echo ( radio( 'web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active() ); ) ?>
+				</li>
+				<li>
+					<label>FTP site login?</label>
+					<? echo ( radio( 'ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active() ); ) ?>
+				</li>
+				<li>
+					<label>Custom Greeting</label>
+					<input type="text" name="greeting" value="<? hecho ( $$variable{User}->greeting() ) ?>" />
+				</li>
+				<li>
+					<label>User Type</label>
+					<select name="type">
+						<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{User}->type() ); ) ?>
+					</select>
+				</li>
+		<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+			</ul>
+		</fieldset>
+	</div>
+	<div class="column login">
+		<fieldset><legend>The following information will be used for future logins.</legend>
+			<ul>
+				<li class="required email"> 
+					<label for="email">E-mail Address</label>
+					<input type="email" id="email" name="email" value="<? hecho ( $$variable{User}->email() ) ?>" autocomplete="username"/>
+				</li>
+        <?include(/includes/_password_part.html)?>
+				<li><label>Password Last Changed</label>
+					<? echo ( format_datetime( $$variable{User}->password_changed_on(), 'never'); ) ?>
+				</li>
+			</ul>
+		</fieldset>
+		<? if ($variable{DoEmail}) ?> 
+		<? include('/account/_email_settings.html' ) ?>
+		<? endif ($variable{DoEmail}) ?> 
+
+<? if ( $config{RADIUS_Support} and ( ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{user_id} ) ) ) ?>
+    <fieldset><legend>RADIUS Auth</legend>
+        <ul>
+    <? echo ( 
+		require openprint::RADIUS_Check;
+		require openprint::RADIUS_Reply;
+        $openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+            database  => $config{RADIUS_DB_Name},
+            driver    => $config{RADIUS_DB_Driver},
+            host      => $config{RADIUS_DB_Server},
+            login     => $config{RADIUS_DB_Username},
+            password  => $config{RADIUS_DB_Password},
+            );
+        if ( ! $openprint::RADIUS_Check::dbh ) {
+            return 'Unable to connect to RADIUS DB server.';
+        } # end if
+
+		$$variable{username} = $$variable{User}->email();
+        my $html = '';
+		$html .= qq`<li id="mac_$$variable{username}">`;
+		$html .= include( '/employee/it/_radius_mac_line.html' );
+		$html .= '</li>';
+        return $html;
+    ) ?>
+        </ul>
+    </fieldset>
+<? endif ( $config{RADIUS_Support} and ( ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{user_id} ) ) ) ?>
+
+	</div><!--column-->
+	<br class="spacer"/>
+<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+	<div class="PurchaseOrderLimits">
+		<fieldset><legend>Purchasing Limits</legend>
+			<ul>
+			<li> 
+				<label>Purchasing Limit (per PO)</label>
+				<? echo ( input( type=>'float', name=>'purchasing_limit', value=>$$variable{User}->purchasing_limit() ); ) ?>
+			</li>
+			<li> 
+				<label>Purchasing Limit (Total)</label>
+				<? echo ( input( type=>'float', name=>'purchasing_total_limit', value=>$$variable{User}->purchasing_total_limit() ); ) ?>
+			</li>
+			<? echo (
+				my $html;
+				foreach my $PO_Type ( openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ) {
+					$html .= '<li><label>Limit for '.$PO_Type->name().'</label>'.input(type=>'cardinal', name=>'po_limit-'.$PO_Type->id(), value=>$$variable{User}->po_limit( $PO_Type->id() ) ).'</li>';
+				} # end foreach PO_Type
+				return $html;
+			) ?>
+			</ul>
+		</fieldset>
+	</div>
+<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+	<div class="Notifications">
+	   <fieldset><legend>Notifications</legend>
+		<div id="Notifications"><?include('/account/_notifications.html')?></div>
+		</fieldset>
+	</div>
+	<br class="spacer"/>
+	<div class="AssistantTo">
+		<fieldset><legend>Assistant To</legend>
+				<ul>
+				<? echo ( 
+					my @csr_ids = $$variable{User}->csr_ids();
+					if ( $session{user_type} eq 'A' or $openprint::User->administrator() eq 'Y' ) {
+						return checkboxes( 'csr_ids', openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>'Sales' ), \@csr_ids, { container=>['<li>','</li>'] } );
+					} elsif ( @csr_ids ) {
+						return checkboxes( 'csr_ids', openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>'Sales', id=>\@csr_ids ), \@csr_ids, { container=>['<li>','</li>'] } );
+					} 
+					return 'No one';
+ ) ?>
+				</ul>
+			
+		</fieldset>
+	</div>
+	<div class="Assistants">
+        <fieldset><legend>Assistants</legend>
+                <ul>
+                <? echo ( 
+                    my @assistant_ids = $$variable{User}->assistant_ids();
+                    return checkboxes( 'assistant_ids', openprint::User->dropdown(company_id=>$openprint::User->company_id(), type=>['E','A'], 'usergroup any'=>'Sales' ), \@assistant_ids, { container=>['<li>','</li>'] } );
+ ) ?>
+                </ul>
+
+        </fieldset>
+    </div>
+	<div class="AdminOptions">
+		<fieldset><legend>Sales Options</legend>
+			<ul>
+			<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+			<? if ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
+				<li class="commission" title="Commission applied to all projects. Will be overriden by company-specific commission rate."><label>Commission</label>
+					<?echo(input(type=>'float', name=>'commission', value=>$$variable{User}->commission());)?> %
+				</li>
+				<li class="wage"><label>Wage</label>
+					<?echo(input(type=>'float', name=>'wage', value=>$$variable{User}->wage());)?>
+				</li>
+			<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
+			<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+			<li class="marketing_categories"> 
+				<label>User Category</label>
+				<ul>
+				<? echo (
+					my @users_categories;
+					if ( $$variable{User}->id() ) {
+						@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $$variable{User}->id() );
+					} # end if
+					if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) {
+						checkboxes( 'marketing_categories', openprint::MarketingCategory->dropdown( order=>'lower(name)'), \@users_categories, { container=>['<li>','</li>'] } );
+					} else {
+						return join("\n", map { '<li>'.$_->name().'</li>' } openprint::MarketingCategory->find( id=>\@users_categories, order=>'lower(name)' ) ) if @users_categories;
+					} # end if
+				) ?>
+				</ul>
+			</li>
+			<li><label>Groups</label>
+				<? echo (
+					require openprint::UserGroup;
+					my $html = '<ul class="UserGroups">';
+					my @usergroup_ids = map { $_->id() } $$variable{User}->Groups();
+					if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) {
+						$html .= checkboxes( 'UserGroups', openprint::UserGroup->dropdown( order=>'lower(name)'), \@usergroup_ids, { container=>['<li>','</li>'] } );
+					} else {
+						$html .= join("\n", map { '<li>'.$_->name().'</li>' } openprint::UserGroup->find( id=>\@usergroup_ids, order=>'lower(name)' ) ) if @usergroup_ids;
+					} # end if
+					return $html . '</ul>';
+				) ?>
+			</li>
+			</ul>
+		</fieldset>
+	</div>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+<? if ( $$variable{User}->id() ) ?>
+<? echo ( include_logs( $$variable{User} ); ) ?>
+<? endif ( $$variable{User}->id() ) ?>
+</div>

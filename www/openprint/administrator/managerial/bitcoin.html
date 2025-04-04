@@ -1,0 +1,32 @@
+<? echo (
+	require JSON::RPC::Client;
+	my $client = new JSON::RPC::Client;
+
+	$client->ua->credentials(
+			($openprint::config{bitcoin_server} ? $openprint::config{bitcoin_server} : 'localhost').':'.
+			($openprint::config{bitcoin_port} ? $openprint::config{bitcoin_port} : '8332'),
+			, $openprint::config{bitcoin_user}, $openprint::config{bitcoin_password}
+			);
+
+	my $uri = 'http://'.($openprint::config{bitcoin_server} ? $openprint::config{bitcoin_server} : 'localhost').':'.
+			($openprint::config{bitcoin_port} ? $openprint::config{bitcoin_port} : '8332').'/';
+	my $obj = {
+		method  => 'getinfo',
+		params  => {
+			account =>  $openprint::config{getnewaddress},
+		},
+	};
+$openprint::log->debug("Asking bitcon for a new addres $uri");
+
+	my $res = $client->call( $uri, $obj );
+
+	if ( $res ) {
+		if ( $res->is_error ) {
+			$openprint::log->error( "Error : ", $res->error_message );
+		} else {
+			return Data::Dumper::Dumper($res->result);
+		}
+	} else {
+		$openprint::log->debug( $client->status_line );
+	}
+) ?>

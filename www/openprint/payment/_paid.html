@@ -1,0 +1,62 @@
+<?include('/includes/error_reporting.html')?>
+<fieldset><legend>Invoices paid by this payment</legend>
+	<table id="paid" class="List sortable">
+		<thead>
+		<tr>
+			<th>Invoice</th>
+			<th class="Price">Total</th>	
+			<th class="Price">Tax</th>	
+			<th class="Price">Interest</th>	
+			<th class="Price">Paid</th>	
+			<th class="Price">Remaining</th>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+		<thead><tbody>
+	<? echo (
+		my $html = '';
+		my $invoice_total = 0;
+    my $paid_total = 0;
+    my $tax_total = 0;
+    my $interest_total = 0;
+		foreach my $IP ( openprint::Invoice_Payment->find( payment_id=>$$variable{Payment}->id(), order=>'invoice_id' ) ) {
+      my $Invoice = $IP->Invoice();
+			$html .= sprintf( q`<tr title="%s">`, $Invoice->external_notes() );
+			$html .= sprintf('<td><a href="/invoice/view.html?invoice_id=%1$d">%1$d</a></td>', $IP->invoice_id() );
+			$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->total() ) );
+			$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->tax() ) );
+			$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Invoice->interest() ) );
+			$html .= sprintf('<td class="Price"><span id="amount_%d">%s</span></td>', $IP->id(), openprint::Currency::format( $IP->amount() ) );
+      $html .= sprintf('<td class="Price" id="remaining_%d">%s%s</td>', $IP->id(), openprint::Currency::format($Invoice->is_early() ? $Invoice->owing_early() : $Invoice->owing()) );
+			$html .= sprintf('<td class="buttons">%s</td>', button( 'del'.$IP->id(), {onclick=>'unpay_invoice('.$IP->invoice_id().');', text=>'-', title=>'Remove' } ) );
+			$html .= "</tr>\n";
+			$html .= '<script>';
+        $html .= sprintf(q`window.addEventListener('DOMContentLoaded', function(){ new Ajax.InPlaceEditor( 'amount_%1$d', '/payment/_edit_payment.html?id=%1$d&action=update&field=amount',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1,onComplete:load_paid}); });`, $IP->id() );
+			$html .= "</script>\n";
+			$invoice_total += $Invoice->total();
+      $paid_total = $IP->amount();
+      $tax_total += $Invoice->tax();
+      $interest_total += $Invoice->interest();
+		} # end foreach IP Invoice
+		$html .= sprintf('
+      </tbody>
+      <tfoot>
+        <tr class="totals">
+          <td colspan="1">&nbsp;</td>
+          <td class="Price">%s</td>
+          <td class="Price">%s</td>
+          <td class="Price">%s</td>
+          <td class="Price">%s</td>
+          <td class="Price">%s</td>
+          <td>&nbsp;</td>
+        </tr>
+      </tfoot>', 
+			openprint::Currency::format( $invoice_total ), 
+			openprint::Currency::format( $tax_total ), 
+			openprint::Currency::format( $interest_total ), 
+			openprint::Currency::format( $paid_total ), 
+			openprint::Currency::format( $$variable{Payment}->remaining() )
+			);
+		return $html;
+	) ?>
+	</table>
+</fieldset>

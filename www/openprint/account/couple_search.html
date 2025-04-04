@@ -1,0 +1,95 @@
+<script type="text/javascript">
+	function load_results() {
+		$('Results').innerHTML = 'Please wait. Loading...';
+		new Ajax.Updater( 'Results', '/account/_couple_search.html', { parameters: $('f1').serialize() } );
+	} // end function load_results
+</script>
+<div class="Account">
+	<div class="Search">
+		<form name="f1" id="f1" action="/account/couple_search.html" method="post">
+			<fieldset class="filters"><legend>Search for account</legend>
+				To search profiles, complete one or more of the fields below.
+				<div class="content leftColumn">
+					<ul>
+						<li><label>Alias/Couple Name</label>
+							<input type="text" name="company_name" id="company_name" onkeyup="if(this.value.length > 3){load_results();};" />
+						</li>
+<!--
+						<li><label>Distance</label>
+							<select name="distance" id="distance">
+								<option value="">select</option>
+								<? echo ( ssi::make_drop_down( [ map { $_, $_.'km' } ( 5, 10, 50, 100 ) ], $session{'/account/search.html?distance'} ); ) ?>
+							</select>
+						</li>
+-->
+<!--
+						<li>
+							<label>Registered</label>
+							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+								to 
+							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_end', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+						</li>
+-->
+						<li>
+							<label>Last Online</label>
+							<? echo ( ssi::date_select_session( '/account/couple_search.html', 'last_online_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+								to 
+							<? echo ( ssi::date_select_session( '/account/couple_search.html', 'last_online_end', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+						</li>
+					</ul>
+				</div>
+				<div class="rightColumn">
+					<ul>
+						<? echo ( 
+	my $html = '';
+	
+	foreach my $Field ( openprint::Company_Profile_Field->find('searchable'=>1,'order'=>'sort,name') ) {
+		$html .= '<li><label>'.$Field->name().'</label><span id="field-'.$Field->id().'_container">';
+		my $value = $session{'/account/couple_search.html?field-'.$Field->id()};
+
+		if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
+			while ( my ( $v, $t ) = splice ( @{$Field->values()}, 0, 2 ) ) {
+$log->debug( "Value: $v, text: $t");
+				$html .= sprintf( q`<input type="checkbox" name="field-%1$d" id="field-%1$d%2$s" value="%2$s" %3$s />
+					<label class="radio" for="field-%1$d%2$s">%4$s</label>
+					`, $Field->id(), $v, ssi::checked( sets::isin( $v, [ split(',', $value ) ] ) ), $t
+					);
+			} # end foreach value
+		} elsif ( $Field->type() eq 'date' ) {
+			my ( $start, $end ) = @{$Field->values()} if $Field->values();
+			$html .= ssi::date_select_session( '/account/couple_search.html', 'field-'.$Field->id().'_start', { 'start'=>$start, 'end'=>$end } );
+			$html .= ' to ';
+			$html .= ssi::date_select_session( '/account/couple_search.html', 'field-'.$Field->id().'_end', { 'start'=>$start, 'end'=>$end } );
+		} elsif ( sets::isin( $Field->type(), [ 'country', 'state', 'city' ] ) ) {
+			my $ChildField = openprint::User_Profile_Field->find_one('type'=>openprint::Location->child_type( $Field->type() ) );
+			if ( $ChildField ) {
+				$html .= sprintf(q`<select id="field-%1$d" name="field-%1$d" onchange="Location_onchange( this, this.form.elements['field-%2$d'], '%3$s' );"><option value=""> </option>`, $Field->id(), $ChildField->id(), $ChildField->name() );
+			} else {
+				$html .= sprintf(q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>`, $Field->id() );
+			} # end if
+			$html .= ssi::make_drop_down( openprint::Location->dropdown('type'=>$Field->type(), 'order'=>'lower(name)'), $value ? $value : $Field->default() );
+			$html .= '</select>';
+		} elsif ( $Field->type() eq 'select-one' ) {
+			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value=""> </option>`, $Field->id() );
+			$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value ? $value : $Field->default() );
+			$html .= '</select>';
+		} elsif ( sets::isin( $Field->type(), [ 'text','number' ] ) ) {
+			$html .= sprintf( q`<input type="%3$s" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), ( $value ? $value : $Field->default() ), $$Field{'type'} );
+		} # end if
+		$html .= "</span></li>\n";
+	} # end foreach Field
+	return $html;
+) ?>
+					</ul>
+				</div>
+			<p class="buttons">
+				<? echo ( join('',
+					ssi::button( 'ShowResults', { 'onclick'=>q`LoadContent('Results','_couple_search.html', f1 );`, 'text'=>'Show Results' } ),
+					ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
+					); ) ?>
+			</p>
+			</fieldset>
+		</form>
+		<div id="Results"><? echo ( include('/account/_couple_search.html'); ) ?></div>
+	</div>
+</div>

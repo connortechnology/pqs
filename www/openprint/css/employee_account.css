@@ -1,0 +1,76 @@
+
+.UserProfile ul.UserGroups,
+.UserProfile .AssistantTo ul,
+.UserProfile .Assistants ul,
+.UserProfile .marketing_categories ul {
+	width: 100%;
+}
+
+.UserProfile .AssistantTo li,
+.UserProfile .Assistants li,
+.UserProfile .marketing_categories li {
+	margin: 0;
+	padding: 0;
+	float: left;
+	width: 33%;
+}
+.UserProfile ul.UserGroups li,
+.UserProfile .marketing_categories li {
+	margin: 0;
+	padding: 0;
+	float: left;
+	width: 50%;
+}
+.UserProfile ul.UserGroups li label,
+.UserProfile .AssistantTo li label ,
+.UserProfile .Assistants li label ,
+.UserProfile .marketing_categories li label {
+  padding: 0;
+	float: none;
+	width: auto;
+	margin: 0;
+	width: auto;
+}
+.UserProfile input#phone {
+	width: 200px;
+}
+.UserProfile input#extension {
+	width: 40px;
+}
+div.Assistants:after {
+  content: ".";
+  display: block;
+  height: 0;
+  font-size: 0;
+  clear: both;
+  visibility: hidden;
+}
+.UserProfile div.AdminOptions,
+.UserProfile div.Assistants,
+.UserProfile div.AssistantTo {
+	width: 49%;
+}
+.UserProfile div.AssistantTo {
+float: right;
+}
+.Notifications {
+	float: right;
+	width: 49%;
+}
+.PurchaseOrderLimits {
+	float: left;
+	width: 49%;
+}
+.PurchaseOrderLimits li {
+  padding-left: 205px;
+}
+.PurchaseOrderLimits li label:not(.radio):not(.radio-inline) {
+  margin-left: -205px;
+  width: 200px;
+}
+#commission {
+	width: 40px;
+}
+.wage {
+	display: none;
+}

@@ -1,0 +1,24 @@
+<? echo ( my $html;
+	
+    my $can_invoice = $$variable{Order}->can_invoice();
+    foreach my $OI ( $$variable{Order}->Invoices() ) {
+        my $Invoice = $OI->Invoice();
+        $html .= $Invoice->link_to( $$Invoice{num} . ' on ' . format_date( $Invoice->posted_on() ) );
+        $html .= button( 'DelInvoice'.$$Invoice{id}, { onclick=>qq`popup_window('/employee/accounting/_delete_order_invoice.html', { order_id: $$OI{order_id}, invoice_id: $$OI{invoice_id} } );`, text=>'-', title=>'Remove Invoice' } ) if $can_invoice;
+$html .= '<br/>';
+    } # end foreach
+
+    if ( $can_invoice ) {
+		$html .= '<span class="edit">';
+        $html .= input( type=>"text", id=>"invoice_num", name=>"invoice_num", placeholder=>'enter invoice #' ). ' on ';
+		$html .= date_select( 'posted_on', [ Date::Calc::Today() ] );
+		$html .= button( 'Invoice', { onclick=>q`if($('invoice_num').value) {new Ajax.Updater( 'Order_Invoices', '/employee/accounting/_order_invoices.html', { parameters: { order_id: '`.$$variable{Order}->id().q`',  action: 'add', invoice_num: $('invoice_num').value, posted_on: get_date_value('posted_on') } } );}else{alert('Please enter an invoice #');};`, text=>'Add Invoice ID' } );
+		$html .= '</span>';
+    } # end if can_invoice
+	if ( $$variable{uri} =~ /_order_invoices.html$/ ) {
+		$html .= include( '/includes/error_reporting.html' );
+	} else {
+		$html = '<div id="Order_Invoices">'.$html.'</div>';
+	} # end if
+    return $html;
+) ?>

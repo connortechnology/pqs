@@ -1,0 +1,47 @@
+<? eval (
+	$ENV{'HTTP_REFERER'} =~ /.*\/(.*\.html)/;
+	$$variable{'referer'} = $1;
+	$$variable{'Paper'} = new openprint::Paper( $param{'paper_id'} );
+	if ( exists $param{'quantity'} ) {
+		$$variable{'quantity'} = $param{'quantity'};
+	} else {
+		$$variable{'quantity'} = $$variable{'Paper'}->available();
+	} # end if
+) ?>
+<div id="CheckIn">
+	<form id="checkinform" name="checkinform" action="<?referer?>" method="post">
+		<input type="hidden" name="btnFunction" value="CheckIn" />
+		<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>" />
+		<input type="hidden" name="skid_id" value="<? echo ( $param{'skid_id'} ) ?>" />
+		<fieldset><legend>Check In Paper</legend>
+			<p>
+				<label>Docket</label>
+				<input type="text" name="Docket" onkeypress="return input_handler( this, event);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckInDocket', 'clear.gif', "checkinform.Docket.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Project #</label>
+				<input type="text" name="Project_id" onkeypress="return input_handler( this, event);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckInProject', 'clear.gif', "checkinform.Project.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Quantity ( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
+				<? echo ( join("\n",
+					input( type=>'text', name=>'Quantity', onkeypress=>'return input_handler(this,event);'),
+				button( 'clearCheckInQuantity', { onclick=>"checkinform.Quantity.value='';", text=>'Clear' } ),
+				); ) ?>
+			</p>
+			<p>
+				<label>Reason</label>
+				<textarea id="reason" name="reason" onkeyup="textarea_resize(this);" cols="" rows="1"></textarea>
+			</p>
+			<hr/>
+			<p style="float: right;">
+			<? echo ( join("\n",
+						button( 'SaveCheckIn', { onclick=> 'if(check_inputs(checkinform)){checkinform.submit();}', text=> 'Save' } ),
+						button( 'CancelCheckIn', { onclick=>'checkinWin.destroy();', text=> 'Cancel' } ),
+			); ) ?>
+			</p>
+		</fieldset>
+	</form>
+</div>

@@ -1,0 +1,49 @@
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
+<script type="text/javascript" src="<?hash_link('shipping.js')?>"></script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend>Shipping Services</legend>
+			<div class="leftColumn address">
+			<?include(_shipping_from_address.html)?>
+			</div>
+			<div class="rightColumn address">
+			<?include(_shipping_to_address.html)?>
+			</div>
+			<br class="spacer"/>
+			<fieldset>
+			<ul>
+				<li><label># of items to ship</label>
+					<? echo (
+						my $html = '';
+						foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							$html .= input(
+								name	=>	'txtQuantity'.$qty_index,
+								value	=>	$$variable{"txtQuantity$qty_index"},
+								type	=>	'cardinal',
+								oninput	=>	'calc(this.form.name);' );
+								$html .= '</span>';
+						} # end foreach qty_index
+						return $html;
+					) ?>
+				</li>
+				<?include(_shipping_packages.html)?>
+				<?include(/includes/main/proj/_service_price.html)?>
+				<?include('/includes/main/proj/_breakdown.html') ?>
+			</ul>
+			</fieldset>
+			<p><label>More Shipping?</label>
+				<? echo ( radio( 'Additional', ['Y','Yes','N','No'], 'N' ); ) ?>
+			</p>
+			
+		</fieldset>
+		<?include(/includes/main/proj/add_to_project.html)?>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="NeedPlainCartons" />
+		<input type="hidden" name="Status" />
+	</form>
+</div><!-- Service -->

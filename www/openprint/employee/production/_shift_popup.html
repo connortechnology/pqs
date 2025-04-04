@@ -1,0 +1,95 @@
+<?include(/includes/error_reporting.html)?>
+<?if($$variable{Shift}->id())?>
+<form id="ShiftForm" name="ShiftForm">
+	<input type="hidden" name="shift_id" value="<? echo ( $param{shift_id} ) ?>" />
+	<fieldset><legend>Shift Information</legend>
+		<ul>
+			<li>
+				<label>Start Time</label>
+				<? echo ( datetime_select( 'starttime', $$variable{Shift}{starttime}, { onchange=>q`check_time_starting(this.form,'starttime','endtime');update_duration(this.form,'starttime','endtime');`} ); ) ?>
+			</li>
+			<li>
+				<label>End Time</label>
+				<? echo ( return datetime_select( 'endtime', $$variable{Shift}{endtime}, { onchange=>q`check_time_starting(this.form,'starttime','endtime');update_duration(this.form,'starttime','endtime');`} );) ?>
+			</li>
+			<li><label>Duration</label>
+				<span id="duration"> </span>
+				<script type="text/javascript">update_duration(document.forms['ShiftForm'],'starttime','endtime');</script>
+			</li>
+			<li><label>Shift</label>
+				<select name="equipmentshift_id" id="equipmentshift_id">
+					<option value=""> select </option>
+					<? echo ( make_drop_down( openprint::Equipment_Shift->dropdown( equipment_id=>$$variable{Shift}{equipment_id}, order=>'starttime_seconds' ), $$variable{Shift}{shift_id} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Operator</label>
+				<select id="operator_ids" name="operator_ids" multiple="multiple">
+				<? echo ( 
+					my $Equipment = $$variable{Shift}->Equipment();
+
+					my @categories = $Equipment->categories();
+					if ( ! @categories ) {
+						$log->error("No categories for " . $Equipment->name() );
+						return;
+					}
+
+					my @Usergroups = openprint::UserGroup->find( name=>\@categories );
+					if ( ! @Usergroups ) {
+						$log->error("No usergroups found for categories @categories");
+						return;
+					}
+					my @Usersin = openprint::User_in_UserGroup->find( usergroup_id=>[ map { $$_{id} } @Usergroups] );
+					if ( ! @Usersin ) {
+						$log->error("No users found for groups: " . join(',', map { $$_{id} } @Usergroups ) );
+						return;
+					}
+
+					
+					my @Operators = $$variable{Shift}->Operators();
+					if ( ! @Operators ) {
+						$log->warn("No operators for " . $$variable{Shift}->to_string());
+						my $Equipment_Shift = $$variable{Shift}->Equipment_Shift();
+						if ( ! $Equipment_Shift ) {
+							$log->error("No equipment shift");
+						} else {
+							@Operators = $Equipment_Shift->Operators();
+							if ( ! @Operators ) {
+								$log->warn("No equipment operators for " . $$variable{Shift}->to_string());
+								@Operators = $$variable{Shift}->Equipment_Shift()->Operators() if ! @Operators;
+							}
+						}
+
+					}
+					my %Operators = map { $$_{id}, $_ } @Operators;
+
+					my @user_ids = map { $Operators{$$_{user_id}} ? () : $$_{user_id} } @Usersin;
+
+					my $html;
+
+					$html .= '<optgroup label="Usual Operators">';
+					$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$openprint::User->company_id(), id=>[keys %Operators] )} ], $$variable{Shift}->operator_ids() ) if %Operators;
+					$html .= '</optgroup>';
+					$html .= '<optgroup label="Others">';
+					$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$openprint::User->company_id(), id=>\@user_ids )} ], $$variable{Shift}->operator_ids() ) if @user_ids;
+					$html .= '</optgroup>';
+					return $html;
+				   ) ?>
+				</select>
+			</li>
+		</ul>
+	</fieldset>
+	<p class="buttons">
+		<? echo ( 
+			join("\n", 
+				button( 'DeleteShift', { onclick=>q`new Ajax.Request('_shift_change.json?action=delete',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, text=>'Delete' } ),
+				button( 'SaveShift', { onclick=>q`new Ajax.Request('_shift_change.json',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, text=>'Save' } ),
+				button( 'CancelShift', { onclick=>"popupWin.destroy();", text=>'Cancel' } ),
+			);
+		) ?>
+	</p>
+</form>
+<?else($$variable{Shift}->id())?>
+		<? echo ( button( 'CancelShift', { onclick=>"popupWin.destroy();", text=>'Cancel' } )) ?>
+<?endif($$variable{Shift}->id())?>
+<script type="text/javascript">$j('#operator_ids').chosen();</script>

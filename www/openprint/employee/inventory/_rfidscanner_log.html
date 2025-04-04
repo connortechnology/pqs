@@ -1,0 +1,20 @@
+<? if ( $$variable{'Entries'} and @{$$variable{'Entries'}} ) ?>
+<table class="List">
+	<tr>
+		<th align="left">When</th>
+		<th align="left">Scanner</th>
+		<th align="left">Tag ID</th>
+		<th align="left">Where</th>
+	</tr>
+	<? while ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
+		<tr height="25">
+			<td><? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Entry'}->updated_on())) ) ?></td>
+			<td><? echo ( $$variable{'Entry'}->Scanner()->name() ) ?></td>
+			<td><? echo ( sprintf('%s (%x)', $$variable{'Entry'}->rfidtag_id(), substr($$variable{'Entry'}->rfidtag_id(),1,15) ); ) ?></td>
+			<td><? echo ( $$variable{'Entry'}->Location()->name() ) ?></td>
+		</tr>
+	<? endwhile ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
+</table>
+<? else ( $$variable{'Entries'} and @{$$variable{'Entries'}} ) ?>
+No results
+<? endif ( $$variable{'Entries'} and @{$$variable{'Entries'}} ) ?>

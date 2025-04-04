@@ -1,0 +1,46 @@
+<fieldset class="Signature"><legend>Information for form <?SignatureIndex?></legend>
+	<p class="summary">
+<? echo ( my $html = '';
+	$html .= openprint::service::summary( $$variable{'Project'}->id(), $$variable{'ServiceIndex'} ) . '<br/>';
+	$html .= openprint::service::summary( $$variable{'Project'}->id(), $$variable{'ServiceIndex'}, $$variable{'Project'}->ordered_quantity_index() );
+	return $html;
+) ?>
+	</p>
+	<form id="f<?ServiceIndex?>" name="f<?ServiceIndex?>" method="post" action="/employee/project/view.html">
+		<div id="Previews<?SignatureIndex?>"><?include('/employee/proj/prin/_previews.html')?></div>
+		<div class="leftColumn">
+			<? echo (
+				my $html = '';
+				my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
+				my $I = new openprint::Imposition();
+				$I->load_used( $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
+				$html .= '<p><label>RunStyle</label>'.$I->runstyle(). '</p>';
+				$html .= '<p><label>Imposition</label>'.$I->to_string().'</p>';
+				return $html;
+			) ?>
+		</div><div class="rightColumn">
+			<?include('/includes/employee/feedback/press_completion.html')?>
+			<p class="buttons">
+		<? echo ( 
+			my $html = '';
+			$html .= button( 'Save'.$$variable{'ServiceIndex'}, { onclick=>'f'.$$variable{'ServiceIndex'}.'.submit();', text=>'Save' } );
+			$html .= button( 'Reset'.$$variable{'ServiceIndex'}, { onclick=>'f'.$$variable{'ServiceIndex'}.'.reset();', text=>'Reset' } );
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) {
+                if ( ! openprint::ScheduledJob->find( project_id=>$$variable{Project}->id(), 'service_id @>'=>$$variable{ServiceIndex} ) ) {
+					$html .= button( 'AddToPressSchedule'.$$variable{'ServiceIndex'}, { onclick=>sprintf(q`f%1$s.btnFunction.value='AddToPressSchedule';f%1$s.submit();`,$$variable{'ServiceIndex'}), text=>'Add To Press Schedule' } );
+                } # end if
+            } # end if
+
+			return $html;
+) ?>
+			</p>
+		</div>
+		<input type="hidden" name="btnFunction" value="Save"/>
+		<?include(/includes/employee/feedback/hidden_fields.html)?>
+	</form>
+	<br class="spacer"/>
+	
+	<fieldset><legend>Production Feedback</legend><div id="ProductionFeedback-<?ServiceIndex?>">
+		<?include(/employee/proj/prin/_production_feedback.html)?>
+	</div></fieldset>
+</fieldset>

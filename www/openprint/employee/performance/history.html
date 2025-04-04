@@ -1,0 +1,86 @@
+<script type="text/javascript">
+	function load( div, form ) {
+		new Ajax.Updater( div, '_history.html', { parameters: form.serialize() } );
+	} // end function load
+</script>
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
+<div class="Performance"><div class="History">
+<form id="f1" name="f1" action="history.html" method="post">
+	<fieldset class="filters"><legend>Select Search Criteria</legend>
+		<ul>
+			<li><label>Docket</label>
+				<? echo ( ssi::input( type=>'cardinal', name=>'docket', id=>'docket', onkeyup=>q`load('Results',$('f1'));` ); ) ?>
+			</li>
+			<li>
+                <label>Category</label>
+                <select name="category_id" id="category_id" onchange="f1.submit();">
+                    <option value="">All</option>
+                <? echo (
+						ssi::make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $session{'/employee/performance/history.html?category_id'} );
+						) ?>
+                </select>
+            </li>
+			<li><label>Equipment</label>
+			<? echo ( 
+				@{$$variable{'Equipment'}} = ();
+				my @presses = openprint::Equipment->find(
+					( $session{'/employee/performance/history.html?category_id'} ?  
+					(	'category_id any'	=>	$session{'/employee/performance/history.html?category_id'}) : () ),
+					useinscheduling=>1,order=>'sorting,lower(strname)');
+
+				my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/performance/history.html?equipment_id'} ) );
+				@selected_equipment = map { $_->id() } @presses if ( ! @selected_equipment );
+				$session{'/employee/performance/history.html?equipment_id'} = join(',', @selected_equipment );
+
+				foreach (@presses) {
+					push @{$$variable{'Equipment'}}, $_ if sets::isin( $_->id(), \@selected_equipment );
+				} # end foreach press
+
+				my $html = '<select id="equipment_id" name="equipment_id" multiple="multiple" size="'. @presses.q`" onchange="load('Results',$('f1'));">`;
+				$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], \@selected_equipment );
+				return $html;
+			) ?>
+				</select>
+			</li>
+			<li><label>Operator</label>
+				<select name="operator_id" onchange="load('Results',$('f1'));">
+					<option value="">All</option>
+					<? echo ( 
+							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
+					( $session{'/employee/performance/history.html?category_id'} ?  
+					(	'usergroup any'	=>	new openprint::Equipment_Category($session{'/employee/performance/history.html?category_id'})->name() ) : () ),
+									type		=>	'E',
+									order		=>	'lower(firstname),lower(lastname)',
+									) ], $session{'/employee/performance/history.html?operator_id'} );
+							) ?>
+				</select>
+			</li>
+			<li>
+				<label>Shift Start</label>
+				<? echo ( 
+					ssi::date_select_session( '/employee/performance/history.html', 'starttime_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1,'with_clear'=>1} );
+				 ) ?>
+				to
+				<? echo ( ssi::date_select_session( '/employee/performance/history.html', 'starttime_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1,'with_clear'=>1} ); ) ?>
+			</li>
+			<li>
+			<label>Unreported Shifts</label>
+			<? echo ( ssi::radio( 'unreported', [ 'Y', 'Yes','N', 'No', '', 'Both' ], $session{'/employee/performance/history.html?unreported'}, { 'onclick'=>q`load('Results', $('f1'));` } ); ) ?>
+			</li>
+		</ul>
+		<p class="buttons">
+				<? echo ( join( '',
+				ssi::button( 'ShowResults', { 'onclick' => q`f1.action='/employee/performance/history.html';f1.submit();`, 'text'=>'Show Results' } ),
+				ssi::button( 'Add', { 'href' => '/employee/performance/edit.html', 'text'=>'Add New' } ),
+				ssi::button( 'Download', {'onclick'=>"f1.action='/employee/performance/history.html?action=Download';f1.submit();", 'text'=>'Download in CSV Format' } ),
+				ssi::button( 'Reset', { 'href'=>'/employee/performance/history.html?action=Reset' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" action="history.html" method="post">
+	<input type="hidden" name="btnFunction"/>
+	<div id="Results"><? echo ( include('_history.html'); ) ?></div>
+</form>
+</div>
+</div>

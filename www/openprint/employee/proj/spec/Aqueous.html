@@ -1,0 +1,78 @@
+<form id="f2" name="f2" action="/employee/project/view.html" method="post">
+  <fieldset class="filters">
+    <ul>
+      <li class="docket"><label>Docket #</label>
+      <? echo ( join("\n",
+            input( type=>'cardinal', name=>'docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='/employee/project/view.html?docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
+            button( 'Go1', { onclick=>q`window.location='/employee/project/view.html?docket='+$('Docket').value;`, text=>'Go' } ),
+						$$variable{Project}->id() ? 
+							button('Return', { href=>'/employee/project/view.html?ProjectIndex='.$$variable{ProjectIndex}, text=>'Return to Docket '.$$variable{Project}->docket() } ) : (),
+      ); ) ?>
+      </li>
+    </ul>
+  </fieldset>
+</form>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/employee/project/view.html">
+		<fieldset><legend>Aqueous Coating</legend>
+		<? eval ( @{$$variable{Signatures}} = $$variable{Project}->signatures( { sort => 1 } );) ?>
+		<? while ( $$variable{SignatureServiceIndex} = shift @{$$variable{Signatures}} ) ?>
+			<? eval ( 
+				$$variable{sig_specs} = openprint::service::get_specs_ref( @$variable{'Project','SignatureServiceIndex'} ); 
+				$$variable{Reference} = openprint::service::summary( $$variable{Project}->id(), $$variable{SignatureServiceIndex} );
+				$$variable{SignatureIndex} = $$variable{sig_specs}{SignatureIndex};
+				$$variable{FrontCoatings} = join(',', openprint::Estimating::Aqueous::get_colours( $$variable{sig_specs}, 'SideOne' ) );
+				$$variable{FrontCoatings} = 'None' if $$variable{FrontCoatings} eq '';
+				$$variable{BackCoatings} = join(',', openprint::Estimating::Aqueous::get_colours( $$variable{sig_specs}, 'SideTwo' ) );
+				$$variable{BackCoatings} = 'None' if ! $$variable{BackCoatings};
+			) ?>
+			<? if ( $$variable{FrontCoatings} ne 'None' or $$variable{BackCoatings} ne 'None' ) ?>
+			<fieldset><legend>Signature <? echo ( $$variable{sig_specs}{SignatureIndex} ) ?></legend>
+				Information for <?Reference?><br/><br/>
+				<div class="Front leftColumn">
+					<p>
+						<label>Coatings on Front</label>
+						<?FrontCoatings?>
+					</p>
+				</div>
+				<div class="Back rightColumn">
+					<p>
+						<label>Coatings on Back</label>
+						<?BackCoatings?>
+					</p>
+				</div>
+				<br class="spacer"/>
+				<div id="Results-<?SignatureIndex?>" >
+					<ul>
+					<li><label>Printed</label><? echo ( 
+						my $html;
+						foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							my $Imposition = new openprint::Imposition(); 
+							$Imposition->load( $$variable{sig_specs}, $qty_index );
+							$html .= $Imposition->to_string();
+							$html .= '</span>';
+						} # end foreach
+						return $html;
+					) ?>
+					<?include(/includes/main/summ/signature_equipment.html)?>
+					</ul>
+				</div>
+				<br class="spacer"/>
+			</fieldset>
+			<? endif ( $$variable{FrontCoatings} ne 'None' or $$variable{BackCoatings} ne 'None' ) ?>
+		<? endwhile ( $$variable{SignatureServiceIndex} = shift @{$$variable{Signatures}} ) ?>
+		<div class="Feedback">
+		<?include('/includes/employee/feedback/employee.html')?>
+		<?include('/includes/employee/feedback/comments.html')?>
+		<?include('/includes/employee/feedback/complete.html')?>
+		<?include('/includes/employee/feedback/complete_date.html')?>
+		<?include('/includes/employee/feedback/buttons.html')?>
+		</div>
+
+		</fieldset>
+		<hr/>
+    <?include('/includes/employee/feedback/hidden_fields.html')?>
+	</form>
+</div>
+

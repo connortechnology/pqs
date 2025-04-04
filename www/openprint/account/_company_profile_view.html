@@ -1,0 +1,20 @@
+<div id="CompanyProfile">
+	<fieldset><legend>Profile</legend>
+		<div class="content">
+			<ul>
+<? echo ( 
+	my $html;
+	my $Profile = $$variable{'Company'}->Profile();
+	
+	foreach my $Field ( openprint::Company_Profile_Field->find('order'=>'sort,name') ) {
+		$html .= '<li><label>'.$Field->name().'</label><span id="field-'.$Field->id().'_container">';
+		my $value = $Profile->value( $Field->name() );
+		$html .= $value;
+		$html .= "</span></li>\n";
+	} # end foreach Field
+	return $html;
+) ?>
+			</ul>
+		</div>
+	</fieldset>
+</div>

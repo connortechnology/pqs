@@ -1,0 +1,98 @@
+<? eval (
+  my $uri = '/payment/history.html';
+	my $company_ids = [ map { $$_{id} } openprint::Company->find_filtered() ] if $session{user_type} ne 'A';
+
+	@{$$variable{Payments}} = ();
+	$$variable{total} = $$variable{remaining_total} = 0;
+	if ( $session{$uri.'?transaction_id'} ) {
+		my $tr_id = $session{$uri.'?transaction_id'};
+
+		$tr_id = '%'.$tr_id.'%' if ! $tr_id =~ /%/;
+		foreach my $Payment ( openprint::Payment->find( 
+				'transaction_id like' => $tr_id,
+				order				=> 'received_on',
+			) ) {
+			push @{$$variable{Payments}}, $Payment;
+			$$variable{total} += $Payment->amount();
+			$$variable{remaining_total} += $Payment->remaining();
+		} # end foreach Payment
+	} else {
+		foreach my $Payment ( openprint::Payment->find( 
+			ssi::date_filter( $uri.'?received_on_end', 'received_on <=' ),
+			ssi::date_filter( $uri.'?received_on_start', 'received_on >=' ),
+			ssi::date_filter( $uri.'?entered_on_end', 'created_on <=' ),
+			ssi::date_filter( $uri.'?entered_on_start', 'created_on >=' ),
+			( $session{$uri.'?payor_id'} ? ( payor_id => $session{$uri.'?payor_id'} ) : ( $company_ids ? ( payor_id=>$company_ids ) : () ) ),
+			( $session{$uri.'?recipient_id'} ? ( recipient_id => $session{$uri.'?recipient_id'} ) : () ),
+			order				=> 'received_on',
+			) ) {
+			push @{$$variable{Payments}}, $Payment;
+			$$variable{total} += $Payment->amount();
+			$$variable{value_total} += $Payment->value();
+			$$variable{remaining_total} += $Payment->remaining();
+		} # end foreach Payment
+	} # end if
+) ?>
+
+<? if ( @{$$variable{Payments}} == 0 ) ?>
+	There are no payments which match your search criteria. 
+<? else ( @{$$variable{Payments}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Payment ID #</b> to view payment details.<br/>
+		To delete payments from history check the appropriate payment(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="ID">ID</th>
+			<th class="From">From</th>
+			<th class="Method">Method</th>
+			<th class="Date">Received On</th>
+			<th class="TransactionID">Transaction ID</th>
+			<th class="Memo">Memo</th>
+			<th class="Invoices">Invoices</th>
+			<th class="Account">Deposited To</th>
+			<th class="Price">Amount</th>
+			<th class="Price">Value</th>
+			<th class="Price">Remaining</th>
+		</tr>
+<? echo (
+		my $html = '';
+my $rowclass;
+		foreach my $Payment ( @{$$variable{Payments}} ) {
+		my $Currency = $Payment->Currency();
+		$html .= sprintf('
+<tr title="%7$s" %1$s>
+	<td class="ID"><a href="/payment/edit.html?payment_id=%2$d">%2$d</a></td>
+	<td class="From"><a href="/payment/edit.html?payment_id=%2$d">%3$s</a></td>
+	<td class="Method"><a href="/payment/edit.html?payment_id=%2$d">%4$s</a></td>
+	<td class="Date"><a href="/payment/edit.html?payment_id=%2$d">%5$s</a></td>
+	<td class="TransactionID"><a href="/payment/edit.html?payment_id=%2$d">%6$s</a></td>
+	<td class="Memo"><a href="/payment/edit.html?payment_id=%2$d">%7$s</a></td>
+  <td class="Invoices">%8$s</td>
+  <td class="Account">%9$s</td>
+	<td class="Price">%10$s</td>
+	<td class="Price">%11$s</td>
+	<td class="Price">%12$s</td>
+</tr>', 
+				$rowclass, $Payment->id(), htmlize($Payment->Payor()->name()), htmlize($Payment->method()),	
+				format_date($Payment->received_on()), 
+				''.htmlize($Payment->transaction_id()),
+				''.htmlize($Payment->memo()),
+        join(', ', map { $_->Invoice()->link_to() } $Payment->Invoice_Payments() ),
+        $Payment->Account()->name(),
+				openprint::Currency::format($Payment->amount()).' '.$Currency->short(),
+				openprint::Currency::format($Payment->value()) . $openprint::Currency->short(),
+				openprint::Currency::format($Payment->remaining()) . $openprint::Currency->short(),
+);
+		 $rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach
+	return $html;
+) ?>
+		<tr class="totals">
+			<td colspan="8">Totals</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{total} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{value_total} ) . ' ' .$openprint::Currency->short(); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{remaining_total} ) . ' ' .$openprint::Currency->short(); ) ?></td>
+		</tr>
+	</table>
+<? endif ( @{$$variable{Payments}} == 0 ) ?>

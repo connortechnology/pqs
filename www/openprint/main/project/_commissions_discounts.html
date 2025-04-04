@@ -1,0 +1,71 @@
+<?if($session{user_type} eq 'E' or $session{user_type} eq 'A')?>
+<? echo (
+	my @credit_card_fees;
+	my @prices_without_credit_card_fee;
+
+	my @commissions;
+	my @prices_without_commission;
+
+	my @discounts;
+	my @prices_without_discount;
+
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		my $p = $prices_without_credit_card_fee[$qty_index] = $$variable{Project}->price($qty_index);
+		if ( $$variable{Project}{credit_card_fee} ) {
+			$credit_card_fees[$qty_index] = $p - ( $p/( 1+($$variable{Project}{credit_card_fee}/100) ) );
+			$prices_without_credit_card_fee[$qty_index] -= $credit_card_fees[$qty_index];
+			$p = $prices_without_credit_card_fee[$qty_index];
+		}
+		if ( $$variable{Project}{csr_commission} ) {
+			$commissions[$qty_index] = $p - ( $p/( 1+($$variable{Project}{csr_commission}/100) ) );
+			$prices_without_commission[$qty_index] = $p - $commissions[$qty_index];
+			$p = $prices_without_commission[$qty_index];
+		}
+		if ( $$variable{Project}{discount} ) {
+			$discounts[$qty_index] = $p - ( $p/( 1-($$variable{Project}{discount}/100) ) );
+			$prices_without_discount[$qty_index] = $p - $discounts[$qty_index];
+			$p = $prices_without_discount[$qty_index];
+		}
+  } # end foreach
+
+	my $html;
+	if ( $$variable{Project}{discount} ) {
+		$html .= '<tr><td>'.$$variable{Project}{discount}.'% '. ( $$variable{Project}{discount} > 0 ? 'discount' : 'markup' ) . '</td>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $discounts[$qty_index] ) ).'</td>';
+		} # end foreach
+		$html .= '<td class="status"></td>';
+		if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) {
+			$html .= '<td class="unprintable actions"></td>';
+		}
+		$html .= '</tr>
+	';
+	}
+	if ( $$variable{Project}{csr_commission} ) {
+		$html .= '<tr class="unprintable"><td>'.$$variable{Project}{csr_commission}.'% commission</td>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $commissions[$qty_index] ) ).'</td>';
+		} # end foreach
+		$html .= '<td class="status"></td>';
+		if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) {
+			$html .= '<td class="unprintable actions"></td>';
+		}
+		$html .= '</tr>';
+	}
+	if ( $$variable{Project}{credit_card_fee} and ($session{user_type} eq 'A') ) {
+		$html .= '<tr class="unprintable"><td>'.$$variable{Project}{credit_card_fee}.'% credit card fee</td>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $credit_card_fees[$qty_index] ) ).'</td>';
+		} # end foreach
+		$html .= '<td class="status"></td>';
+		if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) {
+			$html .= '<td class="unprintable actions"></td>';
+		}
+		$html .= '</tr>';
+	}
+	if ( $html ) {
+		return '<table class="List unprintable">'.$html.'</table>';
+	}
+	return;
+) ?>
+<?endif($session{user_type} eq 'E' or $session{user_type} eq 'A')?>

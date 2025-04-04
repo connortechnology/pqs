@@ -1,0 +1,61 @@
+<style>
+	@media print {
+		input {
+			border: none;
+		}
+		textarea {
+			border: none;
+			overflow: auto;
+		}
+		.titleCSS{
+display: none;
+		}
+		.contentCSS {
+margin: 5px;
+border: none;
+top: 0px;
+left: 0px;
+		}
+
+		body {
+margin: 0px;
+		font-size: 9pt;
+		}
+
+		.menubar {
+		}
+
+		.menu {
+display: none;
+		}
+
+		.Header {
+display: none;
+		}
+
+	}
+	textarea{
+		overflow: auto;
+	}
+</style>
+<script type="text/javascript">
+	function load( form ) {
+		new Ajax.Updater('Label','_'+ form.type_id[form.type_id.selectedIndex].text + '.html', { parameters: Form.serialize( form ), evalScripts: true});
+	} // end function load(form)
+</script>
+<form id="f1" name="f1">
+	<input type="hidden" name="project_id" value="<? echo ( $openprint::param{'ProjectIndex'} ) ?>" />
+<fieldset class="filter"><legend>Select Label</legend>
+	<p>
+		<label>Label</label>
+		<select id="type_id" name="type_id" size="1" onchange="load(this.form);">
+			<option value=""> select </option>
+			<? echo ( ssi::make_drop_down( openprint::LabelType->dropdown('order'=>'lower(name)') ); ) ?>
+		</select>
+		<? echo ( ssi::button( 'Refresh', { onclick=>q`load( $('f1') );` } ); ) ?>
+	</p>
+</fieldset>
+</form>
+<br/><br/>
+<div id="Label">
+</div>

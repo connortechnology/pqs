@@ -1,0 +1,21 @@
+<? echo (
+	my $html;
+	$html .= '<ul>';
+
+    foreach my $signature_service_index ( $$variable{Project}->signatures( { sort => 1 } ) ) {
+        my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $signature_service_index );
+
+		$html .= '<li><label>For ';
+		$html .= '&nbsp;<b>'.$$sig_specs{txtServiceDescription}.'</b> ' if $$sig_specs{'txtServiceDescription'};
+		$html .= 'form ' . $$sig_specs{SignatureIndex};
+		$html .= '<br/>Quantity, size &amp; type</label>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			next if ! $$sig_specs{"txtImposition$qty_index"};
+			$html .= '<div class="value">';
+			$html .= openprint::Estimating::Proofs::signature_summary( @$variable{'Project','ServiceIndex'}, undef, $qty_index, $signature_service_index );
+			$html .= '</div>';
+		} # end foreach qty_index
+		$html .= '</li>';
+    } # end foreach signature
+	return $html.'</ul>';
+) ?>

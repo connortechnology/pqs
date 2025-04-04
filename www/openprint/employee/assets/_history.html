@@ -1,0 +1,78 @@
+<? eval (
+	if ( $param{asset_id} ) {
+		@{$$variable{Assets}} = openprint::Asset->find( 
+			id=>$param{asset_id}, 
+			#'company_id'=>new openprint::User( $session{user_id} )->company_id(),
+			deleted=>[1,0],
+			order => 'id desc');
+	} else {
+		my %search = (
+ #'company_id',		new openprint::User( $session{user_id} )->company_id(),
+			( $session{'/employee/assets/history.html?company_id'} ? ( company_id => $session{'/employee/assets/history.html?company_id'} ) : () ),
+			date_filter( '/employee/assets/history.html?created_on_end', 'created_on <=' ),
+			date_filter( '/employee/assets/history.html?created_on_start', 'created_on >=' ),
+			( $session{'/employee/assets/history.html?deleted'} ne '' ? ( deleted => $session{'/employee/assets/history.html?deleted'} ) : () ),
+			( $session{'/employee/assets/history.html?public'} ne '' ? ( public => $session{'/employee/assets/history.html?public'} ) : () ),
+			order	=>	'id desc',
+		);
+		$search{type_id} = $session{'/employee/assets/history.html?type_id'} if $session{'/employee/assets/history.html?type_id'};
+		$search{created_by} = $session{'/employee/assets/history.html?created_by'} if $session{'/employee/assets/history.html?created_by'};
+
+		@{$$variable{Assets}} = ();
+		foreach my $Asset ( openprint::Asset->find( %search ) ) {
+			if ( $param{search} ) {
+				next if ( $Asset->name() !~ /$param{search}/i and $Asset->filename() !~ /$param{search}/i );
+			} # end if
+			push @{$$variable{Assets}}, $Asset;
+		} # end foreach Asset
+	} # end if
+) ?>
+<?include(/includes/error_reporting.html)?>
+<? if ( @{$$variable{Assets}} == 0 ) ?>
+	There are no assets matching your search criteria.
+<? else ( @{$$variable{Assets}} == 0 ) ?>
+	<p>Please click on a <b>Asset #</b> to view details.</p>
+<table class="List sortable">
+	<thead>
+		<tr>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( $('f2'), 'asset_id', this.checked );"/></th>
+			<th class="ID">ID</th>
+			<th class="DateTime">Created On</th>
+			<th class="User CreatedBy">Created By</th>
+			<th class="Name">Name</th>
+			<th class="Filename">Filename</th>
+			<th class="Public">Public?</th>
+			<th class="thumbnail">Image</th>
+		</tr>
+	</thead>
+	<tbody>
+	<? echo ( 
+		my $html = '';
+		my $report_total = 0;
+		while ( my $Asset = shift @{$$variable{Assets}} ) {
+			$html .= sprintf( q`
+				<tr id="tr-%1$d">
+					<td class="checkbox"><input type="checkbox" id="asset_id%1$d" name="asset_id" value="%1$d"/></td>
+					<td class="ID"><a href="view.html?asset_id=%1$d">%1$d</a></td>
+					<td class="DateTime"><a href="view.html?asset_id=%1$d">%2$s</a></td>
+					<td class="User CreatedBy"><a href="view.html?asset_id=%1$d">%3$s</a></td>
+					<td class="Name"><a href="view.html?asset_id=%1$d">%4$s</a></td>
+					<td class="Filename"><a href="view.html?asset_id=%1$d">%5$s</a></td>
+					<td class="Public"><a href="view.html?asset_id=%1$d">%6$s</a></td>
+					<td class="thumbnail"><a href="view.html?asset_id=%1$d">%7$s</a></td>
+				</tr>`, $$Asset{id}, format_datetime($Asset->created_on()), 
+				$Asset->Creator()->name(), $Asset->name(), $Asset->filename(),
+				( $Asset->public() ? 'Yes' : 'No' ),
+				sprintf('<img src="%s" alt=""/>', $Asset->sized_url('small')),
+				);
+		} # end while
+		return $html;
+	) ?>
+		</tbody>
+	</table>
+	<p class="buttons">
+		<? echo (
+			button( 'Delete', { onclick=>"f2.btnFunction.value='Delete';f2.submit();", text=>'Delete Selected' } );
+		) ?>
+	</p>
+<? endif ( @{$$variable{Assets}} == 0 ) ?>

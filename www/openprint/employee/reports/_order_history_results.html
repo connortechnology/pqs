@@ -1,0 +1,144 @@
+<?include('/includes/error_reporting.html')?>
+<? if ( @{$$variable{Orders}} ) ?>
+<? if ( $param{press_id} ) ?>
+The following had one or more signatures that ran on <? echo ( join(': ', new openprint::Equipment($param{press_id})->get('strid','name') ); ) ?><br/><br/>
+<? endif ( $param{press_id} ) ?>
+<table class="List sortable">
+	<tr>
+		<th class="order_id">Order #</th>
+		<th class="Docket">Docket</th>
+		<th class="invoice_id">Invoice #</th>
+		<th class="Company">Company</th>
+		<th class="DateTime">Ordered</th>
+		<th class="DateTime">Printed</th>
+		<th class="DateTime">Shipped</th>
+		<th class="DateTime">Invoiced</th>
+		<th class="status">Status</th>
+		<th class="Price">Subtotal</th>
+		<? echo ( 
+        return join("\n", map { (exists $$variable{tax_totals}{$$_{id}}) ?
+					sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) : () } @{$$variable{Taxes}} );
+      ) ?>
+		<th class="Price">Total</th>
+		<th class="Price">Commission</th>
+		<th class="Price">Credit Card</th>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		my $total;
+		my $total_subtotal;
+		my $csr_commission_total;
+		my $credit_card_fee_total;
+
+		my $uri = '/employee/reports/order_history.html';
+		my @servicetype_ids = split(',',$session{$uri.'?servicetype_id'} );
+
+		foreach my $Order ( @{$$variable{Orders}} ) {
+			my $Currency = $Order->Currency();
+			my $csr_commission;
+			my $credit_card_fee;
+			my $price;
+			my $subtotal;
+			if ( $session{$uri.'?currency_id'} ) {
+				$subtotal = $Order->subtotal();
+				$price = $Order->total();
+				$csr_commission = $Order->csr_commission();
+				$credit_card_fee = $Order->credit_card_fee();
+			} else {
+				$subtotal = $Currency->convert_from($Order->subtotal());
+				$price = $Currency->convert_from($Order->total());
+				$csr_commission = $Currency->convert_from($Order->csr_commission());
+				$credit_card_fee = $Currency->convert_from($Order->credit_card_fee());
+			}
+      my $url = (($Order->status() eq 'Cancelled') ? '/main/order/history_details.html?order_id=' : '/employee/project/view.html?order_id=').$Order->id();
+			$html .= sprintf(q`
+				<tr%1$s>
+					<td class="order_id"><a href="%16$s">%2$d</a></td>
+					<td class="Docket"><a href="%16$s">%3$d</a></td>
+					<td class="invoice_id"><a href="%16$s">%4$s</a></td>
+					<td class="Company"><a href="%16$s">%5$s</a></td>
+					<td class="DateTime"><a href="%16$s">%6$s</a></td>
+					<td class="DateTime"><a href="%16$s">%7$s</a></td>
+					<td class="DateTime"><a href="%16$s">%8$s</a></td>
+					<td class="DateTime"><a href="%16$s">%9$s</a></td>
+					<td class="status"><a href="%16$s">%10$s</a></td>
+					<td class="Price"><a href="%16$s">%11$s</a></td>
+					%12$s
+					<td class="Price"><a href="%16$s">%13$s</a></td>
+					<td class="Price"><a href="%16$s">%14$s</a></td>
+					<td class="Price"><a href="%16$s">%15$s</a></td>
+				</tr>
+				`, $rowclass, $Order->id(), $Order->docket(),
+				join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ),
+				htmlize($Order->company_name()),
+				format_datetime( $Order->created_on() ),
+				join( '<br/>', map { format_datetime( $_->printed_on() ) } $Order->Projects() ),
+				join( '<br/>', map { format_datetime( $_->shipped_on() ) } $Order->Projects() ),
+				format_datetime( $Order->invoiced_on() ),
+				$Order->status(),
+				openprint::Currency::format($subtotal),
+				join('', map { exists $$variable{tax_totals}{$_->id()} ? sprintf('<td class="Price">%s</td>',
+							openprint::Currency::format($Currency->convert_from($Order->Tax($_)->amount()))) : () } @{$$variable{Taxes}} ),
+				openprint::Currency::format($price),
+				openprint::Currency::format($csr_commission),
+				openprint::Currency::format($credit_card_fee),
+        $url,
+			);
+			foreach my $Project ( $Order->Projects() ) {
+
+				my @Services = openprint::Project_Service->find(
+						project_id			=>	$$Project{id},
+						servicetype_id	=>	\@servicetype_ids
+						) if @servicetype_ids;
+
+				$html .= sprintf('
+        <tr%1$s>
+					<td></td>
+					<td colspan="3" class="reference">%2$s</td>
+					<td colspan="%4$d" class="services" valign="top"><table>%3$s</table></td>
+				<tr>', $rowclass, $Project->reference(),
+				( @servicetype_ids != @{$variable{ServiceTypes}} ? join('<br/>',
+						map { '<tr><td>'.$_->name().'</td><td class="Price">'.openprint::Currency::format($_->ordered_price()).'</td></tr>' } @Services ).
+					'<tr class="totals"><td>Service Total:</td><td class="Price">'.openprint::Currency::format(misc::sum(map{$_->ordered_price()}@Services)).'</td></tr>' : '' ),
+					9+misc::sum(map { exists $$variable{tax_totals}{$_->id()} ? 1 : 0 } @{$$variable{Taxes}}),
+				);
+			} # end foreach Project
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			$total += $price;
+			$total_subtotal += $subtotal;
+			$csr_commission_total += $csr_commission;
+			$credit_card_fee_total += $credit_card_fee;
+		} # end foreach Order
+		$html .= sprintf(q`
+<tr class="totals">
+	<td align="right">Count</td>
+	<td>%d</td>
+	<td align="right">Average Value</td>
+	<td>%s</td>
+	<td colspan="5" align="right">Total</td>
+	<td class="Price">%s</td>
+	%s
+	<td class="Price">%s</td>
+	<td class="Price">%s</td>
+	<td class="Price">%s</td>
+</tr>`, scalar @{$$variable{Orders}},
+		openprint::Currency::format($total/scalar @{$$variable{Orders}}),
+		openprint::Currency::format($total_subtotal),
+		join('', map { exists $$variable{tax_totals}{$_->id()} ?
+			sprintf(
+					'<td class="Price">%s</td>',
+					openprint::Currency::format($$variable{tax_totals}{$_->id()}),
+					) : () } @{$$variable{Taxes}} ),
+		openprint::Currency::format($total),
+		openprint::Currency::format($csr_commission_total),
+		openprint::Currency::format($credit_card_fee_total),
+		);
+		return $html;
+	) ?>
+</table>
+<span class="Currency">All prices shown are in <? echo ( 
+$session{$r->uri().'?currency_id'} ? new openprint::Currency($session{$r->uri().'?currency_id'})->name() : $openprint::Currency->name() ) ?>.</span>
+<? else ( @{$$variable{Orders}} ) ?>
+There were no orders matching your criteria.  Please try again.
+<? endif ( @{$$variable{Orders}} ) ?>

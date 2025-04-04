@@ -1,0 +1,23 @@
+<form id="add_notification_form" name="add_notification_form" action="">
+	<input type="hidden" name="user_id" value="<?echo($param{user_id})?>"/>
+	<input type="hidden" name="action" value="add"/>
+	<fieldset><legend>Add Notification</legend>
+		<ul>
+			<li><label>Type</label>
+				<? echo ( ssi::select( openprint::User_Notification_Type->dropdown(order=>'sort,lower(name)'), undef, { name=>'type_id', prepend=>['','select one'] } ); ) ?>
+			</li>
+			<li><label>Company</label>
+				<? echo ( ssi::select( openprint::Company->dropdown(), undef, { name=>'company_id', prepend=>['','All'] } ); ) ?>
+			</li>
+			<li><label>Yes/No</label>
+				<? echo ( input( type=>'text', name=>'value' ); ) ?>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+						button('Submit', { onclick=>q`new Ajax.Updater( 'Notifications', '/account/_notifications.html', { parameters: $('add_notification_form').serialize(), onSuccess: function() { popupWin.destroy(); } } );` } ),
+		button( 'CancelPopup', { onclick=>'popupWin.destroy();', text=>'Cancel' } ), 
+); ) ?>
+		</p>
+	</fieldset>
+</form>

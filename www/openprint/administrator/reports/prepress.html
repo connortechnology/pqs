@@ -1,0 +1,179 @@
+<form name="f1" method="post" action="prepress.html">
+<fieldset class="filters"><legend>Report Criteria</legend>
+	Choose report criteria and click Show Results.<br/><br/>
+	<p>
+		<label>Employee</label>
+			<select name="ddmEmployee" size="1">
+				<option value="Prepress">All Prepress Employees</option>
+				<option value="All" <? echo ( 'selected' if $r->param('ddmEmployee') eq 'All' ) ?>>All Employees</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)') ], $r->param('ddmEmployee') ); ) ?>
+			</select>
+	</p>
+	<? eval (
+		my @time = localtime(time);
+		if ( $r->param('ddmStartYear') ) {
+			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, $r->param('ddmStartYear'), $r->param('ddmStartMonth'),$r->param('ddmStartDay') );
+		} else {
+			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
+		} # end if
+		if ( $r->param('ddmEndYear') ) {
+			@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, $r->param('ddmEndYear'), $r->param('ddmEndMonth'),$r->param('ddmEndDay') );
+		} else {
+			@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
+		} # end if
+) ?>
+
+	<p>
+		<label>Ordered Date</label>
+			<select name="ddmStartYear"> <?StartYears?> </select>
+			<select name="ddmStartMonth"> <?StartMonths?> </select>
+			<select name="ddmStartDay"> <?StartDays?> </select>
+		to
+			<select name="ddmEndYear"><?EndYears?></select>
+			<select name="ddmEndMonth"><?EndMonths?></select>
+			<select name="ddmEndDay"> <?EndDays?></select>
+	</p>
+	<p class="buttons">
+		<? echo ( join('',
+				ssi::button( 'ShowResults', { onclick=>'f1.submit();', href=>'', text=>'Show Results' } ),
+				ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
+); ) ?>
+	</p>
+</fieldset>
+<? eval ( 
+		my %params = ( 'type'=>['E','A'], 'order'=>'lower(lastname),lower(firstname)' );
+		if ( $openprint::param{'ddmEmployee'} eq 'Prepress' ) {
+			$params{'usergroup'} = 'Prepress';
+		} elsif ( $openprint::param{'ddmEmployee'} ne 'All' ) {
+			$params{'id'} = $openprint::param{'ddmEmployee'};
+		} # end if
+		@{$$variable{'Results'}} = openprint::User->find( %params );
+		@{$$variable{'Projects'}} = openprint::Project->find(
+			'ordered_on <='=>"$$variable{'End'} 23:59:59",
+			'ordered_on >='=>"$$variable{'Start'} 00:00:00",
+			);
+ ) ?>
+ <? if ( @{$$variable{'Projects'}} ) ?>
+	Total # of Dockets in the time period: <? echo ( @{$$variable{'Projects'}} ) ?>:
+	<? eval ( 
+		my %employees;
+		foreach my $User ( @{$$variable{'Results'}} ) {
+			$employees{$User->name()} = $User;
+		} # end foreach
+
+		foreach my $Project ( @{$$variable{'Projects'}} ) {
+			my %services = $Project->get_services();
+			my $proofs_service_index = $services{'Proofs'}[0] if $services{'Proofs'};
+			$proofs_service_index = $services{'FilmStripping'}[0] if $services{'FilmStripping'};
+			next if ! $proofs_service_index;
+			my %proofs_specs = openprint::service::get_specifications_pairs( $log, $dbh, $Project->id(), $proofs_service_index );
+			my ( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $Project->id(), $proofs_service_index );
+			if ( ! $operator_id and $proofs_specs{'txtEmployeeName'} ) {
+				my $operator = $employees{$proofs_specs{'txtEmployeeName'}};
+				$operator_id = $operator->id();
+				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $Project->id(), $proofs_service_index], 'operator_id', $operator->id() );
+			} # end if
+			if ( ! $operator_id ) {
+				push @{$$variable{'UnassignedProjects'}}, $Project;
+			} # end if	
+			$$variable{$operator_id}->{'ProjectCount'} += 1;
+
+			my $qty_index = $Project->ordered_quantity_index();
+
+			foreach my $index ( $Project->signatures() ) {
+				my ( $signature_index, $plate_qty ) = openprint::service::get_specifications( $log, $dbh, $Project->id(), $index, 'SignatureIndex', 'txtPlateQuantity' );
+				$$variable{$operator_id}->{'PlateCount'} += $plate_qty;
+
+				my @proofs;
+				foreach my $key ( keys %proofs_specs ) {
+					push @proofs, $proofs_specs{$key} if $key =~ /^txtProofIndex-$signature_index-\d*-$qty_index$/;
+				} # end foreach
+
+				foreach my $proof_index ( @proofs ) {
+					my ( $quantity, $width, $height, $type ) = @proofs_specs{
+						"txtProofQuantity-$signature_index-$proof_index-$qty_index",
+						"txtProofWidth-$signature_index-$proof_index-$qty_index",
+						"txtProofHeight-$signature_index-$proof_index-$qty_index",
+						"ddmProofType-$signature_index-$proof_index-$qty_index",
+						};
+					$$variable{$operator_id}->{$type.'Count'} += $quantity;
+					$$variable{$operator_id}->{$type.'Area'} += $quantity * $width * $height;
+				} # end foreach proof
+			} # end foreach signature
+			$$variable{$operator_id}->{'OrderValue'} += $Project->ordered_price();
+		} # end foreach Project
+		) ?>
+<table>
+	<tr>
+		<th align="left">Employee</th>
+		<th align="right">Project</th>
+		<th align="right">Plate</th>
+		<th align="right" colspan="2">Digital Dylux Proofs</th>
+		<th align="right" colspan="2">Epson Proofs</th>
+		<th align="right">Order</th>
+	</tr>
+	<tr>
+		<th align="left">Name</th>
+		<th align="right">Quantity</th>
+		<th align="right">Quantity</th>
+		<th align="right">Quantity</th>
+		<th align="right">Area</th>
+		<th align="right">Quantity</th>
+		<th align="right">Area</th>
+		<th align="right">Value</th>
+	</tr>
+	<tr><td colspan="8"><hr/></td></tr>
+<? while ( $$variable{'User'} = shift @{$$variable{'Results'}}; ) ?>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
+	<tr<?rowclass?>>
+		<td><? echo ( ssi::htmlize( $$variable{'User'}->name() ); ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'ProjectCount'} ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'PlateCount'} ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'DigitalDyluxCount'} ) ?></td>
+		<td align="right"><? echo ( sprintf('%.2f', $$variable{$$variable{'User'}->id()}->{'DigitalDyluxArea'} ) ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'EpsonProofCount'} ) ?></td>
+		<td align="right"><? echo ( sprintf('%.2f', $$variable{$$variable{'User'}->id()}->{'EpsonProofArea'} ) ) ?></td>
+		<td align="right"><? echo ( sprintf('$ %.2f', $$variable{$$variable{'User'}->id()}->{'OrderValue'} ) ) ?></td>
+	</tr>
+<? endwhile ( $$variable{'User'} = shift @{$$variable{'Results'}}; ) ?>
+<? if ( $$variable{''}->{'ProjectCount'} ) ?>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
+	<tr<?rowclass?>>
+		<td>Unassigned</td>
+		<td align="right"><? echo ( 1*$$variable{''}->{'ProjectCount'} ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{''}->{'PlateCount'} ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{''}->{'DigitalDyluxCount'} ) ?></td>
+		<td align="right"><? echo ( sprintf('%.2f', $$variable{''}->{'DigitalDyluxArea'} ) ) ?></td>
+		<td align="right"><? echo ( 1*$$variable{''}->{'EpsonProofCount'} ) ?></td>
+		<td align="right"><? echo ( sprintf('%.2f', $$variable{''}->{'EpsonProofArea'} ) ) ?></td>
+		<td align="right"><? echo ( sprintf('$ %.2f', $$variable{''}->{'OrderValue'} ) ) ?></td>
+	</tr>
+<? endif ( $$variable{''}->{'ProjectCount'} ) ?>
+	<tr><td colspan="8"><hr/></td></tr>
+</table>
+<? if ( $$variable{'UnassignedProjects'} ) ?>
+<br/>
+	<h3>Unassigned Projects</h3>
+<table class="List">
+	<tr>
+		<th valign="top" align="left" width="100">Index</th>
+		<th valign="top" align="left">Reference</th>
+		<th valign="top" align="left">Company</th>
+		<th valign="top" align="right" width="100">Ordered On</th>
+	</tr>
+<? while ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>
+<? eval ( @$variable{'DateOrdered'} = sql::execute( $log, $dbh, q{SELECT date(dtmOrderDate) FROM Orders WHERE Index=?}, $$variable{'Project'}->order_id() ); ) ?>
+	<tr<?colrow?>>
+		<td valign="top"><a href="project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
+		<td valign="top"><? echo ( ssi::htmlize( $$variable{'Project'}->reference() ); ) ?></td>
+		<td valign="top"><? echo ( ssi::htmlize( $$variable{'Project'}->Company()->name() ); ) ?></td>
+		<td valign="top" align="right"><?DateOrdered?></td>
+	</tr>
+<? eval ( $$variable{'colrow'} = $$variable{'colrow'} ? '' : ' class="colRow"' ) ?>
+<? endwhile ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>
+</table>
+
+<? endif ( $$variable{'UnassignedProjects'} ) ?>
+<? else ( @{$$variable{'Projects'}} ) ?>
+There were no results matching the report criteria.
+<? endif ( @{$$variable{'Projects'}} ) ?>

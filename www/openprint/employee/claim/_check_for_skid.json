@@ -1,0 +1,45 @@
+<? echo ( 
+	$r->content_type('text/javascript');
+	my $html;
+	my $Skid;
+	my $RFIDTag;
+	
+	if ( exists $param{'skid_id'} ) {
+		$param{'skid_id'} =~ s/\D//g;
+		$param{'content_id'} =~ s/\D//g;
+		$Skid = new openprint::Skid( $param{'skid_id'} );
+	} elsif ( $param{'rfidtag_id'} ) {
+		$param{'rfidtag_id'} =~ s/\D//g;
+		$RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
+		if ( ! $RFIDTag->id() ) {
+			my @Tags = openprint::RFIDTag->find( 'id ilike'=>'%'.$param{'rfidtag_id'} );
+			if ( @Tags == 1 ) {
+				$RFIDTag = $Tags[0];
+			} # end if Tags == 1
+		} # end if
+		if ( $RFIDTag && $RFIDTag->id() ) {
+			$Skid = $RFIDTag->Skid();
+			$html = sprintf( q`$('rfidtag_id%1$s').style.color = 'green';$('skid_id%1$s').value='%2$s';`, ( $param{'content_id'} ? '-'.$param{'content_id'} : ''), $Skid->id() );
+		} else {
+			$html = sprintf( q`$('rfidtag_id%1$s').style.color = 'red';`, ( $param{'content_id'} ? '-'.$param{'content_id'} : '') );
+		} # end if
+	} # end if
+
+	if ( $Skid && $Skid->id() ) {
+		$html .= sprintf( q`$('skid_id%1$s').style.color = 'green';$('rfidtag_id%1$s').value='%2$s';`, ( $param{'content_id'} ? '-'.$param{'content_id'} : ''), $Skid->rfidtag_id() );
+		my @SkidContents = $Skid->Contents();
+		if ( @SkidContents == 1 ) {
+			$html .= sprintf( q`
+					$('qty_lbs%1$s').value='%2$s';
+					convert_lbs_to_kg( $('qty_lbs%1$s'), $('qty_kgs%1$s') );
+					$('description%1$s').innerHTML='%3$s';
+				`, ( $param{'content_id'} ? '-'.$param{'content_id'} : ''),
+				$SkidContents[0]->quantity(),
+				$SkidContents[0]->Paper()->to_string() );
+		} # end if
+	} else {
+		$html = sprintf( q`$('skid_id%1$s').style.color = 'red';`, ( $param{'content_id'} ? '-'.$param{'content_id'} : '') );
+	} # end if
+
+	return $html;
+) ?>

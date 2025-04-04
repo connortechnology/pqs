@@ -1,0 +1,145 @@
+<div class="PageTitle">
+<h1>Orders</h1>
+<h2>Information</h2>
+</div>
+<? echo ( do_css_links( '/order.css' ); ) ?>
+<script src="<? hash_link( /main/order/order.js ) ?>"></script>
+<div class="Order"><div class="Information">
+	<?include('/includes/error_reporting.html') ?>
+	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
+		<div class="Header">
+			<div id="Information">
+				<fieldset>
+					<div class="content">
+						<ul>
+							<li class="order_id"><label>Order ID</label><? echo ( $$variable{Order}->id() ) ?></li>
+							<li class="po<? echo ( $$variable{RequiredFields}{po} ? ' required' : '' ) ?>"> 
+								<label>Purchase Order</label>
+								<input type="text" id="po" name="po" value="<? echo ( $$variable{Order}->po() ) ?>" />
+							</li>
+							<? echo (
+								my $html;
+								my @Suppliers = openprint::Company->find(offers_credit=>1,order=>'id');
+								if ( @Suppliers > 1 ) {
+									if ( sets::isin($session{user_type}, ['A','E'] ) ) {
+										$html .= '<li class="supplier"><label>Supplier</label><select name="supplier_id">';
+										$html .= make_drop_down( [ map { $_->id(), $_->name() } @Suppliers ], $$variable{Order}->supplier_id() );
+										$html .= '</select></li>';
+									} else {
+										$html .= input( type=>'hidden', name=>'supplier_id', value=>$Suppliers[0]->id() );
+									} # end if user_type
+								} # end if @Suppliers > 1 
+								return $html;
+							) ?>
+							<? if ( (! $session{company_id}) and sets::isin($session{user_type}, ['A','E'] ) ) ?>
+							<li class="company_id">
+								<label>Company</label>
+								<span id="CompanyDropDown">
+								<?include('_company_dropdown.html') ?>
+								</span>
+								<? echo ( button( 'AddFromBelow', { onclick=>'save_company();', text=>'Save Company' } ); ) ?>
+							</li>
+							<? endif ( (! $session{company_id}) and sets::isin($session{user_type}, ['A','E'] ) ) ?>
+						</ul>
+					</div>
+				</fieldset>
+			</div><!--Information-->
+			<div id="BillingInformation"><?include(_billing_information.html) ?></div>
+<? if ( $config{PaymentOnOrderInformation} ) ?>
+			<div id="PaymentOptions">
+			<?include(_payment_options.html) ?>
+			</div>
+<? endif ( $config{PaymentOnOrderInformation} ) ?>
+			<? eval ( 
+				$$variable{Projects} = [ $$variable{Order}->Projects() ];
+				$$variable{Products} = [ $$variable{Order}->Products() ];
+				@{$$variable{Contents}} = ( @{$$variable{Projects}}, @{$$variable{Products}} );
+			) ?>
+<? if ( @{$$variable{Contents}} == 1 ) ?>
+			<div id="ShippingInformation">
+        <fieldset><legend>Shipping Information</legend>
+				<? echo (
+					# If there is only 1 thing in the order, then we can condense
+					$$variable{Project} = $$variable{Contents}[0]->Project();
+					my $html;
+					if ( ($$variable{Project}->quantity_indexes() > 1 ) or ! $$variable{Project}->ordered_quantity_index() ) {
+						$html .= '<fieldset><legend>Select Quantity</legend><div class="content"><ul>';
+						$html .= include( '/main/order/_quantity_select.html' ).'</ul></div></fieldset>';
+					} else {
+						$html .= input( type=>'hidden', name=>'rdbQuantity'.$$variable{Project}->id(), value=>$$variable{Project}->ordered_quantity_index() );
+					} # end if
+					$html .= include( '/main/order/_shipping_type_select.html' );
+					return $html;
+				) ?>
+        </fieldset>
+			</div><!--Shipping-->
+<? endif ( @{$$variable{Contents}} == 1 ) ?>
+		</div><!--Header-->
+		<div id="Contents">
+			<? if ( ! @{$$variable{Contents}} ) ?>
+				<p>This order appears to be empty.</p>
+			<? endif ( ! @{$$variable{Contents}} ) ?>
+				<? if ( @{$$variable{Projects}} ) ?>
+				<div id="Projects">
+					<? echo (
+						my $html;
+						foreach my $Project ( @{$$variable{Projects}} ) {
+							$$variable{Project} = $Project;
+							$html .= '<div class="Project">
+<div class="controls">
+<!--<h3 class="project_id">'.$Project->link_to('Project '.$Project->id() ).'</h3>-->
+<p class="buttons">';
+							$html .= button( 'Edit'.$$Project{id}, { href=>$Project->url_to(), text=>'Edit', class=>'EditButton' } );
+							$html .= button( 'Remove'.$$Project{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;project_id=$$Project{id}", text=>'Remove', class=>'RemoveButton' } );
+							$html .= '</p><br class="spacer"/></div>';
+							$html .= include( '/main/order/_project_information.html' );
+							$html .= '</div>';
+						} # end foreach
+						return $html;
+					) ?>
+				</div>
+				<? endif ( @{$$variable{Projects}} ) ?>
+<?if(openprint::Product->find_one())?>
+				<div id="Products">	
+					<?include(_product_list_edit.html)?>
+					<p class="buttons">
+						<?echo(button('AddProduct', { onclick=>qq`popup_window('_add_product_popup.html', { order_id: $$variable{Order}{id} } );`, text=>'Add Product' } ); )?>
+					</p>
+				</div>
+<?endif(openprint::Product->find_one())?>
+		</div><!--Contents-->
+		<div id="Totals">
+			<ul>
+				<li id="SubTotal">
+					<label>Sub Total</label>
+					<? echo ( openprint::Currency::format( $$variable{Order}->Currency()->convert_from( $$variable{Order}->subtotal() ) ); ) ?>
+				</li>
+			</ul>
+		</div>
+		<p class="buttons">
+			<? echo ( 
+				my $html;
+				my @Projects = $$variable{Order}->Projects();
+				if ( @Projects ) {
+					my $Project = $Projects[0];
+					if ( $Project->mode() eq 'Simple' ) {
+						$html .= button( 'Back',{ href=>'/content/'.$Project->Type()->url().'?project_id='.$$Project{id}} );
+					} else {
+						$html .= button( 'Back', { href=>'/main/project/view.html?ProjectIndex='.$$Project{id} } );
+					} 
+				} # end if
+				$html .= button( 'AddProject', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $config{OrderMode} ne 'Simple';
+				if ( $$variable{Order}->status() eq 'Re-Opened' ) {
+          if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
+            $html .= button( 'Close', { href=>'/main/order/confirmation.html?btnFunction=Close&amp;order_id='.$$variable{Order}->id(), text=>'Close' } );
+          }
+				}
+				$html .= button( 'SaveAndContinue', { onclick=>'f1.submit();', text=>'Save And Continue' } ); 
+  
+				return $html;
+			) ?>
+		</p>
+		<input type="hidden" name="order_id" value="<?order_id?>"/>
+		<input type="hidden" name="btnFunction" value="Continue"/>
+	</form>
+</div><!--Information--></div><!--class=Order-->

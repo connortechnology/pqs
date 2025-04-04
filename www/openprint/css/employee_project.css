@@ -1,0 +1,85 @@
+#Labels .Date {
+	text-align: left;
+}
+table .subtotal,
+table .total {
+	font-weight: bold;
+	font-size: large;
+}
+.Project table .status {
+	width: 200px;
+text-align: right;
+}
+.Project table .status .thumbnail {
+	width: 100%;
+	background-color: white;
+	border: 1px solid #000088;
+}
+.Project table .Price {
+	width: 175px;
+}
+.service {
+	text-align: left;
+}
+.quantity {
+	width: 75px;
+	text-align: left;
+}
+#Labels .Date,
+#Labels .Reference,
+#Labels .Type {
+	text-align: left;
+}
+#Labels .buttons,
+#Files .buttons {
+	width: 75px;
+	text-align: right;
+}
+#Files .filename {
+	text-align: left;
+}
+.filters .docket, .filters .project_id {
+    float: left;
+    width: 50%;
+  box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+
+    padding: 0 0 0 85px;
+}
+.filters .docket label:not(.radio), .filters .project_id label:not(.radio) {
+    margin: 0;
+    padding: 0 5px 0 0;
+    vertical-align: middle;
+    width: 80px;
+margin-left: -85px;
+}
+#project_id {
+    width: 80px;
+}
+
+table.ProofsSummary {
+    float: left;
+}
+table .Service {
+	text-align: left;
+}
+.StockAllocated .Stock,
+.StockCheckout .Stock {
+    text-align: left;
+    float: none;
+    width: auto;
+}
+table .Price input {
+    width: 100%;
+}
+.AdditionalChargeActions {
+}
+.AdditionalChargeActions .buttons {
+	float: right;
+}
+
+table .Location {
+	text-align: left;
+	width: 100px;
+}

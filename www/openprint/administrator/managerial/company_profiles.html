@@ -1,0 +1,484 @@
+<div class="CompanyProfiles">
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="post" action="/administrator/managerial/company_profiles.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters"><legend>Search</legend>
+		<ul>
+      <li>
+        <label>Account #</label>
+        <input type="text" name="txtSearchAccountNum" />
+        <? echo ( button( 'Go', { onclick=>q`f1.btnFunction.value='Go';fmCheck(f1);` } ); ) ?>
+      </li>
+      <li>
+        <label>Type</label>
+        <select name="search_type" data-on-change="load_customers">
+          <? echo ( 
+            my @options = ('All','Suppliers', 'Resellers', 'Customers');
+            return make_drop_down( [ map { $_, $_ } @options ], $param{search_type} );	
+          ) ?>
+        </select>
+      </li>
+<? echo (
+    my @salesrep_ids = sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies');
+		$$variable{SalesReps} = [openprint::User->find(
+			id=>\@salesrep_ids,
+			deleted=>exists($session{$r->uri().'?deleted_salresrep_id'}) ? $session{$r->uri().'?deleted_salresrep_id'} : 0
+			)] if @salesrep_ids;
+		if ( @{$$variable{SalesReps}} ) {
+			return '
+		<li>
+			<label>Sales Rep</label>
+'.ssi::select(
+		[ map { $_->id(),$_->name() } @{$$variable{SalesReps}} ],
+		$session{$r->uri().'?search_salesrep_id'},
+		{name=>'search_salesrep_id', id=>'search_salesrep_id', onchange=>'load_customers();', prepend=>['','All'] }
+		).  '
+Deleted? :'.
+          radio('deleted_salesrep_id',
+            [ 1, 'Yes', 0, 'No' ],
+            ( exists($session{$r->uri().'?deleted_salresrep_id'}) ? $session{$r->uri().'?deleted_salresrep_id'} : 0 ),
+            { onclick=>q`LoadContent('search_salesrep_id', '/includes/_users.html', { 'type':'E,A', 'usergroup':'Sales', 'deleted':this.value});` } ).'
+</li>
+';
+	}
+	return '';
+) ?>
+		<li><label>Company Deleted?</label>
+		<? echo ( radio('deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;load_customers();"} ); ) ?></li>
+		<li> 
+			<label>Company</label>
+			<input type="text" name="search_company_filter" id="search_company_filter" class="filter" />
+      <select id="ddmCustomer" name="ddmCustomer" data-on-change="ddmCustomer_onchange">
+				<option value=""> select </option>
+				<? echo ( 
+if ( 0 ) {
+					my %params = (
+							( $session{$r->uri().'?search_salesrep_id'} ? ( salesrep_id=>$session{$r->uri().'?search_salesrep_id'} ) : () ),
+							( $session{$r->uri().'?deleted'} ne '' ? ( deleted=>$session{$r->uri().'?deleted'} ) : () ),
+					);
+					if ( $param{search_type} eq 'Suppliers' ) {
+						$params{supplier} ='Y';
+					} elsif ( $param{search_type} eq 'Resellers' ) {
+						$params{reseller} = 'Y';
+					} elsif ( $param{search_type} eq 'Customers' ) {
+						$params{supplier} = 'N';
+						$params{reseller} = 'N';
+					} # end if
+					my @Companies = @{$$variable{Companies}} = openprint::Company->find( %params );
+					if ( ! sets::isin( $param{ddmCustomer}, map { $_->id() } @Companies ) ) {
+						unshift @Companies, new openprint::Company( $param{ddmCustomer} );
+					} # end if
+
+					return make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( %params ) ], $$variable{CustomerIndex} );
+} else {
+	return make_drop_down( [ map { $_->id(), $_->name() } ( $$variable{Company} ) ], $$variable{CustomerIndex} );
+}
+				) ?>
+			</select>
+			<? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+
+	<fieldset id="ButtonsTop">
+		<p> 
+			<label><? echo ( $$variable{CustomerIndex} ? button( 'Users', { href=>'user_profiles.html?ddmCustomer='.$$variable{CustomerIndex} } ) : '' ) ?></label>
+		
+			<? echo (
+				my $html = '';
+				$html .= button( 'Prev1', { onclick=>q`f1.btnFunction.value='&lt;&lt;';fmCheck(f2);`,text=>'&lt;&lt;' } );
+				$html .= button( 'Next1', { onclick=>q`f1.btnFunction.value='&gt;&gt;';fmCheck(f2);`,text=>'&gt;&gt;' } );
+				$html .= button( 'New1', { onclick=>'addCheck(f2);',text=>'New' } );
+				if ( $$variable{Company}->deleted() ) {
+					$html .= button( 'Undelete1', { onclick=>"f1.btnFunction.value='Undelete';fmCheck(f1);",text=>'Undelete' } );
+					$html .= button( 'Destroy1',{ onclick=>"f1.btnFunction.value='Destroy';fmCheck(f1);",text=>'Destroy' } );
+				} else {
+					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text=>'Delete' } );
+				} # end if
+				$html .= button( 'Save1',{ onclick=>"f2.btnFunction.value='Save';fmChange=3;fmCheck(f2);",text => 'Save' } );
+				$html .= button( 'Reset1', { onclick=>'f2.reset();',text=>'Reset' } );
+				$html .= button( 'Merge', { onclick=>qq`popup_window('_merge_popup.html','company_id=$$variable{CustomerIndex}');` } );
+				return $html;
+			) ?>
+		</p>
+		<? echo (
+			if ( $$variable{Company}->id() ) {
+				my @Companies = openprint::Company->find( name=>$$variable{Company}->name(), order=>'id');
+				if ( @Companies > 1 ) {
+					my $html = '<div class="warning">There are duplicate companies!<br/>';
+					foreach my $C ( @Companies ) {
+						next if $C->id() == $$variable{Company}->id();
+						$html .= sprintf(q`<p><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%1$d">%1$d : %2$s</a><br/>
+%3$s<br/>%4$d Users %5$d Projects %6$d Quotes %7$d Orders<br/>%8$s</p>`, $C->id(), $C->name(), join(' ', $C->get('address1','address2','city','state','country','postalcode')),
+scalar openprint::User->find( company_id=>$C->id()),
+scalar openprint::Project->find( company_id=>$C->id()),
+scalar openprint::Quote->find( company_id=>$C->id()),
+scalar openprint::Order->find( company_id=>$C->id()),
+button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.html?company_id='.$$variable{Company}->id().'&amp;merge_company_id='.$C->id().'&amp;btnFunction=merge', text=>'Merge' } ) );
+					} # end foreach C
+					$html .= '</div>';
+					return $html;
+				} # end if have dups
+			} # end if
+			return '';
+		) ?>
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="/administrator/managerial/company_profiles.html">
+	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" name="company_id" id="company_id" value="<?CustomerIndex?>" />
+	<div class="SalesInformation">
+		<fieldset><legend>Sales Information</legend>
+		<? if ( $$variable{Company}->deleted() ) ?>
+		<div class="error">This company has been deleted.</div>
+		<? endif ( $$variable{Company}->deleted() ) ?>
+		<div class="notes"><? echo ( $$variable{Company}->notes() )?></div>
+	<div class="leftColumn">
+		<ul>
+			<? if ( $$variable{Company}->id() ) ?>
+			<li><label>ID #</label><?CustomerIndex?></li>
+			<? endif ( $$variable{Company}->id() ) ?>
+			<li class="activation"> 
+				<label>Account Activated</label>
+				<? echo ( radio( 'activation', ['Y','Yes','N','No'], $$variable{Company}->activation(), {default=>'N'} ); ) ?>
+			</li><li>
+				<label>Is this a Supplier?</label>
+				<? echo ( radio( 'supplier', ['Y','Yes','N','No'], $$variable{Company}->supplier(), {default=>'N'} ); ) ?>
+			</li><li>
+				<label>Is this a Reseller?</label>
+				<? echo ( radio( 'reseller', ['Y','Yes','N','No'], $$variable{Company}->reseller(), {default=>'N'} ); ) ?>
+			</li>
+			<li><label>Offers Credit</label>
+			<? echo ( radio( 'offers_credit', ['1','Yes','0','No'], $$variable{Company}->offers_credit() ); ) ?>
+			</li><li> 
+				<label>Price List</label>
+				<select name="pricelist_id">
+					<option value="">select</option>
+					<? echo ( make_drop_down( openprint::Pricelist->dropdown( order=>'lower(name)'), $$variable{Company}->pricelist_id() ); ) ?>
+				</select>
+			</li><li> 
+				<label>Preferred Currency</label>
+				<select name="currency_id">
+					<option value=""> select </option>
+					<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Company}->currency_id() ); ) ?>
+				</select>
+			</li>
+			<li class="discount"> 
+				<label>Pricing Discount</label>
+				<? echo ( input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() ); ) ?> %
+			</li>
+			<li class="credit_card_fee"> 
+				<label>Credit Card Fee</label>
+				<? echo ( input( type=>'float', name=>'credit_card_fee', value=>$$variable{Company}->credit_card_fee() ); ) ?> %
+			</li>
+			<li class="csr_commission"> 
+				<label>CSR Commission</label>
+				<? echo ( input( type=>'float', name=>'csr_commission', value=>$$variable{Company}->csr_commission() ); ) ?> %
+			</li>
+			<li> 
+				<label>Sales Person</label>
+				<select name="salesrep_id">
+					<option value="">select</option>
+					<? echo ( make_drop_down( openprint::User->dropdown(type=>['E','A']), $$variable{Company}->salesrep_id() ); ) ?>
+				</select>
+        <?echo(button('CSRGo', { href=>$$variable{Company}->CSR()->admin_url_to(), text=>'Go'});)?>
+			</li>
+		</ul>
+	</div>
+	<div class="leftColumn">
+		<ul>
+		<? if ( $$variable{Company}->id() ) ?>
+		<li>
+			<label>Created On</label>
+			<? echo ( format_datetime( $$variable{Company}->created_on() ); ) ?>
+		</li>
+		<li>
+			<label>Last Update</label>
+			<? echo ( format_datetime( $$variable{Company}->updated_on() ); ) ?>
+		</li>
+		<li>
+			<label>Last Login</label>
+			<? echo ( 
+				$_ = openprint::Log->find_one( order=>'date_time DESC', action=>'Login', company_id=>$$variable{Company}->id() );
+				if ( ! $_ ) {
+					return 'never';
+				}
+				return format_datetime( $_->date_time() );
+			 ) ?>
+		</li>
+		<? endif ( $$variable{Company}->id() ) ?>
+		<li>
+			<label>Notes</label>
+			<textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{notes} ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Company}->notes() )?></textarea>
+		</li>
+		<? if ( $$variable{Company}->id() ) ?>
+			<? eval (
+				@{$$variable{Orders}} = openprint::Order->find('company_id'=>$$variable{CustomerIndex},'order'=>'id DESC');
+			) ?>
+			<li class="orders"><label># of Orders</label>
+				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Orders}} ) ?></a>
+				<? if ( @{$$variable{Orders}} ) ?>
+				Last on
+				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( format_date( $$variable{Orders}[0]->created_on()); ) ?></a>
+				<? endif ( @{$$variable{Orders}} ) ?>
+			</li>
+			<? eval ( @{$$variable{Projects}} = openprint::Project->find(company_id=>$$variable{CustomerIndex},order=>'id DESC'); ) ?>
+			<li class="projects"><label># of Projects</label>
+				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Projects}} ) ?></a>
+				<? if ( @{$$variable{Projects}} ) ?>
+				Last on
+				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( format_date($$variable{Projects}[0]->created_on()); ) ?></a>
+				<? endif ( @{$$variable{Projects}} ) ?>
+			</li>
+			<li class="accounting_contacts">
+				<label>Accounting Contacts</label>
+				<span id="AccountingContacts"><?include('_company_accounting_contacts.html')?></span>
+			</li>
+		<? endif ( $$variable{Company}->id() ) ?>
+			</ul>
+		</div>
+	</fieldset>
+</div>
+<div class="CompanyInformation">
+	<fieldset><legend>Company Information</legend>
+		<ul>
+			<li> 
+				<label>Account #</label>
+				<input type="text" name="accountnumber" value="<? echo ( $$variable{Company}->accountnumber() ) ?>" />
+			</li>
+			<li><label>Company Category</label>
+				<select name="category_id" id="category_id">
+					<option value="">select</option>
+				<? echo ( make_drop_down( openprint::Company_Category->dropdown( order=>'lower(name)'), $$variable{Company}->category_id() ); ) ?>
+				</select>
+			</li>
+			<li> 
+				<label>Internal Name</label>
+				<input type="text" name="name" value="<? echo ( $$variable{Company}->name() ) ?>" />
+			</li>
+			<li> 
+				<label>Legal Name</label>
+				<input type="text" name="business_name" value="<? echo ( $$variable{Company}->business_name() ) ?>" />
+			</li>
+			<li> 
+				<label>Address</label>
+				<input type="text" name="address1" value="<? echo ( $$variable{Company}->address1() ) ?>" />
+			</li>
+			<li class="address2"> 
+				<label>&nbsp;</label>
+				<input type="text" name="address2" value="<? echo ( $$variable{Company}->address2() ) ?>" />
+			</li>
+			<li> 
+				<label>Country</label>
+				<select name="country" data-on-change-this="country_onchange_this">
+					<option value=""> select </option>
+					<? echo ( return_countries($$variable{Company}->country() ); ) ?>
+				</select>
+			</li>
+			<li> 
+        <label id="country_state_label">State/Province</label>
+        <span id="country_state_container">
+          <? if ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
+				<select name="state" id="country_state">
+					<option value=""> select </option>
+          <? echo ( return_states_and_provinces($$variable{Company}->country(), $$variable{Company}->state()); ) ?> 
+				</select>
+          <? else ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
+            <input type="text" name="state" id="country_state" value="<?echo($$variable{Company}->state())?>"/>
+          <? endif ( $$variable{Company}->country() eq 'CA' or $$variable{Company}->country() eq 'US' ) ?>
+        </span>
+			</li>
+			<li> 
+				<label>City</label>
+				<input type="text" name="city" value="<? echo ( $$variable{Company}->city() ) ?>" />
+			</li>
+			<li> 
+				<label><span id="country_postal">Zip/Postal Code</span></label>
+				<input type="text" name="postalcode" value="<? echo ( $$variable{Company}->postalcode() ) ?>" />
+			</li>
+			<li> 
+				<label>Phone</label>
+				<input type="tel" name="phone" value="<? echo ( $$variable{Company}->phone() ) ?>" />
+			</li>
+			<li> 
+				<label>Extension</label>
+				<input type="tel" name="extension" value="<? echo ( $$variable{Company}->extension() ) ?>" />
+			</li>
+			<li> 
+				<label>Fax</label>
+				<input type="tel" name="fax" value="<? echo ( $$variable{Company}->fax() ) ?>" />
+			</li>
+		</ul>
+	</fieldset>
+</div>
+<?include('/account/_company_profile_edit.html')?>
+<div class="BusinessInformation">
+	<fieldset><legend>Business Information</legend>
+		<ul>
+			<li> 
+				<label>Legal Form</label>
+				<? echo ( radio( 'business_form', [ 'Corporation', 'Corporation', 'SoleProprietor', 'Sole Proprietor', 'Partnership', 'Partnership' ], $$variable{Company}->business_form() ); ) ?>
+			</li>
+			<li> 
+				<label>Business Type</label>
+				<input type="text" name="business_type" value="<? echo ( $$variable{Company}->business_type() ) ?>" />
+			</li>
+			<li> 
+				<label>Date Established</label>
+				<select name="start_month" id="start_month">
+					<option value=""> Select </option>
+					<? echo ( getmonths( $$variable{Company}->start_month() ); ) ?>
+				</select>
+				<? echo ( input( type=>'cardinal', name=>'start_year', id=>'start_year', value=>$$variable{Company}->start_year() ); ) ?>
+			</li>
+			<li> 
+				<label>President/Owner/CEO</label>
+				<input type="text" name="president_owner" value="<? echo ( $$variable{Company}->president_owner() ) ?>" />
+			</li>
+			<li class="federal_tax"> 
+				<label>Federal/GST #</label>
+				<input type="text" name="gst_number" value="<? echo ( $$variable{Company}->gst_number() ) ?>" />
+			</li>
+			<li class="federal_tax_exempt"> 
+				<label>Federal/GST Tax Exempt?</label>
+        <?echo(radio('gst_exempt', [ 'Y','Yes','N','No' ], $$variable{Company}->gst_exempt(), { default=>'N' } );)?>
+			</li>
+			<li class="state_tax"> 
+				<label>Prov/State #</label>
+				<input type="text" name="pst_number" value="<? echo ( $$variable{Company}->pst_number() ) ?>" />
+			</li>
+			<li class="state_tax_exempt"> 
+				<label>State/Provincial Tax Exempt?</label>
+        <?echo(radio('pst_exempt', [ 'Y','Yes','N','No' ], $$variable{Company}->pst_exempt(), { default=>'N' } );)?>
+			</li>
+		</ul>
+	</fieldset>
+</div>
+<div class="MarketingInformation">
+	<fieldset><legend>Marketing Information</legend>
+		<ul>
+			<? if ( $$variable{selectCustomerCategories} ) ?>
+			<li> 
+				<label>Marketing Category</label>
+				<select name="selectCustomerCategories" size="4" multiple="multiple"><?selectCustomerCategories?></select>
+			</li>
+			<? endif ( $$variable{selectCustomerCategories} ) ?>
+			<li> 
+				<label>Greeting Message</label>
+				<textarea name="greeting" rows="<? echo ( count_lines( $$variable{Company}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Company}->greeting() ) ?></textarea>
+			</li>
+		</ul>
+	</fieldset>
+</div>
+<div class="ShippingInformation">
+	<fieldset><legend>Shipping Information</legend>
+		<ul>
+			<li> 
+				<label>Company Name</label>
+				<input type="text" name="txtShippingCompanyName" value="<?txtShippingCompanyName?>" />
+			</li>
+			<li>
+				<label>Salutation</label>
+        <?echo(radio('rdbShippingSalutation', [ map { $_, $_ } ( 'Mr.','Mrs.','Ms.','Miss' ) ], $$variable{rdbShippingSalutation});)?>
+			</li>
+			<li> 
+				<label>First Name</label>
+				<input type="text" name="txtShippingFirstName" value="<?txtShippingFirstName?>" />
+			</li>
+			<li> 
+				<label>Last Name</label>
+				<input type="text" name="txtShippingLastName" value="<?txtShippingLastName?>" />
+			</li>
+			<li> 
+				<label>Address</label>
+				<input type="text" name="txtShippingAddress1" value="<?txtShippingAddress1?>" />
+			</li>
+			<li> 
+				<label>&nbsp;</label>
+				<input type="text" name="txtShippingAddress2" value="<?txtShippingAddress2?>" />
+			</li>
+			<li> 
+				<label>Country</label>
+				<select name="ddmShippingCountry" onchange="Country_onchange(this, this.form.ddmShippingStateProvince );">
+					<option value=""> Select </option>
+					<? echo ( return_countries($variable{ddmShippingCountry}); ) ?>
+				</select>
+			</li>
+			<li> 
+				<label><span id="ddmShippingCountry_state">Province/State</span></label>
+				<select name="ddmShippingStateProvince">
+					<option value=""> Select </option>
+					<? echo ( return_states_and_provinces($variable{ddmShippingStateProvince}); ) ?>
+				</select>
+			</li>
+			<li> 
+				<label>City</label>
+				<input type="text" name="txtShippingCity" value="<?txtShippingCity?>" />
+			</li>
+			<li> 
+				<label><span id="ddmShippingCountry_postal">Postal/ZipCode</span></label>
+				<input type="text" name="txtShippingPostalCode" value="<?txtShippingPostalCode?>" />
+			</li>
+			<li> 
+				<label>Phone</label>
+				<input type="tel" name="txtShippingPhone" value="<?txtShippingPhone?>" />
+			</li>
+			<li> 
+				<label>Fax</label>
+				<input type="tel" name="txtShippingFax" value="<?txtShippingFax?>" />
+			</li>
+			<li> 
+				<label>Email</label>
+				<input type="email" name="txtShippingEmail" value="<?txtShippingEmail?>" />
+			</li>
+		</ul>
+	</fieldset>
+</div>
+<div class="Locations">
+<?include(/location/_locations_container.html)?>
+</div>
+<div class="CreditInformation">
+<?include(/includes/_credit_edit.html)?>
+</div>
+<div class="BankInformation">
+	<fieldset><legend>Bank Information</legend>
+		<ul>
+		<li> 
+			<label>Bank Name</label>
+			<input type="text" name="txtBankName" value="<?txtBankName?>" />
+		</li>
+		<li> 
+			<label>Branch #</label>
+			<input type="text" name="txtBankBranch" value="<?txtBankBranch?>" />
+		</li>
+		<li> 
+			<label>Bank Account #</label>
+			<input type="text" name="txtBankAccountNo" value="<?txtBankAccountNo?>" />
+		</li>
+		<li> 
+			<label>Account Manager</label>
+			<input type="text" name="txtBankAccountManager" value="<?txtBankAccountManager?>" />
+		</li>
+		<li> 
+			<label>Bank Phone</label>
+			<input type="tel" name="txtBankPhone" value="<?txtBankPhone?>" />
+		</li>
+		<li> 
+			<label>Bank Fax</label>
+			<input type="tel" name="txtBankFax" value="<?txtBankFax?>" />
+		</li>
+		<li> 
+			<label>Bank E-mail</label>
+			<input type="email" name="txtBankEmail" value="<?txtBankEmail?>" />
+		</li>
+		</ul>
+	</fieldset>
+</div>
+<?include(/account/_trade_references.html)?>
+</form>
+<? if ( $$variable{CustomerIndex} ) ?>
+<br class="spacer"/>
+<? echo ( include_logs( $$variable{Company} ); ) ?>
+<? endif ( $$variable{CustomerIndex} ) ?>
+</div>
+<script src="<? hash_link(/administrator/managerial/company_profiles.js) ?>"></script>

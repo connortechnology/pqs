@@ -1,0 +1,177 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<?include(/includes/error_reporting.html)?>
+<div class="Product">
+	Please select a product to view/edit. 
+	<form name="search" id="search" action="edit.html">
+		<fieldset class="filters"><legend>Search Information</legend>
+			<ul>
+				<? echo (
+					my $contents = openprint::Product_Category->dropdown( order=>'lower(name)' );
+					if ( @{$contents} ) {
+						return '<li><label>Category</label>'.ssi::select( $contents,  $param{ddmSearchCategory}, {
+								name=>'ddmSearchCategory', onchange=>q`form.submit();`, prepend=>['','All'],
+								} ).'</li>';
+					}
+					return;
+				)?>
+				<? echo (
+					my $contents = openprint::Manufacturer->dropdown( order=>'lower(name)' );
+					if ( @{$contents} ) {
+						return '<li><label>Manufacturer</label>'.ssi::select( $contents,  $param{search_manufacturer_id}, {
+								name=>'search_manufacturer_id', onchange=>q`form.submit();`, prepend=>['','All'],
+								} ).'</li>';
+					}
+					return;
+				)?>
+				<? echo (
+					my $contents = openprint::Company->dropdown(order=>'lower(name)', supplier=>'Y');
+					if ( @{$contents} ) {
+						return '<li><label>Supplier</label>'.ssi::select( $contents,  $param{search_supplier_id}, {
+								name=>'search_supplier_id', onchange=>q`form.submit();`, prepend=>['','All'],
+								} ).'</li>';
+					}
+					return;
+				)?>
+				<li> 
+					<label>Product</label>
+					<select name="product_id" onchange="if(this.options[this.selectedIndex].value != ''){form.submit();}">
+						<option value="">select</option>
+						<? echo (
+								make_drop_down( openprint::Product->dropdown( 
+										( $param{ddmSearchCategory} ? ( category_id=>$param{ddmSearchCategory} ) : () ),
+										( $param{search_manufacturer_id} ? ( manufacturer_id=>$param{search_manufacturer_id} ) : () ),
+										order =>'lower(name)' ), $$variable{Product}->id() );
+						) ?>
+					</select>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="edit.html">
+		<input type="hidden" name="product_id" value="<?echo($$variable{Product}->id())?>"/>
+		<p class="buttons">
+			<? echo ( join( "\n", 
+					button( 'Prev1', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'&lt;&lt;' } ),
+					button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'&gt;&gt;' } ),
+					button( 'New1', { href=>'/product/edit.html', text=>'New' } ),
+					button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+				( $$variable{Product}->id() ? (
+					button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } ),
+					button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+				) : () ),
+					button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
+				); ) ?>
+		</p>
+		<p class="buttons">
+			<b>CSV File</b>
+			<input type="file" name="fileImport" />
+			<? echo ( join("\n",
+				button( 'ImportDefinitions', { onclick=>"f1.btnFunction.value='Import Definitions';f1.action='edit.html';f1.submit();", text=>'Import Definitions' } ),
+				button( 'ExportDefinitions', { onclick=>"f1.btnFunction.value='Export Definitions';f1.action='edit.html?Download';f1.submit();", text=>'Export Definitions' } ),
+				button( 'ImportSpecifications', { onclick=>"f1.btnFunction.value='Import Specifications';f1.action='edit.html';f1.submit();", text=>'Import Specifications' } ),
+				button( 'ExportSpecifications', { onclick=>"f1.btnFunction.value='Export Specifications';f1.action='edit.html?Download';f1.submit();", text=>'Export Specifications' } ),
+			); ) ?>
+		</p>
+		<div class="leftColumn">
+			<fieldset><legend>Product Information</legend>
+				<? if ( $$variable{Product}->deleted() ) ?>
+				<div class="warning">This product has been deleted.</div>
+				<? endif ( $$variable{Product}->deleted() ) ?>
+				<ul>
+					<li> 
+						<label>Product ID</label>
+						<? echo ( $$variable{Product}->id(); ) ?>
+					</li>
+					<li> 
+						<label>Product Name</label>
+						<input type="text" name="name" value="<? hecho ( $$variable{Product}->name(); ) ?>" />
+					</li>
+					<li> 
+						<label onclick="$j('#category_id').toggle();$j('#category').toggle();">Category</label>
+						<select name="category_id" id="category_id">
+							<option value="">Select a category</option>
+							<? echo (
+								make_drop_down( openprint::Product_Category->dropdown( order=>'lower(name)'), $$variable{Product}->category_id() );
+							) ?>
+						</select>
+						<input type="text" name="category" id="category" style="display:none;"/>
+					</li>
+					<li> 
+						<label onclick="$j('#manufacturer_id').toggle();$j('#manufacturer').toggle();">Manufacturer</label>
+						<select name="manufacturer_id" id="manufacturer_id">
+							<option value="">none</option>
+							<? echo (
+								make_drop_down( openprint::Manufacturer->dropdown( order=>'lower(name)'), $$variable{Product}->manufacturer_id() );
+							) ?>
+						</select>
+						<input type="text" name="manufacturer" id="manufacturer" style="display:none;"/>
+					</li>
+					<li>
+						<label for="supplier" onclick="$j('#supplier_id').toggle();$j('#supplier').toggle();">Supplier</label>
+						<select id="supplier_id" name="supplier_id" size="1">
+							<option value="">select</option>
+						<? echo (
+								make_drop_down( openprint::Company->dropdown(order=>'lower(name)', supplier=>'Y'), $$variable{Product}->supplier_id() );
+								) ?>
+						</select>
+						<input style="display: none;" type="text" id="supplier" name="supplier" onfocus="if(!this.value){this.value=get_ddm_text(f1.supplier_id);}ddm_select_by_index( f1.supplier_id, 0 );" />
+					</li>
+					<li> 
+						<label>Description</label>
+            <textarea id="description" name="description" rows="<?echo(count_lines($$variable{Product}->description());)?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Product}->description(); ) ?></textarea>
+					</li>
+					<li>
+						<label>Sort</label>
+						<input type="number" name="sort" value="<? echo ( 1*$$variable{Product}->sort(); ) ?>" />
+					</li>
+<? if ( $$variable{Product}->id() ) ?>
+					<li><label>Created On</label>
+						<? echo ( format_datetime( $variable{Product}->created_on() ); ) ?>
+					</li>
+<? endif ( $$variable{Product}->id() ) ?>
+<? if ( openprint::ProjectType->find_one() ) ?>
+					<li>
+						<label>Template</label>
+						<select name="project_id" id="project_id">
+							<option value="">select</option>
+							<? echo ( make_drop_down( [ map { $_->id(), join(' ' , $_->Type()->name(), $_->reference()) } openprint::Project->find( predefined=>1, order=>'lower(strprojectreference)') ], $$variable{Product}->project_id() ); ) ?>
+						</select>
+					</li>
+<? endif ( openprint::ProjectType->find_one() ) ?>
+				</ul>
+			</fieldset>
+			<fieldset><legend>Tax Information</legend>
+				<ul>
+					<li> <label>Federal Exemption</label>
+						<?echo(radio('taxexempt1', [ 'Y', 'Yes', 'N', 'No' ], $$variable{Product}->taxexempt1() );)?>
+					</li>
+					<li> <label>Prov/State Exemption</label>
+						<?echo(radio('taxexempt2', [ 'Y', 'Yes', 'N', 'No' ], $$variable{Product}->taxexempt2() );)?>
+					</li>
+				</ul>
+			</fieldset>
+		</div><!--left-->
+		<div class="rightColumn" style="overflow: hidden;">
+		<?eval($$variable{Object} = $$variable{Product}; )?>
+		<?include(/includes/_specifications_container.html)?>
+		</div>
+		<div class="rightColumn">
+    <? eval ( $$variable{Album} = $$variable{Product};) ?>
+    <?include(/photo_albums/_album_upload.html)?>
+		</div>
+		<br class="spacer"/>
+		<fieldset><legend>Prices</legend>
+			<div id="Prices">
+		<? if ( $$variable{Product}->id() ) ?>
+				<?include(_prices.html)?>
+		<? else ( $$variable{Product}->id() ) ?>
+				Please save your new Product before setting pricing.
+		<? endif ( $$variable{Product}->id() ) ?>
+			</div>
+		</fieldset>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+<? if ( $$variable{Product}->id() ) ?>
+<? echo ( include_logs( $$variable{Product} ); ) ?>
+<? endif ( $$variable{Product}->id() ) ?>
+</div>

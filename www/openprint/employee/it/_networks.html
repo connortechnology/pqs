@@ -1,0 +1,69 @@
+<? eval (
+	my @Networks;
+  my $uri = '/employee/it/networks.html';
+
+  $session{$uri.'?order'} = 'lower(hostname)' if ! $session{$uri.'?order'};
+  @Networks = openprint::Host->find(
+  order	=> ($session{$uri.'?order'} and $openprint::Host::fields{$session{$uri.'?order'}} ) ? $session{$uri.'?order'} : 'lower(hostname)',
+    type=>'Network',
+    ( $session{$uri.'?hostname'} ? ( 'hostname ilike' => ( $session{$uri.'?hostname'} =~ /%/ ? $session{$uri.'?hostname'} : $session{$uri.'?hostname'}.'%' ) ) : () ),
+    ( $session{$uri.'?monitored'} ne '' ? ( monitored=>$session{$uri.'?monitored'} ) : () ),
+    ( $session{$uri.'?owner_id'} ne '' ? ( owner_id => $session{$uri.'?owner_id'} ) : () ),
+    ( $session{$uri.'?deleted'} ne '' ? ( deleted=>$session{$uri.'?deleted'} ) : ( deleted=>[0,1] ) ),
+    date_filter($uri.'?created_on_end', 'created_on <=' ),
+    date_filter($uri.'?created_on_start', 'created_on >=' ),
+    date_filter($uri.'?updated_on_end', 'updated_on <=' ),
+    date_filter($uri.'?updated_on_start', 'updated_on >=' ),
+    limit=>1000,
+    );
+
+	@{$$variable{Networks}} = ();
+	foreach my $Host ( @Networks ) {
+		push @{$$variable{Networks}}, $Host;
+	} # end foreach Host
+) ?>
+<?include(/includes/error_reporting.html)?>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'host_id', this.checked );"/></th>
+			<th class="name">Name</th>
+			<th class="ip" onclick="load_network(f1, {order:'ip'});">IP</th>
+			<th class="options">Options</th>
+			<th class="description">Description</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Host ( @{$$variable{Networks}} ) {
+       $rowclass = ' class="deleted"' if $Host->deleted();
+				my @Assets = $Host->Assets();
+				$html .= sprintf('
+					<tr%6$s>
+						<td class="checkbox"><input type="checkbox" id="host_id" name="host_id" value="%1$d"/></td>
+						<td class="name"><a href="/employee/it/network.html?host_id=%1$d">%2$s</a></td>
+						<td class="ip"><a href="/employee/it/network.html?host_id=%1$d">%3$s</a></td>
+						<td class="options"><a href="/employee/it/network.html?host_id=%1$d">%4$s</a></td>
+						<td class="description"><a href="/employee/it/network.html?host_id=%1$d">%5$s</a></td>
+					</tr>
+					', $Host->id(), $Host->hostname(),
+					join('<br/>', map { $_->ip() } $Host->Interfaces() ),
+					join(', ', (
+            ( $Host->monitored() ? '<span class="monitored">monitored</span>' : () ),
+					) ),
+					$Host->description(),
+					$rowclass,
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Host
+			$html .= '<tr class="totals"><td colspan="5"># of networks: ' . @{$$variable{Networks}} . '</td></tr>';
+			return $html;
+		) ?>
+		<tr>
+	</tbody>
+</table>
+<p class="buttons">
+<? echo ( button( 'delete', { onclick=>q`jQuery('#Results').load('/employee/it/_networks.html?action=Delete', { host_id: get_value( $('f1').host_id ) } );`, text=>'Delete Checked' } ); ) ?>
+</p>

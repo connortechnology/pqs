@@ -1,0 +1,73 @@
+<form id="f1" name="f1" method="post" action="">
+	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
+	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
+	<div class="InstantPricing">
+		<div id="instant_price_section">
+			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+			<div class="shadow_left"><div class="shadow_right">
+						
+				<div class="Questions"><div class="<? echo ( $$variable{'ProjectType'}->name() ) ?>">
+					<? echo ( include('_project_name.html'); ) ?>
+					<div class="ProjectSpecifications">
+						<h1>Project Specifications</h1>
+						<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
+						<? echo ( include('_sizes.html'); ) ?>
+						<div class="Colours">
+							<fieldset><legend>Colours</legend>
+								<div class="content">
+		
+							<ul>
+							<li><label>Colours</label>
+								<select id="Colours" name="Colours" onchange="calc(this.form.name);">
+									<option value="4/0">4 Colour One Side</option>
+									<option value="4/1">4 Colour/Black</option>
+									<option value="4/4">4 Colour Both Sides</option>
+								</select>
+							</li>
+							</ul>
+						</div>
+					</fieldset>
+				</div>
+						<div class="Stock">
+							<fieldset><legend>Stock</legend>
+								<div class="content">
+									<? echo ( include('_paper_dropdowns.html'); ) ?>
+								</div>
+							</fieldset>
+						</div>
+<div class="Production">
+                    <fieldset><legend>Production</legend>
+                        <div class="content">
+                            <ul>
+
+						<? echo ( include('_design.html'); ) ?>
+						<? echo ( include('_proofs.html'); ) ?>
+						<? echo ( include('_drilling.html'); ) ?>
+						<? echo ( include('_scoring.html'); ) ?>
+						<? echo ( include('_perfing.html'); ) ?>
+						<? echo ( include('_turnaround.html'); ) ?>
+						<? echo ( include('_quantity.html'); ) ?>
+						<? echo ( include('_press_type.html'); ) ?>
+							</ul>
+						</div>
+					</fieldset>
+				</div>
+						<br class="spacer"/>
+						<? echo ( include('_prices.html'); ) ?>
+					</div><!--Questions-->
+					<br class="spacer"/>
+				</div>
+			</div>
+			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+		</div>
+</div><!--instant_price_section-->
+<? echo ( 
+	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
+		return ssi::include( $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' );
+	} # end if
+	return '';
+) ?>
+		<? echo ( include('_specials.html'); ) ?>
+	</div><!--InstantPricing-->
+</form>

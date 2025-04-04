@@ -1,0 +1,93 @@
+<? eval (
+	$$variable{RFIDTags} = [];
+	if ( $param{rfidtag_id} ) {
+		$$variable{RFIDTags} = [ openprint::RFIDTag->find( 'id like'=>'%'.$param{rfidtag_id}.'%', order=>'id') ];
+	} elsif ( $param{rfidtag_hex} ) {
+		$$variable{RFIDTags} = [ openprint::RFIDTag->find( 'id like'=>'%'.hex($param{rfidtag_hex}).'%', order=>'id') ];
+	} else {
+		foreach my $RFIDTag ( openprint::RFIDTag->find( 
+			( $session{'/employee/inventory/rfidtags.html?owner_id'} ? ( owner_id => $session{'/employee/inventory/rfidtags.html?Owner'} ) : () ),
+			date_filter( '/employee/inventory/rfidtags.html?created_on_end', 'created_on <=' ),
+			date_filter( '/employee/inventory/rfidtags.html?created_on_start', 'created_on >=' ),
+			date_filter( '/employee/inventory/rfidtags.html?updated_on_end', 'updated_on <=' ),
+			date_filter( '/employee/inventory/rfidtags.html?updated_on_start', 'updated_on >=' ),
+			( $session{'/employee/inventory/rfidtags.html?Type'} ? ( type_id => $session{'/employee/inventory/rfidtags.html?Type'} ) : () ),
+			( $session{'/employee/inventory/rfidtags.html?valid'} ? ( valid	=> $session{'/employee/inventory/rfidtags.html?valid'} ) : () ),
+			( $session{'/employee/inventory/rfidtags.html?location_id'} ? ( location_id=>$session{'/employee/inventory/rfidtags.html?location_id'} ) : () ),
+			order		=>	'id',
+      limit => 10000,
+			) ) {
+			if ( ! $session{'/employee/inventory/rfidtags.html?assigned'} ) {
+				if ( $RFIDTag->type() eq 'Skid' ) {
+					next if openprint::Skid->find('rfidtag_id'=>$RFIDTag->id() );
+				} elsif ( $RFIDTag->type() eq 'Location' ) {
+					next if $RFIDTag->location_id();
+				} # end if
+			} # end if
+			if ( ! $session{'/employee/inventory/rfidtags.html?notassigned'} ) {
+				if ( $RFIDTag->type() eq 'Skid' ) {
+					next if ! openprint::Skid->find( rfidtag_id=>$RFIDTag->id() );
+				} elsif ( $RFIDTag->type() eq 'Location' ) {
+					next if ! $RFIDTag->location_id();
+				} # end if
+			} # end if
+			if ( ( ! $RFIDTag->valid() ) and ( ! $RFIDTag->is_invalid_id() ) ) {
+$log->debug("Updating valid");
+				$RFIDTag->save();
+			} else {
+$log->debug($RFIDTag->valid() . ' ' . $RFIDTag->is_invalid_id() );
+			}
+			push @{$$variable{RFIDTags}}, $RFIDTag;
+
+		} # end foreach Tag
+	} # end if
+) ?>
+<? if ( @{$$variable{RFIDTags}} ) ?>
+<form id="RFIDTagResults" name="RFIDTagResults" action="rfidtags.html" method="post">
+	<table class="List">
+		<tr>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'rfidtags', this.checked );"/></th>
+			<th class="RFID">RFIDTag ID</th>
+			<th class="Verified">V</th>
+			<th class="DateTime">Date Added</th>
+			<th class="DateTime">Updated On</th>
+			<th class="Location">Location</th>
+			<th class="Type">Type</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $RFIDTag ( @{$$variable{RFIDTags}} ) {
+
+				$html .= sprintf('
+<tr%1$s>
+	<td class="checkbox"><input type="checkbox" name="rfidtags" value="%2$s"/></td>
+	<td class="RFID"><a href="rfidtag_details.html?rfidtag_id=%2$s">%2$s (%3$x)</a></td>
+	<td class="Verified"><a href="rfidtag_details.html?rfidtag_id=%2$s">%4$s</a></td>
+	<td class="DateTime"><a href="rfidtag_details.html?rfidtag_id=%2$s">%5$s</a></td>
+	<td class="DateTime"><a href="rfidtag_details.html?rfidtag_id=%2$s">%6$s</a></td>
+	<td class="Location"><a href="rfidtag_details.html?rfidtag_id=%2$s">%7$s</a></td>
+	<td class="Type">%8$s</td>
+</tr>', $rowclass, $$RFIDTag{id}, substr($$RFIDTag{id},1,15),
+( $$RFIDTag{valid} ? 'Y' : 'N' ), 
+format_datetime( $RFIDTag->created_on() ), format_datetime( $RFIDTag->updated_on() ),
+$RFIDTag->Location()->name(),
+				$RFIDTag->Type()->name(),
+
+ );
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach RFIDTag
+			return $html;
+		) ?>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+	<p class="buttons">
+		<? echo ( join("\n",
+					button( 'Validate', { onclick=>"RFIDTagResults.btnFunction.value='Validate';RFIDTagResults.submit();", text=>'Validate' } ),
+					button( 'Delete', { onclick=>"RFIDTagResults.btnFunction.value='Delete';RFIDTagResults.submit();", text=>'Delete Checked' } ),
+			); ) ?>
+	</p>
+</form>
+<? else ( @{$$variable{RFIDTags}} ) ?>
+There were no rfidtags matching your search criteria.
+<? endif ( @{$$variable{RFIDTags}} ) ?>

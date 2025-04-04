@@ -1,0 +1,43 @@
+<? echo (
+	my $C = $$variable{'C'};
+	my $html;
+	$html .= sprintf('<tr id="line-%1$d">', $C->id() );
+	$html .= '<td rowspan="2">'.ssi::writeButton( $log, $dbh, 'Del'.$C->id(), 'del.gif', "del_content( \$('f1'), $$C{id} );", '', 'Delete' )."</td>\n";
+	$html .= sprintf(q`<td rowspan="2">%2$s<input type="hidden" id="type-%1$d" name="type-%1$d" value="%2$s"/></td>`, $$C{'id'}, $C->Type()->name() );
+
+	my ( $mweight, $type, $name ) = $$C{'description'} =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
+    if ( ! sets::isin( $type, [ '', 'FSC', 'PEFC/SFI' ] ) ) {
+        $name = $type . ' ' . $name;
+        $type = '';
+    } # end if
+    my $rows = scalar split(/\n/, $name );
+    $rows = 1 if ! $rows;
+
+    $html .= sprintf(q{<td rowspan="2">
+        <input type="hidden" name="description-%1$d" id="description-%1$d" value="%2$s"/>
+        <input type="text" class="SheetMWeight" name="mweight-%1$d" id="mweight-%1$d" value="%4$s" onkeyup="calc_price(this);update_totals($('f1'));set_description('%1$d');if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" />M
+        <input type="text" class="SheetName" name="name-%1$d" id="name-%1$d" rows="%3$d" onkeyup="set_description('%1$d');if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" value="%5$s"/>
+        <select id="stocktype-%1$d" name="stocktype-%1$d" onchange="set_description('%1$d');">%6$s</select>
+        </td>}, $C->id(), $C->description(), $rows, $mweight, $name, ssi::make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ),
+ );
+
+	$html .= sprintf(q`<td class="Quantity">
+		<input type="text" id="quantity-%1$d" name="quantity-%1$d" value="%2$d" onkeyup="this.value=this.value.replace(/\D/g,'');calc_price(this);update_totals($('f1'));" /> sheets
+		<input type="hidden" name="quantity_units-%1$d" value="sheets" />
+</td>`, $C->id(), $C->quantity() );
+	$html .= sprintf(q`
+	<td class="Weight">
+		<input type="text" id="weight-%1$d" name="weight-%1$d" value="%2$d" onkeyup="this.value=this.value.replace(/\D/g,'');calc_price(this);update_totals($('f1'));" /> lbs
+		<input type="hidden" name="weight_units-%1$d" id="weight_units-%1$d" value="lb" />
+	</td>
+	`, $C->id(), $C->weight() );
+	$html .= sprintf(q`
+		<td class="Cost">
+			<input type="text" id="cost-%1$d" name="cost-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);update_totals($('f1'));" />
+			<select name="cost_units-%1$d" id="cost_units-%1$d" onchange="calc_price(this);update_totals($('f1'));">%3$s</select>
+		</td>`, $C->id(), $C->cost(), ssi::make_drop_down( [ '/100lb', '/100lb', '/Kg', '/Kg', ,'/1000', '/1000', 'Each', 'Each' ], $$C{'cost_units'} ) );
+	$html .= sprintf(q`<td class="Price"><input type="text" id="total-%1$d" name="total-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>`, $C->id(), $C->total() );
+	$html .= "</tr>\n";
+	$html .= '<tr><td colspan="4" class="alert" id="alert-'.$$C{id}.'"></td></tr>';
+	return $html;
+) ?>

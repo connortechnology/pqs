@@ -1,0 +1,41 @@
+#background {
+    fill: white;
+}
+#sheet {
+    fill: white;
+    stroke: black;
+    stroke-width: .125; /* 1/8" */
+}
+#foldline {
+    stroke-width: 0.1;
+    opacity: 0.75;
+    stroke-dasharray: 1 0.75 0.25 0.75;
+}
+#centreline {
+    stroke: black;
+    stroke-width: 0.1;
+    opacity: 0.75;
+    stroke-dasharray: 1 0.75 0.25 0.75;
+}
+pattern { shape-rendering: optimizeSpeed }
+
+/* Image/Page and it's label. */
+g.image > rect, rect.image {
+    shape-rendering: geometricPrecision;
+    stroke: black;
+    stroke-width: .03125;
+}
+g.image > text {
+    text-anchor: middle;
+    baseline-shift: -1.5;
+    font-size: 6;
+}
+#bigger {
+    fill: white; /* Don't fill:none or the link is hard to hit. */
+    fill-opacity: 0;
+    stroke: red;
+    stroke-width: .25;
+    stroke-opacity: 0.75;
+}
+#bigger > line { stroke-width: 0.375; }
+#bigger:hover { stroke: red; }

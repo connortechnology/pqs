@@ -1,0 +1,61 @@
+<? echo (
+my @Recipients = $variable{Campaign}->Recipients();
+my %Sent_Info = misc::make_hash_from_array('user_id', openprint::EmailCampaign_Sent->find(campaign_id=>$$variable{Campaign}->id()));
+
+my $html;
+if ( ! @Recipients ) {
+  $$variable{error} = $dbh->errstr();
+  $html = include('/includes/error_reporting.html');
+}
+$html .= 'There are ' . @Recipients . ' recipients.<br/><br/>';
+$html .= '
+<table id="recipients" class="List sortable">
+	<tr>
+		<th class="User">CSR</th>
+		<th class="Company">Company</th>
+		<th class="User">Name</th>
+		<th class="Email">Email</th>
+		<th class="Phone">Phone</th>
+		<th class="Password">Password?</th>
+		<th class="DateTime">Last Login</th>
+		<th class="TimesSent">Times Sent</th>
+		<th class="DateTime">Last Sent</th>
+		<th class="DateTime">Viewed</th>
+	</tr>
+';
+foreach my $User ( $variable{Campaign}->Recipients() ) {
+$html .= 
+	sprintf('
+<tr>
+	<td class="User">%s</td>
+	<td class="Company">%s</td>
+	<td class="User">%s</td>
+	<td class="Email">%s</td>
+	<td class="Phone">%s</td>
+	<td class="Password">%s</td>
+	<td class="DateTime">%s</td>
+	<td class="TimesSent">%s</td>
+	<td class="DateTime">%s</td>
+	<td class="DateTime">%s</td>
+</tr>
+', 
+			$User->Company()->CSR()->link_to(),
+			$User->Company()->link_to(),
+			$User->link_to($User->name()),
+			$User->link_to($User->email()),
+			$User->link_to($User->phone()),
+			( $User->password() ? 'yes' : 'no' ),
+			format_datetime($User->last_logged_in()),
+			join('<br/>', map { $$_{numemailsent} } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),
+			join('<br/>', map { format_datetime($$_{emailsenton}) } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),
+			join('<br/>', map { format_datetime($$_{last_read}) } ( $Sent_Info{$$User{id}} ? @{$Sent_Info{$$User{id}}} : () ) ),
+ );
+	} # end foreach Recipient
+
+	return $html;
+) ?>
+</table>
+<?
+<script>
+TableKit.Sortable.init('recipients');
+</script>

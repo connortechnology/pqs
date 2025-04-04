@@ -1,0 +1,81 @@
+.PO .buttons {
+	margin: 0;
+}
+.Authorizations .limit input {
+	width: 100%;
+}
+
+
+table .Manifest {
+    text-align: left;
+}
+.quantity input {
+width: 50px;
+}
+.product input {
+	width: 148px;
+}
+.docket input {
+	width: 73px;
+}
+.price input {
+	width: 98px;
+}
+.price input.StockCost {
+	width: 55px;
+}
+.line_total input {
+	width: 98px;
+	text-align: right;
+}
+input.SheetMWeight {
+	width: 30px;
+}
+div.item {
+	width: 100%;
+}
+
+div.item div {
+	padding-top: 2px;
+}
+table .AuthorizedBy,
+table .PreparedBy {
+	width: auto;
+	float: none;
+}
+
+#supplier_id {
+	width: 80%;
+}
+#item_id, #item_id option {
+	max-width: 400px;
+}
+.tax:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+table .Docket {
+width: 100px;
+}
+.Payments .currency {
+text-align: center;
+}
+input[name="vendor_contact"],
+input[name="vendor_email"],
+input[name="vendor_name"],
+input[name="shipto_contact"],
+input[name="shipto_email"],
+input[name="shipto_name"] {
+width: 100%;
+}
+input[name="vendor_address1"],
+input[name="vendor_address2"],
+input[name="shipto_address1"],
+input[name="shipto_address2"] {
+width: 49%;
+}

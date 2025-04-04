@@ -1,0 +1,188 @@
+<form id="f1" name="f1" action="view.html?claim_id=<? echo ( $$variable{Claim}->id() ) ?>" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="btnFunction" />
+	<p class="buttons">
+<? echo ( 
+	my $html = '';
+	$html .= button( 'Print', { onclick=>'window.print();', text=>'Print' } );
+	if ( ($session{user_id} == $$variable{Claim}->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) or sets::isin( $session{user_id}, $$variable{Claim}->editor_id() ) ) {
+		$html .= button( 'SendToMe', { onclick=>"f1.btnFunction.value='SendToMe';f1.submit();" } ) if new openprint::User( $session{user_id} )->email() =~ /iconnor/;
+		$html .= button( 'Email', { onclick=>"f1.btnFunction.value='Send';f1.submit();", text=>'Send Email' } );
+		$html .= button( 'Edit', { href=>'edit.html?claim_id='.$$variable{Claim}->id() } );
+		#$html .= button( 'Copy', { onclick=>"f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } );
+		if ( $$variable{Claim}->deleted() ) {
+			$html .= button( 'UnDelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+		} else {
+			$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", text=>'Delete' } );
+		} # end if
+	} # end if
+	return $html;
+) ?>
+	</p>
+	<?include(/includes/error_reporting.html)?>
+	<div class="Claim"><div class="View">
+		<div class="Header">
+			<div class="Logo">
+				<a href="/index.html">
+					<img src="/images/header/logo.gif" alt="PointOne Graphics Inc" id="LogoImage"/>
+					<span class="LogoText">
+						<span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span>
+					</span>
+				</a>
+				<table class="HeaderText">
+					<tr>
+						<td colspan="2"><? echo ( join(' ', new openprint::User( $session{user_id} )->Company()->get('address1','city','state','postalcode') );) ?></td>
+					</tr>
+					<tr>
+						<td>Phone<? echo ( new openprint::User( $session{user_id} )->Company()->phone() ) ?></td>
+						<td>Fax<? echo ( new openprint::User( $session{user_id} )->Company()->fax() ) ?></td>
+					</tr>
+				</table>
+			</div>
+			<div class="PageTitle">
+				<h1>CLAIM</h1><br/>
+				<a href="/employee/claim/view.html?claim_id=<? echo ( $$variable{Claim}->id() ) ?>">CLAIM # [ <? echo ( $$variable{Claim}->id() ) ?> ]</a>
+				<br/>
+				Date: <? echo ( Date::Format::time2str($config{DateFormat}, Date::Parse::str2time( $$variable{Claim}->created_on() ) ) ) ?><br/>
+			</div>
+		</div>
+		<div class="Information">
+			<div class="Vendor">
+				<p>
+					<label>Vendor</label>
+<? echo (
+	my $html = '';
+	$html .= $$variable{Claim}->Contact()->name().'<br/>' if $$variable{Claim}->contact_id();
+	$html .= $$variable{Claim}->vendor_name().'<br/>' if $$variable{Claim}->vendor_name();
+	$html .= $$variable{Claim}->vendor_address1().'<br/>' if $$variable{Claim}->vendor_address1();
+	$html .= $$variable{Claim}->vendor_address2().'<br/>' if $$variable{Claim}->vendor_address2();
+	$html .= sprintf('%s %s, %s', $$variable{Claim}->get('vendor_city','vendor_state', 'vendor_postalcode')) . '<br/>';
+	$html .= 'Phone: ' . $$variable{Claim}->vendor_phone().'<br/>' if $$variable{Claim}->vendor_phone();
+	$html .= 'Fax: '.$$variable{Claim}->vendor_fax().'<br/>' if $$variable{Claim}->vendor_fax();
+	$html .= 'SMS: '.$$variable{Claim}->vendor_sms().'<br/>' if $$variable{Claim}->vendor_sms();
+	$html .= $$variable{Claim}->vendor_email().'<br/>' if $$variable{Claim}->vendor_email();
+	return $html;
+) ?>
+				</p>
+			</div>
+			<div class="Sender">
+				<p><label>Sender</label>
+				<? echo ( 
+					my $html;
+					$html .= $$variable{Claim}->Creator()->name().'<br/>';
+					$html .= 'Phone: ' . $$variable{Claim}->Creator()->phone().'<br/>' if $$variable{Claim}->Creator()->phone();
+					$html .= 'Fax: ' . $$variable{Claim}->Creator()->fax().'<br/>' if $$variable{Claim}->Creator()->fax();
+					$html .= 'Email: ' . $$variable{Claim}->Creator()->email().'<br/>' if $$variable{Claim}->Creator()->email();
+					return $html;
+				) ?>
+				</p>
+			</div>
+			<div class="Dates">
+				<p class="filed_on"><label>Filed On</label>
+				<? echo ( 
+					$$variable{Claim}->filed_on() ? Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Claim}->filed_on() ) ) : '';
+					) ?>
+				</p>
+				<p class="sent_to"><label>Sent To Accounts</label>
+				<? echo ( 
+					$$variable{Claim}->sent_to_accounts_on() ?  Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Claim}->sent_to_accounts_on() ) ) : '';
+				) ?>
+				</p>
+				<p class="invoiced_on"><label>Invoiced On</label>
+				<? echo ( 
+					$$variable{Claim}->invoiced_on() ? Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Claim}->invoiced_on() ) ) : '';
+				) ?>
+				</p>
+	<? if ( $$variable{Claim}->invoiced_on() ) ?>
+				<p class="invoice_no"><label>Invoice #</label>
+				<? echo ( $$variable{Claim}->invoice_id() ) ?>
+				</p>
+	<? endif ( $$variable{Claim}->invoiced_on() ) ?>
+				<p class="cancelled_on"><label>Cancelled On</label>
+				<? echo ( 
+	$$variable{Claim}->cancelled_on() ?
+	Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $$variable{Claim}->cancelled_on() ) )
+	: '';
+	) ?>
+				</p>
+			</div>
+			<div class="Dockets">
+				<p class="docket"><label>Dockets</label><? echo ( 
+join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ );} $$variable{Claim}->docket() ? @{$$variable{Claim}->docket()} : () );) ?></p>
+			</div>
+		</div>
+		<div class="Contents">
+<table id="Contents">
+	<tr>
+		<th>Description</th>
+		<th class="Quantity">Quantity</th>
+		<th class="Weight">&nbsp;</th>
+		<? if ( ($session{user_id} == $$variable{Claim}->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) ) ?>
+		<th class="Cost">Unit Cost</th>
+		<th class="Price">Total</th>
+		<? endif ( ($session{user_id} == $$variable{Claim}->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) ) ?>
+	</tr>
+<? echo ( my $html = '';
+	foreach my $C ( $$variable{Claim}->Contents('order'=>'id') ) {
+		if ( ($session{user_id} == $$variable{Claim}->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) ) {
+			$html .= sprintf('<tr>
+				<td>%5$s</td>
+				<td class="Quantity">%1$s%2$s</td>
+				<td class="Weight">%3$s%4$s</td>
+				<td class="Cost">%6$s%7$s</td>
+				<td class="Price">%8$s</td>
+			</tr>', $C->quantity(), $C->quantity_units(),
+			( $C->weight() ?  Number::Format::format_number($C->weight()) : '' ), $C->weight_units(), 
+			$C->description(), openprint::Currency::format($C->cost(),2), $C->cost_units(), openprint::Currency::format($C->total()) );
+		} else {
+			$html .= sprintf('<tr>
+				<td>%3$s</td>
+				<td class="Quantity">%1$s%2$s</td>
+				<td class="Weight">%3$s</td>
+			</tr>', $C->quantity(), $C->quantity_units(),
+			( $C->weight() ? Number::Format::format_number($C->weight()) : '' ), $C->weight_units(),
+			$C->description());
+		} # end if
+	} # end foreach C
+	return $html;
+) ?>
+	<? if ( ($session{user_id} == $$variable{Claim}->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) ) ?>
+	<tr class="subtotal">
+		<td colspan="4">SUBTOTAL</td>
+		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{Claim}->subtotal() ); ) ?></td>
+	</tr>
+	<? echo ( 
+		my $html;
+		foreach my $Tax ( $$variable{Claim}->Taxes() ) {
+			$html .= sprintf('<tr class="tax"><td colspan="4" class="totals">%s (%d%)</td><td class="Price">%s</td></tr>',
+				$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
+				);
+		} # end foreach Tax
+		return $html;
+	) ?>
+	<tr class="total">
+		<td colspan="4">TOTAL</td>
+		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{Claim}->total() ); ) ?></td>
+	</tr>
+	<? if ( $$variable{Claim}->total() != $$variable{Claim}->owing() ) ?>
+	<tr class="owing">
+		<td colspan="4">Owing</td>
+		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{Claim}->owing() ); ) ?></td>
+	</tr>
+	<? endif ( $$variable{Claim}->total() != $$variable{Claim}->owing() ) ?>
+
+	<? endif ( ($session{user_id} == $$variable{Claim}->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) ) ?>
+</table>
+		</div><!--Contents-->
+		<div id="Remarks"> <h3>Remarks:</h3> <? echo ( $$variable{Claim}->reason() ) ?> </div>
+		<div id="Payments"><?include(_payments.html)?>
+		<div id="Assets" class="unprintable"><?include(_assets.html)?></div>
+		<div class="rightColumn" style="text-align: right;">
+	<? if ( ($session{user_id} == $$variable{Claim}->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) ) ?>
+		All prices are in <? echo ( $$variable{Claim}->Currency()->name() ) ?>.
+	<? endif ( ($session{user_id} == $$variable{Claim}->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{user_id} ) ) ?>
+		</div>
+		<br class="spacer"/>
+		<div class="Disclaimer">This is a notification of claim.  If there is disagreement, you are requested to advise the sender in writing, either by e-mail or a letter within 5 business days from the date of this claim advice.  An official invoice will be issued if no objection to this claim is filed. After 60 days the amount of claim will be automatically deducted from your account.</div>
+		</div>
+	</div></div><!--Claim-->
+</form>

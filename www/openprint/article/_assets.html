@@ -1,0 +1,16 @@
+<? echo ( 
+	my $html;
+	foreach my $A ( $$variable{Article}->Assets() ) {
+		my $Asset = $A->Asset();
+		$html .= sprintf(q`<li><img src="%2$s" alt="%3$s"/><span class="caption">%3$s</span><span class="buttons">%4$s</span></li>`,
+			$Asset->id(), $Asset->url(), ssi::html_escape($Asset->name()),
+			join('',
+				ssi::button( 'delete'.$Asset->id(), { 
+					onclick=> qq`new Ajax.Updater( 'Assets', '/article/_assets.html', { parameters: { article_id: '$$variable{Article}{id}', asset_id: '$$Asset{id}', func: 'delete' } } );`, 
+					text=>'Delete' } ),
+				ssi::button( 'edit'.$Asset->id(), { href=>'/employee/assets/edit.html?asset_id=' . $Asset->id(), text=>'Edit', target=>'_blank' } ),
+					),
+				);
+	} # end foreach Asset
+	return $html;
+) ?>

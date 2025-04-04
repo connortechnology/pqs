@@ -1,0 +1,53 @@
+<div class="Products">
+<? echo (
+  my $Pricelist = openprint::Pricelist::get_current();
+	my @Categories = openprint::Product_Category->find(order=>'lower(name)' );
+	my $rowclass;
+
+	my $html;
+	foreach my $Category ( @Categories ) {
+		my @Products = $Category->Products( order=>'sort, lower(name)');
+		#if ( @Products ) {
+			$html .= '<div class="Category"><div class="content"><h3>'.$Category->name().'</h3>';
+			if ( my $Album = $Category->Album() ) {
+				$html .= $Album->slider();
+			}
+			$html .= '<p>'.$Category->description().'</p></div>';
+		if ( @Products ) {
+			$html .= '<table class="List"><tr>';
+			my $Product = $Products[0];
+
+			foreach my $spec ( sort keys %{ $Product->specifications() } ) {
+				$html .= qq{<th class="Spec">$spec</th>};
+			} # end foreach specs
+
+			foreach my $qty ( sql::execute( $log, $dbh, q{SELECT DISTINCT min FROM Product_Prices WHERE product_id=? AND pricelist_id=? ORDER BY min}, $Product->id(), $Pricelist->id() ) ) {
+				$html .= qq{<th class="Price">}.Number::Format::format_number($qty).'</th>';
+			} # end foreach
+			$html .= "</tr>\n";
+			my @qtys = sql::execute( $log, $dbh, q{SELECT DISTINCT min FROM Product_Prices WHERE product_id=? AND pricelist_id=? ORDER BY min}, $Product->id(), $Pricelist->id() );
+
+			foreach my $Product ( @Products ) {
+				$html .= '<tr'.$rowclass.'>';
+				foreach my $spec ( sort keys %{ $Product->specifications() } ) {
+					$html .= sprintf('<td class="Spec">%s</td>', $Product->specification( $spec ) );
+				} # end foreach specs
+				foreach my $qty ( @qtys ) {
+					my %price = openprint::pricing::get_best_price_object( $session{company_id}, $Product->id(), $Pricelist->id(), 'openprint::product_priceset', $qty );
+					if ( $price{Price} ) {
+						openprint::Currency::convert( \%price );
+						$html .= sprintf('<td class="Price"><a href="/main/order/information.html?Product=%d&amp;Quantity=%d">%s</a></td>', $Product->id(), $qty, openprint::Currency::format( $price{Price} ) );
+					} else {
+						$html .= '<td class="Price">Call</td>';
+					} # end if
+				} # end foreach
+				$html .= "</tr>\n";
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Product
+			$html .= "</table>\n";
+		} # end if Products
+			$html .= "</div><!--category-->";
+	} # end foreach Category
+	return $html;
+) ?>
+</div>

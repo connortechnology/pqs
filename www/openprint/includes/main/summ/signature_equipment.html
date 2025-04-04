@@ -1,0 +1,13 @@
+<li>
+	<label>Equipment</label>
+	<? echo ( my $html;
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+			if ( $$variable{"ddmEquipment-$$variable{SignatureIndex}-$qty_index"} ) {
+				$html .= new openprint::Equipment( $$variable{"ddmEquipment-$$variable{SignatureIndex}-$qty_index"} )->name();
+			} # end if
+			$html .= '</span>';
+		} # end foreach qty_index
+		return $html;
+) ?>
+</li>

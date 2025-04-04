@@ -1,0 +1,79 @@
+The following stock has been allocated for docket <b><? echo ( $$variable{Order}->docket() ) ?></b><br/>
+
+<? if ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?><p>Some of these stocks have not been seen in over 30 days.  Please verify the availability of these stocks.<? endif ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?></p>
+
+<? if ( $$variable{'nolocation'} ) ?>
+<p>Some of the allocated stock does not have a location stored in the system.  Please discover it's location and availability.</p>
+<? endif ( $$variable{'nolocation'} ) ?>
+
+<? if ( $$variable{'offsite'} ) ?>
+<p>Some of the allocated stock is located offsite.  Please be aware of this and arrange for it to be brought onsite in time to be used.</p>
+<? endif ( $$variable{'offsite'} ) ?>
+<br/>
+<b><? echo ( $$variable{'Paper'}->to_string(); ) ?></b><br/><br/>
+<? if ( $$variable{'Paper'}->available() < 0 ) ?>
+	<p><b>There is more stock allocated than in inventory.  More paper must be ordered to satisfy the allocation!</b></p>
+<table>
+    <thead>
+        <tr>
+            <th class="Docket">Docket</th><th class="Date">Due On</th><th class="Company">Company</th><th class="CSR">Sales Representative</th><th>Quantity</th></tr>
+        </tr>
+    </thead>
+    <tbody>
+<? echo ( 
+    my $html;
+    foreach my $PA ( openprint::PaperAllocation->find('paper_id'=>$$variable{'Allocation'}->paper_id(), 'order'=>'created_on') ) {
+        $html .= sprintf('<tr>
+                            <td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$d</a></td>
+                            <td class="Date">%3$s</td>
+                            <td class="Company">%4$s</td>
+                            <td class="CSR">%5$s</td>
+                            <td class="Quantity">%6$s</td>
+                            </tr>',
+                $PA->docket(),
+                $PA->Order()->due_date(),
+                $PA->Order()->Company()->name(),
+                $PA->Order()->Company()->CSR()->name(),
+                Number::Format::format_number($PA->quantity()).$PA->units(),
+            );
+    } # end foreach PA
+    return $html;
+) ?>
+</table>
+
+<? else ( $$variable{'Paper'}->available() < 0 ) ?>
+<table class="List">
+	<tr>
+		<th class="Skid">Skid #</th><th class="RFID">RFID #</th><th class="Location">Location</th><th class="Date">Last Seen</th><th class="Quantity">Quantity</th>
+	</tr>
+<? echo (
+	my $html;
+	my $rowclass = '';
+	my $units = $$variable{'Allocation'}->units();
+	my @Skids = $$variable{'Allocation'}->Skids();
+	if ( @Skids ) {
+		foreach my $Skid ( @Skids ) {
+			my $Content = $Skid->Content($$variable{Allocation}->Paper());
+
+			$html .= sprintf('
+<tr%s>
+	<td class="Skid">%s</td>
+	<td class="RFID">%s</td>
+	<td class="Location">%s</td>
+	<td class="Date">%s</td>
+	<td class="Quantity">%s%s</td>
+</tr>
+', $rowclass, $Skid->id(), $Skid->rfidtag_id(), $Skid->Location()->name(), format_date( $Skid->updated_on() ),
+ ($Content ? Number::Format::format_number($Content->quantity()) : 'unknown '), $$variable{Allocation}->units(),
+ );
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Skid
+	} # end if
+	$html .= '<tr class="totals">';
+	$html .= '<td colspan="4">Total</td>';
+	$html .= '<td class="Quantity">' .Number::Format::format_number($$variable{'Allocation'}->quantity()).$units.'</td>';
+	$html .= '</tr>';
+	return $html;
+) ?>
+</table>
+<? endif ( $$variable{'Paper'}->available() < 0 ) ?>

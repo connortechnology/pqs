@@ -1,0 +1,52 @@
+div.LoginBox {
+	position: absolute;
+	top: 140px;
+	right: 20px;
+	width: 260px; 
+	height: 314px; 
+	background-image: url(/skins/PointOne%20Graphics%20Inc/images/main/intro/login-background.gif);
+}
+div.LoginBox form {
+padding: 0px;
+padding-left: 20px;
+padding-right: 20px;
+margin:0px;
+}
+div.LoginBox fieldset {
+
+	border: none;
+	color: #22275e;
+	font-size: 12px;
+	margin: 0px;
+	padding: 0px;
+	font-weight: bold;
+}
+div.LoginBox fieldset#NewUsers {
+	height: 129px;
+}
+div.LoginBox fieldset#QuickLogin {
+	height: 149px;
+}
+div.LoginBox fieldset legend {
+font-size: 15px;
+color: #ffffff;
+padding:0px;
+padding-top: 2px;
+margin: 0px;
+font-weight: bold;
+}
+div.WelcomeBox {
+	width: auto;
+	margin-right: 290px;
+	color: #22275e; font-size: 12pt; font-weight bold;
+}
+div.WelcomeBox h3 {
+	color: #4880c9; font-size: 12pt; font-weight: bold;
+	padding: 0px;
+	margin: 0px;
+}
+div.WelcomeBox h1 {
+	color: #22275e; font-size: 18pt; font-weight: bold;
+	padding: 0px;
+	margin: 0px;
+}

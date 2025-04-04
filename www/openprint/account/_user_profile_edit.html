@@ -1,0 +1,18 @@
+<div id="UserProfile">
+	<fieldset><legend>Profile</legend>
+		<div class="content">
+			<ul>
+<? echo ( 
+	my $html;
+	my $Profile = $$variable{User}->Profile();
+	
+	foreach my $Field ( openprint::User_Profile_Field->find(order=>'sort,description') ) {
+		my $Entry = $Profile->Field( $Field->name() );
+		$html .= $Entry->html();
+	} # end foreach Field
+	return $html;
+) ?>
+			</ul>
+		</div>
+	</fieldset>
+</div>

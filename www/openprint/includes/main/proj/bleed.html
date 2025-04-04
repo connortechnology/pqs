@@ -1,0 +1,35 @@
+<? if ( $$variable{Mode} eq 'Easy' ) ?>
+	<input type="hidden" name="BleedLeft<?Signature?>" value="<? echo ( $$variable{'BleedLeft'.$$variable{Signature}} ) ?>" />
+	<input type="hidden" name="BleedRight<?Signature?>" value="<? echo ( $$variable{'BleedRight'.$$variable{Signature}} ) ?>" />
+	<input type="hidden" name="BleedTop<?Signature?>" value="<? echo ( $$variable{'BleedTop'.$$variable{Signature}} ) ?>" />
+	<input type="hidden" name="BleedBottom<?Signature?>" value="<? echo ( $$variable{'BleedBottom'.$$variable{Signature}} ) ?>" />
+<? else ( $$variable{Mode} eq 'Easy' ) ?>
+<li>
+	<label>Bleed</label>
+	<span class="BleedOption None">
+		<input type="checkbox" id="BleedNone<?Signature?>" name="BleedNone<?Signature?>" value="None" onclick="if(this.checked){$('BleedLeft<?Signature?>').checked=false;$('BleedRight<?Signature?>').checked=false;$('BleedTop<?Signature?>').checked=false;$('BleedBottom<?Signature?>').checked=false;}else{$('BleedLeft<?Signature?>').checked=true;$('BleedRight<?Signature?>').checked=true;$('BleedTop<?Signature?>').checked=true;$('BleedBottom<?Signature?>').checked=true;};calc(this.form.name);" 
+		<? echo ( ( $$variable{'BleedLeft'.$$variable{Signature}} eq 'Left' or $$variable{'BleedRight'.$$variable{Signature}} eq 'Right' or $$variable{'BleedTop'.$$variable{Signature}} eq 'Top' or $$variable{'BleedBottom'.$$variable{Signature}} eq 'Bottom' ) ? '' : 'checked="checked"' ) ?>
+		/> <label class="radio-inline" for="BleedNone<?Signature?>">None</label>
+	</span>
+	<span class="BleedOption">
+		<input type="checkbox" id="BleedLeft<?Signature?>" name="BleedLeft<?Signature?>" value="Left" onclick="if(this.checked){$('BleedNone').checked=false;} else if ( ! ( $('BleedRight<?Signature?>').checked || $('BleedTop<?Signature?>').checked || $('BleedBottom<?Signature?>').checked) ) { $('BleedNone').checked=true;};calc(this.form.name);" 
+		<? echo ( $$variable{'BleedLeft'.$$variable{Signature}} eq 'Left' ? 'checked="checked"' : '' ) ?>
+		/> <label class="radio-inline" for="BleedLeft<?Signature?>">Left</label>
+	</span>
+	<span class="BleedOption">
+		<input type="checkbox" id="BleedRight<?Signature?>" name="BleedRight<?Signature?>" value="Right" onclick="if(this.checked){$('BleedNone').checked=false;} else if ( ! ( $('BleedLeft<?Signature?>').checked || $('BleedTop<?Signature?>').checked || $('BleedBottom<?Signature?>').checked) ) { $('BleedNone').checked=true;};calc(this.form.name);" 
+		<? echo ( $$variable{'BleedRight'.$$variable{Signature}} eq 'Right' ? 'checked="checked"' : '' ) ?>
+		/> <label class="radio-inline" for="BleedRight<?Signature?>">Right</label>
+	</span>
+	<span class="BleedOption">
+		<input type="checkbox" id="BleedTop<?Signature?>" name="BleedTop<?Signature?>" value="Top" onclick="if(this.checked){$('BleedNone').checked=false;} else if ( ! ( $('BleedRight<?Signature?>').checked || $('BleedLeft<?Signature?>').checked || $('BleedBottom<?Signature?>').checked) ) { $('BleedNone').checked=true;};calc(this.form.name);" 
+		<? echo ( $$variable{'BleedTop'.$$variable{Signature}} eq 'Top' ? 'checked="checked"' : '' ) ?>
+		/> <label class="radio-inline" for="BleedTop<?Signature?>">Top</label>
+	</span>
+	<span class="BleedOption">
+		<input type="checkbox" id="BleedBottom<?Signature?>" name="BleedBottom<?Signature?>" value="Bottom" onclick="if(this.checked){$('BleedNone').checked=false;} else if ( ! ( $('BleedRight<?Signature?>').checked || $('BleedTop<?Signature?>').checked || $('BleedLeft<?Signature?>').checked) ) { $('BleedNone').checked=true;};calc(this.form.name);" 
+		<? echo ( $$variable{'BleedBottom'.$$variable{Signature}} eq 'Bottom' ? 'checked="checked"' : '' ) ?>
+		/> <label class="radio-inline" for="BleedBottom<?Signature?>">Bottom</label>
+	</span>
+</li>
+<? endif ( $$variable{Mode} eq 'Easy' ) ?>

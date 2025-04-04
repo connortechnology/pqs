@@ -1,0 +1,21 @@
+.Credit, .SalesInformation {
+	width: 50%;
+	float: left;
+}
+
+.Credit fieldset input[type="number"],
+.Credit fieldset input[type="text"] {
+	width: 50%;
+}
+
+.discount input[type="number"],
+.discount input[type="text"]{
+	width: 50px;
+}
+
+#ButtonPay {
+float: right;
+}
+#ButtonCancel {
+float: left;
+}

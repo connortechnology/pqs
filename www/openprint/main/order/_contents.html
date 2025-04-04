@@ -1,0 +1,23 @@
+<div class="contents"><fieldset><legend>Contents</legend>
+<? echo (
+	my $html;
+	$$variable{Projects} = [ $$variable{Order}->Projects() ];
+	$$variable{Products} = [ $$variable{Order}->Products() ];
+	$$variable{Contents} = [ @{$$variable{Projects}}, @{$$variable{Products}} ] if ! ( $$variable{Contents} and @{$$variable{Contents}} );
+
+	foreach my $Project ( @{$$variable{Projects}} ) {
+		$$variable{Project} = $Project;
+		$html .= '<div class="Project">';
+		$html .= include( '/main/order/_project_information.html', $variable );
+		$html .= '</div>';
+	} # end foreach
+	foreach my $Product ( @{$$variable{Products}} ) {
+		$$variable{Product} = $Product;
+		$$variable{Project} = $$variable{Product}->Project();
+		$html .= '<div class="Project">';
+		$html .= include( '/main/order/_product_list.html', $variable );
+		$html .= '</div>';
+	} # end foreach
+	return $html;
+) ?>
+</fieldset></div>

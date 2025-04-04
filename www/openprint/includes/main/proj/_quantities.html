@@ -1,0 +1,15 @@
+<li class="quantity">
+	<label>Quantity</label>
+<? echo ( my $html;
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{Columns}.'Columns">';
+		$html .= input( name=>"txtQuantity$qty_index",
+			value=>$$variable{'txtQuantity'.$qty_index},
+			type=>'cardinal',
+			onkeyup=>q`calc(this.form.name);`,
+		);
+		$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+</li>

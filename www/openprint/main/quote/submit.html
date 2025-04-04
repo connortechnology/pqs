@@ -1,0 +1,68 @@
+		<link rel="stylesheet" href="<?hash_link(/css/quote.css)?>"/>
+<div class="PageTitle">
+	<h1>QUOTE</h1>
+	<h2>Submit Quote <? echo ( $$variable{Quote}->id(); ) ?></h2>
+</div>
+Please review the quote below to ensure accuracy.  When ready, click "Submit Quote" to save it and send a copy via email to the addresses listed.<br/>
+<br/>
+<?include(/includes/error_reporting.html)?>
+<div class="Quote"><div class="Submit">
+	<form id="f1" name="f1" method="post" action="/main/quote/confirmation.html">
+		<div class="Header">
+			<?include(/includes/quote_header.html)?>
+			<?include(/includes/quote_information.html)?>
+				<? if ( $$variable{Quote}->comments() ) ?>
+        <div class="comments"><label>Comments</label><br/>
+				<? echo ( $$variable{Quote}->comments() ) ?>
+				</div>
+				<? endif ( $$variable{Quote}->comments() ) ?>
+		</div>
+		<?include(_projects.html)?>
+		<?include(_products_view.html)?>
+		<? if ( sets::isin( $session{user_type}, ['A', 'E'] ) ) ?>
+			<br/>
+			<fieldset id="SalesRepComments">
+				<p><label>Administrator Name</label>
+					<input type="text" name="AdministratorName" value="<?AdministratorName?>" />
+				</p>
+				<p>
+					<label>Administrator Comments</label>
+					<textarea name="AdministratorComments" rows="<? echo ( count_lines( $$variable{AdministratorComments}); ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
+				</p>
+			</fieldset>
+		<? endif ( sets::isin( $session{user_type}, ['A', 'E'] ) ) ?>
+		<div style="width:49%; float: right; text-align: right;"><br/>
+      <span class="Currency">All prices listed in <? echo ( $$variable{Quote}->Currency()->name(); ) ?>.</span><br class="spacer"/>
+			Prices are subject to applicable taxes.<br/>
+		</div>
+		<br class="spacer"/>
+		<? echo ( ! sets::isin( $session{user_type}, ['A', 'E'] ) ? $config{QuoteViewDisclaimer} : '' ) ?>
+<? echo (
+	my $html = '<style>'.include('/css/project.css').'</style>';
+	if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+		foreach my $Project ( $$variable{Quote}->Quoted_Projects() ) {
+			$html .= 'Include detailed project description for the following project:';
+			$html .= radio( 'include_detailed'.$Project->project_id(), [ 1, 'Yes', '0', 'No' ], $Project->include_detailed(), {
+				default=>'0',
+				onclick	=>	sprintf(q`new Ajax.Updater( 'QuotedProject_%1$d', '_project_template.html', { parameters: { quote_id: %2$d, project_id: %1$d, include_detailed : this.value } } );`, $Project->id(), $$variable{Quote}->id() ),
+			} );
+			$html .= sprintf( '<div id="QuotedProject_%1$d">', $Project->id() );
+			$$variable{QuotedProject} = $Project;
+			my $template = include( '/main/quote/_project_template.html', $variable );
+			$html .= $template;
+			$html .= '</div>';
+		} # end foreach Project
+	} # end if
+	return $html;
+) ?>
+		<p class="buttons">
+			<? echo ( join("\n",
+					button( 'Back', { href=>'/main/quote/information.html?quote_id='.$$variable{Quote}->id(), text=>'Back' } ),
+					button( 'SubmitQuote', { onclick=>"f1.btnFunction.value='Submit';f1.submit();", text=>'Submit Quote' } ),
+					button( 'CloseQuote', { onclick=>"f1.btnFunction.value='Close';f1.submit();", text=>'Close Quote Without Sending' } ),
+					button( 'SendToMe', { onclick=>"f1.action='/main/quote/submit.html';f1.btnFunction.value='SendToMe';f1.submit();", text=>'Send To Me' } ),
+					); ) ?>
+		</p>
+	<input type="hidden" name="btnFunction"/>
+</form>
+</div></div><!--Quote-->

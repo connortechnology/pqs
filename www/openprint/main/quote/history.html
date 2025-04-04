@@ -1,0 +1,140 @@
+<script>
+	function delete_confirm(form) {
+		var number_of_deleted_quotes = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( form.elements[index].name == 'quote_id' && form.elements[index].checked ) {
+				number_of_deleted_quotes += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_quotes == 0 ) {
+			alert("To Delete Quotes, click the checkbox beside the quote.");
+		} else if ( number_of_deleted_quotes == 1 ) {
+			if ( confirm("Are you sure you wish to delete this quote from history?\n") ) {
+				form.submit();
+			} // end if
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_quotes + " quotes from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	} // end function delete_confirrm
+
+	function load_quotes( ) {
+		LoadContent('QuoteList', '/main/quote/_history.html', $j('#f1').serialize() );
+	} // end function load_quotes
+</script>	 
+<?include('/includes/error_reporting.html')?>
+<div class="Quote"><div class="History">
+	<form id="f1" name="f1" method="post" action="history.html">
+		<input type="hidden" name="btnFunction"/>
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+			<ul class="leftColumn">
+        <li>
+          <label for="QuoteID">Quote ID</label>
+          <? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){load_quotes(this.form);};` ); ) ?>
+        </li>
+<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+			<li>
+				<label>Quoted By Company</label>
+				<input class="filter" type="text" oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" />
+				<select name="company_id" id="company_id" onchange="load_quotes(this.form);">
+					<option value="">All</option>
+					<? echo (
+							make_drop_down(
+								openprint::Company->dropdown(or=>{id=>$openprint::Company->id(),'last_quote_id is null'=>0}),
+								exists $session{$r->uri().'?company_id'} ? $session{$r->uri().'?company_id'} : $session{company_id}
+								)
+					) ?>
+				</select>
+			</li>
+      <?echo(
+        my @options = openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>['Sales']);
+        my $html = '';
+        if (@options) {
+          $html .= '<li><label>Sales Rep</label>';
+          $html .= ssi::select(\@options, $session{$r->uri().'?salesrep_id'}, { name=>'salesrep_id', prepend=>['','All Employees'] });
+          $html .= '</li>';
+        }
+        return $html;
+      ) ?>
+<? eval ( 
+  $$variable{Users} = [ openprint::User->find(
+    # Defaults to currently logged in company, if company is all, then list users in OUR company
+    company_id => ( $session{$r->uri().'?company_id'} ? $session{$r->uri().'?company_id'} : $session{company_id} ),
+ ) ] ) ?>
+<? if ( @{$$variable{Users}} > 1 ) ?>
+      <li><label>Created By</label>
+        <select name="user_id" onchange="load_quotes();">
+          <option value="">All</option>
+          <? echo (
+            make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Users}} ], $session{$r->uri().'?user_id'} );
+          ) ?>
+        </select>
+      </li>
+<? endif ( @{$$variable{Users}} > 1 ) ?>
+
+<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+			<li>
+				<label>Quoted For</label>
+				<input type="text" name="QuotedFor" id="QuotedFor" onkeyup="if( this.value.length > 1 ){load_quotes();}" />
+			</li>
+			<li>
+				<label>Quote Date</label>
+        <? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>'load_quotes();', with_today=>1, with_clear=>1 } ); ) ?>
+				to
+        <? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>'load_quotes();', with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+      </ul>
+      <ul class="rightColumn">
+			<li><label>Ordered</label>
+				<?echo(
+						radio(
+							'ordered',
+							[ '1','Yes','0','No','','Both'],
+							$session{$r->uri().'?ordered'},
+							{ onclick=>'load_quotes();', default=>'' },
+							);
+						) ?>
+			</li>
+			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{$r->uri().'?deleted'}, { onclick=>'load_quotes();' } ); ) ?></li>
+			<li><label>Status</label>
+				<? echo ( 
+						my @options = ( 'Incomplete','Complete','Re-Opened' );
+						ssi::select( [ map { $_, $_ } @options ], $session{$r->uri().'?status'}, { name=>'status', onchange=>'load_quotes();', prepend=>['','All'] } );) ?>
+			</li>
+      <?echo(
+        my $html = '';
+        my @options = map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category any'=>'Printing', order=>'lower(strid)');
+        if (@options) {
+          $html .= join("\n",'<li>','<label>Press</label>',
+            ssi::select(\@options, $session{$r->uri().'?press_id'}, {
+            id=>'press_id', name=>'press_id', 'data-on-change'=>'load_quotes',
+              prepend=>['', 'All'],
+            }),
+            '</li>'
+           );
+         }
+         return $html;
+      ) ?>
+			<li><label>Value</label>
+			<? echo ( input( type=>'float', name=>'total_start', value=>$session{$r->uri().'?total_start'}, data_on_input=>'load_quotes' ); ) ?>
+			to
+			<? echo ( input( type=>'float', name=>'total_end', value=>$session{$r->uri().'?total_end'}, data_on_input=>'load_quotes' ); ) ?>
+			</li>
+			</ul>
+      <br class="spacer"/>
+			<p class="buttons">
+				<? echo ( join( "\n",
+					button( 'ShowResults', { onclick=>q`f1.btnFunction.value='';f1.submit();`, text=>'Show Results' } ),
+					button( 'DownloadCSV', { onclick=>q`f1.btnFunction.value='Download in CSV format';f1.submit();`, text=>'Download in CSV Format' } ),
+					button( 'Delete', { onclick=>q`f2.btnFunction.value='Delete';f2.submit();`, text=>'Delete' } ),
+					button( 'Add', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New' } ),
+					button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+				); ) ?>
+			</p>
+		</fieldset>
+	</form>
+	</div>
+	<div id="QuoteList"><?include('_history.html')?></div>
+</div>

@@ -1,0 +1,80 @@
+<? eval (
+	$$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
+	$$variable{'DimensionsDisplay'} = 'Finished';
+) ?>
+<form id="f1" name="f1" method="post" action="/content/prin/prin_broc.html">
+	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
+	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
+	<?include('/includes/error_reporting.html')?>
+	<div class="InstantPricing">
+		<div id="instant_price_section">
+		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+		   <div class="shadow_left"><div class="shadow_right">
+                        
+				<div class="Questions">
+					<h3>Instant Pricing</h3>
+
+					<?include(_project_name.html) ?>
+					<div class="ProjectSpecifications">
+						<h1>Project Specifications</h1>
+						<div class="Envelopes">
+							<fieldset><legend>Envelopes</legend>
+								<input type="hidden" id="txtWidth" name="txtWidth" value="<?txtWidth?>" />
+								<input type="hidden" id="txtHeight" name="txtHeight" value="<?txtHeight?>" />
+								<input type="hidden" id="txtFinalWidth" name="txtFinalWidth" value="<?txtFinalWidth?>" />
+								<input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="<?txtFinalHeight?>" />
+							<div class="content">
+								<ul>
+				<div class="Stock"><fieldset><legend>Stock</legend>
+					<div class="content">
+						<ul>
+						<?include(_paper_dropdowns.html)?>
+						</ul>
+					</div>
+					</fieldset>
+				</div>
+								<ul>
+									<li><label>Colours</label>
+										<select id="Colours" name="Colours" onchange="calc(this.form.name);">
+											<option value="1/0">Black Ink One Side</option>
+											<option value="1/1">Black Ink Both Sides</option>
+											<option value="4/0">4 Colour One Side</option>
+											<option value="4/1">4 Colour/Black</option>
+											<option value="4/4">4 Colour Both Sides</option>
+										</select>
+									</li>
+								</ul>
+							</div>
+							</fieldset>
+						</div><!--Envelopes-->
+						<div class="Production">
+							<fieldset><legend>Production</legend>
+								<div class="content">
+									<ul>
+									<?include(_design.html) ?>
+									<?include(_proofs.html) ?>
+									<?include(_turnaround.html) ?>
+									<?include(_quantity.html) ?>
+									<?include(_press_type.html) ?>
+									</ul>
+								</div>
+							</fieldset>
+						</div>
+				<?include(_ups.html) ?>
+						<div id="AlertDiv" style="display:none;"></div>
+						<br class="spacer"/>
+					</div><!--ProjectSpecifications-->
+					<?include(_prices.html) ?>
+				</div><!--Questions-->
+			  </div></div>
+		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+		</div><!--instant_price_section-->
+<? echo ( 
+	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
+		return include( '/content/'.$$variable{'ProjectType'}->name().'.html' );
+	} # end if
+	return '';
+) ?>
+		<?include(_specials.html) ?>
+	</div><!--InstantPricing-->
+</form>

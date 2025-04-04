@@ -1,0 +1,88 @@
+<?include(/includes/error_reporting.html)?>
+<? if ( ! $$variable{Manifest}->can_edit() ) ?>
+	You cannot edit this manifest.
+	<? echo ( button( 'Back', { href=>'/employee/inventory/manifest_view.html?manifest_id='.$$variable{Manifest}->id() } ); ) ?>
+<? else ( ! $$variable{Manifest}->can_edit() ) ?>
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/employee/inventory/manifest.js)?>"></script>
+<div class="Manifest">
+	<form name="f1" id="f1" method="post" action="manifest.html" onsubmit="return manifest_onsubmit(this);">
+		<input type="hidden" id="manifest_id" name="manifest_id" value="<? echo ( $$variable{Manifest}->id() ) ?>" />
+		<fieldset>
+			<div class="leftColumn">
+				<ul>
+					<li><label for="name">Manifest #</label><input type="text" id="name" name="name" value="<? hecho ( $$variable{Manifest}->name() ) ?>" /></li>
+					<li><label>Vendor</label>
+						<input id="supplier_id_filter" type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+						<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { parameters: { supplier_id: $('supplier_id').value} } );">
+							<option value="">None</option>
+							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( order=>'lower(name)', supplier=>'Y') ], $$variable{Manifest}->supplier_id() ); ) ?>
+						</select>
+					</li>
+					<li><label>Currency</label><?echo(ssi::select(
+								openprint::Currency->dropdown(),
+								$$variable{Manifest}->currency_id() ? $$variable{Manifest}->currency_id() : $openprint::Currency->id(),
+								{ name=>'currency_id', prepend=>['', 'unknown'] } );)?></li>
+				</ul>
+			</div>
+			<div class="rightColumn">
+				<p><label>Received On</label>
+				<? eval ( 
+					if ( $$variable{Manifest}->received_on() ) {
+						@param{'received_on_year','received_on_month','received_on_day'} = split('-', $$variable{Manifest}->received_on() );
+					} else {
+						@param{'received_on_year','received_on_month','received_on_day'} = Date::Calc::Today(); 
+					} # end if
+				) ?>
+<? echo ( date_select( 'received_on', [@param{'received_on_year','received_on_month','received_on_day'}] ); ) ?>
+				</p>
+<? if ( $$variable{Manifest}->id() ) ?>
+				<p><label>Created On</label><? echo ( format_datetime( $$variable{Manifest}->created_on() ); ) ?></p>
+				<p><label>Updated On</label><? echo ( format_datetime( $$variable{Manifest}->updated_on() ); ) ?></p>
+<? endif ( $$variable{Manifest}->id() ) ?>
+			</div>
+		</fieldset>
+		<div id="Types">
+		<? echo (
+			my $html = '';
+			my $ac = sql::start_transaction( $dbh );
+			my $content = slurp_content('/employee/inventory/_manifest_type.html' );
+			$variable{location_dropdown} = openprint::Location->dropdown(company_id=>$openprint::Owner->id(), order=>'parent_id NULLS FIRST, lower(name)', type=>'place');
+			
+			foreach my $Type ( $$variable{Manifest}->Types() ) {
+				$$variable{Type} = $Type;
+				$$variable{type_id} = $Type->id();
+				$html .= variable_substitution( \$content, $variable );
+			} # end foreach
+			sql::end_transaction( $dbh, $ac );
+			return $html;
+		) ?>
+		</div>
+		<p class="buttons">
+			<? echo ( my $html;
+				if ( $$variable{Manifest}->id() ) {
+					$html .= button( 'add', { onclick=>"new Ajax.Updater('Types', '_manifest_type.html', { parameters: { manifest_id: '".$$variable{Manifest}->id()."', action: 'Add'}, insertion: 'bottom' } );", text=>'Add Another Stock' } );
+					if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) ) {
+						$html .= button( 'Save', { onclick=>q`f1.btnFunction.value='Save';if(f1.onsubmit())f1.submit();`, title=>'Only save Manifest contents' } );
+						if ( $$variable{Manifest}->deleted() ) {
+							$html .= button( 'UnDelete', { onclick=>q`f1.btnFunction.value='undelete';f1.submit();` } );
+							$html .= button( 'Destroy', { onclick=>q`if( confirm('Are you sure?') ) {f1.btnFunction.value='destroy';f1.submit();}` } );
+						} else {
+							$html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
+						} # end if
+					} # end if
+					if ( $$variable{FixStockOnSkids} ) {
+						$html .= button( 'FixStockOnSkids', { onclick=>q`f1.btnFunction.value='ChangePaper';f1.submit();`, text=>'Fix Problems' } );
+					} # end if
+					$html .= button( 'Apply', { onclick=>q`f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();`, title=>'Apply Manifest to inventory' } );
+				} else {
+					$html .= button( 'Save', { onclick=>q`f1.btnFunction.value='Save';if(f1.onsubmit())f1.submit();`, title=>'Only save Manifest contents' } );
+				} # end if Manifest->id();
+				return $html;
+			) ?>
+		</p>
+		<input type="hidden" name="btnFunction" />
+	</form>
+</div>
+<? endif ( ! $$variable{Manifest}->can_edit() ) ?>

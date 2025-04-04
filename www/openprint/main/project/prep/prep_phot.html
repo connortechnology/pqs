@@ -1,0 +1,32 @@
+		<script language="javascript" src="/javascripts/proj/calc_prepress.js"></script>
+		<script language="javascript">
+			var service = "PhotoRetouching";
+			var projectType = "Photo Retouching";
+
+			var services = new Array();
+			<?SERVICE_ARRAYS?>
+			<?SERVICE_PRICES?>
+
+			var quantities = new Array();
+			<?QUANTITIES?>
+
+			function calc() {
+				calc_prepress('f1');
+			}
+		</script>
+		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
+		<table width="600" border="0" cellpadding="0" cellspacing="0" cols="3">
+			<tr> 
+				<td width="320" valign="top"><b class="lgTxt">Photo Retouching Services</b></td>
+				<td width="20">&nbsp;</td>
+				<td width="260">&nbsp;</td>
+			</tr>
+		</table>
+			<form name="f1" method="POST" action="/main/project/view.html">
+				<? echo ( include('/includes/main/proj/prepress_hours.html'); ) ?>
+				<? echo ( include('/includes/main/proj/prices_prepress.html'); ) ?>
+				<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+				<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
+			</form>
+	<script language="javascript">calc_prepress('f1');</script>
+

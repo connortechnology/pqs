@@ -1,0 +1,50 @@
+<div id="Totals">
+	<fieldset><legend>Taxes &amp; Totals</legend>
+		<div class="content">
+			<ul>
+				<li class="subtotal">
+					<label>Sub Total</label><?echo($$variable{CurrencySymbol})?>
+					<? echo ( join("\n",
+						input( type=>'float', name=>'subtotal', id=>'subtotal', value=>$$variable{Invoice}->subtotal() ),
+						boolean_override('subtotal_override', $$variable{Invoice}->subtotal_override() ),
+						); ) ?>
+					</span>
+				</li>
+      </ul>
+      <ul id="Taxes">
+        <?include(_taxes_edit.html)?>
+      </ul>
+      <ul>
+				<li class="total">
+					<label>Total</label><?echo($$variable{CurrencySymbol})?>
+          <!--<span id="total"><? echo ( $$variable{Invoice}->Currency()->format( $$variable{Invoice}->total() ); ) ?></span>-->
+					<? echo ( join("\n",
+						input( type=>'float', name=>'total', id=>'total', value=>$$variable{Invoice}->total() ),
+						boolean_override('total_override', $$variable{Invoice}->total_override() ),
+						); ) ?>
+				</li>
+				<? if ( $$variable{Invoice}->interest() ne '' ) ?>
+				<li class="interest">
+					<label>Interest</label>
+					<span id="interest"><? echo ( $$variable{Invoice}->Currency()->format( $$variable{Invoice}->interest() ); ) ?></span>
+				</li>
+				<? endif ( $$variable{Invoice}->interest() ne '' ) ?>
+				<li class="paid">
+					<label>Amount Paid</label>
+					<? echo ( $$variable{Invoice}->Currency()->format( $$variable{Invoice}->paid() ); ) ?>
+				</li>
+				<li class="owing">
+					<label>Amount Owing</label>
+					<span id="Owing"><? echo ( $$variable{Invoice}->Currency()->format( $$variable{Invoice}->owing() ); ) ?></span>
+				</li>
+				<? if ( $$variable{Invoice}->early_payment_amount() and Date::Parse::str2time( $$variable{Invoice}->early_payment_date() ) > time ) ?>
+				<li class="early_payment_owing">
+					<label>Amount Owing if paid by <? echo ( format_date( $$variable{Invoice}->early_payment_date() ); ) ?></label>
+					<span id="EarlyOwing"><? echo ( $$variable{Invoice}->Currency()->format( $$variable{Invoice}->owing_early() ); ) ?></span>
+				</li>
+				<? endif ( $$variable{Invoice}->early_payment_amount() and Date::Parse::str2time( $$variable{Invoice}->early_payment_date() ) > time ) ?>
+			</ul>
+		</div>
+		<span style="float:right;">All amounts in <? echo ( $$variable{Invoice}->Currency()->name(); ) ?>.</span>
+	</fieldset>
+</div>

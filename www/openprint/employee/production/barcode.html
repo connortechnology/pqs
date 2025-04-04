@@ -1,0 +1,55 @@
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript">
+	function submit_handler( form ) {
+		if ( ! form.Operator.value ) {
+			alert( "Please scan your operator code!" );
+		} else if ( ! form.Project.value ) {
+			alert( "Please scan the project number!" );
+		} else if ( ! form.Action.value ) {
+			alert( "Please scan the action code!" );
+		} else {
+			form.submit();
+		} // end if
+	} // end function
+</script>
+Scan the barcodes in any order.  Once you have scanned in all fields, you may click on the Submit button.<br/>
+<form name="f1" method="post" action="barcode.html">
+	<fieldset><legend>Perform Action</legend>
+		<table class="List">
+			<tr>
+				<th>Operator</th>
+				<!-- <th>Docket</th> -->
+				<th>Project</th>
+				<th>Action</th>
+				<th>&nbsp;</th>
+			</tr>
+			<tr>
+				<td align="center"><input type="text" name="Operator" onkeypress="return input_handler( this, event );" /></td>
+				<!-- <td><input type="text" name="Docket" onkeypress="return input_handler( this, event );" /></td> -->
+				<td align="center"><input type="text" name="Project" onkeypress="return input_handler( this, event );" /></td>
+				<td align="center"><input type="text" name="Action" onkeypress="return input_handler( this, event );" /></td>
+				<td align="center"><? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', "submit_handler(f1);", '', 'Submit' ); ) ?></td>
+			</tr>
+		</table>
+	</fieldset>
+	<? if ( $$variable{'Error'} ) ?>
+	<fieldset><legend>Error</legend>
+		<?Error?>
+	</fieldset>
+	<? endif ( $$variable{'Error'} ) ?>
+	<br/>
+	<fieldset><legend>Results</legend>
+		<table class="List">
+			<tr><th align="left" width="130">Date Time</th><th align="left" width="200">Operator</th><th align="left" width="75">Docket</th><th align="left">Action</th></tr>
+			<? echo (
+				my $html;
+				my @data = sql::execute( $log, $dbh, q{SELECT project_id, (SELECT id FROM Orders WHERE docket=DocketNumber), DocketNumber, to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), user_id, ( SELECT firstname || ' ' || lastname FROM Users WHERE id=operator_id), Description FROM Barcode_Log WHERE dtmTimestamp > NOW() - '6 weeks'::interval ORDER BY dtmTimestamp DESC} );
+				while ( my ( $project_index, $order_id, $docket, $when, $user_id, $user_name, $description ) = splice @data, 0, 7 ) {
+					$html .= qq{<tr><td>$when</td><td>$user_name</td><td><a href="/employee/project/view.html?ProjectIndex=$project_index&OrderID=$order_id">$docket</a></td><td>$description</td></tr>};
+				} # end while
+				return $html;
+			) ?>
+		</table>
+	</fieldset>
+</form>
+<script type="text/javascript">document.f1.Operator.focus();</script>

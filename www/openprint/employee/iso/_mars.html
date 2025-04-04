@@ -1,0 +1,54 @@
+<? eval (
+	my $uri = '/employee/iso/mars.html';
+	$$variable{MARs} = [ openprint::MAR->find( 
+		date_filter( $uri.'?issued_on_end', 'issued_on <=' ),
+		date_filter( $uri.'?issued_on_start', 'issued_on >=' ),
+		( $session{$uri.'?equipment_id'} ? ( equipment_id	=>	$session{$uri.'?equipment_id'} ) : () ),
+		( $session{$uri.'?docket'} ? ( docket	=>	$session{$uri.'?docket'} ) : () ),
+		order		=>	'id DESC',
+		deleted		=>	0,
+		) ];
+) ?>
+<? if ( @{$$variable{MARs}} ) ?>
+<form id="MARResults" name="MARResults" action="mars.html" method="post">
+	<table class="List">
+		<tr>
+			<th class="mar_id">MAR ID</th>
+			<th class="User">Issued To</th>
+			<th class="Date">Issued On</th>
+			<th class="Equipment">Equipment</th>
+			<th class="Status">Status</th>
+			<th class="Description">Problem</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $MAR ( @{$$variable{MARs}} ) {
+				next if $MAR->part4_signed_on() and ( $session{$uri.'?status'} ne '' ) and ( 'Closed' ne $session{'/employee/iso/mars.html?status'} );
+				next if (!$MAR->part4_signed_on()) and ( $session{$uri.'?status'} ne '' ) and ( 'Open' ne $session{'/employee/iso/mars.html?status'} );
+				$html .= sprintf( q`
+<tr%1$s>
+	<td class="mar_id"><a href="mar.html?mar_id=%2$d">%2$d</a></td>
+	<td class="User"><a href="mar.html?mar_id=%2$d">%3$s</a></td>
+	<td class="Date"><a href="mar.html?mar_id=%2$d">%4$s</a></td>
+	<td class="Equipment"><a href="mar.html?mar_id=%2$d">%5$s</a></td>
+	<td class="Status"><a href="mar.html?mar_id=%2$d">%6$s</a></td>
+	<td class="Description"><a href="mar.html?mar_id=%2$d">%7$s</a></td>
+</tr>`,
+					$rowclass, $$MAR{id}, 
+					$MAR->issued_to()->name(),
+					format_date( $MAR->issued_on() ),
+					$MAR->Equipment()->name(),
+					( $MAR->part4_signed_on() ? 'Closed' : 'Open' ),
+					$MAR->problem(),
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach MAR
+			return $html;
+		) ?>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<? else ( @{$$variable{MARs}} ) ?>
+There were no MARs matching your search criteria.
+<? endif ( @{$$variable{MARs}} ) ?>

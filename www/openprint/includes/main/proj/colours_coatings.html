@@ -1,0 +1,163 @@
+<div id="Inks<?Signature?>" class="Inks">
+  <div class="link-outer" id="cc_link<?Signature?>">
+    <div class="link-inner">
+      <label for="side_link<?Signature?>" class="radio linkage" title="Link Side One &amp; Side Two">
+<img src="/images/misc/link.png" />
+<input type="checkbox" name="side_link<?Signature?>" class="side_link" id="side_link<?Signature?>" value="1" data_signature_index="<?Signature?>" <?echo(checked($$variable{side_link}))?>/>
+<img src="/images/misc/link.png" />
+</label>
+    </div>
+  </div>
+<div class="InksFront">
+	<fieldset><legend>Front</legend>
+    <div id="InksOnFrontQuestions<?Signature?>">
+		<div class="SpotColours">
+      <span class="checkOption">Spot Colours</span>
+		<? echo ( 
+			my $html;
+			foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
+				$html .= sprintf('<span id="%1$sSpotColourSideOne%2$s" class="SpotColour %1$s">', $colour, $$variable{Signature} );
+				$html .= sprintf(q`<input type="checkbox" id="chk%1$sSideOne%2$s" name="chk%1$sSideOne%2$s" value="%1$s" onclick="if ( this.checked ) { $('%1$sSpotSideOneCoverages%2$s').show() } else { $('%1$sSpotSideOneCoverages%2$s').hide() } calc(this.form.name);" %3$s />`, $colour, $$variable{Signature}, checked( $$variable{'chk'.$colour.'SideOne'.$$variable{Signature}} eq $colour ) );
+				$html .= sprintf('<label class="radio-inline" for="chk%1$sSideOne%2$s">', $colour, $$variable{Signature} ) . writeTip($colour) . '</label>';
+				$html .= sprintf('<span id="%1$sSpotSideOneCoverages%2$s"%4$s>%5$s%</span>', 
+					$colour, $$variable{Signature}, 
+					$$variable{$colour.'SpotSideOneCoverage'.$$variable{Signature}}, 
+					( $$variable{'chk'.$colour.'SideOne'.$$variable{Signature}} eq $colour ? '' : ' style="display:none;"'),
+					input(
+						type	=>	'cardinal',
+						id		=>	$colour.'SpotSideOneCoverage'.$$variable{Signature},
+						name	=>	$colour.'SpotSideOneCoverage'.$$variable{Signature},
+						value	=>	$$variable{$colour.'SpotSideOneCoverage'.$$variable{Signature}},
+						onkeyup	=>	'calc(this.form.name);',
+						),
+					);
+
+				$html .= '</span>';
+			} # end foreach colour
+			return $html;
+		) ?>
+		</div>
+		<div class="ProcessColours">
+      <span class="checkOption">
+        <input type="checkbox" id="chkProcessColourSideOne<?Signature?>" name="chkProcessColourSideOne<?Signature?>" <? echo ( checked( $$variable{'chkProcessColourSideOne'.$$variable{Signature}} eq 'ProcessColour' ); ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideOne<?Signature?>').show() } else { $('ProcessCoveragesSideOne<?Signature?>').hide() } calc(this.form.name);" /> 
+        <label class="radio-inline" for="chkProcessColourSideOne<?Signature?>"><? echo ( writeTip( '4 Colour Process' ); ) ?></label>
+      </span>
+		  <span id="ProcessCoveragesSideOne<?Signature?>" class="Coverages" <? echo ( 'style="display:none;"' if $$variable{'chkProcessColourSideOne'.$$variable{Signature}} ne 'ProcessColour' ) ?> >
+<? echo (
+	my $html = '';
+	foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
+    $html .= sprintf(q`<span class="Coverage"><label class="radio-inline" for="%1$sSideOneCoverage%3$s">%2$s</label>`, $colour, ($colour eq 'Black' ? 'K' : substr($colour,0,1) ), $$variable{Signature} );
+		$html .= input( 'type'=>'cardinal', 
+			id		=>	$colour.'SideOneCoverage'.$$variable{Signature},
+			name	=>	$colour.'SideOneCoverage'.$$variable{Signature},
+			value	=>	$$variable{$colour.'SideOneCoverage'.$$variable{Signature}}, 
+			onkeyup	=>	'calc(this.form.name);',
+			class	=>	'Coverage' );
+    $html .= '%</span>';
+	} # end foreach colour
+	return $html;
+) ?>
+		  </span>
+		</div>
+		<div id="SpecialColoursSideOne<?Signature?>" class="SpecialColours" <? if ( $$variable{PrintingType} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{PrintingType} eq 'Digital' ) ?>>
+			<? echo ( 
+				my $html;
+				$$variable{Side} = 'SideOne';
+				my $fragment = slurp_content( '/includes/main/proj/_additional_colour_coating.html' );
+				$$variable{index} = 0;
+				foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
+					next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+					$$variable{index} = $index;
+					$html .= variable_substitution( \$fragment, $variable );
+				} # end foreach
+				if ( ! $html ) {
+					$$variable{index} = 0;
+				}
+				$$variable{index} += 1;
+				$html .= variable_substitution( \$fragment, $variable );
+				return $html;
+			) ?>
+		</div>
+    </div>
+	</fieldset>
+</div>
+<div class="InksBack">
+  <fieldset><legend>Back<span id="sides_the_same"> image same as front image?
+        <? echo ( radio( 'sides_the_same'.$$variable{Signature}, [ 'Y','Yes','N','No' ], $$variable{"sides_the_same$$variable{Signature}"}, { default=>'N', onclick=>qq`if(this.value=='Y'){\$('InksOnBackQuestions$$variable{Signature}').hide();}else{\$('InksOnBackQuestions$$variable{Signature}').show();};calc(this.form.name);` } ); ) ?></span>
+</legend>
+<div id="side2_linked<?Signature?>"<?echo($$variable{'side_link'.$$variable{Signature}} ? '' : ' style="display: none;"')?>>
+    This side shares the same specifications as the front.<br />
+    Click the chain / checkbox above to unlink them.
+  </div>
+
+		<div id="InksOnBackQuestions<?Signature?>" <? echo ( $$variable{'sides_the_same'.$$variable{Signature}} eq 'Y' ? ' style="display:none;"':'') ?>>
+		<div class="SpotColours">
+      <span class="checkOption">Spot Colours</span>
+		<? echo (
+			my $html;
+			foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
+				$html .= sprintf( '<span id="%1$sSpotColourSideTwo%2$s" class="SpotColour %1$s">', $colour, $$variable{Signature} );
+				$html .= sprintf(q`<input type="checkbox" id="chk%1$sSideTwo%2$s" name="chk%1$sSideTwo%2$s" value="%1$s" onclick="if ( this.checked ) { $('%1$sSpotSideTwoCoverages%2$s').show() } else { $('%1$sSpotSideTwoCoverages%2$s').hide() } calc(this.form.name);" %3$s />`, $colour, $$variable{Signature}, $$variable{'chk'.$colour.'SideTwo'.$$variable{Signature}} eq $colour ? 'checked="checked"' : '' );
+				$html .= sprintf('<label class="radio-inline" for="chk%1$sSideTwo%2$s">', $colour, $$variable{Signature} ) . writeTip($colour) . '</label>';
+				$html .= sprintf('<span id="%1$sSpotSideTwoCoverages%2$s" %4$s >%5$s%</span>', 
+					$colour, $$variable{Signature}, 
+					$$variable{'CyanSpotSideTwoCoverage'.$$variable{Signature}}, 
+					( $$variable{'chk'.$colour.'SideTwo'.$$variable{Signature}} eq $colour ? '':' style="display:none;"'),
+					input(
+						type	=>	'cardinal',
+						id		=>	$colour.'SpotSideTwoCoverage'.$$variable{Signature},
+						name	=>	$colour.'SpotSideTwoCoverage'.$$variable{Signature},
+						value	=>	$$variable{$colour.'SpotSideTwoCoverage'.$$variable{Signature}},
+						oninput	=>	'calc(this.form.name);',
+						),
+					);
+				$html .= '</span>';
+			} # end foreach colour
+			return $html;
+		) ?>
+		</div>
+		<div class="ProcessColours">
+      <span class="checkOption">
+        <input type="checkbox" id="chkProcessColourSideTwo<?Signature?>" name="chkProcessColourSideTwo<?Signature?>" <? echo ( checked( $$variable{'chkProcessColourSideTwo'.$$variable{Signature}} eq 'ProcessColour' ); ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideTwo<?Signature?>').show() } else { $('ProcessCoveragesSideTwo<?Signature?>').hide() } calc(this.form.name);" />
+        <label class="radio-inline" for="chkProcessColourSideTwo<?Signature?>"><? echo ( writeTip( '4 Colour Process' ); ) ?></label>
+      </span>
+		  <span id="ProcessCoveragesSideTwo<?Signature?>" class="Coverages" <? echo ( 'style="display:none;"' if $$variable{'chkProcessColourSideTwo'.$$variable{Signature}} ne 'ProcessColour' ) ?> >
+<? echo (
+	my $html = '';
+	foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
+    $html .= sprintf(q`<span class="Coverage"><label for="%1$sSideTwoCoverage%3$s">%2$s</label>`, $colour, ($colour eq 'Black' ? 'K' : substr($colour,0,1) ), $$variable{Signature} );
+		$html .= input( type=>'cardinal', 
+			id		=>	$colour.'SideTwoCoverage'.$$variable{Signature},
+			name	=>	$colour.'SideTwoCoverage'.$$variable{Signature},
+			value	=>	$$variable{$colour.'SideTwoCoverage'.$$variable{Signature}}, 
+			oninput	=>	'calc(this.form.name);',
+			class	=>	'Coverage' );
+    $html .= '%</span>';
+	} # end foreach colour
+	return $html;
+) ?>
+		  </span>
+		</div>
+		<div id="SpecialColoursSideTwo<?Signature?>">
+			<? echo ( 
+				my $html;
+				my $fragment = slurp_content( '/includes/main/proj/_additional_colour_coating.html' );
+				$$variable{Side} = 'SideTwo';
+				$$variable{index} = 0;
+				foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
+					next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
+					$$variable{index} = $index;
+					$html .= variable_substitution( \$fragment, $variable );
+				} # end foreach
+				if ( ! $html ) {
+					$$variable{index} = 0;
+				}
+				$$variable{index} += 1;
+				$html .= variable_substitution( \$fragment, $variable );
+				return $html;
+			) ?>
+		</div>
+		</div>
+	</fieldset>
+</div>
+</div>

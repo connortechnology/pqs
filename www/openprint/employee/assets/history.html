@@ -1,0 +1,71 @@
+<script>
+	function load_page( form ) {
+		LoadContent('Results', '_history.html', $j(form).serialize());
+	} // end function load
+</script>
+<?include('/includes/error_reporting.html')?>
+<div class="Assets"><div class="History">
+<form id="f1" name="f1" action="history.html" method="post">
+	<fieldset class="filters"><legend>Select Search Criteria</legend>
+		<ul>
+		<li><label>Asset #</label>
+			<? echo ( join("\n",
+				input( type=>'cardinal', id=>'asset_id', name=>'asset_id', onkeydown=>q`if(event.keyCode==13){load_page('f1');};` ),
+				button( 'Go3', { onclick=>q`load_page('f1');`, text=>'Go' } ),
+			); ) ?>
+		</li>
+		</ul>
+		<hr/>
+		<ul>
+		<li><label>Company</label>
+			<select name="company_id" onchange="load_page('f1');">
+				<option value="">All</option>
+				<? echo ( 
+my @company_ids = sql::execute( undef, undef, 'SELECT DISTINCT company_id FROM ASSETS' );
+make_drop_down( openprint::Company->dropdown(id=>\@company_ids), $session{$r->uri().'?company_id'} ) if @company_ids; ) ?>
+			</select>
+		</li>
+		<li><label>Created By</label>
+			<select name="created_by" onchange="load_page('f1');">
+				<option value="">All</option>
+				<? echo ( 
+					make_drop_down( openprint::User->dropdown( type=>['A','E'] ), $session{$r->uri().'?created_by'} ); ) ?>
+			</select>
+		</li>
+		<li><label>Type</label>
+			<select name="type_id" onchange="load_page('f1');">
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::Asset_Type->dropdown( order=>'lower(name)' ), $session{$r->uri().'?type_id'} ); ) ?>
+			</select>
+		</li>
+		<li>
+			<label>Date</label>
+<? echo ( date_select_session( $r->uri(), 'created_on_start', { onchange=>q`load_page('f1');`, with_today=>1, with_clear=>1} ); ) ?>
+            to
+<? echo ( date_select_session( $r->uri(), 'created_on_end', { onchange=>q`load_page('f1');`, with_today=>1, with_clear=>1} ); ) ?>
+		</li>
+		<li><label>Deleted</label>
+			<? echo ( radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'All' ], $session{$r->uri().'?deleted'}, { onclick=>q`load_page('f1');` } ); ) ?>
+		</li>
+		<li><label>Public?</label>
+			<? echo ( radio( 'public', [ '1', 'Yes', '0', 'No', '', 'All' ], $session{$r->uri().'?public'}, { onclick=>q`load_page('f1');` } ); ) ?>
+		</li>
+		<li><label>Search</label>
+			<input type="text" name="search" onkeydown="if(event.keyCode == 13){load_page('f1');}"/>
+		</li>
+		</ul>
+		<p class="buttons">
+				<? echo ( join( "\n",
+				button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+				button( 'Add', { href=>'/employee/assets/edit.html', text=>'Add New' } ),
+				button( 'Reset', { href=>'/employee/assets/history.html?action=reset' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" action="history.html" method="post">
+	<input type="hidden" name="btnFunction"/>
+	<div id="Results"><?include(_history.html)?></div>
+</form>
+</div>
+</div>

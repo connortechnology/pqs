@@ -1,0 +1,63 @@
+<? eval (
+  require openprint::Event;
+	$$variable{Events} = [];
+	foreach my $Event ( openprint::Event->find( 
+		location_id		=>	$variable{'Location'}->id(),
+		ssi::date_filter( '/event/search.html?starting_on_start','starting_on >=' ),
+		ssi::date_filter( '/event/search.html?starting_on_end','starting_on <=' ),
+			( $session{'/event/search.html?category_id'} ? ( 'category_id' => $session{'/event/search.html?category_id'} ) : () ),
+			'order'				=> 'starting_on',
+		) ) {
+		next if ! $Event->can_view();
+		if ( $session{'/event/search.html?country_id'} ) {
+			my $Country = $Event->Location()->ancestor('type','country');
+			if ( $Country and $Country->id() != $session{'/event/search.html?country_id'} ) {
+				next;
+			} # end if
+		} # end if
+		if ( $session{'/event/search.html?state_id'} ) {
+			my $State = $Event->Location()->ancestor('type','state');
+			if ( $State and $State->id() != $session{'/event/search.html?state_id'} ) {
+				next;
+			} # end if
+		} # end if
+		if ( $session{'/event/search.html?city_id'} ) {
+			my $City = $Event->Location()->ancestor('type','city');
+			if ( $City and $City->id() != $session{'/event/search.html?city_id'} ) {
+				next;
+			} elsif ( my $State = $Event->Location()->ancestor('type','state') ) {
+				my $Event_State = new openprint::Location( $session{'/event/search.html?city_id'} )->ancestor('type','state');
+				if ( $Event_State and $State->id() != $Event_State->id() ) {
+					next;
+				} # end if
+			} # end if
+		} # end if
+		push @{$$variable{'Events'}}, $Event;
+	} # end foreach Events
+) ?>
+
+<? if ( @{$$variable{'Events'}} == 0 ) ?>
+	There are no events which match your search criteria. 
+<? else ( @{$$variable{'Events'}} == 0 ) ?>
+		<? echo ( 
+			my $html;
+			foreach my $Event ( @{$$variable{'Events'}} ) {
+
+				$html .= sprintf(q` 
+					<div title="%2$s" class="Event"> %6$s
+						<div class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></div>
+						<div class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></div>
+						<div class="DateTime"><a href="/event/view.html?event_id=%1$d">%4$s</a></div>
+						<div class="Where">%5$s</div>
+						<div class="Attending"></div>
+					</div>
+					`, $Event->id(), ssi::html_escape($Event->name()),
+					$Event->Category()->name(),
+					$Event->time_string(),
+					$Event->where(),
+					$Event->asset_html(),
+				);
+			} # end foreach Events
+			return $html;
+		) ?>
+<? endif ( @{$$variable{'Events'}} == 0 ) ?>

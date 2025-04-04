@@ -1,0 +1,84 @@
+<? eval (
+	my @sigs = @{$$variable{Job}{service_id}} if $$variable{Job}{service_id};
+	my $sig_specs = openprint::service::get_specs_ref( $$variable{Job}->Project(), $sigs[0] ) if @sigs;
+	$$variable{Form} = $$sig_specs{SignatureIndex};
+	$$variable{Equipment} = $$variable{Job}->Equipment();
+	if ( $$variable{Job}{starttime} ) {
+		$$variable{NextShift} = $$variable{Job}->Shift()->Next();
+	} else {
+		$$variable{LastJob} = openprint::ScheduledJob->find_one(
+			order               =>  'starttime DESC',
+			'starttime is null'	=>	0,
+			tentative           =>  0,
+			equipment_id  =>  $$variable{Job}{equipment_id},
+			'id !='       =>  $$variable{Job}{id},
+			);
+		if ( $$variable{LastJob} ) {
+			$$variable{NextShift} = $$variable{LastJob}->Shift();
+		} else {
+			$$variable{NextShift} = openprint::Shift->find_one(
+					equipment_id => $$variable{Job}{equipment_id},
+					'starttime >' => 'NOW()',
+					order=>'starttime',
+			);
+		}
+	}
+	while ( $$variable{NextShift} and ( $$variable{NextShift}->starttime_seconds() < time ) ) {
+		$$variable{NextShift} = $$variable{NextShift}->Next();
+	} # end while
+) ?>
+<form id="bump_form" name="bump_form" action="_li_change.json" method="post">
+	<input type="hidden" name="schedule_id" value="<? echo ( $param{schedule_id} ) ?>" />
+	<input type="hidden" name="btnFunction" value="BumpJob" />
+	<fieldset>
+	<h3>Bump Docket <? echo ( $$variable{Job}->Project()->docket() ) ?> Form <?Form?></h3>
+	<ul>
+		<li><label>Equipment</label>
+			<select name="equipment_id" onchange="new Ajax.Updater( 'other_servicetypes', '_bump_job_popup_servicetypes.html', { parameters: { equipment_id: this.getValue(), schedule_id: this.form.schedule_id.value} } );">
+				<option value="">Unknown</option>
+				<? echo ( 
+					make_drop_down( openprint::Equipment->dropdown(
+							useinscheduling	=>	1,
+							( $$variable{Job}->servicetype_id() ? ( 'servicetype_id any'	=>	$$variable{Job}->servicetype_id() ) : () ),
+							order				=>	'lower(strid)'
+						), $$variable{Job}->equipment_id() );
+				) ?>
+			</select>
+		</li>
+		<li><label>Date</label>
+			<?echo( 
+					my ( $y, $m, $d );
+					if ( $$variable{NextShift} ) {
+						( $y, $m, $d ) = $$variable{NextShift}{starttime} =~ /^(\d{4})-(\d{2})-(\d{2})/;
+					} else {
+						( $y, $m, $d ) = Date::Calc::Today();
+					}
+					return date_select('starttime', [ $y, $m, $d ]);
+					) ?>
+		</li>
+			<?echo(
+					my $Shifts = openprint::Equipment_Shift->dropdown(equipment_id=>$$variable{Equipment}{id}, order=>'starttime_seconds');
+					if ( @{$Shifts} > 2 ) {
+						return '<li><label>Shift</label>'.
+						ssi::select(
+								$Shifts,
+								( $$variable{NextShift} ? $$variable{NextShift}->shift_id(): undef ),
+								{ name=>'shift_id' },
+								).'</li>';
+					}
+					return;
+			)?>
+	</ul>
+	<br/>
+	<div id="other_servicetypes"><?include('_bump_job_popup_servicetypes.html')?></div>
+	<br/>
+	<p class="buttons">
+	<? echo ( 
+		my $html = '';
+		$html .= button( 'BumpOk', { onclick=>"new Ajax.Request( '_li_change.json', {parameters: \$('bump_form').serialize(), evalScripts: true } );popupWin.destroy();", text=>'Ok' } );
+		$html .= button( 'BumpCancel', { onclick=>"popupWin.destroy();", text=>'Cancel' } );
+		return $html;
+	) ?>
+	</p>
+	</fieldset>
+</form>

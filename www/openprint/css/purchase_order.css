@@ -1,0 +1,345 @@
+.PO {
+	background-color: white;
+	position: relative;
+}
+
+.PO table {
+	border-top: 1px solid #3b5e91;
+}
+.PO table td {
+	border: 1px solid #aebdd2;
+	vertical-align: top;
+}
+.PO table th {
+	border: 1px solid #aebdd2;
+	background-color: #e4ebf4;
+}
+
+.PO table .totals {
+	text-align: right;
+}
+
+.price {
+	width: 110px;
+	text-align: right;
+	display: table-cell;
+}
+.line_total {
+	width: 100px;
+	text-align: right;
+	display: table-cell;
+}
+
+
+.PO .Header {
+	display: block;
+	position: relative;
+	top: 0;
+	left: 0;
+	width: 100%;
+	background-image: url(/images/bluegradient.png);
+	background-repeat: repeat-x;
+	vertical-align: top;
+	border-top: 1px solid #3b5e91;
+	padding-top: 5px;
+}
+.PO .Header:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+.PO .Header .Logo {
+	margin: 7px;
+	padding: 0;
+	color: black;
+	width: 270px;
+	background: none;
+	float: left;
+}
+.PO .Header .Logo table {
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+}
+.Logo img {
+	margin: 0 3px 0 0;
+	width: 75px;
+	float: left;
+}
+.PO .Logo table.HeaderText {
+	border: none;
+}
+.PO .Header .Logo table.HeaderText td {
+	font-size: 12px;
+	border: none;
+}
+
+.Logo a {
+	color: black;
+	border: none;
+	float: left;
+	width: 100%;
+}
+.PO .Header .Logo .PointOne {
+	border-bottom: none;
+	font-family: Georgia, Times, serif;
+	padding: 0px;
+	margin: 0px; 
+	font-size: 42px;
+}
+.PO .Header .Logo .GraphicsInc {
+	padding: 0px;
+	margin: 0px; 
+	font-size:24px;
+}
+.PO .Header .PageTitle {
+	margin: 0;
+	text-align: left;
+	float: right;
+	width: 230px;
+}
+div.PO .Header .PageTitle h1 {
+	font-size:24px;
+	color: #3b5e91;
+} 
+fieldset p {
+    margin: .4em 0 0 0;
+    padding: 0 0 0 120px;
+    overflow: hidden;
+}
+
+fieldset p label {
+    width: 115px;
+    text-align: right;
+    margin-left: -120px;
+    vertical-align: top;
+    float: left;
+    overflow: visible;
+}
+
+td p {
+    padding: 0;
+}
+td p label {
+    width: auto;
+    margin-left: 0;
+}
+
+
+.PO #VendorInformation {
+	width: 48%;
+	float: left;
+}
+.PO ul.notifications li {
+	padding: 0;
+	width: 230px;
+}
+.PO .notifications .name {
+}
+.PurchaseOrder table .id, .PurchaseOrder_Items table .id {
+	width: 45px;
+	text-align: left;
+} 
+.quantity {
+	width: 100px;
+	text-align: center;
+}
+.product {
+	min-width: 80px;
+}
+.description,
+.dept {
+}
+.description select {
+	max-width: 300px;
+	width: auto;
+}
+.description textarea {
+	width: 100%;
+}
+.description p {
+margin: 0.2em 0;
+}
+
+.docket {
+	width: 75px;
+	text-align: center;
+}
+.who, .when {
+	width: 120px;
+	text-align: left;
+}
+.method {
+	width: 253px;
+}
+.terms {
+}
+.delivery_date {
+	width: 281px;
+	text-align: center;
+}
+.AuthorizedBy,
+.PreparedBy {
+	width: 52%;
+	float: left;
+}
+.AuthorizedOn {
+	width: 48%;
+	float: right;
+}
+.Vendor {
+	float: left;
+	width: 50%;
+}
+.ShipTo {
+	float: right;
+	width: 50%;
+}
+.Vendor p, .ShipTo p, #Notifications p, #DocketSummary p {
+	padding: 0 0 0 80px;
+margin:  .2em 0;
+}
+.Vendor p label, .ShipTo p label, #Notifications p label, #DocketSummary p label {
+	margin-left: -80px;
+	display: inline-block;
+	width: 75px;
+	text-align: right;
+}
+@media print {
+#Content {
+margin: 0;
+}
+#f2 {
+display: none;
+}
+.quantity {
+	width: 70px;
+}
+	.unprintable, #Header, .Logs {
+		display: none;
+	}
+	.product {
+		width: 80px;
+	}
+	.price {
+		width: 60px;
+	}
+	.total {
+		width: 55px;
+	}
+	.docket {
+		width: 60px;
+	}
+	.delivery_date {
+		width: 185px;
+	}
+	.method {
+		width: 180px;
+	}
+}
+
+table .supplier, table .item_name, table .product {
+	text-align: left;
+}
+#Assets .Thumbnail {
+	width: 75px;
+}
+#Assets .Thumbnail img {
+	width: 100%;
+}
+#Payments .Date {
+	width: 200px;
+}
+.Payments {
+	clear: both;
+	width: 100%;
+}
+.payments_total label {
+	text-transform: uppercase;
+}
+.payments_total label:after {
+	content: ':';	
+}
+.items {
+	margin-top: 10px;
+	clear: both;
+	display: table;
+	border: 1px solid #aebdd2;
+	width: 100%;
+	border-collapse: collapse;
+}
+.items div {
+	border: 1px solid #aebdd2;
+}
+.item div,
+.head div {
+	display: table-cell;
+}
+.item {
+	display: table-row;
+}
+
+.head {
+	width: 100%;
+	display: table-row;
+	background-color: #e4ebf4;
+}
+div.totals, #Taxes {
+	display: block;
+	width: 300px;
+	float: right;
+}
+.totals label {
+	text-transform: uppercase;
+	width: 200px;
+	float: left;
+}
+.totals label:after {
+	content: ':';	
+}
+.tax,
+.subtotal,
+.total,
+.payments_total {
+	width: 100%;
+	text-align: right;
+}
+#DocketSummary {
+	float: left;
+	width: 50%;
+	font-size: large;
+	font-weight: bold;
+}
+#DocketSummary label {
+	font-weight: normal;
+	font-size: small;
+}
+#Notifications {
+	float: right;
+	width: 50%;
+	clear: both;
+}
+div#do_not_pay ,
+div#cancelled,
+div#deleted,
+div#paid,
+div#not_approved {
+	z-index: 1000;
+	position: absolute;
+	top: 25px;
+	left: 125px;
+	width: 70%;
+}
+#do_not_pay img ,
+#cancelled img ,
+#deleted img ,
+#paid img ,
+#not_approved img {
+	width: 100%;
+}
+span.po {
+font-size: x-large;
+}

@@ -1,0 +1,7 @@
+<? eval ( @{$$variable{'tempCuttingGroups'}} = @{$$variable{'CuttingGroups'}} ) ?>
+<? while ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
+	<? if ( $$variable{'Reference'} ) ?>
+	<p><b><?Reference?></b></p>
+	<? endif ( $$variable{'Reference'} ) ?>
+<? endwhile ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
+<br class="spacer"/>

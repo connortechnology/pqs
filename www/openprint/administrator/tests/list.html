@@ -1,0 +1,29 @@
+<script type="text/javascript">
+<!--
+	function load_tests( form ) {
+		$('Tests').innerHTML = 'Please wait...';
+		new Ajax.Updater('Tests','_list.html', {parameters:Form.serialize(form)});
+	} // end function
+-->
+</script>	 
+<div class="Test"><div class="List">
+<? if ( $param{'category_id'} ) ?>
+<div class="Category <? echo ( $variable{'Category'}->name() ) ?>">
+	<div class="name"><? echo ( $$variable{'Category'}->name() ) ?></div>
+	<div class="description"><? echo ( $$variable{'Category'}->description() ) ?></div>
+	<form id="f1" name="f1" method="post" action="list.html" onsubmit="load_tests(this);return false;">
+		<input type="hidden" name="category_id" value="<? echo ( $param{'category_id'} ) ?>" />
+		<input type="text" name="search" id="search" value="<? echo ( $param{'search'} ) ?>" placeholder="Search" onkeydown="if(event.keyCode == 13){event.preventDefault();load_tests(this.form);return false;}" /></li>
+	</form>
+</div><!--Category-->
+<? else ( $param{'category_id'} ) ?>
+<form id="f1" name="f1" method="post" action="list.html" onsubmit="load_tests(this);return false;">
+	<fieldset class="filters">
+	<ul>
+		<li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $param{'search'} ) ?>" onkeydown="if(event.keyCode == 13){event.preventDefault();load_tests(this.form);return false;}"/></li>
+	</ul>
+	</fieldset>
+</form>
+<? endif ( $param{'category_id'} ) ?>
+<div id="Tests"><? echo ( include('_list.html'); ) ?></div>
+</div></div><!--Test-->

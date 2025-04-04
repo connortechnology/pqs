@@ -1,0 +1,203 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/employee/inventory/skid_details.js)?>"></script>
+<?include(/includes/error_reporting.html)?>
+<? if ( $$variable{Skid}->deleted() ) ?>
+<div class="error">Warning: This skid has been deleted.</div>
+<? endif ( $$variable{Skid}->deleted() ) ?>
+
+<form id="jump" name="jump" method="get" action="skid_details.html">
+	<fieldset class="filters"><legend>Choose Skid</legend>
+		<ul>
+		<li class="Skid">
+			<label for="skid_id">Skid ID #</label>
+			<input type="number" id="skid_id" name="skid_id" value="<? echo ( $$variable{Skid}->id() ) ?>" onchange="change_handler(this);" onkeypress="return input_handler(this, event);" onkeydown="this.form.rfidtag_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" />
+			<? echo ( join('',
+				button( 'Go', { 'onclick'=>"if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}" } ),
+				button( 'Previous', { 'onclick'=>q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'text'=>'&lt;&lt;' } ),
+				button( 'Next', { 'onclick'=>q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,'text'=>'&gt;&gt;' } ),
+			); ) ?>
+		</li>
+		<li class="RFID">
+			<label>RFID Tag ID #</label>
+			<input type="number" name="rfidtag_id" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.skid_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" value="<?rfidtag_id?>" />
+			Hex:
+			<input type="text" id="rfidtag_hex" name="rfidtag_hex" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.skid_id.value='';this.form.rfidtag_id.value='';if(event.keyCode == 13){$('jump').submit( );}" />
+			<? echo ( button( 'Load', { onclick=>q`$('jump').submit();`, text=>'Load' } ); ) ?><br/>
+			<? if ( ! $$variable{Skid}->id() and $param{rfidtag_id} ) ?>
+				<? echo ( return join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a> <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->skid_id(), $_->id() ); }  openprint::RFIDTag->find('id like'=>'%'.$param{rfidtag_id}.'%','type'=>'Skid') ); ) ?>
+			<? endif ( ! $$variable{Skid}->id() and $param{rfidtag_id} ) ?>
+		</li>
+		<li class="manufacturers_id">
+			<label>Manufacturers ID</label>
+			<? echo ( input( type=>'text', name=>'manufacturers_id', onkeypress=>'return input_handler(this,event);', onkeydown=>q`this.form.skid_id.value='';this.form.rfidtag_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode==13){$('jump').submit();}`, value=>$$variable{manufacturers_id} ); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<form id="f1" name="f1" action="skid_details.html?skid_id=<? echo ( $$variable{Skid}->id() ) ?>" method="post">
+	<input type="hidden" name="btnFunction" />
+	<fieldset><legend>
+		<? if ( $$variable{Skid}->id() ) ?>
+		Skid ID: <? echo ( $$variable{Skid}->id() ) ?>
+		<? else ( $$variable{Skid}->id() ) ?>
+		New Skid
+		<? endif ( $$variable{Skid}->id() ) ?>
+		</legend>
+
+		<? if ( @{$$variable{skid_ids}} > 1 ) ?>
+		Multiple skids have been selected.  Only the first is shown, however changes will affect all.
+		<? if ( ! $$variable{similar} ) ?>
+		<div class="warning">
+		Warning: Not all specified skids are the same!
+		</div>
+		<? endif ( ! $$variable{similar} ) ?>
+		<? endif ( @{$$variable{skid_ids}} > 1 ) ?>
+
+		<div class="column">
+			<ul>
+			<li class="received_on"><label>Received On</label>
+<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) or ! $$variable{Skid}->id() ) ?>
+				<? echo ( date_select( 'received_on', $$variable{Skid}->received_on() ? $$variable{Skid}->received_on() : [ Date::Calc::Today() ] ); ) ?>
+<? else ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) or ! $$variable{Skid}->id() ) ?>
+				<? echo ( format_date( $$variable{Skid}->received_on() ); ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} ) or ! $$variable{Skid}->id() ) ?>
+			</li>
+		<? if ( $$variable{Skid}->id() ) ?>
+			<li>
+				<label>Created On</label>
+				<? echo ( 
+					my $html;
+					if ( $$variable{Skid}->created_on() ) {
+						$html .= format_datetime($$variable{Skid}->created_on());
+						$html .= ' by ' . new openprint::User( $$variable{Skid}->created_by_id() )->name();
+					} # end if
+					return $html;
+				) ?>
+			</li>
+			<li>
+				<label>Last Updated</label>
+				<? echo (
+					my $html;
+					if ( $$variable{Skid}->updated_on() ) {
+						$html .= format_datetime( $$variable{Skid}->updated_on() );
+						$html .= ' by ' . (new openprint::User( $$variable{Skid}->updated_by() )->name());
+					} # end if
+					return $html;
+				) ?>
+			</li>
+		<? else ( $$variable{Skid}->id() ) ?>
+			<li><label># of skids to add</label>
+				<? echo ( input( type=>'cardinal', name=>'skid_quantity', value=>$param{skid_quantity} ); ) ?>
+			</li>
+		<? endif ( $$variable{Skid}->id() ) ?>
+			<li class="RFID"><label>RFID Tag</label>
+				<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{Skid}->rfidtag_id() ) ?>" />
+				<? if ( $$variable{Skid}->rfidtag_id() ) ?>
+					<? echo ( button( 'ViewTag', { href=>'rfidtag_details.html?rfidtag_id='.$$variable{Skid}->rfidtag_id(), text=>'View Tag' } ); ) ?><br/>
+					Last seen: <? echo ( format_date( $$variable{Skid}->RFIDTag()->updated_on() ); ) ?>
+				<? endif ( $$variable{Skid}->rfidtag_id() ) ?>
+			</li>
+			<li class="manufacturers_id">
+				<label>Manufacturers ID</label>
+				<? echo ( input( type=>'text', name=>'manufacturers_id', onkeypress=>'return input_handler(this,event);', value=>$$variable{Skid}->manufacturers_id() ); ) ?>
+			</li>
+			<li class="verification_code"><label>Verification</label>
+				<input type="text" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" value="<? echo ( $session{'/employee/inventory/skid_details.html?verification_code'} ) ?>" />
+			<? echo ( button( 'vpopulate', { onclick=>"f1.verification_code.value='".Date::Format::time2str( '%Y', time )."';", text=>'Verification:' } ); ) ?>
+			</li>
+			<li>
+				<label>Location</label>
+				<select id="ddmLocation" name="ddmLocation">
+					<option value="">select</option>
+					<? echo ( 
+						make_drop_down( openprint::Location->dropdown(type=>'place', order=>'lower(name)', company_id=>$openprint::Owner->id()), $$variable{Skid} ? $$variable{Skid}->location_id() : $param{ddmLocation} );
+						) ?>
+				</select>
+				<? echo ( join('',
+				button( 'Map', { onclick=>"popup_window('/maps/_popup.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{Skid}{id}');" } ),
+				); ) ?>
+			</li>
+<? if ( $$variable{Skid}->id() ) ?>
+			<li>
+				<label>Manifest</label>
+				<? echo (
+					my $html = '';
+					foreach my $MC ( openprint::ManifestContent->find( skid_id=>$$variable{Skid}->id() ) ) {
+						$html .= sprintf('<a href="/employee/inventory/manifest_view.html?manifest_id=%1$s">%2$s</a><br/>', $MC->manifest_id(), $MC->Manifest()->name() );
+					} # end foreach MC
+					return $html;
+				) ?>
+			</li>
+			<li>
+				<label>Purchase Order</label>
+				<? echo ( return join('<br/>', map { $_->link_to() } $$variable{Skid}->PurchaseOrders() );) ?>
+			</li>
+<? endif ( $$variable{Skid}->id() ) ?>
+			<li>
+				<label for="Docket">Docket</label>
+				<? echo ( input( type=>'cardinal', id=>'Docket', name=>'Docket', value=>$param{Docket} ); ) ?>
+			</li>
+			</ul>
+			<? if ( ! $$variable{Skid}->id() ) ?>
+			<p class="buttons">
+			<? echo ( button( 'saveLeft', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();};", text=>'Save' } ); ) ?>
+			</p>
+			<? else ( ! $$variable{Skid}->id() ) ?>
+			<? echo ( include('/employee/inventory/_skid_contents.html'); ) ?>
+			<? endif ( ! $$variable{Skid}->id() ) ?>
+		</div><!-- column -->
+		<div class="column">
+			<fieldset><legend onclick="toggleContent( 'AddPaper', '/employee/inventory/_add_paper_show.html', null, '/employee/inventory/_add_paper_hide.html' );">Add Paper - click to hide/show</legend>
+				<? if ( $session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{Skid}->id() ) ?>
+				<div id="AddPaper"><? echo ( include('/employee/inventory/_add_paper_show.html'); ) ?></div>
+				<? else ( $session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{Skid}->id() ) ?>
+				<div id="AddPaper" style="display: none;"></div>
+				<? endif ( $session{'/employee/inventory/skid_details.html?ShowAddPaper'} or ! $$variable{Skid}->id() ) ?>
+			</fieldset>
+		</div>
+		<div style="float: right;">
+			<? echo ( 
+					my $html;
+					if ( $$variable{Skid}->id() ) {
+						$html .= button( 'label', { onclick=>"open_window('/employee/inventory/paper_label_window.html?skid_id=$$variable{Skid}{id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", text=>'Print Label' } );
+						$html .= button( 'Copy', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } );
+					} # end if
+					$html .= button( 'save', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", text=>'Save' } );
+					if ( $$variable{Skid}->id() ) {
+						if ( $$variable{Skid}->deleted() ) {
+							$html .= button( 'destroy', { onclick=>"f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
+							$html .= button( 'undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+						} else {
+							$html .= button( 'delete', { onclick=>"if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Delete';f1.submit();}", text=>'Delete' } );
+						} # end if
+					} # end if
+					$html .= button( 'reset', { onclick=>'f1.reset();', text=>'Reset' } );
+					#$html .= button( 'clear', { onclick=>'clearForm(f1);', text=>'Clear' } );
+					$html .= button( 'addnew', { onclick=>'', href=>'skid_details.html', text=>'Add New Skid' } ) if $$variable{Skid}->id();
+					return $html;
+			) ?>
+		</div>
+	</fieldset>
+</form>
+<? if ( $$variable{Skid}{id} ) ?>
+<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', {skid_id<? echo ( $$variable{Skid}->id() ) ?>} );">Allocations - click to hide/show</legend>
+<div id="Allocations"><?include('_skid_allocations.html')?></div>
+</fieldset>
+<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', {skid_id<? echo ( $$variable{Skid}->id() ) ?>} );">Inventory Log - click to hide/show</legend>
+<div id="Log"><?include(_skid_log.html)?></div>
+</fieldset>
+	<? echo ( 
+		if ( $$variable{Skid}{rfidtag_id} ) {
+			$param{rfidtag_id} = $$variable{Skid}{rfidtag_id};
+			$$variable{RFIDTag} = $$variable{Skid}->RFIDTag();
+			openprint::employee_inventory::_rfidtag_log();
+			return include('_rfidtag_log.html');
+		} # end if
+		return;
+	) ?>
+<fieldset><legend onclick="toggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', {skid_id<? echo ( $$variable{Skid}->id() ) ?>} );">Verification Log - click to hide/show</legend>
+<div id="VerificationLog"><? include('_verification_log.html') ?></div>
+</fieldset>
+<? endif ( $$variable{Skid}{id} ) ?>
+<script type="text/javascript">document.jump.skid_id.focus();</script>

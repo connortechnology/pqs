@@ -1,0 +1,91 @@
+.Label {
+	margin: 0;
+	padding: 0;
+	background: white;
+	color: black;
+	font-size: 16px;
+}
+.PackingSlip table {
+	table-layout: fixed;
+	margin-bottom: 5px;
+    border-collapse: separate;
+    border-spacing: 2px;
+	width: 100%;
+}
+.PackingSlip table td {
+	vertical-align: top;
+	font-family: Arial, Helvetica, Sans-Serif;
+	padding: 5px;
+} 
+.Label table textarea {
+	width: 98%;
+}
+.Label p {
+	margin: 2px;
+}
+.PackingSlip {
+} 
+
+.MGA .Header {
+}
+.MGA .Logo {
+	background: none;
+	top: 0px;
+	position: relative;
+}
+.MGA table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	border: 1px solid black;
+}
+.MGA table tr th {
+	font-size: 6pt;
+}
+.MGA table tr td {
+	border: 1px solid black;
+	font-size: 6pt;
+	text-align: center;
+}
+.MGA table tr td div {
+	width: 100%;
+	font-size: 10pt;
+}
+.MGA label {
+	float: left;
+	padding-right: 5px;
+	font-size: 7pt;
+	text-align: left;
+}
+.MGA label.radio {
+	float: none;
+	padding: 0px;
+	margin: 0px;
+	font-size: 6pt;
+}
+.MGA input[type="radio"] {
+	padding: 0px;
+	margin: 1px;
+}
+.MGA ol {
+	padding: 15px;
+}
+
+@media print {
+	div.Label {
+		padding: 0;
+		margin: 0;
+		width: 100%;
+	} 
+	#Header, select {
+		display: none;
+	}
+#Content {
+margin-top: 0;
+}
+}
+   .edit {
+            display: block;
+            width: 100%;
+    border: 1px solid black;
+        }
+

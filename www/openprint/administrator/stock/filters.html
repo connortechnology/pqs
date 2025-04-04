@@ -1,0 +1,68 @@
+<script>
+	function load( e ) {
+		new Ajax.Request( '_filters_load.json', { method: 'post', parameters: { type: e.name, id: e.value }, evalScripts: true } );
+	} // end function load(e)
+	function save( type ) {
+		if ( type == 'StockQuality' || type == 'InventoryCondition' ) {
+			new Ajax.Request( '_filters_save.json', { method: 'post', parameters: { 
+					type: type, 
+					id: $(type).value, 
+					name: $(type+'_name').value,
+					message: $(type+'_message').value,
+					action: 'Save',
+				}, evalScripts: true } );
+		} else {
+			new Ajax.Request( '_filters_save.json', { method: 'post', parameters: { 
+					type: type, 
+					id: $(type).value, 
+					name: $(type+'_name').value,
+					action: 'Save',
+				}, evalScripts: true } );
+		} 
+	} // end function save(e)
+	function destroy( type ) {
+		new Ajax.Request( '_filters_save.json', { method: 'post', parameters: { 
+				type: type, 
+				id: $(type).value, 
+				action: 'Delete',
+			}, evalScripts: true } );
+	} // end function delete(e)
+</script>
+<? echo ( 
+	my $html = '';
+	foreach my $type ( 'Manufacturer','StockBrand','StockFinish','StockColour','StockWeight', 'StockGroup' ) {
+		$html .= sprintf(q`
+			<p>
+				<label>%1$s</label>
+				<select name="%1$s" id="%1$s" onchange="load(this);">
+					<option value=""> select </option>
+					%2$s
+				</select><br/>
+				<label>Name</label><input type="text" name="%1$s_name" id="%1$s_name"/><br/>
+				%3$s
+				%4$s
+			</p>`, $type,
+			make_drop_down( ('openprint::'.$type)->dropdown( order=>'lower(name)') ),
+			button( $type.'Save', { onclick=>"save('$type');", text=>'Save' } ),
+			button( $type.'Delete', { onclick=>"destroy('$type');", text=>'Delete' } ),
+			);
+	} # end foreach type
+	foreach my $type ( 'StockQuality', 'InventoryCondition' ) {
+		$html .= sprintf(q`
+			<p>
+				<label>%1$s</label>
+				<select name="%1$s" id="%1$s" onchange="load(this);">
+					<option value=""> select </option>
+					%2$s
+				</select><br/>
+				<label>Name</label><input type="text" name="%1$s_name" id="%1$s_name"/><br/>
+				<label>Message</label><textarea name="%1$s_message" id="%1$s_message" /></textarea><br/>
+				%3$s
+			</p>`, $type,
+			make_drop_down( ('openprint::'.$type)->dropdown( order=>'lower(name)') ),
+			button( $type.'Save', { onclick=>"save('$type');", 'text'=>'Save' } ),
+			button( $type.'Delete', { onclick=>"destroy('$type');", text=>'Delete' } ),
+			);
+	} # end foreach type
+	return $html;
+) ?>

@@ -1,0 +1,18 @@
+<p> 
+	<label>Bleeds</label>
+<? echo (
+	my $html = '';
+	my $sig_specs = $$variable{'ServiceSpecifications'};
+	if ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} or $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) {
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= '<span class="value">'.$$variable{'ddmBleedSize'.$qty_index}.'&quot; ';
+			$html .= join(' ', @$sig_specs{'BleedLeft','BleedRight','BleedTop','BleedBottom'} ) .'</span>';
+		} # end foreach
+	} else {
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= '<span class="value">No bleed</span>';
+		} # end foreach
+	} # end if
+	return $html;
+) ?>
+</p>

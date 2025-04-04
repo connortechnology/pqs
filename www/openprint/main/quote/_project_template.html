@@ -1,0 +1,19 @@
+<? echo (
+	return '' if ! $$variable{QuotedProject}->include_detailed();
+	return '' if ! sets::isin( $session{user_type}, ['A','E'] );
+
+	my $html;
+	my @QuoteLevels = openprint::QuoteLevel->find( order=>'lower(name)' );
+	if ( @QuoteLevels ) {
+		$html .= 'Template:'; 
+		$html .= sprintf(q`<select name="template_%1$d" onchange="new Ajax.Updater( 'QuotedProjectView_%1$d', '_project_template_view.html', { parameters: { quote_id: %2$d, project_id: %1$d, template_id: this.value } } );">%3$s</select>`, 
+			$$variable{'QuotedProject'}->id(), $$variable{'Quote'}->id(), 
+			make_drop_down( [ map { $_->id(), $_->name() } @QuoteLevels ], $$variable{'QuotedProject'}->template_id() ),
+			); 
+	} # end if
+	$html .= '<div id="QuotedProjectView_'.$$variable{QuotedProject}->id().'" class="ProjectTemplate">';
+	$$variable{'Project'} = $$variable{'QuotedProject'}->Project();
+	$html .= include( '/main/quote/_project_template_view.html', $variable );
+	$html .= '</div>';
+	return $html;
+) ?>

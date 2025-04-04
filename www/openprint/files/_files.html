@@ -1,0 +1,81 @@
+Path: <? echo (
+	my %Companies = map { $_->name(), $_ } openprint::Company->find_filtered();
+
+	my $path = $session{'/files/index.html?path'};
+	my @path = split('/', $path);
+	if ( @path ) {
+		if ( ! $Companies{$path[0]} ) {
+			return 'Not authorized.';
+		} # end if
+	} # end if
+
+	my @filenames;
+	if ( opendir DIRHANDLE, join('/',$config{ProjectFilesPath},$path) ) {
+		@filenames = readdir DIRHANDLE;
+		closedir DIRHANDLE;
+	} else {
+		$log->error("Couldn't open directory ($config{'ProjectFilesPath'}$path)");
+	} # end if
+
+	$$variable{DIRS} = [];
+	$$variable{FILES} = [];
+
+	foreach my $file ( @filenames ) {
+		next if substr($file,0,1) eq '.';
+		if ( -d "$config{ProjectFilesPath}$path/$file" ) {
+			if ( ! $path ) {
+				next if ! $Companies{$file};
+			} # end if
+			push @{$$variable{DIRS}}, $file;
+		} else {
+			push @{$$variable{FILES}}, $file;
+		} # end if directory or file
+	} # end foreach
+	return '/'.($path?$path.'/':'');
+) ?>
+<form id="f1" name="f1" action="index.html" method="post">
+	<table class="List">
+		<tr> 
+			<th class="filename">Filename</th>
+			<th class="size">Size</th>
+			<th class="buttons"><? echo ( ssi::button( 'Delete',{onclick=>"if ( confirm('Are you sure?') ) {new Ajax.Updater( 'FileList', '_files.html', { parameters: { func: 'Delete', files: get_checkbox_values(\$('f1').elements['chkFiles']) } } );};", text=>'Delete' } ); ) ?></th>
+		</tr>
+
+		<? echo (
+			my $html;
+			my $rowclass;
+			my $path = $session{'/files/index.html?path'};
+			my @path = split('/', $path);
+			if ( @path ) {
+				pop @path;
+				my $parentpath = join('/', @path );
+				$html .= sprintf(q`
+<tr%1$s> 
+	<td colspan="2" class="dirname"><a href="%3$s">%2$s</a></td>
+	<td class="buttons"><input type="checkbox" name="chkFiles" value="%2$s"/></td>
+</tr>`, $rowclass, '..', '/files/index.html?path='.$parentpath );
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end if
+	
+			foreach my $dir ( @{$$variable{DIRS}} ) {
+				$html .= sprintf(q`
+<tr%1$s> 
+	<td colspan="2" class="dirname"><a href="%3$s">%2$s</a></td>
+	<td class="buttons"><input type="checkbox" name="chkFiles" value="%2$s"/></td>
+</tr>`, $rowclass, $dir, '/files/index.html?path='.$path.$dir  );
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach dir
+			foreach my $file ( @{$$variable{FILES}} ) {
+				my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev, $size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("$config{'ProjectFilesPath'}/$path/$file");
+		$html .= sprintf(q`<tr%1$s> 
+			<td class="filename"><a href="%3$s">%2$s</a><br/>%5$s</td>
+			<td class="size">%4$s</td>
+			<td class="buttons"><input type="checkbox" name="chkFiles" value="%2$s"/></td>
+		</tr>`, $rowclass, $file, '/project_files/'.$path.$file, misc::format_bytes(int($size)), ''  );
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach dir
+			return $html;
+		) ?>
+	</table>
+	<input type="hidden" name="btnFunction" />
+</form>

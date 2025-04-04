@@ -1,0 +1,73 @@
+.SelectCompany li.form-check-inline {
+	text-align: left;
+	padding: 0 0 0 100px;
+}
+.SelectCompany li label:not(.radio):not(.radio-inline) {
+	margin: 0 0 0 -100px;
+	width: 95px;
+	text-transform: capitalize;
+}
+/*
+.SelectCompany input[type="text"] {
+	width: auto;
+}
+*/
+.SelectCompany select {
+	width: auto;
+	max-width: 75%;
+}
+#psContainer {
+	height:20px;
+	width:100px;
+	border:1px solid #999999;
+	margin: 1px 0 0 5px;
+	background-color:#DDDDDD;
+	display: inline-block;
+}
+
+#psStrength {
+	background-image:url('/images/password_strength.png');
+	background-repeat: repeat-y;
+	height:20px;
+	width:0;
+	display: inline-block;
+	text-align: center;
+}
+
+#LoginLog .From, #LoginLog .Result, #LoginLog .Type {
+	text-align: left;
+}
+
+#extension {
+	width: 40px;
+}
+
+.Notifications {
+    float: right;
+    width: 50%;
+}
+.Notifications fieldset,
+.Email .Vacation fieldset {
+    margin-left: 5px;
+}
+.LoginCredentials {
+    float: left;
+    width: 50%;
+}
+.LoginCredentials fieldset,
+.Email .Settings fieldset {
+    margin-right: 5px;
+}
+.Email {
+    clear: both;
+}
+.Email .Settings {
+    float: left;
+    width: 50%;
+}
+.Email .Vacation {
+    float: right;
+    width: 50%;
+}
+.Login, .Register { 
+}

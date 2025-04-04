@@ -1,0 +1,237 @@
+<? eval (
+	my @Hosts;
+  my $uri = $$variable{uri};
+
+	if ( $session{$uri.'?mac'} and ( $session{$uri.'?mac'} !~ /%/ ) ) {
+		my @HIs = openprint::Host_Interface->find( mac => $session{$uri.'?mac'} );
+		if ( @HIs ) {
+		@Hosts = openprint::Host->find(
+			id	=> [ sets::union( map { $$_{host_id} } @HIs ) ],
+      order	=> ($session{$uri.'?order'} and $openprint::Host::fields{$session{$uri.'?order'}} ) ? $session{$uri.'?order'} : 'lower(hostname)',
+			( $session{$uri.'?deleted'} ne '' ? ( deleted=>$session{$uri.'?deleted'} ) : ( deleted=>[0,1] ) ),
+			limit	=>10,
+		);
+			if ( !@Hosts ) {
+				$variable{warning} .= 'Interface found for ' . $session{$uri.'?mac'} . ' but host not found.<br/>';
+			}
+		}
+	} else {
+		my $host_ids;
+
+		if ( $session{$uri.'?network_id'} ) {
+      # Network is less specific than ip, so let's load it first.
+      $host_ids = [] if ! $host_ids;
+      foreach my $Network ( openprint::Host_Interface->find(host_id=>$session{$uri.'?network_id'}) ) {
+        push @{$host_ids}, map { $_->host_id() } openprint::Host_Interface->find( 'ip <<=' => $$Network{ip} );
+      } # end foreach Network
+    }
+
+		if ( $session{$uri.'?ip'} and ( (!$host_ids) or @{$host_ids} ) ) {
+			if ( $session{$uri.'?ip'} =~ /\// ) {
+				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find(
+            'ip <<=' => $session{$uri.'?ip'},
+            ( $host_ids ? ( host_id => $host_ids ) : () ),
+          ) ];
+			} else {
+				$host_ids = [ map { $_->host_id() } openprint::Host_Interface->find(
+            ip => $session{$uri.'?ip'},
+            ( $host_ids ? ( host_id => $host_ids ) : () ),
+            ) ];
+			}
+		}
+
+		if ( (! $host_ids ) or ( @{$host_ids} ) ) {
+			$session{$uri.'?order'} = 'lower(hostname)' if ! $session{$uri.'?order'};
+      my $Network_Type = openprint::Host_Type->find_one(name=>'Network');
+
+			@Hosts = openprint::Host->find(
+      ($Network_Type ? ('type_id is null or !='=>$$Network_Type{id}) : () ),
+      order	=> ($session{$uri.'?order'} and $openprint::Host::fields{$session{$uri.'?order'}} ) ? $session{$uri.'?order'} : 'lower(hostname)',
+				( $host_ids ? ( id => $host_ids ) : () ),
+				( $session{$uri.'?hostname'} ? ( 'hostname ilike' => ( $session{$uri.'?hostname'} =~ /%/ ? $session{$uri.'?hostname'} : $session{$uri.'?hostname'}.'%' ) ) : () ),
+				( $session{$uri.'?name'} ? ( 'name ilike' => ( $session{$uri.'?name'} =~ /%/ ? $session{$uri.'?name'} : $session{$uri.'?name'}.'%' ) ) : () ),
+				( $session{$uri.'?blacklisted'} ne '' ? ( blacklist=>$session{$uri.'?blacklisted'} ) : () ),
+				( $session{$uri.'?whitelisted'} ne '' ? ( whitelist=>$session{$uri.'?whitelisted'} ) : () ),
+				( $session{$uri.'?monitored'} ne '' ? ( monitored=>$session{$uri.'?monitored'} ) : () ),
+				( $session{$uri.'?online'} ne '' ? ( online=>$session{$uri.'?online'} ) : () ),
+				( $session{$uri.'?has_hostname'} ne '' ? ( 'hostname is null' => ! $session{$uri.'?has_hostname'} ) : () ),
+				( $session{$uri.'?type_id'} ne '' ? ( type_id => $session{$uri.'?type_id'} ) : () ),
+				( $session{$uri.'?owner_id'} ne '' ? ( owner_id => $session{$uri.'?owner_id'} ) : () ),
+				( $session{$uri.'?deleted'} ne '' ? ( deleted=>$session{$uri.'?deleted'} ) : ( deleted=>[0,1] ) ),
+				date_filter($uri.'?created_on_end', 'created_on <=' ),
+				date_filter($uri.'?created_on_start', 'created_on >=' ),
+				date_filter($uri.'?updated_on_end', 'updated_on <=' ),
+				date_filter($uri.'?updated_on_start', 'updated_on >=' ),
+        limit=>10000,
+				);
+		} # end if
+	} # end if
+
+  # Bulk load HostInterfaces
+  if ( @Hosts ) {
+    my %Host_Interfaces;
+    foreach my $HI ( openprint::Host_Interface->find( host_id=>[map { $$_{id} } @Hosts], order =>  'mac' ) ) {
+      $Host_Interfaces{$$HI{host_id}} = [] if ! $Host_Interfaces{$$HI{host_id}};
+      push @{$Host_Interfaces{$$HI{host_id}}}, $HI;
+    }
+    foreach my $Host ( @Hosts ) {
+      $Host->Interfaces( $Host_Interfaces{$$Host{id}} );
+    }
+  }
+
+	my $mac_search;
+	if ( $session{$uri.'?mac'} and $session{$uri.'?mac'} =~ /%/ ) {
+		$mac_search = lc $session{$uri.'?mac'};
+		$mac_search =~ s/%/\.\*/g;
+		$mac_search =~ s/://g;
+	} # end $mac_search
+
+	@{$$variable{Hosts}} = ();
+	foreach my $Host ( @Hosts ) {
+		my @Interfaces = $Host->Interfaces();
+		
+		if ( $mac_search ) {
+			next if ! @Interfaces;
+			my $next = 1;
+			
+			foreach my $I ( @Interfaces ) {
+				my $mac = lc $I->mac();
+				$mac =~ s/://g;
+				if ( $mac =~ /$mac_search/ ) {
+					$next = 0;
+					last;
+				} # end if
+			} # end foreach Interface
+			next if $next;
+		} # end if
+
+		if ( $session{$uri.'?radius_auth'} ne '' ) {
+			if ( $session{$uri.'?radius_auth'} eq '1' ) {
+				my $show = 0;
+				next if ! @Interfaces;
+				foreach my $I ( @Interfaces ) {
+					my $mac = $I->mac();
+					if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+						$mac = "$1-$2-$3-$4-$5-$6";
+					} # end if
+					$mac = uc $mac;
+					
+					if ( openprint::RADIUS_Check->find_one( username=>$mac ) ) {
+						$show = 1;
+						last;
+					} # end if
+				} # end foreach mac
+				next if ! $show;
+			} elsif ( $session{$uri.'?radius_auth'} eq '0' ) {
+				my $show = 1;
+				if ( @Interfaces ) {
+					foreach my $I ( @Interfaces ) {
+						my $mac = $I->mac();
+						if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+							$mac = "$1-$2-$3-$4-$5-$6";
+						} # end if
+						$mac = uc $mac;
+						if ( openprint::RADIUS_Check->find_one( username=>$mac ) ) {
+							$show = 0;
+							last;
+						} # end if
+					} # end foreach mac
+				} # end if
+				next if ! $show;
+			} else {
+				$log->error("Unknown value of " . $session{$uri.'?radius_auth'} );
+			} # end if
+		} # end if
+		push @{$$variable{'Hosts'}}, $Host;
+	} # end foreach Host
+) ?>
+<?include(/includes/error_reporting.html)?>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'host_id', this.checked );"/></th>
+			<th class="id">Id</th>
+			<th class="thumbnail">Image</th>
+			<th class="name">Name</th>
+			<th class="abbr_name">Abbr Name</th>
+			<th class="type">Type</th>
+			<th class="location">Lat &amp; Long</th>
+			<th class="ip" onclick="load_host(f1, {order:'ip'});">IP</th>
+			<th class="mac" onclick="load_host(f1, {order:'mac'});">Mac</th>
+      <th class="status">Status</th>
+			<th class="options">Options</th>
+			<th class="description">Description</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+sub online_html {
+	my ( $online, $text ) = @_;
+
+  if ( defined $online ) {
+
+	return join('',
+			'<span class="', ( $online ? 'online' : 'offline' ),'">',
+			($text ? $text : ($online ? 'online':'offline')),
+			'</span>'
+			);
+	}
+  return $text;
+}
+			my $html;
+			my $rowclass;
+			foreach my $Host ( @{$$variable{Hosts}} ) {
+             my $location = $Host->Location();
+				$html .= sprintf('
+					<tr class="%12$s">
+						<td class="checkbox"><input type="checkbox" id="host_id" name="host_id" value="%1$d"/></td>
+            <td class="id"><a href="/employee/it/host.html?host_id=%1$d">%1$d</a></td>
+						<td class="thumbnail">%13$s</td>
+						<td class="name"><a href="/employee/it/host.html?host_id=%1$d">%2$s</a></td>
+						<td class="abbr_name"><a href="/employee/it/host.html?host_id=%1$d">%3$s</a></td>
+						<td class="type"><a href="/employee/it/host.html?host_id=%1$d">%4$s</a></td>
+						<td class="location"><a href="/employee/it/host.html?host_id=%1$d">%5$s</a></td>
+						<td class="ip"><a href="/employee/it/host.html?host_id=%1$d">%6$s</a></td>
+						<td class="mac"><a href="/employee/it/host.html?host_id=%1$d">%7$s</a></td>
+            <td class="status"><a href="/employee/it/host.html?host_id=%1$d">%8$s<br/>%9$s</a></td>
+						<td class="options"><a href="/employee/it/host.html?host_id=%1$d">%10$s</a></td>
+						<td class="description"><a href="/employee/it/host.html?host_id=%1$d">%11$s</a></td>
+					</tr>
+          ', $Host->id(), $Host->name(), $Host->abbr_name(), $Host->type(),
+          ($location->id() ? join(', ', $location->latitude(), $location->longitude()) : ''),
+					join('<br/>', map { online_html($_->online(), $_->ip() . ' ') } $Host->Interfaces() ),
+					join('<br/>', map { online_html($_->online(), $_->mac() ? $_->mac() : ' ') } $Host->Interfaces() ),
+					join('<br/>', map { online_html($_->online()) } $Host->Interfaces() ), # statsys
+					join('<br/>', $Host->check()),
+					join(', ', (
+          ( $config{DHCP_Server_Support} ? ( ( map { $_->dhcp() ? 'dhcp' : () } $Host->Interfaces() ) ? '<span class="dhcp">dhcp</span>' : () ) : () ),
+            ( $Host->blacklist() ? '<span class="blacklisted">blacklisted: count='.$Host->count().'</span>' : () ),
+            ( $Host->whitelist() ? '<span class="whitelisted">whitelisted</span>' : () ),
+            ( $Host->monitored() ? '<span class="monitored">monitored</span>' : () ),
+					) ),
+					$Host->description(),
+					join(' ', $rowclass, ($Host->deleted() ? 'deleted' : () ) ),
+					$Host->thumbnail_html(),
+					);
+				$rowclass = $rowclass ? '' : 'colRow';
+			} # end foreach Host
+			$html .= '<tr class="totals">
+			<td class="checkbox"><input type="checkbox" onclick="select_all( this.form, \'host_id\', this.checked );"/></td>
+        <td colspan="11"># of hosts: ' . @{$$variable{Hosts}} . '</td></tr>';
+			return $html;
+		) ?>
+		<tr>
+	</tbody>
+</table>
+<p class="buttons">
+<? echo (
+   my $uri = '/employee/it/hosts.html';
+   join("\n",
+     $session{$uri.'?deleted'} eq '1' ? (
+       button( 'destroy', { onclick=>q`jQuery('#Results').load('/employee/it/_hosts.html?action=destroy', { host_id: get_value( $('f1').host_id ) } );`, text=>'Destroy Checked' } ),
+       button( 'undelete', { onclick=>q`jQuery('#Results').load('/employee/it/_hosts.html?action=undelete', { host_id: get_value( $('f1').host_id ) } );`, text=>'Undelete Checked' } ),
+      ) : (
+			  button( 'delete', { onclick=>q`jQuery('#Results').load('/employee/it/_hosts.html?action=Delete', { host_id: get_value( $('f1').host_id ) } );`, text=>'Delete Checked' } ),
+			  button( 'Wake', { onclick=>q`jQuery('#Results').load('/employee/it/_hosts.html?action=wake', { host_id: get_value( $('f1').host_id ) } );`, text=>'Wake' } ),
+) ); ) ?>
+</p>

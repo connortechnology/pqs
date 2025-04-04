@@ -1,0 +1,92 @@
+<script type="text/javascript">
+	function load( div, form ) {
+		form = $(form);
+		new Ajax.Updater( div, '_history.html', { parameters: form.serialize() } );
+	} // end function load
+	function open_decline_window( form ) {
+		var claim_ids;
+		if ( ! form.claim_id.length ) {
+			if ( form.claim_id && form.claim_id.checked ) {
+				claim_ids = new Array();
+				claim_ids[claim_ids.length] = form.claim_id.value;
+			} // end if
+		} else {
+			claim_ids = $A(form.claim_id).filter(function(e){return e.checked}).map(function(e){return e.value});
+		} // end if
+		if ( ! claim_ids.length ) {
+			alert('Please select a claim to decline.');
+		} else {
+			popup_window('_po_decline_popup.html?po_id='+claim_ids.join(','), '', { width: 400 } );
+		} // end if
+	} // end function open_decline_window()
+</script>
+<?include(/includes/error_reporting.html)?>
+<div class="Claims"><div class="History">
+<form id="f1" name="f1" action="history.html" method="post">
+	<fieldset class="filters"><legend>Select Search Criteria</legend>
+		<ul>
+			<li><label>CLAIM #</label>
+			<? echo ( join("\n",
+						input( type=>'cardinal', id=>'claim_id', name=>'claim_id', onchange=>'change_handler(this);', 
+							onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){load('Results','f1');}`),
+						button( 'Go3', { onclick=>q`load('Results','f1');`, text=>'Go' } ),
+				); ) ?>
+			</li>
+			<li><label>Manifest</label>
+				<input type="text" id="manifest_id" name="manifest_id" onkeydown="if(event.keyCode == 13){load('Results','f1');}" onkeyup="this.value=this.value.replace(/\s/g,'');" />
+				<? echo ( button( 'Go2', { onclick=>"load('Results', \$('f1'));", text=>'Go' } ); ) ?>
+			</li>
+		</ul>
+		<hr/>
+		<ul>
+		<li><label>Created By</label>
+			<select name="created_by" onchange="load('Results','f1');">
+				<option value="">All</option>
+				<? echo ( 
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( order=>'lower(firstname),lower(lastname)', type=>['A','E'] ) ], $session{'/employee/claim/history.html?created_by'} ); ) ?>
+			</select>
+		</li>
+		<li><label>Vendor</label>
+			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+			<select name="supplier_id" onchange="load('Results','f1');">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( order=>'lower(name)', supplier=>'Y') ], $session{'/employee/claim/history.html?supplier_id'} ); ) ?>
+			</select>
+		</li>
+		<li>
+			<label>Created</label>
+			<? echo ( date_select_session( '/employee/claim/history.html', 'created_on_start', { onchange=>q`load('Results','f1');`,with_today=>1} );) ?>
+           to
+			<? echo ( date_select_session( '/employee/claim/history.html', 'created_on_end', { onchange=>q`load('Results','f1');`, with_today=>1} ); ) ?>
+		</li>
+		<li>
+			<label>Updated</label>
+			<? echo ( date_select_session( '/employee/claim/history.html', 'updated_on_start', { onchange=>q`load('Results','f1');`,with_today=>1} ); ) ?>
+            to
+			<? echo ( date_select_session( '/employee/claim/history.html', 'updated_on_end', { onchange=>q`load('Results','f1');`, with_today=>1} ); ) ?>
+		</li>
+		<li>
+			<label>Status</label>
+			<? echo ( radio( 'status', [ '', 'All', 'Filed', 'Filed', 'Accounting', 'Sent to Accounts', 'Invoiced', 'Invoiced', 'Cancelled', 'Cancelled', 'Paid', 'Paid' ], $session{'/employee/claim/history.html?status'} ); ) ?>
+		</li>
+		<li>
+			<label>Contains</label>
+			<input type="text" id="contains" name="contains" onkeyup="load('Results','f1');" />
+		</li>
+		<li><label>Deleted</label><? echo ( radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'All' ], $session{'/employee/claim/history.html?deleted'}, { onclick=>q`load('Results','f1');` } ); ) ?></li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join( "\n",
+				button( 'ShowResults', { onclick=>'f1.submit();', text=> 'Show Results' } ),
+				button( 'Add', { href=>'/employee/claim/edit.html', text=>'Add New' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" action="history.html" method="post">
+	<input type="hidden" name="btnFunction"/>
+	<div id="Results"><?include(_history.html)?></div>
+</form>
+</div>
+</div>

@@ -1,0 +1,23 @@
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<? eval (
+	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+	$$variable{'Columns'} = 'Three';
+	} else {
+	$$variable{'Columns'} = 'Two';
+	} # end if
+) ?>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+	<fieldset><legend><?ServiceTypeName?></legend>
+		<ul>
+		<li><label># of hours</label>
+			<? echo ( input( type=>'cardinal', name=>'txtQuantity', value=>$$variable{txtQuantity}, onkeyup=>'calc(this.form.name);' ); ) ?>
+		</li>
+		<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
+		</ul>
+	</fieldset>
+	<hr/>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_all.html'); ) ?>
+	</form>
+</div>

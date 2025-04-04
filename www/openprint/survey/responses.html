@@ -1,0 +1,76 @@
+<form id="f1" name="f1" method="post" action="responses.html">
+	<fieldset class="filters unprintable"><legend>Select Response to View</legend>
+		<ul>
+			<li><label>Survey</label>
+				<select name="survey_id" id="survey_id" onchange="this.form.submit();">
+				<? echo (
+					my @Surveys = ();
+					foreach my $S ( openprint::Survey->find( order=>'lower(name)') ) {
+						next if ! $S->can_edit();
+						push @Surveys, $S;
+					} # end foreach S
+					make_drop_down( [ map { $_->id(), $_->name() } @Surveys ], $param{survey_id} );
+				) ?>
+				</select>
+			</li>
+			<li>
+				<label>Responder</label>
+				<select name="user_id" onchange="this.form.submit();">
+					<option value=""> select </option>
+					<? echo ( 
+							make_drop_down( openprint::User->dropdown(
+									'id in' => [ 
+									sets::union( 
+										map { $_->user_id() } openprint::Survey_Response->find( survey_id=>$param{survey_id} ) 
+										) ], 
+									order=>'lower(firstname),lower(lastname)'), $param{user_id} );
+					) ?>
+				</select>
+			</li>
+		</ul>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+<? if ( $param{'user_id'} ) ?>
+<fieldset><legend>Viewing Survey</legend>
+	The following response was submitted by <? echo ( new openprint::User( $param{user_id} )->name() ) ?>.
+	<table class="List">
+	<? echo (
+		my $html;
+		my %Responses = map { $_->question_id(), $_ } openprint::Survey_Response->find('survey_id'=>$param{'survey_id'}, 'user_id'=>$param{'user_id'} );
+		my @Categories = openprint::Survey_Question_Category->find('order'=>'sorting,name');
+		if ( @Categories ) {
+			foreach my $Category ( @Categories ) {
+				$html .= qq{<tr><th colspan="2" align="left">$$Category{'name'}</th></tr>};
+
+				my @Questions = openprint::Survey_Question->find('survey_id'=>$param{'survey_id'}, 'category_id'=>$Category->id(),'order'=>'sorting' );
+				my $rowclass;
+				foreach my $Question ( @Questions ) {
+					my $Response = $Responses{$$Question{id}};
+					$Response = new openprint::Survey_Response() if ! $Response;
+					$html .= qq`<tr$rowclass><td>$$Question{text}</td><td>`.join(',',map{$_->text()} $Response->Answers()).qq` $$Response{answer}</td></tr>\n`;
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end foreach Question
+			} # end foreach Category
+		} else {
+			my @Questions = openprint::Survey_Question->find('survey_id'=>$param{'survey_id'},'order'=>'sorting' );
+			my $rowclass;
+			foreach my $Question ( @Questions ) {
+				my $Response = $Responses{$$Question{id}};
+				$Response = new openprint::Survey_Response() if ! $Response;
+				$html .= qq`<tr$rowclass title="entered on $$Response{created_on}"><td>$$Question{text}</td><td>`.join(',',map{$_->text()} $Response->Answers()).qq` $$Response{answer}</td></tr>\n`;
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Question
+		} # end if
+		return $html;
+		) ?>
+	</table>
+	<p class="buttons">
+		<? echo ( 
+			if ( $session{'user_type'} eq 'A' or $session{'user_id'} == $param{'user_id'} ) {
+				button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';f1.submit();", 'text'=>'Delete Response' } );
+			} # end if
+		) ?>
+	</p>
+</fieldset>
+<? endif ( $param{'user_id'} ) ?>
+</form>

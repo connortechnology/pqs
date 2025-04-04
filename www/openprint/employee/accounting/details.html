@@ -1,0 +1,99 @@
+<script>
+	function confirm_delete( form, payment_id ) {
+		if ( confirm( "Are you sure you want to delete this payment?" ) ) {
+			form.btnFunction.value = 'Delete';
+			form.payment_id.value = payment_id;
+			form.submit();
+		} // end if
+	} // end function confirm_delete()
+
+	function confirm_cancel( form ) {
+		if ( confirm("Are you sure you want to cancel this order?") ) {
+			form.btnFunction.value = 'Cancel';
+			form.submit();
+		} // end if
+	} // end function confirm_cancel()
+</script>
+<?echo(ssi::link('/css/order.css');)?>
+<?include('/includes/error_reporting.html')?>
+<form id="f2" name="f2" method="get" action="/employee/accounting/details.html">
+  <fieldset class="filters">
+    <div class="content">
+      <ul>
+				<li>
+					<label>Docket #</label>
+					<? echo (
+						input( type=>'cardinal', id=>'docket', name=>'docket', value=>$param{docket}, onkeypress=>q`$('order_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){$('f2').submit();}`);
+					) ?>
+				</li>
+				<li>
+					<label>Order ID</label>
+					<? echo ( 
+						input( type=>'cardinal', id=>'order_id', name=>'order_id', value=>$param{order_id}, onkeypress=>q`$('docket').value='';$('docket').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){$('f2').submit();}` );
+					) ?>
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+</form>
+<? if ( $$variable{Order}{id} ) ?>
+<form id="f1" name="f1" method="post" action="/employee/accounting/details.html?order_id=<?OrderID?>">
+	<p class="buttons">
+	<? echo ( my $html;
+		$html .= button( 'Log', { onclick=>"popup_window('/main/order/_view_log.html', { order_id:$$variable{Order}{id} }, { width: 800 } );", text=> 'View Log' } );
+		#writeButton('Send','sendEmailInvoice.gif', "f1.btnFunction.value='Send';f1.submit();",'','Send Email Invoice' );
+		$html .= button('Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ) if $$variable{'Order'}->owing() > 0;
+		$html .= button('Cancel', { onclick=>q`confirm_cancel($('f1'));`} ) if $$variable{'Order'}->status() ne 'Cancelled';
+		$html .= button('ReOpen', { onclick=>"popup_window('/main/order/_reopen_order.html?order_id=$$variable{Order}{id}');", text=>'ReOpen'});
+		my @Suppliers = openprint::Company->find( supplier =>'Y', offers_credit =>1, order=>'lower(name)' );
+		if ( @Suppliers > 1 ) {
+			$html .= button( 'ChangeSupplier', { onclick=>q`f1.btnFunction.value='ChangeSupplier';f1.submit();`, text=>'Change Supplier to' } );
+			$html .= '<select name="supplier_id"><option value="">select</option>'.make_drop_down([ map { $_->id(), $_->name() } @Suppliers ], $$variable{'Order'}->supplier_id() ).'</select>';
+		} # end if
+		return $html;
+		) ?>
+	</p><br class="spacer"/>
+	<div class="Order">
+	<?include('/includes/order_header.html')?>
+	<br class="spacer"/>
+	<table class="List">
+		<tr>
+			<th class="project_id">Project #</th>
+			<th class="reference">Reference</th>
+			<th class="status">Status</th>
+			<th class="Date">Requested Date</th>
+			<th class="Date">Due Date</th>
+			<th class="Quantity">Qty</th>
+			<th class="Price">Price</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Project ( $$variable{Order}->Projects() ) {
+				$html .= sprintf(q`
+		<tr%1$s>
+			<td class="project_id"><a href="/employee/project/view.html?ProjectIndex=%3$d&OrderID=%2$d">%3$d</a></td>
+			<td class="reference"><a href="/employee/project/view.html?ProjectIndex=%3$d&OrderID=%2$d">%4$s</a></td>
+			<td class="status">%5$s</td>
+			<td class="Date">%6$s</td>
+			<td class="Date">%7$s</td>
+			<td class="Quantity">%8$s</td>
+			<td class="Price">%9$s</td>
+		</tr>`, $rowclass, $$variable{'Order'}->id(), $$Project{id}, $Project->reference(), $Project->status(), $Project->requested_date(), $Project->due_date(),
+			$Project->ordered_quantity(), openprint::Currency::format($Project->ordered_price())
+			);
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach $Project
+	return $html
+) ?>
+	</table>
+	<?include(/main/order/_totals.html)?>
+	<br class="spacer"/>
+	<div id="Payments">
+	<?include(/employee/accounting/_payments.html)?>
+	</div>
+	</div>
+	<input type="hidden" name="payment_id"/>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<? endif ( $$variable{Order}{id} ) ?>

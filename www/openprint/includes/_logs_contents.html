@@ -1,0 +1,67 @@
+<? echo (
+	my $html='';
+	my @Logs = openprint::Log->find(
+		object_type_id	=>	$$variable{Object}->Object_Type()->id(),
+		object_id		=>	$$variable{Object}->id(),
+		date_filter( $variable{uri}.'?log_created_on_end', 'date_time <=' ),
+		date_filter( $variable{uri}.'?log_created_on_start', 'date_time >=' ),
+		( $session{$variable{uri}.'?log_action_id'} ? ( action_id => $session{$variable{uri}.'?log_action_id'} ) : () ),
+		( $session{$variable{uri}.'?log_limit'} ? ( limit => $session{$variable{uri}.'?log_limit'} ) : () ),
+		order =>'date_time DESC',
+	);
+	if ( ( ! @Logs ) and ! ( $session{$variable{uri}.'?log_action_id'} ) and !%param) {
+		@Logs = openprint::Log->find(
+				object_type_id  =>  $$variable{Object}->Object_Type()->id(),
+				object_id       =>  $$variable{Object}->id(),
+				order =>'date_time DESC',
+				limit	=> 1,
+				);
+		if ( @Logs ) {
+			my ( $year, $month, $day ) = ( $Logs[0]{date_time} =~ /(\d\d\d\d)-(\d\d)-(\d\d)/ );
+			$session{$variable{uri}.'?log_created_on_start_year'} = $year;
+			$session{$variable{uri}.'?log_created_on_start_month'} = $month;
+			$session{$variable{uri}.'?log_created_on_start_day'} = $day;
+			@Logs = openprint::Log->find(
+					object_type_id	=>	$$variable{Object}->Object_Type()->id(),
+					object_id		=>	$$variable{Object}->id(),
+					date_filter( $variable{uri}.'?log_created_on_end', 'date_time <=' ),
+					date_filter( $variable{uri}.'?log_created_on_start', 'date_time >=' ),
+					order =>'date_time DESC',
+			);
+		}
+	}
+	return if ! @Logs;
+	
+	my $rowclass = '';
+	$html .= '
+<table class="List">
+	<tr>
+		<th class="DateTime">When</th>
+		<th class="User">Who</th>
+		<th class="action_type">Action</th>
+		<th class="hostname">Host</th>
+		<th class="note">Note</th>
+	</tr>';
+	foreach my $Log ( @Logs ) {
+		
+		$html .= sprintf('
+<tr%s>
+	<td class="DateTime">%s</td>
+	<td class="User">%s</td>
+	<td class="action_type">%s</td>
+	<td class="hostname">%s</td>
+	<td class="note">%s</td>
+</tr>',
+			$rowclass,
+			format_datetime( $Log->date_time() ),
+			$Log->User()->link_to(),
+			$Log->Action()->name(),
+			$Log->Host()->link_to(),
+			$Log->note(),
+			);
+
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Log
+	$html .= '</table>';
+	return $html;
+) ?>

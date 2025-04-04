@@ -1,0 +1,8 @@
+<li> 
+	<label>Total <? echo ( writeTip( 'calliper' ); ) ?></label>
+	<? echo ( join("\n",
+				input( type=>'float', name=>'txtFinishedCalliper', value=>$$variable{txtFinishedCalliper}, onkeyup=>'calc(this.form.name);' ),
+				write_override( 'chkOverrideFinishedCalliper', $$variable{chkOverrideFinishedCalliper}, '', 'calc(this.form.name);' ),
+	); ) ?>
+	(in thousandths of an inch ex: 0.0049)
+</li>

@@ -1,0 +1,66 @@
+<fieldset>
+	<legend>Last Events</legend>
+		<table class="List sortable">
+		<tr>
+			<th class="Action">Action</th>
+			<th class="DateTime">When</th>
+			<th class="ip">IP Address</th>
+			<th class="Note">Note</th>
+			<th class="User">User</th>
+			<th class="Company">Company</th>
+			<th class="Object">Object</th>
+			<th class="buttons"></th>
+		</tr>
+			<? echo (
+				my $html = '';
+				my $uri = '/administrator/managerial/logs.html';
+				$$variable{Results} = [ openprint::Log->find(
+					date_filter( $uri.'?date_end', 'date_time <=' ),
+					date_filter( $uri.'?date_start', 'date_time >=' ),
+					( $param{company_id} ? ( company_id	=>	$param{company_id} ) : () ),
+					( exists $param{company_id_is_null} ? ( 'company_id is null'	=>	$param{company_id_is_null} ) : () ),
+					( $param{user_id} ? ( user_id		=>	$param{user_id} ) : () ),
+					( $param{'user_id !='} ? ( 'user_id !='		=>	$param{'user_id !='} ) : () ),
+					( exists $param{user_id_is_null} ? ( 'user_id is null'=>$param{user_id_is_null} ) : () ),
+					( $param{object_type_id} ? ( object_type_id		=>	$param{object_type_id} ) : () ),
+					( $param{log_actions} ? ( action_id	=>	$param{log_actions} ) : () ),
+          order => 'date_time',
+					limit=>'1000',
+					) ];
+        my @host_ids = map { $$_{host_id} } @{$$variable{Results}};
+        openprint::Host->find(id=>\@host_ids);
+
+				foreach my $Log ( @{$$variable{Results}} ) {
+					my $Object = $Log->Object();
+	
+					my $link_to = ($Object and $Object->can('link_to')) ? $Object->link_to($Object->Object_Type()->human() . ' : ' . $Object->name()) : '';
+
+					$html .= sprintf('<tr id="log_%d">
+							<td class="Action">%s</td>
+							<td class="DateTime">%s</td>
+							<td class="ip" title="%s">%s</td>
+							<td class="Note">%s</td>
+							<td class="User">%s</td>
+							<td class="Company">%s</td>
+							<td class="Object">%s</td>
+							<td class="buttons">%s</td>
+						</tr>',
+						$Log->id(),
+						$Log->Action()->name(),
+						format_datetime( $Log->date_time() ),
+						$Log->ip_address(), ($Log->Host()->can_view() ? $Log->Host()->link_to() : $Log->Host()->name() ),
+						$Log->note_html(),
+						$Log->User()->link_to(),
+						$Log->Company()->link_to(),
+						$link_to,
+						join("\n",
+							( $session{user_type} eq 'A' ?
+								( button( 'X'.$Log->id(), { onclick=>qq`jQuery.ajax('_logs.json', { data: { action: 'delete', log_id: $$Log{id} } } ).done( function(){ jQuery('#log_$$Log{id}').remove() } );`, text=>'X' } ),
+) : () )
+						),
+						);
+				} # end foreach
+				return $html;
+			) ?>
+		</table>
+</fieldset>

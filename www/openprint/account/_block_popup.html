@@ -1,0 +1,18 @@
+<form id="block_form" name="block_form" action="/account/search.html" method="post">
+	<fieldset><legend>Block Account</legend>
+		<div class="instructions">
+			Adding someone to your block list will prevent them from seeing or interacting with you on this site.  It will also block you from seeing and interacting with them.  Removal of the block will require acceptance from both parties. The other user will not be notified of the addition of the block, but will be notified of the removal.
+		</div>
+		<ul>
+			<li><label>Reason</label>
+				<textarea name="reason" id="reason"></textarea>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				ssi::button( 'Block', { href=>"/account/search.html?action=Block&amp;user_id=$$variable{User}{id}", text=>'Block' } ),
+				ssi::button( 'CancelBlock', { onclick=>'popupWin.close();', text=>'Cancel' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+</form>

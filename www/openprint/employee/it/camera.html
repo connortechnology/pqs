@@ -1,0 +1,18 @@
+<div class="ZM_Monitors">
+<? echo (
+	my $zm_dbh = sql::open_sql( $log,
+		  'database'  => $config{'zm_db_name'},
+		  'driver'    => $config{'zm_db_driver'},
+		  'host'      => $config{'zm_db_hostname'},
+		  'login'     => $config{'zm_db_username'},
+		  'password'  => $config{'zm_db_password'},
+		);
+	return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
+	require openprint::ZM_Monitor;
+	my $Monitor = openprint::ZM_Monitor->find_one('dbh'=>$zm_dbh, 'id'=>$param{'monitor_id'} );
+	$zm_dbh->disconnect();
+	return sprintf(q`<img src="http://%2$s.internal.point-one.com/cgi-bin/zms?mode=jpeg&monitor=%1$d&amp;maxfps=%5$d" />`,
+		$Monitor->id(), $Monitor->server_host(), $Monitor->name(), $Monitor->function(), $Monitor->max_fps(),
+		);
+) ?>
+</div>

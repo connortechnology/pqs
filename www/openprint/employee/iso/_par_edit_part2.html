@@ -1,0 +1,37 @@
+<div class="error"><?error?></div>
+<form name="part2form" id="part2form">
+<h3>Part 2 (To be completed by recipient)</h3>
+<table>
+	<tr><td width="100%" colspan="10">FEASIBILITY ANALYSIS</td></tr>
+	<tr><td width="100%" colspan="10"><textarea name="cause" rows="5" style="width:99%;"><? hecho ( $$variable{'PAR'}->cause() ) ?></textarea></td></tr>
+	<tr>
+		<td width="10%" colspan="1">Recipient</td>
+		<td width="40%" colspan="4">
+<select name="part2_user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'PAR'}->part2_user_id() ? $$variable{'PAR'}->part2_user_id() : $session{'user_id'} ); ) ?></select>
+</td>
+		<td width="10%" colspan="1">Date</td>
+		<td width="40%" colspan="4">
+<? eval (
+if ( $$variable{'PAR'}->part2_signed_on() ) {
+@$variable{'part2_signed_on_years','part2_signed_on_months','part2_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-', $$variable{'PAR'}->part2_signed_on() ) );
+} else {
+@$variable{'part2_signed_on_years','part2_signed_on_months','part2_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+} # end if
+) ?>
+            <select name="part2_signed_on_year" onchange="setDaysDropDown(this.value,this.form.part2_signed_on_month.value,this.form.part2_signed_on_day,this.form.part2_signed_on_day.value);"><?part2_signed_on_years?></select>
+            <select name="part2_signed_on_month" onchange="setDaysDropDown(this.form.part2_signed_on_year.value,this.value,this.form.part2_signed_on_day,this.form.part2_signed_on_day.value);"><?part2_signed_on_months?></select>
+            <select name="part2_signed_on_day"><?part2_signed_on_days?></select>
+		</td>
+	</tr>
+</table>
+	<input type="hidden" name="par_id" value="<? echo ( $$variable{'PAR'}->id() ) ?>" />
+	<input type="hidden" name="btnFunction" value="Save" />
+</form>
+<p class="buttons">
+	<? echo ( join('',
+		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "new Ajax.Updater('Part2','_par_view_part2.html', {method:'get',
+			parameters: Form.serialize( \$('part2form') ),
+			evalScripts: true,
+ } );", '','Save' ),
+		); ) ?>
+</p>

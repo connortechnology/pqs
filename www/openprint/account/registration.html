@@ -1,0 +1,233 @@
+<script src="<?hash_link(/javascripts/passwordmeter.js)?>"></script>
+<script nonce="<?echo($config{CSP_NONCE})?>">
+function howdidyouhearaboutus_onchange(e) {
+	if ( e.value == 'Other' ) {
+		$j('#Other').show();
+		$j('#salesrep_id').hide();
+	} else if ( e.value == 'CSR' ) {
+		$j('#Other').show();
+		$j('#salesrep_id').show();
+	} else {
+		$j('#Other').hide();
+		$j('#salesrep_id').hide();
+	} // end if
+} // end function howdidyouhearaboutus_onchange(e)
+</script>
+<div class="PageTitle">
+<h1>ACCOUNT</h1>
+<h2>Registration</h2>
+</div>
+<? if ( ( ! $$variable{error} ) and $param{btnFunction} ) ?>
+
+	<? if ( $session{user_type} and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+	Registration was successful.<br/><br/>
+	You are now representing <? echo ( $param{name} ) ?><br/>
+	<? else ( $session{user_type} and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+	<p>Thank you for registering!</p>
+	<p><? echo ( $config{RegistrationMessage} ) ?></p>
+	<? if ( $session{user_id} ) ?>
+	<p>Your account has been activated and you have been automatically logged in.</p>
+	<? else ( $session{user_id} ) ?>
+		At this time your login remains inactive.<br/>
+		<br/>
+		You will be notified via email when your account is activated.<br/>
+	<? endif ( $session{user_id} ) ?>
+	<? endif ( $session{user_type} and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+	<br/>
+	<b><? echo ( $session{Destination}; ) ?></b><br/>
+
+<? else ( ( ! $$variable{error} ) and $param{btnFunction} ) ?>
+	<? if ( $$variable{error} ) ?>
+	Please correct the following errors...<br/>
+	<div class="error"><?error?></div>
+	<? endif ( $$variable{error} ) ?>
+<div class="Registration">
+	<p class="Instructions">
+	Please complete the form below to setup an account with <?SiteTitle?>.<br/>(<span class="required"></span> denotes required information).<br/>
+	</p>
+<? eval (
+%{$$variable{RequiredFields}} = map{$_,$_} misc::trim( split(',', $config{RegistrationRequiredFields} ) );
+) ?>
+	<form method="post" action="registration.html" name="f1">
+		<div class="BillingInformation">
+			<fieldset><legend>Billing Information</legend>
+				<div class="content">
+					<ul>
+						<li class="company_name<? echo ( $$variable{RequiredFields}{company_name} ? ' required' : '' ) ?>"> 
+							<label for="company_name">Company/Billing Name</label>
+							<input type="text" id="company_name" name="company_name" value="<? echo ( htmlize($param{company_name}) ) ?>"  />
+						</li>
+						<li class="address1<? echo ( $$variable{RequiredFields}{address1} ? ' required' : '' ) ?>"> 
+							<label for="address1">Address Line 1</label>
+							<input type="text" id="address1" name="address1" value="<? echo ( htmlize($param{address1}) ) ?>"  />
+						</li>
+						<li class="address2 <? echo ( $$variable{RequiredFields}{address2} ? ' required' : '' ) ?>">
+							<label for="address2">Address Line 2</label>
+							<input type="text" id="address2" name="address2" value="<? echo ( htmlize($param{address2}); ) ?>"  />
+						</li>
+						<li class="country <? echo ( $$variable{RequiredFields}{country} ? ' required' : '' ) ?>"> 
+							<label for="country">Country</label>
+							<select id="country" name="country" onchange="Country_onchange(this, this.form.ddmStateProvince );">
+							<option value=""> Select </option>
+							<? echo (
+								$$variable{country} = $param{country} ? $param{country} : $session{Country};
+								return return_countries($$variable{country});
+							) ?>					
+							</select>
+						</li>
+						<li class="state <? echo ( $$variable{RequiredFields}{state} ? ' required' : '' ) ?>">
+							<label for="state"><? echo (
+								if ( $$variable{country} eq 'US' ) {
+									return 'State';
+								} elsif ( $$variable{country} eq 'CA' ) {
+									return 'Province';
+								} else {
+									return 'State/Province';
+								} # end if
+							) ?></label>
+							<select id="state" name="state">
+								<option value=""> Select </option>
+							<? echo (
+                if ($$variable{country} eq 'US') {
+                  return return_states($param{state});
+                } elsif ($$variable{country} eq 'CA') {
+                   return_provinces($param{state});
+                } else {
+                   return_states($param{state}).return_provinces( $param{state} );
+                }
+							) ?>
+							</select>
+						</li>
+						<li class="city<? echo ( $$variable{RequiredFields}{city} ? ' required' : '' ) ?>"> 
+							<label for="city">City</label>
+							<input type="text" id="city" name="city" value="<? echo ( htmlize($param{city}); ) ?>"  />
+						</li>
+						<li class="postalcode<? echo ( $$variable{RequiredFields}{postalcode} ? ' required' : '' ) ?>"> 
+							<label for="postalcode"><? echo (
+								   if ( $$variable{country} eq 'US' ) {
+										   return 'Zip Code';
+								   } elsif ( $$variable{country} eq 'CA' ) {
+										   return 'Postal Code';
+								   } else {
+										   return 'Zip/Postal Code';
+								   } # end if
+								) ?></label>
+							<input type="text" id="postalcode" name="postalcode" value="<? echo ( htmlize($param{postalcode}); ) ?>"  />
+						</li>
+						<li class="phone<? echo ( $$variable{RequiredFields}{phone} ? ' required' : '' ) ?>"> 
+							<label for="phone">Phone</label>
+							<input type="tel" id="phone" name="phone" value="<? hecho ( $param{phone} ) ?>" />
+						</li>
+						<li class="fax<? echo ( $$variable{RequiredFields}{fax} ? ' required' : '' ) ?>"> 
+							<label for="fax">Fax</label>
+							<input type="tel" id="fax" name="fax" value="<? hecho ( $param{fax} ) ?>" />
+						</li>
+                <? echo (
+                    my $html;
+                    foreach my $Field ( openprint::Company_Profile_Field->find('on_registration'=>1,order=>'sort') ) {
+                        if ( $Field->type() eq 'date' ) {
+                            $html .= $Field->html( [ @param{'field-'.$Field->id().'_year','field-'.$Field->id().'_month','field-'.$Field->id().'_day'} ] );
+                        } else {
+                            $html .= $Field->html( $param{'field-'.$Field->id()} );
+                        } # end if
+                    } # end foreach Field
+                    return $html;
+                ) ?>
+					</ul>
+				</div>
+			</fieldset>
+		</div>
+		<div class="Miscellaneous">
+		<fieldset>
+			<legend>Miscellaneous Information</legend>
+			<div class="content"><ul>
+			<li class="business_type<? echo ( $$variable{RequiredFields}{business_type} ? ' required' : '' ) ?>">
+				<label for="business_type">Business Type</label>
+				<input type="text" name="business_type" id="business_type" value="<? echo ( htmlize($param{business_type}); ) ?>" />
+			</li>
+			<li class="reasonforpurchase<? echo ( $$variable{RequiredFields}{reasonforpurchase} ? ' required' : '' ) ?>"> 
+				<label>Reason For Purchase</label>
+				<? echo ( radio( 'reasonforpurchase', [ 'EndUser','End User', 'Reseller', 'Reseller' ], $param{reasonforpurchase}, { default=>'EndUser' } ); ) ?>
+			</li>
+			<li class="howdidyouhearaboutus<? echo ( $$variable{RequiredFields}{howdidyouhearaboutus} ? ' required' : '' ) ?>">
+				<label>How did you hear about us?</label>
+				<select name="howdidyouhearaboutus" id="howdidyouhearaboutus" onchange="howdidyouhearaboutus_onchange(this);">
+<? echo ( make_drop_down( [ '', 'select one','CSR','Contacted by CSR - please select who:', 'Internet','Internet','Tradeshow','Tradeshow','Magazine Ad','Magazine Ad','Word of Mouth','Word of Mouth','Other','Other - please enter:' ], $param{howdidyouhearaboutus} ); ) ?>
+				</select>
+				<select name="salesrep_id" id="salesrep_id" style="<? echo ( 'display:none;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','CSR'] ) ) ?>">
+					<? echo (
+						make_drop_down( ['', 'Other - please enter who:', @{ openprint::User->dropdown('usergroup any'=>'Sales', company_id=>$config{owner_id} ) } ], $param{salesrep_id} );
+					) ?>
+				</select>
+				<input id="Other" style="<? echo ( 'display:none;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( htmlize($param{howdidyouhearaboutusother}); ) ?>" />
+			</li>
+			<li class="mailinglist<? echo ( $$variable{RequiredFields}{mailinglist} ? ' required' : '' ) ?>">
+				<label>Add to our mailing list?</label>
+				<? echo ( radio( 'mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $param{mailinglist}, { default=>'Y' } ); ) ?>
+			</li>
+			</ul></div>
+		 </fieldset>
+		</div>
+		<div class="Account">
+		<fieldset><legend>Account Information</legend>
+			The following information will be used to create your login.<br />
+			<div class="content">
+			<ul>
+				<li class="salutation<? echo ( $$variable{RequiredFields}{salutation} ? ' required' : '' ) ?>">
+					<label>Salutation</label>
+					<? echo ( radio( 'salutation', [ map { $_, $_ } ( 'Mr.','Mrs.','Ms.', 'Miss' ) ], $param{salutation} ); ) ?>
+				</li>
+				<li class="firstname<? echo ( $$variable{RequiredFields}{firstname} ? ' required' : '' ) ?>">
+					<label>First Name</label>
+					<input type="text" name="firstname" value="<? echo ( htmlize($param{firstname}); ) ?>" />
+				</li>
+				<li class="lastname<? echo ( $$variable{RequiredFields}{lastname} ? ' required' : '' ) ?>">
+					<label>Last Name</label>
+					<input type="text" name="lastname" value="<? echo ( htmlize($param{lastname}); ) ?>" />
+				</li>
+				<li class="title<? echo ( $$variable{RequiredFields}{title} ? ' required' : '' ) ?>">
+					<label>Position</label>
+					<input type="text" name="title" value="<? echo ( htmlize($param{title}); ) ?>" />
+				</li>
+				<li class="email<? echo ( $$variable{RequiredFields}{email} ? ' required' : '' ) ?>">
+					<label>E-mail</label>
+					<input type="email" name="email" value="<? echo ( htmlize($param{email}); ) ?>" autocomplete="new-password" autofill="off" />
+				</li>
+                <? echo (
+                    my $html;
+                    foreach my $Field ( openprint::User_Profile_Field->find('on_registration'=>1,order=>'sort') ) {
+                        if ( $Field->type() eq 'date' ) {
+                            $html .= $Field->html( [ @param{'field-'.$Field->id().'_year','field-'.$Field->id().'_month','field-'.$Field->id().'_day'} ] );
+                        } else {
+                            $html .= $Field->html( $param{'field-'.$Field->id()} );
+                        } # end if
+                    } # end foreach Field
+                    return $html;
+                ) ?>
+                <?include('/includes/_password_part.html')?>
+<? if ( (!$session{user_id}) and ($config{UseCaptchaOnRegistration} eq 'Y') ) ?>
+  <? if ( $config{reCAPTCHA_site_key} ) ?>
+    <?echo(
+         require Captcha::reCAPTCHA;
+         my $c = Captcha::reCAPTCHA->new;
+         return '<li>'.$c->get_html_v2($config{reCAPTCHA_site_key}).'</li>';
+         ) ?>
+  <? else ( $config{reCAPTCHA_site_key} ) ?>
+        <div id="Captcha"><?include('/includes/_captcha.html')?></div>
+  <? endif ( $config{reCAPTCHA_site_key} ) ?>
+<? endif ( (!$session{user_id}) and ($config{UseCaptchaOnRegistration} eq 'Y') ) ?>
+			</ul>
+			</div>
+<? if ( $config{RegistrationDisclaimer} ) ?>
+				<p><? echo ( $config{RegistrationDisclaimer} ) ?></p>
+<? endif ( $config{RegistrationDisclaimer} ) ?>
+				<p class="buttons">
+					<? echo ( button( 'Submit',{ onclick=>"f1.submit();" } ); ) ?>
+					<? echo ( button( 'Reset',{ onclick=>"f1.reset();" } ); ) ?>
+				</p>
+		 </fieldset>
+		</div>
+		<input type="hidden" name="btnFunction" value="Register" />
+	</form>
+</div>
+<? endif ( ( ! $$variable{error} ) and $param{btnFunction} ) ?>

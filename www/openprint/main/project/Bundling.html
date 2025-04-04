@@ -1,0 +1,71 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/proj/packaging.js)?>"></script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<ul>
+		<?include('/includes/main/proj/items_per_package.html')?>
+		<? echo ( 
+			my $html;
+			my @Materials;
+			my @CrossMaterials;
+			foreach my $M ( openprint::Material->find( category=>$$variable{ServiceType}->name(), order=>'lower(name)' ) ) {
+				if ( $M->name() =~ /cross/i ) {
+					push @CrossMaterials, $M;
+				} else {
+					push @Materials, $M;
+				}
+			} # end foreach Material
+
+			if ( @Materials ) {
+				$html .= '<li class="bands_per_bundle"><label>#';
+				if ( @Materials == 1 ) {
+					$html .= ' of ' . $Materials[0]->description() . '</label>';
+					$html .= input( name=>'bands_per_package', value=>$$variable{bands_per_package}, type=>'cardinal', oninput=>'calc(this.form.name);' );
+				} else {
+					$html .= ' and type of bands</label>';
+					$html .= input( name=>'bands_per_package', value=>$$variable{bands_per_package}, type=>'cardinal', oninput=>'calc(this.form.name);' );
+					$html .= ssi::select( 
+					[ map{ $_->id(), $_->description() } @Materials ], $$variable{type_id}, { name=>'type_id', onchange=>'calc(this.form.name);', prepend=>['','select'] } ).'</li>';
+				} # end if
+			} 
+
+			if ( @CrossMaterials ) {
+				$html .= '<li class="cross_bands_per_bundle"><label>#';
+				if ( @CrossMaterials == 1 ) {
+					$html .= ' of ' . $CrossMaterials[0]->description() . '</label>';
+					$html .= input( name=>'cross_bands_per_package', value=>$$variable{cross_bands_per_package}, type=>'cardinal', oninput=>'calc(this.form.name);' );
+				} else {
+					$html .= ' and Type of cross bands</label>';
+					$html .= input( name=>'cross_bands_per_package', value=>$$variable{cross_bands_per_package}, type=>'cardinal', oninput=>'calc(this.form.name);' );
+					$html .= ssi::select(
+							[ map{ $_->id(), $_->description() } @CrossMaterials ],
+							$$variable{cross_type_id},
+							{
+								name=>'cross_type_id',
+								onchange=>'calc(this.form.name);',
+								prepend=>['','select']
+							}
+							);
+				} # end if
+				$html .= '</li>';
+			}
+			return $html;
+		)?>
+		<?include('/includes/main/proj/cardboard_backing.html')?>
+			</ul>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+                <?include('/includes/main/proj/package_quantity.html') ?>
+                <?include('/includes/main/proj/quantities_equipment_prices.html') ?>
+			</ul>
+		</fieldset>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ContinueProject" value="Y"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+	</form>
+</div>

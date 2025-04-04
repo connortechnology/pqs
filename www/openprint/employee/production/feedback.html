@@ -1,0 +1,69 @@
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript">
+	var emails_by_id = new Array();
+	var ids_by_email = new Array();
+	var equipment_by_id = new Array();
+
+	<? echo (
+			my $html;
+			foreach my $User ( openprint::User->find( 'type' => ['A','E'] ) ) {
+				$html .= sprintf( qq{   emails_by_id[%d] = '%s';\n}, $User->id(), $User->email() );
+				$html .= sprintf( qq{   ids_by_email['%s'] = %d;\n}, $User->email(), $User->id() );
+			} # end foreach
+			foreach my $Equipment ( openprint::Equipment->find() ) {
+				$html .= sprintf( qq{   equipment_by_id[%d] = '%s';\n}, $Equipment->id(), $Equipment->name() );
+			} # end foreach
+			return $html;
+			) ?>
+	function select_user( element ) {
+		if ( element.name == 'operator_id' ) {
+			if ( element.value.charAt(0) == 'E' ) {
+				element.value = element.value.substr(1,element.value.length-1);
+			} // end if
+			if ( emails_by_id[1*element.value] ) {
+				$('operator_name').innerHTML = emails_by_id[1*element.value];
+				element.form.equipment_id.focus();
+			} else {
+				$('operator_name').innerHTML = 'User not found: ' + element.value;
+			} // end if
+		} else if ( element.name == 'equipment_id' ) {
+			if ( equipment_by_id[1*element.value] ) {
+				$('equipment_name').innerHTML = equipment_by_id[1*element.value];
+				element.form.action_id.focus();
+			} else {
+				$('equipment_name').innerHTML = 'Equipment not found: ' + element.value;
+			} // end if
+		} else if ( element.name == 'project_id' ) {
+		} // end if
+	} // end function
+</script>
+<form name="f1" action="feedback.html" method="post">
+<fieldset><legend>Production Feedback</legend>
+	<p>
+		<label>Operator</label>
+		<input type="text" size="4" name="operator_id" onkeypress="return input_handler( this, event );" onchange="select_user( this );" onkeyup="select_user( this );" />
+		<span id="operator_name"></span>
+	</p>
+	<p>
+		<label>Machine</label>
+		<input type="text" size="4" name="equipment_id" onkeypress="return input_handler( this, event );" onchange="select_user( this );" onkeyup="select_user( this );"/>
+		<span id="equipment_name"></span>
+	</p>
+	<p>
+		<label>Docket</label>
+		<input type="text" size="6" name="project_id" onkeypress="return input_handler( this, event );" onchange="select_user( this );" onkeyup="select_user( this );"/>
+		<span id="equipment_name"></span>
+	</p>
+	<p>
+		<label>Action</label>
+		<input type="text" size="4" name="action_id" onkeypress="return input_handler( this, event );" onchange="select_user( this );" onkeyup="select_user( this );"/>
+		<select name="action">
+		<option value=""> select </option>
+			<option value="00001">Assign Operator</option>
+			<option value="00008">Service Start</option>
+			<option value="00004">Service Complete</option>
+		</select>
+		<span id="action_name"></span>
+	</p>
+</fieldset>
+</form>

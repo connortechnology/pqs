@@ -1,0 +1,17 @@
+<? echo (
+	if ( length $param{asset_name} < 3 ) {
+		return '<li>Please enter at least three letters of the name.</li>';
+	}
+	my $html;
+	if ( ! ( $param{asset_name} =~ /%/ ) ) {
+		$param{asset_name} = '%'.$param{asset_name}.'%';
+	}
+	foreach my $Asset ( sets::object_union(
+		openprint::Asset->find('name ilike'=>$param{asset_name}, limit=>100),
+		openprint::Asset->find('filename ilike'=>$param{asset_name}, limit=>100),
+		) ) {
+		$html .= sprintf('<li><img src="%s">%s</li>', $Asset->sized_url('medium'), $Asset->name());
+	} # end foreach
+	$html .= 'No results found.' if ! $html;
+	return $html;
+) ?>

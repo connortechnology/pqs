@@ -1,0 +1,79 @@
+<? eval (
+	require Date::Parse;
+	require Date::Format;
+
+	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
+	@{$$variable{'Ledgers'}} = ();
+	if ( $param{'ledger_id'} ) {
+		foreach my $Ledger ( openprint::Ledger->find( 'id'=>$param{'ledger_id'} ) ) {
+			push @{$$variable{'Ledgers'}}, $Ledger;
+			$$variable{'subtotal'} += $Ledger->subtotal();
+			$$variable{'federaltax_total'} += $Ledger->federaltax();
+			$$variable{'total'} += $Ledger->total();
+			$$variable{'interest_total'} += $Ledger->interest();
+			$$variable{'owing_total'} += $Ledger->owing();
+		} # end foreach
+	} else {
+		foreach my $Ledger ( openprint::Ledger->find( 
+			ssi::date_filter( '/employee/accounting/ledger.html?occurred_on_end', 'occurred_on <=' ),
+			ssi::date_filter( '/employee/accounting/ledger.html?occurred_on_start', 'occurred_on >=' ),
+			ssi::date_filter( '/employee/accounting/ledger.html?due_on_end', 'due_on <=' ),
+			ssi::date_filter( '/employee/accounting/ledger.html?due_on_start', 'due_on >=' ),
+			( $session{'/employee/accounting/ledger.html?company_id'} ? ( 'ledgere_id'		=> $session{'/employee/accounting/ledger.html?company_id'} ) : () ),
+			( $session{'company_id'} ? ( 'ledgerr_id'		=> $session{'company_id'} ) : () ),
+			order				=> 'id',
+			) ) {
+			push @{$$variable{'Ledgers'}}, $Ledger;
+			$$variable{'subtotal'} += $Ledger->subtotal();
+			$$variable{'federaltax_total'} += $Ledger->federaltax();
+			$$variable{'total'} += $Ledger->total();
+		} # end foreach Ledger
+	} # end if
+
+	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+) ?>
+
+<? if ( @{$$variable{'Ledgers'}} == 0 ) ?>
+	There are no ledgers which match your search criteria. 
+<? else ( @{$$variable{'Ledgers'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Ledger ID #</b> to view ledger details.<br/>
+		To delete ledgers from history check the appropriate ledger(s) and click delete.<br/>
+	</div>
+	<table class="List sortable">
+		<tr> 
+			<th width="50">ID</th>
+			<th width="110">When</th>
+			<th>Description</th>
+			<th width="75" style="text-align:right;">Credit</th>
+			<th width="75" style="text-align:right;">Debit</th>
+			<th width="75" style="text-align:right;">GST</th>
+			<th width="75" style="text-align:right;">GST Total</th>
+		</tr>
+		<? while ( $$variable{'Ledger'} = shift @{$$variable{'Ledgers'}}; ) ?>
+		<? eval ( 
+			$$variable{'conversion_rate'} = $$variable{'Ledger'}->Currency()->conversions( $session{'Currency_id'} );
+		) ?>
+		<tr title="<? echo ( $$variable{'Ledger'}->description() ) ?>" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+			<td><a href="/ledger/<? echo ( $$variable{'Ledger'}->posted() ? 'view' : 'edit' ) ?>.html?ledger_id=<? echo ( $$variable{'Ledger'}->id(); ) ?>"><? echo ( $$variable{'Ledger'}->id(); ) ?></a></td>
+			<td><a href="/ledger/<? echo ( $$variable{'Ledger'}->posted() ? 'view' : 'edit' ) ?>.html?ledger_id=<? echo ( $$variable{'Ledger'}->id(); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Ledger'}->occurred_on() ) ); ) ?></a></td>
+			<td><a href="/ledger/<? echo ( $$variable{'Ledger'}->posted() ? 'view' : 'edit' ) ?>.html?ledger_id=<? echo ( $$variable{'Ledger'}->id(); ) ?>"><? hecho ( $$variable{'Ledger'}->memo(); ) ?></a></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Ledger'}->credit() ); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Ledger'}->debit() ); ) ?></td>
+			<td align="right"><? echo ( $$variable{'Ledger'}->federaltaxrate(); ) ?>%</td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Ledger'}->federaltax() ); ) ?></td>
+		</tr>
+		<? endwhile ( $$variable{'Ledger'} = shift @{$$variable{'Ledgers'}}; ) ?>
+		<tr class="totals">
+			<td colspan="3">Totals</td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
+			<td>&nbsp;</td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'federaltax_total'} ); ) ?></td>	
+		</tr>
+	</table>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
+	<br class="spacer"/>
+<span class="unprintable" style="float: right;">
+<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>
+</span>
+<? endif ( @{$$variable{'Ledgers'}} == 0 ) ?>

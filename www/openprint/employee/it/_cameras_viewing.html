@@ -1,0 +1,33 @@
+Click on the image to stop streaming.
+<ul>
+	<? echo (
+		require openprint::ZM_Monitor;
+
+		my $zm_dbh = openprint::ZM_Monitor->connect();
+		return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
+
+		@{$$variable{Monitors}} = openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 );
+		my $html;
+		my %monitor_ids = map { $_ => $_ } split(',', $session{cameras_viewing} );
+		foreach my $Monitor ( @{$$variable{Monitors}} ) {
+			next if ! $monitor_ids{$$Monitor{id}} );
+			next if ! $Monitor->can_view();
+
+			my @size_options = ( '320x240', '352x240', '384x288', '640x480', '800x600', '1024x768' );
+			$session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()} = join('x',$Monitor->get('width','height') ) if ! $session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()};
+
+			if ( ! sets::isin( $session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()}, \@size_options ) ) {
+				@size_options = sort ( @size_options, $session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()} );
+			} # end if
+			$html .= sprintf('<li id="camera_%1$d"><img src="%3$s" id="stream_%1$d" class="stream" alt="%2$s" style="width:%4$dpx; height: %5$dpx;" onclick="stop_stream( %1$d );" /><br/>
+				Size: <select onchange="resize_image( %1$d, this.getValue() );">%6$s</select>
+				</li>
+				',
+				$Monitor->id(), $Monitor->name(), $Monitor->source_stream_url(),
+				split('x',$session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()}),
+				make_drop_down( [ map { $_, $_ } @size_options ], $session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()} ),
+				);
+		} # end foreach Monitor	
+		return $html;
+	) ?>
+</ul>

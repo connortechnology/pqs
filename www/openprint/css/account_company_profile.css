@@ -1,0 +1,64 @@
+
+/* Company Profile Styles */
+div.CompanyProfile div.CompanyInformation,
+div.CompanyProfile div.Preferences,
+div.CompanyProfile div.Locations,
+div.CompanyProfile div.TradeReferences,
+div.CompanyProfile div.BusinessInformation,
+div.CompanyProfile div.BankInformation,
+.SalesInformation,
+#CompanyProfile,
+.AccountInformation {
+	width: 50%;
+	float: left;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  padding: 5px;
+}
+div.CompanyProfile div.CompanyInformation:after, .CreditInformation:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+.CompanyProfile .CreditInformation {
+	width: 100%;
+	float: left;
+}
+.Credit {
+	float: left;
+	width: 50%;
+}
+div.CompanyProfile ul {
+}
+/*
+div.CompanyProfile ul li {
+	padding: 0 0 0 150px;
+}
+div.CompanyProfile ul li label:not(.radio):not(.radio-inline) {
+	margin-left: -150px;
+	width: 145px;
+}
+*/
+.address2:after {
+	content '';
+}
+
+.buttons {
+	clear: both;
+}
+.credit_card_fee input[type="number"],
+.credit_card_Fee input[type="text"],
+.csr_commission input[type="number"],
+.csr_commission input[type="text"],
+.discount input[type="number"],
+.discount input[type="text"] {
+	width: 50px;
+}
+.Locations .informal {
+	float: right;
+}

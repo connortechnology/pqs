@@ -1,0 +1,42 @@
+<div style="width: 6in; height: 4in; border: 1px solid black;">
+<table width="100%" cellpadding="0" cellspacing="0">
+	<tr><td style="border-bottom: 1px solid black; vertical-align: top; text-align: center;">
+			<table cellpadding="0" cellspacing="0" style="margin: 0px;"><tr>
+			<td><img src="/images/header/logo.gif"/></td>
+			<td>
+			<span style="border-bottom: 1px solid white; font-family: Georgia, Times, serif; padding: 0px; margin: 0px; font-size: 2.2em;">PointOne</span><br/>
+			<span style="padding: 0px; margin: 0px; font-size:1.3em;">GRAPHICS INC</span>
+			</td>
+			</tr></table>
+			<span style="font-size: 8pt;">14 Vansco Road &bull; Etobicoke, ON &bull; M8Z 5J4<br/>Tel&bull;866 717 5722 Fax&bull;416 255 6917</span>
+		</td>
+		<td style="border-bottom: 1px solid black; text-align:center; vertical-align:top;">
+			<label for="CustPO">Cust. P.O. #:</label>
+				<input type="text" onkeyup="getImage('CustPOBarcode').src='/barcode.png?type=Code128&Height=40&NoText=1&code='+this.value;"/><br/>
+				<img height="40" id="CustPOBarcode"/>
+		</td>
+	</tr><tr>
+		<td style="border-bottom: 1px solid black; vertical-align:top;">
+			<span style="float: right; text-align: center;">Mfg Ship Date<br/>
+			<input type="text" size="9" value="<? echo ( my ( $year, $month, $day ) = Date::Calc::Today(); return join('/', $month, $day, $year ); ) ?>"/></span>
+			To:<br/><textarea rows="3"></textarea>
+		</td>
+		<td style="border-left: 1px solid black; border-bottom: 1px solid black; text-align: center; vertical-align: top;">
+			COD #:<input type="text" onkeyup="getImage('CODBarcode').src='/barcode.png?type=Code128&Height=40&code='+this.value;"/><br/>
+			<img height="40" id="CODBarcode" src="/barcode.png?type=Code128&Height=40&code=1234"/>
+		</td>
+	</tr><tr>
+		<td style="border-bottom: 1px solid black; vertical-align: top;">
+			Form Number:<input type="text" onkeyup="getImage('PartBarcode').src='/barcode.png?type=Code128&Height=40&NoText=1&code='+this.value;"/><br/>
+			<img height="40" id="PartBarcode" src="/barcode.png?type=Code128&Height=40&NoText=1&code=12345678"/>
+		</td>
+		<td style="border-left: 1px solid black; border-bottom: 1px solid black; text-align: center; vertical-align: top;">
+			Qty:<input type="text" onkeyup="getImage('QTYBarcode').src='/barcode.png?type=Code128&Height=40&NoText=1&code='+this.value;"/><br/>
+			<img height="40" id="QTYBarcode"/>
+		</td>
+	</tr>
+	<tr>
+		<td colspan="2"><textarea rows="4" style="width: 100%; margin: 0px; padding: 0px; border: 0px; font-size: 16pt;"></textarea></td>
+	</tr>
+	</table>
+</div>

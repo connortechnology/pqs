@@ -1,0 +1,111 @@
+<? echo (
+	my @Hosts;
+	$session{'/employee/it/licenses.html?order'} = 'lower(hostname)' if ! $session{'/employee/it/licenses.html?order'};
+	if ( $session{'/employee/it/licenses.html?serialkey'} ) {
+		$$variable{Licenses} = [openprint::License->find( 
+			order=>'lower(serialkey)',
+			( ( $session{'/employee/it/licenses.html?serialkey'} =~ /%/ ) ? ( 'serialkey ilike' => $session{'/employee/it/licenses.html?serialkey'} ) : ( 'serialkey ilike' => '%'.$session{'/employee/it/licenses.html?serialkey'}.'%' ) ),
+			)];
+	} else {
+		if ( $session{'/employee/it/licenses.html?mac'} and $session{'/employee/it/licenses.html?mac'} !~ /%/ ) {
+			@Hosts = openprint::Host->find(
+				order	=>	$session{'/employee/it/licenses.html?order'},
+				mac		=>	$session{'/employee/it/licenses.html?mac'},
+				limit	=>	10,
+			);
+			if ( ! @Hosts ) {
+return '<div class="error">No hosts found for mac '. $session{'/employee/it/licenses.html?mac'} . '</div>';
+			}
+		} else {
+			@Hosts = openprint::Host->find(
+				order => $session{'/employee/it/licenses.html?order'},
+				( $session{'/employee/it/licenses.html?ip'} ? ( ( $session{'/employee/it/licenses.html?ip'} =~ /\// ) ? ( 'ip <<=' => $session{'/employee/it/licenses.html?ip'} ) : ( ip=> $session{'/employee/it/licenses.html?ip'} ) ) : () ),
+				( $session{'/employee/it/licenses.html?hostname'} ? ( 'hostname ilike' => ( $session{'/employee/it/licenses.html?hostname'} =~ /%/ ? $session{'/employee/it/licenses.html?hostname'} : $session{'/employee/it/licenses.html?hostname'}.'%' ) ) : () ),
+				limit	=>	1000,
+				);
+		} # end if
+
+		my $mac_search;
+		if ( $session{'/employee/it/licenses.html?mac'} and $session{'/employee/it/licenses.html?mac'} =~ /%/ ) {
+			$mac_search = lc $session{'/employee/it/licenses.html?mac'};
+			$mac_search =~ s/%/\.\*/g;
+			my @Filtered_Hosts;
+			foreach my $Host ( @Hosts ) {
+				next if ! $Host->mac();
+				my $next = 1;
+				
+				foreach my $m ( @{$Host->mac()} ) {
+					my $mac = lc $m;
+					$mac =~ s/://g;
+					if ( $mac =~ /$mac_search/ ) {
+						$next = 0;
+						last;
+					} # end if
+				} # end foreach mac
+				next if $next;
+				push @Filtered_Hosts, $Host;
+			} # end foreach Host
+			@Hosts = @Filtered_Hosts;
+		} # end $mac_search
+
+		$$variable{Licenses} = [openprint::License->find(
+				date_filter( '/employee/it/licenses.html?created_on_end', 'created_on <=' ),
+				date_filter( '/employee/it/licenses.html?created_on_start', 'created_on >=' ),
+				date_filter( '/employee/it/licenses.html?updated_on_end', 'updated_on <=' ),
+				date_filter( '/employee/it/licenses.html?updated_on_start', 'updated_on >=' ),
+				date_filter( '/employee/it/licenses.html?purchased_on_end', 'purchased_on <=' ),
+				date_filter( '/employee/it/licenses.html?purchased_on_start', 'purchased_on >=' ),
+				date_filter( '/employee/it/licenses.html?expires_on_end', 'expires_on <=' ),
+				date_filter( '/employee/it/licenses.html?expires_on_start', 'expires_on >=' ),
+				#( @Hosts ? ( host_id => [ map { $_->id() } @Hosts ] ) : () ),
+				( $session{'/employee/it/licenses.html?software_id'} ? ( software_id=>$session{'/employee/it/licenses.html?software_id'} ) : () ),
+			
+		)];
+	} # end if serialkey
+	return;
+) ?>
+<table class="List sortable">
+	<thead>
+		<tr>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'license_id', this.checked );"/></th>
+			<th class="serialkey">Serial/Key</th>
+			<th class="software">Software</th>
+			<th class="expires">Expires</th>
+			<th class="hosts">Hosts</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $License ( @{$$variable{Licenses}} ) {
+				$html .= sprintf('
+					<tr%1$s>
+						<td class="checkbox"><input type="checkbox" id="license_id" name="license_id" value="%2$d"/></td>
+						<td class="serialkey"><a href="/employee/it/license.html?license_id=%2$d">%3$s</a></td>
+						<td class="software"><a href="/employee/it/license.html?license_id=%2$d">%4$s</a></td>
+						<td class="expires"><a href="/employee/it/license.html?license_id=%2$d">%5$s</a></td>
+						<td class="hosts"><a href="/employee/it/license.html?license_id=%2$d">%6$s</a></td>
+					</tr>
+					', 
+					$rowclass,
+					$License->id(), $License->serialkey(), $License->software(),
+					format_date( $License->expires_on() ),
+					join('<br/>', map { $_->hostname() } $License->Hosts() ),
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach License
+      $html .= '
+         <tr class="totals">
+           <td class="checkbox"><input type="checkbox" onclick="select_all( this.form, \'license_id\', this.checked );"/></td>
+           <td colspan="1">Totals:</td>
+           <td colspan="3">'.@{$$variable{Licenses}}.' licenses</td>
+        </tr>';
+			return $html;
+		) ?>
+		<tr>
+	</tbody>
+</table>
+<p class="buttons">
+<? echo ( button( 'delete', { 'data-on-click'=>'delete_checked', text=>'Delete Checked' } ); ) ?>
+</p>

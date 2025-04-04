@@ -1,0 +1,48 @@
+<div class="templates">
+	<p>
+		<img src="/images/main/project_templates/multipage/multipage_saddle_stitch.gif">
+		<input type="radio" name="rdbTemplateType" value="SaddleStitching" onClick="f1.hdnBinderyType.value='SaddleStitching';selectProjectTemplate('f1');" <?rdbTemplateTypeSaddleStitching?> /> 
+		<span class="smTbl">Saddle Stitching<br> (Stapled)</span>
+	</p>
+<? if ( openprint::service_type::get_index_by_id( $log, $dbh, 'LoopStitching' ) ) ?>
+	<p>
+		<img src="/images/main/project_templates/multipage/multipage_loop_stitch.gif">
+		<input type="radio" name="rdbTemplateType" value="LoopStitching" onClick="f1.hdnBinderyType.value='LoopStitching';selectProjectTemplate('f1');" <?rdbTemplateTypeLoopStitching?> /> 
+		<span class="smTbl">Loop Stitching<br> (For 3-Hole Binders)</span>
+	</p>
+<? endif ( openprint::service_type::get_index_by_id( $log, $dbh, 'LoopStitching' ) ) ?>
+	<p>
+		<img src="/images/main/project_templates/multipage/multipage_perfect_bound.gif">
+		<input type="radio" name="rdbTemplateType" value="PerfectBound" onClick="f1.hdnBinderyType.value='PerfectBound';selectProjectTemplate('f1');" <?rdbTemplateTypePerfectBound?> /> 
+		<span class="smTbl">Perfect Bound</span>
+	</p>
+	<p>
+		<img src="/images/main/project_templates/multipage/multipage_plastic_comb.gif">
+		<input type="radio" name="rdbTemplateType" value="Cerlox" onClick="f1.hdnBinderyType.value='Spiral';selectProjectTemplate('f1');" <?rdbTemplateTypeCerlox?> /> 
+		<span class="smTbl">Plastic Comb<br>
+		(Cerlox) </span>
+	</p>
+	<p>
+		<img src="/images/main/project_templates/multipage/multipage_plastic_coil.gif">
+		<input type="radio" name="rdbTemplateType" value="PlasticCoil" onClick="f1.hdnBinderyType.value='Spiral';selectProjectTemplate('f1');" <?rdbTemplateTypePlasticCoil?> /> 
+		<span class="smTbl">Plastic Coil <br>(Spiral or Plastikoil)</span>
+	</p>
+	<p>
+		<img src="/images/main/project_templates/multipage/multipage_metal_coil.gif">
+	<input type="radio" name="rdbTemplateType" value="MetalCoil" onClick="f1.hdnBinderyType.value='Spiral';selectProjectTemplate('f1');" <?rdbTemplateTypeMetalCoil?> /> 
+	  <span class="smTbl">Metal Coil<br> (Spiral) </span>
+	</p>
+	<p>
+		<img src="/images/main/project_templates/multipage/multipage_double_loop_wire.gif">
+		<input type="radio" name="rdbTemplateType" value="DoubleLoopWire" onClick="f1.hdnBinderyType.value='Spiral';selectProjectTemplate('f1');" <?rdbTemplateTypeDoubleLoopWire?> />
+		Double Loop Wire<br>
+		(Wire-O)<span class="smTbl"></span>
+	</p>
+	<p>
+		<img src="/images/main/project_templates/brochures/8.5x11_no_fold.gif">
+	 <input type="radio" name="rdbTemplateType" value="NoBindery" onClick="selectProjectTemplate('f1');" <?rdbTemplateTypeNoBindery?> />
+	  <span class="smTbl">No Bindery<br>
+	  (Press Sheets Only)</span>
+		</p>
+</div>
+<input type="hidden" name="hdnBinderyType" value="<?hdnBinderyType?>" >

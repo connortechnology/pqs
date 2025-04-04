@@ -1,0 +1,46 @@
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" action="payment_options.html" method="post">
+	<fieldset>
+		<p>
+			<label>Payment Type</label>
+			<select name="paymenttype_id" onchange="f1.submit();">
+				<option value="">select</option>
+				<? echo ( make_drop_down( openprint::PaymentType->dropdown( order=>'lower(name)'), $$variable{PaymentType}->id() ); ) ?>
+			</select>
+		</p>
+		<p class="buttons">
+			<? echo ( my $html;
+				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'&lt;&lt;' } );
+				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'&gt;&gt;' } );
+        $html .= button( 'New1', { href=>'/administrator/managerial/payment_options.html', text=>'New' } );
+				if ( $param{paymenttype_id} ) {
+					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+				} # end if
+				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
+				$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<fieldset>
+		<ul>
+			<li>
+				<label>Name</label>
+				<input type="text" name="name" value="<? echo ( $$variable{'PaymentType'}->name() ) ?>" />
+			</li>
+			<li>
+				<label>Description</label>
+				<textarea id="description" name="description" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PaymentType'}->description() ) ?></textarea>
+			</li>
+      <li><label>Available From</label>
+        <?echo(ssi::select( openprint::Company->dropdown(offers_credit=>1), $$variable{PaymentType}->payee_id(),
+        {
+        name=>'payee_id',
+        prepend =>  ['','All'],
+        }
+        ); ) ?>
+      </li>
+		</ul>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>

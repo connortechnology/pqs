@@ -1,0 +1,10 @@
+<style type="text/css"><?include(/css/order.css)?></style>
+<div class="Order">
+<? echo ( join("\n",
+	include('/email_content/sales_order_header.html', $variable ),
+	include('/email_content/_order_contents.html', $variable ),
+	include('/main/order/_totals.html', $variable ),
+); ) ?>
+	<br class="spacer"/>
+	<div class="Disclaimer"><? echo ( $config{'OrderViewDisclaimer'} ) ?></div>
+</div>

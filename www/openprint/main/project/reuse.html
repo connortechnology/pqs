@@ -1,0 +1,214 @@
+<div class="PageTitle">
+<h1>PROJECTS</h1>
+<h2>Reuse Project</h2>
+</div>
+<div class="Project"><div class="Reuse">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+	<? echo (
+		my $html;
+		my @required_services;
+		my @overrides;
+		my $Project = $$variable{Project};
+		my $services = $$variable{Project}->services();
+
+		foreach my $ServiceType ( openprint::ServiceType->find() ) {
+			my $module = 'openprint::Estimating::'.$ServiceType->name();
+			if ( ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} ) ) {
+				if ( my $function = $module->can('neccessary') ) {
+					if ( $function->( $Project ) ) {
+						push @required_services, $ServiceType->name();	
+					} # end if
+				} # end if
+			} else {
+				if ( my $function = $module->can( 'has_overrides' ) ) {
+					foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
+						if ( $function->( $Project, $s_id ) ) {
+							push @overrides, $ServiceType->name();	
+						} # end if
+					} # end foreach my $s_id
+				} # end if
+			} # end if
+		} # end foreach ServiceType
+		if ( @required_services ) {
+			$html .= 'This project requires but does not have the following services:' . join(', ', @required_services).'<br/>';
+		} # end if
+		if ( @overrides ) {
+			$html .= 'The following services have overrides which may mean that this quote is not valid or not optimal:' . join(', ', @overrides).'<br/>';
+		} # end if
+
+		if ( $config{OldDefaultInkCoverage} and ( $config{OldDefaultInkCoverage} != $config{DefaultInkCoverage} ) ) {
+			my $upgrade_ink_coverages = 0;
+
+			foreach my $sig_id ( $Project->signatures() ) {
+				my $Service = $Project->Service($sig_id);
+				my $sig_specs = $Service->specs();
+				my @colours = (
+						openprint::Estimating::Printing::get_colours($sig_specs, 'SideOne'),
+						openprint::Estimating::Printing::get_colours($sig_specs, 'SideTwo'),
+						);
+				foreach my $c ( @colours ) {
+					if ( $$c{type} eq 'CMYK' ) {
+						if ( $$c{coverage}  == $config{OldDefaultInkCoverage} and ($$c{coverage} != $config{DefaultInkCoverage}) ) {
+							$upgrade_ink_coverages = 1;
+							last;
+						}
+					} else {
+				  	$log->debug("Unknown type $$c{type}");
+					}
+
+				} # end foreach colour
+			} # end foreach sig
+
+			if ( $upgrade_ink_coverages ) {
+				$html .= "This project contains inks with the old default ink coverage $config{OldDefaultInkCoverage}\%. Do you want to upgrade them to the new default value $config{DefaultInkCoverage}\%? ";
+				$html .= radio('upgrade_ink_coverages', ['Y','Yes', 'N', 'No' ], 'Y');
+			}
+		} # end if have old default coverage
+
+		return '<span class="warning">'.$html.'</span>';
+	) ?>
+		<fieldset>
+			<ul>
+				<li class="reference"> 
+					<label>Please provide a reference</label>
+					<textarea id="reference" name="reference" rows="<? echo ( count_lines( $$variable{Project}->reference() ) ) ?>" on_keyup_this="textarea_resize"><? echo ( unhtmlize( $$variable{Project}->reference() ); ) ?></textarea>
+				</li>
+				<li class="comments">
+					<label>Additional comments or instructions</label>
+					<textarea id="comments" name="comments" rows="<? echo ( count_lines( $$variable{Project}->comments() ); ) ?>" on_keyup_this="textarea_resize"><? echo ( htmlize( $$variable{Project}->comments() ); ) ?></textarea>
+				</li>
+			</ul>
+		</fieldset>
+		<div class="quantities">
+		<fieldset>
+			<legend>What quantities would you like to calculate pricing for?</legend>
+			<ul>
+				<li class="quantity1">
+					<label for="quantity1">Quantity 1</label>
+					<? echo ( input( type=>'cardinal', id=>'quantity1', name=>'quantity1', value=>$$variable{Project}->quantity1() ); ) ?>
+				</li>
+				<li class="quantity2">
+					<label for="quantity2">Quantity 2</label>
+					<? echo ( input( type=>'cardinal', id=>'quantity2', name=>'quantity2', value=>$$variable{Project}->quantity2() ); ) ?>
+				</li>
+				<li class="quantity3">
+					<label for="quantity3">Quantity 3</label>
+					<? echo ( input( type=>'cardinal', id=>'quantity3', name=>'quantity3', value=>$$variable{Project}->quantity3() ); ) ?>
+				</li>
+			</ul>
+		</fieldset>
+		</div>
+<? echo (
+  if ( sets::isin( $session{user_type}, [ 'E', 'A' ] ) ) {
+    return include('_reprint_options.html');
+  }
+  return;
+)?>
+  <? if ( sets::isin( $session{user_type}, [ 'E', 'A'] ) ) ?>
+	<fieldset>
+		If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from now on will be recorded in their history.
+		<ul>
+			<li>
+				<label>Company</label>
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+				<select id="company_id" name="company_id" onchange="stop_filter_companies();">
+					<option value="">Select a Customer</option>
+					<? echo ( make_drop_down( openprint::Company->dropdown('last_project_id is null'=>0), $session{company_id});) ?>
+				</select>
+			</li>
+<li><label>Last 10</label>
+    <? echo ( 
+        my $html = '';
+
+        my $parser = 'DateTime::Format::Pg';
+        my $TZ = DateTime::TimeZone->new( name => $config{Timezone} );
+        my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 );
+
+        my $datetime = DateTime->new( time_zone => $TZ, ( year => $year, month=>$month, day=>$day, ));
+
+        my @Entries = openprint::Log->find( user_id=>$session{user_id}, action=>'Switch Company', order=>'date_time DESC','date_time >=' => $parser->format_datetime( $datetime ) );
+        my @Companies = openprint::Company->find( id=>[ map { $_->company_id() } @Entries ] ) if @Entries;
+        my %companies;
+        foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {
+            next if $companies{$$Log{company_id}};
+            $companies{$$Log{company_id}} = $Log->company_id();
+            $html .= sprintf(q`<a onclick="ddm_select_by_value($('company_id'), %d);" href="#">%s</a><br/>`,
+                $Log->company_id(), $Log->Company()->name(),
+            );
+        } # end foreach
+        my $User = new openprint::User($session{user_id});
+        if ( ! $companies{$$User{company_id}} ) {
+            $html .= sprintf(q`<a onclick="ddm_select_by_value($('company_id'), %d);"href="#">%s</a><br/>`,
+                $User->company_id(), $User->Company()->name(),
+            );
+        } # end if
+        return $html;
+        ) ?>
+        </li>
+		</ul>
+	</fieldset>
+		<? endif ( sets::isin( $session{user_type}, [ 'E', 'A'] ) ) ?>
+		Please click &quot;Save &amp; Continue&quot; if you have provided all the relevant project information.
+		<p class="buttons">
+			<? echo ( join("\n",
+					button( 'Reset', { onclick=>'f1.reset();' } ),
+					button( 'SaveAndContinue', { onclick=>'submit_handler(this.form);',text=>'Save And Continue'}),
+			); ) ?>
+		</p>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="btnFunction" value="Reuse Project"/>
+	</form>
+</div>
+</div>
+<script>
+var tinymce_options = {
+    mode : "textareas",
+    plugins: "paste",
+    theme_advanced_toolbar_location : "top",
+    theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull,separator,bullist,numlist,outdent,indent,sub,sup,charmap",
+    theme_advanced_buttons2 : "",
+    theme_advanced_buttons3 : "",
+    auto_resize : true,
+    theme : "advanced"
+  };
+tinyMCE.init(tinymce_options);
+
+function setReason(reprintVal,divElem) {
+  if (reprintVal == 'Y') {
+    // Project is a reprint.
+    // Display reason drop down option.
+    divElem.style.display = "block";
+  } else {
+    // Project is not a reprint.
+    // Make sure reason drop down is hidden.
+    divElem.style.display = "none";
+  }
+}
+
+function submit_handler(form) {
+  if (!form) {
+    form = document.getElementById('f1');
+    if (!form) form.submit();
+  }
+  if (validate_form(form))
+    form.submit();
+} /* end function submit_handler */
+
+function validate_form(form) {
+  if (form.elements['reprint'] && (get_value(form.elements['reprint']) != 'Y')) {
+    const upper_company_name = form.elements['company_id'] ? get_ddm_text(form.elements['company_id']).toUpperCase() : company_name.toUpperCase();
+    if (upper_company_name) {
+      const summary = form.elements['reference'].value.toUpperCase();
+
+      if ((upper_company_name.indexOf('REPRINT') >=0) || (summary.indexOf('REPRINT') >= 0)) {
+        if (confirm("This appears to be a reprint but you haven't marked it as such.  Is this a reprint?")) {
+          set_value(form.elements['reprint'], 'Y');
+          setReason('Y', $('reprintReasonSection'));
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+</script>

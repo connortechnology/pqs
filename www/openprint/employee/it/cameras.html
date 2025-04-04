@@ -1,0 +1,49 @@
+<div class="ZM_Monitors">
+<table class="List">
+	<thead>
+		<tr>
+			<th class="thumbnail">From ZM</th>
+			<th class="thumbnail">From Camera</th>
+			<th class="name">Name</th>
+			<th class="function">Function</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $zm_dbh = sql::open_sql( $log,
+				  'database'  => $config{'zm_db_name'},
+				  'driver'    => $config{'zm_db_driver'},
+				  'host'      => $config{'zm_db_hostname'},
+				  'login'     => $config{'zm_db_username'},
+				  'password'  => $config{'zm_db_password'},
+				);
+			return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
+			require openprint::ZM_Monitor;
+			$openprint::ZM_Monitor::dbh = $zm_dbh;
+			foreach my $Monitor ( openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence') ) {
+				next if ! $Monitor->can_view();
+				next if $Monitor->function() eq 'None';
+				$html .= sprintf(q`
+<tr>
+	<td class="thumbnail" rowspan="2"><a href="camera.html?monitor_id=%1$d"><img src="http://%2$s/cgi-bin/zms?mode=single&monitor=%1$d&amp;maxfps=%5$d" class="thumbnail"/></a></td>
+	<td class="thumbnail" rowspan="2"><a href="camera.html?monitor_id=%1$d"><img src="http://%6$s%7$s" class="thumbnail"/></a>
+		<a href="http://%6$s%7$s" target="_blank">Link to camera</a>
+	</td>
+	<td class="name">%3$s</td>
+	<td class="function">%4$s</td>
+</tr><tr>
+	<td colspan="2"><a href="http://%2$s/cgi-bin/zms?mode=jpeg&monitor=%1$d&amp;maxfps=%5$d" target="_blank">http://%2$s/cgi-bin/zms?mode=jpeg&monitor=%1$d&amp;maxfps=%5$d</a></td>
+</tr>`,
+$Monitor->id(), $Monitor->Server()->Hostname(), $Monitor->name(), $Monitor->function(), $Monitor->max_fps(), 
+$Monitor->host(),$Monitor->path(),
+);
+				
+			} # end foreach Monitor	
+			$zm_dbh->disconnect();
+			return $html;
+		) ?>
+		</tr>	
+	</tbody>
+</table>
+</div>

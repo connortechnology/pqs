@@ -1,0 +1,39 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<table class="List">
+	<tr>
+		<th width="60">&nbsp;</th>
+		<th class="Type">Type</th>
+		<th>Description</th>
+		<th class="Quantity">Quantity</th>
+		<th class="Weight">Weight</th>
+		<th class="Cost">Cost</th>
+		<th class="Price">Total</th>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $total = 0;
+		my %stocks;
+		my @Contents = $$variable{'Claim'}->Contents( 'order'=>'id');
+		if ( $$variable{'Claim'} and $$variable{'Claim'}->id() and ! @Contents ) {
+			# Every Claim should have at least 1 line in it, even if not populated.
+			my $Claim = new openprint::Claim_Content();
+			if ( ! $Claim->save({'claim_id'=>$$variable{'Claim'}->id()}) ) {
+				push @Contents, $Claim;
+			} # end if
+		} # end if
+		foreach my $C ( @Contents ) {
+			$$variable{'C'} = $C;
+			$html .= include( '/employee/claim/_content_'.$C->Type()->name().'.html', $variable );
+		} # end foreach tag_id
+		return $html;
+	) ?>
+	<tr>
+		<td>
+		<? echo ( button( 'Add', { onclick=>q`add_content( $('f1') );`, text=>'Add' } ); ) ?>
+		<td colspan="6">
+		<select name="type_id"><option value="">select</option>
+		<? echo ( make_drop_down( openprint::Claim_ContentType->dropdown( order=>'lower(name)') ); ) ?>
+		</select>
+		</td>	
+	</tr>
+</table>

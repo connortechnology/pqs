@@ -1,0 +1,34 @@
+<fieldset><legend>From</legend>
+	<ul>
+	<li><label>Company</label>
+		<?FromCompanyName?>
+	</li>
+	<li><label>Location</label>
+		<?FromLocation?>
+	</li>
+	<li><label>Address</label>
+		<?FromAddress1?><br/>
+		<?FromAddress2?>
+		<?FromCity?>, <?FromStateProvince?>, <?FromPostalCode?>
+		<?FromCountry?>
+	</li>
+	<?if($$variable{FromPhone})?>
+	<li> 
+		<label>Phone</label>
+		<?FromPhone?>
+	</li>
+	<?endif($$variable{FromPhone})?>
+	<?if($$variable{FromFax})?>
+	<li> 
+		<label>Fax</label>
+		<?FromFax?>
+	</li>
+	<?endif($$variable{FromFax})?>
+	<?if($$variable{FromEmail})?>
+	<li> 
+		<label>Email</label>
+		<?FromEmail?>
+	</li>
+	<?endif($$variable{FromEmail})?>
+	</ul>
+</fieldset>

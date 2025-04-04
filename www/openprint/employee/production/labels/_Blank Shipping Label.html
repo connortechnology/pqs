@@ -1,0 +1,41 @@
+<? eval (
+	if ( ! $$variable{'Label'} ) {
+		$$variable{'Label'} = new openprint::Label( $openprint::param{'id'} );
+		$$variable{'Label'}->save();
+	} # end if
+) ?>
+<style type="text/css">
+	
+	table {
+		table-layout: fixed;
+		width: 100%;
+	}
+	#Label {
+		font-size: 22pt;
+	}
+	table tr td {
+		vertical-align: top;
+		font-family: Arial, Helvetica, Sans-Serif;
+		padding: 5px;
+		font-size: 20pt;
+	} 
+	table tr td textarea {
+		width: 98%;
+	}
+</style>
+<div>
+	<form name="PackingSlip">
+	<table style="height: 2.75in;">
+		<tr>
+			<td style="border: 1px solid black;">
+				<div id="data" style="height: 2.5in;"><? hecho ( $$variable{'Label'}->get_data('data'); ) ?></div>
+<script type="text/javascript">
+new Ajax.InPlaceEditor( 'data', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=data',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=data'});
+</script>
+			</td>
+		</tr>
+	</table>
+	<span style="float: right;"># <? echo ( $$variable{'Label'}->docket() ) ?>&nbsp;&nbsp;
+<img src="/barcode.png?code=D<? echo ( $$variable{'Label'}->docket() ) ?>+&amp;NoText=1&amp;Height=15" alt="<? echo ( $$variable{'Label'}->docket() ) ?>" /></span>
+	</form>
+</div>

@@ -1,0 +1,55 @@
+<script type="text/javascript">
+<!--
+	function load( div, form ) {
+		new Ajax.Updater( div, '_projects.html', { method: 'get', parameters: form.serialize() } );
+	} // end function load
+-->
+</script>
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
+<div class="SRED"><div class="Projects">
+	<form id="f1" name="f1" action="projects.html" method="post">
+		<input type="hidden" name="action"/>
+		<fieldset class="filters"><legend>Select Search Criteria</legend>
+			<ul>
+			<li><label>Created By</label>
+				<select name="created_by" onchange="load('Results',$('f1'));">
+					<option value="">All</option>
+					<? echo ( 
+						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstname),lower(lastname)','type'=>['A','E'] ) ], $session{'/employee/sred/projects.html?created_by'} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Created</label>
+				<? echo ( 
+					ssi::date_select_session( '/employee/sred/projects.html', 'created_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} );
+				 ) ?>
+				to
+				<? echo ( ssi::date_select_session( '/employee/sred/projects.html', 'created_on_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
+			</li>
+			<li>
+				<label>Updated</label>
+				<? echo ( ssi::date_select_session( '/employee/sred/projects.html', 'updated_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
+				to
+				<? echo ( ssi::date_select_session( '/employee/sred/projects.html', 'updated_on_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
+			</li>
+			<li>
+				<label>Contains</label>
+				<input type="text" id="contains" name="contains" onkeyup="load('Results',$('f1'));" />
+			</li>
+			</ul>
+			<p class="buttons">
+					<? echo ( join( '',
+					ssi::button( 'ShowResults', { 'onclick' => 'f1.submit();', 'text' => 'Show Results' } ),
+					ssi::button( 'Add', { 'href' => '/employee/sred/project.html', 'text' => 'Add New' } ),
+					ssi::button( 'Export', { 'onclick' => q`var form = $(f1);form.elements['action'].value='Export';form.submit();`, 'class'=>'Export' } ),
+					ssi::button( 'Reset', { 'href' => '/employee/sred/projects.html?action=reset' } ),
+					); ) ?>
+			</p>
+		</fieldset>
+	</form>
+	<form id="f2" name="f2" action="projects.html" method="post">
+		<input type="hidden" name="action"/>
+		<div id="Results"><? echo ( include('_projects.html'); ) ?></div>
+	</form>
+</div>
+</div>

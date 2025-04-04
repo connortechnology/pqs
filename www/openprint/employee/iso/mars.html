@@ -1,0 +1,81 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript">
+	function delete_confirm(form) {
+		var number_of_deleted_mars = 0;
+		for ( var index = 0; index < form.elements['mars'].length; index += 1 ) {
+			if ( form.elements['mars'][index].checked ) {
+				number_of_deleted_mars += 1;
+			} // end if
+		} // end for
+		if ( number_of_deleted_mars == 0 ) {
+			alert("To Delete MARs, click the checkbox beside the MAR.");
+		} else if ( number_of_deleted_mars == 1 ) {
+			if ( confirm("Are you sure you wish to delete this MAR?") ) {
+				form.btnFunction.value='Delete';
+				form.submit();
+			} // end if
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_mars + " MARS?") ) {
+				form.btnFunction.value='Delete';
+				form.submit();
+			} // end if
+		} // end if
+	}
+
+	 function load_mars( form ) {
+		 LoadContent('Results','/employee/iso/_mars.html', form);
+	 } // end function
+</script>
+<?include('/includes/error_reporting.html')?>
+Please select a MAR to view/edit.<br>
+<form id="f1" name="f1" method="post" action="mar.html">
+	<fieldset class="filters"><legend>Choose MAR</legend>
+		<ul>
+		<li>
+			<label for="mar_id">MAR ID #</label>
+			<? echo ( join("\n",
+				input( type=>'cardinal', id=>'mar_id', name=>'mar_id', onkeypress=>'return input_handler(this,event);'),
+				button( 'Go', { onclick=>'f1.submit();', text=>'Go' } ),
+			); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="mars.html">
+	<input type="hidden" name="btnFunction" />
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<div class="content">
+        <ul>
+				<li><label>Equipment</label>
+				<? echo ( 
+						ssi::select(
+							openprint::Equipment->dropdown( order=>'sorting,lower(strname)' ),
+							$session{$r->uri().'?equipment_id'},
+							{ name=>'equipment_id', prepend=>['','All'] }
+							);
+						) ?>
+        </li>
+		<li><label>Date Issued</label>
+			<? echo ( join( ' to ',
+						date_select_session($r->uri(), 'issued_on_start', { onchange=>q`load_mars('f2');`, with_today=>1, with_clear=>1 } ),
+						date_select_session($r->uri(), 'issued_on_end', { onchange=>q`load_mars('f2');`, with_today=>1, with_clear=>1 } ),
+						); ) ?>
+		</li>
+		<li><label>Status</label>
+			<? echo ( radio( 'status', [ 'Open','Open','Closed','Closed','','Both' ], $session{$r->uri().'?status'}, { onclick=>q`load_mars('f2');` } ); ) ?>
+		</li>
+		<li><label>Docket</label>
+			<? echo ( input( type=>'cardinal', name=>'docket', value=>$session{$r->uri().'?docket'}, onkeydown=>q`if(event.keyCode==13){load_mars($('f1'));}` ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'load_mars(f2);', text=>'Show Results' } ),
+				button( 'Download', { onclick=>"f2.btnFunction.value='Download in CSV Format';f2.submit();", text=>'Download' } ),
+				button( 'Add', { href=>'mar.html', text=>'Add New MAR' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<script type="text/javascript">document.f1.mar_id.focus();</script>
+<div id="Results"><?include('_mars.html')?></div>

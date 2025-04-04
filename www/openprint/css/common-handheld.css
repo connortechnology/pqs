@@ -1,0 +1,77 @@
+/* This file merely loads CHANGES from common.css.  It is not a re-implementation */
+body {
+	font-size: xx-small;
+	width: 100%;
+	padding: 0px;
+	margin: 0px;
+	background-repeat: repeat;
+}
+
+#Header {
+	margin: 0px;
+	padding: 0px;
+	width: 100%;
+}
+div#Header #Logo {
+	padding: 0px;
+	font-size: xx-small;
+}
+div#Header #Logo img {
+	width: 20px;
+	height: 20px;
+	float: left;
+}
+#Header #Logo #PointOne {
+    border-bottom: 1px solid white;
+    font-family: Georgia, Times, serif;
+    font-size: small;
+	color: white;
+}
+#Header #Logo #GraphicsInc {
+font-size:xx-small;
+	color: white;
+}
+
+#Content {
+    border-bottom: 1px solid black;
+	margin: 0px;
+	padding: 5px;
+	float: none;
+}
+#ContentInner {
+	padding: 0px;
+}
+#DidYouKnow {
+	display: none;
+}
+fieldset {
+	padding: 0px;
+	margin: 0px;
+	font-size: xx-small;
+}
+fieldset legend {
+	padding: 0px;
+	margin: 0px;
+	font-size: xx-small;
+}
+fieldset.filter {
+	margin: 0px;
+	padding: 0px;
+	padding-bottom: 2px;
+	font-size: xx-small;
+	width: 100%;
+}
+fieldset.filter legend {
+	font-size: xx-small;
+}
+fieldset.filter p {
+}
+div.row {
+	margin: 0px;
+}
+fieldset p {
+}
+fieldset p label {
+}
+fieldset p input {
+}

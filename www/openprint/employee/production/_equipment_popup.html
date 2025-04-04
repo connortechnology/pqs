@@ -1,0 +1,21 @@
+<form id="equipment_popup_form" name="equipment_popup_form" action="" >
+	<input type="hidden" name="equipment_id" value="<? echo ( $param{equipment_id} ) ?>" />
+	<fieldset><legend>Edit <? echo ( $$variable{Equipment}->strid() .' ' . $$variable{Equipment}->name() ) ?></legend>
+		<p><label>Message</label>
+		<textarea name="message" id="message" rows="<? echo ( count_lines( $$variable{Equipment}->message() ); ) ?>"><? echo ( 
+	$_ = $$variable{Equipment}->message();
+	$_ =~ s/ \.\.\.\w+$//;
+	return $_;
+ ) ?></textarea>
+		</p>
+	</fieldset>
+		<p class="buttons">
+			<? echo ( join("\n",
+			button( 'SaveEquipment', { onclick=>q`tinyMCE.triggerSave();new Ajax.Updater('message`.$param{equipment_id}.q`','_equipment_message.html', {parameters:$('equipment_popup_form').serialize(), onSuccess:function(){popupWin.destroy();}});`, text=>'Save' } ),
+			button( 'CancelEquipment',  { onclick=>'popupWin.destroy();', text=> 'Cancel' } ),
+				);
+			) ?>
+		</p>
+	<input type="hidden" name="action" value="Save" />
+</form>
+<script type="text/javascript"> tinyMCE.init({ mode: "exact", elements : 'message', plugins: "paste", theme : "advanced" }); </script>

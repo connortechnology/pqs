@@ -1,0 +1,27 @@
+.tableheader {
+        width: 100%;
+        clear: both;
+        font-weight: bold;
+    }
+    @media screen {
+        .Type {
+            float: left;
+            margin-left: 40px;
+        }
+        .Value {
+            float: right;
+        }
+    }
+    @media print {
+        .Type {
+            float: left;
+            margin-left: 40px;
+        }
+        .Value {
+            float: right;
+        }
+    }
+
+    .dark {
+        background-color: #E3E4F0;
+    }

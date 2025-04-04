@@ -1,0 +1,135 @@
+<div class="PageTitle"><h1>ACCOUNT</h1>
+<h2>Company Profile</h2>
+</div>
+<a name="top"></a>
+Your company profile can be modified using the fields below. Use the <b>Save</b> button when finished.<br/>
+<br/>
+<?include(/includes/error_reporting.html)?>
+<form name="f1" method="post" onsubmit="return fmCheck();" action="/account/company_profile.html?company_id=<?echo($$variable{Company}->id())?>">
+	<div class="CompanyProfile">
+		<fieldset>
+			<p class="buttons">
+				<? echo ( join("\n",
+							button('SaveTop', { onclick=>"f1.btnFunction.value='save';fmChange=3;f1.submit();", text=>'Save' }),
+							button('ResetTop', { onclick=>'f1.reset();', text=>'Reset' }),
+							( ($$variable{Company}->deleted() and $$variable{Company}->can_edit())?
+								button('UnDeleteTop', { onclick=>q`f1.btnFunction.value='undelete';f1.submit();`, text=>'Undelete'}) : 
+							( $$variable{Company}->can_delete() ? button('DeleteTop', { onclick=>q`f1.btnFunction.value='delete';f1.submit();`, text=>'Delete'}) : '' ),
+'' ),
+							); ) ?>
+			</p>
+		</fieldset>
+		<div class="CompanyInformation">
+			<?if($$variable{Company}->deleted())?>
+			<div class="warning">Company is deleted.</div>
+			<?endif($$variable{Company}->deleted())?>
+			<fieldset>
+				<legend>Company Information</legend>
+				<ul>
+					<li> 
+						<label for="companyname">Company Name</label>
+						<input type="text" id="companyname" name="companyname" value="<? hecho ( $$variable{Company}->name() ) ?>" />
+					</li>
+					<li class="address1"> 
+						<label for="address1">Address</label>
+						<input type="text" id="address1" name="address1" value="<? hecho ( $$variable{Company}->address1() ) ?>" />
+					</li>
+					<li class="address2"> 
+						<label for="address2">&nbsp;</label>
+						<input type="text" id="address2" name="address2" value="<? hecho ( $$variable{Company}->address2() ) ?>" />
+					</li>
+					<li> 
+						<label>Country</label>
+						<select id="country" name="country" onchange="Country_onchange( this, this.form.state );">
+							<option value=""> Select </option>
+							<? echo ( make_drop_down( \@countries::countries, $$variable{Company}->country() ); ) ?>
+						</select>
+					</li>
+					<li> 
+						<label for="state" id="country_state"><? echo (
+							if ( $$variable{Company}->country() eq 'US' ) {
+								return 'State';
+							} elsif ( $$variable{Company}->country() eq 'CA' ) {
+								return 'Province';
+							} else {
+								return 'State/Province';
+							} # end if
+						) ?></label>
+						<select id="state" name="state">
+							<option value=""> Select </option>
+							<? echo ( join("\n",
+								make_drop_down( \@states::states, $$variable{Company}->state() ),
+								make_drop_down( \@provinces::provinces, $$variable{Company}->state() ),
+);) ?>
+						</select>
+					</li>
+					<li> 
+						<label for="city">City</label>
+						<input type="text" id="city" name="city" value="<? hecho ( $$variable{Company}->city() ) ?>" />
+					</li>
+					<li> 
+						<label for="postalcode" id="country_postal"><? echo (
+							   if ( $$variable{Company}->country() eq 'US' ) {
+									   return 'Zip Code';
+							   } elsif ( $$variable{Company}->country() eq 'CA' ) {
+									   return 'Postal Code';
+							   } else {
+									   return 'Zip/Postal Code';
+							   } # end if
+							) ?></label>
+						<input type="text" id="postalcode" name="postalcode" value="<? hecho ( $$variable{Company}->postalcode() ) ?>" />
+					</li>
+					<li> 
+						<label for="phone">Phone</label>
+						<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{Company}->phone() ) ?>" /> x
+						<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{Company}->extension() ) ?>" />
+					</li>
+					<li> 
+						<label for="fax">Fax</label>
+						<input type="tel" id="fax" name="fax" value="<? hecho ( $$variable{Company}->fax() ) ?>" />
+					</li>
+				</ul>
+			</fieldset>
+		</div>
+		<?include(/account/_business_information.html)?>
+		<?include(/account/_company_account_information.html)?>
+		<?include(/location/_locations_container.html)?>
+		<?include(/includes/_credit_view.html)?>
+		<?include(_company_profile_edit.html)?>
+		<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+		<?include(_sales_edit.html)?>
+		<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+		<?include(/account/_bank_information.html)?>
+		<?include(/account/_trade_references.html)?>
+		<div class="Preferences">
+			<fieldset><legend>Preferences</legend>
+			<ul>
+				<li>
+					<label for="currency_id">Preferred Currency</label>
+					<select id="currency_id" name="currency_id">
+						<option value=""> Please select a Currency </option>
+						<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Company}->currency_id() ); ) ?>
+					</select>
+				</li>
+	<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+				<li class="quote_project_breakdown">
+					<label>Include project breakdown with quote?</label>
+					<? echo ( radio( 'quote_project_breakdown', [ 'Y','Yes','N','No'], $$variable{Company}->quote_project_breakdown() ); ) ?>
+				</li>
+	<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+</ul>
+			</fieldset>
+		</div>
+			<p class="buttons">
+			<? echo ( join("\n",
+						button('SaveBottom', { onclick=>"f1.btnFunction.value='save';fmChange=3;f1.submit();", text=>'Save' }),
+						button('ResetBottom', { onclick=>"f1.reset();", text=>'Reset' }),
+						( ($$variable{Company}->deleted() and $$variable{Company}->can_edit())?
+							button('UnDeleteBottom', { onclick=>q`f1.btnFunction.value='undelete';f1.submit();`, text=>'Undelete'}) : 
+						( $$variable{Company}->can_delete() ? button('DeleteBottom', { onclick=>q`f1.btnFunction.value='delete';f1.submit();`, text=>'Delete'}) : '' )
+),
+						); ) ?>
+			</p>
+	</div><!--CompanyProfile-->
+	<input type="hidden" name="btnFunction"/>
+</form>

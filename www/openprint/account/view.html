@@ -1,0 +1,160 @@
+<script nonce="<?echo($config{CSP_NONCE})?>">
+	function delwall( wall_id ) {
+		new Ajax.Request('_wall.json', { parameters: { wall_id: wall_id, action: 'delete' } } );
+	} // end function delwall
+	function replywall( wall_id ) {
+		var div = $('reply-'+wall_id);
+		if ( ! div ) {
+		new Ajax.Updater('wall-'+wall_id, '_wall_reply.html', { parameters: { user_id: <? echo ( $$variable{User}{'id'} ) ?>, wall_id: wall_id }, insertion: Insertion.Bottom } );
+		} // end if
+	} // end function replywall
+</script>
+<div class="PageTitle">
+<h1>ACCOUNT</h1>
+<h2>User Profile</h2>
+</div>
+<?include('/includes/error_reporting.html')?>
+<? if ( $$variable{User}->id() ) ?>
+	<div class="disclaimer"><? echo ( variable_substitution( \$config{UserProfileDisclaimer}, $variable ); ) ?></div>
+	<div class="UserProfile">
+		<p class="buttons">
+			<? echo ( 
+				my $html;
+				if ( $session{user_id} ) {
+					if ( $$variable{User}->can_edit() ) {
+						$html .= button( 'Delete', { href=>'/account/search.html?action=Delete&amp;user_id='.$$variable{User}{id}, text=>'Delete Profile' } );
+						if ( $session{user_type} eq 'A' ) {
+							$html .= button( 'Edit', { href=>'/administrator/managerial/user_profiles.html?ddmUser='.$$variable{User}{id} } );
+						} else {
+							$html .= button( 'Edit', { href=>'/account/user_profile.html?ddmUser='.$$variable{User}{id} } );
+						}
+					} # end if
+					# Can assume if we are viewing this that we are not blocked.
+					if ( $$variable{User}->id() == $session{user_id} ) {
+						$html .= button( 'Blocklist', { href=>'/account/blocklist.html' } );
+					} else {
+						$html .= button( 'Block', { onclick=>qq`popup_window('_block_popup.html?user_id=$$variable{User}{id}' );`, text=>'Block' } );
+					} # end if
+
+					if ( $$variable{User}->id() and ( $session{user_id} != $$variable{User}->id() ) ) {
+						$html .= button( 'Message', { href=>'/messaging/view.html?to_id='.$$variable{User}->id() } );
+					} # end if
+				} # end if session{user_id}
+				return $html;
+			) ?>
+		</p>
+		<? if ( $session{user_id} and ( $session{user_id} != $$variable{User}->id() ) ) ?>
+		<div id="Opinions"><? echo ( $$variable{User}->opinions('Opinions') ) ?></div>
+		<? endif ( $session{user_id} and ( $session{user_id} != $$variable{User}->id() ) ) ?>
+		
+		<div class="leftColumn">
+		<div id="ProfilePicture">
+			<? echo (
+				my $html;
+				my $Asset = $$variable{User}->Asset();
+				if ( $Asset->id() ) {
+					my $Album = openprint::Photo_Album->find_one('asset_id any'=>$$Asset{'id'},user_id=>$$variable{User}->id());
+					if ( ! $Album ) {
+						$Album = openprint::Photo_Album->find_one(user_id=>$$variable{User}->id(), name=>'Profile Photos' );
+						if ( ! $Album ) {
+							$Album = new openprint::Photo_Album();
+							$Album->save({user_id=>$$variable{User}->id(), name=>'Profile Photos'});
+						} # end if
+					} # end if
+
+						# Happens when the asset is the fallback default icon
+						#$html = sprintf('<img src="%s" alt="%s"/>', $Asset->url(), $Asset->description() );
+					#} else {
+						$html = sprintf('<a href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s"/></a>', $$Album{'id'}, $Asset->url(), $Asset->description() );
+					#}
+				} # end if
+				if ( ! $$variable{User}->asset_id() ) {
+					my $Album = openprint::Photo_Album->find_one(user_id=>$$variable{User}->id(), name=>'Profile Photos' );
+					if ( $Album ) {
+					$html .= '<a href="/photo_albums/view.html?album_id='.$Album->id().'">No profile photo. Click for upload.</a>';
+					} # end if
+				} # end if
+				return $html;
+			) ?>
+			<? if ( $session{user_type} eq 'A' ) ?>
+			<span class="buttons"><? echo ( button( 'UploadPhoto', { href=>'/photo_albums/upload.html', text=>'Upload Photo' } ); ) ?></span>
+			<? endif ( $session{user_type} eq 'A' ) ?>
+		</div><!--ProfilePicture-->
+		<div id="PhotoAlbums">
+			<fieldset><legend>Photos/Videos</legend>
+				<? if ( $$variable{User}->can_edit() ) ?>
+				<span class="buttons"><? echo ( button( 'AddPhotoAlbum', { href=>'/photo_albums/edit.html', text=>'Add' } ); ) ?></span>
+				<? endif ( $$variable{User}->can_edit() ) ?>
+				<? echo (
+					my $html = '';
+					my @Albums = openprint::Photo_Album->find( { user_id => $variable{User}->id(), order=>'id' } );
+					return 'no albums' if ! @Albums;
+					foreach my $Album ( @Albums ) {
+						next if ! $Album->can_view();
+						$html .= $Album->thumbnail_html();
+					} # end foreach Album
+					return $html;
+				) ?>
+			</fieldset>
+		</div>
+		<div id="UserInformation">
+			<fieldset><legend>User Information</legend>
+				<div class="content">
+					<ul>
+						<li><label><? echo ( translate('company') ) ?></label><? echo ( $$variable{User}->Company()->name() ) ?></li>
+						<li><label>Name</label><? echo ( $$variable{User}->name() ) ?></li>
+					</ul>
+				</div>
+			</fieldset>
+		</div>
+		<?include('_statistics.html')?>
+		<?include('_user_profile_view.html')?>
+		</div>
+				
+		<div class="rightColumn">
+			<div class="Badges">
+				<fieldset><legend>Badges</legend>
+				<? echo (
+					my @Badges = openprint::UserGroup->find( 'user_id any'=>$$variable{User}->id(), 'asset_id is null'=>0 );
+					return join("\n", map { $_->Asset()->thumbnail_html() } @Badges );
+				) ?>
+			</div>
+			<div class="Relationships">
+				<fieldset><legend>Relationships</legend>
+					<div id="Relationships"><?include('/account/_relationships.html')?></div>
+				</fieldset>
+			</div>
+			<div id="Events">
+				<fieldset><legend>Events</legend>
+					<? if ( $session{user_id} == $$variable{User}->id() ) ?>
+					<span class="buttons">
+						<? echo ( button( 'NewEvent', {href=>'/event/edit.html', 'text'=>'New' } ); ) ?>
+					</span>
+					<? endif ( $session{user_id} == $$variable{User}->id() ) ?>
+					<div class="content">
+						<ul>
+						<? echo (
+							my @Events = 
+								openprint::Event->find('attending any'=>$$variable{User}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time-(72*3600) ) );
+							if ( ! @Events ) {
+								return '<li>No upcoming events</li>';
+							} # end if
+							my $html;
+							foreach my $Event ( sort { $$a{'starting_on'} cmp $$b{'starting_on'} } @Events ) {
+								$html .= sprintf(q`<li><a class="thumbnail" href="/event/view.html?event_id=%1$d"><img src="%4$s" alt="%5$s"/></a><a href="/event/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
+									$Event->id(), $Event->name(), 
+									Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
+									$Event->Asset()->thumbnail_url(),
+									( $Event->Asset()->caption() ? $Event->Asset()->caption() : $Event->name() ),
+									);
+							} # end foreach Event
+							return $html;
+						) ?>
+						</ul>
+					</div>
+				</fieldset>
+			</div>
+		</div>
+		<div id="Wall"><?include('/account/_wall.html')?></div>
+	</div><!--UserProfile-->
+<? endif ( $$variable{User}->id() ) ?>

@@ -1,0 +1,63 @@
+<?include(/main/order/_product_list.html)?>
+<? if ( @{$$variable{Projects}} = $$variable{Order}->Ordered_Projects() ) ?>
+<table class="List">
+	<tr> 
+		<th class="project_id">ID</th>
+		<th class="reference">Reference</th>
+		<th class="Date">Required Date</th>
+		<th class="quantity">Quantity</th>
+		<th class="Price">Price</th>
+	</tr>
+<? echo (
+	my $rowclass; 
+	my $html;
+
+	foreach my $OP ( @{$$variable{Projects}} ) {
+		my $Project = $OP->Project();
+
+		my $project_price = $OP->price();
+		my $shipping_html;
+		my @ShippingServices = openprint::ServiceType->find( category=>'Shipping' );
+		my %services = $Project->get_services();
+		foreach my $ServiceType ( @ShippingServices ) {
+			if ( $services{$ServiceType->name()} ) {
+				foreach my $service_index ( @{$services{$ServiceType->name()}} ) {
+					my $Service = $Project->Service( $service_index );
+					my $specs = $Service->specs();
+					my $price = $Project->Currency()->convert_to( $$variable{Order}->Currency(), $$specs{'txtPrice'.$Project->ordered_quantity_index()} );
+					$project_price -= $price;
+		
+					# First gives # of items, the second the destination
+					my $summary = $Service->summary( $Project->ordered_quantity_index() );
+					$_ = $Service->summary( );
+					$summary .= ' to<br/>' . $_ if $_;
+					$shipping_html .= qq`<tr$$variable{rowclass}>
+<td class="project_id">`.$ServiceType->description().qq`</td>
+<td class="reference" colspan="2">$summary</td>
+<td class="quantity">$$specs{'alert'}</td>
+<td class="Price">`. $$variable{Currency}->format($price).'</td>
+</tr>';
+				} # end foreach
+			} # end if
+		} # end foreach
+
+		$html .= sprintf(q`
+<tr%1$s>
+	<td class="project_id">%2$s</td>
+	<td class="reference">%3$s</td>
+	<td class="Date">%4$s</td>
+	<td class="quantity">%5$s</td>
+	<td class="Price">%6$s</td>
+</tr>
+`, $rowclass, $Project->link_to(), $Project->link_to( join('<br/>', $Project->reference(), $Project->summary() ) ), 
+format_date( $Project->requested_date() ), $Project->ordered_quantity(), $$variable{Currency}->format( $project_price )
+ );
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+
+		$html .= $shipping_html;
+
+	} # end foreach Project
+	return $html
+) ?>
+</table>
+<? endif ( @{$$variable{Projects}} = $$variable{Order}->Ordered_Projects() ) ?>

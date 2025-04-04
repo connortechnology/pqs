@@ -1,0 +1,80 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<script type="text/javascript">
+	var answer_drop = function(el){
+        new Ajax.Updater( el, '_answers_edit.html', {parameters: { action: 'sort', order: Sortable.serialize(el) }, onSuccess:function(){
+                eval("Sortable.create('"+el+"', { onUpdate:answer_drop });");
+ } } );
+    } // end function answer_drop
+	var question_drop = function(el){
+        new Ajax.Request( '_questions_edit.html', {parameters: { action: 'sort', order: Sortable.serialize(el) }
+ //onSuccess:function(){
+                //eval("Sortable.create('"+el+"', { onUpdate:answer_drop });");
+ //}
+ } );
+	} // end function question_drop
+	tinyMCE.init({
+		relative_urls : false,
+		convert_urls : false,
+		mode : "textareas",
+		theme : "advanced",
+		plugins: "paste",
+		theme_advanced_buttons3 : "pastetext,pasteword,selectall,pastetext"
+	});
+</script>
+<? if ( $$variable{'Survey'}->can_edit() ) ?>
+<form id="f1" name="f1" method="post" action="/survey/edit.html<? echo ( $$variable{'Survey'}->id() ? '?survey_id='.$$variable{'Survey'}->id() : '' ) ?>">
+	<input type="hidden" name="action"/>
+	<fieldset><legend>Survey <? echo ( $$variable{'Survey'}->id() ) ?></legend>
+		<ul>
+			<li>
+				<label>Name</label>
+				<input type="text" name="name" value="<? echo ( $$variable{'Survey'}->name() ) ?>" />
+			</li>
+			<li>
+				<label>Description</label>
+				<textarea name="description"><? echo ( $$variable{'Survey'}->description() ) ?></textarea>
+			</li>
+			<li>
+				<label>Created On</label>
+				<? echo ( $$variable{'Survey'}->datetime_format( 'created_on' ); ) ?>
+			</li>
+			<li><label>Created By</label>
+				<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+					<select name="created_by" id="created_by">
+						<option value="">no one</option>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A','P'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Survey'}->created_by() ); ) ?>
+					</select>
+				<? else ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+					<? echo ( new openprint::User( $$variable{'Survey'}->created_by() )->name() ) ?>
+				<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+			</li>
+		</ul>
+		<fieldset><legend>Questions</legend><? echo ( include('_questions_edit.html'); ) ?>
+		<script type="text/javascript">Sortable.create('Questions', { onUpdate:question_drop });</script>
+	<p class="buttons">
+	<? echo (
+	ssi::button( 'AddQuestion', { 'onclick'=>qq`new Ajax.Updater('Questions', '_question_edit_line.html', {
+		parameters: {
+			survey_id: $$variable{'Survey'}{'id'},
+			action: 'new',
+			},
+		insertion: 'bottom'
+		} );`, 'text'=>'Add Question' } ); 
+) ?>
+	</p>
+</fieldset>
+        <p class="buttons">
+            <? echo ( join('',
+                ssi::button( 'Save',{ 'onclick'=>"f1.elements['action'].value='Save';f1.submit();" } ),
+                ssi::button( 'Delete', { 'onclick'=>"f1.elements['action'].value='Delete';f1.submit();" } ),
+                ssi::button( 'Copy', { 'onclick'=>"f1.elements['action'].value='Copy';f1.submit();" } ),
+                ssi::button( 'Delete', { 'onclick'=>"f1.elements['action'].value='Delete';f1.submit();" } ),
+                ); ) ?>
+        </p>
+    </fieldset>
+<? endif ( $param{'survey_id'} ) ?>
+</form>
+<? else ( $$variable{'Survey'}->can_edit() ) ?>
+	You do not have the rights to edit this survey.
+<? endif ( $$variable{'Survey'}->can_edit() ) ?>

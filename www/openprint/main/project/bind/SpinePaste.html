@@ -1,0 +1,54 @@
+<script src="<?hash_link('/javascripts/service.js)?>"></script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<ul>
+        <!--
+        <li class="complexity"><label>Complexity</label>
+          <?echo(radio('complexity', [map { $_ => $_ } ('Simple','Average','Complex')], $$variable{complexity}, {onclick=>'calc(\'f1\')'});)?>
+        </li>
+        -->
+        <li><label>Trimming</label>
+          <input type="radio" id="TrimmingY" name="Trimming" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{Trimming} ne 'N' ? 'checked="checked"' : '' ) ?> />
+          <label class="radio" for="TrimmingY">Yes</label>
+          <input type="radio" id="TrimmingN" name="Trimming" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{Trimming} eq 'N' ? 'checked="checked"' : '' ) ?> />
+          <label class="radio" for="TrimmingN">No</label>
+        </li>
+        <li><label>Gluing</label>
+          <input type="radio" id="GluingY" name="Gluing" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{Gluing} ne 'N' ? 'checked="checked"' : '' ) ?> />
+          <label class="radio" for="GluingY">Yes</label>
+          <input type="radio" id="GluingN" name="Gluing" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{Gluing} eq 'N' ? 'checked="checked"' : '' ) ?> />
+          <label class="radio" for="GlueingN">No</label>
+        </li>
+			</ul>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+				<li><label>Runspeed</label>
+					<? echo ( my $html = '';
+						foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							$html .= input( 
+								type	=>	'cardinal',
+								name	=>	"Runspeed$qty_index",
+								id		=>	"Runspeed$qty_index", value=>$$variable{'Runspeed'.$qty_index},
+								oninput	=>	'calc(this.form.name);' ).'/Hr';
+                $html .= write_override( 'OverrideRunspeed'.$qty_index, $$variable{'OverrideRunspeed'.$qty_index}, '', "calc(\$('f1').name);" );
+							$html .= '</span>';
+						} # end foreach qty_index
+						return $html;
+					) ?>
+				</li>
+			  <?include('/includes/main/proj/quantities_equipment_prices.html')?>
+			</ul>
+		</fieldset>
+		<hr/>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+		<input type="hidden" name="Status" value="<?Status?>" />
+	</form>
+</div>

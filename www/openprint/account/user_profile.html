@@ -1,0 +1,199 @@
+<div class="PageTitle">
+<h1>ACCOUNT</h1>
+<h2>User Profile</h2>
+</div>
+<script src="<?hash_link(/javascripts/passwordmeter.js)?>"></script>
+<?include('/includes/error_reporting.html') ?>
+<? if ( $session{user_id} ) ?>
+	<form id="f1" name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
+		<div class="Account"><div class="UserProfile">
+			<fieldset class="filters">
+			<? if ( $$variable{User}->Company()->can_edit() ) ?>
+			<? echo (
+				my @Users = @{$$variable{Users}} = openprint::User->find(
+        company_id=> ($$variable{User}->company_id() ? $$variable{User}->company_id() : $session{company_id}),
+        );
+				if ( @Users == 1 ) {
+					return sprintf('<input type="hidden" name="ddmUser" value="%d"/>', $Users[0]->id());
+				} elsif ( @Users ) {
+					return q` 
+				<ul>
+				<li>
+					<label for="ddmUser">User Name</label>
+					<select id="ddmUser" name="ddmUser" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';f1.submit();}">
+						<option value="">Select a User</option>`.
+						make_drop_down( [ map { $_->id(), $_->name() } @Users ], $$variable{User}->id() ).'
+					</select>
+				</li></ul>';
+				} 	
+				return;
+			) ?>
+			<? else ( $$variable{User}->Company()->can_edit() ) ?>
+					<input type="hidden" name="ddmUser" value="<? echo ( $session{user_id} ) ?>"/>
+			<? endif ( $$variable{User}->Company()->can_edit() ) ?>
+				<p class="buttons">
+			<? if ( $$variable{User}->Company()->can_edit() ) ?>
+
+			<? if ( @{$$variable{Users}} > 1 ) ?>
+					<? echo ( button( 'Previous', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'&lt;&lt;' } ); ) ?>
+					<? echo ( button( 'Next', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'&gt;&gt;' } ); ) ?>
+			<? endif ( @{$$variable{Users}} > 1 ) ?>
+					<? echo ( button( 'New', { onclick=>"addCheck(f1);", text=>'New' } ); ) ?>
+			<? endif ( $$variable{User}->Company()->can_edit() ) ?>
+					<? echo ( button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ); ) ?>
+					<? echo ( button( 'Save', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ); ) ?>
+					<? echo ( button( 'Reset', { onclick=>"f1.reset();", text=>'Reset' } ); ) ?>
+				</p>
+			</fieldset>
+<? if ( $$variable{User}->can_edit() ) ?>
+			<span class="required"></span> denotes required information.<br/>
+			<div class="leftColumn">
+				<div id="ProfilePicture">
+				<? if ( $$variable{User}->Asset()->id() ) ?>
+				<img src="<? echo ( $$variable{User}->Asset()->url() ) ?>" alt="<? echo ( $$variable{User}->Asset()->caption() ) ?>"/>
+				<? else ( $$variable{User}->Asset()->id() ) ?>
+				No profile picture set.
+				<? endif ( $$variable{User}->Asset()->id() ) ?>
+				</div>
+				<?include('_statistics.html')?>
+			</div>
+			<div id="UserInformation">
+   			<fieldset><legend>User Information<?echo($session{user_type} eq 'A' ? '('.$$variable{User}->id().')':'')?></legend>
+				<div class="content">
+					<ul>
+   				<li class="salutation notrequired"> 
+   					<label>Salutation</label>
+            <?echo(radio('salutation', [ map { $_, $_ } ( 'Mr.','Mrs.','Ms.','Miss' ) ], $$variable{User}->salutation() ); ) ?>
+   				</li>
+   				<li class="required firstname">
+   					<label for="firstname">First Name</label>
+   					<input type="text" id="firstname" name="firstname" value="<? echo ( $$variable{User}->firstname() ) ?>" />
+   				</li>
+   				<li class="notrequired lastname"> 
+   					<label for="lastname">Last Name</label>
+   					<input type="text" id="lastname" name="lastname" value="<? echo ( $$variable{User}->lastname() ) ?>" />
+   				</li>
+   				<li class="title notrequired"> 
+   					<label for="title">Title</label>
+   					<input type="text" id="title" name="title" value="<? echo ( $$variable{User}->title() ) ?>" />
+   				</li>
+   				<li class="phone notrequired"> 
+   					<label for="phone">Phone</label>
+   					<input type="tel" id="phone" name="phone" value="<? echo ( $$variable{User}->phone() ) ?>" /> x
+   					<input type="tel" id="extension" name="extension" value="<? echo ( $$variable{User}->extension() ) ?>" />
+   				</li>
+   				<li class="mobile notrequired">
+   					<label for="mobile">Mobile</label>
+   					<input type="tel" id="mobile" name="mobile" value="<? echo ( $$variable{User}->mobile() ) ?>" />
+   				</li>
+   				<li class="fax notrequired">
+   					<label for="fax">Fax</label>
+   					<input type="tel" id="fax" name="fax" value="<? echo ( $$variable{User}->fax() ) ?>" />
+   				</li>
+   				<li class="mailinglist notrequired">
+   					<label>Add to our Mailing List</label>
+						<?echo( radio('mailinglist', [ 'Y', 'Yes', 'N', 'No', '', 'Unset' ], $$variable{User}->mailinglist() ); ) ?>
+   				</li>
+			<? if ( $$variable{Me}->administrator() eq 'Y' or $$variable{User}->Company()->can_edit() ) ?>
+   				<li class="web_active notrequired">
+   					<label>Can login to the web site?</label>
+            <?echo(radio('web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active() );)?>
+   				</li>
+				<li class="ftp_active notrequired">
+					<label>Can login to the FTP site?</label>
+            <?echo(radio('ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active() );)?>
+				</li>
+   				<li class="administrator notrequired">
+   					<label>Company administrator?</label>
+            <?echo(radio('administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator() );)?>
+   				</li>
+   				<li class="email_quotes notrequired">
+   					<label>Email my quotes to myself?</label>
+						<?echo( radio('email_quotes_to_myself', [ '1', 'Yes', '0', 'No' ], $$variable{User}->email_quotes_to_myself(), { default=>'0' }); )?>
+   				</li>
+<? eval ( @{$$variable{QuoteLevels}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
+<? if ( @{$$variable{QuoteLevels}} > 1 ) ?>
+   				<li class="notrequired">
+   					<label>Quote Level</label>
+					<select id="quote_level" name="quote_level">
+						<option value="">select</option>
+						<? echo ( make_drop_down( $$variable{QuoteLevels}, $$variable{User}->quote_level() ) ) ?>
+					</select>
+   				</li>
+<? endif ( @{$$variable{QuoteLevels}} > 1 ) ?>
+				<li class="commission"><label>Commission</label>
+					<?echo(input(type=>'float', name=>'commission', value=>$$variable{User}->commission());)?> %
+				</li>
+				<li class="wage"><label>Wage</label>
+					<?echo(input(type=>'float', name=>'wage', value=>$$variable{User}->wage());)?>
+				</li>
+			<? endif ( $$variable{Me}->administrator() eq 'Y' or $$variable{User}->Company()->can_edit() ) ?>
+				</ul>
+				</div>
+   			</fieldset>
+			</div>
+			<?include('_user_profile_edit.html')?>
+			<div id="LoginInformation">
+   			<fieldset><legend>Login Information</legend>
+				<div class="content">
+					<ul>
+						<li class="required">
+							<label for="email">E-mail Address</label>
+							<input type="email" id="email" name="email" value="<? echo ( $$variable{User}->email() ) ?>" >
+						</li>
+            <?include(/includes/_password_part.html)?>
+						<li><label>Password Last Changed</label>
+						<? echo ( $$variable{User}->password_changed_on() ? Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $$variable{User}->password_changed_on() ) ) : 'never' ) ?>
+						</li>
+					</ul>
+				</div>
+   			</fieldset>
+			</div>
+			<? if ($variable{DoEmail}) ?> 
+				<br class="spacer"/>
+				<?include(_email_settings.html)?>
+			<? endif ($variable{DoEmail}) ?> 
+
+			<? if ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
+<br class="spacer"/>
+    <div class="AssistantTo">
+        <fieldset><legend>Assistant To</legend>
+                <ul>
+                <? echo ( 
+                    my @csr_ids = $$variable{User}->csr_ids();
+                    if ( $session{user_type} eq 'A' or $openprint::User->administrator() eq 'Y' ) {
+                        return checkboxes( 'csr_ids', openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>'Sales' ), \@csr_ids, { container=>['<li>','</li>'] } );
+                    } elsif ( @csr_ids ) {
+                        return checkboxes( 'csr_ids', openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>'Sales', id=>\@csr_ids ), \@csr_ids, { container=>['<li>','</li>'] } );
+                    }
+                    return 'No one';
+ ) ?>
+                </ul>
+
+        </fieldset>
+    </div>
+    <div class="Assistants">
+        <fieldset><legend>Assistants</legend>
+                <ul>
+                <? echo ( 
+                    my @assistant_ids = $$variable{User}->assistant_ids();
+                    return checkboxes( 'assistant_ids', openprint::User->dropdown(company_id=>$openprint::User->company_id(), type=>['E','A'], 'usergroup any'=>'Sales' ), \@assistant_ids, { container=>['<li>','</li>'] } );
+ ) ?>
+                </ul>
+
+        </fieldset>
+    </div>
+			<? endif ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
+
+			<?include(_user_login_log.html)?>
+<? else ( $$variable{User}->can_edit() ) ?>
+You cannot edit this user.
+<? eval ( $log->debug( $$variable{User}->to_string() ); ) ?>
+<? endif ( $$variable{User}->can_edit() ) ?>
+		</div><!--UserProfile-->
+</div>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+<? else ( $session{user_id} ) ?>
+You must be logged in to edit user profiles.<br/>
+<? endif ( $session{user_id} ) ?>

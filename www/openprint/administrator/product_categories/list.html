@@ -1,0 +1,28 @@
+<table class="List">
+	<tr>
+		<th class="name">Name</th>
+		<th class="description">Description</th>
+		<th class="projecttype">Project Type</th>
+		<th class="products"># of Products</th>
+	</tr>
+<? echo (
+	my $html = '';
+	my $rowclass;
+	foreach my $Category ( openprint::Product_Category->find( 'order' => 'lower(name)' ) ) {
+		$html .= sprintf(q`
+<tr%1$s>
+	<td class="name"><a href="edit.html?category_id=%2$d">%3$s</a></td>
+	<td class="description"><a href="edit.html?category_id=%2$d">%4$s</a></td>
+	<td class="projecttype">%5$s</td>
+	<td class="products">%6$d</td>
+</tr>
+`, $rowclass, $Category->id(), ( $Category->name() ? $Category->name() : '(empty)' ), $Category->description(),
+$Category->ProjectType()->name(), scalar $Category->products() );
+
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Category
+	delete $param{'category_id'};
+	return $html;
+) ?>
+</table>
+<? echo ( include('edit.html'); ) ?>

@@ -1,0 +1,20 @@
+<form id="f2" name="f2" method="post" action="manifest.html" enctype="multipart/form-data">
+	<fieldset>
+		<ul>
+			<li>
+                <label>Location</label>
+                <select id="ddmLocation" name="ddmLocation">
+                    <option value="">select</option>
+                    <? echo ( 
+                        return ssi::make_drop_down( openprint::Location->dropdown( order=>'parent_id NULLS FIRST,lower(name)') );
+                        ) ?>
+                </select>
+			</li>
+		</ul>
+		<p class="buttons">
+			<input type="file" name="import"/><? echo ( button( 'Import', { onclick=>q`f1.action='manifest.html?action=import';f1.submit();` } ); ) ?>
+			<? echo ( button( 'CancelImport', { onclick=>'popupWin.destroy();', text=>'Cancel' } ); ) ?>
+		</p>
+	</fieldset>
+</form>
+

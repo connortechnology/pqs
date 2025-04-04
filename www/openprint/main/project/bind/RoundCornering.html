@@ -1,0 +1,23 @@
+<script src="<?hash_link('/javascripts/service.js')?>"></script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<ul>
+			<li><label>Rounded Corners</label>
+				<? echo ( input( type=>'cardinal', id=>'RoundedCorners', name=>'RoundedCorners', value=>$$variable{RoundedCorners}, oninput=>'calc(this.form.name);' ); ) ?>
+			</li>
+      </ul>
+    <?include('/includes/main/proj/_comments.html') ?>
+      <ul class="pricing">
+			<?include('/includes/main/proj/quantities_equipment_prices.html')?>
+			</ul>
+		</fieldset>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>">
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="Status" />
+	</form>
+</div>

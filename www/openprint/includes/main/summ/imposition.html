@@ -1,0 +1,24 @@
+<p>
+	<label>Imposition</label>
+	<? if ( $$variable{'Project'}->quantity1() ) ?>
+	<span class="value"><?txtImposition1?> Out - <?hdnImpositionColumns1?>x<?hdnImpositionRows1?>
+<? if ( $$variable{'hdnImpositionDutchColumns1'} ) ?>
++<?hdnImpositionDutchColumns1?>x<?hdnImpositionDutchRows1?>
+<? endif ( $$variable{'hdnImpositionDutchColumns1'} ) ?>
+ : <?txtLayoutWidth1?>&quot; x <?txtLayoutHeight1?>&quot;</span>
+	<? endif ( $$variable{'Project'}->quantity1() ) ?>
+	<? if ( $$variable{'Project'}->quantity2() ) ?>
+	<span class="value"><?txtImposition2?> Out - <?hdnImpositionColumns2?>x<?hdnImpositionRows2?>
+<? if ( $$variable{'hdnImpositionDutchColumns2'} ) ?>
++<?hdnImpositionDutchColumns2?>x<?hdnImpositionDutchRows2?>
+<? endif ( $$variable{'hdnImpositionDutchColumns2'} ) ?>
+ : <?txtLayoutWidth2?>&quot; x <?txtLayoutHeight2?>&quot;</span>
+	<? endif ( $$variable{'Project'}->quantity2() ) ?>
+	<? if ( $$variable{'Project'}->quantity3() ) ?>
+	<span class="value"><?txtImposition3?> Out - <?hdnImpositionColumns3?>x<?hdnImpositionRows3?>
+<? if ( $$variable{'hdnImpositionDutchColumns3'} ) ?>
++<?hdnImpositionDutchColumns3?>x<?hdnImpositionDutchRows3?>
+<? endif ( $$variable{'hdnImpositionDutchColumns3'} ) ?>
+ : <?txtLayoutWidth3?>&quot; x <?txtLayoutHeight3?>&quot;</span>
+	<? endif ( $$variable{'Project'}->quantity3() ) ?>
+</p>

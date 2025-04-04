@@ -1,0 +1,17 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? echo (
+	if ( ! $$variable{'Survey'}->id() ) {
+		return 'Please save the survey before adding questions.';
+	} # end if
+	my $html = '';
+	$$variable{'answers_html'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/survey/_answers_edit.html' );
+	my $question_line_html = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/survey/_question_edit_line.html' );
+
+	$html .= '<ol id="Questions" class="Questions">';
+	foreach my $Question ( $$variable{'Survey'}->Questions() ) {
+		$$variable{'Question'} = $Question;
+		$html .= ssi::variable_substitution( \$question_line_html, $variable );
+	} # end foreach Question
+	$html .= '</ol>';
+	return $html;
+) ?>

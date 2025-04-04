@@ -1,0 +1,124 @@
+<script type="text/javascript">
+	function load_contents( form ) {
+		$('Results').innerHTML = 'Please wait...';
+		new Ajax.Updater('Results','/employee/reports/_project_history_results.html', {parameters:Form.serialize(form)});
+	} // end function
+</script>
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Project History</h2>
+</div>
+<form id="f1" name="f1" method="post" action="/employee/reports/project_history.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+<div class="leftColumn">
+<ul>
+		<? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reports'], $session{user_id} ) ) ?>
+		<li>
+			<label>CSR</label>
+			<select name="CSR" size="1" onchange="filter_companies('company_id', { name: this.form.company_filter.value,selected_id: get_ddm_value($('company_id')),salesrep_id: get_ddm_value(this) } );">
+			<? echo (
+					my @options = ( '', 'All' );
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
+					make_drop_down( \@options, $session{$r->uri().'?CSR'} );
+					) ?>
+
+			 </select>
+		</li>
+		<? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reports'], $session{user_id} ) ) ?>
+		<li>
+			<label>Company</label>
+			<input name="company_filter" class="filter" type="text" oninput="filter_companies('company_id', { name: this.value,selected_id: get_ddm_value($('company_id')),salesrep_id: get_ddm_value(this.form.CSR) } );" />
+			<select name="company_id" id="company_id" onchange="stop_filter_companies();">
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::Company->dropdown( 'last_project_id is null'=>0), $session{$r->uri().'?company_id'} ); ) ?>
+			</select>
+		</li>
+		<li>
+			<label>Estimator</label>
+			<select name="Estimator" size="1">
+			<? echo (
+					my @options = ( '', 'All', 'Non Employee', 'Non Employee' );
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type =>['E','A'], company_id=>$config{owner_id} );
+					make_drop_down( \@options, $session{$r->uri().'?Estimator'} );
+					) ?>
+			</select>
+		</li>
+		<li>
+			<label>Current Status</label>
+			<select name="status" multiple="multiple" size="4">
+			<? echo (
+				@{$$variable{options}} = sql::execute( undef, undef, q{SELECT name, name FROM Project_statuses ORDER BY sort, lower(name)} );
+				my @selected = split(',', $session{$r->uri().'?status'} );
+				@selected = @{$$variable{options}} if ! @selected;
+				return make_drop_down( $$variable{options}, \@selected );
+			) ?>
+			</select>
+		</li>
+		<li>
+			<label>Previous Status</label>
+			<select name="previous_status" multiple="multiple" size="4" >
+			<? echo (
+				my @selected = split(',', $session{$r->uri().'?previous_status'} );
+				@selected = @{$$variable{options}} if ! @selected;
+				return make_drop_down( $$variable{options}, \@selected );
+			) ?>
+			</select>
+		</li>
+		<li>
+			<label>Press</label>
+			<select id="press_id" name="press_id">
+				<option value="">All</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category any'=>'Printing', order=>'lower(strid)') ], $session{$r->uri().'?press_id'} ); ) ?>
+			</select>
+		</li>
+		</ul>
+		</div>
+		<div class="leftColumn">
+		<ul>
+		<li><label>Status Change On</label>
+			<? echo ( date_select_session($r->uri(), 'status_on_start', { with_today=>1, with_clear=>1, with_time=>1 } ); ) ?> to
+			<? echo ( date_select_session($r->uri(), 'status_on_end', { with_today=>1, with_clear=>1, with_time=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Created On</label>
+			<? echo ( date_select_session($r->uri(), 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?> to
+			<? echo ( date_select_session($r->uri(), 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Created On Time</label>
+			<? echo ( join(':',
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 23 ) ], [ $session{$r->uri().'?created_on_time_start_hour'} ], { name=>'created_on_time_start_hour' } ),
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 59 ) ], [ $session{$r->uri().'?created_on_time_start_minute'} ], { name=>'created_on_time_start_minute' } ),
+						); ) ?> to 
+			<? echo ( join(':',
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 23 ) ], [ $session{$r->uri().'?created_on_time_end_hour'} ], { name=>'created_on_time_end_hour' } ),
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 59 ) ], [ $session{$r->uri().'?created_on_time_end_minute'} ], { name=>'created_on_time_end_minute' } ),
+						); ) ?>
+		</li>
+		<li>
+			<label>Value</label>
+			<? echo ( join(' to ', 
+				input( type=>'number', id=>'value_start', name=>'value_start', value=>$param{value_start} ),
+				input( type=>'number', id=>'value_end', name=>'value_end', value=>$param{value_end} ),
+			); ) ?>
+		</li>
+		<li><label>Reprint</label>
+			<? echo (
+				radio( 'reprint', [ 'Y', 'Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?reprint'} );
+			) ?>
+		</li>
+		<li><label>Type</label>
+				<select id="type_id" name="type_id">
+					<option value="">All</option>
+					<? echo ( make_drop_down( openprint::ProjectType->dropdown( order=>'lower(name)' ), $session{$r->uri().'?type_id'} ); ) ?>
+				</select>
+		</li>
+		</ul>
+		</div>
+		 <p class="buttons">
+			 <? echo ( button( 'Go', { onclick=>'load_contents(f1);', text=>'Show Results' } ); ) ?>
+		 </p>
+	</fieldset>
+</form>
+<div id="Results">
+</div>

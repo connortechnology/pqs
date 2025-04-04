@@ -1,0 +1,96 @@
+<div class="PageTitle"><h1>ACCOUNT</h1>
+<h2>Company Profile</h2>
+</div>
+<a name="top"></a>
+Your company profile can be modified using the fields below. Use the <b>Save</b> button when finished.<br/>
+<br/>
+<?include(/includes/error_reporting.html)?>
+	<div class="CompanyProfile">
+		<fieldset>
+			<p class="buttons">
+				<? echo ( join("\n",
+							button( 'Edit', { href=>"/account/company_profile.html?company_id=$$variable{Company}{id}" } ),
+							); ) ?>
+			</p>
+		</fieldset>
+		<div class="CompanyInformation">
+			<fieldset>
+				<legend>Company Information</legend>
+				<ul>
+					<li> 
+						<label for="companyname">Company Name</label>
+						<? hecho ( $$variable{Company}->name() ) ?>
+					</li>
+					<li class="address1"> 
+						<label for="address1">Address</label>
+						<? hecho ( $$variable{Company}->address1() ) ?>
+						<? hecho ( $$variable{Company}->address2() ) ?>
+					</li>
+					<li> 
+						<label>Country</label>
+						<? echo ( $$variable{Company}->country() ) ?>
+					</li>
+					<li> 
+						<label for="state" id="country_state"><? echo (
+							if ( $$variable{Company}->country() eq 'US' ) {
+								return 'State';
+							} elsif ( $$variable{Company}->country() eq 'CA' ) {
+								return 'Province';
+							} else {
+								return 'State/Province';
+							} # end if
+						) ?></label>
+								<? echo ( $$variable{Company}->state() )?>
+					</li>
+					<li> 
+						<label for="city">City</label>
+						<? hecho ( $$variable{Company}->city() ) ?>
+					</li>
+					<li> 
+						<label for="postalcode" id="country_postal"><? echo (
+							   if ( $$variable{Company}->country() eq 'US' ) {
+									   return 'Zip Code';
+							   } elsif ( $$variable{Company}->country() eq 'CA' ) {
+									   return 'Postal Code';
+							   } else {
+									   return 'Zip/Postal Code';
+							   } # end if
+							) ?></label>
+						<? hecho ( $$variable{Company}->postalcode() ) ?>
+					</li>
+					<li> 
+						<label for="phone">Phone</label>
+						<? hecho ( $$variable{Company}->phone() 
+							. ( $$variable{Company}->extension() ? 'x'.$$variable{Company}->extension() : '' )
+						) ?>
+					</li>
+					<li> 
+						<label for="fax">Fax</label>
+						<? hecho ( $$variable{Company}->fax() ) ?>
+					</li>
+				</ul>
+			</fieldset>
+		</div>
+		<?include(/account/_business_information_view.html)?>
+		<?include(/account/_company_account_information_view.html)?>
+		<?include(/includes/_credit_view.html)?>
+		<?include(_company_profile_view.html)?>
+		<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+		<?include(_sales_view.html)?>
+		<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+		<?include(/account/_bank_information_view.html)?>
+		<?include(/account/_trade_references_view.html)?>
+		<div class="Preferences">
+			<fieldset><legend>Preferences</legend>
+			<ul>
+				<li><label>Preferred Currency</label><? echo ( $$variable{Company}->Currency->name() ) ?></li>
+	<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+				<li>
+					<label>Include project breakdown with quote?</label>
+					<? echo ( $$variable{Company}->quote_project_breakdown() ) ?>
+				</li>
+	<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+</ul>
+			</fieldset>
+		</div>
+	</div><!--CompanyProfile-->

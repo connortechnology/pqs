@@ -1,0 +1,23 @@
+<? echo (
+	my $C = $$variable{C};
+	my $html .= sprintf('
+<tr id="line-%1$d">
+	<td rowspan="2">%2$s</td>
+	<td rowspan="2">%3$s<input type="hidden" id="type-%1$d" name="type-%1$d" value="%3$s"/></td>
+	<td rowspan="2"><textarea class="mce" id="description-%1$d" name="description-%1$d" rows="2" cols="">%4$s</textarea></td>
+	<td class="Quantity">%5$s hours</td>
+	<td class="Weight"><input type="hidden" id="weight-%1$d" name="weight-%1$d"/><input type="hidden" name="weight_units-%1$d" id="weight_units-%1$d"/></td>
+	<td class="Cost">%6$s %7$s</td>
+	<td class="Price">%8$s</td>
+</tr>
+<tr><td colspan="4" class="alert" id="alert-%1$d"></td></tr>', $$C{id},
+		button( 'Del'.$$C{id}, { onclick=>"del_content( \$('f1'), $$C{id} );", text=>'Delete' } ),
+		$C->Type()->name(),
+		$C->description(),
+		input( type=>'float', id=>'quantity-'.$$C{id}, name=>'quantity-'.$$C{id}, value=>$C->quantity(), onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){add_content(this.form);}' ),
+		input( type=>'float', id=>'cost-'.$$C{id}, name=>'cost-'.$$C{id}, value=>$C->cost(), onkeyup=>q`calc_price(this);update_totals($('f1'));` ),
+		ssi::select( [ '/Hr.', '/Hr.' ], $$C{cost_units}, { name=>'cost_units-'.$$C{id}, id=>'cost_units-'.$$C{id}, onchange=>q`calc_price(this);update_totals($('f1'));` } ),
+		input( type=>'float', id=>'total-'.$$C{id}, name=>'total-'.$$C{id}, value=>$C->total() ),
+	);
+	return $html;
+) ?>

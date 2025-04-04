@@ -1,0 +1,117 @@
+<?include(/includes/error_reporting.html)?>
+<? if ( openprint::Order->find_one() ) ?>
+	<fieldset><legend>Orders</legend>
+		<table class="List">
+			<tr>
+				<th class="order_id">Order</th>
+				<th class="docket">Docket</th>
+				<th class="po">PO Num</th>
+				<th class="Date">Created</th>
+				<th class="Status">Status</th>
+				<th class="Price">Total</th>
+				<th class="Price">Owing</th>
+				<th class="buttons">&nbsp;</th>
+			</tr>
+			<? echo ( 
+				my $html = '';
+				my $rowclass;
+				$$variable{order_id_total} = 0;
+				foreach my $OI ( $$variable{Invoice}->Orders() ) {
+					my $Order = $OI->Order();
+					$html .= sprintf(q`
+<tr id="Order%1$d"%1$s>
+	<td class="order_id">%2$s</td>
+	<td class="docket">%3$s</td>
+	<td class="po">%4$s</td>
+	<td class="Date">%5$s</td>
+	<td class="Status">%6$s</td>
+	<td class="Price">%7$s</td>
+	<td class="Price">%8$s</td>
+	<td class="buttons">%9$s</td>
+</tr>
+`, 
+						$rowclass,
+						$Order->link_to(),
+						$Order->link_to( $Order->docket() ),
+						$Order->link_to( $Order->po() ),
+						format_date( $Order->created_on() ), 
+						$Order->link_to( $Order->status() ),
+						openprint::Currency::format( $Order->total() ), 
+						openprint::Currency::format( $Order->owing() ),
+						button( 'Remove'.$Order->id(), { onclick=>"del_order($$Order{id});", text=>'-', title=>'Remove' } ),
+					);
+					$$variable{order_total_total} += $Order->total();
+					$$variable{order_owing_total} += $Order->owing();
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end foreach Order
+				return $html;
+			) ?>
+			<tr class="totals">
+				<td colspan="5">Totals</td>
+				<td id="order_total_total"><? echo ( openprint::Currency::format($$variable{order_total_total}); ) ?></td>
+				<td id="order_owing_total"><? echo ( openprint::Currency::format($$variable{order_owing_total}); ) ?></td>
+				<td class="buttons">&nbsp;</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset><legend>Unpaid Orders</legend>
+		<table class="List">
+			<tr>
+				<th class="order_id">Order</th>
+				<th class="docket">Docket</th>
+				<th class="po">PO Num</th>
+				<th class="Date">Created</th>
+				<th class="Status">Status</th>
+				<th class="Price">Total</th>
+				<th class="Price">Owing</th>
+				<th class="buttons">&nbsp;</th>
+			</tr>
+            <? echo ( 
+                my $html = '';
+				my $rowclass;
+                $$variable{orders_total_total} = $$variable{orders_owing_total} = 0;
+                foreach my $Order ( openprint::Order->find( 
+						company_id=>$$variable{Invoice}->invoicee_id(), 
+						'status not in' =>  [ 'Cancelled','Deleted','Incomplete' ],
+						'owing null_or_>'   =>  0,
+						) ) {
+
+					next if sets::isin( $$variable{Invoice}{id}, [ map { $_->invoice_id() } $Order->Invoices() ] );
+					
+                    $html .= sprintf(q`
+<tr id="Order%1$d"%1$s>
+    <td class="order_id">%2$s</td>
+    <td class="docket">%3$s</td>
+    <td class="po">%4$s</td>
+    <td class="Date">%6$s</td>
+    <td class="Status">%5$s</td>
+    <td class="Price">%7$s</td>
+    <td class="Price">%8$s</td>
+    <td class="buttons">%9$s</td>
+</tr>
+`,
+                        $rowclass,
+                        $Order->link_to(),
+                        $Order->link_to( $Order->docket() ),
+                        $Order->link_to( $Order->po() ),
+                        $Order->link_to( $Order->status() ),
+                        format_date( $Order->created_on() ),
+                        openprint::Currency::format( $Order->total() ),
+                        openprint::Currency::format( $Order->owing() ),
+                        button( 'AddOrder'.$Order->id(), { onclick=>"add_order($$Order{id});", title=>'Add To Invoice', text=>'+' } ),
+                    );
+					$$variable{order_total_total} += $Order->total();
+					$$variable{order_owing_total} += $Order->owing();
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+                } # end foreach Order
+                return $html;
+            ) ?>
+			<tr class="totals">
+				<td colspan="5">Totals</td>
+				<td class="Price"><? echo ( openprint::Currency::format($$variable{order_total_total}); ) ?></td>
+				<td class="Price"><? echo ( openprint::Currency::format($$variable{order_owing_total}); ) ?></td>
+				<td class="buttons">&nbsp;</td>
+			</tr>
+		</table>
+	</fieldset>
+<? endif ( openprint::Order->find_one() ) ?>

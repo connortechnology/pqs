@@ -1,0 +1,34 @@
+<? echo (
+	my $C = $$variable{'C'};
+	return sprintf(q`
+				<li>
+					<label>MWeight</label>
+					<input type="text" id="mweight-%1$s" name="mweight-%1$s" value="%2$s" onkeyup="this.value=this.value.replace(/[^\-\d\.]/g,'');calc_price(this);" />
+				</li>
+                <li>
+					<label>Quantity</label>
+					<input type="text" id="quantity-%1$s" name="quantity-%1$s" value="%3$s" onkeyup="this.value=this.value.replace(/[^\-\d\.]/g,'');calc_price(this);" />
+                    <select name="quantity_units-%1$s" id="quantity_units-%1$s" onchange="calc_price(this);">%4$s</select>
+                </li>
+                <li>
+					<label>Weight</label>
+					<input type="text" id="weight-%1$s" name="weight-%1$s" value="%5$s" onkeyup="this.value=this.value.replace(/[^\-\d\.]/g,'');calc_price(this);" />
+                    <select name="weight_units-%1$s" id="weight_units-%1$s" onchange="calc_price(this);">%6$s</select>
+                </li>
+                <li>
+					<label>Cost</label>
+					<input type="text" id="cost-%1$s" name="cost-%1$s" value="%7$s" onkeyup="this.value=this.value.replace(/[^\-\d\.]/g,'');calc_price(this);" />
+					<select name="cost_units-%1$s" id="cost_units-%1$s" onchange="calc_price(this);">%8$s</select>
+				</li>
+                <li>
+					<label>Value</label>
+					<input type="text" id="total-%1$s" name="total-%1$s" value="%9$s" onkeyup="this.value=this.value.replace(/[^\-\d\.]/g,'');" />
+				</li>
+                `, $C->id(), $C->mweight(),
+				$C->quantity(), ssi::make_drop_down( [ map { $_, $_ } ( 'Rolls', 'Sheets' ) ], $C->quantity_units() ),
+				$C->weight(), ssi::make_drop_down( [ map { $_, $_ } ( 'lb','Kg' ) ], $C->weight_units() ),
+                $C->cost(), ssi::make_drop_down( [ map { $_, $_ } ( '/100lb', '/Kg', '/1000' ) ], $C->cost_units() ),
+				$C->total(),
+            );
+) ?>
+

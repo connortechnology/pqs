@@ -1,0 +1,35 @@
+<form id="f1" name="f1" method="post" action="import_export.html" enctype="multipart/form-data">
+	<fieldset>
+		<legend>Stock Definitions</legend>
+		<ul>
+			<li> 
+				Stock definition files <b>must</b> be in 
+				a comma separated values (CSV) format and the columns must be in the 
+				following order <br>
+				<br>
+				PaperID, Owner, Manufacturer, Paper Name, Finish, Colour, M Weight, Weight, 
+				Calliper, Sheet Width, Sheet Height,  
+				Supplier,
+				Double Sided Paper (Y/N), Can be Cut into Smaller Sheets (Y/N), Has mulitple parts (# of Parts) , Perfecting (Y/N), Scoring Required (Y/N), Sort Order, Recommendations<br>
+			</li>
+			<li> 
+				First, select a file containing your new database in CSV format. Then click on the import button.<br>
+				Clicking on the export button will download 
+				the current paper definitions in CSV format.<br>
+				You can then open this in a spreadsheet program such as Microsoft Excel.
+			</li>
+			<li> 
+				<label>CSV File</label>
+				<input type="file" name="fileStock"/>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo (join("\n",
+				button( 'Import', { 'onclick'=>"f1.action='import_export.html?Import';f1.btnFunction.value='Import Stock';f1.submit();" } ),
+				button( 'Export', { 'onclick'=>"f1.action='import_export.html?Export';f1.btnFunction.value='Export Stock';f1.submit();" }),
+			); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<?include(/includes/error_reporting.html)?>

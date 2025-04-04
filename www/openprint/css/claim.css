@@ -1,0 +1,358 @@
+.Claim .DateSelector {
+	float: none;
+}
+
+@media screen {
+.unprintable {
+}
+}
+@media print {
+	.unprintable {
+		display: none;
+	}
+	.Claim .Dates {
+		display: none;
+	}
+	body div#Header {
+		display: none;
+	}
+}
+
+.Claim {
+	background-color: white;
+
+}
+
+.Claim table {
+	border-top: 1px solid #3b5e91;
+	table-layout: fixed;
+}
+.Claim table td {
+	border: 1px solid #aebdd2;
+	vertical-align: top;
+}
+.Claim table th {
+	border: 1px solid #aebdd2;
+	background-color: #e4ebf4;
+}
+	
+.Claim table tr.total td, .Claim table tr.subtotal td, .Claim table tr.tax td {
+	text-align: right;
+}
+.Claim table td input[type="text"] {
+	width: 93%;
+	min-width:0px;
+	margin: 0px;
+	padding: 0px;
+}
+.Claim table .Cost {
+	width: 150px;
+	text-align: left;
+}
+.Claim table td.Price input {
+	text-align: right;
+}
+.Claim table .RFID {
+	width: 140px;
+	text-align: left;
+}
+.Claim table .Skid {
+	width: 70px;
+	text-align: left;
+}
+.Claim table .Quantity {
+	width: 95px;
+}
+.Claim table.List .Quantity input[type="number"] {
+	width: 55px;
+}
+.Claim table td.Weight, .Claim table th.Weight {
+	width: 120px;
+	text-align: left;
+}
+.Claim .View table th.Weight {
+	color: #e4ebf4;
+}
+.Claim table td.Weight input[type="text"] {
+	width: 50px;
+} 
+.Claim table td.Cost input {
+	width: 60px;
+	text-align: right;
+} 
+.Claim table td input.SheetName {
+	width: 240px;
+} 
+.Claim table td input.SheetMWeight {
+	width: 40px;
+} 
+.Claim table td textarea {
+	width: 98%;
+	min-width:0px;
+	margin: 0px;
+	padding: 0px;
+	min-height: 0px;
+}
+
+
+.Claim .Header {
+	display: block;
+	position: relative;
+	width: 100%;
+	background-image: url(/images/bluegradient.png);
+	background-repeat: repeat-x;
+	vertical-align: top;
+	border-top: 1px solid #3b5e91;
+	padding-top: 5px;
+}
+.Claim .Header:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+.Claim .Header .Logo {
+	margin: 7px;
+	padding: 0px;
+	color: black;
+	width: 305px;
+	background: none;
+	float: left;
+}
+.Claim .Header .Logo:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+.Claim .Header .Logo table {
+	text-align: center;
+	margin-left: auto;
+	border: none;
+	border-top: none;
+}
+#LogoImage {
+	float: left;
+	margin-right: 5px;
+	width: 70px;
+}
+#LogoText {
+	float: left;
+}
+.Claim .Header .Logo table td {
+	border: none;
+	vertical-align: top;
+	padding: 1px;
+}
+.Claim .Header table.HeaderText {
+}
+.Claim .Header .Logo table.HeaderText td {
+	font-size: 12px;
+}
+
+.Claim .Header .Logo a {
+	color: black;
+	border: none;
+}
+.Claim .Header .Logo .PointOne {
+	border-bottom: none;
+	font-family: Georgia, Times, serif;
+	padding: 0px;
+	margin: 0px; 
+	font-size: 42px;
+}
+.Claim .Header .Logo .GraphicsInc {
+	padding: 0px;
+	margin: 0px; 
+	font-size:24px;
+}
+.Claim .Header .PageTitle {
+	margin: 0px;
+	float: right;
+	width: 230px;
+}
+.Claim .Header .PageTitle h1 {
+	font-size:24px;
+	color: #3b5e91;
+} 
+.Claim #Contents {
+	margin-top: 20px;
+}
+.Claim #Contents p {
+	padding: 0;
+}
+.Claim .Information {
+	padding: 5px;
+}
+.Claim .Information:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+.Claim .Vendor {
+	width: 50%;
+	float: left;
+}
+.Claim .Sender {
+	width: 50%;
+	float: right;
+	margin-bottom: 5px;
+}
+.Claim .Dates {
+	width: 50%;
+	float: right;
+}
+.Claim .Dockets {
+	width: 50%;
+	float: right;
+	margin-top: 5px;
+}
+.Claim .Dates p, .Claim .Sender p {
+}
+.Claim li {
+    padding: 0 0 0 175px;
+    margin: 0;
+    overflow: hidden;
+}
+.Claim li:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+.Claim li label {
+	margin: 0 0 0 -175px;
+	width: 170px;
+	float: left;
+
+}
+.Claim li label.radio {
+	margin: 0;
+	width: auto;
+	float: none;
+}
+
+fieldset li {
+    margin: 0;
+    margin-top: .4em;
+    padding: 0;
+    padding-left: 210px;
+    overflow: hidden;
+}
+
+label {
+	text-transform: uppercase;
+outline: 0;
+}
+
+fieldset p label {
+    width: 205px;
+    text-align: right;
+    margin-left: -210px;
+    vertical-align: top;
+    float: left;
+    overflow: visible;
+}
+
+td p {
+    padding: 0px;
+}
+td p label {
+    width: auto;
+    margin-left: 0px;
+}
+
+.autocomplete {
+  position:absolute;
+  width:250px;
+  background-color:white;
+  border:1px solid #888;
+  margin:0;
+  padding:0;
+}
+.autocomplete ul {
+  list-style-type:none;
+  margin:0;
+  padding:0;
+}
+.autocomplete ul li.selected { background-color: #ffb;}
+.autocomplete ul li {
+  list-style-type:none;
+  display:block;
+  margin:0;
+  padding:2px;
+  height:32px;
+  cursor:pointer;
+}
+
+p.buttons {
+	text-align: right;
+	margin: 0;
+	padding: 0;
+	float: none;
+}
+.Claims .buttons {
+	margin-left: 140px;
+}
+fieldset.filters p.buttons {
+	text-align: left;
+}
+.Claim .Disclaimer {
+	font-weight: bold;
+	font-size: small;
+	padding: 5px;
+}
+.Claim table td.alert {
+	color: red;
+}
+.Claims table tr td.ID, .Claims table tr th.ID {
+	width: 20px;
+	text-align: left;
+}
+.Claims table .Company {
+	width: 190px;
+	text-align: left;
+	overflow: hidden;
+}
+.Claims table .Date {
+}
+.Claims table .Docket {
+	text-align: right;
+}
+.Claims table tr .CreatedBy {
+	text-align: left;
+	overflow: hidden;
+}
+#Assets .Thumbnail {
+	width: 75px;
+}
+.Claim table .actions {
+	width: 60px;
+	text-align: right;
+}
+.owing {
+	text-transform: uppercase;
+	text-align: right;
+}
+.Payments .ID {
+	text-align: left;
+	width: 75px;
+}
+
+.Claim table .Type {
+	width: 85px;
+}
+#supplier_id {
+	width:80%;
+}

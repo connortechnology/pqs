@@ -1,0 +1,103 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? if ( $$variable{'Approved'} ) ?>
+<div class="unprintable">
+Please print this page for your records.
+<span style="float: right;">
+<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ); ) ?>
+</span>
+</div>
+<? endif ( $$variable{'Approved'} ) ?>
+<? echo ( include('/includes/project_header.html'); ) ?>
+<hr/>
+<form name="f1" method="post" action="sign_off.html">
+<span style="font-size: 8pt;">
+Please check proofs carefully.<br/>
+<br/>
+This is a legal agreement between you and <?SiteTitle?>.
+By clicking on the "approve" button below, you will  
+indicate your acceptance of these terms and conditions, at which  
+point this document will become a legally binding agreement between  
+you and <?SiteTitle?>.<br/>
+<br/>
+If you are residing in a jurisdiction which restricts the use of  
+internet-based applications according to age, or which restricts the  
+ability to enter into agreements such as this agreement according to  
+age and you are under such a jurisdiction and under such age limit,  
+you may not enter into this agreement.<br/>
+<br/>
+All files, proofs, samples and any related documents are and shall  
+remain in the possession of <?SiteTitle?> until payment is made in full.<br/>
+<br/>
+You expressly acknowledge and agree that you have checked all  
+materials, proofs and mockups supplied, both physical and/or digital.  
+No oral, written or electronic information or advice given by any  
+<?SiteTitle?> party shall create any warranty, term or condition with respect  
+to the errors or otherwise.  Should errors in proofing, changes and/ 
+or materials arise, you (and not the <?SiteTitle?> party concerned) agree to  
+assume the entire cost of all necessary corrections.  Some  
+jurisdictions do not allow the exclusion of implied warranties, terms  
+or conditions in certain instances, so the above exclusion may not  
+apply to you. This article will not apply only when and to the extent  
+that applicable law specifically mandates liability, despite the  
+foregoing disclaimer, exclusion and limitation.<br/>
+<br/>
+No <?SiteTitle?> party shall be liable for any loss or damage, either direct,  
+indirect, incidental, consequential or otherwise, arising out of the  
+breach of any express or implied warranty, term or condition, breach  
+of contract, negligence, strict liability misrepresentation, failure  
+of any remedy to achieve its essential purpose or any other legal  
+theory arising out of, or related to, this agreement or your use of  
+any materials (such damages include, but are not limited to, loss of  
+profits, loss of revenue, loss of data, loss of use of the product or  
+any associated equipment, down time and user's time), even if the
+<?SiteTitle?> party concerned has been advised of the possibility of such  
+damages.  In any case, the entire liability of the <?SiteTitle?> parties,  
+collectively, under the provisions of this agreement shall be limited  
+to five Canadian dollars (Canadian $5.00).  Some jurisdictions do not  
+allow the exclusion or limitation of direct, indirect, incidental or  
+consequential damages in certain instances, so the above exclusion  
+may not apply to you. This article will not apply only when and to  
+the extent that applicable law specifically requires liability  
+despite the foregoing disclaimer, exclusion and limitation.<br/>
+<br/>
+I hereby give <?SiteTitle?> consent for this job to be printed.<br/>
+<? if ( $$variable{'Approved'} ) ?>
+	<span style="float: right;">
+		<table>
+			<tr><td>Name</td><td><? echo ( $param{'Name') } ?></td></tr>
+		</table>
+	</span>
+<? else ( $$variable{'Approved'} ) ?>
+	<div style="float: right;">
+		<table style="font-size: 8pt;">
+			<tr>
+			<td>Enter your name</td>
+			<td><input type="text" name="Name" value="<?Name?>" /></span>
+		</tr>
+		<tr>
+			<td>Enter the numbers and letters seen below</td>
+			<td><input type="text" name="Captcha" /></td>
+		</tr>
+		<tr><td align="right">
+				<? echo (
+					my $html;
+					use Authen::Captcha;
+					my $Captcha = new Authen::Captcha( 
+						'data_folder'	=>	'/tmp',
+						'output_folder'	=>	$config{'SkinPath'}.'/images/captcha',
+					);
+					my $md5sum = $Captcha->generate_code( $config{'SignOffCaptchaLength'} );
+					$html .= qq{<input type="hidden" name="MD5SUM" value="$md5sum"/>};
+					$html .= qq{<img src="/images/captcha/$md5sum.png"/>};
+					return $html;
+				) ?>
+		</td><td>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Approve', 'approve.gif', 'f1.submit();', '', 'Approve' ); ) ?>
+			</td>
+		</table>
+	</div>
+<? endif ( $$variable{'Approved'} ) ?>
+</span>
+	<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+	<input type="hidden" name="btnFunction" value="Approve Project" />
+</form>

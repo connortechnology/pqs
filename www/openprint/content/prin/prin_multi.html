@@ -1,0 +1,209 @@
+<form id="f1" name="f1" method="post" action="/main/order/information.html">
+	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{ProjectType}->id() ) ?>" />
+	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
+	<? include('/includes/error_reporting.html' ) ?>
+<? if ( $param{projecttype_id} ) ?>
+	<div class="InstantPricing <?echo($$variable{ProjectType}->name())?>">
+		<div id="instant_price_section">
+			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+			<div class="shadow_left"><div class="shadow_right">
+
+			<div class="Questions">
+				<? eval ( $$variable{TemplateType} = $$variable{TemplateType} ? $$variable{TemplateType} : 'SaddleStitching' ) ?>
+				<? eval ( $$variable{DimensionsDisplay} = 'Finished' ) ?>
+				<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
+				<? include('_project_name.html' ) ?>
+				<div class="ProjectSpecifications">
+					<h1><?echo($$variable{ProjectType}->description() ) ?> Specifications</h1>
+					<div class="Book">
+						<fieldset><legend>Book Specifications</legend>
+						<div class="content">
+							<div class="Size">
+							<ul>
+								<li>
+									<label>Size</label>
+									<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this );">
+										<option value=""> select </option>
+										<? echo ( 
+											$_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, dblFinishedWidth::float || '" x ' || dblFinishedHeight::float || '" Finished' FROM projecttemplate WHERE projecttype_id=?};
+
+											my $html .= make_drop_down( [ sql::execute( undef, undef, $_, $$variable{ProjectType}->id() ) ] );
+											if ( ! $html ) {
+												$$variable{Dimensions} = 'Custom';
+											} # end if
+											return $html;
+										) ?>
+										<option value="Custom">Custom</option>
+									</select>
+									</li>
+								</ul>
+<div id="CustomDimensions" <? echo ( sets::isin( $$variable{ProjectType}->name(),[ 'Letterhead','ScratchPads','RackCards','DoorHangers','Posters','Labels' ] ) ? 'style="display:none;"' : ''; ) ?>>
+<ul>
+	<li class="Final">
+	<label>Final</label>
+	<? echo ( input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, oninput=>q`remove_div('OrderButton');`); ) ?> x
+	<? echo ( input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, oninput=>q`remove_div('OrderButton');`); ) ?>
+	</li>
+	<li class="Flat">
+	<label>Flat</label>
+	<? echo ( input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, oninput=>q`remove_div('OrderButton');`); ) ?> x
+	<? echo ( input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, oninput=>q`remove_div('OrderButton');`); ) ?>
+	</li>
+</ul>
+</div>
+<ul>
+				<li class="spine"><label>Spine</label>
+					<?echo(radio('spine', [ 'height', 'Height', 'width', 'Width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name);' } ); ) ?>
+				</li>
+								<li class="pages">
+									<label>Pages</label>
+<? if ( $$variable{ProjectType}->name() eq 'Calendars' ) ?>
+<select id="txtTotalPageQuantity" name="txtTotalPageQuantity" onchange="remove_div('OrderButton');calc(this.form.name);">
+<? echo ( ssi::make_drop_down( [ map { $_, $_ . ' pages' } ( 12, 24, 28, 32 ) ], $$variable{txtTotalPageQuantity} ); ) ?>
+</select>
+<? else ( $$variable{ProjectType}->name() eq 'Calendars' ) ?>
+									<? echo ( input( type=>'cardinal', id=>'txtTotalPageQuantity', name=>'txtTotalPageQuantity', value=>$$variable{txtTotalPageQuantity}, oninput=>q`remove_div('OrderButton');calc(this.form.name);` ); ) ?>
+<? endif ( $$variable{ProjectType}->name() eq 'Calendars' ) ?>
+								</li>
+								<li class="cover">
+									<label>Cover</label>
+									<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('Cover');remove_div('OrderButton');" <? echo ( ssi::checked( $$variable{rdbCover} ne 'Different' ); ) ?> />
+									<label class="radio" for="rdbCoverSelf">Self Cover</label>
+									<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="add_div('Cover');remove_div('OrderButton');" <? echo ( ssi::checked( $$variable{rdbCover} eq 'Different' ); ) ?> />
+									<label class="radio" for="rdbCoverDifferent">Different Cover</label>
+								</li>
+								<li class="binding_type">
+									<label>Binding Type</label>
+									<select id="rdbTemplateType" name="rdbTemplateType" onchange="remove_div('OrderButton');">
+<? if ( openprint::ServiceType->find('name'=>'SaddleStitching'); ) ?>
+										<option value="SaddleStitching">Saddle Stitching</option>
+<? endif ( openprint::ServiceType->find('name'=>'SaddleStitching'); ) ?>
+<? if ( openprint::ServiceType->find('name'=>'PerfectBound'); ) ?>
+										<option value="PerfectBound">Perfect Bound</option>
+<? endif ( openprint::ServiceType->find('name'=>'PerfectBound'); ) ?>
+<? if ( openprint::ServiceType->find('name'=>'PlasticCoil'); ) ?>
+										<option value="PlasticCoil">Koil Bound</option>
+<? endif ( openprint::ServiceType->find('name'=>'PlasticCoil'); ) ?>
+<? if ( openprint::ServiceType->find('name'=>'DoubleLoopWire'); ) ?>
+										<option value="DoubleLoopWire">Wire-O Bound</option>
+<? endif ( openprint::ServiceType->find('name'=>'DoubleLoopWire'); ) ?>
+									</select>
+								</li>
+							</ul>
+						</div>
+						</fieldset>
+					</div>
+					<div id="Cover" <? echo ( 'style="display:none;"' if $$variable{rdbCover} ne 'Different' ) ?> >
+						<fieldset><legend>Cover</legend>
+						<div class="content">
+							<ul>
+								<li>
+									<label>Colours</label>
+									<select id="ColoursCover" name="ColoursCover" onchange="calc(this.form.name);">
+										<option value="4/0">4 Colour One Side</option>
+										<option value="4/1">4 Colour/Black</option>
+										<option value="4/4">4 Colour Both Sides</option>
+									</select>
+								</li>
+							<? echo ( 
+								# Load Defaults
+								if ( my $ServiceType = openprint::ServiceType->find_one( name=>'Signature') ) {
+									foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ) ) {
+										$$variable{$Default->name().'1'} = $Default->value();
+										$$variable{$Default->name().'2'} = $Default->value();
+									} # end while
+								} # end if
+
+								$$variable{Signature} = '1';
+								my $html;
+								$html .= include( '/content/prin/_aqueous.html' );
+								$html .= include( '/content/prin/_uvcoating.html' );
+								$html .= include( '/content/prin/_paper_dropdowns.html' );
+								return $html;
+							) ?>
+							</ul>
+						</div>
+						</fieldset>
+					</div>
+					<input type="hidden" id="rdbColourBar1" name="rdbColourBar1" value="<?rdbColourBar1?>"/>
+					<input type="hidden" id="txtCropMarkSpace1" name="txtCropMarkSpace1" value="<?txtCropMarkSpace1?>"/>
+					<input type="hidden" id="chkBleedLeft1" name="chkBleedLeft1" value="<?chkBleedLeft1?>"/>
+					<input type="hidden" id="chkBleedRight1" name="chkBleedRight1" value="<?chkBleedRight1?>"/>
+					<input type="hidden" id="chkBleedTop1" name="chkBleedTop1" value="<?chkBleedTop1?>"/>
+					<input type="hidden" id="chkBleedBottom1" name="chkBleedBottom1" value="<?chkBleedBottom1?>"/>
+					<div id="Interior">
+						<fieldset><legend>Interior Pages</legend>
+							<div class="content">
+								<ul>
+									<li>
+										<label>Colours</label>
+										<select id="Colours" name="Colours" onchange="calc(this.form.name);">
+											<option value="4/4">4 Colour</option>
+											<option value="1/1">Black</option>
+										</select>
+									</li>
+									<? echo ( 
+										$$variable{Signature} = '2';
+										my $html .= include( '/content/prin/_aqueous.html' );
+										$html .= include( '/content/prin/_paper_dropdowns.html' );
+										return $html;
+									) ?>
+								</ul>
+							</div>
+						</fieldset>
+					</div>
+					<input type="hidden" id="rdbColourBar2" name="rdbColourBar2" value="<?rdbColourBar2?>"/>
+					<input type="hidden" id="txtCropMarkSpace2" name="txtCropMarkSpace2" value="<?txtCropMarkSpace2?>"/>
+					<input type="hidden" id="chkBleedLeft2" name="chkBleedLeft2" value="<?chkBleedLeft2?>"/>
+					<input type="hidden" id="chkBleedRight2" name="chkBleedRight2" value="<?chkBleedRight2?>"/>
+					<input type="hidden" id="chkBleedTop2" name="chkBleedTop2" value="<?chkBleedTop2?>"/>
+					<input type="hidden" id="chkBleedBottom2" name="chkBleedBottom2" value="<?chkBleedBottom2?>"/>
+					<div class="Finishing">
+						<fieldset><legend>Finishing</legend>
+						<div class="content">
+							<ul>
+							<?include(_drilling.html)?>
+							<?include(_bundling.html)?>
+							<? if ( sets::isin( $$variable{ProjectType}->name(), ['Newsletters'] ) ) ?>
+							<?include(_shrinkwrapping.html)?>
+							<? endif ( sets::isin( $$variable{ProjectType}->name(), ['Newsletters'] ) ) ?>
+							</ul>
+						</div>
+						</fieldset>
+					</div>
+					<div class="Production">
+						<fieldset><legend>Production</legend>
+							<div class="content">
+								<ul>
+								<?include(_design.html)?>
+								<?include(_turnaround.html)?>
+								<?include(_quantity.html)?>
+								<?include(_press_type.html)?>
+								</ul>
+							</div>
+						</fieldset>
+					</div>
+					<?include(_ups.html)?>
+					<div id="AlertDiv" style="display:none;"></div>
+					<br class="spacer"/>
+				</div><!--ProjectSpecifications-->
+
+				<?include(_prices.html)?>
+				</div><!--Questions-->
+			</div></div>
+			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+		</div><!--instant_pricing_section-->
+<? echo ( 
+	if ( -e $config{SkinPath}.'/content/'.$$variable{ProjectType}->name().'.html' ) {
+		return ssi::include( '/content/'.$$variable{ProjectType}->name().'.html' );
+	} else {
+$log->debug("No content for " . $$variable{ProjectType}->name() );
+	} # end if
+	return '';
+) ?>
+		<?include(_specials.html)?>
+		<? else ( $param{projecttype_id} ) ?>
+		Please select the type of your project.
+		<? endif ( $param{projecttype_id} ) ?>
+	</div><!--InstantPricing-->
+</form>

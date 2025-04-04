@@ -1,0 +1,28 @@
+
+<? eval (
+	$$variable{'SUB_TOTAL'} = 0;
+) ?>
+<? if ( @{$$variable{'Products'}} = $$variable{'Order'}->Products(); ) ?>
+<table class="List">
+	<tr> 
+		<th align="left">Reference</td>
+		<th width="175" align="left">Required Date</td>
+		<th width="100" align="left">Quantity</td>
+		<th width="120" align="right">Total</td>
+	</tr>
+<? eval (
+	$$variable{'rowclass'} = ''; 
+) ?>
+
+<? while ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
+	<tr<?rowclass?>> 
+		<td><? echo ( ssi::htmlize( $$variable{'Product'}->Product()->name() ); ) ?></td>
+		<td><? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Product'}->requested_for() ) ); ) ?></td>
+		<td><? echo ( $$variable{'Product'}->quantity(); ) ?></td>
+		<td align="right"><?CurrencySymbol?><? echo ( $$variable{'Product'}->price(); ) ?></td>
+	</tr>
+<? eval (
+	$$variable{'SUB_TOTAL'} += $$variable{'Product'}->price();
+) ?>
+<? endwhile ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
+<? endif ( @{$$variable{'Products'}} = $$variable{'Order'}->Products(); ) ?>

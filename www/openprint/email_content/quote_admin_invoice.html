@@ -1,0 +1,127 @@
+<style type="text/css"><?include('/css/quote.css')?></style>
+<div class="Quote">
+	<div class="Header">
+		<?include('/includes/quote_header.html') ?>
+    <div class="PreparedByFor">
+		<?include('/includes/quote_prepared_by.html') ?>
+		<?include('/includes/quote_prepared_for.html') ?>
+    </div>
+	</div>
+<? if ( $$variable{Quote}->Quoted_Projects() ) ?>
+<table class="List">
+	<tr> 
+		<th class="project_id">ID</th>
+		<th class="description">Description</th>
+		<th class="weight">Weight</th>
+		<th class="markup">MU</th>
+		<th class="quantity">Quantity</th>
+		<th class="price">Price</th>
+		<th class="newprice">Final Price</th>
+	</tr>
+	<? echo (
+		my $html;
+		my $rowclass;
+		my $subtotal;
+		my $newsubtotal;
+
+		foreach my $QP ( $$variable{Quote}->Quoted_Projects() ) {
+			my $Project = $QP->Project();
+			$html .= sprintf(q`
+	<tr%1$s> 
+		<td class="project_id"><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%3$d</a></td>
+		<td class="description">
+			<div class="reference"><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%4$s</a></div>
+			<div class="summary"><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%5$s</a></div>
+		</td>
+		<td colspan="5">
+			<table>
+			`, $rowclass, $config{ExternalSiteURL}, $QP->project_id(),
+			(
+			 ( $Project->reference() ? $Project->reference() : '' ) .
+			 ( $config{ShowProjectSummaryOnQuote} ne 'N' ? $Project->summary() : '' ),
+			),
+			);
+			my $services = $Project->services();
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+			
+				$html .= '<tr><td class="weight">';
+				my $weight;
+
+				if ( $$services{BulkSkids} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{BulkSkids}[0] );
+					$weight = $$specs{'totalWeight'.$qty_index};
+				} elsif ( $$services{PlainCartons} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{PlainCartons}[0] );
+					$weight = $$specs{'totalWeight'.$qty_index};
+				} else {
+        $weight = $Project->finished_weight() * $Project->quantity($qty_index);
+				} # end if
+				my $g = $weight * 453.59237;
+				if ( $g > 1000 ) {
+					$html .= sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
+				} else {
+					$html .= sprintf( '%.0flbs (%.0fg)', $weight, $g );
+				} # end if
+				$html .= sprintf('</td><td class="markup">%1$s</td><td class="quantity">%2$s</td><td class="price">%3$s</td><td class="newprice">%4$s</td></tr>',
+                        $Project->markup($qty_index),
+                        $Project->quantity($qty_index),
+                        openprint::Currency::format( $QP->cost($qty_index) ),
+                        openprint::Currency::format( $QP->price($qty_index) )
+                        );
+                $subtotal += $QP->cost($qty_index);
+                $newsubtotal += $QP->price($qty_index);
+            } # end foreach qty_index
+            $html .= "</table>\n</td>\n</tr>\n";
+            $html .= sprintf('<tr class="totals"><td colspan="5">Subtotal</td><td class="price">%1$s</td><td class="newprice">%2$s</td></tr>',
+                openprint::Currency::format( $subtotal ),
+                openprint::Currency::format( $newsubtotal ),
+				);
+
+			$html .= "</table>\n</td>\n</tr>\n";
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach QP
+		return $html;
+	) ?>
+</table>
+<? endif ( $$variable{Quote}->Quoted_Projects() ) ?>
+<? if ( $$variable{Quote}->Products() ) ?>
+<table>
+	<thead>
+		<tr>
+			<th class="description">Product</th>
+			<th class="quantity">Quantity</th>
+			<th class="cost">Cost</th>
+			<th class="markup">Markup</th>
+			<th class="price">Price</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Product ( $$variable{Quote}->Products() ) {
+				$html .= sprintf('
+<tr%1$s>
+	<td class="description">%3$s</td>
+	<td class="quantity">%4$d</td>
+	<td class="price">%5$s</td>
+	<td class="markup">%6$s</td>
+	<td class="newprice">%7$s</td>
+</tr>', $rowclass, $Product->id(), $Product->name() . ' ' . $Product->description() . ( $Product->description() ? '<br/>'.$Product->comments() : $Product->comments() ), $Product->quantity(), 
+openprint::Currency::format($Product->cost()), $Product->markup(), 
+openprint::Currency::format($Product->price()),
+);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Product
+			
+			return $html;
+		) ?>
+	</tbody>
+</table>
+<? endif ( $$variable{Quote}->Products() ) ?>
+
+<span class="Currency">All prices are in <? echo ( $$variable{Quote}->Currency()->name() ) ?> and are subject to applicable taxes.</span>
+<br/>
+<? if ( $$variable{AdministratorName} ) ?><b>Administrator Name</b><?AdministratorName?><br/><? endif ( $$variable{AdministratorName} ) ?>
+<? if ( $$variable{AdministratorComments} ) ?><b>Administrator Comments</b> <?AdministratorComments?><br/><? endif ( $$variable{AdministratorComments} ) ?>
+</div>

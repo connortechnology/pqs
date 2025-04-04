@@ -1,0 +1,64 @@
+<? echo (
+  my $Interface = $$variable{Interface};
+
+	my $html .= sprintf(q`
+<tr id="hi-%1$d">
+	<td class="mac">%2$s</td>
+	<td class="vendor">%6$s</td>
+  <td class="ip">%3$s<br/>%7$s</td>
+	<td class="options">
+%4$s</td>
+	<td class="comment" rowspan="%8$d"><textarea name="comment-%1$s">%5$s</textarea></td>
+`, 
+	$$Interface{id},
+	input( type=>'mac', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
+	input( type=>'ip', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
+join('<br/>',
+	checkboxes( 'monitor-'.$$Interface{id}, [ 1, 'monitor' ], $Interface->monitor(), { container=>['<span class="option_monitor">','</span>']} ),
+( $config{DHCP_Server_Support} ?
+	checkboxes( 'dhcp-'.$$Interface{id}, [1, 'dhcp'], $Interface->dhcp(), { container=>['<span class="option_dhcp">', '</span>'] } ) : () ),
+	( defined($$Interface{online}) ? ( $$Interface{online} ? '<span class="online">online</span>' : '<span class="offline">offline</span>' ) : 'unknown' ),
+),
+	$Interface->comment(),
+  $Interface->vendor(),
+  $Interface->ipv6_link_local(),
+  ($Interface->mac() ? '2' : '1'),
+);
+	
+  if ( $openprint::RADIUS_Check::dbh ) {
+    my $mac = $$Interface{mac};	
+    if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+      $mac = "$1-$2-$3-$4-$5-$6";
+    } # end if
+    $mac = uc $mac;
+    $html .= '<td class="radius" id="mac-'.$mac.'" rowspan="2">';
+    $$variable{username} = $mac;
+    $html .= variable_substitution( \$$variable{radius_fragment}, $variable ) if $mac;
+    $html .= '</td>';
+  } # end if RADIUS
+
+  $html .= '<td class="buttons">';
+  if ( $$Interface{id} ) {
+    $html .= button( 'DI'.$Interface->id(), { onclick=>qq`delete_interface('$$Interface{id}');`, text=>'-', title=>'Delete Interface' } ),
+  } # end if
+  $html .= '</td></tr>';
+  if ( $$Interface{mac} ) {
+    $html .= '<tr><td colspan="4">';
+    if ( my @others = openprint::Host_Interface->find(mac=>$$Interface{mac}, 'host_id !='=>$$Interface{host_id}) ) {
+      $html .= 'Other Hosts with this mac:<br/>'.join('<br/>', map { $_->Host()->link_to() } @others );
+    }
+    $html .= 'Connections:<br/>';
+    if ( $$variable{Host}->is_wap() ) {
+      foreach my $Station_HI ( openprint::Host_Interface->find( connected_to=>$$Interface{mac} ) ) {
+        $html .= $Station_HI->Host()->link_to().'<br/>';
+      }
+    } # end if
+    if ( $$Interface{connected_to} ) {
+      foreach my $Station_HI ( openprint::Host_Interface->find( mac=>$$Interface{connected_to} ) ) {
+        $html .= $Station_HI->Host()->link_to().'<br/>';
+      }
+    }
+    $html .= '</td><td></td></tr>';
+  } # end if mac
+  return $html;
+) ?>

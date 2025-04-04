@@ -1,0 +1,15 @@
+	
+ul#menubar {
+}
+ul#menubar li {
+}
+ul#menubar li a {
+	padding: 5px;
+	font-size: x-small;
+	width: 120px;
+}
+
+ul#menubar li ul li {
+}
+ul#menubar li ul li a{
+}

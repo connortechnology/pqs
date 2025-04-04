@@ -1,0 +1,22 @@
+<div class="error"><?error?></div>
+<h3>Part 3 (To be completed by recipient)</h3>
+<table class="View">
+	<tr><td colspan="10">PREVENTIVE ACTION</td></tr>
+	<tr><td colspan="10"><? hecho ( $$variable{'PAR'}->action() ) ?></td></tr>
+	<tr>
+		<td colspan="1">Recipient</td>
+		<td colspan="4"><? hecho ( new openprint::User( $$variable{'PAR'}->part3_user_id())->name() ) ?></td>
+		<td colspan="1">Date</td>
+		<td colspan="4"><? hecho ( $$variable{'PAR'}->part3_signed_on() ) ?></td>
+	</tr>
+</table>
+<? if ( ($$variable{'PAR'}->part2_user_id() == $openprint::session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
+	<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'EditPart3', 'edit.gif', sprintf(q`new Ajax.Updater('Part3', '_par_edit_part3.html', { method: 'get', parameters: {par_id:%1$d} } );`, $$variable{'PAR'}->id() ), '', 'Edit' ); ) ?>.
+	</p>
+<? endif ( ($$variable{'PAR'}->part2_user_id() == $openprint::session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
+<? if ( ( ! $$variable{'PAR'}->part4_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
+<script type="text/javascript">
+	new Ajax.Updater( 'Part4', '_par_edit_part4.html', { method: 'get', parameters: {par_id<? echo ( $$variable{'PAR'}->id() ) ?>} } );
+</script>
+<? endif ( ( ! $$variable{'PAR'}->part4_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>

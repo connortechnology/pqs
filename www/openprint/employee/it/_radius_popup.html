@@ -1,0 +1,56 @@
+<script type="text/javascript">
+function load_records( form, options ) {
+	var p = form.serialize(true);
+	if ( options && options.order )
+		p.order = options.order;
+	
+	new Ajax.Updater( 'Results','/employee/it/_radius.html', { parameters: p } );
+} // end function load
+function new_record( ) {
+	new Ajax.Request('_radius_mac_line.html', { 
+		parameters: {
+			action: 'add', 
+			username: $('username').value, 
+			attribute: $('attribute').getValue(),
+			value: $('value').value
+		}, 
+		evalScripts:true, 
+		onSuccess: function(response) { 
+			$('Results').insert({top: response.responseText} ); 
+			SortableTable.load();   
+			} 
+	} );
+} // end function new_record
+</script>
+<?include('/includes/error_reporting.html')?>
+Please select a host to view/edit.<br>
+<form id="f1" name="f1" method="post" action="radius.html">
+	<input type="hidden" name="action"/>
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+			<li><label>Username/MAC</label>
+				<input type="text" id="username" name="username" value="<? echo ( $session{'/employee/it/radius.html?username'} ) ?>" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="if(event.keyCode == 13){load_records( $('f1') );}" />
+			</li>
+			<? if ( $config{'RADIUS_Support'} ) ?>
+				<li><label>Attribute</label>
+					<select name="attribute" id="attribute">
+						<option value="">All</option>
+					<? echo ( make_drop_down( [ map { $_, $openprint::RADIUS_Check::attributes{$_} } keys %openprint::RADIUS_Check::attributes ], $session{'/employee/it/radius.html?attribute'} ); ) ?>
+					</select>
+				</li>
+			<? endif ( $config{'RADIUS_Support'} ) ?>
+			<li><label>Value</label>
+				<input type="text" id="value" name="value" value="<? echo ( $session{'/employee/it/radius.html?value'} ) ?>" onkeydown="if(event.keyCode==13){load_records( $('f1') );}" />
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+				button( 'ShowResults', { onclick=>"load_records( \$('f1') );", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
+				button( 'Add', { onclick=>'new_record();', text=>'Add New RADIUS' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+<div id="Results">Choose criteria and click Show Results</div>
+</form>
+<script type="text/javascript">document.f1.username.focus();</script>

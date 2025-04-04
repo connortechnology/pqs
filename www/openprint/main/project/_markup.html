@@ -1,0 +1,12 @@
+<? echo (
+	my $Project = new openprint::Project( $param{'project_id'} );
+	$param{'value'} =~ s/[^\d\.\-]//mg;
+	$Project->markup( $param{'value'} );
+	$Project->save();
+	openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $Project->id() );
+	openprint::service::auto_calculate( $r, $log, $dbh, $variable, $Project->id(), undef );
+	$Project->summary(undef);
+	$Project->save();
+	openprint::print_project::continue_project( $log, $dbh, $variable, $Project->id() );
+	return 1*$Project->markup().'%';
+) ?>

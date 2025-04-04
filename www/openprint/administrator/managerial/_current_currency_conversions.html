@@ -1,0 +1,21 @@
+<? echo (
+	my $html = include('/includes/error_reporting.html');
+	my $id = $$variable{Currency}{id};
+
+	$html .= '1 ' . $$variable{Currency}->short().' = ';
+	$html .= input( type=>'float', name=>'amount-'.$id, onkeyup=>"calc_rate('$id');" );
+	$html .= ssi::select( openprint::Currency->dropdown(order=>'lower(name)','id !='=>$id), [], { name=>'to-'.$id } );
+	$html .= button( 'Add'.$id, { onclick=>sprintf('set_conversion( %d );', $id ), text => 'Set Conversion' } );
+	$html .= '</br>';
+
+  foreach my $Other_Currency ( openprint::Currency->find('id !='=>$$variable{Currency}->id()) ) {
+    my $C = openprint::Currency_Conversion->find_one(from_id=>$id, to_id=>$Other_Currency->id(), order=>'period_end DESC NULLS FIRST');
+    next if ! $C;
+		my $To = new openprint::Currency( $$C{to_id} );
+		$html .= sprintf('1 %s = %s %s %s %s<br/>', $C->From()->name(), $C->amount(), $To->name(),
+			( $$C{period_start} ? 'from '. format_datetime( $$C{period_start} ) : '' ),
+			( $$C{period_end} ? ' until ' . format_datetime( $$C{period_end} ) : '' ),
+		); 
+	} # end foreach
+	return $html;
+) ?>

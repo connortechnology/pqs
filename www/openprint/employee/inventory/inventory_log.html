@@ -1,0 +1,81 @@
+<script type="text/javascript">
+function calc() {
+LoadContent( 'Log', '_inventory_log.html', $('LogForm').serialize() );
+}
+</script>
+<form name="LogForm" id="LogForm" method="post">
+	<fieldset><legend>Filters</legend>
+		<ul>
+			<li>
+				<label>Date</label>
+		<? echo ( datetime_select_session( '/employee/inventory/inventory_log.html', 'updated_on_start', { onchange=>q`calc();`, with_today=>1 } ); ) ?>
+					to
+		<? echo ( datetime_select_session( '/employee/inventory/inventory_log.html', 'updated_on_end', { onchange=>q`calc();`, with_today=>1 } ); ) ?>
+			</li>
+			<li><label>Ins/Outs</label>
+				<input type="checkbox" name="ins" id="ins" <? echo ( $session{'/employee/inventory/inventory_log.html?ins'} ? 'checked="checked"' : '' ) ?> onclick="calc();"/>
+				<label class="radio" for="ins">Check Ins</label>
+				<input type="checkbox" name="outs" id="outs" <? echo ( $session{'/employee/inventory/inventory_log.html?outs'} ? 'checked="checked"' : '' ) ?> onclick="calc();"/>
+				<label class="radio" for="outs">Check Outs</label>
+			</li>
+			<li><label>Type</label>
+				<? echo ( checkboxes( 'Type', [ 'Sheet', 'Sheet', 'Roll','Roll','Unknown','Unknown' ], [ split(',',$session{'/employee/inventory/inventory_log.html?Type'}) ],  {onclick=>'calc();' } ); ) ?>
+      </li>
+			<li><label>Amount</label>
+					<?echo( join(' to ',
+								input(type=>'integer', name=>'delta_lower', value=>$session{$r->uri().'?delta_lower'}, oninput=>'calc();' ),
+								input(type=>'integer', name=>'delta_upper', value=>$session{$r->uri().'?delta_upper'}, oninput=>'calc();' ),
+								); ) ?>
+			</li>
+		<li>
+		<label>User</label>
+		<select name="employee_id" onchange="calc();">
+			<option value="">All Employees</option>
+<? echo (
+	make_drop_down( openprint::User->dropdown( type=>['E','A'] ),
+	$session{'/employee/inventory/inventory_log.html?employee_id'} );
+)?>
+			</select>
+		</li>
+       <li>
+            <label>Location</label>
+                <? echo ( 
+                    my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find( parent_id=>undef, order=>'lower(name)', type=>'place') );
+                    my @selected = split(',', $session{'/employee/inventory/inventory_log.html?location_id'} );
+                    if ( ! @selected ) {
+                        foreach my $L ( openprint::Location->find( parent_id=>undef, type=>'place', order=>'lower(name)') ) {
+                            next if $L->name() eq 'Missing';
+                            push @selected, $L->id();
+                        } # end foreach $L
+                    } # end if
+                    $session{'/employee/inventory/inventory_log.html?location_id'} = join(',',sets::intersection( @selected, @options ));
+                    return ssi::select( \@options, \@selected, { id=>'location_id',name=>'location_id', multiple=>1, onchange=>'calc();', size=>(scalar @options/2) } );
+                ) ?>
+        </li>
+		<li><label>Show Manifests</label>
+			<? echo ( radio( 'show_manifests', [ 1, 'Yes', 0, 'No' ], $session{'/employee/inventory/inventory_log.html?show_manifests'}, { onclick=>q`calc();if(this.value==1 && this.checked) { $('manifest_options').show(); } else { $('manifest_options').hide();};` } ) ) ?>
+			<div id="manifest_options"<? echo ( $session{'/employee/inventory/inventory_log.html?show_manifests'} ? '' : ' style="display:none;"' ) ?>>
+within 
+			<? echo ( input( type=>'cardinal', id=>'manifests_within_days', name=>'manifests_within_days', value=>$session{'/employee/inventory/inventory_log.html?manifests_within_days'}, onkeydown=>q`if(event.keyCode == 13){calc();}` ); ) ?> days and 
+			<? echo ( input( type=>'cardinal', id=>'manifests_within_lbs', name=>'manifests_within_lbs', value=>$session{'/employee/inventory/inventory_log.html?manifests_within_lbs'}, onkeydown=>q`if(event.keyCode == 13){calc();}` ); ) ?>
+	
+			lbs<br/>
+			<? echo ( checkboxes( 'show_stock_on_manifests', [ 1, 'Show stock on manifests' ], $session{'/employee/inventory/inventory_log.html?show_stock_on_manifests'}, { onclick=>'calc();' } ); ) ?>
+			</div>
+		</li>
+		<li><label>Docket</label>
+			<? echo ( input( type=>'cardinal', name=>'docket', id=>'docket', onkeydown=>q`if(event.keyCode==13){calc();}` ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+						button( 'Load', { onclick=>'calc();' } ),
+						button( 'Download', { onclick=>q`$('LogForm').btnFunction.value='Download';$('LogForm').submit();` } ),
+); ) ?>
+		</p>
+	</fieldset>
+	<fieldset><legend>Results</legend>
+		<div id="Log"><?include(_inventory_log.html)?></div>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>

@@ -1,0 +1,65 @@
+<fieldset>
+	<legend>Contact Information</legend>
+	<div id="contactInformation">
+		<div class="leftColumn" style="float: left; width: 50%;">
+			<div class="fieldContainer">
+				<ul>
+				<li><label>Company Name</label><? echo ( $$variable{Company}->link_to() ) ?></li>
+				<li><label>Address</label>
+					<? echo ( $$variable{Company}->address1() ) ?><br/>
+<? if ( $$variable{Company}->address2() ) ?>
+					<? echo ( $$variable{Company}->address2() ) ?><br/>
+<? endif ( $$variable{Company}->address2() ) ?>
+				</li>
+<? if ( $$variable{Company}->postalcode() ) ?>
+				<li><label>Postal/ZIP Code</label><? echo ( $$variable{Company}->postalcode() ) ?></li>
+<? endif ( $$variable{Company}->postalcode() ) ?>
+				</ul>
+			</div>
+		</div>
+		<div class="rightColumn" style="float: left; width: 50%;">
+			<div class="fieldContainer">
+				<ul>
+				<li><label>CSR</label><? echo ( $$variable{Company}->CSR()->name() ) ?></li>
+				<li><label>Contact Name</label><? echo ( $$variable{User}->name() ) ?></li>
+				<li><label>Email Address</label><a href="mailto:<? echo ( $$variable{User}->email() ) ?>"><? echo ( $$variable{User}->email() ) ?></a></li>
+				<? if ( $$variable{User}->phone() ) ?>
+				<li><label>Phone Number</label>
+					<? echo ( $$variable{User}->phone() ) ?>
+					<? if ( $$variable{User}->extension() ) ?>x<? echo ( $$variable{User}->extension() ) ?><? endif ( $$variable{User}->extension() ) ?>
+				</li>
+				<? endif ( $$variable{User}->phone() ) ?>
+				</ul>
+			</div>
+		</div>
+	</div>
+</fieldset>
+<fieldset>
+	<legend>File<? echo ( @{$$variable{Uploads}} == 1 ? '' : 's' ) ?></legend>
+	<table border="0" cellpadding="1" cellspacing="0" width="100%">
+		<thead>
+		 <tr>
+			<th align="left">Filename</th>
+			<th style="text-align:right; width: 100px;">Size</th>
+			<th style="text-align:right; width: 100px;" class="Status">Status</th>
+		 </tr>
+		</thead>
+		<tbody>
+			<? echo ( 
+				my $html;
+				foreach my $Upload ( @{$$variable{Uploads}} ) {
+					$html .= sprintf('<tr><td nowrap="nowrap">%s%s</td><td align="right">%s</td><td align="right">%s</td></tr>', 
+						$$Upload{file_path}, 
+						( -e $Upload->path() ? '' : '<br/><span class="error">File does not exist in FTP area.</span>' ),
+						misc::format_bytes($$Upload{size}), 
+						( $$Upload{complete} ? 'Complete' : '<span class="error">Incomplete</span>' ),
+						); 
+if ( ! -e $Upload->path() ) {
+$log->error("File does not exist at " . $Upload->path() );
+}
+				} # end foreach Upload
+				return $html;
+			) ?>
+		</tbody>
+	</table>	
+</fieldset>

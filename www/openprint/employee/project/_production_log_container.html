@@ -1,0 +1,10 @@
+<fieldset><legend onclick="toggleContent( 'ProductionLog<?echo($$variable{Project}{id})?>', '/employee/project/_production_log.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Production Log (click to hide/show)</legend>
+<? if ( $session{$r->uri().'?production_log'} ) ?>
+<div id="ProductionLog<?echo($$variable{Project}{id})?>">
+<?include(/employee/project/_production_log.html)?>
+<? else ( $session{$r->uri().'?production_log'} ) ?>
+<div id="ProductionLog<?echo($$variable{Project}{id})?>" style="display: none;">
+<? endif ( $session{$r->uri().'?production_log'} ) ?>
+</div>
+</fieldset>
+

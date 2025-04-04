@@ -1,0 +1,86 @@
+
+<? if ( @{$$variable{'Projects'}} ) ?>
+<? echo (
+	require Chart::Clicker;
+	require Chart::Clicker::Data::DataSet;
+	require Chart::Clicker::Data::Series;
+	my $html = include( '/includes/error_reporting.html' );
+	my %months;
+	my %days;
+	my %hours;
+	my %dow;
+	foreach my $Project ( @{$$variable{Projects}} ) {
+		my ( $year, $month, $day, $h, $m ) = $Project->created_on() =~ /^(\d\d\d\d)-(\d\d)-(\d\d) (\d+):(\d+)/;
+		$months{$year}{1*$month} += 1;
+		$days{$year}{1*$day} += 1;
+		$hours{$year}{1*$h} += 1;
+		$dow{$year}{Date::Calc::Day_of_Week( $year, $month, $day )} += 1;
+	} # end foreach Project
+	my $time = time;
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Project Creation by Month');
+	my $context = $cc->get_context('default');
+	$context->range_axis->format('%.0f');
+	$context->domain_axis->format('%.0f');
+	$context->domain_axis->ticks(11);
+	$context->domain_axis->tick_labels( [ 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' ] );
+	foreach my $year ( sort keys %months ) {
+		my $series = Chart::Clicker::Data::Series->new({ map { $_, defined $months{$year}{$_} ? $months{$year}{$_} : 0 } ( 1 .. 12 ) } );
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
+	} # end foreach year
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-months.png');
+	$html .= qq`<img src="/images/charts/$time-months.png" alt=""/>`;
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Project Creation by Day');
+	my $context = $cc->get_context('default');
+	$context->range_axis->format('%.0f');
+	$context->domain_axis->format('%.0f');
+	$context->domain_axis->ticks(30);
+	foreach my $year ( sort keys %months ) {
+		my $series = Chart::Clicker::Data::Series->new({ map { $_, defined $days{$year}{$_} ? $days{$year}{$_} : 0 } ( 1 .. 31 ) } );
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
+	} # end foreach
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-days.png');
+	$html .= qq`<img src="/images/charts/$time-days.png" alt=""/>`;
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Project Creation by Day of Week');
+	my $context = $cc->get_context('default');
+	$context->range_axis->format('%.0f');
+	$context->domain_axis->ticks(6);
+	$context->domain_axis->tick_labels( [ map { Date::Calc::Day_of_Week_Abbreviation($_) } ( 1 .. 7 ) ] );
+	foreach my $year ( sort keys %months ) {
+		my $series = Chart::Clicker::Data::Series->new({ map { $_, defined $dow{$year}{$_} ? $dow{$year}{$_} : 0 } ( 1 .. 7 ) } );
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
+	} # end foreach year
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-dow.png');
+	$html .= qq`<img src="/images/charts/$time-dow.png" alt=""/>`;
+
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Project Creation by Hour');
+	my $context = $cc->get_context('default');
+	$context->range_axis->format('%.0f');
+	$context->domain_axis->format('%.0f');
+	$context->domain_axis->ticks(23);
+	foreach my $year ( sort keys %months ) {
+		my $series = Chart::Clicker::Data::Series->new({ map { $_, defined $hours{$year}{$_} ? $hours{$year}{$_} : 0 } ( 0 .. 23 ) } );
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
+	} # end foreach year
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-hours.png');
+	$html .= qq`<img src="/images/charts/$time-hours.png" alt=""/>`;
+	return $html;
+) ?>
+<? else ( @{$$variable{'Projects'}} ) ?>
+There were no projects matching your criteria.  Please try again.
+<? endif ( @{$$variable{'Projects'}} ) ?>

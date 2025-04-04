@@ -1,0 +1,25 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<form id="f1" name="f1" action="stock.html" method="post">
+	<input type="hidden" name="btnFunction" />
+	<fieldset><legend>Filters</legend>
+		<ul>
+			<li><label>Received On</label>
+				<? echo ( ssi::date_select_session( '/employee/accounting/stock.html', 'received_on_start', { 'onchange' =>
+							q`LoadContent('Results','/employee/accounting/_stock.html', $('f1') );`,
+							'with_today'=>1, 'with_clear'=>1,
+							} ); ) ?>
+				to
+				<? echo ( ssi::date_select_session( '/employee/accounting/stock.html', 'received_on_end', { 'onchange' =>
+							q`LoadContent('Results','/employee/accounting/_stock.html', $('f1').serialize() );`,
+							'with_today'=>1, 'with_clear'=>1,
+							} ); ) ?>
+			</li>
+			<li><label>Cost assigned</label>
+				<? echo ( ssi::radio( 'cost_assigned', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/employee/accounting/stock.html?cost_assigned'} ); ) ?>
+			</li>
+		</ul>
+		<p class="buttons"><? echo ( ssi::button( 'Load', { 'onclick'=>q`LoadContent('Results','_stock.html', $('f1').serialize() );` } ); ) ?></p>
+	</fieldset>
+	<div id="Results"><? echo ( include('_stock.html'); ) ?></div>
+	<p class="buttons"><? echo ( ssi::button( 'Save', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();" } ); ) ?></p>
+</form>

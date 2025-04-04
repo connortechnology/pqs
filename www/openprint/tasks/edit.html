@@ -1,0 +1,89 @@
+<div class="Task"><div class="Edit">
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="post" action="edit.html" enctype="multipart/form-data">
+	<input type="hidden" id="task_id" name="task_id" value="<? echo ( $$variable{Task}->id() ) ?>" />
+	<input type="hidden" id="action" name="action" />
+	<fieldset><legend>Task <? echo ( $$variable{Task}->id() ) ?></legend>
+		<div class="content leftColumn">
+			<ul>
+        <li class="Department"><label>Department</label>
+<? echo (
+   return ssi::select( openprint::Department->dropdown(),
+   $$variable{Task}->department_id(),
+   {name=>'department_id', prepend=>[''=>'All']
+   });
+) ?>
+      </li>
+      <li class="Type"><label>Type</label>
+<? echo (
+   return ssi::select( openprint::Task_Type->dropdown(),
+   $$variable{Task}->type_id(),
+   {name=>'type_id', prepend=>[''=>'Unknown']
+   });
+) ?>
+      </li>
+      <li class="Action"><label>Action</label>
+<? echo (
+   return ssi::select( openprint::Task_Action->dropdown(),
+   $$variable{Task}->action_id(),
+   {name=>'action_id', prepend=>[''=>'Unknown']
+   });
+) ?>
+      </li>
+      <li class="rb_id"><label>Freeside Id</label><input type="number" step="1" name="rb_id" value="<?echo($$variable{Task}->rb_id())?>"/></li>
+    <li class="AssignedTo"><label>Assigned To</label>
+<? echo (
+  return ssi::select( openprint::User->dropdown(type=>['A','E']),
+    $$variable{Task}->owner_id(),
+    {name=>'assigned_to', prepend=>[''=>'All']
+    });
+) ?>
+      </li>
+
+        <li>
+          <label>Company</label>
+<? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+				<select id="company_id" name="company_id" onchange="stop_filter_companies();">
+					<option value="">select</option>
+          <? echo ( make_drop_down( openprint::Company->dropdown(),
+          ($$variable{Task}->company_id() ? $$variable{Task}->company_id() : $session{company_id}),
+          { encode=>1} ) )?>
+				</select>
+<? else ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+<?echo( $$variable{Task}->company_id() ? $$variable{Task}->Company()->link_to() : $openprint::Company->link_to())?>
+<? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+        </li>
+				<li class="name"><label>Name</label>
+          <input type="text" name="name" value="<? echo ( $$variable{Task}->title() ) ?>" />
+				</li>
+        <?if($$variable{Task}->id())?>
+				<li><label>Created On</label><? echo ( format_datetime( $$variable{Task}->created_on() ) ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Task}->updated_on() ) ) ?></li>
+        <?endif($$variable{Task}->id())?>
+			</ul>
+      <div>
+        <ul>
+          <li class="notes">
+            <label>Notes</label>
+            <textarea name="notes" id="notes"><?echo($$variable{Task}->notes())?></textarea>
+          </li>
+        </ul>
+      </div>
+				<p class="buttons">
+					<? echo ( 
+						my $html;
+						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
+						if ( $$variable{Task}->id() ) {
+							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{Task}->id();
+						} # end if
+						return $html;
+					) ?>
+				</p>
+		</div>
+	</fieldset>
+  <? echo ( $$variable{Task}->id() ? include_logs( $$variable{Task}) : ''; ) ?>
+</form>
+</div></div>
+<script src="edit.js"></script>

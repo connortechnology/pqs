@@ -1,0 +1,11 @@
+	<? echo (
+		my $html;
+		foreach my $Block ( openprint::Blocklist->find(blocker=>$session{user_id},unblock=>0) ) {
+			$html .= qq`<li id="blockee-$$Block{blockee}">`;
+			$html .= $Block->Blockee()->html();
+			$html .= $Block->reason();
+			$html .= ssi::button( 'Unblock'.$Block->blockee(), { onclick=>qq`new Ajax.Request('_blocklist_actions.json', { parameters: { blockee: $$Block{blockee}, action: 'unblock' } } );`, text=>'Unblock' });
+			$html .= '<li>';
+		} # end foreach Block
+		return $html;
+	) ?>

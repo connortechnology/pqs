@@ -1,0 +1,32 @@
+<li>
+	<input type="hidden" id="rdbPanels" name="rdbPanels" value="2"/>
+    <label>Pocket size</label>
+	<input type="text" id="rdbPocketSize" name="rdbPocketSize" value="<? echo ( $$variable{'rdbPocketSize'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc(this.form.name);" />
+<!--
+	<span class="checkOption">
+		<input type="radio" id="rdbPocketSize3" name="rdbPocketSize" value="3" <? echo ( ssi::checked( $$variable{'rdbPocketSize'} == 3);  ) ?> onclick="calc(this.form.name);" />
+		<label class="radio" for="rdbPocketSize3">3&quot;</label>
+	</span>
+	<span class="checkOption">
+		<input type="radio" id="rdbPocketSize4" name="rdbPocketSize" value="4" <? echo ( ssi::checked( $$variable{'rdbPocketSize'} == 4 ); ) ?> onclick="calc(this.form.name);" />
+		<label class="radio" for="rdbPocketSize4">4&quot;</label>
+	</span>
+</li>
+-->
+<li>
+    <label>What side are the pockets on?</label>
+	<span class="checkOption">
+		<input type="checkbox" id="chkPocketLeft" name="chkPocketLeft" value="Left" <? echo ( ssi::checked( $$variable{'chkPocketLeft'} ); ) ?> onclick="calc(this.form.name);" />
+		<label class="radio" for="chkPocketLeft">Left</label>
+	</span>
+<!--
+		<span class="checkOption">
+			<input type="checkbox" id="chkPocketCenter" name="chkPocketCenter" value="Center" <? echo ( 'checked' if $$variable{'chkPocketCenter'} ) ?> />
+			<label for="chkPocketCenter">Center</label>
+		</span>
+-->
+	<span class="checkOption">
+		<input type="checkbox" id="chkPocketRight" name="chkPocketRight" value="Right" <? echo ( ssi::checked( $$variable{'chkPocketRight'} ); ) ?> onclick="calc(this.form.name);" />
+		<label class="radio" for="chkPocketRight">Right</label>
+	</span>
+</li>

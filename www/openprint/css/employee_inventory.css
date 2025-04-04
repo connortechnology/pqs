@@ -1,0 +1,106 @@
+table .manifest_num {
+	text-align: left;
+	width: 125px;
+}
+table .contents {
+	text-align: left;
+}
+table .paper_name {
+	text-align: left;
+}
+table .available {
+	text-align: right;
+	width: 72px;
+	padding-right: 3px;
+}
+table .age {
+	text-align: left;
+	width: 125px;
+}
+table .last_seen {
+	text-align: left;
+	width: 125px;
+}
+table .condition {
+	text-align: left;
+	width: 100px;
+}
+table .inventory {
+	text-align: left;
+	width: 200px;
+}
+table.List .buttons {
+	width: 60px;
+}
+table .mweight, table .gsm {
+	text-align: right;
+	width: 50px;
+}
+table .on_order, table .allocated, table .in_stock, table .Quantity {
+	text-align: right;
+	width: 90px;
+	padding-right: 5px;
+}
+table .Location {
+	text-align: left;
+}
+table .Location select {
+	max-width: 100%;
+}
+table .Condition {
+	text-align: left;
+}
+
+#SkidResults table .RFID,
+#Allocations table .RFID,
+#CurrentInventory table .RFID {
+	width: 95px;
+}
+
+input#quantity {
+	width: 100%;
+}
+table .Employee, table .Comment {
+	text-align: left;
+}
+table .RFIDScanner {
+	width: 140px;
+	text-align: left;
+}
+#ManifestsResults .Date {
+padding-right: 5px;
+}
+.qty_feet input, .qty_lbs input, .qty_kgs input, .Docket input {
+	width: 100%;
+}
+#Allocate input[type="text"],
+#Allocate input[type="number"]{
+	width: 80px;
+}
+.Skid input[type="number"] {
+	width: 70px;
+}
+fieldset li.size input[type="number"] {
+	width: 75px;
+}
+table .ManufacturersID {
+	text-align: left;
+}
+
+#manifests_within_days, #manifests_within_lbs {
+	width: 40px;
+}
+input#width, input#height, input#Quantity, input#Kg {
+	width: 75px;
+}
+#txtCalliper,
+#basis_width, #basis_height {
+	width: 75px;
+}
+
+input#mweight  {
+	width: 40px;
+}
+#location_log_form select {
+	width: auto;
+}

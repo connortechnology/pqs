@@ -1,0 +1,105 @@
+<div class="PageTitle">
+  <h1>Administrator Managerial</h1>
+  <h2>Companies</h2>
+</div>
+<script nonce="<?echo($config{CSP_NONCE})?>">
+function load_page() {
+	LoadContent('Results', '_companies.html', $j('#f1').serialize());
+} 
+function destroy_clicked() {
+  const selected = get_value( $j('#f2')[0].elements['company_id'] );
+  if (!selected.length) {
+    alert('Please select a company to destroy');
+  } else {
+    $j('#Results').html('Destroying...');
+    jQuery('#Results').load('/administrator/managerial/_companies.html?action=destroy', { company_id: selected } );
+  }
+}
+function undelete_clicked() {
+  const selected = get_value( $j('#f2')[0].elements['company_id'] );
+  if (!selected.length) {
+    alert('Please select a company to undelete');
+  } else {
+    $j('#Results').html('Undeleting...');
+    jQuery('#Results').load('/administrator/managerial/_companies.html?action=undelete', { company_id: selected } );
+  }
+}
+function delete_clicked() {
+  const selected = get_value( $j('#f2')[0].elements['company_id'] );
+  if (!selected.length) {
+    alert('Please select a company to delete');
+  } else {
+    $j('#Results').html('Deleting...');
+    jQuery('#Results').load('/administrator/managerial/_companies.html?action=delete', { company_id: selected } );
+  }
+}
+
+</script>
+<form id="f1" name="f1" method="post" action="companies.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<ul>
+		<li>
+			<label>ID</label>
+			<? echo ( input( type=>'cardinal', name=>'company_id', onkeydown=>'if(event.keyCode==13){load_page();}' ); ) ?>
+			<? echo ( button( 'Go1',{ onclick=>q`f1.action='company_profiles.html';f1.submit();`, text=> 'Go' } ); ) ?>	
+		</li>
+		<li>
+			<label>Name</label>
+      <? echo ( input( type=>'text', name=>'company_name', onkeydown=>'if(event.keyCode==13){load_page();}', oninput=>'load_page();', value=>$param{company_name} ); ) ?>
+			<? echo ( button( 'Go2',{ onclick=>q`f1.action='company_profiles.html';f1.submit();`, text=> 'Go' } ); ) ?>	
+		</li>
+    <? echo (
+  my $users = openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' );
+  if ( @{$users} ) {
+    return join("\n",
+        '<li><label>Sales Rep</label>',
+        ssi::select( $users, $session{$r->uri().'?salesrep_id'} , {
+          name=>'salesrep_id',
+          onchange=>'load_page();',
+          prepend=>[ '', 'All' ],
+          } ),
+        checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ),
+        '</li>',
+        );
+  }
+  return;
+) ?>
+		<li> 
+			<label>Created</label>
+			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+		</li>
+		<li> 
+			<label>Updated</label>
+			<? echo ( date_select_session( $r->uri(), 'updated_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'updated_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+		</li>
+		<? if ( 0 and openprint::Project->find_one() ) ?>
+		<li> 
+			<label>Last Project On</label>
+			<? echo ( date_select_session( $r->uri(), 'last_project_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'last_project_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+		</li>
+		<? endif ( 0 and openprint::Project->find_one() ) ?>
+		<? if ( openprint::MarketingCategory->find_one() ) ?>
+		<li><label>Marketing Category</label><? echo ( ssi::select( openprint::MarketingCategory->dropdown(), $session{$r->uri().'?marketing_category_id'}, { onclick=>'load_page();', name=>'marketing_category_id', prepend=>['','All'] } ); ) ?></li>
+		<? endif ( openprint::MarketingCategory->find_one() ) ?>
+		<li><label>Country</label><? echo ( ssi::select( [ map { $_->id(), $_->name() } openprint::Location->find(type=>'country', order=>'lower(name)') ], $session{$r->uri().'?country'}, { name=>'country_id', prepend=>['','All'] } ); ) ?></li>
+		<li><label>Supplier?</label><? echo ( radio( 'supplier', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?supplier'}, {on_click=>'load_page'} ); ) ?></li>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>'load_page();'} ); ) ?></li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
+				button( 'New', { href=>'/administrator/managerial/company_profiles.html', text=>'New' } ),
+				button( 'DownloadCSV', { onclick=>"f1.btnFunction.value='Download';f1.submit();", text=>'Download in CSV Format' } ),
+				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<div id="Results">Click Show Results</div>

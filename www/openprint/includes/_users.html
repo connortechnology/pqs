@@ -1,0 +1,10 @@
+<? echo (
+	my @Users = openprint::User->find(
+		( $param{type} ? ( type=>[ split(',', $param{type}) ] ) : () ),
+		( exists $param{company_id} ? ( company_id=>$param{company_id} ) : () ),
+		( $param{usergroup} ? ( 'usergroup any'=>$param{usergroup} ) : () ),
+		( exists($param{deleted}) ? (deleted=>$param{deleted}) : () ),
+		order	=>	'lower(firstname),lower(lastname)',
+	);
+	return make_drop_down( [ '', 'no one', map { $_->id(), $_->name() } @Users ], @Users == 1 ? $Users[0]{'id'} : $param{selected_id} );
+) ?>

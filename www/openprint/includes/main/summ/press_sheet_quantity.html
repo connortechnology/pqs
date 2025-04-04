@@ -1,0 +1,26 @@
+<p> 
+	<label>Impressions/Gross Stock</label>
+<? echo ( 
+	my $html = '';
+	my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="value">';
+		$html .= $$sig_specs{'hdnImpressionQuantity'.$qty_index} .' impressions ';
+
+		my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $qty_index );
+
+		my $qty = 0;
+		$qty  = $$sig_specs{'txtPressSheetQty'.$qty_index};
+		$qty =~ s/\D//g;
+
+		if ( $Paper->type() eq 'Roll' ) {
+			$html .= sprintf('%dlbs', $qty );
+		} else {
+			$html .= sprintf('%d sheets', $qty );
+		} # end if
+		$html .= ' of ' . $$variable{'ddmStockSheetSize'.$qty_index};
+		$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+</p>

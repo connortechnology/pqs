@@ -1,0 +1,53 @@
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend>Gluing Services</legend>
+		<? eval ( @{$$variable{SignatureGroups}} = $$variable{Project}->signatures(); ) ?>
+		<? while ( $$variable{SignatureServiceIndex} = shift @{$$variable{SignatureGroups}}; ) ?>
+			<? eval (
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $$variable{SignatureServiceIndex} );
+					@$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtServiceDescription'};
+					) ?>
+			<fieldset>
+				<? if ( $$variable{Reference} ) ?>
+				<legend><?Reference?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
+				<? endif ( $$variable{Reference} ) ?>
+				<ul>
+				<li>
+					<label>Glued Area (square inches)</label>
+					<input type="number" name="txtArea-<?SignatureIndex?>" value="<? echo ( $$variable{'txtArea-'.$$variable{SignatureIndex}} ) ?>" oninput="calc(this.form.name);" step="any" min="0"/>
+					<input type="checkbox" id="chkOverrideArea-<?SignatureIndex?>" name="chkOverrideArea-<?SignatureIndex?>" value="Y" onclick="if ( ! this.checked ) calc(this.form.name);"
+					<? echo ( $$variable{'chkOverrideArea-'.$$variable{SignatureIndex}} eq 'Y' ? 'checked="checked"' : '' ) ?>
+					/>
+					<label class="radio" for="chkOverrideArea-<?SignatureIndex?>">Override</label>
+				</li>
+<?echo(
+my @complexityoptions = map { openprint::Service->find_one(name=>'Gluing'.$_) ? $_ : () } ( 'Simple','Average', 'Complex' );
+  if (@complexityoptions) {
+    return join("\n", '<li class="complexity"><label>Complexity</label>',
+      radio('complexity', [map { $_=>$_ } @complexityoptions], $$variable{complexity}, {onclick=>'calc(\'f1\');'}),
+    '</li>',
+);
+}
+return;
+)?>
+
+				</ul>
+			</fieldset>
+		<? endwhile ( $$variable{SignatureServiceIndex} = shift @{$$variable{SignatureGroups}}; ) ?>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+      <ul>
+      <?include(/includes/main/proj/quantities_equipment_prices.html) ?>
+      </ul>
+		</fieldset>
+		<hr/>
+		<?include('/includes/main/proj/_comments.html')?>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="btnFunction" value="Save Service" />
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>" />
+		<input type="hidden" name="ContinueProject" value="Y" />
+	</form>
+</div>
+<script src="<?hash_link('/javascripts/service.js')?>"></script>

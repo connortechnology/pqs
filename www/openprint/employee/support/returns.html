@@ -1,0 +1,59 @@
+<script type="text/javascript">
+	function load_results() {
+		var div = $('Results');
+		if ( div ) {
+			div.innerHTML = 'Please wait. Loading...';
+			new Ajax.Updater( div, '_returns.html', { parameters: $('f1').serialize() } );
+		} // end if
+	} //e nd function load_results
+</script>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<form id="f1" name="f1" method="post" action="returns.html">
+	<fieldset class="filters"><legend>Search</legend>
+		<ul>
+			<li><label>RMA #</label>
+				<input type="text" name="rmanumber" value="<? echo ( $param{rmanumber} ) ?>" />
+				<? echo ( button('Go', { onclick=>'load_results();' } ); ) ?>
+			</li>
+		<ul>
+<? if ( $session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Supplier</label>
+			<input type="text" onkeyup="filterDDM(this, f1.supplier_id);" class="filter"/>
+			<select name="supplier_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value=""> All</option>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/support/returns.html?supplier_id'}, { supplier=>'Y' } ); ) ?>
+			</select>
+		</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Customers</label>
+			<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter"/>
+			<select name="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value=""> All</option>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/support/returns.html?company_id'} ); ) ?>
+			</select>
+		</li><li>
+			<label>Status</label>
+			<? echo ( ssi::select( openprint::RMA_Status->dropdown(order=>'sort,lower(name)'), [ split(',',$session{'/employee/support/returns.html?status'}) ], { multiple=>1, name=>'status' } ); ) ?>
+		</li><li>
+			<label>Created On</label>
+<? echo ( ssi::date_select_session( '/employee/support/returns.html', 'created_on_start', { onchange=>'load_results();' } ); ) ?>
+				to 
+<? echo ( ssi::date_select_session( '/employee/support/returns.html', 'created_on_end', { onchange=>'load_results();' } ); ) ?>
+		</li><li>
+			<label>Updated On</label>
+<? echo ( ssi::date_select_session( '/employee/support/returns.html', 'updated_on_start', { onchange=>'load_results();' } ); ) ?>
+				to 
+<? echo ( ssi::date_select_session( '/employee/support/returns.html', 'updated_on_end', { onchange=>'load_results();' } ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+			ssi::button( 'Submit1', { onclick=>"f1.submit();", text=>'Submit' } ),
+			ssi::button( 'Reset1', { onclick=>"f1.reset();", text=>'Reset' } ),
+); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results"><? echo ( include('_returns.html'); ) ?></div>
+</form>

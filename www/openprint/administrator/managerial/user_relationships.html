@@ -1,0 +1,44 @@
+<div class="User_Relationships">
+	<form id="f1" name="f1" action="user_relationships.html" method="post">
+		<table>
+			<tr>
+				<th>id</td>
+				<th>Name</th>
+				<th>You are/want to be/</th>
+				<th>text2</th>
+				<th>text3</th>
+			</tr>
+			<? echo (
+				my $html;
+				foreach my $R ( openprint::User_Relationship_Type->find() ) {
+					$html .= sprintf(q`
+						<tr>
+							<td>%1$d</td>
+							<td><input type="text" name="name-%1$d" id="name-%1$d" value="%2$s"/></td>
+							<td><input type="text" name="text1-%1$d" id="text1-%1$d" value="%3$s"/></td>
+							<td><input type="text" name="text2-%1$d" id="text2-%1$d" value="%4$s"/></td>
+							<td><input type="text" name="text3-%1$d" id="text3-%1$d" value="%5$s"/></td>
+						</tr>
+						`, $R->id(), $R->name(), $R->text1(), $R->text2(), $R->text3() );
+				} # end foreach R
+				$html .= q`
+					<tr>
+						<td>new</td>
+						<td><input type="text" name="name-new" id="name-new" /></td>
+						<td><input type="text" name="text1-new" id="text1-new" /></td>
+						<td><input type="text" name="text2-new" id="text2-new" /></td>
+						<td><input type="text" name="text3-new" id="text3-new" /></td>
+					</tr>
+					`;
+				return $html;
+			) ?>
+		</table>
+		<p class="buttons">
+			<? echo ( join('',
+						ssi::button( 'Save', {'onclick'=>q`var f1=$('f1');f1.elements['action'].value='save';f1.submit();` } ),
+						ssi::button( 'Reset', {'onclick'=>q`$('f1').reset();` } ),
+				); ) ?>
+		</p>
+		<input type="hidden" name="action"/>
+	</form>
+</div>

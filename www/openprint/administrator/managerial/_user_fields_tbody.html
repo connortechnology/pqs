@@ -1,0 +1,17 @@
+<? echo ( 
+	my $html;
+	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,lower(name)') ) {
+		$$variable{'Field'} = $Field;
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/managerial/_field_tr.html' );
+	} # end foreach Field
+	return $html;
+) ?>
+<script type="text/javascript">
+	Sortable.create( 'fields', {
+		tag: 'tr',
+		constraint: 'vertical',
+		onUpdate: function( container ) {
+				new Ajax.Updater( 'fields', '_user_fields_tbody.html', { parameters: { update: Sortable.serialize(container) }, evalScripts: true } );
+			}
+	} );
+</script>

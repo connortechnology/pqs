@@ -1,0 +1,21 @@
+<?UserFirstName?> <?UserLastName?> has logged into the
+<? if ( $$variable{'Site'} eq 'C' ) ?>
+Customer
+<? endif ( $$variable{'Site'} eq 'C' ) ?>
+<? if ( $$variable{'Site'} eq 'A' ) ?>
+Administrative
+<? endif ( $$variable{'Site'} eq 'A' ) ?>
+<? if ( $$variable{'Site'} eq 'E' ) ?>
+Employee
+<? endif ( $$variable{'Site'} eq 'E' ) ?>
+side of the web site.  This user is
+<? if ( $$variable{'UserType'} eq 'C' ) ?>
+a Customer
+<? endif ( $$variable{'UserType'} eq 'C' ) ?>
+<? if ( $$variable{'UserType'} eq 'A' ) ?>
+an Administrator
+<? endif ( $$variable{'UserType'} eq 'A' ) ?>
+<? if ( $$variable{'UserType'} eq 'E' ) ?>
+an Employee
+<? endif ( $$variable{'UserType'} eq 'E' ) ?>
+.

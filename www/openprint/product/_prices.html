@@ -1,0 +1,24 @@
+<? eval ( 
+	$$variable{Pricelists} = [ openprint::Pricelist->find( order=>'lower(name)') ];
+	$$variable{Product} = new openprint::Product( $param{product_id} ) if ! $$variable{Product};
+) ?>
+<? while ( $$variable{Pricelist} = shift @{$$variable{Pricelists}} ) ?>
+<fieldset><legend>Prices for Price List: <? echo ( $$variable{Pricelist}->link_to(); ) ?></legend>
+	<div class="Equipment" id="pricelist-<? echo ( $$variable{Pricelist}{id})?>">
+		<table class="List"><thead>
+			<tr>
+				<th class="Range">Unit Range</th>
+				<th class="Units">Units</th>
+				<th class="Cost">Cost</th>
+				<th class="Markup">Markup</th>
+				<th class="Price">Price</th>
+				<th class="Discount">Discount</th>
+				<th class="buttons"><?echo(button( 'a'.$$variable{Pricelist}->id(), { 
+						onclick=>qq`add_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}');`, text=>'+', title=>'Add' } );)?></th>
+		</tr>
+		</thead><tbody id="<?echo(join('-', 'prices', $$variable{Pricelist}{id}, $$variable{Equipment}{id} ) ) ?>">
+<?include('/product/_prices_table_body.html')?>
+		</tbody></table>
+	</div><!--Equipment-->
+</fieldset>
+<? endwhile ( $$variable{Pricelist} = shift @{$$variable{Pricelists}} ) ?>

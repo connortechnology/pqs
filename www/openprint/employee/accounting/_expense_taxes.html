@@ -1,0 +1,21 @@
+<? echo (
+	my $html;
+	my @Taxes = openprint::Tax->find(
+			'period_start null_or_<='   =>  $$variable{'Expense'}->invoiced_on(),
+			'period_end null_or_>='     =>  $$variable{'Expense'}->invoiced_on(),
+			'country'   =>  $$variable{'Expense'}->Company()->country(),
+			'state'     =>  $$variable{'Expense'}->Company()->state()
+);
+	foreach my $Tax ( @Taxes ) {
+		my $Expense_Tax = $$variable{'Expense'}->Tax( $Tax );
+		$html .= sprintf(q`
+<li><label>%2$s (<span id="tax_rate-%1$d">%3$d</span>%)<input type="checkbox" name="tax_charge-%1$d" id="tax_charge-%1$d" value="1" %4$s onclick="update_total(this.form);" /></label><input type="text" name="tax_amount-%1$d" id="tax_amount-%1$d" value="%5$s" /></li>
+`, $Tax->id(), $Tax->name(), $Tax->rate(), ssi::checked( exists $param{'tax_charge-'.$Tax->id()} ? $param{'tax_charge-'.$Tax->id()} : $Expense_Tax->charge() ), $Expense_Tax->amount() );
+	} # end foreach Tax
+	if ( $param{'invoiced_on_year'} ) {
+	$html .= '<script type="text/javascript">tax_ids = [ ' . join(',', map { $_->id() } @Taxes ). q` ];
+		update_total( $('f1') );
+		</script>`;
+	} # end if
+	return $html;
+) ?>

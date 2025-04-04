@@ -1,0 +1,60 @@
+<?include(/includes/error_reporting.html)?>
+Please select an allocation to view/edit.<br>
+<form id="f1" name="f1" method="post" action="allocations.html">
+	<input type="hidden" name="action" />
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+			<li><label>Docket</label>
+				<?echo( input( type=>'cardinal', name=>'Docket', value=> $session{'/employee/inventory/allocations.html?Docket'}, onkeydown=>q`if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_allocations.html', $('f1').serialize() );}` ); ) ?>
+				<? echo ( button( 'Go2', { onclick=>"LoadContent( 'Results', '/employee/inventory/_allocations.html', \$('f1').serialize() );", text=>'Go' } ); ) ?>
+			</li>
+		</ul>
+		<hr/>
+		<ul>
+			<li><label>Date Added</label>
+				<? echo ( date_select( 'created_on_start', $session{$$variable{uri}.'?created_on_start_year'} ? [@session{map {$$variable{uri}.'created_on_start_'.$_} ( 'year','month','day' )}] : ' ', { with_today=>1 }); ) ?>
+				to 
+				<? echo ( date_select( 'created_on_end', $session{$$variable{uri}.'?created_on_end_year'} ? [@session{map {$$variable{uri}.'created_on_end_'.$_} ( 'year','month','day' )}] : ' ', { with_today=>1 }); ) ?>
+			</li>
+			<li><label>Stock Age</label>
+				<? echo ( date_select( 'stock_age_start', $session{$$variable{uri}.'?stock_age_start_year'} ? [@session{map {$$variable{uri}.'stock_age_start_'.$_} ( 'year','month','day' )}] : ' ', { with_today=>1 }); ) ?>
+				to 
+				<? echo ( date_select( 'stock_age_end', $session{$$variable{uri}.'?stock_age_start_end'} ? [@session{map {$$variable{uri}.'stock_age_end_'.$_} ( 'year','month','day' )}] : ' ', { with_today=>1 }); ) ?>
+			</li>
+			<li><label>Type</label>
+				<?echo( checkboxes( 'Type', [ map { $_, $_ } ( 'Sheet', 'Roll' ) ], [ split(',', $session{$$variable{uri}.'?Type'} ) ], { onclick=>q`LoadContent( 'Results', '/employee/inventory/_allocations.html', \$('f1').serialize() );` } ); ) ?>
+        </li>
+        <? if ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reports','Inventory'], $session{user_id} ) ) ?>
+        <li>
+            <label>CSR</label>
+            <select name="salesrep_id" size="1" onchange="filter_companies('company_id', { name: this.form.company_filter.value,selected_id: get_ddm_value($('company_id')),salesrep_id: get_ddm_value(this) } );">
+            <? echo (
+                    my @options = ( '', 'All' );
+                    push @options, map { $_->id(), $_->name() } openprint::User->find( type =>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
+                    make_drop_down( \@options, $session{$r->uri().'?salesrep_id'} );
+                    ) ?>
+
+             </select>
+        </li>
+        <? endif ( $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reports','Inventory'], $session{user_id} ) ) ?>
+        <li>
+            <label>Company</label>
+            <input name="company_filter" class="filter" type="text" oninput="filter_companies('company_id', { name: this.value,selected_id: get_ddm_value($('company_id')),salesrep_id: get_ddm_value(this.form.salesrep_id) } );" />
+            <select name="company_id" id="company_id">
+                <option value="">All</option>
+                <? echo ( make_drop_down( openprint::Company->dropdown( 'last_ordered_on is null'=>0,
+								( $session{$r->uri().'?salesrep_id'} ? ( salresrep_id => $session{$r->uri().'?salesrep_id'} ) : () ),
+							), $session{$r->uri().'company_id'} ); ) ?>
+            </select>
+        </li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>q`LoadContent( 'Results', '/employee/inventory/_allocations.html', $j('#f1').serialize() );`, text=>'Show Results' } ),
+				button( 'Reset', { onclick=>q`f1.elements['action'].value='Reset';f1.submit();` } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<div id="Results"><?include(_allocations.html)?></div>
+<script type="text/javascript">document.f1.Docket.focus();</script>

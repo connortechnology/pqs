@@ -1,0 +1,43 @@
+<form name="f2" method="post" action="templates.html">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="ddmProjectType" value="<?echo($param{ddmProjectType})?>" />
+<? if ( $param{'ddmProjectType'} ) ?>
+			<? echo ( join( "\n", 
+						button( 'Save',{ onclick=>"f2.btnFunction.value='Save';f2.submit();" } ),
+						button( 'Reset', { onclick=>'f2.reset();' } ),
+			); ) ?>
+<? eval (
+	$$variable{Templates} = [ openprint::ProjectType_Template->find( order=>'lower(type),lower(description)', projecttype_id=>$param{ddmProjectType} ) ];
+) ?>
+<table class="List">
+	<tr>
+		<th class="type">Type</th>
+		<th class="name">Name</th>
+		<th class="description">Description</th>
+		<th class="finished_width">Finished Width</th>
+		<th class="finished_height">Finished Height</th>
+		<th class="flat_width">Flat Width</th>
+		<th class="flat_height">Flat Height</th>
+		<th class="message">Message</th>
+		<th class="buttons">&nbsp;</th>
+	</tr>
+	<? echo (
+		my $html;
+		while ( $$variable{Template} = shift @{$$variable{Templates}} ) {
+			$html .= include( '/administrator/project_types/_template_line.html' );
+		} # end while
+		return $html;
+	) ?>
+	<tr>
+		<td class="type"><input type="text" name="typeNew"/></td>
+		<td class="name"><input type="text" name="nameNew"/></td>
+		<td class="description"><input type="text" name="descriptionNew"/></td>
+		<td class="finished_width"><input type="number" name="finishedwidthNew"/></td>
+		<td class="finished_height"><input type="number" name="finishedheightNew"/></td>
+		<td class="flat_width"><input type="number" name="flatwidthNew"/></td>
+		<td class="flat_height"><input type="number" name="flatheightNew"/></td>
+		<td class="message"><textarea name="messageNew"></textarea></td>
+	</tr>
+</table>
+<? endif ( $param{'ddmProjectType'} ) ?>
+</form>

@@ -1,0 +1,19 @@
+<div id="bodyPage">
+	<? if ( $$variable{'error'} ) ?>
+		<div id="upload_ErrorMessage">
+		   <div class="error">
+			  <h3>Error!</h3>
+			  <span class="errorMessage"><?error?></span><br />
+			  Please <a href="/upload/upload_center.html">try again</a> or <a href="/main/company/contact.html">contact us</a> for assistance.
+		   </div>
+		</div>
+	<? else ( $$variable{'error'} ) ?>
+		<div id="upload_SuccessMessage">
+		   <div class="information">
+			  <h3>Success!</h3>
+			  <span class="fileMessage"><?information?></span>
+			  You will receive an e-mail transcript shortly.
+		   </div>
+		</div>		
+	<? endif ( $$variable{'error'} ) ?>
+</div>

@@ -1,0 +1,25 @@
+<div class="Affiliates">
+	<div class="List">
+		<form name="f1" action="f1" method="post" action="list.html">
+			<fieldset class="filters">
+				<div class="content">
+					<ul>
+						<li><label>Supplier</label>
+							<select name="supplier_id" id="supplier_id" onchange="new Ajax.Updater( 'Results', '_list.html', { parameters: { supplier_id: $('supplier_id').getValue() } } );">
+								<option value="">all</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'supplier'=>'Y', 'order'=>'lower(name)' ) ], $session{'/administrator/affiliates/list.html?supplier_id'} ); ) ?>
+							</select>
+						</li>
+					</ul>
+				</div>
+				<p class="buttons">
+					<? echo ( join('', 
+						ssi::button('New', { href=>'edit.html' } ),
+					); ) ?>
+				</p>
+			</fieldset>
+			You can use dragndrop to apply sorting.
+			<div id="Results"><? echo ( include('_list.html'); ) ?></div>
+		</form>
+	</div>
+</div>

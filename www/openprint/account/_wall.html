@@ -1,0 +1,62 @@
+<?include('/includes/error_reporting.html')?>
+<fieldset><legend>Wall</legend>
+<?if($session{user_id})?>
+	<textarea id="message" name="message" rows="1" onkeyup="textarea_resize(this);"></textarea>
+	<p class="buttons"><? echo ( ssi::button( 'WriteOnWall', { 'onclick'=>qq`new Ajax.Updater( 'Wall', '/account/_wall.html', { parameters: { user_id: '$$variable{User}{id}', message: \$('message').value } } );`, 'text'=>'Write on wall' } ); ) ?></p>
+	<hr/>
+<?endif($session{user_id})?>
+	<ul>
+<? echo (
+	my $html = '';
+	foreach my $Wall ( openprint::Wall->find( 'user_id' => $variable{'User'}->id(), 'order'=>'created_on DESC', 'reply_to is null'=>1, limit=>10 ) ) {
+		my $Author = $Wall->Author();
+		$html .= sprintf(q`<li id="wall-%1$d" class="wall_post">
+<span class="buttons">%7$s</span>
+<a class="thumbnail" href="/account/view.html?user_id=%2$d"><img src="%4$s" alt="%3$s" title="%3$s"/></a>
+<a class="who" href="/account/view.html?user_id=%2$d">%3$s</a>
+<span class="message">%5$s</span><span class="when">%6$s</span>`,
+			$Wall->id(),
+			$Author->id(), $Author->name(), 
+			$Author->Asset()->sized_url('thumbnail'),
+			$Wall->message(),
+			misc::smart_time( Date::Parse::str2time( $Wall->created_on() ) ),
+			join('',
+				( $Wall->can_edit() ? (
+				ssi::button('delwall'.$Wall->id(), { 'onclick'=>qq`delwall($$Wall{id});`, 'text'=>'X', 'title'=>'Delete' } ),
+				) : () ),
+				( $session{'user_id'} == $$variable{'User'}->id() ? (
+				ssi::button('replywall'.$Wall->id(), { 'onclick'=>qq`replywall($$Wall{id});`, 'text'=>'R', 'title'=>'Reply' } ),
+				) : () ),
+			),
+			
+			);
+		if ( $Wall->has_replies() ) {
+			foreach my $Reply ( openprint::Wall->find( 'user_id' => $variable{'User'}->id(), 'order'=>'created_on DESC', 'reply_to'=>$Wall->id() ) ) {
+				my $Author = $Reply->Author();
+				$html .= sprintf(q`<div id="wall-%1$d" class="wall_post">
+						<span class="buttons">%7$s</span>
+						<a class="thumbnail" href="/account/view.html?user_id=%2$d"><img src="%4$s" alt="%3$s" title="%3$s"/></a>
+						<a class="who" href="/account/view.html?user_id=%2$d">%3$s</a>
+						<span class="message">%5$s</span><span class="when">%6$s</span>`,
+						$Reply->id(),
+						$Author->id(), $Author->name(),
+						$Author->Asset()->sized_url('thumbnail'),
+						misc::smart_time( Date::Parse::str2time( $Reply->created_on() ) ),
+						$Reply->datetime_format( 'created_on' ),
+						join('',
+							( $Reply->can_edit() ? (
+													ssi::button('delwall'.$Reply->id(), { 'onclick'=>qq`delwall($$Reply{id});`, 'text'=>'X', 'title'=>'Delete' } ),
+												   ) : () ),
+							ssi::button('replywall'.$Reply->id(), { 'onclick'=>qq`replywall($$Reply{id});`, 'text'=>'R', 'title'=>'Reply' } ),
+							),
+
+						);
+			} # end foreach Reply	
+		} # end if
+		$html .= '</li>';
+	} # end foreach Wall
+	return $html;
+) ?>
+	</ul>
+	
+</fieldset>

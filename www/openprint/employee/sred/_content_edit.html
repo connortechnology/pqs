@@ -1,0 +1,39 @@
+<form id="form-<? echo ( $$variable{'C'}{id} ) ?>" name="form-<? echo ( $$variable{'C'}{id} ) ?>" method="post" enctype="multipart/form-data" action="/employee/sred/project.html?project_id=<? echo ( $$variable{'Project'}->id() ) ?>">
+	<input type="hidden" name="action" />
+	<input type="hidden" name="content_id" value="<? echo ( $$variable{C}{id} ) ?>" />
+	<div class="leftColumn">
+		<ul>
+			<li><label>Type</label>
+				<select name="type_id-<? echo ( $$variable{C}->id() ) ?>" id="type_id-<? echo ( $$variable{C}->id() ) ?>" onchange="new Ajax.Updater( 'type-<? echo ( $$variable{C}->id() ) ?>', '_content_edit_'+(this.options[this.selectedIndex].text)+'.html', { parameters: { content_id: '<? echo ( $$variable{C}->id() ) ?>' } } );">
+				<? echo (
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::SRED_Content_Type->find('order'=>'lower(name)') ], $$variable{'C'}->type_id() );
+				) ?>
+				</select>
+			</li>
+		</ul>
+		<ul id="type-<? echo ( $$variable{C}->id() ) ?>">
+<? echo (
+	my $Type = $$variable{'C'}->Type();
+	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/sred/_content_edit_'. ( $Type->name() ? $Type->name() : 'Other' ) . '.html' );
+	return ssi::variable_substitution( \$content, $variable );
+) ?>
+		</ul>
+		<div id="alert-<? echo ( $$variable{C}->id() ) ?>"></div>
+	</div>
+	<div class="rightColumn">
+		<ul>
+			<li class="Description"><label>Description<br/><a href="#" onclick="toggletinymce('description-<? echo ( $$variable{'C'}{id} ) ?>', this);">Hide Editor</a></label><textarea id="description-<? echo ( $$variable{'C'}{id} ) ?>" name="description-<? echo ( $$variable{'C'}{id} ) ?>" onkeyup="textarea_resize(this);" rows="<? echo ( ssi::count_lines( $$variable{'C'}->description() ); ) ?>" class="content_description"><? echo ( $$variable{'C'}->description() ) ?></textarea></li>
+			<li class="attachments"><label>Attachment</label><br class="spacer"/><div id="assets-<? echo ( $$variable{'C'}{id} ) ?>">
+			<? echo ( include('_assets.html'); ) ?>
+			</div>
+			<input type="file" name="filename" /></li>
+		</ul>
+	</div>
+	<p class="buttons">
+	<? echo ( join('',
+			ssi::button( 'SaveC'.$$variable{'C'}{'id'}, { 'onclick' => qq`save_content(\$('form-$$variable{C}{id}'), '$$variable{C}{id}' );`, 'text'=>'Save', 'class'=>'Save' } ),
+			ssi::button( 'CancelC'.$$variable{'C'}{'id'}, { 'onclick' => qq`view_content( '$$variable{C}{id}' );`, 'text'=>'Cancel', 'class'=>'Cancel' } ),
+			); ) ?>
+	</p>
+</form>
+

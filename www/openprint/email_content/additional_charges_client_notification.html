@@ -1,0 +1,57 @@
+<style type="text/css">
+<?include(/css/project.css)?>
+</style>
+<a href="mailto:<? echo ( $$variable{'Operator'}->email() ) ?>"><? hecho ( $$variable{'Operator'}->name() ) ?></a> has added additional charges to the following project. 
+These charges will need to be approved before production will continue.<br/>
+<? if ( $$variable{Message} ) ?>
+<?Message?>
+<? endif ( $$variable{Message} ) ?>
+<br/>
+<div class="Project">
+<?include('/includes/project_header.html')?>
+<table class="List">
+	<tr> 
+		<th align="left">Services</th>
+		<th class="Status">Status</th>
+		<th class="Price">Price</th>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		my $services = $$variable{'Project'}->services();
+		foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>'sorting,name') ) {
+           foreach my $ServiceType ( openprint::ServiceType->find( category_id=>$ServiceCategory->id(), order=>'sorting', view_visible=>1 ) ) {
+                next if ! $$services{$ServiceType->name()};
+				next if $ServiceType->name() eq 'Proofs';
+
+                foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+					my $status = openprint::service::status( $$variable{'Project'}->id(), $service_id );
+					if ( $status eq 'Waiting For Customer Approval' ) {
+						my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
+
+						$html .= sprintf('
+							<tr%1$s> 
+								<td>%2$s</td>
+								<td class="Status">%4$s</td>
+								<td class="Price">%3$s</td>
+							</tr>', $rowclass, ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ), openprint::Currency::format( $$specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()} ), 
+						$status );
+						$rowclass = $rowclass ? '' : ' class="colRow"';
+					} # end if
+				} # end foreach service
+			} # end foreach ServiceType
+		} # end foreach ServiceTypeCategory
+		return $html;
+	) ?>
+</table>
+<span>All prices are in <b><? echo ( $$variable{'Project'}->Currency()->name() ) ?></b>.</span>
+</div>
+<br/>
+<span style="float: right;">
+	<? echo ( 
+		if ( sets::isin( $$variable{Project}->status(), [ 'Proofs Out', 'Waiting for Client Approval' ] ) ) {
+			return button( 'SignOff', { href=> qq`sign-off.html?ProjectIndex=$$variable{Project}{id}`, text=>'Sign Off' } );
+		} # end if
+		return;
+	) ?>
+</span>

@@ -1,0 +1,24 @@
+<?include(/includes/error_reporting.html)?>
+<? if ( $$variable{OI} ) ?>
+<form id="OIDeleteForm" name="OIDeleteForm">
+	<input type="hidden" name="order_id" value="<? echo ( $$variable{OI}->order_id() ) ?>" />
+	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{OI}->invoice_id() ) ?>" />
+	<input type="hidden" name="action" value="Delete" />
+	<fieldset>
+		<textarea name="reason" placeholder="Enter a reason for the deletion"></textarea>
+		<p class="buttons">
+		<? echo (  join("\n",
+			button( 'DeleteOI', { onclick=> qq`new Ajax.Updater('Invoices','/employee/accounting/_order_invoices.html', { parameters: \$('OIDeleteForm').serialize(), onSuccess: function(transport){popupWin.close();} } );`,text=>'Remove' } ),
+			button( 'CancelOI', { onclick=>'popupWin.close();', text=>'Cancel' } )
+			); ) ?>
+	</p>
+	</fieldset>
+</form>
+<? else ( $$variable{OI} ) ?>
+<div class="error">Order not found on invoice.</div>
+<p class="buttons">
+<? echo (  join("\n",
+			button( 'CancelOI', { onclick=>'popupWin.close();', text=>'Cancel' } )
+			); ) ?>
+</p>
+<? endif ( $$variable{OI} ) ?>

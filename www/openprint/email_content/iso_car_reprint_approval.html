@@ -1,0 +1,4 @@
+The reprint request for Corrective Action Request <? echo ( $$variable{CAR}{id} ) ?> has been <? echo ( $$variable{CAR}->reprint_approval() eq 'Yes' ? 'approved' : 'not approved' ) ?>.<br/>
+Use the following link to view this CAR:<br/>
+<br/>
+<a href="<? echo ( $config{InternalSiteURL} ) ?>/employee/iso/car.html?car_id=<? echo ( $$variable{CAR}{id} ) ?>">CAR <? echo ( $$variable{CAR}{id} ) ?></a><br/>

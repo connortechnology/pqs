@@ -1,0 +1,16 @@
+<script src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+		<script>
+			var quantities = new Array();
+			<?QUANTITIES?>
+		</script>
+		<?include('/includes/main/proj/required_fields.html')?>
+<fieldset><legend>File Correction Services</legend>
+  <form name="f1" method="post" action="/main/project/view.html">
+<ul>
+    <?include('/includes/main/proj/prepress_hours.html') ?>
+    <?include('/includes/main/proj/prices_prepress.html') ?>
+    <?include('/includes/main/proj/add_to_project.html') ?>
+    <?include('/includes/main/proj/hdn_fields_prepress.html') ?>
+</ul>
+  </form>
+</fieldset>

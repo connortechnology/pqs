@@ -1,0 +1,7 @@
+<p class="buttons">
+	<? echo ( join('',
+			ssi::writeButton( $log, $dbh, 'Save','save.gif', "f1.submit();", '', 'Save' ),
+			ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' ),
+	); ) ?>
+</p>
+<input type="hidden" name="btnFunction" value="Save">

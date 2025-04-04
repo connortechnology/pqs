@@ -1,0 +1,205 @@
+<?include(/includes/error_reporting.html)?>
+<? echo ( 
+	my $uri = '/employee/inventory/check.html';
+	my $html;
+	my $rowclass;
+	my $total_system_weight = 0;
+	my $total_weight = 0;
+	my $total_value = 0;
+
+	openprint::StockBrand->find();
+	openprint::StockFinish->find();
+	openprint::Manufacturer->find();
+	openprint::Location->find( type=>'place' );
+
+	$session{$uri.'?sort'} = 'created_on' if ! $session{$uri.'?sort'};
+
+	my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), 
+		($session{$uri.'?scanner_id'} ? ( scanner_id=>$session{$uri.'?scanner_id'} ) : () ),
+		order=>$session{$uri.'?sort'} );
+
+	$$variable{can_see_pricing} = openprint::Skid->can_see_pricing();
+	$html .= q` 
+	# of items in check: `.(scalar @Contents).q`<br/>
+	<table class="List">
+	<tr>
+	<th class="Skid" onclick="load_entries('sort=skid_id,rfidtag_id,created_on');">Skid/Roll</th>
+	<th class="RFIDTag" onclick="load_entries('sort=rfidtag_id,skid_id,created_on');">RFIDTag</th>
+	<th class="DateTime" onclick="load_entries('sort=created_on,rfidtag_id,skid_id');">When</th>
+	<th class="Diameter">Diameter</th>
+	<th class="Quantity">Weight(lbs)</th>
+	<th class="Location" onclick="load_entries('sort=location_id,created_on,rfidtag_id,skid_id');">Location</th>
+	<th class="Notes">Notes</th>
+	<th class="RFIDScanner User" onclick="load_entries('sort=scanner_id,rfidtag_id,skid_id');">Scanner</th>
+	`;
+	if ( $$variable{can_see_pricing} ) {
+		$html .= '<th class="Price">Price/Value</th>';
+	}
+	$html .= '
+	<th class="buttons"></th>
+	</tr>';
+
+	$variable{location_dropdown} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place') if ! exists $variable{location_dropdown};
+
+	$html .= '<tr id="tr">';
+	$html .= '<td class="Skid">'.input(type=>'cardinal',name=>'skid_id', id=>'skid_id', oninput=>'lookup_item(this);').'</td>';
+	$html .= '<td class="RFID">'.input(type=>'text', name=>'rfidtag_id', oninput=>'lookup_item(this);').'</td>';
+	$html .= '<td class="DateTime"></td>';
+	$html .= '<td class="Diameter">'.input( type=>'positivefloat', id=>'dimension2', name=>'dimension2' ).'</td>';
+	$html .= '<td class="qty_lbs">'.input( type=>'positivefloat', id => 'qty_lbs', name	=> 'qty_lbs', oninput => "from_lbs(this,'','');" ) . '</td>';
+	#$html .= '<td class="qty_kgs">'.input( type=>'positivefloat', id => 'qty_kgs', name => 'qty_kgs', oninput => "from_kg(this,'','');" ) . '</td>';
+	#$html .= '<td class="qty_sheets">'.input( type=>'positivefloat', id => 'qty_sheets', name => 'qty_sheets', oninput => "from_sheets(this,'','');" ) . '</td>';
+	$html .= '<td class="Location">'.ssi::select( $variable{location_dropdown}, undef, { name=>'location_id', prepend=>['','select'] } ).'</td>';
+	$html .= '<td><textarea name="notes"></textarea></td>';
+	$html .= '<td></td>';
+	if ( $$variable{can_see_pricing} ) {
+		$html .= '<td></td>';
+	}
+
+	$html .= '<td class="buttons">' . join("\n",
+			button('Add', { onclick=>q`new Ajax.Updater( 'Entries', '_check_entries.html', { parameters:getValues( 'f2', [ 'rfidtag_id', 'skid_id', 'qty_lbs','qty_kgs', 'qty_sheets', 'location_id' ], { action: 'add', check_id: `.$$variable{Check}->id().q` } ) } );` } ),
+			) . '</td>';
+	$html .= '</tr><tr><td colspan="9" id="alert"></td></tr>';
+
+	foreach my $ICE ( @Contents ) {
+		if ( $$ICE{rfidtag_id} ne $ICE->rfidtag_id() ) {
+			$ICE->save();
+		}
+
+		if ( $$ICE{skid_id} and ! $$ICE{rfidtag_id} and $ICE->rfidtag_id() ) {
+			$ICE->save();
+		} elsif ( $$ICE{rfidtag_id} and ( ! $$ICE{skid_id} ) and $ICE->Skid() and $ICE->Skid()->id() ) {
+			$ICE->save( { skid_id => $ICE->Skid()->id() } );
+		}
+	} # end foreach ICE
+
+	my @skid_ids = map { $$_{skid_id} } @Contents;
+	my @Skids;
+	my %SkidContents;
+	if ( @skid_ids ) {
+		foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
+			$SkidContents{$$SC{skid_id}} = [] if ! $SkidContents{$$SC{skid_id}};
+			push @{$SkidContents{$$SC{skid_id}}}, $SC;
+		}
+		@Skids = openprint::Skid->find( id=>\@skid_ids );
+		foreach my $Skid ( @Skids ) {
+			$Skid->Contents( $SkidContents{$$Skid{id}} ) if $SkidContents{$$Skid{id}};
+		} # end if
+	}
+	
+	my @RFIDTags = openprint::RFIDTag->find( id=>[ map { $$_{rfidtag_id} } @Contents ] ) if @Contents;
+
+	foreach my $ICE ( @Contents ) {
+		if ( $session{$uri.'?has_skid'} eq '1' and ! $ICE->skid_id() ) {
+			next;
+		} elsif ( $session{$uri.'?has_skid'} eq '0' and $ICE->skid_id() ) {
+			next;
+		}
+		if ( $session{$uri.'?has_quantity'} eq '1' and ! $ICE->Skid()->quantity() ) {
+			next;
+		} elsif ( $session{$uri.'?has_quantity'} eq '0' and $ICE->Skid()->quantity() ) {
+			next;
+		}
+		
+		my $Skid = $ICE->Skid();
+		my $check = $ICE->check();
+
+		my $location_message;
+		if ( $$ICE{location_id} ) {
+			 $location_message = $ICE->Location()->name();
+
+			if ( $ICE->location_id() != $ICE->Skid()->location_id() ) {
+				$location_message .= ' was ' . $ICE->Skid()->Location()->name();
+			} 
+		} else {
+			$location_message = $ICE->Skid()->Location()->name();
+		}
+				
+		my $Cost;
+		if ( $$variable{can_see_pricing} ) {
+			$Cost = $Skid->Cost();
+			if ( $session{$uri.'?has_price'} eq '1' and ! $Cost ) {
+				next;
+			} elsif ( $session{$uri.'?has_price'} eq '0' and $Cost ) {
+				next;
+			}
+		}
+	
+		$html .= sprintf('
+<tr class="%1$s%2$s" id="entry-%3$d" title="entry %3$d">
+	<td class="Skid">%4$s</td>
+	<td class="RFIDTag">%5$s</td>
+	<td class="DateTime">%13$s</td>
+	<td class="Diameter">%6$s</td>
+	<td class="Quantity">%7$s</td>
+	<td class="Location" rowspan="2">%10$s</td>
+	<td class="Notes">%8$s</td>
+	<td class="RFIDScanner User" rowspan="2">%11$s %12$s</td>',
+
+		$rowclass, ($check ? ' warning' : '' ),
+		$ICE->id(),
+		$Skid->link_to(),
+		$ICE->RFIDTag()->link_to(),
+		( $ICE->dimension2() ? $ICE->dimenion2() : Math::Round::nearest( 1, $ICE->diameter() ) . '?' ),
+		Number::Format::format_number( $ICE->quantity() ). $Skid->units(),
+		$ICE->notes(), '',
+		$location_message,
+		$ICE->Scanner()->name(), $ICE->User()->name(),
+		format_datetime( $ICE->created_on() ),
+		);
+
+		if ( $$variable{can_see_pricing} ) {
+			$html .= '<td rowspan="2" class="Price">';
+
+			if ( $Cost ) {
+				if ( ! $$Cost{currency_id} ) {
+					$openprint::log->error("Skid $$Skid{id} has no currency");
+					$html .= 'Price has no currency!<br/>';
+				} elsif ( $$Cost{currency_id} != $$openprint::Currency{id} ) {
+
+					$html .= openprint::Currency::format($$Cost{price}).$$Cost{Currency}->short().$$Cost{units}.'<br/>';
+					openprint::Currency::convert( $Cost );
+				}
+				$html .= openprint::Currency::format($$Cost{price}).$$Cost{units}.'<br/>';
+				$html .= $openprint::Currency->format($ICE->value());
+				# value is already converted.
+				$total_value += $ICE->value();
+			} 
+			$html .= '</td>';
+		} # end if
+
+		$html .= sprintf('
+	<td class="buttons" rowspan="2">%3$s</td>
+</tr><tr class="%1$s%2$s"><td></td><td colspan="3">%4$s</td><td class="Quantity">%5$s</td>
+		<td class="Notes" colspan="2">%6$s</td>
+	</tr>',
+		$rowclass, ($check ? ' warning' : '' ),
+		join("\n",
+			button( 'x'.$$ICE{id}, { onclick=>"del_entry($$ICE{id});", title=>'Delete', text=>'X' } ),
+		),
+		join('<br/>', map { $_->Paper()->to_string() } $Skid->Contents() ),
+		join('<br/>', map { Number::Format::format_number( $_->quantity() ) . $_->Paper()->units() } $Skid->Contents() ),
+	$check,
+		
+	);
+
+		$total_system_weight += $ICE->system_quantity();
+		$total_weight += $ICE->quantity();
+		
+		$rowclass = $rowclass ? '' : 'colRow';
+	} # end foreach ICE
+
+
+
+	$html.='
+<tr class="totals">
+  <td colspan="3"># of items in check: ' . scalar @Contents . '</td>
+	<td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs in check<br/>'.Number::Format::format_number(int($total_system_weight)).'lbs in system</td>
+  <td></td><td class="Location"></td><td class="notes"></td><td></td>';
+		if ( $$variable{can_see_pricing} ) {
+			$html .= '<td class="Price">$'. Number::Format::format_number( $total_value ).'</td>';
+		}
+	$html .= '<td class="buttons"></td></tr></table>';
+	return $html;
+) ?>
+

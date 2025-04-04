@@ -1,0 +1,72 @@
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?echo($$variable{ServiceType}->description())?></legend>
+<? echo (
+  my $html = '';
+  my $Project = $$variable{Project};
+  my @coatings = openprint::Material->find('servicetype_id any'=>$$variable{ServiceType}->id(), order=>'lower(name)');
+  my @coating_options = map { $_->name(), $_->description() } @coatings;
+
+  my @signatures = $Project->signatures({sort=>1});
+  foreach my $sig_id (@signatures) {
+    my $sig_specs = openprint::service::get_specs_ref($Project, $sig_id); 
+    my $form = $$variable{SignatureIndex} = $$sig_specs{SignatureIndex};
+    $html .= '<fieldset><legend>Signature '.$form.'</legend>
+        Information for '. openprint::service::summary( $Project->id(), $sig_id ).'<br/>
+      <ul>
+        <li>
+          <label>How many sides will be coated?</label>';
+    $html .= radio('sides-'.$form,['1'=>'1 Side', '2'=>'2 Sides'], $$variable{'sides-'.$form}, { onclick=>q`calc('f1');` });
+    $html .= '
+        </li>';
+    if (@coatings) {
+      $html .= '<li><label>Coating Type</label>';
+
+      $html .= ssi::select( \@coating_options, $$variable{'type-'.$form}, {
+          id    =>  'type-'.$form,
+          name  =>  'type-'.$form,
+        onchange=>'calc(\'f1\');',
+        prepend=>[ '', 'select' ],
+        } );
+      $html .= "\n</li>";
+    } # end if coatings
+    $html .= '<li><label>Sheet Size</label>';
+    foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+      $html .= '<span class="'.$$variable{Columns}.'Columns">';
+      $html .= join("\n",
+              input(name=>'SheetWidth-'.$form.'-'.$qty_index,
+                type=>'float',
+                value=>$$variable{'SheetWidth-'.$form.'-'.$qty_index},
+                oninput=>'calc(this.form.name);'),
+              input(name=>'SheetHeight-'.$form.'-'.$qty_index, type=>'float',
+                value=>$$variable{'SheetHeight-'.$form.'-'.$qty_index},
+                oninput=>'calc(this.form.name);'),
+              write_override('OverrideSheetSize-'.$form.'-'.$qty_index, $$variable{'SheetSize-'.$form.'-'.$qty_index}, q`calc('f1');`, q`calc('f1');`),
+            );
+      $html .= '(W&quot; x H&quot;)
+        </span>';
+    } # end foreach qty 
+    $html .='</li>';
+    $html .= include('/includes/main/proj/signature_equipment.html');
+    $html .= '</ul></fieldset>';
+  } # end foreach sig
+  return $html;
+) ?>
+		<?include('/includes/main/proj/_comments.html') ?>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+			<?include(/includes/main/proj/quantities_prices.html)?>
+			</ul>
+		</fieldset>
+		<hr/>
+		<?include('/includes/main/proj/add_to_project.html')?>
+
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+		<input type="hidden" name="Status"/>
+	</form>
+</div>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>

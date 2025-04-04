@@ -1,0 +1,209 @@
+<?include(/includes/error_reporting.html)?>
+<? if ( $$variable{Event} ) ?>
+<? if ( $$variable{Event}->id() ) ?>
+<script type="text/javascript">
+	function invite_by_email(input) {
+		new Ajax.Updater('Invited', '/event/_invitation_users.html', { parameters: { email: input.value, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
+	} // end function invite_by_email
+
+	// li.id is actually company_id _ user_id
+    function invitation_set_users(input, li) {
+        var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
+        user_ids.push(li.id);
+
+        if ( li.id ) {
+            new Ajax.Updater( 'Invited', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
+        } // end if
+    } // end function invitation_set_users
+
+	function invite_by_username( name ) {
+	} // end function invite_by_username
+	
+    function invitation_remove_user( user_id, form ) {
+		if ( ! form )
+			form = $('invitations');
+        var user_ids = get_form_element_array( form, 'invitation_user_id' );
+        user_ids = user_ids.without( user_id );
+        new Ajax.Updater( 'Invited', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
+    }
+    // adds the currently selected users, so that we can filter them out of returned results
+    function invitation_add_user_ids( input, query ) {
+        var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
+        query += '&user_id=' + user_ids.join('&user_id=');
+        return query;
+    } // end function invitation_add_user_ids
+
+	function invite_by_relationship( ddm ) {
+        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'add by relationship', relationship_id: get_ddm_value(ddm), event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
+	}
+</script>
+<? endif ( $$variable{Event}->id() ) ?>
+<? if ( $$variable{Event}->can_view($param{user_id}) ) ?>
+<div class="Event"><div class="View">
+	<form id="f1" name="f1" action="/event/view.html?event_id=<? echo ( $$variable{Event}->id() ) ?>" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="function"/>
+	<fieldset>
+		<? if ( $session{'user_type'} eq 'A' ) ?>
+		<legend>Viewing Event<? echo ( $$variable{Event}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
+		<? endif ( $session{'user_type'} eq 'A' ) ?>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				if ( $$variable{Event}->id() ) {
+					if ( $$variable{Event}->can_edit() ) {
+						if ( $$variable{Event}->deleted() ) {
+						$html .= button( 'Undelete', { onclick=>"if(confirm('Are you sure?')){f1.elements['function'].value='Undelete';f1.submit();}" } );
+						} else {
+						$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['function'].value='Delete';f1.submit();}" } );
+						} # end if
+						$html .= button( 'Copy', { href=>'view.html?function=Copy&amp;event_id='.$$variable{Event}->id() } );
+						$html .= button( 'Edit', { href=>'edit.html?event_id='.$$variable{Event}->id() } );
+						if ( ! $$variable{template} ) {
+							#$html .= button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
+							$html .= button( 'Send', { onclick=>qq`popup_window('_email_popup.html?event_id=$$variable{Event}{id}');` } );
+						} # end if
+					} # end if
+					$html .= '<span class="GooglePlusOne"><g:plusone></g:plusone></span>';
+				} # end if
+				return $html;
+			) ?>
+		</p>
+		<h1><? echo ( sprintf('<a href="/event/view.html?event_id=%d">%s</a>', $$variable{Event}->id(), $$variable{Event}->name() ); ) ?></h1>
+		<? if ( $$variable{Event}->deleted() ) ?>
+		<span class="warning">This event has been deleted</span>
+		<? endif ( $$variable{Event}->deleted() ) ?>
+<br class="spacer"/>
+		<div class="rightColumn">
+		<? echo (
+			my $html;
+			my $Asset = $$variable{Event}->Asset();
+
+			if ( $Asset->id() ) {
+				my $Album = $$variable{Event}->Album();
+				$html .= sprintf(q`<a class="Asset" href="#" onclick="photo_popup(%d, %d);">%s</a>`,
+#popup_window('/photo_albums/_view_photo.html?asset_id=%d&amp;album_id=%d', '', { width: window.innerWidth-100, height: window.innerHeight-100 } );">%s</a>`, 
+				##$html .= sprintf('<a class="Asset" href="/photo_albums/view_photo.html?asset_id=%1$d&amp;album_id=%2$d" onclick="popup_window('/photo_albums/_view_photo.html?asset_id=%d&amp;album_id=%d');">%s</a>', 
+					$Asset->id(), $Album->id(), $Asset->html() );
+				#$html .= $$variable{Event}->Asset()->html();
+			} # end if
+			my $Location = $$variable{Event}->Location();
+			if ( $Location ) {
+				# Should only do the lookup when Location changes... when it gets saved maybe, because Google only gives us so many lookups
+				#if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
+					#$Location->get_latitude_and_longitude();
+				#} # end if
+				if ( $Location->latitude() and $Location->longitude() ) {
+					$html .= $Location->googlemap_html();
+				} 
+			} 
+			return $html;
+		) ?>
+		</div>
+<div class="leftColumn">
+		<fieldset><legend>All about it</legend>
+			<div class="content">
+				<ul>
+					<li class="createdby"><label>Created By</label><? echo ( sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$variable{Event}->created_by(), $$variable{'Event'}->Created_By()->name() ); ) ?></li>
+					<li class="when"><label>When</label><? echo ( $$variable{Event}->time_string(); ) ?></li>
+					<li class="category"><label>Category</label><? echo ( $$variable{Event}->Category()->name() ) ?></li>
+					<li class="info">
+						<label>More info</label>
+						<? echo ( $$variable{Event}->info() ) ?>
+					</li>
+					<? if ( $$variable{Event}->url() ) ?>
+					<li class="url"><label>Website</label><? echo ( sprintf('<a href="%1$s" target="_blank">%1$s</a>',$$variable{Event}->url() ); ) ?></li>
+					<? endif ( $$variable{Event}->url() ) ?>
+					<? if ( $$variable{Event}->template() and $$variable{Event}->can_edit() ) ?>
+					<li><label>Template</label>
+						<a href="/event/view.html?event_id=<? echo ( $$variable{Event}->template_id() ) ?>"><? echo ( $$variable{Event}->Template()->name() ) ?></a>
+					</li>
+					<? endif ( $$variable{Event}->template() and $$variable{Event}->can_edit() ) ?>
+				</ul>
+			</div>
+		</fieldset>
+		<fieldset><legend>Where</legend>
+			<div class="content">
+				<ul>
+					<li><label>Location</label>
+						<? echo ( 
+								my $html .= $$variable{Event}->where();
+								if ( $session{user_id} ) {
+									my $MyLocation = new openprint::User($session{'user_id'})->Location();
+$log->debug("My location is " . $MyLocation->to_string() );
+									if ( ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
+$log->debug('getting coords');
+$log->debug("My location is " . $MyLocation->to_string() );
+										$MyLocation->get_latitude_and_longitude();
+									} # end if
+
+									my $Location = $$variable{Event}->Location();
+									if ( $Location and $MyLocation and $Location->latitude() and $Location->longitude() and $MyLocation->latitude() and $MyLocation->longitude() ) {
+										my $distance = openprint::Location::distance( @$MyLocation{'latitude','longitude'}, @$Location{'latitude','longitude'}, 'K' ) ;
+										$html .= '<br/>'.int($distance).'km from you.' if $distance;
+									} # end if
+								} # end if user_id
+								return $html;
+						) ?>
+					</li> 
+				</ul>
+			</div>
+		</fieldset>
+	</div>
+	<br class="spacer"/>
+<? if ( ! $$variable{Event}->template() ) ?>
+<? if ( $variable{User}->id() ) ?>
+	<div id="Opinions"><? echo ( $$variable{Event}->opinions('Opinions') ) ?></div>
+	<div id="Invitations">
+		<fieldset><legend>Invitations</legend>
+			<ul>
+				<li><label>By Name</label>
+					<input type="text" name="user_name" id="user_name"/><br/>
+					<div id="user_name_autocomplete" class="autocomplete" style="display:none;"></div>
+					<script type="text/javascript">
+					new Ajax.Autocompleter('user_name','user_name_autocomplete', '/includes/_user_autocomplete.html', { minChars: 2,afterUpdateElement : invitation_set_users, tokens: [',',';',' ','\n'], callback: invitation_add_user_ids } );
+					</script>
+				</li>
+				<li><label>By Relationship</label>
+					<select name="relationship_ip" onchange="invite_by_relationship(this);"><option value="">none</option>
+						<? echo ( 
+            require openprint::User_Relationship_Type;
+            return make_drop_down( openprint::User_Relationship_Type->dropdown(order=>'lower(name)') );
+            ) ?>
+					</select>
+				</li>
+		<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+				<li><label>By Email</label>
+					<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){invite_by_email(this);}" />
+				</li>
+		<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+			</ul>
+			<p class="buttons">
+				<? echo ( button('AddByEmail', { onclick=>q`if($('email').value){invite_by_email($('email'));}`,text=>'Add' } ); ) ?>
+			</p>
+		</fieldset>
+		<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><?include(_invitation_users.html)?></div></fieldset></div>
+	</div>
+<? endif ( $variable{User}->id() ) ?>
+	<div id="Attendance"><? echo ( include('_attendance.html'); ) ?></div>
+<? endif ( ! $$variable{Event}->template() ) ?>
+
+<? if ( $$variable{Event}->id() ) ?>
+	<? eval ( $$variable{Object} = $$variable{Album} = $$variable{Event};) ?>
+	<? echo ( include('/photo_albums/_album_upload.html'); ) ?>
+	<div id="Comments"><? echo ( include('/includes/_comments.html'); ) ?></div>
+<? endif ( $$variable{Event}->id() ) ?>
+	</fieldset>
+	</form>
+</div></div>
+<script type="text/javascript">
+	window.___gcfg = {lang: 'en-GB'};
+  (function() {
+    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+    po.src = 'https://apis.google.com/js/plusone.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+  })();
+</script>
+<? else ( $$variable{Event}->can_view($param{user_id}) ) ?>
+You can't view this event.
+<? endif ( $$variable{Event}->can_view($param{user_id}) ) ?>
+<? endif ( $$variable{Event} ) ?>

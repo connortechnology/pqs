@@ -1,0 +1,93 @@
+<form name="part1form" id="part1form" action="">
+<h3>Part 1 (To be completed by issuer)</h3>
+<table class="View" style="table-layout:fixed;">
+	<tr>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+	</tr>
+	<tr>
+		<td colspan="1">Issued To</td>
+		<td colspan="4"><select name="issued_to_id"><? echo ( make_drop_down( openprint::User->dropdown( company_id=>$config{owner_id}, type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $$variable{PAR}->issued_to_id() ? $$variable{PAR}->issued_to_id() : $session{user_id} ); ) ?></select></td>
+		<td colspan="1">Issued By</td>
+		<td colspan="4"><select name="issued_by_id"><? echo ( make_drop_down( openprint::User->dropdown( company_id=>$config{owner_id}, type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $$variable{PAR}->issued_by_id() ? $$variable{PAR}->issued_by_id() : $session{user_id} ); ) ?></select></td>
+	</tr>
+	<tr>
+		<td colspan="1">Issue Date</td>
+		<td colspan="4">
+<? eval (
+	if ( $$variable{PAR}->issued_on() ) {
+	@$variable{'issued_on_years','issued_on_months','issued_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{PAR}->issued_on()) );
+	} else {
+	@$variable{'issued_on_years','issued_on_months','issued_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+	} # end if
+) ?>
+            <select name="issued_on_year" onchange="setDaysDropDown(this.value,this.form.issued_on_month.value,this.form.issued_on_day,this.form.issued_on_day.value);"><?issued_on_years?></select>
+            <select name="issued_on_month" onchange="setDaysDropDown(this.form.issued_on_year.value,this.value,this.form.issued_on_day,this.form.issued_on_day.value);"><?issued_on_months?></select>
+            <select name="issued_on_day"><?issued_on_days?></select>
+</td>
+		<td colspan="1">Reply By</td>
+		<td colspan="4">
+<? eval (
+	if ( $$variable{PAR}->reply_by() ) {
+@$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{PAR}->reply_by() ) );
+	} else {
+@$variable{'reply_by_years','reply_by_months','reply_by_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+} # end if
+) ?>
+            <select name="reply_by_year" onchange="setDaysDropDown(this.value,this.form.reply_by_month.value,this.form.reply_by_day,this.form.reply_by_day.value);"><?reply_by_years?></select>
+            <select name="reply_by_month" onchange="setDaysDropDown(this.form.reply_by_year.value,this.value,this.form.reply_by_day,this.form.reply_by_day.value);"><?reply_by_months?></select>
+            <select name="reply_by_day"><?reply_by_days?></select>
+		</td>
+	</tr>
+	<tr><td colspan="10">POTENTIAL PROBLEM / NONCONFORMANCE / OPPORTUNITY FOR IMPROVEMENT</td></tr>
+	<tr>
+		<td colspan="1">Area</td>
+		<td colspan="9">
+			<select name="area_id">
+				<option value="">select</option>
+				<? echo ( make_drop_down( openprint::PAR_Area->dropdown( order=>'sorting,lower(name)'), $$variable{PAR}->area_id() ); ) ?>
+			</select>
+		</td>
+	</tr>
+	<tr><td colspan="10"><textarea name="problem" rows="5"><? echo ( $$variable{PAR}->problem() ) ?></textarea></td></tr>
+	<tr>
+		<td colspan="1">Originator</td>
+		<td colspan="4">
+<select name="part1_user_id"><? echo ( make_drop_down( openprint::User->dropdown( company_id=>$config{owner_id}, type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $$variable{PAR}->part1_user_id() ? $$variable{PAR}->part1_user_id() : $session{user_id} ); ) ?></select>
+</td>
+		<td colspan="1">Date</td>
+		<td colspan="4">
+<? eval (
+if ( $$variable{PAR}->part1_signed_on() ) {
+@$variable{'part1_signed_on_years','part1_signed_on_months','part1_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-', $$variable{PAR}->part1_signed_on() ) );
+} else {
+@$variable{'part1_signed_on_years','part1_signed_on_months','part1_signed_on_days','Start'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+} # end if
+) ?>
+            <select name="part1_signed_on_year" onchange="setDaysDropDown(this.value,this.form.part1_signed_on_month.value,this.form.part1_signed_on_day,this.form.part1_signed_on_day.value);"><?part1_signed_on_years?></select>
+            <select name="part1_signed_on_month" onchange="setDaysDropDown(this.form.part1_signed_on_year.value,this.value,this.form.part1_signed_on_day,this.form.part1_signed_on_day.value);"><?part1_signed_on_months?></select>
+            <select name="part1_signed_on_day"><?part1_signed_on_days?></select>
+</td>
+	</tr>
+</table>
+	<input type="hidden" name="par_id" value="<? echo ( $$variable{PAR}->id() ) ?>" />
+	<input type="hidden" name="btnFunction" value="Save" />
+</form>
+<p class="buttons">
+	<? echo ( join("\n",
+		button( 'Save', { onclick=>"new Ajax.Updater('Part1','_par_view_part1.html',
+		{
+			parameters: Form.serialize( \$('part1form') ),
+			evalScripts: true,
+		} );", text=>'Save' } ),
+		); ) ?>
+</p>

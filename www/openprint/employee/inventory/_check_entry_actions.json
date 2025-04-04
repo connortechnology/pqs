@@ -1,0 +1,15 @@
+<? echo (
+	if ( $param{action} eq 'delete' ) {
+		my $ICE = openprint::Inventory_Check_Entry->find_one( id=>$param{id} );
+		if ( $ICE ) {
+			$variable{error} .= $ICE->destroy();
+			if ( ! $variable{error} ) {
+				return qq`\$('entry-$$ICE{id}').remove();`
+			} else {
+				return qq`alert('$variable{error}');`;
+			}
+		} else {
+			return qq`alert('Entry $param{id} not found');`;
+		}
+	}
+) ?>

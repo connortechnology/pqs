@@ -1,0 +1,19 @@
+<div class="Popup" id="Edit">
+	<h3>Edit Paper</h3>
+	<form id="EditForm" name="EditForm" action="skid_details.html">
+		<input type="hidden" name="skid_id" value="<?skid_id?>"/>
+		<input type="hidden" name="paper_id" />
+		<input type="hidden" name="btnFunction" value="Edit" />
+		<ul>
+		<li>
+			<label>Quantity</label>
+			<input type="text" name="Quantity" onkeypress="return input_handler( this, event);"/>
+			<? echo ( ssi::writeButton( $log, $dbh, 'clearEditQuantity', 'clear.gif', "EditForm.Quantity.value='';", '', 'Clear' ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'SaveEdit', 'save.gif', 'checkinform.submit();', '', 'Save' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'CancelEdit', 'cancel.gif', q`$('Edit').hide();`, '', 'Cancel' ); ) ?>
+		</p>
+	</form>
+</div>

@@ -1,0 +1,183 @@
+<script type="text/javascript">
+</script>
+<form name="f1" id="f1" action="gracol.html" method="post">
+Primary, Overprint, and Gray Values
+<table>
+	<tr>
+		<th>&nbsp;</th><th class="cyan">C</th><th>M</th><th>Y</th><th>K</th><th>R</th><th>G</th><th>B</th><th>HC</th><th>HR</th><th>SC</th>
+	</tr>
+	<tr>
+		<th>∆E76</th>
+<th class="C"></th>
+<th class="M"></th>
+<th class="Y"></th>
+<th class="B"></th>
+<th class="R"></th>
+<th class="G"></th>
+<th class="B"></th>
+<th class="HC"></th>
+<th class="HR"></th>
+<th class="SC"></th>
+	</tr>
+	<tr>
+		<th>∆H</th>
+<th class="C"></th>
+<th class="M"></th>
+<th class="Y"></th>
+<th class="B"></th>
+<th class="R"></th>
+<th class="G"></th>
+<th class="B"></th>
+<th class="HC"></th>
+<th class="HR"></th>
+<th class="SC"></th>
+	</tr>
+	<tr>
+		<th>∆F</th>
+<th class="C"></th>
+<th class="M"></th>
+<th class="Y"></th>
+<th class="B"></th>
+<th class="R"></th>
+<th class="G"></th>
+<th class="B"></th>
+<th class="HC"></th>
+<th class="HR"></th>
+<th class="SC"></th>
+	</tr>
+	<tr>
+		<th>∆L</th>
+<th class="C"></th>
+<th class="M"></th>
+<th class="Y"></th>
+<th class="B"></th>
+<th class="R"></th>
+<th class="G"></th>
+<th class="B"></th>
+<th class="HC"></th>
+<th class="HR"></th>
+<th class="SC"></th>
+	</tr>
+</table>
+
+<? echo ( ssi::select( 
+	[ map { $_, $openprint::GRACoL::data_types{$_} } sort keys %openprint::GRACoL::data_types ], 
+	$$variable{GRACoL}->type_id(), 
+	{ name=>'type_id', onchange=>'f1.submit();' } )
+) ?>
+<br class="spacer"/>
+
+<div class="patch_value">
+	<h1>Patch Value</h1>
+	<table><tr><th>C</th><th>M</th><th>Y</th><th>K</th></tr>
+	<? echo ( my $html;
+		foreach my $line ( 0 .. 52 ) {
+			$html .= '<tr>';
+			my $type = $$variable{GRACoL}->type();
+			next if ! $type;
+
+			foreach my $c ( qw( C M Y K ) ) {
+				if ( ! $openprint::GRACoL::ReferenceData{ $type } ) {
+					$log->error( "No data for $type $c" );
+					next;
+				} # end if
+				$html .= qq`<td class="$c">$openprint::GRACoL::ReferenceData{$type}{$c}[$line]</td>`;
+			} # end foreach my c
+			$html .= '</tr>';
+		} # end foreach line
+		return $html;
+	) ?>
+	</table>
+</div>
+<div class="pasted_values">
+	<h1>Pasted Values</h1>
+	<table><tr><th>L*</th><th>a*</th><th>b*</th></tr>
+	<? echo ( my $html;
+		my $data = $$variable{GRACoL}->data();
+		my $type = $$variable{GRACoL}->type();
+		return if ! $type;
+
+		foreach my $line ( 0 .. 52 ) {
+			$html .= '<tr>';
+
+			foreach my $c ( 0, 1, 2 ) { # L a b
+				$html .= qq`<td class="$c">$$data[ $line * 3 + $c ]</td>`;
+			} # end foreach my c
+			$html .= '</tr>';
+		} # end foreach line
+		return $html;
+	) ?>
+	</table>
+</div>
+<div class="reference_data">
+	<h1>Reference Data</h1>
+	<table><tr><th>L*</th><th>a*</th><th>b*</th></tr>
+	<? echo ( my $html;
+		my $type = $$variable{GRACoL}->type();
+		my $data = $openprint::GRACoL::ReferenceData{$type};
+
+		foreach my $line ( 0 .. 52 ) {
+			$html .= '<tr>';
+			foreach my $c ( qw( L a b ) ) { # L a b
+				$html .= qq`<td class="$c">$$data{$c}[$line]</td>`;
+			} # end foreach my c
+			$html .= '</tr>';
+		} # end foreach line
+		return $html;
+	) ?>
+	</table>
+</div>
+<div class="deltae76">
+	<table><tr>
+		<th>L</th>
+		<th>L**2</th>
+		<th>a</th>
+		<th>a**2</th>
+		<th>b</th>
+		<th>b**2</th>
+		<th>∆E76</th>
+		</tr>
+	<? echo ( my $html;
+		my $type = $$variable{GRACoL}->type();
+		my $referencedata = $openprint::GRACoL::ReferenceData{$type};
+		my $data = $$variable{GRACoL}->data();
+
+		foreach my $line ( 0 .. 52 ) {
+	
+			$html .= '<tr>';
+			$html .= '<td class="">';
+			my $L = (10*$$referencedata{L}[$line]- 10*$$data[$line*3 + 0])/10;
+
+			$html .= $$referencedata{L}[$line] . '-' . $$data[$line*3 + 0] . '=' . $L;
+			$html .= '</td>';	
+			$html .= '<td class="">';
+			$html .= Math::Round::nearest( 0.0001,$L**2 );
+			$html .= '</td>';	
+			$html .= '<td class="">';
+			my $a = (10*$$referencedata{L}[$line]- 10*$$data[$line*3 + 1])/10;
+			$html .= $$referencedata{a}[$line] . '-' . $$data[$line*3 + 1] . '=' . $a;
+			$html .= '</td>';	
+			$html .= '<td class="">';
+			$html .= Math::Round::nearest( 0.0001,$a**2 );
+			$html .= '</td>';	
+			$html .= '<td class="">';
+			my $b = (10*$$referencedata{b}[$line]- 10*$$data[$line*3 + 2])/10;
+			$html .= $$referencedata{b}[$line] . '-' . $$data[$line*3 + 2] . '=' . $b;
+			$html .= '</td>';	
+			$html .= '<td class="">';
+			$html .= Math::Round::nearest( 0.0001,$b**2 );
+			$html .= '</td>';	
+			$html .= '<td class="">';
+			$html .= Math::Round::nearest( 0.01,( 
+						( ( 10*$$referencedata{L}[$line]- 10*$$data[$line*3 + 0] )/10 )**2 +
+						( ( 10*$$referencedata{a}[$line]- 10*$$data[$line*3 + 1] )/10 )**2 +
+						( ( 10*$$referencedata{b}[$line]- 10*$$data[$line*3 + 2] )/10 )**2
+				) ** 0.5 );
+			$html .= '</td>';
+			$html .= '</tr>';
+		} # end foreach line
+		return $html;
+	) ?>
+	</table>
+</div>
+</form>

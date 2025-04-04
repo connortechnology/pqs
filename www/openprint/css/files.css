@@ -1,0 +1,15 @@
+table .filename, table .dirname {
+	text-align: left;
+}
+table .dirname {
+	background: url(/images/folder.gif) no-repeat left top;
+	padding-left: 18px;
+}
+table .size {
+	width: 100px;
+	text-align: left;
+}
+table .buttons {
+	width: 75px;
+	text-align: center;
+}

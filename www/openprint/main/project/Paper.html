@@ -1,0 +1,159 @@
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script>
+function calc_sheets_from_weight(e) {
+    var re = /qty-(.*)/
+    var matches = re.exec( e.name );
+    if ( matches ) {
+        var index = matches[1];
+		if ( $('overrideqty-'+index).value == 'Y' ) {
+			var sheet_weight = parseFloat( floatize( $('sheet_weight-'+index) ) );
+			var sheets = $('sheets-'+index);
+			sheets.value = parseInt( e.value / sheet_weight );
+		} 
+	}
+}
+function calc_weight_from_sheets(e) {
+    var re = /sheets-(.*)/
+    var matches = re.exec( e.name );
+    if ( matches ) {
+        var index = matches[1];
+		var override = $('overrideqty-'+index);
+		if ( ! override ) {
+			alert('no override found');
+			return;
+		} 
+		if ( override.value == 'Y' ) {
+			var sheet_weight = parseFloat( floatize( $('sheet_weight-'+index) ) );
+			var qty = $('qty-'+index);
+			qty.value = do_decimals( e.value * sheet_weight, 1 );
+		}
+	}
+}
+</script>
+<div class="Service <?ServiceTypeID?>">
+<div class="PageTitle">
+<h1>Project <?echo($$variable{Project}->link_to())?></h1>
+<h2>Paper</h2>
+</div>
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+<? echo (
+	my $html = '';
+	$$variable{Currency} = openprint::Currency::get_current();
+	my $Project = $$variable{Project};
+
+	my @Stocks = openprint::Estimating::Paper::get_stocks( $Project, $$variable{ServiceIndex} );
+
+	foreach my $ss_id ( $Project->signatures( { sort=>1 } ) ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		my $form = $$variable{form} = $$sig_specs{SignatureIndex};
+		$html .= '<fieldset><legend>Stock for Signature ' . $form . ' ' . $$sig_specs{txtServiceDescription} . '</legend><ul>';
+
+		my %sig_papers;
+		# What we do is load each stock for the signature, and assign it a stock_index, 1 .. 4, then deal with them in order.
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			my $Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			$Stock = $Stock->Supplied();
+			$sig_papers{$Stock->id_string()} = $Stock;
+		} # end foreach
+
+		# We use @stock_ids to put things in the same order for each sig.
+		foreach my $Stock_Entry ( @Stocks ) {
+			
+			if ( ! $sig_papers{$$Stock_Entry{key}} ) {
+				next;
+			} # end if
+
+			$$variable{stock_index} = $$Stock_Entry{index};
+			$$variable{Stock} = $$Stock_Entry{Stock};
+
+			$html .= '<li><label style="width: auto;">'.$$variable{Stock}->to_string().'</label><br/>';
+			$html .= sprintf('<input type="hidden" id="id-%1$d-%2$d" name="id-%1$d-%2$d" value="%3$s" />', @$variable{'form','stock_index','paper_id'} );;
+
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				$html .= '<span class="'.$$variable{Columns}.'Columns">';
+				my $Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+				$Stock = $Stock->Supplied();
+				if ( $$Stock_Entry{Stock}->id() == $Stock->id() ) {
+
+					my $key = 'form'.join('-',$$variable{form},$qty_index );
+					$html .= '<span class="quantity">';
+
+					if ( $$variable{Stock}->type() ne 'Roll' ) {
+						$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, oninput=>'calc_sheets_from_weight(this);calc(this.form.name);' );
+						$html .= 'lbs ';
+						$html .= input( type=>'cardinal', id=>"sheets-$key", name=>"sheets-$key", value=> $$variable{"sheets-$key"}, onkeyup=>'calc_weight_from_sheets(this);calc(this.form.name);' );
+						$html .= 'sheets ';
+						$html .= input( type=>'hidden', id=>'sheet_weight-'.$key, name=>'sheet_weight'.$key, value=>$$variable{Stock}->wpsi() * $$variable{Stock}->area() );
+					} else {
+						$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, onkeyup=>'calc(this.form.name);' );
+						$html .= 'lbs ';
+					} # end if
+					$html .= write_override( "overrideqty-$key", $$variable{"overrideqty-$key"}, '', "calc('f1')" );
+					$html .= '</span>';
+				} else {
+					$html .= 'none';
+				}
+				$html .= '</span>';
+
+			} # end foreach qty_index
+			$html .= '</li>';
+		} # end foreach stock_index
+		$html .= "</ul></fieldset>\n";
+	} # end foreach signature
+
+	$html .= "<fieldset><legend>Totals</legend><ul>\n";
+	foreach my $Stock_Entry ( @Stocks ) {
+		my $stock_id = $$Stock_Entry{index};
+		my $Stock = $$Stock_Entry{Stock};
+
+		$html .= '<li><label>'.($Stock->can_edit() ? $Stock->link_to($Stock->to_string()) : $Stock->to_string())."</label>\n";
+
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			my $key = $stock_id.'-'.$qty_index;
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			$html .= '<span class="quantity">';
+			$html .= qq`<span id="qty-$key">$$variable{"qty-$key"}</span>`;
+			$html .= input( type=>'hidden', id=>'qty-'.$key, name=>'qty-'.$key, value=>$$variable{'qty-'.$key}, onkeyup=>'calc(this.form.name);' );
+			$html .= 'lbs';
+			if ( $Stock->type() ne 'Roll' ) {
+			$html .= qq`(<span id="sheets-$key">$$variable{"sheets-$key"}</span>`;
+				$html .= ' ' . input( type=>'hidden', id=>'sheets-'.$key, name=>'sheets-'.$key, value=>$$variable{'sheets-'.$key}, onkeyup=>q`calc_weight_from_sheets(this);calc(this.form.name);` );
+				$html .= 'sheets)';
+			} # end if
+
+			$html .= '</span><br/>';
+			if ( ! $Stock->supplied() ) {
+				$html .= '<span class="pricing"> @ '.$$variable{Currency}->symbol();
+				$html .= input( type=>'float', id=>"cost-$key", name=>"cost-$key", value=>$$variable{"cost-$key"}, onkeyup=>'calc(this.form.name);' );
+				$html .= write_override( "overridecost-$key", $$variable{"overridecost-$key"}, '', "calc('f1')" );
+				$html .= '/100lb';
+				$html .= ' = '. $$variable{Currency}->symbol();
+				$html .= input( type=>'float', id=>"price-$key", name=>"price-$key", value=>$$variable{"price-$key"}, onkeyup=>'calc(this.form.name);' );
+				$html .= '</span>';
+			} else {
+			 $html .= '<b>Supplied by Customer</b>';
+			} # end if
+			$html .= '</span>';
+		} # end foreach qty_index
+		$html .= "</li>\n";
+	} # end foreach stock
+	$html .= include( '/includes/main/proj/_service_price.html' );
+	$html .= include( '/includes/main/proj/_breakdown.html' );
+	
+	$html .= '</ul></fieldset>';
+	return $html;
+) ?>
+			
+		</fieldset>
+		<hr/>
+		<?include(/includes/main/proj/add_to_project.html)?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>">
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="Status" />
+	</form>
+</div>
+

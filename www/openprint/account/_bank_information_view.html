@@ -1,0 +1,34 @@
+<div class="BankInformation">
+	<fieldset><legend>Bank Information</legend>
+		<ul>
+		<li> 
+			<label for="bank_name">Bank Name</label>
+<? echo ( $$variable{Company}->bank_name() ) ?>
+		</li>
+		<li> 
+			<label for="bank_branch">Branch #</label>
+<? echo ( $$variable{Company}->bank_branch() ) ?>
+		</li>
+		<li> 
+			<label for="bank_account">Bank Account #</label>
+<? echo ( $$variable{Company}->bank_account() ) ?>
+		</li>
+		<li> 
+			<label for="bank_manager">Account Manager</label>
+<? echo ( $$variable{Company}->bank_manager() ) ?>
+		</li>
+		<li> 
+			<label for="bank_phone">Bank Phone</label>
+<? echo ( $$variable{Company}->bank_phone() ) ?>
+		</li>
+		<li> 
+			<label for="bank_fax">Bank Fax</label>
+<? echo ( $$variable{Company}->bank_fax() ) ?>
+		</li>
+		<li> 
+			<label for="bank_email">Bank E-mail</label>
+ <? echo ( $$variable{Company}->bank_email() ) ?>
+		</li>
+		</ul>
+	</fieldset>
+</div>

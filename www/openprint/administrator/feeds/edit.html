@@ -1,0 +1,59 @@
+<div class="Feeds">
+	<div class="Edit">
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<form id="f1" name="f1" method="post" action="edit.html<? echo ( $param{'feed_id'} ? '?feed_id='.$param{'feed_id'} : '' ) ?>">
+		
+	<p class="buttons"> 
+		<? echo ( join('',
+			ssi::button( 'Delete', { onclick=>"f1.elements['action'].value='Delete';fmChange=2;fmCheck(f1);" } ),
+			ssi::button( 'Save', { onclick=>"f1.elements['action'].value='Save';fmChange=3;fmCheck(f1);" } ),
+			ssi::button( 'Copy', { onclick=>"f1.elements['action'].value='Copy';fmCheck(f1);" } ),
+			ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
+		); ) ?>
+	</p>
+	<fieldset>
+		<ul>
+			<li> 
+				<label>Name</label>
+				<input type="text" name="name" value="<? echo ( $$variable{'Feed'}->name() ) ?>" />
+			</li>
+			<li> 
+				<label>Type</label>
+				<select name="type" id="type">
+					<? echo ( ssi::make_drop_down( [ '', 'select', 'RSS', 'RSS' ], $$variable{'Feed'}->type() ); ) ?>
+				</select>
+			</li>
+			<li><label>Company</label>
+				<select name="company_id" id="company_id">
+					<option value=""> none <option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)' ) ], $$variable{'Feed'}->company_id() ); ) ?>
+				</select>
+			</li>
+			<li><label>Category</label>
+				<select name="category_id" id="category_id">
+					<option value=""> none <option>
+					<? echo ( ssi::make_drop_down( openprint::Article_Category->dropdown( 'order'=>'lower(name)' ), $$variable{'Feed'}->category_id() ); ) ?>
+				</select>
+			</li>
+			<li> 
+				<label>Url</label>
+				<input type="url" name="url" value="<? echo ( $$variable{'Feed'}->url() ) ?>" />
+			</li>
+			<li>
+				<label>Filters</label>
+				<textarea name="filters"><? hecho ( $$variable{'Feed'}->filters() ) ?></textarea>
+			</li>
+			<li>
+				<label>Auto Publish</label>
+				<? echo ( ssi::radio( 'published', [ '1', 'Yes', '0', 'No' ], $$variable{'Feed'}->published() ); ) ?>
+			</li>
+			<li>
+				<label>Active</label>
+				<? echo ( ssi::radio( 'active', [ '1', 'Yes', '0', 'No' ], $$variable{'Feed'}->active() ); ) ?>
+			</li>
+		</ul>
+	</fieldset>
+	<input type="hidden" name="action"/>
+</form>
+</div>
+</div>

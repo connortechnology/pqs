@@ -1,0 +1,9 @@
+<div class="row">
+	<span class="required">*</span>
+	<span class="label"><?ServiceTypeName?> length</span>
+	<span class="input">
+		<input type="text" name="txtLength-<?SignatureIndex?>" value="<? echo ( $$variable{"txtLength-$$variable{'SignatureIndex'}"} ) ?>" size="9"  onkeyup="calc(this.form.name);" /> inches
+		<input type="checkbox" id="chkOverrideLength-<?SignatureIndex?>" name="chkOverrideLength-<?SignatureIndex?>" value="Y" <? echo ( 'checked' if $$variable{"chkOverrideLength-$$variable{'SignatureIndex'}"} eq 'Y' ) ?> onclick="if( ! this.checked ) calc(this.form.name);" />
+		<label for="chkOverrideLength-<?SignatureIndex?>">Override</label>
+	</span>
+</div>

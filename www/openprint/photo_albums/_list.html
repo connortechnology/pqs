@@ -1,0 +1,38 @@
+<? echo (
+	my $html;
+	my @Albums = openprint::Photo_Album->find(
+		order=>'lower(name)',
+		( sets::isin( $session{user_type}, [ 'E','A' ] ) ? 
+			( $session{'/photo_albums/list.html?user_id'} ? ( user_id => $session{'/photo_albums/list.html?user_id'} ) : () ) :
+			()
+			#( company_id => $session{company_id} )
+		),
+	);
+	my $num_albums = scalar @Albums;
+	$html .= $num_albums.' album'.($num_albums == 1 ? '' : 's').'<br/>';
+	foreach my $Album ( @Albums ) {
+		next if ! $Album->can_view();
+		my @Photos = $Album->Photos();
+		my ( $num_photos, $num_videos, $num_other ) = ( 0,0,0);
+		foreach my $Photo ( @Photos ) {
+			if ( $Photo->Asset()->is_photo() ) {
+				$num_photos += 1;
+			} elsif ( $Photo->Asset()->is_video() ) {
+				$num_videos += 1;
+			} else {
+				$num_other += 1;
+			} # end if
+		} # end foreach
+		my $size = $config{Photo_Album_Thumbnail_Size} ? $config{Photo_Album_Thumbnail_Size} : 'medium';
+
+		$html .= sprintf( q`<div class="PhotoAlbum"><a class="%6$s" href="/photo_albums/view.html?album_id=%1$d"><img src="%2$s" alt="%3$s" /></a><a href="/photo_albums/view.html?album_id=%1$d"><span class="name">%3$s</span><span class="description">%4$s</span><span class="statistics">%5$s</a></div>`, 
+			$$Album{'id'}, $Album->sized_url( $size ), $Album->name(), $Album->description(),
+			( join('<br/>', 
+				   ( $num_photos . ' photo' . ($num_photos != 1 ? 's' : '') ),
+				   ( $num_videos . ' video' . ($num_photos != 1 ? 's' : '') ),
+				   ( $num_other . ' other' ),
+			) ),
+			$size, );
+	} # end foreach Album
+	return $html;
+) ?>

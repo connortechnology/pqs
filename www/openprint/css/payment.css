@@ -1,0 +1,17 @@
+table .ID {
+	text-align: left;
+	width: 50px;
+}
+table .Method {
+	width: 75px;
+	text-align: left;
+}
+table .TransactionID {
+	width: 135px;
+}
+table .From {
+	text-align: left;
+}
+table .Memo {
+	text-align: left;
+}

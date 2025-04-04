@@ -1,0 +1,42 @@
+<script type="text/javascript">
+var ServicesByCategory = [];
+<? echo ( join("\n", map {
+			'ServicesByCategory['.$$_{id}.'] = ['.join(',', map { $$_{id}} @{$$variable{ServiceTypesByCategory}{$$_{id}}}).'];' 
+			}	@{$$variable{Categories}}
+);) ?>
+function servicetype_category_onchange(element) {
+	ServicesByCategory[element.value].forEach( 
+			function(servicetype_id){ $('servicetype_id'+servicetype_id).checked = element.checked; }
+			);
+}
+</script>
+<li><label>Services</label>
+	<table class="List">
+	<tr><?echo(
+	checkboxes(
+						'servicetype_category_id',
+[map{ $$_{id},$$_{name}} @{$$variable{Categories}}],
+						[split(',',$session{$r->uri().'?servicetype_category_id'})], {
+						onclick		=>'servicetype_category_onchange(this);',
+						container	=>['<th>','</th>'],
+						} );
+)?>
+</tr>
+<tr>
+<?echo(
+	my $html;
+	foreach my $Category ( @{$$variable{Categories}} ) {
+		$html .= '<td>'.
+			checkboxes(
+					'servicetype_id',
+					[ map { $$_{id}, $$_{description} } @{$$variable{ServiceTypesByCategory}{$$Category{id}}} ],
+						[split(',',$session{$r->uri().'?servicetype_id'})], {
+							#onclick		=>	'servicetype_category_onchange(this);',
+							container	=>	['','<br/>'],
+						} ) . '</td>';
+	} # end foreach Category
+	return $html;
+)?>
+	 </tr>
+	</table>
+</li>

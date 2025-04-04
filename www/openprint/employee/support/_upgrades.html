@@ -1,0 +1,38 @@
+<? echo ( include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html' ); ) ?>
+<? if ( $$variable{RMA}->id() ) ?>
+<fieldset><legend>Upgrades</legend>
+	<table class="List">
+		<tr>
+			<th class="Type">Type</th>
+			<th class="old_version">Old Version</th>
+			<th class="new_version">New Version</th>
+			<th class="buttons"></th>
+		</tr>
+<? echo ( my $html; my $rowclass;
+	foreach my $Upgrade ( openprint::Upgrade->find(rma_id=>$$variable{RMA}->id(), order=>'id' ) ) {
+		$html .= sprintf(q`
+<tr%s>
+	<td class="Type">%s</td>
+	<td class="old_version">%s</td>
+	<td class="new_version">%s</td>
+	<td class="buttons"></td>
+</tr>`, $rowclass, $Upgrade->type(),
+		$Upgrade->old_version(),
+		$Upgrade->new_version(),
+);
+		$rowclass = $rowclass ? '' : ' class="colRow"'; 
+	} # end foreach Upgrade
+	return $html;
+) ?>
+		<tr class="new">
+			<td class="Type">
+				<? echo ( ssi::select( openprint::Upgrade_Type->dropdown(order=>'lower(name)'), [ $param{upgrade_type_id} ], { name=>'upgrade_type_id', prepend=>['','select'] } ); ) ?>
+				<!--<input type="text" name="test" placeholder="new test"/>-->
+			</td>
+			<td class="old_version"><? echo ( input( type=>'text', name=>'upgrade_old_version', value=>$param{upgrade_old_version} ); ) ?></td>
+			<td class="new_version"><? echo ( input( type=>'text', name=>'upgrade_new_version', value=>$param{upgrade_new_version} ); ) ?></td>
+			<td class="buttons"><? echo ( button( 'AddUpgrade', { onclick=>qq`new Ajax.Updater('Upgrades', '_upgrades.html', { parameters: getValues( 'f1', [ 'upgrade_type_id', 'upgrade_old_version', 'upgrade_new_version' ], { action: 'Add', rma_id: '$$variable{RMA}{id}' } ) } );`, text=>'Add' } ); ) ?></td>
+		</tr>
+	</table>
+</fieldset>
+<? endif ( $$variable{RMA}->id() ) ?>

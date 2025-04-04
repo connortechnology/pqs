@@ -1,0 +1,62 @@
+  <? if ( $$variable{'ProjectIndex'} eq '' ) ?>
+  There are no PDF proofs available at this time. 
+  <? else ( $$variable{'ProjectIndex'} eq '' ) ?>
+  <form name="f1" method="post" enctype="multipart/form-data">
+    <table cellpadding="0" cellspacing="0" border="0" width="600">
+      <? if ( @{$$variable{'PDFS'}} == 0 ) ?>
+      <tr> 
+        <td colspan="2">No pdfs have been uploaded.</td>
+	  </tr>
+      <? else ( @{$$variable{'PDFS'}} == 0 ) ?>
+      <tr> 
+        <td colspan="2">The following PDF files have been uploaded: (click the filename to view.)</td>
+	  </tr>
+      <tr> 
+        <td colspan="2">&nbsp;</td>
+	  </tr>
+      <tr> 
+        <th width="300" align="left">Filename</th>
+		<th width="200" align="left">Description</th>
+		<th width="100" align="center">&nbsp;</th>
+	  </tr>
+      <? while ( @$variable{'filename','description'} = splice @{$$variable{'PDFS'}},0,2; ) ?>
+      <tr> 
+        <td class="smTbl" height="20"><a href="/pdfs/<?ProjectIndex?>/<?filename?>"><?filename?></a></td>
+		<td class="smTbl" height="20"><?description?></td>
+		<td align="center">
+		  <? if ($$variable{'PDF_PROOF_ID'}) ?>
+		<a href="/includes/proj/view_pdfp.html?ProofID=<?PDF_PROOF_ID?>">PDF</a>
+		  <? endif ($$variable{'PDF_PROOF_ID'}) ?>
+		   
+          </td>
+	  </tr>
+      <? endwhile ( @$variable{'filename','description'} = splice @{$$variable{'PDFS'}},0,2; ) ?>
+      <tr> 
+        <td colspan="3">&nbsp;</td>
+	  </tr>
+      <? endif ( @{$$variable{'PDFS'}} == 0 ) ?>
+    </table>
+	<p>If you would like to approve files for production. Please click <a href="mailto:noone@nowhere.com?subject=Production%20Approval">here</a> 
+      <span class="smallTxtBlack"> </span>to approve by e-mail and include the 
+      following text and information in the body of your e-mail. <br>
+      <br>
+      Project Reference Name:<br>
+      Docket ID:<br>
+      Order ID:<br>
+      Company Name:<br>
+      Authorized Approval Contact:<br>
+      Approval Date:<br>
+      Required by Date: <br>
+      <br>
+      I the "Authorized Approval Contact" have checked and proof read the "PDF 
+      Proof File Name" for the correct content including: Text Information, Spelling, 
+      Grammer, Graphical Images, Color, Design and Layout. I here by approve the 
+      following &quot;Project Reference Name and Docket ID&quot; for production. 
+      <br>
+      <a href="/main/project/view.html?ProjectIndex=<?ProjectIndex?>"><br>
+      Return to Project</a> 
+      <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+      <input type="hidden" name="btnFunction"/>
+    </p>
+    </form>
+  <? endif ( $$variable{'ProjectIndex'} eq '' ) ?>

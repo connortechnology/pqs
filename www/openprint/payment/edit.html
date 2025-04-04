@@ -1,0 +1,111 @@
+<script src="<?hash_link(/payment/edit.js)?>"></script>
+<script> const payment_id = '<? echo ( $$variable{Payment}->id() ) ?>'; </script>
+<?include('/includes/error_reporting.html')?>
+<form name="f1" id="f1" action="edit.html" method="post">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="payment_id" value="<? echo ( $$variable{Payment}->id() ) ?>" />
+	<fieldset><legend>Editing Payment</legend>
+		<div class="leftColumn">
+			<ul>
+			<li><label for="recipient_id">Recipient</label>
+				<input type="text" onkeyup="filter_companies('recipient_id', {name:this.value, offers_credit:'1', selected_id:get_ddm_value($('recipient_id'))});" class="filter" />
+				<select id="recipient_id" name="recipient_id" onchange="load_unpaid();">
+					<option value=""> select </option>
+					<? echo ( make_drop_down(
+             openprint::Company->dropdown(offers_credit=>'1'),
+             $$variable{Payment}->recipient_id() ? $$variable{Payment}->recipient_id() : $session{company_id}
+             ); ) ?>
+				</select>
+			</li>
+			<li><label for="payor_id">Payor</label>
+				<input type="text" onkeyup="filter_companies('payor_id', {name:this.value,selected_id:get_ddm_value($('payor_id'))});" class="filter" />
+				<select id="payor_id" name="payor_id">
+					<option value=""> select </option>
+					<? echo ( make_drop_down( openprint::Company->dropdown( or => {'last_invoice_id is null'=>0, id=>$$variable{Payment}->payor_id() ? $$variable{Payment}->payor_id() : $session{company_id} } ), 
+					 $$variable{Payment}->payor_id() ? $$variable{Payment}->payor_id() : $session{company_id} ); ) ?>
+				</select>
+			</li>
+			<li><label>Received On</label>
+			<? echo ( date_select( 'received_on', $$variable{Payment}->received_on() ? $$variable{Payment}->received_on() : [Date::Calc::Today()], { with_today=>1} ); ) ?>
+			</li>
+			<li><label for="amount">Amount</label>
+				<? echo ( join("\n",
+              input( type=>'float', name=>'amount', id=>'amount', value=> $$variable{Payment}->amount(), oninput=>'calc(this);' ),
+        write_override('amount_locked', $$variable{Payment}->amount_locked()),
+        ); ) ?>
+				<select name="currency_id" id="currency_id">
+					<? echo ( make_drop_down( openprint::Currency->dropdown(), $$variable{Payment}->currency_id() ? $$variable{Payment}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
+				</select>
+			</li>
+      <li id="exchange"><label>Exchange Rate</label>
+        <? echo ( input( type=>'float', name=>'exchange', id=>'exchange', value=>$$variable{Payment}->exchange(), onkeyup=>'calc(this);' ); ) ?>
+      </li>
+      <li><label>Value</label>
+				<? echo ( join("\n",
+          input(type=>'float', name=>'value', id=>'value',
+          value=>$$variable{Payment}->value(),
+          onkeyup=>'calc(this);'),
+        write_override('value_locked', $$variable{Payment}->value_locked()),
+        ); ) ?>
+      </li>
+			<li><label for="method">Method</label>
+				<select id="method" name="method">
+<? echo ( 
+	my @options = ( '', 'Bitcoin', 'Cash','Cheque','Email Transfer','Manual','Paypal','Swift', 'Work In Trade' );
+	make_drop_down( [ map { $_, $_ } @options ], $$variable{Payment}->method() );
+) ?>
+				</select>
+			</li>
+			<li><label for="transaction_id">Transaction ID</label>
+				<input type="text" name="transaction_id" id="transaction_id" value="<? echo ( $$variable{Payment}->transaction_id() ) ?>" />
+			</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
+        <li><label>Deposited to</label><?echo(
+       ssi::select( openprint::Expense_Account->dropdown(), $$variable{Payment}->account_id(), { name=>'account_id', prepend=>['','Unknown'] } ); ) ?>
+        </li>
+        <li>
+          <label for="memo">Memo</label>
+          <textarea id="memo" name="memo" rows="<? echo ( count_lines( $$variable{Payment}->memo() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Payment}->memo() ) ?></textarea>
+        </li>
+				<? if ( $$variable{Payment}->id() ) ?>
+        <li><label>Entered</label><?echo(format_datetime($$variable{Payment}->created_on()))?></li>
+        <li><label>Updated</label><?echo(format_datetime($$variable{Payment}->updated_on()))?></li>
+        <? endif ( $$variable{Payment}->id() ) ?>
+			</ul>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				$html = button( 'Back', { href=>'history.html' } );
+				if ( $$variable{Payment}->id() ) {
+					if ( $$variable{Payment}->deleted() ) {
+						$html .= button( 'Destroy', { onclick=>q`if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}` } );
+						$html .= button( 'UnDelete', { onclick=>q`f1.btnFunction.value='UnDelete';f1.submit();` } );
+					} else {
+						$html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
+					} # end if
+					$html .= button( 'SendReceipt', { onclick=>q`f1.btnFunction.value='Send Receipt';f1.submit();`, text=>'Send Receipt' } );
+					$html .= button( 'SendReceiptToMe', { onclick=>q`f1.btnFunction.value='Send Receipt To Me';f1.submit();`, text=>'Send Receipt To Me' } );
+				} # end if
+				$html .= button( 'Save', { onclick=>q`f1.btnFunction.value='Save';f1.submit();` } );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<? if ( $$variable{Payment}->id() ) ?>
+	<div class="leftColumn" id="Paid">
+		<?include('_paid.html')?>
+	</div>
+	<div class="rightColumn" id="Unpaid">
+		<?include('_unpaid.html')?>
+	</div>
+  <br class="spacer"/>
+  <?eval( $$variable{Object} = $$variable{Payment} ) ?>
+  <?include(/employee/assets/_asset_upload.html)?>
+  <? echo ( include_logs( $$variable{Payment} ); ) ?>
+	<? endif ( $$variable{Payment}->id() ) ?>
+</form>

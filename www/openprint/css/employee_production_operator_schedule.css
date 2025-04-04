@@ -1,0 +1,524 @@
+.Popup {
+	position:absolute;
+	visibility: hidden;
+	background-color: #ffffff;
+	border:1px solid;
+	width: auto;
+	padding: 5px;
+	z-index: 100;
+}
+/*
+.row {
+	clear: none;
+	width: 100%;
+	font-weight: normal;
+	font-size: 10px;
+	margin:0;
+	padding:0;
+	margin-bottom: 4px;
+	height: auto;
+	float: left;
+	p\osition: relative;
+}
+*/
+
+@media print {
+	.PressScheduleHeader {
+		width: 100%;
+		position:fixed;
+		top: 0;
+		border-top: solid 1px;
+		border-bottom: solid 1px;
+		text-align: center;
+		margin-left: auto;
+		margin-right: auto;
+		background-color: #E3E4F0;
+		font-weight: bold;
+		font-size: 16px;
+	}
+	.PressColumn li {
+	}
+}
+@media screen {
+	.PressScheduleHeader {
+		display:none;
+	}
+}
+.PressColumn {
+	margin:0;
+	padding:0;
+	border: 1px solid #DEDCB7;
+	text-align: center;
+	font-size:medium;
+	font-weight:bold;
+	vertical-align: top;
+	float: left;
+	box-sizing: border-box;
+}
+.PressColumn ul {
+	padding:0;
+	margin:0 1px;
+	border-bottom: 1px solid black;
+	list-style: none;
+	font-weight: normal;
+	text-align: left;
+	font-size: medium;
+}
+.PressColumn li {
+	padding:0 0 0px 0;
+	margin:2px 0;
+	border-top: 1px solid black;
+	list-style: none;
+	background-color: #ffffff;
+	z-index: 0;
+	max-height: 1000px;
+	overflow: hidden;
+	position:relative;
+}
+
+.PressColumn .multibindery,
+.PressColumn .multipress, 
+.PressColumn .scheduled, 
+.multipress, 
+.scheduled {
+	background-color: #ffff99;
+}
+.PressColumn .regular, .PressColumn .unscheduled, .regular, .unscheduled {
+	background-color: #ffffff;
+}
+.PressColumn .inprepress, .inprepress {
+	background-color: #caffc4;
+}
+.PressColumn li.complete, li.complete {
+	background-color: #FAC6FF;
+}
+.PressColumn li.tentative, li.tentative {
+	background-color: #d7f5ff;
+}
+.PressColumn li.approval, li.approval {
+	background-color: #FF0000;
+	color: black;
+}
+.PressColumn li.rush, li.rush {
+	border: 2px solid blue;
+} 
+.legend li.rush {
+width: 196px;
+} 
+.When {
+	background-color: #ffb4da;
+	font-weight: bold;
+	font-size: 14px;
+	margin:0 1px;
+	padding:0;
+}
+.Printing .When {
+		background-color: #ffb4da;
+}
+.Bindery .When {
+	background-color: #c1e8e6;
+}
+.When .Shift_time {
+	float: left;
+}
+.When .operator {
+	float: right;
+}
+.When span {
+	padding: 2px;
+	width: auto;
+}
+.When .Interval {
+	float: left;
+} 
+
+.docket {
+	font-weight: bold;
+	float: left;
+	margin: 2px 0px 2px 0px;
+	width: auto;
+	font-size: large;
+}
+.Company {
+	font-weight: bold;
+	font-size: large;
+	overflow: hidden;
+	text-align: left;
+	float: left;
+	margin: 2px 0px 2px 7px;
+}
+.DueDate {
+	position: absolute;
+	top: 0;
+	right: 0;
+	font-size: medium;
+	font-weight: bold;
+	margin: 2px 5px;
+}
+.Presses {
+	font-size: medium;
+	font-weight: bold;
+	padding: 2px 5px;
+	float: left;
+}
+
+.StockVerified,
+.Forms,
+.Impressions,
+.RunTime,
+.StartTime {
+	min-width: 70px;
+margin: 2px 0;
+	padding:1px 4px;
+	float: left;
+	display: inline;
+	border: 1px outset gray;
+	text-align: center;
+}
+.StartTime {
+	width: 80px;
+}
+.StartTime img {
+	margin:0;
+	padding:0;
+	height: 11px;
+	border: none;
+	vertical-align: middle;
+}
+@media print {
+	.StartTime img {
+		height: 10px;
+	}
+	.Feedback {
+		display: none;
+	}
+	.Comment,
+	.Stock {
+	min-height: 40px;
+	}
+
+	/* Empty last shifts don't show */
+	.last  {
+		display: none;
+	}
+}
+.Buttons {
+	float: right;
+	margin: 2px;
+	display: inline;
+}
+.Services {
+	margin: 2px;
+	float: right;
+	display: inline;
+}
+.Services .Service {
+	float: left;
+	margin-right: 5px;
+	text-transform: capitalize;
+}
+.Services .nobindery {
+	text-transform: uppercase;
+} 
+.commands {
+	border-top: 1px solid #000000;
+}
+.Comment:before {
+	clear: both;
+}
+.Comment, .Stock {
+	box-sizing: border-box;
+	text-align: left;
+}
+.Comment p, .Stock p {
+	margin: 0;
+	padding: 2px;
+}
+.Stock, .Stock p {
+	font-size: small;
+
+}
+.Comment img {
+	width: 75px;
+}
+.TotalImpressions {
+	margin-left: auto;
+	margin-right: auto;
+	float: left;
+	p\osition: relative;
+}
+.Operator, .assign {
+	float: right;
+}
+@media print {
+	.PressColumn {
+	border: 1px solid white;
+	color: black;
+	}
+ a.docket {
+		color: black;
+	}
+	.Company { 
+		font-size: large;
+	}
+	.When {
+		font-size: small;
+	}
+	.assign {
+		display: none;
+	}
+	.TotalImpressions {
+			display: none;	
+		}
+		.Comment {
+			border: none;
+		}
+		ul {
+			border: 1px solid black;
+			margin: 2px;
+		}
+		li { 
+			margin:0;
+			padding: 1px;
+		}
+		td { 
+			padding:0;
+			margin:0;
+		}
+		span {
+			margin:0;
+			padding:0;
+			width: auto;
+		}
+		#Header {
+			display: none;
+		}
+	}
+
+.CSR {
+	font-size: 14px;
+/*
+	float: left;
+*/
+position: absolute;
+top: 20px;
+right: 0;
+	font-weight: bold;
+	text-transform: uppercase;
+	margin: 2px 5px;
+}
+.PrepressOperator {
+	font-size: 14px;
+	margin: 2px 5px;
+/*
+		float: left;
+*/
+position: absolute;
+top: 40px;
+right: 0;
+	font-weight: normal;
+	text-transform: lowercase;
+}
+.CSR:before,
+.PrepressOperator:before {
+	content: '(';
+}
+.CSR:after,
+.PrepressOperator:after {
+	content: ')';
+}
+
+.container {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.filters .buttons {
+	clear:both;
+	padding:0;
+	margin: 5px 0 5px 0;
+}
+.filters ul {
+	list-style:none;
+	margin:0;
+	padding:0;
+}
+.schedule:after,
+.header:after,
+.PressColumn:after,
+.PressColumn li:after,
+.When:after,
+.top_row:after,
+.middle_row:after,
+.filters ul:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+.filters li {
+	list-style:none;
+	padding:000 145px;
+  /*
+	float: left;
+  */
+}
+.filters li label:not(.radio):not(.radio-inline) {
+	vertical-align: top;
+	margin:0 0 0 -145px;
+	width: 140px;
+	float: left;
+}
+.filters .presses {
+	width: 275px;
+	float: left;
+}
+.filters .presses li {
+	width: 180px;
+	padding-left: 90px;
+}
+.filters .presses li label:not(.radio):not(.radio-inline),
+.legend li label:not(.radio):not(.radio-inline) {
+	margin-left: -90px;
+	width: 85px;
+}
+.statuses {
+	width: 40%;
+	float: left;
+}
+.statuses li {
+	padding-left: 80px;
+}
+.statuses li label:not(.radio):not(.radio-inline) {
+	margin-left: -80px;
+	width: 75px;
+}
+.dates {
+	min-width: 500px;
+}
+.dates li {
+  /*
+	width: 265px;
+  */
+}
+
+.legend {
+  width: 320px;
+  /*
+	width: 30%;
+	float: left;
+  */
+}
+.legend li {
+	padding-left: 90px;
+}
+.legend li ul {
+
+}
+.legend li li {
+	padding:0px;
+	width: 230px;
+}
+.legend li li label:not(.radio):not(.radio-inline) {
+	margin:0;
+	width: auto;
+}
+.message {
+	font-size: small;
+}
+
+.schedule {
+	margin-top: 24px;
+}
+.schedule,
+.PendingApproved,
+.Pending {
+	position: relative;
+	width: 100%;
+}
+#PendingApproved, #Pending {
+	min-height: 40px;
+background-color: #eeeeee;
+}
+.csrs {
+	float: left;
+}
+.status {
+	float: left;
+	width: 300px;
+}
+.dialog table .runtime input[type="text"]:not(.filter) {
+	width: 80px;
+}
+@media print {
+	#Content {
+		padding: 0;
+		margin:0;
+	}
+	.StockVerified,
+	.Forms,
+	.Impressions,
+	.RunTime,
+	.StartTime {
+		width: auto;
+		padding: 0 5px;
+		min-width: 0;
+	}
+	.RunTime {
+		display:none;
+	}
+	.PressColumn li {
+		font-size: small;
+	}
+
+	.OperatorSignature {
+	float:right;
+/*
+		position: absolute;
+		bottom: -1px;
+		right:0px;
+*/
+		width: 120px;
+		height: 50px;
+		border-top: 1px solid black;
+		border-left: 1px solid black;
+color: grey;
+	}
+	.PressColumn li {
+	}
+	.top_row {
+		margin-right: 60px;
+	}
+	.bottom_row {
+		position: relative;
+		right: 0px;
+	}
+	.middle_row {
+		margin-right: 0px;
+	}
+}
+@media screen {
+	.OperatorSignature {
+		display: none;
+	}
+	.top_row {
+		margin-right: 130px;
+		right: 0;
+	}
+	.middle_row {
+		margin-right: 60px;
+	}
+	.bottom_row {
+		right: 0;
+	}
+}
+.bottom_row {
+	font-size: small;
+}
+.Bindery .OperatorSignature {
+display: none;
+}

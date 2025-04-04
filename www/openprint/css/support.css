@@ -1,0 +1,14 @@
+.rightColumn, .leftColumn {
+	min-width: 400px;
+	float: left;
+}
+.rightColumn {
+	margin-left: 2px;
+}
+li input[type="text"], li input[type="number"], li input[type="url"], li input[type="email"] {
+	width: 95%;
+}
+
+fieldset li textarea {
+	width: 98%;
+}

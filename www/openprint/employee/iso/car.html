@@ -1,0 +1,87 @@
+<div class="PageTitle">
+<h1>CORRECTIVE ACTION REQUEST (CAR)</h1>
+<? if ( $$variable{CAR}->reprint() eq 'Yes' ) ?>
+<h2>(Re-print Job Request)</h2>
+<? endif ( $$variable{CAR}->reprint() eq 'Yes' ) ?>
+</div>
+<script>
+	function check_part1( form ) {
+		if ( ! get_rdb_value( form.identified_by ) ) {
+			alert('Please select either Internal or Customer for Problem Identification');
+			return 0;
+		} // end if
+		if ( ! get_value( form.area_id ) ) {
+			alert('Please select the area');
+			return 0;
+		} // end if
+		if ( ! get_value( form.reason_id ) ) {
+			alert('Please select the reason');
+			return 0;
+		} // end if
+		if ( form.reprint_approval && ( get_rdb_value( form.reprint_approval ) == 'Yes' ) ) {
+			if ( form.reprint_charge ) {
+				var charge = get_value( form.reprint_charge );
+				if ( ! charge ) {
+					alert('Please select wether there will be a reprint charge');
+					return 0;
+				} // end if
+			} // end if
+		} // end if
+		if ( form.reprint && ( get_rdb_value( form.reprint ) == 'Yes' ) ) {
+			if ( form.reprint_value && ! form.reprint_value.value ) {
+				alert('Please enter the reprint value');
+				return 0;
+			} // end if
+			if ( form.reprint_quantity && ! form.reprint_quantity.value ) {
+				alert('Please enter the reprint quantity');
+				return 0;
+			} // end if
+		} // end if
+		return 1;
+	} // end function check_part1
+	function area_id_onchange( e ) {
+		if ( e.form.issued_to_id ) {
+			new Ajax.Request('_select_assignee_from_area.json', {method:'get', parameters: {area_id:e.value}} );
+		} // end if
+	} // end function area_id_onchange(e)
+</script>
+<div id="CAR">
+	<? if ( $param{car_id} and ! $$variable{CAR}->id() ) ?>
+	Invalid CAR # specified.
+	<? else ( $param{car_id} and ! $$variable{CAR}->id() ) ?>
+
+		<? echo (
+			if ( $$variable{CAR}->id() ) {
+				return join("\n",
+					button( 'Print', { onclick=>'window.print();' } ),
+					button( 'Send', { href=>'/employee/iso/car.html?action=Send&amp;car_id='.$$variable{CAR}->id() } ),
+					);
+			}
+			return '';
+		) ?>
+		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{CAR}->id() ) ?></span></h3>
+		<? echo (
+			my $html;
+			if ( ( ! $param{car_id} ) ) {
+				$html .= '<div id="Part1">'.include('/employee/iso/_car_edit_part1.html' ).'</div>';
+				$html .= '<div id="Part1">';
+				$html .= '</div>';
+				$html .= '<div id="Part2">';
+				$html .= '</div>';
+				$html .= '<div id="Part3">';
+				$html .= '</div>';
+				$html .= '<div id="Part4">';
+				$html .= '</div>';
+			} else {
+				$html .= '<div id="Part1">'.include('/employee/iso/_car_view_part1.html' ).'</div>';
+				$html .= '<div id="Part2">'.include('/employee/iso/_car_view_part2.html' ).'</div>';
+				$html .= '<div id="Part3">'.include('/employee/iso/_car_view_part3.html' ).'</div>';
+				$html .= '<div id="Part4">'.include('/employee/iso/_car_view_part4.html' ).'</div>';
+			} # end if
+			return variable_substitution( \$html, $variable );
+		) ?>
+	<? endif ( $param{car_id} and ! $$variable{CAR}->id() ) ?>
+</div>
+<? if ( $$variable{CAR}->id() ) ?>
+<? echo ( include_logs( $$variable{CAR} ); ) ?>
+<? endif ( $$variable{CAR}->id() ) ?>

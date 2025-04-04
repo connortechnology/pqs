@@ -1,0 +1,12 @@
+<? if ( $variable{'error'} ) ?>
+	alert('<? echo ( $variable{'error'} ) ?>');
+<? endif ( $variable{'error'} ) ?>
+<? if ( $param{'function'} eq 'rotate' ) ?>
+	var asset = $('asset-<? echo ( $param{'asset_id'} ) ?>');
+	if ( asset ) {
+		asset.src = '<? echo ( $variable{'Asset'}->url() . '?version=' . time  ) ?>';
+	} else {
+		alert('No asset found');
+	} // end if asset
+<? endif ( $param{'function'} eq 'rotate' ) ?>
+

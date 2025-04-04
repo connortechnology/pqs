@@ -1,0 +1,96 @@
+#Contents ul {
+	list-style:none;
+	margin:0px;
+	padding: 0px;
+}
+#Contents ul li {
+	list-style:none;
+	margin:5px 0 5px 0;
+	padding: 2px;
+	border: 1px solid black;
+}
+#Contents ul li:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+#Contents ul li ul li {
+	padding: 0 0 0 90px;
+	border: none;
+}
+#Contents ul li ul li label {
+	vertical-align: top;
+	width: 85px;
+	margin: 0 0 0 -90px;
+	display: inline-block;
+}
+#Contents ul li ul li label.radio {
+	width: auto;
+	margin: 0;
+	vertical-align: middle;
+}
+#Contents ul li ul li p {
+	display: inline;
+	margin: 0;
+}
+.SRED th.Name, .SRED th.Description {
+	text-align: left;
+}
+.leftColumn, .rightColumn {
+	min-width: 400px;
+	width: 50%;
+}
+.rightColumn {
+	float: left;
+}
+
+#Contents ul li ul li textarea {
+	width: 99%;
+	resize: vertical;
+}
+#Contents p.buttons {
+	margin: 0;
+	width: 100%;
+	text-align: right;
+}
+/*
+a.Delete, a.Save, a.Cancel {
+	width: 20px;
+	height: 20px;
+	margin: 2px;
+} 
+a.Delete, a.Cancel {
+	background: url(/images/icons.gif) no-repeat -460px -20px;
+}
+a.Save {
+	background: url(/images/icons.gif) no-repeat -480px -20px;
+}
+a.Delete .c, a.Save .c, a.Cancel .c {
+	display: none;
+}
+*/
+.attachments {
+}
+.assets {
+	display: inline-block;
+}
+.attachments .thumbnail {
+	display: inline-block;
+	margin: 5px;
+	width: 48px;
+}
+.attachments .thumbnail_link {
+}
+.attachments .thumbnail img {
+	float: none;
+	width: 100%;
+}
+@media print {
+	#content- {
+		display: none;
+	}
+}

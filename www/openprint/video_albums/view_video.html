@@ -1,0 +1,43 @@
+<script type="text/javascript" src="/javascripts/ufo.js"></script>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<div class="Video">
+	<div class="View">
+		<form id="f1" name="f1" action="view.html" method="post">
+			<input type="hidden" name="btnFunction" />
+			<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Video'}->id() ) ?>" />
+			<fieldset><legend>View Video <? echo ( $$variable{'Video'}->id() ) ?></legend>
+<div id="Video"><a href="http://www.macromedia.com/go/getflashplayer">Get the Flash Player</a> to see this player.</div>
+
+			<? echo ( 
+				my $html = '';
+				if ( ($session{'user_id'} == $$variable{'Video'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) or sets::isin( $session{'user_id'}, $$variable{'Video'}->editor_id() ) ) {
+					$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'edit.html?asset_id='.$$variable{'Video'}->id(), 'Edit' );
+					if ( $$variable{'Video'}->deleted() ) {
+						$html .= ssi::button( 'Undelete', { 'onclick' => q`f1.btnFunction.value='Undelete';f1.submit();` } );
+					} else {
+						$html .= ssi::button( 'Delete', { 'onclick' =>  q`if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}` } );
+					} # end if
+				} # end if
+				my @Videos = $$variable{'Video'}->Album()->Videos();
+				my $index = 0;
+				for ( $index = 0; $index < @Videos and $Videos[$index]->id() != $$variable{'Video'}->id(); $index += 1 ) {};
+				$html .= ssi::button( 'Previous', { 'href' => "/video_albums/view_video.html?asset_id=$Videos[$index-1]&amp;album_id=$$variable{'Video'}{'album_id'}" } ) if $index;
+				$html .= ssi::button( 'Next', { 'href' => "/video_albums/view_video.html?asset_id=$Videos[$index+1]&amp;album_id=$$variable{'Video'}{'album_id'}" } ) if ( $index + 1 ) < @Videos;
+				$html = '<p class="buttons">'.$html.'</p>' if $html;
+				if ( $$variable{'Video'}->Asset()->filename() =~ /\.(flv)$/ ) {
+					$html .= sprintf(q`
+<script type="text/javascript">
+    var FO = {      movie:"/flvplayer.swf",width:"320",height:"240",majorversion:"7",build:"0",bgcolor:"#FFFFFF",
+        flashvars:"file=%s&showdigits=false&showicons=false&autostart=false&showfsbutton=false&repeat=false" };
+    UFO.create(FO, "Video");
+</script>
+`, $$variable{'Video'}->url() );
+				} # end if
+				return $html;
+			) ?>
+		</fieldset>
+		</form>
+		<div class="Caption"><? echo ( $$variable{'Video'}->Asset()->description() ) ?></div>
+		<div id="Comments"><fieldset><legend>Comments</legend><? echo ( include('_comments.html'); ) ?></fieldset></div>
+	</div><!--View-->
+</div><!--Video-->

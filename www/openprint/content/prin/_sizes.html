@@ -1,0 +1,120 @@
+<div class="Size"><fieldset><legend>Size</legend>
+	<div class="content"><ul>
+<? echo (
+	my $html;
+	my $Folding = openprint::ServiceType->find_one(name=>'Folding');
+	if ( $Folding and 
+		( 
+		 ( ! sets::isin( $Folding->id(), $$variable{ProjectType}->blocked_services() ) )
+		 and 
+		 ( ! sets::isin( $$variable{ProjectType}->name(), ['Banners','InkjetOutputs','BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels','Envelopes'] ) )
+		)
+) {
+
+		$html .= '<li class="FoldType"><label>Fold</label>'.
+			ssi::select( [ 'NoFold','No Fold', 
+								'2PanelFold','2 Panel Fold',
+								'3PanelFold','3 Panel Fold',
+								'3PanelZFold','3 Panel Z Fold',
+								'4PanelFold','4 Panel Fold',
+								'4PanelZFold','4 Panel Z Fold',
+								'4PanelRollFold','4 Panel Roll Fold',
+								'5PanelFold','5 Panel Fold',
+								'5PanelZFold','5 Panel Z Fold',
+								'6PanelFold','6 Panel Fold',
+								'6PanelZFold','6 Panel Z Fold',
+								'8PageSignatureFold','8 Page Half Then Half Again Fold',
+								'12pg3PanelZFold','Half + 3 Panel Z Fold',
+								'12pg3PanelRollFold','Half + 3 Panel Roll Fold',
+								'DoubleGateFold','Doube Gate Fold',
+								'MapFold', 'Map Fold',
+					], $$variable{FoldType}, { name=>'FoldType', id=>'FoldType', onchange=>'FoldType_onchange(this);', } );
+			$html .= '</li>';
+	} 
+	return $html;
+) ?>
+		<? if ( $$variable{ProjectType}->name() eq 'GreetingCards' ) ?>
+			<input type="hidden" id="FoldType" name="FoldType" value="2PanelFold"/>
+		<? endif ( $$variable{ProjectType}->name() eq 'GreetingCards' ) ?>
+		<? if ( sets::isin( $$variable{ProjectType}->name(), 'Covers' ) ) ?>
+			<li class="FoldType">
+				<label>Fold Type</label>
+				<select id="FoldType" name="FoldType" size="1" onchange="FoldType_onchange( this );">
+					<option value="NoFold">No Fold</option>
+					<option value="2PanelFold">2 Panel Fold</option>
+				</select>
+			</li>
+		<? endif ( sets::isin( $$variable{ProjectType}->name(), 'Covers' ) ) ?>
+	<li class="Dimensions">
+		<label>Size</label>
+		<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this, '' );">
+			<option value=""> select </option>
+			<? echo ( 
+return;
+				$$variable{FoldType} = 'NoFold' if (
+					( ! $$variable{FoldType} ) and 
+					( ! sets::isin( $$variable{ProjectType}->category(), ['Large Format'] ) ) and 
+					( ! sets::isin( $$variable{ProjectType}->name(), ['BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars','NCR'] ) )
+					);
+
+				my $html;
+
+				if ( $$variable{ProjectType}->name() eq 'Envelopes' ) {
+					my @Templates = openprint::ProjectType_Template->find( 
+						projecttype_id	=>	$$variable{ProjectType}->id(), 
+						order			=>	'name,dblfinishedwidth,dblfinishedheight',
+						);
+                    $html = make_drop_down( [ map { $_->finishedwidth() . 'x' . $_->finishedheight() . 'Finished', $_->description() } @Templates ], 
+						join('x', @$variable{'txtFinalWidth','txtFinalHeight'} ) . 'Finished',
+					);
+				} else {
+					my $sql;
+
+					my @Templates = openprint::ProjectType_Template->find( 
+							projecttype_id=>$$variable{ProjectType}->id(), 
+							order=>'dblfinishedwidth,dblfinishedheight',
+							( $$variable{FoldType} ? ( type=>$$variable{FoldType} ) : () ),
+						);
+					@Templates = openprint::ProjectType_Template->find( 
+							projecttype_id=>$$variable{ProjectType}->id(), 
+							order=>'dblfinishedwidth,dblfinishedheight',
+						) if ! @Templates;
+					
+                    $html = make_drop_down( [ map { $_->finishedwidth() . 'x' . $_->finishedheight() . 'Finished', $_->description() } @Templates ], 
+						join('x', @$variable{'txtFinalWidth','txtFinalHeight'} ) . 'Finished',
+					);
+					if ( ! $html ) {
+						$$variable{Dimensions} = 'Custom';
+					} # end if
+				} # end if
+				return $html;
+			) ?>
+<? if ( ! sets::isin( $$variable{ProjectType}->name(),[ 'Envelopes','NCR','PresentationFolders' ] ); ) ?>
+			<option value="Custom">Custom</option>
+			<? echo (
+				#return;
+			  make_drop_down( [
+				  map { 1*$_->finished_width().'x'.1*$_->finished_height(), $_->description() }
+					 $$variable{ProjectType}->Templates( order=>'dblfinishedwidth,dblfinishedheight' )
+					 ],
+				$$variable{ddmProjectSize},
+);
+			) ?>
+<? endif ( ! sets::isin( $$variable{ProjectType}->name(),[ 'Envelopes','NCR','PresentationFolders' ] ); ) ?>
+		</select>
+	</li>
+				<?include(_dimensions.html)?>
+				<? if ( sets::isin( $$variable{ProjectType}->name(), 'ScratchPads' ) ) ?>
+					<li class="PageQuantity">
+						<label>Number of pages per pad</label>
+						<? echo ( input( type=>'cardinal', id=>'PageQuantity', name=>'PageQuantity', value=>$$variable{PageQuantity} ); ) ?>
+					</li>
+				<? endif ( sets::isin( $$variable{ProjectType}->name(), 'ScratchPads' ) ) ?>
+
+				<? if ( sets::isin( $$variable{ProjectType}->name(), 'PresentationFolders' ) ) ?>
+				<?include('/includes/presentation_folder_printing.html')?>
+				<? endif ( sets::isin( $$variable{ProjectType}->name(), 'PresentationFolders' ) ) ?>
+			</ul>
+		</div>
+	</fieldset>
+</div><!--Sizes-->

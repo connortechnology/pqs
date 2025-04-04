@@ -1,0 +1,74 @@
+<? eval (
+	my $uri = '/employee/inventory/packingslips.html';
+	if ( $session{'/employee/inventory/packingslips.html?docket'} ) {
+		@{$$variable{Labels}} = openprint::Label->find( 
+			docket	=>	$session{'/employee/inventory/packingslips.html?docket'},
+			order	=>	'id',
+			);
+	} else {
+		@{$$variable{Labels}} = openprint::Label->find( 
+			date_filter( '/employee/inventory/packingslips.html?created_on_end', 'created_on <=' ),
+			date_filter( '/employee/inventory/packingslips.html?created_on_start', 'created_on >=' ),
+			( $session{'/employee/inventory/packingslips.html?company_id'} ? ( company_id=>$session{'/employee/inventory/packingslips.html?company_id'}):()),
+			( $session{'/employee/inventory/packingslips.html?type_id'} ? ( type_id=>$session{'/employee/inventory/packingslips.html?type_id'}):()),
+			deleted => ( $session{$uri.'?deleted'} ne '' ? $session{$uri.'?deleted'} : [undef,1,0] ),
+			order		=>	'id desc',
+      limit => 10000,
+			);
+	} # end if
+) ?>
+<? if ( @{$$variable{Labels}} ) ?>
+<form id="LabelResults" name="LabelResults" action="packingslips.html" method="post">
+	<table class="List" id="ResultsTable">
+    <tbody>
+		<tr>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'packingslips', this.checked );"/></th>
+			<th class="Docket">Docket</th>
+			<th class="Company">Company</th>
+			<th class="Reference">Reference</th>
+			<th class="Type">Type</th>
+			<th class="DateTime">Created On</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+
+			foreach my $Label ( @{$$variable{Labels}} ) {
+				$html .= sprintf( q`<tr%1$s>
+					<td class="checkbox"><input type="checkbox" name="packingslips" value="%2$d"/></td>
+				<td class="Docket"><a href="/employee/production/labels/label.html?id=%2$d">%3$s</a></td>
+				<td class="Company"><a href="/employee/production/labels/label.html?id=%2$d">%4$s</a></td>
+				<td class="Reference"><a href="/employee/production/labels/label.html?id=%2$d">%5$s</a></td>
+				<td class="Type"><a href="/employee/production/labels/label.html?id=%2$d">%6$s</a></td>
+				<td class="DateTime"><a href="/employee/production/labels/label.html?id=%2$d">%7$s</a></td>
+				</tr>`, $rowclass, $$Label{id}, $Label->docket(), $Label->Project()->Company()->name(),  $Label->reference(), $Label->Type()->name(), 
+				format_datetime( $Label->created_on() ),
+ );
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Label
+			return $html;
+		) ?>
+    </tbody>
+    <tfoot>
+      <tr class="totals">
+        <td class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'packingslips', this.checked );"/></td>
+        <td colspan="5">Totals</td></tr>
+    </tfoot>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+  <script> TableKit.reloadTable('ResultsTable'); </script>
+  <p class="buttons">
+    <? echo (
+      my $uri = '/employee/inventory/packingslips.html';
+     join("\n",
+   $session{$uri.'?deleted'} eq '1' ? (
+     button( 'destroy', { onclick=>q`jQuery('#Results').load('/employee/inventory/_packingslips.html?btnFunction=destroy', { packingslips: get_value( $('LabelResults').packingslips ) } );`, text=>'Destroy Checked' } ),
+      button( 'undelete', { onclick=>q`jQuery('#Results').load('/employee/inventory/_manifests.html?btnFunction=undelete', { packingslips: get_value( $('LabelResults').packingslips ) } );`, text=>'Undelete Checked' } ),
+      ) : (
+          button( 'Delete', { onclick=>q`LabelResults.btnFunction.value='delete';LabelResults.submit();`, text=>'Delete Checked' } ),
+      ) ); ) ?>
+  </p>
+</form>
+<? else ( @{$$variable{Labels}} ) ?>
+There were no packingslips matching your search criteria.
+<? endif ( @{$$variable{Labels}} ) ?>

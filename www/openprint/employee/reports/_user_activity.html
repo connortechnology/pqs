@@ -1,0 +1,112 @@
+<?include('/includes/error_reporting.html')?>
+<?echo (
+  require Chart::Clicker;
+  require Chart::Clicker::Data::DataSet;
+  require Chart::Clicker::Data::Series;
+  my $time = time;
+
+  my $cc = Chart::Clicker->new(width=>1280,format=>'svg');
+  $cc->title->text('Activity');
+  my $context = $cc->get_context('default');
+  $context->range_axis->format('%.0f');
+
+	my @labels;
+	my $last_year;
+	foreach my $week ( @{$variable{Results}} ) {
+		my $label;
+
+		my ( $year, $week ) = $$week{week}->week();
+
+		if ( @{$variable{Results}} > 52 ) {
+			if ( $last_year != $year ) {
+				$last_year = $year;
+				$label = $year;
+			} else {
+				$label = '';
+			}
+		} else {
+			$label = $week;
+		}
+		push @labels, $label;
+	}
+		
+  #$context->domain_axis->format('%.0f');
+  $context->domain_axis->ticks(scalar @labels);
+  $context->domain_axis->tick_labels(\@labels);
+
+	{ # logins
+    my $series = Chart::Clicker::Data::Series->new(
+				keys => [ 1 .. @{$variable{Results}} ],
+				values => [ map { scalar @{$$_{logins}} } @{$variable{Results}} ]
+				);
+    $series->name('Logins');
+    my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+    $cc->add_to_datasets( $ds );
+	}
+	{ # projects
+    my $series = Chart::Clicker::Data::Series->new(
+				keys => [ 1 .. @{$variable{Results}} ],
+				values => [ map { scalar @{$$_{projects}} } @{$variable{Results}} ],
+				);
+    $series->name('Projects');
+    my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+    $cc->add_to_datasets( $ds );
+	}
+	{ # quotes
+    my $series = Chart::Clicker::Data::Series->new(
+				keys => [ 1 .. @{$variable{Results}} ],
+				values => [ map { scalar @{$$_{quotes}} } @{$variable{Results}} ],
+				);
+    $series->name('Quotes');
+    my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+    $cc->add_to_datasets( $ds );
+	}
+	{ # orders
+    my $series = Chart::Clicker::Data::Series->new(
+				keys => [ 1 .. @{$variable{Results}} ],
+				values => [map { scalar @{$$_{orders}} } @{$variable{Results}} ],
+				);
+    $series->name('Orders');
+    my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+    $cc->add_to_datasets( $ds );
+	}
+
+	$cc->draw();
+	return $cc->rendered_data;
+) ?><br/>
+<table class="List">
+	<tr>
+		<th class="Week">Week</th>
+		<th class="Logins">Logins</th>
+		<th class="Projects">Projects</th>
+		<th class="Quotes">Quotes</th>
+		<th class="Orders">Orders</th>
+	</tr>
+<?echo (
+my $html = '';
+my $rowclass;
+my $prev_year;
+
+foreach my $week ( @{$variable{Results}} ) {
+
+	$html .= sprintf('
+		<tr%1$s>
+			<td class="Week">Week %3$d of %2$s %4$s to %5$s</td>
+			<td class="Logins">%6$s</td>
+			<td class="Projects">%7$s</td>
+			<td class="Quotes">%8$s</td>
+			<td class="Orders">%9$s</td>
+		</tr>', $rowclass,
+			$$week{week}->week(),
+			$$week{week}->strftime('%b %d'),
+			$$week{next_week}->strftime('%b %d'),
+			scalar @{$$week{logins}},
+			scalar @{$$week{projects}},
+			scalar @{$$week{quotes}},
+			scalar @{$$week{orders}},
+		);
+	$rowclass = $rowclass ? '' : ' class="colRow"';
+} # end foreach week
+return $html;
+) ?>
+</table>

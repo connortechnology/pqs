@@ -1,0 +1,72 @@
+<form name="copy_popup_form" method="post" action="/main/project/history.html">
+	<? echo ( join("\n", map { '<input type="hidden" name="project_id" value="'.$_.'" />' } ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : ( $param{'project_id'} ) ) ); ) ?>
+	<? if ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
+	<fieldset>
+			If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from then on will be recorded in their history.
+		<ul>
+    <? echo ( 
+        my $html = '';
+
+        my $parser = 'DateTime::Format::Pg';
+        my $TZ = DateTime::TimeZone->new( name => $config{Timezone} );
+        my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 );
+
+        my $datetime = DateTime->new( time_zone => $TZ, ( year => $year, month=>$month, day=>$day, ));
+
+        my @Entries = openprint::Log->find( user_id=>$session{user_id}, action=>'Switch Company', order=>'date_time DESC','date_time >=' => $parser->format_datetime($datetime) );
+        my %companies;
+        foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {
+            next if $companies{$$Log{company_id}};
+            $companies{$$Log{company_id}} = $Log->company_id();
+        } # end foreach
+        if ( ! $companies{$$openprint::User{company_id}} ) {
+         $companies{$$openprint::User{company_id}} = $$openprint::User{company_id};
+        } # end if
+				my @company_ids = keys %companies;
+
+				$html .= q`
+		<li>
+			<label>Company</label>
+			<input type="text" onkeyup="filter_companies('popup_company_id', {name:this.value,selected_id:get_ddm_value($('popup_company_id'))});" class="filter" />
+`;
+$html .= ssi::select( 
+ openprint::Company->dropdown(or=>{
+	 'last_project_on is null'=>0,
+		id=>\@company_ids,
+	}
+),
+$session{company_id},
+{ name=>'company_id', id=>'popup_company_id', onchange=>'stop_filter_companies();', prepend=>['','Select a Company'],
+}
+);
+
+		$html .= '
+</li>
+<li><label>Last 10</label>';
+				
+	  $html .= join("\n",
+				map { 
+					sprintf(q`<a onclick="ddm_select_by_value($('popup_company_id'), %d);" href="#">%s</a><br/>`, $$_{id}, $_->name());
+				} openprint::Company->find(id=>\@company_ids)
+				);
+		return $html;
+) ?>
+        </li>
+		</ul>
+		If you would like these projects to be recalculated to update their pricing, select yes.
+		<ul>
+		<li><label>Recalculate</label>
+			<? echo ( radio( 'recalculate', [ '1', 'Yes', '0', 'No' ], '0' ); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	<? endif ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
+	Please click &quot;Save &amp; Continue&quot; if you have provided all the relevant project information.
+	<p class="buttons">
+		<? echo ( join('',
+				button( 'Cancel', { onclick=>'popupWin.destroy();', text=>'Cancel' } ),
+				button( 'SaveAndContinue', { onclick=>'copy_popup_form.submit();', text=>'Save And Continue' } ),
+		); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction" value="Reuse Project"/>
+</form>

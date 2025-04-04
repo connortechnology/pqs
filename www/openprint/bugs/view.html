@@ -1,0 +1,42 @@
+<div class="Bug">
+<form name="f1" id="f1" action="history.html" method="post">
+	<input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{'invoice_id'} ) ?>" />
+	<fieldset><legend>Bug<? echo ( $$variable{'Bug'}->id() ? '('.$$variable{'Bug'}->id().')' : '' ) ?></legend>
+		<? if ( $$variable{'Bug'}->deleted() ) ?>
+		<span class="warning">This bug has been deleted</span>
+		<? endif ( $$variable{'Bug'}->deleted() ) ?>
+		
+		<input type="hidden" name="bug_id" value="<? echo ( $openprint::param{'bug_id'} ) ?>" />
+		<div class="leftColumn">
+			<ul>
+			<li><label for="company_id">Company</label><? echo ( $$variable{Bug}->Company()->name() ) ?></li>
+			<li><label for="user_id">Employee</label><? echo ( $$variable{Bug}->User()->name() ) ?></li>
+			<li><label>Created On</label>
+			<? echo ( $$variable{'Bug'}->created_on() ) ?>
+			</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
+			<li><label for="description">Description</label><? echo ( $$variable{Bug}->description() ) ?> </li>
+			</ul>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				#$html = ssi::button( 'back', { href=>'history.html', text=>'Back' } );
+				
+				if ( $$variable{'Bug'}->id() ) {
+				$html = ssi::button( 'reset', { onclick=>'f1.reset();check_time_starting(f1);', text=>'Reset' } );
+				$html .= ssi::button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", text=>'Destroy' } );
+				$html .= ssi::button( 'copy', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } );
+				} # end if
+				$html .= ssi::button( 'save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>
+</div>

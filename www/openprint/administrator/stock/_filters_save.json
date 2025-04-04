@@ -1,0 +1,32 @@
+<? echo (
+	my $Object = ('openprint::'.$param{type})->new($param{id});
+	my $error;
+	my $html;
+	if ( $param{action} eq 'Save' and $param{name} ) {
+		if ( sets::isin( $param{type}, [ 'InventoryCondition','StockQuality' ] ) ) {
+			$variable{error} .= $Object->save({
+				name	=>	$param{name},
+				message	=>	$param{message},
+				});
+			$html .= sprintf(q`$('%s_name').value = '';`, $param{type}, $Object->name() );
+			$html .= sprintf(q`$('%s_message').value = '';`, $param{type}, $Object->message() );
+		} else {
+			$error .= $Object->save({
+				name	=>	$param{'name'},
+				});
+		} # end if
+		$html .= sprintf(q`$('%s_name').value = '%s';`, $param{type}, $Object->name() );
+	} elsif ( $param{action} eq 'Delete' ) {
+		$error .= $Object->delete();
+	} # end if
+	$html .= "alert('$error');" if $error;
+
+	my @array = ( '', 'select', map { $_->id(), $_->name() } ('openprint::'.$param{type})->find( order=>'name') );
+	$html .= q`
+var ddm = $('`.$param{type}.q`');
+var options = ` . JSON::encode_json( \@array ) . q`;
+clear_ddm(ddm);
+fill_ddm_from_array( ddm, options );
+ddm_select_by_value( ddm, '`.$$Object{id}.q`' );`;
+	return $html;
+) ?>

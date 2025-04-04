@@ -1,0 +1,74 @@
+<? eval (
+	foreach my $p ( 'Side','index','Signature' ) {
+		if ( $param{$p} and ! $$variable{$p} ) {
+			$$variable{$p} = $param{$p};
+		} # end if
+	} # end foreach
+	$$variable{SideIndexSignature} = join('',@$variable{'index','Side','Signature'});
+) ?>
+<div id="ColourCoating<?index?><?Side?><?Signature?>" class="SpecialColour">
+	<span class="checkOption">
+		<input type="checkbox" id="chkColourCoating<?index?><?Side?><?Signature?>" name="chkColourCoating<?index?><?Side?><?Signature?>" value="Y" onclick="if (this.checked){SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );};calc(this.form.name);"
+		<? echo ( checked( $$variable{"chkColourCoating$$variable{index}$$variable{Side}$$variable{Signature}"} eq 'Y' ); ) ?> />
+		<label class="radio-inline" for="chkColourCoating<?index?><?Side?><?Signature?>">Colour/Coating <?index?></label>
+	</span>
+	<? echo ( 
+		my @options = (
+			'PMS', 'PMS Colour',
+		);
+		my @label_options = ('PMS');
+		
+		my @Services;
+    if(!$$variable{Project}->has_service('AqueousOffline')){
+      if ( $$variable{Coatings} ) {
+        @Services = @{$$variable{Coatings}};
+      } else {
+        @Services = @{$$variable{Coatings}} = openprint::Service->find( category=>'Coating', order=>'lower(name)' );
+      } # end if
+      foreach my $S ( @Services ) {
+        if ( $S->name() =~ /Aqueous/i ) {
+          push @label_options, 'AQ';
+        } elsif ( $S->name() =~ /Varnish/i ) {
+          push @label_options, 'Varnish';
+        } elsif ( $S->name() =~ /UV/i ) {
+          push @label_options, 'UV';
+        } elsif ( $S->name() =~ /White/i ) {
+          push @label_options, 'White';
+        } # end if
+      } # end foreach
+      foreach my $index ( 1 .. $$variable{index}-1 ) {
+        for ( my $j = 0; $j < @Services; $j += 1 ) {
+          if ( $$variable{"ColourCoatingType$index$$variable{Side}$$variable{Signature}"} eq $Services[$j]->name() ) {
+            splice @Services, $j, 1;
+            last;
+          } # end if
+        } # end for
+      } # end foreach
+      push @options, map { $_->name(), $_->description() } @Services;
+    }
+		ssi::select( \@options, $$variable{"ColourCoatingType$$variable{SideIndexSignature}"}, {
+				id		=>	join('','ColourCoatingType',@$variable{'index','Side','Signature'} ),
+				name	=>	join('','ColourCoatingType',@$variable{'index','Side','Signature'} ),
+				onchange=>qq`SpecialColour_onchange(this,'$$variable{Side}','$$variable{index}','$$variable{Signature}');`, 
+				prepend=>[ '', 'Select '.join(' / ', sets::union( @label_options ) ) ],
+				} );
+	) ?>
+	<input type="text" id="ColourCoatingColour<?index?><?Side?><?Signature?>" name="ColourCoatingColour<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingColour$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" <? echo ( $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} =~ /PMS/ ? '' : 'style="display:none;"' ) ?> />
+	<span id="ColourCoatingCoverage<?index?><?Side?><?Signature?>" <? echo ( $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} =~ /Overall/ ? 'style="display:none;"' : '' ) ?> >
+		<? echo ( input( 
+					type	=>	'float', 
+					class	=>	'Coverage', 
+					name	=>	'ColourCoatingCoverage'.join('',@$variable{'index','Side','Signature'}),
+          value =>$$variable{'ColourCoatingCoverage'.join('',@$variable{'index','Side','Signature'})},
+          onkeyup=>"SpecialColour_onchange(this, '$$variable{Side}', '$$variable{index}', '$$variable{Signature}' );",
+          ); ) ?>
+%</span>
+	<span id="ColourCoatingPrice<?index?><?Side?><?Signature?>" class="Price" <? echo ( $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} =~ /PMS/ ? '' : 'style="display:none;"' ) ?>>
+		Price: ($/Kg)
+		<? echo ( input( type=>'float', name=>'ColourCoatingPrice'.join('',@$variable{'index','Side','Signature'}), value=>$$variable{'ColourCoatingPrice'.join('',@$variable{'index','Side','Signature'})}, onkeyup=>"SpecialColour_onchange(this, '$$variable{Side}', '$$variable{index}', '$$variable{Signature}' );" ); ) ?>
+	</span>
+	<span id="ColourCoatingMileage<?index?><?Side?><?Signature?>" class="Mileage" <? echo ( $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} =~ /PMS/ ? '' : 'style="display:none;"' ) ?>>
+		Mileage: (in/Kg)
+		<? echo ( input( type=>'cardinal', name=>'ColourCoatingMileage'.join('',@$variable{'index','Side','Signature'}), value=>$$variable{'ColourCoatingMileage'.join('',@$variable{'index','Side','Signature'})}, onkeyup=>"SpecialColour_onchange(this, '$$variable{Side}', '$$variable{index}', '$$variable{Signature}' );" ); ) ?>
+	</span>
+</div>

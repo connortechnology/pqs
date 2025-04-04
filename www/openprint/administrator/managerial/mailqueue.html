@@ -1,0 +1,36 @@
+<?include(/includes/error_reporting.html)?>
+<form name="f1" action="?" method="post">
+<input type="checkbox" onclick="select_all(this.form, 'queue_id', this.checked );"/> All<br/>
+<?echo(
+my $html;
+	my @data = qx</usr/sbin/postqueue -p>;
+	while ( @data ) {
+		my $line = shift @data;
+		my $queue_id;
+		if ( $line =~ /^(\w+)(\*|\!)?\s/ ) {
+		  $queue_id = $1;
+			my $status = shift @data;
+			my $email_address = shift @data;
+			chomp($email_address);
+			$email_address = $openprint::User->transform(email=>$email_address);
+			my @Users = openprint::User->find(email=>$email_address);
+
+		  $html .= '<p>'.
+			join('<br/>', 
+					checkboxes('queue_id', [$queue_id], undef).$line, $status, $email_address,
+					( map { $_->name() . ' valid? ' . $_->email_valid() . ' mailinglist? ' . $_->mailinglist() } @Users )
+					).
+			'</p>';
+# Need to be root to view
+#my $content = `postcat -q $queue_id`;
+#$log->debug("Content for postcat -q $queue_id: $content");
+#		$html .= '<p>'.$content.'</p>';
+		}
+	}
+	return $html;
+)?>
+<?echo ( join("\n",
+			button('Delete', { type=>'submit', name=>'action', value=>'Delete'} ),
+			button('DeleteAndMarkInvalid', { type=>'submit', name=>'action', value=>'DeleteAndMarkInvalid', text=>'Delete And Mark Invalid'} ),
+);)?>
+</form>

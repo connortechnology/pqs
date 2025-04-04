@@ -1,0 +1,37 @@
+<p>
+		<label>Relevant POs</label>
+<? echo ( 
+	my $html = '';
+	if ( $param{supplier_id} or $param{Docket} ) {
+		$html .= '<table class="List"><tr><th class="po_id">PO ID</th><th class="description">Description</th><th class="buttons"></th></tr>';
+		my %filters = (
+			order			=>	'id',
+			#'manifest_id is null'	=>	1,
+		);
+		$filters{supplier_id} = $param{supplier_id} if $param{supplier_id};
+		$filters{'docket any'} = $param{Docket} if $param{Docket};
+		my $rowclass;
+		foreach my $PO ( openprint::PurchaseOrder->find(%filters) ) {
+			$html .= sprintf(
+					q`
+<tr %3$s onclick="$('po_id').value=%1$d;">
+	<td class="po_id">%2$s</td>
+	<td class="description">%4$s</td>
+	<td class="buttons">%5$s</td>
+</tr>
+
+`, $PO->id(), $PO->link_to(), $rowclass,
+			join("\n", map { 
+				sprintf('%1$d %2$s<br/>', $_->docket(), $_->description() );
+			} $PO->Contents() ),
+			button('selectpo'.$PO->id(), {onclick=>'select_po('.$$variable{Type}->id().','.$PO->id().');', text=>'Select'}),
+);
+			$rowclass = $rowclass ? '' : 'class="colRow"';
+		} # end foreach PO
+		$html .= '</table>';
+	} else {
+		$html .= 'Please select a vendor and/or enter a docket # to show relevant POs';
+	} # end if
+	return $html;
+) ?>
+</p>

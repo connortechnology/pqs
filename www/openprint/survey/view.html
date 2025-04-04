@@ -1,0 +1,111 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<div class="Survey"><div class="View">
+	<? if ( $$variable{'Survey'}->created_by() ) ?>
+	<div class="CreatedBy"><? echo ( my $User = new openprint::User( $$variable{'Survey'}->created_by() )->thumbnail_html(); ) ?></div>
+	<? endif ( $$variable{'Survey'}->created_by() ) ?>
+	<h1><? echo ( $$variable{'Survey'}->name() ) ?></h1>
+	<? echo ( $$variable{'Survey'}->description() ) ?>
+
+<? if ( $session{'user_id'} ) ?>
+<div id="Opinions"><? echo ( $$variable{'Survey'}->opinions('Opinions') ) ?></div>
+<? endif ( $session{'user_id'} ) ?>
+	
+	<form id="f1" name="f1" method="post" action="view.html<? echo ( $$variable{'Survey'}->id() ? '?survey_id='.$$variable{'Survey'}->id() : '' ) ?>">
+		<input type="hidden" name="action" />
+		<p class="buttons">
+			<? echo ( join('',
+				button( 'SubmitTop', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();", 'text'=>'Submit' } ),
+				( $$variable{'Survey'}->can_edit() ? (
+				  button( 'DeleteTop', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id(), 'text'=>'Delete' } ),
+				  button( 'EditTop', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Edit' } ),
+				  button( 'ResponsesTop', { href=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), text=>'Responses' } ),
+				  ) : () ),
+			); ) ?>
+		</p>
+		<? echo (
+			my $html = '';
+			my $can_edit = $$variable{'Survey'}->can_edit();
+
+			$html .= '<ol class="Questions">';
+			foreach my $Category ( openprint::Survey_Question_Category->find( order=>'sorting' ), new openprint::Survey_Question_Category() ) {
+			my @Questions = openprint::Survey_Question->find( survey_id=>$$variable{Survey}->id(), category_id=>($$Category{id} ? $$Category{id} : undef ), order=>'sorting' );
+
+			foreach my $Question ( @Questions ) {
+$html .= sprintf('<li class="Question"><div class="text">%s</div>', $Question->text() );
+				my $Response = undef;
+				my %Responses;
+				my @Responses = openprint::Survey_Response->find( question_id=>$Question->id() );
+				foreach my $R ( @Responses ) {
+					foreach my $answer_id ( $R->answer_ids() ? @{$R->answer_ids()} :() ) {
+						push @{$Responses{$answer_id}}, $R;
+					} # end foreach
+					if (
+						( $R->user_id() == $session{'user_id'} ) and
+						( $R->Answers() or $R->answer() ) ) {
+						# handle when no actual was given, but a response was recorded
+						$Response = $R;
+					} # end if
+				} # end foreach Response
+
+				if ( $Response or $can_edit ) {
+					# Responded, just show totals, and what we chose.  There can be a button for editing
+
+					$html .= '<ul>';
+					foreach my $AA ( $Question->Available_Answers() ) {
+						@{$Responses{$AA->answer_id()}} = () if ! $Responses{$AA->answer_id()};
+						$html .= sprintf( '<li><label>%s</label><span class="percent">%.1f%</span></li>', $AA->Answer()->text(), 100*( @Responses ? scalar(@{$Responses{$AA->answer_id()}})/@Responses : 0 ) );
+					} # end foreach
+					$html .= '</ul>';
+					if ( $Response ) {
+						$html .= '<div class="response">Your reponse: ' . join(',',map{$_->text()} $Response->Answers() ).'<br/>' . ( $Response->answer() ? $Response->answer().'</div>' : '' );
+					} # end if
+				} # end if
+				if ( ! $Response ) {
+					# Did not respond
+					$Response = new openprint::Survey_Response() if ! $Response;
+					$html .= '<div class="answers">';
+					if ( $Question->type() eq 'radio' ) {
+						$html .= radio( 'answer_id-'.$Question->id(), 
+								[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ], 
+								$Response->answer_ids(),
+								);
+					} elsif ( $Question->type() eq 'checkbox' ) {
+						$html .= checkboxes( 'answer_id-'.$Question->id(), 
+								[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ], 
+								$Response->answer_ids(),
+								);
+					} elsif ( $Question->type() eq 'select' ) {
+						$html .= sprintf('<select name="answer_id-%1$d" id="answer_id-%1$d">%2$s</select>', $$Question{'id'},
+								make_drop_down( [ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], $Response->answer_ids() ) );
+					} # end if
+					if ( $$Question{allow_comments} ) {
+						$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea>', $$Question{id} );
+					}
+					$html .= '</div>';
+					if ( $$Question{allow_public} ) {
+						$html .= sprintf('<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response', $$Question{id} );
+					} # end if
+					$html .= '</li>';	
+				} # end if Response
+			} # end foreach Question
+			} # end foreach Category
+			$html .= '</ol>';
+			return $html;
+		) ?>
+		<br/>
+		<p class="buttons">
+			<? echo ( join('',
+				button( 'SubmitBottom', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();", 'text'=>'Submit' } ),
+( $$variable{'Survey'}->can_edit() ? (
+	button( 'DeleteBottom', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id(), 'text'=>'Delete' } ),
+	button( 'EditBottom', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Edit' } ),
+	button( 'ResponsesBottom', { 'href'=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Responses' } ),
+) : () ),
+			); ) ?>
+		</p>
+	</form>
+<? if ( $session{'user_id'} ) ?>
+<div id="Comments"><fieldset><legend>Comments</legend><? echo ( include('_comments.html'); ) ?></fieldset></div>
+<? endif ( $session{'user_id'} ) ?>
+</div>
+</div>

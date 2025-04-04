@@ -1,0 +1,71 @@
+<table class="schedule"><thead>
+<tr>
+<? echo (
+	my @statuses = split(',', $session{'/employee/production/jobs_by_csr.html?status'} );
+
+	@{$$variable{CSRS}} = openprint::User->find(
+		company_id	=>	$config{owner_id},
+		'usergroup any'	=>	'Sales',
+		( $session{'/employee/production/jobs_by_csr.html?salesrep_id'} ? ( id =>	[ split(',',$session{'/employee/production/jobs_by_csr.html?salesrep_id'}) ] ) : () ),
+		order		=>	'lower(firstname),lower(lastname)',
+	);
+	my $html;
+	foreach my $CSR ( @{$$variable{CSRS}} ) {
+		$html .= '<th class="PressColumn"><a href="/employee/production/jobs_by_csr.html?salesrep_id='.$CSR->id().'">'.$CSR->name().'</a></th>';
+	} # end foreach
+	$html .= '</tr></thead><tbody>';
+
+	my %sql = (
+		( $session{'/employee/production/jobs_by_csr.html?company_id'} ? ( company_id => $session{'/employee/production/jobs_by_csr.html?company_id'} ) : () ),
+		status		=>	\@statuses,
+		salesrep_id	=>	[ map { $_->id() } @{$$variable{CSRS}} ],
+		order		=>	'priority',
+		);
+	if ( $session{'/employee/production/jobs_by_csr.html?docket'} ) {
+		if ( $session{'/employee/production/jobs_by_csr.html?docket'} =~ /^<(\d+)/ ) {
+			$sql{'docket <'} = $1;
+		} elsif ( $session{'/employee/production/jobs_by_csr.html?docket'} =~ /^>(\d+)/ ) {
+			$sql{'docket >'} = $1;
+		} else {
+			$sql{docket} = $session{'/employee/production/jobs_by_csr.html?docket'};
+		} # end if
+	} # end if
+
+	my $ac = sql::start_transaction( $dbh ); # for speed
+	my @Projects = openprint::Project->find( %sql );
+
+	# For caching
+	openprint::Company->find( id => [ sets::union( map { $_->company_id() } @Projects ) ] ) if @Projects;
+	my %Jobs;
+	foreach ( @Projects ) {
+		push @{$Jobs{$_->Order()->Company()->salesrep_id()}{$_->status()}}, $_;
+	} # end foreach
+
+	my $ul_html = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.'/employee/production/_jobs_by_csr_ul.html' );
+
+	foreach my $status ( @statuses ) {
+		$html .= '<tr>';
+
+	foreach my $CSR ( @{$$variable{CSRS}} ) {
+
+		$html .= '<td class="PressColumn">';
+			$html .= '<h3>'.$status.'</h3>';
+			my $id = $status; $id =~ s/\s/_/g;
+			$html .= qq`<ul id="csr_$$CSR{id}_$id">`;
+		
+			if ( $Jobs{$$CSR{id}} and $Jobs{$$CSR{id}}{$status} ) {
+				$$variable{ul_id} = "csr_$$CSR{id}_$id";
+				$$variable{Projects} = $Jobs{$$CSR{id}}{$status};
+				$html .= ssi::variable_substitution( $r, $log, $dbh, \$ul_html, $variable );
+			} # end if JOBS
+			$html .= '</ul>';
+		$html .= qq`<script type="text/javascript">Sortable.create('csr_$$CSR{id}_$id', { onUpdate:dropfunction } );</script>`;
+		$html .= '</td>';
+	} # end foreach CSR
+$html .= '</tr>';
+		} # end foreach status
+	sql::end_transaction( $dbh, $ac );
+
+	return $html;
+) ?>
+</tbody></table>

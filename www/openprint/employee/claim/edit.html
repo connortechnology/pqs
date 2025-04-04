@@ -1,0 +1,301 @@
+<script type="text/javascript">
+function calc_price( element ) {
+	var re = /(.*)-(.*)/
+	var matches = re.exec( element.name );
+	if ( matches ) {
+		var index = matches[2];
+		$('alert-'+index).innerHTML = '';
+		
+		$('cost-'+index).value = $('cost-'+index).value.replace(/[^\d\-\.]/g, '' );
+		var cost = parseFloat( $('cost-'+index).value );
+		if ( ! cost )
+			$('alert-'+index).innerHTML += 'Please enter cost.<br/>';
+
+		$('quantity-'+index).value = $('quantity-'+index).value.replace(/[^\d\-\.]/g, '' );
+		var qty = parseFloat( $('quantity-'+index).value );
+
+		if ( $('type-'+index) && ( $('type-'+index).value == 'Sheet Stock' ) ) {
+			var mweight = parseFloat( $('mweight-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+			$('weight-'+index).value = qty * mweight / 1000;
+			qty = 1;
+		} else {
+			$('weight-'+index).value = $('weight-'+index).value.replace(/[^\d\-\.]/g, '' );
+		} // end if
+		var weight = parseFloat( $('weight-'+index).value );
+		var weight_units = $('weight_units-'+index).value;
+
+		var cost_units = $('cost_units-'+index).value;
+		if ( cost_units == '/100lb' ) {
+			if ( ! qty ) {
+				$('alert-'+index).innerHTML += 'Please enter the quantity of items at the given weight in the quantity field.';
+				$('quantity-'+index).value = 1;
+				qty = 1;
+			} // end if
+			if ( ! weight_units ) {
+				ddm_select_by_value( $('weight_units-'+index), 'lb' );
+				weight_units = 'lb';
+			} else if ( weight_units != 'lb' ) {
+				$('alert-'+index).innerHTML += 'The weight is given in ' + weight_units + ' but should be in lbs';
+			} // end if
+			qty = weight * qty / 100;
+		} else if ( cost_units == '/M' ) {
+			if ( ! qty )
+				$('alert-'+index).innerHTML += 'Please enter quantity.<br/>';
+			qty = qty/1000;
+		} else if ( cost_units == '/1000' ) {
+			if ( ! qty )
+				$('alert-'+index).innerHTML += 'Please enter quantity.<br/>';
+			qty = qty/1000;
+		} else if ( cost_units == '/Kg' ) {
+			if ( ! qty ) {
+				$('alert-'+index).innerHTML += 'Please enter the quantity of items at the given weight in the quantity field.';
+				$('quantity-'+index).value = 1;
+				qty = 1;
+			} // end if
+			if ( ! weight_units ) {
+				ddm_select_by_value( $('weight_units-'+index), 'Kg' );
+				weight_units = 'Kg';
+			} else if ( weight_units != 'Kg' ) {
+				$('alert-'+index).innerHTML += 'The weight is given in ' + weight_units + ' but should be in Kgs';
+			} // end if
+		} else if ( cost_units == '/Hr.' ) {
+			if ( ! qty ) 
+				$('alert-'+index).innerHTML += 'Please enter the # of hours.<br/>';
+		} else if ( cost_units == 'Each' ) {
+			if ( ! qty )
+				$('alert-'+index).innerHTML += 'Please enter quantity.<br/>';
+		} // end if
+		$('total-'+index).value = do_decimals( cost * qty, 2 );
+		if ( weight && ! weight_units ) {
+			$('alert-'+index).innerHTML += 'Please select the units that the weight are in.<br/>';
+		} // end if
+	} // end if
+} // end function calc_price
+function update_totals( form ) {
+	var subtotal = 0;
+	var total;
+	var re = /total-(.+)/
+
+	for ( var index = 0; index < form.elements.length; index += 1 ) {
+		var e = form.elements[index];
+		var matches = re.exec( e.name );
+		if ( matches ) {
+			subtotal += parseFloat(1*e.value);
+		} // end if
+	} // end for
+	//$('subtotal').innerHTML = subtotal;
+	$('subtotal').innerHTML = do_decimals( subtotal, 2 );
+	var total = subtotal;
+	var tax = 0;
+	<? echo ( 
+		my $html = '';
+		foreach my $Tax ( $$variable{Claim}->Taxes() ) {
+			$html .= sprintf(q`
+				if ( form.elements['tax_charge-%1$d'].checked ) {
+					tax = subtotal * $('tax_rate-%1$d').innerHTML/100;
+				} else {
+					tax = 0;
+				} // end if
+				$('tax-%1$d').innerHTML = do_decimals( tax, 2 );
+				total += parseFloat( tax );
+			`, $Tax->id() );
+		} # end foreach Tax
+		return $html;
+	) ?>
+	$('total').innerHTML = do_decimals( total, 2 );
+} // end function update_totals
+function getSelectionId(input, li) {
+	var re = /(\w+)-(\w+)/;
+	var matches = re.exec( input.id );
+	if ( matches ) {
+		if ( matches[1] == 'item' ) {
+			var description = Ajax.Autocompleter.extract_value(li, 'description');
+			if ( description != 'undefined' ) 
+				$('description-'+matches[2]).value;
+			var price = Ajax.Autocompleter.extract_value(li, 'price');
+			if ( price != 'undefined' )
+				$('price-'+matches[2]).value = price;
+		} // end if
+	} // end if
+} // end function getSelectionId
+
+function textarea_init () {
+  tinyMCE.init({
+	theme : "advanced",
+	plugins : "tabfocus,paste",
+	mode: "specific_textareas",
+	editor_selector : "mce",
+	theme_advanced_toolbar_location : "external",
+	theme_advanced_toolbar_align : "left",
+	theme_advanced_resizing : "true",
+	theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull",
+	theme_advanced_buttons2 : "formatselect,bullist,numlist,outdent,indent",
+	theme_advanced_buttons3 : "",
+	auto_resize : true,
+	tab_focus : ':prev,:next'
+
+  });
+}
+textarea_init();
+
+function add_content(form) {
+	form = $(form);
+	if ( form.type_id.selectedIndex < 1 ) {
+		alert('Please select the type of line to add.');
+		return;
+	} 
+	tinyMCE.triggerSave();
+
+	new Ajax.Updater( 'Contents','_contents.html?action=Add&claim_id=<? echo ( $$variable{Claim}->id() ) ?>', {
+			parameters: form.serialize(),
+			onComplete: textarea_init,
+			evalScripts: true
+		}
+	);
+} // end function add_Content(form)
+function del_content(form, content_id ) {
+	form = $(form);
+	tinyMCE.triggerSave();
+	new Ajax.Updater( 'Contents','_contents.html?action=Delete&claim_id=<? echo ( $$variable{Claim}->id() ) ?>&amp;content_id='+content_id, {
+			parameters: form.serialize(),
+			onComplete: textarea_init,
+			evalScripts: true
+		}
+	);
+} // end function add_Content(form)
+function set_description(index) {
+    var desc = $('description-'+index);
+    desc.value = '';
+    if ( $('mweight-'+index) ) { 
+        desc.value += $('mweight-'+index).value +'M ';
+    } // end if
+    var type = $('stocktype-'+index);
+    if ( type && type.options[type.selectedIndex].value ) {
+        desc.value += type.options[type.selectedIndex].value + ' ';
+    } // end if
+    desc.value += $('name-'+index).value;
+}
+function validate( form ) {
+	form = $(form);
+	if ( form.filed.checked && ! ( get_ddm_value( form.filed_on_year ) && get_ddm_value( form.filed_on_month ) && get_ddm_value( form.filed_on_day ) ) ) {
+		alert('Please enter the filed on date.');
+		return false;
+	}
+	if ( form.sent_to_accounts.checked && ! ( get_ddm_value( form.sent_to_accounts_on_year ) && get_ddm_value( form.sent_to_accounts_on_month ) && get_ddm_value( form.sent_to_accounts_on_day ) ) ) {
+		alert('Please enter the sent to accounts on date.');
+		return false;
+	}
+	if ( form.cancelled.checked && ! ( get_ddm_value( form.cancelled_on_year ) && get_ddm_value( form.cancelled_on_month ) && get_ddm_value( form.cancelled_on_day ) ) ) {
+		alert('Please enter the cancelled on date.');
+		return false;
+	}
+	if ( form.paid.checked && ! ( get_ddm_value( form.paid_on_year ) && get_ddm_value( form.paid_on_month ) && get_ddm_value( form.paid_on_day ) ) ) {
+		alert('Please enter the cancelled on date.');
+		return false;
+	}
+	return true;	
+} 
+</script>
+<form id="f1" name="f1" action="<? echo ( $$variable{Claim}->id() ? 'view' : 'edit' ) ?>.html?claim_id=<? echo ( $$variable{Claim}->id() ) ?>" method="post">
+	<?include(/includes/error_reporting.html)?>
+	<p class="buttons" id="buttons">
+<? echo ( 
+	my $html = '';
+	$html .= button( 'Save', { onclick=>q`if(validate('f1')){$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();}`, 
+		text => $$variable{Claim}->id() ? 'Save' : 'Create Claim' } );
+	if ( $$variable{Claim}->id() ) {
+		$html .= button( 'Delete', { onclick=>"\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();", text=>'Delete' } );
+	}  # end if
+	return $html;
+) ?>
+	</p>
+	<div class="Claim"><div class="Edit">
+		<div class="PageTitle">
+		<h1>CLAIM (<? echo ( $$variable{Claim}->id() ) ?>)</h1>
+		</div>
+		<?include(_vendor.html)?>
+		<div class="rightColumn">
+			<fieldset>
+				<ul>
+				<li><label>Filed to vendor
+					<input type="checkbox" name="filed" id="filed" onclick="if(this.checked){$('filed_on_span').show();} else {$('filed_on_span').hide();}" <? echo ( ssi::checked( $$variable{Claim}->filed_on() ); ) ?> />
+					</label>
+					<span id="filed_on_span" <? echo ( $$variable{Claim}->filed_on() ? '' : 'style="display:none;"' ) ?>><? echo ( date_select( 'filed_on', $$variable{Claim}->filed_on() ); ) ?></span>
+				</li>
+				<li><label>Sent to accounts
+					<input type="checkbox" name="sent_to_accounts" id="sent_to_accounts" onclick="if(this.checked){$('sent_to_accounts_on_span').show();} else {$('sent_to_accounts_on_span').hide();}" <? echo ( checked( $$variable{Claim}->sent_to_accounts_on() ); ) ?> />
+</label>
+					<span id="sent_to_accounts_on_span" <? echo ( $$variable{Claim}->sent_to_accounts_on() ? '' : 'style="display:none;"' ) ?>><? echo ( date_select( 'sent_to_accounts_on', $$variable{Claim}->sent_to_accounts_on() ); ) ?></span>
+				</li>
+				<li><label>Invoiced On
+					<input type="checkbox" name="invoiced" id="invoiced" onclick="if(this.checked){$('invoiced_on_span').show();$('invoice_id_span').show();} else {$('invoiced_on_span').hide();$('invoice_id_span').hide();}" <? echo ( ssi::checked( $$variable{Claim}->invoiced_on() ); ) ?> />
+</label>
+					<span id="invoiced_on_span" <? echo ( $$variable{Claim}->invoiced_on() ? '' : 'style="display:none;"' ) ?>>
+					<? echo ( date_select( 'invoiced_on', $$variable{Claim}->invoiced_on() ); ) ?>
+					</span>
+				</li>
+				<li id="invoice_id_span" <? echo ( $$variable{Claim}->invoiced_on() ? '' : 'style="display:none;"' ) ?>><label>Invoice #</label>
+					<input type="text" name="invoice_id" id="invoice_id" value="<? echo ( $$variable{Claim}->invoice_id() ) ?>" />
+				</li>
+				<li><label>Cancelled On
+					<input type="checkbox" name="cancelled" id="cancelled" onclick="if(this.checked){$('cancelled_on_span').show();} else {$('cancelled_on_span').hide();}" <? echo ( checked( $$variable{Claim}->cancelled_on() ); ) ?> />
+</label>
+					<span id="cancelled_on_span" <? echo ( $$variable{Claim}->cancelled_on() ? '' : 'style="display:none;"' ) ?>><? echo ( date_select( 'cancelled_on', $$variable{Claim}->cancelled_on() ); ) ?></span>
+				</li>
+				<li><label>Paid On
+					<input type="checkbox" name="paid" id="paid" onclick="if(this.checked){$('paid_on_span').show();} else {$('paid_on_span').hide();}" <? echo ( checked( $$variable{Claim}->paid_on() ); ) ?> />
+</label>
+					<span id="paid_on_span" class="DateSelector" <? echo ( $$variable{Claim}->paid_on() ? '' : 'style="display:none;"' ) ?>><? echo ( date_select( 'paid_on', $$variable{Claim}->paid_on() ); ) ?></span>
+				</li>
+				<li><label>Docket</label><input type="text" name="docket" id="docket" value="<? echo ( join(',',$$variable{Claim}->docket() ? @{$$variable{Claim}->docket()} : ()) ) ?>" onkeyup="this.value=this.value.replace(/[^,\d]/g,'');" /></li>
+				<li><label>Editors</label><span id="editors"><?include('_editors.html')?></span></li>
+				<li><label>Also Notify</label><span id="also_notify"><?include('_also_notify.html')?></span></li>
+				</ul>
+			</fieldset>
+		</div>
+		<br class="spacer"/>
+		<? if ( $$variable{Claim}->id() ) ?>
+		<div id="Contents"><?include(_contents.html)?></div>
+		<? endif ( $$variable{Claim}->id() ) ?>
+<table class="List">
+    <tr class="subtotal">
+		<td class="RemarksTitle" rowspan="<? echo ( $$variable{Claim}->Taxes() + 2 ) ?>">
+Remarks:<br/>
+<textarea class="mce" id="reason" name="reason" rows="2"><? echo ( $$variable{Claim}->reason() ) ?></textarea>
+		</td>
+        <td class="totals">SUBTOTAL</td>
+        <td class="Price"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{Claim}->Currency()->symbol(), $$variable{Claim}->subtotal(0) ); ) ?></td>
+    </tr>
+	   <? echo ( 
+			my $html;
+			foreach my $Tax ( $$variable{Claim}->Taxes() ) {
+				$html .= sprintf('<tr class="tax"><td class="totals">%2$s (<span id="tax_rate-%1$d">%3$d</span>%)
+					<input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" /></td><td class="Price">%4$s<span id="tax-%1$d">%5$.2f</span></td></tr>', $Tax->id(),
+					$Tax->name(), $Tax->rate(), $$variable{Claim}->Currency()->symbol(), $Tax->amount(),
+					ssi::checked( $Tax->charge() ),
+					);
+			} # end foreach Tax
+			return $html;
+		) ?>
+    <tr class="total">
+        <td class="totals">TOTAL</td>
+        <td class="Price"><? echo ( sprintf('%s<span id="total">%.2f</span>', $$variable{Claim}->Currency()->symbol(), $$variable{Claim}->total() ); ) ?></td>
+    </tr>
+</table>
+
+		<div class="leftColumn">
+		</div>
+		<div class="rightColumn" style="text-align: right;">
+			Currency:
+			<select name="currency_id">
+				<option value=""> select one </option>
+				<? echo ( make_drop_down( openprint::Currency->dropdown(), $$variable{Claim}->currency_id() ? $$variable{Claim}->currency_id() : $session{Currency_id} ); ) ?>
+			</select>
+			<br class="spacer"/>
+		</div>
+		<br class="spacer"/><br/>
+<? endif ( $$variable{Claim}->id() ) ?>
+		</div>
+	</div><!--Claim-->
+	<input type="hidden" name="btnFunction" />
+</form>

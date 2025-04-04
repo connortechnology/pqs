@@ -1,0 +1,64 @@
+<?include('/includes/error_reporting.html')?>
+<? echo (
+	my $html = '';
+
+	my %totals = %{$$variable{totals}};
+	my %Stocks = %{$$variable{Stocks}};
+	my %Projects = %{$$variable{Projects}};
+	my @Orders = @{$$variable{Orders}};
+
+	$html .= '<table id="ResultsTable" class="List sortable">
+	<tr>
+		<th class="Stock">Stock</th>
+		<th class="QTY Projects">Projects</th>
+		<th class="QTY Orders">Orders</th>
+		<th class="QTY Sheets">Sheets</th>
+		<th class="QTY Weight">Weight</th>
+		<th class="Price">Price</th>
+	</tr>';
+		my $rowclass;
+		my $total_sheets = 0;
+		my $total_lbs = 0;
+		my $total_price = 0;
+
+		foreach my $paper_string ( sort keys %totals ) {
+			my $Stock = $Stocks{$paper_string};
+			my $quantity = $totals{$paper_string}{quantity};
+			my @unique_order_ids = sets::union( map { $$_{id} } @{$totals{$paper_string}{Orders}} );
+			my @unique_project_ids = sets::union( map { $$_{id} } @{$totals{$paper_string}{Projects}} );
+
+			$html .= sprintf('
+<tr>
+	<td class="Stock">%1$s</td>
+	<td class="QTY Projects">%2$s</td>
+	<td class="QTY Orders">%3$s</td>
+	<td class="QTY Sheets">%4$s</td>
+	<td class="QTY Weight">%5$s lbs</td>
+	<td class="Price">%6$s</td>
+</tr>
+',
+				$paper_string, 
+				scalar @unique_project_ids,
+				scalar @unique_order_ids,
+				$Stock->type() eq 'Sheet' ? Number::Format::format_number($quantity).' sheets' : '',
+				Number::Format::format_number($Stock->type() eq 'Roll' ? $quantity : $quantity * $Stock->sheet_weight() ),
+				openprint::Currency::format( $totals{$paper_string}{price} ),
+			);
+			$html .= "\n";
+			if ( $Stock->type() eq 'Roll' ) {
+				$total_lbs += $quantity;
+			} else {
+				$total_lbs += $quantity * $Stock->sheet_weight();
+				$total_sheets += $quantity;
+			} # end if
+			$total_price += $totals{$paper_string}{price};
+		} # end foreach paper_string
+		my @project_ids = sets::union( map { $$_{id} } map { @{$_} } values %Projects );
+		$html .= '<tr class="totals"><td>Totals</td><td class="QTY Projects">'.@project_ids.'</td><td class="QTY Orders">'.@Orders.'</td><td class="QTY Sheets">'. Number::Format::format_number($total_sheets) .'sheets</td><td class="QTY Weight">'.Number::Format::format_number($total_lbs).'lbs</td><td class="Price">'.openprint::Currency::format( $total_price ) . '</td></tr>';
+	return $html;
+) ?>
+</table>
+Prices shown in <?echo($openprint::Currency->name())?>.
+<script type="text/javascript">
+TableKit.Sortable.init('ResultsTable');
+</script>

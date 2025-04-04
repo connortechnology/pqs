@@ -1,0 +1,17 @@
+Your account status has changed!<br/>
+<br/>
+You account has been deactivated by an administrator.
+You will no longer be able to log in to our website at <? echo ( $openprint::config{'ExternalSiteURL'} ) ?>.<br/>
+<br/>
+<p>
+  If you have any questions, please contact
+  <? echo (
+	  my $Company = $$variable{'User'}->Company();
+	  if ( $Company->salesrep_id() ) {
+          my $CSR = new openprint::User( $Company->salesrep_id() );
+          return sprintf('<a href="mailto:%s">%s %s</a>.', $CSR->email(), $CSR->firstname(), $CSR->lastname() );
+      } else {
+          return qq`our <a href="$openprint::config{'ExternalSiteURL'}/support/help_desk.html">helpdesk</a>.`;
+      } # end if
+) ?>
+</p>

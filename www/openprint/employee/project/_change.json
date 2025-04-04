@@ -1,0 +1,6 @@
+<? echo ( 
+	$r->content_type('text/javascript');
+	my $html = "alert('$variable{error}');\n" if $variable{error};
+	$html .= "alert('$variable{alert}');\n" if $variable{alert};
+	return $html;
+) ?>

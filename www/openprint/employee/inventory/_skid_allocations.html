@@ -1,0 +1,42 @@
+<?include(/includes/error_reporting.html)?>
+<table class="List">
+	<tr>
+		<th class="DateTime">When</th>
+		<th class="paper_name">Paper</th>
+		<th class="Docket">Docket</th>
+		<th class="Quantity">Amount</th>
+		<th class="buttons">&nbsp;</th>
+	</tr>
+	<? echo (
+		my $html;
+		my @Allocations = openprint::PaperAllocation->find( 'skid_ids any'=>$$variable{Skid}->id(), order=>'created_on' );
+		$$variable{TotalAllocated} = 0;
+
+		my $rowclass;
+		foreach my $Allocation ( @Allocations ) {
+			my $Paper = $Allocation->Paper();
+			$html .= sprintf( '<tr%s><td class="DateTime">%s</td><td class="paper_name"><a href="/employee/inventory/paper_details.html?paper_id=%d">%s</a></td><td class="Docket"><a href="/employee/project/view.html?docket=%d">%s</a></td><td class="Quantity">%s%s</td>',
+				$rowclass,
+				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Allocation->created_on() ) ),
+				$Paper->id(),
+				$Paper->to_string(),
+				$Allocation->docket(),
+				$Allocation->docket(),
+				Number::Format::format_number($Allocation->quantity()),
+				$Allocation->units(),
+				);
+			$html .= '<td class="buttons">';
+			$html .= button( 'delete'.$$Allocation{id}, { onclick=>sprintf(q`new Ajax.Updater('Allocations', '_skid_allocations.html', { parameters: { allocation_id : %1$d, skid_id: %2$d, action: 'delete' } } );`, $Allocation->id(), $$variable{skid_id} ), text=>'X', title=>'Delete' } );
+			$html .= '</td></tr>';
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			$$variable{'TotalAllocated'} += $Allocation->quantity();
+			$$variable{'Units'} = $Allocation->units();
+		} # end foreach
+		return $html;
+	) ?>
+	<tr class="totals">
+		<td colspan="3"><b>Totals</b></td>
+		<td class="Quantity"><? echo ( Number::Format::format_number($$variable{'TotalAllocated'}).$$variable{'Units'} ) ?></td>
+		<td>&nbsp;</td>
+	</tr>
+</table>

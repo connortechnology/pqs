@@ -1,0 +1,110 @@
+<? eval (
+
+	@{$$variable{PROJECTS}} = openprint::Project->find(
+		date_filter( '/employee/reports/turnaround.html?due_date_end', 'due_date >=' ),
+		date_filter( '/employee/reports/turnaround.html?due_date_start', 'due_date >=' ),
+		status	=>	['Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Picked Up','Shipped','Complete','Waiting For Pickup'],
+		( $param{csr_id} ? ( csr_id => $param{csr_id} ) : () ),
+		order	=>	'lngdocketnumber',
+	);
+) ?>
+Results for <? echo ( 
+	$$variable{FastCount} = 0;
+	$$variable{MediumCount} = 0;
+	$$variable{LateCount} = 0;
+	$$variable{DocketCount} = 0;
+	if ( $param{CSR} ) {
+		return new openprint::User( $param{CSR} )->name();	
+	} # end if
+	return '';
+) ?>
+<? echo ( 
+ssi::date_filter( '/employee/reports/turnaround.html?due_date_start', 'due_date >=' ) ?
+Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( join('-',
+@session{ map { '/employee/reports/turnaround.html?due_date_start_'.$_ } 'year','month','day' } ) ) ) : ''; ) ?> 
+to 
+<? echo ( 
+ssi::date_filter( '/employee/reports/turnaround.html?due_date_end', 'due_date >=' ) ? 
+Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( join('-',
+@session{ map { '/employee/reports/turnaround.html?due_date_end_'.$_ } 'year','month','day' } ) ) ) : 'now'; ) ?> 
+<br/>
+<? if ( @{$$variable{PROJECTS}} ) ?>
+<table id="ResultsTable" class="List sortable">
+	<thead>
+	<tr> 
+		<th class="Docket">Docket</th>
+		<th class="DateTime">Produced</th>
+		<th class="DateTime">Operator Assigned</th>
+		<th class="DateTime">Proofs Out</th>
+		<th class="DateTime">Approved</th>
+		<th class="DateTime">First Scheduled</th>
+		<th class="DateTime">Printed</th>
+		<th class="DateTime">Completed</th>
+		<th align="left" width="40" title="Time Before Prepress">TBP</th>
+		<th align="left" width="40" title="Time In Prepress">TIP</th>
+		<th align="left" width="40" title="Time From Ordered to Printed">OTP</th>
+		<th align="left">Total</th>
+	</tr>
+	</thead>
+	<tbody>
+	<? echo (
+		my $html;
+		my $rowclass;	
+		foreach my $Project ( @{$$variable{PROJECTS}} ) {
+			my $takeover_days = $Project->takeover_on() ? sprintf('%.0fd',($Project->ordered_to_takeover_seconds()/86400)) : '';
+			my $prepress_days = $Project->approved_on() ? sprintf('%.0fd',($Project->takeover_to_approved_seconds()/86400)) : '';
+			my $production_days = $Project->completed_on() ? sprintf('%.0fd',($Project->production_seconds()/86400)) : '';
+			my $printed_days = $Project->printed_on() ? sprintf('%.0fd', ($Project->ordered_to_printed_seconds()/86400)) : '';
+			$html .= sprintf( q`
+				<tr%1$s> 
+					<td class="Docket"><a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a></td>
+					<td class="DateTime Produced"><a href="/employee/project/view.html?ProjectIndex=%2$d">%4$s</a></td>
+					<td class="DateTime OperatorAssigned"><a href="/employee/project/view.html?ProjectIndex=%2$d">%5$s</a></td>
+					<td class="DateTime ProofsOut"><a href="/employee/project/view.html?ProjectIndex=%2$d">%6$s</a></td>
+					<td class="DateTime Approved"><a href="/employee/project/view.html?ProjectIndex=%2$d">%7$s</a></td>
+					<td class="DateTime FirstScheduled"><a href="/employee/project/view.html?ProjectIndex=%2$d">%8$s</a></td>
+					<td class="DateTime Printed"><a href="/employee/project/view.html?ProjectIndex=%2$d">%9$s</a></td>
+					<td class="DateTime Completed"><a href="/employee/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
+					<td class="TBP"><a href="/employee/project/view.html?ProjectIndex=%2$d">%11$s</a></td>
+					<td class="TIP"><a href="/employee/project/view.html?ProjectIndex=%2$d">%12$s</a></td>
+					<td class="OTP"><a href="/employee/project/view.html?ProjectIndex=%2$d">%13$s</a></td>
+					<td class="Total"><a href="/employee/project/view.html?ProjectIndex=%2$d">%14$s%15$s</a></td>
+				</tr>`, $rowclass, $Project->id(), $Project->docket(), 
+					format_datetime( $Project->ordered_on() ),
+					format_datetime( $Project->takeover_on() ),
+					format_datetime( $Project->proofsout_on() ),
+					format_datetime( $Project->approved_on() ),
+					format_datetime( $Project->first_scheduled() ),
+					format_datetime( $Project->printed_on() ),
+					format_datetime( $Project->completed_on() ),
+					$Project->takeover_on() ? $takeover_days : '',
+					$Project->takeover_to_approved_seconds() ? $prepress_days : '',
+					$Project->ordered_to_printed_seconds() ? $printed_days : '',
+					$Project->production_seconds() ? $production_days : '',
+					( $Project->production_seconds() > 86400*2 ? ' LATE' : '' ),
+			);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			if ( $Project->production_seconds() >= (86400*2) ) {
+				$$variable{LateCount} += 1;
+			} elsif ( $Project->production_seconds() >= 86400 ) {
+				$$variable{MediumCount} += 1;
+			} else {
+				$$variable{FastCount} += 1;
+			} # end if
+		} # end foreach Project
+		return $html;
+		) ?>
+		
+		<tr class="totals">
+			<td>Totals</td>
+			<td>Dockets: <? echo ( @{$$variable{PROJECTS}} ) ?></td>
+			<td colspan="2">Less than 24H:<?FastCount?> <? echo ( Math::Round::nearest( 1, ($$variable{FastCount} / @{$$variable{PROJECTS}})*100 ); ) ?>%</td>
+			<td colspan="2">Less than 48H:<?MediumCount?> <? echo ( Math::Round::nearest( 1, ($$variable{MediumCount} / @{$$variable{PROJECTS}})*100 ); ) ?>%</td>
+			<td colspan="2">More than 48H:<?LateCount?>: <? echo ( Math::Round::nearest( 1, ($$variable{LateCount}/@{$$variable{PROJECTS}})*100) ) ?></td>
+			<td colspan="4">&nbsp;</td>
+		</tr>
+		</tbody>
+	</table>
+<? else ( @{$$variable{PROJECTS}} ) ?>
+There were no results matching your criteria.
+<? endif ( @{$$variable{PROJECTS}} ) ?>

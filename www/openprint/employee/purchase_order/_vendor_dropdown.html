@@ -1,0 +1,9 @@
+<option value="">All</option>
+<? echo (
+		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 
+				'order'=>'lower(name)', 
+				( $session{'/employee/purchase_order/history.html?vendor_category_id'} ? ( 
+				'category_id'	=> $session{'/employee/purchase_order/history.html?vendor_category_id'} ) : () ),
+				'supplier'=>'Y') ],
+			$session{'/employee/purchase_order/history.html?supplier_id'} );
+) ?>

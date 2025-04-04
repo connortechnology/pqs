@@ -1,0 +1,124 @@
+<? eval (
+  require openprint::Fold;
+  my $uri = '/administrator/managerial/folds.html';
+    my %filters = (
+		order	=>	'lower(name)',
+		( $session{$uri.'?equipment_id'} ? ( equipment_id => [split(',',$session{$uri.'?equipment_id'})] ) : () ),
+		( $session{$uri.'?type'} ? ( type => [split(',',$session{$uri.'?type'})] ) : () ),
+    ( $session{$uri.'?imposition'} ? (
+    'min_imposition <=' =>$session{$uri.'?imposition'},
+    'max_imposition <=' => $session{$uri.'?imposition'} ) : () ),
+    map { $session{$uri.'?'.$_} ne '' ? ($_ => $session{$uri.'?'.$_}) : () } ( 'stitching','perfectbind','spinepaste' ),
+		);
+
+    $$variable{Folds} = [ openprint::Fold->find( %filters ) ];
+) ?>	
+<? if ( @{$$variable{Folds}} ) ?>
+<table class="List sortable table-striped" id="FoldsTable"
+    data-pagination="true"
+    data-search="true"
+    data-show-pagination-switch="true"
+    data-cookie="true"
+    data-cookie-same-site="Strict"
+    data-cookie-id-table="FoldsTable"
+    data-cookie-expire="2y"
+    data-show-columns="true"
+    data-show-export="true"
+    data-columns-hidden="[]"
+    data-uncheckAll="true"
+    data-click-to-select="true"
+    data-check-on-init="true"
+    data-mobile-responsive="true"
+    data-min-width="562"
+  >
+  <thead>
+		<tr> 
+      <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'fold_id', this.checked);"/></th>
+			<th class="Equipment" data-field="Equipment" data-sortable="true">Equipment</th>
+			<th class="Fold" data-field="FoldName" data-sortable="true">Name</th>
+			<th class="Type" data-field="FoldType" data-sortable="true">Type</th>
+			<th class="Orientation" data-field="Orientation" data-sortable="true">Orientation</th>
+			<th class="Pages" data-field="Pages" data-sortable="true">Pages</th>
+			<th class="Folds" data-field="Folds" data-sortable="true">Folds</th>
+			<th class="Angles" data-field="Angles" data-sortable="true">Angles</th>
+			<th class="MinMaxImposition" data-field="MinMaxImposition" data-sortable="true">Min/Max Imposition</th>
+			<th class="MinMaxWidth" data-sortable="true">Min/Max Width</th>
+			<th class="MinMaxHeight" data-sortable="true">Min/Max Height</th>
+			<th class="MinMaxCalliper" data-sortable="true">Min/Max Calliper</th>
+			<th class="MRMinutes" data-sortable="true">MR Minutes</th>
+			<th class="MROvers" data-sortable="true">MR Overs</th>
+			<th class="RunOvers" data-sortable="true">Run Overs</th>
+			<th class="Speed" data-sortable="true">Speed</th>
+		</tr>
+  </thead>
+  <tbody>
+<? echo (
+	my $html;
+	my $rowclass;
+	foreach my $Fold ( @{$$variable{Folds}} ) {
+    next if $Fold->Equipment()->deleted();
+		$html .= sprintf(q`
+<tr%1$s> 
+  <td class="checkbox"><input type="checkbox" name="fold_id" value="%2$d"/></td>
+  <td class="Equipment">%3$s</td>
+	<td class="Fold">%4$s</td>
+	<td class="Type">%5$s</td>
+  <td class="Orientation">%6$s</td>
+	<td class="Pages" onclick="popup_fold(%2$d);">%7$s</td>
+	<td class="Folds">%8$s</td>
+	<td class="Angles">%9$s</td>
+	<td class="MinMaxImposition">%10$s / %11$s</td>
+	<td class="MinMaxWidth">%12$s / %13$s</td>
+	<td class="MinMaxHeight">%14$s / %15$s</td>
+	<td class="MinMaxCalliper">%16$s / %17$s</td>
+	<td class="MRTime">%18$d</td>
+	<td class="MROvers">%19$s</td>
+	<td class="RunOvers">%20$s</td>
+	<td class="Speed">%21$s</td>
+</tr>
+`, $rowclass, $$Fold{id}, $Fold->link_to($Fold->Equipment()->name()), $Fold->link_to($$Fold{name}),
+$Fold->link_to($Fold->type()),
+$Fold->link_to($Fold->orientation()),
+($Fold->page_columns() ? $Fold->page_columns().'x'.$Fold->page_rows().'='.$Fold->pages() : $Fold->pages()),
+$Fold->folds(), $Fold->angles(),
+join(' ',
+	join('x',
+		( $Fold->min_imposition_columns() ? $Fold->min_imposition_columns() : () ),
+		( $Fold->min_imposition_rows()?  $Fold->min_imposition_rows() : () ),
+		),
+ ( $Fold->min_imposition() ?  $Fold->min_imposition() : () ),
+),
+join(' ',
+	join('x',
+		( $Fold->max_imposition_columns() ? $Fold->max_imposition_columns() : () ),
+		( $Fold->max_imposition_rows()?  $Fold->max_imposition_rows() : () ),
+		) ,
+ ( $Fold->max_imposition() ? $Fold->max_imposition() : () ),
+),
+$Fold->min_width(), $Fold->max_width(),
+$Fold->min_height(), $Fold->max_height(),
+$Fold->min_calliper(), $Fold->max_calliper(),
+$Fold->makeready_time(),
+$Fold->makeready_overs().$Fold->makeready_overs_units(),
+$Fold->run_overs().$Fold->run_overs_units(),
+join( '<br/>', map { join(' to ',
+  ($_->min() ? $_->min() : ()),
+  ($_->max() ? $_->max() : ()),
+  ). ' '. $Fold->runspeed_units(). ' @ '. $_->runspeed().$_->units() } $Fold->Specifications() ),
+);
+
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach
+	return $html;
+) ?>
+<!--
+<tr class="totals">
+  <td class="checkbox"></td>
+  <td colspan="12"><?echo(scalar @{$$variable{Folds}})?> folds</td>
+</tr>
+-->
+  </tbody>
+</table>
+<? else ( @{$$variable{Folds}} ) ?>
+There were no results matching your criteria.<br>
+<? endif ( @{$$variable{Folds}} ) ?>

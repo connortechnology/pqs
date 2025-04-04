@@ -1,0 +1,59 @@
+<div class="PageTitle">
+	<h1>Accounting</h1>
+	<h2>Ledger</h2>
+</div>
+<script type="text/javascript">
+<!--
+	function delete_confirm(form) {
+		var number_of_deleted_ledgers = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_ledgers += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_ledgers == 0 ) {
+			alert("To Delete Ledgers, click the checkbox beside the ledger.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_ledgers + " ledgers from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_ledgers( form ) {
+		$('LedgerList').innerHTML = 'Please wait...';
+		new Ajax.Updater('LedgerList','_ledger.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+-->
+</script>	 
+<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
+<form id="f1" name="f1" method="post" action="/employee/accounting/ledger.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+		<div class="leftColumn">
+<? eval (
+	ssi::setup_date_select( '/employee/accounting/ledger.html', 'occurred_on', -31, 365 );
+) ?>
+			<p>
+				<label>Date</label>
+<? echo ( ssi::date_select( 'occurred_on_start', join('-', @session{'/employee/accounting/ledger.html?occurred_on_start_year','/employee/accounting/ledger.html?occurred_on_start_month','/employee/accounting/ledger.html?occurred_on_start_day'} ), 'load_ledgers(this.form);' ); ) ?>
+					to 
+<? echo ( ssi::date_select( 'occurred_on_end', join('-', @session{'/employee/accounting/ledger.html?occurred_on_end_year','/employee/accounting/ledger.html?occurred_on_end_month','/employee/accounting/ledger.html?occurred_on_end_day'} ), 'load_ledgers(this.form);' ); ) ?>
+			</p>
+		</div>
+		<div class="rightColumn">
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::button( 'ShowResults', { onclick=>"load_ledgers(f1);", href=>'', text=>'Show Results' } ),
+ssi::button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();", href=>'', text=>'Download' } ),
+				ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="LedgerList"><? echo ( include('_ledger.html'); ) ?></div>
+</form>

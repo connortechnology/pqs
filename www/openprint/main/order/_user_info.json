@@ -1,0 +1,16 @@
+<? echo (
+	my $User = new openprint::User( $param{user_id} );
+	my $html;
+	foreach my $field ( 'salutation', 'firstname','lastname','phone','fax','email' ) {
+	$html .= qq`
+	if ( \$('$field') ) 
+	  set_value(\$('$field'), '$$User{$field}');
+	else if ( \$j('[name="$field"]') )
+		set_value(\$j('[name="$field"]'), '$$User{$field}');
+  else
+    console.log("Nothing found for $field");
+`;
+		
+	} # end foreach
+	return $html;
+) ?>

@@ -1,0 +1,34 @@
+<? echo (
+if ( $variable{error} ) {
+	return qq`alert('$variable{error}')`;
+}
+if ( $param{action} eq 'unblock' ) {
+	my $Block = openprint::Blocklist->find_one(blockee=>$param{blockee}, blocker=>$session{user_id} );
+	if ( $Block ) {
+		if ( $param{blocker} ) {
+			return q`alert('For some reason the block is still there. Please contact support.');`;
+		} elsif ( $param{blockee} and ! $$Block{unblock} ) {
+			return q`alert('For some reason the block is still there. Please contact support.');`;
+		} # end if
+	} else {
+	
+	}
+	return qq`
+\$('blockee-$param{blockee}').remove();
+new Ajax.Updater('Unblocked', '_blocklist_unblocked.html');
+`;
+} elsif ( $param{action} eq 'reinstate' ) {
+	my $Block = openprint::Blocklist->find_one(blockee=>$param{blockee}, blocker=>$session{user_id} );
+	if ( $Block ) {
+		if ( $param{blockee} and $$Block{unblock} ) {
+			return q`alert('For some reason the block hasn\'t been updated. Please contact support.');`;
+		} # end if
+	} else {
+		return q`alert('Block not found. Please contact support.');`;
+	}
+	return qq`
+\$('blockee-$param{blockee}').remove();
+new Ajax.Updater('Blocked', '_blocklist_blocked.html');
+`;
+} # end if
+) ?>

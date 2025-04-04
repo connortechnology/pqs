@@ -1,0 +1,48 @@
+<? eval (
+	@{$$variable{'Messages'}} = ();
+	foreach my $Message ( openprint::Message->find( 
+		date_filter( '/messaging/history.html?created_on_end', 'created_on <=' ),
+		date_filter( '/messaging/history.html?created_on_start', 'created_on >=' ),
+		date_filter( '/messaging/history.html?sent_on_end', 'sent_on <=' ),
+		date_filter( '/messaging/history.html?sent_on_start', 'sent_on >=' ),
+		( $session{'/messaging/history.html?from_id'} ? ( 'from_id' => $session{'/messaging/history.html?from_id'} ) : () ),
+		'order'				=> 'sent_on',
+		) ) {
+		push @{$$variable{'Messages'}}, $Message;
+	} # end foreach Messages
+) ?>
+
+<? if ( @{$$variable{'Messages'}} == 0 ) ?>
+	There are no messages which match your search criteria. 
+<? else ( @{$$variable{'Messages'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Message ID #</b> to view message details.<br/>
+		To delete messages from history check the appropriate message(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="From">From</th>
+			<th class="Subject">Subject</th>
+			<th class="DateTime">Sent</th>
+		</tr>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Message ( @{$$variable{'Messages'}} ) {
+				$html .= sprintf(q` 
+					<tr title="%2$s" %5$s> 
+						<td class="From"><a href="/messaging/view.html?messaging_id=%1$d">%2$s</a></td>
+						<td class="Category"><a href="/messaging/view.html?messaging_id=%1$d">%3$s</a></td>
+						<td class="DateTime"><a href="/messaging/view.html?messaging_id=%1$d">%4$s</a></td>
+					</tr>
+					`, $Message->id(), ssi::html_escape($Message->From()->name()),
+					$Message->subject(),
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Message->sent_on() ) ),
+					$rowclass,
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Message
+			return $html;
+		) ?>
+	</table>
+<? endif ( @{$$variable{'Messages'}} == 0 ) ?>

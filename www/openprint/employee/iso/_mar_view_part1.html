@@ -1,0 +1,33 @@
+<?include('/includes/error_reporting.html')?>
+<h3>Part 1 (To be completed by issuer)</h3>
+<table class="View">
+	<tr>
+		<td colspan="2">Assigned To</td>
+		<td colspan="3"><? hecho ( new openprint::User( $$variable{MAR}->issued_to_id() )->name(); ) ?></td>
+		<td colspan="2">Issued By</td>
+		<td colspan="3"><? hecho ( new openprint::User( $$variable{MAR}->issued_by_id() )->name(); ) ?></td>
+	</tr>
+	<tr>
+		<td colspan="2">Issue Date</td>
+		<td colspan="3"><? hecho ( $$variable{MAR}->issued_on() ) ?></td>
+		<td colspan="2">Reply Due By</td>
+		<td colspan="3"><? hecho ( $$variable{MAR}->reply_by() ) ?></td>
+	</tr>
+	<tr>
+		<td colspan="1">Press</td>
+		<td colspan="9"><? echo ( $variable{MAR}->Equipment()->name() ) ?></td>
+	</tr>
+	<tr><td colspan="4">PROBLEM/NONCONFORMANCE DESCRIPTION</td>
+	<tr><td colspan="10"><? hecho ( $$variable{MAR}->problem() ) ?></td></tr>
+</table>
+<? if ( $$variable{MAR}->can_edit() ) ?>
+	<p class="buttons">
+		<? echo ( button( 'EditPart1', { onclick=>sprintf(q`new Ajax.Updater('Part1', '/employee/iso/_mar_edit_part1.html', { parameters: {mar_id:%1$d} } );`, $$variable{MAR}->id() ), text=>'Edit' } ); ) ?>.
+	</p>
+<? endif ( $$variable{MAR}->can_edit() ) ?>
+<? if ( ! $$variable{MAR}->part2_user_id() ) ?>
+<script type="text/javascript">
+	new Ajax.Updater( 'Part2', '/employee/iso/_mar_edit_part2.html', { parameters: {mar_id:<? echo ( $$variable{MAR}->id() ) ?>} } );
+	$('mar_id').innerHTML = <? echo ( $$variable{MAR}->id() ) ?>;
+</script>
+<? endif ( ! $$variable{MAR}->part2_user_id() ) ?>

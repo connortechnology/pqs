@@ -1,0 +1,74 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript">
+function calc( formName ) {
+	if ( gettingNewPrice ) {
+		setTimeout( "calc('" + formName + "');", 1000 );
+	} else {
+		remove_div('AlertDiv');
+		gettingNewPrice = true;
+		var form = getFormObj( formName );
+		jsrsExecute( '/jsrs.htm', cbFillUPSResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
+	} // end if
+} // end calc()
+function cbFillUPSResults( results ) {
+	cbFillResults( results );
+	var form = getFormObj( 'f1' );
+	if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons in order to be shipped.  Would you like to add Plain Cartons to your project?' ) ) {
+		addService( 'f1', 'PlainCartons' );
+	} // end if
+}
+function validate_data(formName) {
+	var form = getFormObj( formName );
+	var text = '';
+	return true;
+} // end function
+</script>
+<div class="Service">
+	<form name="f1" method="post" action="/employee/project/view.html">
+		<fieldset><legend>UPS Shipping Services</legend>
+			<div class="leftColumn">
+				<? echo ( include('/includes/main/proj/shipping_from_address.html'); ) ?>
+			</div>
+			<div class="rightColumn">
+				<? echo ( include('/includes/main/proj/shipping_to_address.html'); ) ?>
+			</div>
+			<p>
+				<label>Service Type</label>
+				<span id="ServiceTypeDiv">
+					Please wait while services types are loaded.
+					<input type="hidden" name="ddmServiceType" value="<?ddmServiceType?>" />
+				</span>
+			</p>
+			<p>
+				<label>Pickup Type</label>
+				<span id="PickupTypeDiv">
+					Please wait while pickup types are loaded.
+					<input type="hidden" name="ddmPickupType" value="<?ddmPickupType?>" />
+				</span>
+			</p>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<p>
+				<label># of items to ship</label>
+				<input type="text" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
+			</p>
+			<? echo ( include('_shipping_packages.html'); ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+			<p>
+				<label><b>Price (<? echo ( $$variable{'Project'}->Currency()->symbol() ) ?>)</b></label>
+				<input type="text" name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
+			</p>
+			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+		</fieldset>
+		<hr/>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<input type="hidden" name="qty_index" value="Used" />
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<input type="hidden" name="btnFunction" value="Save"/>
+		<input type="hidden" name="NeedPlainCartons" />
+		<input type="hidden" name="Status" />
+	</form>
+	UPS, the UPS brandmark, and the Colour Brown are trademarks of United Parcel Service of America, Inc. All Rights Reserved
+</div><!-- Service -->

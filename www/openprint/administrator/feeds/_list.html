@@ -1,0 +1,23 @@
+<? echo (
+	my $html;
+	my @Feeds;
+	foreach ( openprint::Feed->find(
+		( $session{'/administrator/feeds/list.html?company_id'} ? ( 'company_id' => $session{'/administrator/feeds/list.html?company_id'} ) : () ),
+			'order'=>'lower(name)') ) {
+		push @Feeds, $_; 
+	} # end foreach
+	if ( ! @Feeds ) {
+		return 'No results.';
+	} # end if
+	foreach my $Feed ( @Feeds ) {
+		$html .= sprintf('
+<div class="Feed">
+	<a class="company" href="/administrator/feeds/edit.html?feed_id=%1$d">%3$s</a>
+	<a class="name" href="/administrator/feeds/edit.html?feed_id=%1$d">%2$s</a>
+	<a class="type" href="/administrator/feeds/edit.html?feed_id=%1$d">%4$s</a>
+	<a class="url" href="/administrator/feeds/edit.html?feed_id=%1$d">%5$s</a>
+</div>', $Feed->id(), $Feed->name(), $Feed->Company()->name(), $Feed->type(), $Feed->url() );
+	} # end foreach Feed
+
+	return $html;
+) ?>

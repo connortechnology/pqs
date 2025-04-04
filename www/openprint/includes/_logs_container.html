@@ -1,0 +1,40 @@
+<form id="logs_form" name="logs_form">
+	<input type="hidden" name="object_id" value="<?echo($$variable{Object}->id())?>"/>
+	<input type="hidden" name="object_type_id" value="<?echo($$variable{Object}->Object_Type()->id())?>"/>
+	<input type="hidden" name="uri" value="<?echo($$variable{uri})?>"/>
+	<fieldset><legend>Logs</legend>
+		<ul>
+			<li><label>Date</label>
+				<? echo ( join("\n",
+              join( ' to ',
+                datetime_select_session( $$variable{uri}, 'log_created_on_start', {
+                  on_change	=>'load_logs_form',
+                  with_today=>1,
+                  with_clear=>1,
+                  } ),
+                datetime_select_session( $$variable{uri}, 'log_created_on_end', {
+                  on_change	=>'load_logs_form',
+                  with_today=>1,
+                  with_clear=>1,
+                  } ),
+                ),
+              ssi::select( 
+                openprint::Log_Action->dropdown(), 
+                $session{$$variable{uri}.'?log_action_id'},
+                { 
+                  name			=>	'log_action_id', 
+                  prepend		=>	[ '', 'All Actions' ],
+                  on_change	=>  'load_logs_form',
+                }),
+              ssi::select( [ 10, 10, 20, 20, 50, 50, '', 'All' ], $session{$$variable{uri}.'?log_limit'}, {
+                  name=>'log_limit',
+                  on_change	=>  'load_logs_form',
+                }),
+              button('LoadLog', { on_click=>'load_logs_form', text=>'Load' }),
+            );
+        ) ?>
+			</li>
+		</ul>
+		<div id="Logs"><?include('/includes/_logs_contents.html')?></div>
+	</fieldset>
+</form>

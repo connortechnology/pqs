@@ -1,0 +1,46 @@
+div.LoginBox {
+	width: 100%; 
+	height: auto; 
+	background-image: none;
+	position: relative;
+	top: 0px;
+	right: 0px;
+}
+div.LoginBox form {
+	padding: 0px;
+	margin:0px;
+}
+div.LoginBox form fieldset {
+	border: none;
+	color: #22275e;
+	font-size: 12px;
+	padding-top: 10px;
+	padding-left: 0px;
+	font-weight: bold;
+	height: auto; 
+}
+div.LoginBox fieldset legend {
+font-size: 15px;
+color: #ffffff;
+background-color: #22275e;
+padding-top: 2px;
+padding-left: 0px;
+margin-left: 0px;
+font-weight: bold;
+}
+div.WelcomeBox {
+margin: 0px;
+width: 100%;
+color: #22275e; font-size: 12pt; font-weight bold;
+}
+div.WelcomeBox h3 {
+color: #4880c9; font-size: 12pt; font-weight: bold;
+padding: 0px;
+margin: 0px;
+}
+div.WelcomeBox h1 {
+color: #22275e; font-size: 18pt; font-weight: bold;
+padding: 0px;
+margin: 0px;
+}
+

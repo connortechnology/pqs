@@ -1,0 +1,47 @@
+<script type="text/javascript" src="<? hash_link(/javascripts/fineuploader.js) ?>"></script>
+<link type="text/css" rel="<? hash_link (/css/fileuploader.css) ?>"/>
+<?include(/includes/error_reporting.html)?>
+<div class="PhotoAlbum">
+	<div class="View">
+<? if ( $$variable{Album}->id() )?>
+<? if ( $$variable{Album}->can_view() ) ?>
+		<form id="f1" name="f1" action="/photo_albums/<? echo ( $ENV{HTTP_REFERER} =~ /history/ ? 'history' : 'list' ) ?>.html" enctype="multipart/form-data" method="post">
+			<input type="hidden" name="album_id" value="<? echo ( $$variable{Album}->id() ) ?>" />
+			<input type="hidden" name="btnFunction" />
+			<? if ( $$variable{Album}->deleted() ) ?>
+			<div class="warning">
+			This Album has been deleted.
+			</div>
+			<? endif ( $$variable{Album}->deleted() ) ?>
+			<p class="buttons">
+			<? echo (
+				my $html = '';
+				if ( $$variable{Album}->can_edit() ) {
+					if ( $$variable{Album}->deleted() ) {
+						$html .= button( 'Undelete', { onclick => "if(confirm('Are you sure?')){f1.btnFunction.value='Undelete';f1.submit();};" } );
+						$html .= button( 'Destroy', { onclick => "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();};" } );
+					} else {
+						$html .= button( 'Delete', { onclick => "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};" } );
+					} # end if
+						$html .= button( 'Edit', { href => '/photo_albums/edit.html?album_id='.$$variable{Album}->id() } );
+				} # end if
+				return $html;
+			) ?>
+			</p>
+			<fieldset>
+				<div class="content">
+					<ul>
+						<li class="name"><label>Name</label><? echo ( $$variable{Album}->name() ) ?></li>
+						<li class="description"><label>Description</label><? echo ( $$variable{Album}->description() ) ?></li>
+						<li class="by"><label>By</label><? echo ( $$variable{Album}->user_id() ? sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$variable{Album}->user_id(), $$variable{Album}->User()->name() ) : 'no one' ) ?></li>
+					</ul>
+				</div>
+			</fieldset>
+			<?include(_album_upload.html)?>
+		</form>
+<? else ( $$variable{Album}->can_view() ) ?>
+	You don't have rights to view this album.
+<? endif ( $$variable{Album}->can_view() ) ?>
+<? endif ( $$variable{Album}->id() )?>
+	</div>
+</div>

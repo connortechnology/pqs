@@ -1,0 +1,36 @@
+<? echo ( 
+	my $html;
+	@{$$variable{pending_drops}} = ();
+	if ( $session{$$variable{referer}.'?pending'} ) {
+		$html .= q`<h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $('f1'));">Pending (click to hide):</h3>`;
+		my $Shift = new openprint::Shift();
+		$Shift->name('Pending');
+
+		my $ac = sql::start_transaction($dbh);
+
+		foreach my $E ( @{$$variable{Equipment}} ) {
+			$html .= '<div class="PressColumn">';
+			$Shift->equipment_id( $$E{id} );
+			push @{$$variable{pending_drops}}, $Shift->ul_id();
+			$html .= $Shift->get_ul( {
+					Status=>['','In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete','Pending Deposit']});
+			$html .= '</div>';
+		} # end foreach Equipment
+
+		sql::end_transaction($dbh, $ac);
+	} else {
+	$html .= q`<h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $('f1'));">Pending (click to show):</h3>`;
+	} # end if 
+	return $html;
+) ?>
+<? if ( @{$$variable{pending_drops}} ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
+<script>
+	drops.push("<? echo ( join('","', @{$$variable{pending_drops}} ) ) ?>");
+<? if ( $r->uri() =~ /_pending/ ) ?>
+	setup_drops();
+	setup_dates();
+<? endif ( $r->uri() =~ /_pending/ ) ?>
+</script>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{user_id} ) ) ?>
+<? endif ( @{$$variable{pending_drops}} ) ?>

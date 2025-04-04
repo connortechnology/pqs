@@ -1,0 +1,39 @@
+<?include('/includes/error_reporting.html')?>
+<table class="List sortable">
+	<tr>
+		<th class="name">Name</th>
+		<th class="User">Owner</th>
+		<th class="DateTime">Last Run</th>
+		<th class="DateTime">Next Run</th>
+		<th class="active">Active</th>
+	</tr>
+	<? echo (
+		my $uri = '/marketing/email_campaigns.html';
+		my $html;
+		my $rowclass;
+		foreach my $Campaign ( openprint::EmailCampaign->find(
+				( $session{$uri.'?user_id'} ? ( user_id=>$session{$uri.'?user_id'} ) : () ),
+				( $session{$uri.'?active'} ne '' ? (active=>$session{$uri.'?active'}): () ),
+				( $session{$uri.'?deleted'} ne '' ? (deleted=>$session{$uri.'?deleted'}):(deleted=>[0,1]) ),
+				order => 'lower(name)' ) ) {
+
+			next if ! $Campaign->can_view();
+
+			$html .= sprintf(q`
+			<tr%6$s>
+				<td class="name"><a href="email_campaign.html?campaign_id=%1$d">%2$s</a></td>
+				<td class="User"><a href="email_campaign.html?campaign_id=%1$d">%3$s</a></td>
+				<td class="DateTime"><a href="email_campaign.html?campaign_id=%1$d">%4$s</a></td>
+				<td class="DateTime"><a href="email_campaign.html?campaign_id=%1$d">%5$s</a></td>
+				<td class="active"><a href="email_campaign.html?campaign_id=%1$d">%6$s</a></td>
+			</tr>
+`, $Campaign->id(), $Campaign->name(),
+( $Campaign->user_id() ? $Campaign->User()->name() : 'none' ),
+format_datetime($Campaign->lastrun(), 'never'),
+format_datetime($Campaign->nextrun(), 'never'),
+$Campaign->active(), $rowclass );
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Campaign
+		return $html;
+	) ?>
+</table>

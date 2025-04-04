@@ -1,0 +1,26 @@
+<form name="part3form" id="part3form">
+<h3>Part 3 (To be completed by recipient)</h3>
+<table>
+	<tr><td colspan="4">CORRECTIVE ACTION</td></tr>
+	<tr><td colspan="4"><textarea name="action" rows="<?echo(count_lines($$variable{MAR}->action());)?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{MAR}->action(); ) ?></textarea></td></tr>
+	<tr>
+		<td width="10%">Recipient</td>
+		<td width="40%">
+		<? echo ( ssi::select( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $session{user_id}, { name=>'part3_user_id' } ); ) ?>
+		</td>
+		<td width="10%">Date</td>
+		<td width="40%">
+<? echo ( date_select( 'part3_signed_on', $$variable{MAR}->part3_signed_on() ? $$variable{MAR}->part3_signed_on() : [ Date::Calc::Today() ] ); ) ?>
+		</td>
+	</tr>
+</table>
+	<input type="hidden" name="mar_id" value="<? echo ( $$variable{MAR}->id() ) ?>" />
+	<input type="hidden" name="btnFunction" value="Save" />
+</form>
+<p class="buttons">
+	<? echo ( join("\n",
+		button( 'Part3Save', { onclick=>"new Ajax.Updater('Part3','/employee/iso/_mar_view_part3.html', {parameters: Form.serialize( \$('part3form') ),
+			evalScripts: true,
+ } );", text=>'Save' } ),
+		); ) ?>
+</p>

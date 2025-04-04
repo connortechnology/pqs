@@ -1,0 +1,12 @@
+<p>
+<label>Negative quantity</label>
+<? echo (
+	my $html;
+	foreach my $qty_index ( 1 .. 3 ) {
+		if ( $$variable{'Project'}->quantity( $qty_index ) ) {
+			$html .= qq`<span class="value">$$variable{txtQuantity}</span>`;
+		} 
+	}
+	return $html;
+) ?>
+</p>

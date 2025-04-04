@@ -1,0 +1,87 @@
+<form id="bump_form" name="bump_form" action="/employee/project/view.html" method="post">
+	<input type="hidden" name="action" value="addtoschedule" />
+	<input type="hidden" name="project_id" value="<? echo ( $$variable{Job}->project_id() ) ?>" />
+	<input type="hidden" name="service_id" value="<? echo ( join(',',@{$$variable{Job}->service_id()} ) ) ?>" />
+<fieldset>
+	<h3>Add Docket <? echo ( $$variable{Job}->Project()->docket() . ' ' . $$variable{Job}->ServiceType()->name() ) ?></h3>
+	<ul>
+		<li><label>Equipment</label>
+		<select name="equipment_id">
+			<? echo ( 
+				my $ServiceType = $$variable{Job}->ServiceType();
+				if ( ! $ServiceType->id() ) {
+					$log->error("No servicetype in job. Substituting prniting");
+					$ServiceType = openprint::ServiceType->find_one(name=>'Signature');
+				} # end if
+				if ( ! $ServiceType->id() ) {
+					$log->error("No Printing servicetype in job.");
+					$ServiceType = new openprint::ServiceType();
+				} # end if
+
+				@{$$variable{Equipment}} = openprint::Equipment->find(
+						'servicetype_id @>'	=>	$ServiceType->id(),
+						useinscheduling	=>	1,
+						order			=>	'lower(strname)'
+				);
+				$$variable{Job}->equipment_id($$variable{Equipment}[0]{id}) if @{$$variable{Equipment}};
+				return make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $$variable{Job}->equipment_id() );
+			) ?>
+		</select>
+	</li>
+	<li><label>Shift</label>
+	<?echo(
+
+		if ( $$variable{Job}->equipment_id() ) {
+		 $$variable{LastJob} = openprint::ScheduledJob->find_one(
+				order               =>  'starttime DESC',
+				'starttime is null' =>  0,
+				tentative           =>  0,
+				equipment_id  =>  $$variable{Job}{equipment_id},
+				'id !='       =>  $$variable{Job}{id},
+				);
+			if ( $$variable{LastJob} ) {
+				$$variable{NextShift} = $$variable{LastJob}->Shift();
+			} else {
+				$$variable{NextShift} = openprint::Shift->find_one(
+						equipment_id => $$variable{Job}{equipment_id},
+						'starttime >' => 'NOW()',
+						order=>'starttime',
+				);
+			}
+		while ( $$variable{NextShift} and ( $$variable{NextShift}->starttime_seconds() < time ) ) {
+			$$variable{NextShift} = $$variable{NextShift}->Next();
+		} # end while
+
+		}
+			my $Shifts = openprint::Equipment_Shift->dropdown(equipment_id=>$$variable{Job}->equipment_id(), order=>'starttime_seconds') if $$variable{Job}->equipment_id();
+			return ssi::select(
+						$Shifts,
+						( $$variable{NextShift} ? $$variable{NextShift}->shift_id(): undef ),
+						{ name=>'shift_id', append=>['','Pending'],
+						onchange=>q`if(this.value){$j('#starttime').show();}else{$j('#starttime').hide();};` },
+						);
+	)?>
+	</li>
+	<li id="starttime"><label>Date</label>
+      <?echo( 
+          my ( $y, $m, $d );
+          if ( $$variable{NextShift} ) {
+            ( $y, $m, $d ) = $$variable{NextShift}{starttime} =~ /^(\d{4})-(\d{2})-(\d{2})/;
+          } else {
+            ( $y, $m, $d ) = Date::Calc::Today();
+          }
+          return date_select('starttime', [ $y, $m, $d ]);
+          ) ?>
+    </li>
+	</ul>
+	<p class="buttons">
+	<? echo ( 
+		my $html = '';
+		$html .= button( 'Ok',{onclick=> 
+				q`new Ajax.Updater('status`.join(',',@{$$variable{Job}->service_id()} ).q`', '/employee/project/_status.html', { parameters: $('bump_form').serialize() } );popupWin.close();`, text=>'Add to Schedule' } );
+		$html .= button( 'Cancel', { onclick=>'popupWin.close();', text=>'Cancel' } );
+		return $html;
+	) ?>
+	</p>
+</fieldset>
+</form>

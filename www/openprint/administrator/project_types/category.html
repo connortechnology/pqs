@@ -1,0 +1,49 @@
+<form name="f1" id="f1" action="/administrator/project_types/category.html?category_id=<? echo ( $$variable{ProjectTypeCategory}->id(); ) ?>" method="post">
+	<fieldset>
+		<legend>
+		<? echo (
+			return $openprint::param{category_id} ? 'Editing Category '. $$variable{ProjectTypeCategory}->name() : 'Add New Category';
+		) ?>
+		</legend>
+		<div class="leftColumn">
+		<ul>
+		<li>
+			<label>Name</label>
+			<input type="text" id="name" name="name" value="<? hecho ( $$variable{ProjectTypeCategory}->name(); ) ?>"  />
+		</li>
+		<li>
+			<label>Description</label>
+			<textarea id="description" name="description" rows="4" onkeyup="textarea_resize(this);"><? hecho ( $$variable{ProjectTypeCategory}->description(); ) ?></textarea>
+		</li>
+		<li>
+			<label>Sort</label>
+			<? echo ( input( type=>"integer", id=>"sort", name=>"sort", value=>$$variable{ProjectTypeCategory}->sort() ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+			button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } ),
+			button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } ),
+			button( 'Reset', { onclick=>'f1.reset();' } ),
+			); ) ?>
+		</p>
+		</div>
+		<div class="rightColumn">
+			<ul>
+			<? echo (
+				my $html = '';
+				my @pt_ids = map { $_->id() } $$variable{ProjectTypeCategory}->ProjectTypes();
+				foreach my $PT ( openprint::ProjectType->find( 'order'=>'sorting,lower(name)' ) ) {
+					$html .= sprintf('<li><input type="checkbox" name="projecttype_id" value="%d" %s/> %s</li>',
+						$PT->id(), ssi::checked( sets::isin( $PT->id(), \@pt_ids ) ), $PT->description() );
+				} # end foreach	
+				return $html;
+			) ?>
+			</ul>
+		</div>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>
+<? if ( $$variable{ProjectTypeCategory}->id() ) ?>
+	<? echo ( include_logs( $$variable{ProjectTypeCategory} ); ) ?>
+<? endif ( $$variable{ProjectTypeCategory}->id() ) ?>

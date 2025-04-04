@@ -1,0 +1,33 @@
+<li>
+	<label>UPS Shipping</label>
+	<input type="radio" id="UPSShippingY" name="UPSShipping" value="Y" onclick="$('UPSShippingInputs').show();$('OrderButton').hide();" <? echo ( 'checked="checked"' if $$variable{'UPSShipping'} eq 'Y' ) ?> />
+	<label for="UPSShippingY">Yes</label>
+	<input type="radio" id="UPSShippingN" name="UPSShipping" value="N" onclick="$('UPSShippingInputs').hide();$('OrderButton').hide();" <? echo ( 'checked="checked"' if $$variable{'UPSShipping'} ne 'Y' ) ?> />
+	<label for="UPSShippingN">No</label>
+</li>
+<li id="UPSShippingInputs" <? echo ( 'style="display:none;"' if $$variable{'UPSShipping'} ne 'Y' ) ?> >
+	<label>
+<? eval (
+	if ( ( ! $$variable{'txtShippingPostalCode'} ) and $session{'company_id'} ) {
+		my $Company = new openprint::Company( $session{'company_id'} );
+		my $Shipping_Address = $Company->get_shipping_address();
+		@$variable{'txtShippingPostalCode'} = $Shipping_Address->get('ShippingPostalCode');
+		if ( ! $$variable{'txtShippingPostalCode'} ) {
+			@$variable{'txtShippingPostalCode'} = $Company->get('PostalCode');
+		} # end if
+	} # end if
+) ?>
+		<label for="txtShippingPostalCode">
+<? echo (
+if ( $$variable{'Country'} eq 'US' ) {
+	return 'Zip Code';
+} elsif ( $$variable{'Country'} eq 'CA' ) {
+	return 'Postal Code';
+} else {
+	return 'Zip/Postal Code';
+} # end if
+) ?>
+		</label>
+	</span>
+	<input type="text" id="txtShippingPostalCode" name="txtShippingPostalCode" value="<?txtShippingPostalCode?>" onkeyup="$('OrderButton').hide();"/>
+</li>

@@ -1,0 +1,86 @@
+<script type="text/javascript">
+	function calc_line( element ) {
+		var re = /^\w+(-\d+-\d+)$/;
+		var matches = re.exec( element.name );
+		if ( ! matches ) { alert('no match'); return; }
+		var index = matches[1];
+		$('total'+index).innerHTML = $('value'+index).innerHTML * element.value;
+		update_totals(element);
+	} // 
+	function add_docket( element ) {
+		new Ajax.Updater( 'dockets', '_docket_records.html', { 
+			parameters: {
+				report_id: '<? echo ( $variable{'Report'}->id() ) ?>', 
+				shift_id: '<? echo ( $$variable{'Shift'}->id() ) ?>', 
+				docket: $('docket-new').value,
+				operator_id: $('operator_id').getValue()
+			}, insertion: 'bottom'
+		} );
+	} // end function add_docket
+
+	var type_ids = new Array( <? echo ( join(',', map { $_->type_id() } openprint::Performance_Point->find( 'equipment_id'=>$$variable{'Shift'}->equipment_id() ) ); ) ?> );
+	function update_totals( element ) {
+		var re = /^\w+-(\d+)-(\d+)$/;
+		var matches = re.exec( element.name );
+		if ( ! matches ) { alert('update_totals: no match'); return; }
+		var docket = matches[1];
+
+		var total = 0;
+		for ( var index = 0, len = type_ids.length; index < len; index += 1 ) {
+			var total_div = $('total-'+docket+'-'+type_ids[index]);
+	
+			if ( ! total_div ) {
+				alert("No total div for total-"+docket+'-'+type_ids[index]);
+				continue;
+			} 
+			total += 1*parseInt( total_div.innerHTML );
+		} // end for			
+		$('total-'+docket).innerHTML = total;
+	} // end function update_totals
+</script>
+<div class="Performance"><div class="Edit">
+	<form name="f1" id="f1" action="/employee/performance/history.html" method="post">
+		<input type="hidden" name="shift_id" value="<? echo ( $$variable{'Shift'}->id() ) ?>"/>
+		<input type="hidden" name="action"/>
+	<fieldset><legend>Shift &amp; Operator</legend>
+		<ul>
+			<li><label>Shift</label><? echo ( $$variable{'Shift'}->to_string() ) ?></li>
+			<li><label>Operator</label>
+				<select name="operator_id" id="operator_id">
+					<option value="">select one</option>
+					<? echo ( 
+							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
+									'usergroup'	=>	[ 'Bindery', 'Printing' ],
+									'type'		=>	'E',
+									'order'		=>	'lower(firstname),lower(lastname)',
+									) ], $variable{'Report'}->operator_id() ? $variable{'Report'}->operator_id() : $variable{'Shift'}->operator_id() );
+							) ?>
+				</select>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::button('Save', { 'onclick'=>q`f1.elements['action'].value='Save';f1.submit();` } ),
+			); ) ?>
+		</p>
+	</fieldset>
+	<fieldset><legend>Dockets</legend>
+		<div id="dockets">
+			<? echo ( 
+				my $docket_records = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/performance/_docket_records.html' );
+
+				my $html;
+				foreach my $docket ( sort( sets::union( map { $$_{'docket'} } $$variable{'Report'}->Records() ) ) ) {
+					$$variable{'docket'} = $docket;
+					$html .= ssi::variable_substitution( \$docket_records, $variable );
+	
+				} # end foreach docket
+				return $html;
+			) ?>
+		</div>
+			<p><label>New Docket</label>
+				<input type="number" name="docket-new" id="docket-new" onkeyup="this.value=this.value.replace(/\D/, '');" onkeydown="if(event.keyCode == 13){add_docket();return false;}" />
+				<? echo ( ssi::button( 'AddDocket', { 'onclick'=>'add_docket();', 'text'=>'Add' } ); ) ?></p>
+	</fieldset>
+	</form>
+</div></div>

@@ -1,0 +1,97 @@
+<div class="Service <?ServiceTypeID?>">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<ul>
+			<li>
+				<label>Spine width</label>
+<? echo ( join("\n",
+	input( type=>'float', name=>'txtCalliper', onkeyup=>'calc(this.form.name);' ) , ' inches',
+	write_override( 'OverrideCalliper', $$variable{OverrideCalliper}, '', 'calc(this.form.name);' ),
+	);
+) ?>
+			</li>
+<? eval ( 
+	@{$$variable{GlueTypes}} = openprint::Material->find(category=>'PerfectBound Glue');
+) ?>
+<? if ( @{$$variable{'GlueTypes'}} > 1 ) ?>
+		<li>
+			<label>Glue Type</label>
+			<select id="glue_id" name="glue_id" onchange="calc(this.form.name);">
+<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{GlueTypes}} ], $$variable{glue_id} ); ) ?>
+			</select>
+<? echo ( write_override( 'override_glue_id', $$variable{override_glue_id}, '', 'calc(this.form);' ); ) ?>
+		</li>
+<? else ( @{$$variable{'GlueTypes'}} > 1 ) ?>
+	<li style="display:none;"><input type="hidden" name="glue_id" value="<?glue_id?>" /></li>
+<? endif ( @{$$variable{'GlueTypes'}} > 1 ) ?>
+			<li>
+				<label>Signatures</label>
+				<? echo (
+					my $html;
+					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			
+						$html .= join("\n", '<span class="'.$$variable{Columns}.'Columns">',
+                ( map {
+                  input( 
+                      name	=>	'txtSignatureQty'.$_.'Page-'.$qty_index, 
+                      value	=>	$$variable{'txtSignatureQty'.$_.'Page-'.$qty_index},
+                      type	=>	'cardinal',
+                      onkeyup	=>	'calc(this.form.name);', 
+                      readonly=>	!sets::isin( $session{user_type}, ['A','E'] ),
+                      ).' '.$_.' Page Signature(s)<br/>'
+                  } ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) ), 
+                );
+						$html .= input(
+							name	=>	"txtSignatureQtyGateFolded-$qty_index", 
+							value	=>	$$variable{"txtSignatureQtyGateFolded-$qty_index"},
+							type	=>	'cardinal', onkeyup=>'calc(this.form.name);',
+							readonly	=>	!sets::isin( $session{user_type}, ['A','E'] ),
+							);
+						$html .= 'Gate Folded Signature(s)<br/>';
+						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+							$html .= write_override('OverridePockets'.$qty_index, $$variable{'OverridePockets'.$qty_index}, '', 'calc(this.form.name);' ) . ' Override';
+						} else {
+							if ( $$variable{'OverridePockets'.$qty_index} eq 'Y' ) {
+								$html .= input( type=>'hidden', name=>"OverridePockets$qty_index", value=>'Y' ).' Overriden';
+							} # end if
+						} # end if
+						$html .= '</span>';
+					} # end foreach qty_index
+					return $html;
+				) ?>
+			</li>
+			</ul>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+		<li>
+			<label>Imposition</label>
+			<? echo (
+				my $html;
+				foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+					$html .= '<span class="'.$$variable{Columns}.'Columns">';
+					$html .= input( type=>'cardinal', name=>'Imposition'.$qty_index, value=>$$variable{'Imposition'.$qty_index}, onkeyup=>'calc(this.form.name);' ).' out';
+
+					if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+						$html .= write_override( 'OverrideImposition'.$qty_index, $$variable{'OverrideImposition'.$qty_index}, '', 'calc(this.form.name)' );	
+					} # end if
+					$html .= '</span>';
+				} # end foreach $qty_index
+				return $html;
+			) ?>
+		</li>
+        <?include('/includes/main/proj/quantities_equipment_prices.html')?>
+		</ul>
+		</fieldset>
+		<hr/>
+
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+		<input type="hidden" name="Status" value="<?Status?>" />
+	</form>
+</div>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>

@@ -1,0 +1,53 @@
+<div class="Site"><div class="Edit">
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="post" action="edit.html" enctype="multipart/form-data">
+	<input type="hidden" id="site_id" name="site_id" value="<? echo ( $$variable{Site}->id() ) ?>" />
+	<input type="hidden" id="action" name="action" />
+	<fieldset><legend>Site <? echo ( $$variable{Site}->id() ) ?></legend>
+		<div class="content leftColumn">
+			<ul>
+        <li>
+          <label>Owner</label>
+<? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+				<select id="company_id" name="company_id" onchange="stop_filter_companies();">
+					<option value="">select</option>
+          <? echo (
+                  my $formatter = 'DateTime::Format::Pg';
+                  my $dt = DateTime->from_epoch(epoch => time()-365*86400, time_zone => $openprint::TZ);
+                  make_drop_down( openprint::Company->dropdown('updated_on >='.$formatter->format_datetime($dt)),
+                  ($$variable{Site}->company_id() ? $$variable{Site}->company_id() : $session{company_id}),
+          { encode=>1} ) )?>
+				</select>
+<? else ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+<?echo( $$variable{Site}->company_id() ? $$variable{Site}->Company()->link_to() : $openprint::Company->link_to())?>
+<? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+        </li>
+				<li class="name"><label>Name</label>
+          <input type="text" name="name" value="<? echo ( $$variable{Site}->name() ) ?>" />
+				</li>
+        <?if($$variable{Site}->id())?>
+				<li><label>Created On</label><? echo ( format_datetime( $$variable{Site}->created_on() ) ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Site}->updated_on() ) ) ?></li>
+        <?endif($$variable{Site}->id())?>
+			</ul>
+				<p class="buttons">
+					<? echo ( 
+						my $html;
+						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
+						if ( $$variable{Site}->id() ) {
+							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{Site}->id();
+						} # end if
+						return $html;
+					) ?>
+				</p>
+		</div>
+	</fieldset>
+  <fieldset><legend>Hosts</legend>
+    <div id="Hosts"><?include(_hosts.html)?></div>
+  </fieldset>
+  <? echo ($$variable{Site}->id() ? include_logs($$variable{Site}) : ''; ) ?>
+</form>
+</div></div>
+<script src="<?hash_link(/sites/edit.js)?>"></script>

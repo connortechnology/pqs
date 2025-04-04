@@ -1,0 +1,6 @@
+<? eval (
+    $$variable{ProjectTypeName} = $param{ProjectType} if $param{ProjectType};
+) ?>
+<div class="InstantPricing">
+<?include('/content/'.$$variable{ProjectTypeName}.'.html') ?>
+</div>

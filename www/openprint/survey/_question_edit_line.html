@@ -1,0 +1,36 @@
+<? echo (
+	my $html = '';
+	my $Question = $$variable{'Question'};
+	my $answers_html = $$variable{'answers_html'} ? $$variable{'answers_html'} : misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/survey/_answers_edit.html' );
+
+	$html .= sprintf(q`<li class="Question" id="question-%1$d"><span class="buttons">%4$s</span>
+		<textarea name="text-%1$d" onkeyup="changed(this,$('question-%1$d'));" placeholder="Question Text">%2$s</textarea>
+		<select name="type-%1$d" id="type-%1$d"><option value="">select</option>%3$s</select><ul class="Answers" id="answers-%1$d">`, 
+		$Question->id(), ssi::html_escape($Question->text()),
+		ssi::make_drop_down( [ map { $_, $_ } ( 'checkbox','radio','select', 'text', 'textarea' ) ], $$Question{'type'} ),
+		ssi::button( 'DelQuestion', { 'onclick'=>qq`new Ajax.Request( '_questions_edit.html', {
+			parameters: {
+				survey_id: $$variable{'Survey'}{'id'},
+				question_id: $$Question{id},
+				action: 'delete',
+			}, onSuccess: function() {
+				\$('question-$$Question{id}').remove();
+			}
+			} );`, 'text'=>'X' } ),
+		);
+	if ( sets::isin( $$Question{'type'}, [ 'checkbox','radio' ] ) ) {
+		$html .= '<li><label>Alignment</label>'.ssi::radio('alignment-'.$Question->id(), [0,'Horizontal',1,'Vertical'], $Question->alignment() ).'</li>';
+	} # end if
+	if ( sets::isin( $$Question{'type'}, [ 'checkbox','radio','select' ] ) ) {
+		$html .= ssi::variable_substitution( \$answers_html, { 'Question'=>$Question }  ); 
+	} # end if
+	$html .= '</ul>';
+	$html .= sprintf('<input type="text" id="text-%1$d-new" name="text-%1$d-new" placeholder="new answer"/>', $$variable{'Question'}->id() );
+	$html .= ssi::button('AddAnswer-'.$Question->id(), {
+				'onclick'=>sprintf(q`new Ajax.Updater('answers-%1$d', '_answers_edit.html', { parameters: { action: 'add', question_id: %1$d, text: $('text-%1$d-new').value } } );`, $Question->id() ),
+				'text'	=>	'+',
+	} );
+	$html .= '</li>';
+	$html .= sprintf(q`<script type="text/javascript">Sortable.create('answers-%1$d', { onUpdate:answer_drop });</script>`, $Question->id() );
+	return $html;
+) ?>

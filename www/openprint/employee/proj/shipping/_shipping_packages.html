@@ -1,0 +1,20 @@
+<li>
+	<label>Full Package Weight</label>
+	<span class="TwoColumns"><span id="txtPackageWeight<?QTYIndex?>"><? echo ( $$variable{'txtPackageWeight'.$$variable{QTYIndex}} ) ?></span> lbs</span>
+	<span class="TwoColumns">
+	<? echo ( input( name=>'txtPackageWeightUsed', value=>$$variable{txtPackageWeightUsed} ? $$variable{txtPackageWeightUsed} : $$variable{'txtPackageWeight'.$$variable{QTYIndex}}, type=>'float' ); ) ?> lbs
+	</span>
+</li>
+<li>
+	<label>Package Quantity</label>
+	<span class="TwoColumns"><span id="txtPackageQuantity<?QTYIndex?>"><? echo ( $$variable{'txtPackageQuantity'.$$variable{QTYIndex}} ) ?></span></span>
+	<span class="TwoColumns"> 
+	<? echo ( input( name=>'txtPackageQuantityUsed', value=>$$variable{txtPackageQuantityUsed} ? $$variable{txtPackageQuantityUsed} : $$variable{"txtPackageQuantity".$$variable{QTYIndex}}, type=>'cardinal' ); ) ?>
+	</span>
+</li>
+<li>
+	<label>Total Weight</label>
+	<span class="TwoColumns"><? echo ( $$variable{"txtTotalWeight$$variable{QTYIndex}"} ) ?> lbs</span>
+	<span class="TwoColumns"><? echo ( input( name=>'txtTotalWeightUsed', value=>$$variable{txtTotalWeightUsed} ? $$variable{txtTotalWeightUsed} : $$variable{"txtTotalWeight".$$variable{QTYIndex}}, type=>'float' ); ) ?> lbs
+	</span>
+</li>

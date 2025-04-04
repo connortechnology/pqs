@@ -1,0 +1,15 @@
+<? echo (
+    my $html;
+    if ( my @Assets = $$variable{C}->Assets() ) {
+        foreach my $Asset ( @Assets ) {
+            $html .= sprintf('<span class="thumbnail"><a href="%s" target="_blank" class="thumbnail_link"><img src="%s" alt="" title="%s"/>%s</a>%s</span>', 
+				$Asset->url(), $Asset->Asset()->sized_url('small'), $Asset->Asset()->caption(), $Asset->Asset()->name(),
+				button( 'DeleteAsset'.$Asset->asset_id(), {onclick=>qq`new Ajax.Updater('assets-$$variable{C}{id}', '_assets.html', { parameters: {content_id:'$$variable{C}{id}', asset_id: $$Asset{'asset_id'}, action: 'delete' } } );`, 'text'=>'Delete' } ),
+);
+        } # end foreach Asset
+    } else {
+        $html .= 'No attachments.';
+    } # end if
+    return $html;
+) ?>
+

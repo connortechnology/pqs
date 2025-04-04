@@ -1,0 +1,77 @@
+<?include('/includes/error_reporting.html')?>
+<table>
+	<thead>
+		<tr>
+			<th class="description">Product / Service</th>
+			<th class="quantity">Quantity</th>
+			<th class="cost">Cost</th>
+			<th class="markup">Markup</th>
+			<th class="price">Price</th>
+			<th class="units">Units</th>
+			<th class="total">Total</th>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			my $sub_total;
+			foreach my $Product ( $$variable{Quote}->Products() ) {
+				$html .= sprintf(q`
+<tr%1$s>
+	<td class="description">%3$s<br/>
+    <textarea class="mce" id="comments-%2$d" name="comments-%2$d" placeholder="comments">%11$s</textarea>
+  </td>
+	<td class="quantity"><input type="number" id="quantity-%2$d" name="quantity-%2$d" value="%4$d" step="any" data_oninput_this="calc_from_quantity"/></td>
+	<td class="cost"><input type="number" id="cost-%2$d" value="%5$.2f" name="cost-%2$d" data_oninput_this="calc_from_cost" step="any"/></td>
+	<td class="markup"><input type="number" id="markup-%2$d" name="markup-%2$d" value="%6$.2f" step="any" data_oninput_this="calc_from_markup"/></td>
+	<td class="price"><input type="number" id="price-%2$d" name="price-%2$d" value="%7$.2f" step="any"/></td>
+	<td class="units"><input type="text" id="units-%2$d" name="units-%2$d" value="%8$s" /></td>
+	<td class="total"><input type="number" id="total-%2$d" name="total-%2$d" value="%9$.2f" step="any"/></td>
+	<td class="buttons">%10$s</td>
+</tr>`, $rowclass, $Product->id(),
+$Product->Product()->link_to($Product->name() . ($Product->name() ne $Product->description() ? ' ' . $Product->description() : '')),
+$Product->quantity(), $Product->cost(), $Product->markup(), $Product->price(), $Product->units(), $Product->total(),
+button( 'removeProduct'.$Product->id(), {
+data_onclick_this=>'remove_product', data_product_id=>$$Product{id}, text=>'-', title=>'Remove' } ),
+#qq`new Ajax.Updater('Products', '_products.html?action=del&amp;product_id=$$Product{id}', { parameters: f1.serialize() } );`,
+$Product->comments(),
+);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$sub_total += $Product->total();
+			} # end foreach Product
+      if ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) {
+				$html .= sprintf(q`
+<tr%1$s>
+  <td class="description">
+    <select id="product_category_id-" name="product_category_id-" onchange="new Ajax.Updater('product_id-', '_products_dropdown.html', { parameters: { category_id: this.getValue() } } );">%2$s</select>
+    <select id="product_id-" name="product_id-">%3$s</select>
+  </td>
+  <td class="quantity"><input type="number" min="0" step="any" id="quantity-" name="quantity-" data_oninput_this="calc_from_quantity" /></td>
+  <td class="price"><input type="number" step="any" min="0" id="cost-" name="cost-" data_oninput_this="calc_from_cost"/></td>
+  <td class="markup"><input type="number" step="any" min="0" id="markup-" name="markup-" data_oninput_this="calc_from_markup"/></td>
+  <td class="newprice"><input type="number" step="any" min="0" id="price-" name="price-" /></td>
+	<td class="units"><input type="text" id="units-" name="units-" /></td>
+  <td class="newprice"><input type="number" step="0.01" min="0" id="total-" name="total-" /></td>
+  <td class="buttons">%4$s</td>
+</tr>
+                  `, $rowclass, 
+									make_drop_down( [ '', 'select', map { $_->id(), $_->name() } openprint::Product_Category->find(order=>'lower(name)') ] ),
+									make_drop_down( [ '', 'select', map { $_->id(), $_->name() } openprint::Product->find(order=>'lower(name)') ] ),
+                  button( 'addProduct', { data_onclick_this=>'add_product', 
+                  #onclick=>q`new Ajax.Updater('Products', '_products.html?action=add', { parameters: f1.serialize() } );`,
+                  text=>'+',title=>'Add' } ),
+					);
+			} # end if
+			$html .= '
+      <tr class="totals">
+        <td colspan="5">Subtotal</td>
+        <td class="subtotal" id="products_subtotal">'.openprint::Currency::format($sub_total).'</td>
+        <td></td>
+      </tr>';
+			
+			return $html;
+		) ?>
+	</tbody>
+</table>

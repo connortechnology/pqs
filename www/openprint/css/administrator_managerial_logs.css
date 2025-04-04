@@ -1,0 +1,9 @@
+#logactions {
+}
+#logactions li {
+  float: left;
+  width: 250px;
+  text-align: left;
+  padding: 0px;
+}
+

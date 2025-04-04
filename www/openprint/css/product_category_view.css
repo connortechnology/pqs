@@ -1,0 +1,36 @@
+.Category .description {
+float: left;
+width: 50%;
+}
+.SubCategories {
+display: flex;
+justify-content: space-between;
+flex-wrap: wrap;
+width: 100%;
+}
+.SubCategories li {
+  padding: 0;
+  border: 2px solid #0055a5;
+min-width: 200px;
+margin: 4px;
+text-align: center;
+flex-grow: 1;
+}
+/*
+.BusinessCards, .CarbonlessNCRForms, .Envelopes, .FileFolders {
+width: 20%;
+}
+.Letterhead, .Notepads, .PocketFolders {
+width: 30%;
+}
+*/
+.SubCategories li .description {
+display: none;
+}
+
+.SubCategories h3 a {
+  color: white;
+}
+.Category .Photo img {
+width: 200px;
+}

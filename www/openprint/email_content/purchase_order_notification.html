@@ -1,0 +1,6 @@
+
+<? echo ( $$variable{'From'}->name() ) ?> has created a purchase order with you in the notifications list.<br/>
+<br/>
+Please use the following link to view it.<br/>
+<br/>
+<? echo ( sprintf('<a href="%1$s/employee/purchase_order/view.html?po_id=%2$d">Purchase Order %2$d</a>', $config{'InternalSiteURL'}, $$variable{'PurchaseOrder'}->id() ); ) ?><br/>

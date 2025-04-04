@@ -1,0 +1,51 @@
+table .Skid {
+	width: 80px;
+	text-align: right;
+}
+table .Skid input[type="text"],
+table .Skid input[type="number"] {
+	width: 60px;
+}
+table .RFID {
+	width: 115px;
+}
+table .RFID input[type="text"],
+table .RFID input[type="number"] {
+    width: 120px;
+}
+
+.gsm input[type="text"],
+.gsm input[type="number"],
+.basis_weight input[type="text"],
+.basis_weight input[type="number"],
+.basis_width input[type="text"],
+.basis_width input[type="number"],
+.basis_height input[type="text"],
+.basis_height input[type="number"],
+.weight input[type="text"],
+.weight input[type="number"],
+.size input[type="number"],
+.size input[type="text"],
+.docket input[type="number"],
+.docket input[type="text"],
+.purchaseorder input[type="number"],
+.purchaseorder input[type="text"],
+.mweight input[type="number"],
+.mweight input[type="text"],
+.calliper input[type="number"],
+.calliper input[type="text"] {
+	width: 50px;
+}
+table.List .buttons {
+	width: 100px;
+}
+table .last_seen {
+	width: 60px;
+}
+table .qty_lbs ,
+table .qty_feet{
+	width: 60px;
+}
+table .qty_kgs {
+	width: 50px;
+}

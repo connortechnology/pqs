@@ -1,0 +1,74 @@
+<div class="PageTitle">
+<h1>Surveys</h1>
+<h2>History</h2>
+</div>
+<script>
+	function delete_confirm(form) {
+		var number_of_deleted_surveys = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_surveys += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_surveys == 0 ) {
+			alert("To Delete Surveys, click the checkbox beside the survey.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_surveys + " surveys from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_surveys( form ) {
+		$('SurveyList').innerHTML = 'Please wait...';
+		new Ajax.Updater('SurveyList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+</script>	 
+<div class="Survey"><div class="History">
+	<form id="f1" name="f1" method="post" action="/survey/history.html">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+			<div class="leftColumn">
+				<ul>
+					<li>
+						<label>Created</label>
+		<? echo ( date_select_session( '/survey/history.html', 'created_on_start', {
+onchange=>q`load_surveys($('f1'));`,
+with_today=>1,with_clear=>1} ); ) ?>
+							to 
+		<? echo ( date_select_session( '/survey/history.html', 'created_on_end', {
+onchange=>q`load_surveys($('f1'));`,
+with_today=>1,with_clear=>1} ); ) ?>
+					</li>
+				</ul>
+			</div>
+<? if ( $session{user_type} and sets::isin($session{user_type}, ['E','A'] ) ) ?>
+			<div class="rightColumn">
+				<ul>
+					<li>
+						<label>Author</label>
+						<select name="author_id" id="author_id" onchange="load_surveys(this.form);">
+							<option value="">All</option>
+							<? echo ( make_drop_down( 
+                      openprint::User->dropdown(company_id=>$session{company_id}),
+                      $session{$r->uri().'?author_id'} );
+                      ) ?>
+						</select>
+					</li>
+				</ul>
+			</div>
+<? endif ( $session{user_type} and sets::isin($session{user_type}, ['E','A'] ) ) ?>
+			<br class="spacer"/>
+			<p class="buttons">
+				<? echo ( join("\n",
+					button( 'ShowResults', { onclick=>"load_surveys(f1);", text=>'Show Results'} ),
+					button( 'Reset', { onclick=>'f1.reset();', text=>'Reset'} ),
+					button( 'New', { href=>'/survey/edit.html', text=>'New Survey'} ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<div id="SurveyList"><?include('_history.html')?></div>
+	</form>
+	</div>
+</div>

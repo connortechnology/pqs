@@ -1,0 +1,43 @@
+<? include('/includes/error_reporting.html') ?>
+<div class="Payments">
+    <fieldset><legend>Payments</legend>
+        <table>
+            <tr><th class="ID">ID</th><th class="transaction">Transaction/Cheque #</th><th class="Date">When</th><th class="Notes">Notes</th><th class="Price">Amount</th></tr>
+<? if ( $$variable{'Claim'}->Payments() ) ?>
+            <? echo ( 
+                my $html = '';
+                $$variable{'payment_total'} = 0;
+                foreach my $P ( $$variable{'Claim'}->Payments() ) {
+                    my $Payment = $P->Payment();
+					next if $Payment->deleted();
+                    $html .= sprintf('<tr><td class="ID"><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td>
+                        <td class="transaction"><a href="/payment/edit.html?payment_id=%1$d">%2$s</a></td>
+                        <td class="Date">%3$s</td>
+                        <td class="Notes">%4$s</td>
+						<td class="Price">%5$s</td></tr>',
+                        $Payment->id(),
+                        $Payment->transaction_id(),
+                        format_date( $Payment->received_on() ),
+                        $Payment->memo(),
+                        ( $P->amount() != $Payment->amount() ? openprint::Currency::format( $P->amount() ).'/'.openprint::Currency::format($Payment->amount()) : openprint::Currency::format( $P->amount() ) ),
+ );
+                    $$variable{'payment_total'} += $P->amount();
+                } # end foreach
+                return $html;
+            ) ?>
+            <tr class="totals">
+                <td colspan="4">Total</td>
+                <td class="Price"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
+            </tr>
+<? endif ( $$variable{'Claim'}->Payments() ) ?>
+			<tr class="new">
+				<td class="ID">New</td>
+				<td><input type="text" id="transaction_id" name="transaction_id"/></td>
+				<td><? echo ( date_select( 'payment_when', [ Date::Calc::Today() ] ); ) ?></td>
+				<td><input type="text" id="notes" name="notes"/></td>
+				<td><? echo ( input(type=>'float', id=>'amount', name=>'amount', value=>$$variable{Claim}->owing() ); ) ?></td>
+			</tr>
+        </table>
+		<p class="buttons"><? echo ( button( 'SavePayment', { onclick=>qq`new Ajax.Updater( 'Payments', '_payments.html?claim_id=$$variable{Claim}{id}&amp;action=addpayment', { parameters: \$('f1').serialize() } );` } ); ) ?></p>
+    </fieldset>
+</div>

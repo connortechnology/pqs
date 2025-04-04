@@ -1,0 +1,43 @@
+<div class="PageTitle">
+<h1>Maintenance Action Request (MAR)</h1>
+</div>
+<script type="text/javascript">
+	function check_part1( form ) {
+		if ( ! get_value( form.equipment_id ) ) {
+			alert('Please select the equipment');
+			return 0;
+		} // end if
+		return 1;
+	} // end function check_part1
+</script>
+<div id="MAR">
+	<? if ( $param{mar_id} and ! $$variable{MAR}->id() ) ?>
+	Invalid MAR # specified.
+	<? else ( $param{mar_id} and ! $$variable{MAR}->id() ) ?>
+
+		<? echo ( join("\n",
+					button( 'Print', { onclick=>'window.print();' } ),
+					button( 'Send', { href=>'/employee/iso/mar.html?action=Send&amp;mar_id='.$$variable{MAR}->id() } ),
+					); ) ?>
+		<h3>MAR ID: <span id="mar_id"><? echo ( $$variable{MAR}->id() ) ?></span></h3>
+		<? echo (
+			my $html;
+			if ( ( ! $param{mar_id} ) ) {
+				return join( "\n",
+					'<div id="Part1">', include('/employee/iso/_mar_edit_part1.html' ), '</div>',
+					'<div id="Part1"></div>',
+					'<div id="Part2"></div>',
+					'<div id="Part3"></div>',
+					'<div id="Part4"></div>',
+					);
+			} else {
+				return join("\n",
+					'<div id="Part1">', include( '/employee/iso/_mar_view_part1.html' ), '</div>',
+					'<div id="Part2">', include( '/employee/iso/_mar_view_part2.html' ),'</div>',
+					'<div id="Part3">', include( '/employee/iso/_mar_view_part3.html' ), '</div>',
+					'<div id="Part4">', include( '/employee/iso/_mar_view_part4.html' ), '</div>',
+					);
+			} # end if
+		) ?>
+	<? endif ( $param{mar_id} and ! $$variable{MAR}->id() ) ?>
+</div>

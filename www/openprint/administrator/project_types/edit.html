@@ -1,0 +1,200 @@
+<form id="f1" name="f1" method="post" action="edit.html" enctype="multipart/form-data">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters"><legend>Search Information</legend>
+		<div class="content">
+			<ul>
+<? if ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown(order=>'lower(name)') and @{$$variable{Categories}} ) ?>
+				<li>
+					<label>Category</label>
+					<select name="search_category_id" id="search_category_id" onchange="this.form.btnFunction.value='';this.form.submit();">
+						<option value=""> All </option>
+						<? echo ( make_drop_down( $$variable{Categories}, $param{search_category_id} ) ) ?>
+					</select>
+				</li>
+<? endif ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown(order=>'lower(name)') and @{$$variable{Categories}} ) ?>
+				<li>
+					<label>Project Type</label>
+					<select id="ddmProjectType" name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
+						<option value="">select one</option>
+						<? echo ( 
+								make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)',
+								( $param{search_category_id} ? ( category_id => $param{search_category_id} ) : () ),
+								) ], $$variable{ProjectType}->id() );
+								) ?>
+					</select>
+				</li>
+			</ul>
+		</div>
+		<p class="buttons">
+			<? echo ( join("\n",
+					button( 'Prev1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Previous';fmCheck(f1);", text=>'&lt;&lt;' } ),
+					button( 'Next1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Next';fmCheck(f1);", text=>'&gt;&gt;' } ),
+					button( 'New1', { onclick=>"f1.action='edit.html';addCheck(f1);", text=>'New' } ),
+					button( 'Delete1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+					button( 'Save1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+					button( 'Copy1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Copy';fmChange=3;fmCheck(f1);", text=>'Copy' } ),
+					button( 'Reset1', { onclick=>"f1.action='edit.html';f1.reset();", text=>'Reset' } ),
+	); ) ?>
+		</p>
+		<p class="buttons">
+			<b>CSV File</b>
+			<input type="file" name="fileImport" />
+<? echo ( join("\n",
+			button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();", text=>'Import' } ),
+			button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.action='edit.html?Download';f1.submit();", text=>'Export' } ),
+); ) ?>
+		</p>
+	</fieldset>
+	<fieldset class="leftColumn">
+    <legend><? echo ( $$variable{ProjectType}->id() ? $$variable{ProjectType}->description() : 'New Project Type' ) ?></legend>
+		<ul>
+      <li> 
+        <label>Name</label>
+        <input type="text" id="name" name="name" value="<? echo ( $$variable{ProjectType}->name(); ) ?>" /> 
+      </li>
+      <li> 
+        <label>Description</label>
+        <input type="text" id="description" name="description" value="<? echo ( $$variable{ProjectType}->description(); ) ?>" /> 
+      </li>
+      <li>
+        <label onclick="$('category_id').toggle();$('category').toggle();">Category</label>
+        <select id="category_id" name="category_id" onchange="$('category').value='';">
+          <option value=""> none </option>
+          <? echo (
+            make_drop_down( $$variable{Categories}, $$variable{ProjectType}->category_id() );
+        ) ?>
+        </select>
+        <input type="text" name="category" id="category" style="display:none;" oninput="ddm_select_by_value($('category_id'), '' );"/>
+      </li>
+  <? if ( $openprint::User->email() =~ /iconnor/ ) ?>
+      <li> 
+        <label>Type</label>
+        <? echo ( ssi::select( 
+          [
+            'ChannelLetters', 'Channel Letter',
+             'SinglePage', 'Single Page',
+            'MultiPage', 'Multiple Pages / Book',
+            'NoPrinting', 'No Printing',
+            'ScratchPads',	'Scratch/Note Pads',
+          ], $$variable{ProjectType}->type(),
+          { name => 'type',
+            prepend=>['','please set'] } ); ) ?>
+      </li>
+      <li> 
+        <label>URL</label>
+        <input type="url" id="url" name="url" value="<? echo ( $$variable{ProjectType}->url(); ) ?>" />
+      </li>
+  <? endif ( $openprint::User->email() =~ /iconnor/ ) ?>
+      <li> 
+        <label>Sort</label>
+        <input type="number" id="sorting" name="sorting" value="<? echo ( $$variable{ProjectType}->sorting(); ) ?>" />
+      </li>
+      <li> 
+        <label>Show please call</label>
+        <?echo(radio( 'please_call', [ '1', 'Yes', '0', 'No' ], $$variable{ProjectType}->please_call() ); ) ?>
+      </li>
+		</ul>
+	</fieldset><!-- Column -->
+  <?eval( $$variable{Object} = $$variable{ProjectType} ) ?>
+  <?include(/employee/assets/_asset_upload.html)?>
+	<br class="spacer"/>
+	<fieldset class="RequiredServices"> 
+		<legend>Required Services</legend>
+		The checked services will be automatically added to the project when this project type is selected.
+		<ul> 
+<? echo (
+		return checkboxes('required_services', 
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
+			[ $$variable{ProjectType}->required_services() ],
+			{ container=>['<li>','</li>'] }
+			);
+) ?>
+		</ul>
+	</fieldset><!-- Column -->
+	<fieldset class="BlockedServices"> 
+		<legend>Blocked Services</legend>
+		The checked services will be automatically removed from the project when this project type is selected.
+		<ul> 
+<? echo (
+		return checkboxes('blocked_services', 
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
+			[ $$variable{ProjectType}->blocked_services() ],
+			{ container=>['<li>','</li>'] }
+			);
+) ?>
+		</ul>
+	</fieldset><!-- Column -->
+<? if ( $$variable{ProjectType}->id() ) ?>
+	<div class="PaperRecommendations">
+    <fieldset><legend>Paper Recommendations</legend>
+      <div class="leftColumn">
+        <ul>
+          <li>
+            <label>Brand</label>
+            <select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
+                <option value="">select</option>
+                <? echo ( make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $session{$r->uri().'?brand_id'} );) ?>
+            </select>
+          </li>
+<? echo (
+    my $html;
+    my @options = ( 'Finish', 'Colour', 'Weight', 'Quality', 'Material' );
+    my %options = map { $_, lc $_ } @options;
+
+    openprint::StockFinish->find();
+    openprint::StockColour->find();
+    openprint::StockWeight->find();
+    openprint::StockQuality->find();
+
+    my %find = map { $session{$r->uri().'?'.$_} ? ( $_=>$session{$r->uri().'?'.$_} ) : ()} ( 'brand_id', 'manufacturer_id', 'group_id' );
+    my %results;
+    my @Stocks = openprint::Paper->find(\%find);
+
+    foreach my $Stock ( @Stocks ) {
+      foreach my $option ( @options ) {
+        $results{$option}{$$Stock{$options{$option}.'_id'}} = $Stock->$option();
+      } # end foreach Stock
+    }# end foreach option
+
+    foreach my $option ( @options ) {
+      my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
+      my $lc_option = $options{$option};
+
+      $html .= sprintf(q`
+        <li>
+          <label>%3$s</label>
+          <select id="%1$s_id" name="%1$s_id" size="1" onchange="filter_onChange(this,'');">
+            <option value=""> select one </option>
+            %2$s
+          </select>
+        </li>`, $lc_option, make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{$r->uri().'?'.$lc_option.'_id'} ), $option );
+      $find{$lc_option.'_id'} = $session{$r->uri().'?'.$lc_option.'_id'} if $session{$r->uri().'?'.$lc_option.'_id'};
+    }# end foreach option
+    return $html;
+) ?>
+      </ul>
+		</div>
+		<div class="rightColumn">
+      <ul>
+        <li>
+          <label>Recommended</label>
+          <? echo ( radio( 'Recommended', [ '1', 'Yes', '0', 'No', '', 'All' ], $param{Recommended}, {
+          onclick=>qq`update_recommendations(this);` } ); ) ?></li>
+      </ul>
+		</div>
+		<br class="spacer"/>
+		<div id="PaperRecommendations">
+			<?include('_paper_recommendations.html')?>
+		</div>	
+	</fieldset>
+	</div>
+<? endif ( $$variable{ProjectType}->id() ) ?>
+	<br class="spacer"/>
+</form>
+<? if ( $$variable{ProjectType}->id() ) ?>
+	<? echo ( include_logs( $$variable{ProjectType} ); ) ?>
+<? endif ( $$variable{ProjectType}->id() ) ?>
+<script src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script src="<?hash_link(/administrator/project_types/edit.js)?>"></script>
+<script>
+</script>

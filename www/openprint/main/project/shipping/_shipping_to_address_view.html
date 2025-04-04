@@ -1,0 +1,34 @@
+<fieldset><legend>To</legend>
+	<ul>
+	<li><label>Company</label>
+		<?ToCompanyName?>
+	</li>
+	<li><label>Location</label>
+		<?ToLocation?>
+	</li>
+	<li><label>Address</label>
+		<?ToAddress1?><br/>
+		<?ToAddress2?>
+		<?ToCity?>, <?ToStateProvince?>, <?ToPostalCode?>
+		<?ToCountry?>
+	</li>
+	<?if($$variable{ToPhone})?>
+	<li> 
+		<label>Phone</label>
+		<?ToPhone?>
+	</li>
+	<?endif($$variable{ToPhone})?>
+	<?if($$variable{ToFax})?>
+	<li> 
+		<label>Fax</label>
+		<?ToFax?>
+	</li>
+	<?endif($$variable{ToFax})?>
+	<?if($$variable{ToEmail})?>
+	<li> 
+		<label>Email</label>
+		<?ToEmail?>
+	</li>
+	<?endif($$variable{ToEmail})?>
+	</ul>
+</fieldset>

@@ -1,0 +1,13 @@
+<li>
+    <label>Total Weight</label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+    <input name="totalWeight<?QTYIndex?>" type="number" readonly="readonly" /> lbs
+	</span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</li>
+

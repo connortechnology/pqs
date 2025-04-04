@@ -1,0 +1,38 @@
+<div class="Service <?echo($$variable{ServiceType}->name())?>">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<ul>
+		<?include('/includes/main/proj/items_per_package.html')?>
+<? if ( $$variable{ServiceTypeID} ne 'ShrinkWrap' and $$variable{ServiceTypeID} ne 'KraftWrap') ?>
+			<li>
+				<label>Bands per bundle</label>
+				<? echo ( input( name=>'bands_per_package', value=>$$variable{bands_per_package}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
+			</li>
+      <? endif ( $$variable{ServiceTypeID} ne 'ShrinkWrap' and $$variable{ServiceTypeID} ne 'KraftWrap') ?>
+		<? echo ( 
+			my @Materials = openprint::Material->find( category=>$$variable{ServiceTypeID}, order=>'lower(name)' );
+			if ( @Materials ) {
+				return '<li><label>Type</label>'.ssi::select( 
+				[ map{ $_->id(), $_->description() } @Materials ], $$variable{type_id}, { name=>'type_id', onchange=>'calc(this.form.name);' } ).'</li>';
+			} 
+			return;
+		)?>
+		<?include('/includes/main/proj/cardboard_backing.html')?>
+			</ul>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+        <?include('/includes/main/proj/package_quantity.html') ?>
+        <?include('/includes/main/proj/quantities_equipment_prices.html') ?>
+			</ul>
+		</fieldset>
+		<?include('/includes/main/proj/add_to_project.html')?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ContinueProject" value="Y"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+	</form>
+</div>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>
+<script src="<?hash_link(/javascripts/proj/packaging.js)?>"></script>

@@ -1,0 +1,58 @@
+<div class="templates">
+<? echo ( 
+		my $ProjectType = $$variable{Project}->Type();
+		my %ServiceTypes = map { $_->name(), $_ } openprint::ServiceType->find();
+    my %Templates = map { ($ServiceTypes{$_} ? ($_ => $ServiceTypes{$_}->description()): ()) }
+    qw(
+    SaddleStitching
+    LoopStitching
+    CornerStitching
+		PerfectBound
+    SpinePaste
+			Cerlox
+			PlasticCoil
+			MetalCoil
+			DoubleLoopWire
+			Unbound
+			);
+
+		my $html .= include( '/includes/main/proj/templates/project_template_select.html' );
+    $html .= '<ul>';
+		foreach my $template_type ( sort { $a cmp $b } keys %Templates ) {
+			my $image_path = '';
+			if ( -f $config{SkinPath}.'/images/templates/'.$ProjectType->name().'/'.$template_type.'.png' ) {
+				$image_path = '/images/templates/'.$ProjectType->name().'/'.$template_type.'.png';
+			} elsif ( -f $config{SkinPath}.'/images/templates/'.$template_type.'.png' ) {
+				$image_path = '/images/templates/'.$template_type.'.png';
+			} elsif ( -f $config{SkinPath}.'/images/templates/'.$ProjectType->name().'/'.$template_type.'.gif' ) {
+				$image_path = '/images/templates/'.$ProjectType->name().'/'.$template_type.'.gif';
+	$log->error("Please convert " . $config{SkinPath}.'/images/templates/'.$ProjectType->name().'/'.$template_type.'.gif to  .png');
+			} elsif ( -f $config{SkinPath}.'/images/templates/'.$template_type.'.gif' ) {
+				$image_path = '/images/templates/'.$template_type.'.gif';
+	$log->error("Please convert " . $config{SkinPath}.'/images/templates/'.$template_type.'.gif to  .png');
+			} 
+
+		if ( $image_path ) {
+      $html .= sprintf(q`
+      <li onclick="$('rdbTemplateType%1$s').checked=true;selectProjectTemplate('f1');">
+        <img src="%4$s" alt="%2$s"/><br/>
+        <input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %3$s/>
+        <label for="rdbTemplateType%1$s">%2$s</label>
+      </li>
+      `, $template_type, $Templates{$template_type}, checked( $template_type eq $$variable{rdbTemplateType} ), $image_path );
+		} else {
+      $log->error("No Project Template image for " . $config{SkinPath}.'/images/templates/'.$ProjectType->name().'/'.$template_type.'.gif' );
+      $html .= sprintf('
+      <li>
+        <input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %2$s />
+        <label for="rdbTemplateType%1$s">%1$s</label>
+      </li>', $template_type, checked( $template_type eq
+ $$variable{rdbTemplateType} ), $ProjectType->name() );
+    } # end if
+    $html .= "\n";
+  } # end foreach
+  return $html;
+) ?>
+  </ul>
+</div>
+

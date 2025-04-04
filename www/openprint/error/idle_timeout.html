@@ -1,0 +1,9 @@
+<? eval (
+    openprint::login::save_destination();
+) ?>
+<b>Idled too long.</b>
+This server enforces an idle limit of <?idletime?> seconds.  You have exceeded this limit, and have been automatically logged out.  You may log in again, and continue any projects, orders, or quotes that you had started.<br>
+
+<? echo ( include('/account/login.html'); ) ?>
+  <p><br>
+    <a href="javascript:history.back()">Back</a> </p>

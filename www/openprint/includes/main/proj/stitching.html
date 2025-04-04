@@ -1,0 +1,63 @@
+<ul>
+  <li><label>Finished Calliper</label><span id="txtCalliper"><?echo($$variable{Project}->calliper() )?></span>&quot;</li>
+  <?if($$variable{ServiceType}->name() eq 'SaddleStitching')?>
+  <li><label># of stitches</label><?echo( radio('stitches', [2=>2, 3=>3], $$variable{stitches}, {default=>2}); )?></li>
+  <?endif($$variable{ServiceType}->name() eq 'SaddleStitching')?>
+</ul>
+<? if ( $$variable{Project}->signatures({type=>'GateFolded Spreads'}) ) ?>
+<div id="GateFoldFit">
+		Will your <? echo ( writeTip('Gate Folded'); ) ?>
+		Page(s) require an exact fit? Choosing short will be more cost-effective, 
+		however the <? echo ( writeTip('Gate Folded'); ) ?>
+		page will be approximately 1/16&quot; short of the finished size.
+	<p>
+		<label>Gate Fold Fit</label>
+		<input type="radio" id="rdbGateFoldFitExact" name="rdbGateFoldFit" value="Exact" onclick="calc('f1')" <? echo ( 'checked="checked"' if $$variable{rdbGateFoldFit} eq 'Exact' ) ?> />
+		<label class="radio" for="rdbGateFoldFitExact">Exact</label>
+		<input type="radio" id="rdbGateFoldFitShort" name="rdbGateFoldFit" value="Short" onclick="calc('f1')" <? echo ( 'checked="checked"' if $$variable{rdbGateFoldFit} ne 'Exact' ) ?> />
+		<label class="radio" for="rdbGateFoldFitShort">Short</label>
+	</p>
+</div>
+<? endif ( $$variable{Project}->signatures({type=>'GateFolded Spreads'}) ) ?>
+<? eval ( 
+	$$variable{NeedCoverFit} = 0;
+	foreach my $sig_id ( $$variable{Project}->signatures({Group=>1}) ) {
+		if ( openprint::Estimating::Stitching::form_needs_fit( $$variable{Project}, $sig_id ) ) {
+			$$variable{NeedCoverFit} = 1;
+			last;
+		} # end if
+	} # end if
+) ?>
+<? if ( $$variable{NeedCoverFit} ) ?>
+<div id="CoverFit">
+	Will your Cover require an exact fit? Choosing standard will be more cost-effective, 
+	however the Cover will be approximately 1/16&quot; short of the finished size. Choosing 
+	Flush requires a
+	board to be hand inserted into the text portion of the book before the
+	2nd pass on the stitcher. This is quite a laboursome task so the cost will be significantly higher.
+	<p>
+		<label>Cover Fit</label>
+		<? echo ( radio( 'CoverFit', [ map { $_, $_ } ( 'Standard', 'Held Back', 'Flush' ) ], $$variable{CoverFit}, { onclick=>'calc(this.form.name);' } ); ) ?>
+	</p>
+</div>
+<? endif ( $$variable{NeedCoverFit} ) ?>
+<? if ( $$variable{txtInsertQuantity} ) ?>
+<div id="Inserts">
+	The # of inserts must be set on the book printing page.
+	<p>
+		<label># of inserts</label>
+		<?txtInsertQuantity?>
+		<input name="txtInsertQuantity" value="<?txtInsertQuantity?>" type="hidden" />
+	</p>
+    <? eval ( $$variable{InsertIndex} = 1; ) ?>
+    <? while ( $$variable{InsertIndex} <= $$variable{txtInsertQuantity} ) ?>
+	<p>
+		<label>Insert <?InsertIndex?> falls between</label>
+		Pages:
+		<input name="txtInsertPage1-<?InsertIndex?>" value="<? hecho ( $$variable{'txtInsertPage1-'.$$variable{InsertIndex}} ) ?>" /> &amp;
+		<input name="txtInsertPage2-<?InsertIndex?>" value="<? hecho ( $$variable{'txtInsertPage2-'.$$variable{InsertIndex}} ) ?>" />
+	</p>
+    <? eval ( $$variable{InsertIndex} += 1; ) ?>
+    <? endwhile ( $$variable{InsertIndex} <= $$variable{txtInsertQuantity} ) ?>
+</div>
+<? endif ( $$variable{txtInsertQuantity} ) ?>

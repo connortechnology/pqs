@@ -1,0 +1,21 @@
+<p>
+	<label>Completion Date</label>
+<? if ( $$variable{'rdbComplete'} ne 'Yes' ) ?>
+<? eval ( @$variable{'CompletionDate'} = sql::execute( $log, $dbh, q{SELECT to_char(NOW(),'YYYY-MM-DD HH24:MI')} ); ) ?>
+	<input type="text" name="CompletionDate" id="CompletionDate" value="<?CompletionDate?>"/>
+	<img src="/images/calendar.gif" id="CompletionDateButton" style="cursor: pointer;" title="Date selector" />
+	<script type="text/javascript">
+	Calendar.setup({
+inputField     :    "CompletionDate",      // id of the input field
+ifFormat       :    "%Y-%m-%d %H:%M",       // format of the input field
+button         :    "CompletionDateButton",  // trigger for the calendar (button ID)
+align           :   "Tl",
+showsTime      :    true,            // will display a time selector
+singleClick    :   false,           // double-click mode
+timeFormat		: 24
+});
+</script>
+<? else ( $$variable{'rdbComplete'} ne 'Yes' ) ?>
+		<?CompletionDate?>
+<? endif ( $$variable{'rdbComplete'} ne 'Yes' ) ?>
+</p>

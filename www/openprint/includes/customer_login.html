@@ -1,0 +1,24 @@
+<div id="Login">
+	<form id="LoginForm" name="LoginForm" method="post" action="<?SecureSiteURL?>/account/login.html" class="form-inline">
+<? if ( ! $session{user_id} ) ?>
+		<div class="Register">
+			<fieldset><legend>Registration</legend>
+				<div class="content">
+				<div class="instruction">
+				<? if ( $config{WhyRegister} ) ?>
+				<? echo ( $config{WhyRegister} ) ?>
+				<? else ( $config{WhyRegister} ) ?>
+				Why register?  We require you to have an account to keep an order history, and to allow you to check the status of your project through production and shipping.
+				<? endif ( $config{WhyRegister} ) ?>
+				</div>
+				</div>
+				<p class="buttons">
+					<? echo ( button('Register', {href=>'/account/registration.html', text=>'Register Now'} ); ) ?>
+				</p>
+			</fieldset>
+		</div>
+<? endif ( ! $session{user_id} ) ?>
+		<?include('/includes/_login_part.html')?>
+		<input type="hidden" name="btnFunction" value="Login" />
+	</form>
+</div>

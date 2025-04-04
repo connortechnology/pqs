@@ -1,0 +1,19 @@
+<? eval (
+	openprint::login::save_destination();
+) ?>
+<? if ( $$variable{'error'} ) ?>
+<p class="error"><b><?error?></b><br/>
+  <br/>
+  <?details?><br/>
+</p>
+<? endif ( $$variable{'error'} ) ?>
+<? if ( $session{user_id} ) ?>
+You have requested a page that requires greater credentials than you are currently logged in as.  You will have to login as someone else in order to continue.<br/>
+<? else ( $session{user_id} ) ?>
+You have requested a page that requires you to login and authenticate yourself.<br/>
+<? endif ( $session{user_id} ) ?>
+<? echo ( $$variable{PageSetting}->message() ) ?>
+<br/>
+Please enter your e-mail address and password to login. <br/>
+<br/>
+<?include('/includes/customer_login.html')?>

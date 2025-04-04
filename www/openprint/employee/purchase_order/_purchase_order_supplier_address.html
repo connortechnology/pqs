@@ -1,0 +1,4 @@
+<? echo (
+	return join('<br/>', $$variable{'PurchaseOrder'}->Supplier()->get( 'name','address1'),
+		sprintf('%s %s, %s', $$variable{'PurchaseOrder'}->Supplier()->get('city','state', 'postalcode')), $$variable{'PurchaseOrder'}->Supplier()->phone() );
+) ?>

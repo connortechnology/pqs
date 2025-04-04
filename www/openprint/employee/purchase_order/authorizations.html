@@ -1,0 +1,44 @@
+<script type="text/javascript">
+	function page_load( div_id, form ) {
+		var div = $(div_id);
+		if ( div )
+			div.innerHTML = 'Please wait. Loading...';
+		new Ajax.Updater( div_id, '/employee/purchase_order/_authorizations.html', { parameters: form.serialize() } );
+	} // end function page_load
+</script>
+<div class="PurchaseOrder">
+	<div class="Authorizations">
+		<?include('/includes/error_reporting.html')?>
+		<form id="f1" name="f1" action="/employee/purchase_order/authorizations.html" method="post">
+			<fieldset class="filters"><legend>Select Search Criteria</legend>
+				<ul>
+					<li><label>Company</label>
+						<select name="company_id" onchange="new Ajax.Updater( 'user_id', '/includes/_users.html', { parameters: { company_id: get_ddm_value(this) } } );page_load('Results',$('f1') );">
+						<? echo ( openprint::Company::get_dropdown( $session{'/employee/purchase_order/authorizations.html?company_id'} ); ) ?>
+						</select>
+					</li>
+					<li>
+						<label>User</label>
+						<? echo ( ssi::select( openprint::User->dropdown(order=>'lower(firstname),lower(lastname)', 
+						( $session{'/employee/purchase_order/authorizations.html?company_id'} ? (
+		company_id => $session{'/employee/purchase_order/authorizations.html?company_id'} ) : () ),
+		), $session{'/employee/purchase_order/authorizations.html?user_id'}, { 
+									name	=>	'user_id',
+									id		=>	'user_id',
+									prepend	=>	['','All'],
+									onchange	=>	 q`page_load('Results',$('f1'));`,
+									} ); ) ?>
+					</li>
+				</ul>
+				<p class="buttons">
+					<? echo ( join( '',
+						ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+						ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
+					); ) ?>
+				</p>
+			</fieldset>
+			<input type="hidden" name="btnFunction"/>
+			<div id="Results"><?include(/employee/purchase_order/_authorizations.html)?></div>
+		</form>
+	</div>
+</div>

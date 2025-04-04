@@ -1,0 +1,9 @@
+<li id="CustomDimensions" <? echo ( ( sets::isin( $$variable{ProjectType}->name(),[ 'Letterhead','ScratchPads','RackCards','DoorHangers','Posters','Labels' ] ) and $$variable{Dimensions} ne 'Custom' ) ? 'style="display:none;"' : ''; ) ?>>
+	<label>Final</label>
+	<? echo ( input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>q`remove_div('OrderButton');`); ) ?> x
+	<? echo ( input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>q`remove_div('OrderButton');`); ) ?>
+	<br class="spacer"/>
+	<label>Flat</label>
+	<? echo ( input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>q`remove_div('OrderButton');`); ) ?> x
+	<? echo ( input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>q`remove_div('OrderButton');`); ) ?>
+</li>

@@ -1,0 +1,12 @@
+<p> 
+	<label>Flat dimensions of spread</label>
+<!-- The rest is done for each qty -->
+<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="value"><? echo ( $$variable{'txtWidth'} ) ?>&quot; x <? echo ( $$variable{'txtHeight'} ) ?>&quot; (W x H)</span>
+<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<!-- End of Results -->
+</p>

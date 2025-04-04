@@ -1,0 +1,73 @@
+@import url(/css/event.css);
+
+.List ul {
+	margin-left: 20px;
+}
+.List li {
+	position: relative;
+}
+.List li:hover {
+background-color: gray;
+}
+.List li .buttons {
+	position: absolute;
+	top:0;
+	right: 0;
+}
+#Results .Assets {
+	width: 300px;
+	float: right;
+	margin-left: 10px;
+}
+#Results .Location .Assets img {
+	width: 300px;
+	max-height: 600px;
+}
+
+.Location .View {
+	position: relative;
+}
+.Location .View .buttons {
+	float: right;
+}
+.Location #Photos li {
+	width: 75px;
+	padding: 0;
+	margin: 2px;
+	position: relative;
+}
+#Photos .thumbnail {
+	width: 75px;
+}
+.Location #Photos li .buttons {
+	position: absolute;
+	top:0;
+	right: 0;
+}
+.Location #Photos li .button {
+	height: auto;
+	margin-right: 0;
+	text-shadow: #000000 3px 3px 2px;
+	width: auto;
+	height: auto;
+	line-height: 10px;
+	border: none;
+	padding: 4px;
+	background: none;
+}
+.Location #Photos img {
+	width: 75px;
+}
+.Location .View h1 {
+	font-family: DallianceRoman;
+	font-size: x-large;
+	color: #4e4e4e;
+}
+.Search .Location {
+	border-bottom: 1px dotted black;
+    margin: 5px 0;
+    min-height: 75px;
+    overflow: hidden;
+    padding: 10px 10px 10px 85px;
+    position: relative;
+}

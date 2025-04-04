@@ -1,0 +1,32 @@
+<div class="VideoAlbums">
+	<div class="Assets">
+		<? echo ( include('/includes/error_reporting.html'); ) ?>
+		<form name="f1" id="f1" method="post" action="/video_albums/videos.html">
+			<fieldset class="filters"><legend>Photos</legend>
+				<div class="content">
+					<ul>
+					<? if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) ?>
+					<li><label>Company</label>
+						<select name="company_id" id="company_id" onchange="new Ajax.Updater('Results','_videos.html', { parameters: this.form.serialize() } );">
+							<option value=""> all </option>
+							<? echo ( 
+								ssi::make_drop_down( openprint::Company->dropdown(), $session{'/video_albums/videos.html?company_id'} );
+							) ?>
+						</select>
+					</li>
+					<li><label>User</label>
+						<select name="user_id" id="user_id" onchange="new Ajax.Updater('Results','_videos.html', { parameters: this.form.serialize() } );">
+							<option value=""> all </option>
+							<? echo ( 
+								ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('order'=>'lower(firstname),lower(lastname)') ], $session{'/video_albums/videos.html?user_id'} );
+							) ?>
+						</select>
+					</li>
+					<? endif ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) ?>
+					</ul>
+				</div>
+			</fieldset>
+			<div id="Results"><? echo ( include('_videos.html'); ) ?></div>
+		</form>
+	</div>
+</div>

@@ -1,0 +1,58 @@
+
+fieldset.leftColumn input[type="text"],
+fieldset .leftColumn input[type="text"] {
+	width: 80%;
+}
+fieldset.leftColumn p select, fieldset .leftColumn p select {
+	width: 80%;
+}
+#CompanyProfile,
+.CompanyInformation ,
+.BankInformation ,
+.MarketingInformation ,
+.BusinessInformation {
+	width: 50%;
+	float: left;
+}
+.SalesInformation, .Locations {
+	width: 100%;
+	float: right;
+}
+.TradeReferences,
+.CreditInformation ,
+.ShippingInformation {
+	width: 50%;
+	float: right;
+}
+.CompanyProfiles fieldset li,
+.CompanyProfiles fieldset p {
+	padding-left: 160px;
+}
+.CompanyProfiles fieldset li label:not(.radio):not(.radio-inline),
+.CompanyProfiles fieldset p label:not(.radio):not(.radio-inline) {
+	margin-left: -160px;
+	width: 155px;
+}
+.CompanyProfiles fieldset p input, div.CompanyProfiles fieldset p textarea {
+	width: 98%;
+}
+.CompanyProfiles fieldset.filters p input {
+	width: auto;
+}
+.CreditInformation input[type="text"],
+.CreditInformation input[type="number"] {
+	width: 40%;
+}
+.CreditInformation select {
+	width: auto;
+}
+#new_accounting_contact_id {
+	width: 75%;
+}
+.discount input[type="text"] ,
+.discount input[type="number"] {
+	width: 100px;
+}
+.text input {
+	width: 98%;
+}

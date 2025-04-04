@@ -1,0 +1,96 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+<script type="text/javascript">
+	tinyMCE.init({
+		mode : "specific_textareas",
+		theme : "advanced",
+		editor_selector : "mce",
+		plugins: "advlink,advimage,paste,autolink",
+
+		theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,formatselect,fontselect,fontsizeselect,sub,sup,justifyleft,justifycenter,justifyright,justifyfull,separator,anchor,link,unlink,image,cleanup,code",
+		
+		theme_advanced_buttons2 : "forecolor,backcolor,forecolorpicker,backcolorpicker,bullist,numlist,separator,outdent,indent,separator,undo,redo,separator,pastetext,pasteword,selectall,pastetext,charmap",
+		theme_advanced_buttons3 : ""
+
+	});
+	function add_to_id( input, query ) {
+		var to_id = get_form_element_array( $('f1'), 'to_id' );
+		query += '&to_id=' + to_id.join('&to_id=');
+		return query;
+	}
+
+	// delete goes to server mainly to update the dropdown
+	function delete_to( user_id ) {
+		var form = $('f1');
+		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
+		params.set('conversation_id', '<? echo ( $$variable{Conversation}->id() ) ?>' );
+		params.set('action', 'remove' );
+		params.set('user_id', user_id );
+
+		new Ajax.Updater( 'To', '_to.html', { parameters: params, evalScripts: true } );
+	} // end function delete_to
+	function add_to( input, li ) {
+		var form = input.form;
+		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
+		params.set('conversation_id', '<? echo ( $$variable{Conversation}->id() ) ?>' );
+		params.set('action', 'add' );
+		params.set('user_id', li.id );
+
+		new Ajax.Updater( 'To', '_to.html', { parameters: params, evalScripts: true } );
+	} // end function add_to
+	function reply_to( form ) {
+		tinyMCE.triggerSave();
+		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
+		params.set('conversation_id', '<? echo ( $$variable{Conversation}->id() ) ?>' );
+		params.set('action', 'reply' );
+		params.set('message_id', form.last_message_id.value );
+		params.set('body', form.elements['body'].value );
+
+		new Ajax.Request( '_view.json', { parameters: params } );
+	} // end function reply_to
+</script>
+<?include(/includes/error_reporting.html)?>
+<div class="Conversation"><div class="View">
+	<form id="f1" name="f1" action="/messaging/view.html?conversation_id=<? echo ( $$variable{Conversation}->id() ) ?>" method="post">
+		<input type="hidden" id="last_message_id" value="" />
+		<fieldset>
+<? if ( $$variable{Conversation}->id() ) ?>
+<legend>Viewing Conversation: <? echo ( $$variable{Conversation}->subject() ) ?></legend>
+<? else ( $$variable{Conversation}->id() ) ?>
+<legend>Start a New Conversation</legend>
+<? endif ( $$variable{Conversation}->id() ) ?>
+			<? if ( $$variable{Conversation}->deleted() ) ?>
+			<span class="warning">This message has been deleted</span>
+			<? endif ( $$variable{Conversation}->deleted() ) ?>
+			<div id="Messages"><?include('_messages.html')?></div>
+			<div class="Message Reply">
+				<div id="To"><?include('_to.html')?></div>
+				<? echo ( $openprint::User->icon(); ) ?>
+<? if ( ! $$variable{Conversation}->id() ) ?>
+				<div id="Subject">
+					<input type="text" id="subject" name="subject" value="<? echo ( $param{subject} ) ?>" placeholder="Subject" />
+				</div>
+<? endif ( ! $$variable{Conversation}->id() ) ?>
+				<textarea id="body" name="body" class="mce" onkeyup="textarea_resize(this);" placeholder="<? echo ( $$variable{Conversation}->id() ? 'Reply' : 'Type your message here.' ) ?>"><? echo ( $param{body} ) ?></textarea>
+				<span class="buttons">
+				<? echo (
+if ( $$variable{Conversation}->id() ) {
+	return button( 'Reply', { onclick=>q`reply_to( $('f1') );` } );
+} else {
+	return button( 'Send', { onclick=>q`var form = $('f1'); form.elements['action'].value='Send';form.submit();` } );
+} # end if
+) ?>
+				</span>
+			</div>
+
+			<p class="buttons">
+				<? echo (
+					return if ! $$variable{Conversation}->id();
+					my $html = '';
+					$html .= button( 'DC', { onclick=>"f1.elements['action'].value='Delete';f1.submit();", 'text'=>'Leave Conversation' } );
+					return $html;
+				) ?>
+			</p>
+		</fieldset>
+		<input type="hidden" name="action"/>
+	</form>
+</div></div>

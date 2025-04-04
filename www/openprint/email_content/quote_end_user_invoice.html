@@ -1,0 +1,89 @@
+<!--Quote_End_User-->
+<div class="Quote">
+	<style><?include('/css/quote.css')?></style>
+	<div class="Header">
+		<?include('/includes/quote_header.html')?>
+    <div class="PreparedByFor">
+		<?include('/includes/quote_prepared_by.html')?>
+		<?include('/includes/quote_prepared_for.html')?>
+    </div>
+    <? if ( $$variable{Quote}->comments() ) ?>
+    <div class="comments"><fieldset><legend>Comments</legend>
+        <? echo ( $$variable{Quote}->comments() ) ?>
+      </fieldset>
+        </div>
+        <? endif ( $$variable{Quote}->comments() ) ?>
+	</div>
+	<div class="Projects">
+	<? if ( $$variable{Quote}->Quoted_Projects() ) ?>
+		<table class="List"> 
+			<tr> 
+				<th class="project_id">ID</th>
+				<th class="description">Description</th>
+				<th class="weight">Weight</th>
+				<th class="quantity">Qty</th>
+				<th class="price">Price</th>
+			</tr>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+
+			foreach my $QP ( $$variable{Quote}->Quoted_Projects() ) {
+				my $Project = $QP->Project();
+
+				$html .= sprintf(q`<tr%1$s>
+					<td class="project_id"><a href="/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>
+					<td class="description">
+						<div class="reference"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s</a></div>
+						<div class="summary"><a href="/main/project/view.html?ProjectIndex=%2$d">%4$s</a></div>
+					</td>
+					<td colspan="3">
+					<table>`, $rowclass, $Project->id(),
+					( $Project->reference() ? $Project->reference() . ':<br/>' : '' ),
+					$Project->summary(),
+					);
+
+				my $services = $Project->services();
+
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+
+				   $html .= '<tr><td class="weight">';
+					my $weight;
+
+					if ( $$services{BulkSkids} ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $$services{BulkSkids}[0] );
+						$weight = $$specs{'totalWeight'.$qty_index};
+					} elsif ( $$services{PlainCartons} ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $$services{PlainCartons}[0] );
+						$weight = $$specs{'totalWeight'.$qty_index};
+					} else {
+          $weight = $Project->finished_weight() * $Project->quantity($qty_index);
+					} # end if
+					my $g = $weight * 453.59237;
+					if ( $g > 1000 ) {
+						$html .= sprintf( '%.0flb%s (%.0fkg)', $weight, ($weight>1?'s':''),$g/1000 );
+					} else {
+						$html .= sprintf( '%.0flb%s (%.0fg)', $weight, ($weight>1?'s':''),$g );
+					} # end if
+					$html .= sprintf('</td><td class="quantity">%1$s</td><td class="price">%2$s</td></tr>',
+							$Project->quantity($qty_index),
+							openprint::Currency::format( $QP->price($qty_index) )
+							);
+				} # end foreach qty_index
+				$html .= "</table>\n</td>\n</tr>\n";
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach QP
+			return $html
+		) ?>
+
+		</table>
+	</div>
+<? endif ( $$variable{Quote}->Quoted_Projects() ) ?>
+	<?include('/email_content/_quote_products_for.html')?>
+	<br/>
+	<span class="Currency">All prices are in <b><? echo ( $$variable{Quote}->Currency()->name() ) ?></b> and are subject to applicable taxes.</span><br/>
+	<br/>
+  <div class="Disclaimer">
+	<? echo ( $config{QuoteViewDisclaimer} ) ?>
+  </div>
+</div>

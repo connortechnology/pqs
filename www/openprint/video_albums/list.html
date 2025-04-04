@@ -1,0 +1,29 @@
+<div class="VideoAlbum">
+	<div class="List">
+		<? echo ( include('/includes/error_reporting.html'); ) ?>
+		<form name="f1" id="f1" method="post">
+			<fieldset class="filters"><legend>Video Albums</legend>
+				<div class="content">
+					<ul>
+					<? if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) ?>
+					<li><label>User</label>
+					<select name="user_id" id="user_id" onchange="new Ajax.Updater('Results','_list.html', { parameters: this.form.serialize() } );">
+						<option value=""> all </option>
+						<? echo ( 
+							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('order'=>'lower(firstname),lower(lastname)') ], $session{'/video_albums/list.html?user_id'} );
+						) ?>
+					</select>
+					</li>
+					<? endif ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) ?>
+					</ul>
+				</div>
+				<p class="buttons">
+				<? echo ( join('',
+					ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', '/video_albums/edit.html', 'New Album' ),
+					); ) ?>
+				</p>
+			</fieldset>
+			<div class="Results"><? echo ( include('_list.html'); ) ?></div>
+		</form>
+	</div>
+</div>

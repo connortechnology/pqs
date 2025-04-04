@@ -1,0 +1,55 @@
+<?include('/includes/error_reporting.html')?>
+<? echo ( 
+	if ( ! $$variable{Album}->can_view() ) {
+		$log->debug("Cant view");
+		return ;
+	}
+	my $html;
+	my @Landscape;
+	my @Portrait;
+	foreach my $Photo ( $$variable{Album}->Photos() ) {
+		if ( $Photo->Asset()->layout() eq 'Portrait' ) {
+			push @Portrait, $Photo;
+		} else {
+			push @Landscape, $Photo;
+		} # end if
+	} # end foreach Photo
+
+	foreach my $Photo ( @Portrait, @Landscape ) {
+		$html .= '<div class="Photo">';
+		$html .= $variable{'photo_size'} eq 'full' ? $Photo->html() : $Photo->medium_html();
+		$html .= '<br/>';
+
+		if ( $$variable{Album}->can_edit() ) {
+			$html .= '<p class="buttons">';
+			my $deletable = 1;
+			if ( $Photo->asset_id() != $$variable{Album}->thumbnail_id() ) {
+#$log->debug("Photo asset_id $$Photo{asset_id} != thumbnail_id: " . $$variable{Album}->thumbnail_id() . ' album type: ' . ref $$variable{Album});
+				$html .= button( 'SAT'.$Photo->asset_id(), { onclick=>
+					sprintf( q`new Ajax.Updater('Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '%d', asset_id: %d, action: 'set as album thumbnail', album_type: '%s' } } );`, $$variable{Album}->id(), $Photo->asset_id(), ref $$variable{Album} ),
+					text=>'Set as album thumbnail' } );
+				$html .= '<br/>';
+			} else {
+				$deletable = 0;
+			} # end if
+			if ( $openprint::User->asset_id() != $Photo->asset_id() ) {
+				$html .= button( 'SPP'.$Photo->asset_id(), { onclick=>
+					sprintf( q`new Ajax.Updater('Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '%d', asset_id: %d, action: 'set as profile pic', album_type: '%s' } } );`, $$variable{Album}->id(), $Photo->asset_id(), ref $$variable{Album} ),
+	, text=>'Set as profile picture' } );
+				$html .= '<br/>';
+			} else {
+				$deletable = 0;
+			} # end if
+			if ( $deletable ) {
+				$html .= button( 'D'.$Photo->asset_id(), { onclick=>
+					sprintf( q`new Ajax.Updater('Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '%d', asset_id: %d, action: 'delete', album_type: '%s' } } );`, $$variable{Album}->id(), $Photo->asset_id(), ref $$variable{Album} ),
+	, text=> 'Delete' } );
+				$html .= '<br/>';
+			} # end if
+			$html .= '</p>';
+		} # end if can edit
+		$html .= '</div>';
+	} # end foreach Photo
+	$html .= '<input type="hidden" name="asset_ids" value="'.join(',',map { $_->asset_id() } @Portrait, @Landscape ) . '"/>';
+	return $html;
+) ?>

@@ -1,0 +1,57 @@
+<? eval (
+	require openprint::RFIDScanner;
+
+
+	@{$$variable{'RFIDScanners'}} = openprint::RFIDScanner->find( 
+		( $session{'/employee/inventory/rfidscanners.html?Owner'} ? ( owner_id=>$session{'/employee/inventory/rfidscanners.html?Owner'} ) : () ),
+		date_filter( '/employee/inventory/rfidscanners.html?created_on_end', 'created_on <=' ),
+		date_filter( '/employee/inventory/rfidscanners.html?created_on_start', 'created_on >=' ),
+		date_filter( '/employee/inventory/rfidscanners.html?updated_on_end', 'updated_on <=' ),
+		date_filter( '/employee/inventory/rfidscanners.html?updated_on_start', 'updated_on >=' ),
+		'order'		=>	'id',
+		);
+) ?>
+<? if ( @{$$variable{'RFIDScanners'}} ) ?>
+<form id="RFIDScannerResults" name="RFIDScannerResults" action="rfidscanners.html" method="post">
+	<table class="List sortable">
+		<tr>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'rfidscanners', this.checked );"/></th>
+			<th class="RFIDScanner">Name</th>
+			<th class="ip">IP Address</th>
+			<th class="DateTime">Date Added</th>
+			<th class="DateTime">Updated On</th>
+			<th class="DateTime">Last Seen On</th>
+			<th class="Location">Location</th>
+			<th class="RFIDScannerType">Type</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $RFIDScanner ( @{$$variable{'RFIDScanners'}} ) {
+
+				$html .= "<tr$rowclass>";
+				$html .= qq`<td class="checkbox"><input type="checkbox" name="rfidscanners" value="$$RFIDScanner{'id'}"/></td>`;
+				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%1$d">%2$s</a></td>', @$RFIDScanner{'id','name'} );
+				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%1$d">%2$s</a></td>', @$RFIDScanner{'id','ipaddr'} );
+				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($RFIDScanner->created_on()) ) );
+				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($RFIDScanner->updated_on()) ) );
+				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($RFIDScanner->lastseen_on()) ) );
+				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, $RFIDScanner->Location()->name() );
+
+				$html .= '<td>'.$RFIDScanner->type().'</td>';	
+				$html .= '</tr>';
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach RFIDScanner
+			return $html;
+		) ?>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+	<p class="buttons">
+		<? echo ( join('',
+					button( 'Delete', { 'onclick'=>"RFIDScannerResults.btnFunction.value='Delete';RFIDScannerResults.submit();", 'text'=>'Delete Checked' } ),
+			); ) ?>
+	</p>
+</form>
+<? else ( @{$$variable{'RFIDScanners'}} ) ?>
+There were no rfidscanners matching your search criteria.
+<? endif ( @{$$variable{'RFIDScanners'}} ) ?>

@@ -1,0 +1,69 @@
+<script type="text/javascript">
+	var emails_by_id = new Array();
+	var ids_by_email = new Array();
+
+	<? echo (
+			my $html;
+			foreach my $User ( openprint::User->find( 'type' => ['A','E'] ) ) {
+				$html .= sprintf( qq{	emails_by_id[%d] = '%s';\n}, $User->id(), $User->email() );
+				$html .= sprintf( qq{	ids_by_email['%s'] = %d;\n}, $User->email(), $User->id() );
+			} # end foreach
+			return $html;
+			) ?>
+	function select_user( element ) {
+		if ( element.value.charAt(0) == 'E' ) {
+			element.value = element.value.substr(1,element.value.length-1);
+		} // end if
+		if ( emails_by_id[1*element.value] ) {
+			element.form.email.value = emails_by_id[1*element.value];
+			element.form.password.focus();
+		} else {
+			element.form.email.value = 'User not found: ' + element.value;
+
+		} // end if
+	}
+	function update_userid( e ) {
+		if ( ids_by_email[e.value] ) {
+				e.form.UserID.value = ids_by_email[e.value];
+		} // end if
+	} // end function
+</script>
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<div id="Login">
+<form name="LoginForm" method="post" action="/employee/account/login_confirmation.html">
+	<fieldset><legend>Please Login</legend>
+		Please enter your e-mail address and password.<br/>
+		<ul>
+		<li>
+			<label for="UserID">UserID</label>
+			<? echo ( input( type=>'cardinal', id=>'UserID', name=>'UserID', onkeypress=>'return input_handler(this,event);', onchange=>'select_user(this);', onkeyup=>'select_user(this);' ); ) ?>
+		</li>
+		<li>
+			<label for="email">E-mail</label>
+			<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" onkeyup="update_userid(this);" /><br/>
+			<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your email address.</span>
+		</li>
+		<li> 
+			<label for="password">Password</label>
+			<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
+				<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your password.</span>
+		</li>
+		<li>
+			<label>Remember me</label>
+			<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" />
+			<label class="radio" for="rdbRememberMeY">Yes</label>
+			<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" checked="checked" />
+			<label class="radio" for="rdbRememberMeN">No</label>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+				button( 'Login', { onclick=>"LoginForm.btnFunction.value='Login';LoginForm.submit();", text=>'Login' } ),
+				button( 'Forgot', { onclick=>"LoginForm.btnFunction.value='Forgotten Password';LoginForm.submit();", text=>'Forgot Password' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction" value="Login" />
+</form>
+</div>
+<script type="text/javascript">document.LoginForm.email.focus();</script>

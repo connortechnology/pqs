@@ -1,0 +1,28 @@
+<script>
+	const options = new Array();
+<? echo (
+	my $html = '';
+	my $ProjectType = $$variable{Project}->Type();
+	my @Templates = $ProjectType->Templates();
+  if (!@Templates) {
+      $log->error("No templates for ".$ProjectType->name());
+    }
+
+	my %types = map { $_->type(), 1 } @Templates;
+	foreach my $type ( keys %types ) {
+		$html .= "options['$type'] = new Array();\n";
+	} # end foreach
+	foreach my $Template ( @Templates ) {
+		my $description = $Template->description();
+		$description =~ s/'/\\'/g;
+		$html .= sprintf(q`options['%1$s'][options['%1$s'].length] = { text: '%3$sx%4$s,%5$sx%6$s',value: '%2$s', message: '%7$s'};
+`,
+				$Template->type(),
+				$description,
+				( map { 1*$_} $Template->get('finished_width','finished_height','flat_width','flat_height') ),
+				$Template->message(),
+		 );
+	} # end foreach Template
+	return $html;
+) ?>
+</script>

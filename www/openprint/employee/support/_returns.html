@@ -1,0 +1,38 @@
+<? if ( @{$$variable{'RMAS'}} ) ?>
+<table class="List">
+	<tr>
+		<th class="rma_id">RMA ID</th>
+		<th class="rma_number">RMA #</th>
+		<th class="Company">Company</th>
+		<th class="order_id">OrderID</th>
+		<th class="status">Status</th>
+		<th class="DateTime">Created</th>
+		<th class="DateTime">Updated</th>
+	</tr>
+	<? echo ( my $html; my $rowclass;
+		foreach my $RMA ( @{$$variable{'RMAS'}} ) {
+			$html .= sprintf( q`
+<tr%1$s>
+	<td class="rma_id"><a href="rma.html?rma_id=%2$d">%2$s</a></td>
+	<td class="rma_number"><a href="rma.html?rma_id=%2$d">%3$s</a></td>
+	<td class="Company"><a href="rma.html?rma_id=%2$d">%4$s</a></td>
+	<td class="order_id"><a href="rma.html?rma_id=%2$d">%5$s</a></td>
+	<td class="status"><a href="rma.html?rma_id=%2$d">%6$s</a></td>
+	<td class="DateTime"><a href="rma.html?rma_id=%2$d">%7$s</a></td>
+	<td class="DateTime"><a href="rma.html?rma_id=%2$d">%8$s</a></td>
+</tr>`, $rowclass, $RMA->id(), 
+$RMA->rmanumber(),
+$RMA->Company()->name(),
+$RMA->order_id(),
+$RMA->status(),
+Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $RMA->created_on() ) ),
+Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $RMA->updated_on() ) ),
+);
+	$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach RMA
+		return $html;
+	) ?>
+</table>
+<? else ( @{$$variable{'RMAS'}} ) ?>
+There were no results matching your criteria.<br>
+<? endif ( @{$$variable{'RMAS'}} ) ?>

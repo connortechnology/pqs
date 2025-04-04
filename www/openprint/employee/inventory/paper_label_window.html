@@ -1,0 +1,56 @@
+<div style="font-size:14pt; font-family: Arial, Helvetica,Sans-Serif;">
+	<form name="f1" method="post">
+        <input type="hidden" name="Manifest" value="<? echo ( $param{Manifest} ) ?>" />
+		<div class="unprintable">
+			<span style="float: right;">
+				<? echo (  join('',
+					#ssi::writeButton( $log, $dbh, 'manifest', 'manifest.gif', 'f1.Manifest.value=1;f1.submit();', '', 'Include Manifest' ),
+					ssi::writeButton( $log, $dbh, 'print', 'print.gif', 'window.print();', '', 'Print' ),
+					ssi::writeButton( $log, $dbh, 'close', 'close.gif', 'window.close();', '', 'Close' ),
+				); ) ?>
+			</span>
+			<br class="spacer"/>
+			<hr/>
+		</div>
+	</form>
+	<? echo (
+		my $html;
+		my $manifest = '';
+		$param{'skid_id'} =~ s/[^\d\-\,]//g;
+		my @skid_ids;
+		foreach my $range ( split ',', $param{'skid_id'} ) {
+			if ( $range =~ /(\d*)\-(\d*)/ ) {
+				push @skid_ids, ( $1 .. $2 );
+			} else {
+				push @skid_ids, $range;
+			} # end if
+		} # end foreach
+
+		foreach my $skid_id ( @skid_ids ) {
+			$$variable{'Skid'} = new openprint::Skid( $skid_id );
+			my @papers;
+			if ( $$variable{'paper_id'} ) {
+				@papers = ( $$variable{'paper_id'} );
+			} else {
+				@papers = map { $_->paper_id() } $$variable{'Skid'}->Contents();
+			} # end if
+			my $content = slurp_content( '/employee/inventory/paper_label.html' );
+			if ( @papers ) {
+				foreach my $paper_id ( @papers ) {
+					$$variable{paper_id} = $paper_id;
+					$html .= variable_substitution( \$content, $variable );
+				} # end foreach paper_id
+			} else {
+                $html .= variable_substitution( \$content, $variable );
+            } # end if
+			$html .= '<br class="pagebreak"/>';
+        } # end foreach skid_id
+        if ( 0 and $param{'Manifest'} ) {
+            @{$$variable{'Skids'}} = @skid_ids;
+            my $content = slurp_content( '/employee/inventory/paper_manifest.html' );
+            $html .= ssi::variable_substitution( \$content, $variable );
+        } # end if
+
+		return $html;
+	) ?>
+</div>

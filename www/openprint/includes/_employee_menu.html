@@ -1,0 +1,158 @@
+<li class="off"><a href="/employee/index.html">HOME</a></li>
+<li id="AccountMenu" class="<? echo ( $$variable{uri} =~ /employee\/account/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('AccountMenu'), 'off', 'on');return false;">ACCOUNT</a>
+	<ul>
+<? if ( $session{user_id} ) ?>
+		<li><a href="/employee/account/logout.html"> Logout</a></li>
+<? if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+		<li><a href="/employee/account/profile.html"> User Profiles</a></li>
+<? else ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+		<li><a href="/employee/account/profile.html"> Profile</a></li>
+<? endif ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) ?>
+<? else ( $session{user_id} ) ?>
+		<li><a href="/employee/account/login.html"> Login</a></li>
+<? endif ( $session{user_id} ) ?>
+	</ul>
+</li>
+<? if ( $session{user_id} ) ?>
+<? echo (
+my $html;
+my %menu = (
+	Accounting	=>	{
+		'/employee/accounting/search.html'	=> 'Outstanding',
+		'/employee/accounting/credit.html'	=>	'Customer Credit',
+		'/employee/accounting/details.html'	=>	'Update Order',
+		'/employee/accounting/stock.html'	=>	'Stock',
+		'/employee/accounting/credit_applications.html'	=>	'Credit Applications',
+		'/payment/history.html'				=>	'Payment History',
+		'/payment/edit.html'				=>	undef,
+		'/invoice/history.html'				=>	'Invoices',
+	},
+	Inventory	=>	{
+		'/employee/purchase_order/history.html'	=>	'Purchase Orders',
+		'/employee/purchase_order/items.html'	=>	'Purchase Order Items',
+		'/employee/purchase_order/view.html'	=>	undef,
+		'/employee/purchase_order/edit.html'	=>	undef,
+		'/employee/purchase_order/authorizations.html'	=>	'Purchase Order Limits',
+		'/employee/claim/history.html'	=>	'Claims',
+		'/employee/inventory/available_paper.html'	=>	'Available Paper',
+		'/employee/inventory/docket_labels.html'	=>	'Docket Labels',
+		'/employee/inventory/paper.html'	=>	'Paper',
+		'/employee/inventory/paper_details.html'	=>	undef,
+		'/administrator/stock/list.html'	=>	'Estimating Stocks',
+		'/employee/inventory/skids.html'	=>	'Skids/Rolls',
+		'/employee/inventory/skid_details.html'	=>	undef,
+		'/employee/inventory/allocations.html'	=>	'Allocations',
+		'/employee/inventory/rfidtags.html'		=>	'RFID Tags',
+		'/employee/inventory/rfidscanners.html'	=>	'RFID Scanners',
+		'/employee/inventory/rfidscanner_details.html'	=>	undef,
+		'/employee/inventory/manifest.html'		=>	'Update Inventory',
+		'/employee/inventory/inventory_log.html'	=>	'Inventory Log',
+		'/employee/inventory/manifests.html'		=>	'Manifests',
+		'/employee/inventory/packingslips.html'	=>	'Packing Slips',
+		'/employee/accounting/stock.html'		=>	'Stock Value',
+		'/employee/inventory/checks.html'	=>	'Checks',
+		'/employee/inventory/check.html'	=>	undef,
+	},
+	ISO	=>	{
+		'/employee/iso/cars.html'	=>	'Corrective Action Requests',
+		'/employee/iso/mars.html'	=>	'Maintenance Action Requests',
+		'/employee/iso/pars.html'	=>	'Preventive Action Requests',
+	},
+	IT	=>	{
+		'/article/history.html'   =>  'Articles',
+		'/employee/it/hosts.html'   =>  'Hosts',
+		'/employee/it/networks.html'   =>  'Networks',
+		'/employee/it/host.html'   =>  undef,
+		'/employee/it/licenses.html'        =>  'Licenses',
+		'/location/search.html'				=>	'Locations',
+		'/employee/it/radius.html'			=>	'RADIUS',
+		'/mrtg/index.html'					=>	'Bandwidth Graphs',
+		'/employee/assets/history.html'		=>	'Assets',	
+		'/employee/it/cameras.html'			=>	'Camera Admin',
+		'/employee/it/camera_viewer.html'	=>	'Camera Viewer',
+		'/employee/it/logs.html'			=>	'Logs',
+		'/employee/it/mail_stats.html'		=>	'Mail Statistics',
+		'/employee/it/cacti.html'			=>	'Net Statistics',
+		'/employee/it/sessions.html'		=>	'Sessions',
+	},
+	Marketing => {
+		'/marketing/email_templates.html'	=>	'Email Templates',
+		'/marketing/email_template.html'	=>	undef,
+		'/marketing/email_campaigns.html'	=>	'Email Campaigns',
+		'/marketing/email_campaign.html'	=>	undef,
+		'/marketing/categories.html'		=>	'Marketing Categories',
+		'/marketing/sales_log.html'			=>	'Sales Log',
+		'/survey/history.html'				=>	'Surveys',
+	},
+	Production	=>	{
+		'/employee/production/projects.html'	=>	'Projects',
+		'/employee/production/prepress_overview.html'	=>	'PrePress Overview',
+		'/employee/production/prepress_schedule.html'	=>	'PrePress Schedule',
+		'/employee/production/print_overview.html'	=>	'Production Schedule',
+		'/employee/production/operator_schedule.html'	=>	'Operator Schedule',
+		'/employee/production/monthly_schedule.html'	=>	'Schedule Overview',
+		#'/employee/production/duc_interface.html'		=>	'Set Schedule',
+		'/employee/production/bindery_overview.html'	=>	'Bindery Overview',
+		'/employee/performance/setup.html'				=>	'Performance Setup',
+		'/employee/performance/history.html'			=>	'Performance Reporting',
+		'/employee/production/datacollection.html'		=>	'Data Collection',
+		'/administrator/managerial/upload_log.html'		=>	'Upload Log',
+		'/employee/project/modification_log.html'		=>	'Production Log',
+	},
+	Reports => {
+		'/employee/reports/project_history.html' => 'Project History',
+		'/employee/reports/project_performance.html'	=>	'Project Performance',
+		'/employee/reports/project_log.html'		=>	'Project Log',
+		'/employee/reports/order_history.html'		=>	'Order History',
+		'/employee/reports/order_performance.html'	=>	'Order Performance',
+		'/employee/reports/delivery.html'			=>	'Delivery',
+		'/employee/reports/turnaround.html'			=>	'Turnaround',
+		'/employee/reports/job_size.html'			=>	'Job Size',
+		'/employee/reports/prepress_overview.html'	=>	'Prepress Overview',
+		'/employee/reports/stock.html'				=>	'Stock',
+		'/employee/reports/prepress_productivity.html'	=>	'Prepress Productivity',
+		'/employee/reports/stock_usage.html'		=>	'Stock Usage',
+		'/employee/reports/customer_performance.html'	=>	'Customer Performance',
+
+				'/administrator/reports/customer_login.html'	=>	'Customer Login',
+				'/administrator/reports/CustomerServiceReps.html'	=>	'Customer Service Reps',
+				'/administrator/reports/bindery.html'	=>	'Bindery',
+				'/administrator/reports/yearly_sales.html'	=>	'Yearly Sales',
+	},
+	SRED	=>	{
+		'/employee/sred/projects.html'	=>	'Projects',
+	},
+	Support	=>	{
+		'/employee/support/helpdesk_search.html'	=>	'Help Desk',
+		'/employee/support/returns.html'	=>'Returns',
+	},
+);
+foreach my $category ( sort keys %menu ) {
+	my %urls = %{$menu{$category}};	
+	my $submenu_html;
+	my $on = 0;
+    foreach my $url ( sort { $urls{$a} cmp $urls{$b} } keys %urls ) {
+		if ( $urls{$url} ) {
+			my $Page_Setting = openprint::Page_Setting::get( $url );
+			if ( $Page_Setting->can_view() ) {
+				$submenu_html .= sprintf('<li><a href="%s">%s</a></li>', $url, $urls{$url} );
+			} # end if
+		}
+		$on = 1 if $$variable{uri} eq $url;
+	} # end foreach url	
+	if ( $submenu_html ) {
+		$html .= join( $submenu_html,
+				sprintf(q`<li id="%1$sMenu" class="%2$s"><a href="#" onclick="toggleMenu($('%1$sMenu'), 'off', 'on');return false;">%1$s</a><ul>`, $category, ( $on ? 'on' : 'off' ) ),'</ul></li>' );
+	}
+} # end foreach category
+	return $html
+) ?>
+<? if ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
+<ul>
+<li class="off"><a href="/session.html">SESSION</a></li>
+</ul>
+<? endif ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
+<ul>
+<li class="off"><a href="#" onclick="popup_window('/_bug_report.html');return false;">SEND BUG REPORT</a></li>
+</ul>
+<? endif ( $session{user_id} ) ?>

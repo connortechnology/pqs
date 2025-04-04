@@ -1,0 +1,205 @@
+<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+<? eval (
+	$$variable{Project} = new openprint::Project( $$variable{ProjectIndex} ) if ! $$variable{Project};
+	$$variable{OrderStatus} = $$variable{Project}->Order()->status();
+) ?>
+
+<div class="Project"><div class="View">
+	<? if ( $$variable{ProjectIndex} eq '' ) ?>
+	There is no current project. 
+	<? else ( $$variable{ProjectIndex} eq '' ) ?>
+		<table class="List" style="table-layout: auto;">
+			<tr> 
+				<th align="left">Services</th>
+				<? echo ( my $html = '';
+					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+						$html .= '<th class="price">'.$$variable{Project}->quantity($qty_index).'</th>';
+					} # end foreach qty_index
+					return $html;
+				) ?>
+				<th class="status">Status</th>
+			</tr>
+<? echo ( 
+	my $html = '';
+	my $rowclass = '';
+	my $Project = $$variable{Project};
+	my $Project_Type = $Project->Type();
+	my $ProjectCurrency = $Project->Currency();
+	my $services = $Project->services();
+	my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
+	foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>'sorting,name' ) ) {
+$log->debug("Category: $$ServiceCategory{name}");
+		if ( $ServiceCategory->name() eq 'Printing' ) {
+			my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+            my $function_name = 'openprint::Estimating::'.$Project_Type->type();
+            my $summary = '';
+            if ( my $function = $function_name->can('summary') ) {
+                $summary = $function->($Project, $$services{''}[0], $printing_specs );
+            } # end if
+			$html .= sprintf('<tr%s><td><b>Printing</b><br/>%s</td>', $rowclass, $summary );
+			if ( $$services{Signature} ) {
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+				my @totals;
+
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					$html .= '<td class="price">&nbsp;</td>';
+				} # end foreach
+				$html .= '<td class="status">&nbsp;</td>';
+				$html .= "</tr>\n<tr>";
+				my @sigs = $Project->signatures();
+				while (@sigs) {
+					my $ss_id = shift @sigs;
+					next if $ss_id == $$services{''}[0];
+
+					my %sig_specs = %{openprint::service::get_specs_ref( $Project, $ss_id)};
+
+					my $sig_qty = 1;
+					if ( ! $session{ShowAllSignatures} ) {
+						for ( my $i = 0; $i < @sigs; $i += 1 ) {
+							my $sig_specs2 = openprint::service::get_specs_ref( $Project, $sigs[$i] );
+
+							if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( $Project, \%sig_specs, $sig_specs2 ) ) {
+								$sig_qty += 1;
+								foreach my $qty_index ( $Project->quantity_indexes() ) {
+									$sig_specs{'txtPrice'.$qty_index} += $ProjectCurrency->convert_from( $$sig_specs2{'txtPrice'.$qty_index} );
+									$sig_specs{'txtPressSheetQty'.$qty_index} =~ s/\D//g;
+									my $sheet_qty = $$sig_specs2{'txtPressSheetQty'.$qty_index};
+									$sheet_qty =~ s/\D//g;
+									$sig_specs{'txtPressSheetQty'.$qty_index} += $sheet_qty;
+									if ( $sig_specs{'StockType'.$qty_index} eq 'Roll' ) {
+										$sig_specs{'txtPressSheetQty'.$qty_index}.='lbs';
+									} else {
+										$sig_specs{'txtPressSheetQty'.$qty_index}.='sheets';
+									} # end if
+								} # end foreach $qty_index
+								splice @sigs, $i, 1;
+								$i -= 1;
+							} # end if
+						} # end for
+					} # end if
+					$html .= sprintf('<tr%s><td><b>%d %s</b><br/>%s</td>', $rowclass, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
+							openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
+							);
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
+						$html .= sprintf('<td class="price"><b>%s</b><br/>%s', openprint::Currency::format( $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} )),openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ) );
+						$html .= '</td>';
+						$totals[$qty_index] += $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );
+					} # end foreach qty_index
+					$html .= sprintf('<td class="status">%s</td>', $statuses{$ss_id} );
+					$html .= '</tr>';
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end while sigs
+			} else {
+				my $service_id = $$services{''}[0];
+				my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					$html .= '<td class="price">';
+					if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
+						$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
+					} # end if
+					if ( $session{user_type} eq 'A' or ! $Project->Ordered_Product() ) {
+						$html .= '<b>'.openprint::Currency::format($$specs{'txtPrice'.$qty_index}).'</b><br/>';
+					} # end if
+					my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+					$summary =~ s/\n/<br\/>/g;
+					$html .= $summary;
+					$html .= '</td>';
+				} # end foreach qty_index
+				$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
+				$html .= "</tr>\n";
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end if $$services{Signature}
+		} else {
+			foreach my $ServiceType ( openprint::ServiceType->find( category_id=>$ServiceCategory->id(), order=>'sorting', view_visible=>1 ) ) {
+$log->debug("Service: $$ServiceType{name}");
+				next if ! $$services{$ServiceType->name()};
+				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+					my @summaries;
+					my $summary = openprint::service::summary( $Project->id(), $service_id );
+					if ( ref $summary eq 'ARRAY' ) {
+						@summaries = @{$summary};
+						$summary = shift @summaries;
+					} # end if
+
+					$html .= "<tr$rowclass><td>";
+					$html .= sprintf(q`<b>%1$s</b>%2$s<br/>%3$s`, 
+							( $$specs{ServiceName} ? $$specs{ServiceName} : $ServiceType->description() ),
+							( $$specs{txtServiceDescription} ? ' - '.$$specs{txtServiceDescription} : '' ),
+							$summary,
+						);
+					$html .= '</td>';
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
+						$html .= '<td class="price">';
+						if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
+							$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
+						} # end if
+						if ( $session{user_type} eq 'A' or ! $Project->Ordered_Product() ) {
+							$html .= '<b>'.openprint::Currency::format($$specs{'txtPrice'.$qty_index}).'</b><br/>';
+						} # end if
+						my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+						if ( ref $summary eq 'ARRAY' ) {
+							$$summary[0] =~ s/\n/<br\/>/g;
+							$html .= $$summary[0];
+						} else {
+							$summary =~ s/\n/<br\/>/g;
+							$html .= $summary;
+						} # end if
+						$html .= '</td>';
+					} # end foreach qty_index
+					$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
+					$html .= "</tr>\n";
+
+					if ( @summaries ) {
+						for ( my $line = 0; $line < @summaries; $line += 1 ) {
+							$html .= "<tr$rowclass><td>";
+							$html .= sprintf(q`<br/>%1$s`, $summaries[$line] );
+							foreach my $qty_index ( $Project->quantity_indexes() ) {
+								$html .= '<td class="price">';
+								my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+								$$summary[$line+1] =~ s/\n/<br\/>/g;
+								$html .= $$summary[$line+1];
+								$html .= '</td>';
+							} # end foreach qty_index
+							$html .= '<td>&nbsp;</td></tr>';
+						} # end foreach summary
+					} # end if summaries
+
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end foreach service_id
+			} # end foreach ServiceType
+		} # end if Printing or else
+	} # end foreach ServiceType_Category
+	return $html;
+) ?>
+			<tr class="Prices"> 
+				<td align="left">Unit Prices</td>
+				<? echo ( my $html = '';
+					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+						$html .= '<td class="price">'.openprint::Currency::format($$variable{Project}->unit_price( $qty_index )).'</td>';
+					} # end foreach qty_index
+					return $html;
+				) ?>
+			<td class="status">&nbsp;</td>
+		</tr>
+		<tr> 
+			<td align="left">Total Before Taxes</td>
+<? echo ( my $html = '';
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		$html .= '<td class="price">'.openprint::Currency::format($$variable{Project}->price( $qty_index )).'</td>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+			<td class="status">&nbsp;</td>
+		</tr>
+	</table>
+<br/>
+<? if ( $$variable{Project}->currency_id() != $session{Currency_id} ) ?>
+<span class="Currency">Project originally quoted in <? echo ( $$variable{Project}->Currency()->name() ) ?>.</span>
+<? endif ( $$variable{Project}->currency_id() != $session{Currency_id} ) ?>
+<span class="Currency">All prices in <? echo ( openprint::Currency::get_current()->name() ) ?>.&nbsp;</span>
+<br class="spacer"/>
+<? endif ( $$variable{ProjectIndex} eq '' ) ?>
+</div>
+</div>

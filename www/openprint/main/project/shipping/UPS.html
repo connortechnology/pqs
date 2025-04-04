@@ -1,0 +1,77 @@
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
+<script type="text/javascript" src="<?hash_link('shipping.js')?>"></script>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend>UPS Shipping Services</legend>
+			<? if ( $$variable{'Mode'} eq 'Simple' ) ?>
+			<p> 
+				<label>Country</label>
+				<select name="ToCountry" onchange="calc(this.form.name);">
+					<option value=""> Select </option>
+					<? echo ( return_countries( $$variable{'ToCountry'} ? $$variable{'ToCountry'} : $session{'Country'} ); ) ?>
+				</select>
+			</p>
+			<p> 
+				<label>Zip/Postal Code</label>
+				<input type="text" name="ToPostalCode" value="<?ToPostalCode?>" onkeyup="calc(this.form.name);"/>
+			</p>
+			<? else ( $$variable{'Mode'} eq 'Simple' ) ?>
+			<div class="leftColumn">
+				<?include('_shipping_from_address.html') ?>
+			</div>
+			<div class="rightColumn">
+				<?include('_shipping_to_address.html'); ) ?>
+			</div>
+			<? endif ( $$variable{'Mode'} eq 'Simple' ) ?>
+			<p>
+				<label>Service Type</label>
+				<span id="ServiceTypeDiv">
+					Please wait while services types are loaded.
+					<input type="hidden" name="ddmServiceType" value="<?ddmServiceType?>" />
+				</span>
+			</p>
+			<? if ( $$variable{'Mode'} eq 'Simple' ) ?>
+			<? else ( $$variable{'Mode'} eq 'Simple' ) ?>
+				<p>
+					<label>Pickup Type</label>
+					<span id="PickupTypeDiv">
+						Please wait while pickup types are loaded.
+						<input type="hidden" name="ddmPickupType" value="<?ddmPickupType?>" />
+					</span>
+				</p>
+			<? endif ( $$variable{'Mode'} eq 'Simple' ) ?>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+			<li><label># of items to ship</label>
+					<? echo (
+						my $html = '';
+						foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							$html .= input(
+								name	=>	'txtQuantity'.$qty_index,
+								value	=>	$$variable{"txtQuantity$qty_index"},
+								type	=>	'cardinal',
+								oninput	=>	'calc(this.form.name);' );
+								$html .= '</span>';
+						} # end foreach qty_index
+						return $html;
+					) ?>
+			</li>
+			<?include('_shipping_packages.html'); ) ?>
+			<?include('/includes/main/proj/_service_price.html')?>
+			<?include('/includes/main/proj/_breakdown.html') ?>
+			</ul>
+		</fieldset>
+		<hr/>
+		<?include('/includes/main/proj/add_to_project.html') ?>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="NeedPlainCartons" />
+		<input type="hidden" name="Status" />
+	</form>
+	UPS, the UPS brandmark, and the Colour Brown are trademarks of United Parcel Service of America, Inc. All Rights Reserved
+</div><!-- Service -->

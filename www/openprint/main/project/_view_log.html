@@ -1,0 +1,32 @@
+<fieldset><legend>Modification History</legend>
+	<table class="List" style="table-layout: auto;">
+		<thead>
+		<tr>
+			<th class="Company">Company</th>
+			<th class="User">User</th>
+			<th class="DateTime">When</th>
+			<th class="description">Description</th>
+		</tr>
+		</thead>
+		<tbody>
+<? echo ( 
+my $html = '';
+my $Project = new openprint::Project($param{project_id});
+my $rowclass = '';
+foreach my $Log ( openprint::Project_Log->find(project_id=>$param{project_id}, order=>'dtmTimestamp DESC') ) {
+	$html .= sprintf('
+		<tr%1$s>
+			<td class="Company">%2$s</td>
+			<td class="User">%3$s</td>
+			<td class="DateTime">%4$s</td>
+			<td class="description">%5$s</td>
+		</tr>
+	', $rowclass, $Log->Company()->link_to(), $Log->User()->link_to(), format_datetime($Log->created_on()), $Log->description_html(),
+);
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+}
+return $html;
+)?>
+		</tbody>
+	</table>
+</fieldset>

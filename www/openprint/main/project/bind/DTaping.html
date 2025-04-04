@@ -1,0 +1,51 @@
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures(); ) ?>
+<? while ( $$variable{'signature_service_id'} = shift @{$$variable{'Signatures'}} ) ?>
+	<? eval ( $$variable{'sig_specs'} = openprint::service::get_specs_ref( @$variable{'Project','signature_service_id'} ); ) ?>
+<fieldset>
+	<? if ( $$variable{'sig_specs'}{'Reference'} ) ?>
+	<legend><? echo ( $$variable{'sig_specs'}{'Reference'} ) ?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','signature_service_id'} ); ) ?></p>
+	<? endif ( $$variable{'sig_specs'}{'Reference'} ) ?>
+			<ul>
+			<li><label>Top edge</label>
+				<select id="top-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" name="top-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
+					<option value="">select</option>
+					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 0,1,2,3,4) ], $$variable{"top-strips-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
+				</select> tapes
+			</li>
+			<li><label>Bottom edge</label>
+				<select id="bottom-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" name="bottom-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
+					<option value="">select</option>
+					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 0,1,2,3,4) ], $$variable{"bottom-strips-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
+				</select> tapes
+			</li>
+			<li><label>Left edge</label>
+				<select id="left-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" name="left-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
+					<option value="">select</option>
+					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 0,1,2,3,4) ], $$variable{"left-strips-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
+				</select> tapes
+			</li>
+			<li><label>Right edge</label>
+				<select id="right-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" name="right-strips-<? echo ( $$variable{sig_specs}{SignatureIndex} ) ?>" onchange="calc(this.form.name);">
+					<option value="">select</option>
+					<? echo ( ssi::make_drop_down( [ map {$_,$_} ( 0,1,2,3,4) ], $$variable{"right-strips-$$variable{sig_specs}{SignatureIndex}"} ); ) ?>
+				</select> tapes
+			</li>
+			</ul>
+</fieldset>
+<? endwhile ( $$variable{'signature_service_id'} = shift @{$$variable{'Signatures'}} ) ?>
+			<? echo ( include('/includes/main/proj/quantities_equipment_prices.html'); ) ?>
+		</fieldset>
+		<hr/>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>">
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="Status" />
+	</form>
+</div>
+<script src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>

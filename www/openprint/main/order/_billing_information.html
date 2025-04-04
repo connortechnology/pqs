@@ -1,0 +1,135 @@
+<? eval (
+	if ( $param{company_id} ) {
+		my $Company = new openprint::Company( $param{company_id} );
+		@$variable{'company_name',
+			 'address1',
+			 'address2',
+			 'city',
+			 'state',
+			 'postalcode',
+			 'country',
+			 'phone',
+			 'extension',
+			 'fax'} = $Company->get( 'name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
+	} # end if
+	my @Users = @{$$variable{Users}} = openprint::User->find( 
+		 company_id	=> $param{company_id} ? $param{company_id} : $session{company_id}, 
+	);
+	if ( scalar @Users == 1 ) {
+		$param{ddmUsers} = $Users[0]->id();
+		@$variable{'salutation','firstname','lastname','email'} = $Users[0]->get('salutation','firstname','lastname','email');
+	} elsif ( $$variable{Order}->email() ) {
+		my $SelectedUser = openprint::User->find_one( company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, email=>$$variable{Order}->email() );
+
+		$param{ddmUsers} = $SelectedUser->id() if $SelectedUser;
+	} # end if
+) ?>
+<fieldset><legend>Billing Information</legend>
+	<div class="content">
+		<ul> 
+			<li<?echo( $$variable{RequiredFields}{company_name} ? ' class="required"' : '' )?>>
+				<label>Company Name</label>
+				<input type="text" id="company_name" name="company_name" value="<?company_name?>"/>
+			</li>
+		<? if ( sets::isin( $session{user_type}, [ 'A','E'] ) ) ?>
+			<li> 
+				<label>Contact</label>
+				<select name="ddmUsers" onchange="ddmUsers_onchange(this.form);">
+					<option value="">Please Select</option>
+					<? echo ( 
+						make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Users}} ],
+								$param{ddmUsers} ? $param{ddmUsers} : $session{user_id} 
+						);
+					) ?>
+				</select>
+			</li>
+		<? endif ( sets::isin( $session{user_type}, [ 'A','E'] ) ) ?>
+			<li> 
+				<label>Salutation</label>
+				<? echo ( radio( 'salutation', [ map { $_,$_} ( 'Mr.','Mrs.','Ms.','Miss' ) ], $$variable{salutation} ); ) ?>
+			</li>
+			<li> 
+				<label>First Name</label>
+				<input type="text" id="firstname" name="firstname" value="<?firstname?>"/>
+			</li>
+			<li> 
+				<label>Last Name</label>
+				<input type="text" id="lastname" name="lastname" value="<?lastname?>"/>
+			</li>
+			<li<?echo( $$variable{RequiredFields}{address1} ? ' class="required"' : '' )?>>
+				<label>Address</label>
+				<input type="text" id="address1" name="address1" value="<?address1?>" /><br/>
+				<input type="text" id="address2" name="address2" value="<?address2?>" />
+			</li>
+			<li<?echo( $$variable{RequiredFields}{country} ? ' class="required"' : '' )?>>
+				<label>Country</label>
+				<select name="country" onchange="Country_onchange(this, this.form.state);">
+					<option value=""> Select </option>
+					<? echo ( 
+						require countries;
+						make_drop_down( \@countries::countries, $$variable{country} );
+					) ?> 
+				</select>
+			</li>
+			<li<?echo( $$variable{RequiredFields}{state} ? ' class="required"' : '' )?>>
+				<label><span id="country_state"><? echo (
+if ( $$variable{country} eq 'US' ) {
+	return 'State';
+} elsif ( $$variable{country} eq 'CA' ) {
+	return 'Province';
+} else {
+	return 'State/Province';
+} # end if
+) ?></span></label>
+				<span id="state_container">
+				<select name="state" id="state">
+					<option value=""> Select </option>
+					<? echo ( 
+					if ( $$variable{country} eq 'US' ) {
+					require states;
+						return make_drop_down( \@states::states, $$variable{state} );
+					} elsif ( $$variable{country} eq 'CA' ) {
+						require provinces;
+						return make_drop_down( \@provinces::provinces, $$variable{state} );
+					}
+					require states;
+					join("\n",
+						make_drop_down( \@states::states, $$variable{state} ),
+						make_drop_down( \@provinces::provinces, $$variable{state} ),
+					); 
+					) ?> 
+				</select>
+				</span>
+			</li>
+			<li<?echo( $$variable{RequiredFields}{city} ? ' class="required"' : '' )?>>
+				<label>City</label>
+				<input type="text" id="city" name="city" value="<?city?>" />
+			</li>
+			<li<?echo( $$variable{RequiredFields}{postalcode} ? ' class="required"' : '' )?>>
+				<label><span id="country_postal"><? echo (
+						if ( $$variable{country} eq 'US' ) {
+							return 'Zip Code:';
+						} elsif ( $$variable{country} eq 'CA' ) {
+							return 'Postal Code';
+						} else {
+							return 'Zip/Postal Code';
+						} # end if
+					) ?></span></label>
+				<input type="text" id="postalcode" name="postalcode" value="<?postalcode?>" />
+			</li>
+			<li>
+				<label>Phone</label>
+				<input type="tel" id="phone" name="phone" value="<?phone?>" />
+			</li>
+			<li>
+				<label>Fax</label>
+				<input type="tel" id="fax" name="fax" value="<?fax?>" />
+			</li>
+			<li<?echo( $$variable{RequiredFields}{email} ? ' class="required"' : '' )?>>
+				<label>E-mail</label>
+				<input type="email" id="email" name="email" value="<?email?>" />
+			</li>
+			<li class="help">We use your email to send your order confirmation and updates.</li>
+		</ul>
+	</div>
+</fieldset>

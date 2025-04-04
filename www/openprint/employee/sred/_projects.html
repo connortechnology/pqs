@@ -1,0 +1,61 @@
+<? eval (
+	my %search = (
+		ssi::date_filter( '/employee/sred/projects.html?starting_start', 'starting >=' ),
+		ssi::date_filter( '/employee/sred/projects.html?starting_end', 'starting <=' ),
+		ssi::date_filter( '/employee/sred/projects.html?ending_start', 'ending >=' ),
+		ssi::date_filter( '/employee/sred/projects.html?ending_end', 'ending <=' ),
+		'order',			'id desc',
+	);
+	$search{'created_by'} = $session{'/employee/sred/projects.html?created_by'} if $session{'/employee/sred/projects.html?created_by'};
+
+	@{$$variable{'Projects'}} = ();
+	foreach my $Project ( openprint::SRED_Project->find( %search ) ) {
+		if ( $param{'contains'} ) {
+			my $next = 1;
+			foreach my $C ($Project->Contents()) {
+				if ( $C->description() =~ /$param{'contains'}/i ) {
+					$next = 0;
+					last;
+				} # end if
+			} # end foreach
+			next if $next;
+		} # end if
+		push @{$$variable{'Projects'}}, $Project;
+	} # end foreach Project
+) ?>
+<? if ( @{$$variable{'Projects'}} == 0 ) ?>
+	There are no sreds matching your search criteria.
+<? else ( @{$$variable{'Projects'}} == 0 ) ?>
+	<p>Please click on a <b>Project #</b> to view details.</p>
+<table class="List">
+	<tr>
+		<th class="DateTime">Created On</th>
+		<th class="User">Created By</th>
+		<th class="Name">Name</th>
+		<th class="Name">Description</th>
+		<th class="DateTime">Last Activity</th>
+	</tr>
+	<? echo ( 
+		my $html = '';
+		my $rowclass;
+		foreach my $Project ( @{$$variable{'Projects'}} ) {
+			$html .= sprintf(q`<tr%1$s id="tr-%2$d" onmouseover="$('tr-%2$d').addClassName('highlightOn');" onmouseout="$('tr-%2$d').removeClassName('highlightOn');">
+				<td class="DateTime"><a href="project.html?project_id=%2$d">%3$s</a></td>
+				<td class="CreatedBy"><a href="project.html?project_id=%2$d">%4$s</a></td>
+				<td class="Name"><a href="project.html?project_id=%2$d">%5$s</a></td>
+				<td class="Description"><a href="project.html?project_id=%2$d">%6$s</a></td>
+				<td class="DateTime"><a href="project.html?project_id=%2$d">%7$s</a></td>
+			</tr>`, $rowclass, $Project->id(), 
+				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Project->created_on())), 
+				$Project->Created_By()->name(),
+				$Project->name(),
+				$Project->description(),
+				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Project->updated_on())), 
+				);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end while
+		return $html;
+	) ?>
+		
+	</table>
+<? endif ( @{$$variable{'Projects'}} == 0 ) ?>

@@ -1,0 +1,10 @@
+.Service .address input[type="text"] {
+	width: 97%;
+}
+.Service input[type="text"].filter {
+	width: 40px;
+}
+.Service fieldset li.from_company select,
+.Service fieldset li.to_company select {
+	width: 80%;
+}

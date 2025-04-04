@@ -1,0 +1,38 @@
+<div class="Host">
+	<fieldset><legend>Host <? echo ( $$variable{Host}->link_to( $$variable{Host}->id() ) ) ?></legend>
+		<div class="content leftColumn">
+			<ul>
+				<li><label>Hostname</label><? echo ( $$variable{Host}->hostname() ) ?></li>
+				<li><label>Type</label><? echo ( $$variable{Host}->type() ) ?></li>
+				<li><label>Blacklist</label><?echo ( $$variable{Host}->blacklist() ? 'yes' : 'no' ) ?></li>
+				<li><label>Access violation count</label><? echo ( $$variable{Host}->count() ) ?></li>
+				<li><label>Whitelist</label><?echo ( $$variable{Host}->whitelist() ? 'yes' : 'no' ) ?></li>
+				<li><label>Monitor</label><?echo ( $$variable{Host}->monitored() ? 'yes' : 'no' ) ?></li>
+<? if ( $$variable{Host}->monitored() ) ?>
+				<li><label>Seconds offline before notification</label>
+					<? echo ( $$variable{Host}->offline_seconds() ) ?>
+				</li>
+<? endif ( $$variable{Host}->monitored() ) ?>
+				<li>
+					<label>Online</label><? echo ( $$variable{Host}->online() ? 'Yes' : 'No' ) ?>
+				</li>
+				<li><label>Description</label>
+<? echo ( $$variable{Host}->description() ) ?>
+				</li>
+				<li><label>Created On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Host}->created_on() ); ) ?></li>
+			</ul>
+		</div>
+		<div class="content rightColumn">
+			<fieldset><legend>Photos</legend>
+				<div id="assets"><?include('/employee/it/_assets.html')?></div>
+			</fieldset>
+			<fieldset><legend>Notifications</legend>
+				<div id="notifications"><?include('/employee/it/_notifications_view.html')?></div>
+			</fieldset>
+		</div>
+	</fieldset>
+<?eval($config{RADIUS_Support} == 'N' ) ?>
+	<?include(/employee/it/_interfaces_view.html)?>
+<? echo ( include_logs_view( $$variable{Host} ); ) ?>
+</div>

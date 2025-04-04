@@ -1,0 +1,59 @@
+<form id="f1" name="f1" method="post" action="defaults_edit.html" enctype="multipart/form-data">
+	Default with a specified project type will override default with no project type.  This allows us to do things like
+	set bleeds for everything, and then set no bleeds for Letterhead.  The letterhead setting will override.
+        <p class="buttons">
+			<? echo ( button( 'Save', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ); ) ?>
+			<? echo ( button( 'Reset', { onclick=>'f1.reset();' } ); ) ?>
+			<input type="file" name="fileImport" >
+			<? echo ( button( 'Import', { onclick=>"f1.action='project_defaults.html';f1.btnFunction.value='Import';f1.submit();", text=>'Import' } ); ) ?>
+			<? echo ( button( 'Export', { onclick=>"f1.action='project_defaults.html?Download';f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ); ) ?>
+		</p>
+	<br class="spacer">
+	<table class="List">
+		<tr> 
+			<th>&nbsp;</th>
+			<th class="ProjectType">Project Type</th>
+			<th class="FieldName">Field Name</th>
+			<th class="FieldValue">Field Value</th>
+		</tr>
+		<? echo ( 
+			my $html = '';
+			my $rowclass;
+
+			my $dropdown_contents = openprint::ProjectType->dropdown( order=>'lower(name)' );
+
+			foreach my $Default ( openprint::ProjectType_Default->find( order=>'projecttype_id NULLS FIRST,name' ) ) {
+				$html .= sprintf(q`
+<tr%1$s> 
+	<td>&nbsp;</td>
+	<td class="ProjectType"><select name="projecttype_id-%2$d"><option value=""> all </option>%3$s</select></td>
+	<td><input type="text" name="name-%2$d" value="%4$s"></td>
+	<td><input type="text" name="value-%2$d" value="%5$s"></td>
+</tr>
+					`, $rowclass, $Default->id(), 
+					make_drop_down( $dropdown_contents, $Default->projecttype_id() ),
+					$Default->name(), $Default->value() );
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Default
+			return $html;
+		) ?>
+		<tr> 
+			<td colspan="4"><hr/></td>
+		</tr>
+		<tr> 
+			<td colspan="4">Add New</td>
+		</tr>
+		<tr> 
+			<td>&nbsp;</td>
+			<td>
+				<select name="projecttype_id-New">
+					<option value=""> all </option>
+					<? echo ( make_drop_down( openprint::ProjectType->dropdown( order=>'lower(name)') ); ) ?>
+				</select>
+				</td>
+			<td><input type="text" name="name-New"></td>
+			<td><input type="text" name="value-New"></td>
+		</tr>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+</form>

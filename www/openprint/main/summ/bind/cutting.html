@@ -1,0 +1,94 @@
+<? echo (
+	openprint::Estimating::Cutting::display( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
+	my $html;
+	my $Project = $$variable{Project};
+
+    my $services = $Project->services();
+    my $paper_service_id = ($$services{Paper} and @{$$services{Paper}}) ? $$services{Paper}[0] : 0;
+    my $paper_specs = openprint::service::get_specs_ref( $Project, $paper_service_id ) if $paper_service_id;
+
+    my @All_Stocks = openprint::Estimating::Paper::get_stocks( $Project );
+
+	my @Cut_Stocks = map { {} } ( 1 .. 3 );
+
+	my %Press_Sheets;
+	my $have_cut_stocks = 0;
+
+   foreach my $qty_index ( $Project->quantity_indexes() ) {
+        my $Cut_Stocks = $Cut_Stocks[$qty_index-1];
+
+        foreach my $sig_id ( $Project->signatures() ) {
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+            next if ! $$sig_specs{"txtImposition$qty_index"};
+
+            my $PressSheet = openprint::Paper::load_from_signature( $$variable{Project}, $sig_specs, $qty_index );
+            if ( $PressSheet->is_cut() ) {
+                $$Cut_Stocks{$PressSheet->id_string()} += $$sig_specs{"StockQuantity$qty_index"};
+				$have_cut_stocks = 1;
+            } # end if
+            $Press_Sheets{$PressSheet->id_string()} = $PressSheet if ! $Press_Sheets{$PressSheet->id_string()};
+        } # end foreach sig
+    } # end if
+
+	if ( $have_cut_stocks ) {
+		$html .= '<ul>';
+		foreach my $Stock_Amount ( @All_Stocks ) {
+			my $Stock = $$Stock_Amount{Stock};
+
+			$html .= '<li><label>'.$Stock->to_string().'</label>';
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				$html .= '<span class="value">';
+				my $Cut_Stocks = $Cut_Stocks[$qty_index-1];
+				foreach my $stock_string ( keys %{$Cut_Stocks} ) {
+					my $Cut_Stock = $Press_Sheets{$stock_string};
+					if ( $Cut_Stock->Supplied()->id_string() eq $Stock->id_string() ) {
+						$html .= ' cut to ' . $Cut_Stock->width() . 'x' . $Cut_Stock->height().'<br/>';
+					} # end if
+				} # end foreach stock_String
+				$html .= '</span>';
+			} # end foreach qty_index
+		} # end foreach Stock
+		$html .= '</ul>';
+	} # end if
+
+	foreach my $s_id ( $$variable{Project}->signatures({sort=>1}) ) {
+		my $Service = $$variable{Project}->Service( $s_id );
+
+		my $sig_specs = $Service->specs();
+		if ( $$sig_specs{'txtServiceDescription'} ) {
+			$html .= '<p>For <b>'.$$sig_specs{'txtServiceDescription'}.'</b> Form '.$$sig_specs{SignatureIndex}.'</p>';
+		} # end if
+
+		my $show_fold_cutting = 0;
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			if ( $$variable{"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} ) {
+				$show_fold_cutting = 1;
+				last;
+			} # end if
+		} # end foraech qty_index
+		if ( $show_fold_cutting ) {
+			$html .= '<p><label>Cutting before folding</label>';
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				$html .= join("\n", '<span class="value">', 1*$$variable{"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} , 'cuts', '</span>' );
+			} # end foreach qty_index
+		} # end if
+		$html .= '<p><label>Calculated regular cuts</label>';
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= '<span class="value">'. sprintf('%dx%d=%d',
+				@$variable{
+				join('-', 'txtVerticalCuts',$$sig_specs{SignatureIndex}, $qty_index),
+				join('-', 'txtHorizontalCuts',$$sig_specs{SignatureIndex}, $qty_index),
+				join('-', 'txtCalculatedCuts',$$sig_specs{SignatureIndex}, $qty_index),
+				}).'</span>';
+		} # end foreach qty_index
+		$html .= '</p>';
+		if ( $$variable{'txtAdditionalCuts'.$$sig_specs{SignatureIndex}} ) {
+			$html .= '<p><label>Additional Cuts</label>';
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				$html .= '<span class="value">'.$$variable{'txtAdditionalCuts'.$$sig_specs{SignatureIndex}}.'</span>';
+			} # end foreach
+			$html .= '</p>';
+		} # end if additiaonl
+	} # end foreach sig
+	return $html;
+) ?>

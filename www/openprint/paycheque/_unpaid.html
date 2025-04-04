@@ -1,0 +1,45 @@
+<fieldset><legend>Unpaid Timetracks</legend>
+	<table class="List sortable">
+		<tr>
+			<th class="timetrack_id">Timetrack</th>
+			<th class="DateTime">Start</th>
+			<th class="DateTime">End</th>
+			<th class="Interval">Interval</th>
+			<th class="wage">Wage</th>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+		<? echo (
+			my $html = '';
+			my $total_wage = 0;
+			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+			foreach my $T ( openprint::Timetrack->find(
+					'owner_id'		=> $session{'company_id'},
+					'user_id'		=> $$variable{'Paycheque'}->employee_id(),
+					'paycheque_id'	=> undef,
+					'order'			=> 'starting',
+				) ) {
+				my $wage = $T->elapsed() * $T->User()->wage() / 3600;
+				$total_wage += $wage;
+				$html .= sprintf( q`
+<tr title="%2$ss">
+	<td class="timetrack_id"><a href="/timetrack/edit.html?timetrack_id=%1$d">%1$d</a></td>
+	<td class="DateTime">%3$s</td>
+	<td class="DateTime">%4$s</td>
+	<td class="Interval">%5$s</td>
+	<td class="wage">%6$s</td>
+	<td class="buttons">%7$s</td>
+</tr>
+`, 
+					$T->id(), ssi::html_escape( $T->description() ),
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $T->starting() ) ),
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $T->ending() ) ),
+					misc::seconds_to_pretty_interval( $T->elapsed() ),
+					openprint::Currency::format( $wage ),
+					ssi::button( 'add'.$T->id(), { onclick=>'add_timetrack('.$T->id().');', text=>'+' } ),
+				);
+			} # end foreach $T
+			$html .= '<tr class="totals"><td colspan="4">Total</td><td class="wage">'.openprint::Currency::format($total_wage).'</td><td>&nbsp;</td></tr>';
+			return $html;
+		) ?>
+	</table>
+</fieldset>

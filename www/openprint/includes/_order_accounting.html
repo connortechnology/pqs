@@ -1,0 +1,30 @@
+<table style="width: 250px;">
+	<tr>
+		<td width="175" height="0"></td>
+		<td width="75" height="0"></td>
+	</tr>
+<tr>
+        <td align="right"><b>Amount Paid</b></td>
+        <td align="right"><?CurrencySymbol?><?AmountPaid?></td>
+    </tr>
+    <? if ( $$variable{'DepositDue'} ) ?>
+    <tr>
+       <td align="right"><b>Deposit Due immediately</b></td>
+        <td align="right"><?CurrencySymbol?><?DepositDue?></td>
+    </tr>
+    <? else ( $$variable{'DepositDue'} ) ?>
+    <? if ( $$variable{'AmountOutstanding'} > 0 and $$variable{'ORDER_STATUS'} eq 'Complete' ) ?>
+    <tr>
+        <td colspan="2">
+            <? if ( $$variable{'Terms'} ) ?>Payment is due within <?Terms?> days.
+            <? else ( $$variable{'Terms'} ) ?>Payment is due immediately.
+            <? endif ( $$variable{'Terms'} ) ?>
+        </td>
+       </tr><tr>
+        <td align="right"><b>Outstanding Balance</b></td>
+        <td align="right"><?CurrencySymbol?><?AmountOutstanding?></td>
+    </tr>
+    <? endif ( $$variable{'AmountOutstanding'} > 0 and $$variable{'ORDER_STATUS'} eq 'Complete' ) ?>
+    <? endif ( $$variable{'DepositDue'} ) ?>
+</table>
+

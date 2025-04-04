@@ -1,0 +1,44 @@
+<div class="Header">
+	<div id="OrderInformation">
+	<fieldset><legend>Order Information</legend>
+		<div class="content"><ul>
+			<li><label>Supplier</label><? echo ( $$variable{Order}->Supplier()->name() ) ?></li>
+			<li class="po"><label>P.O.</label><? echo ( $$variable{Order}->po() ) ?></li>
+			<li><label>Order ID</label><? echo ( $$variable{Order}->link_to() ) ?></li>
+		<? if ( $$variable{Order}->docket() ) ?>
+			<li><label>Docket</label><? echo ( $$variable{Order}->link_to($$variable{Order}->docket()); ) ?></li>
+			<li><label>Invoices</label><div id="Invoices"><?include('/employee/accounting/_order_invoices.html')?></div></li>
+		<? endif ( $$variable{Order}->docket() ) ?>
+			<li><label>Created</label><? echo ( format_date( $$variable{Order}->created_on() ) ) ?></li>
+			<li><label>Status</label><? echo ( $$variable{Order}->status() ) ?></li>
+<? if ( $$variable{Order}->salesrep_id() ) ?>
+			<li><label>Sales Rep</label><? echo ( $$variable{Order}->CSR()->link_to() ) ?></li>
+<? endif ( $$variable{Order}->salesrep_id() ) ?>
+		</ul></div>
+	</fieldset>
+	</div>
+	<div id="BillingInformation">
+	<fieldset><legend>Billing Information</legend>
+		<div class="content"><ul>
+			<? if ( $$variable{Order}->company_name() ) ?>
+			<li><label>Company Name</label><? echo ( $$variable{Order}->Company()->link_to( $$variable{Order}->company_name() ) ) ?><br/></li>
+			<? endif ( $$variable{Order}->company_name() ) ?>
+<? if ( $$variable{Order}->address1() or $$variable{Order}->address2() ) ?>
+			<li><label>Address</label> <?echo( $$variable{Order}->address_html() ) ?> </li>
+<? endif ( $$variable{Order}->address1() or $$variable{Order}->address2() ) ?>
+			<? if ( $$variable{Order}->firstname() or $$variable{Order}->lastname() ) ?>
+			<li><label>Name</label><? echo ( join(' ', $$variable{Order}->get('salutation','firstname','lastname') ); ) ?><br/></li>
+			<? endif ( $$variable{Order}->firstname() or $$variable{Order}->lastname() ) ?>
+			<? if ( $$variable{Order}->phone() ) ?>
+				<li><label>Phone</label>
+				<? echo ( $$variable{Order}->phone() ) ?><? if ( $$variable{Order}->extension() ) ?>x<? echo ( $$variable{Order}->extension() ) ?><? endif ( $$variable{Order}->extension() ) ?><br/>
+				</li>
+			<? endif ( $$variable{Order}->phone() ) ?>
+			<? if ( $$variable{Order}->fax() ) ?><li><label>Fax</label><? echo ( $$variable{Order}->fax() ) ?><br/></li><? endif ( $$variable{Order}->fax() ) ?>
+<? if ( $$variable{Order}->email() ) ?>
+			<li><label>Email</label><? echo ( $$variable{Order}->email() ) ?><br/></li>
+<? endif ( $$variable{Order}->email() ) ?>
+		</ul></div>
+	</fieldset>
+	</div>
+</div><!--OrderHeader-->

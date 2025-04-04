@@ -1,0 +1,89 @@
+<? eval (
+	my $uri = '/administrator/services/list.html';
+    my %filters = (
+		order	=>	'lower(name)',
+		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
+		( $session{$uri.'?servicetype_id'} ne '' ? ( 'servicetype_id' => $session{$uri.'?servicetype_id'} ) : () ),
+		( $session{$uri.'?category_id'} ne '' ? ( 'category_id' => $session{$uri.'?category_id'} ) : () ),
+		);
+	if (  $session{$uri.'?service_name'} ) {
+		if ( ! ( $session{$uri.'?service_name'}  =~ /%/ ) ) {
+			$filters{'name ilike'} = $session{$uri.'?service_name'}.'%';
+		} else {
+			$filters{'name ilike'} = $session{$uri.'?service_name'};
+		}
+	}
+
+    $$variable{Service} = [ openprint::Service->find( %filters ) ];
+) ?>	
+<? if ( @{$$variable{Service}} ) ?>
+	<table id="Services" class="List sortable table-striped"
+   data-page-list="[5, 10, 25, 50, 100, 200, 500, 1000, All]"
+  data-pagination="true"
+  data-search="true"
+  data-show-pagination-switch="true"
+  data-cookie="true"
+  data-cookie-same-site="Strict"
+  data-cookie-id-table="AdminServicesTable"
+  data-cookie-expire="2y"
+  data-show-columns="true"
+  data-show-export="true"
+  data-columns-hidden="[]"
+  data-uncheckAll="true"
+  data-click-to-select="true"
+  data-check-on-init="true"
+  data-mobile-responsive="true"
+  data-min-width="562"
+  data-show-export="true"
+  data-uncheckAll="true"
+>
+  <thead>
+		<tr>
+      <th class="checkbox"><input type="checkbox" onclick="select_all(this.form, 'service_ids', this.checked);"/></th>
+			<th id="ServiceId" class="ServiceID" data-field="ServiceId" data-sortable="true">ID #</th>
+			<th class="ServiceName" data-field="Name" data-sortable="true">Name</th>
+			<th class="Description" data-field="Description"data-sortable="true">Description</th>
+			<th class="Categories" data-field="Categories" data-sortable="true">Categories</th>
+			<th class="ServiceTypes" data-field="ServieTypes" data-sortable="true">ServiceTypes</th>
+			<th class="CompanyName Supplier" data-sortable="true">Supplier</th>
+		</tr>
+</thead>
+<tbody>
+<? echo (
+	my $html;
+	my $rowclass;
+	my %ServiceTypes = map { $$_{id}, $_ } openprint::ServiceType->find();
+	my $uri = '/administrator/services/list.html';
+
+	foreach my $Service ( @{$$variable{Service}} ) {
+    next if $session{$uri.'?equipment_id'} and ! openprint::ServicePrice->find(service_id=>$$Service{id}, equipment_id=>$session{$uri.'?equipment_id'});
+		$html .= sprintf(q`
+<tr%1$s> 
+  <td class="checkbox"><input type="checkbox" value="%8$d" name="service_ids"</td>
+	<td class="ServiceID">%2$s</td>
+	<td class="ServiceName">%3$s</td>
+	<td class="Description">%4$s</td>
+	<td class="Categories">%5$s</td>
+	<td class="Services">%6$s</td>
+	<td class="CompanyName Supplier">%7$s</td>
+</tr>
+`, $rowclass, 
+	$Service->link_to( $$Service{id} ),
+	$Service->link_to( $$Service{name} ), 
+	$Service->link_to( $$Service{description} ), 
+  $Service->link_to( $Service->Category()->name() ), 
+  $Service->ServiceType()->name(),
+	#format_date( $$Service{created_on} ),
+  $Service->Supplier()->name(),
+  $Service->id(),
+ );
+
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach
+	return $html;
+) ?>
+</tbody>
+</table>
+<? else ( @{$$variable{Service}} ) ?>
+There were no results matching your criteria.<br>
+<? endif ( @{$$variable{Service}} ) ?>

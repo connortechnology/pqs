@@ -1,0 +1,75 @@
+<script>
+function needed(input) {
+  const sig = input.getAttribute('data_sig');
+  if (input.value == 'Y') {
+    $j('#Stripping-'+sig).show();
+  } else {
+    $j('#Stripping-'+sig).hide();
+  }
+  calc(this.form.name);
+}
+</script>
+<div class="Service <?ServiceTypeID?>">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<div class="Signatures">
+			<? echo ( 
+				my $html;
+
+				my $fragment = slurp_content( '/main/project/bind/_imposition.html' );
+
+				foreach my $sig_id ( $$variable{Project}->signatures({sort=>1}) ) {
+					$$variable{SignatureServiceIndex} = $sig_id;
+
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
+					@$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtServiceDescription'};
+					my $form = $$variable{form} = $$sig_specs{SignatureIndex};
+					$html .= '<fieldset class="Signature">';
+					$html .= '<legend>Form '. $form . ' '.$$sig_specs{txtServiceDescription}.'</legend><p>'. openprint::service::summary( $$variable{ProjectIndex}, $sig_id ) . '</p>';
+					$html .= '<ul> <li> <label>'.$$variable{ServiceTypeName}.' Needed</label>';
+					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { on_click_this=>'needed', data_sig=>$form });
+					$html .= qq`</li>
+					</ul>
+					<div id="Stripping-$form" `. ( $$variable{'Needed-'.$form} eq 'N' ? 'style="display:none;"' : '' ). '><ul>';
+					$html .= include('/includes/main/proj/signature_equipment.html');
+					$html .= '<li><label>Imposition</label>';
+					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+						$$variable{qty_index} = $qty_index;
+
+						next if ! $$sig_specs{"txtImposition$qty_index"};
+						$html .= '<div class="'.$$variable{Columns}.'Columns">';
+
+            $html .= '<table class="Impositions"><tr><th class="Qty">Qty</th><th class="Imp">Imposition</th></tr>';
+            foreach my $index ( 1 .. 4 ) {
+                $$variable{index} = $index;
+                $html .= variable_substitution( \$fragment, $variable );
+            } # end foreach
+            $html .= '</table>';
+						$html .= '</div>';
+					} # end foreach qty_index
+
+					$html .= '</li></ul></div>';
+					$html .= '</fieldset>';
+				} # end foreach sig_id
+				return $html;
+			) ?>
+			</div><!--Signatures-->
+			<?include('/includes/main/proj/_comments.html') ?>
+      <ul class="pricing">
+			<?include('/includes/main/proj/_quantities.html') ?>
+			<?include('/includes/main/proj/_unit_price.html') ?>
+			<?include('/includes/main/proj/_service_price.html') ?>
+			<?include('/includes/main/proj/_breakdown.html') ?>
+			</ul>
+		</fieldset>
+		<hr/>
+    <?include('/includes/main/proj/add_to_project.html') ?>
+    <input type="hidden" name="btnFunction" value="Save Service"/>
+    <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
+    <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
+    <input type="hidden" name="ContinueProject" value="Y" />
+    <input type="hidden" name="ServiceType" value="<?ServiceTypeType?>" />
+		<input type="hidden" name="Status" value="<?Status?>" />
+	</form>
+</div>
+<script src="<?hash_link('/javascripts/service.js')?>"></script>

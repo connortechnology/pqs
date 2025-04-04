@@ -1,0 +1,64 @@
+
+.ProjectCreateEdit fieldset li {
+	float: left;
+	width: 32%;
+	padding: 0;
+	text-align: left;
+	vertical-align: top;
+}
+.ProjectCreateEdit fieldset li.design,
+.ProjectCreateEdit fieldset li.reference,
+.ProjectCreateEdit fieldset li.comments,
+.ProjectCreateEdit .ReprintOptions fieldset li {
+	width: 100%;
+	float: none;
+}
+.ProjectCreateEdit fieldset li label:not(.radio):not(.radio-inline) {
+	float: none;
+	margin: 0;
+	width: auto;
+	vertical-align: middle;
+	
+}
+.ProjectCreateEdit fieldset li label:not(.radio):not(.radio-inline):after {
+	content: "";
+}
+.ProjectCreateEdit fieldset ul li.design label,
+.ProjectCreateEdit fieldset ul li.reference label,
+.ProjectCreateEdit fieldset ul li.comments label,
+.ProjectCreateEdit .ReprintOptions fieldset ul li label {
+	width:33%;
+display: inline-block;
+}
+.ProjectCreateEdit fieldset li label.radio, div.ProjectCreateEdit .ReprintOptions fieldset ul li label.radio {
+	width: auto;
+	display: inline;
+}
+.ProjectCreateEdit fieldset li textarea {
+width: 100%;
+}
+.ProjectCreateEdit fieldset li input[type="text"],
+.ProjectCreateEdit fieldset li input[type="number"],
+.ProjectCreateEdit fieldset li select
+ {
+	width: 60%;
+}
+textarea {
+	resize: vertical;
+}
+#Quantity1, #Quantity2, #Quantity3 {
+	width: 67%;
+}
+
+.ProjectCreateEdit fieldset li.NoBindery {
+	position: absolute;
+	top: 4px;
+	float: none;
+}
+fieldset.Bindery ul {
+	position: relative;
+	padding-top: 30px;
+}
+.ProjectCreateEdit select[name="ddmDesign"] {
+  width: auto;
+}

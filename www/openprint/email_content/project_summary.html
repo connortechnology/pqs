@@ -1,0 +1,45 @@
+<style type="text/css">
+	<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/project.css' ); ) ?>
+	<? eval ( 
+		$$variable{'QTYS'} = scalar $$variable{'Project'}->quantity_indexes();
+	) ?>
+	div.ProjectSummary div.row span.label {
+		width: 45%;
+	}
+	div.ProjectSummary div.row span.value {
+	<? if ( $$variable{'QTYS'} == 1 ) ?>
+		width: 49%;
+	<? endif ( $$variable{'QTYS'} == 1 ) ?>
+	<? if ( $$variable{'QTYS'} == 2 ) ?>
+		width: 25%;
+	<? endif ( $$variable{'QTYS'} == 2 ) ?>
+	<? if ( $$variable{'QTYS'} == 3 ) ?>
+		width: 18%;
+	<? endif ( $$variable{'QTYS'} == 3 ) ?>
+	}
+</style>
+<table class="Title">
+	<tr>
+		<td><b><? echo ( $openprint::config{'SiteTitle'} ) ?> - Project Summary</b></td>
+		<td>&nbsp;</td>
+	</tr>
+</table>
+<div class="Project">
+<?include('/includes/project_header.html')?>
+<div class="ProjectSummary">
+	<fieldset><legend>Project Information</legend>
+	<?include('/includes/main/summ/project_create_edit.html')?>
+	</fieldset>
+<? echo ( my $html;
+	while ( @$variable{'ServiceIndex','ServiceName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3 ) {
+		openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
+		$html .= '<fieldset><legend>'.$$variable{ServiceTypeName}.' ' . $$variable{txtServiceDescription}.'</legend>';
+		if ( $$variable{'prod_url'} ) {
+			$html .= include('/main/summ/'.$$variable{prod_url}, $variable );
+		} # end if
+		$html .= '</fieldset>';
+	} # end while
+	return $html;
+) ?>
+</div>
+</div>

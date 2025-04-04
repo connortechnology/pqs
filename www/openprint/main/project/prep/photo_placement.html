@@ -1,0 +1,13 @@
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="/javascripts/proj/prepress.js"></script>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<? echo ( include('/includes/main/proj/prepress_hours.html'); ) ?>
+			<? echo ( include('/includes/main/proj/prices_prepress.html'); ) ?>
+		</fieldset>
+		<hr/>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
+	</form>
+</div>

@@ -1,0 +1,29 @@
+<? echo (
+	my $html = '';
+	foreach my $service_id ( $$variable{Project}->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $service_id );
+		my $signature_index = $$sig_specs{SignatureIndex};
+		next if ! ( $$variable{"txtVerticalQty-$signature_index"} or $$variable{"txtHorizontalQty-$signature_index"} );
+		if ( $$sig_specs{txtServiceDescription} ) {
+			$html .= '<p> Information for '.$$sig_specs{txtServiceDescription}.'</p>';
+		} # end if
+		$html .= '<p><label>Number of Perforations per item</label>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= sprintf('<span class="value">%d Vertical %d Horizontal</span>', @$variable{"txtVerticalQty-$signature_index","txtHorizontalQty-$signature_index"} );
+		} # end foreach
+		$html .= '</p>
+		<p>
+			<label>Imposition</label>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= qq`<span class="value">$$variable{"txtImposition-$signature_index-$qty_index"}out $$variable{'txtLayoutWidth'.$qty_index} x $$variable{'txtLayoutHeight'.$qty_index}</span>`;
+		} # end foreach
+		$html .= '</p>
+		<p>
+			<label>Equipment</label>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<span class="value">'.new openprint::Equipment( $$variable{"ddmEquipment-$signature_index-$qty_index"} )->name() . '</span>';
+		} # end foreach
+		$html .= '</p>';
+	} # end foreach signature
+	return $html;
+) ?>

@@ -1,0 +1,14 @@
+<? echo (
+	my $html = '';
+	my $Me = new openprint::User( $session{user_id} );
+	$html .= $Me->greeting().'<br/>' if $Me->greeting();
+
+	$html .= join('<br/>', map { $_->greeting() } openprint::MarketingCategory->find('user_id any'=>$session{user_id}));
+	$_ = new openprint::Company( $session{company_id} )->greeting();
+	$html .= $_.'<br/>' if $_;
+	$html .= join('<br/>', map { $_->greeting() } openprint::MarketingCategory->find('company_id any'=>$session{company_id}));
+	if ( ! $html ) {
+		return 'Welcome '.$Me->firstname() . '!  Thank you for logging in.';
+	} # end if
+	return $html;
+) ?>

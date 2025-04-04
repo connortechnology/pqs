@@ -1,0 +1,4 @@
+<li>
+	<label>Quantity<? if ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?> (No. of Pads)<? endif ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?></label>
+	<? echo ( input( type=>'cardinal', name=>'txtQuantity1', id=>'txtQuantity1', value=> $$variable{'Project'}->quantity1(), oninput=>q`remove_div('OrderButton');calc('f1');` ); ) ?>
+</li>

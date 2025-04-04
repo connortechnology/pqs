@@ -1,0 +1,5 @@
+<?echo(
+		my $Shifts = openprint::Equipment_Shift->dropdown(equipment_id=>$$variable{Equipment}{id}, order=>'starttime_seconds');
+		unshift @{$Shifts}, '', 'Pending';
+		make_drop_down( $Shifts, ( $$variable{NextShift} ? $$variable{NextShift}->shift_id(): undef ) );
+)?>

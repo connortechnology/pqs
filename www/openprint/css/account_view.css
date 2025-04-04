@@ -1,0 +1,201 @@
+.UserProfile {
+	padding-left: 345px;
+}
+.UserProfile fieldset {
+	padding: 0;
+}
+.UserProfile fieldset legend {
+	font-size: x-large;
+color: #111111;
+}
+.UserProfile fieldset li {
+	text-align: left;
+	overflow: hidden;
+	padding-left: 85px;
+}
+.UserProfile fieldset li label {
+	text-align: left;
+	overflow: hidden;
+	width: 85px;
+	margin-left: -85px;
+	text-transform: capitalize;
+}
+.UserProfile .leftColumn {
+	width: 300px;
+	float: left;
+	margin: 0px 0 0 -345px;
+}
+.UserProfile .rightColumn {
+}
+#UserProfile fieldset li {
+	padding-left: 165px;
+}
+#UserProfile fieldset li label {
+	width: 165px;
+	margin-left: -165px;
+}
+#ProfilePicture, #UserProfile, #Statistics, #UserInformation {
+	font-size: small;
+}
+#UserProfile fieldset, #Statistics fieldset, #UserInformation fieldset {
+	width: 100%;
+	overflow: hidden;
+	display: block;
+}
+.Relationships,
+#VideoAlbums,
+#Events, #Wall {
+	width: 100%;
+	border-bottom: 1px dotted black;
+	font-size: small;
+}
+
+#Wall legend {
+	display: none;
+}
+
+#ProfilePicture img {
+	width: 100%;
+}
+#ProfilePicture img.thumbnail {
+	max-width: 50px;
+	max-height: 50px;
+}
+#PhotoAlbums .buttons,
+#VideoAlbums .buttons,
+#Events .buttons {
+	z-index: 100;
+	position: absolute;
+	top: 20;
+	right: 0;
+}
+#PhotoAlbums, #VideoAlbums,
+#Events {
+	position: relative;
+}
+#Relationships select {
+width: auto;
+	max-width: 70%;
+}
+#Relationships .add {
+	border-top: 1px dotted black;
+}
+#Wall textarea {
+	width: 98%;
+	resize: vertical;
+}
+.wall_post {
+	position: relative;
+	padding: 0 0 0 55px;
+}
+#Events li {
+	padding: 0 0 0 55px;
+	position: relative;
+}
+#Wall a.thumbnail,
+#Events a.thumbnail {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 50px;
+}
+#Albums a.thumbnail {
+	height: 75px;
+	overflow: hidden;
+	display: inline-block;
+	margin: 5px;
+}
+#Albums img.thumbnail {
+	width: 75px;
+	max-height: 75px;
+	float: none;
+	border: none;
+	margin: 0px;
+	padding: 0px;
+}
+#Albums .buttons {
+	width: 100%;
+}
+#Events:after,
+#ProfilePicture:after,
+#UserInformation:after,
+#Statistics:after, #UserProfile:after {
+	content: ".";
+	display: block;
+	height: 0;
+	font-size: 0;
+	clear: both;
+	visibility: hidden;
+}
+#Albums fieldset {
+	border-bottom: 1px dotted black;
+}
+#Wall li {
+	padding-left: 60px;
+}
+#Wall .message,
+#Wall .who {
+	width: 100%;
+	display: inline-block;
+}
+/*
+#Wall img {
+	width: 50px;
+	overflow: hidden;
+}
+*/
+#Wall li .buttons {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+#Wall p.buttons {
+	padding: 0;
+}
+#Wall li .button {
+	color: white;
+/*
+	color: black;
+	background: none;
+*/
+	height: auto;
+	width: auto;
+	line-height: 10px;
+	text-shadow: #000000 3px 3px 2px;
+	border: none;
+	padding: 4px;
+}
+#Wall .Reply .button {
+	display: inline-block;
+	padding: 5px 10px 5px 10px;
+	text-shadow: 0 3px 3px rgba(0,0,0,.3);
+	border: 1px solid #333333;
+	color: #D7D7D7;
+	-webkit-border-radius: .5em; 
+	-moz-border-radius: .5em;
+	border-radius: .5em;
+	-webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+	-moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+	box-shadow: 0 1px 2px rgba(0,0,0,.2);
+background: #7d7e7d; /* Old browsers */
+background: -moz-linear-gradient(top, #7d7e7d 0%, #0e0e0e 43%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#7d7e7d), color-stop(43%,#0e0e0e)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top, #7d7e7d 0%,#0e0e0e 43%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top, #7d7e7d 0%,#0e0e0e 43%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top, #7d7e7d 0%,#0e0e0e 43%); /* IE10+ */
+background: linear-gradient(top, #7d7e7d 0%,#0e0e0e 43%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7d7e7d', endColorstr='#0e0e0e',GradientType=0 ); /* IE6-9 */
+
+}
+#Wall .Reply {
+	position: relative;
+}
+#Wall .Reply textarea {
+	width: 80%;
+}
+.PopularStuff, .StuffYouLove, .Affiliates, .WWBD {
+display: none;
+}
+.Relationships, .Badges, #Events {
+	display: none;
+}

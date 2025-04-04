@@ -1,0 +1,19 @@
+#width, #height,#calliper, #gsm, #mweight, #Quantity, #Kg, #weight {
+	width: 75px;
+}
+
+table .Cost {
+	width: 95px;
+}
+table .Value {
+	width: 75px;
+	text-align: right;
+}
+
+.RFID input[type="text"], .verification_code input[type="text"], .manufacturers_id input[type="text"] {
+	width: 200px;
+}
+
+table .inches {
+	text-align: left;
+}

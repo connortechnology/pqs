@@ -1,0 +1,73 @@
+<div class="PageTitle">
+<h1>Bugs</h1>
+<h2>History</h2>
+</div>
+<script type="text/javascript">
+	function delete_confirm(form) {
+		var number_of_deleted_bugs = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_bugs += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_bugs == 0 ) {
+			alert("To Delete Bugs, click the checkbox beside the bug.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_bugs + " bugs from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_bugs( form ) {
+		$('BugList').innerHTML = 'Please wait...';
+		new Ajax.Updater('BugList','_history.html', {parameters:Form.serialize(form)});
+	} // end function
+</script>	 
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? if ( $session{'user_id'} ) ?>
+<div class="Bug"><div class="History">
+	<form id="f1" name="f1" method="post" action="/bug/history.html">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+			<div class="leftColumn">
+			<p>
+				<label>Company</label>
+				<select name="company_id" id="company_id" onchange="load_bugs(this.form);">
+					<option value="">All</option>
+					<? echo ( openprint::Company::get_dropdown( $session{'/bug/history.html?company_id'} ); ) ?>
+				</select>
+			</p>
+			<p>
+				<label>Created</label>
+<? echo ( ssi::date_select_session( '/bug/history.html', 'created_on_start', {onchange=>q`load_bugs($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+					to 
+<? echo ( ssi::date_select_session( '/bug/history.html', 'created_on_end', {onchange=>q`load_bugs($('f1'));`, 'with_clear'=>1,'with_today'=>1} ); ) ?>
+			</p>
+			</div>
+			<div class="rightColumn">
+			<ul><li>
+				<label>Employee</label>
+				<select name="user_id" id="user_id" onchange="load_bugs(this.form);">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( openprint::User->dropdown( company_id=>$session{company_id}, order=>'lower(firstname),lower(lastname)'), $session{'/bug/history.html?user_id'} ); ) ?>
+				</select>
+			</li></ul>
+			</div>
+			<br class="spacer"/>
+			<p class="buttons">
+				<? echo ( join('',
+					ssi::button( 'ShowResults', { onclick=>"load_bugs(f1);",text=>'Show Results' } ),
+					ssi::button( 'Reset', { onclick=>'f1.reset();',text=>'Reset' } ),
+					ssi::button( 'New', { onclick=>'', href=>'/bug/edit.html', text=>'New Bug' } ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<div id="BugList"><? echo ( include('_history.html'); ) ?></div>
+	</form>
+	</div>
+</div>
+<? else ( $session{'user_id'} ) ?>
+	Only logged in customers have a bug history.
+<? endif ( $session{'user_id'} ) ?>

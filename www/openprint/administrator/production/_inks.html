@@ -1,0 +1,78 @@
+<? eval ( 
+	@{$$variable{Materials}} = map { $_->id(), $_->name() } openprint::Material->find('order'=>'lower(name)');
+	@{$$variable{Services}} = map { $_->id(), $_->name() } openprint::Service->find('order'=>'lower(name)');
+	@{$$variable{Pricelists}} = openprint::Pricelist->find('order'=>'lower(name)');
+ ) ?>
+<table class="List">
+	<tr>
+		<th class="checkbox"><input type="checkbox" onclick="select_all($('f1'), 'colours', this.checked );"/></th>
+		<th class="pms">PMS #</th>
+		<th class="name">Name</th>
+		<th class="material">Material</th>
+		<th class="service">Service</th>
+		<th class="grades">Grades</th>
+		<th class="washups">Washups</th>
+	<? echo ( 
+		my $html;
+		my $rowclass;
+		my %Grades = (
+			1	=>	'Gloss-coated',
+			2	=>	'Matte-coated',
+			3	=>	'Gloss-coated web',
+			4	=>	'Uncoated, white',
+			5	=>	'Uncoated, yellow',
+		);
+		foreach my $Ink ( openprint::Ink->find(
+				'order'=>'pmsid,name',
+				( $session{'/administrator/production/inks.html?pmsid'} ? ( 'pmsid ilike' => '%'.$session{'/administrator/production/inks.html?pmsid'}.'%' ) : () ),
+				( $session{'/administrator/production/inks.html?name'} ? ( 'name ilike' => '%'.$session{'/administrator/production/inks.html?name'}.'%' ) : () ),
+				) ) {
+			$html .= sprintf(q`<tr%6$s>
+        <td class="checkbox"><input type="checkbox" name="colours" value="%1$d"/></td>
+				<td class="pms"><a href="/administrator/production/ink.html?ink_id=%1$d">%2$s</a></td>
+				<td class="name"><a href="/administrator/production/ink.html?ink_id=%1$d">%3$s</a></td>
+				<td class="material"><a href="/administrator/materials/edit.html?material_id=%4$d">%5$s</a><br/>
+			`, $Ink->id(), $Ink->pmsid(), $Ink->name(), $Ink->material_id(), $Ink->Material()->name(), $rowclass );
+			if ( $Ink->material_id() ) {
+				foreach my $Pricelist ( @{$$variable{'Pricelists'}} ) {
+					$html .= 'Prices for pricelist: ' . $Pricelist->name(). '<br/>';
+					foreach my $Price ( openprint::MaterialPrice->find('pricelist_id'=>$Pricelist->id(), 'material_id'=>$Ink->material_id() ) ) {
+          next if $Price->Equipment()->deleted();
+						$html .= $Price->Equipment()->name().': ' if $Price->equipment_id();
+						$html .= sprintf( '$%.2f*%.2f% = $%.2f%s<br/>', $Price->cost(), $Price->markup(), $Price->price(), $Price->units() );
+					} # end foreach Price
+				} # end foreach Pricelist
+			} # end if
+			$html .= sprintf(q`</td><td class="service"><a href="/administrator/services/edit.html?service_id=%2$d">%3$s</a><br/>`, $Ink->id(), $Ink->service_id(), $Ink->Service()->name() );
+			if ( $Ink->service_id() ) {
+				foreach my $Pricelist ( @{$$variable{Pricelists}} ) {
+					$html .= 'Prices for pricelist: ' . $Pricelist->name(). '<br/>';
+					foreach my $Price ( openprint::ServicePrice->find('pricelist_id'=>$Pricelist->id(), 'service_id'=>$Ink->service_id() ) ) {
+            next if $Price->Equipment()->deleted();
+            $html .= $Price->to_string();
+					} # end foreach Price
+				} # end foreach Pricelist
+			} # end if
+			$html .= '</td><td class="grades">';
+			if ( $Ink->grades() ) {
+				$html .= join('<br/>', map { $Grades{$_} } @{$Ink->grades()} );
+			} else {
+				$html .= 'All';
+			} # end if
+			$html .= '</td>';
+			$html .= sprintf('</td><td class="washups">%2$s</td>', $Ink->washups());
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Ink
+		return $html;
+	) ?>
+<!--
+	<tr class="totals">
+		<td class="pms"><input type="text" name="pmsid-New" value="" placeholder="pms" /></td>
+		<td class="name"><input type="text" name="name-New" value="" placeholder="name" /></td>
+		<td class="material"><select name="material_id-New"><option value="">No Material</option><? echo ( ssi::make_drop_down( $$variable{'Materials'} ); ) ?></select></td>
+		<td class="service"><select name="service_id-New"><option value="">No Service</option><? echo ( ssi::make_drop_down( $$variable{'Services'} ); ) ?></select></td>
+		<td class="washups"><? echo ( ssi::input(type=>'cardinal', name=>'washups-New', placeholder=>'washes' ); ) ?></td>
+		<td class="checkbox">&nbsp;</td>
+	</tr>
+-->
+</table>

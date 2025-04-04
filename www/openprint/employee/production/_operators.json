@@ -1,0 +1,3 @@
+[ ['','select'], <? echo (
+	return join(',', map { "['".$_->name()."','".$_->name()."']" } openprint::User->find('usergroup any'=>'Press',type=>'E',order=>'lower(firstname),lower(lastname)') );
+) ?> ]

@@ -1,0 +1,67 @@
+<script src="<?hash_link(/javascripts/printing.js) ?>"></script>
+<script src="<?hash_link(/javascripts/service.js) ?>"></script>
+<script src="<?hash_link(/javascripts/proj/paper.js) ?>"></script>
+<script>
+
+var quantities=new Array();
+<?QUANTITIES?>
+
+var projectType = "MultiPage";
+
+function calc( formName, force ) {
+	calc_print( formName, force );
+} // end function
+</script>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+			<?include('/includes/main/proj/templates/signature_template_select.html') ?>
+			<?include('/includes/main/proj/templates/signatures.html') ?>
+		<? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+
+		<fieldset><legend><?txtSignatureType?></legend>
+<? if ( $$variable{Group} == 1 ) ?>
+			<div class="leftColumn">
+<? endif ( $$variable{Group} == 1 ) ?>
+				<p><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>"/></p>
+				<p class="dimensions">
+					<label>Spread dimensions</label>
+					<? echo (
+						my $html = sprintf('%s x %s => %s x %s',
+							input( type=>'float', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>'calc(this.form.name);' ),
+							input( type=>'float', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>'calc(this.form.name);' ),
+							input( type=>'float', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'calc(this.form.name);' ),
+							input( type=>'float', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'calc(this.form.name);' ),
+							);
+						if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+							$html .= write_override( 'chkOverrideDimensions', $$variable{'chkOverrideDimensions'}, '', 'calc(this.form.name);' );
+						} # end if
+						return $html;
+					) ?>
+				</p>
+<? if ( $$variable{Group} == 1 ) ?>
+			</div>
+			<div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ( ! ( $$variable{rdbTemplateType} and sets::isin( $$variable{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) ) ? 'style="display:none;"' : '' ) ?> >
+			<?include(/includes/main/proj/presentation_folder_printing.html)?>
+			</div>
+<? endif ( $$variable{Group} == 1 ) ?>
+			<br class="spacer"/>
+
+			<?include('/includes/main/proj/screen_type.html') ?>
+			<?include('/includes/main/proj/colours_coatings.html') ?>
+			<?include('/includes/main/proj/bleeds_colourbars.html') ?>
+			<?include('/includes/main/proj/paper_dropdowns.html') ?>
+		<br class="spacer"/>
+		</fieldset>
+		<!-- End of Input - Start of Results -->
+		<fieldset><legend>Results</legend>
+			<?include('/includes/main/proj/printing_results.html') ?>
+		</fieldset>
+		<hr/>
+		<?include('/includes/main/proj/press_approval.html') ?>
+		<?include('/includes/main/proj/add_to_project.html') ?>
+		<?include('/includes/main/proj/hdn_fields_printing.html') ?>
+		<input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
+		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>" />
+	</form>
+</div><!--Service-->

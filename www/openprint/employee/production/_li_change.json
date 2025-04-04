@@ -1,0 +1,20 @@
+<? echo ( 
+	$r->content_type('text/javascript');
+	my $html = '';
+	if ( $$variable{changed} ) {
+		my @drops = sets::union( @{$$variable{changed}} );
+		$log->debug("Drops: @drops");
+		foreach my $id (sort @drops) {
+			$html .= sprintf(q`
+if ( $('%1$s') ) {
+	new Ajax.Updater( '%1$s', '_ul.html', { parameters: { ul_id: '%1$s' }, evalScripts:true } );
+} else {
+	console.log('no div for %1$s');
+}`, $id );
+			$html .= "\n";
+		} # end foreach id
+	} # end if
+	$html .= "alert('$variable{error}');\n" if $variable{error};
+	$html .= "alert('$variable{alert}');\n" if $variable{alert};
+	return $html;
+) ?>

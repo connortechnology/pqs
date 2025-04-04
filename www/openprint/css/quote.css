@@ -1,0 +1,181 @@
+div.Quote {
+	text-align: left;
+}
+
+div.Quote div.Header {
+	margin-bottom: 5px;
+	width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+}
+div.Quote div.Header fieldset {
+  margin-right: .5em;
+}
+div.Quote div.Header fieldset legend {
+}
+/*
+div.Quote div.Header fieldset ul {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+div.Quote div.Header fieldset ul li {
+	list-style: none;
+  text-align: left;
+	width: auto;
+	padding: 0px;
+	margin: 0px;
+}
+div.Quote div.Header fieldset ul li label:not(.radio) {
+  margin-right: 10px;
+	margin-left: 0px;
+  width: auto;
+  text-align: left;
+}
+div.Quote div.Information div.Header fieldset li {
+	text-align: right;
+}
+*/
+div.Quote div.Information div.Header fieldset li label:not(.radio) {
+	text-align: left;
+}
+
+#Information {
+	width: 100%;
+}
+.PreparedByFor {
+	width: 100%;
+  margin: 4px 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+  
+#PreparedBy,
+#PreparedFor {
+	width: 50%;
+  flex: 1;
+}
+#PreparedBy fieldset,
+#PreparedFor fieldset {
+  height: 87%;
+}
+div#Information {
+	width: 100%;
+	padding: 0px;
+}
+div#Information fieldset {
+	margin-top: 0px;
+	margin-bottom: 0px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
+div#Information fieldset legend {
+display: none;
+}
+div#Information fieldset p label:not(.radio) {
+display: inline;
+    font-weight: bold;
+    margin-right: 10px;
+	margin-left: 0px;
+    width: auto;
+    text-align: right;
+float: none;
+}
+div#Information fieldset p#Status {
+display: none;
+}
+
+div.Quote fieldset ul li {
+	margin: .2em;
+	padding-left: 180px;
+  text-align: left;
+}
+div.Quote fieldset ul li label:not(.radio) {
+
+	margin: 0px 0px 0px -180px;
+	width: 180px;
+}
+fieldset#SalesRepComments {
+	width: 49%;
+	float: left;
+}
+fieldset#SalesRepComments p textarea {
+	width: 100%;
+}
+div.Quote table .description {
+	text-align: left;
+}
+.reference {
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+.reference p {
+  text-align: left;
+ padding: 0;
+}
+div.Quote table .markup {
+	width: 80px;
+	text-align: right;
+}
+div.Quote table .quantity {
+	text-align: right;
+	width: 90px;
+}
+div.Quote table .price {
+	text-align: right;
+	width: 100px;
+}
+div.Quote table .newprice {
+	text-align: right;
+	width: 110px;
+}
+div.Quote table .newprice input {
+	width: 80px;
+	text-align: right;
+}
+div.Quote div.Information table .newprice {
+	width: 150px;
+}
+div.Quote table .projects {
+	text-align: left;
+}
+div.Quote table .project_id {
+	text-align: left;
+	width: 100px;
+}
+div.Quote table .weight {
+	width: 200px;
+	text-align: right;
+}
+div.Quote div.History {
+	text-align: left;
+}
+div.Quote table tr.totals td {
+	text-align: right;
+}
+.Project table .price {
+	text-align: right;
+	width: 110px;
+}
+.Project table .description {
+	text-align: left;
+}
+table td.thumbnail {
+  width: 150px;
+  display: table-cell;
+  padding: 1px;
+  border-radius: 0;
+  border: 0px;
+}
+table th.thumbnail {
+  border: 0px;
+  border-bottom: 1px solid #0046A2;
+}
+.thumbnail img {
+  width: 150px;
+  display: inline-block;
+}
+.comments fieldset p {
+  text-align: left;
+}

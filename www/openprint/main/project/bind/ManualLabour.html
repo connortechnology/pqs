@@ -1,0 +1,42 @@
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<? eval (
+	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+	$$variable{'Columns'} = 'Three';
+	} else {
+	$$variable{'Columns'} = 'Two';
+	} # end if
+) ?>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<ul>
+			<li><label>Units</label>
+				<select name="Units" onchange="if(get_ddm_value(this) == 'Flat' ) {$(BasePrice).hide();}else{$(BasePrice).show();};calc(this.form.name);">
+					<? echo ( ssi::make_drop_down( ['Flat','Flat','Per Item','Per Item','Per M','Per M'], $$variable{'Units'} ); ) ?>
+				</select>
+			</li>
+			<li id="BasePrice" <? echo ( $$variable{'Units'} eq 'Flat' ? 'style="display:none;"' : '' ) ?>> 
+				<label>Base Price</label>
+				<input name="BasePrice" value="<?BasePrice?>" type="number" onkeyup="calc(this.form.name);" />
+			</li>
+			<? echo ( include('/includes/main/proj/_1000_price.html'); ) ?>
+			<li>
+				<label>Total Price (<?CurrencySymbol?>)</label>
+				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+				<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+				<span class="<?Columns?>Columns">
+					<input type="number" name="txtPrice<?QTYIndex?>" />
+					<b><?CurrencyName?></b>
+				</span>
+				<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+			</li>
+			</ul>
+		</fieldset>
+		<hr/>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_all.html'); ) ?>
+	</form>
+</div>

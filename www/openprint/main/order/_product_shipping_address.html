@@ -1,0 +1,80 @@
+<fieldset><legend>Ship via <?ServiceType?> to</legend>
+	<p> 
+		<label>*Company Name</label>
+		<input type="text" name="ProductCompanyName-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->companyname(); ) ?>" onfocus="on(this);" onblur="off(this);" />
+	</p>
+	<p>
+		<label>&nbsp;First Name</label>
+		<input type="text" name="ProductFirstName-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->firstname(); ) ?>" onfocus="on(this);" onblur="off(this);" />
+	</p>
+	<p>
+		<label>&nbsp;Last Name</label>
+		<input type="text" name="ProductLastName-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->lastname(); ) ?>" onfocus="on(this);" onblur="off(this);" />
+	</p>
+	<p>
+		<label>&nbsp;Salutation</label>
+		<input type="radio" id="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Mr." name="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="Mr." <? echo ( 'checked="checked"' if $$variable{'OrderedProduct'}->salutation() eq 'Mr.' ) ?> />
+		<label class="radio" for="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Mr.">Mr. </label>
+		<input type="radio" id="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Mrs." name="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="Mrs." <? echo ( 'checked="checked"' if $$variable{'OrderedProduct'}->salutation() eq 'Mrs.' ) ?> />
+		<label class="radio" for="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Mrs.">Mrs. </label>
+		<input type="radio" id="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Ms." name="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="Ms." <? echo ( 'checked="checked"' if $$variable{'OrderedProduct'}->salutation() eq 'Ms.' ) ?> />
+		<label class="radio" for="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Ms.">Ms. </label>
+		<input type="radio" id="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Miss" name="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="Miss" <? echo ( 'checked="checked"' if $$variable{'OrderedProduct'}->salutation() eq 'Miss' ) ?> />
+		<label class="radio" for="ProductSalutation-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>Miss">Miss</label>
+	</p>
+	<p> 
+		<label>*Address</label>
+		<input type="text" name="ProductAddress1-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->address1(); ) ?>" onfocus="on(this);" onblur="off(this);">
+	</p>
+	<p> 
+		<label>&nbsp;</label>
+		<input type="text" name="ProductAddress2-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->address2(); ) ?>" onfocus="on(this);" onblur="off(this);">
+	</p>
+	<p> 
+		<label>*Country</label>
+		<input type="hidden" name="ProductCountry-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{OrderedProduct'}->country(); ) ?>" />
+			 <? echo ( $$variable{'OrderedProduct'}->country(); ) ?>
+	<!--
+			<select name="ddmShippingCountry-<?ProjectIndex?>" onchange="off(this.options[this.selectedIndex])" onfocus="on(this.options[this.selectedIndex]);on(this);" onblur="off(this.options[this.selectedIndex]);off(this);">
+				<option value=""> Select </option>
+				<? echo ( 
+					ssi::make_drop_down( \@countries::countries, $$variable{'ddmShippingCountry'} );
+				) ?> 
+			</select>
+	-->
+	</p>
+	<p> 
+		<label>*State/Province</label>
+		<select name="ProductStateProvince-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" onchange="off(this.options[this.selectedIndex])" onfocus="on(this.options[this.selectedIndex]);on(this);" onblur="off(this.options[this.selectedIndex]);off(this);">
+			<option value=""> Select </option>
+			<? echo ( 
+				ssi::make_drop_down( \@states::states, $$variable{'OrderedProduct'}->StateProvince() );
+				ssi::make_drop_down( \@provinces::provinces, $$variable{'OrderedProduct'}->StateProvince() );
+			) ?> 
+		</select>
+	</p>
+	<p> 
+		<label>*City</label>
+		<input type="text" name="ProductCity-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->city(); ) ?>" onfocus="on(this);" onblur="off(this);" />
+	</p>
+	<p> 
+		<label>*Zip/Postal Code</label>
+		<input type="hidden" name="ProductPostalCode-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->postal_code(); ) ?>" />
+		<? echo ( $$variable{'OrderedProduct'}->postal_code() ) ?>
+	<!--
+			<input type="text" name="ProductPostalCode-<?ProjectIndex?>" value="<? echo ( $$variable{"ProductPostalCode-$$variable{'ProjectIndex'}"} ) ?>" onfocus="on(this);" onblur="off(this);">
+	-->
+	</p>
+	<p> 
+		<label>*Phone</label>
+		<input type="text" name="ProductPhone-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->phone(); ) ?>" onfocus="on(this);" onblur="off(this);" />
+	</p>
+	<p> 
+		<label>&nbsp;Fax</label>
+		<input type="text" name="ProductFax-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->fax(); ) ?>" onfocus="on(this);" onblur="off(this);" />
+	</p>
+	<p> 
+		<label>*E-mail Address</label>
+		<input type="text" name="ProductEmail-<? echo ( $$variable{'OrderedProduct'}->id(); ) ?>" value="<? echo ( $$variable{'OrderedProduct'}->email(); ) ?>" onfocus="on(this);" onblur="off(this);" />
+	</p>
+</fieldset>

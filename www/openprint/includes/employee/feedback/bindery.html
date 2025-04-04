@@ -1,0 +1,23 @@
+<form method="post" name="f1" action="/employee/project/view.html">
+<fieldset><legend>Production Feedback</legend>
+	<ul>
+		<li><label>Equipment</label><? echo (
+my $specs = $$variable{Service}->specs();
+my $qty_index = $$variable{Project}->ordered_quantity_index();
+
+if ( $$specs{'ddmEquipment'.$qty_index} ) {
+	return new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} )->name();
+}
+return;
+) ?>
+</li>
+</ul>
+
+	<?include('/includes/employee/feedback/employee.html') ?>
+	<?include('/includes/employee/feedback/comments.html') ?>
+	<?include('/includes/employee/feedback/complete.html') ?>
+	<?include('/includes/employee/feedback/complete_date.html') ?>
+	<?include('/includes/employee/feedback/buttons.html') ?>
+	<?include('/includes/employee/feedback/hidden_fields.html')?>
+</fieldset>
+</form>

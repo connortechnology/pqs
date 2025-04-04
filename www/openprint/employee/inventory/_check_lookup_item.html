@@ -1,0 +1,30 @@
+<? echo (
+	my @Skids;
+	if ( $param{skid_id} ) {
+		@Skids = openprint::Skid->find( id=>$param{skid_id} );
+	} elsif ( $param{rfidtag_id} ) {
+		my @Tags = openprint::RFIDTag->find( 'id like'=>'%'.$param{rfidtag_id}, limit=>10 );
+		@Skids = map { $_->Skid() } @Tags;
+	}
+
+	return 'Found:<br/><table>'.join("\n", map { sprintf('<table>
+<tr >
+    <td class="Skid">%1$s</td>
+    <td class="RFIDTag">%2$s</td>
+    <td class="Width">%3$s</td>
+    <td class="Diameter">%4$s</td>
+    <td class="Location">%5$s</td>
+    <td class="Notes">%6$s</td>
+<td>%7$s</td><td class="Quantity">%8$s</td></tr>',
+        $_->link_to(),
+        $_->RFIDTag()->link_to(),
+        $_->dimension1(),
+        $_->dimension2(),
+        ( $_->Location()->name() ),
+        $_->notes(),
+        join('<br/>', map { $_->Paper()->to_string() } $_->Contents() ),
+        join('<br/>', map { Number::Format::format_number( $_->quantity() ) . $_->Paper()->units() } $_->Contents() ),
+
+        );
+	} @Skids ).'</table>';
+)?>

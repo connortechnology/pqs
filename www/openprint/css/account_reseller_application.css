@@ -1,0 +1,52 @@
+
+.ResellerApplication {
+  width: 100%;
+}
+/* Company Profile Styles */
+div.ResellerApplication div.CompanyInformation,
+div.ResellerApplication div.Preferences,
+div.ResellerApplication div.CreditInformation,
+div.ResellerApplication div.TradeReferences,
+div.ResellerApplication div.BankInformation,
+div.ResellerApplication div.BusinessInformation,
+div.ResellerApplication div.Application {
+	width: 49%;
+	float: left;
+	min-width: 400px;
+}
+div.ResellerApplication:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+div.ResellerApplication fieldset ul {
+}
+div.ResellerApplication fieldset ul li {
+	padding: 0 0 0 180px;
+}
+div.ResellerApplication fieldset ul li label:not(.radio):not(.radio-inline) {
+	margin-left: -180px;
+	width: 175px;
+	float: left;
+}
+div.ResellerApplication fieldset li select {
+	width: 92%;
+}
+div.ResellerApplication fieldset li input[type="text"] ,
+div.ResellerApplication fieldset li input[type="tel"] ,
+div.ResellerApplication fieldset li input[type="email"] {
+	width: 90%;
+	min-width: 200px;
+}
+div.ResellerApplication .TradeReference {
+	margin-top: 5px;
+}
+
+#StartYear {
+	width: 50px;
+	text-align: left;
+}

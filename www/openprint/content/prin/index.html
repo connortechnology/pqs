@@ -1,0 +1,26 @@
+<? echo ( 
+	require openprint::ProjectTypeCategory;
+	my @ProjectTypeCategories = openprint::ProjectTypeCategory->find('order'=>'sort,lower(name)');
+	my $html = '<div id="ProjectTypes">';
+	foreach my $ProjectTypeCategory ( @ProjectTypeCategories ) {
+		my @ProjectTypes = openprint::ProjectType->find(category_id=>$$ProjectTypeCategory{id}, order=>'sorting,lower(name)');
+		next if ! @ProjectTypes;
+
+		$html .= sprintf('<div class="Category"><h3>%s</h3><ul>', $ProjectTypeCategory->name() );
+		
+		foreach my $ProjectType ( @ProjectTypes ) {
+			my @Assets = map { $_->Asset() } $ProjectType->Assets();
+			$html .= sprintf('<li><a href="/content/%4$s?projecttype_id=%1$d" title="%3$s">%2$s %5$s</a></li>',
+				$ProjectType->id(), 
+				ssi::htmlize( $ProjectType->description() ),
+				URI::Escape::uri_escape($ProjectType->name()), 
+				( $ProjectType->url() ? $ProjectType->url() : 'prin/Signature.html' ),
+				#openprint::Asset::slider( \@Assets, 'medium' ),
+				( @Assets ? $Assets[0]->sized_html('medium') : '' ),
+				);
+		} # end foreach
+		$html .= '</ul></div>';
+	} # end foreach
+	$html .= "\n";
+	return $html;
+) ?>

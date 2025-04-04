@@ -1,0 +1,17 @@
+<div class="Dimensions"> 
+<p>
+	<label>Dimensions</label>
+			<? echo (
+				join( "\n",
+				input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0, step=>'0.0001' ),
+				' x ',
+				input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, step=>'any' ),
+				'('. writeTip( 'Finished' ).' - W x H in inches)<br/>',
+				input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0, step=>'any' ),
+				' x ',
+				input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, step=>'any' ),
+				'('. writeTip( 'Flat' ).' - W x H in inches)',
+				);
+			) ?>
+</p>
+</div>

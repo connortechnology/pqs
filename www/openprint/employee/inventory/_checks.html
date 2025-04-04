@@ -1,0 +1,51 @@
+<? eval (
+	my $uri = '/employee/inventory/checks.html';
+
+	$$variable{Checks} = [ openprint::Inventory_Check->find( 
+		date_filter( $uri.'?started_on_end', 'started_on <=' ),
+		date_filter( $uri.'?started_on_start', 'started_on >=' ),
+		order		=>	'id',
+		) ];
+
+) ?>
+<? if ( $$variable{Checks} and @{$$variable{Checks}} ) ?>
+<form id="PaperCheckResults" name="PaperCheckResults" action="checks.html" method="post">
+	<table class="List">
+		<tr>
+			<th class="Name">Name</th>
+			<th class="Items"># of Items</th>
+			<th class="Date">Created On</th>
+			<th class="Date">Date Started</th>
+			<th class="Date">Date Ended</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+
+			foreach my $Check ( @{$$variable{Checks}} ) {
+
+				my $quantity = 0;
+				my $max_age;
+				
+				$html .= sprintf('
+<tr class="%1$s">
+	<td class="Name"><a href="check.html?check_id=%2$d">%3$s</a></td>
+	<td class="Name"><a href="check.html?check_id=%2$d">%4$s</a></td>
+	<td class="Date"><a href="check.html?check_id=%2$d">%5$s</a></td>
+	<td class="Date"><a href="check.html?check_id=%2$d">%6$s</a></td>
+	<td class="Date"><a href="check.html?check_id=%2$d">%7$s</a></td>
+</tr>', $rowclass, $$Check{id}, $Check->name(), 
+$Check->item_count(),
+format_date( $Check->created_on() ),
+format_date( $Check->started_on() ),
+format_date( $Check->ended_on() ) );
+				$rowclass = $rowclass ? '' : 'colRow';
+			} # end foreach Check
+			return $html;
+		) ?>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<? else ( $$variable{Checks} and @{$$variable{Checks}} ) ?>
+There were no inventory checks matching your search criteria.
+<? endif ( $$variable{Checks} and @{$$variable{Checks}} ) ?>

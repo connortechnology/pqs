@@ -1,0 +1,94 @@
+<? echo ( 
+	my @Pricelists;
+	my $admin = sets::isin( $session{user_type}, ['E','A'] );
+	if ( $admin ) {
+		@Pricelists = openprint::Pricelist->find( order=>'lower(name)');
+	} else {
+		@Pricelists = openprint::Pricelist->get_current();
+	} # end if
+	my $html = '';
+
+	foreach my $Pricelist ( @Pricelists ) {
+		my $Currency = $Pricelist->Currency();
+
+		$html .= '<fieldset>';
+		$html .= "<legend>Prices for Price List: $$Pricelist{name}</legend>" if $admin;
+		my @Prices = openprint::ProductPrice->find( 'product_id' => $$variable{Product}->id(), 'pricelist_id' => $Pricelist->id(), 'order' => 'min NULLS FIRST' );
+		if ( $admin ) {
+			$html .= '
+		<table class="List">
+			<tr>
+				<th class="Range">Quantity</th>
+				<th class="Units">Units</th>
+				<th class="Cost">Cost</th>
+				<th class="Markup">Markup</th>
+				<th class="Price">Price</th>
+				<th class="Discount">Discount</th>
+				<th class="buttons"></th>
+			</tr>';
+		} else {
+			$html .= '
+		<table class="List">
+			<tr>
+				<th class="Range">Unit Range</th>
+				<th class="Units">Units</th>
+				<th class="Price">Price</th>
+				<th class="buttons"></th>
+			</tr>';
+		} # end if admin
+
+		foreach my $Price ( @Prices ) {
+			if ( $admin ) {
+				$html .= sprintf(q`
+		<tr> 
+			<td class="Range">%1$s</td>
+			<td class="Units">%2$s</td>
+			<td class="Cost">%3$s</td>
+			<td class="Markup">%4$s%</td>
+			<td class="Price">%5$s</td>
+			<td class="Discount">%6$s</td>
+			<td class="buttons">%7$s</td>
+		</tr>`, 
+				( $Price->min() == $Price->max() ?
+				  ( $Price->min() ne '' ? Number::Format::format_number( $Price->min(), 0, 0 ) : '' ) : join(' - ',
+					  ( $Price->min() ne '' ? Number::Format::format_number( $Price->min(), 0, 0 ) : '' ),
+					  ( $Price->max() ne '' ? Number::Format::format_number( $Price->max(), 0, 0 ) : '' ),
+				) ),
+				$Price->units(), 
+				openprint::Currency::format( $Currency->convert_from( $Price->cost() ) ),
+				$Price->markup(),
+				openprint::Currency::format( $Currency->convert_from( $Price->price() ) ),
+				$Price->discountable() ? 'Yes' : 'No',
+join("\n",
+button('Order'.$$Price{id}, { text=>'Order', href=>'/main/order/information.html?Product='.$$variable{Product}->id().'&amp;Quantity='.$Price->min(),
+ } ),
+button('Customize'.$$Price{id}, { text=>'Customize' } ),
+),
+
+				);
+			} else {
+				$html .= sprintf(q`
+		<tr> 
+			<td class="Range">%1$s</td>
+			<td class="Units">%2$s</td>
+			<td class="Price">%3$s</td>
+			<td class="buttons">%4$s</td>
+		</tr>`, 
+				( $Price->min() == $Price->max() ?
+				  ( $Price->min() ne '' ? Number::Format::format_number( $Price->min(), 0, 0 ) : '' ) : join(' - ',
+				( $Price->min() ne '' ? Number::Format::format_number( $Price->min(), 0, 0 ) : '' ),
+				( $Price->max() ne '' ? Number::Format::format_number( $Price->max(), 0, 0 ) : '' ),
+				) ),
+				$Price->units(), 
+				openprint::Currency::format( $Currency->convert_from( $Price->price() ) ),
+join("\n",
+button('Order'.$$Price{id}, { text=>'Order' } ),
+button('Customize'.$$Price{id}, { text=>'Customize' } ),
+),
+				);
+			} # end if admin
+		} # end foreach Price
+		$html .= '</table></fieldset>';
+	} # end foreach Pricelist
+	return $html;
+) ?>

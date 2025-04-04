@@ -1,0 +1,129 @@
+
+#UserProfile ul {
+  list-style: none;
+	width: auto;
+	float: left;
+}
+
+fieldset p,
+fieldset ul li {
+  padding: 0 0 0 215px;
+  text-align: left;
+}
+fieldset ul li label:not(.radio):not(.radio-inline) {
+  width: 210px;
+  margin-left: -215px;
+}
+
+.groups {
+  width: 100%;
+}
+
+.groups li {
+	width: 25%;
+	min-width: 200px;
+	text-align: left;
+	padding: 0;
+	float: left;
+}
+.groups label {
+	float: none;
+	margin: 0;
+}
+.groups label:after {
+content: '';
+}
+.ServiceDefaults {
+	display: none;
+}
+.Notifications, .Permissions {
+	float: right;
+	width: 50%;
+}
+.Notifications fieldset,
+.Email .Vacation fieldset {
+	margin-left: 5px;
+}
+.LoginCredentials,
+.Miscellaneous,
+.groups {
+	float: right;
+	width: 50%;
+}
+.Miscellaneous::before {
+  clear: both;
+}
+.LoginCredentials fieldset,
+.Email .Settings fieldset {
+	margin-right: 5px;
+}
+.Email {
+	clear: both;
+}
+.Email .Settings,
+.Purchasing {
+	float: left;
+	width: 50%;
+}
+.Email .Vacation {
+	float: right;
+	width: 50%;
+}
+#UserProfile ul:after, .Email:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+    clear: both; 
+    visibility: hidden;
+}
+
+#company_id {
+	max-width: 80%;
+}
+.buttons {
+	text-align: left;
+}
+.buttons label {
+	margin: 0;
+}
+.buttons label:after {
+	content: '';
+}
+#phone {
+	width: 67%;
+}
+.wage input[type="number"],
+.wage input[type="text"],
+.commission input[type="text"],
+.commission input[type="number"] {
+	width: 33%;
+ }
+.mailinglist label:not(.radio):not(.radio-inline),
+.web_active label:not(.radio):not(.radio-inline),
+.ftp_active label:not(.radio):not(.radio-inline),
+.ftp_root label:not(.radio):not(.radio-inline),
+.administrator label:not(.radio):not(.radio-inline) {
+	width: 320px;
+}
+#extension {
+	width: 40px;
+}
+#UserProfile,
+.Subscriptions,
+.Assistants {
+  width: 50%;
+  float: left;
+}
+.Assistants li {
+  float: left;
+}
+.LoginCredentials input[type="email"],
+.LoginCredentials input[type="password"],
+.LoginCredentials input[name="password"],
+.LoginCredentials input[name="verifypassword"]
+{
+  width: 50%;
+}
+select#ddmCustomer {
+  max-width: 400px;
+}

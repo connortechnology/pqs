@@ -1,0 +1,97 @@
+<?include('/includes/error_reporting.html')?>
+<? if ( @{$$variable{Orders}} ) ?>
+	<? echo (
+		my $html;
+		my $uri = '/employee/reports/services.html';
+		my %servicetypes = map{ $_=>$_ } split(',', $session{$uri.'?servicetype_id'});
+		my %category_ids = map{ $_=>$_ } split(',', $session{$uri.'?servicetype_category_id'});
+
+		# If a service is clicked, but not it's category then add the category
+		foreach my $ServiceType ( @{$$variable{ServiceTypes}} ) {
+			if ( $servicetypes{$$ServiceType{id}} and ! $category_ids{$$ServiceType{category_id}} ) {
+				$category_ids{$$ServiceType{category_id}} = $$ServiceType{category_id};
+			}
+		}
+		my @Categories = map { $category_ids{$$_{id}} ? $_ : () } @{$$variable{Categories}};
+
+		my %service_totals;
+		my %category_totals;
+
+		my $rowclass;
+		my $total;
+		foreach my $Order ( @{$$variable{Orders}} ) {
+			$rowclass = '';
+
+		  $html .= '
+<table class="List sortable">
+<tr><th colspan="2" class="Order">'.$Order->production_link_to('Order ' . $$Order{id} . ' Docket '.$$Order{docket}).'</th>'.join("\n", map { '<th>'.$$_{name}.'</th>' } @Categories ).'</tr>';
+			foreach my $Project ( $Order->Projects() ) {
+				my @Services = $Project->Services();
+				my $Services_By_ServiceType = misc::make_hash_from_array('servicetype_id', @Services );
+					
+				for( my $category_index = 0; $category_index < @Categories; $category_index += 1 ) {
+					my $Category = $Categories[$category_index];
+					
+					foreach my $ServiceType ( @{$$variable{ServiceTypesByCategory}{$$Category{id}}} ) {
+						next if ! $servicetypes{$$ServiceType{id}};
+						next if ! $$Services_By_ServiceType{$$ServiceType{id}};
+
+
+						# Get the sum price for this servicetype
+						my $servicetype_price = 0;
+
+						foreach my $Service ( @{$$Services_By_ServiceType{$$ServiceType{id}}} ) {
+							next if ! $servicetypes{$$Service{servicetype_id}};
+
+							my $price = $Order->Currency()->convert_from( $Service->ordered_price() );
+							$servicetype_price += $price;
+
+							$service_totals{$$Service{servicetype_id}} += $price;
+							$category_totals{$Service->ServiceType()->category_id()} += $price;
+
+							my $specs = $Service->specs();
+							$html .= '<tr'.$rowclass.'><td class="Service">'.$$ServiceType{description}.'</td><td class="ServiceDescription">'.
+( ( $$specs{ServiceName} and ( $$specs{ServiceName} ne $$ServiceType{description} ) ) ? ' ' . $$specs{ServiceName} : '' ). '</td>';
+							$html .= '<td></td>' x $category_index;
+
+							$html .= '<td>'.openprint::Currency::format($price).'</td>';
+							$html .= '<td></td>'x((scalar @Categories - $category_index) - 1);
+							$html .= '</tr>';
+						} # end foreach Service
+if ( 1 ) {
+						$html .= '<tr class="totals"><td colspan="2" class="Service">Total</td></td>';
+						$html .= '<td></td>' x $category_index;
+
+						$html .= '<td>'.openprint::Currency::format($servicetype_price).'</td>';
+						$html .= '<td></td>'x((scalar @Categories - $category_index) - 1);
+						$html .= '</tr>';
+}
+						$rowclass = $rowclass ? '' : ' class="colRow"';
+					} # end foreach ServiceType
+				} # end foreach category
+			} # end foreach Project
+			$html .= '</table>';	
+		} # end foreach Order
+
+		$html .= '<table class="List sortable"><tr><th>Totals</th>'.join("\n", map { '<th>'.$$_{name}.'</th>' } @Categories ).'</tr>';
+		for( my $category_index = 0; $category_index < @Categories; $category_index += 1 ) {
+			my $Category = $Categories[$category_index];
+			foreach my $ServiceType ( @{$$variable{ServiceTypesByCategory}{$$Category{id}}} ) {
+				next if ! $servicetypes{$$ServiceType{id}};
+				$html .= '<tr'.$rowclass.'><td class="Service">'.$$ServiceType{description}.'</td>';
+				$html .= '<td></td>'x$category_index;
+				$html .= '<td>'.openprint::Currency::format($service_totals{$$ServiceType{id}}).'</td>';
+				$html .= '<td></td>'x((scalar @Categories - $category_index) - 1);
+				$html .= '</tr>';
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach ServiceType
+		} # end foreach Category
+		$html .= '<tr class="totals"><td>Total</td>'.join("\n", map { 
+				'<td>'.openprint::Currency::format($category_totals{$$_{id}}).'</td>' } @Categories ).'</tr>';
+		return $html;
+	) ?>
+</table>
+<span class="Currency">All prices shown are in <? echo ( openprint::Currency::get_current()->name() ) ?>.</span>
+<? else ( @{$$variable{Orders}} ) ?>
+There were no orders matching your criteria.  Please try again.
+<? endif ( @{$$variable{Orders}} ) ?>

@@ -1,0 +1,7 @@
+.ProjectSummary fieldset p {
+  display: flex;
+  padding-left:200px;
+}
+.ProjectSummary fieldset p label:not(.radio):not(.radio-inline) {
+  width: 200px;
+}

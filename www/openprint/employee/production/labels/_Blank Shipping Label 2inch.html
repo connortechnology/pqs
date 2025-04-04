@@ -1,0 +1,90 @@
+<? eval (
+	if ( ! $$variable{'Label'} ) {
+		$$variable{'Label'} = new openprint::Label( $openprint::param{'id'} );
+		$$variable{'Label'}->save();
+	} # end if
+) ?>
+<script>
+	var tinymce_options = {
+		mode : "textareas",
+		theme : "simple"
+	};
+	tinyMCE.init( tinymce_options );
+</script>
+<style type="text/css">
+	
+	div#data {
+		vertical-align: top;
+		padding: 5px;
+		font-size: 20pt;
+	} 
+	textarea {
+		width: 98%;
+	}
+.quantity_per,
+.docket,
+.company {
+padding-left: 100px;
+height: .23in;
+}
+#docket,
+#customer {
+height: .23in;
+}
+.quantity_per label,
+.docket label,
+.company label {
+	margin-left: -100px;
+	float: left;
+}
+.Label {
+background: none;
+}
+	.Label2Inch {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+		border: 1px solid black;
+background: white;
+	width: 4in;
+	}
+@media print {
+	.Label2Inch {
+border: none;
+	width: 100%;
+	height: 100%;
+padding: 5px;
+}
+#Content {
+margin: 0;
+padding: 0;
+}
+}
+</style>
+<div>
+<div class="Label2Inch">
+	<div class="docket">
+		<label>Docket:</label>
+		<div id="docket"><? echo ( $$variable{Label}->get_data('docket'); ) ?></div>
+	</div>
+	<div class="company">
+		<label>Customer:</label>
+		<div id="customer"><? echo ( $$variable{Label}->get_data('customer'); ) ?></div>
+	</div>
+	<div class="description">
+	<label>Description:</label>
+	<div id="data" style="height: .75in;"><? echo ( $$variable{Label}->get_data('data'); ) ?></div>
+	</div>
+	<div class="quantity_per">
+		<label>Qty/carton:</label>
+		<div id="quantity_per"><? echo ( $$variable{Label}->get_data('quantity'); ) ?></div>
+	</div>
+	<script>
+		new Ajax.InPlaceRichEditor( 'data', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=data',{editOnBlank:0,okButton:true,cancelLink:true,rows:2,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=data'}, tinymce_options );
+		new Ajax.InPlaceEditor( 'customer', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=customer',{editOnBlank:0,okButton:true,cancelLink:true,rows:1});
+		new Ajax.InPlaceEditor( 'docket', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=docket',{editOnBlank:0,okButton:true,cancelLink:true,rows:1});
+		new Ajax.InPlaceEditor( 'quantity_per', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity_per',{editOnBlank:0,okButton:true,cancelLink:true,rows:1});
+
+	</script>
+	</div>
+</div>

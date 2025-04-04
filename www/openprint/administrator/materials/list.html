@@ -1,0 +1,125 @@
+<div class="PageTitle">
+<h1>Administrator Materials</h1>
+<h2>List</h2>
+</div>
+<script>
+var load_page_ajax = null;
+
+function load_page() {
+  if ( load_page_ajax ) load_page_ajax.abort();
+  $j('#Results').html('Loading');
+  load_page_ajax = $j.ajax({
+    url: '_list.html',
+    data: $j('#f1').serialize(),
+    success: function(data) {
+      load_page_ajax = null;
+      $j('#Results').html(data);
+      $j('#Materials').bootstrapTable({ });
+    }
+  });
+} 
+
+function reset() {
+  const f1 = document.getElementById('f1');
+  for (let i=0, len = f1.elements.length; i<len; i++) {
+    const element = f1.elements[i];
+    set_value( element, '' );
+  }
+  load_page();
+}
+
+addEventListener('DOMContentLoaded', (event) => {
+  $j('#Materials').bootstrapTable({ });
+});
+</script>
+<div class="Materials">
+<form id="f1" name="f1" method="post" action="list.html">
+	<fieldset class="filters"><legend>Search</legend>
+    <div class="leftColumn">
+		<ul>
+      <li>
+        <label>ID</label>
+        <? echo ( input( type=>'cardinal', name=>'material_id', onkeydown=>"if(event.keyCode==13){f1.submit();}" ); ) ?>
+        <? echo ( button( 'Go1',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
+      </li>
+      <li>
+        <label>Name</label>
+        <? echo ( input( type=>'text', name=>'material_name', oninput=>'load_page();', onkeydown=>"if(event.keyCode==13){f1.submit();}", value=>$session{$r->uri().'?material_id'} ); ) ?>
+        <? echo ( button( 'Go2',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
+      </li>
+      <li><label>Category</label>
+        <?echo( ssi::select( 
+              openprint::MaterialCategory->dropdown(order=>'lower(name)'), 
+              $session{$r->uri().'?category_id'}, { 
+              name=>'category_id', 
+              prepend=>[ '', 'All' ],
+              onchange=>'load_page();',
+              } ); ) ?>
+      </li>
+      <!--
+      <li><label>Type</label>
+        <?echo( return '';
+       ssi::select( 
+              openprint::MaterialType->dropdown(order=>'lower(name)'), 
+              $session{$r->uri().'?type_id'}, { 
+              name=>'type_id', 
+              prepend=>[ '', 'All' ],
+              onchange=>'load_page();',
+              } ); ) ?>
+      </li>
+      -->
+      <li><label>Equipment</label>
+        <?echo( ssi::select( 
+              openprint::Equipment->dropdown(order=>'lower(strname)'), 
+              $session{$r->uri().'?equipment_id'}, { 
+              name=>'equipment_id', 
+              prepend=>[ '', 'All' ],
+              onchange=>'load_page();',
+              } ); ) ?>
+      </li>
+      <!--
+      <li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {on_click=>"load_page();"} ); ) ?></li>
+      -->
+      </ul>
+  </div>
+<div class="rightColumn">
+  <ul>
+<? echo (
+  my $options =  openprint::Company->dropdown( offers_credit=>1 );
+  if (@{$options} > 2) {
+  return join("\n",
+      '<li><label>Owner</label>',
+      ssi::select($options, $session{$r->uri().'?owner_id'}, {
+        name=>'owner_id', prepend=>['','All'], on_change=>'load_page',
+        }),
+      '</li>',
+      );
+  }
+  return;
+) ?>
+<? echo (
+    my $options =  openprint::Company->dropdown( supplier=>'Y' );
+    if (@{$options} > 2) {
+    return join("\n", '<li><label>Supplier</label>',
+        (@{$options} > 10 ? q`<input class="filter" type="text" oninput="filter_companies('supplier_id', { name: this.value,selected_id: get_ddm_value($('supplier_id')) } );" />` : ''),
+        ssi::select($options, $session{$r->uri().'?invoicee_id'}, { name=>'supplier_id', id=>'supplier_id', on_change=>'load_page', prepend=>['','All'] }),
+      '</li>',
+ );
+  }
+  '';
+) ?>
+  </ul>
+</div>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { on_click=>'load_page', text=>'Show Results' } ),
+				button( 'New', { href=>'/administrator/materials/edit.html', text=>'New' } ),
+				button( 'Reset', { on_click=>'reset', text=>'Reset' } ),
+        button( 'delete', { onclick=>q`jQuery('#Results').load('/administrator/materials/_list.html?btnFunction=delete', { material_id: get_value( document.getElementById('f1').material_ids ) } );`, text=>'Delete Checked' } ),
+        ); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results"><?include(_list.html)?></div>
+	<input type="hidden" name="btnFunction"/>
+</form>
+</div>

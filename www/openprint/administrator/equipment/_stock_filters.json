@@ -1,0 +1,48 @@
+<? echo (
+	my $debug = 0;
+
+	my @papers = openprint::Paper->find(
+			( $param{'Selected'} eq 'Manufacturer' ? ( 'manufacturer_id'=>$param{'Manufacturer'} ) : () ),
+			( $param{'Selected'} eq 'Group' ? ( 'group_id'=>$param{'Group'} ) : ()  ),
+			( $param{Selected} eq 'Brand' ? ( brand_id=> ( $param{brand_id} ? $param{brand_id} : $param{Brand} ) ) : ()  ),
+			( sets::isin( $param{'Selected'}, [ 'Finish','Colour','Weight' ] ) ? ( 'finish_id'  => $param{'Finish'} ) : () ),
+			( sets::isin( $param{'Selected'}, [ 'Colour','Weight' ] ) ? ( 'colour_id'   => $param{'Colour'} ) : () ),
+			( sets::isin( $param{'Selected'}, [ 'Weight' ] ) ? ( 'weight_id'	=> $param{'Weight'} ) : () ),
+			( $param{'width'} ? ( 'width >='=>$param{'width'} ) : () ),
+			( $param{'height'} ? ( 'height >='=>$param{'height'} ) : () ),
+			type=>$param{'Types'},
+		);
+
+	my %brands;
+	my %finishes;
+	my %colours;
+	my %weights;
+	foreach my $Paper ( @papers ) {
+		$brands{$Paper->brand()} = $Paper->brand_id();
+		$finishes{$Paper->finish()} = $Paper->finish_id() if ( ! $param{'Brand'} ) or ( $Paper->brand_id() eq $param{'Brand'} ) or ( $Paper->brand_id() eq $param{'brand_id'} );
+		$colours{$Paper->colour()} = $Paper->colour_id() if ( ! $param{'Brand'} ) or ( $Paper->brand_id() eq $param{'Brand'} ) or ( $Paper->brand_id() eq $param{'brand_id'} );
+		$weights{$Paper->weight()} = $Paper->weight_id() if ( ! $param{'Brand'} ) or ( $Paper->brand_id() eq $param{'Brand'} ) or ( $Paper->brand_id() eq $param{'brand_id'} );
+	} # end foreach
+
+	my %results;
+	if ( ($param{'Selected'} eq 'Manufacturer') or ! $param{'Selected'} ) {
+		$results{'Brand'.$param{'id'}} = [ map {$brands{$_}, $_ } sort keys %brands ] 
+	} else {
+		$results{'Brand'.$param{'id'}} = undef;
+	} # end if
+
+	$results{'Finish'.$param{'id'}} = [ map { $finishes{$_}, $_ } sort keys %finishes ] if ( ! $param{'Finish'} ) or ! sets::isin( $param{'Selected'}, [ 'Finish', 'Colour', 'Weight' ] );
+	$results{'Colour'.$param{'id'}} = [ map { $colours{$_}, $_ } sort keys %colours ] if ( ! $param{'Colour'} ) or ! sets::isin( $param{'Selected'}, [ 'Finish','Weight' ] );
+	if ( $param{'Selected'} ne 'Weight' ) {
+		$results{'Weight'.$param{'id'}} = [ map { $weights{$_}, $_ }
+				sort { $a =~ s/^(\d*)/$1/; $b =~ s/^(\d*)/$1/; return $a <=> $b } keys %weights ];
+	} # end if
+	$results{'Manufacturer'} = undef;
+	#push @results, select_sheetsize( $r, $log, $dbh, $variable, $project_index, $brand, $spfinish, $colour, $weight, $press );
+	$results{'id'} = $param{id} if $param{id};
+	$results{'form'} = $param{'form'};
+
+	$param{'callback'} = 'json_fill_drop_downs' if ! $param{'callback'};
+	my $json = JSON->new;
+	return 'var results = new Hash(' . $json->encode( \%results ) . ");\n$param{'callback'}(results);calc('$results{form}');";
+) ?>

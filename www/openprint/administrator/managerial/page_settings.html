@@ -1,0 +1,24 @@
+<script>
+function load_page() {
+  $j('#Results').load('_page_settings.html', $j('#f1').serialize() );
+} 
+</script>
+<?include('/includes/error_reporting.html')?>
+<div class="PageSettings">
+	<form id="f1" name="f1" action="page_settings.html" method="post">
+		<fieldset class="filter"><legend>Filter</legend>
+			<ul>
+				<li><label>URL</label><?echo(input(type=>'url',name=>'url',onkeydown=>"if(event.keyCode==13){load_page();}", value=>$session{$r->uri().'?url'});)?></li>
+			</ul>
+<p class="buttons">
+            <? echo ( join("\n",
+						button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
+						); ) ?>
+        </p>
+		</fieldset>
+	</form>
+	<form id="f2" name="f2" action="page_settings.html" method="post">
+		<input type="hidden" name="action"/>
+		<div id="Results"><?include(_page_settings.html)?></div>
+	</form>
+</div>

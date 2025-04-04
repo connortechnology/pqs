@@ -1,0 +1,150 @@
+<div class="PageTitle">
+<h1><?SiteTitle?></h1>
+<h2>Help Desk</h2>
+</div>
+<? eval (
+	$$variable{User} = $openprint::User;
+) ?>
+<?include(/includes/error_reporting.html)?>
+<form method="post" id="f1" name="f1" action="help_desk.html">
+<fieldset>
+	<div class="leftColumn">
+	<ul>
+	<li> 
+		<label>Company Name</label>
+		<input type="text" name="txtCompanyName" value="<? hecho ( $param{txtCompanyName} ? $param{txtCompanyName} : $$variable{User}->Company()->name() ) ?>" />
+	</li>
+	<li class="required"> 
+		<label>Salutation</label>
+		<? echo ( radio( 'rdbSalutation', [ 'Mr.','Mr.','Mrs.','Mrs.', 'Ms.','Ms.','Miss','Miss' ], $param{rdbSalutation} ? $param{rdbSalutation} : $$variable{User}->salutation() ); ) ?>
+	</li>
+	<li class="required"> 
+		<label>First Name</label>
+		<input type="text" name="txtFirstName" value="<? hecho ( $param{txtFirstName} ? $param{txtFirstName} : $$variable{User}->firstname() ) ?>" />
+	</li>
+	<li class="required"> 
+		<label>Last Name</label>
+		<input type="text" name="txtLastName" value="<? hecho ( $param{txtLastName} ? $param{txtLastName} : $$variable{User}->lastname() ) ?>" />
+	</li>
+	<li> 
+		<label>Title</label>
+		<input type="text" name="txtTitle" value="<? hecho ( $param{txtTitle} ? $param{txtTitle} : $$variable{User}->title() ) ?>" />
+	</li>
+	<li class="required"> 
+		<label>Phone</label>
+		<input type="tel" name="txtPhone" value="<? hecho ( $param{txtPhone} ? $param{txtPhone} : $$variable{User}->phone() ) ?>" />
+	</li>
+	<li class="required"> 
+		<label>E-mail Address</label>
+		<input type="email" name="txtEmail" value="<? hecho ( $param{txtEmail} ? $param{txtEmail} : $$variable{User}->email() ) ?>" />
+	</li>
+	</ul>
+	</div>
+	<div class="rightColumn">
+		<ul>
+	<li class="required"> 
+		<label>Address</label>
+		<input type="text" name="txtAddress1" value="<? hecho ( $param{txtAddress1} ? $param{txtAddress1} : $$variable{User}->Company()->address1(); ) ?>" />
+		<input type="text" name="txtAddress2" value="<? hecho ( $param{txtAddress2} ? $param{txtAddress2} : $$variable{User}->Company()->address2(); ) ?>" />
+	</li>
+	<li class="required"> 
+		<label>City</label>
+		<input type="text" name="txtCity" value="<? hecho ( $param{txtCity} ? $param{txtCity} : $$variable{User}->Company()->city(); ) ?>" />
+	</li>
+	<li class="required"> 
+		<label>State/Province</label>
+			<select name="ddmStateProvince">
+			<option value=""> Select </option>
+			<? echo ( join('',
+				make_drop_down( \@states::states, ( $param{ddmStateProvince} ? $param{ddmStateProvince} : $$variable{User}->Company()->state() ) ),
+				make_drop_down( \@provinces::provinces, ( $param{ddmStateProvince} ? $param{ddmStateProvince} : $$variable{User}->Company()->state() ) ),
+			); ) ?>
+			</select>
+	</li>
+	<li class="required"> 
+		<label>Zip/Postal Code</label>
+			<input type="text" name="txtPostalCode" value="<? hecho ( $param{txtPostalCode} ? $param{txtPostalCode} : $$variable{User}->Company()->postalcode(); ) ?>" />
+	</li>
+	<li class="required"> 
+		<label>Country</label>
+			<select name="ddmCountry">
+			<option value=""> Select </option>
+			<? echo (
+				make_drop_down( \@countries::countries, ( $param{ddmCountry} ? $param{ddmCountry} : $$variable{User}->Company()->country() ) );
+			) ?>
+			</select>
+	</li>
+	</ul>
+	</div>
+	<br class="spacer"/>
+	<ul>
+	<li class="required"> 
+		<label>Question or Comment</label>
+		<textarea name="txtQuestion-Quote" rows="2" onkeyup="textarea_resize(this);"><? echo ( $param{'txtQuestion-Quote'} ) ?></textarea>
+	</li>
+<? echo (
+	my $html;
+	if ( ! $session{user_id} ) {
+		use Authen::Captcha;
+		my $Captcha = new Authen::Captcha(
+			'data_folder'	=>	'/tmp',
+			'output_folder' =>	$config{SkinPath}.'/images/captcha',
+		);
+		if ( my $md5sum = $Captcha->generate_code( $config{RegistrationCaptchaLength} ) ) {
+			$html .= '<li class="required"><label>Enter the code below</label>';
+			$html .= '<input type="text" name="Captcha" /><br/>';
+			$html .= qq{<input type="hidden" name="MD5SUM" value="$md5sum"/>};
+			$html .= qq{<img src="/images/captcha/$md5sum.png"/></li>};
+		} # end if
+	} # end if
+	return $html;
+) ?>
+
+</fieldset>
+	<fieldset>
+		<p class="buttons">
+			<? echo ( button( 'Submit', { onclick=>q`f1.btnSubmit.value='Submit';f1.submit();` } ); ) ?>
+			<? echo ( button( 'Reset', { onclick=>'f1.reset();' } ); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnSubmit"/>
+</form>
+<? if ( $session{user_id} ) ?>
+<? eval (
+$$variable{HELPDESKENTRIES} = [ openprint::Helpdesk->find(
+    #date_filter( '/employee/support/helpdesk_search.html?created_on_end', 'created_on <=' ),
+    #date_filter( '/employee/support/helpdesk_search.html?created_on_start', 'created_on >=' ),
+    #( $session{'/employee/support/helpdesk_search.html?status'} ? ( reviewed=>$session{'/employee/support/helpdesk_search.html?status'} ) : () ),
+    #( $session{'/employee/support/helpdesk_search.html?company_id'} ? ( company_id=>$session{'/employee/support/helpdesk_search.html?company_id'}):() ),
+	company_id	=>	$session{company_id},
+    order   =>  'id DESC',
+) ];
+) ?>
+<? if ( @{$$variable{HELPDESKENTRIES}} ) ?>
+<fieldset><legend>Your Help desk submissions</legend>
+<table class="List sortable">
+    <tr>
+        <th class="User">Submitter</th>
+        <th class="DateTime">Date</th>
+        <th class="Company">Company</th>
+        <th class="reviewed">Reviewed?</th>
+    </tr>
+    <? echo ( my ( $html, $rowclass );
+        foreach my $Helpdesk ( @{$$variable{HELPDESKENTRIES}} ) {
+            $html .= sprintf('
+<tr%1$s>
+    <td class="User"><a href="helpdesk_view.html?helpdesk_id=%2$d">%3$s</a></td>
+    <td class="DateTime"><a href="helpdesk_view.html?helpdesk_id=%2$d">%4$s</a></td>
+    <td class="Company"><a href="helpdesk_view.html?helpdesk_id=%2$d">%5$s</a></td>
+    <td class="reviewed"><a href="helpdesk_view.html?helpdesk_id=%2$d">%6$s</a></td>
+</tr>', $rowclass, $$Helpdesk{id}, $Helpdesk->User()->name(), format_datetime( $Helpdesk->created_on() ), $Helpdesk->Company()->name(),
+                ( $Helpdesk->reviewed() eq 'Y' ? 'Yes' : 'No' ),
+        );
+            $rowclass = $rowclass ? '' : ' class="colRow"';
+        } # end foreach Helpdesk
+        return $html;
+    ) ?>
+</table>
+</fieldset>
+<? endif ( @{$$variable{HELPDESKENTRIES}} ) ?>
+<? endif ( $session{user_id} ) ?>

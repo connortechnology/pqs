@@ -1,0 +1,43 @@
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+		<ul>
+		<li><label>Pages per pad</label>
+			<? echo ( input( type=>'cardinal', name=>'PageQuantity', value=>$$variable{PageQuantity}, oninput=>'calc(this.form.name);' ); ) ?>
+		</li>
+		<li><label>Backing</label>
+      <? echo ( radio( 'Backing', [ map { $_, $_ } ( 'Cardboard','Printed','None' ) ], $$variable{Backing}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<?include(/includes/main/proj/padding.html) ?>
+<? eval ( 
+	@{$$variable{GlueTypes}} = openprint::Material->find(category=>'Padding Glue');
+) ?>
+<? if ( @{$$variable{GlueTypes}} > 1 ) ?>
+		<li>
+			<label>Glue Type</label>
+			<select id="glue_id" name="glue_id" onchange="calc(this.form.name);">
+<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{GlueTypes}} ], $$variable{glue_id} ); ) ?>
+			</select>
+			<input type="checkbox" id="override_glue_id" name="override_glue_id" value="Y" onclick="if(!this.checked)calc(this.form.name);" <? echo ( $$variable{override_glue_id} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="override_glue_id">Override</label>
+<? else ( @{$$variable{GlueTypes}} > 1 ) ?>
+	<input type="hidden" name="glue_id" value="<?glue_id?>" />
+<? endif ( @{$$variable{GlueTypes}} > 1 ) ?>
+			</li>
+			</ul>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+		<?include(/includes/main/proj/quantities_equipment_prices.html) ?>
+			</ul>
+		</fieldset>
+
+		<?include(/includes/main/proj/add_to_project.html) ?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+	</form>
+</div>
+<script src="<?hash_link('/javascripts/service.js')?>"></script>

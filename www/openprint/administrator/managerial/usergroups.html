@@ -1,0 +1,26 @@
+<?include('/includes/error_reporting.html')?>
+<p class="buttons">
+	<? echo ( join( "\n",
+		button( 'New', { href=>'/administrator/managerial/usergroup.html' } ),
+	); ) ?>
+</p>
+<table class="List">
+	<thead><tr><th class="UserGroup">Name</th><th class="duration">Duration</th><th class="Users"># of Users</th></tr></thead>
+	<tbody>
+	<? echo (
+	my $html;
+	foreach my $UG ( openprint::UserGroup->find( order=>'lower(name)' ) ) {
+		$html .= sprintf(q`
+<tr title="%5$s">
+  <td class="UserGroup"><a href="/administrator/managerial/usergroup.html?id=%1$d">%2$s</a></td>
+  <td class="duration">%3$s</td>
+  <td class="Users">%4$d</td>
+</tr>`,
+			$UG->id(), $UG->name(), $UG->duration(), (scalar $UG->Users()), $UG->description(),
+			);
+	} # end foreach UG
+	return $html;
+) ?>
+	</tbody>
+</table>
+

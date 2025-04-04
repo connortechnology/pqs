@@ -1,0 +1,107 @@
+Please note: Costs may be auto-filled from PO.  Please verify before saving.<br/>
+<table class="List">
+	<tr>
+<? if ( $config{RFID} ) ?>
+		<th class="RFID">RFID #</th>
+<? endif ( $config{RFID} ) ?>
+		<th class="Skid">Skid ID</th>
+		<th class="quantity">Quantity</th>
+		<th class="Stock">Stock</th>
+		<th class="Supplier">Supplier</th>
+		<th class="manifest_id">Manifest</th>
+		<th class="po_id">PO</th>
+		<th class="Date">Received</th>
+		<th class="SupplierINV">Supplier INV</th>
+		<th class="Cost">Cost</th>
+	</tr>
+<? echo (
+	require openprint::Manifest_Content_Type;
+	my $html = '';
+	my $rowclass = '';
+	my $total = 0;
+	foreach my $Manifest ( openprint::Manifest->find(
+			date_filter( '/employee/accounting/stock.html?received_on_end', 'received_on <=' ),
+			date_filter( '/employee/accounting/stock.html?received_on_start', 'received_on >=' ),
+			order				=>	'received_on',
+	) ) {
+		foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id(), cost=>undef ) ) {
+			my $Paper = $Type->Paper();
+			my $skid_html = '';
+			my $rfid_html = '';
+			my $qty_html = '';
+			my @Contents = openprint::ManifestContent->find( manifest_id=>$Type->manifest_id(), type_id=>$Type->id());
+			my $quantity = 0;
+			foreach my $MC ( @Contents ) {
+				$skid_html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a><br/>', $MC->skid_id() );
+				$rfid_html .= sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a><br/>', $MC->Skid()->RFIDTag()->id_short() );
+				$qty_html .= Number::Format::format_number($MC->quantity()).$MC->units().'<br/>';
+				$quantity += $MC->quantity();
+			} # end foreach
+			$html .= "<tr$rowclass>";
+			if ( $config{RFID} ) {
+				$html .= '<td class="RFID">'.$rfid_html.'</td>';
+			} # end if
+			$html .= '<td class="Skid">'.$skid_html.'</td>';
+			$html .= '<td class="quantity">'.$qty_html.'</td>';
+
+			my $POC = $Type->PurchaseOrder_Content();
+			$html .= '<td class="Stock">From manifest:';
+			if ( $Paper->id() ) {
+				$html .= sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a><br/>', $$Paper{id}, $Paper->to_string() );
+			} else {
+				my %Papers;
+				foreach my $MC ( @Contents ) {
+					foreach my $SC ( $MC->Skid()->Contents() ) {
+						$Papers{$SC->paper_id()} = $SC->Paper();
+					} # end foreach SC
+				} # end foreach
+				foreach my $paper_id ( keys %Papers ) {
+					my $Paper = $Papers{$paper_id};
+					$html .= sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></br>', $Paper->id(), $Paper->to_string() );
+				} # end foreach
+			} # end if
+			$html .= '<span id="PO_'.$$Type{id}.'">';
+			if ( $$Type{po_content_id} ) {
+				$html .= '<br/>From PO: ' . $POC->item() ? $POC->item() : $POC->description();
+			} elsif ( $POC and $POC->id() ) {
+				$html .= '<br/>Guessed From PO: ' . ($POC->item() ? $POC->item() : $POC->description() );
+				$html .= button('confirm'.$$Type{id}, { onclick=>qq`new Ajax.Request('_stock.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$Type{id}, po_content_id: $$POC{id} } } );`, text=>'Confirm' } );
+			} elsif ( $Type->po_id() ) {
+				$html .= '<br/>Unable to guess from PO.  PO contents: (click to select)<br/>';
+				foreach my $C ( $Type->PurchaseOrder()->Contents() ) {
+					if ( $C->item() ) {
+						$html .= $C->item() . '<br/>';
+					} else { 
+						$html .= $C->description() . '<br/>';
+					} # end if
+				$html .= button('confirm'.$$Type{id}.'-'.$$C{id}, { 'onclick'=>qq`new Ajax.Request('_stock.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$Type{id}, po_content_id: $$C{id} } } );`, 'text'=>'Select' } ) . '<br/><br/>';
+				} # end foreach C
+			} else {
+				$html .= '<br/>No PO assigned.';
+			} # end if
+			$html .= '</span></td>';
+			
+			$html .= sprintf('<td class="Supplier">%1$s</td>', $Type->Manifest()->Vendor()->name() );
+			$html .= sprintf('<td class="manifest_id"><a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a></td>', $Type->manifest_id(), $Type->Manifest()->name() );
+			$html .= '<td class="po_id">';
+			$html .= sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>', $Type->po_id() ) if $Type->po_id();
+			$html .= '</td>';
+			$html .= '<td class="Date">';
+			$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a>', $Type->manifest_id(), format_date($Type->Manifest()->received_on() ) ) if $Type->Manifest()->received_on();
+			$html .= '</td>';
+			$html .= sprintf('<td class="SupplierINV"><input type="text" id="supplier_invoice-%1$d" name="supplier_invoice-%1$d" value="%2$s"></td>', $Type->id(), $Type->supplier_invoice() );
+
+			$html .= join("\n",'<td class="Cost">',
+					input(type=>'float', id=>'cost-'.$$Type{id}, name=>'cost-'.$$Type{id}, value=>$POC? $POC->price():''),
+					ssi::select( [ map { $_, $_ } ( '/cwt','/lb' ) ], '/cwt', { name=>'units-'.$$Type{id}, id=>'units-'.$$Type{id} } ),
+					'</td>',,
+					);
+			$html .= '</tr>';
+			$total += $quantity*$POC->price()/100 if $POC;
+		} # end foreach Type
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Manifest
+	$html .= '<tr class="totals"><td colspan="9">Total</td><td id="total" class="Price">'.openprint::Currency::format($total).'</td></tr>';
+	return $html;
+) ?>
+</table>

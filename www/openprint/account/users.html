@@ -1,0 +1,88 @@
+<div class="PageTitle">
+<h1>Accounts</h1>
+<h2>Users</h2>
+</div>
+<script nonce="<?echo($config{CSP_NONCE})?>">
+var openprint_load_content_ajax = null;
+
+function load_page() {
+	if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
+	openprint_load_content_ajax = new Ajax.Updater( 'Results', '_users.html', { parameters: $('f1').serialize() } );
+} 
+</script>
+<form id="f1" name="f1" method="post" action="users.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<ul>
+		<li>
+			<label>ID</label>
+			<? echo ( input( type=>'cardinal', name=>'user_id', onkeydown=>"if(event.keyCode==13){f1.submit();}" ); ) ?>
+			<? echo ( button( 'Go1',{ onclick=>"f1.action='user_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
+		</li>
+		<li>
+			<label>Email</label>
+			<? echo ( input( type=>'email', name=>'email', onkeydown=>'if(event.keyCode==13){f1.submit();}', oninput=>'load_page();' ); ) ?>
+			<? echo ( button( 'Go2',{ onclick=>"f1.action='user_profiles.html';f1.submit();", text=> 'Go' } ); ) ?>	
+		</li>
+</ul>
+<hr/>
+<ul>
+		<li><label>Company Name</label>
+			<input type="text" oninput="filter_companies($('company_id'), {name:this.value} );" class="filter"/>
+			<select name="company_id" id="company_id" onchange="load_page();">
+				<option value="">All</option>
+				<? echo ( 
+my $companies = openprint::Company->dropdown();
+if ( @{$companies} < 10000 ) {
+return make_drop_down( $companies, $session{$r->uri().'?company_id'} );
+}
+return '<option value="">Use the filter to populate this dropdown</option>';
+) ?>
+			</select>
+		</li>
+<? if ( $openprint::session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Sales Rep</label>
+			<select name="salesrep_id" size="1" onchange="load_page();"> 
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
+			</select>
+			<? echo ( checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ); ) ?>
+		</li>
+<? endif ( $openprint::session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Group</label>
+			<select name="usergroup_id" size="1" onchange="load_page();"> 
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::UserGroup->dropdown(), $session{$r->uri().'?usergroup_id'} ); ) ?>
+			</select>
+		</li>
+		<li><label>Notifications</label>
+			<? echo ( ssi::select( openprint::User_Notification_Type->dropdown(), $session{$r->uri().'?notification_type_id'}, {
+						name=>'notification_type_id',
+						prepend=>['','All'],
+						onchange=>'load_page();',
+						} ); ) ?>
+		</li>
+		<li> 
+			<label>Created Date</label>
+			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+		</li>
+		<li>
+			<label>User Type</label>
+			<? echo ( ssi::select( openprint::User_Type->dropdown(), $session{$r->uri().'?type'}, { name=>'type', prepend=>['','All'], onchange=>'load_page();' } ); ) ?>
+		</li>
+		<li><label>Company Admin?</label><? echo ( radio( 'administrator', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?administrator'}, {onclick=>"load_page();"} ); ) ?></li>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"load_page();"} ); ) ?></li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results">Click Show Results</div>
+	<input type="hidden" name="btnFunction"/>
+</form>

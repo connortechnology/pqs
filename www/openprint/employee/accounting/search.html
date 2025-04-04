@@ -1,0 +1,107 @@
+<script src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script>
+function load_results() {
+	LoadContent('Results','/employee/accounting/_search.html', $j('#f1').serialize() );
+}
+function jump_to( docket ) {
+	new Ajax.Request('/employee/accounting/_jump.json', { parameters: { docket: docket } } );
+}
+</script>
+<div class="Accounting"><div class="Search">
+Choose criteria and click show results. You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br/>
+<br/>
+<form id="f1" name="f1" method="post" action="/employee/accounting/search.html">
+	<fieldset class="filters">
+		<div class="content">
+		<div class="leftColumn">
+			<ul>
+		<li>
+			<label>Docket #</label>
+			<? echo ( my $html;
+				$html .= input( type=>'cardinal', id=>'StartDocket', name=>'StartDocket', value=>$param{StartDocket}, onkeypress=>q`$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){jump_to(this.value);}`);
+				$html .= ' - ';
+				$html .= input( type=>'cardinal', id=>'EndDocket', name=>'EndDocket', value=>$param{EndDocket}, onkeypress=>q`$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){load_results();}`);
+				return $html;
+			) ?>
+		</li>
+		<li>
+			<label>Order ID</label>
+			<? echo ( join("\n",
+						input( type=>'cardinal', id=>'order_id', name=>'order_id', value=>$param{order_id}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);`, onkeydown=>q`if(event.keyCode == 13){load_results();}` ),
+			); ) ?>
+		</li>
+		<li>
+			<label>Invoice #</label>
+			<input type="text" id="invoice_num" name="invoice_num" value="<? echo ( $param{invoice_num} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('project_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){load_results();}" />
+		</li>
+<!--
+		<p>
+			<label>Invoice ID</label>
+			<input type="text" id="invoice_id" name="invoice_id" value="<? echo ( $param{'invoice_id'} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('project_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
+			<? echo ( button( 'InvoiceGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
+		</p>
+-->
+		<li>
+			<label>Project ID</label>
+			<? echo ( join("\n",
+			input( type=>'cardinal', id=>'project_id', name=>'project_id', value=>$param{'project_id'}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('invoice_id').value='';return input_handler(this,event);`, onkeydown=>q`if(event.keyCode==13){load_results();};` ),
+		); ) ?>
+		</li>
+	</ul>
+</div>
+	<div class="rightColumn">
+		<ul>
+		<li>
+			<label>Company</label>
+			<input class="filter" type="text" oninput="filter_companies('ddmCustomer', { name: this.value,selected_id: get_ddm_value($('ddmCustomer')) } );" />
+			<select id="ddmCustomer" name="ddmCustomer" size="1">
+				<option value="">All Customers</option>
+				<? echo ( make_drop_down( openprint::Company->dropdown('last_ordered_on is null'=>0), $session{'/employee/accounting/search.html?ddmCustomer'} ); ) ?>
+			</select>
+		</li>
+		<li> 
+			<label>Status</label>
+			<select name="ddmStatus" multiple="multiple">
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::Order_Status->dropdown(), [ split(',',$session{'/employee/accounting/search.html?ddmStatus'}) ] );) ?>
+			</select>
+		</li>
+		<li> 
+			<label>Sales Reps</label>
+			<select name="ddmEmployee" size="1">
+				<option value="">All</option>
+				<? echo (
+				    make_drop_down( 
+						openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' ),
+						$session{'/employee/accounting/search.html?ddmEmployee'} ); 
+					) ?>
+			</select>
+		</li>
+		<li> 
+			<label>Order Date</label>
+			<? echo ( date_select_session( '/employee/accounting/search.html', 'ordered_on_start', { on_change => 'load_results', with_today=>1, with_clear=>1 } ); ) ?>
+			to
+			<? echo ( date_select_session( '/employee/accounting/search.html', 'ordered_on_end', { onchange => 'load_results', with_today=>1, with_clear=>1, } ); ) ?>
+		</li>
+		<li> 
+			<label>Total Range</label>
+			<? echo ( input( type=>'float', name=>'dblTotal1', value=>$session{'/employee/accounting/search.html?dblTotal1'} ); ) ?>
+			to 
+			<? echo ( input( type=>'float', name=>'dblTotal2', value=>$session{'/employee/accounting/search.html?dblTotal2'} ); ) ?>
+		</li>
+		</ul>
+	</div>
+	</div>
+		<p class="buttons">
+		<? echo ( join("\n",
+					button( 'ShowResults', { on_click=> 'load_results', text=>'Show Results' } ),
+					#ssi::button( 'DownloadCSV', { onclick=>"f1.action='/employee/accounting/search.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+					button( 'Reset', { onclick=>'f1.reset();' } ),
+					); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<div id="Results">Select criteria and click Show Results.</div>
+</div></div>
+<script>document.forms['f1'].StartDocket.focus();</script>

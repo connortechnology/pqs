@@ -1,0 +1,22 @@
+<ul>
+	<? echo ( 
+    require openprint::User_Relationship;
+		my $html;
+		my @to_ids = map { $_->user_id1() == $session{'user_id'} ? $_->user_id2() : $_->user_id1() } openprint::User_Relationship->find( 
+			'custom'=>[ '(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ],
+			'user_id2 not in' => $param{'to_id'},
+			'user_id1 not in' => $param{'to_id'},
+			'distinct' => 1,
+			);
+		my @To = openprint::User->find( 'name ilike'=>'%'.$param{'new_to'}.'%', 'id in'=>[ sets::union( @to_ids ) ], 'order'=>'lower(firstname),lower(lastname)' );
+		push @To, openprint::User->find( 'name ilike'=>'%'.$param{'new_to'}.'%', 'order'=>'lower(firstname),lower(lastname)', 'limit'=>10 );
+		foreach my $User ( @To ) {
+			$html .= sprintf(q`<li id="%d_%d">%s</li>`, $User->id(), $User->company_id(), $User->name() );
+		} # end foreach Location
+
+		foreach my $Company ( openprint::Company->find('name ilike'=>'%'.$param{'new_to'}, 'order'=>'lower(name)' ) ) {
+			$html .= sprintf(q`<li id="_%d">%s</li>`, $Company->id(), $Company->name() );
+		} # end foreach Company
+		return $html;
+	) ?>
+</ul>

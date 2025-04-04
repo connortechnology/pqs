@@ -1,0 +1,51 @@
+input[type="text"],input[type="number"], textarea {
+	width: 100%;
+}
+
+table .car_id, table .mar_id {
+	width: 50px;
+	text-align: left;
+}
+table .Status {
+	width: 75px;
+	text-align: left;
+}
+table .Description {
+	text-align: left;
+}
+	#CAR {
+	}
+	#MAR table,
+	#PAR table,
+	#CAR table {
+		background-color: white;
+		border: 1px solid black;
+		table-layout: fixed;
+	}
+	#PAR table td,
+	#MAR table td,
+	#CAR table td {
+		border: 1px solid black;
+		width: 10%;
+		vertical-align: top;
+	}
+	table.View tr td {
+	padding: 5px;
+	}
+	table tr td textarea {
+		width: 99%;
+	}
+	table tr td select {
+		padding: 1px;
+	}
+	table tr td select option {
+		padding: 1px;
+	}
+@media print {
+	form#part1form, form#part2form, form#part3form, form#part4form {
+		display: none;
+	}
+}
+#company_id {
+	width: 100%;
+}

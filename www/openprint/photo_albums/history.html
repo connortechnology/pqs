@@ -1,0 +1,77 @@
+<div class="PageTitle">
+<h1>Photo_Albums</h1>
+<h2>History</h2>
+</div>
+<script type="text/javascript">
+<!--
+	function delete_confirm(form) {
+		var number_of_deleted_photo_albumss = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_photo_albumss += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_photo_albumss == 0 ) {
+			alert("To Delete Photo_Albumss, click the checkbox beside the photo_albums.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_photo_albumss + " photo_albumss from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_albums( form ) {
+		$('Photo_AlbumsList').innerHTML = 'Please wait...';
+		new Ajax.Updater('Photo_AlbumsList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+-->
+</script>	 
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<div class="Photo_Albums"><div class="History">
+	<form id="f1" name="f1" method="post" action="/photo_albums/history.html">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+				<ul>
+		<? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+<!--
+					<li>
+						<label>Company</label>
+						<select name="company_id" id="company_id" onchange="load_albums(this.form);">
+							<option value="">All</option>
+							<? echo ( openprint::Company::get_dropdown( $session{'/photo_albums/history.html?company_id'} ); ) ?>
+						</select>
+					</li>
+-->
+					<li>
+						<label>User</label>
+						<select name="user_id" id="user_id" onchange="load_albums(this.form);">
+							<option value="">All</option>
+							<? echo ( ssi::make_drop_down( openprint::User->dropdown('company_id'=>$session{'/photo_albums/history.html?company_id'}), $session{'/photo_albums/history.html?user_id'} ); ) ?>
+						</select>
+					</li>
+					<li>
+						<label>Deleted</label>
+						<? echo ( ssi::radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/photo_albums/history.html?deleted'}, { 'onclick'=>'load_albums(this.form);'} ); ) ?>
+					</li>
+		<? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+					<li>
+						<label>Created</label>
+						<? echo ( ssi::date_select_session( '/photo_albums/history.html', 'created_on_start', {onchange=>q`load_albums($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+							to 
+						<? echo ( ssi::date_select_session( '/photo_albums/history.html', 'created_on_end', {onchange=>q`load_albums($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+					</li>
+				</ul>
+			<br class="spacer"/>
+			<p class="buttons">
+				<? echo ( join('',
+					ssi::button( 'ShowResults', { 'onclick'=>'load_albums(f1);', 'text'=>'Show Results' } ),
+					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+					ssi::button( 'New', { 'href'=> '/photo_albums/edit.html', 'text'=> 'New Photo_Album' } ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<div id="Photo_AlbumsList"><? echo ( include('_history.html'); ) ?></div>
+	</form>
+	</div>
+</div>

@@ -1,0 +1,37 @@
+<? echo (
+	my $html;
+  my $Service = $$variable{Service};
+	my @Equipment = openprint::Equipment->find( order=>'lower(strid)' );
+	my @equipment_dropdown = map { $_->id(), $_->strid() . ': ' . $_->name() } @Equipment;
+
+	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+
+	my $prices_per_equipment = slurp_content( '/administrator/services/_prices_per_equipment.html' );
+
+	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+		$$variable{Pricelist} = $Pricelist;
+		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
+		my @Prices = openprint::ServicePrice->find( service_id=>$Service->id(), pricelist_id=>$Pricelist->id() );
+
+		my @equipment_ids = $session{$r->uri().'?equipment_id'} ? ($session{$r->uri().'?equipment_id'}) : sort( sets::union( map{ $_->equipment_id() } @Prices ) );
+		push @equipment_ids, undef if ! @equipment_ids;
+		foreach my $Equipment ( map{new openprint::Equipment($_)} @equipment_ids ) {
+			next if $Equipment->deleted();
+			$$variable{Equipment} = $Equipment;
+			$html .= variable_substitution( \$prices_per_equipment );
+		} # end foreach Equipment
+
+		$html .= '</div>';
+		if ( ! $param{equipment_id} ) {
+			$html .= '<p><label>New Price</label>';
+			$html .= ssi::select( \@equipment_dropdown, undef, { name=>"equipment_id-$$Pricelist{id}", id=>"equipment_id-$$Pricelist{id}", prepend=>['','All'] } );
+			$html .= button( 'a'.$$Pricelist{id}.'new', {
+        on_click_this=>'add_new_price',
+        data_pricelist_id=>$$Pricelist{id}, data_service_id=>$$Service{id},
+        text=>'+', title=>'Add New Price' } );
+			$html .= '</p>';
+		}
+		$html .= '</fieldset><!--Pricelist-->';
+	} # end foreach Pricelist
+	return $html;
+) ?>

@@ -1,0 +1,7 @@
+<p>
+	<label>Service Complete</label>
+	<input type="radio" id="rdbCompleteY" name="rdbComplete" value="Yes" <? echo ( 'checked' if $$variable{'rdbComplete'} eq 'Yes' ) ?> />
+	<label class="radio" for="rdbCompleteY">Yes</label>
+	<input type="radio" id="rdbCompleteN" name="rdbComplete" value="No" <? echo ( 'checked' if $$variable{'rdbComplete'} ne 'Yes' ) ?> />
+	<label class="radio" for="rdbCompleteN">No</label>
+</p>

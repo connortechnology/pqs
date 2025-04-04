@@ -1,0 +1,45 @@
+<div class="Login">
+	<fieldset><legend>Please login</legend>
+		<div class="content">
+			<div class="instruction">Please enter your e-mail address and password.</div>
+        <ul>
+				<li class="form-group">
+					<label for="email" class="col-form-label">E-mail</label>
+					<input type="email" id="email" name="email" value="<? echo ( $param{email} ) ?>" autocomplete="username"/><br/>
+					<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt=""/> Please enter your email address.</span>
+				</li>
+				<li class="form-group">
+					<label for="password" class="col-form-label">Password</label>
+					<input type="password" id="password" name="password" autocomplete="current-password"/>
+          <span id="showpassword">Show</span>
+          <br/>
+					<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt=""/> Please enter your password.</span>
+				</li>
+				<li class="form-group">
+					<label class="col-form-label">Remember me</label>
+					<? echo ( radio( 'rdbRememberMe', ['Y','Yes','N','No'], ( $param{rdbRememberMe} || $config{rdbRememberMe} || 'N' ), { inline=>1 } ); ) ?>
+				</li>
+        </ul>
+		</div>
+		<p class="buttons">
+			<? echo ( join("\n",
+						button( 'MainLogin', { onclick=>q`checkLoginData(LoginForm.email,LoginForm.password);`, text=>'Login' } ),
+						button( 'MainForgot', { onclick=>q`checkForgotPasswordData(LoginForm.email);`, text=>'Forgotten Password' } ),
+						); ) ?>
+		</p>
+	</fieldset>
+</div>
+<script nonce="<?echo($config{CSP_NONCE})?>">
+  window.addEventListener('DOMContentLoaded', function() {
+    document.LoginForm.email.focus();
+    $j('#email').on('keydown', function(e) {
+      if(e.keyCode == 13){checkLoginData( e.target, LoginForm.password );}
+    });
+    $j('#password').on('keydown', function(e) {
+      if (e.keyCode == 13){checkLoginData(LoginForm.email, e.target);}
+    });
+    $j('#showpassword').on('click', function(e) {
+      $j('#password').attr('type', $j('#password').attr('type') == 'password' ? 'text' : 'password');
+    });
+  });
+</script>

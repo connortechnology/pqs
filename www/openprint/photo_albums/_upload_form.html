@@ -1,0 +1,54 @@
+<div id="UploadFiles">
+	<? eval ( @$variable{'serial'} = sql::execute( $log, $dbh, q{SELECT nextval('Upload_id_seq')} ); ) ?>
+	<form name="upload" method="post" action="upload.htm?serial=<?serial?>" enctype="multipart/form-data" target="UploadFrame">
+		<fieldset>
+			<legend>Choose Files</legend>
+			<hr class="legendUnderline" />
+			<div id="stepThreeInstructions">
+				<div id="instructions">
+					<p>Click on the browse button to select a file that you wish to upload.	Then, if you wish, you may enter in a description for the file.	You may upload up to five files at a time.	When the upload is finished, you will be able to upload another five files.</p>
+				</div>
+			 </div>
+			<br class="spacer"/>
+			<table id="fileSelection">
+				<tr>
+					<th width="20">&nbsp;</th>
+					<th width="200" nowrap="nowrap" align="left">Select file(s) to upload</th>
+					<th>Description (optional)</th>
+				</tr>
+				<tr>
+					<td>1.</td>
+					<td><input type="file" name="fileUpload1" id="fileUpload1" /></td>
+					<td><input type="text" name="txtDescription1" style="width: 98%;" /></td>
+				</tr>
+				<tr>
+					<td>2.</td>
+					<td><input type="file" name="fileUpload2" id="fileUpload2" /></td>
+					<td><input type="text" name="txtDescription2" style="width: 98%;" /></td>
+				</tr>
+				<tr>
+					<td>3.</td>
+					<td><input type="file" name="fileUpload3" id="fileUpload3" /></td>
+					<td><input type="text" name="txtDescription3" style="width: 98%;" /></td>
+				</tr>
+				<tr>
+					<td>4.</td>
+					<td><input type="file" name="fileUpload4" id="fileUpload4" /></td>
+					<td><input type="text" name="txtDescription4" style="width: 98%;" /></td>
+				</tr>
+				<tr>
+					<td>5.</td>
+					<td><input type="file" name="fileUpload5" id="fileUpload5" /></td>
+					<td><input type="text" name="txtDescription5" style="width: 98%;" /></td>
+				</tr>
+			</table>
+			<span style="float: right;">
+				<? echo ( 
+					button( 'Upload', { onclick=>"if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});upload.submit();}", text=>'Upload Files' } );
+				) ?>					
+			</span>
+			<br class="spacer"/>
+		</fieldset>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+</div><!-- upload files -->

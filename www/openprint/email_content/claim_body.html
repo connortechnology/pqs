@@ -1,0 +1,32 @@
+
+Claim <? echo ( $$variable{'Claim'}->id() ) ?> from <? echo ( $$variable{'Claim'}->Company()->name() ) ?> is attached.<br/>
+<? if ( $$variable{'Claim'}->Assets() ) ?>
+This claim has photos attached to it.  Click on the name or thumbnail to view a full sized image.
+<table class="List">
+    <thead>
+        <tr>
+            <th class="Name">Name</th>
+            <th width="75">Thumbnail</th>
+        </tr>
+    </thead>
+    <tbody>
+<? echo ( 
+	my $html;
+	my $rowclass;
+	foreach my $Claim_Asset ( $$variable{'Claim'}->Assets() ) {
+		my $Asset = $Claim_Asset->Asset();
+		$html .= sprintf('
+			<tr%1$s>
+				<td class="Name"><a href="%2$s" target="_blank">%3$s</a></td>
+				<td class="Thumbnail"><a href="%2$s" target="_blank"><img src="%4$s" alt=""/></a></td>
+			</tr>
+			', $rowclass, $Asset->url(), $Asset->name(), $Asset->thumbnail_url(),
+			);
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Asset
+	return $html;
+) ?>
+	</body>
+</table>
+<br/>
+<? endif ( $$variable{'Claim'}->Assets() ) ?>

@@ -1,0 +1,128 @@
+<div class="PageTitle">
+<h1>ACCOUNT</h1>
+<h2>Company Profile</h2>
+</div>
+<?include('/includes/error_reporting.html')?>
+<? if ( $session{user_id} ) ?>
+	<div class="CoupleProfile">
+		<p class="buttons">
+			<? echo ( 
+				my $html;
+				if ( $$variable{Company}->can_edit() ) {
+					$html .= button( 'Delete', { href=>'/account/company_profile.html?btnFunction=Delete&amp;ddmCompany='.$$variable{Company}->id() } );
+					$html .= button( 'Edit', { href=>'/account/company_profile.html?ddmCompany='.$$variable{Company}->id() } );
+				} # end if
+				if ( $$variable{Company}->id() and ( $session{company_id} != $$variable{Company}->id() ) ) {
+					$html .= button( 'Message', { href=>'/messaging/edit.html?to_id='.$$variable{User}->id() } );
+				} # end if
+				return $html;
+			) ?>
+		</p>
+
+		<? echo ( 
+			my $html = '';
+			foreach my $User ( openprint::User->find( company_id=>$$variable{Company}->id() ) ) {
+				$variable{User} = $User;
+				$html .= '<div class="UserProfile">
+
+				<div class="leftColumn">
+				<div id="ProfilePictures">';
+				my $Asset = $User->Asset();
+				if ( $Asset->id() ) {
+					$html = sprintf('<img src="%s" alt="%s"/>', $Asset->url(), $Asset->description() );
+				} # end if
+				if ( ! $User->asset_id() ) {
+					$html .= 'No profile picture set.';
+				} # end if
+				$html .= '</div><!--ProfilePicture-->
+				<div id="Albums">
+					<fieldset><legend>Photo Albums</legend>';
+				my @Albums = openprint::Photo_Album->find( user_id => $User->id(), order=>'id' );
+				if ( ! @Albums ) {
+					$html .= 'no albums';
+				} else {
+					foreach my $Album ( @Albums ) {
+						
+						my $Photo = $Album->Thumbnail();
+						if ( $Photo->asset_id() ) {
+							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Photo->thumbnail_url(), $Photo->name() );
+					
+						} # end if Thumbnail
+					} # end foreach Album
+				} # end if
+				$html .= '
+					</fieldset>
+					<fieldset><legend>Video Albums</legend>
+					';
+				my @Albums = openprint::Video_Album->find( { user_id => $User->id(), order=>'id' } );
+				if ( ! @Albums ) {
+					$html .= 'no albums';
+				} else {
+					foreach my $Album ( @Albums ) {
+						
+						my $Video = $Album->Thumbnail();
+						if ( $Video->asset_id() ) {
+							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Video->thumbnail_url(), $Video->name() );
+					
+						} # end if Thumbnail
+					} # end foreach Album
+				} # end if
+				$html .= '
+					</fieldset>
+				</div><!--Albums-->
+				<div id="UserInformation">
+					<fieldset><legend>User Information</legend>
+						<div class="content">
+							<ul>
+								<li><label>Name</label>'. $User->name().'</li>
+							</ul>
+						</div>
+					</fieldset>
+				</div>
+				';
+				$html .= include( '/account/_statistics.html' );
+				$html .= include( '/account/_user_profile_view.html' );
+				$html .= '</div></div><!--UserProfile-->';
+			} # end foreach User
+			$html .= '
+		<div class="rightColumn">
+			<div class="Relationships">
+				<fieldset><legend>Relationships</legend>
+					<div id="Relationships">';
+			$html .= include('/account/_relationships.html');
+			$html .= '</div>
+				</fieldset>
+			</div>
+			<div id="Events">
+				<fieldset><legend>Events</legend>
+					<div class="content">
+						<ul>
+';
+			my @Events = openprint::Event->find( created_by=>[ map { $_->id() } openprint::User->find( company_id=>$variable{Company}->id())], 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time ) );
+			if ( ! @Events ) {
+				$html .= '<li>No upcoming events</li>';
+			} else {
+				foreach my $Event ( @Events ) {
+					$html .= sprintf(q`<li><a class="thumbnail" href="/event/view.html?event_id=%1$d"><img src="%4$s" alt="%5$s"/></a><a href="/event/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
+						$Event->id(), $Event->name(), 
+						Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $Event->starting_on() ) ),
+						$Event->Asset()->sized_url('thumbnail'),
+						( $Event->Asset()->caption() ? $Event->Asset()->caption() : $Event->name() ),
+					);
+				} # end foreach Event
+			} # end if
+			$html .='
+						</ul>
+					</div>
+				</fieldset>
+			</div>
+		</div>
+		<div id="Wall">'.include('/account/_wall.html').'</div>
+	</div><!--UserProfile-->
+';
+	return $html;
+) ?>
+</div><!--CoupleProfile-->
+<? else ( $session{user_id} ) ?>
+You must be logged in to view profiles.<br/>
+<? endif ( $session{user_id} ) ?>

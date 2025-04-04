@@ -1,0 +1,75 @@
+<?eval( $$variable{can_edit} = ( ($session{user_type} eq 'A') or ( $session{user_id} == $$variable{Company}->salesrep_id() ) or $openprint::User->Groups('Accounting') ) ? 1 : 0; ) ?>
+<div class="SalesInformation">
+	<fieldset><legend>Sales Information</legend>
+		<ul>
+			<li><label>Price List</label><? echo ( $$variable{Company}->Pricelist()->name() ) ?></li>
+      <li class="discount" title="For a markup, use a negative value"><label>Pricing Discount</label>
+<? echo (
+	if ( $$variable{can_edit} ) {
+		return input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() );
+	} else {
+		return $$variable{Company}->discount();
+	}
+) ?>%</li>
+			<li class="csr_commission" title="Set the CSR commission percentage.  This will override the commission set in the CSR's user account. 0 means a 0% commission, empty means use whatever is set in the CSR's account."><label>CSR Commission</label>
+<? echo (
+	if ( $$variable{can_edit} ) {
+		return input( type=>'float', name=>'csr_commission', value=>$$variable{Company}->csr_commission() );
+	} else {
+		return $$variable{Company}->csr_commission();
+	}
+) ?>%</li>
+      <li class="credit_card_fee"><label>Credit Card Fee</label>
+<? echo (
+	if ( $$variable{can_edit} ) {
+		return input( type=>'float', name=>'credit_card_fee', value=>$$variable{Company}->credit_card_fee() );
+	} else {
+		return $$variable{Company}->credit_card_fee();
+	}
+) ?>%</li>
+      <li><label>Sales Rep</label><? echo ( 
+				if ( $session{user_type} eq 'A' or ( $session{user_id} == $$variable{Company}->salesrep_id() ) ) {
+					my @csr_ids = openprint::User->find( 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)', company_id=>$config{owner_id} );
+					if ( $$variable{Company}->salesrep_id(), and ! sets::isin( $$variable{Company}->salesrep_id(), [ map { $_->id() } @csr_ids ] ) ) {
+						push @csr_ids, new openprint::User( $$variable{Company}->salesrep_id() );
+					} # end if
+
+					return ssi::select( [ map { $_->id(), $_->name() } @csr_ids ], $$variable{Company}->salesrep_id(), { name=>'salesrep_id', prepend=>['','Unassigned'] } );
+				} else {
+					return $$variable{Company}->salesrep_id() ? $$variable{Company}->CSR()->name() : 'none assigned'
+				}
+			) ?>
+			</li>
+      <? if ( $$variable{Company}->id() ) ?>
+      <? eval (
+          @{$$variable{Orders}} = openprint::Order->find(company_id=>$$variable{Company}->id(),order=>'id DESC');
+      ) ?>
+      <li class="Orders"><label># of Orders</label>
+        <a href="/main/order/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( @{$$variable{Orders}} ) ?></a>
+        <? if ( @{$$variable{Orders}} ) ?>
+        Last on:
+        <a href="/main/order/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( format_date( $$variable{Orders}[0]->created_on() ); ) ?></a>
+        <? endif ( @{$$variable{Orders}} ) ?>
+      </li>
+      <? eval ( @{$$variable{Projects}} = openprint::Project->find(company_id=>$$variable{Company}->id(),order=>'id DESC'); ) ?>
+      <li class="Projects"><label># of Projects</label>
+        <a href="/main/project/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( @{$$variable{Projects}} ) ?></a>
+        <? if ( @{$$variable{Projects}} ) ?>
+        Last on:
+        <a href="/main/project/history.html?company_id=<?echo($$variable{Company}->id())?>"><? echo ( format_date( $$variable{Projects}[0]->created_on() ); ) ?></a>
+        <? endif ( @{$$variable{Projects}} ) ?>
+      </li>
+      <li>
+        <label>Accounting Contacts</label>
+        <span id="AccountingContacts"><? echo (
+            my @accounting_contacts = sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{Company}->id() );
+            my @Users = openprint::User->find( id=>\@accounting_contacts, order=>'lower(firstname),lower(lastname)' ) if @accounting_contacts;
+            return join('<br/>', map { $_->name() } @Users );
+            ) ?>
+        </span>
+      </li>
+      <? endif ( $$variable{Company}->id() ) ?>
+			<li><label>Notes</label><textarea name="notes" rows="<?echo(count_lines($$variable{Company}->notes());)?>"><?echo($$variable{Company}->notes())?></textarea></li>
+		</ul>
+	</fieldset>
+</div>

@@ -1,0 +1,111 @@
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript">
+function load_results( ) {
+	LoadContent( 'Results', '_manifests.html', $('f1').serialize() );
+	return false;
+} // end function load_results
+</script>
+<?include(/includes/error_reporting.html)?>
+<div class="Manifests">
+	Please select a Manifest to view/edit.<br>
+	<form id="f1" name="f1" method="post" action="manifests.html" enctype="multipart/form-data" onsubmit="load_results();">
+		<fieldset class="filters"><legend>Choose Manifest</legend>
+			<div class="leftColumn">
+			<ul>
+				<li>
+					<label for="manifest_name">Manifest ID</label>
+					<input type="text" id="manifest_name" name="manifest_name" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){load_results();}" value="<? echo ( $param{'manifest_name'} ) ?>" />
+				</li>
+				<li>
+					<label for="po_id">Purchase Order</label>
+				<? echo ( 
+					input( type=>'cardinal', id=>'po_id', name=>'po_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
+					) ?>
+				</li>
+				<li>
+					<label for="docket">Docket</label>
+				<? echo (
+					input( type=>'cardinal', id=>'docket', name=>'docket', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
+					) ?>
+				</li>
+			</ul>
+			</div>
+			<div class="rightColumn">
+				<ul>
+					<li><label>Skid ID</label>
+				<? echo (
+					input( type=>'cardinal', id=>'skid_id', name=>'skid_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
+					) ?>
+				</li>
+					<li><label>RFID ID</label>
+				<? echo (
+					input( type=>'cardinal', id=>'rfidtag_id', name=>'rfidtag_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
+					) ?>
+				</li>
+					<li><label>Manufacturers ID</label>
+				<? echo (
+					input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
+					) ?>
+				</li>
+					
+				</ul>
+			</div>
+		</fieldset>
+		<fieldset class="filters"><legend>Search Criteria</legend>
+			<ul>
+			<li><label>Vendor</label>
+				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+				<select name="supplier_id" onchange="load_results();">
+					<option value="">All</option>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/inventory/manifests.html?supplier_id'} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Entered On</label>
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to 
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Updated On</label>
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to 
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Received On</label>
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				to 
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</li>
+			<li>
+				<label>Delivery</label>
+				<? echo ( radio( 'delivery', ['under','Under','over','Over','exact','Exact','','All'], $session{'/employee/inventory/manifests.html?delivery'} ); ) ?>
+			</li>
+			<li>
+				<label>Deleted</label>
+				<? echo ( radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/manifests.html?deleted'} ); ) ?>
+			</li>
+			<li>
+				<label>Has Errors</label>
+				<? echo ( radio( 'has_errors', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/manifests.html?has_errors'}, { default=>'1,0' } ); ) ?>
+			</li>
+			<li><label>Type</label>
+				<? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{'/employee/inventory/manifests.html?type'} ) ] ); ) ?>
+			</li>
+			<li><label>PO Confirmed</label>
+				<? echo ( radio( 'po_confirmed', ['1','Yes','0','No','','All'], $session{'/employee/inventory/manifests.html?po_confirmed'}, { default=>'' } ); ) ?>
+			</li>
+			</ul>
+			<p class="buttons">
+				<? echo ( join("\n",
+					button( 'ShowResults', { onclick=>q`load_results();`, text=>'Show Results' } ),
+					button( 'Add', { href=>'manifest.html', text=>'Add New Manifest' } ),
+					button( 'Import', { onclick=>q`popup_window( '/employee/inventory/_manifest_import_popup.html', '', {width:475} );` } ),
+					); ) ?>
+			</p>
+		</fieldset>
+	</form>
+	<script type="text/javascript">document.f1.manifest_name.focus();</script>
+	<div id="Results"><? include('_manifests.html' ) ?></div>
+</div>

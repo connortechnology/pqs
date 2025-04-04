@@ -1,0 +1,27 @@
+<? echo (
+	my $html;
+	use Authen::Captcha ();
+
+	if ( ! -d '/tmp/'.$config{db_name} ) {
+		mkdir '/tmp/'.$config{db_name};
+	}
+	my $Captcha = new Authen::Captcha(
+		data_folder   =>  '/tmp/'.$config{db_name},
+		output_folder =>  $config{SkinPath}.'/images/captcha',
+	);
+	my $md5sum = $Captcha->generate_code( $config{RegistrationCaptchaLength} );
+	if ( -f $config{SkinPath}.'/images/captcha/'.$md5sum.'.png' ) {
+		$html .= '
+	<ul><li class="captcha required">
+		<label>Enter the <a target="_blank" href="http://en.wikipedia.org/wiki/CAPTCHA">Captcha</a></label>
+		<input type="text" name="Captcha" required />
+';
+		$html .= qq{<input type="hidden" name="MD5SUM" value="$md5sum"/>};
+		$html .= qq{<img src="/images/captcha/$md5sum.png" alt=""/>};
+		$html .= button( 'ReloadCaptcha', { onclick=>q`new Ajax.Updater( 'Captcha', '/includes/_captcha.html' );`, text=>'Reload' } );
+		$html .= '</li></ul>';
+	} else{
+		$log->error('Unable to create captcha image.');
+	} # end if
+	return $html;
+) ?>

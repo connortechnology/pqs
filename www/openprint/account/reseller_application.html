@@ -1,0 +1,39 @@
+<div class="PageTitle">
+<h1>ACCOUNT</h1>
+<h2>Reseller Application</h2>
+</div>
+<script type="text/javascript">
+	function openPDF ( url ) {
+		window.open( url, 'largeimage', 'width=640,height=480' );
+	}
+</script>
+<a name="top"></a>
+<br/>
+<? if ( $session{'company_id'} == 0 ) ?>
+You must register for a login, and be logged in before you can apply to become a reseller.<br>
+<? echo ( include('/includes/customer_login.html'); ) ?>
+<? else ( $session{'company_id'} == 0 ) ?>
+	<? if ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
+		Thank you. Your information has been received.<br/>
+		Your reseller application will be reviewed as soon as possible.	You will be notified of changes to the status of your account by email.<br/>
+	<? else ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
+		<? echo ( include('/includes/error_reporting.html'); ) ?>
+		
+		<p class="required"> denotes required information.</p>
+		<form name="f1" method="post" action="<?SecureSiteURL?>/account/reseller_application.html">
+			<div class="ResellerApplication">
+				<?include('/account/_business_information.html')?>
+				<?include('/account/_trade_references.html')?>
+			</div><!-- Application -->
+			<fieldset>
+				<p class="buttons">
+					<? echo ( join("\n",
+								button( 'Submit1', { onclick=>'f1.submit();', text=>'Submit' } ),
+								button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
+							); ) ?>
+				</p>
+			</fieldset>
+			<input type="hidden" name="btnFunction" value="Apply"/>
+		</form>
+	<? endif ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
+<? endif ( $session{'company_id'} == 0 ) ?>

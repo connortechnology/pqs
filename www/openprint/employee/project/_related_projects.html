@@ -1,0 +1,68 @@
+<?echo(
+my $html;
+my $Project = new openprint::Project( $param{project_id} );
+
+sub get_previous_ids {
+	return () if ! @_;
+	my @Logs = openprint::Project_Log->find( project_id=>\@_, 'description like'=>'Reused from project%');
+	my @project_ids = map { $$_{description} =~ /^Reused from project (\d+)/ } @Logs;
+	return ( @_, get_previous_ids( @project_ids ) );
+}
+		
+my @previous_project_ids = get_previous_ids($param{project_id});
+
+# Shift off the initial project
+shift @previous_project_ids;
+
+$log->debug("Have previous project ids: @previous_project_ids");
+	my @Projects = openprint::Project->find(id=>\@previous_project_ids, 'docket is null'=>0) if @previous_project_ids;
+
+	if ( @Projects ) {
+		$html .= '<h2>Previous Orders</h2>
+<table class="List">
+<tr><th class="Docket">Docket</th><th class="Date">Ordered</th><th class="description">Description</th></tr>
+';
+	$html .= join("\n", map {
+			sprintf('<tr><td class="Docket">%s</td><td class="Date">%s</td><td class="description">%s</td></tr>', 
+					$_->production_link_to($_->docket()),
+					$_->production_link_to(format_date($_->Order()->created_on())),
+					$_->production_link_to($_->reference() . '<br/>'. $_->summary()),
+					) } reverse @Projects );
+$html .= '</table>';
+	} else {
+		$html .= 'There are no previous orders.<br/>';
+	}
+
+sub get_next_ids {
+  return () if ! @_;
+  my @Logs = openprint::Project_Log->find( project_id=>\@_, 'description like'=>'Reused to project%');
+  my @project_ids = map { $$_{description} =~ /^Reused to project (\d+)/ } @Logs;
+  return ( @_, get_next_ids( @project_ids ) );
+}
+
+my @next_project_ids = get_next_ids($param{project_id});
+
+# Shift off the initial project
+shift @next_project_ids;
+
+$log->debug("Have next project ids: @next_project_ids");
+  my @Projects = openprint::Project->find(id=>\@next_project_ids, 'docket is null'=>0) if @next_project_ids;
+
+  if ( @Projects ) {
+    $html .= '<h2>Newer Orders</h2>
+<table class="List">
+<tr><th>Docket</th><th>Description</th></tr>
+';
+  $html .= join("\n", map {
+      sprintf('<tr><td class="Docket">%s</td><td class="description">%s</td></tr>',
+          $_->link_to($_->docket()),
+          $_->link_to($_->summary()),
+          ) } @Projects );
+$html .= '</table>';
+  } else {
+    $html .= 'There are no newer orders.<br/>';
+  }
+
+
+return $html;
+) ?>

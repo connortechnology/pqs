@@ -1,0 +1,20 @@
+<? echo (
+	my @Orders = openprint::Order->find('docket'=>$param{'docket'}) if $param{'docket'};
+	if ( @Orders == 1 ) {
+		$r->content_type('text/javascript');
+		my $html = sprintf(q{ddm_select_by_value( $('company_id'), %d );}, $Orders[0]->company_id() );
+#$openprint::log->debug("Found unique docket, company is:" . $Orders[0]->company_id() );
+		my @Projects = $Orders[0]->Projects();
+		my ( $printed_date ) = sql::execute( undef, undef, q{SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND Description='Marked Printed'}, $Projects[0]->id() ) if @Projects;
+		if ( $printed_date ) {
+			my ( $year, $month, $day ) = $printed_date =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
+			$html .= sprintf(q{ddm_select_by_value( $('printed_on_year'), %d );}, $year );
+			$html .= sprintf(q{ddm_select_by_value( $('printed_on_month'), %d );}, $month );
+			$html .= sprintf(q{ddm_select_by_value( $('printed_on_day'), %d );}, $day );
+		} # end if printed_date
+		return $html;
+	#} else {
+		#$openprint::log->debug("No unique docket found");
+	} # end if
+	return;
+) ?>

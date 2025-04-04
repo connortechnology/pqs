@@ -1,0 +1,101 @@
+<? eval (
+	foreach my $p ( 'QTYIndex','index','SignatureIndex' ) {
+		if ( ( exists $param{$p} ) and ! $$variable{$p} ) {
+			$$variable{$p} = $param{$p};
+		} # end if
+	} # end foreach
+) ?>
+<tr id="Fold-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" <? echo ( ($$variable{index} == 1 or $$variable{"FoldQty-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"})  ? '' : 'style="display:none;"' ) ?>>
+	<td class="Qty">
+<? echo ( 
+	my $blah = join('-',@$variable{'SignatureIndex','QTYIndex','index'});
+	my $onkeyup = "Fold_onchange(this, '$$variable{SignatureIndex}', '$$variable{QTYIndex}', '$$variable{index}' );";
+	my $html = input(
+		type	=>	'cardinal',
+		id		=>	'FoldQty-'.$blah, 
+		name	=>	'FoldQty-'.$blah,
+		value	=>	$$variable{'FoldQty-'.$blah},
+		onkeyup	=>	$onkeyup,
+		);
+	$html .= input(
+		type	=>	'hidden',
+		name	=>	'FoldPageQty-'.$blah,
+		value	=>	$$variable{'FoldPageQty-'.$blah},
+		);
+	$html .= input(
+		type	=>	'hidden',
+		name	=>	'FoldPageColumns-'.$blah,
+		value	=>	$$variable{'FoldPageColumns-'.$blah},
+		);
+	$html .= input(
+		type	=>	'hidden',
+		name	=>	'FoldPageRows-'.$blah,
+		value	=>	$$variable{'FoldPageRows-'.$blah},
+		);
+	$html .= '</td><td class="Imp">';
+	$html .= input(
+		type	=>	'cardinal',
+		id		=>	'FoldImposition-'.$blah,
+		name	=>	'FoldImposition-'.$blah,
+		value	=>	$$variable{'FoldImposition-'.$blah},
+		onkeyup	=>	$onkeyup,
+		);
+	$html .= input(
+		type	=>	'hidden',
+		id		=>	'FoldColumns-'.$blah,
+		name	=>	'FoldColumns-'.$blah,
+		value	=>	$$variable{'FoldColumns-'.$blah},
+		);
+	$html .= input(
+		type	=>	'hidden',
+		id		=>	'FoldRows-'.$blah,
+		name	=>	'FoldRows-'.$blah,
+		value	=>	$$variable{'FoldRows-'.$blah},
+		);
+	$html .= '</td><td class="Type">';
+  if ( !$$variable{fold_options}) {
+    my @options = sort { my ( $pagesa ) = $a =~ /(\d*)/; my ( $pagesb ) = $b =~ /(\d*)/; $pagesa <=> $pagesb; } sql::execute( undef, undef, 'SELECT DISTINCT type FROM folds');
+    @{$$variable{fold_options}} =map { $openprint::Estimating::Folding::fold_types{$_} ? ( $_=>$openprint::Estimating::Folding::fold_types{$_} ) : () } @options;
+  }
+
+	$html .= ssi::select(
+			$$variable{fold_options}, $$variable{'FoldType-'.$blah},
+			{
+			id		=>	'FoldType-'.$blah,
+			name	=>	'FoldType-'.$blah,
+			onchange	=>$onkeyup,
+			prepend	=>	[ '', 'select fold' ],
+			} );
+	$html .= '</td><td class="Folds">';
+	$html .= input(
+		type	=>	'cardinal',
+		id		=>	'FoldFolds-'.$blah,
+		name	=>	'FoldFolds-'.$blah,
+		value	=>	$$variable{'FoldFolds-'.$blah},
+		onkeyup	=>	$onkeyup,
+		);
+	$html .= '</td><td class="Angles">';
+	$html .= input(
+		type	=>	'cardinal',
+		id		=>	'FoldAngles-'.$blah,
+		name	=>	'FoldAngles-'.$blah,
+		value	=>	$$variable{'FoldAngles-'.$blah},
+		onkeyup	=>$onkeyup,
+		);
+	$html .= '</td><td class="Speed">';
+	$html .= input(
+		type	=>	'cardinal',
+		id		=>	'FoldRunspeed-'.$blah,
+		name	=>	'FoldRunspeed-'.$blah,
+		value	=>	$$variable{'FoldRunspeed-'.$blah},
+		onkeyup	=>	$onkeyup,
+	);
+	$html .= write_override( 'OverrideRunspeed-'.$blah,
+			$$variable{'OverrideRunspeed-'.$blah},
+			'', 
+			qq`Fold_onchange(e, '$$variable{SignatureIndex}', '$$variable{QTYIndex}', '$$variable{index}' );`,
+			);
+	$html .= '</td>';
+return $html;
+) ?>
+</tr>

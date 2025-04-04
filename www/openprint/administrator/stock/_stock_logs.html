@@ -1,0 +1,28 @@
+<? echo (
+	my $html='';
+	my $uri = '/administrator/stock/stock.html';
+	my @Logs = openprint::Log->find(
+		object_type	=>'openprint::Paper',
+		object_id		=>	$$variable{Stock}->id(),
+		date_filter( $uri.'?log_created_on_end', 'date_time <=' ),
+		date_filter( $uri.'?log_created_on_start', 'date_time >=' ),
+		order =>'date_time DESC',
+	);
+	return if ! @Logs;
+	
+	my $rowclass = '';
+	$html .= '<table class="List"><tr><th class="DateTime">When</th><th class="User">Who</th><th class="action_type">Action</th><th class="note">Note</th></tr>';
+	foreach my $Log ( @Logs ) {
+		
+		$html .= sprintf('<tr%s><td class="DateTime">%s</td><td class="User">%s</td><td class="action_type">%s</td><td class="note">%s</td></tr>',
+			$rowclass,
+			format_datetime( $Log->date_time() ),
+			$Log->User()->link_to(),
+			$Log->Action()->name(), $Log->note(),
+			);
+
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Log
+	$html .= '</table>';
+	return $html;
+) ?>

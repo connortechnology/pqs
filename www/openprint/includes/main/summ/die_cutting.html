@@ -1,0 +1,62 @@
+<ul>
+<? echo (
+	my $html;
+
+	foreach my $sig_id ( $$variable{Project}->signatures({sort=>1}) ) {
+		my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
+		my $form = $$sig_specs{SignatureIndex};
+
+		$html .= '<li><label>For form ' . $form . '</label></li>';
+
+		$html .= '
+<li> 
+	<label>Supplied die?</label>
+	<div class="value">';
+if ( $$variable{'rdbSuppliedDie-'.$form} eq 'Y' ) {
+        if ( $config{owner_id} == $$variable{Project}->company_id() ) {
+            $html .= 'The client';
+        } else {
+			my $Company = new openprint::Company($$variable{Project}->company_id() );
+			if ( $$Company{id} ) {
+				$html .= $Company->name();
+			} else {
+				$html .= 'You';
+			} # end if
+		} # end if
+} else {
+	$html .=  new openprint::Company( $config{owner_id} )->name();
+}
+	$html .= '</div>
+</li>
+<li> 
+	<label>Dimensions of the die cut</label>
+	<div class="value">' . join( 'x', @$variable{'txtWidth-'.$form, 'txtHeight-'.$form} ) . '</div>
+</li>
+<li> 
+	<label>Hole clearing</label>
+	<div class="value">' . ( $$variable{'rdbHoleClearing-'.$form} eq 'Y' ? 'Yes' : 'No' ) . '</div>
+</li>';
+if ( $$variable{'MakeReadyComplexity-'.$form} ) {
+$html .= '<li> 
+	<label>Make Ready Complexity</label>
+	<div class="value">' . $$variable{'MakeReadyComplexity-'.$form} . '</div>
+</li>';
+}
+
+$html .= include('/includes/main/summ/signature_equipment.html', $variable );
+
+		$html .= '<li><label>Imposition</label><div class="value"><table><tr><th class="Qty">Qty</th><th class="Imp">Imposition</th></tr>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+
+			foreach my $imp_index ( 1 .. 4 ) {
+				next if ! $$variable{"ImpQty-$form-$qty_index-$imp_index"};
+
+				$html .= sprintf('<tr><td class="Qty">%d</td><td class="Imp">%d x %d + %d x %d = %d out</td></tr>', 
+					@variable{map { join('-', $_, $form, $qty_index, $imp_index ) } ( 'ImpQty', 'ImpColumns','ImpRows','ImpDutchColumns','ImpDutchRows','ImpOut' )} );
+			} # end foreach imp_index
+		} # end foreach qty_index
+		$html .= '</table></div></li>';
+	} # end foreach form
+	return $html;
+) ?>
+</ul>

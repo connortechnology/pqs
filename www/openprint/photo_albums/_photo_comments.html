@@ -1,0 +1,38 @@
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? echo (
+	my $html;
+	my @Unapproved = $$variable{'Photo'}->Comments( {'approved' => 0} );
+	if ( @Unapproved ) {
+		$html .= '<div class="Unapproved">The following comments require approval:<br/>';
+		foreach my $Comment ( @Unapproved ) {
+			$html .= sprintf( q`
+				<div class="comment">At %s %s said:<br/>%s`,
+				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );
+
+				$html .= ssi::button( 'ApproveComment'.$Comment->id(), { 'text' => 'Approve', 'onclick' => qq`new Ajax.Updater('Comments', '_photo_comments.html', { parameters: { asset_id: $$variable{Photo}{asset_id}, album_id: $$variable{Photo}{album_id}, comment_id: $$Comment{id}, action: 'approve' } } );` } );
+
+			$html .= '</div>';
+		} # end foreach Comment
+		$html .= '</div>';
+	} # end if Comments needing approval
+
+	foreach my $Comment ( $$variable{'Photo'}->Comments( { 'approved' => 1 } ) ) {
+		$html .= sprintf( q`<div class="comment">At %s %s said:<br/>%s`, 
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );
+		if ( $Comment->can_delete() ) {
+			$html .= ssi::button( 'RemoveComment'.$Comment->id(), { 'text' => 'Remove', 'onclick' => qq`new Ajax.Updater('Comments', '_photo_comments.html', { parameters: { asset_id: $$variable{Photo}{asset_id}, album_id: $$variable{Photo}{album_id}, comment_id: $$Comment{id}, action: 'remove' } } );` } );
+		} # end if
+		$html .= '</div>';
+	} # end foreach Comment
+	return $html;
+) ?>
+<div class="comment">
+	<form id="comment-form" name="comment-form" action="list.html" method="post">
+		<fieldset><legend>Add</legend>
+		<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Photo'}->asset_id() ) ?>"/>
+		<input type="hidden" name="album_id" value="<? echo ( $$variable{'Photo'}->album_id() ) ?>"/>
+		<textarea name="text" id="text"></textarea>
+		<? echo ( ssi::button( 'SaveComment'.$$variable{'Photo'}->id(), { 'text' => 'Save', 'onclick' => qq`new Ajax.Updater('Comments', '_photo_comments.html', { parameters: \$('comment-form').serialize() } );` } ); ) ?>
+		</fieldset>
+	</form>
+</div>

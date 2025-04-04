@@ -1,0 +1,36 @@
+<script type="text/javascript">
+	function load( div, form ) {
+		form = $(form);
+		new Ajax.Updater( div, '_authorizations.html', { parameters: form.serialize() } );
+	} // end function load
+</script>
+<?include(/includes/error_reporting.html)?>
+<div class="Authorizations">
+<form id="f1" name="f1" action="authorizations.html" method="post">
+	<input type="hidden" name="action"/>
+	<fieldset class="filters"><legend>Select Search Criteria</legend>
+		<ul>
+			<li><label>Object Type</label>
+				<? echo (
+						$$variable{object_types} = openprint::Object_Type->dropdown();
+						ssi::select( $$variable{object_types}, $session{$r->uri().'?object_type_id'}, 
+							{ name=>'object_type_id', prepend=>[ '', 'All' ], onchange=>q`load('Results','f1');` } );
+				) ?>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join( "\n",
+				button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+				button( 'Add', { href=>'/employee/authorization/edit.html', text=>'Add New' } ),
+				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results"><?include(_authorizations.html)?></div>
+	<p class="buttons">
+    <? echo (
+        button( 'Save', { onclick=>q`f1.elements['action'].value='Save';f1.submit();` } );
+    ) ?>
+	</p>
+</form>
+</div>

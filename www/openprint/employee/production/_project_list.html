@@ -1,0 +1,97 @@
+<? eval (
+  my $uri = '/employee/production/projects.html';
+	$$variable{Projects} = [];
+	if ( $param{StartDocket} and $param{EndDocket}) {
+		$$variable{Projects} = [ openprint::Project->find(
+			'docket <='	=> $param{EndDocket},
+			'docket >=' => $param{StartDocket},
+			order		=> 'lngdocketnumber',
+			) ];
+
+	} elsif ( $param{StartDocket} ) {
+		$$variable{Projects} = [ openprint::Project->find( docket=>$param{StartDocket} ) ];
+		if ( ! @{$$variable{Projects}} ) {
+			my $Order = openprint::Order->find_one(docket=>$param{StartDocket});
+			if ( $Order ) {
+				my $Project = new openprint::Project();
+				$Project->docket($Order->docket());
+				$Project->status( $Order->status() );
+				$Project->order_id( $$Order{id} );
+				push @{$$variable{Projects}}, $Project;
+			} # end if
+		} # end if
+	} elsif ( $param{OrderID} ) {
+		my $Order = openprint::Order->find_one( id => $param{OrderID} );
+		$$variable{Projects} = [ $Order->Projects() ] if $Order;
+		
+	} else {
+		my %filters = (
+				( $session{$uri.'?ddmPress'} ? ('used_press_name any'	=> $session{$uri.'?ddmPress'} ) : () ),
+				( $session{$uri.'?ddmEmployee'} ? (	'operator_id any'	=> $session{$uri.'?ddmEmployee'} ) : () ),
+				status			=> [ split ',', $session{$uri.'?ProjectStatus'} ],
+				'order_id is null'	=> 0,
+				date_filter($uri.'?due_date_end', 'due_date is null or <=' ),
+				date_filter($uri.'?due_date_start', 'due_date is null or >=' ),
+			( $session{$uri.'?servicetype_id'} ? ( 'servicetype_id	any'=>	$session{$uri.'?servicetype_id'} ) : () ),
+				order			=> 'due_date, lngDocketNumber',
+			);
+		if ( $session{$uri.'?ddmSalesRep'} ) {
+			$filters{salesrep_id} = $session{$uri.'?ddmSalesRep'};
+		} # end if
+		if ( $session{$uri.'?ddmCustomer'} ) {
+			$filters{company_id} = $session{$uri.'?ddmCustomer'};
+		} # end if
+		$$variable{Projects} = [ openprint::Project->find( %filters ) ];
+	} # end if
+) ?>
+<? if ( @{$$variable{Projects}} ) ?>
+	<table class="List">
+		<tr> 
+			<th class="project_id">Project#</th>
+			<th class="docket">Docket#</th>
+			<th class="Company">Company</th>
+			<th class="reference">Project Name</th>
+	<? if ( ! $param{ddmEmployee} ) ?>
+			<th class="Operators">Operators</th>
+	<? endif ( ! $param{ddmEmployee} ) ?>
+			<th class="duedate">Due Date</th>
+			<th class="status">Status</th>
+		</tr>
+		<? echo (
+			my $html = '';
+			my $rowclass;
+  my $uri = '/employee/production/projects.html';
+
+			foreach my $Project ( @{$$variable{Projects}} ) {
+				#next if $session{'/employee/production/projects.html?ddmPress'} and ! sets::isin( $session{'/employee/production/projects.html?ddmPress'}, [ $Project->used_press_names() ] );
+				#my @operators = sql::execute( $log, $dbh, q{SELECT DISTINCT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND operator_id IS NOT NULL}, $Project->id() );
+				#next if $param{ddmEmployee} and sets::isin( $param{ddmEmployee}, \@operators );
+				next if $session{$uri.'?cod'} eq 'Y' and !$Project->Order()->cod_owing();
+				next if $session{$uri.'?cod'} eq 'N' and $Project->Order()->cod_owing();
+				$html .= "<tr$rowclass>\n";
+				$html .= sprintf(q`
+						<td class="project_id"><a href="/employee/project/view.html?project_id=%1$d">%1$d</a>&nbsp;</td>
+						<td class="docket"><a href="/employee/project/view.html?project_id=%1$d">%2$d</a>&nbsp;</td>
+						<td class="Company"><a href="/employee/project/view.html?project_id=%1$d">%3$s</a>&nbsp;</td>
+						<td class="reference"><a href="/employee/project/view.html?project_id=%1$d">%4$s</a>&nbsp;</td>
+			`, $Project->id(), $Project->docket(), $Project->Company()->name(), $Project->reference(),
+ );
+
+				if ( ! $param{ddmEmployee} ) {
+					$html .= sprintf(q`<td class="Operators"><a href="/employee/project/view.html?project_id=%1$d">%2$s</a>&nbsp;</td>`, $Project->id(), 
+						join(', ', map { $_->name() } map { new openprint::User( $_ ); } @{$$variable{operators}} ) );
+				} # end if
+				$html .= sprintf(q`
+					<td class="duedate"><a href="/employee/project/view.html?project_id=%1$d">%2$s</a>&nbsp;</td>
+					<td class="status"><a href="/employee/project/view.html?project_id=%1$d">%3$s</a>&nbsp;</td>
+				</tr>`, $Project->id(), $Project->due_date(), $Project->status(),
+				);
+
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach
+			return $html;
+		) ?>
+	</table>
+<? else ( @{$$variable{Projects}} ) ?>
+There were no results matching your criteria.
+<? endif ( @{$$variable{Projects}} ) ?>

@@ -1,0 +1,162 @@
+<div class="Backup"><div class="Edit">
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="post" action="/employee/it/backup.html" enctype="multipart/form-data">
+	<input type="hidden" id="backup_id" name="backup_id" value="<? echo ( $$variable{Backup}->id() ) ?>" />
+	<input type="hidden" id="action" name="action" />
+	<fieldset><legend>Backup <? echo ( $$variable{Backup}->link_to( $$variable{Backup}->id() ) ) ?></legend>
+		<div class="content leftColumn">
+			<ul>
+				<li>
+					<label>Name</label>
+					<input type="text" id="name" name="name" value="<? echo ( $$variable{Backup}->name() ) ?>" />
+				</li>
+				<li><label>Owner</label>
+          <input type="text" onkeyup="filter_companies('owner_id', {name:this.value,selected_id:get_ddm_value($('owner_id'))});" class="filter" />
+          <select id="owner_id" name="owner_id" onchange="stop_filter_companies();load_hosts();">
+              <option value="">None</option>
+  <? echo ( 
+  my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM Backups');
+  make_drop_down( openprint::Company->dropdown(id=>[ @owner_ids, $openprint::Company->id() ]), $$variable{Backup}->owner_id() );
+  ) ?>
+          </select>
+				</li>
+				<li>
+					<label>Host</label>
+          <?echo ( join("\n",
+                ssi::select( 
+                  openprint::Host->dropdown( 
+                  owner_id=>$$variable{Backup}->owner_id(),
+                  blacklist=>0,
+                    order=>'hostname' ),
+            $$variable{Backup}->host_id(),
+            {
+              name    =>  'host_id',
+              id    =>  'host_id',
+              prepend =>  [ '', 'select' ],
+            } ),
+button('GoHost', { href=>$$variable{Backup}->Host()->url_to(), text=>'Go' } ),
+);
+              ) ?>
+				</li>
+				<li>
+					<label>User</label>
+					<input type="text" id="username" name="username" value="<? echo ( $$variable{Backup}->username() ) ?>" />
+				</li>
+				<li>
+					<label>Path</label>
+					<input type="text" id="path" name="path" value="<? echo ( $$variable{Backup}->path() ) ?>" />
+				</li>
+				<li><label onclick="toggle_input( $('#type_id'), $('#type') );">Type</label>
+        <? echo ( ssi::select( [ map { $_, $openprint::Backup::types{$_} } sort { $a cmp $b } keys %openprint::Backup::types], $$variable{Backup}->type(), { name=>'type' } ); ) ?>
+				</li>
+				<li>
+					<label>How many to keep</label>
+					<? echo ( input(type=>'cardinal', id=>'keep', name=>'keep', value=> $$variable{Backup}->id() ? $$variable{Backup}->keep() : 7 ); ) ?>
+				</li>
+				<li>
+					<label>Enabled</label>
+					<? echo ( radio( 'enabled', [ '1','Yes','0','No' ], $$variable{Backup}->enabled() ); ) ?>
+				</li>
+				<li><label>Description</label>
+					<textarea id="description" name="description" rows="<? echo (count_lines($$variable{Backup}->description()) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Backup}->description() ) ?></textarea>
+				</li>
+        <?if($$variable{Backup}->id())?>
+				<li><label>Created On</label><? echo ( format_datetime( $$variable{Backup}->created_on() ); ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{Backup}->updated_on() ); ) ?></li>
+				<li><label>Last Ran</label><? echo ( format_datetime( $$variable{Backup}->lastran_on() ); ) ?></li>
+        <?endif($$variable{Backup}->id())?>
+			</ul>
+		</div>
+    <?if ($$variable{Backup}->id())?>
+<div class="content leftColumn">
+<fieldset><legend>Files</legend>
+<div id="Files">
+<?include(_backup_files.html)?>
+</div>
+</fieldset>
+</div>
+    <?endif ($$variable{Backup}->id())?>
+        <br class="spacer"/>
+				<p class="buttons">
+					<? echo ( 
+						my $html;
+            $html .= button( 'Save', {'data-on-click'=>'click_save'})."\n";
+						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
+						if ( $$variable{Backup}->id() ) {
+							if ( $$variable{Backup}->deleted() ) {
+								$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+							} else {
+								$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+							}
+						} # end if
+						$html .= button( 'Run', { onclick=>"f1.elements['action'].value='Run';f1.action='/employee/it/backup.html';f1.submit();" } );
+						return $html;
+					) ?>
+				</p>
+<p>Don't forget to copy over the ssh key with something like the following command.  <br/>
+<?echo(
+my $html = '';
+foreach my $HI ( $$variable{Backup}->Host()->Interfaces() ) {
+$html .= "
+VoxIP: sudo ssh-copy-id -i /var/www/.ssh/id_rsa.pub root\@$$HI{ip}<br/>
+VueIP: sudo su -s/bin/bash -c\"ssh-copy-id -o \\\"StrictHostKeyChecking no\\\" -f ipc\@$$HI{ip}\" www-data<br/>
+";
+}
+return $html;
+) ?>
+</p>
+	</fieldset>
+</form>
+<? if ( $$variable{Backup}->id() ) ?>
+<? echo ( include_logs( $$variable{Backup} ); ) ?>
+<? endif ( $$variable{Backup}->id() ) ?>
+</div></div>
+<script>
+  var hosts_ajax = null;
+  function load_hosts() {
+    if ( hosts_ajax ) { hosts_ajax.transport.abort(); }
+
+    hosts_ajax = $j.ajax({
+      url: '/includes/_hosts.html',
+      data: {
+        owner_id: $j('#owner_id').val(),
+        selected_id: $j('#host_id').val()
+      },
+      success:function(data, status, jqXHR){
+        console.log(data);
+        $j('#host_id').html(data);
+        hosts_ajax = null;}
+    });
+  }
+
+	function check_inputs(form) {
+    if (!form.elements['name'].value){
+      alert('Please give this backup a name.');
+      return false;
+    }
+		return true;
+	} //  end function check_inputs
+
+function click_save() {
+  const form = document.getElementById('f1');
+  if ( check_inputs( form ) ){
+    form.elements['action'].value='Save';
+    form.submit();
+  }
+}
+
+  function initPage() {
+    const tinymce_options = {
+      mode : "textareas",
+      plugins: "paste",
+      theme : "advanced",
+      theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,fontsizeselect,|,bullist,numlist,|,indent,outdent",
+      theme_advanced_buttons2 : '',
+      theme_advanced_buttons2 : '',
+      cleanup : true
+    };
+
+    tinyMCE.init(tinymce_options);
+  }
+  window.addEventListener('DOMContentLoaded', initPage);
+</script>

@@ -1,0 +1,22 @@
+<?include(/includes/error_reporting.html)?>
+<? echo (
+	my $html;
+	foreach my $Product ( @{$$variable{Products}} ) {
+		$$variable{Product} = $Product;
+		if ( $Product->project_id() ) {
+			my $Project = $$variable{Project} = $Product->Project();
+			$html .= '<div class="Project"><p class="buttons">';
+			$html .= button( 'Remove'.$$Project{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;product_id=$$Product{id}", text => 'Remove' } );
+			$html .= '</p><br class="spacer"/>';
+			$html .= include( '/main/order/_product_project_information.html' );
+			$html .= '</div>';
+		} else {
+			$html .= '<div class="Product"><p class="buttons">';
+			$html .= button( 'Remove'.$$Product{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;product_id=$$Product{id}", text => 'Remove' } );
+			$html .= '</p><br class="spacer"/>';
+			$html .= include( '/main/order/_product_list.html' );
+			$html .= '</div>';
+		} # end if
+	} # end foreach
+	return $html;
+) ?>

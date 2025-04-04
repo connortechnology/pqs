@@ -1,0 +1,120 @@
+
+.spacer {
+	clear: both;
+}
+
+form {
+	margin: 0px;
+}
+
+body {
+	font-size: 8px;
+}
+
+input {
+	margin: 0px;
+	padding: 0px;
+	border: 1px solid black;
+	font-size: 8px;
+	width: 60%;
+}
+select {
+	margin: 0px;
+	padding: 0px;
+	font-size: 8px;
+	width: 60%;
+}
+option {
+	width: 100%;
+}
+
+div.row {
+}
+div.row span.label {
+	float: left;
+	width: 33%;
+
+}
+div.row span.input {
+	float: left;
+	width: 67%;
+}
+div.row span.buttons {
+	float: left;
+	width: 67%;
+	margin-left: 33%;
+}
+a {
+	font-size: 8px;
+}
+table tr th {
+	font-size: 8px;
+}
+p {
+	text-align: right;
+}
+p:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+/* Hides from IE-mac \*/
+* html p {height: 1%;}
+p {display: block;}
+/* Hides from IE-mac \*/
+
+p label {
+	float: left;
+}
+p.location_id select {
+	width: 60%;
+}
+
+
+	a.button {
+		background-color: #EE3E33;
+		padding: 4px 2px 4px 2px;
+		margin: 2px 5px 2px 2px;
+		text-decoration: none;
+		font-family: Arial, Helvetica, Sans-Serif;
+		font-size: small;
+		font-weight: bold;
+		color: white;
+		display: inline-block;
+		outline:0;
+	}
+
+	a.button:hover {
+		background-color: #FF5C51;
+	}
+a.button .c {
+	font-family: Arial, Helvetica, Sans-Serif;
+	font-weight: normal;
+	font-size: x-small;
+	background: none;
+	display: inline-block;
+	float: none;
+	margin: 0px;
+	padding: 0px;
+	color: white;
+}
+
+div.Contents .Allocated {
+	text-align: right;
+	width: 50px;
+}
+div.Contents .InStock {
+	text-align: right;
+	width: 50px;
+}
+div.Contents .Quality {
+	text-align: right;
+	width: 75px;
+}
+div.Contents .Quality select {
+	width: 100%;
+}

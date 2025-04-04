@@ -1,0 +1,15 @@
+fieldset .ApplyMarkup input[type="number"] {
+	width: 40px;
+}
+
+.pms {
+	width: 40px;
+	text-align: left;
+}
+.name, .material, .service {
+	text-align: left;
+}
+.washups {
+	width: 60px;
+	text-align: left;
+}

@@ -1,0 +1,56 @@
+<fieldset><legend>Photos</legend>
+	<div id="asset_droparea" class="qq-uploader">
+		<div class="droparea qq-upload-drop-area">
+		<ul id="Assets"><?include('/article/_assets.html'; ) ?></ul>
+		<div id="uploadinstructions">
+			To upload files,
+			<span id="dragndropuploadmessage" style="display:none;">
+			simply drag and drop them here. Or </span>
+			<span id="formuploadmessage"> click on the Upload button. There is a 1GB file size limit.</span>
+		</div>
+		<? echo ( button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
+		<span class="qq-drop-processing"><span></span><span class="qq-drop-processing-spinner"></span></span>
+		<ul id="upload_list" class="preview qq-upload-list"></ul>
+	</div>
+	</div>
+	<fieldset><legend>Search for Assets</legend>
+		<ul id="asset_search">
+			<li><label>Name</label><input type="text" name="asset_name_search" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'asset_search_results', '_asset_search_results.html', { parameters: { asset_name: this.value } } ); };"/></li>
+		</ul>
+		<ul id="asset_search_results"><?include('/article/_asset_search_results.html')?></ul>
+	</fieldset>
+</fieldset>
+<script type="text/javascript">
+    if ( window.FileReader ) {
+        $('dragndropuploadmessage').show();
+    } else {
+        $('dragndropuploadmessage').show();
+        $('formuploadmessage').hide();
+    }
+
+	var uploader = new qq.FineUploader({
+		debug: true,
+		element: $('asset_droparea'),
+		template: null,
+		request: {
+			endpoint: '/upload.htm',
+			params: {
+				id: '<? echo ( $$variable{Article}->id() ) ?>',
+				UploadType: '<? echo ( my $type = ref $$variable{Article}; $type =~ s/^openprint:://; return $type; ) ?>'
+			}
+		},
+		validation: {
+			allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf'],
+			sizeLimit: 1024*1024*1024,
+		},
+		callbacks: {
+			onComplete: function(id, fileName){
+				new Ajax.Updater( 'Assets', '/article/_assets.html', { parameters: { article_id: '<? echo ( $$variable{'Article'}->id() ) ?>' } } );
+			}
+		},
+	   dragAndDrop: {
+				hideDropzones: false,
+	},
+
+	});
+</script>

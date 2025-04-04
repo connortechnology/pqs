@@ -1,0 +1,88 @@
+<script>
+	function privacy_set_users(input, li) {
+		var user_ids = get_form_element_array( input.form, 'privacy_user_id' );
+		user_ids.push(li.id);
+
+		if ( li.id ) {
+			new Ajax.Updater( 'privacy_users', '/includes/_privacy_users.html', { parameters: { action: 'set', user_id: user_ids } } );
+		} // end if
+	}
+	function privacy_remove_user( user_id ) {
+		var user_ids = get_form_element_array( input.form, 'privacy_user_id' );
+		user_ids = user_ids.without( user_id );
+		new Ajax.Updater( 'privacy_users', '/includes/_privacy_users.html', { parameters: { action: 'set', user_id: user_ids } } );
+	}
+	// adds the currently selected users, so that we can filter them out of returned results
+	function privacy_add_user_ids( input, query ) {
+		var user_ids = get_form_element_array( input.form, 'privacy_user_id' );
+		query += '&user_id=' + user_ids.join('&user_id=');
+		return query;
+	}
+	function mode_change( e ) {
+		if ( e.value == 'specific' ) {
+			if ( e.checked ) {
+				$('specific_options').show();
+			} // end if
+		} else {
+			if ( e.checked ) {
+				$('specific_options').hide();
+			} // end if
+		} // end if
+	} // end function
+</script>
+<li class="Privacy"><label>Privacy</label>
+	<div id="public_div">
+		<input type="radio" name="privacy_mode" id="privacy_modepublic" value="public" <? echo ( ssi::checked( sets::isin($$variable{'Privacy'}->mode(), ['', 'public' ] ) ) ) ?> onclick="mode_change(this);"/>
+		<label class="radio" for="privacy_modepublic">Public: Everyone, including people who are not logged in can view this.</label>
+	</div>
+	<div id="logged_in_div">
+		<input type="radio" name="privacy_mode" id="privacy_modelogged_in" value="logged_in" <? echo ( ssi::checked( $$variable{'Privacy'}->mode() eq 'logged_in' ) ) ?> onclick="mode_change(this);"/>
+		<label class="radio" for="privacy_modelogged_in">Logged In: All logged in users of this site can view this.</label>
+	</div>
+	<div id="specific_div">
+		<input type="radio" name="privacy_mode" id="privacy_modespecific" value="specific" <? echo ( ssi::checked( $$variable{'Privacy'}->mode() eq 'specific' ) ) ?> onclick="mode_change(this);"/>
+		<label class="radio" for="privacy_modespecific">Specific: Users in these groups can view this.</label><br/>
+		<div id="specific_options"<? echo ( $$variable{'Privacy'}->mode() eq 'specific' ? '' : ' style="display: none;"' ) ?>>
+<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+			<? if ( @{$$variable{'UserGroups'}} = openprint::UserGroup->find( 'order' => 'lower(name)' ); ) ?>
+			<div id="UserGroups">
+				<label class="radio">Usergroups: Users in these groups can view this.</label>
+				<ul class="UserGroups">
+				<? echo ( my $html;
+					foreach my $U ( @{$$variable{'UserGroups'}} ) {
+						$html .= sprintf('<li><input type="checkbox" name="privacy_usergroup_id" value="%1$d" %3$s/>%2$s</li>',$U->id(), $U->name(), 
+							ssi::checked( sets::isin( $U->id(), $$variable{Privacy}->usergroup_id() ) ) );
+					} # 
+					return $html;
+				) ?>
+				</ul>
+			</div>
+			<? endif ( @{$$variable{'UserGroups'}} = openprint::UserGroup->find( 'order' => 'lower(name)' ); ) ?>
+<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+			<div id="Relationships">
+				<label class="radio">Relationships: Users in these relationships can view this.</label>
+				<ul class="Relationships">
+				<? echo ( my $html;
+					foreach my $RT ( openprint::User_Relationship_Type->find( 'order' => 'lower(name)' ) ) {
+						$html .= sprintf('<li><input type="checkbox" name="privacy_relationship_type_id" id="privacy_relationship_type_id%1$d" value="%1$d" %3$s/><label class="radio" for="relationship_type_id%1$d">%2$s</label></li>',$RT->id(), $RT->name(), 
+						ssi::checked( sets::isin( $RT->id(), $$variable{'Privacy'}->relationship_type_id() ) ) );
+					} # 
+					return $html;
+				) ?>
+				</ul>
+			</div>
+			<label class="radio" for="privacy_modeusers">Users: users specified here can view this.</label>
+				Enter name: <input type="text" name="privacy_name" id="privacy_name"/><br/>
+			<div id="privacy_name_autocomplete" class="autocomplete" style="display:none;"></div>
+			<script type="text/javascript">
+			new Ajax.Autocompleter('privacy_name','privacy_name_autocomplete', '/includes/_privacy_name.html', { minChars: 2,afterUpdateElement : privacy_set_users, tokens: ',', callback: privacy_add_user_ids } );
+			</script>
+			<div id="privacy_users"><? echo ( include('/includes/_privacy_users.html'); ) ?></div>
+		</div>
+	</div>
+	<div id="onlyyou_div">
+		<input type="radio" name="privacy_mode" id="privacy_modeonlyyou" value="onlyyou" <? echo ( ssi::checked( $$variable{'Privacy'}->mode() eq 'onlyyou' ) ) ?> onclick="mode_change(this);"/>
+		<label class="radio" for="privacy_modeonlyyou">Only You: Only you (and site admins) can view this.</label>
+	</div>
+	
+</li>

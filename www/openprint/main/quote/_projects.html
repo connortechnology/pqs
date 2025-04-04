@@ -1,0 +1,158 @@
+<? if ( openprint::ProjectType->find_one() ) ?>
+<fieldset><legend>Projects</legend>
+<? if ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or $openprint::Company->reseller() eq 'Y' ) ?>
+<table class="List">
+	<thead>
+		<tr> 
+			<th class="description">Description</th>
+			<th class="weight">Weight</th>
+			<!--<th class="markup">Markup</th>-->
+			<th class="quantity">Qty</th>
+			<!--<th class="price">Price</th>-->
+			<th class="newprice">Price</th>
+		</tr>
+	</thead>
+	<tbody>
+	<? echo ( 
+		my $html;
+		my $rowclass;
+		my $subtotal;
+		my $newsubtotal;
+
+		foreach my $QP ( $$variable{Quote}->Quoted_Projects() ) {
+			my $Project = $QP->Project();
+		
+			$html .= sprintf(q`<tr%1$s> 
+				<td class="description">
+					<div class="reference"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s</a></div>
+					<div class="summary"><a href="/main/project/view.html?ProjectIndex=%2$d">%4$s</a></div>
+				</td>
+				<td colspan="3">
+				<table>`, $rowclass, $Project->id(), 
+				( $Project->reference() ? $Project->reference() . '<br/>' : '' ),
+				$Project->summary(),
+				);
+
+			my $services = $Project->services();
+
+			foreach my $qty_index ( $QP->quantity_indexes() ) {
+				$html .= '<tr><td class="weight">';
+				my $weight;
+
+				if ( $$services{BulkSkids} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{BulkSkids}[0] );
+					$weight = $$specs{'totalWeight'.$qty_index};
+				} elsif ( $$services{PlainCartons} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{PlainCartons}[0] );
+					$weight = $$specs{'totalWeight'.$qty_index};
+				} else {
+          $weight = $Project->finished_weight() * $Project->quantity($qty_index);
+				} # end if
+				my $g = $weight * 453.59237;
+				if ( $g > 1000 ) {
+					$html .= sprintf( '%.0flb%s (%.0fkg)', $weight, ($weight>1?'s':''),$g/1000 );
+				} else {
+					$html .= sprintf( '%.0flb%s (%.0fg)', $weight, ($weight>1?'s':''),$g );
+				} # end if
+if ( 0 ) {
+				$html .= sprintf('</td><td class="markup">%1$s%</td><td class="quantity">%2$s</td><td class="price">%3$s</td><td class="newprice">%4$s</td></tr>', 
+						$QP->markup($qty_index), 
+						$Project->quantity($qty_index), 
+						openprint::Currency::format( $Project->price($qty_index) ), 
+						openprint::Currency::format( $QP->price($qty_index) )
+						);
+} else {
+				$html .= sprintf('</td><td class="quantity">%1$s</td><td class="newprice">%2$s</td></tr>', 
+						$Project->quantity($qty_index), 
+						openprint::Currency::format( $QP->price($qty_index) )
+						);
+}
+				$subtotal += $Project->price($qty_index);
+				$newsubtotal += $QP->price($qty_index);
+				
+			} # end foreach qty_index
+			$html .= "</table>\n</td>\n</tr>\n";
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach QP
+if ( 0 ) {
+		$html .= join( '', '<tr class="totals"><td colspan="4">Subtotal</td><td class="price">',
+				openprint::Currency::format( $subtotal ),
+				'</td><td class="newprice">', 
+				openprint::Currency::format( $newsubtotal ),
+				'</td></tr>',
+				);
+} else {
+		$html .= join( '', '<tr class="totals"><td colspan="3">Subtotal</td>',
+				'<td class="newprice">', 
+				openprint::Currency::format( $newsubtotal ),
+				'</td></tr>',
+				);
+}
+		return $html
+	) ?>
+	</tbody>
+</table>
+<? else ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or $openprint::Company->reseller() eq 'Y' ) ?>
+<table class="List">
+	<thead>
+		<tr> 
+			<th class="projects">Projects</th>
+			<th class="weight">Weight</th>
+			<th class="quantity">Qty</th>
+			<th class="price">Price</th>
+		</tr>
+	</thead>
+	<tbody>
+	<? echo (
+		my $html;
+		my $subtotal;
+		my $rowclass;
+		foreach my $QP ( $$variable{Quote}->Quoted_Projects() ) {
+			my $Project = $QP->Project();
+			$html .= sprintf(q`<tr%1$s> 
+				<td class="projects"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s%4$s</a></td>
+				<td colspan="3">
+					<table>`, $rowclass, $Project->id(),
+					( $Project->reference() ? $Project->reference() . '<br/>' : '' ),
+					$Project->summary(),
+				);
+			my $services = $Project->services();
+
+			foreach my $qty_index ( $QP->quantity_indexes() ) {
+				$html .= '<tr><td class="weight">';
+				my $weight;
+
+				if ( $$services{BulkSkids} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{BulkSkids}[0] );
+					$weight = $$specs{'totalWeight'.$qty_index};
+				} elsif ( $$services{PlainCartons} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{PlainCartons}[0] );
+					$weight = $$specs{'totalWeight'.$qty_index};
+				} else {
+          $weight = $Project->finished_weight() * $Project->quantity($qty_index);
+				} # end if
+				my $g = $weight * 453.59237;
+				if ( $g > 1000 ) {
+					$html .= sprintf( '%.0flb%s (%.0fkg)', $weight, ($weight>1?'s':''),$g/1000 );
+				} else {
+					$html .= sprintf( '%.0flb%s (%.0fg)', $weight, ($weight>1?'s':''),$g );
+				} # end if
+				$html .= join( '', '</td><td class="quantity">',
+						$Project->quantity($qty_index), 
+						'</td><td class="price">', 
+						openprint::Currency::format( $QP->price($qty_index) ),
+						'</td></tr>', 
+						);
+				$subtotal += $QP->price($qty_index);
+			} # end foreach qty_index
+			$html .= "</table>\n</td>\n</tr>\n";
+		} # end foreach Project
+
+		$html .= join('', '<tr class="totals"><td colspan="3">Subtotal</td><td class="price">', openprint::Currency::format( $subtotal ), '</td></tr>' );
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+		return $html;
+	) ?>
+</table>
+<? endif ( sets::isin( $session{user_type}, [ 'A', 'E' ] ) or $openprint::Company->reseller() eq 'Y' ) ?>
+</fieldset>
+<? endif ( openprint::ProjectType->find_one() ) ?>

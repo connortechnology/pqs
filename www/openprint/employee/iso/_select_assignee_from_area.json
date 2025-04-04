@@ -1,0 +1,7 @@
+<? echo (
+	require openprint::CAR_Area;
+	my $Area = new openprint::CAR_Area( $openprint::param{'area_id'} );
+	$r->content_type('text/javascript');
+	my $html = sprintf(q{ddm_select_by_value( $('issued_to_id'), %d );}, $Area->assignee_id() );
+	return $html;
+) ?>

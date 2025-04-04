@@ -1,0 +1,75 @@
+<?include('/includes/error_reporting.html')?>
+<form id="ShiftForm" name="ShiftForm" action="operator_schedule.html" method="post">
+	<input type="hidden" name="shift_id" value="<? echo ( $$variable{Shift}->id() ) ?>" />
+	<input type="hidden" name="func" value="save" />
+	<fieldset><legend>Edit Shift</legend>
+		<ul>
+			<li><label>Name</label>
+				<input type="text" name="name" id="name" value="<? echo ( $$variable{Shift}->name() ) ?>" />
+			</li>
+			<li><label>Time</label>
+				Day: <select name="start_day" id="start_day" onchange="update_duration(this.form,'start','end');">
+					<? echo ( 
+						my $Last = openprint::Equipment_Shift->find_one( equipment_id=>$$variable{Shift}{equipment_id}, order=>'starttime_seconds DESC' );
+						my $last_day = $Last ? $Last->end_day() + 1 : 1;
+						return make_drop_down( [ map { $_, $_ } ( 0 .. $last_day ) ], $$variable{Shift}->start_day() );
+					) ?>
+				</select>
+				<select name="start_hour" id="start_hour" onchange="update_duration(this.form,'start','end');">
+					<? echo ( make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $$variable{Shift}->start_hour() ); ) ?>
+				</select> :
+				<select name="start_minute" id="start_minute" onchange="update_duration(this.form,'start','end');">
+					<? echo ( make_drop_down( [ map { $_, $_ } ( 0 .. 59 ) ], $$variable{Shift}->start_minute() ); ) ?>
+				</select>
+				until
+				Day: <select name="end_day" id="end_day" onchange="update_duration(this.form,'start','end');">
+					<? echo ( 
+						my $Last = openprint::Equipment_Shift->find_one( equipment_id=>$$variable{Shift}{equipment_id}, order=>'starttime_seconds DESC' );
+						my $last_day = $Last ? $Last->end_day() + 1 : 1;
+						return make_drop_down( [ map { $_, $_ } ( 0 .. $last_day ) ], $$variable{Shift}->end_day() );
+					) ?>
+				</select>
+				<select name="end_hour" id="end_hour" onchange="update_duration(this.form,'start','end');">
+					<? echo ( make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $$variable{Shift}->end_hour() ); ) ?>
+				</select> :
+				<select name="end_minute" id="end_minute" onchange="update_duration(this.form,'start','end');">
+					<? echo ( make_drop_down( [ map { $_, $_ } ( 0 .. 59 ) ], $$variable{Shift}->end_minute() ); ) ?>
+			</li>
+			<li><label>Duration</label>
+				<input type="text" name="duration" id="duration" value="<? echo ( $$variable{Shift}->duration() ) ?>" />
+			</li>
+			<li><label>Operators</label>
+				<select name="operator_ids" id="operator_ids" multiple="multiple">
+					<option value=""> select </option>
+				<? echo (
+						my $Equipment = $$variable{Shift}->Equipment();
+
+						my @Usergroups = openprint::UserGroup->find( name=> [ $Equipment->categories()] );
+						my @Usersin = openprint::User_in_UserGroup->find( usergroup_id=>[ map { $$_{id} } @Usergroups] ) if @Usergroups;
+
+						my @Operators = $Equipment->Operators();
+						my %Operators = map { $$_{id}, $_ } @Operators;
+
+						my @user_ids = map { $Operators{$$_{user_id}} ? () : $$_{user_id} } @Usersin;
+
+						my $html .= '<optgroup label="Usual Operators">';
+						$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$openprint::User->company_id(), id=>[keys %Operators] )} ], $$variable{Shift}->operator_ids() ) if %Operators;
+						$html .= '</optgroup>';
+						$html .= '<optgroup label="Others">';
+						$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$openprint::User->company_id(), id=>\@user_ids )} ], $$variable{Shift}->operator_ids() ) if @user_ids;
+						$html .= '</optgroup>';
+
+						return $html;
+) ?>
+				</select>
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n", 
+						button( 'SaveEquipmentShift', { onclick=>"\$('ShiftForm').submit();", text=>'Save' } ),
+						button( 'CancelStartTime', { onclick=>"popupWin.destroy();", text=>'Cancel' } ), 
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<script type="text/javascript">$j('#operator_ids').chosen();</script>

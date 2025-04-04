@@ -1,0 +1,37 @@
+A new paper has been entered as follows<br/><br/>
+<ul>
+<li>
+	<label>ID #</label>
+	<a href="<?ExternalSiteURL?>/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>"><? echo ( $$variable{'Paper'}{'id'} ) ?></a>
+</li>
+<li>
+	<label>Brand</label>
+	<? echo ( $$variable{'Paper'}->brand(); ) ?>
+</li>
+<li>
+	<label>Finish</label>
+	<? echo ( $$variable{'Paper'}->finish(); ) ?>
+</li>
+<li>
+	<label>Colour</label>
+	<? echo ( $$variable{'Paper'}->colour(); ) ?>
+</li>
+<li>
+	<label>Weight</label>
+	<? echo ( $$variable{'Paper'}->weight(); ) ?>
+</li>
+<li>
+	<label>Quality</label>
+	<? echo ( $$variable{'Paper'}->quality(); ) ?>
+</li>
+<li>
+	<label>MWeight</label>
+	<? echo ( $$variable{'Paper'}->mweight(); ) ?>
+</li>
+<li>
+	<label>Owner</label>
+	<? echo ( $$variable{'Paper'}->Owner()->name(); ) ?>
+</li>
+</ul>
+<br/>
+Please verify it and enter any missing information.  Click <a href="<?ExternalSiteURL?>/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{'Paper'}{'id'} ) ?>">here</a> to view this paper.

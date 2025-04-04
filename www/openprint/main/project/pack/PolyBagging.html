@@ -1,0 +1,34 @@
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<? eval (
+	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+	$$variable{'Columns'} = 'Three';
+	} else {
+	$$variable{'Columns'} = 'Two';
+	} # end if
+) ?>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<ul>
+			<li><label># of additional components</label>
+				<? echo ( input( type=>'cardinal', name=>'Inserts', value=>$$variable{Inserts}, onkeyup=>'calc(this.form.name);' ); ) ?>
+			</li>
+			</ul>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+			<? echo ( include('/includes/main/proj/quantities_prices.html'); ) ?>
+			</ul>
+		</fieldset>
+		<? echo ( include('/includes/main/proj/service_combo_quantity.html'); ) ?>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ContinueProject" value="Y"/>
+		<div id="hdnBreakdown1" style="display:none;"></div>
+		<div id="hdnBreakdown2" style="display:none;"></div>
+		<div id="hdnBreakdown3" style="display:none;"></div>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+	</form>
+</div>

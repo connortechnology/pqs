@@ -1,0 +1,54 @@
+<div class="Email">
+	<div class="Settings">
+		<fieldset><legend>Email Settings</legend>
+			<div class="content">
+			<ul>
+				<li>
+					<label>Password</label>
+					<input type="text" name="EmailPassword"
+					<? if ( $session{user_type} eq 'A' ) ?>
+					value="<? echo ( $$variable{Email}->password() ) ?>"
+					<? endif ( $session{user_type} eq 'A' ) ?>
+					/>
+				</li>
+				<li>
+					<label>Verify Password</label>
+					<input type="text" name="VerifyEmailPassword"
+					<? if ( $session{user_type} eq 'A' ) ?>
+					value="<? echo ( $$variable{Email}->password() ) ?>"
+					<? endif ( $session{user_type} eq 'A' ) ?>
+					/>
+				</li>
+				<li>
+					<label>Forwards<br/>(One per line)</label>
+					<textarea id="vacation_aliases" name="vacation_aliases" onkeyup="textarea_resize(this);" rows="<? echo ( @{$$variable{vacation_aliases}} ? scalar @{$$variable{vacation_aliases}} + 1 : 2 ) ?>"><? echo ( join("\n", @{$$variable{vacation_aliases}})) ?></textarea>
+				</li>
+			</ul>
+			</div>
+		</fieldset>
+	</div>
+	<div class="Vacation">
+		<fieldset><legend>Vacation Auto-Responder Settings</legend>
+			<div class="content">
+			<ul>
+				<li>
+					<label>Subject</label>
+					<input type="text" name="vacation_subject" value="<?vacation_subject?>" />
+				</li>
+				<li>
+					<label>Message</label>
+					<textarea name="vacation_body" onkeyup="textarea_resize(this);" rows="<? echo ( count_lines($$variable{vacation_body}); ) ?>"><?vacation_body?></textarea>
+				</li>
+				<li>
+					<label>Vacation Status</label>
+					<? echo ( radio( 'vacation_state', [ '1', 'Enabled', '0', 'Disabled' ], $$variable{vacation_state}, { default=>'0' } ); ) ?> 
+				</li>
+				<li>
+					<label>Receive System Emails</label>
+					<? echo ( radio( 'vacation_system_emails', [ '1', 'Yes', '0', 'No' ], $$variable{vacation_system_emails}, { default=>'1' } ); ) ?> 
+				</li>
+			</ul>
+			</div>
+		</fieldset>
+	</div>
+</div>

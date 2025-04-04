@@ -1,0 +1,13 @@
+<form id="emailform" name="emailform" action="/event/view.html?event_id=<? echo ( $$variable{Event}->id() ) ?>&amp;function=Send" method="post">
+	<fieldset><legend>Email Notification</legend>
+		<ul>
+			<li><label>Message</label><textarea name="message"></textarea></li>
+		</ul>
+		<p class="buttons">
+		<? echo ( join('',
+				ssi::button( 'Send', { onclick=>q`$('emailform').submit();` } ),
+				ssi::button( 'Close', { href=>'view.html?event_id='.$$variable{Event}->id() } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>

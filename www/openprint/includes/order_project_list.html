@@ -1,0 +1,80 @@
+<? if ( @{$$variable{Projects}} = $$variable{Order}->Ordered_Projects() ) ?>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="project_id">Project #</th>
+			<th class="reference">Reference</th>
+			<th class="status">Status</th>
+			<th class="Date">Requested Date</th>
+			<th class="Date">Due Date</th>
+			<th class="quantity">Quantity</th>
+			<th class="Price">Price</th>
+		</tr>
+	</thead>
+	<tbody>
+<? echo (
+	my $html;
+	my $rowclass;
+	my $OrderCurrency = $$variable{Order}->Currency();
+
+	foreach my $OP ( @{$$variable{'Projects'}} ) {
+		my $Project = $OP->Project();
+
+		my $project_price = $OP->price(); # Will be in Order's Currency
+		my $shipping_html;
+		my @ShippingServices = openprint::ServiceType->find( category=>'Shipping');
+		my $services = $Project->services();
+		foreach my $ServiceType ( @ShippingServices ) {
+			next if ! $$services{$ServiceType->name()};
+
+			foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
+				my $specs = openprint::service::get_specs_ref( $Project, $service_index );
+				my $price = $Project->Currency()->convert_to( $OrderCurrency, $$specs{'txtPrice'.$Project->ordered_quantity_index()} );
+				$project_price -= $price;
+				eval(' require openprint::Estimating::'.$ServiceType->name().';' );
+				my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $Project, $service_index, $specs, $Project->ordered_quantity_index() );') . '<br/>';
+
+				if ( $$specs{'FromAddress1'} or $$specs{'FromCity'} or $$specs{'FromStateProvince'} or $$specs{'FromCountry'} ) {
+				$summary .= 'From: ' . join("\n",
+						join(',', $$specs{'FromCompany'} ) ,
+						join(',', $$specs{'FromAddress1'} , $$specs{'FromAddress2'},
+							@$specs{'FromCity','FromStateProvince','FromCountry'},
+							@$specs{'FromPostalCode'} ),
+						) . '<br/>';
+				} # end if
+				if ( $$specs{'ToAddress1'} or $$specs{'ToCity'} or $$specs{'ToStateProvince'} or $$specs{'ToCountry'} ) {
+				$summary .= 'To: ' . join("\n",
+						join(',', $$specs{'ToCompany'} ) ,
+						join(',', $$specs{'ToAddress1'} , $$specs{'ToAddress2'},
+							@$specs{'ToCity','ToStateProvince','ToCountry'},
+							@$specs{'ToPostalCode'} ),
+						).'<br/>';
+				} # end if
+
+				$shipping_html .= qq`<tr$rowclass><td></td><td class="reference"colspan="2">`.$ServiceType->description().($summary? ': ' . $summary : '' ) . qq`</td><td colspan="2">$$specs{alert}</td><td>&nbsp;</td><td class="Price">`.openprint::Currency::format( $OrderCurrency->convert_from( $price )).'</td></tr>';
+			} # end foreach
+		} # end foreach
+		$html .= sprintf( q`
+			<tr%1$s> 
+				<td class="project_id"><a href="/main/project/view.html?project_id=%2$d">%2$d</a></td>
+				<td class="reference"><a href="/main/project/view.html?project_id=%2$d">%3$s</a></td>
+				<td class="status">%4$s</td>
+				<td class="Date">%5$s</td>
+				<td class="Date">%6$s</td>
+				<td class="quantity">%7$d</td>
+				<td class="Price">%8$s</td>
+			</tr>
+			`, $rowclass, $Project->id(), $Project->reference(), $Project->status(),
+			format_date( $Project->requested_date() ),
+			format_date( $Project->due_date() ),
+			$Project->ordered_quantity(),
+			openprint::Currency::format( $OrderCurrency->convert_from( $project_price ) ),
+			);
+		$html .= '<tr'.$rowclass.'><td>&nbsp;</td><td class="reference" colspan="6">'.$Project->summary().'</td></tr>'.$shipping_html;
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Project
+	return $html;
+) ?>
+	</tbody>
+</table>
+<? endif ( @{$$variable{Projects}} = $$variable{Order}->Ordered_Projects() ) ?>

@@ -1,0 +1,230 @@
+<?include(/includes/error_reporting.html)?>
+<fieldset>
+	<? eval (
+		$variable{location_dropdown} = openprint::Location->dropdown(company_id=>$openprint::Owner->id(), order=>'parent_id NULLS FIRST, lower(name)',type=>'place') if ! exists $variable{location_dropdown};
+		if ( ! $$variable{"location_id-$$variable{type_id}-"} ) {
+			my $default_Location = openprint::Location->find_one( name=>'POGI' );
+			$$variable{"location_id-$$variable{type_id}-"} = $default_Location->id() if $default_Location;
+$log->debug("Setting default to: " .  $$variable{"location_id-$$variable{type_id}-"});
+		}	
+		if ( ! $param{'brand_id-'.$$variable{type_id}} ) {
+			my $Paper;
+			if ( $$variable{Type}->paper_id() ) {
+				$Paper = $$variable{Type}->Paper();
+			} else {
+				foreach my $C ( $$variable{Type}->Contents() ) {
+					my $Skid = $C->Skid();
+					foreach my $SkidContent ( $Skid->Contents() ) {
+						$Paper = $SkidContent->Paper();
+						last;
+					} # end foreach paper_id
+					last if $Paper;
+				} # end foreach Content
+			} # end if
+			if ( $Paper ) {
+				$param{'owner_id-'.$$variable{type_id}} = $Paper->owner_id();
+				$param{'manufacturer_id-'.$$variable{type_id}} = $Paper->manufacturer_id();
+				$param{'brand_id-'.$$variable{type_id}} = $Paper->brand_id();
+				$param{'finish_id-'.$$variable{type_id}} = $Paper->finish_id();
+				$param{'colour_id-'.$$variable{type_id}} = $Paper->colour_id();
+				if ( $Paper->weight() =~ /^([\d\.]+)lb$/ ) {
+					$param{'weight-'.$$variable{type_id}} = $1;
+				} # end if
+				$param{'quality_id-'.$$variable{type_id}} = $Paper->quality_id();
+				$param{'material_id-'.$$variable{type_id}} = $Paper->material_id();
+				$param{'type-'.$$variable{type_id}} = $Paper->type();
+				$param{'calliper-'.$$variable{type_id}} = $Paper->calliper()*1000;
+				$param{'width-'.$$variable{type_id}} = $Paper->width();
+				$param{'height-'.$$variable{type_id}} = $Paper->height();
+				$param{'gsm-'.$$variable{type_id}} = $Paper->gsm();
+				$param{'mweight-'.$$variable{type_id}} = $Paper->mweight();
+				$param{'basis_weight-'.$$variable{type_id}} = $Paper->basis_mweight();
+				$param{'basis_width-'.$$variable{type_id}} = $Paper->basis_width();
+				$param{'basis_height-'.$$variable{type_id}} = $Paper->basis_height();
+				$param{'fsc_code-'.$$variable{type_id}} = $Paper->fsc_code();
+				$param{'manufacturers_name='.$$variable{type_id}} = $Paper->manufacturers_name() if ! $$variable{Type}->manufacturers_name();
+			} # end if Paper
+		} # end if
+		$$variable{PO_Content} = $$variable{Type}->PurchaseOrder_Content();
+
+		if ( ! $$variable{Owners} ) {
+			my @owner_ids = sql::execute(undef,undef,'SELECT DISTINCT owner_id FROM Papers');
+			$$variable{Owners} = openprint::Company->dropdown( id=>\@owner_ids );
+		} # end if
+		if ( ! $$variable{Type}->type() ) {
+			$$variable{Type}->type('Sheet');
+		} # end if
+		$param{'condition_id-'.$$variable{type_id}} = $$variable{Type}->condition_id() if ! $param{'condition_id-'.$$variable{type_id}};
+	) ?>
+	<div class="leftColumn">
+		<p id="Owner-<?type_id?>_div">
+			<label for="owner_id-<?type_id?>">Owner</label>
+			<input type="text" onkeyup="new Ajax.Updater('owner_id-<?type_id?>', '/includes/_company_ddm.html', { parameters: { name: this.value,selected_id: get_ddm_value($('owner_id-<?type_id?>')) } } );" class="filter" />
+<? echo ( 
+		ssi::select( $$variable{Owners}, $param{'owner_id-'.$$variable{type_id}} ? $param{'owner_id-'.$$variable{type_id}} : $$openprint::User{company_id}, {
+		id	=>'owner_id-'.$$variable{type_id},
+		name=>'owner_id-'.$$variable{type_id},
+} ); ) ?>
+		</p>
+		<p id="Manufacturer-<?type_id?>_div">
+			<label for="manufacturer-<?type_id?>" onclick="var ddm=$('manufacturer_id-<?type_id?>');ddm.selectedIndex=0;ddm.toggle();$('manufacturer-<?type_id?>').toggle();">Manufacturer</label>
+			<select id="manufacturer_id-<?type_id?>" name="manufacturer_id-<?type_id?>" size="1" onchange="filter_onChange(this,'-<?type_id?>');">
+				<option value="">select</option>
+				<? echo (
+					if ( ! $param{'manufacturer_id-'.$$variable{type_id}} ) {
+						my @Manufacturers = openprint::Manufacturer->find('name'=>'unknown');
+						if ( @Manufacturers ) {
+							$param{'manufacturer_id-'.$$variable{type_id}} = $Manufacturers[0]->id();
+						} # end if
+					} # end if
+					make_drop_down( openprint::Manufacturer->dropdown( order=>'lower(name)'), $param{'manufacturer_id-'.$$variable{type_id}} );
+				) ?>
+			</select>
+			<input style="display: none;" type="text" id="manufacturer-<?type_id?>" name="manufacturer-<?type_id?>" />
+		</p>
+<? echo (
+	my $html;
+	my %Defaults = (
+		Quality		=>	'new',
+		Material	=>	'Paper',
+	);
+	foreach my $option ( 'Brand', 'Finish','Colour', 'Material', 'Quality' ) {
+		my $lc_option = lc $option;
+		$html .= sprintf(q`<p id="%2$s-%1$d_div"><label for="%3$s-%1$d" onclick="var ddm = $('%3$s_id-%1$d');ddm.selectedIndex=0;ddm.toggle();$('%3$s-%1$d').toggle();">%2$s</label>`, $$variable{type_id}, $option, $lc_option );
+
+		if ( $Defaults{$option} and ! $param{$lc_option.'_id-'.$$variable{type_id}} ) {
+			my $Selected = "openprint::Stock$option"->find_one( name=> $Defaults{$option} );
+			if ( $Selected ) {
+				$param{$lc_option.'_id-'.$$variable{type_id}} = $Selected->id();
+			} # end if
+		} # end if
+
+		$html .= ssi::select( ('openprint::Stock'.$option)->dropdown( order=>'lower(name)'), $param{$lc_option . '_id-'.$$variable{type_id}}, { 
+			name	=> $lc_option.'_id-'.$$variable{type_id},
+			id		=> $lc_option.'_id-'.$$variable{type_id},
+			onchange=> "filter_onChange(this,'-$$variable{type_id}');",
+			prepend	=> ['','select'],
+			} );
+		$html .= input( style=>"display: none;", type=>'text', id=>$lc_option.'-'.$$variable{type_id}, name=>$lc_option.'-'.$$variable{type_id}, onkeyup=>"\$('${lc_option}_id-$$variable{type_id}').selectedIndex=0;" );
+		$html .=  '</p>';
+	} # end foreach
+	return $html;
+) ?>
+		<p class="weight">
+			<label for="weight-<?type_id?>">Weight</label>
+			<input type="float" id="weight-<?type_id?>" name="weight-<?type_id?>" value="<? echo ( my $weight = $param{'weight-'.$$variable{type_id}}; $weight =~ s/lb//; return $weight; ) ?>" oninput="calc_from_weight(this.form,'-<?type_id?>');"/>lb
+		</p>
+		<p><label>Type</label>
+			<? echo ( radio( 'type-'.$$variable{type_id}, [ map { $_, $_ } ( 'Sheet','Roll' ) ],
+						( $param{'type-'.$$variable{type_id}} ? $param{'type-'.$$variable{type_id}} : $$variable{Type}->type() ),
+						{ onclick=>qq`type_onclick(this);` } ); ) ?>
+		</p>
+		<p class="size">
+			<label for="width-<?type_id?>">Size</label>
+			<? echo ( input( type=>'positivefloat', id=>'width-'.$$variable{type_id}, name=>'width-'.$$variable{type_id}, value=>$param{'width-'.$$variable{type_id}}, onkeyup=>"calc_from_gsm(this.form,'-$$variable{type_id}');" ); ) ?>
+			<span id="PaperHeight-<?type_id?>"<? echo ( ' style="display: none;"' if $param{'type-'.$$variable{type_id}} eq 'Roll' ) ?>>
+			&nbsp;x&nbsp;
+			<? echo ( input( type=>'positivefloat', id=>'height-'.$$variable{type_id}, name=>'height-'.$$variable{type_id}, value=>$param{'height-'.$$variable{type_id}}, onkeyup=>"calc_from_gsm(this.form,'-$$variable{type_id}');" ); ) ?>
+			</span>
+		</p>
+			<p>
+				<label>Condition</label>
+				<? echo (
+						ssi::select( openprint::InventoryCondition->dropdown( order=>'lower(name)'),
+							$param{'condition_id-'.$$variable{type_id}},
+							{ name=>'condition_id-'.$$variable{type_id}, prepend=>['','select'] }
+							);
+					) ?>
+			</p>
+		<? if ( $$variable{Type}->paper_id() ) ?>
+		<p><label>Link to stock</label><a href="/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{Type}->paper_id() ) ?>"><? echo ( $$variable{Type}->Paper()->to_string() ) ?></a><br/>
+		<?echo (
+				my $html = $$variable{Type}->check();
+				return  $html ? '<span class="warning">'.$html.'</span>' : '';
+				) ?>
+		</p>
+		<? endif ( $$variable{Type}->paper_id() ) ?>
+	</div>
+	<div class="rightColumn">
+		<p class="calliper">
+			<label>Calliper</label>
+			<? echo ( input( type=>'float', id=>'calliper-'.$$variable{type_id}, name=>'calliper-'.$$variable{type_id}, value=>$param{'calliper-'.$$variable{type_id}},
+                oninput=>qq`\$('calliper_mm-$$variable{type_id}').value=do_decimals((this.value/1000)*25.4,3);`,
+						); )?> PT / mils
+
+          <? echo ( input(type=>'float', id=>'calliper_mm-'.$$variable{type_id}, name=>'calliper_mm-'.$$variable{type_id},
+                  value => Math::Round::nearest( .001, ($param{'calliper-'.$$variable{type_id}}/1000) * 25.4),
+                  oninput =>qq`\$('calliper-$$variable{type_id}').value=do_decimals( this.value*39.3701, 1 );`,
+                ); ) ?> mm
+
+		</p>
+		<p class="gsm">
+			<label>GSM</label>
+			<? echo ( input( type=>'float', id=>'gsm-'.$$variable{type_id}, name=>'gsm-'.$$variable{type_id}, value=>$param{'gsm-'.$$variable{type_id}}, onkeyup=>"calc_from_gsm(this.form,'-$$variable{type_id}');" ); ) ?>
+		</p>
+		<p class="mweight" id="MWeight-<?type_id?>" <? echo ( 'style="display:none;"' if $param{'type-'.$$variable{type_id}} eq 'Roll' ) ?> >
+			<label>MWeight</label>
+			<? echo ( input( type=>'float', id=>'mweight-'.$$variable{type_id}, name=>'mweight-'.$$variable{type_id}, value=>$param{'mweight-'.$$variable{type_id}}, onkeyup=>"calc_from_mweight(this.form,'-$$variable{type_id}');" ); ) ?>M
+		</p>
+		<p class="basis_weight" id="basis_weight-<?type_id?>">
+			<label>Basis Weight</label>
+			<? echo ( input( type=>'float', id=>'basis_weight-'.$$variable{type_id}, name=>'basis_weight-'.$$variable{type_id}, value=>$param{'basis_weight-'.$$variable{type_id}}, onkeyup=>"calc_from_basis_weight(this.form,'-$$variable{type_id}');" ); ) ?>M
+		</p>
+		<p class="basis_width" id="basis_width-<?type_id?>">
+			<label>Basis Size</label>
+			<? echo (  join(' x ',
+						input( type=>'float', id=>'basis_width-'.$$variable{type_id}, name=>'basis_width-'.$$variable{type_id}, value=>$param{'basis_width-'.$$variable{type_id}}, onkeyup=>"calc_from_basis_weight(this.form,'-$$variable{type_id}');"),
+						input( type=>'float', id=>'basis_height-'.$$variable{type_id}, name=>'basis_height-'.$$variable{type_id}, value=>$param{'basis_height-'.$$variable{type_id}}, onkeyup=>"calc_from_basis_weight(this.form,'-$$variable{type_id}');"),
+ );
+ ) ?>
+		</p>
+		<p>
+			<label>FSC Code</label>
+			<input type="text" id="fsc_code-<?type_id?>" name="fsc_code-<?type_id?>" value="<? echo ( $param{'fsc_code-'.$$variable{type_id}} ) ?>" />
+		</p>
+		<p>
+			<label>Supplier Invoice#</label>
+			<input type="text" id="supplier_invoice-<?type_id?>" name="supplier_invoice-<?type_id?>" value="<? echo ( $$variable{Type}->supplier_invoice() ) ?>" />
+		</p>
+		<p class="docket">
+			<label>Docket</label>
+			<? echo ( join("\n",
+						input( type=>'cardinal', id=>'docket-'.$$variable{type_id}, name=>'docket-'.$$variable{type_id}, value=>$$variable{Type}->docket(), onkeydown=>"if(event.keyCode==13){load_pos($$variable{Type}{id});};" ),
+						( $$variable{Type}->docket() ? (button('GoDocket'.$$variable{Type}->id(), {
+href=>'/employee/project/view.html?docket='.$$variable{Type}->docket(), target=>'_blank', text=>'Go to Docket' }) ) : () ),
+						button('LoadPos'.$$variable{Type}->id(), { onclick=>"load_pos($$variable{Type}{id});", text=>'Load POs' }),
+
+); ) ?>
+		</p>
+		<div id="PurchaseOrders<? echo ( $$variable{Type}->id() ) ?>">
+		<? if ( ! $$variable{Type}->po_id() ) ?>
+			<?include(_manifest_purchase_orders.html)?>
+		<? endif ( ! $$variable{Type}->po_id() ) ?>
+		</div>
+		<p class="purchaseorder">
+			<label>Purchase Order</label>
+			<? echo ( join("\n", 
+				input( type=>'cardinal', id=>"po_id-$$variable{type_id}", name=>"po_id-$$variable{type_id}", value=>$$variable{Type}->po_id(), onkeydown=>"if(event.keyCode==13){load_po_contents($$variable{type_id});};" ),
+				button( 'GoPO'.$$variable{Type}->id(), {
+					onclick=>qq`window.open('/employee/purchase_order/view.html?po_id='+\$('po_id-$$variable{Type}{id}').value,'_blank');`, text=>'Go' } ),
+			); ) ?>
+		</p>
+		<div id="PO_<? echo ( $$variable{Type}->id() ) ?>"><?include(_manifest_purchase_order_contents.html)?></div>
+		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) ?>
+		<p>
+			<label>Cost (/CWT)</label>
+			<? echo ( input( type=>'float', id=>'cost-'.$$variable{type_id}, name=>'cost-'.$$variable{type_id}, value=>$$variable{Type}->cost() ); ) ?>
+		</p>
+		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) ?>
+		<p><label>Manufacturers Name</label>
+			<? echo ( input( type=>'text', name=>'manufacturers_name-'.$$variable{type_id}, id=>'manufacturers_name-'.$$variable{type_id}, value=>$$variable{Type}->manufacturers_name() ); ) ?>
+		</p>
+		<p><label>Item Count</label>
+			<? echo ( input( type=>'cardinal', name=>'item_count-'.$$variable{type_id}, id=>'item_count-'.$$variable{type_id}, value=>$$variable{Type}->item_count() ? $$variable{Type}->item_count() : 1 ); ) ?>
+		</p>
+	</div>
+	<br class="spacer"/>
+	<br class="spacer"/>
+	<div id="ManifestContents<? echo ( $$variable{Type}->id() ) ?>"><?include(_manifest_contents.html)?></div>
+	<br class="spacer"/>
+</fieldset>

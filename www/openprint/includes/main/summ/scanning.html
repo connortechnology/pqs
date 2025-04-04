@@ -1,0 +1,40 @@
+<p> 
+	<label>Type of original(s)</label>
+	<span class="value">
+		<?ddmOriginal?>
+	</span>
+</p>
+<p> 
+	<label>Original dimensions</label>
+	<span class="value">
+		<?txtScanWidth?>
+		 x 
+		<?txtScanHeight?>
+		 <span class="smTbl">(W x H)</span></span>
+</p>
+<p> 
+	<label>Enlargement and final dimensions</label>
+	<span class="value"> <?txtPercent?> % &nbsp; <?txtScanWidthFinal?> x <?txtScanHeightFinal?> <span class="smTbl">(W x H)</span></span>
+</p>
+<? if ( $$variable{'ddmLineScreen'} or $$variable{'txtLineScreenOther'} ) ?>
+<p> 
+	<label>Line screen</label>
+	<span class="value">
+		<?ddmLineScreen?>
+		<br/>
+		<?txtLineScreenOther?>
+	</span>
+</p>
+<? endif ( $$variable{'ddmLineScreen'} or $$variable{'txtLineScreenOther'} ) ?>
+<p> 
+	<label>Scan quantity</label>
+	<span class="value">
+		<?txtQuantity?>
+	</span>
+</p>
+<p> 
+	<label>Random proof(s)</label>
+	<span class="value">
+		<?rdbRandomProof?>
+	</span>
+</p>

@@ -1,0 +1,38 @@
+<? eval (
+  my $uri = '/administrator/project_types/index.html';
+	@{$$variable{Project_Types}} = ();
+	foreach my $Project_Type ( openprint::ProjectType->find( 
+		#ssi::date_filter( $uri.'?created_on_end','created_on <=' ),
+		#ssi::date_filter( '/administrator/project_types/index.html?created_on_start','created_on >=' ),
+			( $session{$uri.'?category_id'} ? ( category_id => $session{$uri.'?category_id'} ) : () ),
+			order				=> 'sorting,lower(name)',
+		) ) {
+		push @{$$variable{Project_Types}}, $Project_Type;
+	} # end foreach Project_Types
+) ?>
+<? if ( @{$$variable{Project_Types}} == 0 ) ?>
+	There are no project types matching your search criteria. 
+<? else ( @{$$variable{Project_Types}} == 0 ) ?>
+		<? echo ( 
+			my $html;
+$html .= '<div class="Project_Type header"> 
+              <div class="Name">Name</div>
+              <div class="Description">Description</div>
+              <div class="Category">Category</div>
+          </div>';
+
+			foreach my $Project_Type ( @{$$variable{Project_Types}} ) {
+
+				$html .= sprintf(q` 
+					<div title="%2$s" class="Project_Type">
+						<div class="Name"><a href="/administrator/project_types/edit.html?ddmProjectType=%1$d">%2$s</a></div>
+						<div class="Description"><a href="/administrator/project_types/edit.html?ddmProjectType=%1$d">%3$s</a></div>
+						<div class="Category"><a href="/administrator/project_types/edit.html?ddmProjectType=%1$d">%4$s</a></div>
+					</div>
+					`, $Project_Type->id(), html_escape($Project_Type->name()), html_escape($Project_Type->description()),
+					$Project_Type->category(),
+				);
+			} # end foreach Project_Types
+			return $html;
+		) ?>
+<? endif ( @{$$variable{Project_Types}} == 0 ) ?>

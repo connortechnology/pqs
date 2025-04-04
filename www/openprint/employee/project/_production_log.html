@@ -1,0 +1,49 @@
+<? if ( $variable{Project}->id() ) ?>
+<table class="List">
+	<tr>
+		<th class="DateTime">When</th>
+		<th class="form">Form</th>
+		<th class="version">Version</th>
+		<th class="quantity">Quantity</th>
+		<th class="Equipment">Equipment</th>
+		<th class="Signature">Signature</th>
+	</tr>
+<? echo (
+	my $html;
+	my $rowclass;
+	my $quantity_total = 0;
+	foreach my $PF ( openprint::ProductionFeedback->find( order=>'id desc', project_id=>$$variable{Project}->id() ) ) {
+		my $Project = $PF->Project();
+		my $Service = $Project->Service($PF->service_id()) if $PF->service_id();
+		my $specs = $Service->specs() if $Service;
+
+		$html .= sprintf(q`
+<tr%1$s>
+	<td class="DateTime">%2$s</td>
+	<td class="form">%3$d</td>
+	<td class="version">%4$s</td>
+	<td class="quantity">%5$s</td>
+	<td class="Equipment">%6$s</td>
+	<td%11$s class="Signature">%7$s</td>
+</tr>
+`, $rowclass, 
+format_datetime($PF->starting_on()),
+#$$Project{id}, $Project->docket(), $Project->Company()->name(), 
+$$specs{SignatureIndex}, $PF->version(), 
+Number::Format::format_number(int $PF->quantity()), $PF->Equipment()->strid(),
+( $PF->signature_id() ? $PF->Signature()->html({width=>100}) : '' ), 
+( $PF->comment() ? ' rowspan="2"' : '' ),
+
+ );
+		if ( $PF->comment() ) {
+			$html .= '<tr'.$rowclass.'><td colspan="5">'.$PF->comment().'</td></tr>';
+		} # end if
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+		$quantity_total += $PF->quantity();
+	} # end foreach PF
+	$html .= '<tr class="totals"><td colspan="3">Totals</td><td class="quantity">'.Number::Format::format_number($quantity_total).'</td><td colspan="2"></td></tr>';
+
+	return $html;
+) ?>
+</table>
+<? endif ( $variable{Project}->id() ) ?>

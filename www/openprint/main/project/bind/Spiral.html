@@ -1,0 +1,44 @@
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<?include(/includes/main/proj/required_fields.html)?>
+		<fieldset><legend><?ServiceTypeName?></legend>
+			<ul>
+				<?include(/includes/main/proj/finished_calliper.html)?>
+				<li><label>Spine Length</label>
+					<? echo ( join("\n",
+							input( type=>'float', name=>'txtFinalHeight', onkeyup=>q`calc('f1');`),
+							write_override( 'chkOverrideFinalHeight', $$variable{'chkOverrideFinalHeight'}, '', "if(!this.checked)calc('f1');" ),
+						); ) ?>
+				</li>
+			   <li><label>Material used<br/>(in inches)</label>
+					<? echo ( join("\n",
+							input( type=>'float', name=>'txtMaterialLength', onkeyup=>'calc(this.form.name);'),
+							write_override( 'chkOverrideMaterialLength', $$variable{'chkOverrideMaterialLength'}, '', "if(!this.checked)calc('f1');" ),
+						); ) ?>
+				</li>
+        <? if (openprint::Material->find_one(name=>'Clear Acetate Front'))?>
+        <li><label>Clear Acetate Front?</label>
+          <?echo( radio('acetate_front', [Y=>'Yes',N=>'No'], $$variable{acetate_front}, {default=>'N', onclick=>q`calc('f1');`}); ) ?>
+        </li>
+        <? endif (openprint::Material->find_one(name=>'Clear Acetate Front'))?>
+        <? if (openprint::Material->find_one(name=>'Black Acetate Back'))?>
+        <li><label>Black Acetate Back?</label>
+          <?echo( radio('acetate_back', [Y=>'Yes',N=>'No'], $$variable{acetate_back}, {default=>'N', onclick=>q`calc('f1');`}); ) ?>
+        </li>
+        <? endif (openprint::Material->find_one(name=>'Black Acetate Back'))?>
+			</ul>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+			<?include(/includes/main/proj/quantities_equipment_prices.html)?>
+			</ul>
+		</fieldset>
+		<?include(/includes/main/proj/add_to_project.html)?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>">
+		<input type="hidden" name="ContinueProject" value="Y" />
+	</form>
+</div>
+<script src="<?hash_link(/javascripts/service.js)?>"></script>

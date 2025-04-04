@@ -1,0 +1,39 @@
+<? echo (
+	my $html;
+	my @Equipment = openprint::Equipment->find( order=>'lower(strid)', 'servicetype_id any'=> $$variable{ServiceType}->id());
+	my @equipment_dropdown = map { $_->id(), $_->strid() . ': ' . $_->name() } @Equipment;
+  my @services = openprint::Service->find(servicetype_id=>$$variable{ServiceType}->id());
+
+	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+
+	my $prices_per_equipment = slurp_content( '/administrator/services/_prices_per_equipment.html' );
+
+	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+		$$variable{Pricelist} = $Pricelist;
+		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
+      foreach my $service (@services) {
+        $$variable{Service} = $service;
+
+		my @Prices = openprint::ServicePrice->find( service_id=>$$variable{Service}->id(), pricelist_id=>$Pricelist->id() );
+
+		my @equipment_ids = $session{$r->uri().'?equipment_id'} ? ($session{$r->uri().'?equipment_id'}) : sort( sets::union( map{ $_->equipment_id() } @Prices ) );
+		push @equipment_ids, undef if ! @equipment_ids;
+		foreach my $Equipment ( map{new openprint::Equipment($_)} @equipment_ids ) {
+			next if $Equipment->deleted();
+			$$variable{Equipment} = $Equipment;
+			$html .= variable_substitution( \$prices_per_equipment );
+		} # end foreach Equipment
+      }
+
+		$html .= '</div>';
+		if ( ! $param{equipment_id} ) {
+			$html .= '<p><label>New Price</label>';
+			$html .= ssi::select( \@equipment_dropdown, undef, { class=>'equipment', name=>"equipment_id-$$Pricelist{id}", id=>"equipment_id-$$Pricelist{id}", prepend=>['','Equipment All'] } );
+			$html .= ssi::select( [ map { $_{id} => $_{name} } @services ], undef, { class=>"service", name=>"service_id-$$Pricelist{id}", id=>"service_id-$$Pricelist{id}", prepend=>['','Service All'] } );
+			$html .= button( 'a'.$$Pricelist{id}.'new', { onclick=>qq`add_new_price( get_ddm_value(\$('service_id-$$Pricelist{id}')), $$Pricelist{id}, get_ddm_value( \$('equipment_id-$$Pricelist{id}') ) );`, text=>'+', title=>'Add New Price' } );
+			$html .= '</p>';
+		}
+		$html .= '</fieldset><!--Pricelist-->';
+	} # end foreach Pricelist
+	return $html;
+) ?>

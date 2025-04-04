@@ -1,0 +1,67 @@
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Order Performance</h2>
+</div>
+<form id="f1" name="f1" action="/employee/reports/order_performance.html" method="post">
+	<input type="hidden" name="action" />
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<ul>
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
+		<li>
+			<label>CSR</label>
+			<select name="CSR" id="CSR" onchange="filter_companies( f1.company_id, {name:$('company_id').value,salesrep_id:get_ddm_value(this)} );">
+			<? echo (
+					my @options = ( '', 'All' );
+					push @options, map { $_->id(), $_->name() } openprint::User->find(type=>['E','A'], 'usergroup any'=>'Sales', company_id=>$config{owner_id} );
+					make_drop_down( \@options, $param{CSR} );
+					) ?>
+
+			 </select>
+		</li>
+		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
+		<li>
+			<label>Company</label>
+			<input type="text" oninput="filter_companies( f1.company_id, {name:this.value,salesrep_id:get_ddm_value($('CSR'))} );" class="filter" />
+			<select name="company_id" id="company_id">
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::Company->dropdown( 'last_order_id is null'=>0 ), $param{company_id} ); ) ?>
+			</select>
+		</li>
+		<li>
+			<label>Status</label>
+			<select name="status" multiple="multiple" size="4" >
+			<? echo (
+					my @options = map { $_->name(), $_->name() } openprint::Order_Status->find(order=>'lower(name)');
+					make_drop_down( \@options, $param{status} ? [split(',',$param{status})] : \@options);
+					) ?>
+			</select>
+		</li>
+		 <li>
+			 <label>Created</label>
+			<? echo (date_select_session('/employee/reports/order_performance.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?> to
+			<? echo (date_select_session('/employee/reports/order_performance.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Press</label>
+			<select id="press_id" name="press_id">
+				<option value="">All</option>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category any'=>'Printing', 'order'=>'lower(strid)') ], $param{'press_id'} ); ) ?>
+			</select>
+		</li>
+		<li>
+			<label>Reprint</label>
+			<? echo ( radio( 'reprint', [ 'Y', 'Yes', 'N', 'No', '', 'Both' ], $param{reprint} ); ) ?>
+		</li>
+		<li>
+			<label>POs</label>
+			<? echo ( radio( 'pos', [ 'Y', 'Yes', 'N', 'No', '', 'Both' ], $param{pos} ); ) ?>
+		</li>
+		</ul>
+		 <p class="buttons">
+			 <? echo ( join("\n",
+					 button( 'Go', { onclick=>q`LoadContent('Results','/employee/reports/_order_performance.html', $('f1').serialize() );`, text=>'Show Results' } ),
+); ) ?>
+		 </p>
+	</fieldset>
+</form>
+<div id="Results"><?include('/employee/reports/_order_performance.html')?></div>

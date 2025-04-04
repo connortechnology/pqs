@@ -1,0 +1,27 @@
+<? echo ( include('/includes/employee/feedback/timer.js'); ) ?>
+<? echo ( include('/includes/employee/feedback/line.html'); ) ?>
+<form method="post" name="f1" action="/employee/project/view.html">
+	<table width="600" border="0" cellspacing="0" cellpadding="0" cols="3">
+		<tr> 
+			<td width="320" valign="top"><b class="lgTxt">Production Feedback</b></td>
+			<td width="20">&nbsp;</td>
+			<td width="260" colspan="2"></td>
+		</tr>
+		<tr> 
+			<td colspan="4" height="10"></td>
+		</tr>
+		<tr> 
+			<td valign="top">Employee</td>
+			<td>&nbsp;</td>
+			<td colspan="2"><input type="text" name="txtEmployeeName" readonly value="<?txtEmployeeName?>"/></td>
+		</tr>
+	</table>
+	<? echo ( include('/includes/employee/feedback/make_ready_hours.html'); ) ?>
+	<? echo ( include('/includes/employee/feedback/run_hours.html'); ) ?>
+	<? echo ( include('/includes/employee/feedback/downtime_hours.html'); ) ?>
+	<? echo ( include('/includes/employee/feedback/comments.html'); ) ?>
+	<? echo ( include('/includes/employee/feedback/complete.html'); ) ?>
+	<? echo ( include('/includes/employee/feedback/complete_date.html'); ) ?>
+	<? echo ( include('/includes/employee/feedback/buttons.html'); ) ?>
+	<? echo ( include('/includes/employee/feedback/hidden_fields.html'); ) ?>
+</form>

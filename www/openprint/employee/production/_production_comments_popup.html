@@ -1,0 +1,19 @@
+<form id="production_comments_popup_form" name="production_comments_popup_form" action="">
+	<input type="hidden" name="project_id" value="<? echo ( $param{project_id} ) ?>" />
+	<fieldset><legend>Production Comments for  <? echo ( $$variable{Project}->id() ) ?></legend>
+		<p><label>Production Comments</label>
+		<textarea name="production_comments" id="production_comments" rows="<? echo ( count_lines( $$variable{Project}->production_comments() ); ) ?>"><? echo ( 
+				$$variable{Project}->production_comments()
+				) ?></textarea>
+		</p>
+	</fieldset>
+		<p class="buttons">
+			<? echo ( join("\n",
+			button( 'SaveProject', { onclick=>q`tinyMCE.triggerSave();new Ajax.Updater('production_comments`.$param{project_id}.q`','_production_comments.html', {parameters:$('production_comments_popup_form').serialize(), onSuccess:function(){popupWin.destroy();}});`, text=>'Save' } ),
+			button( 'CancelProject',  { onclick=>'popupWin.destroy();', text=> 'Cancel' } ),
+				);
+			) ?>
+		</p>
+	<input type="hidden" name="action" value="Save" />
+</form>
+<script type="text/javascript"> tinyMCE.init({ mode: "exact", elements : 'production_comments', plugins: "paste", theme : "advanced" }); </script>

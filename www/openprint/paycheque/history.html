@@ -1,0 +1,71 @@
+<div class="PageTitle">
+<h1>Paycheques</h1>
+<h2>History</h2>
+</div>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<script type="text/javascript">
+	function delete_confirm(form) {
+		var number_of_deleted_paycheques = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_paycheques += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_paycheques == 0 ) {
+			alert("To Delete Paycheques, click the checkbox beside the paycheque.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_paycheques + " paycheques from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_paycheques( form ) {
+		$('PaychequeList').innerHTML = 'Please wait...';
+		new Ajax.Updater('PaychequeList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+</script>	 
+<? if ( $session{'user_id'} ) ?>
+<form id="f1" name="f1" method="post" action="/paycheque/history.html">
+   <div class="PaychequeHistory">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+			<ul>
+			<li>
+				<label>Employer</label>
+				<select name="employer_id" id="employer_id" onchange="load_paycheques(this.form);">
+					<option value="">All</option>
+					<? echo ( openprint::Company::get_dropdown( $session{'/paycheque/history.html?company_id'} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Employee</label>
+				<select name="employee_id" id="employee_id" onchange="load_paycheques(this.form);">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id'=>$openprint::session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/paycheque/history.html?company_id'} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Paid On</label>
+<? echo ( ssi::date_select_session( '/paycheque/history.html', 'paid_on_start', { 'onchange'=>'load_paycheques(this.form);', 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+					to 
+<? echo ( ssi::date_select_session( '/paycheque/history.html', 'paid_on_end', { 'onchange'=>'load_paycheques(this.form);', 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+			</li>
+			</ul>
+			<p class="buttons">
+				<? echo ( join('',
+					ssi::button( 'ShowResults', { onclick=>"load_paycheques(f1);", text=>'Show Results' } ),
+					ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
+					ssi::button( 'New', { onclick=>'', href=>'edit.html', text=>'New Paycheque' } ),
+					ssi::button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.submit();" } ),
+					); ) ?>
+			</p>
+		</fieldset>
+	</div>
+		<div id="PaychequeList"><? echo ( include('_history.html'); ) ?></div>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+<? else ( $session{'user_id'} ) ?>
+	Only logged in users have a paycheque history.
+<? endif ( $session{'user_id'} ) ?>

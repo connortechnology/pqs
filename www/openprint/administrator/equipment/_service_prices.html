@@ -1,0 +1,50 @@
+<? echo (
+return '' if !$session{'/administrator/equipment/edit.html?show_service_prices'};
+my $html = '';
+my $Equipment = $$variable{Equipment};
+
+$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+  $$variable{Pricelist} = $Pricelist;
+  my @prices = openprint::ServicePrice->find(
+    equipment_id=>$$variable{Equipment}->id(),
+    pricelist_id=>$Pricelist->id(),
+    order=>'min NULLS FIRST, max NULLS LAST');
+  my %prices = misc::make_hash_from_array('service_id', @prices);
+
+  my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices], order=>'lngsortorder ASC,lower(name)') if @prices;
+
+  $html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->link_to() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
+  foreach my $service (@services) {
+    $$variable{Service} = $service;
+
+    $html .= '<fieldset><legend>'.$service->link_to() . '</legend>';
+    $html .= '<table class="List"><thead>';
+    $html .= '<th class="Supplier">Supplier</th>' if @{$$variable{company_ids}} > 2;
+    $html .= '
+          <th class="Period">Period</th>
+          <th class="Range">Discount Range</th>
+          <th class="Range_Units">Discount Units</th>
+          <th class="Cost">Cost</th>
+          <th class="Markup">Mark up</th>
+          <th class="Price">Price</th>
+          <th class="Units">Units</th>
+          <th class="Discount">Discount?</th>
+          <th class="Mode">Mode</th>
+          <th class="buttons">
+    '.
+    button( join('_', 'add',$$Pricelist{id},$$Equipment{id},$$service{id}), { type=>'button',
+        on_click_this=>'add_new_price',
+        data_pricelist_id=>$$Pricelist{id}, data_equipment_id=>$$Equipment{id}, data_service_id=>$$service{id},
+        text=>'+', title=>'Add New Price to '.$Equipment->strid() .' for '.$service->description()} ) . qq`</th>
+      </tr></thead><tbody id="prices-$$Pricelist{id}-$$Equipment{id}-$$service{id}">`;
+    foreach my $price (@{$prices{$service->id()}}) {
+      $$variable{Price} = $price;
+      $html .= include('/administrator/services/_price.html', $variable);
+    } # end foreach price
+    $html .= '</tbody></table></fieldset><!--service-->';
+  } # end foreach service
+    $html .= '</div></fieldset><!--pricelist-->';
+} # end foreach Pricelist
+return $html;
+) ?>

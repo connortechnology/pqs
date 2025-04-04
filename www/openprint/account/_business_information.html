@@ -1,0 +1,52 @@
+<div class="BusinessInformation">
+	<fieldset><legend>Business Information</legend>
+		<ul>
+			<li class="required"> 
+				<label for="businessname">Legal Name</label>
+				<input type="text" id="businessname" name="business_name" value="<? hecho ( $param{business_name} ? $param{business_name} : $$variable{Company}->business_name() ) ?>" />
+			</li>
+			<li class="required legal_form"> 
+				<label>Legal Form</label>
+				<? echo ( radio( 'business_form', [ 'Corporation','Corporation', 'SoleProprietor', 'Sole Proprietor', 'Partnership', 'Partnership' ], $param{business_form} ? $param{business_form} : $$variable{Company}->business_form() ); ) ?>
+			</li>
+			<li class="business_type required"> 
+				<label for="business_type">Business Type</label>
+				<input type="text" id="business_type" name="business_type" value="<? hecho ( $param{business_type} ? $param{business_type} : $$variable{Company}->business_type() ) ?>" />
+			</li>
+			<li class="StartYear required"> 
+				<label for="StartYear">Year Established</label>
+				<input type="number" id="StartYear" name="StartYear" value="<? echo ( 
+						return $param{StartYear} if $param{StartYear};
+					if ( $$variable{Company}->established() ) {
+					$$variable{Company}->established() =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
+					return $1;
+					} # end if
+				) ?>" />
+			</li>
+			<li class="president_owner required"> 
+				<label for="president_owner">President/CEO/Owner</label>
+				<input type="text" id="president_owner" name="president_owner" value="<? hecho ( $param{president_owner} ? $param{president_owner} : $$variable{Company}->president_owner() ) ?>" />
+			</li>
+			<li class="gst_number required"> 
+				<label for="gst_number">
+					<? if ( $session{Country} eq 'US' ) ?>Federal ID #/SSN #<? endif ( $session{Country} eq 'US' ) ?>
+					<? if ( $session{Country} eq 'CA' ) ?>GST/HST #<? endif ( $session{Country} eq 'CA' ) ?>
+				</label>
+				<input type="text" id="gst_number" name="gst_number" value="<? hecho ( $param{gst_number} ? $param{gst_number} : $$variable{Company}->gst_number() ) ?>" />
+			</li>
+			<li class="pst_number required"> 
+				<label for="pst_number">
+				<? echo (
+					if ( $session{Country} eq 'US' ) {
+						return 'State Tax #';
+					} elsif ( $session{Country} eq 'CA' ) {
+						return 'Provincial Tax #';
+					} else {
+						return 'State/Provincial Tax #';
+					} # end if
+				) ?></label>
+				<input type="text" id="pst_number" name="pst_number" value="<? hecho ( $param{pst_number} ? $param{pst_number} : $$variable{Company}->pst_number() ) ?>" />
+			</li>
+		</ul>
+	</fieldset>
+</div>

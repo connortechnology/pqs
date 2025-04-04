@@ -1,0 +1,60 @@
+<? eval (
+	require openprint::Estimating::UPS;
+	openprint::Estimating::UPS::display( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
+) ?>
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript">
+function validate_data(formName) {
+	var form = getFormObj( formName );
+	var text = '';
+	return true;
+} // end function
+</script>
+<div class="Service">
+	<form name="f1" method="post" action="/main/order/submit.html">
+		<fieldset><legend>UPS Shipping Services</legend>
+		<?include('/main/project/shipping/_shipping_packages.html')?>
+		<?include('/main/project/shipping/_shipping_address.html')?>
+		<p>
+			<label>Service Type</label>
+			<span id="ServiceTypeDiv">
+				Please wait while services types are loaded.
+				<input type="hidden" name="ddmServiceType" value="<?ddmServiceType?>" />
+			</span>
+		</p>
+		<p>
+			<label>Pickup Type</label>
+			<span id="PickupTypeDiv">
+				Please wait while pickup types are loaded.
+				<input type="hidden" name="ddmPickupType" value="<?ddmPickupType?>" />
+			</span>
+		</p>
+		<p>
+			<label><b>Price</b></label>
+			<? eval ( $$variable{QTYIndex} = 1 ) ?>
+			<? while ( $$variable{QTYIndex} <= 3 ) ?>
+			<? if ( $$variable{'txtQuantity'.$$variable{QTYIndex}} ) ?>
+			<input name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
+<? if ( sets::isin( $openprint::session{user_type}, ['A','E'] ) ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{QTYIndex}, 'price_breakdown.gif', "show_breakdown('$$variable{QTYIndex}');", '', 'Breakdown' ); ) ?>
+<? endif ( sets::isin( $openprint::session{user_type}, ['A','E'] ) ) ?>
+			<? endif ( $$variable{'txtQuantity'.$$variable{QTYIndex}} ) ?>
+			<? eval ( $$variable{QTYIndex} += 1 ) ?>
+			<? endwhile ( $$variable{QTYIndex} <= 3 ) ?>
+		</p>
+		</fieldset>
+		<hr/>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<input type="hidden" name="OrderID" value="<?OrderID?>">
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>">
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="Status" />
+		<div id="hdnBreakdown1" style="display:none;"></div>
+		<div id="hdnBreakdown2" style="display:none;"></div>
+		<div id="hdnBreakdown3" style="display:none;"></div>
+	</form>
+	UPS, the UPS brandmark, and the Colour Brown are trademarks of United Parcel Service of America, Inc. All Rights Reserved
+</div><!-- Service -->

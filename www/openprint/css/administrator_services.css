@@ -1,0 +1,37 @@
+table .PeriodStart, table .PeriodEnd, table .Period {
+	width: 255px;
+	text-align: left;
+}
+table .Range {
+	width: 185px;
+}
+table .Range_Units {
+	width: 200px;
+}
+
+table .Units {
+	width: 200px;
+}
+table .Cost,
+table .Price,
+table .Markup {
+	width: 80px;
+}
+#Prices table .buttons {
+	width: 80px;
+}
+
+.tax_exempt {
+	padding-left: 185px;
+}
+.tax_exempt label:not(.radio):not(.radio-inline) {
+	width: 180px;
+	margin-left: -185px;
+}
+
+table .Supplier {
+	width: 80px;
+}
+.Service fieldset li input[type="text"] {
+width: 100%;
+}

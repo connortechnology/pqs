@@ -1,0 +1,46 @@
+<table class="List">
+	<tr>
+		<th class="payment_id">ID</th>
+		<th class="DateInput">Received On</th>
+		<th class="TransactionID">Transaction ID</th>
+		<th class="Method">Method</th>
+		<th class="Memo">Memo</th>
+		<th class="Price">Amount</th>
+		<th class="buttons"></th>
+	</tr>
+	<? echo ( 
+		my $html;
+		my $rowclass;
+		foreach my $Payment ( openprint::Payment->find(order_id=>$$variable{Order}->id()) ) {
+			$html .= sprintf(q`
+				<tr%1$s> 
+					<td class="payment_id">%2$d</td>
+					<td class="DateInput">%3$s</td>
+					<td class="TransactionID">%4$s</td>
+					<td class="Method">%5$s</td>
+					<td class="Memo">%6$s</td>
+					<td class="Price">%7$s</td>
+					<td class="buttons">%8$s</td>
+				</tr>`, $rowclass, $Payment->id(),
+					format_date( $Payment->received_on() ),
+					$Payment->transaction_id(),
+					$Payment->method(), $Payment->memo(), $Payment->Currency()->format($Payment->amount()) . $Payment->Currency()->short(),
+					button('Delete'.$$Payment{id}, { onclick=>"confirm_delete( document.f1, '$$Payment{id}' );", text=> 'Delete' } ),
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Payment
+		return $html;
+	) ?>
+	<tr class="totals">
+		<td class="payment_id">New</td>
+		<td class="DateInput"><? echo ( date_select('received_on', [ Date::Calc::Today() ] ); ) ?></td>
+		<td class="TransactionID"><input type="text" name="transaction_id" /></td>
+		<td class="Method">
+<? echo ( ssi::select( [ map { $_, $_ } ( '', 'Cash','Cheque','Email Transfer','Paypal','Work In Trade' ) ], undef, { id=>'method', name=>'method' } ); ) ?>
+		</td>
+		<td class="Memo"><input type="text" name="memo" /></td>
+		<td class="Price"><? echo ( input( type=>'float', name=>'amount', value=>$$variable{Order}->owing(), onkeydown=>"this.lastValue = this.value;return check_decimal(this,event);" ); ) ?></td>
+		<td class="buttons"><? echo (button( 'AddPayment', { onclick=> q`f1.btnFunction.value='Save';f1.submit();`,text=>'Add' } ); ) ?></td>
+	</tr>
+</table>
+

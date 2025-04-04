@@ -1,0 +1,20 @@
+<div class="Map">
+  <?include(/includes/error_reporting.html)?>
+  <div id="map"> </div>
+</div>
+<script>
+  <?echo(
+    require JSON;
+    my $json = JSON->new->allow_nonref->convert_blessed;
+
+    my $host_json = "const hosts = {};\n";
+    my $location_json = "const locations = [];\n";
+
+    foreach my $host (openprint::Host->find('location_id is null'=>0)) {
+      $host_json .= 'hosts['.$host->id().'] = '.$json->encode($host)."\n";
+      $location_json .= 'locations['.$host->location_id().']='.$json->encode($host->Location())."\n";
+    }
+    return $host_json ."\n".$location_json;
+  ) ?>
+</script>
+<script src="<?hash_link(/location/map.js)?>"></script>

@@ -1,0 +1,35 @@
+Click on the image to start streaming
+<ul>
+	<? echo ( 
+			my $zm_dbh = sql::open_sql( $log,
+				  database  => $config{'zm_db_name'},
+				  driver    => $config{'zm_db_driver'},
+				  host      => $config{'zm_db_hostname'},
+				  login     => $config{'zm_db_username'},
+				  password  => $config{'zm_db_password'},
+				);
+			return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
+			require openprint::ZM_Monitor;
+			$openprint::ZM_Monitor::dbh = $zm_dbh;
+
+			if ( !$$variable{Monitors} ) {
+				$$variable{Monitors} = [ openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 ) ];
+			} # end if
+
+		my $html = '';
+		my @monitor_ids = split(',', $session{'cameras_viewing'} );
+		foreach my $Monitor ( @{$$variable{'Monitors'}} ) {
+			next if sets::isin( $Monitor->id(), \@monitor_ids );
+      if (! $Monitor->can_view()) {
+      $log->debug("Can't view monitor $$Monitor{id} $$Monitor{name}");
+			next;
+      }
+			$Monitor::dbh = $zm_dbh;
+
+			$html .= sprintf('<li id="camera_%1$d" onclick="start_stream( %1$d );"><img src="%3$s" class="thumbnail" alt="%2$s" title="%2$s"/></li>
+				', $Monitor->id(), $Monitor->name(), $Monitor->source_snapshot_url(),
+				);
+		} # end foreach Monitor	
+		return $html;
+	) ?>
+</ul>

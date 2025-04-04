@@ -1,0 +1,29 @@
+<fieldset><legend>Specifications</legend>
+	<? if ( $$variable{Object}->id() ) ?>
+<table class="List" id="specifications">
+    <tr>
+        <th class="name">Name</th>
+        <th class="value">Value</th>
+        <th class="buttons">
+    <? echo ( button( 'AddSpec', { onclick=>"new Ajax.Request('/includes/_specifications.json', { parameters:{func:'Add', object_id: $$variable{Object}{id}, object_type_id: '". $$variable{Object}->Object_Type()->id() ."' } } );", text=>'+', title=>'Add' } ); ) ?>
+        </th>
+    </tr>
+<? echo (
+        my $html;
+        my $rowclass;
+        my $template = slurp_content('/includes/_specification.html');
+        foreach my $Spec ( $$variable{Object}->Specifications() ) {
+            $html .= variable_substitution( \$template, {
+                Spec        =>  $Spec,
+                rowclass    =>  $rowclass,
+                } );
+            $rowclass = $rowclass ? '' : ' class="colRow"';
+        } # end foreach
+        return $html;
+) ?>
+</table>
+<? else ( $$variable{Object}->id() ) ?>
+		Please save your new <?echo($$variable{Object}->Object_Type()->human())?> before setting specifications.
+<? endif ( $$variable{Object}->id() ) ?>
+</fieldset>
+

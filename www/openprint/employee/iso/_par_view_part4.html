@@ -1,0 +1,16 @@
+<div class="error"><?error?></div>
+<h3>Part 4 (To be complete by Quality System Management Representative)</h3>
+<table class="View">
+	<tr><td colspan="10">VERIFICATION OF PREVENTIVE ACTION EFFECTIVENESS</td></tr>
+	<tr><td colspan="10"><? hecho ( $$variable{'PAR'}->effectiveness() ) ?></td></tr>
+	<tr><td colspan="1">QS Mgt Rep / Designate</td>
+		<td colspan="4"><? hecho ( new openprint::User( $$variable{'PAR'}->part4_user_id())->name() ) ?></td>
+		<td colspan="1">Date</td>
+		<td colspan="4"><? hecho ( $$variable{'PAR'}->part4_signed_on() ) ?></td>
+	</tr>
+</table>
+<? if ( $$variable{'PAR'}->part4_user_id() == $openprint::session{'user_id'} ) ?>
+	<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'EditPart4', 'edit.gif', sprintf(q`new Ajax.Updater('Part4', '_par_edit_part4.html', { method: 'get', parameters: {par_id:%1$d} } );`, $$variable{'PAR'}->id() ), '', 'Edit' ); ) ?>.
+	</p>
+<? endif ( $$variable{'PAR'}->part4_user_id() == $openprint::session{'user_id'} ) ?>

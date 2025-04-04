@@ -1,0 +1,13 @@
+<form id="decline_form" name="decline_form" action="purchase_orders.html">
+	<input type="hidden" name="btnFunction" value="Decline" />
+	<input type="hidden" name="po_id" value="<? echo ( $param{'po_id'} ) ?>" />
+	<fieldset>
+		<p><label>Reason</label>
+			<textarea id="reason" name="reason" cols="" rows="1" onkeyup="textarea_resize(this);"></textarea>
+		</p>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'decline','decline.gif', 'decline_form.submit();', '', 'Decline' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'cancel','cancel.gif', 'contentWin.destroy();', '', 'Cancel' ); ) ?>
+		</p>
+	</fieldset>
+</form>

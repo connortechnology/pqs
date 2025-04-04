@@ -1,0 +1,119 @@
+<link href="<?hash_link('/css/quote.css'))?>" rel="stylesheet" type="text/css"/>
+<div class="Quote"><div class="History">
+<div class="PageTitle">
+	<h1>QUOTE</h1>
+	<h2>View Quote <? echo ( $$variable{Quote}->id(); ) ?></h2>
+</div>
+<script>
+function delete_confirm(form) {
+	if ( confirm("Are you sure you wish to delete this quote from history?\nClicking OK will take you back to the quote history page.") ) {
+		form.btnFunction.value='Delete';
+		form.submit();
+	}
+}
+  function resend_clicked() {
+      const f1 = document.getElementById('f1');
+      f1.action = '/main/quote/history_details.html';
+      f1.btnFunction.value='Resend';
+      f1.submit();
+    }
+</script>
+<?include('/includes/error_reporting.html')?>
+<? if ( $$variable{Quote}->id() ) ?>
+<? if ( $$variable{Quote}->company_id() != $session{company_id} ) ?>
+	<div class="warning unprintable">
+		Warning: You are logged in as <? echo ( $openprint::Company->name() ) ?> but this order belongs to 
+		<a href="history_details.html?quote_id=<?echo($$variable{Quote}->id())?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<?echo($$variable{Quote}->company_id())?>">
+			<? echo ( $$variable{Quote}->Company()->name() ) ?>
+		</a>!
+	</div>
+<? endif ( $$variable{Quote}->company_id() != $session{company_id} ) ?>
+
+<? if ( $$variable{Quote}->deleted() ) ?>
+	<div class="warning">This quote has been deleted.</div>
+<? endif ( $$variable{Quote}->deleted() ) ?>
+<form id="f1" name="f1" method="post" action="/main/quote/history_details.html">
+	<p class="buttons">
+		<input type="hidden" name="btnFunction"/>
+		<input type="hidden" name="quote_id" value="<? echo ( $$variable{Quote}->id() ) ?>"/>
+		<? echo ( my $html = '';
+			if ( $$variable{Quote}->can_view() ) {
+				$html .= button( 'Print', { onclick=>'window.print();' } );
+				if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+					$html .= button( 'Log', { onclick=>"popup_window('_view_log.html?quote_id=".$$variable{Quote}->id()."', '', {width: 800} );", text=> 'View Log' } );
+				} # end if
+				if ( $$variable{Quote}->can_delete() ) {
+					if ( ! $$variable{Quote}->deleted() ) {
+						$html .= button( 'Delete', { onclick=>'delete_confirm(f1);', text=>'Delete' } );
+					} else {
+						$html .= button( 'Undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+					} # end if
+				} # end if
+				if ( sets::isin( $session{user_type}, [ 'E', 'A' ] ) ) {
+					$html .= button( 'Copy', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy to' } );
+					$html .= button( 'Move', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Move To';f1.submit();", text=>'Move to' } );
+					$html .= q`<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />`;
+					$html .= ssi::select( openprint::Company->dropdown( or => {
+							id => [ $openprint::User->company_id(), $openprint::Company->id(), ( $$variable{Quote}->company_id() ? $$variable{Quote}->company_id() : () ) ], 
+							salesrep_id => [ $session{user_id}, $openprint::User->csr_ids() ] ,
+							} ),
+							$session{company_id}, { name=>'company_id', id=>'company_id', onchange=>'stop_filter_companies();' } );
+				} else {
+					$html .= button( 'Reuse', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy' } );
+				} # end if
+				if ( $$variable{Quote}->status() eq 'Complete' ) {
+					$html .= button( 'Resend', { on_click=>"resend_clicked", text=>'Resend' } );
+					$html .= button( 'SendToMe', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='SendToMe';f1.submit();", text=>'Send To Me' } );
+					$html .= button( 'Order', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", text=>'Order' } );
+					$html .= button( 'Edit', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", text=>'Edit' } );
+				} else {
+					$html .= button( 'Continue', { href=>'/main/quote/information.html?quote_id='.$$variable{Quote}{id}, text=>'Continue' } );
+				} # end if
+			} # end if can_view
+			return $html;
+		) ?>
+	</p>
+</form>
+<span class="unprintable">
+To save, process a new quote or process an order from this quotation, please click on the appropriate button below.<br/>
+<br/>
+</span>
+<div class="Quote">
+<? if ( $$variable{Quote}->can_view() ) ?>
+	<div class="Header">
+		<?include('/includes/quote_header.html')?>
+		<?include('/includes/quote_information.html')?>
+	</div>
+	<?include('_projects.html')?>
+	<?include('_products_view.html')?>
+	<table class="List">
+		<tr>
+			<td>
+				<? if ( $$variable{AdministratorName} ) ?>
+				<b>Administrator Name</b> <?AdministratorName?><br/>
+				<? endif ( $$variable{AdministratorName} ) ?>
+				<? if ( $$variable{AdministratorComments} ) ?>
+				<b>Administrator Comments</b> <?AdministratorComments?><br/>
+				<? endif ( $$variable{AdministratorComments} ) ?>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="3" align="right"><br/>
+				<span class="Currency">All prices listed in <? echo ( $$variable{Quote}->Currency()->name(); ) ?>.</span><br class="spacer"/>
+				Prices are subject to applicable taxes.<br/>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="3" align="left"><br/>
+			<div class="Disclaimer"><? echo ( $config{QuoteViewDisclaimer} ) ?></div>
+			</td>
+		</tr>
+	</table>
+<? else ( $$variable{Quote}->can_view() ) ?>
+<div class="warning">You may not view this quote.</div>
+<? endif ( $$variable{Quote}->can_view() ) ?>
+<? else ( $$variable{Quote}->id() ) ?>
+<div class="error">Quote <?echo( $param{quote_id} ) ?> not found.
+<? endif ( $$variable{Quote}->id() ) ?>
+</div><!--Quote-->
+</div></div>

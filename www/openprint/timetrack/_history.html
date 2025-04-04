@@ -1,0 +1,136 @@
+<? eval (
+  my $uri = '/timetrack/history.html';
+	@{$$variable{Timetracks}} = ();
+	$$variable{elapsed_total} = $$variable{value_total} = $$variable{wage_total} = $$variable{distance_total} = 0;
+	if ( $session{'/timetrack/history.html?contains'} and ( $session{'/timetrack/history.html?contains'} !~ /%/ ) ) {
+		$session{'/timetrack/history.html?contains'} = '%'.$session{'/timetrack/history.html?contains'}.'%';
+	} # end if
+	my @keywords = split(/\s/, $session{'/timetrack/history.html?keywords'});
+	foreach my $Timetrack ( openprint::Timetrack->find( 
+		date_filter( '/timetrack/history.html?starting_end', 'starting <=' ),
+		date_filter( '/timetrack/history.html?starting_start', 'starting >=' ),
+		( $session{'/timetrack/history.html?contains'} ? ( 'description ilike' => $session{'/timetrack/history.html?contains'} ) : () ),
+
+		( sets::isin( $session{user_type}, ['E', 'A'] ) ?
+			( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'	=> $session{'/timetrack/history.html?company_id'} ) : () ) :
+			( company_id	=> $session{company_id} ) ),
+		( $session{'/timetrack/history.html?user_id'} ? ( 'user_id'	=> $session{'/timetrack/history.html?user_id'} ) : () ),
+		( $session{'/timetrack/history.html?service_id'} ? ( 'service_id'	=> $session{'/timetrack/history.html?service_id'} ) : () ),
+		( $session{'/timetrack/history.html?billable'} ne '' ? ( 'billable'=>$session{'/timetrack/history.html?billable'} ) : () ),
+		( $session{'/timetrack/history.html?travel_associated'} ne '' ? ( 'travel_associated'=>$session{'/timetrack/history.html?travel_associated'} ) : () ),
+		order				=> 'starting,created_on',
+		) ) {
+    next if ! $Timetrack->can_view();
+		next if $Timetrack->paid() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?paid'} ) );
+		next if ( ! $Timetrack->paid() ) and ! sets::isin( 0, split(',', $session{'/timetrack/history.html?paid'} ) );
+		next if $Timetrack->invoiced() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?invoiced'} ) );
+		next if ( ! $Timetrack->invoiced() ) and ! sets::isin( 0, split(',', $session{'/timetrack/history.html?invoiced'} ) );
+
+		if ( @keywords ) {
+			my @timetrack_keywords = split( /\s/, $Timetrack->keywords() );
+			my $bad = 0;
+			foreach my $word ( @keywords ) {
+				if ( $word =~ /^\!(.*)$/ ) {
+					$bad = 1 if sets::isin( $1, \@timetrack_keywords );
+				} else {
+					$bad = 1 if ! sets::isin( $word, \@timetrack_keywords );
+				} 
+				last if $bad;
+			}
+					
+			next if $bad;
+		}
+
+		push @{$$variable{Timetracks}}, $Timetrack;
+		$$variable{elapsed_total} += $Timetrack->elapsed();
+		$$variable{value_total} += $Timetrack->value();
+		$$variable{wage_total} += $Timetrack->wage();
+		$$variable{distance_total} += $Timetrack->distance() if $Timetrack->distance();
+	} # end foreach Timetrack
+
+	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
+) ?>
+
+<? if ( @{$$variable{Timetracks}} == 0 ) ?>
+	There are no timetracks which match your search criteria. 
+<? else ( @{$$variable{Timetracks}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Timetrack ID #</b> to view timetrack details.<br/>
+		To delete timetracks from history check the appropriate timetrack(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="timetrack_id"><input type="checkbox" onclick="select_all($('f1'),'timetrack_id',this.checked);"</th>
+			<th class="EmployeeName">Employee</th>
+			<th class="Company">Company</th>
+			<th class="DateTime">Start</th>
+			<th class="DateTime">End</th>
+			<th class="Time">Time</th>
+			<th class="Invoiced">Inv?</th>
+			<th class="Paid">Paid?</th>
+			<th class="Service">Service</th>
+			<th class="Distance">Distance</th>
+			<th class="Rate">Rate</th>
+			<th class="Price">Wage</th>
+			<th class="Price">Billable</th>
+		</tr>
+		<? echo ( 
+			my ( $html, $rowclass );
+      require HTML::Strip;
+			my $hs = HTML::Strip->new();
+			foreach my $T ( @{$$variable{Timetracks}} ) {
+				$html .= sprintf(q`
+<tr title="%2$s"%1$s>
+	<td class="timetrack_id"><input type="checkbox" name="timetrack_id" value="%3$d"/></td>
+	<td class="EmployeeName">%4$s</td>
+	<td class="Company">%5$s</td>
+	<td class="DateTime">%6$s</td>
+	<td class="DateTime">%7$s</td>
+	<td class="Time">%8$s</td>
+	<td class="Invoiced">%9$s</td>
+	<td class="Paid">%10$s</td>
+	<td class="Service">%11$s</td>
+	<td class="Distance">%12$s</td>
+	<td class="Rate">%13$s</td>
+	<td class="Price">%14$s</td>
+	<td class="Price">%15$s</td>
+</tr>
+`, $rowclass, 
+( $T->description() ? Encode::encode('utf8', $hs->parse($T->description())) : ''),
+$T->id(), $T->link_to(html_escape( $T->User()->name() ) ),
+$T->link_to(html_escape( $T->Company()->name() )),
+Date::Format::time2str(($T->time_associated() ? $config{DateTimeFormat} : $config{DateFormat}), Date::Parse::str2time($T->starting())),
+Date::Format::time2str(($T->time_associated() ? $config{DateTimeFormat} : $config{DateFormat}), Date::Parse::str2time($T->ending())),
+$$T{duration_override} ? $$T{duration} : misc::seconds_to_pretty_interval( $T->elapsed() ),
+( $T->invoiced() ? 'Y' : 'N' ),
+( $T->paid() ? 'Y' : 'N' ),
+html_escape($T->Service()->name()),
+( $T->distance() ? $T->distance() .'km' : '' ),
+join('', $T->Currency()->symbol(), $T->rate(), $T->units()),
+openprint::Currency::format($T->wage()),
+openprint::Currency::format($T->value()),
+);
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach TimeTrack
+	$hs->eof();
+	return $html;
+) ?>
+		<tr class="totals">
+			<td colspan="5">Totals</td>
+			<td class="Time"><? echo ( misc::seconds_to_pretty_interval( $$variable{elapsed_total} ); ) ?></td>
+			<td colspan="3">&nbsp;</td>
+			<td class="Distance"><? echo ( 1*$$variable{distance_total} ) ?>km</td>
+			<td class="Rate">&nbsp;</td>
+			<td class="Price"><? echo ( openprint::Currency::format($$variable{wage_total}); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format($$variable{value_total}); ) ?></td>
+		</tr>
+	</table>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{Currency_id} )->name(); ) ?></span>
+	<br class="spacer"/>
+<p class="buttons">
+<? echo ( join("\n",
+			button( 'merge', { onclick=>q`new Ajax.Updater( 'TimetrackList','_history.html?func=merge', { parameters: { timetrack_id: get_value( $('f1').elements['timetrack_id'] ) } } );`, text=>'Merge Checked' } ),
+			button( 'delete', { onclick=>q`new Ajax.Updater( 'TimetrackList','_history.html?func=delete', { parameters: { timetrack_id: get_value( $('f1').elements['timetrack_id'] ) } } );`, text=>'Delete Checked' } ),
+); ) ?>
+</p>
+<? endif ( @{$$variable{Timetracks}} == 0 ) ?>

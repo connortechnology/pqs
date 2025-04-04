@@ -1,0 +1,5 @@
+<? echo (
+		$$variable{User} = $openprint::User;
+		$$variable{Campaign} = new openprint::EmailCampaign();
+		variable_substitution( \$$variable{Template}->body() );
+)?>

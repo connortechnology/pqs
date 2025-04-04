@@ -1,0 +1,4 @@
+<li>
+	<label>Days</label>
+	<? echo ( join('', map { sprintf('<span class="value">%d days</span>', $$variable{'TurnaroundDays'} ) } $$variable{'Project'}->quantity_indexes() ); ) ?>
+</li>

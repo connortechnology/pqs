@@ -1,0 +1,45 @@
+<? if ( $$variable{Quote}->Products() ) ?>
+<table>
+	<thead>
+		<tr>
+			<th class="thumbnail">&nbsp;</th>
+			<th class="description">Product / Service</th>
+			<th class="price">Price</th>
+			<th class="units">Units</th>
+			<th class="quantity">Quantity</th>
+			<th class="price">Total</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			my $subtotal = 0;
+			foreach my $Product ( $$variable{Quote}->Products() ) {
+				$html .= sprintf('<tr%1$s>
+									<td class="thumbnail">%8$s</td>
+									<td class="description">%3$s</td>
+									<td class="price">%5$s</td>
+									<td class="units">%6$s</td>
+									<td class="quantity">%4$s</td>
+									<td class="price total">%7$s</td>
+        </tr>', $rowclass, $Product->id(), $Product->name() . '<br/>' . $Product->description() . ( $Product->description() ? '<br/>'.$Product->comments() : $Product->comments() ),
+									Number::Format::format_number($Product->quantity()), 
+									openprint::Currency::format( $Product->price() ),
+                  $Product->units(),
+									openprint::Currency::format( $Product->total() ),
+									$Product->Product()->thumbnail_html(),
+					);
+		
+				$subtotal += $Product->total();
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Product
+		$html .= '<tr class="totals">';
+		$html .= '<td colspan="5">Subtotal</td><td class="price">';
+		$html .= openprint::Currency::format( $subtotal );
+		$html .= '</td></tr>';
+			return $html;
+		) ?>
+	</tbody>
+</table>
+<? endif ( $$variable{Quote}->Products() ) ?>

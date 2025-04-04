@@ -1,0 +1,13 @@
+<? echo (
+	my $name = openprint::Company->transform('name',$param{'name'});
+	return if ! $name;
+	if ( openprint::Company->find_one('name lc'=>lc $name) ) {
+		return q`
+			$('company_name_alert').innerHTML='Name already in use. You can still use it, but the other users will have to authorize you before you can login.';
+		`;
+	} else {
+		return q`
+			$('company_name_alert').innerHTML='Name is available.';
+		`;
+	} # end if
+) ?>

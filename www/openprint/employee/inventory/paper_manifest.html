@@ -1,0 +1,93 @@
+<? eval ( 
+	$$variable{'pages'} = POSIX::ceil(@{$$variable{'Skids'}}/3);
+	$$variable{'page'} = 1;
+	my $Skid = new openprint::Skid( $$variable{'Skids'}[0] );
+	if ( my $C = $Skid->Content( new openprint::Paper( $$variable{'paper_id'} ) ) ) {
+	$$variable{'total_quantity'} = $C->quantity()*@{$$variable{'Skids'}};
+	} # end if
+	$$variable{'FirstSkid'} = $$variable{'Skids'}[0];
+	$$variable{'LastSkid'} = $$variable{'Skids'}[@{$$variable{'Skids'}}-1];
+) ?>
+<? while ( @{$$variable{'Skids'}} ) ?>
+<p style="padding: 2px;">
+	<span style="float:right;"><b>Page <?page?> of <?pages?></b></span>
+	<span style="float:left;"><b>Manifest</b></span><br class="spacer"/>
+	<span style="float:left;">Received:
+	<? echo ( 
+		$$variable{'page'} += 1;
+		my $Skid = new openprint::Skid( $$variable{'Skids'}[0] );
+		Date::Format::time2str('%d %b %Y %H:%M', Date::Parse::str2time( $Skid->created_on() ) );
+
+		) ?>
+	</span><br class="spacer"/>
+</p>
+<div style="border: 1px solid black; margin-bottom: 2px;">
+<? echo ( 
+	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
+	my $Skid = new openprint::Skid( $$variable{'Skids'}[0] );
+	my $html;
+	$html .= '<table style="width:100%; height: 86px; table-layout:fixed;">';
+	$html .= '<tr><td width="40%" rowspan="2">';
+	if ( $Paper->id() ) {
+		my $paper_details = sprintf('%s %s %s ', $Paper->name(), $Paper->finish(), $Paper->colour() );
+		if ( $Paper->type() eq 'Roll' ) {
+		$paper_details .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );
+		} else {
+		$paper_details .= sprintf('<b>%s %s</b>', $Paper->weight, join('x', $Paper->width(), $Paper->height() ) );
+		} # end if
+		if ( length $paper_details > 80 ) {
+			$html .= '<span style="font-size:x-small;">'.$paper_details.'</span>';
+		} else {
+			$html .= $paper_details;
+		} # end if
+		$html .= '</td>';
+		$html .= '<td width="23%">ID</td><td width="37%">';
+		$html .= sprintf('<img src="/barcode.png?code=R%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/>', $Paper->id() );
+		$html .= '</td></tr>';
+	} else {
+		$html .= '</td><td width="23%">&nbsp;</td><td width="37%">&nbsp;</td></tr>';
+	} # end if
+	$html .= '<tr height="50%"><td>Total Qty</td><td style="border: 1px solid black;">';
+	if ( my $C = $Skid->Content( new openprint::Paper( $$variable{'paper_id'} ) ) ) {
+		$html .= $$variable{'total_quantity'};
+		$html .= 'lbs' if $Paper->type() eq 'Roll';
+		$html .= 'sheets' if $Paper->type() eq 'Sheet';
+	} # end if
+	$html .= '</td></tr></table>';
+	return $html;
+) ?>
+</div>
+<p>
+<? echo ( 
+	my $html;
+	$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$param{docket}+&amp;NoText=1&amp;Height=30">` if $param{'docket'};
+	$html .= '<b>Docket</b>';
+	$html .= qq`<b>$param{docket}</b><br/>`;
+	return $html;
+) ?>
+</p>
+<? echo (
+	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
+	my $html = '';
+	my @skids = splice @{$$variable{'Skids'}}, 0, 3;
+	foreach my $skid_id ( @skids ) {
+		my $Skid = new openprint::Skid( $skid_id );
+		$html .= '<table style="width:100%;">';
+		$html .= qq`<tr><td width="17%"><b>Skid #</b></td><td width="33%">$skid_id</td>`;
+		$html .= qq`<td width="50%" rowspan="2" align="right"><img src="/barcode.png?code=I$skid_id+&amp;NoText=1&amp;Height=50"/></td></tr>`;
+		$html .= '<tr><td style="border: 1px solid black;">Qty</td><td style="border: 1px solid black;">';
+		if ( my $C = $Skid->Content( $Paper ) ) {
+			$html .= $C->quantity();
+			$html .= 'lbs' if $Paper->type() eq 'Roll';
+			$html .= 'sheets' if $Paper->type() eq 'Sheet';
+		} # end if
+		$html .= '</td></tr></table>';
+	} # end foreach skid_id
+	return $html;
+	) ?>
+	<br/>
+<? if ( 3 > @{$$variable{'Skids'}} ) ?>
+	<img src="/barcode.png?code=I<? echo ( join('-', $$variable{'FirstSkid'}, $$variable{'LastSkid'}) ) ?>+&amp;NoText=1&amp;Height=50"/>
+<? endif ( 3 > @{$$variable{'Skids'}} ) ?>
+<br class="pagebreak"/>
+<? endwhile ( @{$$variable{'Skids'}} ) ?>

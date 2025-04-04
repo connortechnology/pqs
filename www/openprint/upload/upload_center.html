@@ -1,0 +1,143 @@
+<div class="PageTitle">
+<h1>Upload Center</h1>
+</div>
+<script type="text/javascript" src="<?hash_link(/javascripts/upload.js)?>"></script>
+<script type="text/javascript">
+function delete_files() {
+	var form = $('f1');
+	var chk = form.elements['chkFiles'];
+	if ( ! chk) {
+		alert('No files to delete!');
+		return false;
+	}
+	var files = new Array();
+	if ( chk.length ) {
+	for ( var i=0, len=chk.length; i < len; i+=1 ) {
+		if ( chk[i].checked ) 
+			files.push( chk[i] ) 
+	} // end foreach 
+	} else if ( chk.checked ) {
+		files.push( chk );
+	} // end if
+	if ( ! files.length ) {
+		alert('Please select which files to delete by selecting them with the corresponding checkbox!');
+		return false;
+	}
+
+	form.btnFunction.value='Delete';
+	LoadContent('FileList', '/upload/_files.html', f1.serialize());
+	return true;
+} // end function delete_files
+
+function displayUploadResults(body) {
+	$('PendingCompletion').innerHTML = '';
+	$('uploadResults').innerHTML = body.innerHTML;
+	// Update files list and serial
+	new Ajax.Updater('UploadForm','/upload/_upload_form.html', {parameters:document.forms['upload'].serialize()});
+	//window.setTimeout("$('UploadCompleteDiv').hide();", 5000);
+	//window.setTimeout("$('UploadForm').show();$('uploadResults').innerHTML='';$('UploadCompleteDiv').hide();", 5000);
+}		 
+
+function check_input( form ) {
+	var error = '';
+	if ( form.txtCompanyName && ! form.txtCompanyName.value ) {
+		error += "Please provide a company name.\n";
+	} // end if
+	if ( form.txtContactName && ! form.txtContactName.value ) {
+		error += "Please provide a contact name.\n";
+	} // end if
+	if ( form.txtEmailAddress && ! email_check( form.txtEmailAddress.value ) ) {
+		error += "Please provide a valid e-mail address.\n";
+	} // end if
+	if ( form.txtPhoneNumber && ! form.txtPhoneNumber.value ) {
+		error += "Please provide a phone number.\n";
+	} // end if
+	if ( form.txtJobDescription && ! form.txtJobDescription.value ) {
+		error += "Please provide a description for the job.\n";
+	} // end if
+	if ( form.Size && ! form.Size.value ) {
+		error += "Please provide a size for the job.\n";
+	} // end if
+	if ( form.Quantity && ! form.Quantity.value ) {
+		error += "Please provide a quantity for the job.\n";
+	} // end if
+	if ( form.proof_type && ! form.proof_type.value ) {
+		error += "Please select the proof type for the job.\n";
+	} // end if
+	if ( error ) {
+		alert(error);
+		return false;
+	} // end if
+	return true;
+} // end function check_input
+</script>
+<div id="uploadContainer">
+	<div id="uploadResults"></div>
+	<!--<iframe style="position: absolute; top: 0px; left: 0px; visibility: hidden;" id="UploadFrame" name="UploadFrame" src=""></iframe>-->
+	<div id="UploadForm">
+	<?include('_upload_form.html')?>
+	</div>
+	<div id="progressMeter" style="display: none;">
+		<p><b>Do not close the browser, or navigate to another site until the upload has completed, or it will be cancelled.</b></p>
+		<div id="theMeter">
+			<div id="progressMeterBar">
+				<div id="progressMeterBarDone"></div>
+			</div>
+			<div id="progressMeterText"></div>
+			<div id="transferRate">Upload Rate: ?</div>
+			<table>
+				<tr id="upload-row-1">
+					<td id="tca1"></td>
+					<td id="tca2" class="headercell">Files</td>
+					<td id="tca3" class="headercell">Size</td>
+					<td id="tca4" class="headercell">Time</td>
+				</tr>
+				<tr id="upload-row-2">
+					<td id="tcb1" class="headercell">Total</td>
+					<td id="totalf">&nbsp;</td>
+					<td id="totals">?</td>
+					<td id="totalt">??:??:??</td>
+				</tr>
+				<tr id="upload-row-4">
+					<td id="tcd1" class="headercell">Remaining</td>
+					<td id="leftf">&nbsp;</td>
+					<td id="lefts">?</td>
+					<td id="leftt">??:??:??</td>
+				</tr>
+			</table>
+		</div>
+		<br/>
+		<p class="buttons">
+		<? echo ( 
+				my $qry;
+				if( $param{docket} ) {
+					$qry = '?docket=' . $param{docket};
+				} elsif( $param{project_id} ) {
+					$qry = '?project_id=' . $param{project_id};
+				} # end if
+			button( 'Cancel', { href=>"/upload/upload_center.html$qry", text=>'Cancel Upload' } );
+		) ?>
+		</p>
+	</div>
+	<div id="PendingCompletion" style="display: none;" align="center">
+		<p>Please wait while we confirm that your upload was successful.</p>
+	</div>
+	<div id="UploadCompleteDiv" style="display: none;">
+		<p class="buttons">
+		<? echo ( 
+			my $qry;
+			if( $param{docket} ) {
+				$qry = '?docket=' . $param{docket};
+			} elsif( $param{project_id} ) {
+				$qry = '?project_id=' . $param{project_id};
+			} # end if
+				
+			return join("\n",
+				button( 'Continue', { href=>"/upload/upload_center.html$qry", text=>'Upload More Files' } ),
+				button( 'Home', { href=>'/' } ),
+			);
+		) ?>
+		</p>
+	</div>
+	<iframe scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0" style="overflow:visible; width:0; height:0; display:none;" id="UploadFrame" name="UploadFrame" src=""></iframe>
+</div>

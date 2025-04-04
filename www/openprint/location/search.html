@@ -1,0 +1,62 @@
+<div class="PageTitle">
+<h1>Locations</h1>
+<h2>Search</h2>
+</div>
+<script type="text/javascript">
+	function load_locations( form ) {
+		$('Results').innerHTML = 'Please wait...';
+		new Ajax.Updater('Results','/location/_search.html', {parameters:Form.serialize(form)});
+	} // end function
+</script>	 
+<?include('/includes/error_reporting.html')?>
+<div class="Location"><div class="Search">
+	<form id="f1" name="f1" method="post" action="/location/search.html">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
+			<div class="content">
+			<div class="leftColumn">
+				<ul>
+<? if ( $session{user_type} eq 'A' ) ?>
+					<li><label>Type</label>
+						<select name="type_id" id="type_id">
+							<option value=""> All </option>
+					<? echo ( make_drop_down( openprint::Location_Type->dropdown(), $session{'/location/search.html?type_id'} ); ) ?>
+						</select>
+					</li>
+<? else ( $session{user_type} eq 'A' ) ?>
+<input type="hidden" name="type_id" value="<? echo ( if( $_ = openprint::Location_Type->find_one(name=>'place') ) { return $_->id(); } ) ?>" />
+<? endif ( $session{user_type} eq 'A' ) ?>
+						<li><label>Owner</label>
+				<input type="text" onkeyup="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" class="filter" />
+				<select id="company_id" name="company_id">
+					<option value="">Select a Company</option>
+					<? echo ( 
+							my @company_ids = sql::execute( undef, undef, 'SELECT DISTINCT company_id FROM Locations' );
+							make_drop_down( openprint::Company->dropdown(id=>\@company_ids), $session{$r->uri().'?company_id'} );
+					) ?>
+				</select>
+						</li>
+					<li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $param{search} ) ?>"/></li>
+				</ul>
+			</div>
+			<div class="rightColumn">
+				<ul>
+<? echo (
+	openprint::Location::filters('',[
+@session{'/location/search.html?country_id',
+'/location/search.html?state_id',
+'/location/search.html?city_id'}], { onSuccess=>'load_locations(f1);'} );
+) ?>
+				</ul>
+			</div>
+			</div>
+			<p class="buttons">
+				<? echo ( join("\n",
+					button( 'ShowResults', { onclick=> 'load_locations(f1);', text=>'Show Results' } ),
+					button( 'New', { href=> '/location/edit.html', text=>'New Location' } ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<div id="Results"><?include('_search.html')?></div>
+	</form>
+	</div>
+</div>

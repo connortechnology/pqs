@@ -1,0 +1,38 @@
+<? echo (
+	my $Field = $$variable{Field};
+	if ( $Field->id() ) {
+
+	return sprintf(q`<tr id="field_%1$d">
+			<td class="name"><input type="text" id="name-%1$d" name="name-%1$d" value="%2$s" onkeyup="check_field(this);" /></td>
+			<td class="description"><input type="text" id="description-%1$d" name="description-%1$d" value="%3$s" onkeyup="check_field(this);" /></td>
+			<td class="type"><select name="type-%1$d" id="type-%1$d" onchange="check_field(this);"><option value=""> choose </option>%4$s</select></td>
+			<td class="values"><input type="text" id="values-%1$d" name="values-%1$d" value="%5$s" onkeyup="check_field(this);"/></td>
+			<td class="defaults"><input type="text" id="defaults-%1$d" name="defaults-%1$d" value="%6$s" onkeyup="check_field(this);"/></td>
+			<td class="required">%7$s</td>
+			<td class="searchable">%8$s</td>
+			<td class="searchdefault">%9$s</td>
+			<td class="match">%10$s</td>
+			<td class="viewable">%11$s</td>
+			<td class="onregistration">%12$s</td>
+			<td class="buttons">%13$s</td>
+		</tr>`, $Field->id(), $Field->name(), $Field->description(),
+			make_drop_down( [ map { $_, $_ } ('date','checkbox', 'email', 'text', 'number', 'tel', 'radio', 'select-one','location','country','state','city' ) ], $Field->type() ),
+			( $Field->values() ? join(',', @{$Field->values()} ) : '' ),
+			( $Field->defaults() ? join(',', @{$Field->defaults()} ) : '' ),
+			radio( 'required-'.$Field->id(), [1,'Yes',0,'No'], $Field->required(), { onclick=>'check_field(this);' } ),
+			radio( 'searchable-'.$Field->id(), [1,'Yes',0,'No'], $Field->searchable(), { onclick=>'check_field(this);' } ),
+			input( name=>'search_default-'.$Field->id(), (value=>$Field->search_default()), type=>'text' ),
+			input( name=>'match-'.$Field->id(), (value=>$Field->match()), type=>'text' ),
+			radio( 'viewable-'.$Field->id(), [1,'Yes',0,'No'], $Field->viewable(), { onclick=>'check_field(this);' } ),
+			radio( 'on_registration-'.$Field->id(), [1,'Yes',0,'No'], $Field->on_registration(), { onclick=>'check_field(this);' } ),
+			
+		join("\n", 
+			button( 'x'.$Field->id(), { onclick=>qq`delField( $$Field{id} );`, text=>'X' } ),
+			button( 'c'.$Field->id(), { onclick=>qq`copyField( $$Field{id} );`, text=>'C' } ),
+			( $Field->sort() ? ( button( 'u'.$Field->id(), { onclick=>qq`upField( $$Field{id} );`, text=>'U' } ) ) : () ),
+			),
+		);
+	} elsif ( $$variable{error} ) {
+		return qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
+	} # end if
+) ?>

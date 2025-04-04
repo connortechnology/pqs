@@ -1,0 +1,17 @@
+<form name="merge_popup_form" action="company_profiles.html" method="post">
+	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" name="company_id" id="company_id" value="<? echo ( $$variable{Company}->id() ) ?>" />
+	<fieldset><legend>Merge <? echo ( $$variable{Company}->name() ) ?> with</legend>
+		The selected company will be merged with <? echo ( $$variable{Company}->name() ) ?>.  The selected company will be deleted. Orders, Projects, Quotes, etc will become owned by <? echo ( $$variable{Company}->name() ) ?>.<br/>
+	<ul><li><label>Company</label>
+      <input type="text" onkeyup="filter_companies('merge_company_id', {name:this.value,selected_id:get_ddm_value($('merge_company_id'))});" class="filter" />
+	<? echo (
+		my @Companies = openprint::Company->find( 'id !=' => $$variable{Company}->id() );
+		my $html .= ssi::select( [ map { $_->id(), $_->name() } map { $_->id() == $$variable{Company}->id() ? () : $_ } @Companies ], $$variable{Company}->id(),
+    { id=>'merge_company_id', name=>'merge_company_id', prepend=>['',' none '] },
+			);
+		$html .= button( 'Merge', { onclick=>"merge_popup_form.btnFunction.value='merge';merge_popup_form.submit();" } );
+	) ?>
+		</li>
+	</ul>
+</form>

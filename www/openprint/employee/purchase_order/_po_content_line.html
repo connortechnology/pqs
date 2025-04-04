@@ -1,0 +1,146 @@
+<? echo (
+	return '' if $param{action} eq 'delete';
+
+	my $C = $$variable{C};
+
+	my $html .= sprintf('
+<div class="item" id="line-%1$d">
+  <div class="buttons">%4$s</div>
+	<input type="hidden" name="type_id-%1$d" id="type_id-%1$d" value="%3$d"/>
+	<input type="hidden" id="type-%1$d" name="type-%1$d" value="%2$s"/>',
+		$C->id(), $C->type(), $C->type_id(),
+		button('del-'.$C->id(), { onclick=>qq`del_poc($$C{id});`,text=>'-', title=>'Delete' } ),
+		);
+
+	if ( $C->Type()->type() eq 'Roll Stock' ) {
+		my ( $type, $name );
+		if ( $C->item() =~ /^(FSC|PEFC\/SFI)? ?(.+)$/ ) {
+			( $type, $name ) = ( $1, $2 );
+		} else {
+			$name = $$C{item};
+		} # end if
+		$html .= sprintf(q`
+			<div class="quantity">%14$slbs</div>
+			<div class="product">
+				<input type="text" name="product-%1$d" id="product-%1$d" value="%3$s" oninput="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');};filter_items(%1$d,%15d,this);"/>
+			</div>
+			<div class="description">
+				<select id="item_id-%1$d" name="item_id-%1$d" onchange="$('item-%1$d').value='';new Ajax.Request( '_item_select.json', { parameters: { content_id: %1$d, item_id: $('item_id-%1$d').getValue() } } );"><option value="">select</option>%12$s</select><br/>
+				<input type="hidden" name="item-%1$d" id="item-%1$d" value="%4$s"/>
+				<input type="text" class="SheetName" name="name-%1$d" id="name-%1$d" placeholder="Stock Description" oninput="set_item('%1$d');if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}filter_items(%1$d,%15$d,this);" value="%6$s"/>
+				<select id="stocktype-%1$d" name="stocktype-%1$d" onchange="set_item('%1$d');filter_items(%1$d,%15$d,this);">%7$s</select>
+				<textarea name="description-%1$d" id="description-%1$d" class="mce" placeholder="Additional comments or details" oninput="textarea_resize(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}">%5$s</textarea>
+			</div>
+			<div class="docket"><input type="text" name="docket-%1$d" id="docket-%1$d" value="%8$s" oninput="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}new Ajax.Updater('similar_pos', '_similar_pos.html', { parameters: { docket: this.value, po_id: '%9$d'} });" onblur="$('similar_pos').innerHTML='';"/></div>
+			<div class="dept"><select name="dept_id-%1$d" id="dept_id-%1$d" onchange="dept_onchange(this);"><option value="">None</option><option value="new">New</option>%13$s</select><input type="text" name="dept-%1$d" id="dept-%1$d" style="display:none;"/></div>
+			<div class="price">%10$s/100lb<br/><span id="price-%1$d-alert" class="error"></span></div>
+			<div class="line_total">%11$s</div>
+		`, $C->id(), $C->qty(), escape_quotes( $C->product(), $C->item() ),
+		CGI::escapeHTML($C->description()), escape_quotes($name), make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ), 
+		$C->docket(), $C->po_id(),
+		input( type=>'float', class=>'StockCost', name=>'price-'.$C->id(),id=>'price-'.$C->id(), value=>$C->price(),
+			oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}", onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);' ),
+		input( type=>'float', name=>'total-'.$C->id(),id=>'total-'.$C->id(), value=>$C->total(),
+				oninput=>"calc_price(this);", onkeydown=>'this.lastValue=this.value;return check_decimal(this,event);' ),
+			make_drop_down( [ 
+					map { $_->id(), $_->price() ? sprintf('%s %s as of %s', $_->name(),
+						openprint::Currency::format($_->price()),
+						format_date( $_->updated_on() ),
+						) : $_->name()
+					}
+					openprint::PurchaseOrder_Item->find( company_id=>$openprint::User->company_id(), vendor_id=>$$variable{PurchaseOrder}->supplier_id(), type_id=>$C->type_id(), order=>'lower(name)' ) ] , $C->item_id() ),
+			make_drop_down( openprint::PurchaseOrder_Department->dropdown(order=>'lower(name)'), $$C{'department_id'} ),
+			input( type=>'float', class=>'RollQTY', name=>'qty-'.$C->id(), id=>'qty-'.$C->id(), value=>$C->qty(),
+					oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}" ),
+			$$C{type_id},
+		);
+	} elsif ( $C->Type()->type() eq 'Sheet Stock' ) {
+		my ( $mweight, $type, $name ) = $C->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
+		if ( $type and ! sets::isin( $type, [ '', 'FSC', 'PEFC/SFI' ] ) ) {
+			$name = $type . ' ' . $name;
+			$type = '';
+		} # end if
+
+		$html .= sprintf(q`
+			<div class="quantity">%16$ssheets</div>
+			<div class="product">
+				<input type="text" name="product-%1$d" id="product-%1$d" value="%3$s" oninput="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');};filter_items(%1$d,%16$d,this);"/>
+			</div>
+			<div class="description">
+				<input type="hidden" name="item-%1$d" id="item-%1$d" value="%4$s"/>
+				<select id="item_id-%1$d" name="item_id-%1$d" onchange="$('item-%1$d').value='';new Ajax.Request( '_item_select.json', { parameters: { content_id: %1$d, item_id: $('item_id-%1$d').getValue() } } );"><option value="">select</option>%14$s</select><br/>
+%5$s M
+				<input type="text" class="SheetName" name="name-%1$d" id="name-%1$d" placeholder="Sheet Description" oninput="set_item('%1$d');if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}filter_items(%1$d,%16$d,this);" value="%6$s"/>
+				<select id="stocktype-%1$d" name="stocktype-%1$d" onchange="set_item('%1$d');filter_items(%1$d,%16$d,this);">%8$s</select>
+				<textarea name="description-%1$d" id="description-%1$d" class="mce" placeholder="Additional Comments or Details" oninput="textarea_resize(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}">%7$s</textarea>
+			</div>
+			<div class="docket"><input type="text" name="docket-%1$d" id="docket-%1$d" value="%9$s" oninput="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}new Ajax.Updater('similar_pos', '_similar_pos.html', { parameters: { docket: this.value, po_id: '%10$d'} });" onblur="$('similar_pos').innerHTML='';"/></div>
+			<div class="dept"><select name="dept_id-%1$d" id="dept_id-%1$d" onchange="dept_onchange(this);"><option value="">None</option><option value="new">New</option>%15$s</select><input type="text" name="dept-%1$d" id="dept-%1$d" style="display:none;"/></div>
+			<div class="price">%11$s/100lb<br/>%12$s/1000<span id="price-%1$d-alert" class="error"></span></div>
+			<div class="line_total">%13$s</div>
+		`, $C->id(), $C->qty(), escape_quotes( $C->product(), $C->item() ),
+				input( type=>'float', class=>'SheetMWeight', name=>'mweight-'.$$C{id}, id=>'mweight-'.$$C{id}, value=>$mweight, oninput=>"calc_price(this);set_item('$$C{id}');filter_items($$C{id},$$C{type_id},this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}else{\$('line-$$C{id}').removeClassName('changed');}"),
+			escape_quotes($name), CGI::escapeHTML( $C->description() ), make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ),
+			$C->docket(), $C->po_id(),
+		input( type=>'float', class=>'StockCost', name=>'price-'.$C->id(),id=>'price-'.$C->id(), value=>$C->price(),
+				oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}",
+				onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);', step=>'0.01' ),
+		input( type=>'float', class=>'StockCost', name=>'mprice-'.$C->id(),id=>'mprice-'.$C->id(), value=>$C->mprice(),
+				oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}",
+				onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);' ),
+		input( type=>'float', name=>'total-'.$C->id(),id=>'total-'.$C->id(), value=>$C->total(),
+				oninput=>"calc_price(this);",
+				onkeydown=>'this.lastValue=this.value;return check_decimal(this,event);' ),
+			make_drop_down( [ 
+					map { $_->id(), $_->price() ? sprintf('%s %s as of %s', $_->name(),
+						openprint::Currency::format($_->price()),
+						format_date( $_->updated_on() ),
+						) : $_->name()
+					}
+					openprint::PurchaseOrder_Item->find( company_id=>$openprint::User->company_id(), vendor_id=>$$variable{PurchaseOrder}->supplier_id(), type_id=>$C->type_id(), order=>'lower(name)' ) ] , $C->item_id() ),
+			make_drop_down( openprint::PurchaseOrder_Department->dropdown('order'=>'lower(name)'), $$C{'department_id'} ),
+			input( type=>'float', class=>'SheetQTY', name=>'qty-'.$C->id(), id=>'qty-'.$C->id(), value=>$C->qty(),
+					oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}" ),
+			$$C{type_id},
+		);
+	} else {
+		my $rows = scalar split('<br\/>', $C->description() );
+		$rows = 1 if ! $rows;
+		$html .= sprintf(q`
+			<div class="quantity">%13$s</div>
+			<div class="product">
+				<input type="text" name="product-%1$d" id="product-%1$d" value="%3$s" oninput="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');};filter_items(%1$d,%14$d,this);"/>
+			</div>
+			<div class="description">
+				<select id="item_id-%1$d" name="item_id-%1$d" onchange="$('item-%1$d').value='';new Ajax.Request( '_item_select.json', { parameters: { content_id: %1$d, item_id: $('item_id-%1$d').getValue() } } );"><option value="">select</option>%11$s</select><br/>
+				<input type="text" name="item-%1$d" id="item-%1$d" value="%4$s" oninput="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');};filter_items(%1$d,%14$d,this);" placeholder="Item Description"/>
+				<textarea name="description-%1$d" id="description-%1$d" rows="%6$d" class="mce" placeholder="Additional Comments or Details" oninput="textarea_resize(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}">%5$s</textarea>
+			</div>
+			<div class="docket"><input type="text" name="docket-%1$d" id="docket-%1$d" value="%7$s" oninput="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}new Ajax.Updater('similar_pos', '_similar_pos.html', { parameters: { docket: this.value, po_id: '%8$d'} });" onblur="$('similar_pos').innerHTML='';" /></div>
+			<div class="dept"><select name="dept_id-%1$d" id="dept_id-%1$d" onchange="dept_onchange(this);"><option value="">None</option><option value="new">New</option>%12$s</select><input type="text" name="dept-%1$d" id="dept-%1$d" style="display:none;"/></div>
+			<div class="price">%9$s<br/><span id="price-%1$d-alert" class="error"></span></div>
+			<div class="line_total">%10$s</div>
+			`, $C->id(), $C->qty(), $C->product(), $C->item(), CGI::escapeHTML($C->description()), $rows,
+			$C->docket(), $C->po_id(),
+		input( type=>'float', name=>'price-'.$C->id(),id=>'price-'.$C->id(), value=>$C->price(),
+			oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}",
+			onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);' ),
+		input( type=>'float', name=>'total-'.$C->id(),id=>'total-'.$C->id(), value=>$C->total(),
+			oninput=>"calc_price(this);",
+			onkeydown=>'this.lastValue=this.value;return check_decimal(this,event);' ),
+			make_drop_down( [ 
+					map { $_->id(), $_->price() ? sprintf('%s %s %s as of %s', $_->product(), $_->name(),
+						openprint::Currency::format($_->price()),
+						format_date( $_->updated_on() ),
+						) : $_->name()
+					}
+					openprint::PurchaseOrder_Item->find( company_id=>$openprint::User->company_id(), vendor_id=>$$variable{PurchaseOrder}->supplier_id(), type_id=>$C->type_id(), order=>'lower(name)' ) ] , $C->item_id() ),
+			make_drop_down( openprint::PurchaseOrder_Department->dropdown( order=>'lower(name)'), $$C{department_id} ),
+			input( type=>'float', name=>'qty-'.$C->id(), id=>'qty-'.$C->id(), value=>$C->qty(),
+					oninput=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}" ),
+			$$C{type_id},
+		);
+	} # end if
+	$html .= '</div>';
+	return $html;
+) ?>

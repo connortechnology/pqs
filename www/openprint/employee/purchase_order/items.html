@@ -1,0 +1,47 @@
+<script type="text/javascript">
+	function page_load( div_id, form ) {
+		var div = $(div_id);
+		if ( div )
+			div.innerHTML = 'Please wait. Loading...';
+		new Ajax.Updater( div_id, '/employee/purchase_order/_items.html', { parameters: form.serialize() } );
+	} // end function load
+</script>
+<div class="PurchaseOrder_Items">
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
+<form id="f1" name="f1" action="items.html" method="post">
+	<fieldset class="filters"><legend>Select Search Criteria</legend>
+		<ul>
+			<li><label>Vendor</label>
+				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+				<select name="supplier_id" onchange="page_load('Results',$('f1'));">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/purchase_order/items.html?supplier_id'} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Types</label>
+				<? echo (
+					my $html;
+					foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
+						$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id, $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(',', $session{'/employee/purchase_order/items.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/items.html?types'} ) );
+					} # end foreach type
+					return $html;
+				) ?>
+			</li>
+			<li>
+				<label>Item Contains</label>
+				<input type="text" id="item_contains" name="item_contains" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" value="<? echo ( $param{'item_contains'} ) ?>" />
+			</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join( '',
+				ssi::button( 'ShowResults', { 'onclick'=>'f1.submit();', 'text'=>'Show Results' } ),
+				#ssi::button( 'Add', { 'href'=>'/employee/purchase_order/edit.html', 'text'=>'Add New' } ),
+				ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
+			); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+	<div id="Results">Choose search criteria</div>
+</form>
+</div>

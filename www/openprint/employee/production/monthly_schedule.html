@@ -1,0 +1,162 @@
+<style type="text/css">
+	td.Day {
+		border: 1px solid black;
+		padding: 0px;
+		height: 100px;
+		vertical-align: top;
+	}
+	span.DayNumber {
+		float: left;
+		border-right: 1px solid black;
+		border-bottom: 1px solid black;
+	}
+	table#MonthlySchedule {
+		table-layout: fixed;
+		border: 1px solid black;
+	}
+	table#MonthlySchedule tbody tr {
+	}
+a.button, a.button {
+	margin: 1px;
+}
+a.button .c {
+	padding: 1px 2px 1px 2px;
+}
+
+a.button .c {
+	padding: 1px 2px 1px 2px;
+}
+</style>
+<script type="text/javascript">
+	var ReservationWindow;
+
+    function openPopup( popup, data1, data2, data3 ) {
+        if ( ! ReservationWindow ) {
+            ReservationWindow = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400, height: 200} );
+            // Set up a windows observer, check ou debug window to get messages
+            myObserver = {
+                onDestroy: function(eventName, win) {
+                    if (win == ReservationWindow) {
+                        var content = ReservationWindow.getContent();
+                        for(var i = 0; i < content.childNodes.length; i++) {
+                            var node = content.childNodes[i];
+                            node.hide();
+                            ReservationWindow._oldParent.appendChild( node );
+                        } // end for
+                        ReservationWindow = null;
+                        Windows.removeObserver(this);
+                    } // end if
+                } // end function
+            } // end observer
+            Windows.addObserver(myObserver);
+        } // end if
+		if ( popup == 'Reservation' ) {
+			ddm_select_by_value( document.forms.ReservationForm.StartYear, data1 );
+			ddm_select_by_value( document.forms.ReservationForm.StartMonth, data2 );
+			ddm_select_by_value( document.forms.ReservationForm.StartDay, data3 );
+		} // end if
+		ReservationWindow.setContent(popup+'Popup');
+		ReservationWindow.showCenter();
+	} // end function openpPOpup
+</script>
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" action="monthly_schedule.html" method="post">
+	<fieldset class="filters"><legend>Display Criteria</legend>
+        <div style="float: left; width: 47%;">
+        <p>
+            <label>Press</label>
+			<select name="Press" onchange="this.form.submit();">
+				<option value=""> select </option>
+<? echo (
+	$session{'/employee/production/monthly_schedule.html?Press'} = $param{Press} if $param{Press};
+    my @presses = map { $_->id(), $_->name() } openprint::Equipment->find('category any'=>'Printing',useinscheduling=>1,order=>'lower(strname)');
+	make_drop_down( \@presses, $session{'/employee/production/monthly_schedule.html?Press'} );
+) ?>
+                </select>
+        </p>
+        </div>
+	</fieldset>
+</form>
+<br/>
+<table id="MonthlySchedule">
+	<tr>
+		<th>Monday</th>
+		<th>Tuesday</th>
+		<th>Wednesday</th>
+		<th>Thursday</th>
+		<th>Friday</th>
+		<th>Saturday</th>
+		<th>Sunday</th>
+	</tr>
+	<tbody>
+<? echo ( 
+my $html = '';
+my ($y,$m,$d) = Date::Calc::Today();
+foreach my $w ( 1 .. 6 ) {
+	$html .= '<tr>';
+	foreach my $dow ( 1 .. 7 ) {
+		my ( $jobtime ) = sql::execute( undef, undef, q{SELECT sum(runtime) FROM Schedule WHERE equipment_id=? AND starttime BETWEEN ? AND ?}, $param{Press}, sprintf('%.4d-%.2d-%.2d 00:00:00', $y,$m,$d), sprintf('%.4d-%.2d-%.2d 23:59:59', $y, $m, $d) );
+		my ( $hours, $minutes, $seconds ) = split(':', $jobtime );
+		my $colour;
+		if ( $hours == 0 ) {
+			$colour = 'white';
+		} elsif ( $hours <= 4 ) {
+			$colour = 'green';
+		} elsif ( $hours <= 8 ) {
+			$colour = 'yellow';
+		} elsif ( $hours <= 16 ) {
+			$colour = 'orange';
+		#} elsif ( $hours <= 24 ) {
+		} else {
+			$colour = 'red';
+		} # end if
+	
+		$html .= qq{<td class="Day" style="background-color: $colour;">};
+		$html .= sprintf('<a class="DayNumber" href="print_overview.html?Presses=%d&amp;ddmScheduleStartYear=%d&amp;ddmScheduleStartMonth=%d&amp;ddmScheduleStartDay=%d">%.2d</a>', $param{Press}, $y,$m,$d, $d );
+
+		$html .= button( sprintf('Reserver-%.4d-%.2d-%.2d', $y,$m,$d), { onclick=>"openPopup('Reservation', $y, $m, $d);", text=> 'Reserve' } );
+		($y,$m,$d) = Date::Calc::Add_Delta_Days( $y,$m,$d,1);
+		$html .= '</td>';
+	} # end foreach day of week
+	$html .= '</tr>';
+} # end foreach week
+return $html;
+) ?>
+	</tbody>
+	</table>
+</div>
+<div id="ReservationPopup" style="display:none;">
+	<form name="ReservationForm" action="monthly_schedule.html" method="post">
+		<fieldset><legend>Make a reservation</legend>
+			<input type="hidden" name="btnFunction" value="MakeReservation"/>
+			<input type="hidden" name="Press" value="<? echo ( $session{'/employee/production/monthly_schedule.html?Press'} ) ?>"/>
+		<p>
+			<label>Date</label>
+<? eval (
+@$variable{'Years','Months','Days'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+) ?>
+		    <span class="DateSelector">
+                <select name="StartYear"><?Years?></select>
+                <select name="StartMonth"><?Months?></select>
+                <select name="StartDay"><?Days?></select>
+            </span>
+		</p>
+		<p>
+			<label>Duration (hours)</label>
+			<input type="text" name="hours" />
+		</p>
+		<p>
+			<label>Company</label>
+			<input type="text" onkeyup="filterDDM(this, this.form.Company);" size="4" class="CompanyFilter"/> &nbsp;
+			<select name="Company">
+				<option value="">select</option>
+				<? echo ( openprint::Company::get_dropdown(); ) ?>
+			</select>
+		</p>
+		<p class="buttons">
+			<? echo ( ssi::button( 'Submit', { onclick=>'ReservationForm.submit();', text=>'Submit' } ); ) ?>
+			<? echo ( ssi::button( 'Cancel', { onclick=>'ReservationWindow.destroy();', text=>'Cancel' } ); ) ?>
+        </p>
+
+	</form>
+</div>
