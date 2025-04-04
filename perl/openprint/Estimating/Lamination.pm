@@ -52,7 +52,7 @@ sub MaterialPriceConfiguration {
 }
 
 %Specifications = (
-'Laminating Count' => { units => ['Net Sheets', 'Gross Sheets'] },
+  'Laminating Count' => { units => ['Net Sheets', 'Gross Sheets'] },
   'Laminating Waste'  => { units => 'Percent' },
   'Laminating Style' => { values => [ 'Sheet','Final Pieces' ] },
   'Laminating Capable' => { values => [ 'Y'|'N' ] },
@@ -93,6 +93,7 @@ sub variables {
     foreach my $qty_index ( $Project->quantity_indexes() ) {
       push @v, (
         "txtWidth-$form", "txtHeight-$form", "chkOverrideDimensions-$form",
+        "calliper-$form", "override_calliper-$form",
         "TypeFront-$form", "TypeBack-$form",
          "ddmEquipment-$form-$qty_index", "chkOverrideEquipment-$form-$qty_index",
        );
@@ -122,6 +123,7 @@ sub outputs {
     foreach my $qty_index ( $Project->quantity_indexes() ) {
       push @o, (
         "txtWidth-$form", "txtHeight-$form",
+        "calliper-$form",
         "TypeFront-$form","TypeBack-$form",
         "ddmEquipment-$form-$qty_index",
       );
@@ -142,6 +144,7 @@ sub calc {
   foreach my $signature_service_index (@sigs) {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
     my $form  = $$sig_specs{SignatureIndex} // 1;
+    my $stock = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
 
     if ( (!$$specs{'chkOverrideDimensions-'.$form}) or ($$specs{'chkOverrideDimensions-'.$form} ne 'Y')) {
       if ($$sig_specs{final_width} and $$sig_specs{final_height}) {
@@ -149,6 +152,7 @@ sub calc {
       } else {
         @$specs{'txtWidth-'.$form,'txtHeight-'.$form} = @$sig_specs{'txtWidth','txtHeight'};
       }
+      $$specs{"calliper-'.$form"} = $stock->calliper();
     } # end if
 
     if ( $$specs{'LaminationType-'.$form} ) {
@@ -163,6 +167,7 @@ sub calc {
 
     $$specs{alert} .= "Please enter object width for form $form.<br/>" if ! $$specs{'txtWidth-'.$form};
     $$specs{alert} .= "Please enter object height for form $form.<br/>" if ! $$specs{'txtHeight-'.$form};
+    $$specs{alert} .= "Please enter object calliper for form $form.<br/>" if ! $$specs{'calliper-'.$form};
   } # end foreach signature
   $$specs{alert} .= 'Please select lamination types for at least one signature or remove lamination from the project.<br/>' if ! $has_lamination;
 
@@ -211,7 +216,8 @@ sub calc {
         #$$specs{'hdnBreakdown'.$qty_index} .= " not doing lamination on form $form<br/>";
         next;
       }
-      my $imposition->load( $sig_specs, $qty_index, $Project );
+      my $imposition = new openprint::Imposition();
+      $imposition->load( $sig_specs, $qty_index, $Project );
       my $stock = $imposition->Paper();
 
       $$specs{'hdnBreakdown'.$qty_index} .= 'Signature ' . $form . ' printed: ' .openprint::service::summary( $Project, $signature_service_index, $qty_index ).'<br/>';
@@ -233,14 +239,14 @@ sub calc {
         my $error = '';
         if ((!$style) or ($style eq 'Final Pieces')) {
           if ( 
-            (my $reason1 = $Equipment->fits( $$specs{"txtWidth-$form"}, undef, $stock->calliper()) ) and
-            (my $reason2 = $Equipment->fits( $$specs{"txtHeight-$form"}, undef, $stock->calliper() ) ) 
+            (my $reason1 = $Equipment->fits( $$specs{"txtWidth-$form"}, undef, $$specs{"calliper-$form"}, ) ) and
+            (my $reason2 = $Equipment->fits( $$specs{"txtHeight-$form"}, undef, $$specs{"calliper-$form"} ) ) 
           ) {
             $error .= 'For ' . $Equipment->name() . ': '. $reason1  . '<br/>' . $reason2;
           } # end if
         } else {
           if ( 
-            (my $reason1 = $Equipment->fits( undef, undef, $stock->calliper() ) )
+            (my $reason1 = $Equipment->fits( undef, undef, $$specs{"calliper-$form"} ))
           ) {
             $error .= 'For ' . $Equipment->name() . ': '. $reason1  . '<br/>';
           } # end if
