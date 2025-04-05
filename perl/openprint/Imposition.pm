@@ -1,5 +1,8 @@
 use strict;
 use Carp qw( cluck );
+require Storable;
+use MIME::Base64;
+use Compress::LZF q(sthaw);
 
 package openprint::Imposition;
 require Math::Round;
@@ -294,8 +297,8 @@ sub load {
 	} # end if
 	$$self{SignatureIndex} = $$specs{SignatureIndex};
 
-	$$self{object_width} = $$specs{txtWidth};
-	$$self{object_height} = $$specs{txtHeight};
+	$$self{object_width} = $$specs{txtWidth} ? $$specs{txtWidth} : $$specs{flat_width};
+	$$self{object_height} = $$specs{txtHeight} ? $$specs{txtHeight} : $$specs{flat_height};
 	$$self{image_width} = $$specs{'txtImageWidth'.$qty_index};
 	$$self{image_width} = $$self{object_width} if ! $$self{image_width};
 	$$self{image_height} = $$specs{'txtImageHeight'.$qty_index};
@@ -303,26 +306,37 @@ sub load {
   $$self{colour_bar_size} = $$self{Press}->specification('Colour Bar Size');
   $$self{colour_bar_orientation} = $$self{Press}->specification('Colour Bar Orientation');
 
-	$$self{imposition} = $$specs{'txtImposition'.$qty_index};
+	$$self{imposition} = $$specs{'txtImposition'.$qty_index} ? $$specs{'txtImposition'.$qty_index} : $$specs{'hdnImposition'.$qty_index};
+  $$self{imposition} = $$specs{imposition} if ! $$self{imposition};
+Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::Dumper($specs)) if ! $$self{imposition};
+
 	$$self{version_qty} = $$specs{'Versions'.$qty_index};
 	$$self{start_columns} = $$self{columns} = $$specs{'hdnImpositionColumns'.$qty_index};
 	$$self{start_rows} = $$self{rows} = $$specs{'hdnImpositionRows'.$qty_index};
 
 	#$$self{columns} = $$self{imposition} / $$self{rows} if $$self{rows} and ! $$self{columns};
 	#$$self{rows} = $$self{imposition} / $$self{columns} if $$self{columns} and ! $$self{rows};
-	$$self{dutch_rows} = $$specs{'hdnImpositionDutchRows'.$qty_index} or 0;
-	$$self{dutch_columns} = $$specs{'hdnImpositionDutchColumns'.$qty_index} or 0;
+	$$self{dutch_rows} = $$specs{'hdnImpositionDutchRows'.$qty_index} // 0;
+	$$self{dutch_columns} = $$specs{'hdnImpositionDutchColumns'.$qty_index} // 0;
 	$$self{cut_off} = $$specs{'CutOff'.$qty_index};
 	if ( ( $$self{columns} * $$self{rows} ) + ( $$self{dutch_rows} * $$self{dutch_columns} ) != $$self{imposition} ) {
-		$$self{imposition} = 0;
+    #$$self{imposition} = 0;
 	}
+  my $imp = Compress::LZF::sthaw(MIME::Base64::decode_base64($$specs{imp}));
+  delete $$imp{Paper};
+  require PQS::Imposition::Node;
+  my $tmp = PQS::Imposition::Node->new(cut => 0, size => [1,1]);
+  undef $tmp;
+  $$imp{tree} = Storable::thaw($$imp{tree});
+  Carp::cluck('compressed imp'.Data::Dumper::Dumper($imp));
 
 
-	#'layout_width','layout_height',
+
+  #'layout_width','layout_height',
 #,'rotate_sheet',
 	$$self{runstyle} = $$specs{'ddmRunStyle'.$qty_index};
 	$$self{runstyle} = 'Sheet Work' if ! $$self{runstyle};
-	$$self{image_orientation_text} = $$specs{'hdnImageOrientation'.$qty_index};
+	$$self{image_orientation_text} = $$specs{'hdnImageOrientation'.$qty_index} ? $$specs{'hdnImageOrientation'.$qty_index} : $$specs{hdnImageOrientation};
 	if ( $$self{image_orientation_text} eq 'Vertical' ) {
 		$$self{image_orientation} = Vertical;
 	} else {
