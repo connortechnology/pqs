@@ -126,15 +126,27 @@ sub price_job {
 	my ($dbh, $pid, $sid, $j, $specs ) = @_;
 
 	my @eids = map { coater($openprint::dbh, $_) } eprint::service::valid_equipment(undef, $openprint::dbh, $j->type);
+  if (!@eids) {
+    $openprint::log->error("No equipment found for ".$j->supplier);
+  }
+  $openprint::log->error("No equipment found for ".$j->supplier. scalar(@eids));
 
-	# If our print Supplier is not 'House' then first check for equipment to match our print supplier.
-	my $price = compare_equipment($pid, $sid, $j, $specs, grep { $_->{supplier} ne 'House' and $_->{supplier} eq $j->supplier } @eids ) if $j->supplier ne 'House';
+  my $price;
+
+  if ($j->supplier ne 'House') {
+    my @supplier_equipment = grep { $_->{supplier} eq $j->supplier } @eids;
+    $openprint::log->debug("Equipment for ".$j->supplier. Data::Dumper::Dumper(\@supplier_equipment));
+
+    # If our print Supplier is not 'House' then first check for equipment to match our print supplier.
+    $price = compare_equipment($pid, $sid, $j, $specs, @supplier_equipment);
+    $openprint::log->debug(Data::Dumper::Dumper($price));
+  }
 
 	# Next try all of the House equipment.
-	$price = compare_equipment( $pid, $sid, $j, $specs, grep { $_->{supplier} eq 'House' } @eids ) if $j->supplier eq 'House' or not $price;
+	$price = compare_equipment( $pid, $sid, $j, $specs, grep { $_->{supplier} eq 'House' } @eids ) if $j->supplier eq 'House' or not $price or not defined($$price{cost});
 
 	# Finally try anything that is left if we still do not have a price.
-	$price = compare_equipment($pid, $sid,  $j, $specs, grep { $_->{supplier} ne 'House' and $_->{supplier} ne $j->supplier } @eids ) if not $price;
+	$price = compare_equipment($pid, $sid,  $j, $specs, @eids ) if not $price or not defined($$price{cost});
 
 	return $price;
 }
