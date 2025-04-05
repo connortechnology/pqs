@@ -152,7 +152,7 @@ sub calc {
       } else {
         @$specs{'txtWidth-'.$form,'txtHeight-'.$form} = @$sig_specs{'txtWidth','txtHeight'};
       }
-      $$specs{"calliper-'.$form"} = $stock->calliper();
+      $$specs{"calliper-$form"} = $stock->calliper();
     } # end if
 
     if ( $$specs{'LaminationType-'.$form} ) {
@@ -207,7 +207,9 @@ sub calc {
 		my $qty = int $$specs{"txtQuantity$qty_index"};
 		next if ! $qty;
 
-    my %totalPrice;
+    my %totalPrice = (
+      MPrice => 0
+    );
 
     foreach my $signature_service_index (@sigs) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -219,8 +221,13 @@ sub calc {
       my $imposition = new openprint::Imposition();
       $imposition->load( $sig_specs, $qty_index, $Project );
       my $stock = $imposition->Paper();
+      $$stock{calliper} = $$specs{"calliper-$form"};
 
       $$specs{'hdnBreakdown'.$qty_index} .= 'Signature ' . $form . ' printed: ' .openprint::service::summary( $Project, $signature_service_index, $qty_index ).'<br/>';
+      if (!$$imposition{imposition}) {
+        $$specs{'hdnBreakdown'.$qty_index} .= 'No imposition loaded.<br/>';
+        next;
+      }
 
       my %bestPrice;
       my @equipment = ();
@@ -301,6 +308,7 @@ sub calc {
             $width = $item_height * $imposition->columns();
           } # end if
           $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items across: ( %s x %s ) %d style:%s<br/>', $item_width, $item_height, $imposition->columns(), $style );
+          next if ! $$imposition{imposition};
           $sheets = $qty;
         } else {
           $_ = equipment_fits($Equipment, $imposition, $stock);
