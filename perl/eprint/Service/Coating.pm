@@ -50,18 +50,25 @@ sub calc {
 	# For now we will let the user override the sheet size going through the coater.
 	if ( $specs->{hdnSheetSizeWidth} ) {
 		$sw = $specs->{hdnSheetSizeWidth};
+    delete $$specs{hdnSheetSizeWidth};
 	} else {
 		$specs->{"hdnSheetSizeWidth"} = $sw;
 	}
 	if ( $specs->{hdnSheetSizeHeight} ) {
 		$sh = $specs->{hdnSheetSizeHeight};
+    delete $$specs{hdnSheetSizeHeight};
 	} else {
 		$specs->{"hdnSheetSizeHeight"} = $sh;
 	}
   if ( $specs->{calliper} ) {
     $cal = $specs->{calliper};
+    delete $$specs{calliper};
   } else {
     $specs->{calliper} = $cal;
+  }
+  if (!($sw and $sh)) {
+    $$specs{"hdnBreakdown1"} = 'Please enter the dimensions of the item to be coated.<br/>';
+    return $status;
   }
 
   # Get the Coating type so we know what # pricing to use.
@@ -119,15 +126,27 @@ sub price_job {
 	my ($dbh, $pid, $sid, $j, $specs ) = @_;
 
 	my @eids = map { coater($openprint::dbh, $_) } eprint::service::valid_equipment(undef, $openprint::dbh, $j->type);
+  if (!@eids) {
+    $openprint::log->error("No equipment found for ".$j->supplier);
+  }
+  $openprint::log->error("No equipment found for ".$j->supplier. scalar(@eids));
 
-	# If our print Supplier is not 'House' then first check for equipment to match our print supplier.
-	my $price = compare_equipment($pid, $sid, $j, $specs, grep { $_->{supplier} ne 'House' and $_->{supplier} eq $j->supplier } @eids ) if $j->supplier ne 'House';
+  my $price;
+
+  if ($j->supplier ne 'House') {
+    my @supplier_equipment = grep { $_->{supplier} eq $j->supplier } @eids;
+    $openprint::log->debug("Equipment for ".$j->supplier. Data::Dumper::Dumper(\@supplier_equipment));
+
+    # If our print Supplier is not 'House' then first check for equipment to match our print supplier.
+    $price = compare_equipment($pid, $sid, $j, $specs, @supplier_equipment);
+    $openprint::log->debug(Data::Dumper::Dumper($price));
+  }
 
 	# Next try all of the House equipment.
-	$price = compare_equipment( $pid, $sid, $j, $specs, grep { $_->{supplier} eq 'House' } @eids ) if $j->supplier eq 'House' or not $price;
+	$price = compare_equipment( $pid, $sid, $j, $specs, grep { $_->{supplier} eq 'House' } @eids ) if $j->supplier eq 'House' or not $price or not defined($$price{cost});
 
 	# Finally try anything that is left if we still do not have a price.
-	$price = compare_equipment($pid, $sid,  $j, $specs, grep { $_->{supplier} ne 'House' and $_->{supplier} ne $j->supplier } @eids ) if not $price;
+	$price = compare_equipment($pid, $sid,  $j, $specs, @eids ) if not $price or not defined($$price{cost});
 
 	return $price;
 }
@@ -136,13 +155,14 @@ sub compare_equipment{
 	my ( $pid, $sid, $j, $specs, @eids ) = @_;
 	my @e_prices;
 
+  my $has_equipment_that_fits = 0;
 	foreach my $e (@eids) {
     if ($$specs{'chkOverrideEquipment'.$j->qty_index} and $$specs{'ddmEquipment'.$j->qty_index} and $$specs{'ddmEquipment'.$j->qty_index} != $$e{id}) {
       next;
     }
     if (!fits($j->width, $j->height, $j->calliper, $e)) {
       if ($$specs{'chkOverrideEquipment'.$j->qty_index}) {
-        my $equipment = new openprint::Equipment($e);
+        my $equipment = new openprint::Equipment($$e{id});
         push @e_prices, {
           equipment       => $e,
           breakdown       => "Doesn't fit: " .$equipment->fits($j->width, $j->height, $j->calliper),
@@ -150,6 +170,7 @@ sub compare_equipment{
       }
       next;
     }
+    $has_equipment_that_fits = 1;
 
 		my $min_charge = price($e->{ref}, $j->type.'MinimumCharge');
 		my $make_ready = price($e->{ref}, $j->type.'MakeReady');
@@ -178,6 +199,15 @@ sub compare_equipment{
               breakdown       => $breakdown,
 						};
 	} # end foreach equipment
+
+  if (!$has_equipment_that_fits) {
+    my $breakdown = 'Doesn\'t fit on any equipment:<br/>';
+    foreach my $e (@eids) {
+      my $equipment = new openprint::Equipment($eids[0]{id});
+      $breakdown .= $equipment->name(). ': '.$equipment->fits($j->width, $j->height, $j->calliper). '<br/>';
+    }
+    push @e_prices, { breakdown => $breakdown };
+  }
 
   $openprint::log->error("Prices".Data::Dumper::Dumper(\@e_prices));
   my @prices = sort { 
@@ -245,13 +275,13 @@ struct COATING_Job => {
 sub display {
 	my ($log, $dbh, $service_type, $pid, $sid, $specs) = @_;
 
-	unless ($specs->{hdnSheetSizeWidth} and $specs->{hdnSheetSizeHeight} ) {
+	if (!($specs->{hdnSheetSizeWidth} and $specs->{hdnSheetSizeHeight})) {
     my $print  = get_print_container($log, $dbh, $pid);
-
-    my @fields = qw(hdnSheetSizeWidth hdnSheetSizeHeight txtStockCalliper);
-
-    @$specs{@fields} = get_specifications($log, $dbh, $pid, $print, @fields);
-    $$specs{calliper} = $$specs{txtStockCalliper};
+    if ($print) {
+      my @fields = qw(hdnSheetSizeWidth hdnSheetSizeHeight txtStockCalliper);
+      @$specs{@fields} = get_specifications($log, $dbh, $pid, $print, @fields);
+      $$specs{calliper} = $$specs{txtStockCalliper} if $$specs{txtStockCalliper};
+    }
   }
 
 	return {};

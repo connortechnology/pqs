@@ -3,12 +3,13 @@ package openprint::Equipment;
 our @ISA = qw( openprint::Object );
 require openprint::Object;
 use openprint ();
-#require openprint::EquipmentSpecification;
+require openprint::EquipmentSpecification;
 #require openprint::Fold;
 #require openprint::Location;
 #require openprint::Equipment_Stock_Setting;
 #require openprint::Equipment_Operator;
 #require openprint::Equipment_Shift;
+require openprint::misc;
 require sql;
 
 #use Memoize;
@@ -389,7 +390,7 @@ sub Specification {
 		$openprint::log->warn("No specifications for ($name) " . $self->name() ) if $s_debug;
 		return;
 	} # end if
-	my $Spec = misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );
+	my $Spec = openprint::misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );
 	$Specification_cache{$key} = $Spec;
 	return $Spec;
 } # end sub specification

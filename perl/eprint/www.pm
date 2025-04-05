@@ -491,6 +491,7 @@ sub parse_page {
     main          => \&section_main,
     site_specific => \&section_main,
     template      => \&section_templating,
+    error         => \&section_error,
   );
   my $func = $section{ $first };
   if ($func) {
@@ -501,15 +502,15 @@ sub parse_page {
       my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
       if ( $proc ) {
         my $module = join('_', ($first, ($second ? $second : ())));
-eval {
-        require "openprint/$module.pm";
-        if ( my $function = ('openprint::'.$module)->can($proc) ) {
-          $log->debug("Running openprint::$module->$proc") if DEBUG;
-          $function->();
-        } else {
-          $log->error("No function def for $module :: $proc!");
-        }
-};
+        eval {
+          require "openprint/$module.pm";
+          if ( my $function = ('openprint::'.$module)->can($proc) ) {
+            $log->debug("Running openprint::$module->$proc") if DEBUG;
+            $function->();
+          } else {
+            $log->debug("No function def for $module :: $proc!");
+          }
+        };
       } else {
         $log->debug("No proc found for $filename");
       } # end if
@@ -521,6 +522,9 @@ eval {
 
   return $status;
 } # end sub parse_page
+
+sub section_error {
+}
 
 sub section_templating {
   my ($r, $log, $dbh, $variable, $cookie, $uri, $sub_section, $filename) = @_;
