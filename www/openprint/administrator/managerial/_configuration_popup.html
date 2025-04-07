@@ -1,0 +1,39 @@
+<?include(/includes/error_reporting.html)?>
+<form id="config_form" name="config_form" action="configuration.html" method="post">
+	<input type="hidden" name="btnFunction" value="New"/>
+	<fieldset><legend><?echo($$variable{Entry}->id() ? 'Edit' : 'New' )?> Configuration Entry</legend>
+		<div class="content">
+			<ul>
+				<li><label>Name</label>
+					<input type="text" id="name" name="name" value="<? echo ( $$variable{Entry}{name} ) ?>"/>
+				</li>
+				<li><label>Description</label>
+					<textarea id="description" name="description" on_input_this="textarea_resize"><? echo ( $$variable{Entry}{description} ) ?></textarea>
+				</li>
+				<li><label>Type</label>
+					<select id="type" name="type">
+					<? echo ( make_drop_down( [ map { $_, $_ } @Configuration::types ], $$variable{Entry}{type} ); ) ?>
+					</select>
+				</li>
+				<li><label>Category</label>
+					<input type="text" id="new_category" name="new_category" onkeyup="ddm_select_by_index( $('category'), 0 );" placeholder="enter new or select existing"/>
+					<select name="category" id="category" onchange="$('new_category').value='';">
+						<option value="">create new</option>
+						<? echo ( make_drop_down( [ map { $_, $_ } Configuration::categories() ], $$variable{Entry}{category} ); ) ?>
+					</select>
+				</li>
+        <li><label>Value</label>
+          <input type="text" name="value"/>
+        </li>
+			</ul>
+		</div>
+		<p class="buttons">
+			<? echo (
+				return join("\n",
+					button( 'SaveNew', { onclick=>q`$j('#config_form').submit();`, text=>'Save' } ),
+					button( 'CancelNew', { onclick=>q`popupWin.destroy();`, text=>'Cancel' } ),
+				);
+			) ?>
+		</p>
+	</fieldset>
+</form>
