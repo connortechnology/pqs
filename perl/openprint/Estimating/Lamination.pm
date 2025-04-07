@@ -528,8 +528,21 @@ sub display {
   my %page;
 	my @equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
 	foreach my $qty_index ( $Project->quantity_indexes() ) {	
-	$page{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->strid(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
+    $page{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->strid(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
+
+    my @sigs = $Project->signatures({ sort=>1 });
+    foreach my $signature_service_index (@sigs) {
+      my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+      my $form  = $$sig_specs{SignatureIndex} // 1;
+      if (!$$specs{"override_calliper-$form"} or $$specs{"override_calliper-$form"} ne 'Y') {
+        my $imposition = new openprint::Imposition();
+        $imposition->load( $sig_specs, $qty_index, $Project );
+        my $stock = $imposition->Paper();
+        $$specs{"calliper-$form"} = $stock->calliper();
+      }
+    } # end foreach sig
 	} # end foreach qty_index
+
   return \%page;
 } # end sub display
 
