@@ -145,6 +145,7 @@ sub calc {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
     my $form  = $$sig_specs{SignatureIndex} // 1;
     my $stock = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
+    $openprint::log->debug("Stock calliper: ".$stock->calliper());
 
     if ( (!$$specs{'chkOverrideDimensions-'.$form}) or ($$specs{'chkOverrideDimensions-'.$form} ne 'Y')) {
       if ($$sig_specs{final_width} and $$sig_specs{final_height}) {
@@ -152,7 +153,12 @@ sub calc {
       } else {
         @$specs{'txtWidth-'.$form,'txtHeight-'.$form} = @$sig_specs{'txtWidth','txtHeight'};
       }
+    }
+
+    if ( (!$$specs{'override_calliper-'.$form}) or ($$specs{'override_calliper-'.$form} ne 'Y')) {
       $$specs{"calliper-$form"} = $stock->calliper();
+      $$specs{"calliper_pt-$form"} = $stock->calliper() * 1000;
+      $$specs{"calliper_mm-$form"} = $stock->calliper() * 25.4;
     } # end if
 
     if ( $$specs{'LaminationType-'.$form} ) {
