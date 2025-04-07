@@ -760,24 +760,27 @@ $openprint::log->debug("Auto calcing mweight from " . $self->weight() );
 } # end sub mweight
 
 sub calliper {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{calliper} = $self->transform('calliper'=>shift);
-	} # end if
-	if ( ! $$self{calliper} ) {
-		if ( $self->finish() =~ /offset/i ) {
-			if ( Math::Round::nearest(10,$self->basis_mweight()) == 70 ) {
-				$$self{calliper} = 0.005;
-			}
-		} elsif ( $self->finish() =~ /gloss/i ) {
-			if ( $self->finish() =~ /cover/i ) {
-				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 10000;
-			} else {
-				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 20000;
-			}
-		} elsif ( $self->finish() =~ /silk/i ) {
-				$$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 20000;
-		}
+  my $self = shift;
+  $$self{calliper} = $self->transform(calliper=>shift) if @_;
+  
+  if (!$$self{calliper}) {
+    if ($self->weight() and ($self->weight() =~ /(\d+)\s(PT)/i)) {
+      $$self{calliper} = $1/1000;
+    } elsif ($self->finish()) {
+      if ($self->finish() =~ /offset/i) {
+        if ( Math::Round::nearest(10,$self->basis_mweight()) == 70 ) {
+          $$self{calliper} = 0.005;
+        }
+      } elsif ( $self->finish() =~ /gloss/i ) {
+        if ( $self->finish() =~ /cover/i ) {
+          $$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 10000;
+        } else {
+          $$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 20000;
+        }
+      } elsif ( $self->finish() =~ /silk/i ) {
+        $$self{calliper} = Math::Round::nearest(10,$self->basis_mweight()) / 20000;
+      }
+    } # end if finish
 	}
 	return $$self{calliper};
 } # end sub calliper
@@ -1499,6 +1502,7 @@ sub load_from_signature {
 	} else {
 
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
+      $openprint::log->debug("Loading by paper_id and qty_index");
 			$Paper = openprint::Paper->find_one( id=>$$specs{'paper_id'.$qty_index} );
 			if ( !$Paper ) {
 				$openprint::log->warn('Loading by paper id but not found: ' . $$specs{'paper_id'.$qty_index} );
@@ -1508,102 +1512,116 @@ sub load_from_signature {
 		#} else {
 			#Carp::cluck("load_from_signature called without qty_index:$qty_index and paper_id:". $$specs{'paper_id'.$qty_index});
 		}
+    if ( $$specs{hdnPaperIndex}) {
+      $openprint::log->debug("Load by hdnPaper Index");
+			$Paper = openprint::Paper->find_one( id=>$$specs{hdnPaperIndex} );
+			if ( !$Paper ) {
+				$openprint::log->warn('Loading by paper id but not found: ' . $$specs{hdnPaperIndex} );
+			} else {
+				$$Paper{Supplied} = $Paper->clone();
+			} # end if
+    }
+    if ($Paper) {
+      $openprint::log->debug("Returning paper ".$Paper->to_string());
+      return $Paper;
+    }
+
 		if ( ! ( $$specs{ddmStockBrand} and $$specs{ddmStockFinish} and $$specs{ddmStockColour} and $$specs{ddmStockWeight} ) ) {
+      $openprint::log->debug("No brand, colour etc, can't find stock");
 			return new openprint::Paper();
 		} # end if
 
-		if ( !$Paper ) {
-			my %params = (
-					'supplied is null or ='	=> $$specs{rdbSuppliedStock},
-					brand	 	=> $$specs{ddmStockBrand},
-					finish	=> $$specs{ddmStockFinish},
-					colour	=> $$specs{ddmStockColour},
-					weight	=> $$specs{ddmStockWeight},
-					( $Project ? ( 'project_type_id any'=> $Project->type_id() ) : () ),
-# FIXME
-					( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( digital=>1 ) : () ),
-					order		=>	'minimum_order',
-					);
-			if ( $qty_index and $$specs{'hdnSuppliedStockWidth'.$qty_index} ) {
-				$params{width} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
-				$params{type}	= $$specs{'StockType'.$qty_index} if $$specs{'StockType'.$qty_index};
-				#$params{type}	= $$specs{StockType} if $$specs{StockType};
-				if ( $params{type} ne 'Roll' ) {
-					$params{height} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
-				} # end if
-			} # end if
-			my @Papers = openprint::Paper->find( %params );
-			if ( !@Papers ) {
-$log->debug("Didn't find specific paper $params{width} x $params{height} $$specs{StockType} type: " . $$specs{'StockType'.$qty_index});
-				delete $params{width};
-				delete $params{height};
-				@Papers = openprint::Paper->find( %params );
-			} # end if
-			if ( !@Papers ) {
-				$openprint::log->warn("No papers found for brand($$specs{ddmStockBrand}) finish($$specs{ddmStockFinish}) color($$specs{ddmStockColour}) weight($$specs{ddmStockWeight})");
-				$Paper = new openprint::Paper();
-				my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} )) if $Project;;
-				@StockOptions = misc::trim(split (',', $openprint::config{StockOptions} )) if ! @StockOptions;
-				@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
-				foreach my $option ( @StockOptions ) {
-					my $lc_option = lc $option;
-					$Paper->$lc_option( $$specs{"ddmStock$option"} );
-				} # end foreach
-				$Paper->calliper( $$specs{txtSpecificStockCalliper} );
-				$Paper->start_width( $$specs{"hdnSuppliedStockWidth$qty_index"} );
-				$Paper->start_height( $$specs{"hdnSuppliedStockHeight$qty_index"} );
-				if ( $qty_index ) {
-					$Paper->width( $$specs{'StockWidth'.$qty_index} );
-					$Paper->height( $$specs{'StockHeight'.$qty_index} );
-				} else {
-					$Paper->width( $$specs{hdnSuppliedStockWidth} );
-					$Paper->height( $$specs{hdnSuppliedStockHeight} );
-				} # end if
-				$Paper->doublesided( $$specs{CustomSheetDoubleSided} );
-				$Paper->gsm( $$specs{txtStockGSM} ) if $$specs{txtStockGSM};
-				$Paper->type( $$specs{'StockType'.$qty_index} ) if $$specs{'StockType'.$qty_index};
-				$Paper->type( $$specs{StockType} ) if $$specs{StockType};
+    my %params = (
+      'supplied is null or ='	=> $$specs{rdbSuppliedStock},
+      brand	 	=> $$specs{ddmStockBrand},
+      finish	=> $$specs{ddmStockFinish},
+      colour	=> $$specs{ddmStockColour},
+      weight	=> $$specs{ddmStockWeight},
+      ( $Project ? ( 'project_type_id any'=> $Project->type_id() ) : () ),
+      # FIXME
+      ( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( digital=>1 ) : () ),
+      order		=>	'minimum_order',
+    );
+    if ( $qty_index and $$specs{'hdnSuppliedStockWidth'.$qty_index} ) {
+      $params{width} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
+      $params{type}	= $$specs{'StockType'.$qty_index} if $$specs{'StockType'.$qty_index};
+      #$params{type}	= $$specs{StockType} if $$specs{StockType};
+      if ( $params{type} ne 'Roll' ) {
+        $params{height} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
+      } # end if
+    } # end if
+    my @Papers = openprint::Paper->find( %params );
+    if ( !@Papers ) {
+      $log->debug("Didn't find specific paper $params{width} x $params{height} $$specs{StockType} type: " . $$specs{'StockType'.$qty_index});
+      delete $params{width};
+      delete $params{height};
+      @Papers = openprint::Paper->find( %params );
+    } # end if
+    if ( !@Papers ) {
+      $openprint::log->warn("No papers found for brand($$specs{ddmStockBrand}) finish($$specs{ddmStockFinish}) color($$specs{ddmStockColour}) weight($$specs{ddmStockWeight})");
+      $Paper = new openprint::Paper();
+      my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} )) if $Project;;
+      @StockOptions = misc::trim(split (',', $openprint::config{StockOptions} )) if ! @StockOptions;
+      @StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
+      foreach my $option ( @StockOptions ) {
+        my $lc_option = lc $option;
+        $Paper->$lc_option( $$specs{"ddmStock$option"} );
+      } # end foreach
+      $Paper->calliper( $$specs{txtSpecificStockCalliper} );
+      $Paper->start_width( $$specs{"hdnSuppliedStockWidth$qty_index"} );
+      $Paper->start_height( $$specs{"hdnSuppliedStockHeight$qty_index"} );
+      if ( $qty_index ) {
+        $Paper->width( $$specs{'StockWidth'.$qty_index} );
+        $Paper->height( $$specs{'StockHeight'.$qty_index} );
+      } else {
+        $Paper->width( $$specs{hdnSuppliedStockWidth} );
+        $Paper->height( $$specs{hdnSuppliedStockHeight} );
+      } # end if
+      $Paper->doublesided( $$specs{CustomSheetDoubleSided} );
+      $Paper->gsm( $$specs{txtStockGSM} ) if $$specs{txtStockGSM};
+      $Paper->type( $$specs{'StockType'.$qty_index} ) if $$specs{'StockType'.$qty_index};
+      $Paper->type( $$specs{StockType} ) if $$specs{StockType};
 
-				$Paper->grade( $$specs{StockGrade});
+      $Paper->grade( $$specs{StockGrade});
 
-				$$Paper{Price} = $$specs{CustomStockPrice};
-				$$Paper{Units} = $$specs{CustomStockPriceUnits};
-				$Paper->basis_width( $$specs{basis_width} ) if $$specs{basis_width};
-				$Paper->basis_height( $$specs{basis_height} ) if $$specs{basis_height};
-				$Paper->basis_mweight( $$specs{basis_mweight} ) if $$specs{basis_mweight};
-				$Paper->score_required( $Paper->calliper() > 0.008 );
-				$Paper->mweight( $$specs{'txtMWeight'.$qty_index} );
-				@Papers = ( $Paper );
-			} elsif ( $qty_index ) {
-				my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"}) if $qty_index and $$specs{"ddmPress$qty_index"};
-				foreach my $P ( @Papers ) {
-					if ( $Press and ( my $Stock_Setting = $Press->Stock_Setting( $P ) ) ) {
-						next if $Stock_Setting->grain() eq 'Dont Use';
-					} # end if
-					if ( ! $$specs{'StockQuantity'.$qty_index} ) {
-						$$specs{'StockQuantity'.$qty_index} = $$specs{'txtPressSheetQty'.$qty_index};
-						$$specs{'StockQuantity'.$qty_index} =~ s/\D//g;
-					} # end if
-					if ( $$specs{'StockQuantity'.$qty_index} and ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) ) {
-						$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() ) if $debug;
-						next;
-					} # end if
-					$Paper = $P;
-					last;
-				} # end foreach
-			} else {
-				$Paper = $Papers[0];
-			} # end if
-			if ( (!$Paper) and @Papers ) {
-        $log->debug('No paper found matching minimum_order want '.$$specs{'StockQuantity'.$qty_index});
-        foreach my $P ( @Papers ) {
-          $log->debug($P->id_string());
-        } # end foreach P
-        $Paper = shift @Papers;
-			} # end if
-		} # end if Paper
+      $$Paper{Price} = $$specs{CustomStockPrice};
+      $$Paper{Units} = $$specs{CustomStockPriceUnits};
+      $Paper->basis_width( $$specs{basis_width} ) if $$specs{basis_width};
+      $Paper->basis_height( $$specs{basis_height} ) if $$specs{basis_height};
+      $Paper->basis_mweight( $$specs{basis_mweight} ) if $$specs{basis_mweight};
+      $Paper->score_required( $Paper->calliper() > 0.008 );
+      $Paper->mweight( $$specs{'txtMWeight'.$qty_index} );
+      @Papers = ( $Paper );
+    } elsif ( $qty_index ) {
+      my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"}) if $qty_index and $$specs{"ddmPress$qty_index"};
+      foreach my $P ( @Papers ) {
+        if ( $Press and ( my $Stock_Setting = $Press->Stock_Setting( $P ) ) ) {
+          next if $Stock_Setting->grain() eq 'Dont Use';
+        } # end if
+        if ( ! $$specs{'StockQuantity'.$qty_index} ) {
+          $$specs{'StockQuantity'.$qty_index} = $$specs{'txtPressSheetQty'.$qty_index};
+          $$specs{'StockQuantity'.$qty_index} =~ s/\D//g;
+        } # end if
+        if ( $$specs{'StockQuantity'.$qty_index} and ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) ) {
+          $openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() ) if $debug;
+          next;
+        } # end if
+        $Paper = $P;
+        last;
+      } # end foreach
+    } else {
+      $Paper = $Papers[0];
+    } # end if
+    if ( (!$Paper) and @Papers ) {
+      $log->debug('No paper found matching minimum_order want '.$$specs{'StockQuantity'.$qty_index});
+      foreach my $P ( @Papers ) {
+        $log->debug($P->id_string());
+      } # end foreach P
+      $Paper = shift @Papers;
+    } # end if
+
 		if ( !$Paper ) {
-#$log->debug("No paper found");
+$log->debug("No paper found");
 			$Paper = new openprint::Paper();
 		} # end if
 
@@ -1618,7 +1636,7 @@ $log->debug("Didn't find specific paper $params{width} x $params{height} $$specs
 
 	my $Supplied = $Paper;
 	$Paper = $Paper->clone();
-#$openprint::log->debug($Paper->to_string() );
+$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
     #FIXME Whay?
     # So... if loading need to check that it fits the size.... but if we are loading by id.... then we don't need to do this... maybe test the impact of this code.
