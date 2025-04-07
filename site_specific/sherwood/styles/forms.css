@@ -27,6 +27,7 @@ fieldset legend {
 
 	color: #000000;
 	font-weight: bold;
+  font-size: 1em;
 }
 
 fieldset fieldset legend {color: #0B0D60;}
