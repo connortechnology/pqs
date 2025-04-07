@@ -41,22 +41,15 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub configuration {
 
 	if ( $param{btnFunction} eq 'New' ) {
-		if ( sql::execute( $log, $dbh, 'SELECT * FROM Configuration WHERE name=? LIMIT 1', $param{name} ) ) {
-			sql::update( $log, $dbh, 'configuration', [ 'name=?', $param{name} ], {
-				'description'	=>	$param{description},
-				'type'			=>	$param{type},
-				'category'		=>	( $param{new_category} ? $param{new_category} : $param{category} ),
-				(exists $param{value} ? ( 'value'			=>	$param{value} ) : () ),
-			} );
-		} else {
-			sql::insert( $log, $dbh, 'configuration', {
-				'name'	=>	$param{name},
-				'description'	=>	$param{description},
-				'type'			=>	$param{type},
-				'category'		=>	( $param{new_category} ? $param{new_category} : $param{category} ),
-				'value'			=>	$param{value},
-			} );
-		} # end if
+    my $entry = Configuration->find_one(name=>$param{name});
+    $entry = new Configuration() if ! $entry;
+    $entry->save({
+        name => $param{name},
+        description	=>	$param{description},
+        type			=>	$param{type},
+        category		=>	( $param{new_category} ? $param{new_category} : $param{category} ),
+        (exists $param{value} ? ( value	=>	$param{value} ) : () ),
+      });
 	} elsif ( $param{btnFunction} eq 'Save' ) {
 		foreach my $C ( Configuration->find() ) {
 			my $name = $$C{name};
@@ -111,9 +104,12 @@ require Authen::Passphrase::BlowfishCrypt;
 
 		# Add record to audit log - action "Update Configuration".
 		new openprint::Log()->save({action=>'Update Configuration'});
-    $variable{ExternalRedirect} = '/administrator/managerial/configuration.html';
+    $variable{ExternalRedirect} = '/openprint/administrator/managerial/configuration.html';
 	} elsif ( $param{action} eq 'delete' ) {
-		sql::execute( undef, undef, 'DELETE FROM Configuration WHERE name=?', $param{name} );
+    my $entry = Configuration->find_one(name=>$param{name});
+    $entry->delete();
+		new openprint::Log()->save({action=>'Delete Configuration'});
+    $variable{ExternalRedirect} = '/openprint/administrator/managerial/configuration.html';
 	} # end if
 } # end sub configuration
 
