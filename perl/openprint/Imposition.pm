@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 use Carp qw( cluck );
 require Storable;
 use MIME::Base64;
@@ -280,7 +281,9 @@ sub load {
 
 	$$self{page_quantity} = $$self{quantity} = 1;
 	$$self{specs} = $specs;
-	$$self{Paper} = openprint::Paper::load_from_signature( $Project, $specs, $qty_index ) if ! $$self{Paper};
+  $openprint::log->debug("Loading stock");
+	my $Paper = $$self{Paper} = openprint::Paper::load_from_signature( $Project, $specs, $qty_index ) if ! $$self{Paper};
+  $openprint::log->debug("Paper" . $$self{Paper}->to_string());
 	if ( ! $$self{Press} ) {
 		if ( ! $$specs{'ddmPress'.$qty_index} ) {
 			#$openprint::log->error("No ddmPress for $qty_index for signature $$specs{SignatureIndex}");
@@ -330,12 +333,13 @@ Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::D
   $$imp{tree} = Storable::thaw($$imp{tree});
   Carp::cluck('compressed imp'.Data::Dumper::Dumper($imp));
 
-
-
   #'layout_width','layout_height',
 #,'rotate_sheet',
 	$$self{runstyle} = $$specs{'ddmRunStyle'.$qty_index};
 	$$self{runstyle} = 'Sheet Work' if ! $$self{runstyle};
+  if ($$self{runstyle} eq 'SW') {
+    $$self{runstyle} = 'Sheet Work';
+  }
 	$$self{image_orientation_text} = $$specs{'hdnImageOrientation'.$qty_index} ? $$specs{'hdnImageOrientation'.$qty_index} : $$specs{hdnImageOrientation};
 	if ( $$self{image_orientation_text} eq 'Vertical' ) {
 		$$self{image_orientation} = Vertical;
@@ -347,7 +351,6 @@ Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::D
 	$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	$$self{printing_type} = $$specs{"PrintingType$qty_index"};
 
-	my $Paper = $$self{Paper};
 
 	my ( $dutch_width, $dutch_height );
 
@@ -464,10 +467,10 @@ $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}
 	} # end if
 	$$self{page_width} = $$specs{txtFinalWidth};
 	$$self{page_height} = $$specs{txtFinalHeight};
-	$$self{sheet_width} = $$self{Paper}{width};
-	$$self{sheet_height} = $$self{cut_off} ? $$self{cut_off} : $$self{Paper}{height};
+	$$self{sheet_width} = $$Paper{width};
+	$$self{sheet_height} = $$self{cut_off} ? $$self{cut_off} : $$Paper{height};
 	if ( ! exists $$specs{"RotateSheet$qty_index"} ) {
-		if ( $$self{layout_width} > $$self{Paper}->width() or $$self{layout_height} > $$self{sheet_height} ) {
+		if ( $$self{layout_width} > $Paper->width() or $$self{layout_height} > $$self{sheet_height} ) {
 			$$self{rotate_sheet} = 1;
 		} else {
 			$$self{rotate_sheet} = 0;
