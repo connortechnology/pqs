@@ -1,0 +1,78 @@
+<div class="Configuration">
+<form id="f1" name="f1" method="post" action="?">
+	<p class="buttons">
+		<? echo ( join("\n",
+					button( 'SaveTop', { onclick=>"f1.btnFunction.value='Save';f1.submit();",text=>'Save' } ),
+					button( 'ResetTop', { onclick=>'f1.reset();',text => 'Reset' } ),
+					button( 'New', { onclick=>q`popup_window('_configuration_popup.html');` } )
+		); ) ?>
+  </p>
+<fieldset class="filters"><legend>Filters</legend>
+  <ul>
+    <li><label>Category</label>
+      <?echo(
+          ssi::select([map { $_, $_ } Configuration::categories()],
+          $param{category_filter}, 
+          { name=>'category_filter', prepend=>['','All'], onchange=>'this.form.submit();' }
+          );
+          )?>
+    </li>
+  </ul>
+</fieldset>
+
+<div id="Configuration">
+<? echo (
+	my $html;
+	my @Suppliers = openprint::Company->find( supplier =>'Y');
+  my @Owners = openprint::Company->find(offers_credit=>1) if $openprint::Company::fields{offers_credit};
+  my $Pricelists = openprint::Pricelist->dropdown(order=>'lower('.$openprint::Pricelist::fields{name}.')');
+
+	my $cat;
+	foreach my $C ( Configuration->find(
+    ( $param{category_filter} ? (category=>$param{category_filter}) : () ),
+    order=>'lower(category),lower('.$Configuration::fields{name}.')') ) {
+
+		if ( ! defined $cat ) {
+			$html .= "<fieldset><legend>$$C{category}</legend><ul>";
+		} elsif ( $cat ne $$C{category} ) {
+			$html .= "</ul></fieldset><fieldset><legend>$$C{category}</legend><ul>";
+		} # end if
+		
+        $html .= qq`<li id="$$C{name}"><label>`.( $$C{description} ? $$C{description} : $$C{name} ) . "</label>\n";
+		my $name = $$C{name};
+		$name =~ s/ /%20/g;
+        if ( $$C{type} eq 'Supplier' ) {
+            $html .= ssi::select( [ map { $_->id(), $_->name() } @Suppliers ], $$C{value}, { name=>$name, prepend=>[ '', 'select one' ] } );
+        } elsif ( $$C{type} eq 'Owner' ) {
+            $html .= ssi::select( [ map { $_->id(), $_->name() } @Owners ], $$C{value}, { name=>$name, prepend=>[ '', 'select one' ] } );
+        } elsif ( $$C{type} eq 'pricelist' ) {
+            $html .= ssi::select( $Pricelists, $$C{value}, { name=>$name, prepend=>[ '', 'select one' ] } );
+        } elsif ( $$C{type} eq 'currency' ) {
+            $html .= ssi::select( openprint::Currency->dropdown(order=>'lower(name)'), $$C{value}, { name=>$name, prepend=>[ '', 'select one' ] } );
+        } elsif ( $$C{type} eq 'yes/no' ) {
+            $html .= radio( $name, [ 'Y','Yes', 'N', 'No' ], $$C{value} );
+        } elsif ( $$C{type} eq 'boolean' ) {
+            $html .= radio( $name, [ '1','Yes', '0', 'No' ], $$C{value} );
+        } elsif ( $$C{type} eq 'textarea' ) {
+			my @rows = split "\n", $$C{value};
+            $html .= sprintf('<textarea name="%s" cols="80" rows="%d" onkeyup="textarea_resize(this);" />%s</textarea>', $name, scalar @rows, htmlize($$C{value}) );
+		} elsif ( $$C{type} eq 'number' ) {
+			$html .= input( type=>'number', name=>$name, value=>$$C{value} );
+        } else {
+			$html .= input( type=>'text', name=>$name, value=>$$C{value} );
+        } # end if
+		$html .= '<span class="buttons">';
+		$html .= button( 'Delete'.$$C{name}, { onclick =>qq`new Ajax.Request('_configuration.json', { parameters: { name: '$$C{name}', action: 'delete' }, evalScripts: true } );`, text=>'Delete' } );
+		$html .= button( 'Edit'.$$C{name}, { onclick =>qq`popup_window('_configuration_popup.html','name=$$C{name}');`, text=>'Edit' } );
+		$html .= '</span>';
+        $html .= "</li>\n";
+		$cat = $$C{category};
+		$cat = '' if ! defined $cat;
+    } # end foreach C
+	return $html;
+) ?>
+	</ul></fieldset>
+</div>
+	<input type="hidden" name="btnFunction"/>
+</form>
+</div>
