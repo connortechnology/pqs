@@ -1,15 +1,19 @@
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-<li>
+<?if($openprint::User->is_staff())?>
+<li class="breakdowns">
 	<? echo ( my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{Columns}.'Columns">';
-			$html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown('$qty_index');", text=>'Breakdown' } );
+      if (!$config{BreakdownPopups} or $config{BreakdownPopups} ne 'N') {
+        $html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown('$qty_index');", text=>'Breakdown' } );
+        $html .= qq`<div id="hdnBreakdown$qty_index" style="display:none;"></div>`;
+      } else {
+        $html .= '<fieldset><legend>Breakdown</legend>';
+        $html .= '<div class="breakdown" id="hdnBreakdown'.$qty_index.'"></div>';
+        $html .= '</fieldset>';
+      }
 			$html .= '</span>';
-			$html .= qq`<div id="hdnBreakdown$qty_index" style="display:none;"></div>
-			<!--<input type="hidden" name="hdnBreakdown$qty_index" />-->
-			`;
 		} # end foreach
 		return $html;
 	) ?>
 </li>
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+<?endif($openprint::User->is_staff())?>
