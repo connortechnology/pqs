@@ -3,7 +3,9 @@ my $html;
 my $options = $$variable{Equipment} ? [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ] :
   openprint::Equipment->dropdown('servicetype_id any'=>$$variable{ServiceType}->id(), useinestimating=>1);
 if (@{$options}) {
-  $html .= ' <li> <label>Equipment</label>';
+  $html .= ' <li> <label>Equipment</label>
+    ';
+
   foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
     $html .= '<span class="'.$$variable{Columns}.'Columns">';
 
