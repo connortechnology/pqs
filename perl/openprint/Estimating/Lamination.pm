@@ -210,6 +210,7 @@ sub calc {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
+    $$specs{"hdnBreakdown$qty_index"} = '';
 		my $qty = int $$specs{"txtQuantity$qty_index"};
 		next if ! $qty;
 
@@ -248,6 +249,12 @@ sub calc {
 
       foreach my $Equipment (@equipment) {
         my $style = $Equipment->specification('Laminating Style') // '';
+        my %price = (
+          breakdown => '',
+          total => 0,
+          MPrice => 0,
+          Equipment => $Equipment,
+        );
 
         my $error = '';
         if ((!$style) or ($style eq 'Final Pieces')) {
@@ -280,7 +287,7 @@ sub calc {
         my $maximum_sheet_width = $Equipment->specification('Maximum Sheet Width') // '';
         my $maximum_sheet_length= $Equipment->specification('Maximum Sheet Length') // '';
         my $laminate_width = $Equipment->specification('Laminate Width');
-        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s max Width: %s Length: %s<br/>',
+        $price{breakdown} .= sprintf('Equipment: %s max Width: %s Length: %s<br/>',
             $Equipment->name(), $maximum_sheet_width, $maximum_sheet_length);
         my $sheets = 0;
 
@@ -313,13 +320,13 @@ sub calc {
             $length = $item_width * $imposition->rows();
             $width = $item_height * $imposition->columns();
           } # end if
-          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items across: ( %s x %s ) %d style:%s<br/>', $item_width, $item_height, $imposition->columns(), $style );
+          $price{breakdown} .= sprintf('Items across: ( %s x %s ) %d style:%s<br/>', $item_width, $item_height, $imposition->columns(), $style );
           next if ! $$imposition{imposition};
           $sheets = $qty;
         } else {
           $_ = equipment_fits($Equipment, $imposition, $stock);
           if ($_) {
-            $$specs{'hdnBreakdown'.$qty_index} .= 'Doesn\'t fit.'.$_.'<br/>';
+            $price{breakdown} .= 'Doesn\'t fit.'.$_.'<br/>';
             next;
           } # end if
           if ($imposition->sheet_width() > $maximum_sheet_width) {
@@ -352,11 +359,11 @@ sub calc {
 
         $width = $laminate_width if $laminate_width;
         my $area = $length * $width * $sheets;
-        $$specs{'hdnBreakdown'.$qty_index} .= 'Using '.$length.'" x '.$width.'" * '.$sheets.' sheets = '.$area.' square inches<br/>';
+        $price{breakdown} .= 'Using '.$length.'" x '.$width.'" * '.$sheets.' sheets = '.$area.' square inches<br/>';
 
         my %SetupPrice = $MakeReady->get_price(undef, $Equipment ) if $MakeReady;
-        my $price = $SetupPrice{Price};
-        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $SetupPrice{Price});
+        $price{total} += $SetupPrice{Price};
+        $price{breakdown} .= sprintf('Setup: $%.2f<br/>', $SetupPrice{Price});
 
         my $MPrice = 0;
 
@@ -366,14 +373,14 @@ sub calc {
 
           if ( $ServicePrice{units} eq 'per m' ) {
             $ServicePrice{Total} = ($ServicePrice{Price} * $qty)/1000;
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f %2$s * %4$f = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
-            $MPrice += $ServicePrice{Price};
+            $price{breakdown} .= sprintf('Service: $%1$.2f %2$s * %4$f = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
+            $price{MPrice} += $ServicePrice{Price};
           } elsif ( $ServicePrice{units} eq 'per inch' ) {
             my $linear_length = Math::Round::nearest(0.01, $length * $sheets);
             #$$specs{'hdnBreakdown'.$qty_index} .= "Linear length $length * $sheets = $linear_length inches<br/>";
             $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $linear_length );
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%1$.2f %2$s * %4$d inches = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $linear_length);
-            $MPrice += Math::Round::nearest( 0.01, $ServicePrice{Price} * ($length * 1000 / $$imposition{imposition}));
+            $price{breakdown} .= sprintf('Service: $%1$.2f %2$s * %4$d inches = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $linear_length);
+            $price{MPrice} += Math::Round::nearest( 0.01, $ServicePrice{Price} * ($length * 1000 / $$imposition{imposition}));
           } elsif ( $ServicePrice{units} eq '/Hr' or $ServicePrice{units} eq 'per hour') {
             my $inches_per_hour;
             my $Speed = $Equipment->Specification( 'Run Speed' ) ;
@@ -381,11 +388,11 @@ sub calc {
               if ( lc $$Speed{units} eq 'inches per hour' ) {
                 $inches_per_hour = $$Speed{value};
               } else {
-                $$specs{'hdnBreakdown'.$qty_index} .= "Unknown speed units ($$Speed{units}<br/>";
+                $price{breakdown} .= "Unknown speed units ($$Speed{units}<br/>";
                 $inches_per_hour = 720;
               } # end if
             } else {
-              $$specs{'hdnBreakdown'.$qty_index} .= 'No speed set<br/>';
+              $price{breakdown} .= 'No speed set<br/>';
               $inches_per_hour = 720;
             } # end if
 
@@ -393,35 +400,36 @@ sub calc {
               my $hours = Math::Round::nearest( 0.01, $length * ( $qty / $$imposition{imposition} ) / $inches_per_hour );
               $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $hours );
               if ($sides eq 'Single' and $$specs{"TypeFront-$form"} and $$specs{"TypeBack-$form"}) {
-                $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Front $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
-                $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Back $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+                $price{breakdown} .= sprintf('Service: Front $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+                $price{breakdown} .= sprintf('Service: Back $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
                 $ServicePrice{Total} *= 2;
                 $ServicePrice{Price} *= 2;
               } else {
-                $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Both sides $%1$.2f %4$s * %2$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+                $price{breakdown} .= sprintf('Service: Both sides $%1$.2f %4$s * %2$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
               }
               $MPrice += Math::Round::nearest( 0.01, $ServicePrice{Price} * ( $length * ( 1000 / $$imposition{imposition} ) ) / $inches_per_hour );
             } else {
               my $hours = Math::Round::nearest(0.01, $length * $sheets / $inches_per_hour);
-              $$specs{'hdnBreakdown'.$qty_index} .= "Runtime = length $length * $sheets / $inches_per_hour<br/>";
+              $price{breakdown} .= "Runtime = length $length * $sheets / $inches_per_hour<br/>";
               $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $hours );
               if ($sides eq 'Single' and $$specs{"TypeFront-$form"} and $$specs{"TypeBack-$form"}) {
-                $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Front $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
-                $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Back $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+                $price{breakdown} .= sprintf('Service: Front $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+                $price{breakdown} .= sprintf('Service: Back $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
                 $ServicePrice{Total} *= 2;
                 $ServicePrice{Price} *= 2;
               } else {
-                $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: Both sides: $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
+                $price{breakdown} .= sprintf('Service: Both sides: $%1$.2f %2$s * %4$.2fhours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours);
               }
-              $MPrice += Math::Round::nearest( 0.01, $ServicePrice{Price} * ( $length * ( 1000 / $$imposition{imposition} ) ) / $inches_per_hour );
+              $price{MPrice} += Math::Round::nearest( 0.01, $ServicePrice{Price} * ( $length * ( 1000 / $$imposition{imposition} ) ) / $inches_per_hour );
             }
           } else {
-            $$specs{'hdnBreakdown'.$qty_index} .= "Unknown units ($ServicePrice{units}) for $$specs{ServiceType}<br/>";
+            $price{breakdown} .= "Unknown units ($ServicePrice{units}) for $$specs{ServiceType}<br/>";
           } # end if
-          $price += $ServicePrice{Total};
+          $price{total} += $ServicePrice{Total};
         } else {
-          $$specs{'hdnBreakdown'.$qty_index} .= "No Service price for $$specs{ServiceType}<br/>";
+          $price{breakdown} .= "No Service price for $$specs{ServiceType}<br/>";
         } # end if
+
         if ( $$specs{"TypeFront-$form"}) {
           my $FrontMaterialPrice;
           if ( my $FrontMaterial = openprint::Material->find_one(name=>$$specs{"TypeFront-$form"} ) ) {
@@ -435,17 +443,17 @@ sub calc {
             } # end if
             if ( $$FrontMaterialPrice{units} eq 'per square foot' ) {
               $$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $area / 144;
-              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.6f %2$s * %4$.2f square feet = $%3$.2f<br/>', @$FrontMaterialPrice{'Price','units','Total'}, $area/144 );
+              $price{breakdown} .= sprintf('Material on Front: $%1$.6f %2$s * %4$.2f square feet = $%3$.2f<br/>', @$FrontMaterialPrice{'Price','units','Total'}, $area/144 );
             } elsif ( $$FrontMaterialPrice{units} eq 'per m square inches' ) {
               $$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $area / 1000;
-              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.2f %2$s * %4$.2f inches = $%3$.2f<br/>', @$FrontMaterialPrice{'Price','units','Total'}, $area/1000 );
+              $price{breakdown} .= sprintf('Material on Front: $%1$.2f %2$s * %4$.2f inches = $%3$.2f<br/>', @$FrontMaterialPrice{'Price','units','Total'}, $area/1000 );
             } else {
-              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: unknown units: (%s)<br/>', $FrontMaterialPrice->to_string() );
+              $price{breakdown} .= sprintf('Material on Front: unknown units: (%s)<br/>', $FrontMaterialPrice->to_string() );
             } # end if
-            $price += $$FrontMaterialPrice{Total};
-            $MPrice += ( 1000 / $$imposition{imposition} ) * $$FrontMaterialPrice{Total}/$sheets;
+            $price{total} += $$FrontMaterialPrice{Total};
+            $price{MPrice} += ( 1000 / $$imposition{imposition} ) * $$FrontMaterialPrice{Total}/$sheets;
           } else {
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('No Material found for Front: (%s)<br/>', $$specs{"TypeFront-$form"} );
+            $price{breakdown} .= sprintf('No Material found for Front: (%s)<br/>', $$specs{"TypeFront-$form"} );
           } # end if Material Found
         } # end if TypeFront
 
@@ -461,33 +469,31 @@ sub calc {
             } # end if
             if ( $BackMaterialPrice{units} eq 'per square foot' ) {
               $BackMaterialPrice{Total} = $BackMaterialPrice{Price} * $area / 144;
-              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Back: $%1$.2f %2$s * %4$.2f square feet = $%3$.2f<br/>', @BackMaterialPrice{'Price','units','Total'}, $area/144 );
+              $price{breakdown} .= sprintf('Material on Back: $%1$.2f %2$s * %4$.2f square feet = $%3$.2f<br/>', @BackMaterialPrice{'Price','units','Total'}, $area/144 );
             } elsif ( $BackMaterialPrice{units} eq 'per m square inches' ) {
               $BackMaterialPrice{Total} = $BackMaterialPrice{Price} * $area / 1000;
-              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Back: $%1$.2f %2$s * %4$.2f square inches = $%3$.2f<br/>', @BackMaterialPrice{'Price','units','Total'}, $area/1000 );
+              $price{breakdown} .= sprintf('Material on Back: $%1$.2f %2$s * %4$.2f square inches = $%3$.2f<br/>', @BackMaterialPrice{'Price','units','Total'}, $area/1000 );
             } else {
-              $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: unknown units: (%s)<br/>', $BackMaterialPrice{units} );
+              $price{breakdown} .= sprintf('Material on Front: unknown units: (%s)<br/>', $BackMaterialPrice{units} );
             } # end if
-            $price += $BackMaterialPrice{Total};
-            $MPrice += ( 1000 / $$imposition{imposition} ) * $BackMaterialPrice{Total}/$sheets;
+            $price{total} += $BackMaterialPrice{Total};
+            $price{MPrice} += ( 1000 / $$imposition{imposition} ) * $BackMaterialPrice{Total}/$sheets;
           } else {
-            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('No Material found for Back: (%s)<br/>', $$specs{"TypeBack-$form"} );
+            $price{breakdown} .= sprintf('No Material found for Back: (%s)<br/>', $$specs{"TypeBack-$form"} );
           } # end if Material Found
         } # end if TypeFront
 
-        $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/><br/>', $price );
+        $price{breakdown} .= sprintf('Total: $%.2f<br/><br/>', $price{total} );
 
-        if ((!$bestPrice{Price}) or ($bestPrice{Price} > $price)) {
-          $bestPrice{Price} = $price;
-          $bestPrice{MPrice} = $MPrice;
-          $bestPrice{Equipment} = $Equipment;
+        if ((!$bestPrice{total}) or ($bestPrice{total} > $price{total})) {
+          %bestPrice = %price;
         } # end if
       } # end foreach equipment
 
       if (%bestPrice) {
-        if ($bestPrice{Price} < $MinimumCharge{Price}) {
-          $$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>Using minimum charge: $%.2f<br/>', $MinimumCharge{Price} );
-          $bestPrice{Price} = $MinimumCharge{Price};
+        if ($bestPrice{total} < $MinimumCharge{Price}) {
+          $bestPrice{breakdown} .= sprintf('<br/>Using minimum charge: $%.2f<br/>', $MinimumCharge{Price} );
+          $bestPrice{total} = $MinimumCharge{Price};
         } # endif
       } else {
         $$specs{Status} = 'uncalculated';
@@ -495,11 +501,13 @@ sub calc {
       } # end if
       if ($bestPrice{Equipment}) {
         $$specs{"ddmEquipment-$form-$qty_index"} = $bestPrice{Equipment}->id();
-        $totalPrice{Price} += $bestPrice{Price};
+        $totalPrice{Price} += $bestPrice{total};
         $totalPrice{MPrice} += $bestPrice{MPrice};
+        $totalPrice{breakdown} .= $bestPrice{breakdown};
       }
     } # end foreach signature
 
+    $$specs{'hdnBreakdown'.$qty_index} .= $totalPrice{breakdown};
 		if ((!$$specs{"OverridePrice$qty_index"}) or ( $$specs{"OverridePrice$qty_index"} ne 'Y')) {
       $totalPrice{Price} //= 0;
       $totalPrice{UnitPrice} = $totalPrice{Price}/$qty;
