@@ -6,31 +6,30 @@ no warnings qw(uninitialized);
 
 use session;
 use Data::Dumper;
+require openprint;
+use vars qw( $log $dbh );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 sub set_name {
   my ($id, $name) = @_;
-  my $dbh = session::dbh;
   $dbh->do(q{update categories set name = ? where id = ?},undef,  $name, $id);
 }
 
 sub set_description {
   my ($id, $desc) = @_;
-  my $dbh = session::dbh;
   $dbh->do(q{update categories set description = ? where id = ?},undef,  $desc, $id);
 }
 sub set_header {
   my ($id, $desc) = @_;
-  my $dbh = session::dbh;
   $dbh->do(q{update categories set header = ? where id = ?},undef,  $desc, $id);
 }
 sub set_footer {
   my ($id, $desc) = @_;
-  my $dbh = session::dbh;
   $dbh->do(q{update categories set footer = ? where id = ?},undef,  $desc, $id);
 }
 sub set_productinfo {
   my ($id, $desc) = @_;
-  my $dbh = session::dbh;
   $dbh->do(q{update categories set productinfo = ? where id = ?},undef,  $desc, $id);
 }
 
@@ -40,25 +39,21 @@ sub set_productinfo {
 
 sub set_active {
   my ($id, $active) = @_;
-  my $dbh = session::dbh;
   $dbh->do(q{update categories set active = ? where id = ?},undef,  $active, $id);
 }
 sub set_parent {
   my ($id, $parent) = @_;
-  my $dbh = session::dbh;
   $dbh->do(q{update categories set parent = ? where id = ?},undef, $parent, $id);
 }
 
 
 sub delete {
   my ($id) = @_;
-  my $dbh = session::dbh;
   $dbh->do(q{Delete from categories where id = ? },undef, $id);
 }
 
 sub insert {
   my ($id, $name) = @_;
-  my $dbh = session::dbh;
   $dbh->do(q{insert into categories (name, parent) values ( ?, ? ) },undef,  $name, $id);
   return $dbh->last_insert_id('',qw(public categories id));
 }
@@ -66,7 +61,6 @@ sub insert {
 
 sub get {
   my ($id, $showall) = @_;
-  my $dbh = session::dbh;
 
   my $active =  $showall ? '' : ' AND ACTIVE ';
   print STDERR "Get ACTIVE: $active \n";
@@ -75,7 +69,6 @@ sub get {
 
 sub get_children_from_id {
   my ($id, $showall) = @_;
-  my $dbh = session::dbh;
 
   my $active =  $showall ? '' : ' AND ACTIVE ';
 
@@ -91,27 +84,20 @@ sub get_children_from_id {
 
 sub get_parent_from_id {
   my ($id) = @_;
-  my $dbh = session::dbh;
-
   return $dbh->selectrow_array("select parent from categories where id = ?", undef, $id);
 }
 
 sub get_id_from_name {
   my ($str) = @_;
-  my $dbh = session::dbh;
-
   return $dbh->selectrow_array("select id from categories where name = ?", undef, $str);
 }
 
 sub get_name_from_id {
   my ($str) = @_;
-  my $dbh = session::dbh;
-
   return $dbh->selectrow_array("select name from categories where id = ?", undef, $str);
 }
-sub get_all {
-  my $dbh = session::dbh;
 
+sub get_all {
   my $all = $dbh->selectall_hashref("select * from categories where active",'id');
   
   my $cats;
@@ -127,29 +113,21 @@ sub get_all {
   } keys %{$all};
   
   foreach my $cat ( keys %{$cats} ) {
-    
     my $children = $subcats->{$cats->{$cat}{id}};
-    
     @{$children} = sort { $a->{name} cmp $b->{name} } @{$children} if defined $children;
-   
     $cats->{$cat}{children} = $children;
   }
-  
-  
-  
  
 #print STDERR "HAVE MY CATS", Dumper($cats);
 
   return $cats;
-
 }
+
 sub products_in_cat {
-  	my $dbh = session::dbh;
 	my $cat = shift;
 	my $show_all = shift;
 
-	my $active;
-	$active = q{AND active} unless $show_all;
+	my $active = q{AND active} unless $show_all;
 
 	return $dbh->selectall_arrayref(qq{
 		SELECT * from tbl_products WHERE category = ?
@@ -161,12 +139,10 @@ sub products_in_cat {
 
 
 sub products_in_tree {
-  	my $dbh = session::dbh;
 	my $cat = shift;
 	my $show_all = shift;
 
-	my $active;
-	$active = q{AND active} unless $show_all;
+	my $active = q{AND active} unless $show_all;
 
 	unless ($cat) {
 		return $dbh->selectall_arrayref(q{
@@ -198,17 +174,11 @@ sub products_in_tree {
 }
 
 sub select_list {
-  	my $dbh = session::dbh;
-
-    my $list = $dbh->selectcol_arrayref(q{
-        SELECT id, name || '  (' || id || ')'
-        FROM categories 
-		ORDER by name;
+  my $list = $dbh->selectcol_arrayref(q{
+    SELECT id, name || '  (' || id || ')'
+    FROM categories 
+    ORDER by name;
     }, { Columns => [1, 2] });
-
-	
 }
-
-
 
 1;
