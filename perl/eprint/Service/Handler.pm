@@ -251,7 +251,7 @@ sub response {
       #$dbh->rollback; # GET requests don't save.
 
       $specs->{status} = $status; # Send client the status
-      $openprint::log->debug("Response: ".Data::Dumper::Dump($specs));
+      $openprint::log->debug("Response: ".Data::Dumper::Dumper($specs));
       my $coder = JSON::XS->new->ascii->pretty->allow_nonref;
 
       my $response = $coder->encode( $specs );
