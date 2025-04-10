@@ -31,7 +31,7 @@ $serial = 'lngProjectIndex_seq';
 
 %fields = (
 	id							=>	'lngprojectindex',
-	docket					=>	'lngdocketnumber',
+  #docket					=>	'lngdocketnumber',
 	company_id			=>	'lngcustomerid',
 	user_id					=>	'lnguserindex',
 	reference				=>	'strprojectreference',
@@ -39,12 +39,12 @@ $serial = 'lngProjectIndex_seq';
 	design					=>	'strdesign',
 	created_on			=>	'dtmcreationdate',
 	updated_on			=>	'dtmlastmodified',
-	calculated_on		=>	'calculated_on',
+  #calculated_on		=>	'calculated_on',
 	quantity1				=>	'intquantity1',
 	quantity2				=>	'intquantity2',
 	quantity3				=>	'intquantity3',
 	status					=>	'strstatus',
-	mode						=>	'strmode',
+  #mode						=>	'strmode',
 	programs				=>	'strprograms',
 	other_programs	=>	'strotherprograms',
 	currency_id			=>	'currency_id',
@@ -54,20 +54,20 @@ $serial = 'lngProjectIndex_seq';
 	price3					=>	'price3',
 	order_id				=>	'order_id',
 	due_date				=>	'due_date',
-	externalrefnumber=>	'externalrefnumber',
-	reprint					=>	'reprint',
-	reprint_reason	=>	'reprint_reason',
-	reprint_description	=>	'reprint_description',
-	predefined			=>	'predefined',
-	rush							=>	'rush',
-	style_id					=>	'style_id',
+  #externalrefnumber=>	'externalrefnumber',
+  #reprint					=>	'reprint',
+  #reprint_reason	=>	'reprint_reason',
+  #reprint_description	=>	'reprint_description',
+  #predefined			=>	'predefined',
+  #rush							=>	'rush',
+  #style_id					=>	'style_id',
 	summary						=>	'summary',
-	markup						=>	'markup',
-	discount					=>	'discount',
-	credit_card_fee   =>  'credit_card_fee',
-	csr_commission    =>  'csr_commission',
-	priority					=>	'priority',
-	production_comments	=>	'production_comments',
+  #markup						=>	'markup',
+  #discount					=>	'discount',
+  #credit_card_fee   =>  'credit_card_fee',
+  #csr_commission    =>  'csr_commission',
+  #priority					=>	'priority',
+  #production_comments	=>	'production_comments',
 ordered_quantity	=> undef,
 ordered_quantity_index	=> undef,
 ordered_price	=> undef,
@@ -1863,11 +1863,11 @@ sub change_ProjectType {
 } # end sub change_ProjectType
 
 sub url_to {
-	return '/main/project/view.html?project_id='.$_[0]{id};
+	return '/main/proj/view.html?pid='.$_[0]{id};
 } # end sub url_to
 
 sub link_to {
-	return sprintf('<a href="/main/project/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
+	return sprintf('<a href="%1$s?pid=%2$d">%3$s</a>', $_[0]->url_to(), $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
 } # end sub link_to
 
 sub production_link_to {
@@ -2026,6 +2026,23 @@ sub can_edit {
   
   return 0;
 } # end sub can_edit
+
+sub can_delete {
+  my $self = shift;
+  if ( $$self{user_id} == $openprint::session{user_id} ) {
+    $openprint::log->debug("can_view 1 cuz i am the creator") if $debug;
+    return 1;
+  }
+  if ($$self{company_id} == $openprint::session{company_id}) {
+    $openprint::log->debug("can_view 1 cuz i am the company") if $debug;
+    return 1;
+  }
+  if ( $openprint::session{user_type} eq 'A' ) {
+    $openprint::log->debug('can_edit 1 cuz admin') if $debug;
+    return 1
+  }
+  return 0;
+}
 
 sub change_due_date {
 	my $Project = shift;
