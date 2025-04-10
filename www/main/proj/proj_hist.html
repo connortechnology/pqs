@@ -131,8 +131,8 @@
 							<? if ( $$variable{'status'} ne 'uncalculated' ) ?><a href="/main/proj/dispatch.html?action=reorder;pid=<?pid?>" class="button" > <?if order_id?>Re-Order<?else order_id?>Order<?endif order_id?></a><? endif ( $$variable{'status'} ne 'uncalculated' ) ?>
 						
 					  </td>
-						<td style="text-align: left;"><a href="/main/proj/proj_view.html?pid=<?pid?>"><?pid?></a></td>
-						<td style="text-align: left;"><a href="/main/proj/proj_view.html?pid=<?pid?>"><?reference?></a></td>
+						<td style="text-align: left;"><a href="/main/proj/view.html?pid=<?pid?>"><?pid?></a></td>
+						<td style="text-align: left;"><a href="/main/proj/view.html?pid=<?pid?>"><?reference?></a></td>
 						<td style="text-align: center;"><?status?></td>
 						<td style="text-align: center;" <? if expired ?> class="error" <? endif expired ?> ><?create_date?></td>
 						<?if is_staff ?><td style="text-align: center;"><input class="button" type="button" value="Print Docket" onclick="open_project_docket(<?pid?>, <?order_qty?> );" /></td><?endif is_staff ?>                        

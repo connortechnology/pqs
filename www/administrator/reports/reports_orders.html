@@ -137,7 +137,7 @@
 						<tr<?if ($variable->{_even}) ?> class='colRow'<?endif ($variable->{_even}) ?>>
 							<td style="text-align: center;"><?po?></td>
 							<td style="text-align: left;"><a href="/main/order/order_history_details.html?order_id=<?id?>"><?id?></a></td>
-							<td style="text-align: left;"><? loop projects ?><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>"><?pid?> - <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
+							<td style="text-align: left;"><? loop projects ?><a href="/main/proj/view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>"><?pid?> - <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
 							<td style="text-align: center;"><?date?></td>
 							<td style="text-align: center;"><?cname?></td>
 							<td style="text-align: center;"><?status?></td>

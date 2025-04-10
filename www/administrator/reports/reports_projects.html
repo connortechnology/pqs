@@ -123,9 +123,9 @@
 					<? loop projects ?>
 						<tr<? if ($variable->{_even}) ?> class='colRow'<? endif ($variable->{_even}) ?>>
 						  <td><a href="/main/order/order_history_details.html?order_id=<?order_id?>"><?rev:order_id?></a></td>
-							<td><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>"><?pid?></a></td>
+							<td><a href="/main/proj/view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>"><?pid?></a></td>
 							<td style="text-align: left;"><a href="/administrator/managerial/company_profiles.html?ddmCustomer=<?customer?>"><?company?></a></td>
-							<td style="text-align: left;"><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>"><?reference?></a></td>
+							<td style="text-align: left;"><a href="/main/proj/view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>"><?reference?></a></td>
 							<td style="text-align: center;"><?creationdate?></td>
 							<td style="text-align: right;"><?status?></td>
 						</tr>

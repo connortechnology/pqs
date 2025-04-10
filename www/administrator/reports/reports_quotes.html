@@ -121,7 +121,7 @@
 				<?loop quotes?>
 					<tr<?if ($variable->{_even}) ?> class='colRow'<?endif ($variable->{_even}) ?>>
 						<td><a href="/main/quote/quote_history_details.html?quote_id=<?qid?>"><?qid?></a></td>
-						<td style="text-align: left;"><? loop projects ?><a href="/main/proj/proj_view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>"><?pid?> - <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
+						<td style="text-align: left;"><? loop projects ?><a href="/main/proj/view.html?ProjectIndex=<?pid?>&AutoLogin=A&SelectCustomer=<?customer?>"><?pid?> - <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
 						<td style="text-align: center;"><?qdate?></td>
 						<td style="text-align: center;"><?byname?></td>
 						<td style="text-align: center;"><?forname?></td>

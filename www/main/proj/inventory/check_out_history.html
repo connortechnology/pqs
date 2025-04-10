@@ -40,7 +40,7 @@
 				
 				<? while ( @$variable{'index', 'order_id', 'qty', 'checkindate', 'requireddate'} = splice @{$$variable{'PROJECTS'}},0,5; ) ?>
 					<tr>
-						<td style="text-align: left;"><a href="/main/proj/proj_view.html?ProjectIndex=<?index?>"><?index?></a>&nbsp;</td>
+						<td style="text-align: left;"><a href="/main/proj/view.html?ProjectIndex=<?index?>"><?index?></a>&nbsp;</td>
 						<td style="text-align: left;"><a href="/main/order/order_history_details.html?order_id=<?order_id?>"><?rev:order_id?></a>&nbsp;</td>
 						<td style="text-align: center;">&nbsp;<?qty?></td>
 						<td style="text-align: center;"><?checkindate?>&nbsp;</td>

@@ -17,7 +17,7 @@
            <!-- Start Change Order Info - if you are on the original project this should show the new project number if there is a new project number (spec changes). -->
           <?if change_order.pid_to?>
           <tr>
-			<th>Project has changed to:</th><td><a href="/main/proj/proj_view.html?Issue_Cookie=true&ProjectIndex=<?change_order.pid_to?>"><?change_order.pid_to?></a></td>
+			<th>Project has changed to:</th><td><a href="/main/proj/view.html?Issue_Cookie=true&ProjectIndex=<?change_order.pid_to?>"><?change_order.pid_to?></a></td>
 		 </tr>
           <?endif change_order.pid_to?>
           <!-- END Change Order Info - if you are on the original project this should show the new project number if there is a new project number (spec changes). -->
@@ -26,7 +26,7 @@
           <!-- Start Change Order Info - if you are on the new change order project this should show the old project number if there is a old project number (spec changes). -->
           <?if ($variable->{parent_change_order} && ($variable->{HeaderInfo}{id} ne $variable->{parent_change_order}{pid_from}))?>
           <tr>
-			<th>Original Project:</th><td><a href="/main/proj/proj_view.html?Issue_Cookie=true&ProjectIndex=<?parent_change_order.pid_from?>"><?parent_change_order.pid_from?></a></td>
+			<th>Original Project:</th><td><a href="/main/proj/view.html?Issue_Cookie=true&ProjectIndex=<?parent_change_order.pid_from?>"><?parent_change_order.pid_from?></a></td>
 		 </tr>
          <?endif ($variable->{parent_change_order} && ($variable->{HeaderInfo}{id} ne $variable->{parent_change_order}{pid_from}))?>
           <!-- END Change Order Info - if you are on the new change order project this should show the old project number if there is a old project number (spec changes). -->
@@ -78,7 +78,7 @@
 		<?if ( $variable->{HeaderInfo}{copy_pid} ) ?>
 		<tr>
 			<th>Copied From:</th>
-			<td><span class="id"><a href="/main/proj/proj_view.html?Issue_Cookie=true&ProjectIndex=<?HeaderInfo.copy_pid?>"><?HeaderInfo.copy_pid?></a></span></td>
+			<td><span class="id"><a href="/main/proj/view.html?Issue_Cookie=true&ProjectIndex=<?HeaderInfo.copy_pid?>"><?HeaderInfo.copy_pid?></a></span></td>
 		</tr>
 		<?endif ( $variable->{HeaderInfo}{copy_pid} ) ?>
 
@@ -109,7 +109,7 @@
 		<? if ($$variable{checkout}) ?>
 			<tr>
 				<th>Check-In ID:</th>
-				<td><a href="/main/proj/proj_view.html?ProjectIndex=<?checkin_pid?>"><?checkin_pid?></a></td>
+				<td><a href="/main/proj/view.html?ProjectIndex=<?checkin_pid?>"><?checkin_pid?></a></td>
 			</tr>
 		<? endif ($$variable{checkout}) ?>
 	</table>
@@ -182,7 +182,7 @@
 			<th>Supplier Contact:</th><td>
 				<?if ($variable->{HeaderInfo}{RFQAwardedSupplier}) ?><?HeaderInfo.RFQAwardedSupplier?>
 				<?else ($variable->{HeaderInfo}{RFQAwardedSupplier}) ?>
-				<form action="proj_view.html" name="f-supplier" method="post" id="f-supplier" >
+				<form action="view.html" name="f-supplier" method="post" id="f-supplier" >
 				<select name="supplier" onChange="form.submit();">
 				 	<option value="">- Please select one. -</option>
                     <?SUPPLIERS?>
