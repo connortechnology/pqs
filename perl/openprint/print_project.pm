@@ -176,7 +176,7 @@ sub choose_service {
 		" AND strName='ServiceType' AND strValue != 'Signature' AND lngServiceIndex IN (".join(',',@incomplete_services).")";
 	my @project_services = sql::execute( $log, $dbh, $_, $project_index );
 
-	foreach my $ServiceType ( openprint::ServiceType->find('url is null'=>0, 'url !='=>'', order=>'sorting') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find('url is null'=>0, 'url !='=>'', order=>$openprint::ServiceType::fields{sorting}) ) {
 		if ( $$services{$ServiceType->name()} ) {
 			my @incomplete = sets::intersection( @incomplete_services, @{$$services{$ServiceType->name()}} );
 			if ( @incomplete ) {
@@ -338,8 +338,8 @@ sub summary {
 		push @services, $sig_id, $Type->name(), $Type->url();
 	} # end foreach signature
 
-	foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>'sorting,name') ) {
-		foreach my $ServiceType ( openprint::ServiceType->find( category_id=>$$ServiceCategory{id}, order=>'sorting' ) ) {
+	foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>join(',',@openprint::ServiceType_Category::fields{'sorting','name'})) ) {
+		foreach my $ServiceType ( openprint::ServiceType->find( category_id=>$$ServiceCategory{id}, order=>$openprint::ServiceType::fields{sorting} ) ) {
 			next if ! $$services{$$ServiceType{name}};
 			next if $ServiceType->name() eq 'Signature';
 			foreach my $s_id ( @{$$services{$$ServiceType{name}}} ) {
