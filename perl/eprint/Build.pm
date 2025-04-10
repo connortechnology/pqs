@@ -305,7 +305,7 @@ sub build {
       }
 
       # Get the specs and price the service. FIX
-      my $status = 'uncalculated'; #process($log, $dbh, $variable, $pid, $sid, $service);
+      my $status = process($log, $dbh, $variable, $pid, $sid, $service);
 
       # Track the first unfinished service we find.
       if ($status eq 'uncalculated') {
