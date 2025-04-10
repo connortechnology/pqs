@@ -411,7 +411,9 @@
 		display: inline;
 		position: relative;
 	
+    /*
 		height: 27px;
+    */
 		margin: -10px 0 0 5px;
 		padding: 0px 4px;
 		
@@ -762,6 +764,10 @@
 	
 	* html .ie-fix-image { margin-bottom: -2px; }
 
+	#headerTabs {
+    display: flex;
+    flex-direction: row-reverse;
+  }
 }
  
 @media print {   
