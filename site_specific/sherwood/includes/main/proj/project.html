@@ -155,7 +155,13 @@ var end;
 									<?if not:_last?> / <?endif not:_last?>
 								<?endif html ?>
 							<?endloop controls?>
-						<?endif flags.can_edit ?>					</td>
+						<?endif flags.can_edit ?>					
+            <?if ($openprint::User->email() eq 'iconnor@connortechnology.com') ?>
+             <?echo(
+               sprintf(q`<a href="#" onclick="popup_window('/openprint/main/project/_service_dump.html', { project_id: %d, service_id: %d } );">Specs</a>`, @$variable{'pid','id'} );
+               )?>
+            <?endif ($openprint::User->email() eq 'iconnor@connortechnology.com') ?>
+          </td>
 				</tr>
 
 					<input type="hidden" name="sid" value="<?id?>" />
