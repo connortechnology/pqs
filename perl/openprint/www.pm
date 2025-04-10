@@ -480,7 +480,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 				$variable{ProjectIndex} = $openprint::param{ProjectIndex} if ! $variable{ProjectIndex};
 				$variable{ProjectIndex} = $openprint::param{project_id} if ! $variable{ProjectIndex};
 				$variable{ProjectIndex} = $openprint::session{project_id} if ! $variable{ProjectIndex};
-				$variable{Project} = new openprint::Project( $variable{ProjectIndex} );
+				my $Project = $variable{Project} = new openprint::Project( $variable{ProjectIndex} );
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 				my $project_index = $variable{ProjectIndex};
@@ -492,7 +492,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 					my $Service = $variable{Service} = $variable{Project}->Service( $service_index );
 					if ( !$Service->service_id() ) {
 						$variable{error} .= 'Unable to load data for service. Perhaps it was removed.<br/>';
-						$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
+						$variable{ExternalRedirect} = $Project->url_to();
 					} else {
 						my $specs = $Service->specs();
 						@variable{keys %$specs} = values %$specs;
