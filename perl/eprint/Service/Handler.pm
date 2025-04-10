@@ -122,8 +122,8 @@ sub handler {
 
 	#map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . " \n"; } $r->param();
 
-    my $pid = $r->param('pid');
-    my $sid = $r->param('sid');
+    my $pid = $r->param('pid') ? $r->param('pid') : $r->param('project_id');
+    my $sid = $r->param('sid') ? $r->param('sid') : $r->param('service_id');
     if (!($pid and $sid)) {
       $r->headers_out->set(Location => '/main/proj/proj_hist.html');
       $r->status(Apache2::Const::REDIRECT); #302
