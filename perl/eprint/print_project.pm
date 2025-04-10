@@ -33,6 +33,7 @@ use Data::Dumper;
 require misc;
 require eprint::login;
 require openprint::Company;
+require openprint::Project;
 require openprint::ServiceType;
 require eprint::inventory;
 require eprint::user;
