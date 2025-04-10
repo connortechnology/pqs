@@ -57,72 +57,65 @@ sub load {
 
 
 sub ink_sum {
-	my $self = shift;
-	my $sid = shift;
+  my $self = shift;
+  my $sid = shift;
 
-	my $dbh = $self->{dbh};
-	my $log = $self->{log};
+  my $dbh = $self->{dbh};
+  my $log = $self->{log};
 
-# Side n colours and coatings.
-        my @keys = qw(
-            black        	    process
-            drytrap      	    coating_type 
-            varnish_spot_gloss  varnish_spot_matte
-            varnish_flood       coating_texture
-        );
+  # Side n colours and coatings.
+  my @keys = qw(
+  black        	    process
+  drytrap      	    coating_type 
+  varnish_spot_gloss  varnish_spot_matte
+  varnish_flood       coating_texture
+  );
 
-        # Generate the full list of specs.
-        my @specs;
-        for my $side (qw(s0_ s1_)) {
-            push @specs, "${side}${_}"          for @keys; # Colours/Coatings 
-            push @specs, "${side}pms_${_}_name" for 1..8;  # PMS
-        }
+  # Generate the full list of specs.
+  my @specs;
+  for my $side (qw(s0_ s1_)) {
+    push @specs, "${side}${_}"          for @keys; # Colours/Coatings 
+    push @specs, "${side}pms_${_}_name" for 1..8;  # PMS
+  }
 
-        my %results = eprint::service::get_specifications_pairs(
-            $log, $dbh, undef, $sid, @specs
-        );
+  my %results = eprint::service::get_specifications_pairs(
+    $log, $dbh, undef, $sid, @specs
+  );
 
-        my (@count, @text);
-        for my $s (0..1) {
-            # Colours.
-            $count[$s] = 0;
-            $count[$s] += 4 if $results{"s${s}_process"};
-            $count[$s] += 1 if $results{"s${s}_black"};
+  my (@count, @text);
+  for my $s (0..1) {
+    # Colours.
+    $count[$s] = 0;
+    $count[$s] += 4 if $results{"s${s}_process"};
+    $count[$s] += 1 if $results{"s${s}_black"};
 
-            for my $n (1..8) {
-                $count[$s]++ if $results{"s${s}_pms_${n}_name"};
-            }
+    for my $n (1..8) {
+      $count[$s]++ if $results{"s${s}_pms_${n}_name"};
+    }
 
-            # Varnish
-            $text[$s] .= ' +V' 
-                if     $results{"s${s}_varnish_spot_gloss"} 
-                    || $results{"s${s}_varnish_spot_matte"} 
-                    || $results{"s${s}_varnish_flood"};
+    # Varnish
+    $text[$s] .= ' +V' 
+    if     $results{"s${s}_varnish_spot_gloss"} 
+    || $results{"s${s}_varnish_spot_matte"} 
+    || $results{"s${s}_varnish_flood"};
 
-            # Coatings
-            $text[$s] .= ' +' . uc(substr($results{"s${s}_coating_type"}, 0, 2))
-                if $results{"s${s}_coating_type"};
+    # Coatings
+    $text[$s] .= ' +' . uc(substr($results{"s${s}_coating_type"}, 0, 2))
+    if $results{"s${s}_coating_type"};
+  }
 
+  my $sum = "$count[0]";
 
-		}
+  $sum .= " / $count[1] " if $count[1];
 
-	my $sum = "$count[0]";
-
-	$sum .= " / $count[1] " if $count[1];
-
-	return $sum;
-
-		
-
+  return $sum;
 }
 
 sub upload_required {
 	my $self = shift;
 	my $val = shift;
 	my $dbh = session::dbh;
-	$dbh->do(q{
-		update tbl_projects set upload_required = ?  where lngprojectindex = ?
-	}, undef, $val, $self->{id});
+	$dbh->do(q{ update tbl_projects set upload_required = ?  where lngprojectindex = ?  }, undef, $val, $self->{id});
 	print STDERR "SET PROJECT: $self->{id} = $val \n";
 }
 
@@ -151,18 +144,11 @@ sub no_service_dependencies {
 	return 0;
 }
 
-
-
 sub no_upload_required {
-
 	my $self = shift;
 	my $dbh = session::dbh;
 
-
-
-	my $nf = $dbh->selectrow_array(q{
-		 select upload_required from tbl_projects where lngprojectindex = ?
-	}, undef, $self->{id});
+	my $nf = $dbh->selectrow_array(q{ select upload_required from tbl_projects where lngprojectindex = ?  }, undef, $self->{id});
 
 	print STDERR "SET PROJECT NE UPLOAD: $nf \n";
 
@@ -174,9 +160,7 @@ sub have_production_file {
 	my $self = shift;
 	my $dbh = session::dbh;
 
-	my $file = $dbh->selectrow_array(q{
-		 select count(*) from project_files where approval_production is not null AND pid = ?
-	}, undef, $self->{id});
+	my $file = $dbh->selectrow_array(q{ select count(*) from project_files where approval_production is not null AND pid = ?  }, undef, $self->{id});
 
 	return $file;
 }
@@ -184,29 +168,22 @@ sub have_production_file {
 sub check_status {
 	my $self = shift;
 
-
 	my $oid = $self->order_id;
 	my $order = new PQS::Object::order($oid);
 
 	my $status  = '';
 	if ( $oid ) {
-
-
 		#If paymnet has not been made, do not allow order to go into production
 		if ( $order->pending_deposit ) {
 		   	$status =  'PD'
 		} else { 
-
 			$status =  'WF';
 			$status =  'IP' if  $self->{specs}{files} && $self->have_production_file;
 			$status =  'IP' if  $self->{specs}{strstatus} eq 'In Production';
 			$status =  'IP' if  $self->no_upload_required;
 		}
 
-
-
 		print STDERR "STATUS HAVE COMPLETION DATE FOR:  $self->{id} = $self->{specs}{completion_date}  \n";
-
 	}
 
 	if ( $status  eq 'IP' ) {
@@ -219,8 +196,6 @@ sub check_status {
 	print STDERR "CHECK STATUS $self->{id} = $status \n";
 
 	return $status;
-
-	
 }
 
 sub init_production {
@@ -268,15 +243,9 @@ sub init_production {
 					}
 
 				}
-	
-
 		}
-			
-
  
 		print STDERR "HAVE EQUIPMENT: $equip, $eid FROM Service $s->{strservicetype} \n";
-
-
 	}
 }
 
@@ -289,13 +258,11 @@ sub allocate_inventory {
 	my $id = $dbh->selectrow_array(q{SELECT strid FROM tbl_paper WHERE lngindex = ?}, undef, $stock);
 
 	$dbh->do(q{Update inventory_count SET onorder = onorder + ? WHERE id = ?}, undef, $sheets, $id);
-
 }
 
 sub qty {
 	my $self = shift;
 	return $self->{specs}{intquantity1};
-
 }
 
 sub product {
@@ -315,11 +282,9 @@ sub close_inventory {
 			$dbh->do(q{Update inventory_count SET onorder = onorder - ? WHERE id = ?}, undef, $self->qty(), $id);
 			$dbh->do(q{Update inventory_count SET onhand = onhand - ? WHERE id = ?}, undef, $self->qty(), $id);
 		}
-
 	}
 
 	foreach my $s ( @{$self->services} ) {
-
 		if ( $s->{strservicetype} eq 'Printing' ) {
 			    my $index 	=  $s->{lngserviceindex};
 			    my $sheets 	=  $s->{gross_sheets};
@@ -330,22 +295,17 @@ sub close_inventory {
 
 					$dbh->do(q{Update inventory_count SET onorder = onorder - ? WHERE id = ?}, undef, $sheets, $id);
 					$dbh->do(q{Update inventory_count SET onhand  = onhand  - ? WHERE id = ?}, undef, $sheets, $id);
-
 				}
 		}
 	}
-
-
 }
 
 sub services {
 	my $self = shift;
 
 	my $dbh  = session::dbh;
-	my $sids = $dbh->selectall_arrayref(q{
-		SELECT * FROM tbl_project_contents where lngprojectindex = ?}, { Slice => {} }, $self->{id});
+	my $sids = $dbh->selectall_arrayref(q{SELECT * FROM tbl_project_contents where lngprojectindex = ?}, { Slice => {} }, $self->{id});
 	return $sids;
-
 }
 
 sub set_status {
@@ -356,30 +316,23 @@ sub set_status {
 
 	PQS::model::project::set_status($self->{id}, $status);
 
-	my $sids = $dbh->selectcol_arrayref(q{
-		SELECT lngserviceindex FROM tbl_project_contents where lngprojectindex = ?}, undef, $self->{id});
+	my $sids = $dbh->selectcol_arrayref(q{SELECT lngserviceindex FROM tbl_project_contents where lngprojectindex = ?}, undef, $self->{id});
 
 	eprint::service::set_status($log, $dbh, $self->{id}, $status, @{$sids});
 
 	print STDERR "PROJECT: $self->{id} Set to : $status  \n ";
-
-
 }
 
 sub set_equipment {
 	my $self = shift;
-
 	my $sid = shift;
 	my $value = shift;
 
 	PQS::model::project::set_equipment($sid, $value);
-
-
 }
 
 sub update_status {
 	my $self = shift;
-
 
 	my $pid = $self->{id};
 
@@ -388,8 +341,6 @@ sub update_status {
 print STDERR "UPDATE PROJECT STATUS: $pid =  $status \n";
 
 	my $oid = $self->order_id;
-
-
 	if ( $oid ) {
 		my $order = new PQS::Object::order($oid);
 
@@ -400,28 +351,21 @@ print STDERR "UPDATE PROJECT STATUS: $pid =  $status \n";
 		$self->set_status($status::project->{$status});
 	}
 
-
-
 	my $out = PQS::model::project::get_status($pid);
 	print STDERR "UPDATE PROJECT STATUS: $pid =  $out \n";
 	#return 	PQS::model::project::get_status($pid);
 	return 	$out;
-
 }
-
 
 sub order {
 	my $self = shift;
 	return PQS::model::order::get_order_by_pid($self->{id});
-
 }
 
 sub quote_id {
 	my $self = shift;
 	my $dbh = session::dbh;
-	my $qid = $dbh->selectrow_array(q{ 
-			select lngquoteid from tbl_quote_details where lngprojectindex = ?
-	}, undef, $self->{id});
+	my $qid = $dbh->selectrow_array(q{ select lngquoteid from tbl_quote_details where lngprojectindex = ?}, undef, $self->{id});
 
 	return $qid;
 }
@@ -429,10 +373,9 @@ sub quote_id {
 sub order_id {
 	my $self = shift;
 	return PQS::model::order::get_orderid_by_pid($self->{id});
-
 }
-sub parent_sheet_count {
 
+sub parent_sheet_count {
 	my $self = shift;
 	my $sid = shift;
 
@@ -441,22 +384,14 @@ sub parent_sheet_count {
 
 	my @specs = qw( hdnPaperBuyQuantity1 hdnGrossSheetCount1 txtSignatureQuantity );
 
-	my %results = eprint::service::get_specifications_pairs(
-            $log, $dbh, undef, $sid, @specs
-     );
+	my %results = eprint::service::get_specifications_pairs( $log, $dbh, undef, $sid, @specs);
+  my $count = $results{hdnPaperBuyQuantity1} || $results{hdnGrossSheetCount1};
+  $count *= $results{txtSignatureQuantity} if  $results{txtSignatureQuantity} > 1;
 
-
-	 my $count =  $results{hdnPaperBuyQuantity1} || $results{hdnGrossSheetCount1};
-
-	 $count *= $results{txtSignatureQuantity} if  $results{txtSignatureQuantity} > 1;
-
-	return $count;
-
-
+  return $count;
 }
 
 sub sheet_count {
-
 	my $self = shift;
 	my $sid = shift;
 
@@ -468,12 +403,7 @@ sub sheet_count {
 	my %results = eprint::service::get_specifications_pairs(
             $log, $dbh, undef, $sid, @specs
      );
-
-
-
 	return $results{hdnGrossSheetCount1};
-
-
 }
 sub sheet_size {
 
@@ -484,23 +414,13 @@ sub sheet_size {
 	my $log = $self->{log};
 
 	my @specs = qw( hdnSuppliedStockWidth hdnSuppliedStockHeight );
-
-	my %results = eprint::service::get_specifications_pairs(
-            $log, $dbh, undef, $sid, @specs
-     );
-
-
+	my %results = eprint::service::get_specifications_pairs( $log, $dbh, undef, $sid, @specs);
 	my $text = "$results{hdnSuppliedStockWidth} x $results{hdnSuppliedStockHeight} ";
 
 	return $text;
-
-
 }
 
-
-
 sub stock_name {
-
 	my $self = shift;
 	my $sid = shift;
 
@@ -509,25 +429,17 @@ sub stock_name {
 
 	my @specs = qw( stock_finish stock_colour stock_weight stock_name );
 
-	my %results = eprint::service::get_specifications_pairs(
-            $log, $dbh, undef, $sid, @specs
-     );
+	my %results = eprint::service::get_specifications_pairs( $log, $dbh, undef, $sid, @specs);
 
 	 my $text = $results{stock_name};
 	 $text .= " " . $results{stock_colour};
 	 $text .= " " . $results{stock_finish};
 	 $text .= " " . $results{stock_weight};
 
-
 	return $text;
-
-
 }
 
-
-
 sub delivery_method {
-
 	my $self = shift;
 	my $pu = 'Pick-Up';
 
@@ -540,33 +452,20 @@ sub delivery_method {
 
 	my @specs = qw( shipping_required ddmShipVia1 );
 	
-	my %results = eprint::service::get_specifications_pairs(
-            $log, $dbh, undef, $sid, @specs
-     	);
+	my %results = eprint::service::get_specifications_pairs( $log, $dbh, undef, $sid, @specs);
 
-	 my $ship;
+  my $ship;
 
-	 if ( $results{shipping_required} ) {
-
-		 $ship = $dbh->selectrow_array(q{
-			 SELECT strname FROM tbl_ship_via WHERE lngindex = ?
-		 }, undef, $results{ddmShipVia1}) || 'Shipping';
-	 } else { 
-		 $ship = $pu;
-	 }
-
-
-
-
-	return $ship;
-
-
-
+  if ( $results{shipping_required} ) {
+    $ship = $dbh->selectrow_array(q{ SELECT strname FROM tbl_ship_via WHERE lngindex = ?  }, undef, $results{ddmShipVia1}) || 'Shipping';
+  } else { 
+    $ship = $pu;
+  }
+  return $ship;
 }
+
 sub date {
-
 	my $self = shift;
-
 	return $self->{specs}{dtmcreationdate};
 }
 
