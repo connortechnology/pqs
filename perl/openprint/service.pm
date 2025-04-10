@@ -48,9 +48,7 @@ sub save_service {
 	my $specs = $Service->specs();
 
 	my $service_type = $openprint::param{ServiceType};
-	if ( !$service_type ) {
-		$service_type = $ServiceType->type();
-	} # end if
+  $service_type = $ServiceType->type() if !$service_type;
 	if ( (!$service_type) and !$$specs{ProjectType} ) {
 		$log->error("No serviceType in params for service $service_index.  Trying to recover");
 	} # end if
@@ -64,16 +62,16 @@ $openprint::log->debug("Module is: $module");
 	$log->error($@) if $@;
 	my @variables = eval( $module.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
-#$log->debug("variables: @variables");
+$log->debug("variables: @variables");
 # We cannot lock tbl_service_specifications or tbl_project_contents.  Just too nasty.  So use tbl_Projects as the contention point.
 	# make this fast by doing it in one transaction, locking does the tranasaction for us
 	$Project->lock();
 	my @changes;
   my @deleted_specs;
 	foreach my $key ( sort { $a cmp $b } @variables) {
-#$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
+$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-#$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
+$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		} elsif ( ! exists $openprint::param{$key} ) {
       push @deleted_specs, $key;
 		} else {
@@ -82,6 +80,7 @@ $openprint::log->debug("Module is: $module");
 			insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $openprint::param{$key}, 0 );
 		} # end if
 	} # end foreach
+  $openprint::log->debug("Deleted specs @deleted_specs");
 	delete_service_spec( $project_index, $service_index, @deleted_specs ) if @deleted_specs;
 	if ( my $function = $module->can('save') ) {
 		$function->($project_index, $service_index, \%openprint::param);
@@ -139,7 +138,7 @@ sub get_specs_ref {
 		if ( sets::isin( ref $p_id, [ 'openprint::Project', 'openprint::QuotedProject' ] ) ) {
 			$p_id = $p_id->id();
 		} # end if
-		if ( ! $p_id ) {
+		if (!$p_id) {
 			Carp::cluck("********* Called get_specs_ref without Project Index ****************");
 			return;
 		} # end if
