@@ -1,0 +1,284 @@
+.SidesTheSame {
+	top: -22px; left: 50px; position: relative; width: 120px;padding-left: 5px;
+	background-color: #DEDCB7;
+}
+.Service {
+min-width: 1000px;
+}
+.Service input[type="text"],
+.Service input[type="number"] {
+	width: 75px;
+	text-align: right;
+  float: none;
+}
+.Service .Stock .Brand input,
+.Service .Stock .Finish input,
+.Service .Stock .Colour input,
+.Service .Stock .Weight input {
+	width: 100%;
+	text-align: left;
+}
+.Service a:link {
+color: black;
+}
+.pagequantity input[type="number"],
+.pagequantity input[type="text"],
+.imposition input[type="number"],
+.imposition input[type="text"] {
+	width: 40px;
+}
+.Project .View table tr .price1 input[type="number"],
+.Project .View table tr .price1 input[type="text"],
+.price2 input[type="number"],
+.price2 input[type="text"],
+.price3 input[type="number"],
+.price3 input[type="text"],
+.quantity input[type="number"],
+.quantity input[type="text"],
+.unitprice input[type="number"],
+.unitprice input[type="text"],
+.mprice input[type="number"],
+.mprice input[type="text"],
+.serviceprice input[type="text"],
+.serviceprice input[type="number"] {
+	width: 85px;
+	text-align: right;
+}
+.stockquantity input[type="text"] ,
+.stockquantity input[type="number"] {
+	width: 100px;
+}
+/*
+.InteriorPages,
+.GateFoldedPages,
+.CoverPages .Dimensions {
+	width: 50%;
+	float: left;
+}
+.CoverPages .Dimensions {
+	width: auto;
+}
+*/
+.Service .Dimensions input {
+	width: 17%;
+	max-width: 65px;
+	min-width: 45px;
+}
+.Dimensions .leftColumn,
+.Dimensions .rightColumn {
+	width: 100%;
+}
+.InteriorPages .Dimensions {
+	width: auto;
+	float: none;
+}
+.Service .SpotColour input[type="number"],
+.Service .SpotColour input[type="text"],
+.Service .Coverages input[type="number"],
+.Service .Coverages input[type="text"],
+.SpecialColour input[type="number"] ,
+.SpecialColour input[type="text"] {
+	width: 40px;
+  margin-left: 5px;
+}
+.SpecialColour input[type="text"] {
+	min-width: 50px;
+	max-width: 100px;
+	text-align: left;
+}
+.SpecialColour select {
+}
+.SpecialColour .Price input {
+	width: 40%;
+	text-align: right;
+}
+.SpecialColour .Mileage input {
+	width: 40%;
+}
+.Service .templates {
+    padding-right: 0;
+}
+.Service .templates {
+}
+.Service .templates:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+.Service .templates li,
+.Service fieldset .templates li {
+	float: left;
+	width: 175px;
+	height: 180px;
+	text-align: center;
+	margin: 0 5px 10px 5px;
+	padding: 0;
+  display: block;
+}
+.Service fieldset .templates li label:not(.radio):not(.radio-inline) {
+  width: auto;
+	clear: none;
+	float: none;
+	margin: 0;
+	vertical-align: middle;
+}
+.Service .templates li label:after {
+content: "";
+}
+.Service .templates li img {
+    clear: both;
+    width: 130px;
+    height: 130px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+.templateOption {
+	float: left;
+	width: 165px;
+	height: 180px;
+	text-align: center;
+	margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 10px;
+}
+.templateOption img {
+    clear: both;
+    width: 130px;
+    height: 130px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+.psc_questions {
+	width: 50%;
+	float: left;
+}
+.Service .psc_questions li {
+	padding-left: 300px;
+}
+.Service .psc_questions label {
+	width: 300px;
+	margin-left: -300px;
+}
+.Stock {
+	position: relative;
+}
+#ButtonStockList {
+	position: absolute;
+	right: 0;
+	top: 10px;
+}
+@media only screen and (min-device-width: 481px) and (max-device-width: 1024px) {
+li label {
+    font-size: medium;
+}
+select {
+	font-size: medium;
+}
+.SpotColour label, .Coverages label {
+	font-size: medium;
+}
+.Service input {
+	font-size: medium;
+}
+}
+
+.Service .Description input {
+	width: 97%;
+	text-align: left;
+}
+
+.Paper .TwoColumns .quantity,
+.Paper .TwoColumns .pricing {
+	display: block;
+	width: 100%;
+}
+.Paper li {
+	margin: 15px 0;
+}
+#InformationDiv {
+	min-height: 15px;
+}
+svg.Imposition {
+	width: 320px;
+	color: white;
+}
+svg.Imposition rect.background {
+	background: none;
+	fill: white;
+}
+svg.Imposition .foldline {
+    stroke-width: 0.1;
+    opacity: 0.75;
+    stroke-dasharray: 1 0.75 0.25 0.75;
+}
+svg.Imposition rect.sheet {
+	background-color: white;
+	border: 1px solid black;
+	color: white;
+  fill: white;
+    stroke: black;
+    stroke-width: .03125;
+}
+svg.Imposition rect.image {
+	background-color: white;
+	border: 1px solid black;
+	color: white;
+  fill: white;
+    shape-rendering: geometricPrecision;
+    stroke: black;
+    stroke-width: .03125;
+}
+#centreline {
+    stroke: black;
+    stroke-width: 0.1;
+    opacity: 0.75;
+    stroke-dasharray: 1 0.75 0.25 0.75;
+}
+pattern { shape-rendering: optimizeSpeed }
+
+
+.link-outer {
+  margin: 2ex 25% 0ex 25%;
+  border-bottom: 0;
+}
+.link-inner {
+  position: relative;
+  margin: -2ex auto 0ex auto;
+  border: 0;
+  text-align: center;
+}
+.linkage {
+  float: none;
+  display: inline;
+  padding: 0 1em;
+  background-color: #FFFFFF;
+}
+#Versions {
+  width: 50%;
+  flex: 1;
+}
+#Versions .Id {
+  width: 30px;
+}
+#Versions table {
+  width: 100%;
+}
+#Versions .Description {
+  text-align: left;
+}
+#Versions .Quantity {
+  width: 100px;
+}
+#Versions input {
+  max-width: 100%;
+}
+#calliper_pt {
+width: 35px;
+}
+#calliper_mm,
+#calliper, #size, #width, #height {
+width: 55px;
+}
