@@ -31,7 +31,7 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 
 # Locations of pages of interest.
 use constant SERVICE_PAGE_BASE   => '/service/';
-use constant PROJECT_VIEW_PAGE   => '/main/proj/proj_view.html';
+use constant PROJECT_VIEW_PAGE   => '/main/proj/view.html';
 use constant NOTIFICATION_PAGE   => '/main/proj/project_notification.html';
 use constant ORDER_PAGE          => '/main/order/order_submit.html';
 use constant QUOTE_PAGE          => '/main/quote/quote_submit.html';
@@ -131,9 +131,7 @@ map {
     # If build returned a service page go to it, otherwise go directly to an
     # order (if that flag was set and we calculated correctly) or the project
     # view .
-	my ($cto, $ctq) = $dbh->selectrow_array(q{
-		SELECT create_to_order, create_to_quote FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid);
+	my ($cto, $ctq) = $dbh->selectrow_array(q{ SELECT create_to_order, create_to_quote FROM tbl_projects WHERE lngprojectindex = ?  }, undef, $pid);
 
 	# If our quote is complete then we no longer need to process it.
 	$ctq = 0 if $ctq && $dbh->selectrow_array(q{
@@ -149,14 +147,12 @@ map {
 		AND oc.lngprojectindex = ?
 	}, undef, $pid);
 
-print STDERR "********HAVE CTO: $cto CTQ: $ctq *********\n";
-    my $to_order = ( $r->param('create_to_order') || $cto )  
-                && eprint::project::project_state($dbh, $pid) eq 'Unordered';
-
+  #print STDERR "********HAVE CTO: $cto CTQ: $ctq *********\n";
+  my $to_order = ( $r->param('create_to_order') || $cto )  && eprint::project::project_state($dbh, $pid) eq 'Unordered';
 
 	my $mail_page = $dbh->selectrow_array(q{ SELECT mail_type FROM tbl_projects WHERE lngprojectindex = ?  }, undef, $pid );
 
-print STDERR "VARIABLE: ", Dumper( $mail_page, $to_order, $page, $variable);
+  #print STDERR "VARIABLE: ", Dumper( $mail_page, $to_order, $page, $variable);
     
     $page = $page eq 'notification' ? NOTIFICATION_PAGE . "?pid=$pid"
 		  : $page     ? SERVICE_PAGE_BASE . $page 
@@ -164,10 +160,7 @@ print STDERR "VARIABLE: ", Dumper( $mail_page, $to_order, $page, $variable);
           : $ctq 	  ? QUOTE_PAGE . "?btnFunction=Process Quote;ProjectIndex=$pid"
           :             PROJECT_VIEW_PAGE . "?pid=$pid";
 
-	my $cpid = $dbh->selectrow_array(q{
-		SELECT copy_pid FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid);
-
+	my $cpid = $dbh->selectrow_array(q{SELECT copy_pid FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
 
 if ( $cpid ) {
   print STDERR "HAVE COPY PID: $cpid FROM PROJECT: $pid \n";
@@ -220,8 +213,7 @@ use constant NON_DEPENDENT_LEVEL => 10;
 sub build {
   my ($log, $dbh, $pid, $variable, $start) = @_;
 
-  # Get the service types suggested for the project type and template, we'll
-  # check their needs as the service type comes up.
+  # Get the service types suggested for the project type and template, we'll check their needs as the service type comes up.
   my %template = template_service_types($log, $dbh, $pid);
 
   print STDERR "BUILD TEMPLATE", Dumper(\%template);
@@ -270,13 +262,11 @@ sub build {
     eval { 
       $service = load_service_type($service);
       $service->{is_needed} = needed($log, $dbh, $pid, $service, $template{$type});
-      print STDERR "is needed $$service{is_needed}\n";
+      print STDERR "$$service{type} is needed $$service{is_needed}\n";
     };
     if ($@) {
-      # If we can't properly process the module we'll mark the service
-      # in an error state (inserting it if it's not already present.
-      my @sids = check_for_service($log, $dbh, $pid, $type)
-      || insert_service($log, $dbh, $pid, $type, {
+      # If we can't properly process the module we'll mark the service # in an error state (inserting it if it's not already present.
+      my @sids = check_for_service($log, $dbh, $pid, $type) || insert_service($log, $dbh, $pid, $type, {
           user_requested => 0,
           need_level     => NEEDED,
         });
@@ -297,34 +287,25 @@ sub build {
         });
 
       # Override service defaults with template ones if they exist.
-      insert_service_specs(
-        $log, $dbh, $pid, $sid, %{ $template{$type}{specs} }
-      ) if exists $template{$type}{specs};
+      insert_service_specs( $log, $dbh, $pid, $sid, %{ $template{$type}{specs} }) if exists $template{$type}{specs};
     }
 
     SERVICE:
     while (my $sid = next_service($log, $dbh, $pid, $type)) { 
 
-      # TODO Should we skip the service if it's on the starting level
-      # and already calculated (or if it's non-dependent)? ie. no need
-      # to recalculate it.
+      # TODO Should we skip the service if it's on the starting level # and already calculated (or if it's non-dependent)? ie. no need # to recalculate it.
 
-      # Remove the service if it's no longer needed in the project (and
-      # isn't user requested).
+      # Remove the service if it's no longer needed in the project (and # isn't user requested).
       if (!$service->{is_needed} && !user_requested($dbh, $sid)) {
-        if (!$dbh->do(q{
-            DELETE FROM tbl_project_contents 
-            WHERE lngserviceindex = ?
-            AND NOT ysnuserrequested
-            }, undef, $sid)) {
+        if (!$dbh->do(q{ DELETE FROM tbl_project_contents WHERE lngserviceindex = ?  AND NOT ysnuserrequested }, undef, $sid)) {
           print STDERR "Error ".$dbh->errstr()."\n";
         }
 
         next SERVICE;
       }
 
-      # Get the specs and price the service.
-      my $status = process($log, $dbh, $variable, $pid, $sid, $service);
+      # Get the specs and price the service. FIX
+      my $status = 'uncalculated'; #process($log, $dbh, $variable, $pid, $sid, $service);
 
       # Track the first unfinished service we find.
       if ($status eq 'uncalculated') {
@@ -348,13 +329,8 @@ sub build {
   if ($unfinished) {
     recalc_dependencies($log, $dbh, $pid, $unfinished->{sid});
 
-    $dbh->do(q{
-      UPDATE tbl_projects SET strstatus = 'uncalculated' 
-      WHERE lngprojectindex = ?
-      }, undef, $pid);
-    my $prod = $dbh->selectrow_array(q{
-      SELECT product FROM tbl_projects WHERE lngprojectindex = ?
-      }, undef, $pid); 
+    $dbh->do(q{ UPDATE tbl_projects SET strstatus = 'uncalculated' WHERE lngprojectindex = ?  }, undef, $pid);
+    my $prod = $dbh->selectrow_array(q{ SELECT product FROM tbl_projects WHERE lngprojectindex = ?  }, undef, $pid); 
 
     if ($prod && ($unfinished->{type} ne 'Shipping')) {
       return "notification" unless $variable->{user_id} == 2;
@@ -362,16 +338,10 @@ sub build {
       return "$unfinished->{type}?pid=$pid;sid=$unfinished->{sid}";
     }
 
-
     return "$unfinished->{type}?pid=$pid;sid=$unfinished->{sid}";
-  }
-  else {
+  } else {
     # Change the project status if we've just completed it.
-    $dbh->do(q{
-      UPDATE tbl_projects 
-      SET strstatus = 'Unordered'
-      WHERE lngprojectindex = ? AND strStatus = 'uncalculated'
-      }, undef, $pid) if is_complete($log, $dbh, $pid);
+    $dbh->do(q{ UPDATE tbl_projects SET strstatus = 'Unordered' WHERE lngprojectindex = ? AND strStatus = 'uncalculated' }, undef, $pid) if is_complete($log, $dbh, $pid);
   }
 
 
