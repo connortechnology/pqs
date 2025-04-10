@@ -111,33 +111,33 @@ sub sql_statement {
 # placeholdered (a new verb?) INSERT statement and executes it against the
 # database.
 sub insert {
-    my $log   = shift;
-    $log = $openprint::log if ! $log;
-    my $dbh   = shift;
-    $dbh = $openprint::dbh if ! $dbh;
-    my $table = shift; # The table name to operate on (may contain schema)
-    my %data  = @_;    # Field and value pairs
+  my $log   = shift;
+  $log = $openprint::log if ! $log;
+  my $dbh   = shift;
+  $dbh = $openprint::dbh if ! $dbh;
+  my $table = shift; # The table name to operate on (may contain schema)
+  my %data  = @_ == 1 ? @{$_[0]} : @_;    # Field and value pairs
 
-    # Identifiers (schema, table, fields, etc.) are lowercased before they're
-    # quoted as some section of the code use mixed case, relying on Pg's case
-    # folding of unquoted identifiers. These section should be revised
-    # whenever possible.
-    my $sql = sprintf "INSERT INTO %s (%s) VALUES (%s)",
-        $dbh->quote_identifier( lc( $table ) ),
-        (join ', ', map {$dbh->quote_identifier(lc($_))} keys %data),
-        (join ', ', ('?') x scalar keys %data)
-    ;
+  # Identifiers (schema, table, fields, etc.) are lowercased before they're
+  # quoted as some section of the code use mixed case, relying on Pg's case
+  # folding of unquoted identifiers. These section should be revised
+  # whenever possible.
+  my $sql = sprintf "INSERT INTO %s (%s) VALUES (%s)",
+  $dbh->quote_identifier( lc( $table ) ),
+  (join ', ', map {$dbh->quote_identifier(lc($_))} keys %data),
+  (join ', ', ('?') x scalar keys %data)
+  ;
 
-    # Some code passes NULL as a string instead of as undef. Bad code, no
-    # biscuit.
-    for my $k (keys %data) { $data{$k} = undef if $data{$k} eq 'NULL'; }
+  # Some code passes NULL as a string instead of as undef. Bad code, no
+  # biscuit.
+  for my $k (keys %data) { $data{$k} = undef if $data{$k} eq 'NULL'; }
 
-    print STDERR "$sql ".join(',', keys %data).'='.join(',',values %data)."\n" if DEBUG;
-    my $sth = $dbh->prepare($sql);
-       $sth->execute( values %data );
+  print STDERR "$sql ".join(',', keys %data).'='.join(',',values %data)."\n" if DEBUG;
+  my $sth = $dbh->prepare($sql);
+  $sth->execute( values %data );
 
-    # We should think about returning the number of records effected.
-    return 1;
+  # We should think about returning the number of records effected.
+  return 1;
 }
 
 # Given a log, dbh, table and field/value pairs creates a properly quoted and
@@ -165,7 +165,7 @@ sub update {
         $sql .= ' WHERE '. shift @{$condition};
         @condition_values = @{$condition};
       } else {
-        $sql .= " WHERE $condition "
+        $sql .= ' WHERE '.$condition. ' '; 
       }
     }
 
@@ -180,7 +180,7 @@ sub update {
     if ( $log ) {
       my $starttime = [gettimeofday] if TIMING;
       my $sth = $dbh->prepare($sql);
-      $sth->execute(@condition_values, values %data );
+      $sth->execute( values %data, @condition_values );
       my $print_sql = $sql;
       $print_sql =~ s/\?/\%s/g;
       $print_sql = sprintf($print_sql, values %data );
