@@ -654,7 +654,5 @@ sub same_size :Private {
     my ($n, $p) = @_;
     return 1 if $p->[W] == $n->[W] and $p->[H] == $n->[H];
 }
-
-
-}
 1;
+__END__
