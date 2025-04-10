@@ -19,7 +19,7 @@
   float: none;
 }
 
-.name {
+li.name {
   display: flex;
 }
 .name input {
