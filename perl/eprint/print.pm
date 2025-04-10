@@ -884,7 +884,7 @@ sub paper_info {
   # Get the paper each signature uses.
   my @papers = map signature_paper($log, $dbh, $pid, $_), check_for_service($log, $dbh, $pid, 'Printing');
 
-  print STDERR "HAVE PAPER 1 " , Dumper(\@papers);
+  #print STDERR "HAVE PAPER 1 " , Dumper(\@papers);
 
   # Collect identical papers (by ID and if they're supplied) so we can
   # display similar papers on the same line. Customer supplied paper is
@@ -896,7 +896,7 @@ sub paper_info {
     $dupe{$key} = [] unless exists $dupe{$key};
     push @{ $dupe{$key} }, $paper;
   }
-  print STDERR "HAVE DUPE " , Dumper(\%dupe);
+  #print STDERR "HAVE DUPE " , Dumper(\%dupe);
 
   # Go through and sum the quanties of each paper type.
   for my $papers (values %dupe) {
@@ -906,7 +906,7 @@ sub paper_info {
     }
   }
 
-  print STDERR "HAVE PAPER", Dumper(\@papers);
+  #print STDERR "HAVE PAPER", Dumper(\@papers);
 
   # Compose the final sorted and grouped list of paper.
   @papers = sort { not ($a->{is_supplied} <=> $b->{is_supplied})
