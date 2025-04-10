@@ -42,10 +42,10 @@ sub add_link {
     my $l = shift;
 
     $x->{link} = "/main/order/order_history_details.html?order_id=$x->{value};ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'lngorderid';
-    $x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
+    $x->{link} = "/main/proj/view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
     $x->{link} = "/administrator/managerial/company_profiles.html?ddmCustomer=$l->{lngcustomerid}" if $x->{id} eq 'strcompanyname';
     $x->{link} = "/administrator/managerial/user_profiles.html?ddmUser=$l->{contactid}" if $x->{id} eq 'contact';
-    $x->{link} = "/main/proj/proj_view.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'strprojectreference';
+    $x->{link} = "/main/proj/view.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'strprojectreference';
     $x->{link} = "/main/proj/edit.html?pid=$l->{lngprojectindex}" if $x->{id} eq 'intquantity1';
     $x->{link} = "/service/shipping?pid=$l->{lngprojectindex};sid=$l->{shipid}" if $x->{id} eq 'delivery';
     $x->{link} = "/service/printing?pid=$l->{lngprojectindex};sid=$l->{lngserviceindex}" if $x->{id} eq 'stock';
@@ -348,7 +348,7 @@ sub text_search {
 
 			if ( $pid ) {
 				$var->{param}{pid} = $pid;
-				$redirect = "/main/proj/proj_view.html?pid=$pid";
+				$redirect = "/main/proj/view.html?pid=$pid";
 			}
 		}
 
