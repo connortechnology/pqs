@@ -33,7 +33,7 @@ sub add_link {
     my $l = shift;
 
     $x->{link} = "promotion_edit.html?id=$x->{value}" if $x->{id} eq 'id';
-	#$x->{link} = "/main/proj/proj_view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
+	#$x->{link} = "/main/proj/view.html?pid=$x->{value}" if $x->{id} eq 'lngprojectindex';
 
 
 

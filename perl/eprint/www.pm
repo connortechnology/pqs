@@ -53,6 +53,7 @@ sub cleanup {
       $log->debug('Finished cleanup');
     } # end if
     $dbh->disconnect();
+    $gdb->disconnect;
   } else {
     $log->debug('No dbh at cleanup');
   } # end if
@@ -119,10 +120,10 @@ sub handler {
 
   session::r($r);
   session::log($r->log);
-  $openprint::log = $r->log;
+  $log = $r->log;
 
   if ( $r->header_only ) {
-    $r->log->debug('Browser only wanted header.');
+    $log->debug('Browser only wanted header.');
     return OK;
   }
   $r->push_handlers(PerlCleanupHandler => \&cleanup);
@@ -136,7 +137,6 @@ sub handler {
 
   $cookie = generate_cookie($r, $r->log, $dbh) unless $cookie;
 
-  #%openprint::param = %{$variable->{param}} = map {$_ => $r->param($_)} $r->param();
   # Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
   foreach my $key ( $r->param ) {
 
@@ -249,9 +249,7 @@ sub handler {
 
     close $fh;
 
-    $file_data = ssi::variable_substitution(
-      $r, $r->log, $dbh, $file_data, $variable
-    );
+    $file_data = ssi::variable_substitution( $r, $r->log, $dbh, $file_data, $variable);
 
     #print STDERR "CHECK FILL IN FORM \n";
     if ( $variable->{__FillInForm} ) {
@@ -275,10 +273,6 @@ sub handler {
 
     print $file_data;
   }
-
-  #print STDERR "END REQUEST \n\n\n\n\n";
-
-  $gdb->disconnect;
 
   return OK;
 }
@@ -869,7 +863,7 @@ sub section_main {
     }
 
     # View the project (pricing).
-    if ( $filename eq 'proj_view.html' ) {
+    if ( $filename eq 'view.html' ) {
 
       # We need to make sure that people are logged in or have a chance
       # to login using all the links from emails sent out.

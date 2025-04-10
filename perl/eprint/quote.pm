@@ -473,7 +473,7 @@ sub submit_quote {
 	my $quote_id = get_unfinished_quote_id( $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'} );
 	
 	if (!$quote_id && $r->param('ProjectIndex') ) {
-		$variable->{Redirect} = '/main/proj/proj_view.html';
+		$variable->{Redirect} = '/main/proj/view.html';
 		return;
 	}
 

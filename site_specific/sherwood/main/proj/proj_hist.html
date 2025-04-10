@@ -50,7 +50,7 @@ To add additional quantities to your project select the + beside the Project Qua
 To upload project files select the U/A under the "Files" column.<br /><br />
 To delete projects from history check the appropriate project(s) and select delete.</p>
 
-	<form action="/main/proj/proj_view.html" method="get" id="ProjectIndex" name="ProjectIndex">
+	<form action="/main/proj/view.html" method="get" id="ProjectIndex" name="ProjectIndex">
 		<fieldset>
 			<legend>
 				Project ID
@@ -97,8 +97,10 @@ To delete projects from history check the appropriate project(s) and select dele
 		
 			<label for="ddmStatus">Status:</label>
 			<select id="ddmStatus" name="ddmStatus" size="1">
-				<option value=""> All </option>
-				<?ddmStatus?>
+<? echo (
+    $_ = q{SELECT name, name FROM Project_Statuses ORDER BY sort,lower(name)};
+    make_drop_down( [ '', 'All', sql::execute( $log, $dbh, $_ )], $r->param('ddmStatus') );
+) ?>
 			</select>
 			<br />
 
@@ -154,8 +156,8 @@ To delete projects from history check the appropriate project(s) and select dele
 
 				<? loop projects ?>
 					<tr class="r<?_even?>">
-						<td style="text-align: left;" id="mpid"><a href="/main/proj/proj_view.html?pid=<?pid?>"><?pid?></a></td>
-						<td style="text-align: left;"><a href="/main/proj/proj_view.html?pid=<?pid?>"><?reference?></a></td>
+						<td style="text-align: left;" id="mpid"><a href="/main/proj/view.html?pid=<?pid?>"><?pid?></a></td>
+						<td style="text-align: left;"><a href="/main/proj/view.html?pid=<?pid?>"><?reference?></a></td>
 						<td style="text-align: right;"><input type="hidden" value="<?escape_html:reference?>" id="ref-<?pid?>" name="reference"/>
                         <?qty?> <a heref="#" onclick="$('qpid').value=<?pid?>;$('pref').value=$('ref-<?pid?>').value;$('fsq').show();$('txtQuantity1').focus();" onmouseover="this.style.cursor='pointer'"; >+</a></td>
 						<td style="text-align: right;"><?money:price?></td>
@@ -177,7 +179,7 @@ To delete projects from history check the appropriate project(s) and select dele
 	<!--#include virtual="/includes/main/account.html" -->
 	<!--#include virtual="/includes/f2-main.html" -->
 
-	<script type="text/javascript"> 
+	<script> 
 	$('fsq').hide();
 	</script>
 </body>
