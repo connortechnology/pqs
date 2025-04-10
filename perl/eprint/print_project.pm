@@ -32,7 +32,8 @@ use Data::Dumper;
 
 require misc;
 require eprint::login;
-require eprint::obj_customer;
+require openprint::Company;
+require openprint::ServiceType;
 require eprint::inventory;
 require eprint::user;
 require eprint::Build;
@@ -97,7 +98,7 @@ sub insert_service {
     my ($log,
         $dbh,
         $pid,          # Project ID.
-        $service_type, # Service type string ID.
+        $service_type_name, # Service type string ID.
         $attr,         # Optional attributes hashref.
         $specs,        # Service specifications hashref.
     ) = @_;
@@ -105,14 +106,12 @@ sub insert_service {
 	$dbh->do(q{update tbl_projects set build = true where lngprojectindex = ?}, undef, $pid);
     
     # Get the numeric ID from the string one.
-    my $stid = $dbh->selectrow_array(q{
-        SELECT lngindex FROM tbl_service_types WHERE strid = ?
-    }, undef, $service_type);
+    my $service_type = openprint::ServiceType->find_one(name=>$service_type_name);
 
     # If the service type isn't found log an error and don't insert.
-    unless ($stid) {
-        $log->error("Couldn't get service index for $service_type.");
-        return;
+    if (!$service_type) {
+      $log->error("Couldn't get service index for $service_type_name.");
+      return;
     }
    
     # Check the dependency level of the service being inserted against the
@@ -124,7 +123,7 @@ sub insert_service {
                    AND project =  ? ) < lngdep
         FROM tbl_service_types
         WHERE strid = ?
-    }, undef, $pid, $service_type);
+    }, undef, $pid, $service_type_name);
 
     my $status = $dependent ? 'dependent' : 'uncalculated';
     
@@ -146,7 +145,8 @@ sub insert_service {
         $log, $dbh, 'tbl_project_contents', %args,
         lngProjectIndex => $pid,
         strStatus       => $status,
-        strservicetype  => $service_type,
+        strservicetype  => $service_type_name,
+        servicetype_id  => $service_type->id(),
     );
     # Get the current contents service id. Should use
     # $dbh->last_insert_id() when it's available.
@@ -164,16 +164,14 @@ sub insert_service {
             (lngprojectindex, lngserviceindex, strname, strvalue)
             ( SELECT $pid, $sid, strfieldname, strdefaultvalue 
               FROM tbl_service_defaults
-              WHERE lngserviceindex = ( SELECT lngindex
-                                        FROM tbl_service_types
-                                        WHERE strid = ? ))
-    }, undef, $service_type);
+              WHERE lngserviceindex = ?)
+    }, undef, $service_type->id());
 
     # Insert the any specifications that were given.
     if (keys %$specs) {
-        while (my ($field, $value) = each %$specs) {
-            insert_service_spec($log, $dbh, $pid, $sid, $field, $value);
-        }
+      while (my ($field, $value) = each %$specs) {
+        insert_service_spec($log, $dbh, $pid, $sid, $field, $value);
+      }
     }
 
     return $sid;
@@ -306,7 +304,7 @@ sub create_display {
   } # end if predefined
 
   #get the default line screen from the company profile.
-  my $cust = new eprint::obj_customer($log, $dbh, $variable->{cust_id});
+  my $cust = new openprint::Company($variable->{cust_id});
   $variable->{__FillInForm}{linescreen} = $cust->get('linescreen');
 
   # Allow PDF template selection to pass through
@@ -614,172 +612,147 @@ sub design_format {
 
 # Creates a new project, first clearing out any previous projects.
 sub create_process {
-    my ( $r, $log, $dbh, $cookie, $var, $qtys, $predefined, 
-		 $projref, $press_type, $project_type 				) = @_;
+  my ( $r, $log, $dbh, $cookie, $var, $qtys, $predefined, $projref, $press_type, $project_type) = @_;
 
-    die "You must specify a project name"              unless $projref;
-    die "You must specify at least the first quantity" unless $qtys->[0];
+  die "You must specify a project name"              unless $projref;
+  die "You must specify at least the first quantity" unless $qtys->[0];
 
-	$project_type = $project_type  || $r->param('rdbProjectType');
-	$press_type   = $press_type    || $r->param('rdbPressType');
+  $project_type = $project_type  || $r->param('rdbProjectType');
+  $press_type   = $press_type    || $r->param('rdbPressType');
 
-    # if we are going to select a predefined project then we don't want to
-    # create a new project yet.
-    if ( $r->param('rdbMode') eq 'Predefined' ) {
-        $var->{Redirect} = '/main/proj/templates/brochures.html';
-        return;
-    }
+  # if we are going to select a predefined project then we don't want to create a new project yet.
+  if ( $r->param('rdbMode') eq 'Predefined' ) {
+    $var->{Redirect} = '/main/proj/templates/brochures.html';
+    return;
+  }
 
-	my $project_ref;
-	my $templateurl;
+  my $project_ref;
+  my $templateurl;
 
-    # Add the project type directly to the project now, not in service
-    # specifications on the 'Print' task.
-    ($project_type, $project_ref, $templateurl) = $dbh->selectrow_array(q{
-        SELECT lngindex, strid, strtemplateurl
-        FROM tbl_projecttypes
-        WHERE lngindex = ?
-    }, undef, $project_type)  if $project_type;
+  # Add the project type directly to the project now, not in service
+  # specifications on the 'Print' task.
+  ($project_type, $project_ref, $templateurl) = $dbh->selectrow_array(q{ SELECT lngindex, strid, strtemplateurl FROM tbl_projecttypes WHERE lngindex = ?  }, undef, $project_type)  if $project_type;
 
-   
-    $press_type = scalar $dbh->selectrow_array(q{
-        SELECT lngindex
-        FROM tbl_equipment_type
-        WHERE strid = ?
-    }, undef, $press_type);
+  $press_type = scalar $dbh->selectrow_array(q{ SELECT lngindex FROM tbl_equipment_type WHERE strid = ?  }, undef, $press_type);
 
+  my $user = openprint::User->find_one(id=> $$var{user_id});
+  my $user_name = $user->name() if $user;
 
-    my $user_name = scalar $dbh->selectrow_array(q{
-        SELECT strfirstname ||' '|| strlastname
-        FROM tbl_customer_users
-        WHERE lnguserid = ?
-    }, {}, $$var{'user_id'});
+  # IMAGE/DESIGN MEDIA TYPE
+  #
+  # The project design can be supplied by some type of electronic file, as
+  # film for 'convential' image-setting, or as pre-made plates. The
+  # format is a combination of the available file types and the media
+  # options.
+  my ($design, $program, $other) = design_format($r);
 
-    # IMAGE/DESIGN MEDIA TYPE
-    #
-    # The project design can be supplied by some type of electronic file, as
-    # film for 'convential' image-setting, or as pre-made plates. The
-    # format is a combination of the available file types and the media
-    # options.
-    my ($design, $program, $other) = design_format($r);
+  # Create the project.
+  insert(
+    $log, $dbh, 'tbl_Projects',
+    lngprojecttype      => $project_type,
+    lngCustomerID       => $var->{'cust_id'},
+    lngUserIndex        => $var->{'user_id'},
+    strProjectReference => $projref,
 
-    # Create the project.
-    insert(
-        $log, $dbh, 'tbl_Projects',
-        lngprojecttype      => $project_type,
-        lngCustomerID       => $var->{'cust_id'},
-        lngUserIndex        => $var->{'user_id'},
-        strProjectReference => $projref,
+    strComments         => $r->param('txtComments') . '' ,
 
-        strComments         => $r->param('txtComments') . '' ,
-        
-        intQuantity1        => $qtys->[0],
-        q2        			=> $qtys->[1],
-        q3        			=> $qtys->[2],
+    intQuantity1        => $qtys->[0],
+    q2        			=> $qtys->[1],
+    q3        			=> $qtys->[2],
 
-        strStatus           => 'uncalculated',
-        lngPressType        => $press_type,
-        strdesign           => $design,
-        strprograms         => $program,
-        strotherprograms    => $other,
-        dtmCreationDate     => 'NOW()',
-        dtmLastModified     => 'NOW()',
-        strCreatedBy        => $user_name,
-		rfq_only			=> $r->param('rfq_only') ? $r->param('rfq_only') : 0,
-        strInvoiceComments  => $r->param('txtInvoiceComments') || undef,
-		linescreen			=> $r->param('linescreen') || undef,
-		digifed				=> ($r->param('DigiFed') || 0),
-    );
+    strStatus           => 'uncalculated',
+    lngPressType        => $press_type,
+    strdesign           => $design,
+    strprograms         => $program,
+    strotherprograms    => $other,
+    dtmCreationDate     => 'NOW()',
+    dtmLastModified     => 'NOW()',
+    strCreatedBy        => $user_name,
+    rfq_only			=> $r->param('rfq_only') ? $r->param('rfq_only') : 0,
+    strInvoiceComments  => $r->param('txtInvoiceComments') || undef,
+    linescreen			=> $r->param('linescreen') || undef,
+    digifed				=> ($r->param('DigiFed') || 0),
+  );
 
-    my $pid;
+  my $pid;
 
-    # Get the new project's ID. Replace with last_insert_id when avail.
-    $pid = $dbh->selectrow_array(
-        q{SELECT currval('lngprojectindex_seq')}
-    );
+  # Get the new project's ID. Replace with last_insert_id when avail.
+  $pid = $dbh->selectrow_array( q{SELECT currval('lngprojectindex_seq')});
 
-    # If we don't get a valid PID something has gone very wrong.
-    die "Couldn't create project" unless $pid;
+  # If we don't get a valid PID something has gone very wrong.
+  die "Couldn't create project" unless $pid;
 
-    # Special case for project type
-    insert_project_type($r, $log, $dbh, $pid, $project_ref) 
-        unless $project_ref eq 'InventoryCheckOut';
-    
-    # Add any additional services the user requested.
-    modify_services($r, $log, $dbh, $cookie, $var, $pid);
+  # Special case for project type
+  insert_project_type($r, $log, $dbh, $pid, $project_ref) unless $project_ref eq 'InventoryCheckOut';
 
-    return $pid;
+  # Add any additional services the user requested.
+  modify_services($r, $log, $dbh, $cookie, $var, $pid);
+
+  return $pid;
 }
 
 
 sub modify_services {
-    my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
-    
-    my $modified = 0;
+  my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
 
-    $variable->{PressType} = get_press_type($log, $dbh, $pid);
+  my $modified = 0;
 
-    # PROJECT SERVICES
-    #
-    # The user has just (re)defined which prepress, bindery, and speciality
-    # service types they want in their project. Compare against the list of
-    # project services and insert or delete as required.
-    
-    # Get the list of services the user wants.
-    my %service;
-    @service{ $r->param('project_service') } = (undef);
+  $variable->{PressType} = get_press_type($log, $dbh, $pid);
 
-    # Get all the service types and join it to the list of project services in
-    # the current project. Anything that is NEEDED or SUGGESTED will not
-    # appear in the overall list at all.
-    my $sth = $dbh->prepare(q{
-        SELECT p.lngserviceindex AS sid, t.strid AS name
-        FROM      ( SELECT lngserviceindex, strservicetype, lngneedlevel
-                    FROM tbl_project_contents
-                    WHERE lngprojectindex = ?) p
-        FULL JOIN tbl_service_types t ON (p.strservicetype = t.strid),
-                  ( SELECT DISTINCT service_type
-                    FROM service_type_equipment ) s
-        WHERE t.lngindex = s.service_type
-          AND ysncreatevisible = 'Y'
-        --  AND strtype <> 'bind'
-          AND (p.lngneedlevel IS NULL OR p.lngneedlevel = 0)
-        ORDER BY strname
+  # PROJECT SERVICES
+  #
+  # The user has just (re)defined which prepress, bindery, and speciality
+  # service types they want in their project. Compare against the list of
+  # project services and insert or delete as required.
+
+  # Get the list of services the user wants.
+  my %service;
+  @service{ $r->param('project_service') } = (undef);
+
+  # Get all the service types and join it to the list of project services in
+  # the current project. Anything that is NEEDED or SUGGESTED will not
+  # appear in the overall list at all.
+  my $sth = $dbh->prepare(q{
+    SELECT p.lngserviceindex AS sid, t.strid AS name
+    FROM      ( SELECT lngserviceindex, strservicetype, lngneedlevel FROM tbl_project_contents WHERE lngprojectindex = ?) p
+    FULL JOIN tbl_service_types t ON (p.strservicetype = t.strid),
+    ( SELECT DISTINCT service_type FROM service_type_equipment ) s
+    WHERE t.lngindex = s.service_type
+    AND ysncreatevisible = 'Y'
+    --  AND strtype <> 'bind'
+    AND (p.lngneedlevel IS NULL OR p.lngneedlevel = 0)
+    ORDER BY strname
     });
-    $sth->execute($pid);
+  $sth->execute($pid);
 
-    my ($sid, $name);
-    $sth->bind_columns(\$sid, \$name);
+  my ($sid, $name);
+  $sth->bind_columns(\$sid, \$name);
 
-    # Insert or delete as needed (we use remove just incase).
-    while ($sth->fetch) {
-print STDERR "PRICING MODIFY SERVICE: SID: $sid NAME: $name HAVE:  $service{$name} \n";
-        # If the project service exists in the project but isn't in the user's
-        # service list we'll remove it from the project.
-        if ($sid && ! exists $service{$name}) {
-            remove_service($log, $dbh, $pid, $sid);
-            $modified = 1;
-        }
-        # If the name is in the list but the service type isn't in the
-        # project, we'll insert it.
-        elsif (exists $service{$name} && ! $sid) {
-            insert_service($log, $dbh, $pid, $name);
-            $modified = 1;
-        }
+  # Insert or delete as needed (we use remove just in case).
+  while ($sth->fetch) {
+    $openprint::log->debug("PRICING MODIFY SERVICE: SID: $sid NAME: $name HAVE:  $service{$name}");
+    # If the project service exists in the project but isn't in the user's service list we'll remove it from the project.
+    if ($sid && ! exists $service{$name}) {
+      remove_service($log, $dbh, $pid, $sid);
+      $modified = 1;
+    } elsif (exists $service{$name} && ! $sid) {
+      # If the name is in the list but the service type isn't in the project, we'll insert it.
+      insert_service($log, $dbh, $pid, $name);
+      $modified = 1;
     }
+  }
 
-    # Handle the extra shipping services that are not real service types.
-    foreach my $type ( qw{Project Samples Proofs} ) {
-        if ( exists $service{"Shipping_$type"}) {
-            add_shipping($log, $dbh, $pid, $type);
-            $modified = 1;
-        } 
-        else {
-            remove_shipping($log, $dbh, $pid, $type);
-        }
+  # Handle the extra shipping services that are not real service types.
+  foreach my $type ( qw{Project Samples Proofs} ) {
+    if ( exists $service{"Shipping_$type"}) {
+      add_shipping($log, $dbh, $pid, $type);
+      $modified = 1;
+    } else {
+      remove_shipping($log, $dbh, $pid, $type);
     }
+  }
 
-    return $modified;
+  return $modified;
 }
 
 sub add_shipping {
@@ -998,36 +971,26 @@ sub history_list {
 
   my $redirect;
   my $cust;
-  my $pid;
-  ($pid, $cust) = $is_num ? $dbh->selectrow_array(q{
-    SELECT lngprojectindex, lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?
-    }, undef, $ref) : undef;
 
-  if ( $pid ) {
-    $redirect = "/main/proj/proj_view.html?pid=$pid";
-  }
-
-  $ref =~ /(\d*)/;
-
-  my $order;
-  my $ocust;
-  ($order, $ocust)	= $1 ? $dbh->selectrow_array(q{
-    SELECT lngorderid, lngcustomerid FROM tbl_orders WHERE lngorderid = ?
-    }, undef, $1) : undef;
-
-  if ( $order ) {
-    $redirect = "/main/order/order_history_details.html?order_id=$order";
-    $cust = $ocust;
+  my $project = openprint::Project->find_one(id=>$ref) if $ref;
+  if ($project) {
+    $redirect = $project->url_to() if $project;
+    $cust = $project->company_id();
+  } else {
+    $ref =~ /(\d*)/;
+    my $order = openprint::Order->find_one(id=>$1) if $1;
+    if ( $order ) {
+      $redirect = '/main/order/order_history_details.html?order_id='.$order->id();
+      $cust = $order->company_id();
+    }
   }
 
   if ( $redirect ) {
-    die("have cust: $cust, $variable->{cookie} ") unless $cust;
     eprint::login::select_customer( $r, $log, $dbh, $variable->{cookie}, $variable, $cust );
     $variable->{Redirect} = $redirect;
     return;
   }
 
-  print STDERR "HAVE STUFF: $ref ; $is_num -- PID: $pid \n";
 
   # Current date.
   my ($year, $month, $day) = (localtime(time))[5,4,3];
@@ -1057,18 +1020,7 @@ sub history_list {
   );
 
   my $status = $r->param('ddmStatus');
-
-  # Status search dropdown.
-  $variable->{ddmStatus} = ssi::fill_drop_down($log, $dbh, qq{
-    SELECT DISTINCT strStatus, strStatus 
-    FROM tbl_Projects 
-    WHERE strStatus != '' 
-    AND strStatus != 'Deleted' 
-    AND lngCustomerID = $variable->{cust_id}
-    ORDER BY strStatus
-    }, $status );
-
-  my $clause = 'AND strstatus = ' . $dbh->quote($status) if $status;
+  my $status_clause = $status ? 'AND strstatus = ' . $dbh->quote($status) : "AND strStatus != 'Deleted'";
 
   #my $user_clause = "AND lnguserindex = $variable->{user_id} " if $variable->{user_type} eq 'C' && $variable->{user_id} ne '293';
   my $user_clause = " ";
@@ -1103,10 +1055,9 @@ sub history_list {
 
     FROM tbl_projects p LEFT JOIN tbl_order_contents o USING (lngprojectindex)
     WHERE p.lngcustomerid = ?
-    AND p.strstatus != 'Deleted'
     AND date(p.dtmcreationdate) BETWEEN date(?)
     AND date(?)
-    $clause
+    $status_clause
     $user_clause
     $ref_clause
     ORDER BY p.lngProjectIndex DESC
@@ -1121,56 +1072,37 @@ sub history_list {
 
   $variable->{search} = $r->param('pid');
 
-  #use Data::Dumper;
-  #print STDERR "PROJ DUMPER " , Dumper($variable);
   return OK;
 }
 
 sub delete_project {
     my ($log, $dbh, $variable, $pid) = @_;
 
-    my $id = $dbh->selectrow_array(q{
-        SELECT lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?
-    }, undef, $pid);
-
-    return 'Project does not exist.' unless $id; # Project doesn't exist.
+    my $project = openprint::Project->find_one(id=>$pid);
+    return 'Project does not exist.' unless $project;
 
     # The user is only allowed if they're the owner or an employee/admin.
-    return "You don't have permission to modify this project."
-        unless $variable->{user_type} =~ /^[AE]$/ 
-            || $id == $variable->{cust_id};
+    return "You don't have permission to modify this project." unless $project->can_delete();
 
 	#****************************** This code is broken > 1 allows projects to be delted *******************************
 	#Projects show not be allowed to be deleted after order or quote.
 			
     # Check to see if the project is in a quote or order.
     my $is_ordered = $dbh->selectrow_array(q{
-        SELECT count(*) > 1 FROM tbl_order_contents WHERE lngprojectindex = ?
+        SELECT count(*) > 0 FROM tbl_order_contents WHERE lngprojectindex = ?
     }, undef, $pid);
 
     my $is_quoted  = $dbh->selectrow_array(q{
-        SELECT count(*) > 1 FROM tbl_quote_details  WHERE lngprojectindex = ?
+        SELECT count(*) > 0 FROM tbl_quote_details  WHERE lngprojectindex = ?
     }, undef, $pid);
 
-    eprint::inventory::delete_by_project($log, $dbh, $pid);
-
-    # TODO Just catch the ref. integrity error instead of the two check queries.
 
     # Only mark the project as no longer visible if it is in either a quote or
     # order, otherwise it may be safely removed.
-	
-	#Disable deleting until bugs are fixed.
-	#Projects are being removed from db.
-	
-
-	#my $statement = ($is_ordered || $is_quoted) 
-	#    ? q{ UPDATE tbl_projects SET strstatus = 'Deleted' WHERE lngprojectindex = ? }
-	#    : q{ DELETE FROM tbl_projects                      WHERE lngprojectindex = ? };
-
-	#my $statement =  q{UPDATE tbl_projects SET strstatus = 'Deleted' WHERE lngprojectindex = ? };
-
-
-	#my $deleted = $dbh->do($statement, undef, $pid);
+    if (!($is_ordered || $is_quoted)) {
+      eprint::inventory::delete_by_project($log, $dbh, $pid);
+      $project->delete();
+    }
 
     return;
 }
@@ -1239,132 +1171,92 @@ sub summary_header {
 }
 
 sub edit_process {
-    my ( $r, $log, $dbh, $cookie, $variable, $pid, $add_qty, $qtys ) = @_;
+  my ( $r, $log, $dbh, $cookie, $variable, $pid, $add_qty, $qtys ) = @_;
 
-    $pid =~ tr/0-9//cd;
+  $pid = openprint::Project->transform(id=>$pid);
 
-    my $modified = 0;
+  my $modified = 0;
 
-    # BASIC PROJECT INFO
-    #
-    # Update the project name and mode.
-    update( $log, $dbh, 'tbl_Projects', "lngProjectIndex='$pid'", 
-        strComments         => ($r->param('txtComments') or undef),
-        strInvoiceComments  => ($r->param('txtInvoiceComments') or undef),
-        dtmLastModified     => 'NOW()',
-    );
+  # BASIC PROJECT INFO
+  update( $log, $dbh, 'tbl_Projects', "lngProjectIndex='$pid'", 
+    strComments         => ($r->param('txtComments') or undef),
+    strInvoiceComments  => ($r->param('txtInvoiceComments') or undef),
+    dtmLastModified     => 'NOW()',
+    ($r->param('txtProjectReference') ? (strProjectReference => $r->param('txtProjectReference')) : () ),
+    ($r->param('rdbPressType') ? (lngpresstype => $r->param('rdbPressType')) : () ),
+  );
 
-    update( $log, $dbh, 'tbl_Projects', "lngProjectIndex='$pid'", 
-        strProjectReference => $r->param('txtProjectReference')
-	) if $r->param('txtProjectReference');
+  # QUANTITIES
+  #
+  if (!has_locked_quantity($dbh, $pid) || $variable->{is_staff}) {
+    # If the quantities have changed we need a full recalculation.
+    my @old; @old[1..3] = get_quantities($log, $dbh, $pid);
 
-    update( $log, $dbh, 'tbl_Projects', "lngProjectIndex='$pid'", 
-        lngpresstype => $r->param('rdbPressType')
-    ) if $r->param('rdbPressType');
-
-    # QUANTITIES
-    #
-    if (!has_locked_quantity($dbh, $pid) || $variable->{is_staff}) {
-        # If the quantities have changed we need a full recalculation.
-        my @old; @old[1..3] = get_quantities($log, $dbh, $pid);
-
-        # Clean the new quantities and remove any blanks. None of this crap would
-        # be necessary if we just used HTML elements properly.
-        my @new;
-		if ( defined $qtys ) {
-print STDERR "USE NEW QTYS: @{$qtys} \n";
-			@new = (undef,@{$qtys});
-		} else {
-print STDERR "USE NEW QTYS FROM PARAM:  \n";
-			@new = grep { defined $_ and $_ > 0     }
-					  map  { $r->param("txtQuantity$_") =~ /(\d+)/; $1 } 
-						   1..3;
-			@new = (undef, map { $new[$_] || 0 } 0..2);
-		}
-
-        # Compare the new and old quantities and update statuses if needed.
-        for my $i (1..3) {
-            # If the quantities are different update them and set the flag.
-            if ($new[$i] != $old[$i]) {
-                update($log, $dbh, 'tbl_Projects', "lngProjectIndex = $pid",
-                    "intquantity$i" => $new[$i],
-                );
-
-                # Horribly we just clobber all the custom quantities without
-                # ever informing the user. TODO: Bug 1646
-                update($log, $dbh, 'tbl_service_specifications', 
-                    "lngprojectindex = $pid AND strname = 'txtQuantity$i'",
-                    strvalue => $new[$i],
-                );
-                update($log, $dbh, 'tbl_service_specifications', 
-                    "lngprojectindex = $pid AND strname = 'hdnQuantity$i'",
-                    strvalue => $new[$i],
-                );
-				my $sq = $dbh->selectrow_array(q{
-					SELECT Count(*) FROM tbl_service_specifications 
-					WHERE lngprojectindex = ? AND strname ~ 'add_qty1'
-				}, undef, $pid);
-print STDERR "MY QTYS: $sq \n";
-
-				if ( $sq == 1 ) {
-					update($log, $dbh, 'tbl_service_specifications', 
-						"lngprojectindex = $pid AND strname ~ 'add_qty$i'",
-						strvalue => $new[$i],
-					);
-				} else { 
-
-					my $sth = $dbh->prepare(q{ DELETE FROM tbl_service_specifications
-						WHERE strname ~ 'add_qty' 
-						AND lngprojectindex = ?
-					});
-					$sth->execute($pid);
-			
-
-					$dbh->do(q{ UPDATE tbl_project_contents SET strstatus = 'uncalculated'
-						WHERE lngprojectindex=? AND strservicetype = 'Shipping' }, {}, $pid );
-				}
-               
-                $modified = 2; # Full recalculate
-            }
-        }
+    # Clean the new quantities and remove any blanks.
+    my @new;
+    if ( defined $qtys ) {
+      print STDERR "USE NEW QTYS: @{$qtys} \n";
+      @new = (undef,@{$qtys});
+    } else {
+      print STDERR "USE NEW QTYS FROM PARAM:  \n";
+      @new = grep { defined $_ and $_ > 0 } map { $r->param("txtQuantity$_") =~ /(\d+)/; $1 } 1..3;
+      @new = (undef, map { $new[$_] || 0 } 0..2);
     }
 
-    # IMAGE/DESIGN MEDIA TYPE -- PREFLIGHT
-    #
-    # The project design can be supplied by some type of electronic file, as
-    # film for 'conventional' image-setting, or as pre-made plates. If we're
-    # changing between any of these types we need to recalculate everything as
-    # all the plate charges are currently in printing.
+    # Compare the new and old quantities and update statuses if needed.
+    for my $i (1..3) {
+      # If the quantities are different update them and set the flag.
+      if ($new[$i] != $old[$i]) {
+        update($log, $dbh, 'tbl_Projects', "lngProjectIndex = $pid", "intquantity$i" => $new[$i],);
 
-    # The previous design selected.
-    my ($design, $program) = $dbh->selectrow_array(q{
-        SELECT strdesign, strprograms FROM tbl_projects WHERE lngprojectindex = ?
-    }, {}, $pid);
+        # Horribly we just clobber all the custom quantities without
+        # ever informing the user. TODO: Bug 1646
+        update($log, $dbh, 'tbl_service_specifications', "lngprojectindex = $pid AND strname = 'txtQuantity$i'", strvalue => $new[$i],);
+        update($log, $dbh, 'tbl_service_specifications', "lngprojectindex = $pid AND strname = 'hdnQuantity$i'", strvalue => $new[$i],);
+        my $sq = $dbh->selectrow_array(q{ SELECT Count(*) FROM tbl_service_specifications WHERE lngprojectindex = ? AND strname ~ 'add_qty1' }, undef, $pid);
+        print STDERR "MY QTYS: $sq \n";
 
-    # The current user selected format.
-    my ($format, $file_type, $other) = design_format($r);
-    
-    # Update the design and program information if any of it's changed.
-    update($log, $dbh, 'tbl_projects', "lngprojectindex = $pid",
-        strdesign        => $format,
-        strprograms      => $file_type,
-        strotherprograms => $other,
-    );
+        if ( $sq == 1 ) {
+          update($log, $dbh, 'tbl_service_specifications', "lngprojectindex = $pid AND strname ~ 'add_qty$i'", strvalue => $new[$i],);
+        } else { 
+          my $sth = $dbh->prepare(q{ DELETE FROM tbl_service_specifications WHERE strname ~ 'add_qty' AND lngprojectindex = ?  });
+          $sth->execute($pid);
+          $dbh->do(q{ UPDATE tbl_project_contents SET strstatus = 'uncalculated' WHERE lngprojectindex=? AND strservicetype = 'Shipping' }, {}, $pid );
+        }
 
-    # See if the overall design media has changed, if so recalculate. TODO:
-    # Just fiddle with the preflight project service if we're only changing
-    # the file types.
-    $modified = 2 if $design ne $format or $program ne $file_type;
+        $modified = 2; # Full recalculate
+      }
+    }
+  }
 
-    # TODO: Are there any actions other than recalculating we need to take
-    # when changing between supplied media?
+  # IMAGE/DESIGN MEDIA TYPE -- PREFLIGHT
+  #
+  # The project design can be supplied by some type of electronic file, as
+  # film for 'conventional' image-setting, or as pre-made plates. If we're
+  # changing between any of these types we need to recalculate everything as
+  # all the plate charges are currently in printing.
 
-    my $services_modified
-        = modify_services($r, $log, $dbh, $cookie, $variable, $pid) if !$add_qty;;
+  # The previous design selected.
+  my ($design, $program) = $dbh->selectrow_array(q{ SELECT strdesign, strprograms FROM tbl_projects WHERE lngprojectindex = ?  }, {}, $pid);
 
-    # The level of recalculation required.
-    return $modified > $services_modified ? $modified : $services_modified;
-} 
+  # The current user selected format.
+  my ($format, $file_type, $other) = design_format($r);
+
+  # Update the design and program information if any of it's changed.
+  update($log, $dbh, 'tbl_projects', "lngprojectindex = $pid", strdesign        => $format, strprograms      => $file_type, strotherprograms => $other,);
+
+  # See if the overall design media has changed, if so recalculate. TODO:
+  # Just fiddle with the preflight project service if we're only changing
+  # the file types.
+  $modified = 2 if $design ne $format or $program ne $file_type;
+
+  # TODO: Are there any actions other than recalculating we need to take when changing between supplied media?
+
+  my $services_modified = modify_services($r, $log, $dbh, $cookie, $variable, $pid) if !$add_qty;;
+
+  # The level of recalculation required.
+  return $modified > $services_modified ? $modified : $services_modified;
+}  # end sub edit_process
 
 # User removal of services, marks as removed instead of actually deleting them
 # unless they're NOT_NEEDED.
@@ -1438,11 +1330,17 @@ sub delete_service {
     set_status($log, $dbh, $pid, 'calculated', $sid);
     recalc_dependencies($log, $dbh, $pid, $sid);
 
-    # Now we can fade into the sunset. 
-    $dbh->do(q{ 
-        DELETE FROM tbl_project_contents WHERE lngserviceindex = ?
-    }, undef, $sid);
-
+    my $project = openprint::Project->find_one(id=>$pid);
+    if (!$project) {
+      $openprint::log->error("No project found for $pid");
+      return 0;
+    }
+    my $service = $project->Service($sid);
+    if (!$project) {
+      $openprint::log->error("No service found for $sid in project $pid");
+      return 0;
+    }
+    $service->delete();
     return 1;
 }
 
@@ -1981,7 +1879,7 @@ sub insert_custom_service {
 
 
 use constant BUILD_PAGE    => '/build';
-use constant VIEW_PAGE     => '/main/proj/proj_view.html';
+use constant VIEW_PAGE     => '/main/proj/view.html';
 use constant TEMPLATE_PAGE => '/template/record.html';
 
 # Instead of the mass of if/elses that was the project view function, we'll
@@ -2055,7 +1953,7 @@ sub update_product {
 
 	$dbh->do(q{ Update tbl_products set project = ?, description = NULL where id = ?}, undef, $pid, $prod); 
 
-	return "/main/proj/proj_view.html?pid=$pid";
+	return "/main/proj/view.html?pid=$pid";
 
 }
 
@@ -2129,7 +2027,7 @@ sub complete_change_order {
   #send email
   eprint::order::send_sales_order($r, $log, $dbh, $order->{lngorderid}, 1);
 
-  return "/main/proj/proj_view.html?pid=" . ($change_order->{pid_to} ? $change_order->{pid_to} : $pid);
+  return "/main/proj/view.html?pid=" . ($change_order->{pid_to} ? $change_order->{pid_to} : $pid);
 }
 
 sub complete_project {
@@ -2138,7 +2036,7 @@ sub complete_project {
 	require eprint::employee_project;
     eprint::employee_project::complete_project( $r, $dbh, $pid, $var);
 
-	return "/main/proj/proj_view.html?pid=$pid";
+	return "/main/proj/view.html?pid=$pid";
 
 
 }
@@ -2147,7 +2045,7 @@ sub update_order {
     my ($r, $log, $dbh, $cookie, $var, $pid) = @_;
 print STDERR "UPDATE MY ORDER - $cookie - $pid \n";
 	eprint::order::update_order($r, $log, $dbh, $cookie, $var, $pid);
-	return "/main/proj/proj_view.html?pid=$pid";
+	return "/main/proj/view.html?pid=$pid";
 	
 
 }
@@ -2372,20 +2270,17 @@ sub inventory_checkout {
 
 
 sub edit_project {
-    my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
+  my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
 
-    my $modified = edit_process(@_);
+  my $modified = edit_process(@_);
 
-    # Send for a full recalculate if the quantities have changed. Otherwise
-    # the build process will just pickup any added services.
+  # Send for a full recalculate if the quantities have changed. Otherwise
+  # the build process will just pickup any added services.
 
-    my $p = $r->param('create_to_order') ? ";create_to_order=1" : ''; 
+  my $p = $r->param('create_to_order') ? ";create_to_order=1" : ''; 
 
-	$modified = 2;
-print STDERR "EDIT: $modified, $p \n\n";
-    return $modified 
-        ? BUILD_PAGE . "?pid=$pid" . ($modified > 1 ? ';level=0' : '') . $p
-        : VIEW_PAGE  . "?pid=$pid" . $p;
+  $modified = 2;
+  return $modified ? BUILD_PAGE . "?pid=$pid" . ($modified > 1 ? ';level=0' : '') . $p : VIEW_PAGE  . "?pid=$pid" . $p;
 }
 
 sub copy {
@@ -2462,10 +2357,7 @@ sub remove_item {
     my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
 
     my $sid = $r->param('sid') or die "Invalid service ID";
-
-    # We're modifying the project (should be a DB trigger)
-    sql::update( $log, $dbh, 'tbl_Projects', "lngProjectIndex = $pid", dtmLastModified => 'NOW()', );
-
+    sql::update( $log, $dbh, 'tbl_Projects', ['lngProjectIndex=?', $pid], dtmLastModified => 'NOW()');
     remove_service($log, $dbh, $pid, $sid);
 
     # See if we need to recalculate anything.
@@ -2546,7 +2438,7 @@ sub edit_line_item {
 
 	#return BUILD_PAGE . "?pid=$pid;edit=11111";
 	#
-    return "/main/proj/proj_view.html?pid=$pid;edit=$edit";
+    return "/main/proj/view.html?pid=$pid;edit=$edit";
 }
 
 
