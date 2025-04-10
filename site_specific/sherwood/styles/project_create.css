@@ -360,13 +360,8 @@ h2#pricing_title {
 }
 
 div#pricing {
-	_height: 1%;	/* IE6 Float Fix */
-
 	margin-bottom: 1.5ex;
-	_margin-bottom: 4ex;
-	_padding-top: 1ex;
-	padding-left: 3em;
-	
+	padding: 0 1em; /* 3em; */
 	background-color: #AACCFF;
 	border: 2px solid #0B0D60;
 }
