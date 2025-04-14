@@ -261,26 +261,6 @@ sub best_fit {
 
   # TODO normalize this during printing page input validation.
   my $grain = $project->{grain} eq '' ? undef : $project->{grain} ? 1 : 0;
-
-  #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
-  for my $style (@styles) {
-
-    # Inline bindery can not be W/TF if one up. TODO: How about checking for stock cuttable instead of envelopes
-    next if $style =~ /^W[TF]$/ && ( $is_one_up || $project->{type} eq 'Envelopes' );
-
-    # Envelopes imposition is exactly the size of the envelope
-    # (currently). So just return that with the style (SW/PF).
-    return ($style, $lookup[$$self][0]) if $project->{type} eq 'Envelopes';
-
-    my $rotated  = 0;
-    my @dims     = qw(width height);
-
-    BEST_FIT:
-    {
-      my ($w, $h) = @$sheet{@dims}; # Imagable area.
-
-  # TODO normalize this during printing page input validation.
-  my $grain = $project->{grain} eq '' ? undef : $project->{grain} ? 1 : 0;
   #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
   for my $style (@styles) {
 
