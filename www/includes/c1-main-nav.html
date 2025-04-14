@@ -21,17 +21,16 @@
 											</form>
 										</div>
 
-											<? if ( $$variable{user_type} )?>
-												<div class="tab">
-													<div id="accountLabel">
-														Account:&nbsp;<br />
-														User:&nbsp;</div><!-- &nbsp;'s for consistant white-space'ing -->
-													<div id="accountValue">
-														<a href="/main/account/account_select_customer.html"><?user.company.name?></a><br />
-														<?user.name?>
-													</div>
-												</div>
-											<? endif ( $$variable{user_type} )?>
-
-										</div>
+                    <? if ( $$variable{user_type} )?>
+                    <div class="tab">
+                      <div id="accountLabel">
+                        Account:&nbsp;<br />
+                        User:&nbsp;</div><!-- &nbsp;'s for consistant white-space'ing -->
+                      <div id="accountValue">
+                        <a href="/main/account/account_select_customer.html"><?user.company.name?></a><br />
+                        <?user.name?>
+                      </div>
+                    </div>
+                    <? endif ( $$variable{user_type} )?>
+									</div>
 									<!-- End Tabs -->
