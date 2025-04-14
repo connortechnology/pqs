@@ -5,6 +5,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 use Carp qw( cluck );
 require Math::Round;
+require POSIX;
 
 use openprint ();
 use vars qw( $log %variable %config );
@@ -28,7 +29,6 @@ require openprint::StockWeight;
 #require openprint::StockMaterial;
 #require openprint::Equipment_Stock_Setting;
 #require openprint::PaperInventory;
-require POSIX;
 require openprint::PaperRecommendation;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
@@ -725,6 +725,7 @@ sub height {
 	return $$self{height};
 } # end if
 
+# It is nearly impossible to accurately figure out the mweight of an envelope, we can do *2, but that's not accurate.
 sub mweight {
 	my $self = shift;
 	if ( @_ ) {
@@ -750,7 +751,7 @@ $openprint::log->debug("Setting mweight to $$self{mweight} from wpsi $wpsi and b
 			$$self{mweight} = Math::Round::round(($$self{basis_mweight}*$$self{width}*$$self{height})/($self->basis_width()*$self->basis_height()));
 $openprint::log->debug("Auto calcing mweight from basis" . $self->weight() );
 		} elsif ( ! $self->weight() =~ /\D/ ) {
-			# weigiht of 500sheets of 25x38
+			# weight of 500sheets of 25x38
 $openprint::log->debug("Auto calcing mweight from " . $self->weight() );
 			$$self{mweight} = Math::Round(($self->weight()*$$self{width}*$$self{height})/($self->basis_width()*$self->basis_height()));
 		} # end if
@@ -819,7 +820,8 @@ sub Owner {
 		$$self{owner_id} = $Owner->id();
 	} # end if
 	return new openprint::Company( $$self{owner_id} );
-} # endn sub Owner
+} # end sub Owner
+
 sub owner {
 	my $self = shift;
 	my $Company;
@@ -839,6 +841,7 @@ sub owner {
 	} # end if
 	return $Company->name();
 } # end sub owner
+
 sub owner_id {
 	my $self = shift;
 	if ( @_ ) {
@@ -846,7 +849,7 @@ sub owner_id {
 		#$$self{owner_id} =~ s/\D//g;
 	} # end if
 	return $$self{owner_id};
-} # end sub owner
+} # end sub owner_id
 
 # This function assumes that the skid contents have already been updated
 sub add_inventory {
