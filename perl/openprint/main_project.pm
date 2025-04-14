@@ -204,34 +204,38 @@ sub view {
 				my $new_status = $param{Status} ? $param{Status} : 'calculated';
 				$Service->save({ status=>$new_status }) if (!$Service->status()) or ( ( $Service->status() ne $new_status ) and ( $Service->status() ne 'Completed' ) );
 
-				if ( $Project->currency_id() != $openprint::Currency->id() ) {
+				if ( (!$Project->currency_id()) or ($Project->currency_id() != $openprint::Currency->id())) {
 					$Project->add_to_log( @session{'company_id','user_id'}, 'Currency changed from '.$Project->Currency()->name() . ' to '. $openprint::Currency->name() );
 					$Project->currency_id( $openprint::Currency->id() );
 				} # end if
 
 				$Project->lock();
         my $project_type = $Project->Type()->type();
-
-        my $calc = ('openprint::Estimating::'.$project_type)->can('calc');
-        if ($calc) {
-          my $s = openprint::service::internal_calc( $log, $dbh, \%variable, $project_id, $$services{''}[0], $project_type);
-          if ( $$s{Status} ne 'calculated' ) {
-            $log->error("Error calculating Project service");
-            # Don't want to redirect because it would be annoying.  Just go to view.
+        if ($project_type) {
+          my $calc = ('openprint::Estimating::'.$project_type)->can('calc');
+          if ($calc) {
+            my $s = openprint::service::internal_calc( $log, $dbh, \%variable, $project_id, $$services{''}[0], $project_type);
+            if ( $$s{Status} ne 'calculated' ) {
+              $log->error("Error calculating Project service");
+              # Don't want to redirect because it would be annoying.  Just go to view.
+            } else {
+              $calc = ('openprint::Estimating::'.$project_type)->can('calculate_signatures');
+              $calc->($Project) if $calc;
+            }
           } else {
-            $calc = ('openprint::Estimating::'.$project_type)->can('calculate_signatures');
-            $calc->($Project) if $calc;
+            $log->error("No calc for $project_type");
           }
         } else {
-$log->error("No calc for $project_type");
+          $log->error("Unable to determine project type");
         }
-				openprint::service::auto_calculate($Project, $service_index);
+        #openprint::service::auto_calculate($Project, $service_index);
 				$Project->update_status();
 				$Project->unlock();
 		
 				$Project->summary(undef);
 				$Project->save( { calculated_on => 'NOW()' } );
-				openprint::print_project::continue_project($Project);
+        $variable{ExternalRedirect} = $Project->url_to();
+        #openprint::print_project::continue_project($Project);
 				return if $variable{ExternalRedirect};
 			} elsif ( $param{btnFunction} eq 'Modify Project' ) {
 				my $service_name = $param{txtServiceName} ? $param{txtServiceName} : 'Adjustment';
@@ -400,23 +404,31 @@ sub calc {
 	if ( $param{ServiceIndex} ) {
 		my $Service = $Project->Service( $param{ServiceIndex} );
 	}
-	if ( ! $Service ) {
+	if (!$Service and $param{ServiceType}) {
 		$Service = new openprint::Project_Service();
 		$Service->set({ project_id=>$Project->id(), service_type=>openprint::ServiceType->transform(name=>$param{ServiceType}) } );
 	}
 
+  if (!($Service and $Service->service_type())) {
+    $log->error("Unable to determine service type");
+    return (alert=>'Unable to determine service type.');
+  }
 	eval {
     # FIXME potential security problem here, need to sanitise service_type
 		require 'openprint/Estimating/'.$Service->service_type().'.pm';
 	};
-	$log->error("Error requiring $$Service{service_type}: $@") if $@;
-	my $module = 'openprint::Estimating::'.$Service->service_type();
+  if ($@) {
+    $log->error("Error requiring $$Service{service_type}: $@");
+    return (alert=>"Unable to load code for $$Service{service_ype}.");
+  }
+  my $module = 'openprint::Estimating::'.$Service->service_type();
 
 	$param{method} = 'calc' if ! $param{method};
 # Not sure this is a good idea, but its neccessary for printing... why is it neccessary?
+  # I think soas to populte the cache with live values instead of whats in the db
 	$openprint::service::specs_cache{$param{ServiceIndex}} = \%param if $param{ServiceIndex};
 	my %specs = %param;
-	if ( my $function = $module->can( $param{method} ) ) {
+	if (my $function = $module->can( $param{method})) {
 		$log->debug("Can do $module -> $param{method}");
 		$specs{Status} = $function->( $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'}, $$Service{service_type}, \%specs );
 	} else {
