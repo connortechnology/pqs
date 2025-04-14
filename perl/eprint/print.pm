@@ -556,8 +556,7 @@ sub display_project {
         # SERVICE TYPE CATEGORY
         #
         # Who do we belong to?
-        $category{ $service->{category} } = {} 
-            unless exists $category{ $service->{category} };
+        $category{ $service->{category} } = {} unless exists $category{ $service->{category} };
         
         my $cat = $category{ $service->{category} };
 
@@ -649,11 +648,9 @@ sub display_project {
         # that aren't in the 'allowed' additional services.
         if (  !$variable->{is_staff} 
             && $has_locked_services 
-            && !exists $allowed->{ $service->{type} } )
-        {
+            && !exists $allowed->{ $service->{type} } ) {
             delete $service->{url};
-        }
-        elsif ($flags{can_edit} && $service->{status} ne 'dependent' && !$disabled) {
+        } elsif ($flags{can_edit} && $service->{status} ne 'dependent' && !$disabled) {
           my @controls;
 
           my $name = lc $service->{ref};
