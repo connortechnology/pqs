@@ -1,0 +1,32 @@
+
+.Service input.calliper_pt {
+width: 35px;
+}
+.Service input.calliper_mm, 
+.Service input.calliper, #size, #width, #height {
+width: 55px;
+}
+
+#div#pricing {
+  padding: 0;
+}
+
+div#pricing fieldset{
+  margin-bottom: 1.5ex;
+  padding: 0 1em;
+
+  background-color: #AACCFF;
+  border: none; /*2px solid #0B0D60;*/
+}
+div#pricing ul {
+  display: flex;
+}
+
+div#pricing .breakdowns {
+  background: white;
+  border: 2px solid #0B0D60;
+}
+
+div#pricing label {
+  border-bottom: 1px solid #0B0D60;
+}
