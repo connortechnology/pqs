@@ -24,7 +24,7 @@
 <? echo (
 	my $html;
 	my @Suppliers = openprint::Company->find( supplier =>'Y');
-  my @Owners = openprint::Company->find(offers_credit=>1) if $openprint::Company::fields{offers_credit};
+  my @Owners = openprint::Company->find($openprint::Company::fields{offers_credit} ? (offers_credit=>1): ());
   my $Pricelists = openprint::Pricelist->dropdown(order=>'lower('.$openprint::Pricelist::fields{name}.')');
 
 	my $cat;
