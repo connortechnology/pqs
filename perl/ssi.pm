@@ -1069,8 +1069,8 @@ sub button {
     # Default non-a types to a button
     $$options{type} = 'button';
   } # end if
-  $$options{text} = $$options{value} if ! $$options{text};
-  $$options{text} = $name if ! $$options{text};
+  $$options{text} = $$options{value} if ! exists $$options{text} and exists $$options{value};
+  $$options{text} = $name if ! exists $$options{text};
   if ( $$options{text} and ! $$options{value}) {
     $$options{value} = $$options{text};
   }
@@ -1087,6 +1087,13 @@ sub button {
   #$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
   $html .= join(' ', map { ($_ eq 'onclick' or $_ eq 'text') ? () : $_.'="'.$$options{$_}.'"' } ( keys %{$options} ) );
   $html .= '>';
+	if ( $$options{image} ) {
+		if ( $openprint::config{ButtonsUseImages} and ($openprint::config{ButtonsUseImages} eq 'true') ) {
+			$html .= "<img src=\"/images/buttons/off/$$options{image}\" id=\"ButtonImage$name\"";
+		} else {
+			$html .= "<img src=\"$$options{image}\" id=\"ButtonImage$name\"";
+		} # end if
+  }
   $html .= $$options{text};
   $html .= $$options{type} ? '</button>
 ' : '</a>

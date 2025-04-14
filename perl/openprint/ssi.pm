@@ -591,8 +591,8 @@ sub button {
     # Default non-a types to a button
     $$options{type} = 'button';
 	} # end if
-	$$options{text} = $$options{value} if ! $$options{text};
-	$$options{text} = $name if ! $$options{text};
+	$$options{text} = $$options{value} if ! exists $$options{text} and $$options{value};
+	$$options{text} = $name if ! exists $$options{text};
   if ( $$options{text} and ! $$options{value}) {
     $$options{value} = $$options{text};
   }
