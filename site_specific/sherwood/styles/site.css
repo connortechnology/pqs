@@ -841,3 +841,33 @@ button[disabled='disabled'] {
 .Service ul li label {
   float: none;
 }
+.Service ul li label {
+  width: 175px;
+  display: inline-block;
+}
+
+#ButtonBug {
+  background-color: #0B0D60;
+}
+#ButtonBug:hover {
+  background-color: #1D23F4;
+  border: 1px solid #1D23F4;
+}
+#ButtonBug img {
+  height: 28px;
+}
+#BugReport p {
+  text-align: left;
+  display: flex;
+}
+#BugReport p.buttons {
+  text-align: right;
+  flex-direction: row-reverse;
+}
+#BugReport p label {
+  width: 75px;
+}
+#BugReport input ,
+#BugReport textarea {
+  width:80%;
+}
