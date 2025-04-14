@@ -1500,7 +1500,7 @@ function popup_window( url, parameters, options ) {
 		popupWin = new Window(defaults);
 
 		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
+		var myObserver = {
       onDestroy: function(eventName, win) {
 				if (win == popupWin) {
 					popupWin = null;
