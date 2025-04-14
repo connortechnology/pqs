@@ -2,7 +2,7 @@
 <h1>Bugs</h1>
 <h2>History</h2>
 </div>
-<script type="text/javascript">
+<script>
 	function delete_confirm(form) {
 		var number_of_deleted_bugs = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -26,7 +26,7 @@
 		new Ajax.Updater('BugList','_history.html', {parameters:Form.serialize(form)});
 	} // end function
 </script>	 
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <? if ( $session{'user_id'} ) ?>
 <div class="Bug"><div class="History">
 	<form id="f1" name="f1" method="post" action="/bug/history.html">
@@ -41,26 +41,26 @@
 			</p>
 			<p>
 				<label>Created</label>
-<? echo ( ssi::date_select_session( '/bug/history.html', 'created_on_start', {onchange=>q`load_bugs($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+<? echo ( date_select_session( '/bug/history.html', 'created_on_start', {onchange=>q`load_bugs($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/bug/history.html', 'created_on_end', {onchange=>q`load_bugs($('f1'));`, 'with_clear'=>1,'with_today'=>1} ); ) ?>
+<? echo ( date_select_session( '/bug/history.html', 'created_on_end', {onchange=>q`load_bugs($('f1'));`, 'with_clear'=>1,'with_today'=>1} ); ) ?>
 			</p>
 			</div>
 			<div class="rightColumn">
-			<ul><li>
+        <p>
 				<label>Employee</label>
 				<select name="user_id" id="user_id" onchange="load_bugs(this.form);">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( openprint::User->dropdown( company_id=>$session{company_id}, order=>'lower(firstname),lower(lastname)'), $session{'/bug/history.html?user_id'} ); ) ?>
+          <? echo ( make_drop_down( openprint::User->dropdown(company_id=>$openprint::Owner->id()), $session{'/bug/history.html?user_id'} ); ) ?>
 				</select>
-			</li></ul>
+        </p>
 			</div>
 			<br class="spacer"/>
 			<p class="buttons">
-				<? echo ( join('',
-					ssi::button( 'ShowResults', { onclick=>"load_bugs(f1);",text=>'Show Results' } ),
-					ssi::button( 'Reset', { onclick=>'f1.reset();',text=>'Reset' } ),
-					ssi::button( 'New', { onclick=>'', href=>'/bug/edit.html', text=>'New Bug' } ),
+				<? echo ( join("\n",
+					button( 'ShowResults', { onclick=>"load_bugs(f1);", text=>'Show Results' } ),
+					button( 'Reset', { onclick=>'f1.reset();' } ),
+					button( 'New', { onclick=>'', href=>'/bug/edit.html', text=>'New Bug' } ),
 					); ) ?>
 			</p>
 		</fieldset>
