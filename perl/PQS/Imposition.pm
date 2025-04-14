@@ -1,4 +1,4 @@
-package PQS::Imposition; {
+package PQS::Imposition;
 use strict;
 use warnings;
 
@@ -19,7 +19,7 @@ no warnings qw(uninitialized);
 use constant BOUNDS => [
     eprint::Config->get(Imposition => 'bound_x'),
     eprint::Config->get(Imposition => 'bound_y'),
-]; 
+];
 
 my @project :Field(Name => 'project');
 my @lookup  :Field(Name => 'lookup');
@@ -48,7 +48,7 @@ sub _init :Init {
   # Our imposition code wasn't in an object before, we'll wrap it in
   # it's own little closure type environment until we have time to
   # refactor it.
-  local @images = (); 
+  local @images = ();
   local $cache  = {};
 
   {
@@ -76,8 +76,7 @@ sub _init :Init {
   }
 
   # Our file cache (shared between children).
-  my $result_cache = Cache::FileCache->new({ namespace => 'imposition' })
-    or die "Couldn't initialise cache: $!";
+  my $result_cache = Cache::FileCache->new({ namespace => 'imposition' }) or die "Couldn't initialise cache: $!";
 
   {
     my $end =  Time::HiRes::time() - $start_time;
@@ -181,43 +180,42 @@ sub _init :Init {
 # Generate the image information from the project. TODO The images would
 # probably be better suited as objects.
 sub images { # :Private
-    my ($self, $grain)  = @_;
+  my ($self, $grain)  = @_;
 
-    my $project = $project[$$self];
-    my ($w, $h) = @$project{qw(width height)}; # Image (w x h)
-    my @bleed   = @{ $project->{bleed} };
+  my $project = $project[$$self];
+  my ($w, $h) = @$project{qw(width height)}; # Image (w x h)
+  my @bleed   = @{ $project->{bleed} };
 
-    if(!( $w >= 0.25 && $h >= 0.25)) {
-      print STDERR "Invalid sizes ($w x $h)";
-      return ();
-    }
-   
-    # Drop dead simple (and wrong) bindery trim/grind-off space. Basically we
-    # just expand any bleeds there might be to at least the trim size.
-    # TODO Really it should be usable (for gutters, etc.) non-printing space.
-    my $trim = $project->{trim};
-    @bleed   = map { max($trim, $_) } @bleed;
+  if(!( $w >= 0.25 && $h >= 0.25)) {
+    print STDERR "Invalid sizes ($w x $h)";
+    return ();
+  }
 
-    # Add the bleeds to the appropriate image sides.
-    $w += $bleed[L] + $bleed[R];
-    $h += $bleed[T] + $bleed[B];
+  # Drop dead simple (and wrong) bindery trim/grind-off space. Basically we
+  # just expand any bleeds there might be to at least the trim size.
+  # TODO Really it should be usable (for gutters, etc.) non-printing space.
+  my $trim = $project->{trim};
+  @bleed   = map { max($trim, $_) } @bleed;
 
-    my @images;
-    
-    if (($grain eq '') || $grain == 0) {
-        push @images, [ $w, $h, 0, \@bleed, 0 ];
-    }
-    
-    # If the grain direction isn't constrained and we're not a multipage
-    # project (not handled yet) we can try the rotated version as well. TODO
-    # The image format is an array of stuff, make it an object or something.
-    if (($grain eq '') || $grain == 1) {
-        push @images, [ $h, $w, 0, [ @bleed[R, B, L, T] ], 1 ];
-    }
+  # Add the bleeds to the appropriate image sides.
+  $w += $bleed[L] + $bleed[R];
+  $h += $bleed[T] + $bleed[B];
 
-    return @images;
+  my @images;
+
+  if (($grain eq '') || $grain == 0) {
+    push @images, [ $w, $h, 0, \@bleed, 0 ];
+  }
+
+  # If the grain direction isn't constrained and we're not a multipage
+  # project (not handled yet) we can try the rotated version as well. TODO
+  # The image format is an array of stuff, make it an object or something.
+  if (($grain eq '') || $grain == 1) {
+    push @images, [ $h, $w, 0, [ @bleed[R, B, L, T] ], 1 ];
+  }
+
+  return @images;
 }
-
 
 # Add an image to the imposition (invalidates the cache and calculations).
 # sub add_image { }
@@ -281,6 +279,26 @@ sub best_fit {
     {
       my ($w, $h) = @$sheet{@dims}; # Imagable area.
 
+  # TODO normalize this during printing page input validation.
+  my $grain = $project->{grain} eq '' ? undef : $project->{grain} ? 1 : 0;
+  #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
+  for my $style (@styles) {
+
+    # Inline bindery can not be W/TF if one up.
+    next if $style =~ /^W[TF]$/ && ( $is_one_up || $project->{type} eq 'Envelopes' );
+
+    # Envelopes imposition is exactly the size of the envelope
+    # (currently). So just return that with the style (SW/PF).
+    return ($style, $lookup[$$self][0]) if $project->{type} eq 'Envelopes';
+
+    my $rotated  = 0;
+    my @dims     = qw(width height);
+
+
+    BEST_FIT:
+    {
+      my ($w, $h) = @$sheet{@dims}; # Imagable area.
+
       #print STDERR "STEP BEST FIT: $w x $h \n";
       # TODO move to substrate section (substrate section needs to pass
       # both rotated and unrotated sheets per press). Hrmm... though if
@@ -290,6 +308,7 @@ sub best_fit {
       if (!sheet_fits_press(@$sheet{@dims}, $press) && !$rotated) {
         @dims = reverse @dims;
         $rotated = 1;
+
         redo BEST_FIT;
       }
 
@@ -306,9 +325,6 @@ sub best_fit {
         # grip and colour bar at the head.
         if ($style eq 'WF') { $h -= 2 * max($press->{grip} , $cb) }
         else                { $h -=         $press->{grip} + $cb  }
-
-        #                if ($style eq 'WF') { $h -= 2 * max($press->{grip} , $project->{colour_bar}) }
-        #                else                { $h -=         $press->{grip} + $project->{colour_bar}  }
 
         #print STDERR "STEP BEST FIT WF: $w x $h,  GRIP: $press->{grip}, CB: $cb \n";
         # Most presses can't print to the absolute edge of the sheet.
@@ -367,17 +383,15 @@ sub best_fit {
   #Swapped Sort order, card is top of list, then check wt/wf
   #reversed back to the what it was in older versions.
   my $node = (
-    sort { $b->[1]->card <=> $a->[1]->card } 
+    sort { $b->[1]->card <=> $a->[1]->card }
     sort { $b->[0]       cmp $a->[0]       } # Prefere WT over WF
-    grep { $_->[1] } 
+    grep { $_->[1] }
     @possible
   )[0];
 
 
   #no warnings qw(uninitialized);
-
-  print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ", Dumper(@possible);
-
+  #print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ", Dumper(@possible);
 
   # TEMP: Simple call for now.
   return $node->[0] ? @$node : (undef, undef);
@@ -385,12 +399,12 @@ sub best_fit {
 
 # Determine if a given sheet size will fit on the given press.
 sub sheet_fits_press {
-    my ($w, $h, $press) = @_;
+  my ($w, $h, $press) = @_;
 
-    return $w <= $press->{maximum_sheet_width}
-        && $h <= $press->{maximum_sheet_length}
-        && $w >= $press->{minimum_sheet_width}
-        && $h >= $press->{minimum_sheet_length};
+  return $w <= $press->{maximum_sheet_width}
+  && $h <= $press->{maximum_sheet_length}
+  && $w >= $press->{minimum_sheet_width}
+  && $h >= $press->{minimum_sheet_length};
 }
 
 
@@ -429,222 +443,211 @@ sub find_fit {
 # coded in. The first should be a private object variable the second a
 # callback.
 sub fill_box :Private {
-    my ($box) = @_;              # Bounding box (w×h)
-    my $size  = join 'x', @$box; # Node size.
+  my ($box) = @_;              # Bounding box (w×h)
+  my $size  = join 'x', @$box; # Node size.
 
-    my @forest;                  # Possible impositions for size.
+  my @forest;                  # Possible impositions for size.
 
-    # If we've already been calculated just reference our table entry.
-    return $cache->{$size} if exists $cache->{$size};
+  # If we've already been calculated just reference our table entry.
+  return $cache->{$size} if exists $cache->{$size};
 
-    IMAGE:
-    for my $image (@images) {
-        # Don't bother with this image if it can't fit.
-        next IMAGE if $image->[W] > $box->[W] or $image->[H] > $box->[H];
-        
-        # TODO: If we prepopulate the cache with these nodes and mark the
-        # cache as incomplete (as other images may be able to fit within the
-        # space taken by a large image), will it be less expensive then
-        # checking this for every image on every node?
-        if ($image->[W] == $box->[W] and $image->[H] == $box->[H]) {
-            push @forest, PQS::Imposition::Node->new(
-                size  => $box,
-                image => $image->[ID],
-                bleed => $image->[BLEED],
-                grain => $image->[GRAIN],
-            );
-        }
-               
-        DIRECTION:
-        for my $dir (VERTICAL, HORIZONTAL) {
-            my ($bound, $len) = ($box->[$dir], $image->[$dir]); # -| to cut.
+  IMAGE:
+  for my $image (@images) {
+    # Don't bother with this image if it can't fit.
+    next IMAGE if $image->[W] > $box->[W] or $image->[H] > $box->[H];
 
-            next DIRECTION if $bound == $len;
-
-            # Fill the sub-boxes made by paritioning the box.
-            my @partitions = map { 
-                fill_box($dir ? [ $box->[W], $_        ] # Horizontal cut.
-                              : [ $_,        $box->[H] ] # Vertical cut.
-                );
-            } ($len, $bound - $len);
-
-            # Compare each pairing (cartesian product) of the two partitions
-            # and choose the best ones.
-            for my $n (@{ $partitions[HORIZONTAL] }) {
-                for my $p (@{ $partitions[VERTICAL] }) {
-                    my $node = PQS::Imposition::Node->new( # Faster than copying.
-                        size     => $box,
-                        cut      => $dir,
-                        children => [$n, $p],
-                    );
-
-                    # Can we be compared? If so are we better?
-                    my $has_similar;
-
-                    COMPARISON:
-                    for my $potential (@forest) {
-                      # The overloaded version of calling the comparison
-                      # somehow wasn't seeing private data.
-                      #
-                      # my $cmp = $node <=> $potential;
-
-                      my $cmp = PQS::Imposition::Node::compare($node, $potential);
-
-                      if (defined $cmp) {
-                        # We're better than the previous in our group.
-                        $openprint::log->debug("comparison $cmp ".Dumper($node) . ' and '.Dumper($potential));
-                        if ($cmp > 0) {
-                          $potential = $node;
-                        }
-
-                        # We've found our group, mark it and we're done.
-                        $has_similar = 1;
-                        last COMPARISON;
-                      } else {
-                        $openprint::log->debug("No comparison ".Dumper($node) . ' and '.Dumper($potential));
-                      }
-                    } #ned foreach potential in forest
-
-                    # Add us if we're first or no comparable node exists.
-                    if (!@forest or !$has_similar) {
-                        push @forest, $node;
-                    }
-                }
-            }
-        }
+    # TODO: If we prepopulate the cache with these nodes and mark the
+    # cache as incomplete (as other images may be able to fit within the
+    # space taken by a large image), will it be less expensive then
+    # checking this for every image on every node?
+    if ($image->[W] == $box->[W] and $image->[H] == $box->[H]) {
+      push @forest, PQS::Imposition::Node->new(
+        size  => $box,
+        image => $image->[ID],
+        bleed => $image->[BLEED],
+        grain => $image->[GRAIN],
+      );
     }
-    # If nothing matched, we're a blank node (represented as undefined).
-    @forest = (undef) unless @forest;
-    
-    return $cache->{$size} = \@forest;
-}
 
+    DIRECTION:
+    for my $dir (VERTICAL, HORIZONTAL) {
+      my ($bound, $len) = ($box->[$dir], $image->[$dir]); # -| to cut.
+
+      next DIRECTION if $bound == $len;
+
+      # Fill the sub-boxes made by paritioning the box.
+      my @partitions = map {
+      fill_box($dir ? [ $box->[W], $_        ] # Horizontal cut.
+      : [ $_,        $box->[H] ] # Vertical cut.
+      );
+      } ($len, $bound - $len);
+
+      # Compare each pairing (cartesian product) of the two partitions
+      # and choose the best ones.
+      for my $n (@{ $partitions[HORIZONTAL] }) {
+        for my $p (@{ $partitions[VERTICAL] }) {
+          my $node = PQS::Imposition::Node->new( # Faster than copying.
+            size     => $box,
+            cut      => $dir,
+            children => [$n, $p],
+          );
+
+          # Can we be compared? If so are we better?
+          my $has_similar;
+
+          COMPARISON:
+          for my $potential (@forest) {
+            # The overloaded version of calling the comparison
+            # somehow wasn't seeing private data.
+            #
+            # my $cmp = $node <=> $potential;
+
+            my $cmp = PQS::Imposition::Node::compare($node, $potential);
+
+            if (defined $cmp) {
+              # We're better than the previous in our group.
+              if ($cmp > 0) { $potential = $node; }
+
+              # We've found our group, mark it and we're done.
+              $has_similar = 1;
+              last COMPARISON;
+            }
+          }
+
+          # Add us if we're first or no comparable node exists.
+          if (!@forest or !$has_similar) {
+            push @forest, $node;
+          }
+        } # end foreach p
+      } # end foreach n
+    }
+  }
+  # If nothing matched, we're a blank node (represented as undefined).
+  @forest = (undef) unless @forest;
+
+  return $cache->{$size} = \@forest;
+}
 
 # TEMP: The sub-node generation is currently generating impositions with
 # spacing and sub-optimal results. We'll do a simple post-processing prune of
 # the cache to remove the worst of these.
 sub post_process :Private {
-    my ($trees, $cache) = @_;
+  my ($trees, $cache) = @_;
 
-    # UGLY! Refactor initial generation so we don't even need this. ASAP.
-    
-    my (@nodes, %seen);
-    
-    SIZE:
-    while (my ($size, $nodes) = each %{ $cache }) {
-        next SIZE unless ref $nodes eq 'ARRAY';
+  # UGLY! Refactor initial generation so we don't even need this. ASAP.
 
-        NODE:
-        for my $i (0..$#{ $nodes }) {
+  my (@nodes, %seen);
 
+  SIZE:
+  while (my ($size, $nodes) = each %{ $cache }) {
+    next SIZE unless ref $nodes eq 'ARRAY';
 
-            my $node = $nodes->[$i];
+    NODE:
+    for my $i (0..$#{ $nodes }) {
+      my $node = $nodes->[$i];
 
+      next NODE if !$node; # Skip invalid.
 
-            next NODE if !$node; # Skip invalid.
+      # Skip through trim nodes (nodes that contain only one other
+      # container node to trim off one side).
+      $node = ($node->children)[0] while $node->children == 1;
 
-            # Skip through trim nodes (nodes that contain only one other
-            # container node to trim off one side).
-            $node = ($node->children)[0]
-                while $node->children == 1;
+      # If the node is an image (leaf) add it to our lookup.
+      if ($node->is_sink) {
+        my $id = join 'x', @{ $node->size };
 
-            # If the node is an image (leaf) add it to our lookup.
-            if ($node->is_sink) {
-                my $id = join 'x', @{ $node->size };
+        next NODE if $seen{$id};
 
-                next NODE if $seen{$id};
-                
-                $seen{$id} = 1;
-                
-                push @nodes, $node; # Add to valid list.
-                next NODE;
-            }
+        $seen{$id} = 1;
 
-            # Now we'll look for extraneous white space, both parallel and
-            # perpendicular to the initial cut.
-            my ($w, $h) = @{ $node->size };
-            my $dir     = $node->cut;
+        push @nodes, $node; # Add to valid list.
+        next NODE;
+      }
 
-            my ($len_x, $max_y) = (0, 0);
-            for my $child ($node->children) {
-                # Parallel || dimension.
-                $len_x += $child->size->[$dir];
-    
-                # Perpendicular _|_.
-                my $len_y = 0;
-                for my $grandchild ($child->children) {
-                    $len_y += $grandchild->size->[!$dir];
-                }
-                
-                # Find the largest child perpendicular child.
-                $max_y = $len_y if $max_y < $len_y;
-            }
-            $max_y = $node->size->[!$dir] unless $max_y;
-            
-            my ($width, $height) = $dir ? ($max_y, $len_x) : ($len_x, $max_y);
+      # Now we'll look for extraneous white space, both parallel and
+      # perpendicular to the initial cut.
+      my ($w, $h) = @{ $node->size };
+      my $dir     = $node->cut;
 
-            # Now we'll create a new box sized exactly to the nodes.
-            if ($len_x < $w || $h > $max_y) {
-                my @box            = @{ $node->size }; # Inital size.
-                @box[ $dir, !$dir] = ($len_x, $max_y); # New size.
-                my $id             = join 'x', @box;   # New ID.
+      my ($len_x, $max_y) = (0, 0);
+      for my $child ($node->children) {
+        # Parallel || dimension.
+        $len_x += $child->size->[$dir];
 
-                # This size optimized node already exists.
-                next NODE if exists $seen{$id};
-
-                # Create trimmed down (y dimension) children.
-                my @children;
-                for my $child ($node->children) {
-                    my $new = $child; # New smaller child if needed.
-
-                    # If the child isn't an image or already the correct size.
-                    if (!$child->is_sink && $child->size->[$dir] < $max_y) {
-                        my @box     = @{ $child->size };
-
-                        $box[!$dir] = $max_y;
-
-                        # Create a new trimmed down node.
-                        $new = PQS::Imposition::Node->new(
-                            size  => \@box,
-                            cut   => $child->cut,
-                            grain => $child->grain,
-                        );
-                        $new->add_edge( $child->children );
-                    }
-
-                    push @children, $new;
-                }
-
-                # Now create the trimmed down current node.
-                my $new = PQS::Imposition::Node->new(
-                    size  => \@box,
-                    cut   => $dir,
-                    grain => $node->grain, 
-                );
-                $new->add_edge( @children );
-
-                # Mark that we've seen this node size (invalid for gang-run).
-                $seen{$id} = 1;
-
-                # Add whitespace nodes for accurate cutting and mirroring.
-                $new->mark_whitespace;
-
-                push @nodes, $new; # Add to valid list.
-            }
+        # Perpendicular _|_.
+        my $len_y = 0;
+        for my $grandchild ($child->children) {
+          $len_y += $grandchild->size->[!$dir];
         }
-    }
 
-    return wantarray ? @nodes : \@nodes;
+        # Find the largest child perpendicular child.
+        $max_y = $len_y if $max_y < $len_y;
+      }
+      $max_y = $node->size->[!$dir] unless $max_y;
+
+      my ($width, $height) = $dir ? ($max_y, $len_x) : ($len_x, $max_y);
+
+      # Now we'll create a new box sized exactly to the nodes.
+      if ($len_x < $w || $h > $max_y) {
+        my @box            = @{ $node->size }; # Inital size.
+        @box[ $dir, !$dir] = ($len_x, $max_y); # New size.
+        my $id             = join 'x', @box;   # New ID.
+
+        # This size optimized node already exists.
+        next NODE if exists $seen{$id};
+
+        # Create trimmed down (y dimension) children.
+        my @children;
+        for my $child ($node->children) {
+          my $new = $child; # New smaller child if needed.
+
+          # If the child isn't an image or already the correct size.
+          if (!$child->is_sink && $child->size->[$dir] < $max_y) {
+            my @box     = @{ $child->size };
+
+            $box[!$dir] = $max_y;
+
+            # Create a new trimmed down node.
+            $new = PQS::Imposition::Node->new(
+              size  => \@box,
+              cut   => $child->cut,
+              grain => $child->grain,
+            );
+            $new->add_edge( $child->children );
+          }
+
+          push @children, $new;
+        }
+
+        # Now create the trimmed down current node.
+        my $new = PQS::Imposition::Node->new(
+          size  => \@box,
+          cut   => $dir,
+          grain => $node->grain,
+        );
+        $new->add_edge( @children );
+
+        # Mark that we've seen this node size (invalid for gang-run).
+        $seen{$id} = 1;
+
+        # Add whitespace nodes for accurate cutting and mirroring.
+        $new->mark_whitespace;
+
+        push @nodes, $new; # Add to valid list.
+      }
+    }
+  }
+
+  return wantarray ? @nodes : \@nodes;
 }
 
 
 # Returns true if box A is the same size and orientations as box B. TODO:
 # Really we want to generalise this to == between two pairs (n,m).
 sub same_size :Private {
-    my ($n, $p) = @_;
-    return 1 if $p->[W] == $n->[W] and $p->[H] == $n->[H];
+  my ($n, $p) = @_;
+  return 1 if $p->[W] == $n->[W] and $p->[H] == $n->[H];
 }
 
-
-}
 1;
+__END__

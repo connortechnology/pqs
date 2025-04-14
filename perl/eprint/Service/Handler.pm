@@ -9,6 +9,8 @@ use Apache2::Log       ();
 
 use JSON::XS 2.0     qw(encode_json);
 use HTML::FillInForm ();
+use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
 
 use PQS::DB ();
 use PQS::Constants;
@@ -24,6 +26,7 @@ require misc;
 require eprint::login;
 require eprint::banner;
 require openprint;
+require openprint::www;
 
 use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *variable = \%openprint::variable;
@@ -42,11 +45,12 @@ use constant PROJECT_VIEW_PAGE  => '/main/proj/proj_view.html';
 
 sub handler {
   $request = shift;
+	$request->push_handlers(PerlCleanupHandler => \&openprint::www::cleanup);
     $r = Apache2::Request->new($request,
         POST_MAX        => 8096,
         DISABLE_UPLOADS => 1,
     );
-    my $variable = {};
+    my $variable = \%variable;
 
     # Process the request params.
     $r->parse;
@@ -174,10 +178,10 @@ print STDERR "Forbidden for $pid\n";
     if ($@) {
         my $err = $@;
 
-        $dbh->rollback;
+        #$dbh->rollback;
         $dbh->disconnect;
     
-        $r->log_error($err);
+        $log->error($err);
                 
         if (DEBUG) {
             require Error::StackTrace;
@@ -190,7 +194,7 @@ print STDERR "Forbidden for $pid\n";
         return SERVER_ERROR;
     }
   
-    $dbh->disconnect;
+    $dbh->disconnect if $dbh;
 
     return OK;
 }
@@ -249,17 +253,10 @@ sub response {
       #$dbh->rollback; # GET requests don't save.
 
       $specs->{status} = $status; # Send client the status
-      $openprint::log->debug("Response: ".Data::Dumper::Dump($specs));
+      $openprint::log->debug("Response: ".Data::Dumper::Dumper($specs));
       my $coder = JSON::XS->new->ascii->pretty->allow_nonref;
 
       my $response = $coder->encode( $specs );
-      if (0) {
-      my $response = $coder->encode(
-        $status eq 'calculated' 
-        ? $specs : 
-        { status => $status, error => $specs->{error} }
-      );
-    }
 
       $r->content_type('application/json; charset=utf-8');
       print $response;
@@ -316,12 +313,6 @@ sub show {
   $variable->{Project} = new openprint::Project($pid);
   $variable->{ServiceType} = $variable->{Project}->ServiceType($sid);
 
-# Display the banner advert.
-  if ( configuration::get_value($r->log, $dbh, 'UsesBanners') ) {
-	  $variable->{BANNER_AD} = eprint::banner::select_banner( $r->log, $dbh, @$variable{qw(cust_id user_id)});
-  }
-
-
   # Display/hide pricing based on customer default.
   $variable->{isServicePricing} = $$openprint::Company{ysnpricingservices};
 
@@ -343,12 +334,10 @@ sub show {
   close $fh or die "Can't close file: $!";
 
   if ($is_openprint) {
-    use openprint::www;
     $request->uri($service->{page});
     openprint::www::handler($request);
     my $output = '';
     return \$output;
-    #$html = openprint::ssi::variable_substitution(\$html, $variable);
   } else {
     use eprint::www;
     eprint::www::word_sub($variable);

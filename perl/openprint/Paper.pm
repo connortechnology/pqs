@@ -2013,7 +2013,7 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
     push @results, 'appears to be C1S, but is marked double sided.';
   }
 	if ( $Paper->weight() =~ /(\d+) *lb/i or $Paper->weight() =~ /(\d+) *#/) {
-		if ( int($Paper->basis_mweight()) != 2*$1 ) {
+		if ( int($Paper->basis_mweight()) < (2*$1-1) or int($Paper->basis_mweight()) > (2*$1+1) ) {
 			push @results, 'may have wrong basis weight ('.int($Paper->basis_mweight()).'. Should probably be '.2*$1;
 		}
 	}
