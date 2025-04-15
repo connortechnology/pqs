@@ -160,11 +160,33 @@ function calc_from_weight(form, id='') {
 }
 
 function set_basis_dimensions(width, height) {
-var basis_width = $('basis_width');
-if ( basis_width )
-	basis_width.value = width;
-var basis_height=$('basis_height');
-if ( basis_height )
-	basis_height.value = height;
-basis_weight_to_gsm($('f1'));
+  var basis_width = $('basis_width');
+  if ( basis_width )
+    basis_width.value = width;
+  var basis_height=$('basis_height');
+  if ( basis_height )
+    basis_height.value = height;
+  basis_weight_to_gsm($('f1'));
+}
+
+function calliper_onchange(element) {
+  let re = /(\d*)$/;
+  let matches = re.exec(element.name);
+  const signature = matches.length ? '-'+matches[1] : '';
+console.log(element, signature);
+  const form = element.form;
+  if (element.name.match(/^calliper_pt/)) {
+    form.elements['calliper'+signature].value = element.value/1000;
+    form.elements['calliper_mm'+signature].value = do_decimals(element.value*25.4/1000, 3);
+  } else if (element.name.match(/^calliper_mm/)) {
+    form.elements['calliper_pt'+signature].value = do_decimals(element.value*39.3701,1);
+    // Use PT to ensure consistency
+    form.elements['calliper'+signature].value = form.elements['calliper_pt'+signature].value/1000;
+  } else if (element.name.match(/^calliper/)) {
+    form.elements['calliper_pt'+signature].value = element.value*1000;
+    form.elements['calliper_mm'+signature].value = do_decimals(element.value*25.4, 3);
+  } else {
+    console.log("No match");
+  }
+  calc(element.form.name);
 }
