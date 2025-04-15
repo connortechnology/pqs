@@ -234,9 +234,6 @@ table .category td.description {
 .Service fieldset p {
 	text-align: left;
 }
-.AddToProjectButtons {
-	float: right;
-}
 
 .checkOption {
 	float: left;

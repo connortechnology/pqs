@@ -3,7 +3,6 @@
 	background-color: #DEDCB7;
 }
 .Service {
-min-width: 1000px;
 }
 .Service input[type="text"],
 .Service input[type="number"] {
@@ -281,4 +280,7 @@ width: 35px;
 #calliper_mm,
 #calliper, #size, #width, #height {
 width: 55px;
+}
+.AddToProjectButtons {
+	float: right;
 }
