@@ -11,7 +11,7 @@ require openprint;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults $default_sort);
 
-$debug = 1;
+$debug = 0;
 $table = 'pricelist';
 $default_sort = 'lower(name)';
 $serial = 'price_list_id_seq';
