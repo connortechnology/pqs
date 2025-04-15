@@ -3,16 +3,18 @@ use warnings;
 package openprint;
 use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser $Host);
 
+*Currency = \$openprint::Currency;
+
 use constant Debug => 1;
 
 require openprint::Host;
 require openprint::Host_Interface;
 
-	require Apache2::Cookie;
-	require Apache::Session::Postgres;
-	require openprint::Pricelist;
-	require openprint::Currency;
-	require DateTime::TimeZone;
+require Apache2::Cookie;
+require Apache::Session::Postgres;
+require openprint::Pricelist;
+require openprint::Currency;
+require DateTime::TimeZone;
 
 sub session_init {
 
@@ -118,29 +120,29 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 	if ( $param{Currency} ) {
 		my $short = $param{Currency};
 		$short = substr( $short, 0, 3 );
-		$_ = openprint::Currency->find_one( short => $short );
-		$session{Currency_id} = $_->id() if $_;
+		$Currency = openprint::Currency->find_one( short => $short );
+		$session{Currency_id} = $Currency->id() if $Currency;
 	} elsif ( $param{select_currency_id} ) {
 		$param{select_currency_id} = openprint::Currency->transform( id=>$param{select_currency_id} );
 		if ( $param{select_currency_id} ) {
-			my $Currency = new openprint::Currency( $param{select_currency_id} );
+			$Currency = new openprint::Currency( $param{select_currency_id} );
 			$session{Currency_id} = $Currency->id();
 		} # end if
 	}
 	if ( ! $session{Currency_id} ) {
 		if ( $config{currency_id} ) {
-			my $C = openprint::Currency->find_one( id => $config{currency_id} );
-			if ( ! $C ) {
+			$Currency = openprint::Currency->find_one( id => $config{currency_id} );
+			if ( ! $Currency ) {
 				$log->error("The default currency $config{currency_id} was not found in db!");
 			} else {
-				$session{Currency_id} = $C->id();
+				$session{Currency_id} = $Currency->id();
 			}
 		} elsif ($config{Currency}) {
-			my $C = openprint::Currency->find_one( short => $config{Currency} );
-			if ( ! $C ) {
+			$Currency = openprint::Currency->find_one( short => $config{Currency} );
+			if ( ! $Currency ) {
 				$log->error("The default currency $config{Currency} was not found in db!");
 			} else {
-				$session{Currency_id} = $C->id();
+				$session{Currency_id} = $Currency->id();
 			}
     } else {
 			$log->warn('Please specify a default currency!');
@@ -149,7 +151,7 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 
 	$Company = new openprint::Company( $session{company_id} );
 	$Owner = new openprint::Company( $config{owner_id} );
-	$Currency = new openprint::Currency( $session{Currency_id} );
+	$Currency = new openprint::Currency( $session{Currency_id} ) if !$Currency;
 	$log->debug("Company: $$Company{name} $$User{email} $session{user_type}") if $$User{id};
 
 	if ( $config{Pricelist} ) {
