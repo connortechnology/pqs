@@ -1,0 +1,75 @@
+<div class="PageTitle">
+  <h1>Project <?echo($$variable{Project}->link_to())?></h1>
+  <h2><?ServiceTypeName?></h2>
+</div>
+<div class="Service">
+	<form id="f1" name="f1" method="post" action="/openprint/main/project/view.html">
+
+<? echo (
+  $$variable{type_options} = ['', 'None', map { $_->name(), $_->description() } openprint::Material->find(category=>'Lamination Types') ];
+  my $html = '';
+
+  my $project = $$variable{Project};
+
+  foreach my $sig_id ($project->signatures( { sort => 1 } )) {
+    my $service = $project->Service($sig_id);
+    my $sig_specs = $service->specs();
+    my $form = $$variable{SignatureIndex} = $$sig_specs{SignatureIndex} // 1;
+    
+    $html .= '<fieldset><legend>Signature '.$form.'</legend>
+      Information for '.$service->summary().'<br/>
+      <ul>';
+    $html .= join("\n",
+        '<li><label>Dimensions</label>',
+      input(type=>'float',name=>'txtWidth-'.$form, value=>$$variable{'txtWidth-'.$form}, oninput=>'calc(this.form.name);'),
+      'x',
+      input(type=>'float',name=>'txtHeight-'.$form, value=>$$variable{'txtHeight-'.$form}, oninput=>'calc(this.form.name);'),
+      write_override( 'chkOverrideDimensions-'.$form, $$variable{'chkOverrideDimensions-'.$form}, '', q`calc('f1');` ),
+    );
+    $html .= '(W x H) in inches</li>';
+    $html .= ssi::include('/openprint/includes/main/proj/signature_stock_calliper.html');
+    $html .= '<li><label>Type for front</label>
+      ';
+      $html .= ssi::select($$variable{type_options}, $$variable{'TypeFront-'.$form}, {
+      name=>'TypeFront-'.$form,
+      , size=>1, onchange=>'calc(this.form.name);' }
+      );
+    $html .= '</li>
+      <li><label>Type for back</label>
+        ';
+        $html .= ssi::select($$variable{type_options}, $$variable{'TypeBack-'.$form}, {
+        name=>'TypeBack-'.$form,
+        , size=>1, onchange=>'calc(this.form.name);' }
+      );
+      $html .= '</li>';
+      $html .= include('/includes/main/proj/signature_equipment.html');
+      $html .= '
+          </ul>
+      </fieldset>
+      ';
+      } # end foreach sig
+      return $html;
+)?>
+
+    <div id="pricing">
+		<fieldset><legend>Pricing</legend>
+			<ul>
+		<?include(/includes/main/proj/quantities_prices.html) ?>
+			</ul>
+		</fieldset>
+    </div>
+		<hr/>
+		<?include(/includes/main/proj/add_to_project.html) ?>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
+		<input type="hidden" name="Status"/>
+	</form>
+</div>
+<script src="<?hash_link(/openprint/javascripts/service.js)?>"></script>
+<script src="<?hash_link(/openprint/javascripts/paper.js)?>"></script>
+<script>
+  Event.observe(window, 'load', function() {
+      //calc_from_calliper(document.getElementById('calliper-1'));
+      calc('f1'); }); </script>
