@@ -1,0 +1,20 @@
+<li class="calliper"><label>Calliper</label>
+<? echo (
+    my $form = $$variable{SignatureIndex} // 1;
+    return join("\n",
+    input( type=>'float', class=>'calliper_pt', name=>'calliper_pt-'.$form,
+    value=>$$variable{'calliper-'.$form}?$$variable{'calliper-'.$form}*1000:'',
+    on_input_this=>'calliper_onchange' ),
+    'PT',
+    input( type=>'float', class=>'calliper', name=>'calliper-'.$form,
+    value=>$$variable{'calliper-'.$form}?$$variable{'calliper-'.$form}:'',
+    on_input_this=>'calliper_onchange' ),
+    'inches',
+    input( type=>'float', class=>'calliper_mm', name=>'calliper_mm-'.$form,
+    value=>$$variable{'calliper-'.$form}?Math::Round::nearest(0.001, $$variable{'calliper-'.$form}*25.4):'',
+    on_input_this=>'calliper_onchange' ),
+    'mm',
+    write_override( 'override_calliper-'.$form, $$variable{'override_calliper-'.$form}, '', q`calc('f1');` ),
+    );
+    ) ?>
+</li>
