@@ -1237,12 +1237,13 @@ sub hash_link {
 		} # end if
 	} # end if
 
+	my @stat = stat $src;
+  my $timestamp = $stat[9];
+
 	if ( !($script = $hash_cache{$config{SkinPath}}{$path})
 			|| ! -f $$script{cache_file}
-			|| ( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
+			|| ($timestamp > $script->{timestamp})
 	   ) {
-
-		$timestamp = (stat $src)[9] if ! $timestamp;
 
 		my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
 		$ext =~ s/^\.//;
@@ -1279,9 +1280,8 @@ sub hash_link {
 			File::Slurp::write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, JSON::to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
 		} # end if
 	#} else {
-		#my @stat = stat $script->{src};
 
-#$log->debug("HASH CACHED $path ($$script{cache_file} ($timestamp) ($$script{timestamp}) @stat");
+$log->debug("HASH CACHED $path ($$script{cache_file} ($timestamp) ($$script{timestamp}) @stat");
 	} # end if
 
 	# cache_path is the url part
@@ -1338,7 +1338,7 @@ sub do_css_links {
   $css =~ s/^openprint\///;
   $css =~ s/\..+$//;
   my @parts = split '/', $css;
-  $log->debug("Parts: @parts");
+  $log->debug("Parts: @parts") if Debug;
 
   while ( @parts ) {
     $css = join('_', @parts ) . '.css';
