@@ -41,6 +41,13 @@
 	a.button:visited { background-color: #1D23F4; border-color: #0B0D60; color: #FFFFFF;}
 	a.button:hover   { background-color: #0B0D60; border-color: #0B0D60; color: #FFFFFF;}
 	a.button:active  { background-color: #0B0D60; border-color: #0B0D60; color: #FFFFFF;}
+  button,
+  button:not(:disabled),
+  .btn {background-color: #1D23F4; border-color: #0B0D60; color: #FFFFFF; white-space: nowrap !important;
+    padding: 0.25ex 0.5em 0.5ex 0.5em;
+    font-size: 0.85em;
+    border-radius: 0;
+  }
 
 
     /* Footer Links */
@@ -317,7 +324,9 @@
 	input.button,
 	button,
 	a.button {
+    /*
 		float: left;
+    */
 		clear: none;
 		display: inline;
 		position: relative;
