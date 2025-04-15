@@ -1,3 +1,24 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.8 (Ubuntu 16.8-0ubuntu0.24.04.1)
+-- Dumped by pg_dump version 16.8 (Ubuntu 16.8-0ubuntu0.24.04.1)
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Data for Name: folds; Type: TABLE DATA; Schema: public; Owner: sherwood
+--
 
 INSERT INTO public.folds VALUES (69, 135, '4PageFold', '4PageFold', 1, NULL, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, true, false, NULL, 15, NULL, 'Sheets', NULL, 'Sheets', NULL, '', 'gsm', NULL, NULL, NULL, NULL, NULL);
 INSERT INTO public.folds VALUES (1, 136, '2PanelFold', '2 Panel Fold', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 'gsm', NULL, NULL, NULL, NULL, NULL);
@@ -5,7 +26,6 @@ INSERT INTO public.folds VALUES (3, 136, '3PanelZFold', '3 Panel Z Fold', NULL, 
 INSERT INTO public.folds VALUES (4, 136, '4PageFold', '4PageFold', NULL, NULL, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 'gsm', NULL, NULL, NULL, NULL, NULL);
 INSERT INTO public.folds VALUES (5, 136, 'SingleGateFold', 'Single Gate Fold', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 'gsm', NULL, NULL, NULL, NULL, NULL);
 INSERT INTO public.folds VALUES (70, 107, '4PageFold', '4 Page Fold', NULL, NULL, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0, NULL, 'Sheets', NULL, 'Sheets', NULL, '', 'gsm', NULL, NULL, NULL, NULL, NULL);
-INSERT INTO public.folds VALUES (71, 197, '4PageFold', '4 Page Fold', NULL, NULL, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0, NULL, 'Sheets', NULL, 'Sheets', NULL, '', 'gsm', NULL, NULL, NULL, NULL, NULL);
 INSERT INTO public.folds VALUES (6, 188, '2PanelFold', '2 Panel Fold', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 6, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 'gsm', NULL, NULL, NULL, NULL, NULL);
 INSERT INTO public.folds VALUES (8, 188, '3PanelZFold', '3 Panel Z Fold', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 6, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 'gsm', NULL, NULL, NULL, NULL, NULL);
 INSERT INTO public.folds VALUES (9, 188, '4PageFold', '4PageFold', NULL, NULL, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 2, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 'gsm', NULL, NULL, NULL, NULL, NULL);
@@ -73,7 +93,7 @@ INSERT INTO public.folds VALUES (46, 169, '6PanelFold', '6 Panel Roll Fold', NUL
 
 
 --
--- Name: folds_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: folds_id_seq; Type: SEQUENCE SET; Schema: public; Owner: sherwood
 --
 
 SELECT pg_catalog.setval('public.folds_id_seq', 71, true);
