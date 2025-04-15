@@ -1,7 +1,7 @@
 /* Styles for Site Layout - Jello Mold Piefecta */
 
 body {
-	padding: 0 385px; /* the critical side padding that sets the natural min-width! */
+	padding: 0; /* the critical side padding that sets the natural min-width! */
 	background-color: #CCCCCC;
 	text-align: center; /* centers the #sizer element in IE5.x/win */
 	color: #000000;
@@ -10,15 +10,15 @@ body {
 #sizer {
 	margin: 0 auto; /* centers #sizer in standard browsers */
 	padding: 0;
-	width: 88.88%; /* this value controls liquidity in IE; 0% = full rigid, 100% = full liquid */
 	text-align: left; /* resets the default text alignment for the page */
-	max-width: 220px;	/* this value controls the liquidity in FF */
+  min-width: 1130px;
+  max-width: 1130px;
 }
 
 #expander { /* Any % height here causes IE to lose the neg right margin */
 	position: relative; /* makes #expander visible outside #sizer in IEwin */
 	min-width: 1100px; /* This prevents Safari from losing the negative margins in narrow windows */
-	margin: 0 -385px; /* neg side margin values should be < or = to side body padding */
+	margin: 0; /* neg side margin values should be < or = to side body padding */
 
 	background-color: #FFFFFF;
 	background-image: url('/images/main/menu/left-menu-background.gif');
