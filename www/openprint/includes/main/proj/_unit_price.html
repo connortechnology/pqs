@@ -1,5 +1,5 @@
 <li class="unitprice">
-	<label>Unit Price (<?CurrencySymbol?>)</label>
+  <label>Unit Price (<?echo($openprint::Currency->symbol())?>)</label>
 		<?echo( join("\n", map {
 	'<span class="'.$$variable{Columns}.'Columns">'.
 	input( type=>'float', name=>'txtUnitPrice'.$_, value=>$$variable{"txtUnitPrice$_"}, readonly=>'readonly', onfocus=>'this.blur();' ).
