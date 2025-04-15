@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 package openprint::Bug;
 our @ISA = qw( openprint::Object );
 require openprint::Object;
@@ -42,11 +43,11 @@ sub destroy {
 } # end sub destroy
 
 sub url_to {
-	return '/bugs/view.html?bug_id='.$_[0]{id};
+	return '/openprint/bugs/view.html?bug_id='.$_[0]{id};
 } # end sub url_to
 
 sub link_to {
-	return sprintf('<a href="/bugs/view.html?bug_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
+	return sprintf('<a href="/openprint/bugs/view.html?bug_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
 } # end sub link_to
 
 sub Company {
