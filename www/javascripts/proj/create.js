@@ -81,34 +81,36 @@ Event.observe(window, 'load', function () {
   var projects = form.rdbProjectType;
 
   if (!projects) {
-    console.log("No projects found?", form);
-  return;
+    console.log("No project types found?", form);
+    return;
   }
 
   // The last set of disabled additional services 
   var disabled_services = [];
 
   function additional_services () {
-    const service_types = SERVICE_TYPES_BY_GROUP[PROJECT_GROUPS[this.value]];
-    console.log(service_types, this, PROJECT_GROUPS[this.value]);
 
     for (let j=0; j < disabled_services.length; j++) {
       const service = document.getElementById('s' + disabled_services[j]);
-      console.log('re-enable disabled', service);
+      //console.log('re-enable disabled', service);
       service.disabled = false;
       service.parentNode.style.display = '';
-      console.log('re-enable disabled', service);
+      //console.log('re-enable disabled', service);
     }
 
-    for (var j=0; j < service_types.length; j++) {
-      const service = document.getElementById('s' + service_types[j]);
-      if (!service) {
-        console.log("Service ", service_types[j], "not found");
-        continue; 
+    const service_types = SERVICE_TYPES_BY_GROUP[PROJECT_GROUPS[this.value]];
+    console.log(service_types, this, PROJECT_GROUPS[this.value]);
+    if (service_types) {
+      for (let j=0; j < service_types.length; j++) {
+        const service = document.getElementById('s' + service_types[j]);
+        if (!service) {
+          console.log("Service ", service_types[j], "not found");
+          continue; 
+        }
+        console.log('disable', service);
+        service.disabled = true;
+        service.parentNode.style.display = 'none';
       }
-      console.log('disable', service);
-      service.disabled = true;
-      service.parentNode.style.display = 'none';
     }
 
     disabled_services = service_types;
