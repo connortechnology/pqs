@@ -57,6 +57,7 @@ sub cleanup {
   } else {
     $log->debug('No dbh at cleanup');
   } # end if
+  $openprint::User = new openprint::User;
 } # end sub cleanup
 
 sub show_params {
