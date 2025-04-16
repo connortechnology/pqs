@@ -28,17 +28,13 @@ sub display_category {
        $category = lc $category;
 
     # Check to see if the optional category include exists.
-    my $site_specific = $r->dir_config('site_specific')
-                     || $r->document_root . '/site_specific';
+    my $site_specific = $r->dir_config('site_specific') || $r->document_root . '/site_specific';
     my $include = "includes/products/$category.html";
 
-    $variable->{include} 
-        = -e "$site_specific/$include" ? "/site_specific/$include" : undef;
+    $variable->{include} = -e "$site_specific/$include" ? "/site_specific/$include" : undef;
 
     # Get the category information.
-    $variable->{category} = $dbh->selectrow_hashref(q{
-        SELECT * FROM product.category WHERE name = ?
-    }, undef, $r->param('category'));
+    $variable->{category} = $dbh->selectrow_hashref(q{ SELECT * FROM product.category WHERE name = ? }, undef, $r->param('category'));
 
 
     my $sql = qq{ SELECT lnguserid, strfirstname || ' ' || strlastname FROM tbl_customer_users 
@@ -54,12 +50,7 @@ sub display_category {
               if ($@) { () }                             # Invalid items are removed.
               else    { $item->{view} = $_->[1]; $item } 
             } 
-           @{ $dbh->selectall_arrayref(q{
-                SELECT item, initial_view
-                FROM product.item_category
-                WHERE category = ?
-                ORDER BY sort
-                }, undef, $variable->{category}{id}) }
+           @{ $dbh->selectall_arrayref(q{ SELECT item, initial_view FROM product.item_category WHERE category = ?  ORDER BY sort }, undef, $variable->{category}{id}) }
     ];
 
 #Addd current year plus future years.
@@ -67,68 +58,53 @@ sub display_category {
 	my $year = 1900 + $time[5];
 	map { push @{$variable->{YEARS}}, {year=>$_+$year} } (0..3);
 
-    return misc::error($r->log, $dbh, $variable, 'Not Found', 
-        "There are no products in this category."
-    ) unless @{ $variable->{items} };
+  return misc::error($r->log, $dbh, $variable, 'Not Found', "There are no products in this category.") unless @{ $variable->{items} };
 
-   return OK;
+  return OK;
 }
 
 # Map the selections from a "product selector" form to a predifined project. 
 sub select_project {
-    my ($r, $dbh , $var) = @_;
+  my ($r, $dbh , $var) = @_;
 
-    my $item = $r->param('item');
-       $item =~ tr/0-9//cd;
+  my $item = $r->param('item');
+  $item =~ tr/0-9//cd;
 
-    die "Invalid or no predefined selector item found." unless $item;
+  die "Invalid or no predefined selector item found." unless $item;
 
-    # If they've chosen a specific item from the matrix we can just use that.
-    my $predefined = $r->param('pid') || $r->param('auto_pid');
+  # If they've chosen a specific item from the matrix we can just use that.
+  my $predefined = $r->param('pid') || $r->param('auto_pid');
 
-	
-    unless ($predefined) {
+  unless ($predefined) {
+    # Otherwise we need to see if a projects exists at the intersection of the
+    # answers in the cross product.
+    my @answers = map { $_ = $r->param($_); tr/0-9//cd; $_ } 
+    grep /^q\d+$/, $r->param;
 
+    ($predefined) = assigned_project($dbh, $item, @answers);
 
-		# Otherwise we need to see if a projects exists at the intersection of the
-		# answers in the cross product.
-		my @answers = map { $_ = $r->param($_); tr/0-9//cd; $_ } 
-							  grep /^q\d+$/, $r->param;
-
-		($predefined) = assigned_project($dbh, $item, @answers);
-
-
-		die "No project found based on selections." unless $predefined;
-	}
-
+    die "No project found based on selections." unless $predefined;
+  }
 
 	if ( $r->param('auto_pid') ) {
-		
 		#Validate the Delivery date to prevent problems downstream.
 		#check_date (yyyy, mm, dd)
 		use Date::Calc qw/check_date/;
 		my @date =  ($r->param('ddmDueDateYear1'), $r->param('ddmDueDateMonth1'), $r->param('ddmDueDateDay1'));
 
-		return misc::error( $r->log, $dbh, $var, 
-			'Invalid Delivery Date', 'Please press the Back button and enter a valid Delivery Date' )
-		unless check_date(@date);
+		return misc::error( $r->log, $dbh, $var, 'Invalid Delivery Date', 'Please press the Back button and enter a valid Delivery Date' ) unless check_date(@date);
 
 		my $pid = eprint::qprice::auto_product($r, $dbh, $var, $predefined);
 		
-		# recalc project if we have one.
-		# else will be redirected to custom error page.
-		$r->headers_out->set( 
-			Location => "/build?pid=$pid;level=0"
-		) if $pid;
+		# recalc project if we have one. else will be redirected to custom error page.
+		$r->headers_out->set( Location => "/build?pid=$pid;level=0") if $pid;
 	} else {
 		# Send the user to the create page with their selected predefined project.
-		$r->headers_out->set(
-			Location => "/main/proj/create.html?predefined=$predefined"
-		);
+		$r->headers_out->set( Location => "/main/proj/create.html?predefined=$predefined");
 	}
 
 	$r->status(HTTP_MOVED_TEMPORARILY);
-    return HTTP_MOVED_TEMPORARILY;
+  return HTTP_MOVED_TEMPORARILY;
 }
 
 
