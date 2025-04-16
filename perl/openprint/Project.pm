@@ -821,7 +821,9 @@ sub servicetype_id {
 	} # end if
   if (!$$self{service_types}{$s_id}) {
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, (SELECT lngindex from tbl_service_types where strid= strservicetype) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+    $openprint::log->debug(Data::Dumper::Dumper($$self{service_types}));
   }
+
 
 	return $$self{service_types}{$s_id};
 } # end sub servicetype_id
@@ -1101,7 +1103,7 @@ sub signatures {
 
   # eprint support
   if ($$services{Printing}) {
-    return @{$$services{Printing}};
+    return sort { $a <=> $b } @{$$services{Printing}};
   }
 
 	if ( $params and $$services{Signature} ) {
@@ -1118,11 +1120,11 @@ sub signatures {
 			push @sigs, $s_id;
 		} # end foreach signatures
 		if ( $$params{sort} ) {
-            return sort {
-                my $a_specs = openprint::service::get_specs_ref( $self, $a );
-                my $b_specs = openprint::service::get_specs_ref( $self, $b );
-                $$a_specs{Group} <=> $$b_specs{Group} || $$a_specs{SignatureIndex} <=> $$b_specs{SignatureIndex};
-            } @sigs;
+      return sort {
+        my $a_specs = openprint::service::get_specs_ref( $self, $a );
+        my $b_specs = openprint::service::get_specs_ref( $self, $b );
+        $$a_specs{Group} <=> $$b_specs{Group} || $$a_specs{SignatureIndex} <=> $$b_specs{SignatureIndex};
+      } @sigs;
 		} # end if
 		return @sigs;
 	} # end if
@@ -2193,6 +2195,20 @@ sub equipment {
     $equipment{$$sig_specs{'ddmPress'.$self->ordered_quantity_index()}} = 1;
 	}
   return join(', ', keys %equipment);
+}
+
+# Returns the give projects 'Print' service.
+sub get_print_container {
+  my $self = shift;
+
+    my @sid = $self->has_service('Book')
+           || $self->has_service('Item')
+           || $self->has_service('InventoryCheckOut')
+           || $self->has_service('Printing')
+           || $self->has_service('')
+           ;
+
+    return $sid[0];
 }
 
 1;
