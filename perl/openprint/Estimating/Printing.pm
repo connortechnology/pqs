@@ -24,6 +24,9 @@ use Data::Dumper;
 use Storable 'dclone';
 use POSIX qw(ceil);
 use List::Util qw(sum);
+
+use PQS::Imposition::Constants;
+
 use openprint ();
 use vars qw( %config $log $dbh %ServicePrices %Specifications);
 *config = \%openprint::config;
@@ -7752,25 +7755,34 @@ sub summary {
 	my ( $Project, $service_index, $specs, $qty_index ) = @_;
 
 	my $services = $Project->services();
-	my $printing_specs = openprint::service::get_specs_ref($Project, $$services{''}[0]) if $$services{''};
+  my $print_service_id = $Project->get_print_container();
+  $openprint::log->warn("Summary print service id $print_service_id");
+	my $printing_specs = openprint::service::get_specs_ref($Project, $print_service_id);
+  $openprint::log->debug(Data::Dumper::Dumper($printing_specs));
+
+  my $imposition = new openprint::Imposition();
+  $imposition->load($specs, $qty_index, $Project);
 
 	if ( $qty_index ) {
-		return '' if ! $$specs{'txtImposition'.$qty_index};
+    if (!$$imposition{imposition}) {
+      $openprint::log->warn("No imposition for qty $qty_index");
+      return '' 
+    }
 		my $html;
 		if ( $Project->Type()->name() ne 'PresentationFolders' ) {
 			$html .= $$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pg ' : '';
 		} # end if
-		$html .= $$specs{'txtImposition'.$qty_index}.'out ';
-		$html .= '<span class="RunStyle '.$$specs{"PrintingType$qty_index"}.' '.$$specs{'ddmRunStyle'.$qty_index}.'">';
+		$html .= $$imposition{imposition}.'out ';
+		$html .= '<span class="RunStyle '.$$specs{"PrintingType$qty_index"}.' '.$$imposition{runstyle}.'">';
 		if ( $$specs{"PrintingType$qty_index"} eq 'Digital' ) {
 			$html .= 'Digital';
 		} else {
-			$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" Web' : ssi::html_escape($$specs{'ddmRunStyle'.$qty_index}) ;
+			$html .= $$imposition{runstyle} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" Web' : ssi::html_escape($$specs{'ddmRunStyle'.$qty_index}) ;
 		} # end if
 		$html .= '</span>';
 	
 		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{versions};
-		$html .= ' on '. $$specs{'ddmPress'.$qty_index} if $$specs{'ddmPress'.$qty_index}; # and $openprint::User->email() =~ /^iconnor/;
+		$html .= ' on '. $imposition->Press()->name() if $imposition->Press()->name();
 
 		my $plate_changes = 0;
 		if ( $$specs{Group} and $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"} ) {
@@ -7828,16 +7840,13 @@ sub summary {
 	} else { # ! qty_index
 		my $dimensions = '';
 		if ( $$specs{txtSignatureType} ) {
-if ( 0 ) {
-			if ( $$specs{txtSignatureType} eq 'Cover Pages' ) {
-				$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtFinalWidth','txtFinalHeight'});
-			} else {
-				$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$printing_specs{'txtFinalWidth','txtFinalHeight'});
-			} # end if
-} else {
+      if ( $$specs{'txtWidth'}) {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; -> %s&quot;x%s&quot; ',
 						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
-}
+        } else {
+          $dimensions .= sprintf( '%s&quot;x%s&quot; -> %s&quot;x%s&quot; ',
+            @$printing_specs{'flat_width','flat_height','final_width','final_height'});
+        }
 		} elsif ( ( $$specs{txtFinalWidth} and $$specs{txtFinalHeight} ) and ( $$specs{txtFinalWidth} != $$specs{txtWidth} or $$specs{txtFinalHeight} != $$specs{txtHeight} ) ) {
 			if ( $$services{Folding} and @{$$services{Folding}} ) {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; folded to %s&quot;x%s&quot; ',
@@ -7849,12 +7858,14 @@ if ( 0 ) {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; -> %s&quot;x%s&quot; ',
 						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
 			} # end if
-		} else {
+		} elsif ($$specs{'txtWidth'}) {
 			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtWidth','txtHeight'});
+		} elsif ($$specs{'flat_width'}) {
+			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'flat_width','flat_height'});
 		} # end if
 
 		my $string = join(' ', ($$specs{txtServiceDescription} ? $$specs{txtServiceDescription} . ':' : ''), $dimensions );
-		if ( ! $$services{NoPrinting} ) {
+		if (!$$services{NoPrinting} ) {
 			$string .= get_colour_description($Project, $specs) . ' on '.get_stock_description($specs);
     }
 
@@ -7869,13 +7880,24 @@ if ( 0 ) {
 		if ( $Project->Type()->name() eq 'PresentationFolders' ) {
 			my @pockets = map { $$specs{"chkPocket$_"} ? lc $_ : () } ( 'Left', 'Center', 'Right' );
 			$string .= '<br/>' . $$specs{rdbPanels} . ' panels ' . ( $$specs{PocketSize} ? $$specs{PocketSize} . '&quot; ' : '' ) . ' pocket'.(@pockets == 1 ? '' : 's').' on ' . join( ',', @pockets );
-		} # end if
-		my $special_string = join(', ',
-				( $$specs{OverrideAddGrip} ? ' no image in grip or sides' : () ),
-				( ($$specs{rdbColourBar} and ( $$specs{rdbColourBar} eq 'N' ) ) ? ' no colour bar' : () ),
-				( ( $$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom} ) ? '' : 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) ) ),
-				( (exists $$specs{txtCropMarkSpace} ) ? () : 'no crop marks' ),
-		);
+    } # end if
+    my $special_string = join(', ',
+      ( ($$specs{OverrideAddGrip} or $$specs{ignore_margins}) ? ' no image in grip or sides' : () ),
+      ( ($$specs{rdbColourBar} and ( $$specs{rdbColourBar} eq 'N' ) ) ? ' no colour bar' : () ),
+    );
+    if (!(
+        ($$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom})
+          or (4 == split(',', $$specs{bleed_sides}))
+      )) {
+      if ($$specs{ddmBleedSize}) {
+        $special_string .= 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) );
+      } elsif ($$specs{bleed_size}) {
+        my %bleed_sides = map { int($_) => $openprint::Imposition::bleed_sides{int($_)} } split(',', $$specs{bleed_sides});
+        $special_string .= 'no bleed on ' . join(', ', map { $_, $bleed_sides{$_} } ( TOP,BOTTOM,LEFT,RIGHT ) );
+      }
+    }
+
+    #( (exists $$specs{txtCropMarkSpace} ) ? () : 'no crop marks' ),
     $string .= '<br/>' . $special_string if $special_string;
 		if ( $$specs{PressApproval} and ( $$specs{PressApproval} eq 'Y' ) ) {
 			$string .= '<br/>Customer wants press approval';
@@ -7886,27 +7908,27 @@ if ( 0 ) {
 
 sub get_stock_description {
   my $specs = shift;
+  my $stock = openprint::Paper::load_from_signature(undef, $specs);
   my $string = join('',
-    ( ( $$specs{rdbSuppliedStock} and ( $$specs{rdbSuppliedStock} eq 'Y' ) ) ? '<b>Customer Supplied</b>' : '' ),
-    ( ( $$specs{rdbSpecificStock} and ( $$specs{rdbSpecificStock} eq 'Y' ) ) ? '<b>Custom:</b>' .
-      join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
-      join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ),
-    ) );
+    ($$stock{supplied} ? '<b>Customer Supplied</b> ' : ''),
+    ($$stock{custom} ? '<b>Custom:</b> ' : ''),
+    join(', ', $stock->brand(), $stock->finish(), $stock->colour, $stock->weight()),
+    );
 
   if ( $openprint::config{Show_Stock_Calliper} ne 'N' ) {
-    if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]+)\s*PT/ ) ) {
-      if ( $$specs{txtSpecificStockCalliper} ) {
-        $string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
+    if ( ! ( $$stock{weight} =~ /([\d\.]+)\s*PT/i ) ) {
+      if ( $stock->calliper() ) {
+        $string .= ' ' . ($stock->calliper() * 1000).'PT';
       } # end if
     } else {
-      my $c = $$specs{txtSpecificStockCalliper}*1000;
+      my $c = $stock->calliper()*1000;
       if ( $1 ne $c ) {
-        $log->debug("$1 is !- $$specs{txtSpecificStockCalliper} c1($c)");
+        $log->debug("$1 is !- $$stock{calliper} c1($c)");
         $string .= ' (' .$c.'PT)';
       } # end if
     } # end if
   } # end if show stock calliper
-  $string .= ' ' . int($$specs{txtStockGSM}).'gsm' if $openprint::config{Show_Stock_GSM} ne 'N';
+  $string .= ' ' . int($stock->gsm()).'gsm' if $openprint::config{Show_Stock_GSM} ne 'N';
   return $string;
 }
 
@@ -8039,7 +8061,9 @@ sub get_colour_description_no_coverage {
   } # end if
 
   unshift @front_coatings, map { $$specs{'chk'.$_.$side} ? $_ : () } ( 'Cyan','Magenta','Yellow','Black' );
-  if ( $$specs{'chkProcessColour'.$side} ) {
+  if ( $$specs{"s0_process"}) {
+    unshift @front_coatings, '4C';
+  } elsif ( $$specs{'chkProcessColour'.$side} ) {
     unshift @front_coatings, '4C'; 
   }
 
@@ -8075,7 +8099,9 @@ sub get_colour_description_no_coverage {
 			unshift @back_coatings, $back_pms.'PMS';
 		} # end if
 		unshift @back_coatings, map { $$specs{'chk'.$_.$side} ? $_ : () } ( 'Cyan','Magenta','Yellow','Black' );
-		if ( $$specs{'chkProcessColour'.$side} ) {
+    if ( $$specs{"s1_process"}) {
+      unshift @back_coatings, '4C';
+    } elsif ( $$specs{'chkProcessColour'.$side} ) {
 			unshift @back_coatings, '4C';
 		} # end if Process
 	} # end if
@@ -8124,9 +8150,11 @@ $log->debug("Adding PMS for $type chkColourCoating$index$side");
 	} # end if
 
 	unshift @front_coatings, map { $$specs{'chk'.$_.$side} ? $_ . ( $$specs{$_.'Spot'.$side.'Coverage'} != $CMYK_Ink_Coverage ? ' ' . $$specs{$_.'Spot'.$side.'Coverage'}.'%' : '')    : () } ( 'Cyan','Magenta','Yellow','Black' );
-	if ( $$specs{'chkProcessColour'.$side} ) {
-		unshift @front_coatings, join(' ', '4C', 
-				map { 
+  if ( $$specs{"s0_process"}) {
+    unshift @front_coatings, '4C';
+  } elsif ( $$specs{'chkProcessColour'.$side} ) {
+    unshift @front_coatings, join(' ', '4C', 
+      map { 
 				( $$specs{$_.$side.'Coverage'} != $CMYK_Ink_Coverage ) ?
 				'<span class="warning">'. $process_colours_short{$_}.$$specs{$_.$side.'Coverage'}.'%</span>'
 				: ()
@@ -8168,7 +8196,9 @@ $log->debug("Adding PMS for $type chkColourCoating$index$side");
 			unshift @back_coatings, $back_pms.'PMS';
 		} # end if
 		unshift @back_coatings, map { $$specs{'chk'.$_.$side} ? $_ . ( $$specs{$_.'Spot'.$side.'Coverage'} != $CMYK_Ink_Coverage ? ' ' . $$specs{$_.'Spot'.$side.'Coverage'}.'%' : '')    : () } ( 'Cyan','Magenta','Yellow','Black' );
-		if ( $$specs{'chkProcessColour'.$side} ) {
+    if ( $$specs{"s1_process"}) {
+      unshift @back_coatings, '4C';
+    } elsif ( $$specs{'chkProcessColour'.$side} ) {
 			unshift @back_coatings, join(' ', '4C',
 				map {
 				( $$specs{$_.$side.'Coverage'} != $CMYK_Ink_Coverage ) ?
