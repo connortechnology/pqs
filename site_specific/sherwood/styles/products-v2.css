@@ -69,12 +69,16 @@ div.product div.tabs span:hover {
 /* Question view */
 div.questions {
     padding: 2ex;
+    display: flex;
+    flex-direction: column;
 }
 
-div.questions > strong { 
-	display: block; 
-	float: left;
-	width: 9em;
+div.questions > div { 
+  display: flex;
+}
+div.questions > div > strong { 
+	width: 11em;
+  margin: 1ex 0;
 }
 
 
