@@ -136,8 +136,14 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $type, $specs ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my $services = $Project->services();
+  my $services = $Project->services();
   $$specs{alert} = '';
+
+  my $print_service_id = $Project->get_print_container();
+  $openprint::log->warn("Summary print service id $print_service_id");
+  my $printing_specs = openprint::service::get_specs_ref($Project, $print_service_id);
+  $openprint::log->debug(Data::Dumper::Dumper($printing_specs));
+
 
   my $has_lamination = 0;
   my @sigs = $Project->signatures({ sort=>1 });
@@ -150,6 +156,8 @@ sub calc {
     if ( (!$$specs{'chkOverrideDimensions-'.$form}) or ($$specs{'chkOverrideDimensions-'.$form} ne 'Y')) {
       if ($$sig_specs{final_width} and $$sig_specs{final_height}) {
         @$specs{'txtWidth-'.$form,'txtHeight-'.$form} = @$sig_specs{'final_width','final_height'};
+      } elsif (!$$sig_specs{'txtWidth'}) {
+        @$specs{'txtWidth-'.$form,'txtHeight-'.$form} = @$printing_specs{'final_width','final_height'};
       } else {
         @$specs{'txtWidth-'.$form,'txtHeight-'.$form} = @$sig_specs{'txtWidth','txtHeight'};
       }
