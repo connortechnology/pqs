@@ -35,9 +35,9 @@
       </div>
     </div>
   </li>
-  <li>
-    <? echo ( button( 'Bug', {
-          onclick=>q`popup_window('/openprint/_bug_report.html','', {width: 1024, height: window.innerHeight-230 });`,
-          text=>'', title=>'Send Bug Report', image=>'/images/bug-white.png?v=1' } );
-          )?>
-  </li>
+  <?echo (
+    if ($openprint::User->is_staff()) {
+      return '<li>'. button( 'Bug', { onclick=>q`popup_window('/openprint/_bug_report.html','', {width: 1024, height: window.innerHeight-230 });`, text=>'', title=>'Send Bug Report', image=>'/images/bug-white.png?v=1' } ).'</li>';
+    }
+    return;
+  )?>
