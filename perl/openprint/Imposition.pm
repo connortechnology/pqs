@@ -5,11 +5,13 @@ require Storable;
 use MIME::Base64;
 use Compress::LZF q(sthaw);
 
+use PQS::Imposition::Constants;
+
 package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
 use SVG;
-use vars qw( $AUTOLOAD %Orientations @RunStyles %ShortStyles);
+use vars qw( $AUTOLOAD %Orientations @RunStyles %ShortStyles %bleed_sides);
 use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
@@ -18,6 +20,13 @@ use constant Horizontal => 1;
 %Orientations = (
 	0	=>	'Vertical',
 	1	=>	'Horizontal',
+);
+
+%bleed_sides = (
+  TOP => 'Top',
+  BOTTOM => 'Bottom',
+  LEFT => 'Left',
+  RIGHT => 'Right',
 );
 
 @RunStyles = ( 'Sheet Work', 'Work & Turn', 'Work & Tumble', 'Perfecting', 'Web' );
@@ -279,6 +288,8 @@ sub Paper {
 sub load {
 	my ( $self, $specs, $qty_index, $Project ) = @_;
 
+  $qty_index //= '';
+
 	$$self{page_quantity} = $$self{quantity} = 1;
 	$$self{specs} = $specs;
   $openprint::log->debug("Loading stock");
@@ -301,10 +312,18 @@ sub load {
 	$$self{SignatureIndex} = $$specs{SignatureIndex};
 
 	$$self{object_width} = $$specs{txtWidth} ? $$specs{txtWidth} : $$specs{flat_width};
-	$$self{object_height} = $$specs{txtHeight} ? $$specs{txtHeight} : $$specs{flat_height};
-	$$self{image_width} = $$specs{'txtImageWidth'.$qty_index};
+  if (!$$self{object_width}) {
+    my $print_service_id = $Project->get_print_container();
+    my $printing_specs = openprint::service::get_specs_ref($Project, $print_service_id);
+    $$self{object_width} = $$printing_specs{flat_width};
+    $$self{object_height} = $$printing_specs{flat_height};
+    $openprint::log->error("Loading from book $$self{object_width}x$$self{object_height}");
+  }
+
+	$$self{object_height} = $$specs{txtHeight} ? $$specs{txtHeight} : $$specs{flat_height} if ! $$self{object_height};
+	$$self{image_width} = ($$specs{'txtImageWidth'.$qty_index} ? $$specs{'txtImageWidth'.$qty_index} : $$specs{'txtImageWidth'} );
 	$$self{image_width} = $$self{object_width} if ! $$self{image_width};
-	$$self{image_height} = $$specs{'txtImageHeight'.$qty_index};
+	$$self{image_height} = ($$specs{'txtImageHeight'.$qty_index} ? $$specs{'txtImageHeight'.$qty_index} : $$specs{'txtImageHeight'});
 	$$self{image_height} = $$self{object_height} if ! $$self{image_height};
   $$self{colour_bar_size} = $$self{Press}->specification('Colour Bar Size');
   $$self{colour_bar_orientation} = $$self{Press}->specification('Colour Bar Orientation');
@@ -314,8 +333,8 @@ sub load {
 Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::Dumper($specs)) if ! $$self{imposition};
 
 	$$self{version_qty} = $$specs{'Versions'.$qty_index};
-	$$self{start_columns} = $$self{columns} = $$specs{'hdnImpositionColumns'.$qty_index};
-	$$self{start_rows} = $$self{rows} = $$specs{'hdnImpositionRows'.$qty_index};
+	$$self{start_columns} = $$self{columns} = ($$specs{'hdnImpositionColumns'.$qty_index} ? $$specs{'hdnImpositionColumns'.$qty_index} : $$specs{'hdnImpositionColumns'});
+	$$self{start_rows} = $$self{rows} = ($$specs{'hdnImpositionRows'.$qty_index} ? $$specs{'hdnImpositionRows'.$qty_index} : $$specs{'hdnImpositionRows'});
 
 	#$$self{columns} = $$self{imposition} / $$self{rows} if $$self{rows} and ! $$self{columns};
 	#$$self{rows} = $$self{imposition} / $$self{columns} if $$self{columns} and ! $$self{rows};
@@ -398,11 +417,11 @@ Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::D
 			}
 			$$self{spine} = 'height' if ! $$self{spine};
 		}
-		$$self{pages} = $$specs{'PageQuantity'.$qty_index};
-		$$self{spread_size} = $$specs{txtSpreadSize};
+		$$self{spread_size} = $$specs{txtSpreadSize} // 4; # FIXME
+		$$self{pages} = ($$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index} : $$specs{spreads} * $$specs{spread_size});
 		$$self{spreads} = $$self{pages} / $$self{spread_size} if $$self{spread_size};
-		$$self{spread_rows} = $$specs{'SpreadRows'.$qty_index};
-		$$self{spread_columns} = $$specs{'SpreadCols'.$qty_index};
+		$$self{spread_rows} = ($$specs{'SpreadRows'.$qty_index} ? $$specs{'SpreadRows'.$qty_index} : $$specs{'SpreadRows'});
+		$$self{spread_columns} = ($$specs{'SpreadCols'.$qty_index} ? $$specs{'SpreadCols'.$qty_index} : $$specs{'SpreadCols'});
 		if ( $$self{spine} eq 'width' ) {
 			if ( $$self{image_orientation} == Vertical ) {
 				$$self{page_rows} = $$self{spread_rows} * ($$self{spread_size}/2);
