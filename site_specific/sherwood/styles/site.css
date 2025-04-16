@@ -855,6 +855,8 @@ button[disabled='disabled'] {
 
 #ButtonBug {
   background-color: #0B0D60;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 #ButtonBug:hover {
   background-color: #1D23F4;
