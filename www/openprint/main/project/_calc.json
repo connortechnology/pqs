@@ -1,11 +1,6 @@
 <? echo (
 	my $debug = 0;
 
-	if ( ! $param{ServiceType} ) {
-    $log->warn("No servicetype in params in calc");
-		return;
-	} # end if
-
 my %specs;
 eval {
 	%specs = openprint::main_project::calc( $debug );
