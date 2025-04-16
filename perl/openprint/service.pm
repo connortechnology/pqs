@@ -663,20 +663,31 @@ sub summary {
 	$service_id = $service_ids[0];
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
-	my $services = $Project->services();
 	my $ServiceType = $Project->ServiceType( $service_id );
-	return '' if ! $ServiceType->summary_visible();
+  if (! $ServiceType->summary_visible()) {
+    $openprint::log->debug($ServiceType->to_string().' not visible for summary');
+    return '';
+  }
 
 	my $specs = get_specs_ref( $Project, $service_id );
   my $ServiceTypeType = $ServiceType->type();
-  return if ! $ServiceTypeType;
+  if (!$ServiceTypeType) {
+    $openprint::log->error("No type in service type ".$ServiceType->to_string());
+    return '';
+  }
 
+  $ServiceTypeType = 'Printing' if $ServiceTypeType eq 'print';
   eval('require openprint::Estimating::'.$ServiceTypeType.';' );
-  $openprint::log->error("ERror requiring openprint::Estimating::$ServiceTypeType ::summary: $@)") if $@;
+  if ($@) {
+    $openprint::log->error("ERror requiring openprint::Estimating::$ServiceTypeType ::summary: $@)");
+    return '';
+  }
 
   my $module = 'openprint::Estimating::'.$ServiceTypeType;
 	if ( my $function = $module->can('summary') ) {
 		return $function->($Project, $service_id, $specs, $qty_index);
+  } else {
+    $openprint::log->error("No summary function for $ServiceTypeType");
   }
   return '';
 } # end sub summary
