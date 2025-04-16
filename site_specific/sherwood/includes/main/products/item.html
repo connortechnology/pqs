@@ -11,7 +11,7 @@
                         <!-- Question view. -->
                         <div class="questions<?if ($variable->{view} eq 'Q')?> selected<?endif ($variable->{view} eq 'Q')?>" >
                                 <?loop questions?>
-                                <strong><?label?></strong>
+                                <div><strong><?label?></strong>
 
                                         <?if (@{ $variable->{answers} } > 5) ?>
                                                 <select name="q<?id?>">
@@ -29,6 +29,7 @@
                                         <?endif (@{ $variable->{answers} } > 5) ?>
 
                                         <?if not:_last?><br /><?endif not:_last?>
+                                </div>
                                 <?endloop questions?>
                         </div>
 
