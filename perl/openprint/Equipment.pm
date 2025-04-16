@@ -371,6 +371,7 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range, $s_debug ) = @_;
 
+  return if ! $$self{id};
 	my $key = join(',', $$self{id}, $name, (defined($range)?$range:''));
 	if ( exists $Specification_cache{$key} ) {
 		return $Specification_cache{$key};
