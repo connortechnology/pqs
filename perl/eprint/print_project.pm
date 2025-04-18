@@ -806,9 +806,7 @@ sub create_project_from_predefined {
     return $destination if has_locked_quantity($dbh, $source);
 
     # Otherwise reset the project for recalculation.
-    update($log, $dbh, 'tbl_projects', "lngProjectIndex = $destination", 
-        strstatus => 'uncalculated'
-    );
+    update($log, $dbh, 'tbl_projects', "lngProjectIndex = $destination", strstatus => 'uncalculated');
 
     # If the design was supplied via the form (predefined projects) override
     # the old with the selected one. TODO Make sure preflight isn't a locked
@@ -1567,7 +1565,7 @@ sub copy_project {
     my %copy = (
         lnguserindex  => $variable->{user_id},
         lngcustomerid => $variable->{cust_id},
-		copy_pid	  => $pid,
+        copy_pid	  => $pid,
     );
 
     # We can change the account, name, comments, and quantity of the project.
@@ -1579,10 +1577,8 @@ sub copy_project {
 	#field on copy project page is named different.
     $copy{strcomments}         = $args->{comments} if $args->{comments};
 
-
     # Reset the project's status (unless the old one didn't calculate).
-    $copy{strstatus} = 'Unordered' 
-        unless $orig->{strstatus} eq 'uncalculated';
+    $copy{strstatus} = 'Unordered' unless $orig->{strstatus} eq 'uncalculated';
 
     my $has_new_owner = ($orig->{lngcustomerid} != $copy{lngcustomerid});
 
@@ -1601,130 +1597,98 @@ sub copy_project {
 
     $dbh->commit;
 
-print STDERR "DONE COPY PROJECT NEW PID: $new \n";
-
     return ($new, $has_new_owner);
 }
 
 # Copy a projects services to a destination project (for new projects only).
 sub copy_project_services {
-    my ($dbh, $src, $dest, $has_new_owner) = @_;
+  my ($dbh, $src, $dest, $has_new_owner) = @_;
 
-    # NOTE: This whole section should be done more in the db, no need to bring
-    # the data through Perl.
+  # NOTE: This whole section should be done more in the db, no need to bring
+  # the data through Perl.
 
-    # Prepare the queries for grabbing and re-inserting specs.
-    my $specs = $dbh->prepare(qq{
-        SELECT strName, strValue, ui_spec
-        FROM tbl_Service_Specifications
-        WHERE lngProjectIndex = ?
-          AND lngServiceIndex = ?
-    });
-    my $insert_spec = $dbh->prepare(q{
-        INSERT INTO tbl_service_specifications
-            (lngprojectindex, lngserviceindex, strname, strvalue, ui_spec)
-        VALUES (?, ?, ?, ?, ?)
-    });
-	
-	my $old_ship = $dbh->prepare(q{
-		SELECT * FROM tbl_addresses WHERE lngindex IN 
-			( SELECT shipid FROM ship_address WHERE sid = ? )
-		
-	});
-	my $ins_ship = $dbh->prepare(q{
-		INSERT INTO ship_address VALUES ( ?, ? );
-	});
-    my $ship_specs = $dbh->prepare(qq{
-        SELECT strName, strValue, ui_spec
-        FROM tbl_Service_Specifications
-        WHERE lngProjectIndex = ?
-          AND lngServiceIndex = ?
-		  AND strname ~ ?
-    });
+  # Prepare the queries for grabbing and re-inserting specs.
+  my $specs = $dbh->prepare(qq{ SELECT strName, strValue, ui_spec FROM tbl_Service_Specifications WHERE lngProjectIndex = ?  AND lngServiceIndex = ?  });
+  my $insert_spec = $dbh->prepare(q{ INSERT INTO tbl_service_specifications (lngprojectindex, lngserviceindex, strname, strvalue, ui_spec) VALUES (?, ?, ?, ?, ?) });
 
-    # Get the old project service instances. Preserve the original insertion
-    # order as some horrible old code actually uses it.
-    my $sth = $dbh->prepare(q{
-        SELECT * FROM tbl_Project_Contents
-        WHERE lngProjectIndex = ?
-        ORDER BY lngServiceIndex
-    });
-    # Start the run through.
-    $sth->execute($src);
+  my $old_ship = $dbh->prepare(q{ SELECT * FROM tbl_addresses WHERE lngindex IN ( SELECT shipid FROM ship_address WHERE sid = ? ) });
+  my $ins_ship = $dbh->prepare(q{ INSERT INTO ship_address VALUES ( ?, ? ); });
+  my $ship_specs = $dbh->prepare(qq{ SELECT strName, strValue, ui_spec FROM tbl_Service_Specifications WHERE lngProjectIndex = ?  AND lngServiceIndex = ?  AND strname ~ ?  });
 
-    while (my $contents = $sth->fetchrow_hashref) {
-        # Reset any status tracking states.
-        $contents->{strstatus} = 'calculated' 
-            unless $contents->{strstatus} eq 'uncalculated' 
-                || $contents->{strstatus} eq 'error';
+  # Get the old project service instances. Preserve the original insertion
+  # order as some horrible old code actually uses it.
+  my $sth = $dbh->prepare(q{ SELECT * FROM tbl_Project_Contents WHERE lngProjectIndex = ?  ORDER BY lngServiceIndex });
+  # Start the run through.
+  $sth->execute($src);
 
-        $contents->{lngcompletestate} = 0;
-        $contents->{lngpriority}      = 0;
+  while (my $contents = $sth->fetchrow_hashref) {
+    # Reset any status tracking states.
+    $contents->{strstatus} = 'calculated' unless $contents->{strstatus} eq 'uncalculated' || $contents->{strstatus} eq 'error';
 
-       	$contents->{price_override} = undef;
-        
-        # Change the project ID to the new project and remove the project
-        # service ID. Then insert the project service.
-        $contents->{lngprojectindex} = $dest;
-        my $sid = delete $contents->{lngserviceindex};
+    $contents->{lngcompletestate} = 0;
+    $contents->{lngpriority}      = 0;
 
-        insert(undef, $dbh, 'tbl_project_contents', %$contents);
+    $contents->{price_override} = undef;
 
-        # Get the new service ID.
-        my $new_sid = $dbh->last_insert_id('', qw(public tbl_project_contents lngserviceindex), 'ContentsServiceIndex_seq');
+    # Change the project ID to the new project and remove the project
+    # service ID. Then insert the project service.
+    $contents->{lngprojectindex} = $dest;
+    my $sid = delete $contents->{lngserviceindex};
 
-        # Grab the old specs.
-        $specs->execute($src, $sid);
-        my ($name, $value, $ui_spec);
-        $specs->bind_columns( \$name, \$value, \$ui_spec );
+    insert(undef, $dbh, 'tbl_project_contents', %$contents);
 
-        # Insert each spec into the new project. Ommitting a few.
-        while ( $specs->fetch ) {
-            next if grep{$name eq $_} qw(ServiceIndex ProjectIndex TemplateType);
+    # Get the new service ID.
+    my $new_sid = $dbh->last_insert_id('', qw(public tbl_project_contents lngserviceindex), 'ContentsServiceIndex_seq');
 
-            # Cripple the shipping information so it will get the address
-            # for the new customer.
-            next if $has_new_owner && $name =~ /(txt|ddm)Shipping/;
-            next if $name =~ /(add_qty|add_price|cost_center|DueDate|accountnumber|account_number)/;
+    # Grab the old specs.
+    $specs->execute($src, $sid);
+    my ($name, $value, $ui_spec);
+    $specs->bind_columns( \$name, \$value, \$ui_spec );
 
-            $insert_spec->execute($dest, $new_sid, $name, $value, $ui_spec);
-        }
-        $insert_spec->execute($dest, $new_sid, ProjectIndex => $dest,    1);
-        $insert_spec->execute($dest, $new_sid, ServiceIndex => $new_sid, 1);
-		
-		if ( $contents->{strservicetype} eq 'Shipping' ) {
-			$old_ship->execute($sid);
-    		while (my $ship = $old_ship->fetchrow_hashref) {
-				my $old_id = delete $ship->{lngindex};
-        		insert(undef, $dbh, 'tbl_addresses', %$ship);
+    # Insert each spec into the new project. Ommitting a few.
+    while ( $specs->fetch ) {
+      next if grep{$name eq $_} qw(ServiceIndex ProjectIndex TemplateType);
 
-        		# Get the new address ID.
-        		my $new_id = $dbh->last_insert_id(
-            		'', qw(public tbl_addresses lngindex));
+      # Cripple the shipping information so it will get the address
+      # for the new customer.
+      next if $has_new_owner && $name =~ /(txt|ddm)Shipping/;
+      next if $name =~ /(add_qty|add_price|cost_center|DueDate|accountnumber|account_number)/;
 
-				$ins_ship->execute($new_sid, $new_id);
-				$ship_specs->execute($src, $sid, $old_id);
-
-				my ( $n, $v, $u );
-				$ship_specs->bind_columns( \$n, \$v, \$u );
-				while ( $ship_specs->fetch ) {		
-            		next if $n =~ /(accountnumber|account_number)/;
-					#Seperate spec name from old index.
-					$n =~ /(\w+)-(\d+)$/;
-            		if ( $1 && $2 ) {
-						# Insert spec with new address index.
-						$insert_spec->execute(
-							$dest, $new_sid, "$1-$new_id", $v, $u);
-					}
-				}
-				
-			}
-			
-			
-		}
+      $insert_spec->execute($dest, $new_sid, $name, $value, $ui_spec);
     }
+    $insert_spec->execute($dest, $new_sid, ProjectIndex => $dest,    1);
+    $insert_spec->execute($dest, $new_sid, ServiceIndex => $new_sid, 1);
 
-    return 1;
+    if ( $contents->{strservicetype} eq 'Shipping' ) {
+      $old_ship->execute($sid);
+      while (my $ship = $old_ship->fetchrow_hashref) {
+        my $old_id = delete $ship->{lngindex};
+        insert(undef, $dbh, 'tbl_addresses', %$ship);
+
+        # Get the new address ID.
+        my $new_id = $dbh->last_insert_id(
+          '', qw(public tbl_addresses lngindex));
+
+        $ins_ship->execute($new_sid, $new_id);
+        $ship_specs->execute($src, $sid, $old_id);
+
+        my ( $n, $v, $u );
+        $ship_specs->bind_columns( \$n, \$v, \$u );
+        while ( $ship_specs->fetch ) {		
+          next if $n =~ /(accountnumber|account_number)/;
+          #Seperate spec name from old index.
+          $n =~ /(\w+)-(\d+)$/;
+          if ( $1 && $2 ) {
+            # Insert spec with new address index.
+            $insert_spec->execute(
+              $dest, $new_sid, "$1-$new_id", $v, $u);
+          }
+        }
+      }
+    }
+  }
+
+  return 1;
 }
 
 sub copy_project_comments {
