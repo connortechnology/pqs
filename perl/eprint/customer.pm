@@ -67,7 +67,10 @@ sub get_currency {
 sub get_discount {
     my ($dbh, $cid) = @_;
 
-    return $openprint::Company{discount}+$openprint::Pricelist{discount};
+    if ($openprint::Company{id} == $cid) {
+      $openprint::log->error("DISCOUNT is : ".$openprint::Company{discount}+$openprint::Pricelist{discount});
+      return $openprint::Company{discount}+$openprint::Pricelist{discount};
+    }
 
     my $sth = $dbh->prepare_cached(q{
         SELECT p.discount + c.dblpricingpercent AS discount
