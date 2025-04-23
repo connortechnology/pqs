@@ -1038,7 +1038,7 @@ sub price {
     # versions in $spec.
     delete $new->{versions};
 
-    $openprint::log->debug("NEW FROM printing service ".Data::Dumper::Dumper($new));
+    #$openprint::log->debug("NEW FROM printing service ".Data::Dumper::Dumper($new));
     @$specs{keys %$new} = values %$new;
   }
 
@@ -1049,7 +1049,7 @@ sub price {
       $init->($pid, $sid, $specs);
     }
   };
-  $log->error($@) if $@;
+  $log->error("Error from init: $@") if $@;
   my $status;
   # Calculate the service.
   my $calc   = $service->{can}->('calc');
