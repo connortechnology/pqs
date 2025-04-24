@@ -378,12 +378,13 @@ sub calc {
         my %ServicePrice = $Service->get_price( undef, $Equipment ) if $Service;
         if ( %ServicePrice ) {
           $ServicePrice{units} //= '';
+          $ServicePrice{units} = lc $ServicePrice{units};
 
-          if ( $ServicePrice{units} eq 'per m' ) {
+          if ( $ServicePrice{units} eq 'per m' or $ServicePrice{units} eq 'per 1000') {
             $ServicePrice{Total} = ($ServicePrice{Price} * $qty)/1000;
             $price{breakdown} .= sprintf('Service: $%1$.2f %2$s * %4$f = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
             $price{MPrice} += $ServicePrice{Price};
-          } elsif ( $ServicePrice{units} eq 'per inch' ) {
+          } elsif ( $ServicePrice{units} eq 'per inch' or $ServicePrice{units} eq 'per linear inch') {
             my $linear_length = Math::Round::nearest(0.01, $length * $sheets);
             #$$specs{'hdnBreakdown'.$qty_index} .= "Linear length $length * $sheets = $linear_length inches<br/>";
             $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $linear_length );
