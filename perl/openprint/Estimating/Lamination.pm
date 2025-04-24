@@ -89,7 +89,7 @@ sub variables {
   my @v = @variables;
   foreach my $s_s_id ( $Project->signatures() ) {
     my $specs = openprint::service::get_specs_ref($Project, $s_s_id);
-    my $form = $$specs{SignatureIndex} // 1;
+    my $form = $$specs{Form} // 1;
     foreach my $qty_index ( $Project->quantity_indexes() ) {
       push @v, (
         "txtWidth-$form", "txtHeight-$form", "chkOverrideDimensions-$form",
@@ -119,7 +119,7 @@ sub outputs {
   my $Project = new openprint::Project($p_id);
   foreach my $s_s_id ( $Project->signatures() ) {
     my $specs = openprint::service::get_specs_ref($Project, $s_s_id);
-    my $form = $$specs{SignatureIndex} // 1;
+    my $form = $$specs{Form} // 1;
     foreach my $qty_index ( $Project->quantity_indexes() ) {
       push @o, (
         "txtWidth-$form", "txtHeight-$form",
@@ -149,7 +149,7 @@ sub calc {
   my @sigs = $Project->signatures({ sort=>1 });
   foreach my $signature_service_index (@sigs) {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-    my $form  = $$sig_specs{SignatureIndex} // 1;
+    my $form  = $$sig_specs{Form} // 1;
     my $stock = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
     $openprint::log->debug("Stock calliper: ".$stock->calliper());
 
@@ -228,7 +228,7 @@ sub calc {
 
     foreach my $signature_service_index (@sigs) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-      my $form  = $$sig_specs{SignatureIndex} // 1;
+      my $form  = $$sig_specs{Form} // 1;
       if ((!$$specs{"TypeFront-$form"}) and (!$$specs{"TypeBack-$form"})) {
         #$$specs{'hdnBreakdown'.$qty_index} .= " not doing lamination on form $form<br/>";
         next;
@@ -556,7 +556,7 @@ sub display {
     my @sigs = $Project->signatures({ sort=>1 });
     foreach my $signature_service_index (@sigs) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-      my $form  = $$sig_specs{SignatureIndex} // 1;
+      my $form  = $$sig_specs{Form} // 1;
       if (!$$specs{"override_calliper-$form"} or $$specs{"override_calliper-$form"} ne 'Y') {
         my $imposition = new openprint::Imposition();
         $imposition->load( $sig_specs, $qty_index, $Project );
@@ -575,7 +575,7 @@ sub summary {
   my @sigs = $Project->signatures({ sort=>1 });
   foreach my $signature_service_index (@sigs) {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-    my $form  = $$sig_specs{SignatureIndex};
+    my $form  = $$sig_specs{Form};
 
     if ($$specs{"TypeFront-$form"} or $$specs{"TypeBack-$form"}) {
       $summary .= (@sigs > 1) ? 'Form '.$form.' ': '';
@@ -624,7 +624,7 @@ sub has_overrides {
     push @v, map { ($$specs{$_.$qty_index} and ($$specs{$_.$qty_index} eq 'Y')) ? $_.$qty_index : () } ( 'OverridePrice' );
     foreach my $s_s_id ( $Project->signatures() ) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-      my $form = $$sig_specs{SignatureIndex};
+      my $form = $$sig_specs{Form};
       push @v, map { ($$specs{$_} and ($$specs{$_} eq 'Y')) ? $_ : () } (
         "chkOverrideEquipment-$form-$qty_index",
         "chkOverrideDimensions-$form",
