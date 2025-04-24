@@ -190,11 +190,15 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
       if ( !@Interfaces ) {
         $log->debug('No HI found for '.$safe_ip);
         $Host = openprint::Host->find_one(hostname=>$safe_ip);
-        if ( !$Host ) {
+        if (!$Host) {
           $Host = new openprint::Host();
           $Host->save({hostname=>$safe_ip});
         }
+
         # The logging of the creation of the Host entry will save the host_interface
+        # But it isn't.
+        my $HI = new openprint::Host_Interface();
+        $HI->save({host_id=>$Host->id(), ip=>$safe_ip});
       } else { 
         if ( @Interfaces > 1 ) {
           $log->error("More than 1 Interface with ip $safe_ip");

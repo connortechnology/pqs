@@ -118,7 +118,7 @@ sub calc {
 		$status = 'calculated' if $specs->{"txtPrice$i"} > 0;
 	} # end foreach qty
 
-      $openprint::log->debug(Data::Dumper::Dumper($specs));
+  #$openprint::log->debug(Data::Dumper::Dumper($specs));
   return $status;
 }
 
@@ -127,9 +127,8 @@ sub price_job {
 
 	my @eids = map { coater($openprint::dbh, $_) } eprint::service::valid_equipment(undef, $openprint::dbh, $j->type);
   if (!@eids) {
-    $openprint::log->error("No equipment found for ".$j->supplier);
+    $openprint::log->debug("No equipment found for ".$j->supplier);
   }
-  $openprint::log->error("No equipment found for ".$j->supplier. scalar(@eids));
 
   my $price;
 
@@ -210,7 +209,6 @@ sub compare_equipment{
     push @e_prices, { breakdown => $breakdown };
   }
 
-  $openprint::log->error("Prices".Data::Dumper::Dumper(\@e_prices));
   my @prices = sort { 
     if (defined($a->{cost})) {
       return defined($b->{cost}) ? $a->{cost} <=> $b->{cost} : 0;

@@ -193,7 +193,11 @@ sub imposition {
 sub load_stylesheet {
     my $r = shift;
 
-    open(my $fh, $r->document_root . STYLESHEET) or die "Couldn't open stylesheet at ".($r->document_root . STYLESHEET).": $!";
+    my $fh;
+    if (!open($fh, $r->document_root . STYLESHEET)) {
+      $openprint::log->error("Couldn't open stylesheet at ".($r->document_root . STYLESHEET)." : $!");
+      return \'';
+    }
    
     flock   $fh, LOCK_SH or die "Couldn't lock styles for reading\n";
     binmode $fh; 

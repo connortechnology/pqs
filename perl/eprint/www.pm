@@ -79,7 +79,7 @@ sub generate_cookie {
   || $r->dir_config('cookiedomain')
   || configuration::get_value($log, $dbh, 'cookiedomain');
  
-  $log->debug("COokie domain: $domain");
+  #$log->debug("COokie domain: $domain");
 
   # Generate and set the cookie.
   my $cookie = Apache2::Cookie->new($r,
@@ -88,7 +88,7 @@ sub generate_cookie {
     -path    => '/',
     -domain  => $domain
   );
-  print STDERR "Cookie $cookie for $domain Host:".$r->headers_in->{'Host'}." cookiedomain: ".$r->dir_config('cookiedomain')."\n";
+  #print STDERR "Cookie $cookie for $domain Host:".$r->headers_in->{'Host'}." cookiedomain: ".$r->dir_config('cookiedomain')."\n";
   $cookie->bake($r);
 
   # Return the generated session ID.
@@ -168,8 +168,6 @@ sub handler {
   openprint::configuration::init( $r->dir_config() );
   openprint::session_init();
 
-  #print STDERR "HAVE COOKIE: $cookie\n";
-
   my ($page, $args, $status);
 
   word_sub($variable);
@@ -192,7 +190,7 @@ sub handler {
       } else {
         $page = $r->uri();
       }
-
+$log->debug("Page $page");
       $variable{uri} = $page;
       $status = parse_page( $r, $r->log, $cookie, $dbh, $variable, $page );
       die "Maximum redirects exceeded" if $redirects > MAX_REDIRECTS;
@@ -425,7 +423,7 @@ sub parse_page {
     # If the user isn't authorized for this section, check if the page is
     # public otherwise redirect them to a login page.
     unless (user_allowed($variable->{user}{type}, $section)) {
-      print STDERR "Used not allowed: type: ".$variable->{user}{type}, ' section: '.$section."\n";
+      print STDERR "User not allowed: type: ".$variable->{user}{type}, ' section: '.$section."\n";
 
       my @public = split /,/, configuration::get_value($log, $dbh, 'public_URIs');
 
@@ -688,7 +686,7 @@ sub section_admininistrator {
   } # end if sub_section
 
   return OK;
-}
+} # end sub section_administrator
 
 sub section_employee {
   my ($r, $log, $dbh, $variable, $cookie, $uri, $sub_section, $filename) = @_;

@@ -139,13 +139,12 @@ sub mp_versions {
 sub munge {
   my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
-  die "Invalid template" unless defined $specs->{template};
+  if (!defined $specs->{template}) {
+    $openprint::log->error("Undefined template in book in $pid $sid");
+  }
 
   # Make sure the cover spec is set, and correctly when perfect bound. 
-  $specs->{rdbCover} = 
-  $specs->{template} eq 'PerfectBinding' ? 'DifferentCover'
-  : $specs->{rdbCover}                     ? $specs->{rdbCover}
-  :                                          'SelfCover';
+  $specs->{rdbCover} = $specs->{template} eq 'PerfectBinding' ? 'DifferentCover' : $specs->{rdbCover} ? $specs->{rdbCover} : 'SelfCover';
 
   return 1;  
 }

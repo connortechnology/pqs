@@ -430,19 +430,14 @@ sub item_cover_paper {
         });
 
         foreach my $family ($r->param('i')) {
-print STDERR "INSERT PAPER: $family - $eid T: $table \n";
         	$sh->execute($family);
         	$rl->execute($family);
-
         }
 
-print STDERR "DBH COMMIT HERE \n";
         $dbh->commit();
     }
 
     my $paper = get_paper();
-
-
     my $query = qq{
 		SELECT DISTINCT paper_family(p) as family,
 		(SELECT count(*) FROM product.item_cover_paper e WHERE e.paper = p.lngindex AND e.item =  ? ) as invalid
@@ -826,8 +821,6 @@ sub update_recommendations {
 sub equipment {
     my $r = shift;
     my $t = shift;
-
-print STDERR "START EQUIPMENT NOW $r, $t, \n";
 
     # Get all the valid types for the 'new' option. An equipment type is valid
     # if any service types can be performed on it.

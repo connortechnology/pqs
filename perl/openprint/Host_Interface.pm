@@ -7,7 +7,7 @@ require openprint::Host;
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field );
-$debug = 1;
+$debug = 0;
 $serial = 'host_interfaces_id_seq';
 $table = 'host_interfaces';
 

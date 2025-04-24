@@ -292,6 +292,7 @@ select.failed {
 -->
 
 					<div style="margin-left:5px;">
+            <?if($$variable{cat_children})?>
 					<?loop cat_chain?>
 						<?if name?>
 						<a href="/main/ecommerce/products.html?category=<?id?>">
@@ -303,6 +304,7 @@ select.failed {
 						<?name?> </a>
 						<?endif name?>
 			  		<?endloop cat_chain?>
+            <?endif($$variable{cat_children})?>
 					</div>
 					
 					</span>
