@@ -14,7 +14,14 @@
   foreach my $sig_id ($project->signatures( { sort => 1 } )) {
     my $service = $project->Service($sig_id);
     my $sig_specs = $service->specs();
-    my $form = $$variable{SignatureIndex} = $$sig_specs{SignatureIndex} // 1;
+    my $form = $$variable{SignatureIndex} = $$sig_specs{Form};
+    if (!$form) {
+      $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
+      ( $form ) = sql::execute( $log, $dbh, $_, $project->id() );
+      $form = $form ? $form+1 : 1;
+      openprint::service::insert_service_spec( $log, $dbh, $project->id(), $sig_id, 'Form', $form);
+      $$variable{SignatureIndex} = $$sig_specs{SignatureIndex} = $form;
+    }
     
     $html .= '<fieldset><legend>Signature '.$form.'</legend>
       Information for '.$service->summary().'<br/>
