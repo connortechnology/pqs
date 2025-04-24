@@ -1806,57 +1806,54 @@ use constant TEMPLATE_PAGE => '/template/record.html';
 # Instead of the mass of if/elses that was the project view function, we'll
 # use a simple dispatch table for the moment.
 {
-    my %DISPATCH = (
-        create            => \&create_project,
-        create_multiple   => \&create_multiple,
-        create_checkout   => \&inventory_checkout,
-        edit              => \&edit_project,
-        copy              => \&copy,
-		add_qty           => \&add_qty,
-        change_order     =>   \&change_order,
-        complete_change_order => \&complete_change_order,
-        reorder           => \&reorder,
-        make_predefined   => \&make_predefined,
-		update_order	  => \&update_order,
+  my %DISPATCH = (
+    create            => \&create_project,
+    create_multiple   => \&create_multiple,
+    create_checkout   => \&inventory_checkout,
+    edit              => \&edit_project,
+    copy              => \&copy,
+    add_qty           => \&add_qty,
+    change_order     =>   \&change_order,
+    complete_change_order => \&complete_change_order,
+    reorder           => \&reorder,
+    make_predefined   => \&make_predefined,
+    update_order	  => \&update_order,
 
-        remove            => \&remove_item,   # Remove a service
-        supply            => \&supply_item,   # Remove a service
+    remove            => \&remove_item,   # Remove a service
+    supply            => \&supply_item,   # Remove a service
 
-        add_line_item          => \&add_line_item,         # Add a custom line item
-        edit_line_item         => \&edit_line_item,         # Add a custom line item
-        add_discount           => \&add_discount,          # Create fixed price project
-        add_per_item_discount  => \&add_per_item_discount, # Create fixed price project
-		complete	       => \&complete_project,
-		add_product_to_order   => \&add_product_to_order,
-		update_product		=> \&update_product,
-    );
+    add_line_item          => \&add_line_item,         # Add a custom line item
+    edit_line_item         => \&edit_line_item,         # Add a custom line item
+    add_discount           => \&add_discount,          # Create fixed price project
+    add_per_item_discount  => \&add_per_item_discount, # Create fixed price project
+    complete	       => \&complete_project,
+    add_product_to_order   => \&add_product_to_order,
+    update_product		=> \&update_product,
+  );
 
-    sub dispatch {
-        my ($r, $log, $dbh, $cookie, $variable) = @_;
+  sub dispatch {
+    my ($r, $log, $dbh, $cookie, $variable) = @_;
 
-        my $action = $r->param('action') or die "No action given to dispatch";
-        my $func   = $DISPATCH{$action}  or die "Invalid action ($action)";
+    my $action = $r->param('action') or die "No action given to dispatch";
+    my $func   = $DISPATCH{$action}  or die "Invalid action ($action)";
 
-print STDERR "START DISPATCH: COOKIE: $cookie ACTION: $action FUNC: $func \n";
+    # Project ID is required for everything but creation.
+    my $pid;
+    if ($action !~ /^create/ && $action !~ /^add_product/) {
+      $pid = $r->param('pid');
+      $pid =~ tr/0-9//cd;
 
-        # Project ID is required for everything but creation.
-        my $pid;
-        if ($action !~ /^create/ && $action !~ /^add_product/) {
-            $pid = $r->param('pid');
-            $pid =~ tr/0-9//cd;
+      die "No or invalid project ID"           unless $pid;
 
-            die "No or invalid project ID"           unless $pid;
+      my $allowed = project_allowed($dbh, $pid, $variable);
 
-            my $allowed = project_allowed($dbh, $pid, $variable);
-
-            die "Project doesn't exist"              unless defined $allowed;
-            die "No permission to edit project $pid" unless $allowed;
-        }
-        
-        return $func->(@_, $pid);
+      die "Project doesn't exist"              unless defined $allowed;
+      die "No permission to edit project $pid" unless $allowed;
     }
-}
 
+    return $func->(@_, $pid);
+  }
+}
 
 sub update_product {
 	my ($r, $log, $dbh, $cookie, $var, $pid) = @_;
@@ -1878,13 +1875,9 @@ sub update_product {
 
 }
 
-
-
 sub add_product_to_order {
 	my ($r, $log, $dbh, $cookie, $var, $pid) = @_;
 
-
-	
 	my $product = $r->param('product');
 	my $qty     = $r->param('txtQuantity1') ||  1;
 	my $jobname = $r->param('jobname') ||  undef;
@@ -1892,7 +1885,6 @@ sub add_product_to_order {
 	my $versions = $r->param('versions1') ||  1;
 
 	$jobname .= " $versions Versions " if $versions > 1;
-print STDERR "PRODUCT: $jobname \n";
 
 	die("Invalid request. Product can not be added to order") unless $product && $qty;
 
@@ -1904,7 +1896,6 @@ print STDERR "PRODUCT: $jobname \n";
 	
 	#die("have ref: $ref -- $1 ");
 	return "$ref";
-
 }
 
 sub change_order {
@@ -1955,11 +1946,9 @@ sub complete_project {
     my ($r, $log, $dbh, $cookie, $var, $pid) = @_;
 
 	require eprint::employee_project;
-    eprint::employee_project::complete_project( $r, $dbh, $pid, $var);
+  eprint::employee_project::complete_project( $r, $dbh, $pid, $var);
 
 	return "/main/proj/view.html?pid=$pid";
-
-
 }
 
 sub update_order {
@@ -1967,22 +1956,16 @@ sub update_order {
 print STDERR "UPDATE MY ORDER - $cookie - $pid \n";
 	eprint::order::update_order($r, $log, $dbh, $cookie, $var, $pid);
 	return "/main/proj/view.html?pid=$pid";
-	
-
 }
 
 sub make_quote {
-    my ($r, $log, $dbh, $cookie, $var, $pid) = @_;
-print STDERR "CREATE MY PROJECT TO QUOTE - $cookie - $pid \n";
+  my ($r, $log, $dbh, $cookie, $var, $pid) = @_;
 
-		my $cust_id = $var->{'cust_id'};
-		my $user_id = $var->{'user_id'};
+  my $cust_id = $var->{'cust_id'};
+  my $user_id = $var->{'user_id'};
 
-		$dbh->do(qq{
-			UPDATE tbl_projects set create_to_quote = true WHERE lngprojectindex = $pid 
-		});
-		my $quote_id = eprint::quote::add_project_to_quote( 
-						$r, $log, $dbh, $cust_id, $user_id, $cookie, undef, $pid );
+  $dbh->do(qq{ UPDATE tbl_projects set create_to_quote = true WHERE lngprojectindex = $pid });
+  my $quote_id = eprint::quote::add_project_to_quote($r, $log, $dbh, $cust_id, $user_id, $cookie, undef, $pid);
 }
 
 sub make_order {
