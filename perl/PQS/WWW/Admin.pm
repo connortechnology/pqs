@@ -955,8 +955,7 @@ sub specifications {
         # If the item isn't ranged we can just append it to the list.
         if ( not $rec->{ranged} ) {
             # Get the list of value units.
-            $rec->{units}{value} =
-                $dbh->selectcol_arrayref($unit, undef, $rec->{id}, 0);
+            $rec->{units}{value} = $dbh->selectcol_arrayref($unit, undef, $rec->{id}, 0);
             $rec->{units}{multiple} = @{ $rec->{units}{value} } > 1;
 
             # Push onto the queue.
@@ -1000,12 +999,7 @@ sub specifications {
 
 
 	#Make a list of suppliers.
-	my $supplier = $dbh->selectcol_arrayref(q{
-		SELECT strcompanyname
-		FROM tbl_customer
-		WHERE ysnsupplier = 'Y'
-		ORDER by lower(strcompanyname)
-	},undef);
+	my $supplier = $dbh->selectcol_arrayref(q{ SELECT strcompanyname FROM tbl_customer WHERE ysnsupplier = 'Y' ORDER by lower(strcompanyname) },undef);
 
 	my $is_press = grep {$equipment->{type_id} eq $_} PRESS_TYPES;
 
@@ -1051,273 +1045,231 @@ sub specifications {
 
 # Display the equipment / service / pricelist pricing page.
 sub pricing {
-    my $r = shift;
-    my $t = shift;
+  my $r = shift;
+  my $t = shift;
 
-    # Simplistic sanity checks.
-    my $eid = $r->param('equipment'); $eid =~ tr/0-9//cd;
-    die "An integer equipment id is required." unless $eid;
+  # Simplistic sanity checks.
+  my $eid = $r->param('equipment'); $eid =~ tr/0-9//cd;
+  die "An integer equipment id is required." unless $eid;
 
-    my $lid   = $r->param('pricelist');
-    my $stid  = $r->param('servicetype');
-    my $subid = $r->param('sub_type');
+  my $lid   = $r->param('pricelist');
+  my $stid  = $r->param('servicetype');
+  my $subid = $r->param('sub_type');
 
-    # If we're not posting, we only need the equipment id as we'll choose a
-    # default service type and list.
-    if ( $r->method eq 'POST') {
-        $lid =~ tr/0-9//cd;
-        die "An integer list id is required." unless $lid;
+  # If we're not posting, we only need the equipment id as we'll choose a
+  # default service type and list.
+  if ( $r->method eq 'POST') {
+    $lid =~ tr/0-9//cd;
+    die "An integer list id is required." unless $lid;
 
-        $stid =~ tr/0-9//cd;
-        die "An integer service type id is required." unless $stid;
+    $stid =~ tr/0-9//cd;
+    die "An integer service type id is required." unless $stid;
 
-        # Delete the pricing for the service type if they've chosen to no
-        # longer provide it on this equipment.
-        # delete_pricing( $if $r->param('remove')
+    # Delete the pricing for the service type if they've chosen to no
+    # longer provide it on this equipment.
+    # delete_pricing( $if $r->param('remove')
 
-        # If we're posting to the page then we need to do an update before
-        # displaying the updated values.
-        update_pricing( $r ) if $r->param('save');
+    # If we're posting to the page then we need to do an update before
+    # displaying the updated values.
+    update_pricing( $r ) if $r->param('save');
+  }
+
+  $t->{file} = '/admin/pricing/pricing.html';
+
+  # EQUIPMENT
+  #
+  # Get the currently selected equipment's basic attributes.
+  my $equipment = attributes($eid);
+
+  # SERVICE TYPES
+  #
+  # Which service types, of all possible for the type of equipment, does the
+  # currently selected piece of equipment provide?
+  #
+  # Should this also check for 0 pricing in the offered service types? So we
+  # can display it in the sidebar?.
+  #
+  # A somewhat bastardised query, we shouldn't have to pass both the type and
+  # equipment id in, but ohh well (among other things).
+  my $sth = $dbh->prepare_cached(q{
+    SELECT a.service_type              AS id, s.strname                   AS "name", coalesce(b.selected, false) AS "exists"
+    FROM tbl_service_types s,
+    ( SELECT service_type FROM equipment_type_service_type etst, tbl_equipment_type          t WHERE etst.equipment_type = t.lngindex AND t.lngindex = ? ) AS a
+    LEFT JOIN ( SELECT service_type, true AS selected FROM service_type_equipment
+    WHERE equipment        = ? ) AS b USING (service_type)
+    WHERE a.service_type = s.lngindex
+    ORDER BY "name"
+    });
+  my $types = $dbh->selectall_arrayref( $sth, { Slice => {} }, $equipment->{type_id}, $eid );
+
+  # If we've been supplied a service type, grab it's info out of the list.
+  # Otherwise choose the first one as a default.
+  my ($type) = defined $stid ? grep {$_->{id} == $stid} @$types : $types->[0];
+
+  # SUB-TYPES
+  #
+  # A newer addition is labelled service types. This allows multiple service
+  # types differing by some labelled attribute. TODO Show the pricing
+  # existance for sub-types as well.
+  $sth = $dbh->prepare(q{ SELECT id, "name" FROM sub_service_type WHERE service_type = ?  ORDER BY "name" });
+  my $sub_types = $dbh->selectall_arrayref($sth, { Slice => {} }, $type->{id});
+
+  # There is always the base service type.
+  unshift @{ $sub_types }, { id => undef, => name => 'Default' };
+
+  # If the sub-type was supplied use it, otherwise use the default.
+  my ($sub_type) = (defined $subid) ? grep {defined $_->{id} && $_->{id} == $subid} @$sub_types : $sub_types->[0];
+
+  # PRICE LISTS
+  #
+  # Which price lists, of all possible, does the currently selected equipment and service type have pricing in?
+  $sth = $dbh->prepare_cached(q{
+    SELECT l.id, l.name, l.currency, c.symbol, count(p.list) > 0 AS "exists" FROM pricelist l LEFT JOIN (
+    SELECT lnglistindex AS list FROM tbl_service_prices WHERE lngequipmentindex = ?  AND lngserviceindex IN (
+    SELECT lngindex FROM tbl_services WHERE lngtype = ? )) AS p ON (l.id = p.list),
+    currency c WHERE l.currency = c.code
+    GROUP BY l.id, l."name", l.currency, c.symbol
+    ORDER BY l.currency, l.name
+    });
+  my $lists = $dbh->selectall_arrayref( $sth, { Slice => {} }, $eid, $stid );
+
+  # If we've been supplied a price list, grab it's info out of the list.
+  # Otherwise choose the first one as a default.
+  my ($list) = defined $lid ? grep {$_->{id} == $lid} @$lists : $lists->[0];
+
+  # PRICING
+  #
+  # Get all the valid services for the currently selected service type and
+  # join it with the current pricing. Kludged in equipment_type/service
+  # exclusion. TODO This query has gotten ridiculous, refactor.
+  $sth = $dbh->prepare_cached(q{
+    SELECT s.lngindex       AS id,
+    s.strid          AS ref,
+    s.strname        AS "name",
+    s.strdescription AS description,
+    s.ysnranged      AS ranged,
+
+    p.lngmin                                 AS min, -- For ranged
+    p.lngmax                                 AS max, -- For ranged
+    to_char(p.dblcost,   'FM999990D00999')   AS cost,
+    to_char(p.dblprice,  'FM999990D00999')   AS price,
+    to_char(p.dblmarkup, 'FM999990D0009999') AS markup,
+    p.strunits                               AS unit,
+    CASE p.ysndiscountable
+    WHEN 'Y' THEN true
+    ELSE false         END               AS discountable
+
+    FROM equipment_type_service e, 
+    tbl_services s
+    LEFT JOIN (SELECT lngserviceindex, lngmin, lngmax, strunits, dblcost, dblprice, dblmarkup, ysndiscountable FROM tbl_service_prices WHERE lngequipmentindex = ?  AND lnglistindex      = ? 
+    AND (    lngsubservicetype = ?  OR (lngsubservicetype IS NULL AND ?::INT IS NULL) )
+    ) p ON (s.lngindex = p.lngserviceindex)
+
+    WHERE s.lngindex = e.service
+    AND e.equipment_type = ?
+    AND s.lngtype = ?
+    ORDER BY ranged, s.lngsortorder, "name", (lngmin IS NOT NULL), min, max
+    });
+  $sth->execute( $eid,                  $list->{id}, 
+    $sub_type->{id},       $sub_type->{id}, 
+    $equipment->{type_id}, $type->{id}
+  );
+
+  # Each service may have multiple units for it's pricing. While it's valid
+  # to have multiple ranged units we have none now so don't bother handling
+  # it yet. (We could also query all units for the service and uses hashes
+  # to map between... might be faster).
+  my $unit = $dbh->prepare_cached(q{ SELECT u.name FROM unit u, service_unit s WHERE s.unit    = u.id AND s.service = ?  AND s.ranged  = ?  });
+
+  # TODO : Generalise the grouping function and use hash slices for the # attribute slicing.
+
+  # Sort them out into two seperate result sets for easier display.
+  my (@ranged, @unranged);
+
+  # We have a kludge to exclude certain services from pricing based on # equipment specs if the equipment type is some sort of press.
+  my $is_press = is_press($equipment->{type_id});
+
+  my $last = undef;
+  while ( my $rec = $sth->fetchrow_hashref ) {
+    # Exclude certain services based on the equipment specs, but only for # presses. It's kludgerific!
+    next if $is_press and service_exkludgeion($eid, $rec->{ref});
+
+    # If the price isn't ranged we can just append it to the list.
+    if ( not $rec->{ranged} ) {
+      # Get the list of pricing units.
+      $rec->{units}{price} = $dbh->selectcol_arrayref($unit, undef, $rec->{id}, 0);
+      $rec->{units}{multiple} = @{ $rec->{units}{price} } > 1;
+
+      # Push onto the queue.
+      push(@unranged, $rec);
+      next;
     }
 
-    $t->{file} = '/admin/pricing/pricing.html';
+    # Add a new service onto the stack if we're done with the current.
+    if ( not defined $last or $rec->{id} != $last->{id} ) {
+      # Add a bunch of empty ranges to the tail of services ranges.
+      push @{ $ranged[-1]->{ranges} }, ({}) x 4 if defined $last;
 
-    # EQUIPMENT
-    #
-    # Get the currently selected equipment's basic attributes.
-    my $equipment = attributes($eid);
-
-    
-    # SERVICE TYPES
-    #
-    # Which service types, of all possible for the type of equipment, does the
-    # currently selected piece of equipment provide?
-    #
-    # Should this also check for 0 pricing in the offered service types? So we
-    # can display it in the sidebar?.
-    #
-    # A somewhat bastardised query, we shouldn't have to pass both the type and
-    # equipment id in, but ohh well (among other things).
-    my $sth = $dbh->prepare_cached(q{
-        SELECT a.service_type              AS id,
-               s.strname                   AS "name",
-               coalesce(b.selected, false) AS "exists"
-        FROM tbl_service_types s,
-           ( SELECT service_type
-             FROM equipment_type_service_type s,
-                  tbl_equipment_type          t
-             WHERE s.equipment_type = t.lngindex
-               AND t.lngindex       = ? ) AS a LEFT JOIN
-           ( SELECT service_type, true AS selected
-             FROM service_type_equipment
-             WHERE equipment        = ? ) AS b USING (service_type)
-        WHERE a.service_type = s.lngindex
-        ORDER BY "name"
-    });
-    my $types = $dbh->selectall_arrayref(
-        $sth, { Slice => {} }, $equipment->{type_id}, $eid );
-
-    # If we've been supplied a service type, grab it's info out of the list.
-    # Otherwise choose the first one as a default.
-    my ($type) = defined $stid ? grep {$_->{id} == $stid} @$types : $types->[0];
-
-    # SUB-TYPES
-    #
-    # A newer addition is labelled service types. This allows multiple service
-    # types differing by some labelled attribute. TODO Show the pricing
-    # existance for sub-types as well.
-    $sth = $dbh->prepare(q{
-        SELECT id, "name" 
-        FROM sub_service_type 
-        WHERE service_type = ? 
-        ORDER BY "name"
-    });
-    my $sub_types = $dbh->selectall_arrayref($sth, { Slice => {} }, $type->{id});
-
-    # There is always the base service type.
-    unshift @{ $sub_types }, { id => undef, => name => 'Default' };
-
-    # If the sub-type was supplied use it, otherwise use the default.
-    my ($sub_type) = (defined $subid)
-        ? grep {defined $_->{id} && $_->{id} == $subid} @$sub_types
-        : $sub_types->[0];
-
-    # PRICE LISTS
-    #
-    # Which price lists, of all possible, does the currently selected equipment
-    # and service type have pricing in?
-    $sth = $dbh->prepare_cached(q{
-        SELECT l.id, l.name, l.currency, c.symbol, count(p.list) > 0 AS "exists"
-        FROM pricelist l LEFT JOIN (
-             SELECT lnglistindex AS list
-             FROM tbl_service_prices
-             WHERE lngequipmentindex = ?
-              AND lngserviceindex IN (
-                 SELECT lngindex
-                 FROM tbl_services
-                 WHERE lngtype = ? )
-             ) AS p ON (l.id = p.list),
-             currency c
-        WHERE l.currency = c.code
-        GROUP BY l.id, l."name", l.currency, c.symbol
-        ORDER BY l.currency, l.name
-    });
-    my $lists = $dbh->selectall_arrayref(
-        $sth, { Slice => {} }, $eid, $stid );
-
-    # If we've been supplied a price list, grab it's info out of the list.
-    # Otherwise choose the first one as a default.
-    my ($list) = defined $lid ? grep {$_->{id} == $lid} @$lists : $lists->[0];
-
-    
-    # PRICING
-    #
-    # Get all the valid services for the currently selected service type and
-    # join it with the current pricing. Kludged in equipment_type/service
-    # exclusion. TODO This query has gotten ridiculous, refactor.
-    $sth = $dbh->prepare_cached(q{
-        SELECT s.lngindex       AS id,
-               s.strid          AS ref,
-               s.strname        AS "name",
-               s.strdescription AS description,
-               s.ysnranged      AS ranged,
-
-               p.lngmin                                 AS min, -- For ranged
-               p.lngmax                                 AS max, -- For ranged
-               to_char(p.dblcost,   'FM999990D00999')   AS cost,
-               to_char(p.dblprice,  'FM999990D00999')   AS price,
-               to_char(p.dblmarkup, 'FM999990D0009999') AS markup,
-               p.strunits                               AS unit,
-               CASE p.ysndiscountable
-               WHEN 'Y' THEN true
-               ELSE false         END               AS discountable
-        
-        FROM equipment_type_service e, 
-             tbl_services s
-        LEFT JOIN (SELECT lngserviceindex, lngmin, lngmax, 
-                          strunits, dblcost, dblprice, dblmarkup, ysndiscountable
-                   FROM tbl_service_prices
-                   WHERE lngequipmentindex = ?
-                     AND lnglistindex      = ? 
-                     AND (    lngsubservicetype = ? 
-                          OR (lngsubservicetype IS NULL AND ?::INT IS NULL) )
-             ) p ON (s.lngindex = p.lngserviceindex)
-     
-        WHERE s.lngindex = e.service
-          AND e.equipment_type = ?
-          AND s.lngtype = ?
-        ORDER BY ranged, s.lngsortorder, "name", (lngmin IS NOT NULL), min, max
-    });
-    $sth->execute( $eid,                  $list->{id}, 
-                   $sub_type->{id},       $sub_type->{id}, 
-                   $equipment->{type_id}, $type->{id}
-    );
-
-    # Each service may have multiple units for it's pricing. While it's valid
-    # to have multiple ranged units we have none now so don't bother handling
-    # it yet. (We could also query all units for the service and uses hashes
-    # to map between... might be faster).
-    my $unit = $dbh->prepare_cached(q{
-        SELECT u.name
-        FROM unit u, service_unit s
-        WHERE s.unit    = u.id
-          AND s.service = ?
-          AND s.ranged  = ?
-    });
-
-    # TODO : Generalise the grouping function and use hash slices for the
-    # attribute slicing.
-
-    # Sort them out into two seperate result sets for easier display.
-    my (@ranged, @unranged);
-
-    # We have a kludge to exclude certain services from pricing based on
-    # equipment specs if the equipment type is some sort of press.
-    my $is_press = is_press($equipment->{type_id});
-
-    my $last = undef;
-    while ( my $rec = $sth->fetchrow_hashref ) {
-        # Exclude certain services based on the equipment specs, but only for
-        # presses. It's kludgerific!
-        next if $is_press and service_exkludgeion($eid, $rec->{ref});
-
-        # If the price isn't ranged we can just append it to the list.
-        if ( not $rec->{ranged} ) {
-            # Get the list of pricing units.
-            $rec->{units}{price} =
-                $dbh->selectcol_arrayref($unit, undef, $rec->{id}, 0);
-            $rec->{units}{multiple} = @{ $rec->{units}{price} } > 1;
-
-            # Push onto the queue.
-            push(@unranged, $rec);
-            next;
-        }
-
-        # Add a new service onto the stack if we're done with the current.
-        if ( not defined $last or $rec->{id} != $last->{id} ) {
-            # Add a bunch of empty ranges to the tail of services ranges.
-            push @{ $ranged[-1]->{ranges} }, ({}) x 4 if defined $last;
-
-            # Push a new service onto the stack.
-            push @ranged, {
-                id           => $rec->{id},
-                name         => $rec->{name},
-                discountable => $rec->{discountable},
-                ranges       => [],
-                units        => {
-                price        => $dbh->selectcol_arrayref(
-                                    $unit, undef, $rec->{id}, 0
-                                ),
-                ranged       => scalar $dbh->selectrow_array(
-                                    $unit, undef, $rec->{id}, 1
-                                ),
-                },
-            };
-            # Due to a mismatch between Petal and Perl (TAL comes from
-            # Python's OO) some easy things are harder. Here we set a
-            # variable to get the length of the units/price array. Really we
-            # should be able to say "units/price/length" or something
-            # similar.
-            $ranged[-1]->{units}{multiple} = @{$ranged[-1]->{units}{price}}>1;
-        }
-
-        # Push the price range onto the current service's range list.
-        push @{ $ranged[-1]->{ranges} }, $rec;
-
-        $last = $rec; # A pointer to the last record processed.
+      # Push a new service onto the stack.
+      push @ranged, {
+        id           => $rec->{id},
+        name         => $rec->{name},
+        discountable => $rec->{discountable},
+        ranges       => [],
+        units        => {
+          price        => $dbh->selectcol_arrayref(
+            $unit, undef, $rec->{id}, 0
+          ),
+          ranged       => scalar $dbh->selectrow_array(
+            $unit, undef, $rec->{id}, 1
+          ),
+        },
+      };
+      # Due to a mismatch between Petal and Perl (TAL comes from
+      # Python's OO) some easy things are harder. Here we set a
+      # variable to get the length of the units/price array. Really we
+      # should be able to say "units/price/length" or something
+      # similar.
+      $ranged[-1]->{units}{multiple} = @{$ranged[-1]->{units}{price}}>1;
     }
-    # Handle the off case of only a single ranged service, or the last one in
-    # the list, where $last won't be defined.
-    push @{ $ranged[-1]->{ranges} }, ({}) x 4 if @ranged;
 
-    # Parse error when the condition in the ternary operator isn't a
-    # constant... Don't know if there _is_ a proper syntax to get this
-    # working.
-    # push(($_->{ranged} ? @ranged : @unranged), $_) while $sth->fetchrow_hashref;
+    # Push the price range onto the current service's range list.
+    push @{ $ranged[-1]->{ranges} }, $rec;
 
-    # Start making the client happy.
-    $r->content_type('text/html; charset=utf-8');
+    $last = $rec; # A pointer to the last record processed.
+  }
+  # Handle the off case of only a single ranged service, or the last one in
+  # the list, where $last won't be defined.
+  push @{ $ranged[-1]->{ranges} }, ({}) x 4 if @ranged;
 
-    print $t->process(
-        # This might be renamed and will definitely added to the infastructure.
-        r => $r,
+  # Parse error when the condition in the ternary operator isn't a
+  # constant... Don't know if there _is_ a proper syntax to get this
+  # working.
+  # push(($_->{ranged} ? @ranged : @unranged), $_) while $sth->fetchrow_hashref;
 
-        title     => "Pricing",
-        equip     => $equipment,
-        
-        type      => $type,      # Current
-        types     => $types,
+  # Start making the client happy.
+  $r->content_type('text/html; charset=utf-8');
 
-        sub_type  => $sub_type, # Current
-        sub_types => $sub_types,
-        
-        list      => $list,      # Current
-        lists     => $lists,
-        
-        price => { ranged => \@ranged, unranged => \@unranged },
-    );
+  print $t->process(
+    # This might be renamed and will definitely added to the infastructure.
+    r => $r,
 
-    return OK;
+    title     => "Pricing",
+    equip     => $equipment,
+
+    type      => $type,      # Current
+    types     => $types,
+
+    sub_type  => $sub_type, # Current
+    sub_types => $sub_types,
+
+    list      => $list,      # Current
+    lists     => $lists,
+
+    price => { ranged => \@ranged, unranged => \@unranged },
+  );
+
+  return OK;
 }
 
 sub service_exkludgeion {
