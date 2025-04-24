@@ -232,11 +232,7 @@ sub action {
   # Get the stanadard project type defaults for insertion into
   # all of the signature services ( Interior/Cover/GF ).
   # This will get us our bleed & other defaults.
-  my $ptd = $dbh->selectall_hashref(q{
-    SELECT strfieldname as name, strdefaultvalue as value 
-    FROM tbl_projecttype_defaults 
-    WHERE lngprojecttypeindex IS Null
-    }, 'name');
+  my $ptd = $dbh->selectall_hashref(q{ SELECT strfieldname as name, strdefaultvalue as value FROM tbl_projecttype_defaults WHERE lngprojecttypeindex IS Null }, 'name');
 
   my %defaults;
   map { $defaults{$_} = $ptd->{$_}{value} } keys %$ptd;
@@ -247,6 +243,8 @@ sub action {
 
     my $double = grep { $bind_type eq $_ } qw(SaddleStitching PerfectBinding);
     print STDERR "IS SINGLE ********* $double - $bind_type ****\n";
+
+
 
     my $cover = insert_service($log, $dbh, $pid, 'Printing', {
         # Perfect binding requires the cover.
@@ -269,6 +267,11 @@ sub action {
       });
     insert_service_spec( $log, $dbh, $pid, $cover, SignatureIndex => $cover);
     insert_service_specs($log, $dbh, $pid, $cover, %defaults);
+
+    $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
+    my ( $form ) = sql::execute( $log, $dbh, $_, $pid );
+    $form  = $form ? $form+1 : 1;
+    openprint::service::insert_service_spec( $log, $dbh, $pid, $cover, 'Form', $form );
 
     # TODO A perfect bound cover's size is dependent on the thickness of
     # the book (spine size). Should we even insert it now?
@@ -300,6 +303,11 @@ sub action {
       });
     insert_service_spec( $log, $dbh, $pid, $gatefold, SignatureIndex => $gatefold);
     insert_service_specs($log, $dbh, $pid, $gatefold, %defaults);
+
+    $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
+    my ( $form ) = sql::execute( $log, $dbh, $_, $pid );
+    $form  = $form ? $form+1 : 1;
+    openprint::service::insert_service_spec( $log, $dbh, $pid, $gatefold, 'Form', $form );
 
     #print STDERR "DO SPREADS *****************", Dumper($prev);
 
@@ -334,6 +342,10 @@ sub action {
   print STDERR "Interior index $interior\n";
   insert_service_spec( $log, $dbh, $pid, $interior, SignatureIndex => $interior);
   insert_service_specs($log, $dbh, $pid, $interior, %defaults);
+    $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
+    my ( $form ) = sql::execute( $log, $dbh, $_, $pid );
+    $form  = $form ? $form+1 : 1;
+    openprint::service::insert_service_spec( $log, $dbh, $pid, $interior, 'Form', $form );
 
   map { 
     if ( $_ =~ /mv/ || $_ =~ /version/ || /version_quantities/ ) {
