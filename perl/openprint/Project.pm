@@ -855,10 +855,10 @@ sub services {
 	
 	if ( $$self{id} and ! $$self{Services} ) {
 		my %results;
-		my @data = sql::execute( undef, undef, 'SELECT (SELECT '.$openprint::ServiceType::fields{name}.' FROM '.$openprint::ServiceType::table.' WHERE '.$openprint::ServiceType::fields{id}.'=servicetype_id), lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?', $$self{id} );
-		while ( my ( $id, $index ) = splice @data, 0, 2 ) {
-			$id = '' if ! $id;
-			push @{$results{$id}}, $index;
+		my @data = sql::execute( undef, undef, 'SELECT (SELECT '.$openprint::ServiceType::fields{name}.' FROM '.$openprint::ServiceType::table.' WHERE '.$openprint::ServiceType::fields{id}.'=servicetype_id), lngServiceIndex, strservicetype FROM tbl_Project_Contents WHERE lngProjectIndex=?', $$self{id} );
+		while ( my ( $name, $service_index, $oldname ) = splice @data, 0, 3 ) {
+			$name = $oldname if ! $name;
+			push @{$results{$name}}, $service_index;
 		} # end while
 		$$self{Services} = \%results;
 	} # end if
@@ -1103,6 +1103,7 @@ sub signatures {
 
   # eprint support
   if ($$services{Printing}) {
+    $openprint::log->debug("Have printing ".scalar(@{$$services{Printing}}) . ' '.join(', ', @{$$services{Printing}}));
     return sort { $a <=> $b } @{$$services{Printing}};
   }
 
@@ -1123,11 +1124,12 @@ sub signatures {
       return sort {
         my $a_specs = openprint::service::get_specs_ref( $self, $a );
         my $b_specs = openprint::service::get_specs_ref( $self, $b );
-        $$a_specs{Group} <=> $$b_specs{Group} || $$a_specs{SignatureIndex} <=> $$b_specs{SignatureIndex};
+        $$a_specs{Group} <=> $$b_specs{Group} || $$a_specs{Form} <=> $$b_specs{Form};
       } @sigs;
 		} # end if
 		return @sigs;
 	} # end if
+  $openprint::log->debug(Data::Dumper::Dumper($services));
 	return @{$$services{Signature}} if $$services{Signature} and @{$$services{Signature}};
 
 	return;
