@@ -53,7 +53,8 @@ sub cleanup {
       $log->debug('Finished cleanup');
     } # end if
     $dbh->disconnect();
-    $gdb->disconnect;
+    $dbh = undef;
+    $gdb->disconnect if $gdb;
   } else {
     $log->debug('No dbh at cleanup');
   } # end if
