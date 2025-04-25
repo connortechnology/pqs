@@ -320,12 +320,11 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 </form>
 </div>
 
+          <?if ( $variable->{cat_children} and @{$variable->{cat_children}} ) ?>
 					<h2>
 
 					<br/>
-					<?if ( @{$variable->{cat_children}} ) ?>
 					<span class="title-section"> Filter by Category: <br/>
-					<?endif ( @{$variable->{cat_children}} ) ?>
 
 					<?loop cat_children?>
 						<a href="/main/ecommerce/products.html?category=<?id?>">
@@ -335,6 +334,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 					
 					</span>
 					</h2>
+          <?endif ( $variable->{cat_children} and @{$variable->{cat_children}} ) ?>
 
 
 <div id="horizontal-spacer1" style="height: 50px; width=100%; "></div>
@@ -382,11 +382,6 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 			Update 
 		</button>
 		<input type="hidden" name="tmpjobname"	id="tmpjobname" value="<?jobname?>"  />           
-
-
-
-
-
 	</div>
 
 	<div style="margin-bottom: 30px;">
@@ -528,7 +523,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 					<div id="leadtime" style="margin: 10px 0 0 0">
 					<span style="font-weight: bold; display: inline-block; width: 130px;">Lead Time: </span><?lead_time?> <br />
 					</div>
-					<?if (scalar @{$variable->{kit_list}} > 0 )?>
+          <?if ($variable->{kit_list} and (scalar @{$variable->{kit_list}} > 0) )?>
 					<div>
 						<table id="kit_contents" style="width: 100%; margin-top: 20px">
 							<tr style="padding-bottom: 3px"> <td colspan=2 style="text-align: center;font-size:1.4em;font-weight: bold;"> Kit Contents </td> <tr>
@@ -548,7 +543,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 							<?endloop kit_list?>
 						</table>
 					</div>
-					<?endif (scalar @{$variable->{kit_list}} > 0 )?>
+          <?endif ($variable->{kit_list} and (scalar @{$variable->{kit_list}} > 0) )?>
 				</div>
 			<!--
              </a>
@@ -559,17 +554,9 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 
 <?endloop products?>
     <br />
-
-    
 </div> <!-- end noname width 130% -->
-
-		
 	</div>
 	<!-- end .centerbox -->
-
-
-
-
 </div>
 <!-- end .center -->
 
