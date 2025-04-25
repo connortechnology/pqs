@@ -1,9 +1,9 @@
 <? eval (
 	my $uri = '/administrator/materials/list.html';
-    my %filters = (
-		order	=>	'lower(name)',
+  my %filters = (
+  order	=>	'lower('.$openprint::Material::fields{name}.')',
 		#( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
-		#( $session{$uri.'?materialtype_id'} ne '' ? ( 'materialtype_id' => $session{$uri.'?materialtype_id'} ) : () ),
+		( $session{$uri.'?type_id'} ne '' ? ( type_id => $session{$uri.'?type_id'} ) : () ),
 		( $session{$uri.'?category_id'} ne '' ? ( category_id => $session{$uri.'?category_id'} ) : () ),
 		( $session{$uri.'?equipment_id'} ne '' ? ( 'equipment_id any'=> $session{$uri.'?equipment_id'} ) : () ),
 		);
@@ -41,6 +41,7 @@
 			<th class="MaterialID" data-field="MaterialID" data-sortable="true">ID #</th>
 			<th class="MaterialName" data-field="MaterialName" data-sortable="true">Name</th>
 			<th class="Description" data-field="Description" data-sortable="true">Description</th>
+			<th class="Type" data-field="Type" data-sortable="true">Type</th>
 			<th class="Categories" data-field="Categories" data-sortable="true">Categories</th>
 			<th class="CompanyName Manufacturer" data-field="Manufacturer" data-sortable="true">Manufacturer</th>
 			<th class="CompanyName Supplier" data-field="Supplier" data-sortable="true">Supplier</th>
@@ -58,7 +59,8 @@
 	<td class="MaterialID">%3$s</td>
 	<td class="MaterialName">%4$s</td>
 	<td class="Description">%5$s</td>
-	<td class="Categories">%6$s</td>
+	<td class="Type">%6$s</td>
+	<td class="Categories">%7$s</td>
 	<td class="CompanyName Manufacturer">%7$s</td>
 	<td class="CompanyName Supplier">%8$s</td>
 </tr>
@@ -67,6 +69,7 @@
 	$Material->link_to( $$Material{id} ),
 	$Material->link_to( $$Material{name} ), 
 	$Material->link_to( $$Material{description} ), 
+  $Material->link_to( $Material->type() ), 
   $Material->link_to( $Material->Category()->name() ), 
   $Material->Manufacturer()->name(),
   $Material->Supplier()->name(),
