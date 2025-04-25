@@ -6,12 +6,18 @@
 	<form id="f1" name="f1" method="post" action="/openprint/main/project/view.html">
 
 <? echo (
-  $$variable{type_options} = ['', 'None', map { $_->name(), $_->description() } openprint::Material->find(category=>'Lamination Types') ];
+  $$variable{type_options} = ['', 'None', map { $_->name(), $_->description() } openprint::Material->find(
+  type => 'Laminate',
+  #category=>'Lamination Types'
+  ) ];
   my $html = '';
 
   my $project = $$variable{Project};
 
-  foreach my $sig_id ($project->signatures( { sort => 1 } )) {
+  my @sigs = $project->signatures( { sort => 1 } );
+  $openprint::log->error("Sigs @sigs");
+
+  foreach my $sig_id (@sigs) {
     my $service = $project->Service($sig_id);
     my $sig_specs = $service->specs();
     my $form = $$variable{SignatureIndex} = $$sig_specs{Form};
