@@ -103,46 +103,28 @@ sub price {
   my $price;
 
 	$price =  PQS::model::pricing::price_item($cust_id, $self->{list}, $self->{id}, $qty);
+  $price =  $self->kit_price($cust_id) if $self->spec('kit') and !$price;
 
+  if ($price) {
+    my $markup = $self->markup($cust_id);
+    $price = $price * (1 + ( $markup / 100)) if $markup;
 
-	print STDERR "Volumne DISCOUNT Price: $price / $qty \n";
+    print STDERR "Customer Discount Price: $price Markup: $markup CUST: $cust_id) \n";
 
-	if ( $self->spec('kit') ) {
-		$price =  $self->kit_price($cust_id) unless $price;
-	}
+    if ( $self->{specs}{units} eq 'Per 1000' ) {
+      $price /= 1000;
+    }
 
-	print STDERR "Kit  Price: $price \n";
-
-	my $markup = $self->markup($cust_id);
-	$price = $price * (1 + ( $markup / 100));
-
-	print STDERR "Customer Discount Price: $price Markup: $markup CUST: $cust_id) \n";
-
-	if ( $self->{specs}{units} eq 'Per 1000' ) {
-		$price /= 1000;
-	}
-
-	print STDERR "Per 1000 Adjustment Price: $price \n";
-
-	my $version_discount = $self->version_discount($versions);
-
-	print STDERR "PRICE BEFORE DISCOUNT: $price \n";
-
-	$price -= ($version_discount / 100) * $price; 
-
-	print STDERR "PRICE AFTER DISCOUNT: $price : $version_discount \n";
-
-  
-	#  die("Price not found: $self->{id}") unless $price;
-  
+    my $version_discount = $self->version_discount($versions);
+    $price -= ($version_discount / 100) * $price; 
+  }
   return $price;
 }
 
 sub markup {
 	my $self 		= shift;
 	my $cust_id 	= shift;
-  	return PQS::model::product_markup::get($cust_id, $self->{specs}{category_id});
-
+  return PQS::model::product_markup::get($cust_id, $self->{specs}{category_id});
 }
 
 sub add_kit_item {
@@ -152,7 +134,6 @@ sub add_kit_item {
 
 #	PQS::model::products::remove_kit_item($self->{id}, $prod);
 	PQS::model::products::add_kit_item($self->{id}, $prod, $qty);
-
 }
 
 sub remove_kit_category {
