@@ -18,12 +18,13 @@ $serial = 'products_id_seq';
 	name			=>	'name',
 	description		=>	'description',
 	weight			=>	'weight',
-	taxexempt1		=>	'taxexempt1',
-	taxexempt2		=>	'taxexempt2',
+	taxexempt1		=>	'tax_exempt1',
+	taxexempt2		=>	'tax_exempt2',
+	taxexempt3		=>	'tax_exempt3',
 	sort			=>	'sort',
 	category_id		=>	'category_id',
 	category		=>	undef,
-	project_id		=>	'project_id',
+	project_id		=>	'project',
 	deleted			=>	'deleted',
 	owner_id		=>	'owner_id',
 	created_on		=>	'created_on',
@@ -32,6 +33,25 @@ $serial = 'products_id_seq';
 	manufacturer	=>	undef,
 	supplier_id	=>	'supplier_id',
 	supplier	=>	undef,
+  minimum_qty => 'minimum_qty',
+  maximum_qty => 'maximum_qty',
+  part_number => 'part_number',
+  increment   => 'increment',
+  units       => 'units',
+  vendor      => 'vendor',
+  notes       => 'notes',
+  details     => 'details',
+  active      => 'active',
+  expiry      => 'expiry',
+  product_group => 'product_group',
+  group_option => 'group_option',
+  mediawide     => 'mediawide',
+  lead_time   => 'lead_time',
+  kit         => 'kit',
+  showprice   => 'showprice',
+  delivery_days =>  'delivery_days',
+  file_upload => 'file_upload',
+  pdftemplate =>  'pdftemplate',
 );
 
 %find_fields = (
@@ -39,10 +59,11 @@ $serial = 'products_id_seq';
 );
 
 %transforms = (
-	id			=>	[ 's/\D//g', '<2147483647' ],
-    name		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+  id			=>	[ 's/\D//g', '<2147483647' ],
+  name		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+  description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
+
 %defaults = (
 	weight			=>	undef,
 	taxexempt1		=>	q`'N'`,
