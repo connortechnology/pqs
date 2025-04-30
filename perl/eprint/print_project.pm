@@ -1573,6 +1573,9 @@ sub copy_project {
     $copy{strcomments}         = $args->{comment} if $args->{comment};
     $copy{prod}                = $args->{prod} if $args->{prod};
     $copy{intquantity1}        = $args->{qty} if $args->{qty};
+    $copy{intquantity1}        = $args->{quantity1} // undef if exists $args->{quantity1};
+    $copy{intquantity2}        = ($args->{quantity2} ? $args->{quantity2} : 'NULL') if exists $args->{quantity2};
+    $copy{intquantity3}        = ($args->{quantity3} ? $args->{quantity3} : 'NULL') if exists $args->{quantity3};
 		
 	#field on copy project page is named different.
     $copy{strcomments}         = $args->{comments} if $args->{comments};
@@ -2217,9 +2220,12 @@ sub copy {
 
 	} else {
 		($new, $changed) = copy_project($dbh, $variable, $pid, {
-			name      => ($r->param('name')    || ''),
-			comments   => ($r->param('comments') || ''),
-			no_assets => !$r->param('copy_assets'),
+			name      => ($openprint::param{name}    || ''),
+			comments   => ($openprint::param{comments} || ''),
+			no_assets => !$openprint::param{copy_assets},
+      quantity1 =>  $openprint::param{quantity1},
+      quantity2 =>  $openprint::param{quantity2},
+      quantity3 =>  $openprint::param{quantity3},
 		});
 	}
 
