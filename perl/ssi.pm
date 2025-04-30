@@ -95,7 +95,11 @@ our %MODIFIERS = (
     'ucfirst'   => sub { ucfirst(         $_[0] ) },
     'uc'        => sub { uc(              $_[0] ) },
     'lc'        => sub { lc(              $_[0] ) },
-    escape_html => sub { encode_entities(     $_[0] ) },
+    escape_html => sub {
+      utf8::decode($_[0]);
+      encode_entities($_[0]);
+    },
+
     Dumper      => sub { Dumper(          $_[0] ) },
     newline     => sub { $_[0] =~ s/\r/<br>/g;    return $_[0]; },
 
