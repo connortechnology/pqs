@@ -38,8 +38,8 @@ use constant DEBUG => 0;
 sub cleanup {
   if ( $r->connection->aborted( ) ) {
     $log->debug('Was aborted');
-  } elsif ( DEBUG ) {
-    $log->debug('cleanup');
+    #} elsif ( DEBUG ) {
+    #$log->debug('cleanup');
   } # end if
   %openprint::variable = ();
   %openprint::param = ();
@@ -49,11 +49,12 @@ sub cleanup {
     openprint::Object::init_cache();
     if ( ! $dbh->{AutoCommit} ) {
       $log->error('Uncommited transaction');
-    } elsif ( DEBUG ) {
-      $log->debug('Finished cleanup');
+      #} elsif ( DEBUG ) {
+      #$log->debug('Finished cleanup');
     } # end if
     $dbh->disconnect();
-    $gdb->disconnect;
+    $dbh = undef;
+    $gdb->disconnect if $gdb;
   } else {
     $log->debug('No dbh at cleanup');
   } # end if

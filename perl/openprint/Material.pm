@@ -23,18 +23,22 @@ $serial = 'material_seq';
 %fields = (
     id        =>  'lngindex',
     name      =>  'strid',
+    type          => undef,
+    type_id          => 'lngtype',
     description    =>  'strname',
+    details         => 'strdetails',
     supplier_id    =>  'lngsupplierindex',
     supplier    =>  undef,
     category_id    =>  'category_id',
     category    =>  undef,
-    taxexempt1    =>  'taxexempt1',
-    taxexempt2    =>  'taxexempt2',
+    taxexempt1    =>  'ysntaxexempt1',
+    taxexempt2    =>  'ysntaxexempt2',
     activity_code  =>  'activity_code',
     manufacturer_id  =>  'manufacturer_id',
 		servicetype_id	=>	'servicetype_id',
     );  
 %find_fields = (
+    type    =>  '(SELECT name FROM Material_Type WHERE id='.$fields{type_id}.')',
     category    =>  '(SELECT name FROM Material_Categories WHERE id=category_id)',
     equipment_id  =>  '(SELECT lngequipmentindex FROM tbl_material_prices WHERE lngmaterialindex=materials.'.$fields{id}.')',
     servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
@@ -223,10 +227,6 @@ sub Previous {
   return new openprint::Material( $self->prev($params) );
 } # end sub Next
 
-sub Category {
-  return new openprint::MaterialCategory( $_[0]{category_id} );
-}
-
 sub minimum_order {
   return undef;
 }
@@ -263,10 +263,14 @@ sub Unit_Of_Measure_Costing {
 
 sub link_to {
   if ( $openprint::session{user_type} eq 'A' ) {
-    return sprintf('<a href="/administrator/materials/edit.html?material_id=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
+    return sprintf('<a href="/openprint/administrator/materials/edit.html?material_id=%d">%s</a>', $_[0]{id}, ( @_ > 1 ? $_[1] : $_[0]{name} ) );
   } else {
     return @_ > 1 ? $_[1] : $_[0]{name};
   }
+}
+
+sub Category {
+  return new openprint::MaterialCategory( $_[0]{category_id} );
 }
 
 sub category {
@@ -283,6 +287,19 @@ sub category {
   } # end if
   return $$self{category};
 } # end sub category
+
+sub Type {
+  my $self = shift;
+  if (!$$self{Type}) {
+    $$self{Type} = new openprint::MaterialType($$self{type_id});
+  }
+  return $$self{Type};
+}
+
+sub type {
+  my $self = shift;
+  return $self->Type()->name();
+}
 
 sub Supplier {
   if (!$_[0]{Supplier}) {
