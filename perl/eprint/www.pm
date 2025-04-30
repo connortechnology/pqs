@@ -420,25 +420,20 @@ sub parse_page {
 
     }
 
-    # If the user isn't authorized for this section, check if the page is
-    # public otherwise redirect them to a login page.
+    # If the user isn't authorized for this section, check if the page is public otherwise redirect them to a login page.
     unless (user_allowed($variable->{user}{type}, $section)) {
-      print STDERR "User not allowed: type: ".$variable->{user}{type}, ' section: '.$section."\n";
+      print STDERR "User not allowed: type: ".$variable->{user}{type}, ' section: '.$section." page $page\n";
 
       my @public = split /,/, configuration::get_value($log, $dbh, 'public_URIs');
 
       # We're not a public URI, so direct them to login.
-      unless (grep { $page =~ /^$_$/ } @public) {
+      unless ($page and grep { $page =~ /^$_$/ } @public) {
 
-        my $destination = $r->method eq 'GET'
-        ? 'destination=' . misc::get_destination($r, $log, $page)
-        : '';
+        my $destination = $r->method eq 'GET' ? 'destination=' . misc::get_destination($r, $log, $page) : '';
 
         print STDERR "HAVE DEST: $destination \n";
         $r->status(HTTP_MOVED_TEMPORARILY);
-        $r->headers_out->set(
-          Location => "/$first/login.html?section=$section;$destination"
-        );
+        $r->headers_out->set( Location => "/$first/login.html?section=$section;$destination");
 
         return OK;
       }
