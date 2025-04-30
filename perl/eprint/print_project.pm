@@ -780,73 +780,90 @@ sub remove_shipping {
 # Creates a new project by copying a predefined one and recalculating it
 # (possibly changing the quantities).
 sub create_project_from_predefined {
-  my ($r, $log, $dbh, $cookie, $variable, $qtys, $source, $name) = @_;
-  no warnings qw(uninitialized);
+    my ($r, $log, $dbh, $cookie, $variable, $qtys, $source, $name) = @_;
+    no warnings qw(uninitialized);
 
-  die("Can not make project. Project Ref: $name, Product: $source") unless $source && $name;
+	die("Can not make project. Project Ref: $name, Product: $source") unless $source && $name;
 
-  # Make sure the project exists and is predefined.
-  die "Project ($source) doesn't exist or isn't a predefined project."
-  unless $dbh->selectrow_arrayref(q{
-    SELECT true FROM tbl_projects 
-    WHERE strstatus = 'predefined' AND lngprojectindex = ?
-    }, undef, $source);
+    # Make sure the project exists and is predefined.
+    die "Project ($source) doesn't exist or isn't a predefined project."
+        unless $dbh->selectrow_arrayref(q{
+            SELECT true FROM tbl_projects 
+            WHERE strstatus = 'predefined' AND lngprojectindex = ?
+        }, undef, $source);
 
 
-  # Copy the project.
-  my ($destination) = copy_project($dbh, $variable, $source, {
-      name    => $name,
-      comment => ($r->param('txtComments')         || ''),
-      prod => ($source)
+    # Copy the project.
+    my ($destination) = copy_project($dbh, $variable, $source, {
+            name    => $name,
+            comment => ($r->param('txtComments')         || ''),
+			prod => ($source)
+        }
+    ) or die "Error copying prefedined project ($source)";
+
+
+    # If the project is locked copying is all we have to do.
+    return $destination if has_locked_quantity($dbh, $source);
+
+    # Otherwise reset the project for recalculation.
+    update($log, $dbh, 'tbl_projects', "lngProjectIndex = $destination", strstatus => 'uncalculated');
+
+    # If the design was supplied via the form (predefined projects) override
+    # the old with the selected one. TODO Make sure preflight isn't a locked
+    # service before changing the format.
+    if ($r->param('format')) {
+        $dbh->do(q{
+            UPDATE tbl_projects
+            SET strdesign        = ?,
+                strprograms      = ?,
+                strotherprograms = ?
+            WHERE lngprojectindex = ?
+        }, undef, design_format($r), $destination);
     }
-  ) or die "Error copying prefedined project ($source)";
 
-  # If the project is locked copying is all we have to do.
-  return $destination if has_locked_quantity($dbh, $source);
 
-  $qtys = [$r->param('product_qty'), 0, 0] if $r->param('product_qty');
-  die "At least one quantity must be defined" unless $qtys->[0];
+	$qtys = [$r->param('product_qty'), 0, 0] if $r->param('product_qty');
 
-  # If the design was supplied via the form (predefined projects) override
-  # the old with the selected one. TODO Make sure preflight isn't a locked
-  # service before changing the format.
-  my @design_format = design_format($r);
-  my $project = new openprint::Project($destination);
-  $project->save({
-      status => 'uncalculated',
-      quantity1=>$qtys->[0], quantity2 => $qtys->[1], quantity3 => $qtys->[2],
-      ($r->param('format') ? ( design        =>$design_format[0], programs      => $design_format[1], otherprograms => $design_format[2],
-        ) : () ),
-    });
+    die "At least one quantity must be defined" unless $qtys->[0];
 
-  # Each sevice that makes or modifies the project needs to be updated.
-  my $specs = $dbh->prepare(q{
-    UPDATE tbl_service_specifications
-    SET strvalue = ?
-    WHERE strname = 'txtQuantity' || ?::char(1)
-    AND lngprojectindex = ?
-    });
-
-  for my $i (0..1) {
-    next unless $qtys->[$i] && $qtys->[$i] > 0;
-    $specs->execute($qtys->[$i], $i+1, $destination);
-  }
-
-  # Support for Custom Fields on Project Create page to insert
-  # pms colours into the printing services.
-  foreach my $p ( $r->param() ) {
-    next unless $p =~ /pms.*name/;
+    # Update the project itself.
     $dbh->do(q{
-      UPDATE tbl_service_specifications SET strvalue = ?
-      WHERE strname = ? AND lngserviceindex in (
-      SELECT lngserviceindex FROM tbl_project_contents
-      WHERE lngprojectindex = ? and strservicetype = 'Printing'
-      )
-      }, undef, $r->param($p), $p, $destination);
+        UPDATE tbl_projects
+        SET intquantity1 = ?,
+            intquantity2 = ?,
+            intquantity3 = ?
+        WHERE lngprojectindex = ?
+    }, undef, @{$qtys}, $destination);
 
-  }
 
-  return $destination;
+    # Each sevice that makes or modifies the project needs to be updated.
+    my $specs = $dbh->prepare(q{
+        UPDATE tbl_service_specifications
+        SET strvalue = ?
+        WHERE strname = 'txtQuantity' || ?::char(1)
+          AND lngprojectindex = ?
+    });
+
+    for my $i (0..1) {
+        next unless $qtys->[$i] && $qtys->[$i] > 0;
+        $specs->execute($qtys->[$i], $i+1, $destination);
+    }
+
+    # Support for Custom Fields on Project Create page to insert
+    # pms colours into the printing services.
+    foreach my $p ( $r->param() ) {
+        next unless $p =~ /pms.*name/;
+        $dbh->do(q{
+            UPDATE tbl_service_specifications SET strvalue = ?
+            WHERE strname = ? AND lngserviceindex in (
+                SELECT lngserviceindex FROM tbl_project_contents
+                WHERE lngprojectindex = ? and strservicetype = 'Printing'
+            )
+        }, undef, $r->param($p), $p, $destination);
+    
+    }
+
+    return $destination;
 }
 
 
@@ -1517,50 +1534,70 @@ sub display_reuse_project {
     return OK;
 }
 
+
 # Copy a project (with changes supplied by the request object).
 sub copy_project {
     my ($dbh, $variable, $pid, $args) = @_;
 
+    #print STDERR "STARRT COPY PID ", Dumper(@_);
+
     die "Must provide a valid project ID." unless $pid;
 
+    # NOTE: Most of this could be done within the db, or someting handling
+    # generalised copying of parent and multiple child tables. Then it's just
+    # a bit of changing statuses and such. What's here is just slightly
+    # improved on legacy stuff.
     $dbh->begin_work;
 
-    my $src = openprint::Project->find_one(Id=>$pid);
+    # Source project attributes.
+    my $orig = $dbh->selectrow_hashref(q{
+        SELECT strprojectreference, strcomments,   lngcustomerid,
+               lngprojecttype,      lngpresstype,  strstatus,
+               intquantity1,        intquantity2,  intquantity3,
+               strdesign,           strprograms,   strotherprograms,
+			   rfq_only, product, false as create_to_quote,  false as create_to_order,
+				prod_id
+        FROM tbl_projects
+        WHERE lngprojectindex = ?
+    }, undef, $pid);
 
     # Destination (new) project attributes.
     my %copy = (
-        user_id  => $openprint::User->id(),
-        company_id => $openprint::Company->id(),
+        lnguserindex  => $variable->{user_id},
+        lngcustomerid => $variable->{cust_id},
         copy_pid	  => $pid,
     );
 
     # We can change the account, name, comments, and quantity of the project.
-    $copy{reference} = $args->{name}    if $args->{name};
-    $copy{comments}         = $args->{comment} if $args->{comment};
-    $copy{prod}             = $args->{prod} if $args->{prod};
-    $copy{quantity1}        = $args->{qty} if $args->{qty};
+    $copy{strprojectreference} = $args->{name}    if $args->{name};
+    $copy{strcomments}         = $args->{comment} if $args->{comment};
+    $copy{prod}                = $args->{prod} if $args->{prod};
+    $copy{intquantity1}        = $args->{qty} if $args->{qty};
 		
 	#field on copy project page is named different.
-    $copy{comments}         = $args->{comments} if $args->{comments};
+    $copy{strcomments}         = $args->{comments} if $args->{comments};
 
     # Reset the project's status (unless the old one didn't calculate).
-    #$copy{strstatus} = 'Unordered' unless $orig->{strstatus} eq 'uncalculated';
+    $copy{strstatus} = 'Unordered' unless $orig->{strstatus} eq 'uncalculated';
 
-    my $has_new_owner = ($src->company_id() != $copy{company_id});
+    my $has_new_owner = ($orig->{lngcustomerid} != $copy{lngcustomerid});
 
-    my $dest = $src->copy();
+    insert(undef, $dbh, 'tbl_projects', (%$orig, %copy));
+    
+    # Get the next insert id in the sequence.
+    my $new = $dbh->last_insert_id('', qw(public tbl_projects lngProjectIndex), {sequence=>'lngProjectIndex_seq'});
 
     # Copy all the services for the project (blanks shipping if new owner).
-    copy_project_services($dbh, $pid, $dest->id(), $has_new_owner);
+    copy_project_services($dbh, $pid, $new, $has_new_owner);
 
     # Copy all the assets unless told not to.
-    copy_project_assets($dbh, $pid, $dest->id()) unless $args->{no_assets};
+    copy_project_assets($dbh, $pid, $new) unless $args->{no_assets};
 
-    copy_project_comments($dbh, $pid, $dest->id());
+    copy_project_comments($dbh, $pid, $new);
 
     $dbh->commit;
 
-    return ($dest->id(), $has_new_owner);
+    return ($new, $has_new_owner);
 }
 
 # Copy a projects services to a destination project (for new projects only).
@@ -1655,64 +1692,112 @@ sub copy_project_services {
 }
 
 sub copy_project_comments {
-  my ($dbh, $src, $dest) = @_;
+    my ($dbh, $src, $dest) = @_;
 
-  my $files = $dbh->prepare(q{ SELECT * FROM project_comments WHERE pid = ?  });
-  my $insert = $dbh->prepare(q{ INSERT INTO project_comments VALUES (?, ?, ?, ?, ?) });
+    my $files = $dbh->prepare(q{
+        SELECT *  FROM project_comments WHERE pid = ?
+    });
 
-  $files->execute($src);
-  my ($pid, $user, $assigned, $date, $comment);
-  $files->bind_columns(\$pid, \$user, \$assigned, \$date, \$comment);
+    my $insert = $dbh->prepare(q{
+        INSERT INTO project_comments VALUES (?, ?, ?, ?, ?)
+    });
 
-  $insert->execute($dest, $user, $assigned, $date, $comment) while $files->fetch;
-  return;
+    # Copy the file metadata in the DB from source to dest.
+    $files->execute($src);
+    my ($pid, $user, $assigned, $date, $comment);
+    $files->bind_columns(\$pid, \$user, \$assigned, \$date, \$comment);
+
+    $insert->execute($dest, $user, $assigned, $date, $comment)
+        while $files->fetch;
+
+
+    return;
 }
 
 
 # Copy the project files (and file metadata in DB) to the destination pid. All
 # approvals are cleared from the files.
 sub copy_project_assets {
-  my ($dbh, $src, $dest) = @_;
+    my ($dbh, $src, $dest) = @_;
 
-  my $files = $dbh->prepare(q{ SELECT filename, description, owner FROM project_files WHERE pid = ?  });
-  my $insert = $dbh->prepare(q{ INSERT INTO project_files (pid, filename, description, owner) VALUES (?, ?, ?, ?) });
+    my $files = $dbh->prepare(q{
+        SELECT filename, description, owner FROM project_files WHERE pid = ?
+    });
 
-  # Copy the file metadata in the DB from source to dest.
-  $files->execute($src);
-  my ($filename, $description, $owner);
-  $files->bind_columns(\$filename, \$description, \$owner);
-  $insert->execute($dest, $filename, $description, $owner) while $files->fetch;
+    my $insert = $dbh->prepare(q{
+        INSERT INTO project_files (pid, filename, description, owner)
+        VALUES (?, ?, ?, ?)
+    });
 
-  # Copy the files themselves.
-  require File::Copy::Recursive;
-  my $count = File::Copy::Recursive::dircopy(
-    get_path(undef, $dbh, $src),
-    get_path(undef, $dbh, $dest),
-  );
+    # Copy the file metadata in the DB from source to dest.
+    $files->execute($src);
+    my ($filename, $description, $owner);
+    $files->bind_columns(\$filename, \$description, \$owner);
 
-  return $count;
+    $insert->execute($dest, $filename, $description, $owner)
+        while $files->fetch;
+
+    # Copy the files themselves.
+    require File::Copy::Recursive;
+    my $count = File::Copy::Recursive::dircopy(
+        get_path(undef, $dbh, $src),
+        get_path(undef, $dbh, $dest),
+    );
+
+    return $count;
 }
 
+
+# Adds a cutstom line item.
 sub insert_custom_service {
-  my ( $log, $dbh, $pid, $desc, $docket, @prices ) = @_;
+    my ( $log, $dbh, $pid, $desc, $docket, @prices ) = @_;
 
-  sql::insert( $log, $dbh, 'tbl_Project_Contents', lngProjectIndex => $pid, strStatus       => 'calculated', strServiceType  => 'Custom');
-  # Get the just inserted service index from the project contents.
-  my $sid = $dbh->selectrow_array(q{ SELECT currval('ContentsServiceIndex_seq') });
+    sql::insert( $log, $dbh, 'tbl_Project_Contents',
+        lngProjectIndex => $pid,
+        strStatus       => 'calculated',
+        strServiceType  => 'Custom'
+    );
+    # Get the just inserted service index from the project contents.
+    my $sid = $dbh->selectrow_array(q{
+        SELECT currval('ContentsServiceIndex_seq')
+    });
 
-  # Insert service type and display name.
-  sql::insert( $log, $dbh, 'tbl_Service_Specifications', lngProjectIndex => $pid, lngServiceIndex => $sid, strName         => 'ServiceType', strValue        => 'Custom' );
-  sql::insert( $log, $dbh, 'tbl_Service_Specifications', lngProjectIndex => $pid, lngServiceIndex => $sid, strName         => 'ServiceName', strValue        => $desc );
-  sql::insert( $log, $dbh, 'tbl_Service_Specifications', lngProjectIndex => $pid, lngServiceIndex => $sid, strName         => 'hide_docket', strValue        => $docket ); 
+    # Insert service type and display name.
+    sql::insert( $log, $dbh, 'tbl_Service_Specifications',
+        lngProjectIndex => $pid,
+        lngServiceIndex => $sid,
+        strName         => 'ServiceType',
+        strValue        => 'Custom' );
+    sql::insert( $log, $dbh, 'tbl_Service_Specifications',
+        lngProjectIndex => $pid,
+        lngServiceIndex => $sid,
+        strName         => 'ServiceName',
+        strValue        => $desc );
 
-  # Insert pricing.
-  for my $i (1..3) {
-    my $price = $prices[$i-1] || '0.00';
-    sql::insert( $log, $dbh, 'tbl_Service_Specifications', lngProjectIndex => $pid, lngServiceIndex => $sid, strName         => "txtPrice$i", strValue        => $price);
-  }
+    sql::insert( $log, $dbh, 'tbl_Service_Specifications',
+        lngProjectIndex => $pid,
+        lngServiceIndex => $sid,
+        strName         => 'hide_docket',
+        strValue        => $docket ); 
 
-  return 1;
+    # Insert pricing.
+    for my $i (1..3) {
+        my $price = $prices[$i-1] || '0.00';
+
+        sql::insert( $log, $dbh, 'tbl_Service_Specifications',
+            lngProjectIndex => $pid,
+            lngServiceIndex => $sid,
+            strName         => "txtPrice$i",
+            strValue        => $price
+        );
+    }
+
+    return 1;
 }
+
+
+
+
 
 use constant BUILD_PAGE    => '/build';
 use constant VIEW_PAGE     => '/main/proj/view.html';
@@ -1896,15 +1981,21 @@ sub make_order {
 	   	return misc::error($log, $dbh, $variable, 'Error', $error) if $error;
 }
 
+
 sub reorder {
-  my ($r, $log, $dbh, $cookie, $variable) = @_;
+    my ($r, $log, $dbh, $cookie, $variable) = @_;
 
-  my  $pid = $r->param('pid');
+	my  $pid = $r->param('pid');
 
+
+print STDERR "RE ORDER PID: $pid \n";
 	($pid) = copy_project($dbh, $variable, $pid, {});
+print STDERR "RE ORDER NEW PID: $pid \n";
+
 	make_order($r, $log, $dbh, $cookie, $variable, $pid);
 	
-  return BUILD_PAGE . "?pid=$pid;level=0";
+    return BUILD_PAGE . "?pid=$pid;level=0";
+
 }
 
 # Create a dummy project to upload files.
@@ -2097,36 +2188,44 @@ sub edit_project {
 }
 
 sub copy {
-  my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
+    my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
 
-  # Change the customer the new project will be owned by (if specified by an admin). If done the project will be recalculated later on.
-  if ($r->param('ddmCustomer') && grep { $variable->{user_type} eq $_ } qw(A E)) {
-    eprint::login::select_customer( $r, $log, $dbh, $cookie, $variable );
-  }
-  my ($new, $changed);
-  if ( $r->param('move_project') ) {
-    my $old = get_path(undef, $dbh, $pid);
+    # Change the customer the new project will be owned by (if specified by an
+    # admin). If done the project will be recalculated later on.
+    if (   $r->param('ddmCustomer') 
+         && grep { $variable->{user_type} eq $_ } qw(A E))
+    {
+        eprint::login::select_customer( $r, $log, $dbh, $cookie, $variable );
+    }
+    my ($new, $changed);
+	if ( $r->param('move_project') ) {
 
-    $dbh->do(q{ UPDATE tbl_projects SET lngcustomerid = ? WHERE lngprojectindex = ?  }, undef, $r->param('ddmCustomer'), $pid);
-    $new = $pid;
+		my $old = get_path(undef, $dbh, $pid);
+
+		$dbh->do(q{
+			UPDATE tbl_projects SET lngcustomerid = ? WHERE lngprojectindex = ?
+		}, undef, $r->param('ddmCustomer'), $pid);
+		$new = $pid;
+		$changed = 1;
+
+		my $new = get_path(undef, $dbh, $pid);
+
+		# Copy the files themselves.
+		require File::Copy::Recursive;
+		my $count = File::Copy::Recursive::dircopy($old, $new);
+		
+
+	} else {
+		($new, $changed) = copy_project($dbh, $variable, $pid, {
+			name      => ($r->param('name')    || ''),
+			comments   => ($r->param('comments') || ''),
+			no_assets => !$r->param('copy_assets'),
+		});
+	}
+
+    # TODO Fix SignatureIndex issue (bug 3675) so we don't have to force a
+    # recalculation.
     $changed = 1;
-
-    my $new = get_path(undef, $dbh, $pid);
-
-    # Copy the files themselves.
-    require File::Copy::Recursive;
-    my $count = File::Copy::Recursive::dircopy($old, $new);
-
-  } else {
-    ($new, $changed) = copy_project($dbh, $variable, $pid, {
-        name      => ($openprint::param{'name'}    || ''),
-        comments  => ($openprint::param{'comments'} || ''),
-        no_assets => !$openprint::param{'copy_assets'},
-      });
-  }
-
-  # TODO Fix SignatureIndex issue (bug 3675) so we don't have to force a recalculation.
-  $changed = 1;
 
     my $p  = "pid=$new";
        $p .= ";level=0"           if $r->param('predefined');
