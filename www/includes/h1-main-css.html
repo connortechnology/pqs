@@ -1,4 +1,7 @@
-<? echo ( openprint::ssi::do_css_links( $$variable{uri} ); ) ?>
+<? echo (
+require openprint::ssi;
+openprint::ssi::do_css_links( $$variable{uri} );
+) ?>
 <link href="<?hash_link(/styles/site.css)?>" rel="stylesheet" type="text/css" media="screen, print" />
 <link href="<?hash_link(/styles/nav.css)?>" rel="stylesheet" type="text/css" media="screen" />
 <link href="<?hash_link(/styles/main.css)?>" rel="stylesheet" type="text/css" media="screen" />
