@@ -41,7 +41,7 @@ my $request;
 
 use constant SERVICE_PAGE_PATH  => '/main/proj';
 use constant PROJECT_BUILD_PAGE => '/build';
-use constant PROJECT_VIEW_PAGE  => '/main/proj/proj_view.html';
+use constant PROJECT_VIEW_PAGE  => '/main/proj/view.html';
 
 sub handler {
   $request = shift;
@@ -142,7 +142,7 @@ sub handler {
   {
     print STDERR "Service not found for $pid/$sid\n";
     if ($dbh->selectrow_array('SELECT true from tbl_projects WHERE lngprojectindex=?', undef, $pid)) {
-      $r->headers_out->set(Location => '/main/proj/proj_view.html?pid='.$pid);
+      $r->headers_out->set(Location => '/main/proj/view.html?pid='.$pid);
       $r->status(Apache2::Const::REDIRECT); #302
       return Apache2::Const::OK;
     }
