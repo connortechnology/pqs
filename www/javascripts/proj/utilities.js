@@ -254,9 +254,10 @@ function growTable (last_row) {
   var inputs = last_row.getElementsByTagName('input');
   for (var i=0; i < inputs.length; i++) {
     inputs[i].onkeypress = function () {};
-    console.log(inputs[i].oninput, growTable);
-    if (inputs[i].oninput == growTable) {
-      console.log('clearing');
+    if (inputs[i].getAttribute('oninput') == 'growTable(this);') {
+      inputs[i].oninput = function () {};
+    }
+    if (inputs[i].getAttribute('on_input_this') == 'growTable') {
       inputs[i].oninput = function () {};
     }
   }
