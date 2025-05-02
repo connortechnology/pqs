@@ -38,12 +38,12 @@ function filter_onChange( element, id, selected ) {
 
   parameters.set('form',form.name);
   parameters.set('selected',selected);
-  new Ajax.Request( '/administrator/equipment/_stock_filters.json', { method: 'post', parameters: parameters, evalScripts: true } );
+  new Ajax.Request( '_stock_filters.json', { method: 'post', parameters: parameters, evalScripts: true } );
 
 } // end function Name_onChange()
 
 function calc(formName) {
-  new Ajax.Updater('Stocks','/administrator/equipment/_stocks.html', {
+  new Ajax.Updater('Stocks','_stocks.html', {
     onLoading:function(){ $('Stocks').innerHTML='Loading...'; },
     parameters:Form.serialize($(formName))});
   //evalScripts:true,
@@ -68,14 +68,29 @@ function add_operator(user_id) {
     }
   );
 }
+
+function add_spec() {
+  new Ajax.Request('_specification.html', {
+    parameters: {
+      action: 'add',
+      equipment_id: $('ddmEquipment').value,
+    },
+    evalScripts:true,
+    onSuccess: function(response){
+      $('specifications_body').insert({top: response.responseText} );
+      SortableTable.load();
+    }
+  } );
+}
+
 function delete_spec( id ) {
-  new Ajax.Request('/administrator/equipment/_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('S'+id); tr.parentNode.removeChild(tr);SortableTable.load();} } );
+  new Ajax.Request('_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('S'+id); tr.parentNode.removeChild(tr);SortableTable.load();} } );
 }
 function copy_spec( id ) {
-  new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;id='+id, { onSuccess: function(response){ $('S'+id).insert( {after: response.responseText } ); SortableTable.load();} } );
+  new Ajax.Request('_specification.html?action=copy&amp;id='+id, { onSuccess: function(response){ $('S'+id).insert( {after: response.responseText } ); SortableTable.load();} } );
 }
 function delete_fold_spec( id ) {
-  new Ajax.Request('/administrator/equipment/_fold_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('FoldSpecification-'+id); tr.parentNode.removeChild(tr);} } );
+  new Ajax.Request('_fold_specification.html?action=delete&amp;id='+id, { onSuccess: function(){var tr = $('FoldSpecification-'+id); tr.parentNode.removeChild(tr);} } );
 } // end function delete_fold_spec
 
 function toggle_service_prices() {
@@ -87,12 +102,21 @@ function toggle_service_prices() {
     div.html('Loading...');
     toggle.html('-');
   }
-  div.load('/administrator/equipment/_service_prices.html?equipment_id='+$j('#ddmEquipment').val()+'&hide='+(toggle.html() == '-' ?'0':'1'),null, function(){
+  div.load('_service_prices.html?equipment_id='+$j('#ddmEquipment').val()+'&hide='+(toggle.html() == '-' ?'0':'1'),null, function(){
       update_event_bindings();
       });
 }
 function toggle_specifications() {
   $j('#show_specifications').toggle();
+}
+
+function add_fold() {
+  new Ajax.Request('_fold.html?action=add&equipment_id='+$j('#ddmEquipment').val(), {
+    onSuccess: function(response){
+      new Insertion.Top($('Folds'), response.responseText);
+      SortableTable.load();
+    }
+  });
 }
 
 function load_folds() {
