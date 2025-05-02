@@ -10,7 +10,7 @@ use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $c
 $debug = 0;
 $table = 'tbl_service_types';
 $serial = 'servicetypeindex';
-$dropdown_field = 'strdescription';
+$dropdown_field = 'description';
 
 %fields = (
 	id			    	=>	'lngindex',
