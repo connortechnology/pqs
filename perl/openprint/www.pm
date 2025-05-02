@@ -50,8 +50,8 @@ sub warn {
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 		$log->debug('Was aborted');
-	} elsif ( Debug ) {
-		$log->debug('cleanup');
+    #} elsif ( Debug ) {
+    #$log->debug('cleanup');
 	} # end if
 	%openprint::variable = ();
 	%openprint::param = ();
@@ -65,8 +65,8 @@ sub cleanup {
 		openprint::Object::init_cache();
 		if ( ! $dbh->{AutoCommit} ) {
 			$log->error('Uncommited transaction');
-		} elsif ( Debug ) {
-			$log->debug('Finished cleanup');
+      #} elsif ( Debug ) {
+      #$log->debug('Finished cleanup');
 		} # end if
 		$dbh->disconnect();
     $dbh = undef;
