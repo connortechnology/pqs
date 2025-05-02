@@ -3,16 +3,16 @@ return '' if !$session{'/administrator/equipment/edit.html?show_service_prices'}
 my $html = '';
 my $Equipment = $$variable{Equipment};
 
-$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
-foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower('.$openprint::Company::fields{name}.')' ) ];
+foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower('.$openprint::Pricelist::fields{name}.')') ) {
   $$variable{Pricelist} = $Pricelist;
   my @prices = openprint::ServicePrice->find(
     equipment_id=>$$variable{Equipment}->id(),
     pricelist_id=>$Pricelist->id(),
-    order=>'min NULLS FIRST, max NULLS LAST');
-  my %prices = misc::make_hash_from_array('service_id', @prices);
+    order=>$openprint::ServicePrice::fields{min}.' NULLS FIRST, '.$openprint::ServicePrice::fields{max}.' NULLS LAST');
+  my %prices = openprint::misc::make_hash_from_array('service_id', @prices);
 
-  my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices], order=>'lngsortorder ASC,lower(name)') if @prices;
+  my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices], order=>$openprint::Service::fields{sorting}.' ASC,lower('.$openprint::Service::fields{name}.')') if @prices;
 
   $html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->link_to() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
   foreach my $service (@services) {
@@ -40,7 +40,7 @@ foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
       </tr></thead><tbody id="prices-$$Pricelist{id}-$$Equipment{id}-$$service{id}">`;
     foreach my $price (@{$prices{$service->id()}}) {
       $$variable{Price} = $price;
-      $html .= include('/administrator/services/_price.html', $variable);
+      $html .= include('/openprint/administrator/services/_price.html', $variable);
     } # end foreach price
     $html .= '</tbody></table></fieldset><!--service-->';
   } # end foreach service
