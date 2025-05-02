@@ -592,6 +592,29 @@ sub htmlize {
 #    return @_;
 #}
 
+sub unhtmlize {
+	return if ! @_;
+	if ( @_ == 1 ) {
+		$_ = shift;
+		return if ! defined $_;
+		$_ =~ s/&amp;/&/mg;
+		$_ =~ s/&quot;/"/mg;
+		$_ =~ s/&lt;/</mg;
+		$_ =~ s/&gt;/>/mg;
+		$_ =~ s/<br\/>/\n/mg;
+		return $_;
+	} # end if
+	for( $_ = 0; $_ < @_; $_ += 1 ) {
+		next if ! defined $_[$_];
+		$_[$_] =~ s/&amp;/&/mg;
+		$_[$_] =~ s/&quot;/"/mg;
+		$_[$_] =~ s/&lt;/</mg;
+		$_[$_] =~ s/&gt;/>/mg;
+		$_[$_] =~ s/<br\/>/\n/mg;
+	} # end for
+	return @_;
+} # end sub unhtmlize
+
 
 sub select_options {
 	my $table 	= shift;
@@ -1022,6 +1045,10 @@ sub radio {
     $selected = $$options{default};
     delete $$options{default};
   } # end if
+  my %v = @{$values};
+  if (!sets::isin($selected, [ keys %v ])) {
+    $log->error("selected $selected no in values ".join(',',keys %v));
+  }
 
   for (my $i = 0; $i < @{$values}; $i += 2) {
     my ($value, $label) = ( $$values[$i], $$values[$i+1] );
