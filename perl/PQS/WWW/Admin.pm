@@ -1328,9 +1328,6 @@ sub is_press {
     return scalar grep { $type == $_ } @$presses;
 }
 
-
-
-
 # Display the material / pricelist pricing page.
 sub material {
     my $r = shift;
