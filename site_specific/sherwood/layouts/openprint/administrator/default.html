@@ -16,6 +16,7 @@
   <link href="<?hash_link(/styles/forms.css)?>" rel="stylesheet" media="screen" />
   <? echo ( do_css_links( 'common.css' ); ) ?>
   <? echo ( do_css_links( $$variable{uri} ); ) ?>
+    <?include(/includes/h2-js.html)?>
 </head>
 <body>
 <?echo(
@@ -29,7 +30,6 @@
     <? echo (variable_substitution( \$$variable{PageContent}, $variable ); ) ?>
 </div>
 
-    <?include(/includes/h2-js.html)?>
     <!--<script src="/javascripts/other.js"></script>-->
     <script src="/openprint/javascripts/bootstrap-5.3.3-dist/js/bootstrap.bundle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.22.6/dist/bootstrap-table.min.js"></script>
