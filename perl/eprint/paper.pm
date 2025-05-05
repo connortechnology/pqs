@@ -395,10 +395,6 @@ sub get_price {
       $price->{Cost}  /= 100;
       $price->{Price} /= 100;
     }
-  } elsif ( $price->{units} eq '1000 Sheets' or $price->{units} eq '1000 sheets' ) {
-    #$openprint::log->error("Price per 1000 sheets $$price{Price} /= 1000 = price per sheet = ".($$price{Price}/1000));
-    $price->{Cost}  /= 1000; 
-    $price->{Price} /= 1000;
   } elsif ( (!$price->{units}) or $price->{units} =~ /lbs/ ) {
     # Get a per sheet price for the stock. The MWeight is the weight of
     # 1000 sheets and the price is based on 100lbs. 
@@ -408,6 +404,10 @@ sub get_price {
     #$openprint::log->error("Price per sheet  from /100lbs $$price{Price} * $mweight / 100 * 1000 = ".($$price{Price} * $mweight /(100 *1000)));
     $price->{Cost}  *= $mweight / (100 * 1000); 
     $price->{Price} *= $mweight / (100 * 1000); 
+  } elsif ( $price->{units} eq '1000 Sheets' or $price->{units} eq '1000 sheets' ) {
+    #$openprint::log->error("Price per 1000 sheets $$price{Price} /= 1000 = price per sheet = ".($$price{Price}/1000));
+    $price->{Cost}  /= 1000; 
+    $price->{Price} /= 1000;
   } else {
     $log->error("Invalid Paper Units: $price->{units}");
   }
