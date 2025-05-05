@@ -3,6 +3,8 @@ use strict;
 use warnings;
 use utf8;
 
+use constant DEBUG => 0;
+
 use Apache2::Const qw(:common :http :methods);
 use Apache2::Request   ();
 use Apache2::Log       ();
@@ -172,7 +174,7 @@ sub handler {
   if ($@) {
     my $err = $@;
 
-    $log->error($err);
+    $log->error('ERror from response: '.$err);
 
     if (DEBUG) {
       require Error::StackTrace;
