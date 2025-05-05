@@ -1017,7 +1017,7 @@ sub price {
     }
   };
   if ($@) { 
-    $log->error($@);
+    $log->error('service::price'.$@);
 
     # An error during munging most likely is a validation error.
     # warn("${service_type}::munge: $@");
@@ -1067,7 +1067,7 @@ sub price {
     }
     my $elapsed = Time::HiRes::time() - $start_time;
     $openprint::log->debug("Status $status from $service_type elapsed: $elapsed");
-    $openprint::log->debug(Data::Dumper::Dumper($specs));
+    $openprint::log->debug('specs'.Data::Dumper::Dumper($specs));
 
     # Unknown statuses are treated as errors.
     unless (grep { $status eq $_ } STATUSES) {
