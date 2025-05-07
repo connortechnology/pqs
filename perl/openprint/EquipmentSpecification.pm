@@ -9,10 +9,10 @@ use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 1;
 $table = 'tbl_Equipment_Specifications';
-$serial = 'tbl_equipment_specifications_id_seq';
+$serial = 'EquipmentSpecification_seq';
 
 %fields = (
-	id				=>	'id',
+	id				=>	'lngindex',
 	equipment_id	=>	'lngequipmentindex',
 	min				=>	'dblmin',
 	max				=>	'dblmax',
@@ -21,6 +21,7 @@ $serial = 'tbl_equipment_specifications_id_seq';
 	value			=>	'strvalue',
 	units			=>	'strunits',
 	interpolate		=>	'interpolate',
+  sorting   => 'sorting',
 );
 %transforms = (
 	min		=> [ 's/[^\d\.]//g' ],

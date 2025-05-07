@@ -23,6 +23,7 @@ require eprint::login;
 use constant JSRS_FILE  => 'jsrs.htm';       # Standard template.
 use constant JSRS_ERROR => 'jsrs_error.htm'; # User error template.
 use constant JSRS_DEBUG => 'jsrs_debug.htm'; # Developer debugging template.
+use constant DEBUG => 0;
 
 # Package variable for storing functions we're allowed to execute from a web
 # request. Populated by the attribute handler.

@@ -43,6 +43,7 @@ $serial = 'tbl_services_lngindex_seq';
 		activity_code	=>	'activity_code',
 		servicetype_id	=>	'servicetype_id',
 		deleted					=>	'deleted',
+    sorting         => 'lngsortorder',
 	 	);	
 %find_fields = (
 		category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',

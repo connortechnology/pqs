@@ -15,7 +15,7 @@
 
 	<!--#include virtual="/includes/h2-js.html" -->
 
-	<script src="/javascripts/proj/service.js"></script>
+  <script src="<?hash_link(/javascripts/proj/service.js)?>"></script>
 	<script>
 			var service = new Service('<?service.ref?>');
 	</script>
@@ -46,11 +46,18 @@
 		<input name="pid" type="hidden" value="<?pid?>" />
 		<input name="sid" type="hidden" value="<?sid?>" />
 
+    <!--#include virtual="/includes/main/proj/equipment.html"-->
 		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 	</form>
 	<!--#include virtual="/includes/f1-main.html" -->
 	<!--#include virtual="/includes/main/proj.html" -->
 	<!--#include virtual="/includes/f2-main.html" -->
-</body>
+  <script>
+    Event.observe(window, 'load', function() {
+      update_event_bindings();
+      calc(document.getElementById('status'));
+    });
+    </script>
+  </body>
 </html>

@@ -84,7 +84,7 @@ use constant DEBUG_FOLDING => 0;
 sub fits {
 	my ( $self, $width, $height, $calliper, $service ) = @_;
 
-	$service = ' '.$service if $service;
+	$service = $service ? ' '.$service : '';
 	if ( $width and $height ) {
 		my $max_width = $self->specification("Maximum$service Sheet Width");
 		my $max_length = $self->specification("Maximum$service Sheet Length");
@@ -604,7 +604,7 @@ sub link_to {
   my $self = shift;
   my $text = @_ ? shift : $$self{strid};
   my $options = @_ ? shift : {};
-	return '<a href="/administrator/equipment/edit.html?ddmEquipment='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>';
+	return '<a href="/openprint/administrator/equipment/edit.html?ddmEquipment='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>';
 }
 sub button_to {
   my $self = shift;

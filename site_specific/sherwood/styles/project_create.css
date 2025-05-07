@@ -750,3 +750,18 @@ width: 35px;
 #calliper, #size, #width, #height {
 width: 55px;
 }
+
+.quantities ul, li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+.quantity2 label,
+.quantity3 label {
+  width: auto;
+  margin-right: 10px;
+}
+input[name="name"] {
+  width: 50em;
+}

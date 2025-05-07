@@ -7,6 +7,8 @@ use strict;
 use warnings;
 no warnings qw(uninitialized);
 
+use constant DEBUG=>0;
+
 BEGIN {
     use base qw( Exporter );
 
@@ -95,7 +97,11 @@ our %MODIFIERS = (
     'ucfirst'   => sub { ucfirst(         $_[0] ) },
     'uc'        => sub { uc(              $_[0] ) },
     'lc'        => sub { lc(              $_[0] ) },
-    escape_html => sub { encode_entities(     $_[0] ) },
+    escape_html => sub {
+      utf8::decode($_[0]);
+      encode_entities($_[0]);
+    },
+
     Dumper      => sub { Dumper(          $_[0] ) },
     newline     => sub { $_[0] =~ s/\r/<br>/g;    return $_[0]; },
 
@@ -588,6 +594,29 @@ sub htmlize {
 #    return @_;
 #}
 
+sub unhtmlize {
+	return if ! @_;
+	if ( @_ == 1 ) {
+		$_ = shift;
+		return if ! defined $_;
+		$_ =~ s/&amp;/&/mg;
+		$_ =~ s/&quot;/"/mg;
+		$_ =~ s/&lt;/</mg;
+		$_ =~ s/&gt;/>/mg;
+		$_ =~ s/<br\/>/\n/mg;
+		return $_;
+	} # end if
+	for( $_ = 0; $_ < @_; $_ += 1 ) {
+		next if ! defined $_[$_];
+		$_[$_] =~ s/&amp;/&/mg;
+		$_[$_] =~ s/&quot;/"/mg;
+		$_[$_] =~ s/&lt;/</mg;
+		$_[$_] =~ s/&gt;/>/mg;
+		$_[$_] =~ s/<br\/>/\n/mg;
+	} # end for
+	return @_;
+} # end sub unhtmlize
+
 
 sub select_options {
 	my $table 	= shift;
@@ -1018,6 +1047,10 @@ sub radio {
     $selected = $$options{default};
     delete $$options{default};
   } # end if
+  my %v = @{$values};
+  if (!sets::isin($selected, [ keys %v ])) {
+    $log->error("selected $selected no in values ".join(',',keys %v));
+  }
 
   for (my $i = 0; $i < @{$values}; $i += 2) {
     my ($value, $label) = ( $$values[$i], $$values[$i+1] );

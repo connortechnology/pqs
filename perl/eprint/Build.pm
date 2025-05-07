@@ -1,6 +1,7 @@
 package eprint::Build;
 use strict;
 use warnings;
+use constant DEBUG=>0;
 
 use Apache2::Const qw(:common :http);
 use Apache2::Log       ();

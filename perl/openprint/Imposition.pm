@@ -174,7 +174,7 @@ sub layout_height {
 			my $folio_size = $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} );
 			$folio_size -= $_[0]{colour_bar_size} if $_[0]{colour_bar_orientation} eq 'Width';
 			$folio_size -= $_[0]{grip};
-			if ( $folio_size > 0 ) {
+			if ($folio_size > 0) {
 				$openprint::log->debug("Adding folio lip size $folio_size to height  $_[0]{rows} * ( $_[0]{folio_lip} - $_[0]{bleed_size} ) - $_[0]{colour_bar_size} $_[0]{colour_bar_orientation}  grip: $_[0]{grip}"  );
 				$_[0]{layout_height} += $folio_size;
         #} else {
