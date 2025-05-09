@@ -1240,10 +1240,10 @@ sub calc_print_price {
   my $plate_multiplier = ($run_style =~ /^W/) ? 2 : 1;
   my $forms = scalar @{ $imp->{layout} };
 
+  # icon: I don't know what the following code does.  It seems to be rejecting if more than 1 sig is being used.
   my %vl;
   my %lay_count;
-  my @lays = @{$imp->{layout}};
-  foreach my $l (@lays) {
+  foreach my $l (@{$imp->{layout}}) {
     my $count = scalar(@{$l});
     $lay_count{$count} = 1;
     map {
@@ -1252,10 +1252,10 @@ sub calc_print_price {
     } @{$l};
   }
   if (scalar(keys %lay_count) > 1 ) {
-    $price{reject_mv_layout} = 1;
+    #$price{reject_mv_layout} = 1; #icon disable as it seems to simply reject anything with more than 1 sig
     print STDERR "versions REJECT MV LAYOUT \n", Dumper(\%lay_count);
   } else {
-    #print STDERR "versions PASS MV LAYOUT \n";
+    print STDERR "versions PASS MV LAYOUT \n";
   }
 
   my $lay_versions = scalar(keys %vl);
