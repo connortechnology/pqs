@@ -879,47 +879,47 @@ sub project_price {
 
   $total[$_] = ($service[$_] // 0) + ($material[$_]//0) for 0..(scalar @service); 
 
-  print STDERR "HAVE PROJECT PRICES: ", Dumper(\@material, \@service, \@total);
+  #print STDERR "HAVE PROJECT PRICES: ", Dumper(\@material, \@service, \@total);
 
   return @total;
 }
 
 # Returns a hash of the service type and price of each service in the project.
 sub service_prices {
-    my ($dbh, $pid) = @_;
+  my ($dbh, $pid) = @_;
 
-    my $sth = $dbh->prepare_cached(q{
-        SELECT c.lngserviceindex                AS sid,
-               t.lngindex                       AS type,
-               c.strservicetype                 AS service, 
-               coalesce(s.strvalue::NUMERIC, 0) AS price
-        FROM tbl_service_specifications s, 
-             tbl_project_contents c,
-             tbl_service_types t
-        WHERE c.lngprojectindex = s.lngprojectindex
-          AND c.lngserviceindex = s.lngserviceindex
-          AND c.strservicetype  = t.strid
-		  AND c.strstatus NOT IN ('uncalculated', 'Deleted')
-          AND s.strvalue NOT IN ('N/A', 'n/a', '')
-          AND c.ysnremoved = false
-          AND s.strname   = 'txtPrice' || ?::char(1)
-          AND c.lngprojectindex = ?
-    });
+  my $sth = $dbh->prepare_cached(q{
+      SELECT c.lngserviceindex                AS sid,
+             t.lngindex                       AS type,
+             c.strservicetype                 AS service, 
+             coalesce(s.strvalue::NUMERIC, 0) AS price
+      FROM tbl_service_specifications s, 
+           tbl_project_contents c,
+           tbl_service_types t
+      WHERE c.lngprojectindex = s.lngprojectindex
+        AND c.lngserviceindex = s.lngserviceindex
+        AND c.strservicetype  = t.strid
+    AND c.strstatus NOT IN ('uncalculated', 'Deleted')
+        AND s.strvalue NOT IN ('N/A', 'n/a', '')
+        AND c.ysnremoved = false
+        AND s.strname   = 'txtPrice' || ?::char(1)
+        AND c.lngprojectindex = ?
+  });
 
-    my @qty = (undef, get_quantities(undef, $dbh, $pid));
+  my @qty = (undef, get_quantities(undef, $dbh, $pid));
 
-    # Ensure a three element array(where Q2 could be missing).
-    my @prices;
-    for my $i (1..3) {
-        unless ($qty[$i] && $qty[$i] > 0) {
-            push @prices, undef;
-            next;
-        };
-        
-        push @prices, $dbh->selectall_hashref($sth, 'sid', {}, $i, $pid);
-    }
+  # Ensure a three element array(where Q2 could be missing).
+  my @prices;
+  for my $i (1..3) {
+    unless ($qty[$i] && $qty[$i] > 0) {
+      push @prices, undef;
+      next;
+    };
 
-    return \@prices;
+    push @prices, $dbh->selectall_hashref($sth, 'sid', {}, $i, $pid);
+  }
+
+  return \@prices;
 }
 
 # Sum all per signature stock totals.
