@@ -5,8 +5,8 @@ no warnings qw(uninitialized);
 
 use base qw(Exporter);
 our @EXPORT = qw(
-    convert_to_old        desired_signature_size
-    convert_to_signature  lf_imposition
+convert_to_old        desired_signature_size
+convert_to_signature  lf_imposition
 );
 
 use constant DEBUG=>1;
@@ -63,25 +63,22 @@ sub convert_to_old {
     #($rows, $cols) = $imposition->cut ? ($y, $x) : ($x, $y);
     #
     ($cols, $rows) = $imposition->cut ? ($y, $x) : ($x, $y);
-
     print STDERR "IMP1: Rows: $rows, COLS: $cols CUT: " . $imposition->cut . " X: $x Y: $y \n" if DEBUG;
   } else {
     print STDERR "CHildren:". Data::Dumper::Dumper($imposition->children)."\n";
   }
 
-  # Multi-version needs it's layouts determined, single version is just
-  # the full sheet.
+  # Multi-version needs it's layouts determined, single version is just the full sheet.
   my $versions = $project->{versions};
   my $n        = $style =~ /^W[TF]$/ ? $slots/2 : $slots;
 
-  my $layouts  = (%$versions) ? version_layouts($n, $versions, $project->{is_multipage})
-  : [[[{ n         => 0,
+  my @layouts  = (%$versions) ? version_layouts($n, $versions, $project->{is_multipage})
+  : ([[{ n         => 0,
           label     => 'Signature',
           requested => 100,
           final     => 100,
           slots     => $n,
-        }]]]
-  ;
+        }]]);
 
   # TEMPORARY: For now we'll treat each as a totally new imposition.
   # Really we want to only recalculate the running costs so the
@@ -89,7 +86,7 @@ sub convert_to_old {
   # we do running (no setup, etc.) comparison in pricing.
   my @impositions;
 
-  for my $layout (@$layouts) {
+  foreach my $layout (@layouts) {
     # Mirror back across the slots (*2) to display W&T/F
     # correctly. Note: Quick and Dirty deep copy needed as the
     # return is memoized.
@@ -120,7 +117,7 @@ sub convert_to_old {
     );
 
     push @impositions, $imp;
-  }
+  } # end foreach layout
 
   return @impositions;
 }
@@ -129,46 +126,46 @@ sub convert_to_old {
 # to see if 'valid' multi-page signatures can be created from them. NOTE - See
 # Bugzilla for a number of significant issues with this section
 sub desired_signature_size {
-    my ($desired_signature_size, $impositions) = @_;
+  my ($desired_signature_size, $impositions) = @_;
 
-    my $max_setup = max(map { $_->{setup} } @$impositions);
+  my $max_setup = max(map { $_->{setup} } @$impositions);
 
-	print STDERR "HAVE MAX SETUP: $max_setup DSS: $desired_signature_size \n" if DEBUG;
-    if ($max_setup == 9) {
-        # right now 36 pg signatures are not a good thing, so until we can
-        # figure when we do want them we are just going to do without. will -
-        # jan 21/03 e.x. on a 112pg book we want 3 32s instead of 3 36s. for
-        # the most part 32s are more better.
-        $max_setup = 8;
+  print STDERR "HAVE MAX SETUP: $max_setup DSS: $desired_signature_size \n" if DEBUG;
+  if ($max_setup == 9) {
+    # right now 36 pg signatures are not a good thing, so until we can
+    # figure when we do want them we are just going to do without. will -
+    # jan 21/03 e.x. on a 112pg book we want 3 32s instead of 3 36s. for
+    # the most part 32s are more better.
+    $max_setup = 8;
+  }
+  elsif ($max_setup == 18) {
+    # create the same rule for 2pg Signatures.
+    $max_setup = 16;
+  }
+
+  if ($desired_signature_size > $max_setup) {
+    $desired_signature_size = $max_setup;
+  }
+  else {
+    # OK here is where we handle optimizing signature sizes.  This is a
+    # simple start that replaces the logic we used to have in calc_book.js
+
+    # e.x.: 4 - 3 = 1;
+    my $empty_slots = $max_setup - $desired_signature_size;
+    my $new_layout  = $desired_signature_size - $empty_slots;
+
+    # If the new layout is exactly half of the max then use it.
+    if ($new_layout * 2 == $max_setup) {
+      $desired_signature_size = $new_layout;
     }
-    elsif ($max_setup == 18) {
-        # create the same rule for 2pg Signatures.
-        $max_setup = 16;
+    elsif ($desired_signature_size == 5) {
+      # until we figure out when 20pg sigs are a good thing, we don't
+      # want to do them cause there is almost always a better format.
+      $desired_signature_size = 4;
     }
-
-    if ($desired_signature_size > $max_setup) {
-        $desired_signature_size = $max_setup;
-    }
-    else {
-        # OK here is where we handle optimizing signature sizes.  This is a
-        # simple start that replaces the logic we used to have in calc_book.js
-
-        # e.x.: 4 - 3 = 1;
-        my $empty_slots = $max_setup - $desired_signature_size;
-        my $new_layout  = $desired_signature_size - $empty_slots;
-
-        # If the new layout is exactly half of the max then use it.
-        if ($new_layout * 2 == $max_setup) {
-            $desired_signature_size = $new_layout;
-        }
-        elsif ($desired_signature_size == 5) {
-            # until we figure out when 20pg sigs are a good thing, we don't
-            # want to do them cause there is almost always a better format.
-            $desired_signature_size = 4;
-        }
-    }
-	print STDERR "HAVE NEW DSS: $desired_signature_size \n" if DEBUG;
-    return $desired_signature_size;
+  }
+  print STDERR "HAVE NEW DSS: $desired_signature_size \n" if DEBUG;
+  return $desired_signature_size;
 }
 
 sub convert_to_signature {
@@ -296,16 +293,16 @@ sub convert_to_signature {
     my $sig_size = $rows * $cols;
     print STDERR "CONVER DONE2 ROWS: $rows COLS: $cols SETUP $ \n" if DEBUG;
     map {
-      foreach my $l (@{$_}) {
-        #print STDERR "HAVE L VALUE: $l->{slots} \n";
-        if ( $l->{slots} >= $desired_signature_size ) {
-          #if ( $l->{slots} >= ($desired_signature_size * $sig_size) ) {
-          print STDERR "HAVE VALID SLOTS: $l->{slots} SIG SIZE: $sig_size DSS: $desired_signature_size \n" if DEBUG;
-        } else {
-          print STDERR "INVALID SLOTS: $l->{slots} SIG SIZE: $sig_size DSS: $desired_signature_size \n" if DEBUG;
-          return {};
-        }
+    foreach my $l (@{$_}) {
+      #print STDERR "HAVE L VALUE: $l->{slots} \n";
+      if ( $l->{slots} >= $desired_signature_size ) {
+        #if ( $l->{slots} >= ($desired_signature_size * $sig_size) ) {
+        print STDERR "HAVE VALID SLOTS: $l->{slots} SIG SIZE: $sig_size DSS: $desired_signature_size \n" if DEBUG;
+      } else {
+        print STDERR "INVALID SLOTS: $l->{slots} SIG SIZE: $sig_size DSS: $desired_signature_size \n" if DEBUG;
+        return {};
       }
+    }
     } @{$imp->{layout}};
 
     return $imp;
@@ -316,19 +313,19 @@ sub convert_to_signature {
 
 
 sub descrease_imposition { # [sic]
-    # When refactoring this please change to correct spelling of 'decrease'.
+  # When refactoring this please change to correct spelling of 'decrease'.
 
-    my ($imposition) = @_;
+  my ($imposition) = @_;
 
-    if ($$imposition{Rows} > $$imposition{Cols}) {
-        $$imposition{Rows} -= 1;
-    }
-    else {
-        $$imposition{Cols} -= 1;
-    }
-    $$imposition{Imposition} = $$imposition{Rows} * $$imposition{Cols};
+  if ($$imposition{Rows} > $$imposition{Cols}) {
+    $$imposition{Rows} -= 1;
+  }
+  else {
+    $$imposition{Cols} -= 1;
+  }
+  $$imposition{Imposition} = $$imposition{Rows} * $$imposition{Cols};
 
-    return;
+  return;
 }
 
 
@@ -340,174 +337,174 @@ sub descrease_imposition { # [sic]
 # significantly different (at this time).
 
 sub lf_imposition {
-    my ($dbh, $project, $press, $substrate, $style) = @_;
+  my ($dbh, $project, $press, $substrate, $style) = @_;
 
-    my ($w, $h) = @$substrate{qw(width height)};
+  my ($w, $h) = @$substrate{qw(width height)};
 
-    if (exists $press->{grip} and defined $press->{grip}) {
-        $w -= $press->{grip};
+  if (exists $press->{grip} and defined $press->{grip}) {
+    $w -= $press->{grip};
+  }
+
+  # The imposition method varies with the substrate format.
+  my $impose = $substrate->{type} eq 'roll'
+  ? \&get_lf_roll_impositions : \&get_lf_sheet_impositions;
+
+  my @lf_impositions = $impose->($project, $substrate, $w, $h);
+
+  my @impositions;
+  foreach my $lf_imp (@lf_impositions) {
+    my $imp = eprint::impositionObject->new($press->{id});
+
+    my $slots = $lf_imp->{rows} * $lf_imp->{cols};
+
+    my $map = {
+      Setup            => $slots,
+      RotateSheet      => $lf_imp->{rotate},
+      Rows             => $lf_imp->{rows},
+      Cols             => $lf_imp->{cols},
+      SpreadRows       => $lf_imp->{spread_rows},
+      SpreadCols       => $lf_imp->{spread_cols},
+      StitchSize       => $lf_imp->{stitch_size},
+      CutOff           => $lf_imp->{cutoff},
+
+      Spreads          => $lf_imp->{spread_rows}
+      * $lf_imp->{spread_cols},
+
+
+      ImageWidth       => $project->{width},
+      ImageHeight      => $project->{height},
+
+      Setup            => $lf_imp->{rows} * $lf_imp->{cols},
+
+      GrainDirection   => undef,
+      ImageOrientation => undef,
+      Style            => $style,
+      Paper            => $substrate,
+      Layout           => [[{ n         => 0,
+            label     => 'Inkjet Output',
+            requested => 100,
+            final     => 100,
+            slots     => $slots,
+          }]],
+      tree             => {}, # A dummy reference.
+    };
+
+    while (my ($key, $value) = each %$map) {
+      my $command = "set$key";
+      $imp->$command( $value );
     }
 
-    # The imposition method varies with the substrate format.
-    my $impose = $substrate->{type} eq 'roll'
-        ? \&get_lf_roll_impositions : \&get_lf_sheet_impositions;
+    push @impositions, $imp;
+  }
 
-    my @lf_impositions = $impose->($project, $substrate, $w, $h);
-
-    my @impositions;
-    foreach my $lf_imp (@lf_impositions) {
-        my $imp = eprint::impositionObject->new($press->{id});
-
-        my $slots = $lf_imp->{rows} * $lf_imp->{cols};
-
-        my $map = {
-            Setup            => $slots,
-            RotateSheet      => $lf_imp->{rotate},
-            Rows             => $lf_imp->{rows},
-            Cols             => $lf_imp->{cols},
-            SpreadRows       => $lf_imp->{spread_rows},
-            SpreadCols       => $lf_imp->{spread_cols},
-            StitchSize       => $lf_imp->{stitch_size},
-            CutOff           => $lf_imp->{cutoff},
-
-            Spreads          => $lf_imp->{spread_rows}
-                              * $lf_imp->{spread_cols},
-
-
-            ImageWidth       => $project->{width},
-            ImageHeight      => $project->{height},
-
-            Setup            => $lf_imp->{rows} * $lf_imp->{cols},
-
-            GrainDirection   => undef,
-            ImageOrientation => undef,
-            Style            => $style,
-            Paper            => $substrate,
-            Layout           => [[{ n         => 0,
-                                     label     => 'Inkjet Output',
-                                     requested => 100,
-                                     final     => 100,
-                                     slots     => $slots,
-                                }]],
-            tree             => {}, # A dummy reference.
-        };
-
-        while (my ($key, $value) = each %$map) {
-            my $command = "set$key";
-            $imp->$command( $value );
-        }
-
-        push @impositions, $imp;
-    }
-
-    return @impositions;
+  return @impositions;
 }
 
 sub get_lf_roll_impositions {
-    my ($project, $substrate, $w, $h) = @_;
+  my ($project, $substrate, $w, $h) = @_;
 
-    my @impositions;
+  my @impositions;
 
-    foreach my $dimension (qw( width height )) {
-        if ( $project->{$dimension} <= $w) {
-            push @impositions, {
-                stitch_size => 0,
-                rows        => 1,
-                cols        => floor($w / $project->{$dimension}),
-                spreads     => 1,
-                spread_rows => 1,
-                spread_cols => 1,
-                rotate      => $dimension eq 'height',
-                cutoff      => (  $dimension eq 'height'
-                                ? $project->{width}
-                                : $project->{height}),
-            };
-        }
+  foreach my $dimension (qw( width height )) {
+    if ( $project->{$dimension} <= $w) {
+      push @impositions, {
+        stitch_size => 0,
+        rows        => 1,
+        cols        => floor($w / $project->{$dimension}),
+        spreads     => 1,
+        spread_rows => 1,
+        spread_cols => 1,
+        rotate      => $dimension eq 'height',
+        cutoff      => (  $dimension eq 'height'
+          ? $project->{width}
+          : $project->{height}),
+      };
     }
+  }
 
-    return @impositions if scalar @impositions;
+  return @impositions if scalar @impositions;
 
-    # Neither dimension fits without tiling.
-    my @dimensions = qw( image_height image_width );
-    my @col_names  = qw( rows         cols        );
+  # Neither dimension fits without tiling.
+  my @dimensions = qw( image_height image_width );
+  my @col_names  = qw( rows         cols        );
 
-    foreach my $dimension (0, 1) {
-        my %spreads = ( rows => 1, cols => 1 );
+  foreach my $dimension (0, 1) {
+    my %spreads = ( rows => 1, cols => 1 );
 
-        $spreads{ $col_names[$dimension] } = ceil(
-            $project->{ $dimensions[$dimension] } / $w
-        );
+    $spreads{ $col_names[$dimension] } = ceil(
+      $project->{ $dimensions[$dimension] } / $w
+    );
 
-        my $stitch_size
-            = ($spreads{ $col_names[$dimension]      } - 1)
-            *  $project->{ $dimensions[$dimension ^ 1] };
+    my $stitch_size
+    = ($spreads{ $col_names[$dimension]      } - 1)
+    *  $project->{ $dimensions[$dimension ^ 1] };
 
-        push @impositions, {
-            stitch_size => $stitch_size,
-            rows        => 1,
-            cols        => 1,
-            spread_rows => $spreads{rows},
-            spread_cols => $spreads{cols},
-            rotate      => $dimension,
-            cutoff      => $project->{ $dimensions[$dimension ^ 1] },
-        };
-    }
+    push @impositions, {
+      stitch_size => $stitch_size,
+      rows        => 1,
+      cols        => 1,
+      spread_rows => $spreads{rows},
+      spread_cols => $spreads{cols},
+      rotate      => $dimension,
+      cutoff      => $project->{ $dimensions[$dimension ^ 1] },
+    };
+  }
 
-    return @impositions;
+  return @impositions;
 }
 
 sub get_lf_sheet_impositions {
-    my ($project, $sheet, $w, $h) = @_;
+  my ($project, $sheet, $w, $h) = @_;
 
-    my @impositions;
+  my @impositions;
 
-    my @dimensions = qw( height width );
+  my @dimensions = qw( height width );
 
-    foreach my $dimension (0, 1) {
-        my $x = $dimensions[$dimension    ];
-        my $y = $dimensions[$dimension ^ 1];
+  foreach my $dimension (0, 1) {
+    my $x = $dimensions[$dimension    ];
+    my $y = $dimensions[$dimension ^ 1];
 
-        if (   $project->{$x} < $h
-            && $project->{$y} < $w ) {
+    if (   $project->{$x} < $h
+      && $project->{$y} < $w ) {
 
-            my $cols = floor( $h / $project->{$x} );
-            my $rows = floor( $w / $project->{$y} );
+      my $cols = floor( $h / $project->{$x} );
+      my $rows = floor( $w / $project->{$y} );
 
-            push @impositions, {
-                stitch_size => 0,
-                rows        => $rows,
-                cols        => $cols,
-                spread_rows => 1,
-                spread_cols => 1,
-                rotate      => $dimension,
-            };
-        }
+      push @impositions, {
+        stitch_size => 0,
+        rows        => $rows,
+        cols        => $cols,
+        spread_rows => 1,
+        spread_cols => 1,
+        rotate      => $dimension,
+      };
     }
+  }
 
-    return @impositions if scalar @impositions;
+  return @impositions if scalar @impositions;
 
-    foreach my $dimension (0, 1) {
-        my $x = $dimensions[$dimension    ];
-        my $y = $dimensions[$dimension ^ 1];
+  foreach my $dimension (0, 1) {
+    my $x = $dimensions[$dimension    ];
+    my $y = $dimensions[$dimension ^ 1];
 
-        my $spread_rows = ceil($project->{$x} / $h);
-        my $spread_cols = ceil($project->{$y} / $w);
+    my $spread_rows = ceil($project->{$x} / $h);
+    my $spread_cols = ceil($project->{$y} / $w);
 
-        my $stitch_size
-            = ( $spread_cols * $sheet->{width}  * ($spread_rows - 1) )
-            + ( $spread_rows * $sheet->{height} * ($spread_cols - 1) );
+    my $stitch_size
+    = ( $spread_cols * $sheet->{width}  * ($spread_rows - 1) )
+    + ( $spread_rows * $sheet->{height} * ($spread_cols - 1) );
 
-        push @impositions, {
-            rows        => 1,
-            cols        => 1,
-            stitch_size => $stitch_size,
-            spread_rows => $spread_rows,
-            spread_cols => $spread_cols,
-            rotate      => $dimension,
-        };
-    }
+    push @impositions, {
+      rows        => 1,
+      cols        => 1,
+      stitch_size => $stitch_size,
+      spread_rows => $spread_rows,
+      spread_cols => $spread_cols,
+      rotate      => $dimension,
+    };
+  }
 
-    return @impositions;
+  return @impositions;
 }
 
 
@@ -519,102 +516,100 @@ sub get_lf_sheet_impositions {
 # (labels => percentages) return a set of possible impositions to produce the
 # versions. Follow through for exact methods of generating the set.
 memoize('version_layouts',
-   # Version labels and order doesn't effect the end result.
-   NORMALIZER => sub {my ($s,$v)=@_; join ',', $s, sort {$a<=>$b} values %$v},
-   LIST_CACHE   => 'MEMORY',
-   SCALAR_CACHE => 'MEMORY',
+  # Version labels and order doesn't effect the end result.
+  NORMALIZER => sub {my ($s,$v)=@_; join ',', $s, sort {$a<=>$b} values %$v},
+  LIST_CACHE   => 'MEMORY',
+  SCALAR_CACHE => 'MEMORY',
 );
 sub version_layouts {
-    my ($slots, $versions, $multipage) = @_;
+  my ($slots, $versions, $multipage) = @_;
 
-    # Given the number of versions determine all the unique groupings where no
-    # version spans multiple press sheets (integer partitions). TODO: We
-    # really should span one version across multiple sheets as situations like
-    # a setup of 4 with version % of 40,30,20,10 will probably work best that
-    # way (only one plate change, 0 waste for 2A2B, 2C1D1A layout).
-    my @partitions = partitions(scalar keys %$versions);
+  # Given the number of versions determine all the unique groupings where no
+  # version spans multiple press sheets (integer partitions). TODO: We
+  # really should span one version across multiple sheets as situations like
+  # a setup of 4 with version % of 40,30,20,10 will probably work best that
+  # way (only one plate change, 0 waste for 2A2B, 2C1D1A layout).
+  my @partitions = partitions(scalar keys %$versions);
 
-	#We now alllot multipage projects to have multiple verions, however
-	#the current restriction is 1 Verions per Form.
-	# X Versions = X Froms regardless of layout.
-	print STDERR "START HAVE PARITIONS SLOTS: $slots ", Dumper(\@partitions, $multipage) if DEBUG;
+  #We now alllot multipage projects to have multiple verions, however
+  #the current restriction is 1 Verions per Form.
+  # X Versions = X Froms regardless of layout.
+  print STDERR "START HAVE PARITIONS SLOTS: $slots ", Dumper(\@partitions, $multipage) if DEBUG;
 
-	#***************************************************
-	#disble this filter for now. filtering done down stream in convert to signatrue function.
-	#***************************************************
-	#	if ( $multipage ) {
-	#
-	#		#Filter out at partition set that uses multiple verions.
-	#		my @tmp;
-	#		my @org = @partitions;
-	#		foreach my $set (@partitions) {
+  #***************************************************
+  #disble this filter for now. filtering done down stream in convert to signatrue function.
+  #***************************************************
+  #	if ( $multipage ) {
+  #
+  #		#Filter out at partition set that uses multiple verions.
+  #		my @tmp;
+  #		my @org = @partitions;
+  #		foreach my $set (@partitions) {
 
-	#		my $check = 1;
-	#			foreach my $n (@$set) {
-	#				$check = 0 if $n > 1;
-	#			}
-	#			push @tmp, $set if $check;
-	#		}
+  #		my $check = 1;
+  #			foreach my $n (@$set) {
+  #				$check = 0 if $n > 1;
+  #			}
+  #			push @tmp, $set if $check;
+  #		}
 
-	#	@partitions = @tmp;
-	#	print STDERR "START HAVE PARITIONS ", Dumper(\@partitions, \@tmp, @org, $multipage);
+  #	@partitions = @tmp;
+  #	print STDERR "START HAVE PARITIONS ", Dumper(\@partitions, \@tmp, @org, $multipage);
 
-	#}
-	#***************************************************
-
-
-    # If there're less slots than versions we need to discard the first n
-    # partitions that contain layouts with more than x slots.
-    @partitions = grep { $_->[0] <= $slots } @partitions
-        if $slots < scalar keys %$versions;
-
-    # We need the versions to be in percentile order so we can close groupings
-    # in an easier fashion.
-    my $i = 0;
-    my @nversions = map  { $i++; { n         => $i,
-                                   label     => $_,
-                                   requested => $versions->{$_}, }}
-                    sort { $versions->{$a} <=> $versions->{$b}    } keys %$versions;
-    undef $i;
-
-	print STDERR "HAVR PART  NVER" , Dumper(\@nversions) if DEBUG;
-
-    # It's important to note that the partitions are processed in ascending
-    # order of plate changes.
-    my (%result, $max_waste);
-    foreach my $set (@partitions) {
-
-		print STDERR "HAVE SET CHECK: ",  Dumper($set) if DEBUG;
-        my @remaining = @nversions;
-
-        # Choose which n versions will go on the current sheet (n is a single
-        # integer from a partion) until all versions are gone.
-        my ($selected, @layout);
-        foreach my $n (@$set) {
-            ($selected, @remaining) = get_matching_versions($n, @remaining);
-
-            # Determine how the selected version get laid out on the sheet.
-            push @layout, match_versions($slots, $selected);
-        }
+  #}
+  #***************************************************
 
 
-        # Determine the layout wastage.
-        my $wastage = sum( map { map { $_->{final} } @$_ } @layout ) - 100;
+  # If there're less slots than versions we need to discard the first n partitions that contain layouts with more than x slots.
+  @partitions = grep { $_->[0] <= $slots } @partitions if $slots < scalar keys %$versions;
 
-        # Subsequent layouts use the same or more plates, so they must use
-        # less waste or they aren't worth considering.
-		if (not defined $max_waste or $wastage <= $max_waste) {
-            $max_waste = $wastage;
-            $result{@layout} = \@layout;
-		}
+  # We need the versions to be in percentile order so we can close groupings # in an easier fashion.
+  my $i = 0;
+  my @nversions = map  { $i++; { n         => $i,
+    label     => $_,
+    requested => $versions->{$_}, }}
+  sort { $versions->{$a} <=> $versions->{$b}    } keys %$versions;
+  undef $i;
 
-        # Note: Run overs are variable based on each form's run length, so
-        # wastage is not the only factor. However it's felt
+  print STDERR "HAVR PART NVER" , Dumper(\@nversions) if DEBUG;
+
+  # It's important to note that the partitions are processed in ascending order of plate changes.
+  my (@result, $max_waste);
+  foreach my $set (@partitions) {
+
+    #print STDERR "HAVE SET CHECK: ",  Dumper($set) if DEBUG;
+    my @remaining = @nversions;
+
+    # Choose which n versions will go on the current sheet (n is a single integer from a partion) until all versions are gone.
+    my ($selected, @layout);
+    foreach my $n (@$set) {
+      ($selected, @remaining) = get_matching_versions($n, @remaining);
+
+      # Determine how the selected version get laid out on the sheet.
+      my $layout = match_versions($slots, $selected);
+      print STDERR "Layout: $slots, $selected: " . Dumper($layout)."\n";
+      push @layout, $layout;
     }
+    #icon: Can't optimise by wastage here, should just calculate it for later. 
 
-	print STDERR "HAVR PART " , Dumper(\%result) if DEBUG;
+    # Determine the layout wastage. final is the percentage
+    my $wastage = sum( map { map { $_->{final} } @$_ } @layout ) - 100;
 
-    return [values %result];
+    $openprint::log->debug("Wasteage $wastage <= ? $max_waste");
+    # Subsequent layouts use the same or more plates, so they must use
+    # less waste or they aren't worth considering.
+    #if (not defined $max_waste or $wastage <= $max_waste) {
+    $max_waste = $wastage;
+    push @result, \@layout;
+    #}
+
+    # Note: Run overs are variable based on each form's run length, so
+    # wastage is not the only factor. However it's felt
+  }
+
+  print STDERR "HAVR PART " , Dumper(\@result) if DEBUG;
+
+  return @result;
 }
 
 
@@ -622,27 +617,27 @@ sub version_layouts {
 #  Ex. 5 becomes [5], [4,1], [3,2], [3,1,1], [2,2,1], [2,1,1,1], [1,1,1,1,1]
 memoize('partitions');
 sub partitions {
-    my $n = shift;
+  my $n = shift;
 
-    return []  if $n == 0;
-    return [1] if $n == 1;
+  return []  if $n == 0;
+  return [1] if $n == 1;
 
 
-    my @set;
-    for my $p ( partitions($n - 1) ) {
-        my $append = [@$p, 1]; # Append 1 to each elem.
+  my @set;
+  for my $p ( partitions($n - 1) ) {
+    my $append = [@$p, 1]; # Append 1 to each elem.
 
-        # Any set that's a singleton or whose first field is less than the
-        # second, gets the first field incremented. (ie. [3+1], [2,1+1])
-        if ( @$p == 1 or $p->[-1] < $p->[-2] ) {
-            $p->[-1]++;
-            push @set, $p;
-        }
-
-        push @set, $append;
+    # Any set that's a singleton or whose first field is less than the
+    # second, gets the first field incremented. (ie. [3+1], [2,1+1])
+    if ( @$p == 1 or $p->[-1] < $p->[-2] ) {
+      $p->[-1]++;
+      push @set, $p;
     }
 
-    return @set;
+    push @set, $append;
+  }
+
+  return @set;
 }
 
 
@@ -659,7 +654,7 @@ sub partitions {
 # ideas?  TODO: We may not want to # keep the cached values (version
 # percentages) around for long?
 memoize('get_matching_versions',
-   NORMALIZER => sub { my($s,@v)=@_; join ',', $s, map {$_->{requested}} @v; }
+  NORMALIZER => sub { my($s,@v)=@_; join ',', $s, map {$_->{requested}} @v; }
 );
 sub get_matching_versions {
   my ($n, @versions) = @_;
@@ -757,24 +752,25 @@ sub match_versions {
 
 # Standard deviation. TODO Replace with XS function for speed?
 sub stddev {
-    my $array = shift;
+  my $array = shift;
 
-	print STDERR "\nMAKE STD DEV" ,Dumper($array) if DEBUG;
+  print STDERR "\nMAKE STD DEV" ,Dumper($array) if DEBUG;
 
-    my $elems  = scalar @$array;
-    my $sum    = 0;
-    my $sum_sq = 0;
+  my $elems  = scalar @$array;
+  my $sum    = 0;
+  my $sum_sq = 0;
 
-    for (@$array) {
-        $sum    += $_;
-        $sum_sq += ($_ **2);
-    }
+  for (@$array) {
+    $sum    += $_;
+    $sum_sq += ($_ **2);
+  }
 
-    # Floating point errors can cause negative results, for our purposes
-    # anything that close can just be 0.
-    my $result = $sum_sq/$elems - (($sum/$elems) ** 2);
+  # Floating point errors can cause negative results, for our purposes
+  # anything that close can just be 0.
+  my $result = $sum_sq/$elems - (($sum/$elems) ** 2);
 
-    return ($result <= 0) ? 0 : sqrt($result);
+  return ($result <= 0) ? 0 : sqrt($result);
 }
 
 1;
+__END__

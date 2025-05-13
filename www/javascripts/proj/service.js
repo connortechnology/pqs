@@ -146,7 +146,6 @@ Service.prototype = {
 
         if (data.error) { 
             alert("A problem has occured:\n\t" + data.error); 
-            return; 
         }
 
         // Dispatch to the custom response handler
@@ -162,7 +161,10 @@ Service.prototype = {
       const form = this.form; // "this" gets reset into the each
       for (const [field, value] of Object.entries(data)) {
         var elem = form.elements[field] ? form.elements[field] : document.getElementById(field);
-        if (!elem) continue;
+        if (!elem) {
+          console.log("No element found for "+field);
+          continue;
+        }
 
         // IE uses NodeLists but doesn't recognize them as DOM objects.
         //   elem = $A( elem instanceof NodeList ? elem : [elem] );

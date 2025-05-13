@@ -762,3 +762,6 @@ width: 55px;
   width: auto;
   margin-right: 10px;
 }
+input[name="name"] {
+  width: 50em;
+}

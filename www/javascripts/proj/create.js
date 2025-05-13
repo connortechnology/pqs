@@ -58,7 +58,8 @@ function press_type_projects (press_type) {
       if (!input || (input.name != 'rdbProjectType')) continue;
       const exists = project_types[ input.value ];
       input.disable = !exists;                   // Disable
-      Element.display(input.parentNode, exists); // Hide
+      exists ? $j(input.parentNode).show() : $j(input.parentNode).hide(); // Hide
+
       // An invalid option can't be the selected one.
       if (input.checked && !exists) input.checked = false;
       if (exists) {
@@ -68,7 +69,7 @@ function press_type_projects (press_type) {
     }
 
     // A section without any options isn't displayed.
-    Element.display(section, has_option);
+    has_option ? $j(section).show() : $j(section).hide();
   }
   return true;
 }

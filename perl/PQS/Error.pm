@@ -24,7 +24,8 @@ use warnings;
 
 use Carp;
 use Exporter;
-use PQS::Constants qw(DEBUG);
+#use PQS::Constants qw(DEBUG);
+use constant DEBUG=>0;
 
 use base qw(Exporter);
 our @EXPORT = qw(die);

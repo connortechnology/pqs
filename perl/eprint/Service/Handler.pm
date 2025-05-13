@@ -3,6 +3,8 @@ use strict;
 use warnings;
 use utf8;
 
+use constant DEBUG => 0;
+
 use Apache2::Const qw(:common :http :methods);
 use Apache2::Request   ();
 use Apache2::Log       ();
@@ -41,7 +43,7 @@ my $request;
 
 use constant SERVICE_PAGE_PATH  => '/main/proj';
 use constant PROJECT_BUILD_PAGE => '/build';
-use constant PROJECT_VIEW_PAGE  => '/main/proj/proj_view.html';
+use constant PROJECT_VIEW_PAGE  => '/main/proj/view.html';
 
 sub handler {
   $request = shift;
@@ -142,7 +144,7 @@ sub handler {
   {
     print STDERR "Service not found for $pid/$sid\n";
     if ($dbh->selectrow_array('SELECT true from tbl_projects WHERE lngprojectindex=?', undef, $pid)) {
-      $r->headers_out->set(Location => '/main/proj/proj_view.html?pid='.$pid);
+      $r->headers_out->set(Location => '/main/proj/view.html?pid='.$pid);
       $r->status(Apache2::Const::REDIRECT); #302
       return Apache2::Const::OK;
     }
@@ -172,7 +174,7 @@ sub handler {
   if ($@) {
     my $err = $@;
 
-    $log->error($err);
+    $log->error('ERror from response: '.$err);
 
     if (DEBUG) {
       require Error::StackTrace;

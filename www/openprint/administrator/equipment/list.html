@@ -32,7 +32,7 @@ function load_page() {
 		</li>
 		<li><label>Category</label>
 			<?echo( ssi::select( 
-						openprint::Equipment_Category->dropdown(order=>'lower(name)'), 
+						openprint::Equipment_Category->dropdown(), 
 						$session{$r->uri().'?category_id'}, { 
 						name=>'category_id', 
 						prepend=>[ '', 'All' ],
@@ -41,7 +41,7 @@ function load_page() {
 		</li>
 		<li><label>Service</label>
 			<?echo( ssi::select( 
-						openprint::ServiceType->dropdown(order=>'lower(name)'), 
+           openprint::ServiceType->dropdown(order=>'lower('.$openprint::ServiceType::fields{name}.')'), 
 						$session{$r->uri().'?servicetype_id'}, { 
 						name=>'servicetype_id', 
 						prepend=>[ '', 'All' ],

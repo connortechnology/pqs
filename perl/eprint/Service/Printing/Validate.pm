@@ -10,6 +10,7 @@ use Data::Dumper;
 use eprint::Config;
 use eprint::project qw(:common);
 use List::Util		qw(sum);
+use Math::Round;
 
 use constant VARNISHES        => qw(gloss matte);
 use constant DEFAULT_COVERAGE => eprint::Config->get('Printing' => 'default_coverage');
@@ -46,9 +47,7 @@ sub munge {
 
 sub rfq_only {
 	my ( $dbh, $pid ) = @_;
-	return $dbh->selectrow_array(q{
-		SELECT rfq_only FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid);
+	return $dbh->selectrow_array(q{ SELECT rfq_only FROM tbl_projects WHERE lngprojectindex = ?  }, undef, $pid);
 }
 sub product_only {
 	my ( $dbh, $pid ) = @_;
@@ -462,7 +461,7 @@ sub versions {
     
     # Map the counts into percentages as we need to use them for
     # all project estimate quantites.
-    $_ = ($_/$total) * 100 for values %versions;
+    $_ = Math::Round::nearest(0.01, ($_/$total) * 100) for values %versions;
 
     return \%versions;
 }

@@ -99,7 +99,7 @@
 				<label>Service Types</label>
 				<select name="servicetype_id" id="servicetype_id" multiple="multiple" class="chosen">
 					<? echo ( make_drop_down(
-						openprint::ServiceType->dropdown( order=>'lower(name)'),
+            openprint::ServiceType->dropdown( order=>'lower('.$openprint::ServiceType::fields{name}.')'),
 						$$variable{Equipment}->servicetype_id(),
 						); ) ?>
 				</select>
@@ -205,21 +205,7 @@
 					<th class="value">Value</th>
 					<th class="units">Units</th>
 					<th class="interpolate">Interpolate</th>
-					<th class="buttons">
-<? echo (
-	button( 'Add', { onclick=>q`new Ajax.Request('/administrator/equipment/_specification.html', {
-		parameters: {
-			action: 'add',
-			equipment_id: $('ddmEquipment').value,
-		},
-		evalScripts:true,
-		onSuccess: function(response){
-			$('specifications_body').insert({top: response.responseText} );
-			SortableTable.load();
-			}
-	} );`,text=>'Add' } );
-) ?>
-</th>
+					<th class="buttons"> <? echo ( button( 'Add', { on_click=>'add_spec', text=>'Add' } );) ?> </th>
 				</tr>
 			</thead>
 			<tbody id="specifications_body">
@@ -259,7 +245,7 @@
 ) ?>
 			</select>
 <? echo ( join("\n",
-			button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{Equipment}->id() ."', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
+			button( 'AddFold', { on_click=>'add_fold', text=>'Add' } ),
 			'<input type="file" name="fileFolds"/>',
 			button( 'ExportFolds', { onclick=>"f3.btnFunction.value='Export Folds';f3.submit();", text=>'Export Folds' } ),
 			button( 'ImportFolds', { onclick=>"f3.btnFunction.value='Import Folds';f3.submit();", text=>'Import Folds' } ),
@@ -282,9 +268,9 @@
 <? if ( $$variable{Equipment}->id() ) ?>
 	<? echo ( include_logs( $$variable{Equipment} ); ) ?>
 <? endif ( $$variable{Equipment}->id() ) ?>
-<script src="<?hash_link(/javascripts/paper.js)?>"></script>
-<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
-<script src="<?hash_link(/administrator/equipment/edit.js)?>"></script>
+<script src="<?hash_link(/openprint/javascripts/paper.js)?>"></script>
+<script src="<?hash_link(/openprint/javascripts/pricing.js)?>"></script>
+<script src="<?hash_link(/openprint/administrator/equipment/edit.js)?>"></script>
 <script>
   const equipment_id='<?echo($$variable{Equipment}->id())?>';
 </script>

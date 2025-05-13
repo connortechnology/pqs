@@ -149,7 +149,6 @@ function clear_price_data( form ) {
 //
 
 Event.observe(window, 'load', function () {
-    var is_mv = $('is_mv');
 
     var elem = $('s0_metal_effects');
     if ( elem )
@@ -159,8 +158,8 @@ Event.observe(window, 'load', function () {
     if ( elem )
         Event.observe(elem, 'click', check_metal.bindAsEventListener(elem));
 
+    var is_mv = $('is_mv');
     if (!is_mv) return;
-
     Event.observe(is_mv, 'click', need_multiversion.bindAsEventListener(is_mv));
 
     // Set the initial page state.
