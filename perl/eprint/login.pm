@@ -16,6 +16,7 @@ require eprint::greetings;
 require eprint::user;
 require MIME::QuotedPrint;
 require crypto;
+require eprint::order;
 
 # displays the login page, and populates the destination variable
 sub login_display {
@@ -1100,40 +1101,36 @@ print STDERR "SELECT CUSTOMER: " , $sql , "\n";
 sub select_customer {
   my ($r, $log, $dbh, $cookie, $variable, $customer) = @_;
 
-  my $cust_id = $customer || $r->param('ddmCustomer') || $r->param('SelectCustomer');
+  my $cust_id = $customer || $r->param('ddmCustomer') || $r->param('SelectCustomer') || $r->param('ddmCompany');
+  if ($cust_id) {
+    sql::update($log, $dbh, 'tbl_Logged_In', ['strSessionID=?', $cookie], lngCustomerID => $cust_id);
 
-  sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID= '$cookie'",# AND chrSite = 'C' ",
-    lngCustomerID => $cust_id
-  );
+    $variable->{cust_id} = $cust_id;
 
-  $variable->{cust_id} = $cust_id;
+    # Update this session's company information to the newly selected one.
+    $variable->{user}{company} = $dbh->selectrow_hashref(q{
+      SELECT lngcustomerid                                          AS id,
+      strcompanyname                                         AS "name",
+      (CASE WHEN ysnsupplier = 'Y' THEN true ELSE false END) AS is_supplier,
+      (CASE WHEN ysnreseller = 'Y' THEN true ELSE false END) AS is_reseller,
+      ordercredit
+      FROM tbl_customer WHERE lngcustomerid = ?
+      }, undef, $variable->{cust_id});
 
-  #print STDERR "UPDATE CUST TO : $variable->{cust_id} \n";
+    $variable->{strCompanyName} = $variable->{user}{company}{name};
+    $variable->{dollarcredit}  = $variable->{user}{company}{ordercredit} // '0.00';
 
-  # Update this session's company information to the newly selected one.
-  $variable->{user}{company} = $dbh->selectrow_hashref(q{
-    SELECT lngcustomerid                                          AS id,
-    strcompanyname                                         AS "name",
-    (CASE WHEN ysnsupplier = 'Y' THEN true ELSE false END) AS is_supplier,
-    (CASE WHEN ysnreseller = 'Y' THEN true ELSE false END) AS is_reseller,
-    ordercredit
-    FROM tbl_customer WHERE lngcustomerid = ?
-    }, undef, $variable->{cust_id});
+    my $order_id = eprint::order::get_unfinished_order(undef, $dbh, $cookie, $variable->{cust_id}, $variable->{user_id} );
 
-  $variable->{strCompanyName} = $variable->{user}{company}{name};
-  $variable->{dollarcredit}  = $variable->{user}{company}{ordercredit} // '0.00';
+    $variable->{order_count} = $order_id ? $dbh->selectrow_array(q{
+      SELECT count(*) FROM tbl_order_contents
+      WHERE lngorderid = ?
+      }, undef, $order_id) : '';
 
-require eprint::order;
-  my $order_id = eprint::order::get_unfinished_order(
-    undef, $dbh, $cookie, $variable->{cust_id}, $variable->{user_id} );
-
-  $variable->{order_count} = $order_id ? $dbh->selectrow_array(q{
-    SELECT count(*) FROM tbl_order_contents
-    WHERE lngorderid = ?
-    }, undef, $order_id) : '';
-
-
-  #print STDERR "VERIFY HAVE ORDER: $order_id OC: $variable->{order_count} \n";
+    my $company = openprint::Company->find_one(id=>$cust_id);
+    openprint::switch_company($company) if $company;
+    #print STDERR "VERIFY HAVE ORDER: $order_id OC: $variable->{order_count} \n";
+  }  # end if cust_id
   return OK;
 }
 
