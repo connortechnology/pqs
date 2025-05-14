@@ -385,13 +385,14 @@ sub get_project_price {
 
   my $impositions = create_impositions($dbh, $project, $desired_size);
 
-  print STDERR "DONE IMPOSE 4 create_impositions \n";
+  print STDERR "DONE IMPOSE 4 create_impositions \n" . Data::Dumper::Dumper($impositions);
 
   $te_impose = Time::HiRes::time() if TIMINGS;
 
   # If we don't have any valid impositions we can't continue and should tell
   # the client why.
-  return ({ error => 'No valid impositions' }) unless scalar @$impositions;
+  return ({ error => 'No valid impositions.'.($$project{error} ? "\n".$$project{error} : '') }) unless scalar @$impositions;
+  print STDERR "IMpositions? " . @$impositions;
 
   ## PRICING
   #
@@ -961,31 +962,19 @@ sub fill_price_hash {
 
 sub create_impositions {
   my ($dbh, $project, $desired_size) = @_;
-  my @impositions;
 
   my $start_time = Time::HiRes::time();
   # Get an iterator that generates imposition possibilities.
   #print STDERR "START IMPOSE $project->{id}\n";
+
+  my $func = $project->{press_type} eq 'inkjetprinter' ? \&lf_imposition : \&convert_to_old;
+
+  my @impositions;
   my $iter = impositions($dbh, $project, $start_time);
-
-  my $end =  Time::HiRes::time() - $start_time;
-  print STDERR "DONE IMPOSE $project->{id} :  elapsed $end (s)  \n";
-
-  my $func = $project->{press_type} eq 'inkjetprinter'
-  ? \&lf_imposition : \&convert_to_old;
-
-  $end =  Time::HiRes::time() - $start_time;
-  print STDERR "DONE IMPOSE 2 $project->{id} :  elapsed $end (s)  \n";
-
   # For now just flatten the iterator into a list of old 'impositionObjects'.
   while ($iter->isnt_exhausted) {
     push @impositions, $func->($dbh, $project, @{ $iter->value });
   }
-
-  $end =  Time::HiRes::time() - $start_time;
-
-  print STDERR "HAVE IMPOSTIONS BEFORE FILTER  1 " . scalar @impositions . "\n";
-  print STDERR "DONE IMPOSE 3 $project->{id} :  elapsed $end (s)  \n";
 
   # MULTI-VERSION TEMP: For now we'll constrain business cards to layout
   # on as few sheets as possible. Note: This equation was just pulled
@@ -995,9 +984,7 @@ sub create_impositions {
   if ($project->{type} eq 'BusinessCards' and keys %{ $project->{versions} }) {
     @impositions = map {
       my $d = ($_->{run_style} =~ /^W/) ? 2 : 1;
-      my $n = ceil(  (keys %{$project->{versions}})
-      / ($_->{setup} / ($d*1.8))
-      );
+      my $n = ceil(  (keys %{$project->{versions}}) / ($_->{setup} / ($d*1.8)));
 
       (@{$_->{layout}} > $n) ? () : $_;
     } @impositions;
@@ -1601,8 +1588,7 @@ sub calc_print_price {
     my $is_sqft = $paper_price->{units} eq 'square foot';
 
     if ($roll && !$is_sqft) {
-      return (error => 'That particular selection does not have '
-        . 'large format pricing.');
+      return (error => 'That particular selection does not have large format pricing.');
     }
 
     if ($is_sqft) {
@@ -2154,9 +2140,7 @@ sub get_run_price {
     '', $press);
 
   if (!$max_colours) {
-    $log->error(
-      "PRINTING: FATAL ERROR: Could Not Get 'Number of Colours' for Press: $press"
-    );
+    $log->error( "PRINTING: FATAL ERROR: Could Not Get 'Number of Colours' for Press: $press");
     return %run_price;
   }
   my $impression_service =

@@ -38,7 +38,9 @@ sub impositions {
   my $end =  Time::HiRes::time() - $start_time;
   print STDERR "START Printing \ IMPOSE: $end \n ";
 
-  my $presses    = get_presses   ($dbh, $project); # Potential printers.
+  my %reasons;
+  my $presses    = get_presses   ($dbh, $project, \%reasons); # Potential printers.
+    $$project{error} .= join("\n", values %reasons ) if !$presses->isnt_exhausted;
 
   my $substrates = get_substrates($dbh, $project); # Fits image at least.
   #print STDERR "HAVE NO PAPER \n" unless @{$substrates};
@@ -109,18 +111,15 @@ sub impositions {
 # Return an iterator over the set of presses that fit enough specs to attempt
 # to run the project.
 sub get_presses {
-  my ($dbh, $project) = @_;
+  my ($dbh, $project, $reasons) = @_;
 
   # If we've been overridden our press is as specified. Otherwise get all
   # for the press type chosen for the project.
-  my @ids = $project->{override}{press}
-  || press_ids($dbh, $project->{press_type}, $project->{rfq_only});
+  my @ids = $project->{override}{press} || press_ids($dbh, $project->{press_type}, $project->{rfq_only});
 
   print STDERR "HAVE PRESS LIST: ", Dumper(@ids);
 
-  return igrep { can_print_project ($dbh, $_, $project) }
-  imap  { get_equipment     ($dbh, $_          ) }
-  ilist (@ids);
+  return igrep { can_print_project ($dbh, $_, $project, $reasons) } imap  { get_equipment     ($dbh, $_          ) } ilist (@ids);
 }
 
 # Get a list of presses (number ids) of a given press type.
@@ -138,57 +137,71 @@ sub press_ids {
 
 # Returns a bool if the press has the correct attributes to print the project.
 sub can_print_project {
-  my ($dbh, $press, $project) = @_;
+  my ($dbh, $press, $project, $reasons) = @_;
 
   #not allowed to use a non variable press if there is variable data
   if (eprint::project::check_for_service(undef, $dbh, $project->{id}, "VariableData") && !grep(/^VariableData$/, @{$press->{services}})) {
+    $$reasons{$$press{id}} = $$press{name} . ' does not support variable data';
     return 0;
   }
   #print STDERR "Pass Variable Data Test \n";
 
   #print STDERR "\nCHECK PRESS: $press->{id} - $press->{name} \n";
   # Can we even print the project type?
-  return unless can_print_project_type($press, $project->{type});
+  if (!can_print_project_type($press, $project->{type})) {
+    $$reasons{$$press{id}} = $$press{name} .= ' does not support project type '.$project->{type};
+    return 0;
+  }
   #print STDERR "Pass Project Type Test \n";
 
+  # Icon: removed because it has nothing to do with press
   # Clause added due to empty string (*sigh*) being possible as paper
   # calliper is stored as a string. TODO Use correct type, check earlier.
-  return unless $project->{paper}{calliper} 
-  || $project->{type} eq 'ScreenItem';
+  #if (!$project->{paper}{calliper} and $project->{type} ne 'ScreenItem') {
+  #$results{$$press{id}} = 'Does not support project type '.$project->{type};
+  #}
 
   #print STDERR "Pass Calliper  Test \n";
 
   # Manual screen 'presses' are exempt from calliper checks. You can place a
   # screen on the side of a bus if you felt like it.
-  return if !($press->{type} == SCREEN && $press->{operation} =~ /^Manual/i)
-  && $press->{maximum_calliper} < $project->{paper}{calliper};
+  if (!($press->{type} == SCREEN && $press->{operation} =~ /^Manual/i) && $press->{maximum_calliper} < $project->{paper}{calliper}) {
+    $$reasons{$$press{id}} = $$press{name} . ' failed maximum calliper '.$press->{maximum_calliper}.' < '.$project->{paper}{calliper};
+    return 0;
+  }
 
   #print STDERR "Pass Max Calliper  Test \n";
 
   # The project image can't be bigger than the maximum imageable area.
   # Inkjet printers ignore this as they're allowed to tile their images.
-  return if $press->{type} != INKJET
+  if ($press->{type} != INKJET
     && ($press->{maximum_image_area_length} and
-    ( $project->{height} > $press->{maximum_image_area_length} 
-      || $project->{width}  > $press->{maximum_image_area_length} )
-    && ($press->{maximum_image_area_width} and (
-        $project->{width} > $press->{maximum_image_area_width}
-        || $project->{height} > $press->{maximum_image_area_width}))
-  );
+      ( $project->{height} > $press->{maximum_image_area_length} 
+        || $project->{width}  > $press->{maximum_image_area_length} )
+      && ($press->{maximum_image_area_width} and (
+          $project->{width} > $press->{maximum_image_area_width}
+          || $project->{height} > $press->{maximum_image_area_width}))
+    ) ) {
+    $$reasons{$$press{id}} = $$press{name} .= ' failed image area test';
+    return 0;
+  }
 
   #print STDERR "Pass Project Size Test \n";
 
   # Check minimum project size for Screen presses.
-  return if $press->{type} == SCREEN
-  && defined $press->{minimum_project_size}
-  && $project->{width}  * $project->{height} < $press->{minimum_project_size};
+  if ($press->{type} == SCREEN && defined $press->{minimum_project_size} && $project->{width}  * $project->{height} < $press->{minimum_project_size}) {
+    $$reasons{$$press{id}} = $$press{name} .= ' failed minimum project size test';
+    return 0;
+  }
 
   #print STDERR "Pass Min Project Size Test \n";
 
   # Check if the press has pricing for the required coatings.
   # return if grep {    ($project->{$_}{side_one} || $project->{$_}{side_two}) 
-  return if grep {    ($project->{$_}) 
-    && ! can_coat($dbh, $press, $_) } COATINGS;
+  if (grep { $project->{$_} && ! can_coat($dbh, $press, $_) } COATINGS) {
+    $$reasons{$$press{id}} = $$press{name} .= ' failed coatings test';
+    return 0;
+  }
 
   #print STDERR "Pass COATING Test \n";
 
@@ -196,24 +209,32 @@ sub can_print_project {
   # customer's want a work around to setting up proper wash and varnish
   # costs. So if we have a varnish check for pricing (in any price list).
   if (grep { /Varnish/i } map { @$_ } @{ $project->{colours} }) {
-    return unless can_coat($dbh, $press, 'varnish');
+    if (!can_coat($dbh, $press, 'varnish')) {
+      $$reasons{$$press{id}} = $$press{name} . ' failed varnish test';
+      return 0;
+    }
   }
 
   #print STDERR "Pass Varnish Test \n";
   # We do not support offline Corner Stitching.
   # So we will only allow presses with inline corner stitching.
-  return if (   $press->{type} == DIGITAL
+  if (   $press->{type} == DIGITAL
     && defined $project->{bind_type} 
     && $project->{bind_type} eq 'CornerStitching'
-    && ! grep { $_ eq 'CornerStitching' } @{$press->{services}} );
-
+    && ! grep { $_ eq 'CornerStitching' } @{$press->{services}} ) {
+    $$reasons{$$press{id}} = $$press{name} .= ' failed corner stitching test';
+    return 0;
+  }
 
   #print STDERR "Pass Digital Test \n";
 
   # If our project has specified Press Quality Requirements only allow the presses
   # that exactly match the quality rating we are looking for.
 
-  return if ( (!$project->{product_only}) && $press->{product_only} );
+  if ( (!$project->{product_only}) && $press->{product_only} ) {
+    $$reasons{$$press{id}} = $$press{name} .= ' failed product only test';
+    return 0;
+  }
 
   #print STDERR "\nC PRESS IS VALID: $press->{id} - $press->{name} \n";
   return 1;
