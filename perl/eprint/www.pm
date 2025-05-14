@@ -404,7 +404,8 @@ sub parse_page {
     if ($section eq 'C') {
 
       # Something to do with logging in from email links.
-      if ($r->param('AutoLogin')) {
+      if (0 and $r->param('AutoLogin')) {
+        $log->error("THIS IS COMPLETELY INSECURE");
         eprint::login::get_login_info($log, $dbh, $cookie, $variable, $r->param('AutoLogin'));
         sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID = '$cookie' AND chrSite = 'C'", 
           lngCustomerID => $variable->{cust_id},

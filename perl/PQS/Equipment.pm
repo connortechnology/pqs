@@ -35,7 +35,6 @@ sub get_equipment {
   my $equip = $dbh->selectrow_hashref($sth, {}, $id);
 
   croak "Equipment ($id) does not exists." unless $equip;
-  $openprint::log->debug(Data::Dumper::Dumper($equip));
 
   # Create a dualvar of the numeric and string equipment type for ease.
   $equip->{type} = dualvar $equip->{type_id}, $equip->{type_ref};
@@ -93,12 +92,8 @@ sub get_equipment {
     });
 
   die "'services' is a reserved key (used erroneously by equipment $id)" if exists $equip->{services};
-
   $equip->{services} = [ map { dualvar $_->[0], $_->[1] } @{ $dbh->selectall_arrayref($services, undef, $id) } ];
-
-  $equip->{invalid_substrates} = $dbh->selectcol_arrayref(q{ SELECT paper FROM equipment_paper_exclusion 
-    WHERE equipment = ?
-    },undef,$equip->{id});
+  $equip->{invalid_substrates} = $dbh->selectcol_arrayref(q{ SELECT paper FROM equipment_paper_exclusion WHERE equipment = ?  },undef,$equip->{id});
 
   # The interface we'll provide will be the standard hash for legacy
   # reasons; however, we'll impose a readonly contraint, normalize any input
