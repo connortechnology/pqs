@@ -101,7 +101,7 @@ sub calc {
     $ts_req = Time::HiRes::time(); # Debug/profiling timings;
   }
 
-  print STDERR "log: $openprint::log dbh $openprint::dbh\n";
+  #print STDERR "log: $openprint::log dbh $openprint::dbh\n";
   eprint::Service::Cutting::init($pid);
 
   my $pricing = get_project_price(
@@ -429,9 +429,7 @@ sub get_project_price {
   local %eprint::service::cache = eprint::service::load_pricing(
     $dbh, $variable->{cust_id}, ($project->{press_type}, 'cutter')
   );
-  local %eprint::equipment::cache = eprint::equipment::load_specs(
-    $dbh, $project->{press_type}
-  );
+  local %eprint::equipment::cache = eprint::equipment::load_specs( $dbh, $project->{press_type});
 
   # A bit kludgey but it's better than thrashing the DB until we can
   # rewrite print pricing properly.
@@ -971,14 +969,14 @@ sub create_impositions {
   my $end =  Time::HiRes::time() - $start_time;
   print STDERR "DONE IMPOSE $project->{id} :  elapsed $end (s)  \n";
 
-  my $func = $project->{press_type} eq 'inkjetprinter'
-  ? \&lf_imposition : \&convert_to_old;
+  my $func = $project->{press_type} eq 'inkjetprinter' ? \&lf_imposition : \&convert_to_old;
 
   $end =  Time::HiRes::time() - $start_time;
   print STDERR "DONE IMPOSE 2 $project->{id} :  elapsed $end (s)  \n";
 
   # For now just flatten the iterator into a list of old 'impositionObjects'.
   while ($iter->isnt_exhausted) {
+    $openrpint::log->debug(Data::Dumper::Dumper($iter->value));
     push @impositions, $func->($dbh, $project, @{ $iter->value });
   }
 
@@ -1007,9 +1005,7 @@ sub create_impositions {
   if ($desired_size > 0) {
     my $signature_size = desired_signature_size($desired_size, \@impositions);
 
-    $signature_size = 1
-    if $signature_size
-    && $project->{press_type} eq 'digital'
+    $signature_size = 1 if $signature_size && $project->{press_type} eq 'digital'
     && $project->{bind_type} !~ /^(Loop|Saddle)Stitching$/
     && configuration::get_value(undef, $dbh, 'Digital2PageSignatures');
 
