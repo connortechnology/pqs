@@ -24,7 +24,7 @@ require openprint::OrderedProduct;
 
 $debug = 0;
 
-$table = 'orders';
+$table = 'tbl_orders';
 $serial = 'orders_id_seq';
 %fields = (
 	id								=> 'id',
