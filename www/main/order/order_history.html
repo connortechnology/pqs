@@ -83,9 +83,9 @@
 
 				<p class="none">&nbsp;</p>
 
-				<? if ( @{$$variable{'ORDERS'}} == 0 ) ?>
+				<? if ( (!$$variable{'ORDERS'}) or @{$$variable{'ORDERS'}} == 0 ) ?>
 					<p>There are no orders which match your search criteria.</p>
-				<? else ( @{$$variable{'ORDERS'}} == 0 ) ?>
+				<? else ( (!$$variable{'ORDERS'}) or @{$$variable{'ORDERS'}} == 0 ) ?>
 
 					<p>Please click on an <strong>Order ID #</strong> to view an order's details.</p>
 
@@ -149,7 +149,7 @@
 
 					<div style="width: 100%;text-align: right;"></div>
 
-				<? endif ( @{$$variable{'ORDERS'}} == 0 ) ?>
+				<? endif ( (!$$variable{'ORDERS'}) or @{$$variable{'ORDERS'}} == 0 ) ?>
 
 				<input type="hidden" name="btnFunction" />
 				<br />
