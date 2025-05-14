@@ -23,7 +23,7 @@
 				<option value="">Auto-select</option>
 				<?substrate?>
 			</select>
-			<label for="override_substrate" class="checkbox override"><input type="checkbox" id="override_substrate" name="override_substrate" onclick="overrides_chkbox.apply(this);" class="override" value="Y" />Override</label>
+			<label for="override_substrate" class="checkbox override"><input type="checkbox" id="override_substrate" name="override_substrate" on_click_this="overrides_chkbox" class="override" value="Y" />Override</label>
 			<br />
 	<? endif (! ($variable->{project}{press_type}{ref} eq 'screen' || $variable->{project}{press_type}{ref} eq 'web')) ?>
 
@@ -35,7 +35,7 @@
 		<? endloop presses ?>
 	</select>
 	<label for="override_press" class="checkbox override">
-	<input type="checkbox" name="override_press" id="override_press" onclick="overrides_chkbox.apply(this);" value="1" />Override</label>
+	<input type="checkbox" name="override_press" id="override_press" on_click_this="overrides_chkbox" value="1" />Override</label>
 	<br />
 
 	<? if ($$variable{project}{press_type}{ref} ne 'web') ?>
