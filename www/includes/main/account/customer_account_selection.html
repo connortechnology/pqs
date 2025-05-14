@@ -1,25 +1,58 @@
 <? if ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' or $$variable{'Reseller'} eq 'Y' ) ?>
-	<br class="clear" />
-
-	<form action="/main/account/confirmation_select_customer.html" name="f1" id="f1">
-
+<form action="/main/account/confirmation_select_customer.html" name="f1" id="f1" method="post">
 	<fieldset>
-		<legend>
-			Account Selection
-		</legend>
+		<legend> Account Selection </legend>
 
 		<p>As an employee or administrator you may now select an account. Any projects,  quotes or orders that you create will be recorded in the selected Company's account history.</p>
 
-		<label for="ddmCustomer">Select an Account:</label>
-		<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
-			<option value=""> Select an Account </option>
-			<?ddmCustomer?>
-		</select>
-		<input type="submit" value="Go" class="button" />
-		
-		<br />
+    <ul class="non-list" style="display: flex; flex-direction: column;">
+      <li>
+      <label for="ddmCompany">Select an Account:</label>
+      <select id="ddmCompany" name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+        <option value=""> Select an Account </option>
+        <?ddmCustomer?>
+      </select>
+      <input type="submit" value="Go" class="button" />
+    </li>
+    <li class="form-group"><label>Last 10</label>
+      <ul class="non-list" style="display: flex; flex-direction: column;">
+  <? echo (
+    my $html = '';
+
+    my $parser = 'DateTime::Format::Pg';
+    my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 );
+
+    my $datetime = DateTime->new( time_zone => $openprint::TZ, ( year => $year, month=>$month, day=>$day, ));
+
+    my @Entries = openprint::Log->find(
+      user_id=>$session{user_id},
+      action=>'Switch Company',
+      order=>'date_time DESC',
+      'date_time >=' => $parser->format_datetime( $datetime ),
+      );
+    my %companies;
+    if ( @Entries ) {
+      my @Companies = openprint::Company->find( id=>[ map { $_->company_id() } @Entries ] );
+      foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {
+        next if $companies{$$Log{company_id}};
+        next if ! $Log->Company()->can_become();
+        $companies{$$Log{company_id}} = $Log->company_id();
+        $html .= sprintf('<li><a href="/main/account/confirmation_select_customer.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a></li>',
+          $Log->company_id(), $Log->Company()->name(),
+        );
+      } # end foreach
+    }
+    my $User = new openprint::User($session{user_id});
+    if ( ! $companies{$$User{company_id}} ) {
+    $html .= sprintf('<li><a href="/main/account/confirmation_select_customer.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a></li>',
+        $User->company_id(), $User->Company()->name(),
+      );
+    } # end if
+    return $html;
+    ) ?>
+      </ul>
+    </li>
+    </ul>
 	</fieldset>
-
-	</form>
-
+</form>
 <? endif ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' or $$variable{'Reseller'} eq 'Y' ) ?>
