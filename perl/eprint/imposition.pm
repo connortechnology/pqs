@@ -30,16 +30,13 @@ sub convert_to_old {
   # The total number of images in this imposition.
   my $slots = $imposition->card;
 
-
   # These should always exist but they don't for all presses so we check
   # existance first to avoid an error on equipment lookup.
   my $grip   = exists $press->{grip}   && !$project->{override}{margin} ? $press->{grip}   : 0;
   my $gutter = exists $press->{gutter} && !$project->{override}{margin} ? $press->{gutter} : 0;
 
   # Create a nice string version of the grain. TODO Should be external.
-  my $grain = !defined $imposition->grain ? 'Mixed'
-  :          $imposition->grain ? 'Height'
-  :                               'Width';
+  my $grain = !defined $imposition->grain ? 'Mixed' : $imposition->grain ? 'Height' : 'Width';
 
   # Non-dutch (mixed grain) impositions can still get the old rows ×
   # columns fields filled out.
