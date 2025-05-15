@@ -971,7 +971,7 @@ sub create_impositions {
   my $iter = impositions($dbh, $project, $start_time);
   # For now just flatten the iterator into a list of old 'impositionObjects'.
   while ($iter->isnt_exhausted) {
-    $openrpint::log->debug(Data::Dumper::Dumper($iter->value));
+    #$openprint::log->debug(Data::Dumper::Dumper($iter->value));
     push @impositions, $func->($dbh, $project, @{ $iter->value });
   }
 
