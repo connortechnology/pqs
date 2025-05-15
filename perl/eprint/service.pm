@@ -342,7 +342,7 @@ sub valid_equipment {
 #								  WHERE strname = 'product_only' AND strvalue = 'Y')" if $pid;
 	
 
-	print STDERR "VALID EQUIPEMNT SQL: $sql \n";
+  #print STDERR "VALID EQUIPEMNT SQL: $sql \n";
 	
   # As this query will potentially be run for every single service for every
   # project created, let's cache the statment.
