@@ -184,7 +184,7 @@ sub can_print_project {
           $project->{width} > $press->{maximum_image_area_width}
           || $project->{height} > $press->{maximum_image_area_width}))
     )) {
-    $$reasons{$$press{id}} = $$press{name} .= ' failed image area test';
+    $$reasons{$$press{id}} = $$press{name} . ' failed image area test';
     return 0;
   }
 
