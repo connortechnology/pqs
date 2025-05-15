@@ -39,17 +39,17 @@ sub impositions {
   print STDERR "START Printing \ IMPOSE: $end \n ";
 
   my %reasons;
-  my $presses    = get_presses   ($dbh, $project, \%reasons); # Potential printers.
-    $$project{error} .= join("\n", values %reasons ) if !$presses->isnt_exhausted;
+  my $presses    = get_presses($dbh, $project, \%reasons); # Potential printers.
+  $$project{error} .= join("\n", values %reasons ) if !$presses->isnt_exhausted;
 
   my $substrates = get_substrates($dbh, $project); # Fits image at least.
   #print STDERR "HAVE NO PAPER \n" unless @{$substrates};
   my $subs = @{$substrates};
 
-  #use Data::Dumper;
   #print STDERR "HAVE PAPER: $subs PRESSES: $presses \n", Dumper($substrates);
 
   my @styles     = get_runstyles($project);
+  $openprint::log->debug("RS: @styles");
 
   my $empty = Iterator->new(sub { Iterator::is_done });
 
@@ -62,6 +62,7 @@ sub impositions {
 
   # Generate all possible impositions for the project (except inkjet).
   my $impositions = !$is_inkjet ? PQS::Imposition->new(project => $project, start => $start_time) : undef;
+  #$openprint::log->debug('impositions: '.Data::Dumper::Dumper($impositions));
 
   $end =  Time::HiRes::time() - $start_time;
   print STDERR "START Printing \ IMPOSE 3: $end  \n";
@@ -71,7 +72,7 @@ sub impositions {
   my $run = sub {
     my $press = shift;
 
-    #print STDERR "HAVE PRESS: ", Dumper($press);
+    print STDERR "HAVE PRESS: ", Dumper($press);
 
     # Get the run styles we can do and sheet sizes that fit on the press.
     my @r = grep { can_print_style($press, $_, $project) } @styles;
@@ -117,17 +118,19 @@ sub get_presses {
   # for the press type chosen for the project.
   my @ids = $project->{override}{press} || press_ids($dbh, $project->{press_type}, $project->{rfq_only});
 
-  print STDERR "HAVE PRESS LIST: ", Dumper(@ids);
+  print STDERR "HAVE PRESS LIST: ", Dumper(\@ids);
 
-  return igrep { can_print_project ($dbh, $_, $project, $reasons) } imap  { get_equipment     ($dbh, $_          ) } ilist (@ids);
+  return igrep { can_print_project ($dbh, $_, $project, $reasons) } imap { get_equipment($dbh, $_) } ilist (@ids);
 }
 
 # Get a list of presses (number ids) of a given press type.
 sub press_ids {
   my ($dbh, $press_type, $rfq_only) = @_;
 
-  my $sql  = "SELECT lngindex FROM tbl_equipment WHERE strtype = ? ";
-  $sql .= "AND strsupplier <> 'RFQ Required'" unless $rfq_only;
+  my $sql  = 'SELECT lngindex FROM tbl_equipment WHERE TRUE';
+  $sql .= ' AND strtype=?' if $press_type;
+  $sql .= " AND strsupplier <> 'RFQ Required'" unless $rfq_only;
+  $openprint::log->error($sql.$press_type);
 
   # Get a list of all presses of the user chosen type.
   my $presses = $dbh->prepare_cached($sql);
@@ -144,15 +147,14 @@ sub can_print_project {
     $$reasons{$$press{id}} = $$press{name} . ' does not support variable data';
     return 0;
   }
-  #print STDERR "Pass Variable Data Test \n";
+  print STDERR "Pass Variable Data Test \n";
 
   #print STDERR "\nCHECK PRESS: $press->{id} - $press->{name} \n";
   # Can we even print the project type?
-  if (!can_print_project_type($press, $project->{type})) {
+  if ($project->{type} and !can_print_project_type($press, $project->{type})) {
     $$reasons{$$press{id}} = $$press{name} .= ' does not support project type '.$project->{type};
     return 0;
   }
-  #print STDERR "Pass Project Type Test \n";
 
   # Icon: removed because it has nothing to do with press
   # Clause added due to empty string (*sigh*) being possible as paper
@@ -161,7 +163,7 @@ sub can_print_project {
   #$results{$$press{id}} = 'Does not support project type '.$project->{type};
   #}
 
-  #print STDERR "Pass Calliper  Test \n";
+  print STDERR "Pass Calliper  Test \n";
 
   # Manual screen 'presses' are exempt from calliper checks. You can place a
   # screen on the side of a bus if you felt like it.
@@ -181,12 +183,12 @@ sub can_print_project {
       && ($press->{maximum_image_area_width} and (
           $project->{width} > $press->{maximum_image_area_width}
           || $project->{height} > $press->{maximum_image_area_width}))
-    ) ) {
-    $$reasons{$$press{id}} = $$press{name} .= ' failed image area test';
+    )) {
+    $$reasons{$$press{id}} = $$press{name} . ' failed image area test';
     return 0;
   }
 
-  #print STDERR "Pass Project Size Test \n";
+#print STDERR "Pass Project Size Test \n";
 
   # Check minimum project size for Screen presses.
   if ($press->{type} == SCREEN && defined $press->{minimum_project_size} && $project->{width}  * $project->{height} < $press->{minimum_project_size}) {
@@ -194,7 +196,7 @@ sub can_print_project {
     return 0;
   }
 
-  #print STDERR "Pass Min Project Size Test \n";
+  print STDERR "Pass Min Project Size Test \n";
 
   # Check if the press has pricing for the required coatings.
   # return if grep {    ($project->{$_}{side_one} || $project->{$_}{side_two}) 
@@ -236,7 +238,7 @@ sub can_print_project {
     return 0;
   }
 
-  #print STDERR "\nC PRESS IS VALID: $press->{id} - $press->{name} \n";
+  print STDERR "\nC PRESS IS VALID: $press->{id} - $press->{name} \n";
   return 1;
 }
 

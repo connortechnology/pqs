@@ -865,6 +865,7 @@ sub _couple_search {
 				map { 'field-'.$_->id() } openprint::Company_Profile_Field->find('order'=>'sort,name')
 				) );
 } # end sub _couple_search
+
 sub search {
 	if ( $param{action} eq 'Delete' ) {
 		my $User = new openprint::User( $param{user_id} );

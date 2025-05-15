@@ -101,7 +101,7 @@ sub calc {
     $ts_req = Time::HiRes::time(); # Debug/profiling timings;
   }
 
-  print STDERR "log: $openprint::log dbh $openprint::dbh\n";
+  #print STDERR "log: $openprint::log dbh $openprint::dbh\n";
   eprint::Service::Cutting::init($pid);
 
   my $pricing = get_project_price(
@@ -430,9 +430,7 @@ sub get_project_price {
   local %eprint::service::cache = eprint::service::load_pricing(
     $dbh, $variable->{cust_id}, ($project->{press_type}, 'cutter')
   );
-  local %eprint::equipment::cache = eprint::equipment::load_specs(
-    $dbh, $project->{press_type}
-  );
+  local %eprint::equipment::cache = eprint::equipment::load_specs( $dbh, $project->{press_type});
 
   # A bit kludgey but it's better than thrashing the DB until we can
   # rewrite print pricing properly.
@@ -973,6 +971,7 @@ sub create_impositions {
   my $iter = impositions($dbh, $project, $start_time);
   # For now just flatten the iterator into a list of old 'impositionObjects'.
   while ($iter->isnt_exhausted) {
+    $openrpint::log->debug(Data::Dumper::Dumper($iter->value));
     push @impositions, $func->($dbh, $project, @{ $iter->value });
   }
 
@@ -994,9 +993,7 @@ sub create_impositions {
   if ($desired_size > 0) {
     my $signature_size = desired_signature_size($desired_size, \@impositions);
 
-    $signature_size = 1
-    if $signature_size
-    && $project->{press_type} eq 'digital'
+    $signature_size = 1 if $signature_size && $project->{press_type} eq 'digital'
     && $project->{bind_type} !~ /^(Loop|Saddle)Stitching$/
     && configuration::get_value(undef, $dbh, 'Digital2PageSignatures');
 
@@ -1227,10 +1224,10 @@ sub calc_print_price {
   my $plate_multiplier = ($run_style =~ /^W/) ? 2 : 1;
   my $forms = scalar @{ $imp->{layout} };
 
+  # icon: I don't know what the following code does.  It seems to be rejecting if more than 1 sig is being used.
   my %vl;
   my %lay_count;
-  my @lays = @{$imp->{layout}};
-  foreach my $l (@lays) {
+  foreach my $l (@{$imp->{layout}}) {
     my $count = scalar(@{$l});
     $lay_count{$count} = 1;
     map {
@@ -1239,10 +1236,10 @@ sub calc_print_price {
     } @{$l};
   }
   if (scalar(keys %lay_count) > 1 ) {
-    $price{reject_mv_layout} = 1;
+    #$price{reject_mv_layout} = 1; #icon disable as it seems to simply reject anything with more than 1 sig
     print STDERR "versions REJECT MV LAYOUT \n", Dumper(\%lay_count);
   } else {
-    #print STDERR "versions PASS MV LAYOUT \n";
+    print STDERR "versions PASS MV LAYOUT \n";
   }
 
   my $lay_versions = scalar(keys %vl);
