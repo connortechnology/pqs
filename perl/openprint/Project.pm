@@ -73,7 +73,9 @@ $serial = 'lngProjectIndex_seq';
 ordered_quantity	=> undef,
 ordered_quantity_index	=> undef,
 ordered_price	=> undef,
-press_type  => 'lngpresstype',
+press_type_id  => 'lngpresstype',
+press_type => undef,
+rfq_only => 'rfq_only',
 );
 %transforms = (
 	id								=>	[ 's/\D//g', '<2147483647' ],
@@ -2214,6 +2216,18 @@ sub get_print_container {
            ;
 
     return $sid[0];
+}
+
+sub press_type {
+  my $self = shift;
+  if (@_) {
+    $$self{press_type} = shift;
+    @$self{press_type_id} = sql::execute(undef, undef, 'SELECT lngindex FROM tbl_equipment_type WHERE strid=?', $$self{press_type});
+  }
+  if (!$$self{press_type} and $$self{press_type_id}) {
+    @$self{press_type} = sql::execute(undef, undef, 'SELECT strid FROM tbl_equipment_type WHERE lngindex=?', $$self{press_type_id});
+  }
+  return $$self{press_type};
 }
 
 1;
