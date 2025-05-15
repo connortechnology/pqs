@@ -187,11 +187,7 @@ sub project_types {
     
     # Get the customer's project types. TODO: Setup categories in the project
     # types so we don't have to do weird dispatch stuff?
-    my $project_type = $dbh->prepare_cached(q{
-        SELECT lngindex, strid, strname, ysnmultipage
-        FROM tbl_projecttypes
-        ORDER BY lngsort;
-    });
+    my $project_type = $dbh->prepare_cached(q{ SELECT lngindex, strid, strname, ysnmultipage FROM tbl_projecttypes ORDER BY lngsort });
     $project_type->execute;
 
     my ($id, $ref, $name, $multi); 
@@ -260,7 +256,7 @@ sub create_display {
     unless $pid && $variable->{type};
 
     $variable->{pms_colours_1} = $dbh->selectall_hashref(q{
-      SELECT strname as name from tbl_service_specifications 
+      SELECT strname AS name from tbl_service_specifications 
       WHERE lngprojectindex = ? And strName like 's0_pms%name'
       AND lngserviceindex IN ( select lngserviceindex FROM tbl_project_contents
       WHERE lngprojectindex = ?
@@ -289,7 +285,6 @@ sub create_display {
     }
 
     $variable->{product_qty} = $r->param('qty');
-    print STDERR "PRODUCT QTY , $variable->{product_qty} \n";
 
     # Go to Order process instead of project view if true.
     $variable->{create_to_order} = $r->param('create_to_order');
@@ -344,9 +339,9 @@ sub create_display {
 
   $variable->{press_types} = $dbh->selectall_arrayref(q{
     SELECT DISTINCT et.strname AS name, et.strid AS press
-    FROM tbl_equipment e, 
-    tbl_equipment_type et, 
-    tbl_service_types s, 
+    FROM tbl_equipment e,
+    tbl_equipment_type et,
+    tbl_service_types s,
     service_type_equipment se
     WHERE e.strtype = et.strid
     AND s.strid = 'Printing'
@@ -505,21 +500,30 @@ sub edit_display {
   my $pid = $r->param('pid') || $r->param('ProjectIndex');
 
   $variable->{ProjectIndex} = $pid;
+  my $project = openprint::Project->find_one(id=>$pid);
 
   # TODO: Replace w/ selectrow_hashref.
   @$variable{qw( txtProjectReference  design        file_type
   txtQuantity1         txtQuantity2  txtQuantity3 
   txtComments          ShipDate 
   project_type         RequiredDate txtInvoiceComments
-  )} = $dbh->selectrow_array(q{
-    SELECT strProjectReference,  strDesign,    strprograms,
-    intQuantity1,         intQuantity2, intQuantity3, 
-    strComments,          dtmShipDate,
-    lngprojecttype,       to_char(dtmRequiredDate, 'MM/DD/YYYY'),
-    strInvoiceComments
-    FROM tbl_Projects WHERE lngProjectIndex = ?
-    }, {}, $pid);
-  #print STDERR "HAVE INVOCIE COMMENTS: $variable->{txtInvoiceComments} \n";
+  SelectedPress
+  rfq_only
+  )} = (
+    $project->reference(),
+    $project->design(),
+    $project->programs(),
+    $project->quantity1(),
+    $project->quantity2(),
+    $project->quantity3(),
+    $project->comments(),
+    $project->shipped_on(),
+    $project->type_id(),
+    $project->due_date(),
+    $project->invoice_comments(),
+    $project->press_type(),
+    $project->rfq_only()
+  );
 
   $variable->{txtProjectReference} =~ s/'/&apos;/g;
   $variable->{txtProjectReference} =~ s/"/&quot;/g;
@@ -528,13 +532,67 @@ sub edit_display {
 
   $variable->{has_locked_quantity} = $variable->{is_staff}  ? 0 : has_locked_quantity($dbh, $pid);
 
-  $variable->{__FillInForm}{project_service} = $dbh->selectcol_arrayref(q{
-    SELECT strServiceType FROM tbl_Project_Contents WHERE lngProjectIndex = ?
-    }, undef, $pid, );
+   # PRESS TYPES
+  #
+  # Weird ass way about building that data structure.
+  $variable->{SelectedPress} = $project->press_type();
 
-  push @{ $variable->{__FillInForm}{project_service} } , @{ $dbh->selectcol_arrayref(q{
-  SELECT strvalue FROM tbl_service_specifications WHERE lngProjectIndex = ? AND strName = 'ShippingType'
-  }, undef, $pid) };
+  $variable->{press_types} = $dbh->selectall_arrayref(q{
+    SELECT DISTINCT et.strname AS name, et.strid AS press
+    FROM tbl_equipment e,
+    tbl_equipment_type et,
+    tbl_service_types s,
+    service_type_equipment se
+    WHERE e.strtype = et.strid
+    AND s.strid = 'Printing'
+    AND s.lngindex = se.service_type
+    AND se.equipment = e.lngindex
+    ORDER BY et.strid
+    }, { Slice => {} },
+  );
+
+  # just reverses it..
+  my %press_types;
+  for my $hash (@{ $variable->{press_types} }) {
+    $press_types{ $hash->{press} } = $hash;
+  }
+
+  @{ $variable->{press_types} } = ();
+
+  foreach my $press (qw( press web screen inkjetprinter digital NoPrinting )) {
+    push @{ $variable->{press_types} }, $press_types{ $press } if $press_types{ $press }
+  }
+
+    # PROJECT TYPES
+  $variable->{project_type} = project_types($log, $dbh);
+
+  # If we only have 1 Project Type Category &&
+  # only 1 Project Type in that Category then select
+  # it by default when loading the page.
+  my @cats = keys %{$variable->{project_type}};
+  if (scalar @cats == 1 && @{$variable->{project_type}{$cats[0]}} == 1) {
+    $variable->{__FillInForm}{rdbProjectType} = ${$variable->{project_type}{$cats[0]}}[0]->{id};
+  };
+
+  # NOTE: Pushing the mapping onto an array instead of creating a secondary
+  # hash yields a data structure that serialised down to less than half the
+  # hash. However we then have to convert in JS or it's cumbersome to work
+  # with. Not sure where the better tradeoff lies.
+
+  # The project types allowed depends on the press type selected. TODO Use
+  # press id instead of the string.
+  my $sth = $dbh->prepare(q{ SELECT e.strid, p.project_type FROM project_type_by_press p, tbl_equipment_type e WHERE e.lngindex = p.press});
+  $sth->execute();
+  my %by_press;
+  while (my ($press, $project_type) = $sth->fetchrow_array) {
+    $by_press{$press} = {} unless exists $by_press{$press};
+    $by_press{$press}{$project_type} = 1;
+  }
+  $variable->{press_to_project} = encode_json(\%by_press);
+
+  $variable->{__FillInForm}{project_service} = $dbh->selectcol_arrayref(q{ SELECT strServiceType FROM tbl_Project_Contents WHERE lngProjectIndex = ?  }, undef, $pid, );
+
+  push @{ $variable->{__FillInForm}{project_service} } , @{ $dbh->selectcol_arrayref(q{ SELECT strvalue FROM tbl_service_specifications WHERE lngProjectIndex = ? AND strName = 'ShippingType' }, undef, $pid) };
 
   # DESIGN FORMAT
   # 
@@ -544,7 +602,8 @@ sub edit_display {
 
   $variable->{format}{ lc $variable->{design} } = 'selected="selected"';    
 
-  @$variable{qw(categories category)} = service_types_by_category( $dbh, $variable->{project_type}, $pid, $variable->{is_staff});
+  @$variable{qw(categories category)} = service_types_by_category( $dbh, $project->type_id(), $pid, $variable->{is_staff});
+  $$variable{type} = $project->type_id();
 
   $variable->{display_shipping} = $dbh->selectrow_array(q{ SELECT count(*) from tbl_service_types WHERE strid = 'Shipping' AND ysnviewvisible = 'Y' });
 
@@ -1132,14 +1191,17 @@ sub edit_process {
 
   my $modified = 0;
 
-  # BASIC PROJECT INFO
-  update( $log, $dbh, 'tbl_Projects', "lngProjectIndex='$pid'", 
-    strComments         => ($r->param('txtComments') or undef),
-    strInvoiceComments  => ($r->param('txtInvoiceComments') or undef),
-    dtmLastModified     => 'NOW()',
-    ($r->param('txtProjectReference') ? (strProjectReference => $r->param('txtProjectReference')) : () ),
-    ($r->param('rdbPressType') ? (lngpresstype => $r->param('rdbPressType')) : () ),
-  );
+  my $project = openprint::Project->find_one(id=>$pid);
+  die "project $pid not found" if ! $project;
+
+  $project->set({
+    comments         => ($r->param('txtComments') or undef),
+    invoice_comments => ($r->param('txtInvoiceComments') or undef),
+    ($r->param('txtProjectReference') ? (reference => $r->param('txtProjectReference')) : () ),
+    ($r->param('rdbPressType') ? (press_type => $r->param('rdbPressType')) : () ),
+    ($r->param('rdbProjectType') ? (type_id => $r->param('rdbProjectType')) : () ),
+    rfq_only => $r->param('rfq_only'),
+  });
 
   # QUANTITIES
   #
@@ -1150,10 +1212,10 @@ sub edit_process {
     # Clean the new quantities and remove any blanks.
     my @new;
     if ( defined $qtys ) {
-      print STDERR "USE NEW QTYS: @{$qtys} \n";
-      @new = (undef,@{$qtys});
+      #print STDERR "USE NEW QTYS: @{$qtys} \n";
+      @new = (undef, @{$qtys});
     } else {
-      print STDERR "USE NEW QTYS FROM PARAM:  \n";
+      #print STDERR "USE NEW QTYS FROM PARAM:  \n";
       @new = grep { defined $_ and $_ > 0 } map { $r->param("txtQuantity$_") =~ /(\d+)/; $1 } 1..3;
       @new = (undef, map { $new[$_] || 0 } 0..2);
     }
@@ -1162,7 +1224,7 @@ sub edit_process {
     for my $i (1..3) {
       # If the quantities are different update them and set the flag.
       if ($new[$i] != $old[$i]) {
-        update($log, $dbh, 'tbl_Projects', "lngProjectIndex = $pid", "intquantity$i" => $new[$i],);
+        $project->set({'quantity'.$i=>$new[$i]});
 
         # Horribly we just clobber all the custom quantities without
         # ever informing the user. TODO: Bug 1646
@@ -1181,8 +1243,8 @@ sub edit_process {
 
         $modified = 2; # Full recalculate
       }
-    }
-  }
+    } # end foreach quanty
+  } # end if has_locked || is_staff
 
   # IMAGE/DESIGN MEDIA TYPE -- PREFLIGHT
   #
@@ -1197,8 +1259,8 @@ sub edit_process {
   # The current user selected format.
   my ($format, $file_type, $other) = design_format($r);
 
-  # Update the design and program information if any of it's changed.
-  update($log, $dbh, 'tbl_projects', "lngprojectindex = $pid", strdesign        => $format, strprograms      => $file_type, strotherprograms => $other,);
+  $project->set({design=>$format, programs=>$file_type, other_programs=>$other});
+  $project->save();
 
   # See if the overall design media has changed, if so recalculate. TODO:
   # Just fiddle with the preflight project service if we're only changing
