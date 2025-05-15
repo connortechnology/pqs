@@ -152,7 +152,7 @@ sub can_print_project {
   #print STDERR "\nCHECK PRESS: $press->{id} - $press->{name} \n";
   # Can we even print the project type?
   if ($project->{type} and !can_print_project_type($press, $project->{type})) {
-    $$reasons{$$press{id}} = $$press{name} .= ' does not support project type '.$project->{type};
+    $$reasons{$$press{id}} = $$press{name} = ' does not support project type '.$project->{type};
     return 0;
   }
 
