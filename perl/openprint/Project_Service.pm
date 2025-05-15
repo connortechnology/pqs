@@ -10,16 +10,29 @@ require openprint::Project_Service_Operator;
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @identified_by );
 
-$debug = 0;
+$debug = 1;
 %fields = (
-	service_id			=>	'lngserviceindex',
-	project_id			=>	'lngprojectindex',
-	operator_id			=>	'operator_id',
-	operator_ids		=>	undef,
-	status					=>	'strstatus',
-	servicetype_id	=>	'servicetype_id',
-	service_type		=>	undef,
-	created_on			=>	'dtmlastmodified',
+  service_id			=>	'lngserviceindex',
+  project_id			=>	'lngprojectindex',
+  operator_id			=>	'operator_id',
+  operator_ids		=>	undef,
+  status					=>	'strstatus',
+  servicetype_id	=>	'servicetype_id',
+  service_type		=>	undef,
+  created_on			=>	'dtmlastmodified',
+  completion_state => 'lngcompletestate',
+  priority => 'lngpriority',
+  price_override  => 'price_override',
+  strservicetype => 'strservicetype',
+  strcomments     =>  'strcomments',
+  ysnremoved        => 'ysnremoved',
+  lngneedlevel      => 'lngneedlevel',
+  ysnuserrequested  => 'ysnuserrequested',
+  trackingnumber => 'trackingnumber',
+  custom_sort      => ' custom_sort',
+  equipment        => 'equipment',
+  stock  => 'stock',
+  gross_sheets => 'gross_sheets',
 );
 %find_fields = (
 	category				=>	'(SELECT ServiceType_Categories.name FROM ServiceType_Categories,'.$openprint::ServiceType::table.' WHERE ServiceType_Categories.id='.$openprint::ServiceType::table.'.category_id AND '.$openprint::ServiceType::table.'.id=servicetype_id)',
@@ -36,6 +49,10 @@ $debug = 0;
 $table = 'tbl_project_contents';
 %serial = ( service_id=>'ContentsServiceIndex_seq' );
 @identified_by = ( 'project_id', 'service_id' );
+
+sub id {
+  return $_[0]{service_id};
+}
 
 sub Project {
 	return new openprint::Project( $_[0]{project_id} );
@@ -84,8 +101,10 @@ sub service_type {
 	if ( @_ > 1 ) {
 		$_[0]{service_type} = $_[1];
 	} # end if
-	if ( ! $_[0]{service_type} ) {
+	if ( ! $_[0]{service_type} and $_[0]{servicetype_id}) {
 		$_[0]{service_type} = $_[0]->ServiceType()->type();
+  } elsif ($_[0]{strservicetype}) {
+    $_[0]{service_type} = $_[0]{strservicetype};
 	} # end if
 	return $_[0]{service_type};
 } # end sub service_type

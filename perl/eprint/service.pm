@@ -342,7 +342,7 @@ sub valid_equipment {
 #								  WHERE strname = 'product_only' AND strvalue = 'Y')" if $pid;
 	
 
-	print STDERR "VALID EQUIPEMNT SQL: $sql \n";
+	$openprint::log->debug("VALID EQUIPEMNT for $service_type SQL: $sql");
 	
   # As this query will potentially be run for every single service for every
   # project created, let's cache the statment.
@@ -875,18 +875,15 @@ sub get_service_full_price {
     }
 
     my $setup;
-
     my $run_price = $price * $quantity;
 
     if ($min_charge > $price * $quantity  +  $setup_price) {
       $price = $min_charge;
       $setup = 0;
-    }
-    else {
+    } else {
       $price = $price * $quantity;
       $setup = $setup_price;
     }
-
 
     $device_prices{$device} = [ $price, $material_price, $setup, $run_price, $min_charge ];
   }
