@@ -422,6 +422,7 @@ sub parse_page {
 
     }
 
+    $section //= '';
     # If the user isn't authorized for this section, check if the page is public otherwise redirect them to a login page.
     unless (user_allowed($variable->{user}{type}, $section)) {
       print STDERR "User not allowed: type: ".$variable->{user}{type}, ' section: '.$section." page $page\n";
