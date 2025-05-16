@@ -1199,6 +1199,7 @@ sub edit_process {
     invoice_comments => ($r->param('txtInvoiceComments') or undef),
     ($r->param('txtProjectReference') ? (reference => $r->param('txtProjectReference')) : () ),
     ($r->param('rdbPressType') ? (press_type => $r->param('rdbPressType')) : () ),
+    ($r->param('press_type_id') ? (press_type_id => $r->param('press_type_id')) : () ),
     ($r->param('rdbProjectType') ? (type_id => $r->param('rdbProjectType')) : () ),
     rfq_only => $r->param('rfq_only'),
   });
