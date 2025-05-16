@@ -25,7 +25,7 @@
     my $datetime = DateTime->new( time_zone => $openprint::TZ, ( year => $year, month=>$month, day=>$day, ));
 
     my @Entries = openprint::Log->find(
-      user_id=>$session{user_id},
+      user_id=>$openprint::User->id(),
       action=>'Switch Company',
       order=>'date_time DESC',
       'date_time >=' => $parser->format_datetime( $datetime ),
@@ -42,10 +42,9 @@
         );
       } # end foreach
     }
-    my $User = new openprint::User($session{user_id});
-    if ( ! $companies{$$User{company_id}} ) {
+    if ( ! $companies{$$openprint::User{company_id}} ) {
     $html .= sprintf('<li><a href="/main/account/confirmation_select_customer.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a></li>',
-        $User->company_id(), $User->Company()->name(),
+        $openprint::User->company_id(), $openprint::User->Company()->name(),
       );
     } # end if
     return $html;
