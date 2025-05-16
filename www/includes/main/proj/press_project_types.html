@@ -1,0 +1,106 @@
+<? if ($variable->{press_types} > 1) ?>
+  <fieldset id="equipment-type">
+    <legend>Equipment Type</legend>
+
+    <p>What type of equipment would you like to perform the printing of your project?</p>
+
+    <div class="width forths">
+      <?loop press_types ?>
+      <label class="no-pad-bot">
+          <input type="radio" name="rdbPressType" value="<?press?>" <? if ($$variable{'press'} eq $$variable{'SelectedPress'})?> checked="checked" <? endif ($$variable{'press'} eq $$variable{'SelectedPress'})?> />
+          <?name?>
+        </label>
+      <?endloop press_types ?>
+    </div>
+    <br />
+  </fieldset>
+<? else ($variable->{press_types} > 1) ?>
+  <?loop press_types ?>
+    <input type="hidden" name="rdbPressType" value="<?press?>" /> 
+  <?endloop press_types ?>
+<? endif ($variable->{press_types} > 1) ?>
+
+<div id='project_types'>
+  <fieldset id="project-type">
+    <legend>
+      Project Type
+    </legend>
+
+    <p>What type of project would you like to create?</p>
+
+    <!-- Single Page Projects. -->
+    <? if project_type.singlepage ?>
+
+      <div class="nothing">
+        <h4>Single Sheet Flat or Folded Print Projects</h4>
+
+        <div class="width thirds">
+          <? loop project_type.singlepage ?>
+            <label for="rdbProjectType-<?id?>" class="no-pad-bot">
+              <input type="radio" id="rdbProjectType-<?id?>" name="rdbProjectType" value="<?id?>" <? if ($$variable{type} eq $$variable{id}) ?>checked="checked"<? endif ($$variable{type} eq $$variable{id}) ?> />
+              <?name?>
+            </label>
+          <? endloop project_type.singlepage ?>
+        </div>
+      </div>
+    <? endif project_type.singlepage ?>
+
+    <!-- Multi-page Projects. -->
+    <?if project_type.multipage ?>
+      <br /><!-- Do Not Remove BR Tag - FireFox Fix -->
+
+      <div class="nothing">
+        <h4>Multi-Sheet Bound Print Projects</h4>
+
+        <div id="multi-page-projects" class="width thirds">
+          <? loop project_type.multipage ?>
+            <label for="rdbProjectType-<?id?>" class="no-pad-bot">
+              <input type="radio" id="rdbProjectType-<?id?>" name="rdbProjectType" value="<?id?>"	<? if ($$variable{type} eq $$variable{id}) ?>checked="checked"<? endif ($$variable{type} eq $$variable{id}) ?> />
+              <?name?>
+            </label>
+          <? endloop project_type.multipage ?>
+        </div>
+      </div>
+    <?endif project_type.multipage ?>
+
+
+    <!-- Screen Projects. -->
+    <?if project_type.screen ?>
+      <br /><!-- Do Not Remove BR Tag - FireFox Fix -->
+
+      <div class="nothing">
+        <h4>Screen Print Projects</h4>
+
+        <div class="width thirds">
+          <? loop project_type.screen ?>
+            <label for="rdbProjectType-<?id?>" class="no-pad-bot">
+              <input type="radio" id="rdbProjectType-<?id?>" name="rdbProjectType" value="<?id?>" <? if ($$variable{type} eq $$variable{id}) ?>checked="checked"<? endif ($$variable{type} eq $$variable{id}) ?> />
+              <?name?>
+            </label>
+          <? endloop project_type.screen ?>
+        </div>
+      </div>
+    <?endif project_type.screen ?>
+
+
+    <!-- Inkjet Projects. -->
+    <?if project_type.inkjet ?>
+      <br /><!-- Do Not Remove BR Tag - FireFox Fix -->
+
+      <div class="nothing">
+        <h4>Larger Format Print Projects</h4>
+
+        <div class="width thirds">
+          <? loop project_type.inkjet ?>
+            <label for="rdbProjectType-<?id?>" class="no-pad-bot">
+              <input type="radio" id="rdbProjectType-<?id?>" name="rdbProjectType" value="<?id?>" <? if ($$variable{type} eq $$variable{id}) ?>checked="checked"<? endif ($$variable{type} eq $$variable{id}) ?> />
+              <?name?>
+            </label>
+          <? endloop project_type.inkjet ?>
+        </div>
+      </div>
+    <?endif project_type.inkjet ?>
+
+    <br />
+  </fieldset>
+</div>
