@@ -36,7 +36,7 @@ sub impositions {
   my ($dbh, $project, $start_time) = @_;
 
   my $end =  Time::HiRes::time() - $start_time;
-  print STDERR "START Printing \ IMPOSE: $end \n ";
+  #print STDERR "START Printing \ IMPOSE: $end \n ";
 
   my %reasons;
   my $presses    = get_presses($dbh, $project, \%reasons); # Potential printers.
@@ -58,21 +58,21 @@ sub impositions {
   my $is_inkjet = $project->{press_type} eq 'inkjetprinter';
 
   $end =  Time::HiRes::time() - $start_time;
-  print STDERR "START Printing \ IMPOSE 2: $end  \n";
+  #print STDERR "START Printing \ IMPOSE 2: $end  \n";
 
   # Generate all possible impositions for the project (except inkjet).
   my $impositions = !$is_inkjet ? PQS::Imposition->new(project => $project, start => $start_time) : undef;
   #$openprint::log->debug('impositions: '.Data::Dumper::Dumper($impositions));
 
   $end =  Time::HiRes::time() - $start_time;
-  print STDERR "START Printing \ IMPOSE 3: $end  \n";
+  #nprint STDERR "START Printing \ IMPOSE 3: $end  \n";
 
   # A press run is the set of valid run styles X sheet sizes for that press.
   # Returns [press, sheet, style, node tree, is_rotated]
   my $run = sub {
     my $press = shift;
 
-    print STDERR "HAVE PRESS: ", Dumper($press);
+    #print STDERR "HAVE PRESS: ", Dumper($press);
 
     # Get the run styles we can do and sheet sizes that fit on the press.
     my @r = grep { can_print_style($press, $_, $project) } @styles;
@@ -118,7 +118,7 @@ sub get_presses {
   # for the press type chosen for the project.
   my @ids = $project->{override}{press} || press_ids($dbh, $project->{press_type}, $project->{rfq_only});
 
-  print STDERR "HAVE PRESS LIST: ", Dumper(\@ids);
+  #print STDERR "HAVE PRESS LIST: ", Dumper(\@ids);
 
   return igrep { can_print_project ($dbh, $_, $project, $reasons) } imap { get_equipment($dbh, $_) } ilist (@ids);
 }
@@ -147,7 +147,7 @@ sub can_print_project {
     $$reasons{$$press{id}} = $$press{name} . ' does not support variable data';
     return 0;
   }
-  print STDERR "Pass Variable Data Test \n";
+  #print STDERR "Pass Variable Data Test \n";
 
   #print STDERR "\nCHECK PRESS: $press->{id} - $press->{name} \n";
   # Can we even print the project type?
@@ -163,7 +163,7 @@ sub can_print_project {
   #$results{$$press{id}} = 'Does not support project type '.$project->{type};
   #}
 
-  print STDERR "Pass Calliper  Test \n";
+  #print STDERR "Pass Calliper  Test \n";
 
   # Manual screen 'presses' are exempt from calliper checks. You can place a
   # screen on the side of a bus if you felt like it.
@@ -196,12 +196,12 @@ sub can_print_project {
     return 0;
   }
 
-  print STDERR "Pass Min Project Size Test \n";
+  #print STDERR "Pass Min Project Size Test \n";
 
   # Check if the press has pricing for the required coatings.
   # return if grep {    ($project->{$_}{side_one} || $project->{$_}{side_two}) 
   if (grep { $project->{$_} && ! can_coat($dbh, $press, $_) } COATINGS) {
-    $$reasons{$$press{id}} = $$press{name} .= ' failed coatings test';
+    $$reasons{$$press{id}} = $$press{name} . ' failed coatings test';
     return 0;
   }
 
@@ -238,7 +238,7 @@ sub can_print_project {
     return 0;
   }
 
-  print STDERR "\nC PRESS IS VALID: $press->{id} - $press->{name} \n";
+  #print STDERR "\nC PRESS IS VALID: $press->{id} - $press->{name} \n";
   return 1;
 }
 
@@ -309,8 +309,7 @@ sub can_print_project_type {
 
     #print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
     # Are there enough press units to run the project this way?
-    return unless $ENOUGH_UNITS_FOR{ $style }->(
-      $press->{number_of_colours}, (\@s1, \@s2) );
+    return unless $ENOUGH_UNITS_FOR{ $style }->($press->{number_of_colours}, (\@s1, \@s2));
 
     #print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
     # Not all presses of a type that can perfect, do.
@@ -319,8 +318,7 @@ sub can_print_project_type {
       return unless $press->{perfecting_press};
 
       # Can the paper fit through the change-over unit?
-      return if $project->{paper}{calliper}
-      > $press->{maximum_calliper_perfecting};
+      return if $project->{paper}{calliper} > $press->{maximum_calliper_perfecting};
     }
     #print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
 
@@ -344,9 +342,9 @@ sub can_coat {
     AND p.lngequipmentindex = ?
     }, undef, $press->{id});
 
+  $openprint::log->debug("Can coat $$press{id} $coating $can_coat[0]");
   return $can_coat[0];
 }
-
 
 #
 # RUN STYLES
