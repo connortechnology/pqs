@@ -66,6 +66,16 @@ use PQS::DB;
 use PQS::Imposition::Constants;
 use PQS::Imposition::Colour qw(:all);
 
+require openprint;
+
+use vars qw( $r %variable %session %param %config $log $dbh $starttime );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*r = \$openprint::r;
 
 # Canvas size, taken from max imposition bounds.
 use constant { 
@@ -81,7 +91,7 @@ use constant STYLESHEET => '/site_specific/base-css/imposition.css';
 # Grabs the imposition information from the DB for the passed and generates an
 # image of it on-the-fly.
 sub handler {
-    my $r = shift;
+    $r = shift;
     $r = Apache2::Request->new($r);
 
     # Service ID (will be checked later for existance).
@@ -91,6 +101,7 @@ sub handler {
 
     session::r($r);
 #    session::log($r->log);
+    $log = $r->log;
     
     # The layout number only applies in multi-version. Any integer from 0..inf
     # is allowed.
@@ -582,64 +593,63 @@ sub layout {
 # TODO This is a typical traversal pattern that could be added as a method on
 # the tree and the specifics just passed as a function. Or it gives a list.
 sub draw_node {
-    my ($canvas, $node, $colour, $offset) = @_; 
+  my ($canvas, $node, $colour, $offset) = @_; 
 
-    return unless $node; # Empty node.
+  return unless $node; # Empty node.
 
-    
-    # Sinks (with cardinality) are images. Draw it where it stands.
-    if ($node->is_sink && $node->card) {
-        # TODO Predefine images and just `use` them.
-        #
-        # $canvas->use(-href => '#image', x => $offset->[W], y => $offset->[H]);
+  # Sinks (with cardinality) are images. Draw it where it stands.
+  if ($node->is_sink && $node->card) {
+    # TODO Predefine images and just `use` them.
+    #
+    # $canvas->use(-href => '#image', x => $offset->[W], y => $offset->[H]);
 
-        my ($w, $h) = @{ $node->size };
+    my ($w, $h) = @{ $node->size };
 
-		my ($fill, $label, $i ) = $colour->();
+    my ($fill, $label, $i) = $colour->();
 
+    $label //= '';
+    $i //= '';
 
-		$canvas = $canvas->group();
+    $canvas = $canvas->group();
 
-        $canvas->rect(
-            class  => 'image',
-            x      => $offset->[W], 
-            y      => $offset->[H],
-            width  => $w,
-            height => $h,
-			#fill   => $colour->(),
-            fill   => $fill,
-        )->cdata($label . $i);
+    $canvas->rect(
+      class  => 'image',
+      x      => $offset->[W], 
+      y      => $offset->[H],
+      width  => $w,
+      height => $h,
+      #fill   => $colour->(),
+      fill   => $fill,
+    )->cdata($label . $i);
 
-		#$canvas->title()->cdata('hello');
-		
-		#Shorten label to defined length
-		my $l = substr($label,0,7);
+    #$canvas->title()->cdata('hello');
 
-		$canvas->text( 
-			x      		=> $offset->[W] + 0.25, #Text start on left/mirrored on right. 
-            y      		=> $offset->[H] + ($h/2), #Center text vertically in box.
-			'font-size' => 1
- 		)->cdata("$l");
+    #Shorten label to defined length
+    my $l = substr($label, 0, 7);
 
+    $canvas->text( 
+      x      		=> $offset->[W] + 0.25, #Text start on left/mirrored on right. 
+      y      		=> $offset->[H] + ($h/2), #Center text vertically in box.
+      'font-size' => 1
+    )->cdata($l);
+
+  } else {  
+  # We're a cutting group. TODO Draw a dashed cutting line.
+    $canvas = $canvas->group();
+
+    my @internal  = @$offset;   # Keep track of our draw offset.
+    my $direction = $node->cut; # Traversal direction (vert. | horz.)
+
+    # Draw each of the children keeping track of their locations.
+    for my $child ($node->children) {
+      draw_node($canvas, $child, $colour, \@internal);
+
+      $internal[$direction] += $child->size()->[$direction];
     }
-    # We're a cutting group. TODO Draw a dashed cutting line.
-    else {  
-        $canvas = $canvas->group();
+  }
 
-        my @internal  = @$offset;   # Keep track of our draw offset.
-        my $direction = $node->cut; # Traversal direction (vert. | horz.)
-
-        # Draw each of the children keeping track of their locations.
-        for my $child ($node->children) {
-            draw_node($canvas, $child, $colour, \@internal);
-            
-            $internal[$direction] += $child->size()->[$direction];
-        }
-    }
-
-    return $canvas;
+  return $canvas;
 }
-
 
 # Creates an iterator that can be bumped during node traversal to properly
 # colour the node based on which version (from multi-version jobs) it is.
