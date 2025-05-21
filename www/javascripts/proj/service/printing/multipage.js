@@ -43,7 +43,7 @@ Event.observe(window, 'load', function () {
     return true;
 });
 
-// Tallies spreads × forms and gives the user a visual warning if they exceed
+// Tallies spreads x forms and gives the user a visual warning if they exceed
 // the spreads remaining to be allocated.
 Event.observe(window, 'load', function () {
     var form      = $('f1');
