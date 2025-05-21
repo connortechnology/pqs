@@ -2546,9 +2546,6 @@ sub add_qty {
 		) WHERE lngprojectindex = ?
 	},undef, $pid, $new);
 
-	$dbh->do(q{
-		UPDATE tbl_projects SET lngpresstype = ?  WHERE lngprojectindex = ?
-	},undef, $press_type, $new) if $press_type;
 
 	my $old_q1 = $dbh->selectrow_array(q{
 		SELECT intquantity1 FROM tbl_projects 
@@ -2560,10 +2557,10 @@ print STDERR "Q1: PID: $pid \n ";
 
 	edit_process($r, $log, $dbh, $cookie, $var, $pid, 1, $qtys);
 
-	my $new_q1 = $dbh->selectrow_array(q{
-		SELECT intquantity1 FROM tbl_projects 
-		WHERE  lngprojectindex = ?
-	}, undef, $pid);
+  # edit process can reset lngpresstype
+	$dbh->do(q{UPDATE tbl_projects SET lngpresstype=? WHERE lngprojectindex=?},undef, $press_type, $new) if $press_type;
+
+	my $new_q1 = $dbh->selectrow_array(q{SELECT intquantity1 FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
 
 	my $mv = $dbh->selectrow_array(q{
 		SELECT strvalue FROM tbl_service_specifications
