@@ -37,6 +37,7 @@
         next if $companies{$$Log{company_id}};
         next if ! $Log->Company()->can_become();
         $companies{$$Log{company_id}} = $Log->company_id();
+        last if keys %companies >= 10;
         $html .= sprintf('<li><a href="/main/account/confirmation_select_customer.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a></li>',
           $Log->company_id(), $Log->Company()->name(),
         );
