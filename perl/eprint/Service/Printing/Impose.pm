@@ -201,7 +201,7 @@ sub can_print_project {
   # Check if the press has pricing for the required coatings.
   # return if grep {    ($project->{$_}{side_one} || $project->{$_}{side_two}) 
   if (grep { $project->{$_} && ! can_coat($dbh, $press, $_) } COATINGS) {
-    $$reasons{$$press{id}} = $$press{name} .= ' failed coatings test';
+    $$reasons{$$press{id}} = $$press{name} . ' failed coatings test';
     return 0;
   }
 
