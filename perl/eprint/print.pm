@@ -56,33 +56,27 @@ sub view_services {
   my $qtys = [0,0,0];
 
   #### CUSTOM CODE SECTION ***********
-  my ($q1, $q2, $q3, $digifed) = $dbh->selectrow_array(q{
-    SELECT intQuantity1, q2, q3, digifed FROM tbl_projects WHERE lngprojectindex = ?
-    }, undef, $pid);
+  my ($q1, $q2, $q3, $digifed) = sql::execute(undef, undef, q{SELECT intQuantity1, q2, q3, digifed FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
 
+  # This code takes the other quantities and generates new projects for them.
   if ( $q2 ) {
-    $dbh->do(q{
-      UPDATE tbl_projects set q2 = NULL WHERE lngprojectindex = ?
-      },undef,$pid);
+    $dbh->do(q{UPDATE tbl_projects set q2 = NULL WHERE lngprojectindex = ?},undef,$pid);
     $qtys->[0] = $q2;
     eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys);
   }
   if ( $q3 ) {
-    $dbh->do(q{
-      UPDATE tbl_projects set q3 = NULL WHERE lngprojectindex = ?
-      },undef,$pid);
+    $dbh->do(q{ UPDATE tbl_projects set q3 = NULL WHERE lngprojectindex = ?  },undef,$pid);
     $qtys->[0] = $q3;
     eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys);
   }
 
   my $pms = scalar $dbh->selectrow_array(q{
-    SELECT count(*) FROM tbl_service_specifications 
-    WHERE lngprojectindex = ? AND strname  LIKE  '%pms%name'
+    SELECT count(*) FROM tbl_service_specifications WHERE lngprojectindex = ? AND strname  LIKE  '%pms%name'
     }, undef, $pid);
 
   print STDERR "HAVE DIGIFED: $digifed PMS: $pms ************\n";
 
-  $dbh->do(q{UPDATE tbl_projects set digifed = false WHERE lngprojectindex = ?},undef,$pid);
+  $dbh->do(q{UPDATE tbl_projects set digifed = false WHERE lngprojectindex = ?},undef,$pid) if $digifed;
 
   if ( $digifed && !$pms ) {
     $qtys->[0] = $q1;
@@ -126,9 +120,7 @@ sub view_services {
   #print STDERR "USER DUMPER" , Dumper($variable);
   # Determine if the project is currently in a quote or order and therefor
   # locked from certain actions (site override is possible for staff).
-  if (configuration::get_value($log, $dbh, 'ModifyOrderedProject')
-    && $variable->{is_staff} ) 
-  {
+  if (configuration::get_value($log, $dbh, 'ModifyOrderedProject') && $variable->{is_staff} ) {
     $variable->{is_ordered} = 0;
     $variable->{is_quoted}  = 0;
   } else {
@@ -325,20 +317,16 @@ sub custom_sort {
 
 # Display all the services and pricing for the project.
 sub display_project {
-    my ($log, $dbh, $variable, $pid) = @_;
-    return if !$pid;
+  my ($log, $dbh, $variable, $pid) = @_;
+  return if !$pid;
 
-    no warnings qw(uninitialized); # We'll be interpolating undef a lot.
+  no warnings qw(uninitialized); # We'll be interpolating undef a lot.
 
-    # PROJECT INFO
-    #
-    $variable->{PressType} = get_press_type($log, $dbh, $pid);
-    $variable->{pid}       = $pid;
+  # PROJECT INFO
+  #
+  $variable->{pid}       = $pid;
 
-
-	my $rfq_only = $dbh->selectrow_array(q{
-		SELECT rfq_only FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid);
+	my $rfq_only = $dbh->selectrow_array(q{SELECT rfq_only FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
 
 	my $have_disc = $dbh->selectrow_array(q{
 		SELECT COUNT(lngserviceindex) FROM tbl_project_contents 
@@ -349,7 +337,7 @@ sub display_project {
 	$variable->{rfq_only} = $rfq_only;
 
     my $is_multipage = $variable->{is_multipage} = is_multipage($log, $dbh, $pid);
-    my $press_type   = $variable->{press_type}   = get_press_type($log, $dbh, $pid);
+    my $press_type   = $variable->{PressType} = $variable->{press_type}   = get_press_type($log, $dbh, $pid);
 
     @$variable{qw(ProjectTypeID ProjectTypeName)} = get_type($log, $dbh, $pid);
     
@@ -359,8 +347,7 @@ sub display_project {
         SELECT strname, strurl FROM tbl_projecttypes WHERE strid = ?
     }, undef, $project_type);
 
-    my $has_locked_services 
-        = $variable->{is_fixed_price} = has_locked_services($dbh, $pid);
+    my $has_locked_services = $variable->{is_fixed_price} = has_locked_services($dbh, $pid);
 
     my $allowed = $has_locked_services ? allowed_services($dbh, $pid) : undef;
 
@@ -379,12 +366,11 @@ sub display_project {
     # for folding it in.
     my $stock_price = {};
     if (!$flags{stock_separate}) {
-        $stock_price = eprint::project::sig_stock_prices($log, $dbh, $pid);
+      $stock_price = eprint::project::sig_stock_prices($log, $dbh, $pid);
     }
     # Otherwise we need the final totals for display.
     else {
-        @$variable{qw(stock_price1 stock_price2 stock_price3)} = 
-            stock_price($log, $dbh, $pid);
+      @$variable{qw(stock_price1 stock_price2 stock_price3)} = stock_price($log, $dbh, $pid);
     }
 
     #loads the change orders
@@ -977,7 +963,7 @@ sub signature_paper {
   # we are going to display the buy quantity b/c it is
   # in pounds instead of the Gross Count which is number of Cutoffs.
   my $press = get_press_type($log, $dbh, $pid);
-  if ( $press  eq 'web' ) {
+  if ($press and ($press eq 'web')) {
     $paper{q1} = 'hdnPaperBuyQuantity1';
     $paper{q2} = 'hdnPaperBuyQuantity2';
     $paper{q3} = 'hdnPaperBuyQuantity3';
