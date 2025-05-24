@@ -163,86 +163,84 @@ sub preaction {
 # *** Should screen surfaces be checked like signatures?
 
 sub action {
-    my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
+  my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
 
-    return unless is_multipage($log, $dbh, $pid)
-               && get_press_type($log, $dbh, $pid) ne 'screen';
+  return unless is_multipage($log, $dbh, $pid) && get_press_type($log, $dbh, $pid) ne 'screen';
 
-    my $book        = check_for_service($log, $dbh, $pid, 'Book');
-    my $spread_type = $specs->{txtSignatureType} // COVER;
-    $openprint::log->debug("Spread type in action: $spread_type");
+  my $book        = check_for_service($log, $dbh, $pid, 'Book');
+  my $spread_type = $specs->{txtSignatureType} // COVER;
+  $openprint::log->debug("Spread type in action: $spread_type");
 
-    print STDERR "Invalid multipage project $pid book:$book spread type: $spread_type\n" unless $book && $spread_type;
+  print STDERR "Invalid multipage project $pid book:$book spread type: $spread_type\n" unless $book && $spread_type;
 
 
-    # If we're cover spreads there can only be one of us so we're done.
-    return if $spread_type eq COVER;
+  # If we're cover spreads there can only be one of us so we're done.
+  return if $spread_type eq COVER;
 
-    # PERFECT BOUND COVER SPREAD
-    #
-    # If we're creating a perfect bound book the cover spread needs to be
-    # adjusted whenever any interior (includes gate folded) spread change.
-    if (get_bindery_type($log, $dbh, $pid) eq 'PerfectBinding') {
+  # PERFECT BOUND COVER SPREAD
+  #
+  # If we're creating a perfect bound book the cover spread needs to be
+  # adjusted whenever any interior (includes gate folded) spread change.
+  if (get_bindery_type($log, $dbh, $pid) eq 'PerfectBinding') {
+    my $cover = signatures_of_type($log, $dbh, $pid, COVER);
 
-        my $cover = signatures_of_type($log, $dbh, $pid, COVER);
+    # Get the cover signature and check it's flat_width.
+    if ($sid != $cover) {
 
-        # Get the cover signature and check it's flat_width.
-        if ($sid != $cover) {
+      my $width   = get_specifications($log, $dbh, $pid, $book, 'final_width');
+      my $spine   = get_finished_calliper($log, $dbh, {}, $pid);
+      my $current = get_specifications($log, $dbh, $pid, $cover, 'txtSpreadWidth');
 
-            my $width   = get_specifications($log, $dbh, $pid, $book, 'final_width');
-            my $spine   = get_finished_calliper($log, $dbh, {}, $pid);
-            my $current = get_specifications($log, $dbh, $pid, $cover, 'txtSpreadWidth');
+      $width = sprintf "%.3f", $width + $spine + $width;
 
-            $width = sprintf "%.3f", $width + $spine + $width;
-
-            # If it's different from the calculated dimenion adjust the spec
-            # and reset it to uncalculated.
-            if ($width != $current) {
-                insert_service_spec($log, $dbh, $pid, $cover, 
-                    txtSpreadWidth => $width,
-                );
-                set_status($log, $dbh, $pid, 'uncalculated', $cover)
-            }
-        }
+      # If it's different from the calculated dimenion adjust the spec
+      # and reset it to uncalculated.
+      if ($width != $current) {
+        insert_service_spec($log, $dbh, $pid, $cover, 
+          txtSpreadWidth => $width,
+        );
+        set_status($log, $dbh, $pid, 'uncalculated', $cover)
+      }
     }
+  }
 
-    # SIGNATURES
-    #
-    # Get all signatures of our type (excluding us) and those not completed.
-    my @signatures = grep { $_ != $sid } 
-                     signatures_of_type($log, $dbh, $pid, $spread_type);
-    
-    my @unfinished = grep { get_status($log, $dbh, $_) ne 'calculated' }
-                          @signatures;
+  # SIGNATURES
+  #
+  # Get all signatures of our type (excluding us) and those not completed.
+  my @signatures = grep { $_ != $sid } 
+  signatures_of_type($log, $dbh, $pid, $spread_type);
 
-    my $needed   = get_specifications($log, $dbh, $pid, $book, $spread_type);
-    my $current  = count_completed_spreads($log, $dbh, $spread_type, $pid, $sid);
-    my $provided = $specs->{spreads_in_group} 
-                 * ($specs->{txtSignatureQuantity} || 1);
+  my @unfinished = grep { get_status($log, $dbh, $_) ne 'calculated' }
+  @signatures;
 
-    $current += $provided;
+  my $needed   = get_specifications($log, $dbh, $pid, $book, $spread_type);
+  my $current  = count_completed_spreads($log, $dbh, $spread_type, $pid, $sid);
+  my $provided = $specs->{spreads_in_group} 
+  * ($specs->{txtSignatureQuantity} || 1);
 
-    # Compare the current total number of spreads we've defined against those
-    # needed according to our parent book service.
-    if ($current > $needed) {
-      $openprint::log->debug("Have more sigs than needed $current > $needed");
-        # We have too many signatures. Remove everyone but us.
-        delete_service($log, $dbh, $pid, $_) for @signatures;
+  $current += $provided;
 
-        insert_signature($log, $dbh, $pid, $book, $sid, $specs)
-            if $provided < $needed;
+  # Compare the current total number of spreads we've defined against those
+  # needed according to our parent book service.
+  if ($current > $needed) {
+    $openprint::log->debug("Have more sigs than needed $current > $needed");
+    # We have too many signatures. Remove everyone but us.
+    delete_service($log, $dbh, $pid, $_) for @signatures;
 
-        $log->warn("Too many spreads in p:$book while processing s:$sid\n");
-    } elsif ($current < $needed) {
-        # We still need signatures, add a new one unless another unfinished
-        # one already exists.
-        insert_signature($log, $dbh, $pid, $book, $sid, $specs) unless @unfinished;
-    } else {
-        # Just right. We can remove any unfinished signatures there might be.
-        delete_service($log, $dbh, $pid, $_) for @unfinished;
-    }
+    insert_signature($log, $dbh, $pid, $book, $sid, $specs)
+    if $provided < $needed;
 
-    return $specs;
+    $log->warn("Too many spreads in p:$book while processing s:$sid\n");
+  } elsif ($current < $needed) {
+    # We still need signatures, add a new one unless another unfinished
+    # one already exists.
+    insert_signature($log, $dbh, $pid, $book, $sid, $specs) unless @unfinished;
+  } else {
+    # Just right. We can remove any unfinished signatures there might be.
+    delete_service($log, $dbh, $pid, $_) for @unfinished;
+  }
+
+  return $specs;
 }
 
 sub insert_signature {

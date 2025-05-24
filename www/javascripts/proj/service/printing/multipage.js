@@ -1,50 +1,33 @@
 // Shows/hides the gate folded lip dimensions based on the template selection.
 Event.observe(window, 'load', function () {
-    var form      = $('f1');
-    var size      = $('gatefold_size');
-    var templates = form.template;
+  var form      = $('f1');
+  var templates = form.template;
 
-    if (!size) return;
+  for (var i=0; i < templates.length; i++) {
+    var template = templates[i];
+    template_onclick(template);
+    Event.observe(template, 'click', template_onclick.bind(template, template));
+  }
 
-    for (var i=0; i < templates.length; i++) {
-        var template = templates[i];
-
-        // Set initial state.
-        if (template.checked)
-            size.display( !!template.value.match(/GateFold/i) );
-
-        Event.observe(template, 'click', function () {
-            size.display( !!this.value.match(/GateFold/i) );
-        }.bind(template));
-    }
-
-    return true;
-});
-// Shows/hides the flush fold out cover based on the template selection.
-Event.observe(window, 'load', function () {
-    var form      = $('f1');
-    var size      = $('flush_foldout');
-    var templates = form.template;
-
-    if (!size) return;
-
-    for (var i=0; i < templates.length; i++) {
-        var template = templates[i];
-
-        // Set initial state.
-        if (template.checked)
-            size.display( !!template.value.match(/GateFold/i) );
-
-        Event.observe(template, 'click', function () {
-            size.display( !!this.value.match(/GateFold/i) );
-        }.bind(template));
-    }
-
-    return true;
+  return true;
 });
 
-// Tallies spreads x forms and gives the user a visual warning if they exceed
-// the spreads remaining to be allocated.
+function template_onclick(template) {
+  console.log('template_onlci', template);
+  if (!template.checked) return;
+  var gatefold_size      = $j('#gatefold_size');
+  var flush_foldout      = $j('#flush_foldout');
+  var is_gatefold = template.value.match(/GateFold/i);
+  if (is_gatefold) {
+    gatefold_size.show();
+    flush_foldout.show();
+  } else {
+    gatefold_size.hide();
+    flush_foldout.hide();
+  }
+}
+
+// Tallies spreads ? forms and gives the user a visual warning if they exceed the spreads remaining to be allocated.
 Event.observe(window, 'load', function () {
     var form      = $('f1');
 

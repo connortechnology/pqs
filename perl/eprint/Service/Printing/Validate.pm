@@ -101,9 +101,9 @@ sub spread {
 
   # See if the user chosen a bleed, and if so what size it is.
   my $size = $specs->{bleed_size};
-  print STDERR "bleed $size";
+  #print STDERR "bleed $size";
   $size =~ tr/0-9.+-//cd;
-  print STDERR " bleed $size \n";
+  #print STDERR " bleed $size \n";
 
   # If only one bleed side is selected then we must force it into an
   # array ref.
