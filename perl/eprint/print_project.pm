@@ -516,7 +516,7 @@ sub edit_display {
     $project->quantity1(),
     $project->quantity2(),
     $project->quantity3(),
-    $project->comments(),
+    ssi::unhtmlize($project->comments()),
     $project->shipped_on(),
     $project->type_id(),
     $project->due_date(),
