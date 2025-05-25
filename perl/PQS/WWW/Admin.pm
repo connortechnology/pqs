@@ -113,13 +113,10 @@ sub handler {
 
       $r->log->error($err);
 
-      if (DEBUG) {
-        require Error::StackTrace;
-        $r->status(SERVER_ERROR);
-        $r->content_type('text/html');
-        print Error::StackTrace::trace($r, $err);
-        return OK;
-      }
+      require Error::StackTrace;
+      $r->status(SERVER_ERROR);
+      $r->content_type('text/html');
+      print Error::StackTrace::trace($r, $err);
 
       return SERVER_ERROR;
     }
