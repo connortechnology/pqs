@@ -10,19 +10,19 @@
 	<!--#include virtual="/includes/web_page_meta.html" -->
 	<!--#include virtual="/includes/h1-main-css.html" -->
 
-	<link href="/styles/price_breakdown.css" rel="stylesheet" type="text/css" />
-	<link href="/base-css/imposition.css" rel="stylesheet" type="text/css" />
-	<link href="/styles/print_webpage.css" rel="stylesheet" type="text/css" media="screen" />
+  <link href="<?hash_link(/styles/price_breakdown.css)?>" rel="stylesheet" type="text/css" />
+  <link href="<?hash_link(/base-css/imposition.css)?>" rel="stylesheet" type="text/css" />
+  <link href="<?hash_link(/styles/print_webpage.css)?>" rel="stylesheet" type="text/css" media="screen" />
 
 	<!--#include virtual="/includes/h2-js.html" -->
 
-	<script type="text/javascript" src="/javascripts/other.js"></script>
+  <script src="<?hash_link(/javascripts/other.js)?>"></script>
 
-<script src='/javascripts/tablesort/tablesort.js'></script>
+<script src='/javascripts/tablesort/tablesort.min.js'></script>
 
 <!-- Include sort types you need -->
-<script src='/javascripts/tablesort/sorts/tablesort.number.js'></script>
-<script src='/javascripts/tablesort/sorts/tablesort.date.js'></script>
+<script src='/javascripts/tablesort/sorts/tablesort.number.min.js'></script>
+<script src='/javascripts/tablesort/sorts/tablesort.date.min.js'></script>
 
 
 	<style type="text/css">
@@ -41,7 +41,6 @@ a.svg {
   position: relative;
   display: inline-block;
 }
-
 
 		table,
 		table th,
