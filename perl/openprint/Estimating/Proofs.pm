@@ -24,10 +24,10 @@ use vars qw( $log $dbh );
 *dbh = \$openprint::dbh;
 
 require sql;
+require openprint::Project;
 require openprint::service;
 require openprint::Estimating::Printing;
 use Data::Dumper;
-
 
 use constant DEBUG => 0;
 my @variables = (
@@ -552,18 +552,23 @@ sub load_proof_info {
 	return @proof_info;
 } # end sub load_proof_info
 
-sub get_proof_specs {
-	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+sub display {
+	my ($log, $dbh, $variable, $project_index, $service_index) = @_;
 
-	my $Project = new openprint::Project($project_index);
+	my $Project = openprint::Project->find_one(id=>$project_index);
+  if (!$Project) {
+    $log->error("No project for $project_index");
+    return 'uncalculated';
+  }
+
 	my $services = $Project->services();
-	my @service_dropdown = map { $_->name(), $_->description() } openprint::Service->find(category=>'Proofs');
+  my $ServiceType = $Project->ServiceType($service_index);
+	my @service_dropdown = map { $_->name(), $_->description() } openprint::Service->find(servicetype_id=>$ServiceType->id());
 
 	my $specs = openprint::service::get_specs_ref($Project, $service_index);
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %proof_indexes;
 		foreach my $key ( keys %$specs ) {
-#$openprint::log->debug("key $key");
 			if ( $key =~ /^txtProofIndex-(\d+)-(\d+)-$qty_index$/ ) {
 				$proof_indexes{$1}[$$specs{$key}] = $$specs{$key};
 			} # end if
@@ -572,7 +577,7 @@ sub get_proof_specs {
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $form = $$sig_specs{SignatureIndex};
-			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+			if (!($$sig_specs{'txtImposition'.$qty_index} or $$sig_specs{'hdnImposition'.$qty_index})) {
 				$log->warn("No imposition in signature $form") if DEBUG;
 				next;
 			} # end if
@@ -582,6 +587,7 @@ sub get_proof_specs {
 			$Imposition->display( "For sig $form") if DEBUG;
 
 			if ( (!$proof_indexes{$form}[1]) and $openprint::config{Add_Default_Layout_Proof} and ($openprint::config{Add_Default_Layout_Proof} eq 'Y') ) {
+        $proof_indexes{$form} = [] if ! $proof_indexes{$form};
 				$proof_indexes{$form}[1] = 1;
 				$openprint::log->debug("ADDING Layout Proof to $form") if DEBUG;
 				insert_layout_proof($sig_specs, 1, $qty_index, $specs, $Imposition);
@@ -613,7 +619,7 @@ sub get_proof_specs {
 				$log->debug('Already had press proof');
 			} # end if
 
-			@{$$variable{'Proofs-'.$form.'-'.$qty_index}} = ();
+			$$variable{'Proofs-'.$form.'-'.$qty_index} = [];
 			next if ! $proof_indexes{$form};
 			foreach my $proof_index ( sort map { $_ ? $_ : () } @{$proof_indexes{$form}} ) {
 				my ( $quantity, $width, $height, $type ) = @$specs{map{join('-',$_,$form,$proof_index,$qty_index)}
