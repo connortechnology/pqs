@@ -1195,13 +1195,13 @@ sub edit_process {
   die "project $pid not found" if ! $project;
 
   $project->set({
-    comments         => ($r->param('txtComments') or undef),
-    invoice_comments => ($r->param('txtInvoiceComments') or undef),
+    ($r->param('txtComments') ? (comments=> $r->param('txtComments')) : ()),
+    ($r->param('invoice_comments') ? (invoice_comments => $r->param('txtInvoiceComments') ) : ()),
     ($r->param('txtProjectReference') ? (reference => $r->param('txtProjectReference')) : () ),
     ($r->param('rdbPressType') ? (press_type => $r->param('rdbPressType')) : () ),
     ($r->param('press_type_id') ? (press_type_id => $r->param('press_type_id')) : () ),
     ($r->param('rdbProjectType') ? (type_id => $r->param('rdbProjectType')) : () ),
-    rfq_only => $r->param('rfq_only'),
+    ($r->param('rfq_only') ? ( rfq_only => $r->param('rfq_only') ) : ()),
   });
 
   # QUANTITIES
