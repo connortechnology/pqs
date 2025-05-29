@@ -206,7 +206,8 @@ sub update {
       $sth->execute( values %data, @condition_values );
       my $print_sql = $sql;
       $print_sql =~ s/\?/\%s/g;
-      $print_sql = sprintf($print_sql, values %data );
+      my @values = values %data;
+      $print_sql = sprintf($print_sql, @values, @condition_values) if @condition_values or @values;
       $log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, $print_sql ) );
     } # end if
 
