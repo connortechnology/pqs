@@ -31,12 +31,31 @@ use Data::Dumper;
 
 use constant DEBUG => 0;
 my @variables = (
-		'txtPrice',
-		'CustomProofSpecs',
-		'RequireColourProofs',
-		'RequirePressProofs',
-		'alert',
-		);
+  'txtPrice',
+  'CustomProofSpecs',
+  'RequireColourProofs',
+  'RequirePressProofs',
+  'alert',
+);
+
+my %ServicePrices = (
+  'Epson Proof' => { units=>['each','per proof', 'per square inch', 'per square foot'] },
+);
+my %Specifications = (
+);
+
+sub ServicePriceConfiguration {
+  my $name = shift;
+  return $ServicePrices{$name} if $ServicePrices{$name};
+  foreach my $key (keys %ServicePrices) {
+    return $ServicePrices{$key} if ($name =~ /$key/i);
+  }
+  return undef;
+}
+sub SpecificationConfiguration {
+  return $Specifications{shift};
+}
+
 my %ProofServices;
 
 sub variables {
