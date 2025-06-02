@@ -781,6 +781,7 @@ sub get_project_price {
   my $press     = get_equipment($dbh, $best_price->{press});
 
   my $substrate = $best_price->{paper}{id};
+  $$best_price{substrate} = $substrate;
 
   # Get the substrates for the press, sort them, and serialize the list.
   $best_price->{sheet_sizes} = join q{_} =>
