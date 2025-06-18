@@ -22,12 +22,12 @@
 #
 #  - ADTs and/or objects for projects, signatures, and equipment/cutters
 #  - Support for Dutch impositions and non-pow2 cutting.
-#  - Make the project_cost(), compete(), project(), etc. general functions. 
+#  - Make the project_cost(), compete(), project(), etc. general functions.
 #    Any service type can potentially use these.
 #  - Deprecate necessary() as it's wasteful to determine all the jobs needed
 #    for a boolean return, then create the service container, then call
 #    interal_calc() which populates all the jobs again.
-#  
+#
 package eprint::Service::Cutting;
 use strict;
 use warnings;
@@ -37,12 +37,12 @@ use Class::Struct;
 use List::Util           qw(sum max);
 use POSIX                qw(ceil);
 
-
+use Data::Dumper;
 use PQS::Imposition::Constants;
 use Compress::LZF         qw(:compress :freeze);
-    use Storable              qw(thaw);
-    use MIME::Base64;
-    use PQS::Imposition::Node;
+use Storable              qw(thaw);
+use MIME::Base64;
+use PQS::Imposition::Node;
 
 use eprint::project      qw(:common has_no_bindery get_finished_calliper);
 use eprint::service      qw(:common);
@@ -55,7 +55,7 @@ require openprint;
 my @cutters;
 
 # DEPRECATED: The only way to really determine if cutting is necessary is to
-# see if any estimate quantity of the project needs _any_ jobs done. 
+# see if any estimate quantity of the project needs _any_ jobs done.
 sub necessary {
     my ($log, $dbh, $pid) = @_;
 
@@ -66,8 +66,8 @@ sub necessary {
     # is redundant but it's worth it in speed and as a guard clause.
     my $type = get_type($log, $dbh, $pid);
 
-    if (   grep({ $type eq $_ } qw(Envelopes Product ScreenItem InventoryCheckOut 
-    				   ScreenTShirts ScreenHoodies ScreenSweatShirts 
+    if (   grep({ $type eq $_ } qw(Envelopes Product ScreenItem InventoryCheckOut
+    				   ScreenTShirts ScreenHoodies ScreenSweatShirts
 				   ScreenMisc ScreenCoffeeMugs ScreenMousePads))
         || $type =~ /^LF/ ) {
         return (wantarray ? () : undef);
@@ -82,7 +82,7 @@ sub necessary {
         next unless $qty[$i] > 0;
         push @jobs, project_jobs( project($log, $dbh, $pid, $i) );
     }
-    
+
     # If we have any then cutting is necessary.
     return scalar @jobs ? 1 : 0;
 }
@@ -91,16 +91,16 @@ sub necessary {
 # Calculate the cutting needs and price of any given project and store the
 # information in the appropriate project service. Do NOT call from JS.
 sub calc {
-    my ($log, $dbh, $var, $pid, $sid, $service_type, $specs) = @_; 
+    my ($log, $dbh, $var, $pid, $sid, $service_type, $specs) = @_;
 
     # Retrieve the project quantities with the indices they use (it can not be
     # treated as a list).
     my @qty; @qty[1..3] = get_quantities($log, $dbh, $pid);
 
-    die "Invalid project ($pid - $sid)" 
+    die "Invalid project ($pid - $sid)"
         unless $pid && $sid && int($qty[1]) > 0;
 
-    
+
     # Running each quantity as a seperate project is a waste of resources at
     # present as the signature sizes are always the same. In the near future
     # though, we should have proper multi-quantity print estimating; meaning
@@ -117,7 +117,7 @@ sub calc {
 
         # We shouldn't even be here if there are no jobs for us to do.
         unless (@jobs) { $price[$i] = 'NaN'; next; }
-       
+
         # Cost the project (for the given user).
         $price[$i] = project_cost($dbh, $pid, $sid, @jobs);
 
@@ -138,16 +138,13 @@ sub calc {
             = format_pricing($price[$i], $qty[$i]);
     }
 
-    #print STDERR "HAVE SPECS", Dumper($specs);
-
     return 'calculated';
 }
 
 sub init {
   my ($pid) = @_;
   # Load all the cutters in inventory.
-  @cutters = map { cutter($openprint::dbh, $_) }
-                      eprint::service::valid_equipment(undef, $openprint::dbh, 'Cutting', $pid);
+  @cutters = map { cutter($openprint::dbh, $_) } eprint::service::valid_equipment(undef, $openprint::dbh, 'Cutting', $pid);
     # Really this shouldn't be here but the get_price function is horribly
     # ugly using \%variable to retrieve customer price list information and
     # other things, so we wrap it up into a bit neater package.
@@ -176,8 +173,8 @@ sub project_cost {
 
         # The initial competition is limited to runners (cutters) in the same
         # class (supplier) as the race (job), excluding 'House' league.
-        @competitors = compete($j, grep { $_->{supplier} ne 'House' 
-                                      and $_->{supplier} eq $j->supplier } @cutters 
+        @competitors = compete($j, grep { $_->{supplier} ne 'House'
+                                      and $_->{supplier} eq $j->supplier } @cutters
         ) if $j->supplier ne 'House';
 
         # Our house league can now play. Also if we didn't have any valid
@@ -188,23 +185,23 @@ sub project_cost {
         # Neither supplier or house can handle it? Open it to everyone.
         if ( not @competitors ) {
             # We'll eliminate those who've already been disqualified.
-            @cutters = grep { $_->{supplier} ne $j->supplier 
+            @cutters = grep { $_->{supplier} ne $j->supplier
                           and $_->{supplier} ne 'House'      }
                               @cutters;
-            
+
             @competitors = compete($j, @cutters);
 
             # No one at all? Alright, this race is a complete failure.
             return undef unless @competitors
         }
-        
+
         # Let the best cutter WIN!
         push @winners, (sort { $a->{cost} <=> $b->{cost} } @competitors)[0];
     }
 
     # No one can win by default, at least one person has to finish each race.
     return undef unless scalar @jobs == grep { $_->{cost} } @winners;
-    
+
     # The final project cost is the sum of each job's 'winner'.
     my $total = 0; $total += $_->{cost} for @winners;
 
@@ -230,7 +227,7 @@ sub compete {
 
         # If they finished, they're a valid competitor (zero is a valid cost).
         push @competitors, {
-            job       => $job, 
+            job       => $job,
             equipment => $equip,
             cost      => $cost,
         } if defined $cost and $cost >= 0;
@@ -243,7 +240,7 @@ sub compete {
 sub fits {
     my $job   = shift; # The job.
     my $equip = shift; # The equipment to test it on.
-    
+
     # Well, we do a shitty job of this. As we don't track orientation and where
     # the cuts phyically are we don't know if any one cut will be over the
     # cutter's capabilities. So we just blindly assume that it will work as
@@ -257,7 +254,7 @@ sub fits {
 
     # We just blindly assume that it will work as long as one dimension is
     # smaller than the blade length.
-    return 0 
+    return 0
         unless $job->height < $blade_length or $job->width < $blade_length;
 
     # Check lift depth vs. job calliper.
@@ -284,16 +281,16 @@ sub fits {
 # dimensions?
 
 # sub project_cost {
-# 
+#
 #     # We sort the jobs by supplier so we don't have to load/cache supplier
 #     # equipment multiple times. 'House' and unknown jobs are handled last as
 #     # any jobs that fail (specs. not met) are pushed to the bottom of the
 #     # stack and given a second chance on house equipment.
 #     my @jobs = sort { return -1 if $a->{supplier} eq 'House';
 #                       return -1 if not defined $a->{supplier};
-#                       return $a->{supplier} cmp $b->{supplier} 
+#                       return $a->{supplier} cmp $b->{supplier}
 #                     } project_jobs($project);
-#     
+#
 #     return $total;
 # }
 
@@ -311,13 +308,13 @@ sub fits {
 #                                  # can shift and tear it.
 #       cost       => cost,
 #   );
-#   
+#
 #   my %cost = (
 #       make_ready => float,
 #       min        => float,
 #       run        => sub ($) { }, # Takes quantity returns float price.
 #   );
-  
+
 # Given a database handle and the cutter's ID, instansiate the cutter instance.
 sub cutter {
     my $dbh    = shift;
@@ -330,13 +327,13 @@ sub cutter {
         SELECT lngindex    AS id,
                strid       AS ref,
                strname     AS name,
-               strsupplier AS supplier 
+               strsupplier AS supplier
         FROM tbl_equipment
         WHERE lngindex = ?
     }, undef, $id) };
 
     # EQUIPMENT SPECIFICATIONS
-    # 
+    #
     # Get the standard sizing specs. (max/min height/width).
     my $spec = $dbh->selectall_hashref(q{
         SELECT strname AS name, strvalue AS value
@@ -383,32 +380,32 @@ sub cutter {
 #   my %project = (
 #       id  => int,
 #       qty => int,
-#       
+#
 #       width    => float, # |
 #       height   => float, # |-Final project dimensions
 #       calliper => float, # |
-#      
+#
 #       type         => string, # Project type
 #       is_multipage => bool,
 #       bindery      => string, # Type of bindery (if applicable)
-#       
+#
 #       signatures => [ signature ],
 #   );
-#   
+#
 #   my %signature = (
 #       id          => int,      # Signature ID
 #       orientation => string,   # 'Horizontal' or 'Vertical'
 #       rows        => int || 1,
 #       cols        => int || 1,
 #       groups      => int || 1, # The number of signatures in the group.
-#   
+#
 #       colour_bar => bool,
 #       bleed      => [float, float, float, float], # Top, bottom, left, right.
 #       stock      => stock,
 #
 #       supplier => string, # The print supplier (for matching equipment).
 #   );
-#   
+#
 #   my %stock = (
 #       calliper => float,
 #       supplied => { qty => [int], width => float, height => float, },
@@ -433,8 +430,8 @@ sub project {
     my $print = get_print_container($log, $dbh, $pid);
 
     # The project type and estimate quantity.
-    $project{type}       = get_type($log, $dbh, $pid); 
-    $project{press_type} = get_press_type($log, $dbh, $pid); 
+    $project{type}       = get_type($log, $dbh, $pid);
+    $project{press_type} = get_press_type($log, $dbh, $pid);
     $project{qty}        = (get_quantities($log, $dbh, $pid))[$i-1];
 
 	$project{CutsPerSheet} = $specs->{CutsPerSheet};
@@ -442,10 +439,10 @@ sub project {
 
 
     # The final flat project dimensions and bindery type.
-    @project{ qw(width height bindery) } = get_specifications($log, $dbh, 
+    @project{ qw(width height bindery) } = get_specifications($log, $dbh,
         $pid, $print, qw(flat_width flat_height template));
     $project{calliper} = get_finished_calliper($log, $dbh, {}, $pid);
-    
+
     # Is the project type considered to be multi-page?
     $project{is_multipage} = is_multipage($log, $dbh, $pid);
 
@@ -460,10 +457,10 @@ sub project {
         # DATABASE SPECS
         #
         # Get the raws 'specs' from what we pass off as a relational database.
-        my %spec = get_specifications_pairs($log, $dbh, $pid, $id, 
+        my %spec = get_specifications_pairs($log, $dbh, $pid, $id,
             # Basic signature info.
             qw( txtSignatureQuantity  hdnImageOrientation
-                hdnImpositionRows     hdnImpositionColumns 
+                hdnImpositionRows     hdnImpositionColumns
                 txtServiceDescription ),
 
             # Bleed size and edges.
@@ -500,7 +497,7 @@ sub project {
         $sig{groups} = $spec{txtSignatureQuantity} || 1;
 
         # The orientation should be either Horizontal or Vertical.
-        $sig{orientation} = ( $spec{hdnImageOrientation} eq 'Horizontal' 
+        $sig{orientation} = ( $spec{hdnImageOrientation} eq 'Horizontal'
                            or $spec{hdnImageOrientation} eq 'Vertical'   )
                        ? $spec{hdnImageOrientation} : undef;
 
@@ -509,7 +506,7 @@ sub project {
             for split(',', $spec{bleed_sides} );
 
         $sig{colour_bar} = ($spec{colour_bar} eq 'Yes');
-        
+
         # STOCK
         #
         # The supplied stock is before any precutting (which may or may not be
@@ -523,8 +520,8 @@ sub project {
 
         # Gross press quantity (including overage).
         $sig{stock}{press}{qty}    = $spec{"hdnGrossSheetCount$i"};
-        $sig{stock}{supplied}{qty} = ceil( 
-            $spec{"hdnGrossSheetCount$i"} / 
+        $sig{stock}{supplied}{qty} = ceil(
+            $spec{"hdnGrossSheetCount$i"} /
             (   ($spec{imp}{paper}{width_factor}  || 1)
               * ($spec{imp}{paper}{height_factor} || 1) )
         );
@@ -540,7 +537,7 @@ sub project {
         # Currently hdnEquipment1 is the only field being used by the
         # printing services.
 
-        
+
         push @{ $project{signatures} }, \%sig;
     }
 
@@ -567,7 +564,7 @@ sub get_imposition {
     # the package before we can retrieve into it.
     my $tmp = PQS::Imposition::Node->new(cut => 0, size => [1,1]);
     undef $tmp;
-   
+
     $imposition->{tree} = thaw($imposition->{tree}); # Frozen object.
 
     return $imposition;
@@ -576,10 +573,10 @@ sub get_imposition {
 
 
 # JOB
-# 
+#
 struct Job => {
     signature => '$', # signature,  # Signature ID [optional]
-    
+
     width     => '$', # float,      # |
     height    => '$', # float,      # |- Before cutting dimensions
     calliper  => '$', # float,      # |
@@ -613,7 +610,7 @@ sub project_jobs {
                        #print STDERR "START PROJECT JOBS 2 \n";
 
     # SIGNATURES
-    # 
+    #
     for my $sig (@{ $project->{signatures} }) {
         my $stock = $sig->{stock}; # Signature stock info.
 
@@ -624,14 +621,12 @@ sub project_jobs {
         next if  $project->{width}  == $stock->{press}{width}
              and $project->{height} == $stock->{press}{height};
 
-           #print STDERR "START PROJECT JOBS SIG 2 \n";
-       
         # PRE-PRESS CUTTING
         #
         # Determine if we need to cut the stock down to fit on the press.
         if ($sig->{imp}{paper}{cuts} && $project->{press_type} ne WEB) {
             push @jobs, Job->new(
-                signature => $sig, 
+                signature => $sig,
                 width     => $stock->{supplied}{width},
                 height    => $stock->{supplied}{height},
                 supplier  => $sig->{supplier},
@@ -655,13 +650,13 @@ sub project_jobs {
         # instead of a cutter to do certain cutting jobs. However as we don't
         # know what signature the letterpress is working on in a multipage job
         # we currently ignore it.
-        # 
+        #
         # If the project is a multipage project, the only thing we may need to
-        # do at the signature level is cut n-up sheets into 1-up. 
+        # do at the signature level is cut n-up sheets into 1-up.
         if ( $project->{is_multipage} ) {
             # Don't worry about trimming, just do dead cuts if it's n-up.
             push @jobs, Job->new(
-                signature => $sig, 
+                signature => $sig,
                 width     => $stock->{press}{width},
                 height    => $stock->{press}{height},
                 supplier  => $sig->{supplier},
@@ -678,12 +673,12 @@ sub project_jobs {
             #                        |  8pg  | 4pg |
             #                        |       |_____|
             #                        |_______|_____|
-            #         
+            #
 
             # TODO: Spiral bound covers need to be cut into a front and back
             # even though they're laid up in four page spreads. This can be
             # combined with any n-up dead cuts.
-            
+
             # Actually there is one other case. If the project is being spiral
             # bound and our current signature in an n-up signature that's
             # under an eight page signature in a multi-signature (or multiple
@@ -693,13 +688,13 @@ sub project_jobs {
             # if ( project->bindery eq spiral and ... )
             #     $jobs[-1]->cuts( $jobs[-1]->cuts + 2 );
             #
-            
+
             next; # We're done at the signature level for multipage.
         }
-        
+
         # SINGLE PAGE
         #
-        # Single signature projects need cutting if they have any bleeds or 
+        # Single signature projects need cutting if they have any bleeds or
         # colour bars, if they're n-up, or a combination of the two.
         # Additionally we'll always be working with the same stock quantity
         # and callipers.
@@ -722,7 +717,7 @@ sub project_jobs {
         # if ( using_letterpress )  {
         #     next;
         # }
-        
+
 		# We now want to add Post Process cutting into Presentaiton Folders.
         #next if $project->{type} eq 'PresentationFolders';
 
@@ -745,7 +740,7 @@ sub project_jobs {
             push @jobs, $job;
 			next;
 		}
-        
+
         # All n-up non multi-sheet projects are now handled the same.
         if (my $cuts = cuts($sig->{imp})) {
             $job->note("Single sheet $n-up.");
@@ -763,7 +758,7 @@ sub project_jobs {
         # with full trim (handled in the signature section above).
 
         # Stitching types and Perfect Binding trim on during binding.
-    
+
         # Spiral bindery however (Cerlox, Plastic Coil, etc.) is a special
         # case. The (possibly cut down for n-up) press sheets are folded and
         # collated before they are cut. So we're cutting the final project
@@ -791,9 +786,6 @@ sub project_jobs {
         #       before folding and/or collating. We don't consider that.
     }
 
-    #use Data::Dumper;
-  #print STDERR "HAVE JOBS: ", Dumper(@jobs);
-
     return wantarray ? @jobs : \@jobs;
 }
 
@@ -808,7 +800,7 @@ sub cuts {
     # has a bleed.
     my $bleed = $root->bleed;
 
-    my ($x, $y) = $imposition->{rotate_sheet} ? qw(height width) 
+    my ($x, $y) = $imposition->{rotate_sheet} ? qw(height width)
                                               : qw(width height);
 
     if ($imposition->{paper}{$x} == $root->size->[WIDTH]) {
@@ -838,9 +830,9 @@ sub cuts {
 # processed in parallel based on the stock calliper, item size, cutting
 # equipment, etc. Until then we'll assume everything can be cut in parallel.
 # TODO Determine and code some rules.
-sub parallel { 
+sub parallel {
     my ($imposition) = @_;
-    
+
     return sub {100};
 };
 
@@ -889,11 +881,11 @@ sub cut_list {
                 $cuts += 2;
             }
             # Otherwise we just have a dead cut.
-            else { 
-                $cuts += 1; 
+            else {
+                $cuts += 1;
             }
         }
-        
+
         # How many cuts each node needs, and how many there are of it.
         $cut_list{$id} = { node => $node, cuts => $cuts, qty => 1 };
 
@@ -917,7 +909,7 @@ sub job_cost {
 
     my $total = 0;
     my $make_ready = $cost->{make_ready};
-    
+
     # The maximum calliper of a stack varies with the paper calliper; as
     # cutting thick stacks of thin stocks can shift and tear them.
     my $lift_depth = &{ $cutter->{lift_depth} }( $job->calliper )
@@ -952,80 +944,79 @@ sub job_cost {
 
 
 sub display {
-    my ($log, $dbh, $service_type, $pid, $sid, $specs) = @_;
+  $openprint::log->debug("Here");
+  my ($log, $dbh, $service_type, $pid, $sid, $specs) = @_;
 
-    my %page;
+  my %page;
+  my $project = new openprint::Project($pid);
+  my $type = $project->type();
 
-	my $type = eprint::project::get_type($log, $dbh, $pid);
-	
-	$page{NoPrint} = 1 if $type eq 'NoPrint';
+  $page{NoPrint} = 1 if $type eq 'NoPrint';
 
+  # If we're not calculated there's a problem. As we don't have a standardised messaging system we'll co-opt our signature output.
+  my $s = get_status($log, $dbh, $sid);
+  if ( grep { $s eq $_ }  ('uncalculated', 'error')) {
+    $page{signatures} = [ {
+        name => 'Call for Quote',
+        notes => [ {
+            operation => 'We can not automatically process this job at
+            this time, please call for a quote.'
+          } ],
+      }, ];
+    return \%page;
+  }
+  my @qty; @qty[1..3] = get_quantities($log, $dbh, $pid);
+  die "This project has no valid quantities!"
+  unless grep { defined $_ and $_ > 0 } @qty;
 
-    # If we're not calculated there's a problem. As we don't have a
-    # standardised messaging system we'll co-opt our signature output.
-    my $s = get_status($log, $dbh, $sid);
-    if ( grep { $s eq $_ }  ('uncalculated', 'error')) {
-        $page{signatures} = [ { 
-            name => 'Call for Quote', 
-            notes => [ { 
-                operation => 'We can not automatically process this job at
-                this time, please call for a quote.'
-            } ],
-        }, ];
-        return \%page;
-    }
-    my @qty; @qty[1..3] = get_quantities($log, $dbh, $pid);
-    die "This project has no valid quantities!"
-        unless grep { defined $_ and $_ > 0 } @qty;
+  # We make the assumption here that we're not yet processing a real three
+  # quantity job so we'll just get the job info from the first valid qty.
+  my $i;
+  for $i (1..3) {
+    last if (defined $qty[$i] and $qty[$i] > 0);
+  }
+  my $project = project($log, $dbh, $pid, $i);
+  $page{project} = $project;
 
-    # We make the assumption here that we're not yet processing a real three
-    # quantity job so we'll just get the job info from the first valid qty.
-    my $i;
-    for $i (1..3) {
-        last if (defined $qty[$i] and $qty[$i] > 0);
-    }
-    my $project = project($log, $dbh, $pid, $i);
-    $page{project} = $project;
+  # We display the operations performed grouped by signature.
+  my @jobs = project_jobs($project);
+  my %sig;
+  for my $job (@jobs) {
+    # Jobs without a defined signature apply to the entire project.
+    my $name = (defined $job->signature) ? $job->signature->{name}
+    : 'Project';
 
-    # We display the operations performed grouped by signature.
-    my @jobs = project_jobs($project);
-    my %sig;
-    for my $job (@jobs) {
-        # Jobs without a defined signature apply to the entire project.
-        my $name = (defined $job->signature) ? $job->signature->{name}
-                                             : 'Project';
-        
-        # All we currently care about is the operation performed in the order
-        # it was performed (if possible).
-        $sig{$name} = [] unless exists $sig{$name};
+    # All we currently care about is the operation performed in the order
+    # it was performed (if possible).
+    $sig{$name} = [] unless exists $sig{$name};
 
-        push @{ $sig{$name} }, { operation => $job->note };
-    }
+    push @{ $sig{$name} }, { operation => $job->note };
+  }
 
-    # Sort for display and change the data structure to make SSI happier.
-    my @signatures = sort { $a->{name} cmp $b->{name}         }
-                     map  { { name => $_, notes => $sig{$_} } } keys %sig;
-    $page{signatures} = \@signatures;
+  # Sort for display and change the data structure to make SSI happier.
+  my @signatures = sort { $a->{name} cmp $b->{name}         }
+  map  { { name => $_, notes => $sig{$_} } } keys %sig;
+  $page{signatures} = \@signatures;
 
-    # And finally the quantity/total prices common section.
-    $page{qty} = [];
-    for my $i (1..3) {
-        next unless $qty[$i] > 0;
-        
-        # Get the pricing for valid quantities and make it SSI friendly.
-        my ($unit, $total) = get_specifications($log, $dbh, $pid, $sid,
-            "txtUnitPrice$i", "txtPrice$i"
-        );
-        push @{ $page{qty} }, { 
-            id       => $i,
-            quantity => $qty[$i],
-            unit     => $unit, 
-            total    => $total, 
-        };
-    }
+  # And finally the quantity/total prices common section.
+  $page{qty} = [];
+  for my $i (1..3) {
+    next unless $qty[$i] > 0;
 
-	 $page{project}{qty} = [get_quantities($log, $dbh, $pid)];
-   return \%page;
+    # Get the pricing for valid quantities and make it SSI friendly.
+    my ($unit, $total) = get_specifications($log, $dbh, $pid, $sid,
+      "txtUnitPrice$i", "txtPrice$i"
+    );
+    push @{ $page{qty} }, {
+      id       => $i,
+      quantity => $qty[$i],
+      unit     => $unit,
+      total    => $total,
+    };
+  }
+
+  $page{project}{qty} = [get_quantities($log, $dbh, $pid)];
+  return \%page;
 }
 
 1;
