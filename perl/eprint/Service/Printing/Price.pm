@@ -124,14 +124,12 @@ sub get_project_price {
   my ($log, $dbh, $variable, $pid, $sid, $spread, $versions, $overrides) = @_;
 
   #HANDLE NEW No PRINT PROJECT TYPE
-  my $type = get_type($log, $dbh, $pid);
+  my $Project = new openprint::Project($pid);
+  my $type = $Project->type();
+  return undef if $type eq 'NoPrint';
 
-  my $s;
+  #my $s;
   #return {error =>  'Missing Specs width and height'} unless $spread->{flat}{width} and $spread->{flat}{height};
-
-  #	print STDERR "HAVE DEA", Dumper($spread);
-
-  return $s if $type eq 'NoPrint';
   # DONE NOPRINT
 
   return {error => 'Rquired Specs not found: colour'}
@@ -449,9 +447,8 @@ sub get_project_price {
   $total_imp = scalar @$impositions if TIMINGS;
 
   foreach $imp (@$impositions) {
-    #print STDERR  "imp".Data::Dumper::Dumper($imp);
     if ( $openprint::r ) {
-      $openprint::r->print("\n");
+      $openprint::r->print("");
       if ( $openprint::r->connection()->aborted() ) {
         print STDERR "Aborted\n";
         return {error => 'Aborted'};
@@ -610,7 +607,8 @@ sub get_project_price {
       # And remember its place in the price check so we can find it # easily later.
       $price{comparison_idx} = $#price_check;
     }
-  }
+  }  # end foreach imposition
+  #$openprint::log->error(Data::Dumper::Dumper($best_price));
 
   if ( $price_check == -1 || !keys %$best_price ) {
     return {error => 'Could not price project'};
@@ -2133,9 +2131,7 @@ sub get_run_price {
   my %run_price;
   $run_price{ImpressionRange} = $press_sheets;
   my $running_price = 0;
-  my $max_colours   =
-  eprint::equipment::get_specification($log, $dbh, 'Number of Colours',
-    '', $press);
+  my $max_colours   = eprint::equipment::get_specification($log, $dbh, 'Number of Colours', '', $press);
 
   if (!$max_colours) {
     $log->error( "PRINTING: FATAL ERROR: Could Not Get 'Number of Colours' for Press: $press");
@@ -2835,9 +2831,7 @@ sub get_cutdown_cost {
     if ((!$bestprice) || ($price < $bestprice)) { $bestprice = $price }
   }
   if (!$bestprice) {
-    $log->error(
-      "UNABLE TO PRICE PRECUTTING OF STOCK - NO CUTTER WITH VALID PRICING IN SYSTEM"
-    );
+    $log->error( "UNABLE TO PRICE PRECUTTING OF STOCK - NO CUTTER WITH VALID PRICING IN SYSTEM");
   }
 
   return $bestprice;
@@ -3053,20 +3047,22 @@ sub spreads_remaining {
     return 0;
   }
 
-  return 1 if get_type($log, $dbh, $pid) eq 'ScreenItem';
+  my $project = new openprint::Project($pid);
+  return 1 if $project->type() eq 'ScreenItem';
 
-  my $type      = get_specifications($log, $dbh, $pid, $sid, 'txtSignatureType');
+  my $specs = openprint::service::get_specs_ref($log, $dbh, $pid, $sid);
+  my $type      = $$specs{txtSignatureType};
   if (!$type) {
     $openprint::log->error("No signature type");
   }
   my $book      = get_print_container($log, $dbh, $pid);
 
-  print STDERR "HAVE SIGNATURE TYPE : $type SID: $sid \n";
+  #print STDERR "HAVE SIGNATURE TYPE : $type SID: $sid \n";
 
   my $total     = get_specifications($log, $dbh, $pid, $book, $type);
-  print STDERR "HAVE TOTAL : $total \n";
+  #print STDERR "HAVE TOTAL : $total \n";
   my $completed = count_completed_spreads($log, $dbh, $type, $pid, $sid);
-  print STDERR "HAVE COMPLETED : $completed \n";
+  #print STDERR "HAVE COMPLETED : $completed \n";
 
   my $needed    = $total - $completed;
 
