@@ -91,54 +91,47 @@ sub necessary {
 # Calculate the cutting needs and price of any given project and store the
 # information in the appropriate project service. Do NOT call from JS.
 sub calc {
-    my ($log, $dbh, $var, $pid, $sid, $service_type, $specs) = @_;
+  my ($log, $dbh, $var, $pid, $sid, $service_type, $specs) = @_;
 
-    # Retrieve the project quantities with the indices they use (it can not be
-    # treated as a list).
-    my @qty; @qty[1..3] = get_quantities($log, $dbh, $pid);
+  # Retrieve the project quantities with the indices they use (it can not be treated as a list).
+  my @qty; @qty[1..3] = get_quantities($log, $dbh, $pid);
 
-    die "Invalid project ($pid - $sid)"
-        unless $pid && $sid && int($qty[1]) > 0;
+  die "Invalid project ($pid - $sid)" unless $pid && $sid && int($qty[1]) > 0;
 
+  # Running each quantity as a seperate project is a waste of resources at
+  # present as the signature sizes are always the same. In the near future
+  # though, we should have proper multi-quantity print estimating; meaning
+  # imposition layouts/signatures could vary greatly by quantity.
+  my @price;
+  for my $i (1..3) {
+    next unless $qty[$i] > 0;
 
-    # Running each quantity as a seperate project is a waste of resources at
-    # present as the signature sizes are always the same. In the near future
-    # though, we should have proper multi-quantity print estimating; meaning
-    # imposition layouts/signatures could vary greatly by quantity.
-    my @price;
-    for my $i (1..3) {
-        next unless $qty[$i] > 0;
+    # Get the project information for the current estimate quantity.
+    my $project = project($log, $dbh, $pid, $i, $specs);
 
-        # Get the project information for the current estimate quantity.
-        my $project = project($log, $dbh, $pid, $i, $specs);
+    # The jobs needed for the project.
+    my @jobs = project_jobs($project);
 
-        # The jobs needed for the project.
-        my @jobs = project_jobs($project);
+    # We shouldn't even be here if there are no jobs for us to do.
+    unless (@jobs) { $price[$i] = 'NaN'; next; }
 
-        # We shouldn't even be here if there are no jobs for us to do.
-        unless (@jobs) { $price[$i] = 'NaN'; next; }
+    # Cost the project (for the given user).
+    $price[$i] = project_cost($dbh, $pid, $sid, @jobs);
 
-        # Cost the project (for the given user).
-        $price[$i] = project_cost($dbh, $pid, $sid, @jobs);
+    # Zero is valid at this stage but undef isn't; set to error state.
+    $price[$i] = 'NaN' if not defined $price[$i];
+  }
 
-        # Zero is valid at this stage but undef isn't; set to error state.
-        $price[$i] = 'NaN' if not defined $price[$i];
-    }
+  # A negative estimate indicates an error case, the service type status should be uncalculated if this is present.
+  return 'uncalculated' if grep {$_ eq 'NaN'} @price;
 
-    # A negative estimate indicates an error case, the service type status
-    # should be uncalculated if this is present.
+  # Insert legacy pricing fields. Main price ceil()inged to nearest dollar.
+  for my $i (1..3) {
+    next unless $qty[$i] > 0;
+    @{$specs}{"txtPrice$i", "txtUnitPrice$i"} = format_pricing($price[$i], $qty[$i]);
+  }
 
-    return 'uncalculated' if grep {$_ eq 'NaN'} @price;
-
-    # Insert legacy pricing fields. Main price ceil()inged to nearest dollar.
-    for my $i (1..3) {
-        next unless $qty[$i] > 0;
-
-        @{$specs}{"txtPrice$i", "txtUnitPrice$i"}
-            = format_pricing($price[$i], $qty[$i]);
-    }
-
-    return 'calculated';
+  return 'calculated';
 }
 
 sub init {
@@ -944,7 +937,6 @@ sub job_cost {
 
 
 sub display {
-  $openprint::log->debug("Here");
   my ($log, $dbh, $service_type, $pid, $sid, $specs) = @_;
 
   my %page;
@@ -953,21 +945,20 @@ sub display {
 
   $page{NoPrint} = 1 if $type eq 'NoPrint';
 
+  # FIXME: This should go in calculating, not here
   # If we're not calculated there's a problem. As we don't have a standardised messaging system we'll co-opt our signature output.
   my $s = get_status($log, $dbh, $sid);
   if ( grep { $s eq $_ }  ('uncalculated', 'error')) {
     $page{signatures} = [ {
         name => 'Call for Quote',
         notes => [ {
-            operation => 'We can not automatically process this job at
-            this time, please call for a quote.'
+            operation => 'We can not automatically process this job at this time, please call for a quote.'
           } ],
       }, ];
     return \%page;
   }
   my @qty; @qty[1..3] = get_quantities($log, $dbh, $pid);
-  die "This project has no valid quantities!"
-  unless grep { defined $_ and $_ > 0 } @qty;
+  die "This project has no valid quantities!" unless grep { defined $_ and $_ > 0 } @qty;
 
   # We make the assumption here that we're not yet processing a real three
   # quantity job so we'll just get the job info from the first valid qty.
@@ -983,8 +974,7 @@ sub display {
   my %sig;
   for my $job (@jobs) {
     # Jobs without a defined signature apply to the entire project.
-    my $name = (defined $job->signature) ? $job->signature->{name}
-    : 'Project';
+    my $name = (defined $job->signature) ? $job->signature->{name} : 'Project';
 
     # All we currently care about is the operation performed in the order
     # it was performed (if possible).
@@ -1004,9 +994,7 @@ sub display {
     next unless $qty[$i] > 0;
 
     # Get the pricing for valid quantities and make it SSI friendly.
-    my ($unit, $total) = get_specifications($log, $dbh, $pid, $sid,
-      "txtUnitPrice$i", "txtPrice$i"
-    );
+    my ($unit, $total) = get_specifications($log, $dbh, $pid, $sid, "txtUnitPrice$i", "txtPrice$i");
     push @{ $page{qty} }, {
       id       => $i,
       quantity => $qty[$i],
