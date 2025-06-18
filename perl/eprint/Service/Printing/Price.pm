@@ -354,6 +354,16 @@ sub get_project_price {
   if ($project->{width} < $project->{minwidth} || $project->{height} < $project->{minheight}) {
     return {'error' => 'Project must be at least ' . $project->{minwidth} . 'x' . $project->{minheight}};
   }
+  if (!($paper{name} and $paper{finish} and $paper{colour} and $paper{weight} and $paper{calliper})) {
+    return {
+      error => 'Stock is not fully specified.<br/>'.
+      ($paper{name} ? '' : 'Please specify stock name<br/>').
+      ($paper{finish} ? '' : 'Please specify stock finish<br/>').
+      ($paper{colour} ? '' : 'Please specify stock colour<br/>').
+      ($paper{weight} ? '' : 'Please specify stock weight<br/>').
+      ($paper{calliper} ? '' : 'Please specify stock calliper<br/>')
+    };
+  }
 
   $ts_impose = Time::HiRes::time() if TIMINGS;
 
