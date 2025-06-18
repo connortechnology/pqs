@@ -354,12 +354,13 @@ sub get_project_price {
   }
   if (!($paper{name} and $paper{finish} and $paper{colour} and $paper{weight} and $paper{calliper})) {
     return {
-      error => 'Stock is not fully specified.<br/>'.
-      ($paper{name} ? '' : 'Please specify stock name<br/>').
-      ($paper{finish} ? '' : 'Please specify stock finish<br/>').
-      ($paper{colour} ? '' : 'Please specify stock colour<br/>').
-      ($paper{weight} ? '' : 'Please specify stock weight<br/>').
-      ($paper{calliper} ? '' : 'Please specify stock calliper<br/>')
+      error => join("\n", 'Stock is not fully specified.',
+      ($paper{name} ? () : 'Please specify stock name'),
+      ($paper{finish} ? () : 'Please specify stock finish'),
+      ($paper{colour} ? () : 'Please specify stock colour'),
+      ($paper{weight} ? () : 'Please specify stock weight'),
+      ($paper{calliper} ? () : 'Please specify stock calliper')
+    )
     };
   }
 
