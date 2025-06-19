@@ -267,12 +267,14 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{$r->uri().'?OrLarger'}, { oncl
     -->
 		<li>
 			<label>Recommendations</label>
-      <? echo ( radio( 'recommendations', [ '1'=>'Yes','0'=>'No', ''=>'All' ], $session{$r->uri().'?recommendations'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+      <? echo ( radio( 'recommendations', [ '1'=>'Yes','0'=>'No', ''=>'All' ],
+      $session{$r->uri().'?recommendations'} // '', { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
     <!--
 		<li>
 			<label>Grain Direction</label>
-			<? echo ( radio( 'grain_direction', [ 'width', 'Width','height', 'Height', '', 'Both' ], $session{$r->uri().'?grain_direction'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'grain_direction', [ 'width', 'Width','height', 'Height', '', 'Both' ],
+      $session{$r->uri().'?grain_direction'} // '', { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>FSC Code</label>
@@ -286,32 +288,32 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{$r->uri().'?OrLarger'}, { oncl
 		</li>
 		<li>
 			<label>Digital</label>
-			<? echo ( radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?digital'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?digital'} // '', { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>Requires Scoring</label>
-			<? echo ( radio( 'scoring', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?scoring'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'scoring', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?scoring'} // '', { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>Has Setup Prices</label>
-			<? echo ( radio( 'setup_prices', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?setup_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'setup_prices', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?setup_prices'} // '', { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>Has Material Prices</label>
-			<? echo ( radio( 'material_prices', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?material_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'material_prices', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?material_prices'} // '', { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li><label>Customer Supplied</label>
-			<? echo ( radio( 'customer_supplied', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?customer_supplied'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'customer_supplied', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?customer_supplied'} // '', { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li><label>Has message</label>
-			<? echo ( radio( 'has_message', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?has_message'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'has_message', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?has_message'} // '', { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li><label>Has minimum order</label>
-			<? echo ( radio( 'has_minimum_order', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?has_minimum_order'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'has_minimum_order', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?has_minimum_order'} // '', { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 -->
 		<li><label>Has problems</label>
-			<? echo ( radio( 'has_problems', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?has_problems'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'has_problems', [ '1','Yes','0','No', '', 'All' ], $session{$r->uri().'?has_problems'} // '', { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 
 		</ul>
