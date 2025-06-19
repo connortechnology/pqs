@@ -940,8 +940,8 @@ sub display {
   my ($log, $dbh, $service_type, $pid, $sid, $specs) = @_;
 
   my %page;
-  my $project = new openprint::Project($pid);
-  my $type = $project->type();
+  my $Project = new openprint::Project($pid);
+  my $type = $Project->type();
 
   $page{NoPrint} = 1 if $type eq 'NoPrint';
 
