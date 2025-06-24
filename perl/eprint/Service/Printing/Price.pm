@@ -44,6 +44,19 @@ require eprint::material;
 require eprint::imposition;
 require eprint::paper;
 require openprint;
+require openprint::Service;
+require openprint::Equipment;
+
+use vars qw( $r %variable %session %param %config $log $dbh $starttime );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*r = \$openprint::r;
+my $variable = \%variable;
+
 
 use base qw(Exporter);
 our @EXPORT      = 'calc';
@@ -258,6 +271,15 @@ sub get_project_price {
     underbase     => $spread->{underbase},
   };
 
+	my $services = $Project->services();
+	foreach my $service ( 'Folding','Scoring','Perforating','DieCutting','Cutting','Numbering','Proofs' ) {
+		if ( $$services{$service} and @{$$services{$service}} ) {
+			$$project{'Has'.$service} = $$services{$service}[0];
+      $$project{$service.'Service'} = $Project->Service($$services{$service}[0]);
+			%{$$project{$service.'Specs'}} = %{openprint::service::get_specs_ref( $Project, $$services{$service}[0] )};
+		} # end if	
+	} # end foreach
+
   # Load signature specifications.
   if ($project->{is_multipage}) {
     my @fields = qw( txtSignatureType txtSpreadWidth txtSpreadHeight txtSignatureSize );
@@ -431,16 +453,9 @@ sub get_project_price {
   # current press type. TODO Material pricing.
 
   no warnings qw(once);
-  local %eprint::service::cache = eprint::service::load_pricing(
-    $dbh, $variable->{cust_id}, ($project->{press_type}, 'cutter')
-  );
+  local %eprint::service::cache = eprint::service::load_pricing( $dbh, $variable->{cust_id}, ($project->{press_type}, 'cutter'));
   local %eprint::equipment::cache = eprint::equipment::load_specs($dbh, $project->{press_type});
 
-  # A bit kludgey but it's better than thrashing the DB until we can
-  # rewrite print pricing properly.
-
-  # PRICING (Q1)
-  #
   my %pms_prices;
   my $imp; # Declare this up here so that we can steal it after the while.
 
@@ -550,6 +565,24 @@ sub get_project_price {
       # Add the job cost to the comparison one.
       $price{'Comparison Cost'} += eprint::Service::Cutting::project_cost($dbh, $pid, $precut);
     }
+
+    if ( $$project{HasProofs} ) {
+      my $sig_count = $price{forms} || 1;
+      my $Press = new openprint::Equipment($press);
+      my $sig_specs = openprint::service::get_specs_ref($pid, $sid);
+      # Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
+      my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $Project->ServiceType($$project{HasProofs}), $$project{ProofsSpecs}, $sig_specs, 1,
+        {}, # Indexes
+        undef, #Totals,
+        $Press, $imp );
+      $price{'Comparison Cost'} += $sig_count * $Results{total};
+      $openprint::log->debug("Proofs pricing: $Results{total} * $sig_count");
+      $openprint::log->error("Proofs alert $Results{alert}") if $Results{alert};
+      #$$price{'Comparison Log'} .= 'proofs for ' . $sig_count . 'sigs. '. $sig_count * $Results{Total} . ' total: ' . $$price{ComparisonCost} . '<br/>' if COMPARISON_LOG;
+      #$$price{'Proofs Breakdown'} .= $Results{Breakdown};
+    } else {
+      $log->error("No proofs>!");
+    } # end if
 
     # This is large format stitching, not saddle stitching/bindery.
     $price{'Comparison Cost'} += $price{stitching};
@@ -1809,20 +1842,14 @@ sub get_washed_colours {
   my ($log, $dbh, $pid, $sid) = @_;
   my %service_colours = ();
 
-  my @secondarys = @{ $dbh->selectcol_arrayref(q{
-  SELECT lngServiceIndex FROM tbl_Service_Specifications
-  WHERE strName = 'SecondarySignature' AND lngProjectIndex = ?
-  }, {}, $pid) };
+  my @secondarys = @{ $dbh->selectcol_arrayref(q{ SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE strName = 'SecondarySignature' AND lngProjectIndex = ?  }, {}, $pid) };
 
   foreach my $sig (eprint::project::get_signature_indices($log, $dbh, $pid)) {
     my $secondary = grep { $_ == $sig } @secondarys;
 
-    if (   ($sig ne $sid && !$secondary)
-      || ($secondary && grep { $_ == $sid } @secondarys) )
-    {
+    if (   ($sig ne $sid && !$secondary) || ($secondary && grep { $_ == $sid } @secondarys) ) {
       my ($wash, $press) =
-      eprint::service::get_specifications($log, $dbh, undef, $sig,
-        'hdnInkMixColours', 'hdnPress');
+      eprint::service::get_specifications($log, $dbh, undef, $sig, 'hdnInkMixColours', 'hdnPress');
       foreach my $colour (split(';', $wash)) {
         $service_colours{ $colour . $press } = 'washed';
       }
