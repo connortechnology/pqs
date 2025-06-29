@@ -8,6 +8,7 @@ use constant DEBUG=>0;
 my $cutters = 0;
 
 use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
 use Compress::LZF         qw(:compress :freeze);
 use Storable              qw(freeze);
 use List::Util            qw(sum);
@@ -46,6 +47,8 @@ require eprint::paper;
 require openprint;
 require openprint::Service;
 require openprint::Equipment;
+require openprint::Estimating::Proofs;
+require openprint::Estimating::Cutting;
 
 use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *variable = \%openprint::variable;
@@ -108,21 +111,12 @@ use constant TIMINGS => 0;
 sub calc {
   my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
-  my $ac = sql::start_transaction($dbh);
-  if (TIMINGS) {
-    require Time::HiRes;
-    $ts_req = Time::HiRes::time(); # Debug/profiling timings;
-  }
-
-  #print STDERR "log: $openprint::log dbh $openprint::dbh\n";
-  eprint::Service::Cutting::init($pid);
+  my $ac = sql::start_transaction($dbh); # For speed
 
   my $pricing = get_project_price($pid, $sid, @$specs{qw(spread versions overrides)}, $specs);
 
   # Keep Version information. Needed for auto-calc.
   delete $specs->{$_} for grep {! $_ =~ /mv/} keys %$specs;
-
-  #print STDERR "HAVE IMP", Dumper($specs->{imp});
 
   $specs->{$_} = $pricing->{$_} for keys %$pricing;
   sql::end_transaction($dbh, $ac);
@@ -138,6 +132,8 @@ sub get_project_price {
   my $type = $Project->type();
   return undef if $type eq 'NoPrint';
 
+  eprint::Service::Cutting::init($pid);
+  openprint::Estimating::Cutting::init($Project);
   #my $s;
   #return {error =>  'Missing Specs width and height'} unless $spread->{flat}{width} and $spread->{flat}{height};
   # DONE NOPRINT
@@ -211,22 +207,19 @@ sub get_project_price {
   my $has_softtouch  = (scalar grep {$_ eq 'soft_touch'     } map {$spread->{side}[$_]{coating}{type}} 0..1);
   my $is_spot = (scalar grep {$_             } map {$spread->{side}[$_]{coating}{spot}} 0..1) > 0;
 
-  # we can juryrig group factor in here to compensate for being unable
-  # to calculate imposition based on multiple signatures in a group
-  my $group_factor = $dbh->selectrow_array(q{
-    SELECT strvalue FROM tbl_service_specifications WHERE strname = 'GroupFactor' AND lngserviceindex = ?  }, {}, $sid);
   my $print_container = get_print_container($log, $dbh, $pid);
-  my $pages = get_specifications( $log, $dbh, undef, $print_container, 'txtTotalSpreadQuantity') || 1;
+  my $print_specs = openprint::service::get_specs_ref($Project, $print_container);
+  my $pages = $$print_specs{txtTotalSpreadQuantity} || 1;
 
   my $press_type = get_press_type($log, $dbh, $pid, $sid);
-
+  my $is_multipage = is_multipage($log, $dbh, $pid);
   # PROJECT
   # Create a much more useful project info hash. TODO Hopefully to become a
   # heirarchy of object soon. (Service type info broken from project etc.)
   my $project = {
     id           => $pid,
     type         => scalar($type),
-    is_multipage => is_multipage($log, $dbh, $pid),
+    is_multipage => $is_multipage,
     press_type   => $press_type,
     quantities   => $qtys,
 
@@ -238,7 +231,6 @@ sub get_project_price {
     minheight    => scalar( get_minimum_height($log, $dbh, $pid) ),
 
     template     => $spread->{template},
-    group_factor => $group_factor,
 
     colour_bar   => ($spread->{colour_bar} ? $press_type eq 'web'
       ? WEB_COLOUR_BAR_SIZE
@@ -257,6 +249,7 @@ sub get_project_price {
     paper        => $spread->{stock},
     pages        => $pages,
     print_container => $print_container,
+    print_specifications => $print_specs,
 
     override => $overrides,
 
@@ -271,6 +264,7 @@ sub get_project_price {
     screen_foil   => $spread->{screen_foil},
     underbase     => $spread->{underbase},
   };
+  $openprint::log->debug("HAVE PROJECT: ". Dumper($project)) if DEBUG;
 
 	my $services = $Project->services();
 	foreach my $service ( 'Folding','Scoring','Perforating','DieCutting','Cutting','Numbering','Proofs' ) {
@@ -281,12 +275,14 @@ sub get_project_price {
 		} # end if	
 	} # end foreach
 
+  $openprint::log->debug("HAVE PROJECT: ". Dumper($project)) if DEBUG;
   # Load signature specifications.
-  if ($project->{is_multipage}) {
+  if ($is_multipage) {
     my @fields = qw( txtSignatureType txtSpreadWidth txtSpreadHeight txtSignatureSize );
 
+    my $sig_specs = openprint::service::get_specs_ref($Project, $sid);
     $project->{signature} = {};
-    @{ $project->{signature} }{@fields} = get_specifications($log, $dbh, $pid, $sid, @fields);
+    @{ $project->{signature} }{@fields} = @$sig_specs{@fields};
 
     print STDERR "HAVE PROJECT: ", Dumper($project, $spread) if DEBUG;
     $project->{width}  = $spread->{SpreadWidth} if  $spread->{SpreadWidth};
@@ -303,21 +299,6 @@ sub get_project_price {
 
       @$project{qw(image_width image_height)} = @$project{qw(width height)};
     }
-  }
-  if (!($project->{width} && $project->{height})) {
-    @$project{qw(width height)} = get_specifications($log, $dbh, $pid, $print_container, 'final_width','final_height');
-    if (!$$project{txtSignatureSize}) {
-      my ($bind_type) = get_specifications($log, $dbh, $pid, $print_container, 'template');
-      my $double = grep { $bind_type eq $_ } qw(SaddleStitching PerfectBinding);
-      $$project{sigature}{txtSignatureSize} = $double ? 4 : 2;
-    }
-    $$project{width} *= $$project{sigature}{txtSignatureSize} / 2;
-  }
-
-  # SUBSTRATE/STOCK/PAPER
-  my %paper = %{ $spread->{stock} };
-
-  if ($project->{is_multipage}) {
     my $bind_type = $project->{bind_type} = eprint::project::get_bindery_type($log, $dbh, $pid);
     my $bookid = $$project{bookid} = eprint::project::get_service_index($log, $dbh, $pid, 'Book');
     if ($bookid) {
@@ -330,7 +311,21 @@ sub get_project_price {
     # TODO This should really be stored as at compile-time and only looked up
     # in the imposition code.
     $project->{trim} = eprint::Config->get(Imposition => lc "trim_$BINDERY_CLASS{$bind_type}") || 0;
-  } else { $project->{trim} = 0; }
+  } else { $project->{trim} = 0;
+  } # end if multipage
+
+  if (!($project->{width} && $project->{height})) {
+    @$project{qw(width height)} = @$print_specs{'final_width','final_height'};
+    if (!$$project{txtSignatureSize}) {
+      my $bind_type = $$print_specs{template};
+      my $double = grep { $bind_type eq $_ } qw(SaddleStitching PerfectBinding);
+      $$project{sigature}{txtSignatureSize} = $double ? 4 : 2;
+    }
+    $$project{width} *= $$project{sigature}{txtSignatureSize} / 2;
+  }
+
+  # SUBSTRATE/STOCK/PAPER
+  my %paper = %{ $spread->{stock} };
 
   # Colour bars and ignoring margins don't mix.
   if ($project->{override}{margin}) { $project->{colour_bar} = 0 }
@@ -543,8 +538,9 @@ sub get_project_price {
     # COMPARISON COST ADDITIONS
     #
 
-    # If the paper needs prepress cutting, we need to factor that into the
-    # comparison cost.
+    my $sig_count = $price{forms} || 1;
+
+    # If the paper needs prepress cutting, we need to factor that into the comparison cost.
     if ($imp->{paper}{cuts}) {
       # For determining the cutting cost we need the original sheet
       # quantity not what we need of the cutdown one.
@@ -567,11 +563,37 @@ sub get_project_price {
       # Add the job cost to the comparison one.
       $price{'Comparison Cost'} += eprint::Service::Cutting::project_cost($dbh, $pid, $precut);
     }
+ 
+    my $sig_specs = openprint::service::get_specs_ref($pid, $sid);
 
+    if ( 1 and $$project{HasCutting} ) {
+      my $imposition = new openprint::Imposition();
+      $imposition->load($sig_specs, 1, $Project);
+      $imposition->load_from_impositionObject($imp);
+
+      my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, $sig_specs, $$project{CuttingSpecs}, 1, $imp->Paper, $imposition, $$project{FoldingSpecs}, $project );
+
+      $log->debug(Data::Dumper::Dumper(\%cutting_results));
+      if ( $cutting_results{Status} eq 'uncalculated' ) {
+        $price{'Cutting Breakdown'} .= "Cutting error: $cutting_results{alert}<br/>";
+      } else {
+        $price{'Cutting Breakdown'} .= sprintf('Cutting Price: $%.2f<br/>', $cutting_results{price});
+        $price{'Cutting Breakdown'} .= $cutting_results{Breakdown};
+        #$price{'Cutting Breakdown'} .= ' on '. $cutting_results{Equipment}->name() if $cutting_results{Equipment};
+        $price{'Cutting Breakdown'} .= '<br/>';
+
+        #$price{'Cutting Breakdown'} .= $$project{CuttingSpecs}{'hdnBreakdown'.$qty_index}.'<br/>';
+        $price{'Comparison Cost'} += $cutting_results{price};
+        $price{'Comparison Cost'} += $cutting_results{FoldingPrice};
+        #$price{'Comparison Log'} .= "Cutting : $cutting_results{Price} PreFolding: $cutting_results{FoldingPrice} total: $price{ComparisonCost}<br/>" if COMPARISON_LOG;
+        $price{'Cutting Overs'} = $cutting_results{overs};
+      } # end if
+      #} else {
+      #$log->debug("Has no cutting") if DEBUG;
+    } # end if
+        
     if ( $$project{HasProofs} ) {
-      my $sig_count = $price{forms} || 1;
       my $Press = new openprint::Equipment($press);
-      my $sig_specs = openprint::service::get_specs_ref($pid, $sid);
       # Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
       my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $Project->ServiceType($$project{HasProofs}), $$project{ProofsSpecs}, $sig_specs, 1,
         {}, # Indexes
@@ -2741,6 +2763,7 @@ sub press_setup_cost {
 sub cut_signatures {
   my ($pid, $specs, $project) = @_;
 
+  $log->debug(Data::Dumper::Dumper($project));
   my $bind_type  = $$project{bind_type};
   my $press_type = $$project{press_type};
 
@@ -2829,30 +2852,19 @@ sub valid_price {
 #
 # TODO: Remove this and have a more approriate routine in the cutting module.
 sub get_cutdown_cost {
-  my ($log,        $dbh,        $variable, $new_width, $old_width,
-    $new_height, $old_height, $calliper, $sheetcount)
-  = @_;
+  my ($log, $dbh, $variable, $new_width, $old_width, $new_height, $old_height, $calliper, $sheetcount) = @_;
 
-  my $total_cuts =
-  ceil($old_width / $new_width) + ceil($old_height / $new_height);
+  my $total_cuts = ceil($old_width / $new_width) + ceil($old_height / $new_height);
 
-  $cutters = $dbh->selectcol_arrayref(q{
-    SELECT strid FROM tbl_equipment WHERE strtype = 'cutter'
-    }) if !$cutters;
+  $cutters = $dbh->selectcol_arrayref(q{ SELECT strid FROM tbl_equipment WHERE strtype = 'cutter' }) if !$cutters;
 
   my $bestprice = 0;
   foreach my $current_equipment (@$cutters) {
-    my $price =
-    eprint::service::get_price($log, $dbh, $variable, 'CuttingMakeReady',
-      undef, $current_equipment);
+    my $price = eprint::service::get_price($log, $dbh, $variable, 'CuttingMakeReady', undef, $current_equipment);
 
-    my $serviceprice =
-    eprint::service::get_price($log, $dbh, $variable, 'Cutting',
-      $total_cuts, $current_equipment);
+    my $serviceprice = eprint::service::get_price($log, $dbh, $variable, 'Cutting', $total_cuts, $current_equipment);
 
-    my $lift_depth =
-    eprint::equipment::get_specification($log, $dbh, 'Maximum Lift Depth',
-      $calliper, $current_equipment);
+    my $lift_depth = eprint::equipment::get_specification($log, $dbh, 'Maximum Lift Depth', $calliper, $current_equipment);
 
     my $lifts = ceil($calliper * $sheetcount / $lift_depth);
 
