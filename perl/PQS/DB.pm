@@ -33,7 +33,7 @@ sub connect {
     # Set the default handle attributes.
     my %attr = (
         AutoCommit => 0,
-        RaiseError => 1,
+        RaiseError => 0,
         ShowErrorStatement => 1,
 		#HandleError => \&_handle_error, # Can't be anon.
         pg_enable_utf8 => 1,
