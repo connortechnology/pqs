@@ -21,10 +21,10 @@ use constant TIMING=>1;
 
 our @EXPORT_OK = qw(
 execute
-    sql_statement
-    insert
-    update
-    escape
+sql_statement
+insert
+update
+escape
 );
 
 our %EXPORT_TAGS = ( all    => \@EXPORT_OK,
