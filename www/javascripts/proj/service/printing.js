@@ -63,7 +63,7 @@ function validate (e) {
 
   if (text) {
     if (!is_auto) {
-      alert('Your form is incomplete!\n\n' + text);
+      return confirm('Your form is incomplete!\n\n' + text);
     }
     return false;
   }
