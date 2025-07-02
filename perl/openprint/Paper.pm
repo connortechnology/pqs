@@ -177,7 +177,7 @@ $serial	= 'paper_id_seq';
 	full_packages		=>	q`'0'`,
 	minimum_order		=>	q`'0'`,
 	parts				=>	undef,
-	digital				=>	undef,
+	digital				=>	q`'0'`,
 	message				=>	undef,
 	fsc_code			=>	undef,
 );
