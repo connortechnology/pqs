@@ -68,7 +68,9 @@ return '';
 		<fieldset><legend>Stock Information: (<? echo ( $$variable{Stock}->id(); ) ?>)</legend>
 			<div class="Column">
         <ul class="non-list">
-          <li class="name"><label>Id</label><input type="text" name="name" value="<?echo($$variable{Stock}->name())?>" /></li>
+          <li class="name"><label>Id</label><input type="text" name="name" value="<?echo($$variable{Stock}->name())?>" on_input_this="check_name" />
+            <span id="name_error"></span>
+          </li>
           <!--
 				<li>
 					<label for="ddmOwner">Owner</label>
@@ -268,11 +270,11 @@ return '';
         <!--
 				<li>
 					<label>Grain Direction</label>
-					<? echo ( radio( 'grain_direction', [ 'width', 'Width', 'height', 'Height' ], $$variable{Stock}->grain_direction() ); ) ?>
+					<? echo ( #radio( 'grain_direction', [ 'width', 'Width', 'height', 'Height' ], $$variable{Stock}->grain_direction() ); ) ?>
 				</li>
 				<li>
 					<label>Customer Supplied</label>
-					<? echo ( radio( 'supplied', [ '1', 'Yes', '0', 'No', '', 'Both' ], $$variable{Stock}->supplied() ); ) ?>
+					<? echo ( #radio( 'supplied', [ '1', 'Yes', '0', 'No', '', 'Both' ], $$variable{Stock}->supplied() ); ) ?>
 				</li>
         -->
         </ul>
