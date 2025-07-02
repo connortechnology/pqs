@@ -170,6 +170,7 @@ sub handler {
   openprint::session_init();
 
   my ($page, $args, $status);
+  $status = OK;
 
   word_sub($variable);
 
@@ -425,7 +426,7 @@ sub parse_page {
     $section //= '';
     # If the user isn't authorized for this section, check if the page is public otherwise redirect them to a login page.
     unless (user_allowed($variable->{user}{type}, $section)) {
-      print STDERR "User not allowed: type: ".$variable->{user}{type}, ' section: '.$section." page $page\n";
+      print STDERR "User not allowed: type: ".($variable->{user}{type} ? $variable->{user}{type} : 'none'), ' section: '.$section." page $page\n";
 
       my @public = split /,/, configuration::get_value($log, $dbh, 'public_URIs');
 
