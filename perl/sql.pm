@@ -167,52 +167,48 @@ sub insert {
 # placeholdered (a new verb?) UPDATE statement and executes it against the
 # database.
 sub update {
-    my $log       = shift;
-    my $dbh       = shift;
-    my $table     = shift; # The table name to operate on (may contain schema)
-    my $condition = shift; # A filter (WHERE) condition
-    my %data      = @_;    # Field and value pairs
+  my $log       = shift;
+  my $dbh       = shift;
+  my $table     = shift; # The table name to operate on (may contain schema)
+  my $condition = shift; # A filter (WHERE) condition
+  my %data      = @_;    # Field and value pairs
 
-    # Identifiers (schema, table, fields, etc.) are lowercased before they're
-    # quoted as some section of the code use mixed case, relying on Pg's case
-    # folding of unquoted identifiers. These section should be revised
-    # whenever possible.
-    my $sql = sprintf "UPDATE %s SET %s",
-        $dbh->quote_identifier( lc( $table ) ),
-        join ', ', map {$dbh->quote_identifier(lc($_)) . ' = ?'} keys %data
-    ;
-    # If there's a condition sent include it in the statement.
-    my @condition_values;
-    if (defined $condition and $condition ne '') {
-      if (ref $condition eq 'ARRAY') {
-        $sql .= ' WHERE '. shift @{$condition};
-        @condition_values = @{$condition};
-      } else {
-        $sql .= ' WHERE '.$condition. ' '; 
-      }
+  # Identifiers (schema, table, fields, etc.) are lowercased before they're
+  # quoted as some section of the code use mixed case, relying on Pg's case
+  # folding of unquoted identifiers. These section should be revised
+  # whenever possible.
+  my $sql = 'UPDATE '.$table.' SET '.join(', ', map {$dbh->quote_identifier(lc($_)) . ' = ?'} keys %data);
+  # If there's a condition sent include it in the statement.
+  my @condition_values;
+  if (defined $condition and $condition ne '') {
+    if (ref $condition eq 'ARRAY') {
+      $sql .= ' WHERE '. shift @{$condition};
+      @condition_values = @{$condition};
+      $log->debug("condition: @condition_values");
+    } else {
+      $sql .= ' WHERE '.$condition. ' '; 
     }
+  }
 
-    # Some code passes NULL as a string instead of as undef. Bad code, no
-    # biscuit.
-    #Change empty strings to undefined, DBI will convert undefiend to NULL
-    #prevents sql errors for inserting empty strings into numeric fields
-    for my $k (keys %data) {
-      $data{$k} = undef if $data{$k} eq 'NULL' or $data{$k} eq '';
-    }
+  # Some code passes NULL as a string instead of as undef. Bad code, no
+  # biscuit.
+  #Change empty strings to undefined, DBI will convert undefiend to NULL
+  #prevents sql errors for inserting empty strings into numeric fields
+  for my $k (keys %data) {
+    $data{$k} = undef if $data{$k} eq 'NULL' or $data{$k} eq '';
+  }
 
-    if ( $log ) {
-      my $starttime = [gettimeofday] if TIMING;
-      my $sth = $dbh->prepare($sql);
-      $sth->execute( values %data, @condition_values );
-      my $print_sql = $sql;
-      $print_sql =~ s/\?/\%s/g;
-      my @values = values %data;
-      $print_sql = sprintf($print_sql, @values, @condition_values) if @condition_values or @values;
-      $log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, $print_sql ) );
-    } # end if
+  if ( $log ) {
+    my $starttime = [gettimeofday] if TIMING;
+    my $sth = $dbh->prepare($sql);
+    $sth->execute( values %data, @condition_values );
+    $sql =~ s/\?/\%s/g;
+    $sql = sprintf($sql, (values %data, @condition_values) );
+    $log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, $sql ) );
+  } # end if
 
-    # We should think about returning the number of records affected.
-    return 1;
+  # We should think about returning the number of records affected.
+  return 1;
 }
 
 # DEPRECATED. Escapes characters. A much better version is
