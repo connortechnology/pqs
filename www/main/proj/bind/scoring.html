@@ -15,8 +15,8 @@
 
     <!--#include virtual="/includes/h2-js.html" -->
 
-	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
-	<script type="text/javascript">
+    <script src="<?hash_link(/javascripts/proj/service.js)?>"></script>
+	<script>
 			var service = new Service('<?service.ref?>');
 	</script>
 </head>
@@ -54,9 +54,7 @@
 			<input id="txtPerfQty-<?SignatureGroupIndex?>" name="txtPerfQty-<?SignatureGroupIndex?>" value="<?txtPerfQty?>" type="text" size="9" class="smBox" />
 			<br />
 		
-			<? if project.qty.0 || project.qty.1 || project.qty.2 ?>
-				<p>The most cost effective <?lc:ServiceTypeName?> equipment and imposition have been automatically selected. If you require a specific imposition or equipment, please check the override box and select what is most appropriate.</p>
-			<? endif project.qty.0 || project.qty.1 || project.qty.2 ?>
+			<p>The most cost effective <?lc:ServiceTypeName?> equipment and imposition have been automatically selected. If you require a specific imposition or equipment, please check the override box and select what is most appropriate.</p>
 		
 			<? if project.qty.0 ?>
 				<h5>Quantity of <?project.qty.0?></h5>
