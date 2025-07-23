@@ -62,7 +62,6 @@ sub add {
 sub save {
     my ( $r, $log, $dbh, $variable, $user_id ) = @_;
 
-
 	my $email =  $r->param('txtEmail') || $r->param('email');
     my $pass  =  $r->param('txtPassword') || $r->param('password');
     my $verify = $r->param('txtVerifyPassword')  || $r->param('verify');
