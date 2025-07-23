@@ -707,222 +707,171 @@ sub get_totals {
 }
 
 sub send_quote {
-    my ( $r, $log, $dbh, $quote_id, $variable ) = @_;
-    my ( $temp, %quote, $txt_template, $html_template );
+  my ( $r, $log, $dbh, $quote_id, $variable ) = @_;
+  my ( $temp, %quote, $txt_template, $html_template );
 
+  get_user_by_info( $log, $dbh, \%quote, $quote_id );
+  get_user_for_info( $log, $dbh, \%quote, $quote_id );
 
-print STDERR "START SEND QUOTES HERE \n";
+  $quote{CCITYPROV} = misc::build_city_prov_country(@quote{qw( ByCity ByStateProvince ByCountry )});
+  $quote{FCITYPROV} = misc::build_city_prov_country(@quote{qw( ForCity ForStateProvince ForCountry )});
 
-    get_user_by_info( $log, $dbh, \%quote, $quote_id );
-    get_user_for_info( $log, $dbh, \%quote, $quote_id );
+  get_misc_info( $log, $dbh, \%quote, $quote_id );
+  get_finished_quote_contents( $log, $dbh, \%quote, $quote_id );
 
-    $quote{CCITYPROV} = misc::build_city_prov_country(
-        @quote{qw( ByCity ByStateProvince ByCountry )}
+  $quote{siteURL} = configuration::get_value( $log, $dbh, 'siteURL');
+
+  my @project_summaries = ();
+
+  my @projects =  @{ $dbh->selectcol_arrayref(q{ SELECT lngProjectIndex FROM tbl_quote_details WHERE lngquoteid = ?  }, undef, $quote_id)};
+
+  # Send an email to the admin.
+  my @pids =  @{$dbh->selectcol_arrayref(q{
+  SELECT lngprojectindex FROM tbl_quote_details WHERE lngquoteid = ? and type = 'print'
+  }, undef, $quote_id)};
+
+  $quote{cust_id}        = $variable->{cust_id};
+  $quote{isQuotePricing} = $variable->{isQuotePricing};
+
+  my $cc = '';
+  for my $pid (@pids) {
+    my %hash = (
+      cust_id   => $variable->{cust_id},
+      user_type => 'C'
     );
 
-    $quote{FCITYPROV} = misc::build_city_prov_country(
-        @quote{qw( ForCity ForStateProvince ForCountry )}
-    );
+    # The project header and service/material information.
+    eprint::docket::summary_display( $r, $log, $dbh, \%hash, $pid, undef, 1);
 
-                  get_misc_info( $log, $dbh, \%quote, $quote_id );
-    get_finished_quote_contents( $log, $dbh, \%quote, $quote_id );
+    #Override project settings to not show stock price on quotes.
+    $hash{flags}{stock_separate} = undef;
 
-    #$quote{siteURL} = "http://" . $r->hostname;
-    $quote{siteURL} = configuration::get_value( $log, $dbh, 'siteURL');
+    push @{ $quote{attachedProjects} }, \%hash;
 
-    my @project_summaries = ();
+    my $email = $dbh->selectrow_array(q{
+      SELECT strvalue FROM tbl_service_specifications WHERE lngprojectindex = ? AND strname = 'txtEmailCC'
+      }, undef, $pid);
+    $cc .= $email;
+  }
 
-    my @projects =  @{ $dbh->selectcol_arrayref(q{
-        SELECT
-            lngProjectIndex
-        FROM
-            tbl_quote_details
-        WHERE
-            lngquoteid = ?
-          }, undef, $quote_id
-    )};
+  $quote{PRODUCTS} = get_products( $quote_id );
 
-    # Send an email to the admin.
-    my @pids =  @{$dbh->selectcol_arrayref(q{
-        SELECT lngprojectindex FROM tbl_quote_details WHERE lngquoteid = ? and type = 'print'
-    }, undef, $quote_id)};
+  my $sales_email = $openprint::Company->CSR()->email();
 
-    $quote{cust_id}        = $variable->{cust_id};
-    $quote{isQuotePricing} = $variable->{isQuotePricing};
+  $quote{ResellerForEndUser} = 'N';
+  $quote{Reseller}           = 'Y';
+  $quote{user_type}          = $variable->{user_type};
 
-	my $cc = '';
-    for my $pid (@pids) {
-        my %hash = (
-            cust_id   => $variable->{cust_id},
-            user_type => 'C'
-        );
+  my @totals                 = get_totals( $log, $dbh, $quote_id );
+  $quote{TOTALS}             = \@totals; # Legacy.
 
-        # The project header and service/material information.
-        eprint::docket::summary_display(
-            $r, $log, $dbh, \%hash, $pid, undef, 1
-        );
+  # Convert our lovely flattended result sets to a list of hashes.
+  $quote{totals} = [];
 
-		#Override project settings to not show stock price on quotes.
-		$hash{flags}{stock_separate} = undef;
+  for (my $i=0; $i < @totals; $i+=2) {
+    push @{ $quote{totals} }, { 'index' => $totals[$i], total => $totals[$i+1] };
+  }
 
+  my $email_content = misc::load_file($r, '/email/email_template.html');
 
-        push @{ $quote{attachedProjects} }, \%hash;
+  $quote{ReplacementText} = q{<!--#include virtual="/email/forms/quote_with_PDF.html"} . q{-->};
+  $email_content = MIME::QuotedPrint::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%quote ));
+  my @body = ('', $email_content, 'text/html', 'quoted-printable' );
 
-		my $email = $dbh->selectrow_array(q{
-			SELECT strvalue FROM tbl_service_specifications WHERE lngprojectindex = ? AND strname = 'txtEmailCC'
-		}, undef, $pid);
-		$cc .= $email;
+  # One email goes out to the admin.
+  my $html  = misc::load_file($r, '/email/forms/quote.html');
+  $html = ssi::variable_substitution( $r, $log, $dbh, $html, \%quote);
+
+  my $name = "quote-$quote_id";
+  my $pdf = misc::html2pdf($name, $html);
+
+  $pdf = encode_base64($pdf);
+  push @body, ("quote-$quote_id.pdf", $pdf,  'application/pdf', 'base64');
+
+  my $creator = $dbh->selectrow_array(q{
+    SELECT u.strfirstname || ' ' || u.strlastname FROM tbl_customer_users u, tbl_quotes q
+    WHERE u.lnguserid = q.lnguserid
+    AND lngquoteid = ?
+    }, undef, $quote_id);
+
+  my %mail = (
+    SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
+    FROM    => configuration::get_value( $log, $dbh, 'QuotingEmail'),
+    TO      => configuration::get_value( $log, $dbh, 'QuotingEmail').($sales_email? ','.$sales_email : ''),
+    SUBJECT => "$creator - Quote $quote_id",
+  );
+
+  misc::send_email_with_attachment( $r, $log, \%mail, @body, @project_summaries);
+
+  my @additional_attachments = misc::get_attachments(openprint::misc::get_files($openprint::config{SkinPath}.'/email/quote/'));
+
+  # One goes to the person who prepared the quote, and one for who the
+  # quote was prepared for (if applicable).
+  if ($variable->{Reseller}  eq 'Y' || $variable->{user_type} eq 'A' || $variable->{user_type} eq 'E') {
+    my $from = "$quote{ByFirstName} $quote{ByLastName} <$quote{ByEmail}>";
+    if (index(lc $quote{ByEmail}, lc configuration::get_value($log, $dbh, 'domain')) == -1) {
+      $from = configuration::get_value($log, $dbh, 'QuotingEmail');
     }
-		
-	$quote{PRODUCTS} = get_products( $quote_id );
-
-    my $sales_email = scalar $dbh->selectrow_array(q{
-    	SELECT
-            strEmail
-		FROM
-            tbl_customer_users
-		WHERE lnguserid = (SELECT
-                            lngsalesperson
-                           FROM
-                            tbl_customer
-                           WHERE
-                            lngcustomerid = ?)
-        }, undef, $variable->{cust_id}
+    my %mail = (
+      SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
+      FROM    => $from,
+      TO      => qq`"$quote{ByFirstName} $quote{ByLastName}" <$quote{ByEmail}>`,
+      SUBJECT => "Quote $quote_id",
     );
 
-    $quote{ResellerForEndUser} = 'N';
-    $quote{Reseller}           = 'Y';
-    $quote{user_type}          = $variable->{user_type};
-
-    my @totals                 = get_totals( $log, $dbh, $quote_id );
-    $quote{TOTALS}             = \@totals; # Legacy.
-
-    # Convert our lovely flattended result sets to a list of hashes.
-    $quote{totals} = [];
-
-    for (my $i=0; $i < @totals; $i+=2) {
-        push @{ $quote{totals} },
-            { 'index' => $totals[$i], total => $totals[$i+1] };
-    }
-
-   	my $email_content = misc::load_file($r, '/email/email_template.html');
-
-   	$quote{ReplacementText} = q{<!--#include virtual="/email/forms/quote_with_PDF.html"} . q{-->};
-	  $email_content = MIME::QuotedPrint::encode_qp(ssi::variable_substitution( $r, $log, $dbh, $email_content, \%quote ));
-    my @body = ('', $email_content, 'text/html', 'quoted-printable' );
-
-#print STDERR "HAVE QUOTE DATA" , Dumper(%quote);
-
-    # One email goes out to the admin.
-    my $html  = misc::load_file($r, '/email/forms/quote.html');
-	$html = ssi::variable_substitution( $r, $log, $dbh, $html, \%quote);
-
-    my $name = "quote-$quote_id";
-    my $pdf = misc::html2pdf($name, $html);
-
-    $pdf = encode_base64($pdf);
-    push @body, ("quote-$quote_id.pdf", $pdf,  'application/pdf', 'base64');
-
-	my $creator = $dbh->selectrow_array(q{
-		SELECT u.strfirstname || ' ' || u.strlastname FROM tbl_customer_users u, tbl_quotes q
-		WHERE u.lnguserid = q.lnguserid
-		AND lngquoteid = ?
-	}, undef, $quote_id);
-
-
+    misc::send_email_with_attachment( $r, $log, \%mail, @body, @additional_attachments);
 
     my %mail = (
-        SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
-        FROM    => configuration::get_value( $log, $dbh, 'QuotingEmail'),
-        TO      => configuration::get_value( $log, $dbh, 'QuotingEmail')
-                 . ','
-                 . $sales_email,
-        SUBJECT => " $creator - Quote $quote_id",
+      SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
+      FROM    => $from,
+      TO      => qq{"$quote{ForFirstName} $quote{ForLastName}" } . "<$quote{ForEmail}>",
+      SUBJECT => "Quote $quote_id",
+      CC => $cc,
     );
 
-    misc::send_email_with_attachment(
-        $r, $log, \%mail, @body, @project_summaries
+    misc::send_email_with_attachment($r, $log, \%mail, @body);
+  } else {
+    my $from = $quote{ByEmail};
+    if (index($quote{ByEmail}, configuration::get_value($log, $dbh, 'domain')) == -1) {
+      $from = configuration::get_value($log, $dbh, 'QuotingEmail');
+    }
+
+    my %mail = (
+      SMTP    => configuration::get_value($log, $dbh, 'Mail Server'),
+      FROM    => $from,
+      TO      => $quote{ForEmail},
+      SUBJECT => "Quote $quote_id",
+      CC => $cc,
     );
 
-    # One goes to the person who prepared the quote, and one for who the
-    # quote was prepared for (if applicable).
-    if (   $variable->{Reseller}  eq 'Y' || $variable->{user_type} eq 'A'
-        || $variable->{user_type} eq 'E' ) {
-	my $from = "$quote{ByFirstName} $quote{ByLastName} <$quote{ByEmail}>";
-$log->debug($from);
-	if (index(lc $quote{ByEmail}, lc configuration::get_value($log, $dbh, 'domain')) == -1) {
-	  $from = configuration::get_value($log, $dbh, 'QuotingEmail');
-$log->debug($from);
-        }
-        my %mail = (
-                SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
-                FROM    => $from,
-                TO      => qq{"$quote{ByFirstName} $quote{ByLastName}"}
-                         . "<$quote{ByEmail}>",
-                SUBJECT => "Quote $quote_id",
-        );
-
-        misc::send_email_with_attachment( $r, $log, \%mail, @body);
-
-
-
-		my %mail = (
-			SMTP    => configuration::get_value(
-						$log, $dbh, 'Mail Server'
-					   ),
-			FROM    => $from,
-			TO      => qq{"$quote{ForFirstName} $quote{ForLastName}" }
-					 . "<$quote{ForEmail}>",
-			SUBJECT => "Quote $quote_id",
-			CC => $cc,
-		);
-
-		misc::send_email_with_attachment($r, $log, \%mail, @body);
-        
-    }
-    else {
-	my $from = $quote{ByEmail};
-	if (index($quote{ByEmail}, configuration::get_value($log, $dbh, 'domain')) == -1) {
-	  $from = configuration::get_value($log, $dbh, 'QuotingEmail');
-        }
-
-        my %mail = (
-            SMTP    => configuration::get_value($log, $dbh, 'Mail Server'),
-            FROM    => $from,
-            TO      => $quote{ForEmail},
-            SUBJECT => "Quote $quote_id",
-			CC => $cc,
-        );
-
-        misc::send_email_with_attachment($r, $log, \%mail, @body); 
-    }
-
+    misc::send_email_with_attachment($r, $log, \%mail, @body, @additional_attachments); 
+  }
 }
 
 sub finalise_quote {
-	my ( $r, $log, $dbh, $cookie, $variable ) = @_;
+  my ( $r, $log, $dbh, $cookie, $variable ) = @_;
 
-	my $quote_id = get_unfinished_quote_id( $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'} );
-
-
-
-	if ( $quote_id ) {
-		$_ = "SELECT strStatus FROM tbl_Quotes WHERE lngQuoteID='$quote_id'";
-		( $_ ) = sql::sql_statement( $log, $dbh, $_ );
+  my $quote_id = get_unfinished_quote_id( $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'} );
 
 
-		if ( $_ ne 'Complete' ) {
-			commit_quote( $log, $dbh, $quote_id );
-			sql::update( $log, $dbh, 'tbl_Quotes', "lngQuoteID = '$quote_id'", 'strStatus', 'Complete', 
-					( defined $r->param('AdministratorComments') ? ( 'strAdministratorComments', $r->param('AdministratorComments') ) : () ),
-					( defined $r->param('AdministratorName') ? ( 'strAdministratorName', $r->param('AdministratorName') ) : () ),
-					);
-			send_quote( $r, $log, $dbh, $quote_id, $variable );
-		} # end if
-	} # end if
-	$variable->{quote_id} = $r->param('quote_id') || $quote_id;
 
-	return OK;
+  if ( $quote_id ) {
+    $_ = "SELECT strStatus FROM tbl_Quotes WHERE lngQuoteID='$quote_id'";
+    ( $_ ) = sql::sql_statement( $log, $dbh, $_ );
+
+
+    if ( $_ ne 'Complete' ) {
+      commit_quote( $log, $dbh, $quote_id );
+      sql::update( $log, $dbh, 'tbl_Quotes', "lngQuoteID = '$quote_id'", 'strStatus', 'Complete', 
+        ( defined $r->param('AdministratorComments') ? ( 'strAdministratorComments', $r->param('AdministratorComments') ) : () ),
+        ( defined $r->param('AdministratorName') ? ( 'strAdministratorName', $r->param('AdministratorName') ) : () ),
+      );
+      send_quote( $r, $log, $dbh, $quote_id, $variable );
+    } # end if
+  } # end if
+  $variable->{quote_id} = $r->param('quote_id') || $quote_id;
+
+  return OK;
 } # end sub finalise_quote
 
 sub quote_history {
