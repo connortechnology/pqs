@@ -565,13 +565,15 @@ sub get_project_price {
     }
  
     my $sig_specs = openprint::service::get_specs_ref($pid, $sid);
+    my $imposition = new openprint::Imposition();
+    $imposition->load_from_impositionObject($imp);
 
-    if ( 1 and $$project{HasCutting} ) {
-      my $imposition = new openprint::Imposition();
-      $imposition->load($sig_specs, 1, $Project);
-      $imposition->load_from_impositionObject($imp);
+    if ( 0 and $$project{HasCutting} ) {
+      $log->debug("SIG SPECS before cutting:" . Data::Dumper::Dumper($sig_specs));
+      $log->debug("SIG SPECS before cutting:" . Data::Dumper::Dumper($imp));
+      #$imposition->load($sig_specs, 1, $Project);
 
-      my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, $sig_specs, $$project{CuttingSpecs}, 1, $imp->Paper, $imposition, $$project{FoldingSpecs}, $project );
+      my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, $sig_specs, $$project{CuttingSpecs}, 1, $imposition->Paper(), $imposition, $$project{FoldingSpecs}, $project );
 
       $log->debug(Data::Dumper::Dumper(\%cutting_results));
       if ( $cutting_results{Status} eq 'uncalculated' ) {
@@ -592,13 +594,13 @@ sub get_project_price {
       #$log->debug("Has no cutting") if DEBUG;
     } # end if
         
-    if ( $$project{HasProofs} ) {
+    if ( 0 and $$project{HasProofs} ) {
       my $Press = new openprint::Equipment($press);
       # Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
       my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $Project->ServiceType($$project{HasProofs}), $$project{ProofsSpecs}, $sig_specs, 1,
         {}, # Indexes
         undef, #Totals,
-        $Press, $imp );
+        $Press, $imposition );
       $price{'Comparison Cost'} += $sig_count * $Results{total};
       $openprint::log->debug("Proofs pricing: $Results{total} * $sig_count");
       $openprint::log->error("Proofs alert $Results{alert}") if $Results{alert};
