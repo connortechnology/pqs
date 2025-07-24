@@ -168,6 +168,7 @@ sub insert {
 # database.
 sub update {
   my $log       = shift;
+  $log = $openprint::log if !$log;
   my $dbh       = shift;
   my $table     = shift; # The table name to operate on (may contain schema)
   my $condition = shift; # A filter (WHERE) condition
