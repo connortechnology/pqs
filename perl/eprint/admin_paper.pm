@@ -366,12 +366,21 @@ print STDERR "Start Paer Edit - $action \n";
 		$temp .= "AND dblWidth = '$width'\n" if $width ne '';
 		$temp .= "AND dblHeight = '$height'\n" if $height ne '';
 		( $index ) = sql::sql_statement( $log, $dbh, $temp );
-	} elsif ( $r->param('btnFunction') eq 'Go') {
-		$index = scalar $dbh->selectrow_array(q{
-			SELECT lngindex 
-			FROM tbl_paper
-			WHERE strID = ?
-		},undef, $r->param('txtGoPaperID'));
+  } elsif ( $r->param('btnFunction') eq 'Go') {
+    if ($r->param('txtGoPaperID')) {
+      $index = scalar $dbh->selectrow_array(q{ SELECT lngindex FROM tbl_paper WHERE strID = ?  },undef, $r->param('txtGoPaperID'));
+    } else {
+      $temp = "SELECT MIN(lngIndex) FROM tbl_Paper WHERE 1>0\n";
+      $temp .= "AND strName = '" . $r->param('ddmPaperName') . "'\n" if $r->param('ddmPaperName') ne '';
+      $temp .= "AND strCategory = '" . $r->param('ddmCategory') . "'\n" if $r->param('ddmCategory') ne '';
+      $temp .= "AND strFinish = '" . $r->param('ddmFinish') . "'\n" if $r->param('ddmFinish') ne '';
+      $temp .= "AND strColour = '" . $r->param('ddmColour') . "'\n" if $r->param('ddmColour') ne '';
+      $temp .= "AND strWeight = '" . $r->param('ddmWeight') . "'\n" if $r->param('ddmWeight') ne '';
+      $temp .= "AND lngPaperListIndex = '" . $r->param('ddmPaperList') . "'\n" if $r->param('ddmPaperList') ne '';
+      $temp .= "AND dblWidth = '$width'\n" if $width ne '';
+      $temp .= "AND dblHeight = '$height'\n" if $height ne '';
+      ( $index ) = sql::sql_statement( $log, $dbh, $temp );
+    }
 	} elsif ( $r->param('btnFunction') eq '<<' ) {
 		$temp = "SELECT MAX(lngIndex) FROM tbl_Paper WHERE strID < ( SELECT strID FROM tbl_Paper WHERE lngIndex='$index' )\n";
 		$temp .= "AND strName = '" . $r->param('ddmPaperName') . "'\n" if $r->param('ddmPaperName') ne '';
