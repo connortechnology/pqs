@@ -500,19 +500,10 @@ sub page_options {
 	$var->{CustomerList} 	= ssi::make_drop_down($sql);
 
 
-	my $sql = $dbh->selectall_arrayref(q{ 
-		SELECT Distinct  strStatus, strStatus  FROM tbl_projects ORDER by 1
-	}, {});
+	my $sql = $dbh->selectall_arrayref(q{ SELECT name, name FROM project_statuses ORDER by lower(name)}, {});
 
 	$var->{ProjectStatus} = ssi::make_drop_down($sql);
-
-
-
-
-
 	#print STDERR "HAVE COMPANY" , Dumper($data, $var->{Company_Name});
-
-
 }
 
 
