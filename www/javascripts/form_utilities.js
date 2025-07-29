@@ -560,6 +560,9 @@ function clearSelect( ddm ) {
 	ddm.options[0].selected = 1;
 }
 
+function clearElementForm(element) {
+  clearForm(element.form);
+}
 function clearForm(form) {
 	form = $(form);
 	for ( let i=0, len = form.elements.length; i < len; i += 1 ) {
