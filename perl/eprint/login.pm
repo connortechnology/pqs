@@ -18,6 +18,8 @@ require MIME::QuotedPrint;
 require crypto;
 require eprint::order;
 
+require openprint::User;
+
 # displays the login page, and populates the destination variable
 sub login_display {
     my ($r, $log, $dbh, $cookie, $variable) = @_;
@@ -35,7 +37,7 @@ sub verify_login {
   my ($temp, $error, $details);
 
   # convert the email address to lower case. All email addresses stored in DB will be lower case.
-  my $email = lc $r->param('txtEmail');
+  my $email = lc openprint::User->transform(email=>$r->param('txtEmail'));
   if (!$email) {
     $error = "No password provided. Authentication Failed.";
     return misc::error($log, $dbh, $variable, $error, $details);
