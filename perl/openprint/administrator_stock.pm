@@ -264,7 +264,6 @@ $openprint::log->debug("Setting: $param{amount} " );
 } # end sub list
 
 sub stock {
-
   my $Paper = openprint::Paper->find_one( id=>$param{stock_id} ) if $param{stock_id};
   if ( $param{btnFunction} ) {
     if ( $param{btnFunction} eq 'Delete' ) {
@@ -461,11 +460,18 @@ sub stock {
     } # end if
   } elsif (!$Paper) {
     $Paper = new openprint::Paper();
-    $openprint::log->debug(Data::Dumper::Dumper(\%param));
-    $Paper->set(\%param) if %param;
-    my $price = new openprint::PaperPrice();
-    $price->set({cost=>$param{price}, price=>$param{price}, service=>'Material', Paper=>$Paper});
-    $Paper->Prices([$price]);
+    if (%param) {
+      $openprint::log->debug(Data::Dumper::Dumper(\%param));
+      $Paper->set(\%param) if %param;
+      my $price = new openprint::PaperPrice();
+      $price->set({cost=>$param{price}, price=>$param{price}, service=>'Material', Paper=>$Paper});
+      $Paper->Prices([$price]);
+    } else { # Let's try session from stocks
+      my $uri = '/administrator/stock/stocks.html';
+      my %defaults = map { $_ =~ /^$uri\?(.*)$/ ? ( $1 => $openprint::session{$uri.'?'.$1} ) : () } keys %openprint::session;
+      $openprint::log->debug(Data::Dumper::Dumper(\%defaults));
+      $Paper->set(\%defaults);
+    }
   }
 
 	$variable{Stock} = $Paper;
