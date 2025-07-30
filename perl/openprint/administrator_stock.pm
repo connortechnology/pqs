@@ -467,7 +467,7 @@ sub stock {
       $price->set({cost=>$param{price}, price=>$param{price}, service=>'Material', Paper=>$Paper});
       $Paper->Prices([$price]);
     } else { # Let's try session from stocks
-      my $uri = '/administrator/stock/stocks.html';
+      my $uri = '/administrator/stock/list.html';
       my %defaults = map { $_ =~ /^$uri\?(.*)$/ ? ( $1 => $openprint::session{$uri.'?'.$1} ) : () } keys %openprint::session;
       $openprint::log->debug(Data::Dumper::Dumper(\%defaults));
       $Paper->set(\%defaults);
