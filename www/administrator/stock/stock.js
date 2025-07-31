@@ -4,7 +4,7 @@ function check_name(element) {
   $j.get('stock.json', {
     action: 'find',
     name: element.value,
-    'id !=': element.form.elements['id'}
+    'id !=': element.form.elements['id']
     });
 }
 
