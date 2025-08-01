@@ -292,7 +292,7 @@ sub list {
 }
 sub _list {
   ssi::save_params( '/administrator/materials/list.html', (
-      'deleted', 'material_name', 'equipment_id', 'category_id',
+      'deleted', 'material_name', 'equipment_id', 'category_id', 'type_id',
     ) );
   return if ! $param{btnFunction};
 
