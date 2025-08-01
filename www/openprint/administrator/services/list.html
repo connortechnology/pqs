@@ -51,7 +51,7 @@ order: [[1, 'asc']]
 		</li>
 		<li><label>Category</label>
 			<?echo( ssi::select( 
-						openprint::ServiceCategory->dropdown(order=>'lower(name)'), 
+						openprint::ServiceCategory->dropdown(), 
 						$session{$r->uri().'?category_id'}, { 
 						name=>'category_id', 
 						prepend=>[ '', 'All' ],
@@ -60,7 +60,7 @@ order: [[1, 'asc']]
 		</li>
 		<li><label>Type</label>
 			<?echo( ssi::select( 
-						openprint::ServiceType->dropdown(order=>'lower(name)'), 
+						openprint::ServiceType->dropdown(), 
 						$session{$r->uri().'?servicetype_id'}, { 
 						name=>'servicetype_id', 
 						prepend=>[ '', 'All' ],

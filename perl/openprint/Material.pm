@@ -8,6 +8,7 @@ require openprint::Object;
 require openprint::Log;
 require openprint::MaterialSpecification;
 require openprint::MaterialCategory;
+require openprint::MaterialType;
 require openprint::Manufacturer;
 
 use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults $cache_field $cached };
@@ -186,6 +187,8 @@ sub get_Price {
 
   $$price{Material} = $_[0];
   $$price{currency_id} = $Pricelist->currency_id();
+  $price->load();
+  $price->units();
   openprint::Currency::convert( $price ) if $$Pricelist{currency_id} != $openprint::session{Currency_id};
 
   return $price;
@@ -319,7 +322,9 @@ sub supplier {
 
 sub servicetype_id {
   my $self = shift;
-  if (@_) {
+  $$self{servicetype_id} = shift if @_;
+  if (0) {
+   if (@_) {
     if (ref($_[0]) eq 'ARRAY') {
       $$self{servicetype_id} = shift;
     } else {
@@ -327,12 +332,13 @@ sub servicetype_id {
     }
   }
   return [] if ! $$self{servicetype_id};
+}
   return $$self{servicetype_id};
 } # end sub servicetype_id
 
 sub ServiceTypes {
   return () if ! $_[0]{servicetype_id};
-  return map { new openprint::ServiceType( $_ ); } @{$_[0]{servicetype_id}};
+  return map { new openprint::ServiceType( $_ ); } ref $_[0]{servicetype_id} eq 'ARRAY' ? @{$_[0]{servicetype_id}} : ($_[0]{servicetype_id});
 } # end sub ServiceTypes
 
 1;

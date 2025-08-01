@@ -8,6 +8,7 @@ our @EXPORT = qw( load_file send_email_with_attached_files send_email_with_attac
 use Text::CSV_XS ();
 use Date::Calc qw(Add_Delta_Days);
 use Date::Format qw( time2str );
+use File::Basename;
 
 #use Mail::Sendmail ();
 
@@ -531,6 +532,30 @@ sub smart_time {
 	}
 } # end sub smart_time
 
+sub get_files {
+  if ( ! -d $_[0] ) {
+    $openprint::log->error("Supplied path $_[0] was not a directory");
+    return;
+  }
+  my @results;
+  my @filenames;
+  if ( opendir DIRHANDLE, $_[0] ) {
+    @filenames = readdir DIRHANDLE;
+    closedir DIRHANDLE;
+  } # end if
+$openprint::log->debug("Have @filenames from $_[0]");
+  foreach ( @filenames ) {
+    next if $_ =~ /^\./;
+    my $path = $_[0].'/'.$_ ;
+    if ( -f $path ) {
+      push @results, $path;
+    } else {
+      $openprint::log->debug("What was $path");
+    }
+  }
+  return @results;
+}
+
 sub get_files_recursive {
 	if ( ! -d $_[0] ) {
 		$openprint::log->error("Supplied path $_[0] was not a directory");
@@ -605,6 +630,50 @@ sub json_to_html {
 	}
 	return $html;
 }
+
+sub get_session_uri {
+  my $uri = shift;
+
+  my ($filename, $path, $suffix) = fileparse($uri);
+  if (substr($filename,0,1) eq '_') {
+    return $path.substr($filename,1).$suffix;
+  }
+  return $uri;
+}
+
+# Todo, put this in a Price object as the parent of MaterialPrice, ServicePrice etc.
+sub get_units {
+  my $price = shift;
+  my $config = shift;
+  my $field = shift;
+
+  my $value = lc $price->$field();
+  $openprint::log->debug("Value for $field $value");
+
+  if (!($config and $$config{$field})) {
+    $openprint::log->debug("No config entry for $field");
+    return ssi::input( type=>'text', name=>join('-', $field, $$price{id} ), value=>$value );
+  }
+  if (!@{$$config{$field}}) {
+    # No options specified. Don't even offer an input
+    return '';
+  } elsif (@{$$config{$field}}==1) {
+    # Only 1 option, hide it.
+    return ssi::input( type=>'hidden', name=>join('-', $field, $$price{id} ), value=>$$config{$field}[0] ).$$config{$field}[0];
+  }
+  my @values = map { $_, $_ } @{$$config{$field}};
+  if ($value and !sets::isin($value, $$config{$field})) {
+    push @values, $value, 'Invalid value '.$value;
+  }
+  if ((!defined $value) and sets::isin('', $$config{$field})) {
+    $value = '';
+  }
+  if (!sets::isin('', $$config{$field})) {
+    unshift @values, '','no units set';
+  }
+  return openprint::ssi::select( \@values, $value, { name=>join('-', $field, $$price{id}) } )
+}
+
 
 1;
 __END__

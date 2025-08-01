@@ -25,8 +25,11 @@ use Apache2::Cookie;
 use Apache2::Util;
 use Apache2::Upload;
 use Text::CSV_XS;
+use File::Basename;
+use File::Slurp;
 
 use MIME::QuotedPrint;
+use MIME::Base64;
 use Mail::Sendmail;
 use session;
 
@@ -112,88 +115,110 @@ sub send_email_with_attached_files {
     send_email_with_attachment( $log, $mail, @attachments );
 }
 
+sub get_attachments {
+  my @attachments;
+  while (@_) {
+    my $file = shift;
+    if (-e $file) {
+      my $contents = File::Slurp::read_file($file, err_mode => 'carp' );
+      $file = basename($file);
+      if (!$contents) {
+        $openprint::log->debug("Failed to load $file");
+      } else {
+        push @attachments, ($file, MIME::Base64::encode_base64($contents), 'application/octet-stream', 'base64');
+      }
+    } else {
+      $openprint::log->debug("File not found at $file");
+    }
+  }
+  return @attachments;
+}
 
 # we should really be using mime-tools.
 sub send_email_with_attachment {
-    my ($r, $log, $mail, @attachments) = @_;
-print STDERR "SEND EMAIL WITH ATTACHMENT START \n", Dumper($mail);
-	
-	my $list;
-	map { $list->{$_} = 1 } split ',', $mail->{TO} || $mail->{To};
+  my ($r, $log, $mail, @attachments) = @_;
 
-	$mail->{TO} = join ',', keys %{$list};
+  my $list;
+  map { $list->{$_} = 1 } split ',', $mail->{TO} || $mail->{To};
 
-print STDERR "SEND MAIL TO: $mail->{TO} FROM $mail->{FROM} SUBJECT: $mail->{SUBJECT} $mail->{subject} \n";
+  $mail->{TO} = join ',', keys %{$list};
 
-	
-    my $message = $mail->{BODY};
+  print STDERR "SEND MAIL TO: $mail->{TO} FROM $mail->{FROM} SUBJECT: $mail->{SUBJECT} $mail->{subject} \n";
 
-    my $boundary = "====" . time() . "====";
+  my $message = $mail->{BODY};
 
-    $mail->{'content-type'}
-        = "multipart/mixed;\r\n  boundary=\"$boundary\"\r\n";
+  my $boundary = "====" . time() . "====";
 
-    $boundary = '--'.$boundary;
+  $mail->{'content-type'} = "multipart/mixed;\r\n  boundary=\"$boundary\"\r\n";
 
-    # start with the current body
-    $mail->{'BODY'} .= "This is a multi-part message in MIME format.\n\n";
+  $boundary = '--'.$boundary;
 
-    if ( $message ) {
-        $mail->{BODY} .= "$boundary\n"
-                      .  "Content-Type: text/plain;\n"
-                      .  "\tcharset=\"iso-8859-1\"\n"
-                      .  "Content-Transfer-Encoding: 8-bit\n\n"
-                      .  "\n$message\n";
-    }
-    else {
-        my ($name, $text, $type, $encoding) = splice @attachments, 0, 4;
+  # start with the current body
+  $mail->{'BODY'} .= "This is a multi-part message in MIME format.\n\n";
 
-        $mail->{BODY} .= "$boundary\nContent-Type: $type;\n"
-                       . "Content-Transfer-Encoding: $encoding\n\n"
-                       . "$text\n";
-    }
+  if ( $message ) {
+    $mail->{BODY} .= "$boundary\n"
+    .  "Content-Type: text/plain;\n"
+    .  "\tcharset=\"iso-8859-1\"\n"
+    .  "Content-Transfer-Encoding: 8-bit\n\n"
+    .  "\n$message\n";
+  } else {
+    my ($name, $text, $type, $encoding) = splice @attachments, 0, 4;
 
-    my $attachmentname = '';
-    while ( @attachments ) {
-        my ($name, $text, $type, $encoding) = splice @attachments, 0, 4;
-print STDERR "EMAIL DUMPER", Dumper($name );
+    $mail->{BODY} .= "$boundary\nContent-Type: $type;\n"
+    . "Content-Transfer-Encoding: $encoding\n\n"
+    . "$text\n";
+  }
 
-        $mail->{BODY} .= "$boundary\nContent-Type: $type;\n"
-                      .  ($name ? "\tname=\"$name\"\n" : q{})
-                      .  "Content-Transfer-Encoding: $encoding\n"
-                      .  "Content-Disposition: attachment;\n"
-                      .  ($name ? "\tfilename=\"$name\"\n" : q{})
-                      .  "\n$text\n";
-        $attachmentname .= $name . ", ";
-    }
+  my $attachmentname = '';
+  while ( @attachments ) {
+    my ($name, $text, $type, $encoding) = splice @attachments, 0, 4;
 
-    # Signal end of attachments
-    $mail->{BODY} .= "$boundary--\n\n";
-    insert_to_emaildb($mail, $attachmentname);
-    sendmail( %$mail ) || $log->debug( "Error: $Mail::Sendmail::error\n" );
+    $mail->{BODY} .= "$boundary\nContent-Type: $type;\n"
+    .  ($name ? "\tname=\"$name\"\n" : q{})
+    .  "Content-Transfer-Encoding: $encoding\n"
+    .  "Content-Disposition: attachment;\n"
+    .  ($name ? "\tfilename=\"$name\"\n" : q{})
+    .  "\n$text\n";
+    $attachmentname .= $name . ", ";
+  }
+
+  # Signal end of attachments
+  $mail->{BODY} .= "$boundary--\n\n";
+  insert_to_emaildb($mail, $attachmentname);
+  if ( $openprint::config{EmailTo} ) {
+    $$mail{TO} = $openprint::config{EmailTo};
+    delete($$mail{BCC});
+    delete($$mail{CC});
+  } # end if
+  if ( $openprint::config{EmailBCC} ) {
+    $$mail{BCC} = $$mail{BCC} ? $$mail{BCC}.', '.$openprint::config{EmailBCC} : $openprint::config{EmailBCC};
+  } # end if
+  if ($openprint::config{EmailSubjectPrepend}) {
+    $$mail{SUBJECT} = $openprint::config{EmailSubjectPrepend}.' '.$$mail{SUBJECT};
+  }
+
+  sendmail( %$mail ) || $log->debug( "Error: $Mail::Sendmail::error\n" );
 }
 
 sub insert_to_emaildb {
-    my $mail = shift;
-    my $attachmentname = shift;
-    my $dbh = session::dbh;
+  my $mail = shift;
+  my $attachmentname = shift;
+  my $dbh = session::dbh;
 
-    my @k = keys %{$mail};
-    my $subject;
+  my @k = keys %{$mail};
+  my $subject;
 
-    foreach my $key (@k){
-        if ($key =~ /(subject)/i){
-            $subject = $mail->{$key};
-        }
+  foreach my $key (@k){
+    if ($key =~ /(subject)/i){
+      $subject = $mail->{$key};
+      last;
     }
+  }
 
-	eval {
-		$dbh->  do("INSERT INTO public.tbl_email(from_address, to_address, subject, attachmentname)
-		VALUES (?, ?, ?, ?)" , undef, $mail->{FROM}, $mail->{TO}, $subject, $attachmentname);
-	};
-
-    print STDERR "$mail->{FROM}, $mail->{TO}, $subject EMAIL HISTORY SAVED IN TBL_EMAIL DATABASE \n";
-    
+  eval {
+    $dbh->do("INSERT INTO public.tbl_email(from_address, to_address, subject, attachmentname) VALUES (?, ?, ?, ?)" , undef, $mail->{FROM}, $mail->{TO}, $subject, $attachmentname);
+  };
 }
 
 
@@ -499,4 +524,25 @@ sub html2pdf {
   } # end if successfully wrote html content
   return undef;
 }
+sub get_session_uri {
+  my $uri = shift;
+
+  my ($filename, $path, $suffix) = fileparse($uri);
+  my @path = map { $_ eq 'openprint' ? () : $_ } split('/', $path);
+  if (substr($filename,0,1) eq '_') {
+    $filename = substr($filename,1);
+  }
+  $uri = join('/',@path, $filename.$suffix);
+  $openprint::log->debug("get_session_uri $uri");
+  return $uri;
+}
+
+sub make_hash_from_array {
+  return openprint::misc::make_hash_from_array(@_);
+}
+
+sub get_units {
+  return openprint::misc::get_units(@_);
+}
+
 1;

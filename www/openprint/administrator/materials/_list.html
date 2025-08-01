@@ -9,7 +9,7 @@
 		);
 	if (  $session{$uri.'?material_name'} ) {
 		if ( ! ( $session{$uri.'?material_name'}  =~ /%/ ) ) {
-			$filters{'name ilike'} = $session{$uri.'?material_name'}.'%';
+			$filters{'name ilike'} = '%'.$session{$uri.'?material_name'}.'%';
 		} else {
 			$filters{'name ilike'} = $session{$uri.'?material_name'};
 		}

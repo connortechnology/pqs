@@ -1,5 +1,5 @@
 <?include('/includes/error_reporting.html')?>
-<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<script src="<?hash_link(/openprint/javascripts/pricing.js)?>"></script>
 <div class="Service">
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<input type="hidden" name="btnFunction"/>
@@ -19,7 +19,7 @@
 				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $session{$r->uri().'?equipment_id'} ); ) ?>
 			</select>
       <?if($session{$r->uri().'?equipment_id'})?>
-      <a href="/administrator/equipment/edit.html?ddmEquipment=<?echo($session{$r->uri().'?equipment_id'})?>">Go</a>
+      <?echo( new openprint::Equipment($session{$r->uri().'?equipment_id'})->link_to('Go'); )?>
       <?endif($session{$r->uri().'?equipment_id'})?>
 		</li>
 <?endif(@{$$variable{Equipment}} = openprint::Equipment->find(order=>'lower(strid)'))?>
@@ -30,7 +30,7 @@
 				<? echo ( make_drop_down( [ map { $_->id(), $_->name() . ($_->name() ne $_->description() ? ' : '.$_->description() : '' ) } openprint::Service->find(
 							( $session{$r->uri().'?ddmSearchCategory'} ? ( category_id=>$session{$r->uri().'?ddmSearchCategory'} ) : () ),
 							( $session{$r->uri().'?equipment_id'} ? ( 'equipment_id any'=> $session{$r->uri().'?equipment_id'} ) : () ),
-							order=>'lower(name)') ], $$variable{Service}->id() ); ) ?>
+							) ], $$variable{Service}->id() ); ) ?>
 			</select>
 		</li>
 		</ul>
@@ -80,15 +80,16 @@
 				<label>Service Type</label>
 				<select id="servicetype_id" name="servicetype_id">
 					<option value="">All/Unspecified</option>
-					<? echo ( make_drop_down( openprint::ServiceType->dropdown(order=>'lower(description)'), $$variable{Service}->servicetype_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::ServiceType->dropdown(), $$variable{Service}->servicetype_id() ); ) ?>
 				</select>
+      <?echo( $$variable{Service}->servicetype_id() ? new openprint::ServiceType($$variable{Service}->servicetype_id())->button_to('Go') : ''; )?>
 			</li>
 			<li> 
 				<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category</label>
 				<input style="display:none;" type="text" id="new_category" name="new_category" value=""/>	
 				<select id="category_id" name="category_id">
 					<option value="">Select a category</option>
-					<? echo ( make_drop_down( openprint::ServiceCategory->dropdown(order=>'lower(name)'), $$variable{Service}->category_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::ServiceCategory->dropdown(), $$variable{Service}->category_id() ); ) ?>
 				</select>
 			</li>
 			<li> 

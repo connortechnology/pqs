@@ -16,6 +16,7 @@
     if (!$module) {
       $log->error("No service type set for ".$Service->name());
     } else {
+      $module =~ s/^openprint::Estimating:://;
       $module = 'openprint::Estimating::'.$module;
       eval ( 'require '.$module.';' );
       $log->error("eval error $@") if $@;
@@ -31,8 +32,11 @@
     my $price = shift;
     my $config = shift;
     my $field = shift;
+
+    my $value = lc $price->$field();
+
     if (!($config and $$config{$field})) {
-      return input( type=>'text', name=>join('-', $field, $$price{id} ), value=>$price->$field() );
+      return input( type=>'text', name=>join('-', $field, $$price{id} ), value=>$value );
     }
     if (!@{$$config{$field}}) {
       return '';
@@ -40,16 +44,16 @@
       return input( type=>'hidden', name=>join('-', $field, $$price{id} ), value=>$$config{$field}[0] ).$$config{$field}[0];
     }
     my @values = map { $_, $_ } @{$$config{$field}};
-    if ($$price{$field} and !sets::isin($$price{$field}, $$config{$field})) {
-      push @values, $$price{$field}, 'Invalid value '.$$price{$field};
+    if ($value and !sets::isin($value, $$config{$field})) {
+      push @values, $value, 'Invalid value '.$value;
     }
-    if ((!defined $$price{$field}) and sets::isin('', $$config{$field})) {
-      $$price{$field} = '';
+    if ((!defined $value) and sets::isin('', $$config{$field})) {
+      $value = '';
     }
     if (!sets::isin('', $$config{$field})) {
       unshift @values, '','no units set';
     }
-    return ssi::select( \@values, $$price{$field}, { name=>join('-', $field, $$price{id}) } )
+    return ssi::select( \@values, $value, { name=>join('-', $field, $$price{id}) } )
   }
 
 	$html .= sprintf('
@@ -73,7 +77,7 @@
 		input( type=>'float', name=>join('-', 'markup', $$Price{id} ), value=>$Price->markup(), onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
 		input( type=>'float', name=>join('-', 'price', $$Price{id} ), value=>$Currency->format($Price->price(),5,''), onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
     get_units($Price, $Configuration, 'units'),
-    ssi::radio( join('-', 'discountable',$$Price{id} ), [ 'Y'=>'Yes', 'N'=>'No' ], $Price->discountable(), { default=>'Y' } ).$Price->discountable(),
+    ssi::radio( join('-', 'discountable',$$Price{id} ), [ 'Y'=>'Yes', 'N'=>'No' ], $Price->discountable(), { default=>'Y' } ),
 		ssi::select( [ '', 'Basic', 'Stepped', 'Stepped', 'Interpolate', 'Interpolate' ], $Price->mode(), { name=>'mode-'.$$Price{id}, id=>'mode-'.$$Price{id} } ),
 		($Price->id() ? 
 		join("\n", 

@@ -22,9 +22,10 @@ require ssi;
 require sets;
 require sql;
 require openprint;
-use vars qw( $r %variable %session %param %config $log $dbh );
+use vars qw( $r %variable %session %page_session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
+*page_session = \%openprint::page_session;
 *param = \%openprint::param;
 *config = \%openprint::config;
 *log = \$openprint::log;
@@ -307,10 +308,14 @@ sub make_drop_down {
 	my $html = '';
 	if ( $$options{prepend} ) {
 		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2 ) {
-			$html .= sprintf('<option value="%s"%s>%s</option>',
+			$html .= join('', 
+        '<option value="',
 					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
+      '"',
 					( $selected{ $$options{prepend}[$n] } ? ' selected="selected"' : '' ),
+      '>',
 					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
+      '</option>',"\n",
 					);
 		} # end for
 	} # end if
@@ -336,16 +341,20 @@ sub make_drop_down {
       $label = HTML::Entities::encode_entities(Encode::encode('utf-8', $label));
     }
 		
-		$html .= join('','<option value="', $value, '"', ( $selected{ $value } ? ' selected="selected"' : '' ), '>', $label, '</option>');
+		$html .= join('','<option value="', $value, '"', ( $selected{ $value } ? ' selected="selected"' : '' ), '>', $label, '</option>', "\n");
 	} # end for
 
 	if ( $$options{append} ) {
 		for ( my $n = 0; $n < @{$$options{append}}; $n += 2 ) {
-			$html .= sprintf('<option value="%s"%s>%s</option>',
-					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{append}[$n])) : $$options{append}[$n] ),
-					( $selected{ $$options{append}[$n] } ? ' selected="selected"' : '' ),
-					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ) ) : $$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ),
-					);
+      $html .= join('',
+        '<option value="',
+        ( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{append}[$n])) : $$options{append}[$n] ),
+        '"',
+        ( $selected{ $$options{append}[$n] } ? ' selected="selected"' : '' ),
+        '>',
+        ( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ) ) : $$options{length} ? substr($$options{append}[$n + 1],0, $$options{length}) : $$options{append}[$n + 1] ),
+        '</option>',"\n",
+      );
 		} # end for
 	} # end if
 	return $html;
@@ -727,7 +736,7 @@ sub setup_date_select {
 			@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ( '', '', '' );
 		} # end if
 	} else {
-		@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} );
+		@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = fix_date( @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} );
 	} # end if
 } # end sub setup_date_select
 
@@ -910,7 +919,7 @@ sub save_params {
 		$openprint::log->debug('save_params: key '.$_) if Debug;
 		if (!exists $param{$_}) {
 			$openprint::log->debug('save_params: does not exist in param key '.$_) if Debug;
-			undef($session{$url.'?'.$_});
+      #undef($session{$url.'?'.$_});
 			next;
 		}
 		if (ref $param{$_} eq 'ARRAY') {
@@ -931,15 +940,19 @@ sub boolean_override {
 			$for, 1*$value, ($value ? 'locked' : 'unlocked'), $locked_js, $unlocked_js );
 }
 sub write_override {
-	my ( $for, $value, $locked_js, $unlocked_js ) = @_;
+	my ( $for, $value, $locked_js, $unlocked_js, $employee_only ) = @_;
 	if ( 1 ) {
-		return sprintf(q`
-      <input type="hidden" id="%1$s" name="%1$s" value="%2$s"/>
-      <img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt="" title="Click to override"/>`, 
+    my $html = sprintf('<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/>', $for, ((defined($value) and sets::isin($value, ['Y', '1' ]) ) ? 'Y' : '' ));
+    if ((!$employee_only) or ($session{user_type} eq 'E' or $session{user_type} eq 'A')) {
+      $html .= sprintf(q`<img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt="" title="Click to override"/>`, 
 				$for,
 				((defined($value) and sets::isin($value, ['Y', '1' ]) ) ? 'Y' : '' ),
 				((defined($value) and sets::isin($value, ['Y', '1' ])) ? 'locked' : 'unlocked'),
 				$locked_js, $unlocked_js );
+    } else {
+      #$html .= (defined($value) and sets::isin($value, ['Y', '1'])) ? 'locked' : 'unlocked';
+    }
+    return $html;
 	} else {
 		return sprintf('<input type="checkbox" id="%1$s" name="%1$s" value="%2$s" onclick="if(!this.checked){%5$s}else{%4$s};" %3$s /> <label class="radio" for="%1$s">Override</label>', $for, $value, ssi::checked( $value eq 'Y' ), $locked_js, $unlocked_js );
 	} # end if

@@ -1,8 +1,12 @@
 <? echo (
 	my $html;
 	my $Pricelist = $$variable{Pricelist};
-	my $Equipment = $$variable{Equipment};
   my $Material = $$variable{Material};
+
+	my $Equipment = $$variable{Equipment};
+  if (!$Equipment->strid()) {
+    $Equipment->strid('All equipment');
+  }
 
 	$html .= '<fieldset class="Equipment">';
 	$html .= sprintf( '<a href="/administrator/equipment/edit.html?ddmEquipment=%d">%s</a><br/>',$Equipment->id(), $Equipment->strid().': '.$Equipment->name().' '.$Equipment->description() );

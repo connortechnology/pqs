@@ -3,7 +3,7 @@
 	<fieldset class="filters"><legend>Search Information</legend>
 		<div class="content">
 			<ul>
-<? if ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown(order=>'lower(name)') and @{$$variable{Categories}} ) ?>
+<? if ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown() and @{$$variable{Categories}} ) ?>
 				<li>
 					<label>Category</label>
 					<select name="search_category_id" id="search_category_id" onchange="this.form.btnFunction.value='';this.form.submit();">
@@ -11,13 +11,13 @@
 						<? echo ( make_drop_down( $$variable{Categories}, $param{search_category_id} ) ) ?>
 					</select>
 				</li>
-<? endif ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown(order=>'lower(name)') and @{$$variable{Categories}} ) ?>
+<? endif ( $$variable{Categories} = openprint::ProjectTypeCategory->dropdown() and @{$$variable{Categories}} ) ?>
 				<li>
 					<label>Project Type</label>
 					<select id="ddmProjectType" name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
 						<option value="">select one</option>
 						<? echo ( 
-								make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)',
+								make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find(
 								( $param{search_category_id} ? ( category_id => $param{search_category_id} ) : () ),
 								) ], $$variable{ProjectType}->id() );
 								) ?>
@@ -66,7 +66,7 @@
         </select>
         <input type="text" name="category" id="category" style="display:none;" oninput="ddm_select_by_value($('category_id'), '' );"/>
       </li>
-  <? if ( $openprint::User->email() =~ /iconnor/ ) ?>
+  <? if ( $openprint::User->email() =~ /iconnor/ and 0 ) ?>
       <li> 
         <label>Type</label>
         <? echo ( ssi::select( 
@@ -84,15 +84,17 @@
         <label>URL</label>
         <input type="url" id="url" name="url" value="<? echo ( $$variable{ProjectType}->url(); ) ?>" />
       </li>
-  <? endif ( $openprint::User->email() =~ /iconnor/ ) ?>
+  <? endif ( $openprint::User->email() =~ /iconnor/ and 0 ) ?>
       <li> 
         <label>Sort</label>
         <input type="number" id="sorting" name="sorting" value="<? echo ( $$variable{ProjectType}->sorting(); ) ?>" />
       </li>
+      <?if(0)?>
       <li> 
         <label>Show please call</label>
         <?echo(radio( 'please_call', [ '1', 'Yes', '0', 'No' ], $$variable{ProjectType}->please_call() ); ) ?>
       </li>
+      <?endif(0)?>
 		</ul>
 	</fieldset><!-- Column -->
   <?eval( $$variable{Object} = $$variable{ProjectType} ) ?>
@@ -104,7 +106,7 @@
 		<ul> 
 <? echo (
 		return checkboxes('required_services', 
-			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find() ],
 			[ $$variable{ProjectType}->required_services() ],
 			{ container=>['<li>','</li>'] }
 			);
@@ -117,14 +119,14 @@
 		<ul> 
 <? echo (
 		return checkboxes('blocked_services', 
-			[ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ],
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find() ],
 			[ $$variable{ProjectType}->blocked_services() ],
 			{ container=>['<li>','</li>'] }
 			);
 ) ?>
 		</ul>
 	</fieldset><!-- Column -->
-<? if ( $$variable{ProjectType}->id() ) ?>
+<? if ( $$variable{ProjectType}->id() and 0 ) ?>
 	<div class="PaperRecommendations">
     <fieldset><legend>Paper Recommendations</legend>
       <div class="leftColumn">
@@ -188,7 +190,7 @@
 		</div>	
 	</fieldset>
 	</div>
-<? endif ( $$variable{ProjectType}->id() ) ?>
+<? endif ( $$variable{ProjectType}->id() and 0 ) ?>
 	<br class="spacer"/>
 </form>
 <? if ( $$variable{ProjectType}->id() ) ?>
@@ -196,5 +198,3 @@
 <? endif ( $$variable{ProjectType}->id() ) ?>
 <script src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script src="<?hash_link(/administrator/project_types/edit.js)?>"></script>
-<script>
-</script>

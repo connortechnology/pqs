@@ -22,6 +22,7 @@ use session;
 use PQS::WWW::Predefined;
 
 require openprint;
+require openprint::www;
 require openprint::configuration;
 
 use vars qw( $r %variable %session %param %config $log $dbh $starttime );
@@ -40,6 +41,7 @@ sub precision ($) {($_)=@_;m/-?\d+\.?(\d*)$/ or return;$_=$1;s/0*$//;length$_}
 
 sub handler {
     $r = shift;
+    $r->push_handlers(PerlCleanupHandler => \&openprint::www::cleanup);
 
     # Subclass the Apache request object for a better parameter interface.
     $r = Apache2::Request->new($r);
@@ -62,13 +64,13 @@ sub handler {
     # disconnect from the database. We'd much rather keep the connection but,
     # given the existing eprint code, we can't use a persistant handle.
     Apache2::ServerUtil::server->push_handlers("PerlCleanupHandler", sub {
-            if ($dbh) {
-                Apache2::ServerUtil->server->log_error('DB handle still present');
-                $dbh->rollback();
-                $dbh->disconnect();
-            }
-            return OK;
-    });
+        if ($dbh) {
+          Apache2::ServerUtil->server->log_error('DB handle still present');
+          #$dbh->rollback();
+          $dbh->disconnect();
+        }
+        return OK;
+      });
 
     # Register a log handler for auditting.
     Apache2::ServerUtil::server->push_handlers("PerlLogHandler", \&PQS::Log::Audit::handler);
@@ -77,8 +79,8 @@ sub handler {
     # in the dispatched function.
     my $t = Petal->new(
         base_dir         => $r->document_root,
-        input            => 'XHTML',
-        output           => 'XHTML',
+        input            => 'HTML',
+        output           => 'HTML',
         #    language         => 'en',              # These should soon be
         #    defualt_language => 'en',              # dynamically populated.
     );
@@ -90,6 +92,7 @@ sub handler {
 
     # Get a refrence to the function.
     my $func = qualify_to_ref( $name, __PACKAGE__ );
+    $log->debug("Func $name => $func");
 
     # Verify that the function requested exists, if not return a 404.
     return NOT_FOUND unless defined &$func;
@@ -107,12 +110,6 @@ sub handler {
 
     if ($@) {
       my $err = $@;
-
-      $dbh->rollback;
-      $dbh->disconnect;
-
-      $r->log->error($err);
-
       require Error::StackTrace;
       $r->status(SERVER_ERROR);
       $r->content_type('text/html');
@@ -121,13 +118,11 @@ sub handler {
       return SERVER_ERROR;
     }
 
-    #$dbh->rollback;
-    $dbh->disconnect;
-
     return $status;
 }
 
 sub valid_user {
+  $log->debug(Data::Dumper::Dumper($openprint::User));
   return 1 if $openprint::User->type() eq 'A';
 	my $func = shift;
 	my @efunc = qw(item items categories category question modify_question item_paper item_cover_paper item_service );
@@ -206,8 +201,6 @@ sub valid_admin {
 
     my ($uid, $exist, $admin, $timed_out) =
         $dbh->selectrow_array($sth, undef, $session);
-
-
   
     # Let apache know the user (even though we're not doing auth) and set some
     # of their information in the request notes.
@@ -1327,154 +1320,149 @@ sub is_press {
 
 # Display the material / pricelist pricing page.
 sub material {
-    my $r = shift;
-    my $t = shift;
+  my $r = shift;
+  my $t = shift;
+  $openprint::log->debug("r $r t $t");
 
-    # Start making the client happy.
-    $r->content_type('text/html; charset=utf-8');
+  # Start making the client happy.
+  $r->content_type('text/html; charset=utf-8');
 
+  my $mtid = $r->param('materialtype');
+  $mtid =~ tr/0-9//cd if $mtid;
+
+  my $lid  = $r->param('pricelist');
+  $lid =~ tr/0-9//cd if $lid;
+
+  # If we're not posting, we only need the equipment id as we'll choose a
+  # default service type and list.
+  if ( $r->method eq 'POST') {
     # Simplistic sanity checks.
-    my $lid  = $r->param('pricelist');
-    my $mtid = $r->param('materialtype');
+    die "An integer list id is required." unless $lid;
 
-    # If we're not posting, we only need the equipment id as we'll choose a
-    # default service type and list.
-    if ( $r->method eq 'POST') {
-        $lid =~ tr/0-9//cd;
-        die "An integer list id is required." unless $lid;
+    die "An integer material type id is required." unless $mtid;
 
-        $mtid =~ tr/0-9//cd;
-        die "An integer service type id is required." unless $mtid;
+    # If we're posting to the page then we need to do an update before
+    # displaying the updated values.
+    update_material_pricing( $r )
+  }
 
-        # If we're posting to the page then we need to do an update before
-        # displaying the updated values.
-        update_material_pricing( $r )
-    }
+  $t->{file} = '/admin/material/material.html';
 
-    $t->{file} = '/admin/material/material.html';
-
-    # Get all the material categories, also specifying if any pricing exists
-    # for a material in that category. TODO: For now we just say everything
-    # exists, fix that.
-    my $sth = $dbh->prepare_cached(q{
-        SELECT id, name, true AS exists
-        FROM material_type
-        WHERE id IN (SELECT DISTINCT lngtype FROM tbl_materials)
-        ORDER BY name
+  # Get all the material categories, also specifying if any pricing exists
+  # for a material in that category. TODO: For now we just say everything
+  # exists, fix that.
+  my $sth = $dbh->prepare_cached(q{
+    SELECT id, name, true AS exists FROM material_type WHERE id IN (SELECT DISTINCT lngtype FROM tbl_materials) ORDER BY name
     });
-    my $types = $dbh->selectall_arrayref( $sth, { Slice => {} } );
+  my $types = $dbh->selectall_arrayref( $sth, { Slice => {} } );
 
-    # If we've been supplied a material type, grab it's info out of the list.
-    # Otherwise choose the first one as a default.
-    my ($type) = defined $mtid ? grep {$_->{id} eq $mtid} @$types : $types->[0];
+  # If we've been supplied a material type, grab it's info out of the list.
+  # Otherwise choose the first one as a default.
+  my ($type) = defined $mtid ? grep {$_->{id} eq $mtid} @$types : $types->[0];
 
-    # Which price lists, of all possible, does the currently selected material
-    # category have pricing in? For now we'll just show all.
-    $sth = $dbh->prepare_cached(q{
-        SELECT l.id,
-               l.name,
-               l.currency,
-               c.symbol,
-               true       AS "exists"
-        FROM pricelist l, currency c
-        WHERE l.currency = c.code
-        ORDER BY l.currency, l.name
+  # Which price lists, of all possible, does the currently selected material
+  # category have pricing in? For now we'll just show all.
+  $sth = $dbh->prepare_cached(q{
+    SELECT l.id, l.name, l.currency, c.symbol, true       AS "exists"
+    FROM pricelist l, currency c
+    WHERE l.currency = c.code
+    ORDER BY l.currency, l.name
     });
-    my $lists = $dbh->selectall_arrayref( $sth, { Slice => {} });
+  my $lists = $dbh->selectall_arrayref( $sth, { Slice => {} });
 
-    # If we've been supplied a price list, grab it's info out of the list.
-    # Otherwise choose the first one as a default.
-    my ($list) = defined $lid ? grep {$_->{id} eq $lid} @$lists : $lists->[0];
+  # If we've been supplied a price list, grab it's info out of the list.
+  # Otherwise choose the first one as a default.
+  my ($list) = defined $lid ? grep {$_->{id} eq $lid} @$lists : $lists->[0];
 
-    # Material categories define the units the materials in them are priced
-    # by. Get the units for the selected category.
-    my ($price_unit, $ranged_unit) = $dbh->selectrow_array(q{
-        SELECT p.name, r.name
-        FROM material_type t
-        LEFT JOIN unit p ON (t.price_unit  = p.id)
-        LEFT JOIN unit r ON (t.ranged_unit = r.id)
-        WHERE t.id = ?
+  # Material categories define the units the materials in them are priced
+  # by. Get the units for the selected category.
+  my ($price_unit, $ranged_unit) = $dbh->selectrow_array(q{
+    SELECT p.name, r.name
+    FROM material_type t
+    LEFT JOIN unit p ON (t.price_unit  = p.id)
+    LEFT JOIN unit r ON (t.ranged_unit = r.id)
+    WHERE t.id = ?
     }, undef, $type->{id});
 
-    # Get all the valid materials for the currently selected material category
-    # and join it with the current pricing.
-    $sth = $dbh->prepare_cached(q{
-        SELECT m.lngindex  AS id,
-               m.strname   AS "name",
+  # Get all the valid materials for the currently selected material category
+  # and join it with the current pricing.
+  $sth = $dbh->prepare_cached(q{
+    SELECT m.lngindex  AS id,
+    m.strname   AS "name",
 
-               p.lngmin                                 AS min,
-               p.lngmax                                 AS max,
-               to_char(p.dblcost,   'FM999990D00999')   AS cost,
-               to_char(p.dblprice,  'FM999990D00999')   AS price,
-               to_char(p.dblmarkup, 'FM999990D0009999') AS markup,
+    p.lngmin                                 AS min,
+    p.lngmax                                 AS max,
+    to_char(p.dblcost,   'FM999990D00999')   AS cost,
+    to_char(p.dblprice,  'FM999990D00999')   AS price,
+    to_char(p.dblmarkup, 'FM999990D0009999') AS markup,
 
-               p.lngequipmentindex                      AS equip,
+    p.lngequipmentindex                      AS equip,
 
-               CASE p.ysndiscountable
-                   WHEN 'Y' THEN true
-                   ELSE false         END               AS discountable
-        FROM tbl_materials m LEFT JOIN (
-                 SELECT lngmaterialindex, lngmin, lngmax, lngequipmentindex,
-                        dblcost, dblprice, dblmarkup, ysndiscountable
-                 FROM tbl_material_prices
-                 WHERE lnglistindex = ? ) p
-              ON (m.lngindex = p.lngmaterialindex)
-        WHERE m.lngtype = ?
-        ORDER BY "name", equip, (lngmin IS NOT NULL), min, max
+    CASE p.ysndiscountable
+    WHEN 'Y' THEN true
+    ELSE false         END               AS discountable
+    FROM tbl_materials m LEFT JOIN (
+    SELECT lngmaterialindex, lngmin, lngmax, lngequipmentindex,
+    dblcost, dblprice, dblmarkup, ysndiscountable
+    FROM tbl_material_prices
+    WHERE lnglistindex = ? ) p
+    ON (m.lngindex = p.lngmaterialindex)
+    WHERE m.lngtype = ?
+    ORDER BY "name", equip, (lngmin IS NOT NULL), min, max
     });
-    $sth->execute( $list->{id}, $type->{id} );
+  $sth->execute( $list->{id}, $type->{id} );
 
-    # TODO : Generalise the grouping function and use hash slices for the
-    # attribute slicing.
+  # TODO : Generalise the grouping function and use hash slices for the
+  # attribute slicing.
 
-    # Sort them out into two seperate result sets for easier display.
-    my @ranged;
+  # Sort them out into two seperate result sets for easier display.
+  my @ranged;
 
-    my $last = undef;
-    while ( my $rec = $sth->fetchrow_hashref ) {
-        # Add a new service onto the stack if we're done with the current.
-        if ( not defined $last or $rec->{id} != $last->{id} ) {
-            # Add a bunch of empty ranges to the tail of material ranges.
-            push @{ $ranged[-1]->{ranges} }, ({}) x 4 if defined $last;
+  my $last = undef;
+  while ( my $rec = $sth->fetchrow_hashref ) {
+    # Add a new service onto the stack if we're done with the current.
+    if ( not defined $last or $rec->{id} != $last->{id} ) {
+      # Add a bunch of empty ranges to the tail of material ranges.
+      push @{ $ranged[-1]->{ranges} }, ({}) x 4 if defined $last;
 
-            # Push a new service onto the stack.
-            push @ranged, {
-                id           => $rec->{id},
-                name         => $rec->{name},
-                discountable => $rec->{discountable},
-                ranges       => [],
-            };
-        }
-
-        # Push the price range onto the current service's range list.
-        push @{ $ranged[-1]->{ranges} }, $rec;
-
-        $last = $rec; # A pointer to the last record processed.
+      # Push a new service onto the stack.
+      push @ranged, {
+        id           => $rec->{id},
+        name         => $rec->{name},
+        discountable => $rec->{discountable},
+        ranges       => [],
+      };
     }
-    # Handle the off case of only a single ranged service, or the last one in
-    # the list, where $last won't be defined.
-    push @{ $ranged[-1]->{ranges} }, ({}) x 4 if @ranged;
 
-    # Parse error when the condition in the ternary operator isn't a
-    # constant... Don't know if there _is_ a proper syntax to get this
-    # working.
-    # push(($_->{ranged} ? @ranged : @unranged), $_) while $sth->fetchrow_hashref;
+    # Push the price range onto the current service's range list.
+    push @{ $ranged[-1]->{ranges} }, $rec;
 
-    print $t->process(
-        # This might be renamed and will definitely added to the infastructure.
-        r => Apache2::RequestUtil->request,
+    $last = $rec; # A pointer to the last record processed.
+  }
+  # Handle the off case of only a single ranged service, or the last one in
+  # the list, where $last won't be defined.
+  push @{ $ranged[-1]->{ranges} }, ({}) x 4 if @ranged;
 
-        title => "Material Pricing",
-        type  => $type,      # Currently selected
-        types => $types,
-        list  => $list,      # Currently selected
-        lists => $lists,
+  # Parse error when the condition in the ternary operator isn't a
+  # constant... Don't know if there _is_ a proper syntax to get this
+  # working.
+  # push(($_->{ranged} ? @ranged : @unranged), $_) while $sth->fetchrow_hashref;
 
-        pricing => \@ranged,
-        unit => { price => $price_unit, ranged => $ranged_unit, },
-    );
+  print $t->process(
+    # This might be renamed and will definitely added to the infastructure.
+    r => Apache2::RequestUtil->request,
 
-    return OK;
+    title => "Material Pricing",
+    type  => $type,      # Currently selected
+    types => $types,
+    list  => $list,      # Currently selected
+    lists => $lists,
+
+    pricing => \@ranged,
+    unit => { price => $price_unit, ranged => $ranged_unit, },
+  );
+
+  return OK;
 }
 
 #

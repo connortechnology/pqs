@@ -28,10 +28,12 @@ BEGIN {
 our $gdb;
 
 require openprint;
+require openprint::ssi;
 #Used for resource hashed links
 my $hash_cache;
-use vars qw( $r %variable %session %param %config $log $dbh );
+use vars qw( $r %variable %session %page_session %param %config $log $dbh );
 *session = \%openprint::session;
+*page_session = \%openprint::page_session;
 *param = \%openprint::param;
 *log = \$openprint::log;
 *variable = \%openprint::variable;
@@ -391,9 +393,14 @@ sub eval_variable {
     if ($name =~ /\./ and not $name =~ /\.$/) {
         $replacement = dereference($log, $variable, $name); }
     else {
-        die "Could not find key '$name'\n"
-            if $INVALID_KEY and not exists $variable->{$name};
-        $replacement = $variable->{$name};
+        die "Could not find key '$name'\n" if $INVALID_KEY and not exists $variable->{$name};
+        if (ref $variable ne 'HASH') {
+
+          my ( $caller, undef, $line ) = caller;
+          $openprint::log->debug("Invalid call to eval from $caller:$line, var is $variable");
+        } else {
+          $replacement = $variable->{$name};
+      }
     }
 
     # Modifiers are right associative (run in reverse order) and can be
@@ -1122,10 +1129,11 @@ sub button {
   $html .= '>';
 	if ( $$options{image} ) {
 		if ( $openprint::config{ButtonsUseImages} and ($openprint::config{ButtonsUseImages} eq 'true') ) {
-			$html .= "<img src=\"/images/buttons/off/$$options{image}\" id=\"ButtonImage$name\"";
+			$html .= "<img src=\"/images/buttons/off/$$options{image}\" id=\"ButtonImage$name\"/>";
 		} else {
-			$html .= "<img src=\"$$options{image}\" id=\"ButtonImage$name\"";
+			$html .= "<img src=\"$$options{image}\" id=\"ButtonImage$name\"/>";
 		} # end if
+    delete $$options{image};
   }
   $html .= $$options{text};
   $html .= $$options{type} ? '</button>
@@ -1429,16 +1437,7 @@ sub include_logs_view {
 }
 
 sub setup_date_select {
-  my ( $page, $prefix, $delta ) = @_;
-  if ( ( ! ( exists $session{$page.'?'.$prefix.'_year'} and exists $session{$page.'?'.$prefix.'_month'} and exists $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
-    if ( $delta ne '' ) {
-      @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1*$delta );
-    } else {
-      @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ( '', '', '' );
-    } # end if
-  } else {
-    @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} );
-  } # end if
+  return openprint::ssi::setup_date_select(@_);
 } # end sub setup_date_select
 
 sub date_select_session {

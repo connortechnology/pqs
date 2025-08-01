@@ -1,4 +1,4 @@
-<form name="f1" id="f1" action="/administrator/project_types/category.html?category_id=<? echo ( $$variable{ProjectTypeCategory}->id(); ) ?>" method="post">
+<form name="f1" id="f1" action="category.html?category_id=<? echo ( $$variable{ProjectTypeCategory}->id(); ) ?>" method="post">
 	<fieldset>
 		<legend>
 		<? echo (
@@ -33,7 +33,7 @@
 			<? echo (
 				my $html = '';
 				my @pt_ids = map { $_->id() } $$variable{ProjectTypeCategory}->ProjectTypes();
-				foreach my $PT ( openprint::ProjectType->find( 'order'=>'sorting,lower(name)' ) ) {
+        foreach my $PT ( openprint::ProjectType->find( order=>$openprint::ProjectType::fields{sorting}.',lower('.$openprint::ProjectType::fields{name}.')' ) ) {
 					$html .= sprintf('<li><input type="checkbox" name="projecttype_id" value="%d" %s/> %s</li>',
 						$PT->id(), ssi::checked( sets::isin( $PT->id(), \@pt_ids ) ), $PT->description() );
 				} # end foreach	

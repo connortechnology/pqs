@@ -70,8 +70,8 @@ INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, st
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT lngindex from tbl_equipment where strname='Laminator - Wesco'), 'Minimum Calliper', '0.008','Inches');
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT lngindex from tbl_equipment where strname='Laminator - Wesco'), 'Minimum Sheet Length', '18','Inches');
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT lngindex from tbl_equipment where strname='Laminator - Wesco'), 'Minimum Sheet Width', '12','Inches');
-INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT lngindex from tbl_equipment where strname='Laminator - GBC Voyager'), 'Maximum Sheet Length', '40','Inches');
-INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT lngindex from tbl_equipment where strname='Laminator - GBC Voyager'), 'Maximum Sheet Width', '30','Inches');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT lngindex from tbl_equipment where strname='Laminator - Wesco'), 'Maximum Sheet Length', '40','Inches');
+INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT lngindex from tbl_equipment where strname='Laminator - Wesco'), 'Maximum Sheet Width', '30','Inches');
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue, strunits) values ((SELECT lngindex from tbl_equipment where strname='Laminator - Wesco'), 'Run Speed', '21000','inches per hour');
 
 INSERT INTO tbl_equipment_specifications (lngequipmentindex,strname,strvalue) values ((SELECT lngindex from tbl_equipment where strname='Laminator - GBC Voyager'), 'Laminating Capable', 'Y');

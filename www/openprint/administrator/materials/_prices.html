@@ -2,10 +2,10 @@
 	my $html;
   my $Material = $$variable{Material};
 
-	my @Equipment = openprint::Equipment->find( order=>'lower(strid)' );
+	my @Equipment = openprint::Equipment->find( );
 	my @equipment_dropdown = map { $_->id(), $_->strid() . ': ' . $_->name() } @Equipment;
 
-	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y') ];
 
 	my $prices_per_equipment = slurp_content( '/administrator/materials/_prices_per_equipment.html' );
 
@@ -24,7 +24,7 @@
 
 		$html .= '</div>';
 		if ( ! $param{equipment_id} ) {
-			$html .= '<p><label>New Price</label>';
+			$html .= '<p><label>New Price for equipment</label>';
 			$html .= ssi::select( \@equipment_dropdown, undef, { name=>"equipment_id-$$Pricelist{id}", id=>"equipment_id-$$Pricelist{id}", prepend=>['','All'] } );
 			$html .= button( 'a'.$$Pricelist{id}.'new', {
         on_click_this=>'add_new_price',

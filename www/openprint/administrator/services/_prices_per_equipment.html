@@ -5,7 +5,7 @@
   my $Service = $$variable{Service};
 
 	$html .= '<fieldset class="Equipment">';
-	$html .= sprintf( '<a href="/administrator/equipment/edit.html?ddmEquipment=%d">%s</a><br/>',$Equipment->id(), $Equipment->strid().': '.$Equipment->name().' '.$Equipment->description() );
+                      $html .= $Equipment->link_to($Equipment->strid().': '.$Equipment->name().' '.$Equipment->description() ).'<br/>';
 	$html .= '<table class="List"><thead><tr>';
 	$html .= '<th class="Supplier">Supplier</th>' if @{$$variable{company_ids}} > 2;
 	$html .= '

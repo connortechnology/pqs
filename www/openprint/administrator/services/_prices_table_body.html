@@ -4,7 +4,7 @@
 		service_id		=>	$$variable{Service}->id(),
 		pricelist_id	=>	$$variable{Pricelist}->id(),
 		equipment_id	=>	( $$variable{Equipment}->id() ? $$variable{Equipment}->id() : undef ),
-		order=>'min NULLS FIRST,max NULLS FIRST,period_start NULLS FIRST, period_end NULLS FIRST' );
+    order=>$openprint::ServicePrice::fields{min}.' NULLS FIRST,'.$openprint::ServicePrice::fields{max}.' NULLS FIRST,period_start NULLS FIRST, period_end NULLS FIRST' );
 
 	my $price_html = slurp_content( '/administrator/services/_price.html' );
 

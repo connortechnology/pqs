@@ -28,7 +28,7 @@
 </script>	 
 <?include('/includes/error_reporting.html')?>
 <div class="Project_Types"><div class="Search">
-	<form id="f1" name="f1" method="post" action="/administrator/project_types/index.html" enctype="multipart/form-data">
+	<form id="f1" name="f1" method="post" action="index.html" enctype="multipart/form-data">
 		<input type="hidden" name="btnFunction"/>
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
 			<div class="content">
@@ -50,7 +50,7 @@
 				<? echo ( join("\n",
 					button( 'ShowResults', { onclick=> 'load_products(f1);', text=>'Show Results' } ),
 					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-					button( 'New', { href=> '/administrator/project_types/edit.html', text=>'New Project Type' } ),
+					button( 'New', { href=> 'edit.html', text=>'New Project Type' } ),
 					); ) ?>
 			</p>
 		<p class="buttons">

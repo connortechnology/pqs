@@ -18,7 +18,7 @@
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 			'project_type_id any' => $$variable{ProjectType}->id(),
 			( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'brand_id', 'finish_id', 'colour_id', 'weight_id', 'group_id', 'material_id' ) ),
-			order	=>'brand,finish,colour,weight,width,height' );
+      order	=>'brand,finish,colour,weight,'.$openprint::Paper::fields{width}.','.$openprint::Paper::fields{height} );
     my %prices = misc::make_hash_from_array(paper_id=>openprint::PaperPrice->find(paper_id=>[map { $$_{id} } @recommended_papers])) if @recommended_papers;
 
 		foreach my $Paper ( @recommended_papers ) {
@@ -40,7 +40,7 @@
 			columns	=> '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 			'project_type_id not any' => $$variable{ProjectType}->id(),
 			( map { $session{$uri.'?'.$_} ? ( $_ => $session{$uri.'?'.$_} ) : () } ( 'brand_id', 'finish_id', 'colour_id', 'weight_id', 'group_id', 'material_id' ) ),
-			order	=> 'brand,finish,colour,weight,width,height');
+      order	=> 'brand,finish,colour,weight,'.$openprint::Paper::fields{width}.','.$openprint::Paper::fields{height} );
 
     my %prices = misc::make_hash_from_array(paper_id=>openprint::PaperPrice->find(paper_id=>[map { $$_{id} } @all_papers])) if @all_papers;
 		foreach my $Paper ( @all_papers ) {
