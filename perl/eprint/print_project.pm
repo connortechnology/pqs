@@ -2128,7 +2128,7 @@ sub create_multiple {
 sub create_project {
   my ($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref) = @_;
 
-  map { $qty->[$_-1] = int $qty->[$_-1] || $r->param("txtQuantity$_") || 0 } 1..3;
+  map { $qty->[$_-1] = int($qty->[$_-1]) || int($r->param("txtQuantity$_")) || 0 } 1..3;
 #map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) } $r->param();
 
   $projref ||= $r->param('txtProjectReference');
