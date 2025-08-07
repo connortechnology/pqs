@@ -4,4 +4,5 @@ Disallow: /main/order/
 Disallow: /main/quote/
 Disallow: /main/account/
 Disallow: /administrator/
+Disallow: /admin/
 Disallow: /employee/
