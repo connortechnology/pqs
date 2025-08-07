@@ -439,7 +439,7 @@ sub parse_page {
         $r->status(HTTP_MOVED_TEMPORARILY);
         $r->headers_out->set( Location => "/$first/login.html?section=$section;$destination");
 
-        return OK;
+        return HTTP_MOVED_TEMPORARILY;
       }
     }
 
