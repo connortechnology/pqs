@@ -1014,7 +1014,7 @@ sub create_impositions {
     }
     @impositions = @converted_impositions;
   } else {
-    $openprint::log->error("No desired size: $desired_size");
+    $openprint::log->debug("No desired size: $desired_size");
   }
 
   #print STDERR "HAVE IMPOS.TIONS BEFORE FILTER 99 " . scalar @impositions . "\n", Dumper(\@impositions);

@@ -183,7 +183,7 @@ sub compare_equipment{
     my $breakdown       = sprintf('On %s MR: $%.2f RUN: %d * %d sides * $%.2f = $%.2f, total: $%.2f',
       new openprint::Equipment($e)->name(),
       $make_ready, $j->qty, $j->sides, $service_price, $run_price, $total);
-    $openprint::log->error($breakdown);
+    #$openprint::log->error($breakdown);
 
     if ($total < $min_charge) {
       $breakdown .= ' using minimum charge $'.sprintf('%.2f', $min_charge);

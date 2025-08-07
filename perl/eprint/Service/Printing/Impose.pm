@@ -130,7 +130,7 @@ sub press_ids {
   my $sql  = 'SELECT lngindex FROM tbl_equipment WHERE TRUE';
   $sql .= ' AND strtype=?' if $press_type;
   $sql .= " AND strsupplier <> 'RFQ Required'" unless $rfq_only;
-  $openprint::log->error($sql.$press_type);
+  #$openprint::log->error($sql.$press_type);
 
   # Get a list of all presses of the user chosen type.
   my $presses = $dbh->prepare_cached($sql);
