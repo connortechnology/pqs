@@ -151,20 +151,11 @@ sub get_data {
 	};
 
 	my $lines = $dbh->selectall_arrayref( $sql, {Slice => {}} );
-
-print STDERR "HAVE SQL: $sql \n";
-
-
 	my @data;
 
 	my $sortfield = $param->{sortfield};
 
-	print STDERR "HAVE SORT FIELD: $sortfield \n";
-
 	foreach my $l ( @{$lines} ) {
-
-		#print STDERR "HAVE LINE $l->{lngorderid} \n";
-
 		my $p = new PQS::Object::project($l->{lngprojectindex});
 
 		$l->{lngorderid} = $p->order_id;
@@ -188,59 +179,41 @@ print STDERR "HAVE SQL: $sql \n";
 		$l->{sheets} = $p->parent_sheet_count($l->{lngserviceindex});
 		$l->{sheet_size} = $p->sheet_size($l->{lngserviceindex});
 		$l->{shipid} = eprint::project::check_for_service(undef, $dbh, $l->{lngprojectindex}, 'Shipping');
-
-
-
-
-		my $con =  $dbh->selectrow_hashref(q{ 
-			SELECT * FROM tbl_customer_users WHERE lnguserid = ?
-		}, undef, $l->{lnguserindex});
-
 		
+    my $contact;
 		if ( $l->{lngorderid}) {
-			$con =  $dbh->selectrow_hashref(q{ 
-				SELECT * FROM tbl_orders WHERE lngorderid = ?
-			}, undef, $l->{lngorderid});
+      $contact =  $dbh->selectrow_hashref(q{ SELECT * FROM tbl_orders WHERE lngorderid = ?  }, undef, $l->{lngorderid});
+    } else  {
+      $contact =  $dbh->selectrow_hashref(q{ SELECT * FROM tbl_customer_users WHERE lnguserid = ?  }, undef, $l->{lnguserindex});
+    }
 
-		}
-		
-		$l->{contact} = "$con->{strfirstname} $con->{strlastname}";
+		$l->{contact} = "$contact->{strfirstname} $contact->{strlastname}";
 		
 		# add email also sometimes same account in multiple companies
-		$con = $dbh->selectrow_hashref(q{ 
+		$contact = $dbh->selectrow_hashref(q{ 
 			SELECT * FROM tbl_customer_users
 			WHERE stremail = ?
-		}, undef, $con->{stremail});
+		}, undef, $contact->{stremail});
 
-		$l->{contactid} = $con->{lnguserid};
-
+		$l->{contactid} = $contact->{lnguserid};
 
 		my $d = {};
 		foreach my $c ( @{$col_list} )  {
 			my %x = %{$c};
 
-
 			$x{value} = $l->{$c->{id}};
 			
 			add_link(\%x, $l);
 
-
 			push @{$d->{fields}}, \%x; 
 			$d->{sortdata} = $l->{$sortfield};
 			$d->{pid} = $l->{lngprojectindex};
-
 		}
 
-		print STDERR "HAVE DATA: ",Dumper($l, $con, $l->{lngcustomerid}, $con->{lngcustomerid});
 		push @data, $d;
 	}
 
-	map {
-		print STDERR "HAVE SQL RESULTS:$_->{fields}[0]->{value} $_->{fields}[8]->{value}  \n";
-	} @data;
-	print STDERR "# of Records: ", scalar @data , "\n";
 	return @data;
-
 }
 
 sub action {
