@@ -138,7 +138,7 @@ sub calc {
             = format_pricing($price[$i], $qty[$i]);
     }
 
-	print STDERR "HAVE SPECS", Dumper($specs);
+    #print STDERR "HAVE SPECS", Dumper($specs);
 
     return 'calculated';
 }
@@ -597,7 +597,7 @@ sub project_jobs {
     my @jobs;               # The stack of cutting jobs.
 
 
-	print STDERR "START PROJECT JOBS \n";
+    #print STDERR "START PROJECT JOBS \n";
 
     # Some very, very basic assertions.
     die "Invalid project reference."   unless ref $project eq 'HASH';
@@ -610,21 +610,21 @@ sub project_jobs {
     return (wantarray ? () : undef) if grep { $project->{type} eq $_ }
                        qw( Envelopes InkjetOutputs Product ScreenItem );
 
-	print STDERR "START PROJECT JOBS 2 \n";
+                       #print STDERR "START PROJECT JOBS 2 \n";
 
     # SIGNATURES
     # 
     for my $sig (@{ $project->{signatures} }) {
         my $stock = $sig->{stock}; # Signature stock info.
 
-	print STDERR "START PROJECT JOBS SIG \n";
+        #print STDERR "START PROJECT JOBS SIG \n";
         # If a project has the same width and height as the press sheet it
 
         # shouldn't even be here.
         next if  $project->{width}  == $stock->{press}{width}
              and $project->{height} == $stock->{press}{height};
 
-	print STDERR "START PROJECT JOBS SIG 2 \n";
+           #print STDERR "START PROJECT JOBS SIG 2 \n";
        
         # PRE-PRESS CUTTING
         #
@@ -712,7 +712,7 @@ sub project_jobs {
             calliper  => $stock->{calliper},
         );
 
-	print STDERR "START PROJECT JOBS SIG 5 \n";
+        #print STDERR "START PROJECT JOBS SIG 5 \n";
         # When using a letterpress on a single page project we can do the trim
         # cutting using a die rule while we perform the other operations on
         # it. However we may need to do a few dead cuts first to get the sheet
@@ -791,8 +791,8 @@ sub project_jobs {
         #       before folding and/or collating. We don't consider that.
     }
 
-	use Data::Dumper;
-	print STDERR "HAVE JOBS: ", Dumper(@jobs);
+    #use Data::Dumper;
+  #print STDERR "HAVE JOBS: ", Dumper(@jobs);
 
     return wantarray ? @jobs : \@jobs;
 }
