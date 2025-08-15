@@ -816,7 +816,7 @@ sub send_quote {
       SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
       FROM    => $from,
       TO      => qq`"$quote{ByFirstName} $quote{ByLastName}" <$quote{ByEmail}>`,
-      SUBJECT => "Quote $quote_id",
+      SUBJECT => "Quote $quote_id by $quote{ByFirstName} $quote{ByLastName}",
     );
 
     misc::send_email_with_attachment( $r, $log, \%mail, @body, @additional_attachments);
@@ -825,11 +825,11 @@ sub send_quote {
       SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
       FROM    => $from,
       TO      => qq{"$quote{ForFirstName} $quote{ForLastName}" } . "<$quote{ForEmail}>",
-      SUBJECT => "Quote $quote_id",
+      SUBJECT => "Quote $quote_id for $quote{ForFirstName} $quote{ForLastName}",
       CC => $cc,
     );
 
-    misc::send_email_with_attachment($r, $log, \%mail, @body);
+    misc::send_email_with_attachment($r, $log, \%mail, @body, @additional_attachments);
   } else {
     my $from = $quote{ByEmail};
     if (index($quote{ByEmail}, configuration::get_value($log, $dbh, 'domain')) == -1) {
