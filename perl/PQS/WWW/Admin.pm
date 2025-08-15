@@ -14,7 +14,7 @@ use Petal::Utils qw(:all);
 use PQS::Constants;
 use PQS::DB ();
 use PQS::Error;
-use PQS::Log::Audit ();
+#use PQS::Log::Audit ();
 use PQS::Util qw( group get_modules );
 use Symbol qw(qualify_to_ref);
 use session;
@@ -73,7 +73,7 @@ sub handler {
       });
 
     # Register a log handler for auditting.
-    Apache2::ServerUtil::server->push_handlers("PerlLogHandler", \&PQS::Log::Audit::handler);
+    #Apache2::ServerUtil::server->push_handlers("PerlLogHandler", \&PQS::Log::Audit::handler);
 
     # Create a template object, it will need to be associated with a template
     # in the dispatched function.
