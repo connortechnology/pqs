@@ -155,11 +155,12 @@ map {
 
   #print STDERR "VARIABLE: ", Dumper( $mail_page, $to_order, $page, $variable);
     
-    $page = $page eq 'notification' ? NOTIFICATION_PAGE . "?pid=$pid"
-		  : $page     ? SERVICE_PAGE_BASE . $page 
-          : $to_order ? ORDER_PAGE . "?btnFunction=Process Order;ProjectIndex=$pid"
-          : $ctq 	  ? QUOTE_PAGE . "?btnFunction=Process Quote;ProjectIndex=$pid"
-          :             PROJECT_VIEW_PAGE . "?pid=$pid";
+  $page =
+  (! $page) ? PROJECT_VIEW_PAGE . "?pid=$pid"
+  : $page eq 'notification' ? NOTIFICATION_PAGE . "?pid=$pid"
+  : $page     ? SERVICE_PAGE_BASE . $page
+  : $to_order ? ORDER_PAGE . "?btnFunction=Process Order;ProjectIndex=$pid"
+  : $ctq      ? QUOTE_PAGE . "?btnFunction=Process Quote;ProjectIndex=$pid" : '';
 
 	my $cpid = $dbh->selectrow_array(q{SELECT copy_pid FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
 
