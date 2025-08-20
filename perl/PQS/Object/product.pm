@@ -109,14 +109,14 @@ sub price {
     my $markup = $self->markup($cust_id);
     $price = $price * (1 + ( $markup / 100)) if $markup;
 
-    print STDERR "Customer Discount Price: $price Markup: $markup CUST: $cust_id) \n";
+    #print STDERR "Customer Discount Price: $price Markup: $markup CUST: $cust_id) \n";
 
     if ( $self->{specs}{units} eq 'Per 1000' ) {
       $price /= 1000;
     }
 
     my $version_discount = $self->version_discount($versions);
-    $price -= ($version_discount / 100) * $price; 
+    $price -= ($version_discount / 100) * $price if $version_discount;
   }
   return $price;
 }
@@ -154,7 +154,7 @@ sub kit_price {
 		my $price = PQS::model::pricing::price_item($cust_id, $self->{list}, $_->{id}, $_->{qty});
 
 		$kit_price += $price * $_->{qty};
-print STDERR "Have price for $_->{id} QTY: $_->{qty} Price: $price \n";
+#nnprint STDERR "Have price for $_->{id} QTY: $_->{qty} Price: $price \n";
 
 		warn("Missing Price for Product: $_->{product} QTY: $_->{qty} ") unless $price;
  
@@ -190,7 +190,7 @@ sub image {
 	
 	$path = ssi::get_file_path($r, $img);
 
-	print STDERR "HAVE CATEGORY PATH: $path IMG: $img \n";
+  #print STDERR "HAVE CATEGORY PATH: $path IMG: $img \n";
 
 
 	return $img if -e $path;
@@ -200,7 +200,7 @@ sub image {
 
 	$path = ssi::get_file_path($r, $img);
 
-	print STDERR "HAVE CATEGORY IMAGE: $img, $path \n";
+  #print STDERR "HAVE CATEGORY IMAGE: $img, $path \n";
 
 
 	return $img if -e $path;
@@ -248,13 +248,13 @@ sub load {
 
   $self->{specs}{category}    = PQS::model::categories::get_name_from_id($self->get('category_id'));
 
-  print STDERR "LOAD PRODUCT: $self->{id} HAVE PRODUCTS CAT: ", Dumper($self->{category_id}, $self->{specs} );
+  #print STDERR "LOAD PRODUCT: $self->{id} HAVE PRODUCTS CAT: ", Dumper($self->{category_id}, $self->{specs} );
   
 }
 
 sub cat_chain {
 	my $self = shift;
-	print STDERR "GET CHAIN FOR: $self->{specs}{category_id} \n";
+  #print STDERR "GET CHAIN FOR: $self->{specs}{category_id} \n";
 	my $chain = eprint::products::cat_chain($self->{specs}{category_id});
 	return $chain;
 
@@ -321,7 +321,7 @@ sub csv_import {
 	map { 
 
 		my $val =  $rec->[$i];
-print STDERR "SET FIELD: $_  = $val \n ";
+#print STDERR "SET FIELD: $_  = $val \n ";
 
 		$self->set($_, $rec->[$i]);
 		$i++;	
@@ -335,8 +335,6 @@ print STDERR "SET FIELD: $_  = $val \n ";
 	$self->{id} = PQS::model::products::get_id_from_str($self->get('strid') );
 	
 	$self->set('category_id', $cat_id);
-
-
 }
 
 
@@ -362,7 +360,7 @@ sub save {
 	my $rec = shift;
 	
 
-print STDERR "HAVE PRODUCT ID: $self->{id} FOR $self->{specs}{strid} \n";
+#print STDERR "HAVE PRODUCT ID: $self->{id} FOR $self->{specs}{strid} \n";
 	$self->{id} = PQS::model::products::get_id_from_str($self->get('strid')) unless $self->{id};
 	
 	$self->{id} = PQS::model::products::insert( $self->get('strid') ) unless $self->{id};
@@ -382,7 +380,7 @@ print STDERR "HAVE PRODUCT ID: $self->{id} FOR $self->{specs}{strid} \n";
 	  push @data, { name=> $field, value=> $self->get($field) } unless $field eq 'category'; 
 	}
 
-print STDERR "TIME TO SEND DATA TO UPDATE ", Dumper(\@data, $self->get('category_id'));
+#nnprint STDERR "TIME TO SEND DATA TO UPDATE ", Dumper(\@data, $self->get('category_id'));
 
 
 	PQS::model::products::update($self->{id}, \@data );
@@ -393,7 +391,7 @@ print STDERR "TIME TO SEND DATA TO UPDATE ", Dumper(\@data, $self->get('category
 
 
 
-print STDERR "START SAVE ", Dumper($self->{specs});
+#print STDERR "START SAVE ", Dumper($self->{specs});
 	if ( $self->{specs}{qprice}  ) {
 
 		my $qprice = $self->spec('qprice');
@@ -401,7 +399,7 @@ print STDERR "START SAVE ", Dumper($self->{specs});
 		my $pricelist = 1;
 
 		PQS::model::pricing::clear_item($self->{id}, $pricelist);
-		print STDERR "DELETE PRICE: $self->{id} \n";
+    #print STDERR "DELETE PRICE: $self->{id} \n";
 
 
 		my $price = [1, $self->{id}, undef,  undef, 0, $qprice, undef, $pricelist];
@@ -413,7 +411,7 @@ print STDERR "START SAVE ", Dumper($self->{specs});
 	#check to make sure options have been loaded before removing	
 	if ( $self->{options} &&  @{$self->{options}} ) {
 
-		print STDERR "DELETE OPTIONS: $self->{id} \n";
+    #print STDERR "DELETE OPTIONS: $self->{id} \n";
 
 		PQS::model::product_filter::delete_product_options($self->{id});
 
@@ -464,12 +462,12 @@ sub record_error {
 sub validate {
   my $self = shift;
   my $row = shift;
-print STDERR "TIME TO VALIDATE ******* \n", Dumper($self->{specs});
+#print STDERR "TIME TO VALIDATE ******* \n", Dumper($self->{specs});
 
   map {
     
     my $f = $_;
-    print STDERR "VALIDATE F: $f->{fname}  \n";
+    #print STDERR "VALIDATE F: $f->{fname}  \n";
     if ( $f->{fname} eq 'project' ) {
       $self->set($f->{fname}, undef) unless $self->get($f->{fname});  
     } elsif ( $f->{fname} eq 'expiry' ) {
