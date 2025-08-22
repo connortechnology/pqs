@@ -1,0 +1,39 @@
+<html>
+  <head>
+    <title>
+      <?include(/includes/web_page_title.html)?>
+      Email
+    </title>
+    <style><?include(/styles/email.css)?></style>
+    <base href="<?echo($config{siteURL})?>" />
+	</head>
+	
+	<body id="email-template">
+	
+		<div id="email-wrapper">	
+			<div id="email-border">
+			
+				<div id="email-header">
+					<a href="/" target="_blank"><img src="/images/e-mail/email_header.gif" /></a>
+				</div>
+		
+				<div id="email-content">
+					<?ReplacementText?>
+				</div>
+		
+				<div id="email-footer">
+					<p><?include(/includes/company_tag_line.html)?></p>
+					<p><?include(/includes/company_contact_info.html)?></p>
+					<p>
+						Tel: <?include(/includes/company_telephone_number.html)?><br />
+						Fax: <?include(/includes/company_fax_number.html)?>
+					</p>
+					<p><?include(/includes/company_contact_e-mail.html)?><br />
+					<?include(/includes/web_site_URL.html)?></p>
+				</div>
+				
+			</div>
+		</div>
+		
+	</body>
+</html>
