@@ -18,11 +18,13 @@
   <span> x </span>
 	<input id="hdnSheetSizeHeight" name="hdnSheetSizeHeight" size="9" type="number" step="any" min="0" class="smBox" />
 	<label for="sheet_height" class="post-input">(W&#8243; &#215; H&#8243;)</label>
+  <?echo(write_override( "OverrideSheetSize", $$variable{"OverrideSheetSize"}, '', q`calc('f1')` );)?>
 	<br />
 	<p>What is the calliper of press sheet to be coated?</p>
 	<label for="calliper">Calliper:</label>
 	<input id="calliper_pt" name="calliper_pt" on_input_this="calc_from_calliper_pt"type="number" step="any" min="0" /> PT
 	<input id="calliper" name="calliper" on_input_this="calc_from_calliper" type="number" step="any" min="0" /> Inches
 	<input id="calliper_mm" name="calliper_mm" on_input_this="calc_from_calliper_mm" type="number" step="any" min="0" /> MM
+  <?echo(write_override( "OverrideCalliper", $$variable{"OverrideCalliper"}, '', q`calc('f1')` );)?>
 	<br />
 </fieldset>
