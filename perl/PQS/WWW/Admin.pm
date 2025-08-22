@@ -60,21 +60,6 @@ sub handler {
 
     $r->pnotes(dbh => $dbh);
 
-    # At the end of each request we'll roll back any unsaved change and
-    # disconnect from the database. We'd much rather keep the connection but,
-    # given the existing eprint code, we can't use a persistant handle.
-    Apache2::ServerUtil::server->push_handlers("PerlCleanupHandler", sub {
-        if ($dbh) {
-          Apache2::ServerUtil->server->log_error('DB handle still present');
-          #$dbh->rollback();
-          $dbh->disconnect();
-        }
-        return OK;
-      });
-
-    # Register a log handler for auditting.
-    #Apache2::ServerUtil::server->push_handlers("PerlLogHandler", \&PQS::Log::Audit::handler);
-
     # Create a template object, it will need to be associated with a template
     # in the dispatched function.
     my $t = Petal->new(
@@ -259,10 +244,11 @@ sub select_paper {
     $r->content_type('text/html; charset=utf-8');
     $t->{file} = 'admin/paper/select.html';
 
-    print $t->process(r => $r,
+    my $output = $t->process(r => $r,
         title         => 'Paper Selection',
         paper         => $paper,
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
     return OK;
 }
@@ -323,12 +309,13 @@ sub visibility {
     $r->content_type('text/html; charset=utf-8');
     $t->{file} = 'admin/paper/visible.html';
 
-    print $t->process(
+    my $output = $t->process(
         r         => $r,
         title     => 'Visibility Paper Selection',
         visible   => $visible,
         invisible => $invisible,
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
     return OK;
 }
@@ -383,16 +370,18 @@ sub item_service {
     $r->content_type('text/html; charset=utf-8');
     $t->{file} = 'admin/predefined/service.html';
 
-    print $t->process(
+    my $output = $t->process(
         r         => $r,
         title     => 'Product Service Selection',
         visible   => $visible,
         invisible => $invisible,
 		eid       => $eid
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
     return OK;
 }
+
 sub item_cover_paper {
     my ($r, $t) = @_;
 	
@@ -454,7 +443,7 @@ sub item_cover_paper {
     $t->{file} = 'admin/predefined/stock.html';
     $t->{file} = 'admin/predefined/cover_stock.html';
 
-    print $t->process(
+    my $output = $t->process(
         r         => $r,
         title     => 'Equipment Paper Selection',
         visible   => $visible,
@@ -462,6 +451,7 @@ sub item_cover_paper {
 		eid       => $eid,
 		type	  => $r->param('type')
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
     return OK;
 
@@ -531,7 +521,7 @@ print STDERR "DBH COMMIT HERE \n";
     $r->content_type('text/html; charset=utf-8');
     $t->{file} = 'admin/predefined/stock.html';
 
-    print $t->process(
+    my $output = $t->process(
         r         => $r,
         title     => 'Equipment Paper Selection',
         visible   => $visible,
@@ -539,6 +529,7 @@ print STDERR "DBH COMMIT HERE \n";
 		eid       => $eid,
 		type	  => $r->param('type')
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
     return OK;
 
@@ -620,13 +611,14 @@ sub equipment_paper {
   $r->content_type('text/html; charset=utf-8');
   $t->{file} = 'admin/paper/equipment.html';
 
-  print $t->process(
+  my $output = $t->process(
     r         => $r,
     title     => 'Equipment Paper Selection',
     visible   => $visible,
     invisible => $invisible,
     eid       => $eid
   );
+  print openprint::ssi::variable_substitution( \$output, \%variable );
 
   return OK;
 }
@@ -697,14 +689,14 @@ sub recommendations {
 
     my $f = new HTML::FillInForm;
 
-    print $f->fill( fdat => \%recommend, scalarref => \$t->process(
+    my $output = $f->fill( fdat => \%recommend, scalarref => \$t->process(
         r             => $r,
         title         => 'Paper Recommendations',
         project_types => $project_types,
         press_types   => $press_types,
-    ));;
-
-    return OK;
+    ));
+  print openprint::ssi::variable_substitution( \$output, \%variable );
+  return OK;
 }
 
 sub update_recommendations {
@@ -844,11 +836,12 @@ sub equipment {
     $r->content_type('text/html; charset=utf-8');
     $t->{file} = 'admin/equipment/list.html';
 
-    print $t->process(
+    my $output = $t->process(
         title     => 'Equipment List',
         equipment => $equip,
         types     => $types,
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
     return OK;
 }
@@ -1000,7 +993,7 @@ sub specifications {
 
 	my $list = { comp_price => $equipment->{comp_price}};
 
-    print $f->fill( fdat => $list, scalarref => \$t->process(
+    my $output = $f->fill( fdat => $list, scalarref => \$t->process(
         r     => $r,
         title => 'Equipment Specifications',
         equip => $equipment,
@@ -1010,6 +1003,7 @@ sub specifications {
         specifications => { unranged => \@unranged,
                             ranged   => \@ranged    },
     ));
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
    return OK;
 }
@@ -1240,7 +1234,7 @@ sub pricing {
   # Start making the client happy.
   $r->content_type('text/html; charset=utf-8');
 
-  print $t->process(
+  my $output = $t->process(
     # This might be renamed and will definitely added to the infastructure.
     r => $r,
 
@@ -1258,6 +1252,7 @@ sub pricing {
 
     price => { ranged => \@ranged, unranged => \@unranged },
   );
+  print openprint::ssi::variable_substitution( \$output, \%variable );
 
   return OK;
 }
@@ -1448,7 +1443,7 @@ sub material {
   # working.
   # push(($_->{ranged} ? @ranged : @unranged), $_) while $sth->fetchrow_hashref;
 
-  print $t->process(
+  my $output = $t->process(
     # This might be renamed and will definitely added to the infastructure.
     r => Apache2::RequestUtil->request,
 
@@ -1461,6 +1456,7 @@ sub material {
     pricing => \@ranged,
     unit => { price => $price_unit, ranged => $ranged_unit, },
   );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
   return OK;
 }
@@ -1969,7 +1965,7 @@ sub pricelist {
     # Output the template, filling in form variables, and other fun stuff.
     my $f = new HTML::FillInForm;
 
-    print $f->fill( fdat => $list, scalarref => \$t->process(
+    my $output = $f->fill( fdat => $list, scalarref => \$t->process(
         r => $r,
         title => "$list->{currency} - $list->{name} Pricelist",
         list     => $list,
@@ -1978,6 +1974,7 @@ sub pricelist {
         customer => $customers,
         currency => $currency,
     ));
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
     return OK;
 }
@@ -2251,11 +2248,12 @@ sub service_types {
     my $f = new HTML::FillInForm;
 
     binmode STDOUT, ":utf8";
-    print $f->fill( fdat => $type, scalarref => \$t->process(
+    my $output = $f->fill( fdat => $type, scalarref => \$t->process(
         r => $r,
         title => 'MV MP Over Options',
         types => $types,
     ));
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
     return OK;
 }
@@ -2296,11 +2294,12 @@ sub sub_service_type {
     $r->content_type('text/html; charset=utf-8');
     $t->{file} = 'admin/sub_service_type.html';
 
-    print $t->process(
+    my $output = $t->process(
         r => Apache2::RequestUtil->request,
         title         => 'Sub-Service Types',
         service_types => \@service_types,
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
     return OK;
 }
@@ -2386,10 +2385,11 @@ sub audit_log {
     $r->content_type('text/html; charset=utf-8');
     $t->{file} = 'admin/audit_log.html';
 
-    print $t->process(
+    my $output = $t->process(
         title => 'Audit Log',
         log => $dbh->selectall_arrayref($sth, {Slice=>{}}, @args),
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
     return OK;
 }
@@ -2742,7 +2742,7 @@ sub merchants {
              : undef;
     };
 
-    print $t->process(
+    my $output = $t->process(
         title            => 'Credit Card Merchants',
         r                => $r,
         merchants        => $merchants,
@@ -2754,6 +2754,7 @@ sub merchants {
         # a zero in a conditional..
         display_fields   => $id > 0 || $r->param('new') ? 1 : 0,
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
 
     return OK;
 }

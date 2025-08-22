@@ -16,6 +16,17 @@ our @EXPORT = qw(
                 question  modify_question
 );   #    projects    define
 
+require openprint;
+
+use vars qw( $r %variable %session %param %config $log $dbh $starttime );
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*r = \$openprint::r;
+
 # Display product categories.
 sub categories {
     my $r   = shift;
@@ -30,10 +41,12 @@ sub categories {
     $r->content_type('text/html; charset=utf-8');
     $t->{file} = 'admin/predefined/categories.html';
 
-    print $t->process(
+    my $output = $t->process(
         title => 'Predefined Product Categories',
         categories => $categories,
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
+
 
     return OK;
 }
@@ -67,10 +80,12 @@ sub category {
     $r->content_type('text/html; charset=utf-8');
     $t->{file} = 'admin/predefined/category.html';
 
-    print $t->process(
+    my $output = $t->process(
         title    => 'Predefined Product Category',
         category => $category,
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
+
 
     return OK;
 }
@@ -154,10 +169,12 @@ sub items {
     $r->content_type('text/html; charset=utf-8');
     $t->{file} = 'admin/predefined/items.html';
 
-    print $t->process(
+    my $output = $t->process(
         title => 'Predefined Project Setup',
         items => $items,
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
+
 
     return OK;
 }
@@ -209,11 +226,13 @@ sub item {
     $r->content_type('text/html; charset=utf-8');
     $t->{file} = 'admin/predefined/item.html';
 
-    print $t->process(
+    my $output = $t->process(
         title  => 'Predefined Product Setup',
         item   => $item, 
         matrix => $item->{matrix}, 
     );
+    print openprint::ssi::variable_substitution( \$output, \%variable );
+
 
     return OK;
 }
@@ -448,11 +467,12 @@ sub question {
   $r->content_type('text/html; charset=utf-8');
   $t->{file} = 'admin/predefined/question.html';
 
-  print $t->process(
+  my $output = $t->process(
     title    => 'Product Questions',
     item     => $item, 
     question => $question,
   );
+  print openprint::ssi::variable_substitution( \$output, \%variable );
 
   return OK;
 }
@@ -594,10 +614,11 @@ sub projects {
   $r->content_type('text/html; charset=utf-8');
   $t->{file} = 'admin/predefined/projects.html';
 
-  print $t->process(
+  my $output = $t->process(
     title     => 'Predefined Projects',
     projects  => $projects,
   );
+  print openprint::ssi::variable_substitution( \$output, \%variable );
 
   return OK;
 }
