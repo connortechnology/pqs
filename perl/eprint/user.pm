@@ -60,55 +60,55 @@ sub add {
 
 # Save changes to a user down to the database (from form POST).
 sub save {
-    my ( $r, $log, $dbh, $variable, $user_id ) = @_;
+  my ( $r, $log, $dbh, $variable, $user_id ) = @_;
 
-	my $email =  $r->param('txtEmail') || $r->param('email');
-    my $pass  =  $r->param('txtPassword') || $r->param('password');
-    my $verify = $r->param('txtVerifyPassword')  || $r->param('verify');
-    
-    # Send a notification about change of user type (if applicable).
-    notify_usertype_change($r, $log, $dbh, $user_id, $r->param('ddmUserType')) 
-        if defined $r->param('ddmUserType');
+  my $email =  $r->param('txtEmail') || $r->param('email');
+  my $pass  =  $r->param('txtPassword') || $r->param('password');
+  my $verify = $r->param('txtVerifyPassword')  || $r->param('verify');
 
-    # Send a notification if the user's account has been (en|dis)abled.
-    notify_activation_change(
-        $r, $log, $dbh, $user_id, $r->param('rdbAccountActivation')
-    ) if defined $r->param('rdbAccountActivation');
+  # Send a notification about change of user type (if applicable).
+  notify_usertype_change($r, $log, $dbh, $user_id, $r->param('ddmUserType')) 
+  if defined $r->param('ddmUserType');
 
-    my $crypt = crypto::get_crypt($log, $dbh);
 
-    sql::update($log, $dbh, 'tbl_Customer_Users', "lngUserID = $user_id", 
-        notify_manager_order  => ($r->param('notify_manager_order') ? 1 : 0),
-        notify_manager_file   => ($r->param('notify_manager_file')  ? 1 : 0),
-        editproject   		  => ($r->param('editproject')  ? 1 : 0),
+  my $crypt = crypto::get_crypt($log, $dbh);
 
-        ( defined $r->param('ddmCompany')           ? (lngCustomerID        => $r->param('ddmCompany')) : () ),
-        ( defined $r->param('txtTitle')             ? (strTitle             => $r->param('txtTitle')) : () ),
-        ( defined $r->param('txtFirstName')         ? (strFirstName         => $r->param('txtFirstName')) : () ),
-        ( defined $r->param('txtLastName')          ? (strLastName          => $r->param('txtLastName')) : () ),
-        ( defined $r->param('rdbSalutation')        ? (strSalutation        => $r->param('rdbSalutation')) : () ),
-        ( defined $r->param('txtPhone')             ? (strPhone             => $r->param('txtPhone')) : () ),
-        ( defined $r->param('txtExtension')         ? (strExt               => $r->param('txtExtension')) : () ),
-        ( defined $r->param('txtFax')               ? (strFax               => $r->param('txtFax')) : () ),
-        ( defined $r->param('txtCommission')        ? (dblCommission        => ($r->param('txtCommission') ne '' ? $r->param('txtCommission') : '0') ) : () ),
-        ( defined $r->param('txtCustomGreeting')    ? (strCustomGreeting    => $r->param('txtCustomGreeting')) : () ),
-        ( defined $r->param('ddmUserType')          ? (chrType              => $r->param('ddmUserType')) : () ),
-        ( defined $r->param('rdbChangePassword')    ? (ysnChangePassword    => $r->param('rdbChangePassword')) : () ),
-        ( defined $r->param('rdbMailingList')       ? (ysnMailingList       => $r->param('rdbMailingList')) : () ),
-        ( defined $r->param('rdbAccountActivation') ? (ysnAccountActivation => $r->param('rdbAccountActivation')) : () ),
-        ( defined $r->param('rdbAdministrator')     ? (ysnAdministrator     => $r->param('rdbAdministrator')) : () ),
-        ( defined $r->param('address1')     		? ( address1     		 => $r->param('address1') ) : () ),
-        ( defined $r->param('address2')     		? ( address2     		 => $r->param('address2') ) : () ),
-        ( defined $r->param('cubicle')     			? ( cubicle     		 => $r->param('cubicle') ) : () ),
-        ( defined $r->param('city')     			? ( city     		 	 => $r->param('city') ) : () ),
-        ( defined $r->param('state')     			? ( state     		 	 => $r->param('state') ) : () ),
-        ( defined $r->param('country')     			? ( country     		 => $r->param('country') ) : () ),
-        ( defined $r->param('postalcode')     		? ( postalcode     		 => $r->param('postalcode') ) : () ),
-        ( $pass ? ( strPassword => misc::escape( $crypt->encrypt($pass) ) ) : () ),
-        ( defined $email              				? (strEmail             => $email ) : () ),
-    );
+  sql::update($log, $dbh, 'tbl_Customer_Users', "lngUserID = $user_id", 
+    notify_manager_order  => ($r->param('notify_manager_order') ? 1 : 0),
+    notify_manager_file   => ($r->param('notify_manager_file')  ? 1 : 0),
+    editproject   		  => ($r->param('editproject')  ? 1 : 0),
 
-    return OK;
+    ( defined $r->param('ddmCompany')           ? (lngCustomerID        => $r->param('ddmCompany')) : () ),
+    ( defined $r->param('txtTitle')             ? (strTitle             => $r->param('txtTitle')) : () ),
+    ( defined $r->param('txtFirstName')         ? (strFirstName         => $r->param('txtFirstName')) : () ),
+    ( defined $r->param('txtLastName')          ? (strLastName          => $r->param('txtLastName')) : () ),
+    ( defined $r->param('rdbSalutation')        ? (strSalutation        => $r->param('rdbSalutation')) : () ),
+    ( defined $r->param('txtPhone')             ? (strPhone             => $r->param('txtPhone')) : () ),
+    ( defined $r->param('txtExtension')         ? (strExt               => $r->param('txtExtension')) : () ),
+    ( defined $r->param('txtFax')               ? (strFax               => $r->param('txtFax')) : () ),
+    ( defined $r->param('txtCommission')        ? (dblCommission        => ($r->param('txtCommission') ne '' ? $r->param('txtCommission') : '0') ) : () ),
+    ( defined $r->param('txtCustomGreeting')    ? (strCustomGreeting    => $r->param('txtCustomGreeting')) : () ),
+    ( defined $r->param('ddmUserType')          ? (chrType              => $r->param('ddmUserType')) : () ),
+    ( defined $r->param('rdbChangePassword')    ? (ysnChangePassword    => $r->param('rdbChangePassword')) : () ),
+    ( defined $r->param('rdbMailingList')       ? (ysnMailingList       => $r->param('rdbMailingList')) : () ),
+    ( defined $r->param('rdbAccountActivation') ? (ysnAccountActivation => $r->param('rdbAccountActivation')) : () ),
+    ( defined $r->param('rdbAdministrator')     ? (ysnAdministrator     => $r->param('rdbAdministrator')) : () ),
+    ( defined $r->param('address1')     		? ( address1     		 => $r->param('address1') ) : () ),
+    ( defined $r->param('address2')     		? ( address2     		 => $r->param('address2') ) : () ),
+    ( defined $r->param('cubicle')     			? ( cubicle     		 => $r->param('cubicle') ) : () ),
+    ( defined $r->param('city')     			? ( city     		 	 => $r->param('city') ) : () ),
+    ( defined $r->param('state')     			? ( state     		 	 => $r->param('state') ) : () ),
+    ( defined $r->param('country')     			? ( country     		 => $r->param('country') ) : () ),
+    ( defined $r->param('postalcode')     		? ( postalcode     		 => $r->param('postalcode') ) : () ),
+    ( $pass ? ( strPassword => misc::escape( $crypt->encrypt($pass) ) ) : () ),
+    ( defined $email              				? (strEmail             => $email ) : () ),
+  );
+
+  my $user = openprint::User->find_one(email=>openprint::User->transform(email=> $email));
+  # Send a notification if the user's account has been (en|dis)abled.
+  $user->notify_activation_change() if defined $r->param('rdbAccountActivation') and $r->param('rdbAccountActivation') eq 'Y';
+
+  return OK;
 }
 
 # Remove the user.
