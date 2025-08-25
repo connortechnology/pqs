@@ -305,7 +305,7 @@ sub show {
   $variable->{ServiceType} = $variable->{Project}->ServiceType($sid);
 
   # Display/hide pricing based on customer default.
-  $variable->{isServicePricing} = $$openprint::Company{ysnpricingservices};
+  $variable->{isServicePricing} = $openprint::User->type() eq 'A' ? 1 : $$openprint::Company{ysnpricingservices};
 
   # Load the specs from the db.
   my $specs = $$variable{specs} = $variable->{spec} = eprint::service::get_specs($dbh, $pid, $sid, $service);
