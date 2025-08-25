@@ -143,7 +143,7 @@ sub edit {
         #push @pricing_changes, 'Delete price: ' . $Price->to_string();
         #}
         #} else {
-					my %data = map { $_ => $param{join('-', $_, $$Price{id})} } qw( min					max					units				cost				markup			price				discountable);
+					my %data = map { $_ => $param{join('-', $_, $$Price{id})} } qw( min					max					range_units units				cost				markup			price				discountable);
 					my @price_changes = $Price->changes( \%data );
 					if ( @price_changes ) {
 						if ( $Price->set(\%data) ) {
@@ -205,7 +205,7 @@ sub edit {
 			(new openprint::Log())->save({action=>'Save Material', Object=>$Material, note=>join('<br/>', @changes)}) if @changes;
 			sql::end_transaction( $dbh, $ac );
 			if ( ! $variable{error} ) {
-				$variable{ExternalRedirect} = '/administrator/materials/edit.html?material_id='.$Material->id();
+				$variable{ExternalRedirect} = $openprint::config{url_base}.'/administrator/materials/edit.html?material_id='.$Material->id();
 				return;
 			} # end if
 
@@ -228,7 +228,7 @@ sub edit {
 					$variable{error} .= $Spec->save();
 				} # end foreach
 				$Material = $NewMaterial;
-				$variable{ExternalRedirect} = '/administrator/materials/edit.html?material_id='.$Material->id();
+				$variable{ExternalRedirect} = $openprint::config{url_base}.'/administrator/materials/edit.html?material_id='.$Material->id();
 			} # end if
 		} # end if
 	} # end if btnFunction
