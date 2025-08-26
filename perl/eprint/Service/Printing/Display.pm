@@ -240,47 +240,50 @@ sub template_sizes {
 # Create an array of version information to make the version text boxes and
 # quantity information on printing edit.
 sub multiversion {
-    my ($log, $dbh, $pid, $specs) = @_;
+  my ($log, $dbh, $pid, $specs) = @_;
 
-    my %versions;
-	
-	eval { @versions{ @{$specs->{mv_name}} } = @{$specs->{mv_qty}}; };
+  my %versions;
 
-    return unless scalar keys %versions;
+  eval { @versions{ @{$specs->{mv_name}} } = @{$specs->{mv_qty}}; };
 
-    # Calculate the initial quantity breakdown. TODO: Let JS do that as
-    # non-JS clients will get invalid values after editing otherwise. 
-    my @qty = (undef, get_quantities($log, $dbh, $pid));
+  return unless scalar keys %versions;
 
-    # We've changed the version storage to the name and a breakdown of the
-    # first quantity.
-    my (@list, $remaining);
-	my $i;
-    for my $name (sort keys %versions) {
-	$i++;
-        my $q1      = $versions{$name};
-        my $percent = $q1 / $qty[1];
-        
-        # Calculate the percentage based on the first quantity.
-        my %v = ( 
-            name    => $name, 
-            q1      => $q1,
-            percent => sprintf("%.2f", $percent * 100), # Approx.
-	    id	=> $i,
-        );
-        # Extrapolate the second and third quantities.
-        $v{"q$_"} = int($qty[$_] * $percent) for 2..3;
-        
-        push @list, \%v;
-    }
+  # Calculate the initial quantity breakdown. TODO: Let JS do that as
+  # non-JS clients will get invalid values after editing otherwise. 
+  my @qty = (undef, get_quantities($log, $dbh, $pid));
 
-    $remaining = $qty[1] - sum(values %versions);
+  # We've changed the version storage to the name and a breakdown of the
+  # first quantity.
+  my (@list, $remaining);
+  my $i;
+  for my $name (sort {
+    return $a <=> $b if ($a =~ /^\d+$/ and $b =~ /^\d+$/);
+    return $a cmp $b;
+    } keys %versions) {
+    $i++;
+    my $q1      = $versions{$name};
+    my $percent = $q1 / $qty[1];
 
-    # We don't want the newly created form filled automatically.
-    delete $specs->{mv_qty};
-    delete $specs->{mv_name};
+    # Calculate the percentage based on the first quantity.
+    my %v = ( 
+      name    => $name, 
+      q1      => $q1,
+      percent => sprintf("%.2f", $percent * 100), # Approx.
+      id	=> $i,
+    );
+    # Extrapolate the second and third quantities.
+    $v{"q$_"} = int($qty[$_] * $percent) for 2..3;
 
-    return \@list, $remaining;
+    push @list, \%v;
+  }
+
+  $remaining = $qty[1] - sum(values %versions);
+
+  # We don't want the newly created form filled automatically.
+  delete $specs->{mv_qty};
+  delete $specs->{mv_name};
+
+  return \@list, $remaining;
 }
 
 # Determines if any presses of the given type can perform the given coating.
