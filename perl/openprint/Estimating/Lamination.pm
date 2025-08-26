@@ -391,7 +391,7 @@ sub calc {
           } else {
             $price{breakdown} .= 'Laminate width is '.$laminate_width .'<br/>';
 #.' ' . $imposition->layout_width().'x'.$imposition->layout_height().'<br/>';
-            $width = $laminate_width if $laminate_width;
+            $width = $laminate_width;
           }
         }
         my $area = $length * $width * $sheets;
