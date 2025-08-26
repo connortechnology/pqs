@@ -7,7 +7,7 @@ use strict;
 use warnings;
 no warnings qw(uninitialized);
 
-use constant DEBUG=>0;
+use constant DEBUG=>1;
 
 BEGIN {
     use base qw( Exporter );
@@ -1634,8 +1634,9 @@ sub return_years {
 } # end sub return_years
 
 sub write_override {
+  return openprint::ssi::write_override(@_);
   my ( $for, $value, $locked_js, $unlocked_js ) = @_;
-  if ( 0 ) {
+  if ( 1 ) {
     return sprintf(q`
       <input type="hidden" id="%1$s" name="%1$s" value="%2$s"/>
       <img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt="" title="Click to override"/>`,
