@@ -726,9 +726,7 @@ sub send_quote {
   my @projects =  @{ $dbh->selectcol_arrayref(q{ SELECT lngProjectIndex FROM tbl_quote_details WHERE lngquoteid = ?  }, undef, $quote_id)};
 
   # Send an email to the admin.
-  my @pids =  @{$dbh->selectcol_arrayref(q{
-  SELECT lngprojectindex FROM tbl_quote_details WHERE lngquoteid = ? and type = 'print'
-  }, undef, $quote_id)};
+  my @pids =  @{$dbh->selectcol_arrayref(q{SELECT lngprojectindex FROM tbl_quote_details WHERE lngquoteid = ? AND type = 'print'}, undef, $quote_id)};
 
   $quote{cust_id}        = $variable->{cust_id};
   $quote{isQuotePricing} = $variable->{isQuotePricing};
@@ -781,6 +779,7 @@ sub send_quote {
   # One email goes out to the admin.
   my $html  = misc::load_file($r, '/email/forms/quote.html');
   $html = ssi::variable_substitution( $r, $log, $dbh, $html, \%quote);
+  $openprint::log->debug("$html");
 
   my $name = "quote-$quote_id";
   my $pdf = misc::html2pdf($name, $html);
