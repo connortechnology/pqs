@@ -24,7 +24,6 @@
 			</thead>
 
 			<tbody>
-				<? eval( use Data::Dumper; print STDERR "HAVE VERSIONS ", Dumper($variable->{versions}) ) ?>
 				<?loop versions?>
 				<tr>
 					<td><input name="mv_name" value="<?name?>" type="text" /></td>
