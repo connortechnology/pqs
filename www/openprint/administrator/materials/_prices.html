@@ -11,7 +11,7 @@
 
 	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
 		$$variable{Pricelist} = $Pricelist;
-		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
+		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend><div id=\"pricelist-$$Pricelist{id}\" class=\"pricelist\">";
 		my @Prices = openprint::MaterialPrice->find( material_id=>$$variable{Material}->id(), pricelist_id=>$Pricelist->id() );
 
 		my @equipment_ids = $session{$r->uri().'?equipment_id'} ? ($session{$r->uri().'?equipment_id'}) : sort( sets::union( map{ $_->equipment_id() } @Prices ) );
