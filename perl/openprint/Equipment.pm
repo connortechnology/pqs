@@ -6,7 +6,7 @@ require openprint::Object;
 use openprint ();
 require openprint::EquipmentSpecification;
 require openprint::ServiceType;
-#require openprint::Fold;
+require openprint::Fold;
 #require openprint::Location;
 #require openprint::Equipment_Stock_Setting;
 #require openprint::Equipment_Operator;
@@ -59,6 +59,7 @@ use constant DEBUG_FOLDING => 0;
 	sorting				=>	'sorting',
 	message				=>	'message',
 	deleted				=>	'deleted',
+  type          => 'strtype',
 );
 %find_fields = (
 	Specifications => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.'.$fields{id}.' AND strName=? LIMIT 1)',
@@ -360,6 +361,11 @@ sub Specifications {
 	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'sorting NULLS FIRST,strname, dblmin NULLS FIRST', @_ );
 } # end sub Specifications
 
+sub specifications {
+  my $self = shift;
+  return map { $self->specification($_) } @_;
+}
+
 sub specification {
 	my $Specification = Specification( @_ );
 	if ( ! $Specification ) {
@@ -604,11 +610,12 @@ sub link_to {
   my $self = shift;
   my $text = @_ ? shift : $$self{strid};
   my $options = @_ ? shift : {};
-	return '<a href="/openprint/administrator/equipment/edit.html?ddmEquipment='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>';
+	return '<a href="/openprint/administrator/equipment/edit.html?ddmEquipment='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>' if $$self{id};
+  return '';
 }
 sub button_to {
   my $self = shift;
-  return ssi::button('EquipmentButton'.$$self{id}, {href=>'/administrator/equipment/edit.html?ddmEquipment='.$_[0]{id}.'">'.(@_ ? shift : $$self{strid})});
+  return ssi::button('EquipmentButton'.$$self{id}, {href=>'/administrator/equipment/edit.html?ddmEquipment='.$$self{id}, text=>(@_ ? shift : $$self{strid})});
 }
 
 1;
