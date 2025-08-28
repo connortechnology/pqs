@@ -1,4 +1,6 @@
 use strict;
+use warnings;
+
 package openprint::ServiceCategory;
 our @ISA = qw( openprint::Object );
 require openprint::Service;
@@ -6,13 +8,15 @@ require openprint::Service;
 use vars qw( $debug $table $serial %fields %transforms %defaults $default_sort );
 
 $debug = 0;
-$default_sort = 'lower(name)';
-$table = 'Service_Categories';
+$default_sort = 'lower(strname)';
+$table = 'tbl_Service_Categories';
 $serial = 'Service_Categories_id_seq';
 
 %fields = (
-	id		=>	'id',
-	name	=>	'name',
+	id		=>	'lngindex',
+	name	=>	'strname',
+  strid =>  'strid',
+  sort => 'lngsort',
 );
 %transforms = (
 );

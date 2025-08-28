@@ -42,27 +42,20 @@ sub calc {
 
 	# Start by getting the basic specs needed for the pricing.
   my $print = get_print_container($log, $dbh, $pid);
-  my ( $sw, $sh, $cal, $imp, $runstyle, $press_id ) = get_specifications(
-    $log, $dbh, $pid, $print,
+  my ( $sw, $sh, $cal, $imp, $runstyle, $press_id ) = get_specifications($log, $dbh, $pid, $print,
     qw( hdnSheetSizeWidth hdnSheetSizeHeight txtStockCalliper hdnImposition runstyle press)
   );
 
 	# For now we will let the user override the sheet size going through the coater.
-	if ( $specs->{hdnSheetSizeWidth} ) {
+	if ($$specs{OverrideSheetSize} and ($$specs{OverrideSheetSize} eq 'Y')) {
 		$sw = $specs->{hdnSheetSizeWidth};
-    delete $$specs{hdnSheetSizeWidth};
+		$sh = $specs->{hdnSheetSizeHeight};
 	} else {
 		$specs->{"hdnSheetSizeWidth"} = $sw;
-	}
-	if ( $specs->{hdnSheetSizeHeight} ) {
-		$sh = $specs->{hdnSheetSizeHeight};
-    delete $$specs{hdnSheetSizeHeight};
-	} else {
 		$specs->{"hdnSheetSizeHeight"} = $sh;
 	}
-  if ( $specs->{calliper} ) {
+  if ($$specs{OverrideCalliper} and ($$specs{OverrideCalliper} eq 'Y')) {
     $cal = $specs->{calliper};
-    delete $$specs{calliper};
   } else {
     $specs->{calliper} = $cal;
   }

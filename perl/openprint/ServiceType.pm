@@ -5,20 +5,21 @@ require openprint::Object;
 require openprint::ServiceType_Category;
 require openprint::ServiceType_Default;
 
-use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field $dropdown_field);
+use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field $dropdown_field $default_sort);
 
-$debug = 0;
+$debug = 1;
 $table = 'tbl_service_types';
 $serial = 'servicetypeindex';
 $dropdown_field = 'description';
+$default_sort = 'lower(strname)';
 
 %fields = (
 	id			    	=>	'lngindex',
 	name		    	=> 'strid',
 	description		=> 'strname',
 	url				    => 'strurl',
-	type		    	=> 'strtype',
-  #category_id		=> 'category_id',
+	module	    	=> 'strmodule',
+  category_id		=> 'category_id',
 	sorting		  	=> 'lngsort',
 	create_visible	=> 'ysncreatevisible',
 	view_visible	=> 'ysnviewvisible',
@@ -26,6 +27,8 @@ $dropdown_field = 'description';
 	category		  => undef,
 	allow_delete	=> 'allow_delete',
 	deleted		  	=> 'deleted',
+  level         => 'lngdep',
+  #type          => 'strtype',
 );
 %find_fields = (
 	category	=>	'(SELECT name FROM ServiceType_Categories WHERE id=category_id)',
@@ -119,6 +122,21 @@ sub allow_delete {
 		$_[0]{allow_delete} = $defaults{allow_delete};
 	}
 	return $_[0]{allow_delete};
+}
+
+sub link_to {
+  my $self = shift;
+  my $text = @_ ? shift : $$self{name};
+  my $options = @_ ? shift : {};
+	return '<a href="/openprint/administrator/service_types/edit.html?id='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>';
+}
+sub button_to {
+  my $self = shift;
+  return ssi::button('ServiceTypeButton'.$$self{id}, {href=>'/openprint/administrator/service_types/edit.html?id='.$$self{id},text=>(@_ ? shift : $$self{name})});
+}
+
+sub type {
+  return $_[0]->name();
 }
 
 1;

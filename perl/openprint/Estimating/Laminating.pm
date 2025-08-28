@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-package openprint::Estimating::Lamination;
+package openprint::Estimating::Laminating;
 use strict;
 use warnings;
 
@@ -146,7 +146,6 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
   my $services = $Project->services();
   $$specs{alert} = '';
-  #$$specs{ServiceType} = 'Laminating';
 
   my $print_service_id = $Project->get_print_container();
   my $printing_specs = openprint::service::get_specs_ref($Project, $print_service_id);
@@ -331,11 +330,12 @@ sub calc {
             $imposition->columns($imposition1);
             $imposition->image_orientation(openprint::Imposition::Vertical);
           }
+
           next if ! $$imposition{imposition};
           if ( $$imposition{image_orientation} == openprint::Imposition::Vertical ) {
             $length = $item_height * $imposition->rows();
             $width = $item_width * $imposition->columns();
-            $price{breakdown} .= sprintf('Items across: %d at a time material length = height %.2d * %d = %.2d inches, style:%s<br/>', $imposition->columns(), 
+            $price{breakdown} .= sprintf('Items across: %d at a time material length = height %.2d * %d = %.2d inches, style:%s<br/>', $imposition->columns(),
               $item_height, $imposition->rows(), $length,
               $style );
             $sheets = POSIX::ceil($qty / $$imposition{columns});
@@ -343,7 +343,7 @@ sub calc {
           } else {
             $length = $item_width * $imposition->rows();
             $width = $item_height * $imposition->columns();
-            $price{breakdown} .= sprintf('Items across: %d at a time material length = width %.2d * %d = %.2d inches, style:%s<br/>', $imposition->rows(), 
+            $price{breakdown} .= sprintf('Items across: %d at a time material length = width %.2d * %d = %.2d inches, style:%s<br/>', $imposition->rows(),
               $item_width, $imposition->rows(), $length,
               $style );
             $sheets = POSIX::ceil($qty / $$imposition{rows});
@@ -390,6 +390,7 @@ sub calc {
             next;
           } else {
             $price{breakdown} .= 'Laminate width is '.$laminate_width .'&quot;<br/>';
+            #$price{breakdown} .= 'Laminate width is '.$laminate_width.' ' . $imposition->layout_width().'x'.$imposition->layout_height().'<br/>';
             $width = $laminate_width;
           }
         }

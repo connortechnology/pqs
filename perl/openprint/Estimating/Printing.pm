@@ -862,17 +862,18 @@ sub get_colours {
 	#my ( $caller, undef, $line ) = caller;
 #$log->debug("Called get_colours from $caller : $line");
 	my @colours;
-	if ((
-        ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' )
+  if ((
+      ( defined $$specs{sides_the_same} ) and ( $$specs{sides_the_same} eq 'Y' )
         or
-        ( defined $$specs{side_link} ) and ( $$specs{side_link} eq '1' )
+      ( defined $$specs{side_link} ) and ( $$specs{side_link} eq '1' )
         and ( $side eq 'SideTwo' )
-      )
-     ) {
-		$side = 'SideOne';
-	} # end if
+    )
+  ) {
+    $side = 'SideOne';
+  } # end if
+  my $s = $side eq 'SideOne' ? '0' : '1';
 
-	$v = \%variables if ! $v;
+  $v = \%variables if ! $v;
 
 	foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
 		if ( $$specs{'chk'.$colour.$side} ) {
@@ -883,16 +884,28 @@ sub get_colours {
 				coverage_key	=> $colour.'Spot'.$side.'Coverage',
 			};
 		} # end if
-	} # end foreach
+  } # end foreach
 
-	if ( $$specs{'chkProcessColour'.$side} ) {
-		push @colours, map { { 
-			type	=>	'CMYK',
-			name => $_,
-			coverage=>$$specs{$_.$side.'Coverage'},
-			coverage_key	=> $_.$side.'Coverage',
-		} } ( 'Cyan','Magenta','Yellow','Black' );
-	} # end if
+  if ($$specs{'chkProcessColour'.$side} or $$specs{"s${s}_process"}) {
+    push @colours, map { { 
+        type	=>	'CMYK',
+        name => $_,
+        coverage=>$$specs{$_.$side.'Coverage'},
+        coverage_key	=> $_.$side.'Coverage',
+      } } ( 'Cyan','Magenta','Yellow','Black' );
+  } # end if
+
+  foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
+    if ($$specs{"s${s}_pms_${index}_name"}) {
+      my $c = {
+        name => $$specs{"s${s}_pms_${index}_name"},
+        type => $$specs{"s${s}_pms_${index}_type"},
+        coverage => $$specs{"s${s}_pms_${index}_coverage"},
+        coverage_key => "s${s}_pms_${index}_coverage",
+      };
+      push @colours, $c;
+    }
+  }
 
 	foreach my $index ( 1 .. $config{SpecialColourQuantity} ) {
     if (! $$specs{"chkColourCoating$index$side"} ) {
@@ -3111,7 +3124,7 @@ $log->debug('after sorting presses: ' . ( sprintf('%.4f', tv_interval( [$master_
 			$I->load( $sig_specs, $qty_index, $Project );
 			push @other_impositions, $I;					
 			if ( $$project{FoldingSpecs} ) {
-				$$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $$project{FoldingSpecs}, $I, $qty_index ) ];
+				$$I{Folds} = [ openprint::Estimating::Folding::get_Folds($Project,  $$project{FoldingSpecs}, $I, $qty_index ) ];
 			}
 		} # end foreach sig_id
 		if ( DEBUG ) {
@@ -7692,7 +7705,7 @@ sub runspeed {
 			if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{SignatureIndex}.'-'.$qty_index} == $Equipment->id() ) {
 				$runspeed = int($$fold_specs{"FoldRunspeed-$form-$qty_index-1"});
 				if ( ! $runspeed ) {
-					my @Folds = openprint::Estimating::Folding::get_Folds($fold_specs, $Imposition, $qty_index);
+					my @Folds = openprint::Estimating::Folding::get_Folds($Project, $fold_specs, $Imposition, $qty_index);
 					if ( @Folds ) {
 						my $Fold = $Folds[0];
 						$runspeed = int($Fold->runspeed($$Fold{runspeed_units} eq 'calliper' ? $$Paper{calliper} : $$Paper{gsm}));
@@ -7762,6 +7775,7 @@ sub summary {
 
   my $imposition = new openprint::Imposition();
   $imposition->load($specs, $qty_index, $Project);
+  my $paper = $imposition->Paper();
 
 	if ( $qty_index ) {
     if (!$$imposition{imposition}) {
@@ -7773,12 +7787,9 @@ sub summary {
 			$html .= $$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pg ' : '';
 		} # end if
 		$html .= $$imposition{imposition}.'out ';
-		$html .= '<span class="RunStyle '.$$specs{"PrintingType$qty_index"}.' '.$$imposition{runstyle}.'">';
-		if ( $$specs{"PrintingType$qty_index"} eq 'Digital' ) {
-			$html .= 'Digital';
-		} else {
-			$html .= $$imposition{runstyle} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" Web' : ssi::html_escape($$specs{'ddmRunStyle'.$qty_index}) ;
-		} # end if
+		$html .= '<span class="RunStyle '.$imposition->press_type().' '.$$imposition{runstyle}.'">';
+		$html .= $imposition->press_type().' ';
+		$html .= $$imposition{runstyle} eq 'Web' ? $imposition->sheet_width().'" Web' : ssi::html_escape($$imposition{runstyle}) ;
 		$html .= '</span>';
 	
 		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{versions};
@@ -7806,15 +7817,15 @@ sub summary {
 #if ( 1 ) {
 # Have Stock summary line now
 		if ( $$services{NoPrinting} ) {
-			$html .= sprintf(' %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+			$html .= sprintf(' %s" x %s"', $paper->width(), $paper->height());
 		} else {
 			#$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
-			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
-				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
-					$html .= sprintf( ' on %s" Roll.	Cut Off: %s"',	1*$$specs{'StockWidth'.$qty_index},1*$$specs{'StockHeight'.$qty_index});
+			if ( $$paper{type} eq 'Roll' ) {
+				if ( $$imposition{runstyle} ne 'Web' ) {
+					$html .= sprintf( ' on %s" Roll.	Cut Off: %s"',	1*$paper->width(),1*$paper->height());
 				} # end if
 			} else {
-				$html .= sprintf(' on %s" x %s"', 1*$$specs{'StockWidth'.$qty_index}, 1*$$specs{'StockHeight'.$qty_index});
+				$html .= sprintf(' on %s" x %s"', 1*$paper->width(), 1*$paper->height());
 			} # end if
 		} # end if
 		if ( 0 and sets::isin( $openprint::session{user_type}, [ 'E', 'A' ] ) ) {
@@ -7829,11 +7840,13 @@ sub summary {
 				} # end if
 			} # end if
 		} # end if
-		if ( (!$$specs{'MatchGrain'.$qty_index}) or ( $$specs{'MatchGrain'.$qty_index} ne 'Y') ) {
-			$html .= '<br/>Do not match grain<br/>';
-		} # end if
-		if ( ! $$specs{"Runspeed$qty_index"} ) {
-			$html .= '<span class="error"><br/>No runspeed!</span>';
+    if (0) {
+      if ((!$$specs{'MatchGrain'.$qty_index}) or ( $$specs{'MatchGrain'.$qty_index} ne 'Y') ) {
+        $html .= '<br/>Do not match grain<br/>' if $Project->signatures() > 1;
+      } # end if
+      if (!$$specs{"Runspeed$qty_index"}) {
+        $html .= '<span class="error"><br/>No runspeed!</span>';
+      }
 		}
 
 		return $html;
@@ -7929,6 +7942,9 @@ sub get_stock_description {
     } # end if
   } # end if show stock calliper
   $string .= ' ' . int($stock->gsm()).'gsm' if $openprint::config{Show_Stock_GSM} ne 'N';
+  if ($openprint::session{user_type} eq 'A') {
+    return $stock->link_to($string);
+  }
   return $string;
 }
 
