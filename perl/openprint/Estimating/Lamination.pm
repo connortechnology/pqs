@@ -146,7 +146,6 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
   my $services = $Project->services();
   $$specs{alert} = '';
-  #$$specs{ServiceType} = 'Laminating';
 
   my $print_service_id = $Project->get_print_container();
   my $printing_specs = openprint::service::get_specs_ref($Project, $print_service_id);
@@ -335,7 +334,7 @@ sub calc {
           if ( $$imposition{image_orientation} == openprint::Imposition::Vertical ) {
             $length = $item_height * $imposition->rows();
             $width = $item_width * $imposition->columns();
-            $price{breakdown} .= sprintf('Items across: %d at a time material length = height %.2d * %d = %.2d inches, style:%s<br/>', $imposition->columns(), 
+            $price{breakdown} .= sprintf('Items across: %d at a time<br/> material length = height %.2d * %d = %.2d inches, style:%s<br/>', $imposition->columns(), 
               $item_height, $imposition->rows(), $length,
               $style );
             $sheets = POSIX::ceil($qty / $$imposition{columns});
@@ -343,7 +342,7 @@ sub calc {
           } else {
             $length = $item_width * $imposition->rows();
             $width = $item_height * $imposition->columns();
-            $price{breakdown} .= sprintf('Items across: %d at a time material length = width %.2d * %d = %.2d inches, style:%s<br/>', $imposition->rows(), 
+            $price{breakdown} .= sprintf('Items across: %d at a time<br/> material length = width %.2d * %d = %.2d inches, style:%s<br/>', $imposition->rows(), 
               $item_width, $imposition->rows(), $length,
               $style );
             $sheets = POSIX::ceil($qty / $$imposition{rows});
@@ -422,9 +421,9 @@ sub calc {
             $price{MPrice} += $ServicePrice{Price};
           } elsif ( $ServicePrice{units} eq 'per inch' or $ServicePrice{units} eq 'per linear inch') {
             my $linear_length = Math::Round::nearest(0.01, $length * $sheets);
-            #$$specs{'hdnBreakdown'.$qty_index} .= "Linear length $length * $sheets = $linear_length inches<br/>";
             $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $linear_length );
-            $price{breakdown} .= sprintf('Service: $%1$.2f %2$s * %4$d linear inches = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $linear_length);
+            $price{breakdown} .= sprintf('Service: $%1$.2f %2$s * %4$s linear inches = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'},
+              Number::Format::format_number($linear_length) );
             $price{MPrice} += Math::Round::nearest( 0.01, $ServicePrice{Price} * ($length * 1000 / $$imposition{imposition}));
           } elsif ( $ServicePrice{units} eq '/Hr' or $ServicePrice{units} eq 'per hour') {
             my $inches_per_hour;
