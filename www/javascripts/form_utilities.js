@@ -243,14 +243,26 @@ function isin_ddm ( array, value ) {
 	return true;
 } // end function isin_ddm
 
-function get_option_index ( array, value ) {
+function get_option_by_text(ddm, text) {
+  for ( var i = 0, len = ddm.options.length; i < len; i += 1 ) {
+    const option = ddm.options[i];
+    if (option.text == text) return option;
+  } // end for
+  return null;
+}
+
+function get_option_index_by_value(array, value) {
+  return get_option_index(array, value);
+}
+
+function get_option_index( array, value ) {
 	if ( array ) {
 		for ( var i = 0, len = array.length; i < len; i += 1 ) {
 			if ( array[i] && array[i].value == value )
 				return i;
 		} // end for
 	} else {
-		alert("get_option_index: null array" );
+		console.log("get_option_index: null array" );
 	}
 	return -1;
 } // end function get_option_index
