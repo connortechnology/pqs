@@ -7769,9 +7769,8 @@ sub summary {
 
 	my $services = $Project->services();
   my $print_service_id = $Project->get_print_container();
-  $openprint::log->warn("Summary print service id $print_service_id");
 	my $printing_specs = openprint::service::get_specs_ref($Project, $print_service_id);
-  $openprint::log->debug(Data::Dumper::Dumper($printing_specs));
+  #$openprint::log->debug(Data::Dumper::Dumper($printing_specs));
 
   my $imposition = new openprint::Imposition();
   $imposition->load($specs, $qty_index, $Project);
