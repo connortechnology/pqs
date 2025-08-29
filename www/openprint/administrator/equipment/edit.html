@@ -99,7 +99,7 @@
 				<label>Service Types</label>
 				<select name="servicetype_id" id="servicetype_id" multiple="multiple" class="chosen">
 					<? echo ( make_drop_down(
-            openprint::ServiceType->dropdown( order=>'lower('.$openprint::ServiceType::fields{name}.')'),
+            openprint::ServiceType->dropdown(),
 						$$variable{Equipment}->servicetype_id(),
 						); ) ?>
 				</select>
