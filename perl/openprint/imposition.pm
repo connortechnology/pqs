@@ -63,7 +63,7 @@ sub calc_setup {
 	my $rows = $object_height > 0 ? int(($space_height / $object_height)) : 0;
   $openprint::log->debug("calc_setup: space height $space_height / object height $object_height = $rows rows") if DEBUG;
 
-	$setup->set(imposition=>$rows * $cols, rows=>$rows, columns=>$cols );
+	@$setup{qw(imposition rows, columns)} = ($rows * $cols, $rows, $cols);
 } # end sub calc_setup
 
 sub calc_dutch {
