@@ -76,7 +76,7 @@
 
     $html .= join("\n",
     '<li><label for="film_width-'.$form.'">Film Width</label>',
-            ssi::select([map { $_=>$_ } @film_options],
+      ssi::select([map { $_=>$_ } (''=>'custom', @film_options)],
               $$variable{'film_width-'.$form}, {
               id=>'film_width-'.$form,
               name=>'film_width-'.$form,
@@ -91,6 +91,7 @@
               name=>'custom_film_width-'.$form,
               value=>$$variable{'custom_film_width-'.$form},
               min=>0, step=>'any', placeholder=>'custom film width',
+              on_input_this=>'custom_film_width_oninput',
               (($$variable{'override_film_width-'.$form} and $$variable{'override_film_width-'.$form} eq 'Y') ? () : (style=>'display: none;')),
             ),
         '</li>',
@@ -123,6 +124,31 @@
 <script src="<?hash_link(/openprint/javascripts/service.js)?>"></script>
 <script src="<?hash_link(/openprint/javascripts/paper.js)?>"></script>
 <script>
+function custom_film_width_oninput(e) {
+  const form = e.form;
+  const re = /^custom_film_width\-(\d+)$/;
+  const matches = e.name.match(re);
+  const signature = matches[1];
+
+  if (e.value) {
+    let width_options = form.elements['film_width-'+signature];
+    let option_index = get_option_index_by_value(width_options, e.value);
+    if (option_index != -1) {
+      width_options.selectedIndex = option_index;
+    } else {
+      // Not found.
+      let custom_option = get_option_by_text(width_options, 'custom');
+      if (!custom_option) {
+        custom_option = document.createElement('option');
+        custom_option.text = 'custom';
+        width_options.add(custom_option, 0);
+      }
+      width_options.selectedIndex = 0;
+    }
+  }
+
+  calc(form.name);
+}
   //document.addEventListener('load', function() {
     //calc_from_calliper(document.getElementById('calliper-1'));
     //calc('f1'); // not needed because of body_onload
