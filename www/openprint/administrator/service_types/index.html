@@ -2,7 +2,7 @@
 <h1>Service Types</h1>
 <h2>Search</h2>
 </div>
-<script type="text/javascript">
+<script>
 	function delete_confirm(form) {
 		var number_of_deleted_products = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -29,29 +29,30 @@
 <?include('/includes/error_reporting.html')?>
 <div class="Service_Types">
   <div class="Search">
-    <form id="f1" name="f1" method="post" action="/administrator/service_types/index.html" enctype="multipart/form-data">
+    <form id="f1" name="f1" method="post" action="index.html" enctype="multipart/form-data">
       <input type="hidden" name="btnFunction"/>
       <fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
         <div class="content">
           <div class="leftColumn">
             <ul>
-            <? if ( @{$$variable{Categories}} = openprint::ServiceType_Category->find(order=>'lower(name)') ) ?>
+            <? if ( @{$$variable{Categories}} = openprint::ServiceType_Category->find() ) ?>
               <li><label>Category</label>
                 <select name="category_id" id="category_id" onchange="load_types(this.form);">
                   <option value="">All</option>
-                  <? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{'/administrator/service_types/index.html?category_id'} ); ) ?>
+                  <? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{$r->uri().'?category_id'} ); ) ?>
                 </select>
               </li>
-            <? endif ( @{$$variable{Categories}} = openprint::ServiceType_Category->find(order=>'lower(name)') ) ?>
-              <li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $param{search} ) ?>"/></li>
+            <? endif ( @{$$variable{Categories}} = openprint::ServiceType_Category->find() ) ?>
+            <li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $session{$r->uri().'?search'} ) ?>"/></li>
             </ul>
           </div>
         </div>
         <br class="spacer"/>
+        <div class="button-bar">
         <p class="buttons">
           <? echo ( join("\n",
             button( 'ShowResults', { onclick=> 'load_types(f1);', text=>'Show Results' } ),
-            button( 'New', { href=> '/administrator/service_types/edit.html', text=>'New Service Type' } ),
+            button( 'New', { href=> 'edit.html', text=>'New Service Type' } ),
             ); ) ?>
         </p>
         <p class="buttons">
@@ -64,6 +65,7 @@
           button( 'Export', { onclick=>"f1.btnFunction.value='Export Defaults';f1.submit();", text=>'Export Defaults' } ),
     ); ) ?>
         </p>
+        </div>
       </fieldset>
     </form>
 	</div>
