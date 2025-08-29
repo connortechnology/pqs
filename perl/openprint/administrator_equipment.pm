@@ -535,7 +535,7 @@ sub list {
 sub _list {
     ssi::save_params( '/administrator/equipment/list.html', (
                 ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
-				'deleted', 'equipment_name', 'servicetype_id', 'category_id', 'useinestimating',
+				'deleted', 'equipment_name', 'servicetype_id', 'category_id', 'useinestimating','type',
                 ) );
 }
 
