@@ -28,8 +28,26 @@ function load_page() {
 			<label>Created Date</label>
 			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, on_change=>'load_page' } ); ) ?>
 			to
-			<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, on_change=>'load_page' } ); ) ?>
-		</li>
+      <? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, on_change=>'load_page' } ); ) ?>
+    </li>
+    <?echo( 
+      my $html = '';
+      my @types = sql::execute(undef,undef, 'SELECT DISTINCT strtype FROM tbl_equipment');
+      if (@types > 1) {
+        return join("\n",   
+        '<li><label>Type</label>',
+         ssi::select(  
+         [map { $_, ucfirst($_) } sort { lc $a cmp lc $b } @types],
+         $session{$r->uri().'?type'}, {
+         name=>'type',  
+         prepend=>[ '', 'All' ],
+         on_change=>'load_page',
+         } ),
+         '</li>',
+        );
+      } 
+      return '';
+    ) ?>
 		<li><label>Category</label>
 			<?echo( ssi::select( 
 						openprint::Equipment_Category->dropdown(), 
@@ -41,7 +59,7 @@ function load_page() {
 		</li>
 		<li><label>Service</label>
 			<?echo( ssi::select( 
-           openprint::ServiceType->dropdown(order=>'lower('.$openprint::ServiceType::fields{name}.')'), 
+           openprint::ServiceType->dropdown(), 
 						$session{$r->uri().'?servicetype_id'}, { 
 						name=>'servicetype_id', 
 						prepend=>[ '', 'All' ],
