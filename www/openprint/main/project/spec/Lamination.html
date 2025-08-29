@@ -6,21 +6,21 @@
 	<form id="f1" name="f1" method="post" action="/openprint/main/project/view.html">
 
 <? echo (
-  $$variable{type_options} = ['', 'None', map { $_->name(), $_->description() } openprint::Material->find(
-  type => 'Laminate',
-  #category=>'Lamination Types'
-  ) ];
+  my @laminates = openprint::Material->find(
+    type => 'Laminate',
+    #category=>'Lamination Types'
+  );
+
+  $$variable{type_options} = ['', 'None', map { $_->name(), $_->description() } @laminates ];
   my $html = '';
 
   my $project = $$variable{Project};
-
   my @sigs = $project->signatures( { sort => 1 } );
-  $openprint::log->error("Sigs @sigs");
 
   foreach my $sig_id (@sigs) {
     my $service = $project->Service($sig_id);
     my $sig_specs = $service->specs();
-    my $form = $$variable{SignatureIndex} = $$sig_specs{Form};
+    my $form = $$variable{SignatureIndex} = $$sig_specs{Form} // $$sig_specs{SignatureIndex};
     if (!$form) {
       $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
       ( $form ) = sql::execute( $log, $dbh, $_, $project->id() );
@@ -29,17 +29,28 @@
       $$variable{SignatureIndex} = $$sig_specs{SignatureIndex} = $form;
     }
     
-    $html .= '<fieldset><legend>Signature '.$form.'</legend>
+    $html .= '<fieldset><legend>'.$service->link_to('Signature '.$form).'</legend>
       Information for '.$service->summary().'<br/>
+      Printed '.$service->summary(1).'<br/>
+
       <ul>';
     $html .= join("\n",
-        '<li><label>Dimensions</label>',
+        '<li class="item_dimensions"><label>Item Dimensions</label>',
       input(type=>'float',name=>'txtWidth-'.$form, value=>$$variable{'txtWidth-'.$form}, oninput=>'calc(this.form.name);'),
       'x',
       input(type=>'float',name=>'txtHeight-'.$form, value=>$$variable{'txtHeight-'.$form}, oninput=>'calc(this.form.name);'),
       write_override( 'chkOverrideDimensions-'.$form, $$variable{'chkOverrideDimensions-'.$form}, '', q`calc('f1');` ),
     );
     $html .= '(W x H) in inches</li>';
+    $html .= join("\n",
+      '<li><label>Sheet Size</label>',
+        input(type=>'float',name=>'sheet_width-'.$form, value=>$$variable{'sheet_width-'.$form}, oninput=>'calc(this.form.name);'),
+      'x',
+      input(type=>'float',name=>'sheet_height-'.$form, value=>$$variable{'sheet_height-'.$form}, oninput=>'calc(this.form.name);'),
+      write_override( 'override_sheetsize-'.$form, $$variable{'override_sheetsize-'.$form}, '', q`calc('f1');` ),
+      );
+    $html .= '(W x H) in inches</li>';
+
     $html .= ssi::include('/openprint/includes/main/proj/signature_stock_calliper.html');
     $html .= '<li><label>Type for front</label>
       ';
@@ -54,20 +65,49 @@
         name=>'TypeBack-'.$form,
         , size=>1, onchange=>'calc(this.form.name);' }
       );
-      $html .= '</li>';
-      $html .= include('/includes/main/proj/signature_equipment.html');
-      $html .= '
+    $html .= '</li>';
+
+    my %width_options;
+    foreach my $laminate (@laminates) {
+      my @widths = map { ($_ =~ /([\d\.]+)/) ? $1 : () } split(',', $laminate->specification('Widths'));
+      @width_options{@widths} = @widths;
+    }
+    my @film_options = sort { $a <=> $b } keys %width_options;
+
+    $html .= join("\n",
+    '<li><label for="film_width-'.$form.'">Film Width</label>',
+            ssi::select([map { $_=>$_ } @film_options],
+              $$variable{'film_width-'.$form}, {
+              id=>'film_width-'.$form,
+              name=>'film_width-'.$form,
+              onchange=>q`calc('f1');`
+              }),
+            write_override( 'override_film_width-'.$form, $$variable{'override_film_width-'.$form},
+            qq`\$j('#custom_film_width-$form').show();`,
+            qq`\$j('#custom_film_width-$form').hide();calc('f1');` ),
+            'inches',
+            ssi::input(
+              id=>'custom_film_width-'.$form,
+              name=>'custom_film_width-'.$form,
+              value=>$$variable{'custom_film_width-'.$form},
+              min=>0, step=>'any', placeholder=>'custom film width',
+              (($$variable{'override_film_width-'.$form} and $$variable{'override_film_width-'.$form} eq 'Y') ? () : (style=>'display: none;')),
+            ),
+        '</li>',
+        );
+    $html .= include('/includes/main/proj/signature_equipment.html');
+    $html .= '
           </ul>
       </fieldset>
       ';
-      } # end foreach sig
-      return $html;
+    } # end foreach sig
+    return $html;
 )?>
 
     <div id="pricing">
 		<fieldset><legend>Pricing</legend>
 			<ul>
-		<?include(/includes/main/proj/quantities_prices.html) ?>
+		  <?include(/includes/main/proj/quantities_prices.html) ?>
 			</ul>
 		</fieldset>
     </div>
@@ -83,6 +123,8 @@
 <script src="<?hash_link(/openprint/javascripts/service.js)?>"></script>
 <script src="<?hash_link(/openprint/javascripts/paper.js)?>"></script>
 <script>
-  Event.observe(window, 'load', function() {
-      //calc_from_calliper(document.getElementById('calliper-1'));
-      calc('f1'); }); </script>
+  //document.addEventListener('load', function() {
+    //calc_from_calliper(document.getElementById('calliper-1'));
+    //calc('f1'); // not needed because of body_onload
+  //});
+</script>
