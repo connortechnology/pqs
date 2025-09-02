@@ -76,14 +76,14 @@
 
     $html .= join("\n",
     '<li><label for="film_width-'.$form.'">Film Width</label>',
-      ssi::select([map { $_=>$_ } (''=>'custom', @film_options)],
+      ssi::select([$$variable{"custom_film_width-$form"}=>'custom', map { $_=>$_ } @film_options],
               $$variable{'film_width-'.$form}, {
               id=>'film_width-'.$form,
               name=>'film_width-'.$form,
               onchange=>q`calc('f1');`
               }),
             write_override( 'override_film_width-'.$form, $$variable{'override_film_width-'.$form},
-            qq`\$j('#custom_film_width-$form').show();`,
+            qq`\$j('#custom_film_width-$form').show();custom_film_width_oninput(document.getElementById('custom_film_width-$form'));`,
             qq`\$j('#custom_film_width-$form').hide();calc('f1');` ),
             'inches',
             ssi::input(
@@ -141,8 +141,9 @@ function custom_film_width_oninput(e) {
       if (!custom_option) {
         custom_option = document.createElement('option');
         custom_option.text = 'custom';
-        width_options.add(custom_option, 0);
+        width_options.add(custom_option, 1);
       }
+      custom_option.value = e.value;
       width_options.selectedIndex = 0;
     }
   }
