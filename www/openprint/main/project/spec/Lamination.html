@@ -80,7 +80,8 @@
               $$variable{'film_width-'.$form}, {
               id=>'film_width-'.$form,
               name=>'film_width-'.$form,
-              onchange=>q`calc('f1');`
+              on_change_this=>'film_width_onchange',
+#q`calc('f1');`
               }),
             write_override( 'override_film_width-'.$form, $$variable{'override_film_width-'.$form},
             qq`\$j('#custom_film_width-$form').show();custom_film_width_oninput(document.getElementById('custom_film_width-$form'));`,
@@ -124,6 +125,15 @@
 <script src="<?hash_link(/openprint/javascripts/service.js)?>"></script>
 <script src="<?hash_link(/openprint/javascripts/paper.js)?>"></script>
 <script>
+function film_width_onchange(e) {
+  const form = e.form;
+  const re = /^film_width\-(\d+)$/;
+  const matches = e.name.match(re);
+  const signature = matches[1];
+
+  document.getElementById('custom_film_width-'+signature).value = e.value;
+  calc(form.name);
+}
 function custom_film_width_oninput(e) {
   const form = e.form;
   const re = /^custom_film_width\-(\d+)$/;
