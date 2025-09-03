@@ -96,7 +96,9 @@ fieldset textarea {
 }
 
 fieldset select {
+  /*
 	float: left;
+  */
 	display: inline;
 	
 	margin-top: 1px;
