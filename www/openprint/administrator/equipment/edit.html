@@ -185,7 +185,8 @@
     <div id="show_service_prices"><?echo($session{$r->uri().'?show_service_prices'} ? include('_service_prices.html') : '' )?></div>
   </fieldset>
 </div><!--ServicePrices-->
-<fieldset><legend>Specifications <span on_click="toggle_specifications">+</span></legend>
+<div class="Specifications">
+<fieldset><legend>Specifications <span id="toggle_specifications" on_click="toggle_specifications">+</span></legend>
   <p class="buttons">
 			<input type="file" name="fileSpecifications"/>
 			<? echo ( join("\n",
@@ -223,6 +224,7 @@
 		</table>
 </div>
 	</fieldset>
+</div>
 <? endif ( $$variable{Equipment}->id() ) ?>
 </form>
 <? if ( $$variable{Equipment}->specification('Folding Capable') ) ?>
