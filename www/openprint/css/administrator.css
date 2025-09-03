@@ -111,7 +111,32 @@ input[type="numeric"] {
 li input[type="text"] {
   width: 100%;
 }
+#ServicePrices,
+.Specifications {
+  margin-top: 13px;
+}
 #ServicePrices tr th button.btn {
   font-size: 1.5rem;
   padding: 0.25rem 0.6rem;
+}
+
+.Specifications fieldset legend,
+#ServicePrices fieldset legend {
+  position: relative;
+}
+
+#toggle_specifications,
+#toggle_service_prices {
+  position: absolute;
+  top: -15px;
+  right: 40px;
+  background-color: white;
+}
+#toggle_specifications::before ,
+#toggle_service_prices::before {
+  content: '( ';
+}
+#toggle_specifications::after ,
+#toggle_service_prices::after {
+  content: ' )';
 }
