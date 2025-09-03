@@ -169,7 +169,13 @@ sub calc {
     my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
     my $stock = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
 
-    if ( (!$$specs{'chkOverrideDimensions-'.$form}) or ($$specs{'chkOverrideDimensions-'.$form} ne 'Y')) {
+    $$specs{"override_film_width-$form"} //= '';
+    $$specs{'chkOverrideDimensions-'.$form} //= '';
+    $$specs{'override_sheetsize-'.$form} //= '';
+    $$specs{'override_calliper-'.$form} //= '';
+
+
+    if ($$specs{'chkOverrideDimensions-'.$form} ne 'Y') {
       if ($$sig_specs{final_width} and $$sig_specs{final_height}) {
         @$specs{'txtWidth-'.$form,'txtHeight-'.$form} = @$sig_specs{'final_width','final_height'};
       } elsif (!$$sig_specs{'txtWidth'}) {
@@ -178,7 +184,7 @@ sub calc {
         @$specs{'txtWidth-'.$form,'txtHeight-'.$form} = @$sig_specs{'txtWidth','txtHeight'};
       }
     }
-    if ((!$$specs{'override_sheetsize-'.$form}) or ($$specs{'override_sheetsize-'.$form} ne 'Y')) {
+    if ($$specs{'override_sheetsize-'.$form} ne 'Y') {
       $$specs{'sheet_width-'.$form} = $stock->width();
       $$specs{'sheet_height-'.$form} = $stock->height();
     } else {
@@ -186,7 +192,7 @@ sub calc {
       $stock->height($$specs{'sheet_height-'.$form});
     }
 
-    if ( (!$$specs{'override_calliper-'.$form}) or ($$specs{'override_calliper-'.$form} ne 'Y')) {
+    if ($$specs{'override_calliper-'.$form} ne 'Y') {
       $$specs{"calliper-$form"} = $stock->calliper();
       $$specs{"calliper_pt-$form"} = $stock->calliper() * 1000;
       $$specs{"calliper_mm-$form"} = $stock->calliper() * 25.4;
@@ -264,7 +270,7 @@ sub calc {
       my $stock = $imposition->Paper();
       $$stock{calliper} = $$specs{"calliper-$form"}; # Overrides done earlier
 
-      $$specs{'hdnBreakdown'.$qty_index} .= 'Signature ' . $form . ' printed: ' .openprint::service::summary( $Project, $signature_service_id, $qty_index ).'<br/>';
+      $$specs{'hdnBreakdown'.$qty_index} .= 'Signature ' . $form . ' printed: ' .openprint::service::summary( $Project, $signature_service_id, $qty_index ).'. Imposition image dimensions are '.$$imposition{layout_width}.'&quot; x '.$$imposition{layout_height}.'&quot;<br/>';
       if (!$$imposition{imposition}) {
         $$specs{'hdnBreakdown'.$qty_index} .= 'No imposition loaded.<br/>';
         next;
@@ -278,6 +284,12 @@ sub calc {
       } else {
         $$specs{Status} = 'uncalculated';
       } # end if
+
+      if ($sig_price{film_width}) {
+        $$specs{"film_width-$form"} = $sig_price{film_width};
+      } else {
+        $log->error("No film width in price?");
+      }
 
       if ($sig_price{Equipment}) {
         $$specs{"ddmEquipment-$form-$qty_index"} = $sig_price{Equipment}->id();
@@ -365,6 +377,7 @@ sub signature_calc {
 
     if ($error) {
       $equipment_price{breakdown} .= $error; # WHY
+      %best_equipment_price = %equipment_price if !%best_equipment_price;
       next;
     }
 
@@ -382,51 +395,45 @@ sub signature_calc {
     $equipment_price{breakdown} .= sprintf('Equipment: %s max Width: %s&quot; Length: %s&quot;<br/>',
       $equipment->name(), $maximum_sheet_width, $maximum_sheet_length);
 
-    my $laminate_width_options = $equipment->specification('Laminate Width') // '';
-    my @laminate_widths = split(',', $laminate_width_options) if $laminate_width_options;
+    my $film_width_options = $equipment->specification('Laminate Width') // '';
+    my @film_widths = map { $_ =~ s/[^\d\.]//; $_ } split(',', $film_width_options) if $film_width_options;
 
-    $openprint::log->debug("Laminate widths: @laminate_widths from $laminate_width_options");
+    $openprint::log->debug("Laminate widths: @film_widths from $film_width_options");
 
-    if ($$specs{"override_film_width-$form"} and $$specs{"override_film_width-$form"} eq 'Y') {
+    if ($$specs{"override_film_width-$form"} eq 'Y') {
       if ($$specs{"custom_film_width-$form"}) {
-        @laminate_widths = ($$specs{"custom_film_width-$form"});
+        @film_widths = map { $_ =~ s/[^\d\.]//; $_ } ($$specs{"custom_film_width-$form"});
       } else {
-        #if ($laminate_width_options) {
-        #if ($$specs{"film_width-$form"} and !sets::isin($$specs{"film_width-$form"}, \@laminate_widths)) {
-        #$equipment_price{breakdown} .= "Equipment forced laminate width ".$$specs{"film_width-$form"}." is not in @laminate_widths<br/>";
+        #if ($film_width_options) {
+        #if ($$specs{"film_width-$form"} and !sets::isin($$specs{"film_width-$form"}, \@film_widths)) {
+        #$equipment_price{breakdown} .= "Equipment forced laminate width ".$$specs{"film_width-$form"}." is not in @film_widths<br/>";
         #next;
         #}
         #}
-        @laminate_widths = ($$specs{"film_width-$form"});
+        @film_widths = map { $_ =~ s/[^\d\.]//; $_ } ($$specs{"film_width-$form"});
       }
     }
 
     my %best_laminate_price;
     my %laminate_price;
-    foreach my $laminate_width (@laminate_widths) {
+    foreach my $film_width (@film_widths) {
       %laminate_price = %equipment_price;
 
-      my $impo = get_laminating_imposition($equipment, $imposition, $specs, \%laminate_price, $qty, $laminate_width);
+      my $impo = get_laminating_imposition($equipment, $imposition, $specs, \%laminate_price, $qty, $film_width);
       if ($impo) {
         my $sheets = $$impo{sheets}; # may be adjusted by impo
-        my $waste = $equipment->Specification('Laminating Waste');
-        if ($waste) {
-          if ($$waste{units} eq 'percent') {
-            $sheets += int($sheets * $$waste{value}/100);
-          }
-        }
 
-        $laminate_price{breakdown} .= 'Laminate width is '.$laminate_width .'&quot;<br/>';
-        $$impo{laminate_width} = $laminate_width;
+        $laminate_price{breakdown} .= 'Laminate width is '.($$specs{"override_film_width-$form"} eq 'Y'?'overriden to ':'').$film_width .'&quot;<br/>';
+        #$$impo{film_width} = $film_width;
 
         %laminate_price = get_price($equipment, $impo, \%laminate_price, $qty);
       }
 
       if (!$best_laminate_price{total} or ($laminate_price{total} and ($best_laminate_price{total} > $laminate_price{total}))) {
-        #$openprint::log->debug("Have better laminate price: $best_laminate_price{total} > $laminate_price{total} on $laminate_width $laminate_price{breakdown}");
+        #$openprint::log->debug("Have better laminate price: $best_laminate_price{total} > $laminate_price{total} on $film_width $laminate_price{breakdown}");
         %best_laminate_price = %laminate_price;
       } # end if
-    } # end foreach laminate_width
+    } # end foreach film_width
     $openprint::log->debug("best laminate price: ".Data::Dumper::Dumper(\%best_laminate_price));
 
     if ((!%best_equipment_price) or ($best_laminate_price{total} and ($best_equipment_price{total} > $best_laminate_price{total}))) {
@@ -443,8 +450,10 @@ sub get_price {
 
   my %price = %{$price}; # make a copy
   my $area = $$imposition{area};
+  my $laminate_area = $$imposition{laminate_area};
   my $width = $$imposition{width};
   my $length = $$imposition{length};
+  my $film_width = $price{film_width} = $$imposition{film_width};
   my $sheets = $$imposition{sheets};
   my $style = $equipment->specification('Laminating Style') // 'Final Pieces';
   my $sides = $equipment->specification('Laminating Sides') // 'Single';
@@ -455,7 +464,11 @@ sub get_price {
   my $setup_overs = $$imposition{setup_overs};
   my $run_overs = $$imposition{run_overs};
 
-  $price{breakdown} .= '<tr><td class="desc">Impressions: net: '.$qty.' + setup overs '.$setup_overs->to_breakdown().' + run overs: '.$run_overs->to_breakdown().' = '.$$imposition{sheets}.'</td><td></td></tr>';
+  $price{breakdown} .= '<tr><td class="desc">Impressions: net: '.$qty.' + setup overs: '.$setup_overs->to_breakdown().' + run overs: '.$run_overs->to_breakdown().' = '.$$imposition{sheets}.'</td><td></td></tr>';
+  my $linear_length = Math::Round::nearest(0.01, $length * $sheets);
+  $price{breakdown} .= '<tr><td class="desc">Laminate length: '.$length.'&quot; * '.$sheets.' sheets = '.Number::Format::format_number($linear_length).'&quot;</td><td class="Price"></td></tr>';
+  $price{breakdown} .= '<tr><td colspan="2" class="desc">Laminate quantity using '.$length.'" x '.$film_width.'" * '.$sheets.' sheets '.
+  ($$imposition{waste}{total} ? ' + '.$$imposition{waste}->to_breakdown().' waste' : '').' = '.Number::Format::format_number($laminate_area).' square inches</td></tr>';
   $price{breakdown} .= sprintf('<tr><td class="desc">Setup: </td><td class="Price">$%.2f</td><tr>', $SetupPrice{Price});
 
   my %ServicePrice = $Service->get_price( undef, $equipment ) if $Service;
@@ -475,24 +488,36 @@ sub get_price {
 
     if ( $ServicePrice{units} eq 'per m' or $ServicePrice{units} eq 'per 1000') {
       $ServicePrice{Total} = ($ServicePrice{Price} * $qty)/1000;
-      $price{breakdown} .= sprintf('<tr><td class="desc">Service: $%1$s %2$s * %4$f</td><td class="Price">$%3$.2f</td></tr>',
-        @ServicePrice{'Price','units','Total'}, $qty );
+      if ($$imposition{TypeFront} and $$imposition{TypeBack} and $sides eq 'Single') {
+        $ServicePrice{Total} *= 2;
+        $price{breakdown} .= sprintf('<tr><td class="desc">Service: $%1$s %2$s * %4$f * 2 sides</td><td class="Price">$%3$.2f</td></tr>',
+          @ServicePrice{'Price','units','Total'}, $qty );
+      } else {
+        $price{breakdown} .= sprintf('<tr><td class="desc">Service: $%1$s %2$s * %4$f</td><td class="Price">$%3$.2f</td></tr>',
+          @ServicePrice{'Price','units','Total'}, $qty );
+      }
       $price{MPrice} += $ServicePrice{Price};
     } elsif ( $ServicePrice{units} eq 'per inch' or $ServicePrice{units} eq 'per linear inch') {
-      my $linear_length = Math::Round::nearest(0.01, $length * $sheets);
-      $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $linear_length );
-      $price{breakdown} .= sprintf('<tr><td class="desc">Service: $%1$s %2$s * %4$s linear inches</td><td class="Price">$%3$.2f</td></tr>',
-        @ServicePrice{'Price','units','Total'},
-        Number::Format::format_number($linear_length) );
+      $ServicePrice{Total} = Math::Round::nearest(0.01, $ServicePrice{Price} * $linear_length);
+      if ($$imposition{TypeFront} and $$imposition{TypeBack} and $sides eq 'Single') {
+        $ServicePrice{Total} *= 2;
+        $price{breakdown} .= sprintf('<tr><td class="desc">Service: $%1$s %2$s * %4$s linear inches * 2 sides</td><td class="Price">$%3$.2f</td></tr>',
+          @ServicePrice{'Price','units','Total'},
+          Number::Format::format_number($linear_length));
+      } else {
+        $price{breakdown} .= sprintf('<tr><td class="desc">Service: $%1$s %2$s * %4$s linear inches</td><td class="Price">$%3$.2f</td></tr>',
+          @ServicePrice{'Price','units','Total'},
+          Number::Format::format_number($linear_length));
+      }
       $price{MPrice} += Math::Round::nearest( 0.01, $ServicePrice{Price} * ($length * 1000 / $$imposition{imposition}));
     } elsif ( $ServicePrice{units} eq '/Hr' or $ServicePrice{units} eq 'per hour') {
       my $inches_per_hour;
-      my $Speed = $equipment->Specification( 'Run Speed' ) ;
+      my $Speed = $equipment->Specification('Run Speed') ;
       if ( $Speed ) {
         if ( lc $$Speed{units} eq 'inches per hour' ) {
           $inches_per_hour = $$Speed{value};
         } else {
-          $price{breakdown} .= "Unknown speed units ($$Speed{units}<br/>";
+          $price{breakdown} .= "Unknown speed units $$Speed{units}<br/>";
           $inches_per_hour = 720;
         } # end if
       } else {
@@ -540,7 +565,6 @@ sub get_price {
     $price{breakdown} .= "<tr><td class=\"warn\">No Service price for ".__PACKAGE__.'</td><td class="Price"></td></tr>';
   } # end if
 
-  $price{breakdown} .= '<tr><td colspan="2" class="desc">Material quantity using '.$length.'" x '.$width.'" * '.$sheets.' sheets = '.Number::Format::format_number($area).' square inches</td></tr>';
   if ( $$imposition{TypeFront} ) {
     my $FrontMaterialPrice;
     if (my $FrontMaterial = $$imposition{FrontMaterial}) {
@@ -554,15 +578,15 @@ sub get_price {
         next;
       } # end if
       if ( $$FrontMaterialPrice{units} eq 'per square foot' ) {
-        $$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $area / 144;
+        $$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $laminate_area / 144;
         $price{breakdown} .= sprintf('<tr><td class="desc">Material on Front: $%1$.6f %2$s * %4$s square feet</td><td class="Price">$%3$.2f</td></tr>',
           @$FrontMaterialPrice{'Price','units','Total'},
-          Number::Format::format_number($area/144) );
+          Number::Format::format_number($laminate_area/144) );
       } elsif ( $$FrontMaterialPrice{units} eq 'per m square inches' ) {
-        $$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $area / 1000;
+        $$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $laminate_area / 1000;
         $price{breakdown} .= sprintf('<tr><td class="desc">Material on Front: $%1$.5f %2$s * %4$s square inches</td><td class="Price">$%3$.2f</td></tr>',
           @$FrontMaterialPrice{'Price','units','Total'},
-          Number::Format::format_number($area) );
+          Number::Format::format_number($laminate_area) );
       } else {
         $price{breakdown} .= sprintf('<tr><td colspan="2">Material on Front: unknown units: (%s)</td></tr>', $FrontMaterialPrice->to_string() );
       } # end if
@@ -584,17 +608,17 @@ sub get_price {
         next;
       } # end if
       if ( $$BackMaterialPrice{units} eq 'per square foot' ) {
-        $$BackMaterialPrice{Total} = $$BackMaterialPrice{Price} * $area / 144;
+        $$BackMaterialPrice{Total} = $$BackMaterialPrice{Price} * $laminate_area / 144;
         $price{breakdown} .= sprintf('<tr><td class="desc">Material on Back: $%1$.5f %2$s * %4$s square feet</td><td class="Price">$%3$.2f</td></tr>',
           @$BackMaterialPrice{'Price','units','Total'},
-          Number::Format::format_number($area/144) );
+          Number::Format::format_number($laminate_area/144) );
       } elsif ( $$BackMaterialPrice{units} eq 'per m square inches' ) {
-        $$BackMaterialPrice{Total} = $$BackMaterialPrice{Price} * $area / 1000;
+        $$BackMaterialPrice{Total} = $$BackMaterialPrice{Price} * $laminate_area / 1000;
         $price{breakdown} .= sprintf('<tr><td class="desc">Material on Back: $%1$.5f %2$s * %4$s square inches</td><td class="Price">$%3$.2f</td></tr>',
           @$BackMaterialPrice{'Price','units','Total'},
-          Number::Format::format_number($area/1000) );
+          Number::Format::format_number($laminate_area) );
       } else {
-        $price{breakdown} .= sprintf('<tr><td class="warn" colspan="2">Material on Front: unknown units: (%s)</td></tr>', $$BackMaterialPrice{units} );
+        $price{breakdown} .= sprintf('<tr><td class="warn" colspan="2">Material on Back: unknown units: (%s)</td></tr>', $$BackMaterialPrice{units} );
       } # end if
       $price{total} += $$BackMaterialPrice{Total};
       $price{MPrice} += ( 1000 / $$imposition{imposition} ) * $$BackMaterialPrice{Total}/$sheets;
@@ -608,18 +632,21 @@ sub get_price {
 } # end sub get_price($equipment, $imposition);
 
 sub get_laminating_imposition {
-  my ($equipment, $sig_imposition, $specs, $price, $qty, $laminate_width) = @_;
+  my ($equipment, $sig_imposition, $specs, $price, $qty, $film_width) = @_;
+
   my $length;
   my $layout_width;
+  $openprint::log->debug("DOING film width: $film_width");
+
   my $width;
   my $imposition = $sig_imposition->copy();
   my $form = $sig_imposition->form();
-  $$imposition{laminate_width} = $laminate_width;
+  $$imposition{film_width} = $film_width;
   @$imposition{'TypeFront','TypeBack'} = @$specs{"TypeFront-$form","TypeBack-$form"};
   $$imposition{FrontMaterial} = openprint::Material->find_one(name=>$$imposition{TypeFront});
   $$imposition{BackMaterial} = openprint::Material->find_one(name=>$$imposition{TypeBack});
 
-  my $sheets = $qty; # Gross vs Net FIXME
+  my $sheets = $qty; # Gross vs Net
   my $setup_overs = $equipment->Specification('Laminating Setup Overs');
 
   if ($setup_overs) {
@@ -630,10 +657,10 @@ sub get_laminating_imposition {
       $$setup_overs{total} = 1*$$setup_overs{value};
     }
   } else {
-    $setup_overs = {value=>'', units=>'', total=>0};
+    $setup_overs = new openprint::EquipmentSpecification();
+    $setup_overs->set({value=>'', units=>'', total=>0});
   }
   $$imposition{setup_overs} = $setup_overs;
-
 
   my $run_overs = $equipment->Specification('Laminating Run Overs');
   if ($run_overs) {
@@ -644,13 +671,19 @@ sub get_laminating_imposition {
       $$run_overs{total} = 1*$$run_overs{value};
     }
   } else {
-    $run_overs = {value=>'', units=>'', total=>0};
+    $run_overs = new openprint::EquipmentSpecification();
+    $run_overs->set({value=>'', units=>'', total=>0});
   }
   $$imposition{run_overs} = $run_overs;
 
   my $maximum_sheet_width = $equipment->specification('Maximum Sheet Width') // '';
   my $maximum_sheet_length= $equipment->specification('Maximum Sheet Length') // '';
   my $margin = $equipment->specification('Laminating Margin') // 0.125;
+  if ($film_width > $maximum_sheet_width) {
+    $$price{alert} .= "Film width $film_width&quot; must be less than maximum Sheet width $maximum_sheet_width&quot;<br/>";
+    return;
+  }
+  my $waste = $$imposition{waste} = $equipment->Specification('Laminating Waste');
 
   my $style = $equipment->specification('Laminating Style') // 'Final Pieces';
   if ($style eq 'Final Pieces') {
@@ -692,6 +725,7 @@ sub get_laminating_imposition {
       $$price{breakdown} .= "sheets $sheets = qty $qty / $$imposition{rows}<br/>";
     } # end if
   } else { # Full Sheet
+
     $_ = equipment_fits($equipment, $imposition, $imposition->Paper);
     if ($_) {
       $$price{alert} .= 'Doesn\'t fit.'.$_.'<br/>';
@@ -705,24 +739,35 @@ sub get_laminating_imposition {
       $sheets = $$imposition{impressions} ? $$imposition{impressions} : $$imposition{net_sheets};
     }
     $sheets = $qty if ! $sheets;
-    $$imposition{sheets} = $sheets + $$setup_overs{total} + $$run_overs{total};
+    $$imposition{sheets} = $sheets = $sheets + $$setup_overs{total} + $$run_overs{total};
+
+    # Prefer using the larger of height/width as the "Width"
 
     if ($imposition->sheet_width() > $imposition->sheet_height()) {
-      #height it shorter, so it if fits, return it.
-      $length = $imposition->sheet_height();
       $width = $imposition->sheet_width();
+      $length = $imposition->sheet_height();
       $layout_width = $imposition->layout_width();
 
       if (
         ($width < $maximum_sheet_width)
           and
-        ($width - $margin >= $laminate_width)
+        ($width - $margin >= $film_width) # sheet larger than film
           and
-        ($layout_width + $margin <= $laminate_width)
+        ($layout_width + $margin <= $film_width) # layout < film
       ) {
         $$imposition{length} = $length;
         $$imposition{width} = $width;
         $$imposition{area} = $length * $width * $sheets;
+        my $laminate_area = $$imposition{laminate_area} = $length * $film_width * $sheets;
+        if ($waste) {
+          if (lc $$waste{units} eq 'percent') {
+            $$waste{total} = int($laminate_area * $$waste{value}/100);
+            $laminate_area += $$waste{total};
+            $$imposition{laminate_area} = $laminate_area;
+          }
+        }
+
+        $openprint::log->debug("Returning impo $sheets sheets using $width as width, $length as length $layout_width as layout width area: $$imposition{laminate_area}");
         return $imposition;
       }
     } # else
@@ -733,31 +778,55 @@ sub get_laminating_imposition {
     if (
       ($width < $maximum_sheet_width)
         and
-      ($width - $margin >= $laminate_width)
+      ($width - $margin >= $film_width)
         and
-      ($layout_width + $margin <= $laminate_width)
+      ($layout_width + $margin <= $film_width)
     ) {
       $$imposition{length} = $length;
       $$imposition{width} = $width;
       $$imposition{area} = $length * $width * $sheets;
+      my $laminate_area = $$imposition{laminate_area} = $length * $film_width * $sheets;
+      if ($waste) {
+        if (lc $$waste{units} eq 'percent') {
+          $$waste{total} = int($laminate_area * $$waste{value}/100);
+          $laminate_area += $$waste{total};
+          $$imposition{laminate_area} = $laminate_area;
+        }
+      }
+
+      $openprint::log->debug("Returning B impo using $width as width, $length as $length");
       return $imposition;
     }
 
     if ($$imposition{sheet_width} < $maximum_sheet_width) {
-      if ($$imposition{sheet_width} - $margin < $laminate_width) {
-        $$price{alert} .= "Laminate width $laminate_width must be at least ".2*$margin." inches less than the sheet width $$imposition{sheet_width}<br/>";
+      if ($$imposition{sheet_width} - $margin < $film_width) {
+        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches less than the sheet width $$imposition{sheet_width}<br/>";
       }
-      if ($$imposition{layout_width} + $margin > $laminate_width) {
-        $$price{alert} .= "Laminate width $laminate_width must be at least ".2*$margin." inches greater than the layout width $$imposition{layout_width}<br/>";
+      if ($$imposition{layout_width} + $margin > $film_width) {
+        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches greater than the layout width $$imposition{layout_width}<br/>";
       }
     }
     if ($$imposition{sheet_height} < $maximum_sheet_width) {
-      if ($$imposition{sheet_height} - $margin < $laminate_width) {
-        $$price{alert} .= "Laminate width $laminate_width must be at least ".2*$margin." inches less than the sheet height $$imposition{sheet_height}<br/>";
+      if ($$imposition{sheet_height} - $margin < $film_width) {
+        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches less than the sheet height $$imposition{sheet_height}<br/>";
       }
-      if ($$imposition{layout_height} + $margin > $laminate_width) {
-        $$price{alert} .= "Laminate width $laminate_width must be at least ".2*$margin." inches greater than the layout height $$imposition{layout_height}<br/>";
+      if ($$imposition{layout_height} + $margin > $film_width) {
+        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches greater than the layout height $$imposition{layout_height}<br/>";
       }
+    }
+    if ($$specs{"override_film_width-$form"} eq 'Y') {
+      $$imposition{length} = $length;
+      $$imposition{width} = $width;
+      $$imposition{area} = $length * $width * $sheets;
+      my $laminate_area = $$imposition{laminate_area} = $length * $film_width * $sheets;
+      if ($waste) {
+        if (lc $$waste{units} eq 'percent') {
+          $$waste{total} = int($laminate_area * $$waste{value}/100);
+          $laminate_area += $$waste{total};
+          $$imposition{laminate_area} = $laminate_area;
+        }
+      }
+      return $imposition;
     }
     return undef;
   } # end style
@@ -771,7 +840,7 @@ sub display {
 	my $Project = new openprint::Project( $project_index );
 
   my %page;
-	my @equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
+	my @equipment = openprint::Equipment->find( Specifications => {'Laminating Capable'=>'Y'}, useinestimating=>1, order=>'strName');
 	foreach my $qty_index ( $Project->quantity_indexes() ) {	
     $page{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->strid(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
 
