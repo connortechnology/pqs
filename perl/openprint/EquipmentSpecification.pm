@@ -42,7 +42,7 @@ sub Equipment {
 
 sub to_breakdown {
   my $self = shift;
-  return $$self{value}.$$self{units}.'='.$$self{total};
+  return (1*$$self{value}).(lc $$self{units} eq 'percent' ? '%' : $$self{units}).'='.(1*$$self{total});
 }
 
 1;
