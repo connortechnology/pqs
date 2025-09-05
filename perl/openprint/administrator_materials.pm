@@ -287,14 +287,19 @@ sub _prices_per_equipment {
 } # end sub _prices_per_equipment
 
 sub list {
+  my $uri = misc::get_session_uri($r->uri());
+
   _list();
-  $openprint::session{$r->uri().'?deleted'} = '0' if ! exists $openprint::session{$r->uri().'?deleted'};
+  $openprint::session{$uri.'?deleted'} = '0' if ! exists $openprint::session{$r->uri().'?deleted'};
 }
 sub _list {
-  ssi::save_params( '/administrator/materials/list.html', (
-      'deleted', 'material_name', 'equipment_id', 'category_id', 'type_id',
-    ) );
-  return if ! $param{btnFunction};
+  if (!$param{btnFunction}) {
+    my $uri = misc::get_session_uri($r->uri());
+    ssi::save_params( $uri, (
+        'deleted', 'material_name', 'equipment_id', 'category_id', 'type_id',
+      ) );
+    return;
+  }
 
   if ($param{btnFunction} eq 'delete') {
     my @ids = exists($param{'material_id[]'}) ? @{$param{'material_id[]'}} : (
