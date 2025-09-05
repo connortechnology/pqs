@@ -17,17 +17,17 @@
       my $module = 'openprint::Estimating::'.$service_type->type();
       eval ( 'require '.$module.';' );
       $log->error("eval error $@") if $@;
-      $log->debug("Has servicetype for $module");
+      #$log->debug("Has servicetype for $module");
 
       if (my $function = $module->can('MaterialPriceConfiguration')) {
-        $log->debug("Has function for $module");
+        #$log->debug("Has function for $module");
         $Configuration = $function->($$Material{name});
-        $openprint::log->debug( Data::Dumper::Dumper($Configuration));
+        #$openprint::log->debug( Data::Dumper::Dumper($Configuration));
         last if $Configuration;
       }
     }
   }
-  $openprint::log->debug( Data::Dumper::Dumper($Configuration));
+  #$openprint::log->debug( Data::Dumper::Dumper($Configuration));
 	#my $Configuration = $openprint::Material::Configuration{$$variable{Material}{name}};
   my $Currency = $$variable{Pricelist}->Currency();
 
