@@ -1,12 +1,17 @@
 use strict;
+use warnings;
+
 package openprint::MaterialType;
 our @ISA = qw( openprint::Object );
 require openprint::Material;
 
-use vars qw( $table $serial %fields );
+use vars qw( $debug $table $serial %fields $default_sort);
+
+$debug = 1;
 
 $table = 'material_type';
 $serial = 'material_type_id_seq';
+$default_sort = 'lower(name)';
 %fields = (
 	id	=>	'id',
 	name	=>	'name',
