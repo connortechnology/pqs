@@ -6,7 +6,7 @@
         <label>Category</label>
         <select name="ddmSearchCategory" on_change_this="submitElementsForm">
           <option value="">All Categories</option>
-          <? echo ( make_drop_down( openprint::MaterialCategory->dropdown( ), $session{$$variable{uri}.'?ddmSearchCategory'} ); ) ?>
+          <? echo ( make_drop_down( openprint::MaterialCategory->dropdown( ), $page_session{ddmSearchCategory} ); ) ?>
         </select>
       </li>
       <li>
@@ -14,20 +14,31 @@
         <input type="text" name="search_activity_code" value="<?echo($session{'/administrator/materials/edit.html?search_activity_code'})?>" />
       </li>
       <li><label>Equipment</label>
-        <select name="equipment_id" on_change-this="submitElementsForm">
+        <select name="equipment_id" on_change_this="submitElementsForm">
           <option value="">All</option>
           <? echo (
             $variable{Equipment} = [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find() ];
             make_drop_down( $variable{Equipment}, $param{equipment_id} ); ) ?>
         </select>
       </li>
+      <li class="type"><label>Type</label>
+        <?echo(
+       ssi::select( 
+              openprint::MaterialType->dropdown(), 
+              $page_session{type_id}, { 
+              name=>'type_id', 
+              prepend=>[ '', 'All' ],
+              on_change_this=>"submitElementsForm",
+
+              } ); ) ?>
       <li>
         <label>Material</label>
         <select name="material_id" on_change_this="submitElementsFormIfHasValue">
           <option value="">Select a Material</option>
           <? echo (
               make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find(
-                  ( $session{$$variable{uri}.'?ddmSearchCategory'} ? ( category_id=>$session{$$variable{uri}.'?ddmSearchCategory'} ) : () ),
+                  ( $page_session{ddmSearchCategory} ? ( category_id=>$page_session{ddmSearchCategory} ) : () ),
+                  ( $page_session{type_id} ? ( type_id=>$page_session{type_id} ) : () ),
                   ( $param{equipment_id} ? ( 'equipment_id any' => $param{equipment_id} ) : () ),
                   ) ], $$variable{Material}->id() );
               ) ?>
