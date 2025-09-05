@@ -139,5 +139,28 @@ sub type {
   return $_[0]->name();
 }
 
-1;
-__END__
+sub configuration {
+  my $self = shift;
+  my $type = shift;
+
+  my $config;
+  my $module = $self->type();
+  if (!$module) {
+    $openprint::log->error("No type set for ".$self->name());
+  } else {
+    $module =~ s/^openprint::Estimating:://;
+    $module = 'openprint::Estimating::'.$module;
+    eval ( 'require '.$module.';' );
+    $openprint::log->error("eval error $@") if $@;
+
+    if (my $function = $module->can($type.'Configuration')) {
+      $config = $function->();
+    } else {
+      $openprint::log->debug("No $type Configuration in $module");
+    }
+  }
+  return $config;
+} # end sub configuration
+
+  1;
+  __END__
