@@ -144,3 +144,74 @@
 <? echo ( include_logs( $$variable{Material} ); ) ?>
 <? endif ( $$variable{Material}->id() ) ?>
 <script src="<?hash_link(/openprint/javascripts/pricing.js)?>"></script>
+<script>
+const SpecificationsConfiguration = <?echo(
+    my $config;
+    foreach my $service_type ($$variable{Material}->ServiceTypes()) {
+      my $c = $service_type->configuration('MaterialSpecifications');
+      $log->debug("config for $$service_type{id} is ".Data::Dumper::Dumper($c));
+      $$config{$$service_type{id}} = $c;
+    }
+    return JSON::encode_json($config);
+    )?>;
+
+function get_config(name) {
+  var config = null;
+
+  Object.entries(SpecificationsConfiguration).forEach(([key, value]) => {
+    //console.log(`${key}: ${value}`);
+    if (value[name]) {
+      console.log(name, value[name]);
+      config = value[name];
+      return;
+    //} else {
+      //console.log(name);
+    }
+  });
+  return config;
+}
+
+function specification_name_onchange(e) {
+  const re = /^txtSpecificationName(\d*)$/;
+  const matches = e.name.match(re);
+  const id = matches[1];
+  const config = get_config(e.value);
+  if (!config) {
+    console.log('No config');
+    return;
+  }
+    console.log(config);
+  if (config.units) {
+    console.log(config.units);
+
+    console.log(id, e.form.elements['units-'+id]);
+
+    let units_ddm = e.form.elements['units-'+id];
+    const currentValue = $j(units_ddm).val();
+    if (currentValue && !config.units.find(currentvalue))
+      config.units[config.units.length] = currentValue;
+
+    if (config.units.length > 1) {
+      if (units_ddm.nodeName != 'SELECT') {
+        console.log(units_ddm.nodeName);
+        const parent = units_ddm.parentNode;
+        console.log(parent);
+        units_ddm.remove();
+        units_ddm = document.createElement('SELECT');
+        units_ddm.name = 'units-'+id;
+        parent.appendChild(units_ddm);
+      } else {
+        console.log("is select");
+        clear_ddm(units_ddm);
+      }
+
+      for (let i=0; i<config.units.length; i++) {
+        units_ddm.add(create_option(config.units[i], config.units[i]));
+      }
+      ddm_select_by_value(units_ddm, currentValue);
+    } else {
+      units_ddm.value = currentValue ? currentValue : config.units[0];
+    }
+  } // end if config.units
+}
+</script>
