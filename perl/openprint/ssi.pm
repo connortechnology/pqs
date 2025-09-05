@@ -1,9 +1,10 @@
 use strict;
 package openprint::ssi;
 
-use constant Debug => 0;
+use constant Debug => 1;
 
 require Date::Calc;
+require JSON;
 
 # For Hash stuff
 use File::Basename;
@@ -923,11 +924,11 @@ sub save_params {
 			next;
 		}
 		if (ref $param{$_} eq 'ARRAY') {
-			$session{"$url?$_"} = join(',', @{$param{$_}} );
+			$page_session{$_} = $session{"$url?$_"} = join(',', @{$param{$_}} );
 $openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if Debug;
 		} else {
       s/^\s+//, s/\s+$// for $param{$_};
-			$session{$url.'?'.$_} = $param{$_};
+			$page_session{$_} = $session{$url.'?'.$_} = $param{$_};
 $openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if Debug;
 		} # end if
 		$session{$url.'?lastupdated'} = time;

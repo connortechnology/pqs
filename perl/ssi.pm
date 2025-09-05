@@ -1367,11 +1367,11 @@ sub save_params {
       next;
     }
     if (ref $param{$_} eq 'ARRAY') {
-      $session{"$url?$_"} = join(',', @{$param{$_}} );
+      $page_session{$_} = $session{"$url?$_"} = join(',', @{$param{$_}} );
 $log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if DEBUG;
     } else {
       s/^\s+//, s/\s+$// for $param{$_};
-      $session{$url.'?'.$_} = $param{$_};
+      $page_session{$_} = $session{$url.'?'.$_} = $param{$_};
 $log->debug("Storing ($_) (".$session{"$url?$_"}.")") if DEBUG;
     } # end if
     $session{$url.'?lastupdated'} = time;

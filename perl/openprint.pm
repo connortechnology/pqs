@@ -1,11 +1,11 @@
 use strict;
 use warnings;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser $Host);
+use vars qw( $r %variable %session %page_session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser $Host);
 
 *Currency = \$openprint::Currency;
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 require openprint::Host;
 require openprint::Host_Interface;
@@ -17,7 +17,6 @@ require openprint::Currency;
 require DateTime::TimeZone;
 
 sub session_init {
-
 	$parser = 'DateTime::Format::Pg';
  
 	if ( ! $openprint::config{Timezone} ) {
@@ -57,12 +56,10 @@ sub session_init {
 						%session = ();
 					} # end if
 				} # end if
-				# Store this, will be useful
 			} # end if
 
-
 			if ( (!$cookie) or ( $cookie ne $session{_session_id} ) ) {
-$log->debug('Generating new cookie '.$session{_session_id}) if Debug;
+        $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 				my $Cookie = Apache2::Cookie->new($r,
 						-name	=> '_session_id',
 						-value => $session{_session_id},
@@ -75,6 +72,13 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 					$log->error('No Cookie.  Does db have a sessions table?');
 				} # end if
 			} # end if
+
+      my $uri = misc::get_session_uri($r->uri());
+      foreach my $k (keys %session) {
+        if ($k =~ /^$uri\?(.*)$/) {
+          $page_session{$1} = $session{$k};
+        }
+      }
 		} else {
 			%session = ();
 		} # end if
