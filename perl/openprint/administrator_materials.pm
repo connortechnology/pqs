@@ -26,7 +26,7 @@ sub edit {
 	require openprint::Equipment;
 
 	my $Material = $variable{Material} = new openprint::Material( $param{material_id} );
-	ssi::save_params( $variable{uri}, ( 'ddmSearchCategory' ) );
+	ssi::save_params( $variable{uri}, ( 'ddmSearchCategory', 'type_id','equipment_id' ) ) if !$param{btnFunction};
 
 	if ( $param{btnFunction} ) {
 		if ( $param{btnFunction} eq '<<' ) {
@@ -173,7 +173,7 @@ sub edit {
 								equipment_id	=>	$param{'spec_equipment_id-'.$$Spec{id}},
 								min				=>	$param{'txtSpecificationMin'.$$Spec{id}},
 								max				=>	$param{'txtSpecificationMax'.$$Spec{id}},
-								units			=>	$param{'txtSpecificationUnits'.$$Spec{id}},
+								units			=>	$param{'spec_units-'.$$Spec{id}},
 								name			=>	$param{'txtSpecificationName'.$$Spec{id}},
 								value			=>	$param{'txtSpecificationValue'.$$Spec{id}},
 								interpolate		=>	$param{'interpolate'.$$Spec{id}},
@@ -184,7 +184,7 @@ sub edit {
 									equipment_id	=>	$param{'spec_equipment_id-'.$$Spec{id}},
 									min				=>	$param{'txtSpecificationMin'.$$Spec{id}},
 									max				=>	$param{'txtSpecificationMax'.$$Spec{id}},
-									units			=>	$param{'txtSpecificationUnits'.$$Spec{id}},
+									units			=>	$param{'spec_units-'.$$Spec{id}},
 									name			=>	$param{'txtSpecificationName'.$$Spec{id}},
 									value			=>	$param{'txtSpecificationValue'.$$Spec{id}},
 									interpolate		=>	$param{'interpolate'.$$Spec{id}},
