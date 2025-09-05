@@ -24,7 +24,7 @@ require openprint::Equipment;
 require openprint::service;
 
 require sql;
-use vars qw( %ServicePrices %MaterialPrices %Specifications);
+use vars qw( %ServicePrices %MaterialPrices %Specifications %MaterialSpecifications);
 %ServicePrices = (
   LaminatingMinimumCharge => { units=>[] },
   LaminatingMakeReady => { units => [] },
@@ -78,6 +78,25 @@ sub SpecificationConfiguration {
   my $name = shift;
   return $Specifications{$name} if $Specifications{$name};
   return undef;
+}
+
+%MaterialSpecifications = (
+  '.*Laminate.*' => {
+    'Run Speed' => { units => ['inches per hour'] },
+  },
+);
+
+sub MaterialSpecificationsConfiguration {
+  if (@_) {
+    my $name = shift;
+    return $MaterialSpecifications{$name} if $MaterialSpecifications{$name};
+    foreach my $key (keys %MaterialSpecifications) {
+      return $MaterialSpecifications{$key} if ($name =~ /$key/i);
+    }
+    $openprint::log->debug(" $name => $MaterialSpecifications{$name}");
+    return undef;
+  }
+  return \%MaterialSpecifications;
 }
 
 my @variables = (
@@ -392,13 +411,15 @@ sub signature_calc {
     my $maximum_sheet_width = $equipment->specification('Maximum Sheet Width') // '';
     my $maximum_sheet_length= $equipment->specification('Maximum Sheet Length') // '';
 
-    $equipment_price{breakdown} .= sprintf('Equipment: %s max Width: %s&quot; Length: %s&quot;<br/>',
+    my $Speed = $equipment->Specification('Run Speed') ;
+
+    $equipment_price{breakdown} .= sprintf('Equipment: %s max Width: %s&quot; Length: %s&quot;'.( $Speed ? ' base runspeed: '.$Speed->value().$Speed->units():'').'<br/>',
       $equipment->name(), $maximum_sheet_width, $maximum_sheet_length);
 
     my $film_width_options = $equipment->specification('Laminate Width') // '';
-    my @film_widths = map { $_ =~ s/[^\d\.]//; $_ } split(',', $film_width_options) if $film_width_options;
+    my @film_widths = sort { $b <=> $a } map { $_ =~ s/[^\d\.]//; $_ } split(',', $film_width_options) if $film_width_options;
 
-    $openprint::log->debug("Laminate widths: @film_widths from $film_width_options");
+    $openprint::log->debug("Laminate widths on $$equipment{name}: @film_widths from $film_width_options");
 
     if ($$specs{"override_film_width-$form"} eq 'Y') {
       if ($$specs{"custom_film_width-$form"}) {
@@ -421,11 +442,7 @@ sub signature_calc {
 
       my $impo = get_laminating_imposition($equipment, $imposition, $specs, \%laminate_price, $qty, $film_width);
       if ($impo) {
-        my $sheets = $$impo{sheets}; # may be adjusted by impo
-
         $laminate_price{breakdown} .= 'Laminate width is '.($$specs{"override_film_width-$form"} eq 'Y'?'overriden to ':'').$film_width .'&quot;<br/>';
-        #$$impo{film_width} = $film_width;
-
         %laminate_price = get_price($equipment, $impo, \%laminate_price, $qty);
       }
 
@@ -433,6 +450,7 @@ sub signature_calc {
         #$openprint::log->debug("Have better laminate price: $best_laminate_price{total} > $laminate_price{total} on $film_width $laminate_price{breakdown}");
         %best_laminate_price = %laminate_price;
       } # end if
+      last if $laminate_price{total}; # HACK, have valid, widest
     } # end foreach film_width
     $openprint::log->debug("best laminate price: ".Data::Dumper::Dumper(\%best_laminate_price));
 
@@ -458,11 +476,28 @@ sub get_price {
   my $style = $equipment->specification('Laminating Style') // 'Final Pieces';
   my $sides = $equipment->specification('Laminating Sides') // 'Single';
 
+  my $FrontMaterial = openprint::Material->find_one(name=>$$imposition{TypeFront}) if $$imposition{TypeFront};
+  my $BackMaterial = openprint::Material->find_one(name=>$$imposition{TypeBack}) if $$imposition{TypeBack};
+
   my %SetupPrice = $MakeReady->get_price(undef, $equipment) if $MakeReady;
   $price{total} += $SetupPrice{Price};
   $price{breakdown} .= '<table>';
   my $setup_overs = $$imposition{setup_overs};
   my $run_overs = $$imposition{run_overs};
+
+  my $inches_per_hour;
+  my $Speed = $equipment->Specification('Run Speed') ;
+  if ( $Speed ) {
+    if ( lc $$Speed{units} eq 'inches per hour' ) {
+      $inches_per_hour = $$Speed{value};
+    } else {
+      $price{breakdown} .= "Unknown speed units $$Speed{units}<br/>";
+      $inches_per_hour = 720;
+    } # end if
+  } else {
+    $price{breakdown} .= 'No speed set<br/>';
+    $inches_per_hour = 720;
+  } # end if
 
   $price{breakdown} .= '<tr><td class="desc">Impressions: net: '.$qty.' + setup overs: '.$setup_overs->to_breakdown().' + run overs: '.$run_overs->to_breakdown().' = '.$$imposition{sheets}.'</td><td></td></tr>';
   my $linear_length = Math::Round::nearest(0.01, $length * $sheets);
@@ -499,31 +534,57 @@ sub get_price {
       $price{MPrice} += $ServicePrice{Price};
     } elsif ( $ServicePrice{units} eq 'per inch' or $ServicePrice{units} eq 'per linear inch') {
       $ServicePrice{Total} = Math::Round::nearest(0.01, $ServicePrice{Price} * $linear_length);
-      if ($$imposition{TypeFront} and $$imposition{TypeBack} and $sides eq 'Single') {
-        $ServicePrice{Total} *= 2;
-        $price{breakdown} .= sprintf('<tr><td class="desc">Service: $%1$s %2$s * %4$s linear inches * 2 sides</td><td class="Price">$%3$.2f</td></tr>',
-          @ServicePrice{'Price','units','Total'},
-          Number::Format::format_number($linear_length));
+      if ($sides eq 'Single') {
+
+        if ($$imposition{TypeFront}) {
+          my $front_inches_per_hour = $inches_per_hour;
+          my $front_speed = $FrontMaterial->Specification('Run Speed', undef, $equipment);
+          if ( $front_speed ) {
+          $openprint::log->debug("front speed".Data::Dumper::Dumper($front_speed));
+            if ( lc $$front_speed{units} eq 'inches per hour' ) {
+              $front_inches_per_hour = $$front_speed{value};
+            } else {
+              $price{breakdown} .= "Unknown speed units on $$FrontMaterial{name}: $$front_speed{units}<br/>";
+            } # end if
+          } # end if
+
+          my %FrontServicePrice = %ServicePrice;
+          $price{breakdown} .= sprintf('<tr><td class="desc">Service Front: $%1$s %2$s * %4$s linear inches @%5$d%6$s</td><td class="Price">$%3$.2f</td></tr>',
+            @FrontServicePrice{'Price','units','Total'},
+            Number::Format::format_number($linear_length),
+            $front_inches_per_hour, 'inches per hour',
+          );
+        }
+        if ($$imposition{TypeBack}) {
+          my $back_inches_per_hour = $inches_per_hour;
+          my $back_speed = $BackMaterial->Specification('Run Speed', undef, $equipment);
+          if ( $back_speed ) {
+          $openprint::log->debug("back speed".Data::Dumper::Dumper($back_speed));
+            if ( lc $$back_speed{units} eq 'inches per hour' ) {
+              $back_inches_per_hour = $$back_speed{value};
+            } else {
+              $price{breakdown} .= "Unknown speed units on $$BackMaterial{name}: $$back_speed{units}<br/>";
+            } # end if
+          } # end if
+          my %BackServicePrice = %ServicePrice;
+          $price{breakdown} .= sprintf('<tr><td class="desc">Service Back: $%1$s %2$s * %4$s linear inches @%5$d%6$s</td><td class="Price">$%3$.2f</td></tr>',
+            @BackServicePrice{'Price','units','Total'},
+            Number::Format::format_number($linear_length),
+            $back_inches_per_hour, 'inches per hour',
+          );
+          $ServicePrice{Total} += $BackServicePrice{Total};
+          $ServicePrice{Price} += $BackServicePrice{Price};
+        }
       } else {
-        $price{breakdown} .= sprintf('<tr><td class="desc">Service: $%1$s %2$s * %4$s linear inches</td><td class="Price">$%3$.2f</td></tr>',
+        $price{breakdown} .= sprintf('<tr><td class="desc">Service %5$s: $%1$s %2$s * %4$s linear inches</td><td class="Price">$%3$.2f</td></tr>',
           @ServicePrice{'Price','units','Total'},
-          Number::Format::format_number($linear_length));
-      }
+          Number::Format::format_number($linear_length),
+          (($$imposition{TypeFront} and $$imposition{TypeBack}) ? 'both sides' : '')
+        );
+      } # end if sides
+
       $price{MPrice} += Math::Round::nearest( 0.01, $ServicePrice{Price} * ($length * 1000 / $$imposition{imposition}));
     } elsif ( $ServicePrice{units} eq '/Hr' or $ServicePrice{units} eq 'per hour') {
-      my $inches_per_hour;
-      my $Speed = $equipment->Specification('Run Speed') ;
-      if ( $Speed ) {
-        if ( lc $$Speed{units} eq 'inches per hour' ) {
-          $inches_per_hour = $$Speed{value};
-        } else {
-          $price{breakdown} .= "Unknown speed units $$Speed{units}<br/>";
-          $inches_per_hour = 720;
-        } # end if
-      } else {
-        $price{breakdown} .= 'No speed set<br/>';
-        $inches_per_hour = 720;
-      } # end if
 
       if ($style ne 'Sheet' ) {
         my $hours = Math::Round::nearest( 0.01, $length * ( $qty / $$imposition{imposition} ) / $inches_per_hour );
@@ -665,6 +726,7 @@ sub get_laminating_imposition {
   my $run_overs = $equipment->Specification('Laminating Run Overs');
   if ($run_overs) {
     $run_overs = $run_overs->clone();
+    $$run_overs{value} //= 0;
     if ($$run_overs{units} eq 'Percent') {
       $$run_overs{total} = $qty * ($$run_overs{value}/100);
     } else {
