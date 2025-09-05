@@ -58,6 +58,7 @@ sub cleanup {
 	if ( $dbh ) {
 		$session{lastupdated} = time;
 		untie %session;
+    %openprint::page_session = ();
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
 		$openprint::Service::cached = 0;
