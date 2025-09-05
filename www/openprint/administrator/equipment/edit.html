@@ -138,14 +138,18 @@
 				<label>JDF Name</label>
 				<input type="text" name="jdf_name" value="<? hecho ( $$variable{Equipment}->jdf_name(); ) ?>"  />
 			</li>
-			<li>
-				<label>Location</label>
+      <?echo(my @locations = openprint::Location->find( order=>'parent_id NULLS FIRST, lower(name)', type=>'place', company_id=>$openprint::Owner->id());
+      if (@locations) {
+      return join("\n", '<li><label>Location</label>
 				<select id="location_id" name="location_id">
-					<option value="">select</option>
-          <? echo ( make_drop_down( openprint::Location->dropdown( order=>'parent_id NULLS FIRST, lower(name)', type=>'place', company_id=>$openprint::Owner->id()), $$variable{Equipment}->location_id() ); ) ?>
-				</select>
-			</li>
-			<li>
+					<option value="">select</option>'.
+          make_drop_down([map { $$_{id} => $$_{name} } @locations], $$variable{Equipment}->location_id() ),
+				'</select>
+			</li>');
+      }
+      return '';
+      )?>
+			<li class="cip3_integration">
 				<label>CIP3 Integration</label>
         <?echo(radio('cip3_monitor', ['1','Yes','0','No'], $$variable{Equipment}->cip3_monitor(), { onclick=>q`if(this.value==1){$('CIP3').show();}else{$('CIP3').hide();}`, default=>'0' } );)?>
 			</li>
