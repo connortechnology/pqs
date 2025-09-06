@@ -80,6 +80,8 @@ use constant DEBUG_FOLDING => 0;
 	useinestimating	=>	undef,
 	useinscheduling	=>	undef,
   smartscheduling => 0,
+  jmf_enabled => 0,
+  instantgate_enabled => 0,
 );
 
 sub fits {
@@ -425,38 +427,18 @@ sub copy {
 	}
 
 # Now do pricing, start with Service Prices
-	my @prices = sql::execute( undef, undef, q{SELECT pricelist_id, service_id, min, max, units, cost, markup, price FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
-	while ( my ( $list_id, $service_id, $min, $max, $units, $cost, $markup, $price ) = splice @prices, 0, 8 ) {
-		sql::insert( undef, undef, 'Service_Prices',[
-				'pricelist_id',	 $list_id,
-				'service_id',	$service_id,
-				'min',			$min,
-				'max',			$max,
-				'units',		 $units,
-				'cost',			$cost,
-				'markup',		$markup,
-				'Price',		 $price,
-				'equipment_id', $$new{id},
-				]);
-	} # end while
-	@prices = sql::execute( undef, undef, q{SELECT lnglistindex, lngmaterialindex, lngmin, lngmax, strunits, dblcost, dblmarkup, dblprice FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
-	while ( my ( $list_id, $service_id, $min, $max, $units, $cost, $markup, $price ) = splice @prices, 0, 8 ) {
-		sql::insert( undef, undef, 'tbl_Material_Prices',[
-				'lnglistindex',	 $list_id,
-				'lngmaterialindex', $service_id,
-				'lngmin',			$min,
-				'lngmax',			$max,
-				'strunits',		 $units,
-				'dblcost',			$cost,
-				'dblmarkup',		$markup,
-				'dblPrice',		 $price,
-				'lngEquipmentindex', $$new{id},
-				] );
-	} # end while
+foreach my $sp (openprint::ServicePrice->find(equipment_id=>$$self{id})) {
+  $sp = $sp->clone();
+  $sp->save({equipment_id=>$$new{id}});
+}
+foreach my $mp (openprint::MaterialPrice->find(equipment_id=>$$self{id})) {
+  $mp = $mp->clone();
+  $mp->save({equipment_id=>$$new{id}});
+}
 	# Equipment_shifts
-	foreach my $ES ( openprint::Equipment_Shift->find(equipment_id=>$$self{id}) ) {
-		$ES->copy()->save({equipment_id=>$$new{id}});
-	} # end foreach $ES
+  #foreach my $ES ( openprint::Equipment_Shift->find(equipment_id=>$$self{id}) ) {
+  #$ES->copy()->save({equipment_id=>$$new{id}});
+  #} # end foreach $ES
 	sql::end_transaction( $openprint::dbh, $ac );
 
 	return $new;
