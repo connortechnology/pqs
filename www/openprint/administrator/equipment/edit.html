@@ -35,11 +35,11 @@
 				button( 'NewTop', { href=>'/administrator/equipment/edit.html', text=>'New' } ),
 				( $$variable{Equipment}->deleted() ? (
 				button( 'Destroy', { onclick=>"f1.btnFunction.value='Destroy';fmChange=2;fmCheck(f1);", text=>'Destroy' } ),
-				button( 'UnDelete', { onclick=>"f1.btnFunction.value='UnDelete';fmChange=2;fmCheck(f1);", text=>'UnDelete' } ),
+				button( 'UnDelete', { onclick=>"f1.btnFunction.value='UnDelete';f1.submit();", text=>'UnDelete' } ),
 				) : (
 				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
 				) ),
-				button( 'SaveTop', { onclick=>q`$('f2').btnFunction.value='Save';fmChange=3;fmCheck($('f2'));`, text=>'Save' } ),
+				button( 'SaveTop', { onclick=>q`$('f2').btnFunction.value='Save';$('f2').submit();`, text=>'Save' } ),
 				button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
 				button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ),
 				);
