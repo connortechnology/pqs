@@ -177,7 +177,7 @@
 <? if ( $$variable{Equipment}->id() ) ?>
 <div id="ServicePrices">
   <fieldset><legend>Service Prices <span id="toggle_service_prices" on_click="toggle_service_prices" title="Toggle visibility of service prices">
-<?echo($session{$r->uri().'?show_service_prices'} ? '-' : '+')?>
+<?echo($page_session{show_service_prices} ? '-' : '+')?>
 </span></legend>
   <p class="buttons">
 			<input type="file" name="fileServicePrices"/>
@@ -186,11 +186,13 @@
 			button( 'ExportServicePrices', { onclick=>"f2.btnFunction.value='Export Service Prices';f2.submit();", text=>'Export' } ),
 			); ) ?>
   </p>
-    <div id="show_service_prices"><?echo($session{$r->uri().'?show_service_prices'} ? include('_service_prices.html') : '' )?></div>
+    <div id="show_service_prices"><?include('_service_prices.html')?></div>
   </fieldset>
 </div><!--ServicePrices-->
 <div class="Specifications">
-<fieldset><legend>Specifications <span id="toggle_specifications" on_click="toggle_specifications">+</span></legend>
+  <fieldset><legend>Specifications <span id="toggle_specifications" on_click="toggle_specifications">
+        <?echo($page_session{show_specifications} ? '-' : '+')?>
+      </span></legend>
   <p class="buttons">
 			<input type="file" name="fileSpecifications"/>
 			<? echo ( join("\n",
