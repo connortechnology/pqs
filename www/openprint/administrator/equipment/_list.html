@@ -1,6 +1,6 @@
 <? eval (
-	my $uri = '/administrator/equipment/list.html';
-    my %filters = (
+  my $uri = misc::get_session_uri($r->uri());
+  my %filters = (
 		order	=>	'lower(strid)',
 		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
 		( $session{$uri.'?useinestimating'} ne '' ? ( useinestimating => $session{$uri.'?useinestimating'} ) : () ),
