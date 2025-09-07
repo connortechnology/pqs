@@ -582,7 +582,7 @@ function clearForm(form) {
 		if ( ! e.type )
 			continue;
 		if ( e.type == 'checkbox' || e.type == 'radio' ) {
-			e.checked = '';
+			e.checked = !e.value;
 		} else if (e.type == 'hidden' || e.type == 'password' || e.type == 'text' || e.type == 'textarea' || e.type == 'number' || e.type == 'email' || e.type == 'url' || e.type == 'tel' ) {
 			e.value = '';
 		} else if ( e.type == 'select-one' ) {
@@ -598,6 +598,8 @@ function clearForm(form) {
 			//alert(e.type);
 		} // end if
 	} // end for
+  const on_change = form.getAttribute('on_change');
+  if (on_change) window[on_change]();
 } // end function clearForm(form)
 
 function update_changed( element ) {
