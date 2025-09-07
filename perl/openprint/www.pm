@@ -369,8 +369,8 @@ sub parse_page {
   $openprint::log->debug("URI: $uri real:$real_uri thing:@thing");
 	my $filename = pop @thing;
 	my @path = @thing;
-	my $first = shift @thing;
-  $first = shift @thing while $first eq '' or $first eq 'openprint' and @thing;
+	my $first = shift @thing if @thing;
+  #$first = shift @thing while $first eq '' or $first eq 'openprint' and @thing;
 	my $second = shift @thing if @thing;
 	my $third = shift @thing if @thing;
 	my $fourth = shift @thing if @thing;
