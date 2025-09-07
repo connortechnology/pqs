@@ -115,10 +115,15 @@ li input[type="text"] {
 .Specifications {
   margin-top: 13px;
 }
+#ServicePrices .buttons {
+  width: 100px;
+}
+/*
 #ServicePrices tr th button.btn {
   font-size: 1.5rem;
   padding: 0.25rem 0.6rem;
 }
+*/
 
 .Specifications fieldset legend,
 #ServicePrices fieldset legend {
@@ -127,6 +132,7 @@ li input[type="text"] {
 
 #toggle_specifications,
 #toggle_service_prices {
+  cursor: pointer;
   position: absolute;
   top: -15px;
   right: 40px;
