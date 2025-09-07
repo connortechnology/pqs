@@ -184,37 +184,39 @@ sub session_init {
     }
   }
 
-  my $ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
-  if ($ip) {
-    my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
-    # FIXME :ipv6
-    if ($safe_ip and ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
-      openprint::Host_Interface->lock();
-      my @Interfaces = openprint::Host_Interface->find(ip=>$safe_ip);
-      if ( !@Interfaces ) {
-        $log->debug('No HI found for '.$safe_ip);
-        $Host = openprint::Host->find_one(hostname=>$safe_ip);
-        if (!$Host) {
-          $Host = new openprint::Host();
-          $Host->save({hostname=>$safe_ip});
-        }
+  my @ips = split(',', $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR});
+  $log->debug("@ips");
+  foreach my $ip (@ips) {
+    if ($ip) {
+      my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
+      # FIXME :ipv6
+      if ($safe_ip and ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+        openprint::Host_Interface->lock();
+        my @Interfaces = openprint::Host_Interface->find(ip=>$safe_ip);
+        if ( !@Interfaces ) {
+          $log->debug('No HI found for '.$safe_ip);
+          $Host = openprint::Host->find_one(hostname=>$safe_ip);
+          if (!$Host) {
+            $Host = new openprint::Host();
+            $Host->save({hostname=>$safe_ip});
+          }
 
-        # The logging of the creation of the Host entry will save the host_interface
-        # But it isn't.
-        my $HI = new openprint::Host_Interface();
-        $HI->save({host_id=>$Host->id(), ip=>$safe_ip});
-      } else { 
-        if ( @Interfaces > 1 ) {
-          $log->error("More than 1 Interface with ip $safe_ip");
+          # The logging of the creation of the Host entry will save the host_interface
+          # But it isn't.
+          my $HI = new openprint::Host_Interface();
+          $HI->save({host_id=>$Host->id(), ip=>$safe_ip});
+        } else { 
+          if ( @Interfaces > 1 ) {
+            $log->error("More than 1 Interface with ip $safe_ip");
+          }
+          $Host = $Interfaces[0]->Host();
         }
-        $Host = $Interfaces[0]->Host();
-      }
-      openprint::Host_Interface->unlock();
-    } else {
-      $log->warn("ip and safe ip differ. $ip != $safe_ip bad ip");
-    } # end if safe_ip
-  } # end if ip
-
+        openprint::Host_Interface->unlock();
+      } else {
+        $log->warn("ip and safe ip differ. $ip != $safe_ip bad ip");
+      } # end if safe_ip
+    } # end if ip
+  } # end foreach ip
 } # end sub session_init
 
 sub switch_company {
