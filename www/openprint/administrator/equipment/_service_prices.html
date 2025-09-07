@@ -1,5 +1,5 @@
 <? echo (
-return '' if !$session{'/administrator/equipment/edit.html?show_service_prices'};
+return '' if !$page_session{show_service_prices};
 my $html = '';
 my $Equipment = $$variable{Equipment};
 
@@ -29,14 +29,14 @@ foreach my $Pricelist ( openprint::Pricelist->find() ) {
           <th class="Markup">Mark up</th>
           <th class="Price">Price</th>
           <th class="Units">Units</th>
-          <th class="Discount">Discount?</th>
+          <th class="Discount" title="Whether to apply customer discounts to this price">Discount?</th>
           <th class="Mode">Mode</th>
           <th class="buttons">
     '.
     button( join('_', 'add',$$Pricelist{id},$$Equipment{id},$$service{id}), { type=>'button',
         on_click_this=>'add_new_price',
         data_pricelist_id=>$$Pricelist{id}, data_equipment_id=>$$Equipment{id}, data_service_id=>$$service{id},
-        text=>'+', title=>'Add New Price to '.$Equipment->strid() .' for '.$service->description()} ) . qq`</th>
+        text=>'Add', title=>'Add New Price to '.$Equipment->strid() .' for '.$service->description()} ) . qq`</th>
       </tr></thead><tbody id="prices-$$Pricelist{id}-$$Equipment{id}-$$service{id}">`;
     foreach my $price (@{$prices{$service->id()}}) {
       $$variable{Price} = $price;
