@@ -146,11 +146,11 @@ function del_price(btn) {
     action: 'delete'
   };
   let id;
-  let url = '/administrator/services/_prices_table_body.html';
+  let url = '/openprint/administrator/services/_prices_table_body.html';
   if (!(id = btn.getAttribute('data_service_id'))) {
     id = btn.getAttribute('data_material_id');
     data.material_id = id;
-    url = '/administrator/materials/_prices_table_body.html';
+    url = '/openprint/administrator/materials/_prices_table_body.html';
   } else {
     data.service_id = id;
   }
@@ -167,14 +167,15 @@ function del_price(btn) {
 } /* end function del_price() */
 
 function copy_price(btn) {
+  console.log(btn);
   const form = btn.form;
   const pricelist_id = btn.getAttribute('data_pricelist_id');
   const equipment_id = btn.getAttribute('data_equipment_id');
   let id;
-  let url = '/administrator/services/_prices_table_body.html';
+  let url = '/openprint/administrator/services/_prices_table_body.html';
   if (!(id = btn.getAttribute('data_service_id'))) {
     id = btn.getAttribute('data_material_id');
-    url = '/administrator/material/_prices_table_body.html';
+    url = '/openprint/administrator/material/_prices_table_body.html';
   }
 
   const price_id = btn.getAttribute('data_price_id');
@@ -183,6 +184,7 @@ function copy_price(btn) {
   const div = $j(prices_id);
   div.html('Please wait...loading.');
   const data = Object.fromEntries(new FormData(form));
+  console.log(data);
 	div.load(url+'?action=copy&price_id='+price_id, data, function() {
       update_event_bindings();
       });
@@ -201,12 +203,12 @@ function add_new_price(btn) {
     action: 'add'
   };
   let id;
-  let url = '/administrator/services/';
+  let url = '/openprint/administrator/services/';
   if (id = btn.getAttribute('data_service_id')) {
     data.service_id = id;
   } else {
     id = btn.getAttribute('data_material_id');
-    url = '/administrator/materials/';
+    url = '/openprint/administrator/materials/';
     data.material_id = id;
   }
 
