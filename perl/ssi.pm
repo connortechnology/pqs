@@ -1140,7 +1140,7 @@ sub button {
 ' : '</a>
 ';
   if ( $$options{onclick} ) {
-    $html .= '<script'.($r->dir_config('CSP_NONCE') ?' nonce="'.$r->dir_config('CSP_NONCE').'"':'').">
+    $html .= '<script'.($openprint::config{CSP_NONCE} ?' nonce="'.$openprint::config{CSP_NONCE}.'"':'').">
     document.getElementById('Button$name').onclick = function(){
     $$options{onclick};
     };
