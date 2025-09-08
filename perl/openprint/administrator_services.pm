@@ -206,13 +206,22 @@ sub _prices_table_body {
 } # end sub _prices_table_body
 
 sub _price {
-	$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
-	$variable{Pricelist} = new openprint::Pricelist( $param{pricelist_id} );
-	$variable{Service} = new openprint::Service( $param{service_id} );
 	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y' ) ];
 	if ( $param{action} eq 'add' ) {
 		my $Price = $variable{Price} = new openprint::ServicePrice();
+    $variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
+    $variable{Pricelist} = new openprint::Pricelist( $param{pricelist_id} );
+    $variable{Service} = new openprint::Service( $param{service_id} );
 		$variable{error} .= $Price->save({ equipment_id=>$param{equipment_id}, pricelist_id=>$param{pricelist_id}, service_id=>$param{service_id} });
+  } elsif ( $param{action} eq 'copy' ) {
+		my $price = openprint::ServicePrice->find_one(id=>$param{price_id});
+    if (!$price) {
+      $variable{error} .= 'Price not found for '.$param{price_id};
+      return;
+    }
+    $price = $price->clone();
+    $variable{error} .= $price->save({id=>undef});
+    $variable{Price} = $price;
 	} # end if
 } # end sub _price
 
