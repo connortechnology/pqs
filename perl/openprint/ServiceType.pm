@@ -130,9 +130,13 @@ sub link_to {
   my $options = @_ ? shift : {};
 	return '<a href="/openprint/administrator/service_types/edit.html?id='.$$self{id}.'"'.join(' ', map { $_.'="'.$$options{$_}.'"'} keys %$options).'>'.$text.'</a>';
 }
+
 sub button_to {
   my $self = shift;
-  return ssi::button('ServiceTypeButton'.$$self{id}, {href=>'/openprint/administrator/service_types/edit.html?id='.$$self{id},text=>(@_ ? shift : $$self{name})});
+  return ssi::button('ServiceTypeButton'.$$self{id}, {
+      href=>'/openprint/administrator/service_types/edit.html?id='.$$self{id},
+      text=>(@_ ? shift : $$self{name})
+    });
 }
 
 sub type {
