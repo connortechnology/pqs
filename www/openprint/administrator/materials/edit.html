@@ -2,18 +2,18 @@
 <form name="f1" id="f1" method="get" action="edit.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
-      <li>
+      <li class="category_id">
         <label>Category</label>
         <select name="ddmSearchCategory" on_change_this="submitElementsForm">
           <option value="">All Categories</option>
           <? echo ( make_drop_down( openprint::MaterialCategory->dropdown( ), $page_session{ddmSearchCategory} ); ) ?>
         </select>
       </li>
-      <li>
+      <li class="activity_code">
         <label>Activity Code</label>
         <input type="text" name="search_activity_code" value="<?echo($session{'/administrator/materials/edit.html?search_activity_code'})?>" />
       </li>
-      <li><label>Equipment</label>
+      <li class="equipment_id"><label>Equipment</label>
         <select name="equipment_id" on_change_this="submitElementsForm">
           <option value="">All</option>
           <? echo (
@@ -32,7 +32,7 @@
 
               } ); ) ?>
       <li>
-        <label>Material</label>
+        <label>Editing Material</label>
         <select name="material_id" on_change_this="submitElementsFormIfHasValue">
           <option value="">Select a Material</option>
           <? echo (
@@ -45,10 +45,6 @@
         </select>
       </li>
 		</ul>
-	</fieldset>
-</form>
-<form name="f2" id="f2" method="post" enctype="multipart/form-data" action="edit.html">
-	<input type="hidden" name="material_id" value="<?echo($$variable{Material}->id())?>"/>
 	<p class="buttons">
 		<? echo ( join("\n",
 			button( 'New', { href=>'/administrator/materials/edit.html', text=>'New' } ),
@@ -57,10 +53,14 @@
 				button( 'Copy', { onclick=>"f2.btnFunction.value='Copy';fmCheck(f2);", text=>'Copy' } ),
 				button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};", text=>'Delete' } ),
 			) : () ),
-			button( 'Reset', { onclick=>'f2.reset();', text=>'Reset' } ),
+			#button( 'Reset', { onclick=>'f2.reset();', text=>'Reset' } ),
 );
 		) ?>
 	</p>
+	</fieldset>
+</form>
+<form name="f2" id="f2" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" name="material_id" value="<?echo($$variable{Material}->id())?>"/>
 <? if ( 0 and $openprint::User->email() =~ /^iconnor/ ) ?>
 	<p class="buttons">
   <input type="file" name="file"/>
