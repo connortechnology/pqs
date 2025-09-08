@@ -60,10 +60,10 @@ sub MaterialPriceConfiguration {
 }
 
 %Specifications = (
-  'Laminating Count' => { units => ['Net Sheets', 'Gross Sheets'] },
+  'Laminating Count' => { units => ['Net Sheets', 'Gross Sheets'], range_units=>[] },
   'Laminating Waste'  => { units => 'Percent' },
   'Laminating Style' => { values => [ 'Sheet','Final Pieces' ] },
-  'Laminating Capable' => { values => [ 'Y'|'N' ] },
+  #'Laminating Capable' => { values => [ 'Y'|'N' ] },
   'Laminating Sides' => { values => ['Both', 'Single'] },
   'Maximum Sheet Width' => { units => 'Inches' },
   'Maximum Sheet Length' => { units => 'Inches' },
@@ -71,7 +71,7 @@ sub MaterialPriceConfiguration {
   'Minimum Sheet Length' => { units => 'Inches' },
   'Maximum Calliper' => { units => 'Inches' },
   'Minimum Calliper' => { units => 'Inches' },
-  'Run Speed' => { units => 'inches per hour' },
+  'Run Speed.*' => { units => 'inches per hour' },
 );
 
 sub SpecificationConfiguration {
@@ -170,12 +170,14 @@ sub outputs {
 my $MakeReady;
 my $Service;
 my @all_equipment;
+my $ServiceType;
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
   my $services = $Project->services();
+  $ServiceType = $Project->ServiceType($service_index);
   $$specs{alert} = '';
 
   my $print_service_id = $Project->get_print_container();
@@ -246,9 +248,7 @@ sub calc {
   $MinimumCharge{Price} //= 0;
 
   @all_equipment = openprint::Equipment->find(
-    Specifications => {
-      'Laminating Capable'=>'Y'
-    },
+    'servicetype_id any' => $ServiceType->id(),
     useinestimating=>1,
     order=>'lower(strName)');
 
@@ -411,7 +411,7 @@ sub signature_calc {
     my $maximum_sheet_width = $equipment->specification('Maximum Sheet Width') // '';
     my $maximum_sheet_length= $equipment->specification('Maximum Sheet Length') // '';
 
-    my $Speed = $equipment->Specification('Run Speed') ;
+    my $Speed = $equipment->Specification('Laminating Run Speed') || $equipment->Specification('Run Speed');
 
     $equipment_price{breakdown} .= sprintf('Equipment: %s max Width: %s&quot; Length: %s&quot;'.( $Speed ? ' base runspeed: '.$Speed->value().$Speed->units():'').'<br/>',
       $equipment->name(), $maximum_sheet_width, $maximum_sheet_length);
@@ -486,7 +486,7 @@ sub get_price {
   my $run_overs = $$imposition{run_overs};
 
   my $inches_per_hour;
-  my $Speed = $equipment->Specification('Run Speed') ;
+  my $Speed = $equipment->Specification('Laminating Run Speed') || $equipment->Specification('Run Speed');
   if ( $Speed ) {
     if ( lc $$Speed{units} eq 'inches per hour' ) {
       $inches_per_hour = $$Speed{value};
@@ -495,7 +495,8 @@ sub get_price {
       $inches_per_hour = 720;
     } # end if
   } else {
-    $price{breakdown} .= 'No speed set<br/>';
+    $price{breakdown} .= 'No base Run Speed set<br/>';
+    $openprint::log->error(Data::Dumper::Dumper($Speed));
     $inches_per_hour = 720;
   } # end if
 
@@ -538,7 +539,10 @@ sub get_price {
 
         if ($$imposition{TypeFront}) {
           my $front_inches_per_hour = $inches_per_hour;
-          my $front_speed = $FrontMaterial->Specification('Run Speed', undef, $equipment);
+          my $front_speed = $FrontMaterial->Specification('Run Speed', undef, $equipment)
+            || $equipment->Specification('Run Speed '.$FrontMaterial->name())
+            || $equipment->Specification('Run Speed '.$FrontMaterial->description())
+            ;
           if ( $front_speed ) {
           $openprint::log->debug("front speed".Data::Dumper::Dumper($front_speed));
             if ( lc $$front_speed{units} eq 'inches per hour' ) {
@@ -557,7 +561,10 @@ sub get_price {
         }
         if ($$imposition{TypeBack}) {
           my $back_inches_per_hour = $inches_per_hour;
-          my $back_speed = $BackMaterial->Specification('Run Speed', undef, $equipment);
+          my $back_speed = $BackMaterial->Specification('Run Speed', undef, $equipment)
+            || $equipment->Specification('Run Speed '.$BackMaterial->name())
+            || $equipment->Specification('Run Speed '.$BackMaterial->description())
+            ;
           if ( $back_speed ) {
           $openprint::log->debug("back speed".Data::Dumper::Dumper($back_speed));
             if ( lc $$back_speed{units} eq 'inches per hour' ) {
@@ -900,9 +907,10 @@ sub display {
 	my ( $log, $dbh, $type, $project_index, $service_index, $specs, $variable ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
+  $ServiceType = $Project->ServiceType($service_index);
 
   my %page;
-	my @equipment = openprint::Equipment->find( Specifications => {'Laminating Capable'=>'Y'}, useinestimating=>1, order=>'strName');
+	my @equipment = openprint::Equipment->find('servicetype_id any' => $ServiceType->id(), useinestimating=>1, order=>'strName');
 	foreach my $qty_index ( $Project->quantity_indexes() ) {	
     $page{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->strid(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
 
