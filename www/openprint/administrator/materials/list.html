@@ -44,18 +44,25 @@ addEventListener('DOMContentLoaded', (event) => {
       </li>
       <li>
         <label>Name</label>
-        <? echo ( input( type=>'text', name=>'material_name', oninput=>'load_page();', onkeydown=>"if(event.keyCode==13){f1.submit();}", value=>$page_session{material_id} ); ) ?>
-        <? echo ( button( 'Go2',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
+        <? echo ( input( type=>'text', name=>'material_name', on_input=>'load_page', onkeydown=>"if(event.keyCode==13){f1.submit();}", value=>$page_session{material_name} ); ) ?>
       </li>
-      <li class="category"><label>Category</label>
-        <?echo( ssi::select( 
+      <?echo(
+         my $categories = openprint::MaterialCategory->dropdown();
+         if (@{$categories} > 2) {
+      return join("\n",
+      '<li class="category"><label>Category</label>',
+      ssi::select( 
               openprint::MaterialCategory->dropdown(), 
               $page_session{category_id}, { 
               name=>'category_id', 
               prepend=>[ '', 'All' ],
               on_change=>'load_page',
-              } ); ) ?>
-      </li>
+              } ),
+              '</li>',
+              );
+          }
+          return;
+        ) ?>
       <li class="type"><label>Type</label>
         <?echo(
        ssi::select( 
@@ -112,7 +119,8 @@ addEventListener('DOMContentLoaded', (event) => {
 			<? echo ( join("\n",
 				button( 'ShowResults', { on_click=>'load_page', text=>'Show Results' } ),
 				button( 'New', { href=>'/administrator/materials/edit.html', text=>'New' } ),
-				button( 'Reset', { on_click=>'reset', text=>'Reset' } ),
+				button( 'Clear', { on_click_this=>'clearElementForm', text=>'Clear' } ),
+				#button( 'Reset', { on_click=>'reset', text=>'Reset' } ),
         button( 'delete', { onclick=>q`jQuery('#Results').load('/administrator/materials/_list.html?btnFunction=delete', { material_id: get_value( document.getElementById('f1').material_ids ) } );`, text=>'Delete Checked' } ),
         ); ) ?>
 		</p>
