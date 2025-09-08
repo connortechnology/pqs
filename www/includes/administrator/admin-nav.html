@@ -10,8 +10,10 @@
         <li><a href="/openprint/administrator/materials/list.html">Materials</a></li>
         <!--<li><a href="/admin/material">PQS Materials</a></li>-->
         <li><a href="/openprint/administrator/services/list.html">Services</a></li>
+        <?if($openprint::User->email() =~ /iconnor/)?>
         <li><a href="/openprint/administrator/service_types/index.html">Openprint Service Types</a></li>
         <li><a href="/admin/service_types">PQS Service Types</a></li>
+        <?endif($openprint::User->email() =~ /iconnor/)?>
       </ul>
     </li>
     <li>
