@@ -155,6 +155,7 @@ function del_price(btn) {
     data.service_id = id;
   }
   if (!id) {
+    console.log(btn);
     alert("Failed to identify the price. Will not proceed");
     return;
   }
@@ -167,27 +168,36 @@ function del_price(btn) {
 } /* end function del_price() */
 
 function copy_price(btn) {
-  console.log(btn);
   const form = btn.form;
   const pricelist_id = btn.getAttribute('data_pricelist_id');
   const equipment_id = btn.getAttribute('data_equipment_id');
-  let id;
-  let url = '/openprint/administrator/services/_prices_table_body.html';
-  if (!(id = btn.getAttribute('data_service_id'))) {
-    id = btn.getAttribute('data_material_id');
-    url = '/openprint/administrator/material/_prices_table_body.html';
-  }
-
   const price_id = btn.getAttribute('data_price_id');
 
-  const prices_id = '#prices-'+pricelist_id+'-'+equipment_id+'-'+id;
-  const div = $j(prices_id);
-  div.html('Please wait...loading.');
-  const data = Object.fromEntries(new FormData(form));
-  console.log(data);
-	div.load(url+'?action=copy&price_id='+price_id, data, function() {
+  if (btn.getAttribute('data_service_id')) {
+    var url = '/openprint/administrator/services/';
+  } else {
+    var url = '/openprint/administrator/materials/';
+  }
+  const data = {
+    price_id: price_id,
+    pricelist_id: pricelist_id,
+    equipment_id: equipment_id,
+    action: 'copy'
+  };
+
+    $j.get(url+'_price.html', data).done(function(data) {
+      console.log(data);
+      $j(data).insertAfter('#Price-'+price_id);
+      //prices.append(data);
       update_event_bindings();
-      });
+    }).fail(function(data) {
+      alert("Failed adding price");
+      console.log(data);
+    });
+
+	//div.load(url+'?action=copy&price_id='+price_id, data, function() {
+      //update_event_bindings();
+      //});
 } /* end function copy_price() */
 
 function add_new_price(btn) {
@@ -228,7 +238,7 @@ function add_new_price(btn) {
       update_event_bindings();
     }).fail(function(data) {
       alert("Failed adding equipment price");
-    console.log(data);
+      console.log(data);
     });
 	} // end if
 } // end function add_new_price(btn)
