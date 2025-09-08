@@ -2,8 +2,18 @@
 <script src="/javascripts/window.js"></script>
 <!--<script src="/javascripts/menu.js"></script>-->
 <script src="/javascripts/jquery-3.7.1.min.js"></script>
+<script src="/openprint/javascripts/chosen/chosen.jquery.js"></script>
+<link href="/openprint/javascripts/chosen/chosen.css" rel="stylesheet" type="text/css" />
 <script>
-      var $j = jQuery.noConflict();
+  var $j = jQuery.noConflict();
+  const user_id = '<?echo($session{user_id})?>';
+  const company_id = '<?echo($session{company_id})?>';
+  const company_name = '<?echo($openprint::Company->name())?>';
+  addEventListener("DOMContentLoaded", (event) => {
+    update_event_bindings();
+    if (jQuery && jQuery.fn && jQuery.fn.chosen)
+      $j('select.chosen').chosen({disable_search_threshold: 10});
+  });
 </script>
 <script src="<?hash_link(/javascripts/form_utilities.js)?>"></script>
 <script src="/openprint/javascripts/scriptaculous.js"></script>
