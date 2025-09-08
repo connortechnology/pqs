@@ -129,6 +129,7 @@ body > #fixedHeader {
 	padding: 0;
 
 	background-color: #FFFFFF;
+  position: relative;
 }
 
 
