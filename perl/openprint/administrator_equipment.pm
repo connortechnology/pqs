@@ -121,7 +121,8 @@ sub edit {
       }
       my %prices = misc::make_hash_from_array('service_id', openprint::ServicePrice->find(
             equipment_id=>$Equipment->id(),
-            order=>'pricelist_id, min NULLS FIRST,max NULLS FIRST' ));
+            #order=>'pricelist_id, min NULLS FIRST,max NULLS FIRST'
+            ));
       foreach my $service (openprint::Service->find(id=>[keys %prices])) {
         my @service_changes;
         foreach my $Price ( @{$prices{$service->id()}} ) {
