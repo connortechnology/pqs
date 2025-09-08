@@ -1,0 +1,5 @@
+.filters .category_id,
+.filters .equipment_id {
+
+  display: none;
+}
