@@ -545,10 +545,10 @@ sub _service_prices {
   my $uri = '/administrator/equipment/edit.html';
   $variable{Equipment} = new openprint::Equipment($param{equipment_id});
   if ($param{hide} eq '1') {
-    $openprint::session{$uri.'?show_service_prices'} = 0;
+    $openprint::page_session{show_service_prices} = $openprint::session{$uri.'?show_service_prices'} = 0;
     $variable{PageContent} = '';
   } else  {
-    $openprint::session{$uri.'?show_service_prices'} = 1;
+    $openprint::page_session{show_service_prices} = $openprint::session{$uri.'?show_service_prices'} = 1;
   }
 }
 
