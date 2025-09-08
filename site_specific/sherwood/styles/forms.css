@@ -50,7 +50,9 @@ fieldset p {
 
 fieldset label,
 fieldset span.label,
+/*
 fieldset span,
+*/
 fieldset div.text {
 	overflow: visible;
 
@@ -71,7 +73,9 @@ fieldset div.text {
 
 
 fieldset div {
+  /*
 	float: left;
+  */
 	clear: none;
 	display: inline; 
 	position: relative;
