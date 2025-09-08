@@ -193,3 +193,6 @@ table .Supplier {
   float: none;
   margin: 0px;
 }
+#ServicePrices .Mode {
+  display: none;
+}
