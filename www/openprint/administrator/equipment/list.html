@@ -13,18 +13,21 @@ function load_page() {
 <div class="Equipment">
 <form id="f1" name="f1" method="post" action="list.html" on_change="load_page">
 	<fieldset class="filters"><legend>Search</legend>
+    <div class="leftColumn">
 		<ul>
-		<li>
-			<label>ID</label>
-			<? echo ( input( type=>'cardinal', name=>'equipment_id', onkeydown=>"if(event.keyCode==13){f1.submit();}" ); ) ?>
-			<? echo ( button( 'Go1',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
-		</li>
-		<li>
-			<label>Name</label>
-			<? echo ( input( type=>'text', name=>'equipment_name', oninput=>'load_page();', onkeydown=>"if(event.keyCode==13){f1.submit();}", value=>$session{$r->uri().'?equipment_id'} ); ) ?>
-			<? echo ( button( 'Go2',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
-		</li>
-		<li> 
+      <li>
+        <label>ID</label>
+        <? echo ( input( type=>'cardinal', name=>'equipment_id', onkeydown=>"if(event.keyCode==13){f1.submit();}" ); ) ?>
+        <? echo ( button( 'Go1',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
+      </li>
+      <li>
+        <label>Name</label>
+        <? echo ( input( type=>'text', name=>'equipment_name', on_input=>'load_page', onkeydown=>"if(event.keyCode==13){f1.submit();}", value=>$page_session{equipment_name} ); ) ?>
+        <? echo ( button( 'Go2',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
+      </li>
+    </ul>
+    <ul>
+		<li class="created_on"> 
 			<label>Created Date</label>
 			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, on_change=>'load_page' } ); ) ?>
 			to
@@ -38,7 +41,7 @@ function load_page() {
         '<li><label>Type</label>',
          ssi::select(  
          [map { $_, ucfirst($_) } sort { lc $a cmp lc $b } @types],
-         $session{$r->uri().'?type'}, {
+         $page_session{type}, {
          name=>'type',  
          prepend=>[ '', 'All' ],
          on_change=>'load_page',
