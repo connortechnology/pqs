@@ -218,9 +218,13 @@ sub output {
 				$session{$key} = $variable{$key};
 			} # end if
 		} # end foreach
-    my $redirect = $config{url_base} ? $config{url_base}.$variable{ExternalRedirect} : $variable{ExternalRedirect};
 
-		$r->headers_out->set(Location=>$redirect);
+    my $redirect = $variable{ExternalRedirect};
+    if ($config{url_base} and ($variable{ExternalRedirect} =~ /^\/administrator/) and ($variable{ExternalRedirect} !~ /^$config{url_base}/)) {
+      $redirect = $config{url_base}.$variable{ExternalRedirect};
+    }
+
+    $r->headers_out->set(Location=>$redirect);
 		$r->status(Apache2::Const::REDIRECT);
 		#$r->send_http_header;
 		$log->debug('Redirecting to ' . $redirect );
