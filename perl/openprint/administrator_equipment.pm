@@ -121,7 +121,8 @@ sub edit {
       }
       my %prices = misc::make_hash_from_array('service_id', openprint::ServicePrice->find(
             equipment_id=>$Equipment->id(),
-            order=>'pricelist_id, min NULLS FIRST,max NULLS FIRST' ));
+            #order=>'pricelist_id, min NULLS FIRST,max NULLS FIRST'
+            ));
       foreach my $service (openprint::Service->find(id=>[keys %prices])) {
         my @service_changes;
         foreach my $Price ( @{$prices{$service->id()}} ) {
@@ -528,24 +529,27 @@ sub _operators {
 
 sub list {
 	_list();
-	ssi::setup_date_select( '/administrator/equipment/list.html', 'created_on_start', '' );
-	ssi::setup_date_select( '/administrator/equipment/list.html', 'created_on_end', '' );
-	$openprint::session{'/administrator/equipment/list.html?deleted'} = '0' if ! exists $openprint::session{'/administrator/equipment/list.html?deleted'};
+  my $uri = misc::get_session_uri($r->uri());
+	ssi::setup_date_select( $uri, 'created_on_start', '' );
+	ssi::setup_date_select( $uri, 'created_on_end', '' );
+	$openprint::session{$uri.'?deleted'} = '0' if ! exists $openprint::session{$uri.'?deleted'};
 }
 sub _list {
-    ssi::save_params( '/administrator/equipment/list.html', (
-                ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
-				'deleted', 'equipment_name', 'servicetype_id', 'category_id', 'useinestimating',
-                ) );
+  my $uri = misc::get_session_uri($r->uri());
+  ssi::save_params( $uri,(
+      ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+      'deleted', 'equipment_name', 'servicetype_id', 'category_id', 'useinestimating','type',
+    ) );
 }
 
 sub _service_prices {
+  my $uri = '/administrator/equipment/edit.html';
   $variable{Equipment} = new openprint::Equipment($param{equipment_id});
   if ($param{hide} eq '1') {
-    $openprint::session{'/administrator/equipment/edit.html?show_service_prices'} = 0;
+    $openprint::page_session{show_service_prices} = $openprint::session{$uri.'?show_service_prices'} = 0;
     $variable{PageContent} = '';
   } else  {
-    $openprint::session{'/administrator/equipment/edit.html?show_service_prices'} = 1;
+    $openprint::page_session{show_service_prices} = $openprint::session{$uri.'?show_service_prices'} = 1;
   }
 }
 

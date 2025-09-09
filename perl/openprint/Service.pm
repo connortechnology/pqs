@@ -1,7 +1,7 @@
 use strict;
 package openprint::Service;
 our @ISA = qw( openprint::Object );
-use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached %ServicePrices %Configuration );
+use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached %ServicePrices %Configuration $default_sort );
 
 require sql;
 require openprint::Object;
@@ -20,30 +20,32 @@ foreach my $Service ( 'UVCoating', 'ThreeKnifeTrim' ) {
 	";
 }
 foreach my $service ( keys %ServicePrices) {
-$log->debug("Have a price definition for $service");
+  $log->debug("Have a price definition for $service");
 }
 
-
 $debug = 1;
-$cached = 1;
+$cached = 0;
 
 $table = 'tbl_services';
 $serial = 'tbl_services_lngindex_seq';
+$default_sort = 'lower(strname)';
 
 %fields = (
 		id				=>	'lngindex',
-		name			=>	'strname',
-		description		=>	'strdescription',
+		name			=>	'strid',
+		description		=>	'strname',
 		supplier_id		=>	'supplier_id',
-		category_id		=>	'category_id',
+		category_id		=>	'lngcategoryindex',
 		category		=>	undef,
-		taxexempt1		=>	'taxexempt1',
-		taxexempt2		=>	'taxexempt2',
+		taxexempt1		=>	'ysntaxexempt1',
+		taxexempt2		=>	'ysntaxexempt2',
 		owner_id		=>	'owner_id',
-		activity_code	=>	'activity_code',
-		servicetype_id	=>	'servicetype_id',
+		activity_code   =>	'activity_code',
+		servicetype_id	=>	'lngtype',
+    #servicetype_id	=>	'servicetype_id',
 		deleted					=>	'deleted',
-    sorting         => 'lngsortorder',
+    sorting         =>  'lngsortorder',
+    ranged          =>  'ysnranged',
 	 	);	
 %find_fields = (
 		category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
@@ -64,6 +66,7 @@ $serial = 'tbl_services_lngindex_seq';
 		taxexempt2	=>	q`'N'`,
 		owner_id	=>	q`$openprint::config{owner_id}`,
 		deleted					=>	0,
+    ranged      =>  1,
 		);
 
 %Configuration = (
@@ -139,7 +142,7 @@ sub destroy {
 } # end sub delete
 
 sub prices {
-	return openprint::ServicePrice->find( service_id=>$_[0]{id} );
+	return $_[0]->Prices();
 } # end sub prices
 
 sub get_Price {
@@ -158,7 +161,11 @@ sub Prices {
   my $self = shift;
   $$self{Prices} = shift if @_;
   if (!$$self{Prices}) {
-    $$self{Prices} = [ openprint::ServicePrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST', service_id=>$$self{id}) ];
+    $$self{Prices} = [ openprint::ServicePrice->find(
+        service_id=>$$self{id},
+        'period_end is null'=>1,
+        order=>$openprint::ServicePrice::fields{min}.' NULLS FIRST, '.$openprint::ServicePrice::fields{max}.' NULLS FIRST',
+      ) ];
   }
   return @{$$self{Prices}} if wantarray;
   return $$self{Prices};
@@ -284,7 +291,7 @@ sub Owner {
 
 sub link_to {
 	my $self = shift;
-	return '<a href="/administrator/services/edit.html?service_id='.$$self{id}.'">'.(@_?$_[0]:$$self{name}).'</a>';
+	return '<a href="/openprint/administrator/services/edit.html?service_id='.$$self{id}.'">'.(@_?$_[0]:$$self{name}).'</a>';
 }
 
 1;

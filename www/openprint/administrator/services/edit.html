@@ -1,25 +1,25 @@
 <?include('/includes/error_reporting.html')?>
 <script src="<?hash_link(/openprint/javascripts/pricing.js)?>"></script>
-<div class="Service">
+<div class="Services">
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
-		<li> 
-			<label>Category</label>
-			<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
-				<option value="">All Categories</option>
-				<? echo ( make_drop_down( openprint::ServiceCategory->dropdown(), $session{$r->uri().'?ddmSearchCategory'} ); ) ?>
-			</select>
-		</li>
+      <li class="category_id"> 
+        <label>Category</label>
+        <select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
+          <option value="">All Categories</option>
+          <? echo ( make_drop_down( openprint::ServiceCategory->dropdown(), $session{$r->uri().'?ddmSearchCategory'} ); ) ?>
+        </select>
+      </li>
 <?if(@{$$variable{Equipment}} = openprint::Equipment->find(order=>'lower(strid)'))?>
-		<li><label>Equipment</label>
+		<li class="equipment_id"><label>Equipment</label>
 			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All</option>
 				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $session{$r->uri().'?equipment_id'} ); ) ?>
 			</select>
       <?if($session{$r->uri().'?equipment_id'})?>
-      <?echo( new openprint::Equipment($session{$r->uri().'?equipment_id'})->link_to('Go'); )?>
+      <?echo( new openprint::Equipment($page_session{equipment_id})->link_to('Go'); )?>
       <?endif($session{$r->uri().'?equipment_id'})?>
 		</li>
 <?endif(@{$$variable{Equipment}} = openprint::Equipment->find(order=>'lower(strid)'))?>
@@ -50,7 +50,7 @@
 						$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 					}
 				} # end if
-				$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
+				#$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 				return $html;
 			) ?>
 		</p>
@@ -72,7 +72,7 @@
 	<fieldset><legend>Service Information</legend>
 		<ul>
 			<li><label>Id</label><? echo ( $$variable{Service}->id() ) ?></li>
-			<li> 
+			<li>
 				<label>Service Name</label>
 				<input type="text" name="name" value="<? echo ( $$variable{Service}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
 			</li>
@@ -82,21 +82,22 @@
 					<option value="">All/Unspecified</option>
 					<? echo ( make_drop_down( openprint::ServiceType->dropdown(), $$variable{Service}->servicetype_id() ); ) ?>
 				</select>
-      <?echo( $$variable{Service}->servicetype_id() ? new openprint::ServiceType($$variable{Service}->servicetype_id())->button_to('Go') : ''; )?>
+      <?echo( $$variable{Service}->servicetype_id() ? $$variable{Service}->ServiceType()->button_to('Go') : ''; )?>
 			</li>
 			<li> 
-				<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category</label>
-				<input style="display:none;" type="text" id="new_category" name="new_category" value=""/>	
+				<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').toggle()">Category</label>
+				<input style="display:none;" type="text" id="new_category" name="new_category" placeholder="new category name"/>	
 				<select id="category_id" name="category_id">
 					<option value="">Select a category</option>
 					<? echo ( make_drop_down( openprint::ServiceCategory->dropdown(), $$variable{Service}->category_id() ); ) ?>
 				</select>
+        <button type="button" onclick="this.innerHTML = (this.innerHTML=='New')?'Cancel':'New';$('new_category').toggle();$('category_id').toggle()">New</button>
 			</li>
-			<li> 
+			<li class="description"> 
 				<label>Description</label>
 				<input type="text" id="description" name="description" value="<? echo ( $$variable{Service}->description(); ) ?>" />
 			</li>
-			<li>
+			<li class="activity_code">
 				<label>Activity Code</label>
 				<input type="text" name="activity_code" value="<? echo ( $$variable{Service}->activity_code(); ) ?>" />
 			</li>

@@ -13,14 +13,14 @@ $serial = 'tbl_Service_Defaults_lngId_seq';
 	id		      		=>	'lngindex',
 	projecttype_id	=>	'projecttype_id',
 	projecttype	  	=>	undef,
-	servicetype_id	=>	'lngservicetypeindex',
+	servicetype_id	=>	'lngserviceindex',
 	servicetype		  =>	undef,
 	name			      =>	'strfieldname',
 	value	      		=>	'strdefaultvalue',
 );
 %find_fields = (
 	projecttype	=>	'(SELECT name FROM project_types WHERE project_types.id=projecttype_id)',
-	servicetype	=>	'(SELECT name FROM service_types WHERE service_types.id=lngservicetypeindex)',
+	servicetype	=>	'(SELECT name FROM service_types WHERE service_types.id=lngserviceindex)',
 );
 
 %transforms = (

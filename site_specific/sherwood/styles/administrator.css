@@ -129,6 +129,7 @@ body > #fixedHeader {
 	padding: 0;
 
 	background-color: #FFFFFF;
+  position: relative;
 }
 
 
@@ -173,4 +174,26 @@ body > #fixedHeader {
 
 #footer-text {
 	padding-left: 15px;
+}
+table .Period,
+table .Supplier {
+  display: none;
+}
+.button-bar {
+  display: flex;
+}
+#Prices table .buttons {
+	width: 50px;
+}
+
+.pricelist {
+  clear: both;
+  float: none;
+}
+#Prices label:not(.radio):not(.radio-inline) {
+  float: none;
+  margin: 0px;
+}
+#ServicePrices .Mode {
+  display: none;
 }

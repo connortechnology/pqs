@@ -1,11 +1,12 @@
 <? eval (
-	my $uri = '/administrator/equipment/list.html';
-    my %filters = (
+  my $uri = misc::get_session_uri($r->uri());
+  my %filters = (
 		order	=>	'lower(strid)',
 		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
 		( $session{$uri.'?useinestimating'} ne '' ? ( useinestimating => $session{$uri.'?useinestimating'} ) : () ),
 		( $session{$uri.'?servicetype_id'} ne '' ? ( 'servicetype_id any' => $session{$uri.'?servicetype_id'} ) : () ),
 		( $session{$uri.'?category_id'} ne '' ? ( 'category_id any' => $session{$uri.'?category_id'} ) : () ),
+		( $session{$uri.'?type'} ne '' ? ( type => $session{$uri.'?type'} ) : () ),
 		date_filter( $uri.'?created_on_end', 'created_on <=' ),
 		date_filter( $uri.'?created_on_start', 'created_on >=' ),
 		);

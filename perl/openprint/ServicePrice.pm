@@ -5,11 +5,12 @@ require Math::Round;
 package openprint::ServicePrice;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults $default_sort);
 
-$debug = 1;
+$debug = 0;
 $table = 'tbl_service_prices';
-$serial = 'service_prices_id_seq';
+$serial = 'tbl_service_prices_id_seq';
+$default_sort = 'lngmin NULLS FIRST, lngmax NULLS LAST';
 
 %fields = (
 	id							=>	'id',
@@ -25,8 +26,8 @@ $serial = 'service_prices_id_seq';
 	markup					=>	'dblmarkup',
 	price						=>	'dblprice',
 	discountable		=>	'ysndiscountable',
-	mode						=>	'mode',
-	supplier_id			=>	'supplier_id',
+  mode						=>	'mode',
+  supplier_id			=>	'supplier_id',
 	period_start		=>	'period_start',
 	period_end			=>	'period_end',
 );
@@ -36,9 +37,9 @@ $serial = 'service_prices_id_seq';
 %defaults = (
 	min							=>	undef,
 	max							=>	undef,
-	cost						=>	undef,
-	markup					=>	undef,
-	price						=>	undef,
+	cost						=>	0,
+	markup					=>	0,
+	price						=>	0,
 	discountable		=>	q`'Y'`,
 	mode						=>	undef,
 	period_start    =>  undef,
@@ -54,8 +55,8 @@ $serial = 'service_prices_id_seq';
 	cost	=>	[ 's/[^\d\.\-]//g' ],
 	markup	=>	[ 's/[^\d\.\-]//g' ],
 	price	=>	[ 's/[^\d\.\-]//g' ],
-	units					=>	[ 's/^\s+//', 's/\s+$//' ],
-	range_units					=>	[ 's/^\s+//', 's/\s+$//' ],
+	units					=>	[ 's/^\s+//', 's/\s+$//', 's/(^.s*)/lc($1)/ge' ],
+	range_units					=>	[ 's/^\s+//', 's/\s+$//', 's/(^.s*)/lc($1)/ge' ],
 );
 
 sub next {
@@ -138,6 +139,16 @@ sub to_string {
   return $Price->Pricelist()->name() . ' '. $price_desc . ' on ' . $Price->Equipment()->strid() .sprintf( '%s to %s $%.2f*%.2f% = $%.2f%s<br/>',
             $Price->min(), $Price->max(), $Price->cost(), $Price->markup(), $Price->price(), $Price->units() );
 
+}
+sub range_units {
+  my $self = shift;
+  $$self{range_units} = shift if @_;
+  if (!  $$self{range_units}) {
+    my ($unit, $service_unit) = sql::execute(undef, undef, ' SELECT u.name FROM unit u, service_unit s WHERE s.unit=u.id AND s.service=? AND s.ranged=?', $$self{service_id}, $self->Service()->ranged());
+    $openprint::log->debug("range units $unit $service_unit");
+    $$self{range_units} = $unit;
+  }
+  return $$self{range_units};
 }
 
 1;

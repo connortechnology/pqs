@@ -1,18 +1,18 @@
 <? echo (
-return '' if !$session{'/administrator/equipment/edit.html?show_service_prices'};
+return '' if !$page_session{show_service_prices};
 my $html = '';
 my $Equipment = $$variable{Equipment};
 
-$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower('.$openprint::Company::fields{name}.')' ) ];
-foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower('.$openprint::Pricelist::fields{name}.')') ) {
+$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y' ) ];
+foreach my $Pricelist ( openprint::Pricelist->find() ) {
   $$variable{Pricelist} = $Pricelist;
   my @prices = openprint::ServicePrice->find(
     equipment_id=>$$variable{Equipment}->id(),
     pricelist_id=>$Pricelist->id(),
-    order=>$openprint::ServicePrice::fields{min}.' NULLS FIRST, '.$openprint::ServicePrice::fields{max}.' NULLS LAST');
+    );
   my %prices = openprint::misc::make_hash_from_array('service_id', @prices);
 
-  my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices], order=>$openprint::Service::fields{sorting}.' ASC,lower('.$openprint::Service::fields{name}.')') if @prices;
+  my @services = openprint::Service->find(id=>[map { $_->service_id() } @prices]) if @prices;
 
   $html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->link_to() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
   foreach my $service (@services) {
@@ -29,14 +29,14 @@ foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower('.$openprint::
           <th class="Markup">Mark up</th>
           <th class="Price">Price</th>
           <th class="Units">Units</th>
-          <th class="Discount">Discount?</th>
+          <th class="Discount" title="Whether to apply customer discounts to this price">Discount?</th>
           <th class="Mode">Mode</th>
           <th class="buttons">
     '.
     button( join('_', 'add',$$Pricelist{id},$$Equipment{id},$$service{id}), { type=>'button',
         on_click_this=>'add_new_price',
         data_pricelist_id=>$$Pricelist{id}, data_equipment_id=>$$Equipment{id}, data_service_id=>$$service{id},
-        text=>'+', title=>'Add New Price to '.$Equipment->strid() .' for '.$service->description()} ) . qq`</th>
+        text=>'Add', title=>'Add New Price to '.$Equipment->strid() .' for '.$service->description()} ) . qq`</th>
       </tr></thead><tbody id="prices-$$Pricelist{id}-$$Equipment{id}-$$service{id}">`;
     foreach my $price (@{$prices{$service->id()}}) {
       $$variable{Price} = $price;

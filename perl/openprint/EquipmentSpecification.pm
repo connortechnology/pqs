@@ -40,5 +40,10 @@ sub Equipment {
 	return new openprint::Equipment( $_[0]{equipment_id} );
 } # end sub Equipment
 
+sub to_breakdown {
+  my $self = shift;
+  return (1*$$self{value}).(lc $$self{units} eq 'percent' ? '%' : $$self{units}).'='.(1*$$self{total});
+}
+
 1;
 __END__

@@ -58,6 +58,7 @@ sub cleanup {
 	if ( $dbh ) {
 		$session{lastupdated} = time;
 		untie %session;
+    %openprint::page_session = ();
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
 		$openprint::Service::cached = 0;
@@ -203,7 +204,7 @@ sub output {
 		if ( $lastpage =~ /\.html/ ) {
 			$r->content_type(q{text/html; charset=utf-8});
 		} elsif ( $lastpage =~ /\.json/ ) {
-			$r->content_type(q{text/javascript; charset=utf-8});
+			$r->content_type(q{application/json; charset=utf-8});
 		} elsif ( $lastpage =~ /\.xml/ ) {
 			$r->content_type(q{text/xml; charset=utf-8});
 		} elsif ( $lastpage =~ /\.rss/ ) {
@@ -217,10 +218,16 @@ sub output {
 				$session{$key} = $variable{$key};
 			} # end if
 		} # end foreach
-		$r->headers_out->set(Location=>$variable{ExternalRedirect});
+
+    my $redirect = $variable{ExternalRedirect};
+    if ($config{url_base} and ($variable{ExternalRedirect} =~ /^\/administrator/) and ($variable{ExternalRedirect} !~ /^$config{url_base}/)) {
+      $redirect = $config{url_base}.$variable{ExternalRedirect};
+    }
+
+    $r->headers_out->set(Location=>$redirect);
 		$r->status(Apache2::Const::REDIRECT);
 		#$r->send_http_header;
-		$log->debug('Redirecting to ' . $variable{ExternalRedirect} );
+		$log->debug('Redirecting to ' . $redirect );
 	} elsif ( exists $variable{Download} and $variable{Download} ) {
 		if ( ref $variable{Download} eq 'ARRAY' ) {
 			foreach ( @{$variable{Download}} ) {
@@ -244,7 +251,7 @@ sub output {
 					$log->error("Found no content at $path");
 				} # end if
 			} elsif ( -e ( my $path = join('/', $config{SkinPath}, $page )) ) {
-$log->error("Deprecated SkinPath layout! $path");
+        $log->error("Deprecated SkinPath layout! $path");
 				$content = openprint::misc::load_file( $log, $path );
 				if ( ! $content ) {
 					$log->error("Found no content at $path");
@@ -255,7 +262,7 @@ $log->error("Deprecated SkinPath layout! $path");
 					$log->error("Found no content at $ENV{DOCUMENT_ROOT}$page instead of $config{SkinPath}/$page");
 				} # end if
       } else {
-        $log->debug("Path not found $page");
+        $log->debug("Path not found $page at ". $ENV{DOCUMENT_ROOT} . $page);
 			} # end if
 			$variable{PageContent} = $content;
 		} else {
@@ -314,19 +321,60 @@ $log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_inter
 	return Apache2::Const::OK;
 } # end sub handler
 
-sub parse_page {
-	my $uri = shift;
-	my ( $status );
+sub call_mod_for_uri {
+  my $uri = shift;
 
 	# This deals with things like /account/login.html//balhblahblah.php
 	my ($real_uri) = $uri =~ /^\/openprint\/([^\.]+\.[^\.]+)/i;
-	my @thing = split( '/', $real_uri );
-  shift @thing if $thing[0] eq 'openprint';
-$openprint::log->debug("URI: $real_uri @thing");
+	my @thing = split( '/', ($real_uri?$real_uri:$uri));
+  shift @thing while $thing[0] eq 'openprint' or ! $thing[0];
+  $openprint::log->debug("URI: $uri real:$real_uri thing:@thing");
 	my $filename = pop @thing;
-  #shift @thing; # get rid of element before leading slash
 	my @path = @thing;
 	my $first = shift @thing if @thing;
+	my $first = shift @thing if @thing and !$first;
+	my $second = shift @thing if @thing;
+	my $third = shift @thing if @thing;
+	my $fourth = shift @thing if @thing;
+  $log->debug("url $uri First: $first Second: $second Third: $third Filename: $filename");
+
+  if ( -e $ENV{DOCUMENT_ROOT}.$uri or -e $ENV{DOCUMENT_ROOT}.'/openprint'.$uri ) {
+    my ( $proc ) = $filename =~ /^(.*)\.(html|json|xml|rss)$/;
+    if ( $proc ) {
+      my $module = join('_', map { lc $_ } @path);
+      #$module .= '_'.$second if $second;
+      $log->debug("Module is $module");
+      eval {
+        require "openprint/$module.pm"; 
+        if ( my $function = ('openprint::'.$module)->can($proc) ) {
+          $function->($r, $log, $dbh, \%variable);
+          $log->debug("calling of require $module :: $proc, filename is $filename");
+        } else {
+          $log->error("Eval error of require $module :: $proc, can't do function");
+        }
+      };
+      $log->error( "Eval error of require $module Reason: " . $@ ) if $@;
+    } else {
+      $log->error("No proc in filename $uri");
+    } # end if
+  } else {
+    $log->debug("No firstSo or non-existant $uri first: $first ");
+  } # end if
+}
+
+sub parse_page {
+	my $uri = shift;
+	my $status;
+
+	# This deals with things like /account/login.html//balhblahblah.php
+	my ($real_uri) = $uri =~ /^\/openprint\/([^\.]+\.[^\.]+)/i;
+	my @thing = split( '/', ($real_uri?$real_uri:$uri));
+  shift @thing while ($thing[0] eq 'openprint' or ! $thing[0]) and @thing;
+  $openprint::log->debug("URI: $uri real:$real_uri thing:@thing");
+	my $filename = pop @thing;
+	my @path = @thing;
+	my $first = shift @thing if @thing;
+  #$first = shift @thing while $first eq '' or $first eq 'openprint' and @thing;
 	my $second = shift @thing if @thing;
 	my $third = shift @thing if @thing;
 	my $fourth = shift @thing if @thing;
@@ -438,17 +486,7 @@ $openprint::log->debug("URI: $real_uri @thing");
 				} # end if proc
 			#} # end if prin
 		} else {
-			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-			if ( $proc ) {
-				my $module = join('_', @path);
-				require "openprint/$module.pm";
-				if ( my $function = ('openprint::'.$module)->can($proc) ) {
-$log->debug("Running openprint::$module->$proc") if Debug;
-					$function->($r, $log, $dbh, \%variable );
-				} else {
-					$log->error( "Eval error of require $module :: $proc, Reason: " );
-				}
-			} # end if
+      call_mod_for_uri($uri);
 		} # end if
 	} elsif ( $first and sets::isin($first, ['content', 'account']) ) {
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
@@ -534,7 +572,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 						openprint::Estimating::Scanning::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename eq 'proofs.html' ) {
 						require openprint::Estimating::Proofs;
-						openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, \%variable, $project_index, $service_index );
+						openprint::Estimating::Proofs::display($log, $dbh, \%variable, $project_index, $service_index);
 					} # end if
 
 				} elsif ($third eq 'bind') {
@@ -581,7 +619,7 @@ $log->debug("Running openprint::$module->$proc") if Debug;
               if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
                 $function->($log, $dbh, \%variable, $project_index, $service_index );
               } else {
-                $log->error( "Eval error of require $module :: display, Reason: " );
+                $log->error("No display function for $module");
               }
 						};
 						$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
@@ -608,87 +646,26 @@ $log->debug("Running openprint::$module->$proc") if Debug;
 						}; 
 						$log->error( "Eval error of require $module Reason: " . $@ ) if $@;
 					} else {
-						if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
-							my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
-							if ( $proc ) {
-								my $module = join('_', ($first, $second, $third));
-								require "openprint/$module.pm";
-								if ( my $function = ('openprint::'.$module)->can($proc) ) {
-									$log->debug("Running openprint::$module->$proc") if Debug;
-									$function->();
-								} else {
-									$log->error( "No function def for $module :: $proc!" );
-								}
-							} else {
-								$log->debug("No proc found for $filename");
-							} # end if
-						} # end if -e $ENV{DOCUMENT_ROOT}.$uri
+            call_mod_for_uri($uri);
 					}
 				} # end if main:project:$third
 			} else {
-				if ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
-					my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
-					if ( $proc ) {
-						my $module = join('_', ($first, $second));
-						require "openprint/$module.pm"; 
-						if ( my $function = ('openprint::'.$module)->can($proc) ) {
-              $log->debug("Running openprint::$module->$proc") if Debug;
-							$function->();
-						} else {
-							$log->error("No function def for $module :: $proc!");
-						}
-					} else {
-            $log->debug("No proc found for $filename");
-					} # end if
-				} # end if -e $ENV{DOCUMENT_ROOT}.$uri 
+        call_mod_for_uri($uri);
 
 				openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
 				openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
 			} # end if defined third
-		} elsif ( -e $ENV{DOCUMENT_ROOT}.$uri ) {
-			my ( $proc ) = $filename =~ /^(.*)\.(html|json|xml|rss)$/;
-			if ( $proc ) {
-				my $module = join('_', ($first, $second));
-				require "openprint/$module.pm"; 
-				if ( my $function = ('openprint::'.$module)->can($proc) ) {
-					$function->($r, $log, $dbh, \%variable );
-				} else {
-					$log->error( "Eval error of require $module :: $proc, Reason: can't do function" );
-				}
-			} # end if
 		} else {
-			$log->debug($ENV{DOCUMENT_ROOT}.$uri.' does not exist.');
+      call_mod_for_uri($uri);
 		} # end if main:$second
 
   } else {
-    if ( $first and -e $ENV{DOCUMENT_ROOT}.$uri ) {
-      my ( $proc ) = $filename =~ /^(.*)\.(html|json|xml|rss)$/;
-      if ( $proc ) {
-        my $module = lc $first;
-        if ($module ne 'openprint') {
-          $module .= '_'.$second if $second;
-        } else {
-          $module = $second.'_'.$third;;
-        }
-        eval {
-          require "openprint/$module.pm"; 
-          if ( my $function = ('openprint::'.$module)->can($proc) ) {
-            $function->($r, $log, $dbh, \%variable);
-            $log->debug("calling of require $module :: $proc");
-          } else {
-            $log->error("Eval error of require $module :: $proc, can't do function");
-          }
-        };
-			} else {
-				$log->error("No proc in filename $filename");
-			} # end if
-		} else {
-			$log->debug("No firstSo or non-existant $uri first: $first ");
-		} # end if
+    call_mod_for_uri($uri);
 	} # end if $first
 
 	return $status;
 }
+
 
 1;
 __END__

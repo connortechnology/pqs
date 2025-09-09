@@ -6,7 +6,7 @@
 			<li><label>Category</label>
 				<select name="SearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 					<option value=""> All </option>
-					<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown( order=>'sorting,name'), $param{SearchCategory} ); ) ?>
+					<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown(), $param{SearchCategory} ); ) ?>
 				</select>
 			</li>
 			<li>
@@ -15,7 +15,7 @@
 					<option value="">Select a Service Type</option>
 					<? echo ( make_drop_down( [ map { $_->id(), $_->name() . ': ' . $_->description() } openprint::ServiceType->find(
 						( $param{SearchCategory} ? ( category_id=>$param{SearchCategory} ) : () ), 
-						  order=>'lower(name)') ], $$variable{ServiceType}->id() ); ) ?>
+						  ) ], $$variable{ServiceType}->id() ); ) ?>
 				</select>
 			</li>
 		</ul>
@@ -32,7 +32,8 @@
 		</p>
 	</fieldset>
   <fieldset><legend>Edit ServiceType <?echo($$variable{ServiceType}->id())?></legend>
-		<ul>
+    <div class="content">
+		<ul class="column">
 		<li> 
 			<label>Name</label>
 			<input type="text" name="name" value="<? echo ( $$variable{ServiceType}->name() ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}" />
@@ -46,15 +47,15 @@
 			<input style="display:none;" type="text" id="new_category" name="new_category"/>	
 			<select id="category_id" name="category_id">
 				<option value=""> None </option>
-				<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown( order=>'sorting,name'), $$variable{ServiceType}->category_id() ); ) ?>
+				<? echo ( make_drop_down( openprint::ServiceType_Category->dropdown(), $$variable{ServiceType}->category_id() ); ) ?>
 			</select>
 		</li>
 <? if ( $openprint::User->email() =~ /iconnor/ ) ?>
 		<li> 
 			<label>Type</label>
 <?echo (
- return ssi::select([map {$_=>$_}
-sort { $a cmp $b } qw(AdditionalProofs  Coating CornerStitching  FilmStripping  Mounting      PlateMaking     Sewing          ThreeKnifeTrim
+my @types = map {'openprint::Estimating::'.$_=>'Openprint '.$_} sort { $a cmp $b } qw(
+AdditionalProofs  Coating CornerStitching  FilmStripping  Mounting      PlateMaking     Sewing          ThreeKnifeTrim
 Aqueous           Counting         Folding        MultiPage     PolyBagging     Shipping        Tipping
 Blowing           CustomService    Gluing         NoBindery     Prepress        ShrinkWrapping  Turnaround
 Bundling          CustomerPickUp   Grommeting     NoPrinting    Printing        SinglePage      UPS
@@ -62,10 +63,13 @@ CDBurning         Cutting          HStands        Numbering     Project         
 CanadaPost        DTaping          HandAssembly   Packaging     Proofs          SoftFolding
 ChannelLetters    DieCutting       Imposition     Padding       RoundCornering  SpinePaste
 ClipSealing       Drilling         Inkjetting     Paper         Scanning        Spiral
-Collating         Embossing        Lamination     PerfectBound  Scoring         Stitching
+Collating         Embossing        Laminating     PerfectBound  Scoring         Stitching
 CopyDot           ExtraBurns       ManualLabour   Perforating   ScratchPads     Stripping
-VariableData
-)], $$variable{ServiceType}->type(), {name=>'type', prepend=>['','choose one']});
+VariableData);
+
+push @types, map { $_->module() => $_->module() } openprint::ServiceType->find('module ilike'=>'eprint%');
+
+ return ssi::select(\@types, $$variable{ServiceType}->module(), {name=>'module', prepend=>['','choose one']});
 )?>
 
 		</li>
@@ -74,13 +78,15 @@ VariableData
 			<input type="url" name="url" value="<? echo ( $$variable{ServiceType}->url() ) ?>" /> 
 		</li>
 <? endif ( $openprint::User->email() =~ /iconnor/ ) ?>
+    </ul>
+    <ul class="column">
 		<li>
 			<label>Visible in Project Create</label>
-			<? echo ( radio( 'create_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->create_visible() ); ) ?>
+			<? echo ( radio( 'create_visible', [ 'Y','Yes','N','No' ], $$variable{ServiceType}->create_visible() ); ) ?>
 		</li>
 		<li>
 			<label>Visible in Project View</label>
-			<? echo ( radio( 'view_visible', [ '1','Yes','0','No' ], $$variable{ServiceType}->view_visible() ); ) ?>
+			<? echo ( radio( 'view_visible', [ 'Y','Yes','N','No' ], $$variable{ServiceType}->view_visible() ); ) ?>
 		</li>
 		<li>
 			<label>Visible in Project Summary</label>
@@ -95,15 +101,18 @@ VariableData
 			<? echo ( input( type=>'integer', name=>'sorting', value=>$$variable{ServiceType}->sorting() ); ) ?>
 		</li>
 		</ul>
+    </div>
 	</fieldset>
 	<fieldset><legend>Defaults</legend>
 		<div id="Defaults">
 		<?include('_defaults.html')?>
 		</div>
 	</fieldset>
+  <div class="ServicePrics">
 <fieldset><legend>Service Prices</legend>
 		<?include('_service_prices.html')?>
 </fieldset>
+  </div>
 	<input type="hidden" name="btnFunction"/>
 </form>
 <? if ( $$variable{ServiceType}->id() ) ?>

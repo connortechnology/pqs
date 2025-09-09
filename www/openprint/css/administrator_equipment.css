@@ -23,7 +23,9 @@ li input[type="text"] {
 }
 
 #specifications .units {
+  /*
     width: 100px;
+    */
     text-align: left;
 }
 #specifications .interpolate {

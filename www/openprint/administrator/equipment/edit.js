@@ -43,14 +43,14 @@ function filter_onChange( element, id, selected ) {
 } // end function Name_onChange()
 
 function calc(formName) {
-  new Ajax.Updater('Stocks','_stocks.html', {
+  new Ajax.Updater('Stocks', '_stocks.html', {
     onLoading:function(){ $('Stocks').innerHTML='Loading...'; },
     parameters:Form.serialize($(formName))});
   //evalScripts:true,
 }
 
 function del_operator(user_id) {
-  $j.get('/administrator/equipment/_operators.html',
+  $j.get('_operators.html',
     { action: 'delete', equipment_id: equipment_id, user_id: user_id },
     function(data) {
       $j('#Operators').html(data);
@@ -60,7 +60,7 @@ function del_operator(user_id) {
 } // end function del_operator
 
 function add_operator(user_id) {
-  $j.get('/administrator/equipment/_operators.html',
+  $j.get('_operators.html',
     { action: 'add', equipment_id: equipment_id, user_id: user_id },
     function(data) {
       $j('#Operators').html(data);
@@ -78,6 +78,13 @@ function add_spec() {
     evalScripts:true,
     onSuccess: function(response){
       $('specifications_body').insert({top: response.responseText} );
+      $j('.inplaceeditor').each(function(index, element) {
+        console.log(index, element);
+          const id = element.getAttribute('data_id');
+          const field = element.getAttribute('data_field');
+          new Ajax.InPlaceEditor( element.name, '_specification.html?id='+id+'&action=update&field='+field,{okButton:false,cancelLink:true,submitOnBlur:false,rows:1});
+      });
+
       SortableTable.load();
     }
   } );

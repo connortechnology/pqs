@@ -15,7 +15,7 @@
 		<? echo ( 
 			my $html = '';
 			my $rowclass;
-			@{$$variable{'ProjectTypes'}} = openprint::ProjectType->find( order=>'lower(name)' );
+			@{$$variable{ProjectTypes}} = openprint::ProjectType->find();
 			my $row = slurp_content( '/administrator/service_types/_row.html' );
 
 			foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$$variable{ServiceType}->id(), order=>'projecttype_id,'.$openprint::ServiceType_Default::fields{'name'}) ) {

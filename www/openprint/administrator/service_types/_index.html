@@ -1,8 +1,9 @@
 <? echo (
+  my $uri = misc::get_session_uri($r->uri());
 	@{$$variable{Service_Types}} = ();
 	foreach my $Service_Type ( openprint::ServiceType->find( 
-			( $session{'/administrator/service_types/index.html?category_id'} ? ( category_id => $session{'/administrator/service_types/index.html?category_id'} ) : () ),
-			order				=> 'lower(name)',
+			( $session{$uri.'?category_id'} ? ( category_id => $session{$uri.'?category_id'} ) : () ),
+      ( $session{$uri.'?search'} ? ( 'name ilike' => '%'.$session{$uri.'?search'}.'%') : () ),
 		) ) {
 		push @{$$variable{Service_Types}}, $Service_Type;
 	} # end foreach Service_Types
@@ -12,20 +13,25 @@ return 'There are no service types which match your search criteria.';
 } else {
 	my $rowclass;
 my $html = '
-<div class="Service_Type header"> 
-	<div class="Name">Name</div>
-	<div class="Description">Description</div>
-	<div class="Category">Category</div>
-</div>';
+<table class="List">
+  <thead>
+    <tr class="Service_Type"> 
+      <td class="Name">Name</td>
+      <td class="Description">Description</td>
+      <td class="Category">Category</td>
+    </tr>
+  </thead>
+  <tbody>
+    ';
 
 	foreach my $Service_Type ( @{$$variable{Service_Types}} ) {
 
 		$html .= sprintf(q` 
-			<div title="%2$s" class="Service_Type%5$s">
-				<div class="Name"><a href="/administrator/service_types/edit.html?ServiceType_id=%1$d">%2$s</a></div>
-				<div class="Description"><a href="/administrator/service_types/edit.html?ServiceType_id=%1$d">%3$s</a></div>
-				<div class="Category"><a href="/administrator/service_types/edit.html?ServiceType_id=%1$d">%4$s</a></div>
-			</div>
+			<tr title="%2$s" class="Service_Type%5$s">
+				<td class="Name"><a href="edit.html?ServiceType_id=%1$d">%2$s</a></td>
+				<td class="Description"><a href="edit.html?ServiceType_id=%1$d">%3$s</a></td>
+				<td class="Category"><a href="dit.html?ServiceType_id=%1$d">%4$s</a></td>
+			</tr>
 			`, $Service_Type->id(),
 			html_escape($Service_Type->name()),
 			html_escape($Service_Type->description()),
@@ -37,3 +43,5 @@ my $html = '
 	return $html;
 }
 ) ?>
+  </tbody>
+</table>

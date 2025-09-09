@@ -1,18 +1,19 @@
 <? echo (
 	my $html;
-	my @Equipment = openprint::Equipment->find( order=>'lower(strid)', 'servicetype_id any'=> $$variable{ServiceType}->id());
+	my @Equipment = openprint::Equipment->find( 'servicetype_id any'=> $$variable{ServiceType}->id());
 	my @equipment_dropdown = map { $_->id(), $_->strid() . ': ' . $_->name() } @Equipment;
   my @services = openprint::Service->find(servicetype_id=>$$variable{ServiceType}->id());
 
-	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find(supplier=>'Y') ];
 
 	my $prices_per_equipment = slurp_content( '/administrator/services/_prices_per_equipment.html' );
 
-	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+	foreach my $Pricelist ( openprint::Pricelist->find() ) {
 		$$variable{Pricelist} = $Pricelist;
 		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend><div id=\"pricelist-$$Pricelist{id}\">";
       foreach my $service (@services) {
         $$variable{Service} = $service;
+        $html .= '<fieldset><legend>Service '.$service->link_to().'</legend>';
 
 		my @Prices = openprint::ServicePrice->find( service_id=>$$variable{Service}->id(), pricelist_id=>$Pricelist->id() );
 
@@ -23,7 +24,8 @@
 			$$variable{Equipment} = $Equipment;
 			$html .= variable_substitution( \$prices_per_equipment );
 		} # end foreach Equipment
-      }
+        $html .= '</fieldset>';
+    } # end foreach service
 
 		$html .= '</div>';
 		if ( ! $param{equipment_id} ) {

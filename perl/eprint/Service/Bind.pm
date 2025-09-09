@@ -38,7 +38,10 @@ sub necessary {
   # Bindery types are currently mutually exclusive (can't bind half the
   # project as one thing and half as another). We're only necessary if we're
   # the chosen template.
-  return 1 if $service_type eq get_bindery_type($log, $dbh, $pid);
+  my $bindery_type = get_bindery_type($log, $dbh, $pid);
+  $openprint::log->debug("Bindery type: $bindery_type ?= $service_type");
+  return 0 if !$service_type;
+  return 1 if $service_type eq $bindery_type;
   return 1 if $service_type eq '3HolePunch' and get_template($log, $dbh, $pid) eq '3HolePunchBinder';
   return 1 if $service_type eq 'SingleHole' and get_template($log, $dbh, $pid) eq 'SingleHole';
 
