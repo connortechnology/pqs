@@ -11,13 +11,14 @@ require openprint::MaterialCategory;
 require openprint::MaterialType;
 require openprint::Manufacturer;
 
-use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults $cache_field $cached };
+use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults $cache_field $cached $default_sort};
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
 
 $debug = 0;
 $cached = 0;
+$default_sort => 'lower(strid)',
 $table = 'tbl_materials';
 $serial = 'material_seq';
 
@@ -41,7 +42,7 @@ $serial = 'material_seq';
 %find_fields = (
     type    =>  '(SELECT name FROM Material_Type WHERE id='.$fields{type_id}.')',
     category    =>  '(SELECT name FROM Material_Categories WHERE id=category_id)',
-    equipment_id  =>  '(SELECT lngequipmentindex FROM tbl_material_prices WHERE lngmaterialindex=materials.'.$fields{id}.')',
+    equipment_id  =>  '(SELECT lngequipmentindex FROM tbl_material_prices WHERE lngmaterialindex='.$table.'.'.$fields{id}.')',
     servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
 );
 

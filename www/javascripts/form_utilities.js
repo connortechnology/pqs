@@ -1882,6 +1882,14 @@ function update_event_bindings() {
     }
     el.oninput = window[fnName].bind(el, el);
   });
+  document.querySelectorAll("input[on_input]").forEach(function(el) {
+    const fnName = el.getAttribute("on_input");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    el.oninput = window[fnName].bind(el, el);
+  });
 
   document.querySelectorAll("input[data_on_input]").forEach(function(el) {
     const fnName = el.getAttribute("data_on_input");

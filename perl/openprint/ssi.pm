@@ -1088,7 +1088,7 @@ sub date_filter {
 	return ( $sql_field, $parser->format_datetime( $datetime ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this', 'on_input_this' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this', 'on_input_this', 'on_input' );
 
 sub input {
 	my %options = @_;

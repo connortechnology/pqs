@@ -69,6 +69,7 @@ table .EquipmentID {
 table .EquipmentID,
 table .EquipmentName,
 table .Description,
+table .Categories,
 table .Services {
 	text-align: left;
 }

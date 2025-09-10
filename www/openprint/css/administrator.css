@@ -89,7 +89,7 @@ fieldset.Fold p input {
 }
 
 #Prices table .buttons {
-	width: 80px;
+	width: 100px;
 }
 input[type="numeric"] {
 	max-width: 96%;
