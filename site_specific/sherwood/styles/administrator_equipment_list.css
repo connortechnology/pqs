@@ -1,0 +1,13 @@
+.filters div.content {
+  display: flex;
+  clear: unset;
+  float: none;
+  width: 100%;
+}
+.filters div ul {
+  flex-grow: 1;
+  width: 33%;
+}
+.Created {
+  display: none;
+}
