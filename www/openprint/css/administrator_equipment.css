@@ -23,7 +23,9 @@ li input[type="text"] {
 }
 
 #specifications .units {
+  /*
     width: 100px;
+    */
     text-align: left;
 }
 #specifications .interpolate {
@@ -67,6 +69,7 @@ table .EquipmentID {
 table .EquipmentID,
 table .EquipmentName,
 table .Description,
+table .Categories,
 table .Services {
 	text-align: left;
 }

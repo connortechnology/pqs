@@ -430,7 +430,7 @@ sub calc {
 	my %specs = %param;
 	if (my $function = $module->can( $param{method})) {
 		$log->debug("Can do $module -> $param{method}");
-		$specs{Status} = $function->( $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'}, $$Service{service_type}, \%specs );
+		$specs{Status} = $function->( $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'}, \%specs );
 	} else {
 		$log->error("Cant do $param{method} for $module");
 	} # end if

@@ -1,0 +1,13 @@
+.filters legend,
+.filters .category_id,
+.activity_code,
+.filters .equipment_id,
+.filters .type {
+  display: none;
+}
+
+fieldset p select {
+  width: auto;
+}
+
+

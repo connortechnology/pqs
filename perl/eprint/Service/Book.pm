@@ -16,6 +16,7 @@ use eprint::Service::Printing::Price     qw(signatures_of_type);
 use PQS::model::materials;
 use PQS::model::service;
 use Data::Dumper;
+require openprint;
 
 sub store {
   my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
@@ -26,7 +27,7 @@ sub store {
     my @qty   = @{ $specs->{mv_qty}  };
     my $total = (get_quantities($log, $dbh, $pid))[0];
 
-    print STDERR "STORE FOR BOOK  Servcie: PID: $pid SID: $sid \n";
+    #print STDERR "STORE FOR BOOK  Servcie: PID: $pid SID: $sid \n";
 
     my (@versions, @quantities);
 
@@ -67,7 +68,7 @@ sub restore {
     $specs->{versions} = \%versions;
   }
 
-  print STDERR "HAVE VERSIONS: ", Dumper($specs->{versions});
+  #print STDERR "HAVE VERSIONS: ", Dumper($specs->{versions});
   return $specs;
 }
 
@@ -86,7 +87,7 @@ sub display {
   $mv{next_version} = $mv{versions} ? scalar @{$mv{versions}} + 1 : 1;
   map { $mv{$_} = $specs->{$_} if $_ =~ /mv_num_col/; } keys %{$specs};
 
-  print STDERR "HAVE VERSIONS DATA", Dumper(\%mv);
+  #print STDERR "HAVE VERSIONS DATA", Dumper(\%mv);
 
   # Get the bindery options (radio buttons w/ images).
   my $bindery = $dbh->selectall_arrayref(qq{
@@ -140,7 +141,8 @@ sub munge {
   my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
   if (!defined $specs->{template}) {
-    $openprint::log->error("Undefined template in book in $pid $sid");
+    $openprint::log->debug("Undefined template in book in $pid $sid");
+    return 1;
   }
 
   # Make sure the cover spec is set, and correctly when perfect bound. 
@@ -210,19 +212,18 @@ sub calc {
 sub action { 
   my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
 
-  print STDERR "START BOOK ACTION: PID: $pid SID: $sid \n";
-  print STDERR 'specs'.Data::Dumper::Dumper($specs);
+  #print STDERR "START BOOK ACTION: PID: $pid SID: $sid \n";
+  #print STDERR 'specs'.Data::Dumper::Dumper($specs);
 
   my $project_type = get_type($log, $dbh, $pid);
   my $bind_type    = $specs->{template};
 
-  die "No bindery type found for multi-page project!" 
-  unless ($bind_type || $project_type eq 'ScreenItem');
+  $openprint::log->error( "No bindery type found for multi-page project!" ) unless ($bind_type || $project_type eq 'ScreenItem');
 
   # Preserve the information from the first spread if we're editing. TODO
   # Check that we're not saving for the first time.
   my $prev = previous_specs($log, $dbh, $pid);
-  print STDERR 'prev'.Data::Dumper::Dumper($prev);
+  #print STDERR 'prev'.Data::Dumper::Dumper($prev);
 
   # TODO We should be able to only remove all printing services and this will "just work".
   for my $service (qw(Printing Folding Proofs Film)) {
@@ -239,12 +240,10 @@ sub action {
 
   # Add a cover spread if needed.
   if ($specs->{ COVER() }) {
-    print STDERR "Have cover?".COVER()."\n";
+    #print STDERR "Have cover?".COVER()."\n";
 
     my $double = grep { $bind_type eq $_ } qw(SaddleStitching PerfectBinding);
-    print STDERR "IS SINGLE ********* $double - $bind_type ****\n";
-
-
+    #print STDERR "IS SINGLE ********* $double - $bind_type ****\n";
 
     my $cover = insert_service($log, $dbh, $pid, 'Printing', {
         # Perfect binding requires the cover.
@@ -283,7 +282,7 @@ sub action {
     # Insert previous specs if we're redoing this book.
     if (exists $prev->{COVER()}) {
       while (my ($name, $value) = each %{ $prev->{COVER()} }) {
-        print STDERR "$name => $value\n";
+        #print STDERR "$name => $value\n";
         insert_service_spec(
           $log, $dbh, $pid, $cover, $name => $value, undef, 1
         );
@@ -324,7 +323,7 @@ sub action {
   # We now allow GF only jobs.
   # Check to see if there are INTERIORS before adding.
   if (! $specs->{ INTERIOR() }) {
-    print STDERR "Don't have interior because we removed them!".INTERIOR()."\n";
+    #print STDERR "Don't have interior because we removed them!".INTERIOR()."\n";
     return 1;
   }
 
@@ -339,7 +338,7 @@ sub action {
       txtSignatureSize          => (($bind_type eq 'LoopStitching' or $bind_type eq 'SaddleStitching') ? 4 : 2),
       VERSIONS		  =>  [mp_versions($specs)],
     });
-  print STDERR "Interior index $interior\n";
+  #print STDERR "Interior index $interior\n";
   insert_service_spec( $log, $dbh, $pid, $interior, SignatureIndex => $interior);
   insert_service_specs($log, $dbh, $pid, $interior, %defaults);
     $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
@@ -362,7 +361,7 @@ sub action {
     }
   }
 
-  print STDERR "HAVE SPECS", Dumper($specs);
+  #print STDERR "HAVE SPECS", Dumper($specs);
 
   # NOTE: The bindery types will take care of themselves.
 

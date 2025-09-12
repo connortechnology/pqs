@@ -3,6 +3,7 @@
 
 	<p>If the ink on your project <span class="tip" title="Layout, type or pictures that extend beyond the trim marks on a page. Illustrations that spread to the edge of the paper without margins are referred to as 'bled off'.">bleed</span> off the edge, please specify the amount and locations</p>
 
+  <div class="bleeds">
 	<label for="bleed_size">Bleed Size:</label>
 	<select id="bleed_size" name="bleed_size" size="1" onchange="check_bleeds.apply(this);" >
         
@@ -26,15 +27,18 @@
 	</select>
 	<br />
 
-	<span class="label">Bleed Locations:</span>
-	<div class="checkbox pad-right">
-		<label for="bleed_sides_left"><input type="checkbox" name="bleed_sides" id="bleed_sides_left" value="3" />Left</label><br />
-		<label for="bleed_sides_right"><input type="checkbox" name="bleed_sides" id="bleed_sides_right" value="1" />Right</label><br />
-	</div>
-	<div class="checkbox">
-		<label for="bleed_sides_top"><input type="checkbox" name="bleed_sides" id="bleed_sides_top" value="0" />Top</label><br />
-		<label for="bleed_sides_bottom"><input type="checkbox" name="bleed_sides" id="bleed_sides_bottom" value="2" />Bottom</label><br />
-	</div>
+    <label>Bleed Locations:</label>
+    <div class="bleed_sides">
+      <div class="checkbox pad-right">
+        <label for="bleed_sides_left"><input type="checkbox" name="bleed_sides" id="bleed_sides_left" value="3" />Left</label><br />
+        <label for="bleed_sides_right"><input type="checkbox" name="bleed_sides" id="bleed_sides_right" value="1" />Right</label><br />
+      </div>
+      <div class="checkbox">
+        <label for="bleed_sides_top"><input type="checkbox" name="bleed_sides" id="bleed_sides_top" value="0" />Top</label><br />
+        <label for="bleed_sides_bottom"><input type="checkbox" name="bleed_sides" id="bleed_sides_bottom" value="2" />Bottom</label><br />
+      </div>
+    </div>
+  </div>
 	<br />
 
 	<fieldset class="hidden-details dnd-fieldset">

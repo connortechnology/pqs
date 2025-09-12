@@ -50,12 +50,15 @@ fieldset p {
 
 fieldset label,
 fieldset span.label,
+/*
 fieldset span,
+*/
 fieldset div.text {
 	overflow: visible;
-
+/*
     float: left;
-	display: inline;
+    */
+	display: inline-block;
 	position: relative;
 
     width: 18em;
@@ -71,7 +74,9 @@ fieldset div.text {
 
 
 fieldset div {
+  /*
 	float: left;
+  */
 	clear: none;
 	display: inline; 
 	position: relative;
@@ -96,7 +101,9 @@ fieldset textarea {
 }
 
 fieldset select {
+  /*
 	float: left;
+  */
 	display: inline;
 	
 	margin-top: 1px;
@@ -182,9 +189,11 @@ fieldset div.radio label,
 fieldset label.checkbox-after-label {
 	overflow: visible;
 
+  /*
 	float: left;
+  */
 	clear: none;
-	display: inline;
+	display: inline-block;
 	position: relative;
 
 	width: auto;
@@ -363,7 +372,9 @@ fieldset textarea.fixed {font-family: "Courier New", Courier, monospace; font-si
 }
 
 .smBox, .smBoxLeft, .smbox {
+  /*
 	float: left;
+  */
 	display: inline;
 	position: relative;
 
@@ -371,7 +382,9 @@ fieldset textarea.fixed {font-family: "Courier New", Courier, monospace; font-si
 }
 
 .smBox {text-align: right;}
-.smBoxLeft {text-align: left;}
+.smBoxLeft {
+  float: left;
+text-align: left;}
 
 
 

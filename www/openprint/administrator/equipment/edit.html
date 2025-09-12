@@ -7,7 +7,7 @@
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search Information</legend>
 		<ul>
-      <li>
+      <li class="category_id">
         <label>Category</label>
         <select name="search_category_id" on_change_this="search_change" class="chosen">
           <option value="">All</option>
@@ -15,7 +15,7 @@
         </select>
       </li>
       <li>
-        <label>Equipment ID</label>
+        <label>Editing Equipment</label>
         <select name="ddmEquipment" on_change_this="search_change" class="chosen">
           <option value="">Select Equipment</option>
   <? echo (
@@ -35,13 +35,13 @@
 				button( 'NewTop', { href=>'/administrator/equipment/edit.html', text=>'New' } ),
 				( $$variable{Equipment}->deleted() ? (
 				button( 'Destroy', { onclick=>"f1.btnFunction.value='Destroy';fmChange=2;fmCheck(f1);", text=>'Destroy' } ),
-				button( 'UnDelete', { onclick=>"f1.btnFunction.value='UnDelete';fmChange=2;fmCheck(f1);", text=>'UnDelete' } ),
+				button( 'UnDelete', { onclick=>"f1.btnFunction.value='UnDelete';f1.submit();", text=>'UnDelete' } ),
 				) : (
 				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
 				) ),
-				button( 'SaveTop', { onclick=>q`$('f2').btnFunction.value='Save';fmChange=3;fmCheck($('f2'));`, text=>'Save' } ),
+				button( 'SaveTop', { onclick=>q`$('f2').btnFunction.value='Save';$('f2').submit();`, text=>'Save' } ),
 				button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
-				button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ),
+				#button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ),
 				);
 			) ?>
 		</p>
@@ -55,11 +55,11 @@
       <ul>
 			<li><label>Index</label><? hecho ( $$variable{Equipment}->id(); ) ?></li>
 			<li>
-				<label>ID</label>
+				<label title="Short identifier that can be used where space is at a premium">ID</label>
 				<input type="text" name="strid" value="<? hecho ( $$variable{Equipment}->strid(); ) ?>"/>
 			</li>
 			<li>
-				<label>Name</label>
+				<label title="Proper name used wherever space is not at a premium">Name</label>
 				<input type="text" name="name" value="<? hecho ( $$variable{Equipment}->name(); ) ?>" />
 			</li>
 			<li>
@@ -76,21 +76,37 @@
 				<label>Sort</label>
 				<input type="text" name="sorting" value="<? echo ( $$variable{Equipment}->sorting(); ) ?>" />
 			</li>
-			<li>
+			<li class="image">
 				<label>Image</label>
 				<input type="text" name="image" value="<? hecho ( $$variable{Equipment}->image(); ) ?>" />
-			</li>
-			<li><label>Operators</label>
-			<div id="Operators"><?include(_operators.html)?></div>
 			</li>
       </ul>
 		</div>
 		<div class="rightColumn">
       <ul>
+        <?if(0)?>
 			<li>
 				<label>Supplier</label>
 				<input type="text" name="supplier" value="<? hecho ( $$variable{Equipment}->supplier(); ) ?>" />
 			</li>
+        <?endif(0)?>
+      <?echo( 
+         my $html = '';
+         my @types = sql::execute(undef,undef, 'SELECT DISTINCT strtype FROM tbl_equipment');
+         if (@types > 1) {
+         return join("\n",
+         '<li><label>Type</label>',
+           ssi::select(
+           [map { $_, ucfirst($_) } sort { lc $a cmp lc $b } @types],
+           $$variable{Equipment}->type(), {
+           name=>'type',
+           prepend=>[ '', 'None' ],
+           } ),
+           '</li>',
+         );
+         }
+         return '';
+      ) ?>
 			<li>
 				<label>Use in estimating</label>
 				<? echo ( radio( 'useinestimating', [ '1', 'Yes', '0', 'No', '', 'By Override' ], $$variable{Equipment}->useinestimating(), { default=>'' } ); ) ?>
@@ -99,11 +115,12 @@
 				<label>Service Types</label>
 				<select name="servicetype_id" id="servicetype_id" multiple="multiple" class="chosen">
 					<? echo ( make_drop_down(
-            openprint::ServiceType->dropdown( order=>'lower('.$openprint::ServiceType::fields{name}.')'),
+            openprint::ServiceType->dropdown(),
 						$$variable{Equipment}->servicetype_id(),
 						); ) ?>
 				</select>
 			</li>
+        <?if($config{hasScheduling})?>
 			<li>
 				<label>Use in scheduling</label>
 				<? echo ( radio( 'useinscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->useinscheduling(), { default=>'0', onclick=>q`if(this.value=='1'){$('schedulingoptions').show();}else{$('schedulingoptions').hide();}` } ); ) ?>
@@ -112,6 +129,10 @@
 				<label>Smart Scheduling</label>
 				<? echo ( radio( 'smartscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->smartscheduling() ); ) ?>
 	    </li>
+			<li><label>Operators</label>
+			<div id="Operators"><?include(_operators.html)?></div>
+			</li>
+        <?endif($config{hasScheduling})?>
 	<? if ( $config{JMFEnabled} eq 'Y' ) ?>
 			<li>
 				<label>Use JMF</label>
@@ -130,22 +151,28 @@
 				<input type="text" name="cost_center" value="<? hecho ( $$variable{Equipment}->cost_center(); ) ?>"  />
 			</li>
 	<? endif ( $config{InstantGateEnabled} eq 'Y' or $config{JDFEnabled} eq 'Y' ) ?>
-			<li>
+  <?if($config{JDFEnabled} eq 'Y' ) ?>
+			<li class="jdf_id">
 				<label>JDF ID</label>
 				<input type="text" name="jdf_id" value="<? hecho ( $$variable{Equipment}->jdf_id(); ) ?>"  />
 			</li>
-			<li>
+			<li class="jdf_name">
 				<label>JDF Name</label>
 				<input type="text" name="jdf_name" value="<? hecho ( $$variable{Equipment}->jdf_name(); ) ?>"  />
 			</li>
-			<li>
-				<label>Location</label>
+  <?endif($config{JDFEnabled} eq 'Y' ) ?>
+      <?echo(my @locations = openprint::Location->find( order=>'parent_id NULLS FIRST, lower(name)', type=>'place', company_id=>$openprint::Owner->id());
+      if (@locations) {
+      return join("\n", '<li><label>Location</label>
 				<select id="location_id" name="location_id">
-					<option value="">select</option>
-          <? echo ( make_drop_down( openprint::Location->dropdown( order=>'parent_id NULLS FIRST, lower(name)', type=>'place', company_id=>$openprint::Owner->id()), $$variable{Equipment}->location_id() ); ) ?>
-				</select>
-			</li>
-			<li>
+					<option value="">select</option>'.
+          make_drop_down([map { $$_{id} => $$_{name} } @locations], $$variable{Equipment}->location_id() ),
+				'</select>
+			</li>');
+      }
+      return '';
+      )?>
+			<li class="cip3_integration">
 				<label>CIP3 Integration</label>
         <?echo(radio('cip3_monitor', ['1','Yes','0','No'], $$variable{Equipment}->cip3_monitor(), { onclick=>q`if(this.value==1){$('CIP3').show();}else{$('CIP3').hide();}`, default=>'0' } );)?>
 			</li>
@@ -173,7 +200,7 @@
 <? if ( $$variable{Equipment}->id() ) ?>
 <div id="ServicePrices">
   <fieldset><legend>Service Prices <span id="toggle_service_prices" on_click="toggle_service_prices" title="Toggle visibility of service prices">
-<?echo($session{$r->uri().'?show_service_prices'} ? '-' : '+')?>
+<?echo($page_session{show_service_prices} ? '-' : '+')?>
 </span></legend>
   <p class="buttons">
 			<input type="file" name="fileServicePrices"/>
@@ -182,10 +209,13 @@
 			button( 'ExportServicePrices', { onclick=>"f2.btnFunction.value='Export Service Prices';f2.submit();", text=>'Export' } ),
 			); ) ?>
   </p>
-    <div id="show_service_prices"><?echo($session{$r->uri().'?show_service_prices'} ? include('_service_prices.html') : '' )?></div>
+    <div id="show_service_prices"><?include('_service_prices.html')?></div>
   </fieldset>
 </div><!--ServicePrices-->
-<fieldset><legend>Specifications <span on_click="toggle_specifications">+</span></legend>
+<div class="Specifications">
+  <fieldset><legend>Specifications <span id="toggle_specifications" on_click="toggle_specifications">
+        <?echo($page_session{show_specifications} ? '-' : '+')?>
+      </span></legend>
   <p class="buttons">
 			<input type="file" name="fileSpecifications"/>
 			<? echo ( join("\n",
@@ -223,6 +253,7 @@
 		</table>
 </div>
 	</fieldset>
+</div>
 <? endif ( $$variable{Equipment}->id() ) ?>
 </form>
 <? if ( $$variable{Equipment}->specification('Folding Capable') ) ?>

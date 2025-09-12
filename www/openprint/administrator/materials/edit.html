@@ -2,42 +2,49 @@
 <form name="f1" id="f1" method="get" action="edit.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
-      <li>
+      <li class="category_id">
         <label>Category</label>
         <select name="ddmSearchCategory" on_change_this="submitElementsForm">
           <option value="">All Categories</option>
-          <? echo ( make_drop_down( openprint::MaterialCategory->dropdown( ), $session{$$variable{uri}.'?ddmSearchCategory'} ); ) ?>
+          <? echo ( make_drop_down( openprint::MaterialCategory->dropdown( ), $page_session{ddmSearchCategory} ); ) ?>
         </select>
       </li>
-      <li>
+      <li class="activity_code">
         <label>Activity Code</label>
         <input type="text" name="search_activity_code" value="<?echo($session{'/administrator/materials/edit.html?search_activity_code'})?>" />
       </li>
-      <li><label>Equipment</label>
-        <select name="equipment_id" on_change-this="submitElementsForm">
+      <li class="equipment_id"><label>Equipment</label>
+        <select name="equipment_id" on_change_this="submitElementsForm">
           <option value="">All</option>
           <? echo (
             $variable{Equipment} = [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find() ];
             make_drop_down( $variable{Equipment}, $param{equipment_id} ); ) ?>
         </select>
       </li>
+      <li class="type"><label>Type</label>
+        <?echo(
+       ssi::select( 
+              openprint::MaterialType->dropdown(), 
+              $page_session{type_id}, { 
+              name=>'type_id', 
+              prepend=>[ '', 'All' ],
+              on_change_this=>"submitElementsForm",
+
+              } ); ) ?>
       <li>
-        <label>Material</label>
+        <label>Editing Material</label>
         <select name="material_id" on_change_this="submitElementsFormIfHasValue">
           <option value="">Select a Material</option>
           <? echo (
               make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find(
-                  ( $session{$$variable{uri}.'?ddmSearchCategory'} ? ( category_id=>$session{$$variable{uri}.'?ddmSearchCategory'} ) : () ),
+                  ( $page_session{ddmSearchCategory} ? ( category_id=>$page_session{ddmSearchCategory} ) : () ),
+                  ( $page_session{type_id} ? ( type_id=>$page_session{type_id} ) : () ),
                   ( $param{equipment_id} ? ( 'equipment_id any' => $param{equipment_id} ) : () ),
                   ) ], $$variable{Material}->id() );
               ) ?>
         </select>
       </li>
 		</ul>
-	</fieldset>
-</form>
-<form name="f2" id="f2" method="post" enctype="multipart/form-data" action="edit.html">
-	<input type="hidden" name="material_id" value="<?echo($$variable{Material}->id())?>"/>
 	<p class="buttons">
 		<? echo ( join("\n",
 			button( 'New', { href=>'/administrator/materials/edit.html', text=>'New' } ),
@@ -46,10 +53,14 @@
 				button( 'Copy', { onclick=>"f2.btnFunction.value='Copy';fmCheck(f2);", text=>'Copy' } ),
 				button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};", text=>'Delete' } ),
 			) : () ),
-			button( 'Reset', { onclick=>'f2.reset();', text=>'Reset' } ),
+			#button( 'Reset', { onclick=>'f2.reset();', text=>'Reset' } ),
 );
 		) ?>
 	</p>
+	</fieldset>
+</form>
+<form name="f2" id="f2" method="post" enctype="multipart/form-data" action="edit.html">
+	<input type="hidden" name="material_id" value="<?echo($$variable{Material}->id())?>"/>
 <? if ( 0 and $openprint::User->email() =~ /^iconnor/ ) ?>
 	<p class="buttons">
   <input type="file" name="file"/>
@@ -143,4 +154,75 @@
 <? if ( $$variable{Material}->id() ) ?>
 <? echo ( include_logs( $$variable{Material} ); ) ?>
 <? endif ( $$variable{Material}->id() ) ?>
-<script src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<script src="<?hash_link(/openprint/javascripts/pricing.js)?>"></script>
+<script>
+const SpecificationsConfiguration = <?echo(
+    my $config;
+    foreach my $service_type ($$variable{Material}->ServiceTypes()) {
+      my $c = $service_type->configuration('MaterialSpecifications');
+      $log->debug("config for $$service_type{id} is ".Data::Dumper::Dumper($c));
+      $$config{$$service_type{id}} = $c;
+    }
+    return JSON::encode_json($config);
+    )?>;
+
+function get_config(name) {
+  var config = null;
+
+  Object.entries(SpecificationsConfiguration).forEach(([key, value]) => {
+    //console.log(`${key}: ${value}`);
+    if (value[name]) {
+      console.log(name, value[name]);
+      config = value[name];
+      return;
+    //} else {
+      //console.log(name);
+    }
+  });
+  return config;
+}
+
+function specification_name_onchange(e) {
+  const re = /^txtSpecificationName(\d*)$/;
+  const matches = e.name.match(re);
+  const id = matches[1];
+  const config = get_config(e.value);
+  if (!config) {
+    console.log('No config');
+    return;
+  }
+    console.log(config);
+  if (config.units) {
+    console.log(config.units);
+
+    console.log(id, e.form.elements['units-'+id]);
+
+    let units_ddm = e.form.elements['units-'+id];
+    const currentValue = $j(units_ddm).val();
+    if (currentValue && !config.units.find(currentvalue))
+      config.units[config.units.length] = currentValue;
+
+    if (config.units.length > 1) {
+      if (units_ddm.nodeName != 'SELECT') {
+        console.log(units_ddm.nodeName);
+        const parent = units_ddm.parentNode;
+        console.log(parent);
+        units_ddm.remove();
+        units_ddm = document.createElement('SELECT');
+        units_ddm.name = 'units-'+id;
+        parent.appendChild(units_ddm);
+      } else {
+        console.log("is select");
+        clear_ddm(units_ddm);
+      }
+
+      for (let i=0; i<config.units.length; i++) {
+        units_ddm.add(create_option(config.units[i], config.units[i]));
+      }
+      ddm_select_by_value(units_ddm, currentValue);
+    } else {
+      units_ddm.value = currentValue ? currentValue : config.units[0];
+    }
+  } // end if config.units
+}
+</script>

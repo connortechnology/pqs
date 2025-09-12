@@ -1,9 +1,10 @@
 use strict;
 package openprint::ssi;
 
-use constant Debug => 0;
+use constant Debug => 1;
 
 require Date::Calc;
+require JSON;
 
 # For Hash stuff
 use File::Basename;
@@ -923,11 +924,11 @@ sub save_params {
 			next;
 		}
 		if (ref $param{$_} eq 'ARRAY') {
-			$session{"$url?$_"} = join(',', @{$param{$_}} );
+			$page_session{$_} = $session{"$url?$_"} = join(',', @{$param{$_}} );
 $openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if Debug;
 		} else {
       s/^\s+//, s/\s+$// for $param{$_};
-			$session{$url.'?'.$_} = $param{$_};
+			$page_session{$_} = $session{$url.'?'.$_} = $param{$_};
 $openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if Debug;
 		} # end if
 		$session{$url.'?lastupdated'} = time;
@@ -1087,7 +1088,7 @@ sub date_filter {
 	return ( $sql_field, $parser->format_datetime( $datetime ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this', 'on_input_this' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title', 'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this', 'on_input_this', 'on_input' );
 
 sub input {
 	my %options = @_;

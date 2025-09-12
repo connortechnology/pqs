@@ -65,7 +65,7 @@ sub handler {
     print STDERR "Invalid method ".$r->method_number." get:".M_GET.' post:'.M_POST."\n";
     return HTTP_METHOD_NOT_ALLOWED;
   }
-  $dbh = PQS::DB->connect($r);  # TODO Use RO session for GETs
+  $dbh = PQS::DB->connect($r);
   session::dbh($dbh);
 
   # If the customer isn't valid and logged in, they can't use us.
@@ -76,7 +76,6 @@ sub handler {
     return Apache2::Const::OK;
   }
 
-  #%openprint::param = %{$variable->{param}} = map {$_ => $r->param($_)} $r->param();
   # Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
   foreach my $key ( $r->param ) {
     my @values = $r->param($key);
@@ -102,6 +101,7 @@ sub handler {
       #$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
     } # end if
   } # end foreach
+
   openprint::configuration::init( $r->dir_config() );
   openprint::session_init();
 
@@ -305,18 +305,25 @@ sub show {
   $variable->{ServiceType} = $variable->{Project}->ServiceType($sid);
 
   # Display/hide pricing based on customer default.
-  $variable->{isServicePricing} = $$openprint::Company{ysnpricingservices};
+  $variable->{isServicePricing} = $openprint::User->type() eq 'A' ? 1 : $$openprint::Company{ysnpricingservices};
 
   # Load the specs from the db.
   my $specs = $$variable{specs} = $variable->{spec} = eprint::service::get_specs($dbh, $pid, $sid, $service);
 
   # If the service has a display() function run it an populate variable with it's return.
   my $display = $service->{can}->('display');
-  my $page = $display ? $display->($r->log, $dbh, $service->{type}, $pid, $sid, $specs, $variable) : {};
+  my $is_openprint = (-1 != index($$service{page}, 'openprint'));
+
+  my $page = {};
+  if ($is_openprint) {
+    $display->($r->log, $dbh, $variable, $pid, $sid) if $display;
+  } elsif ($display) {
+    $page = $display->($r->log, $dbh, $service->{type}, $pid, $sid, $specs, $variable);
+  }
+
 
   $variable->{$_} = $page->{$_} for keys %$page;
 
-  my $is_openprint = (-1 != index($$service{page}, 'openprint'));
   # Open the template page.
   my $path = $r->document_root . ($is_openprint ? '' : SERVICE_PAGE_PATH);
 

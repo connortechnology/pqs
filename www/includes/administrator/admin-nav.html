@@ -4,12 +4,16 @@
   <ul>
     <li><a href="#" class="parent">Production</a>
       <ul>
-        <li><a href="/admin/equipment">PQS Equipment</a></li>
-        <li><a href="/openprint/administrator/equipment/list.html">Openprint Equipment</a></li>
+        <!--<li><a href="/admin/equipment">PQS Equipment</a></li>-->
+        <li><a href="/openprint/administrator/equipment/list.html">Equipment</a></li>
         <li><a href="/openprint/administrator/managerial/folds.html">Folds</a></li>
-        <li><a href="/admin/material">Materials</a></li>
-        <li><a href="/openprint/administrator/materials/list.html">New Materials</a></li>
-        <li><a href="/admin/service_types">Service Types</a></li>
+        <li><a href="/openprint/administrator/materials/list.html">Materials</a></li>
+        <!--<li><a href="/admin/material">PQS Materials</a></li>-->
+        <li><a href="/openprint/administrator/services/list.html">Services</a></li>
+        <?if($openprint::User->email() =~ /iconnor/)?>
+        <li><a href="/openprint/administrator/service_types/index.html">Openprint Service Types</a></li>
+        <li><a href="/admin/service_types">PQS Service Types</a></li>
+        <?endif($openprint::User->email() =~ /iconnor/)?>
       </ul>
     </li>
     <li>
@@ -23,8 +27,8 @@
     </li>
     <li><a href="#" class="parent">Stock</a>
       <ul>
-        <li><a href="/administrator/stock/list.html">List</a></li>
-        <li><a href="/administrator/paper/paper.html">Information</a></li>
+        <li><a href="/openprint/administrator/stock/stocks.html">List</a></li>
+        <li><a href="/administrator/paper/paper.html">PQS Paper Edit</a></li>
         <li><a href="/administrator/paper/import_export.html">Import / Export</a></li>
         <li><a href="/admin/recommendations">Recommendations</a></li>
         <li><a href="/admin/visibility">Visibility</a></li>
@@ -35,6 +39,8 @@
     <li><a href="/administrator/production/shipping.html">Shipping</a> </li>
     <li><a href="#" class="parent">Projects</a>
       <ul>
+        <li><a href="/openprint/administrator/project_types/index.html">Types</a></li>
+        <li><a href="/openprint/administrator/project_types/categories.html">Categories</a></li>
         <li><a href="/administrator/production/project_defaults.html">Defaults</a></li>
         <li><a href="/administrator/production/project_services.html">Services</a></li>
         <li><a href="/administrator/production/project_templates.html">Templates</a></li>
@@ -93,6 +99,13 @@
     <li><a href="/administrator/reports/inventory_reports.html">Inventory Report</a></li>
     -->
     <li><a href="/administrator/mat_inventory/inventory_list.html">Materials</a></li>
+  </ul>
+</li>
+<li><a href="#">IT</a>
+  <ul>
+    <li><a href="/openprint/employee/it/hosts.html">Devices</a></li>
+    <li><a href="/openprint/employee/it/networks.html">Networks</a></li>
+    <li><a href="/openprint/employee/it/licenses.html">Licenses</a></li>
   </ul>
 </li>
 <li><a href="#">Marketing</a>

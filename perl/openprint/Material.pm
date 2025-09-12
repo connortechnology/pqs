@@ -11,13 +11,14 @@ require openprint::MaterialCategory;
 require openprint::MaterialType;
 require openprint::Manufacturer;
 
-use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults $cache_field $cached };
+use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults $cache_field $cached $default_sort};
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
 
 $debug = 0;
 $cached = 0;
+$default_sort => 'lower(strid)',
 $table = 'tbl_materials';
 $serial = 'material_seq';
 
@@ -41,7 +42,7 @@ $serial = 'material_seq';
 %find_fields = (
     type    =>  '(SELECT name FROM Material_Type WHERE id='.$fields{type_id}.')',
     category    =>  '(SELECT name FROM Material_Categories WHERE id=category_id)',
-    equipment_id  =>  '(SELECT lngequipmentindex FROM tbl_material_prices WHERE lngmaterialindex=materials.'.$fields{id}.')',
+    equipment_id  =>  '(SELECT lngequipmentindex FROM tbl_material_prices WHERE lngmaterialindex='.$table.'.'.$fields{id}.')',
     servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
 );
 
@@ -127,28 +128,34 @@ sub New_Specification {
 } # end sub New_Specification
 
 sub Specification {
-  my ( $self, $name, $range ) = @_;
+  my ( $self, $name, $range, $equipment ) = @_;
 
-  if ( ! $_[0]{Specifications} ) {
+  if ( ! $$self{Specifications} ) {
     foreach my $Spec ( openprint::MaterialSpecification->find( material_id=>$_[0]{id}, order=>'min NULLS FIRST' ) ) {
-      push @{$_[0]{Specifications}{$$Spec{name}}}, $Spec;
+      push @{$$self{Specifications}{$$Spec{name}}}, $Spec;
     } # end foreach
-    if ( ! $_[0]{Specifications} ) {
+    if ( ! $$self{Specifications} ) {
 #$openprint::log->warn("No specfications for " . $self->name() );
-      $_[0]{Specifications} = {};
+      $$self{Specifications} = {};
       return;
     }
   } # end if
 
-  if ( ! $_[0]{Specifications}{$_[1]} ) {
+  if ( ! $$self{Specifications}{$name} ) {
     $openprint::log->warn("No specfications for ($name) " . $self->name() );
     return;
   }
 
-  return $_[0]{Specifications}{$_[1]}[0] if ! defined $_[2];
+  return $$self{Specifications}{$name}[0] if ! defined $range;
 #$openprint::log->debug("Looking for $name : $range") if $debug;
+  #
+  if ($equipment) {
+    # First filter by equipment
+    my @specs = map { (!$$_{equipment_id} or $$_{equipment_id} == $$equipment{id}) ? $_ : () } @{$$self{Specifications}{$name}};
+    return misc::find_entry( $range, \@specs, undef );
+  }
 
-  return misc::find_entry( $_[2], $_[0]{Specifications}{$_[1]}, $_[3] );
+  return misc::find_entry( $range, $$self{Specifications}{$name}, undef );
 } # end sub Specification
 
 sub specification {
@@ -324,15 +331,15 @@ sub servicetype_id {
   my $self = shift;
   $$self{servicetype_id} = shift if @_;
   if (0) {
-   if (@_) {
-    if (ref($_[0]) eq 'ARRAY') {
-      $$self{servicetype_id} = shift;
-    } else {
-      $$self{servicetype_id} = [shift];
+    if (@_) {
+      if (ref($_[0]) eq 'ARRAY') {
+        $$self{servicetype_id} = shift;
+      } else {
+        $$self{servicetype_id} = [shift];
+      }
     }
+    return [] if ! $$self{servicetype_id};
   }
-  return [] if ! $$self{servicetype_id};
-}
   return $$self{servicetype_id};
 } # end sub servicetype_id
 

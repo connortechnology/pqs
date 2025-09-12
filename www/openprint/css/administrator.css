@@ -26,12 +26,6 @@ th.Range,
 select.equipment, select.service {
 width: auto;
 }
-.Mode {
-/*
-, .Period {
-*/
-	display: none;
-}
 	
 .Equipment select {
 max-width: 100%;
@@ -43,6 +37,10 @@ max-width: 100%;
 .Value,
 .Name {
   text-align: left;
+}
+th.Mode, .Mode {
+	width: 160px;
+	text-align: center;
 }
 th.Units,
 .Units {
@@ -91,7 +89,7 @@ fieldset.Fold p input {
 }
 
 #Prices table .buttons {
-	width: 80px;
+	width: 100px;
 }
 input[type="numeric"] {
 	max-width: 96%;
@@ -111,7 +109,38 @@ input[type="numeric"] {
 li input[type="text"] {
   width: 100%;
 }
+#ServicePrices,
+.Specifications {
+  margin-top: 13px;
+}
+#ServicePrices .buttons {
+  width: 100px;
+}
+/*
 #ServicePrices tr th button.btn {
   font-size: 1.5rem;
   padding: 0.25rem 0.6rem;
+}
+*/
+
+.Specifications fieldset legend,
+#ServicePrices fieldset legend {
+  position: relative;
+}
+
+#toggle_specifications,
+#toggle_service_prices {
+  cursor: pointer;
+  position: absolute;
+  top: -15px;
+  right: 40px;
+  background-color: white;
+}
+#toggle_specifications::before ,
+#toggle_service_prices::before {
+  content: '( ';
+}
+#toggle_specifications::after ,
+#toggle_service_prices::after {
+  content: ' )';
 }

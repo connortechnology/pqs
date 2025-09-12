@@ -1543,15 +1543,21 @@ sub display {
     my @qty       = (undef, get_quantities($log, $dbh, $pid));
 
     for my $i (1..3) {
-		my $q = $variable->{txtServiceDescription} eq 'Samples' ?  $variable->{hdnSampleQuantity}
-			  : $variable->{txtServiceDescription} eq 'Proofs'  ?  $variable->{hdnProofQuantity}
-			  : 												   $qty[$i];
-		# Remove when possible.
-        $variable->{"QUANTITY$i"}     = $qty[$i] unless $variable->{"QUANTITY$i"};
+      my $q;
+      if (!$variable->{txtServiceDescription}) {
+        $q = $qty[$i];
+      } elsif ($variable->{txtServiceDescription} eq 'Samples') {
+        $q = $variable->{hdnSampleQuantity};
+      } elsif ($variable->{txtServiceDescription} eq 'Proofs') {
+        $q = $variable->{hdnProofQuantity};
+      } else {
+        $q = $qty[$i];
+      }
+      # Remove when possible.
+      $variable->{"QUANTITY$i"}     = $qty[$i] unless $variable->{"QUANTITY$i"};
 
-        $variable->{"txtQuantity$i"}  = $q;
-        $variable->{"hdnQuantity$i"}  = $q;
-
+      $variable->{"txtQuantity$i"}  = $q;
+      $variable->{"hdnQuantity$i"}  = $q;
     }
 	
 	$variable->{ADDRESSES} = $dbh->selectall_arrayref(q{

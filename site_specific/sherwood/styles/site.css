@@ -880,3 +880,20 @@ button[disabled='disabled'] {
 #BugReport textarea {
   width:80%;
 }
+table .Price {
+  text-align: right;
+  width: 100px;
+}
+.breakdown table,
+.breakdown table td {
+  border:none;
+}
+.breakdown table .totals {
+  border-top: 1px solid black;
+}
+
+img.Override {
+  width: 17px;
+  vertical-align: middle;
+  margin:3px 4px 6px 0;
+}

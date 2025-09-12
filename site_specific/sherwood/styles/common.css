@@ -1,0 +1,21 @@
+.PageTitle {
+  position: relative;
+  top: 0px;
+  text-align: left;
+  left: 0px;
+}
+.PageTitle h1 {
+  color: #0055a5;
+  font-weight: normal;
+  display: inline-block;
+}
+.PageTitle h1:after {
+  content: ' »';
+}
+
+.PageTitle h2 {
+  color: #000;
+  font-weight: normal;
+  display: inline-block;
+}
+

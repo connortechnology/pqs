@@ -1,11 +1,12 @@
 <? eval (
-	my $uri = '/administrator/equipment/list.html';
-    my %filters = (
+  my $uri = misc::get_session_uri($r->uri());
+  my %filters = (
 		order	=>	'lower(strid)',
 		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
 		( $session{$uri.'?useinestimating'} ne '' ? ( useinestimating => $session{$uri.'?useinestimating'} ) : () ),
 		( $session{$uri.'?servicetype_id'} ne '' ? ( 'servicetype_id any' => $session{$uri.'?servicetype_id'} ) : () ),
 		( $session{$uri.'?category_id'} ne '' ? ( 'category_id any' => $session{$uri.'?category_id'} ) : () ),
+		( $session{$uri.'?type'} ne '' ? ( type => $session{$uri.'?type'} ) : () ),
 		date_filter( $uri.'?created_on_end', 'created_on <=' ),
 		date_filter( $uri.'?created_on_start', 'created_on >=' ),
 		);
@@ -26,8 +27,9 @@
 			<th class="EquipmentName">Name</th>
 			<th class="Description">Description</th>
 			<th class="Categories">Categories</th>
+			<th class="Type">Type</th>
 			<th class="Services">Services</th>
-			<th class="Date">Created</th>
+			<th class="Date Created">Created</th>
 		</tr>
 <? echo (
 	my $html;
@@ -41,14 +43,16 @@
 	<td class="EquipmentName">%3$s</td>
 	<td class="Description">%4$s</td>
 	<td class="Categories">%5$s</td>
-	<td class="Services">%6$s</td>
-	<td class="Date">%7$s</td>
+	<td class="Type">%6$s</td>
+	<td class="Services">%7$s</td>
+	<td class="Date Created">%8$s</td>
 </tr>
 `, $rowclass, 
 	$Equipment->link_to( $$Equipment{id} ),
 	$Equipment->link_to( $$Equipment{strid} ), 
 	$Equipment->link_to( $$Equipment{name} ), 
   $Equipment->link_to( join(',', $Equipment->categories()) ), 
+  $Equipment->link_to( $$Equipment{type}),
 	join(',', sort { $a cmp $b } map { $ServiceTypes{$_} ? $ServiceTypes{$_}->name() : () } @{$Equipment->servicetype_id()} ),
 	format_date( $$Equipment{created_on} ),
  );

@@ -32,9 +32,11 @@ fieldset fieldset p {
 
 fieldset label,
 fieldset span.label {
+  /*
 	float: left;
+  */
 	clear: none;
-	display: inline;
+	display: inline-block;
 	position: relative;
 
   /*
@@ -58,8 +60,25 @@ fieldset fieldset span.label {
 
 	/* Div */
 
+.checkbox label {
+}
+.bleeds div {
+  display: flex;
+}
+.bleeds label {
+  float: left;
+}
+.bleed_sides {
+  display: flex;
+  flex-direction: column;
+}
+#HouseStock div {
+  float: left;
+}
 fieldset div {
+  /*
 	float: left;
+  */
 	clear: none;
 	display: inline;
 	position: relative;
@@ -733,7 +752,9 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 #imposition {
+  /*
   float: left;
+  */
   width: 40px;
 }
 #txtSignatureSize,

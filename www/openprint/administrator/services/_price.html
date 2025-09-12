@@ -1,7 +1,10 @@
 <? echo (
 	my $html;
 	my $Price = $$variable{Price};
-  my $Service = $$variable{Service};
+  my $service = $$variable{Service} ? $$variable{Service} : $Price->Service();
+  my $equipment = $$variable{Equipment} ? $$variable{Equipment} : $Price->Equipment();
+  my $pricelist = $$variable{Pricelist} ? $$variable{Pricelist} : $Price->Pricelist();
+  my $Currency = $pricelist->Currency();
 
 	$html .= sprintf('<tr id="Price-%d">', $$Price{id} );
 
@@ -11,10 +14,10 @@
 	} # end if
 
   my $Configuration;
-  if ($Service->servicetype_id()) {
-    my $module = $Service->ServiceType()->type();
+  if ($service->servicetype_id()) {
+    my $module = $service->ServiceType()->type();
     if (!$module) {
-      $log->error("No service type set for ".$Service->name());
+      $log->error("No service type set for ".$service->name());
     } else {
       $module =~ s/^openprint::Estimating:://;
       $module = 'openprint::Estimating::'.$module;
@@ -22,11 +25,10 @@
       $log->error("eval error $@") if $@;
 
       if (my $function = $module->can('ServicePriceConfiguration')) {
-        $Configuration = $function->($$Service{name});
+        $Configuration = $function->($$service{name});
       }
     }
   }
-  my $Currency = $$variable{Pricelist}->Currency();
 
   sub get_units {
     my $price = shift;
@@ -81,8 +83,8 @@
 		ssi::select( [ '', 'Basic', 'Stepped', 'Stepped', 'Interpolate', 'Interpolate' ], $Price->mode(), { name=>'mode-'.$$Price{id}, id=>'mode-'.$$Price{id} } ),
 		($Price->id() ? 
 		join("\n", 
-			button( 'x'.$Price->id(), { on_click_this=>'del_price', data_pricelist_id=>$$variable{Pricelist}{id}, data_equipment_id=>$$variable{Equipment}{id}, data_service_id=>$$variable{Service}{id}, data_price_id=>$$Price{id}, text=>'X', title=>'Delete', type=>'button' } ),
-			button( 'c'.$Price->id(), { on_click_this=>'copy_price', data_pricelist_id=>$$variable{Pricelist}{id}, data_equipment_id=>$$variable{Equipment}{id}, data_service_id=>$$variable{Service}{id}, data_price_id=>$$Price{id}, text=>'C', title=>'Copy', type=>'button' } ),
+			button( 'x'.$Price->id(), { on_click_this=>'del_price', data_pricelist_id=>$$pricelist{id}, data_equipment_id=>$$equipment{id}, data_service_id=>$$service{id}, data_price_id=>$$Price{id}, text=>'Delete', title=>'Delete Price', type=>'button' } ),
+			button( 'c'.$Price->id(), { on_click_this=>'copy_price', data_pricelist_id=>$$pricelist{id}, data_equipment_id=>$$equipment{id}, data_service_id=>$$service{id}, data_price_id=>$$Price{id}, text=>'Copy', title=>'Copy Price', type=>'button' } ),
 			) : ''),
 	);
 	return $html;

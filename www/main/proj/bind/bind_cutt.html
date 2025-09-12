@@ -16,72 +16,59 @@
 	<!--#include virtual="/includes/h2-js.html" -->
 
   <script src="<?hash_link(/javascripts/other.js)?>"></script>
-  <script src="<?hash_link(/javascripts/proj/service.js)?>"></script>
 </head>
 <body>
 	<!--#include virtual="/includes/c1-main-nav.html" -->
 	<h1><span class="title-section">Projects &#187;</span> <?service.category?> &#187; <?service.name?></h1>
+  <form id="f1" name="f1" method="POST" action="/service/<?lc:service.ref?>">
+    <input type="hidden" name="pid" value="<?pid?>" />
+    <input type="hidden" name="sid" value="<?sid?>" />
 
+	  <div style="margin: 2em 2em 1em 2em;">
+	  	<p>The following is a list of signatures that require cutting and the operations performed on them.</p>
+      <div class="standout">
+        <?loop signatures?>
+          <? if ($$variable{'name'} ne "") ?>
+            <h5 style="padding-top: 0;"><?name?></h5>
+          <? endif ($$variable{'name'} ne "") ?>
 
-		<form id="f1" name="f1" method="POST" action="/service/<?lc:service.ref?>">
-				<input type="hidden" name="pid" value="<?pid?>" />
-				<input type="hidden" name="sid" value="<?sid?>" />
+          <ul style="margin-top: 0;">
+            <?loop notes?>
+              <li><?operation?>	</li>
+            <?endloop notes?>
+          </ul>
 
-	<div style="margin: 2em 2em 1em 2em">
+        <?endloop signatures?>
 
-		<p>The following is a list of signatures that require cutting and the operations performed on them.</p>
-
-
-
-		<div class="standout">
-			<?loop signatures?>
-				<? if ($$variable{'name'} ne "") ?>
-					<h5 style="padding-top: 0;"><?name?></h5>
-				<? endif ($$variable{'name'} ne "") ?>
-
-				<ul style="margin-top: 0;">
-					<?loop notes?>
-						<li><?operation?>	</li>
-					<?endloop notes?>
-				</ul>
-
-			<?endloop signatures?>
-
-			<?if NoPrint?>
-
-			<fieldset>
-				<p>Please enter required Fields</p>
-				<label>*Number of Cuts per Sheet:</label>
-				<input name="CutsPerSheet" value="<?CutsPerSheet?>" id="CutsPerSheet" class="smbox" />
-				<br />
-				<label>*Number of Press Sheets:</label>
-				<input name="SheetCount" value="<?SheetCount?>" id="SheetCount"  class="smbox"/>
-			</fieldset>
-
-			<?endif NoPrint?>
-
-		</div>
-		<br />
-	</div>
-
-
+        <?if NoPrint?>
+        <fieldset>
+          <p>Please enter required Fields</p>
+          <label>*Number of Cuts per Sheet:</label>
+          <input name="CutsPerSheet" value="<?CutsPerSheet?>" id="CutsPerSheet" class="smbox" />
+          <br />
+          <label>*Number of Press Sheets:</label>
+          <input name="SheetCount" value="<?SheetCount?>" id="SheetCount"  class="smbox"/>
+        </fieldset>
+        <?endif NoPrint?>
+      </div>
+      <br />
+    </div>
 
 		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
-			<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-
-
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 	</form>
-
 
 	<!--#include virtual="/includes/f1-main.html" -->
 	<!--#include virtual="/includes/main/proj.html" -->
 	<!--#include virtual="/includes/f2-main.html" -->
+  <script src="<?hash_link(/javascripts/proj/service.js)?>"></script>
   <script>
+    // Have to do this outside of an event
+		var service = new Service('<?service.ref?>');
     Event.observe(window, 'load', function() {
       update_event_bindings();
-			var service = new Service('<?service.ref?>');
       service.calculate();
-          });
+    });
   </script>
 </body>
 </html>

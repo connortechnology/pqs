@@ -86,6 +86,7 @@ sub get_discount {
 sub get_pricing_display_info {
     my ($log, $dbh, $cid) = @_;
 
+    return (1,1,1) if ($openprint::User->type() eq 'A');
     return $dbh->selectrow_array(q{
         SELECT ysnpricingservices, ysnpricingprojectview, ysnpricingquotes
         FROM tbl_customer

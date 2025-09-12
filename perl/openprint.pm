@@ -1,11 +1,11 @@
 use strict;
 use warnings;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser $Host);
+use vars qw( $r %variable %session %page_session %param %config $log $dbh $User $Company $TZ $Owner $Pricelist $Currency $parser $Host);
 
 *Currency = \$openprint::Currency;
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 require openprint::Host;
 require openprint::Host_Interface;
@@ -17,7 +17,6 @@ require openprint::Currency;
 require DateTime::TimeZone;
 
 sub session_init {
-
 	$parser = 'DateTime::Format::Pg';
  
 	if ( ! $openprint::config{Timezone} ) {
@@ -57,12 +56,10 @@ sub session_init {
 						%session = ();
 					} # end if
 				} # end if
-				# Store this, will be useful
 			} # end if
 
-
 			if ( (!$cookie) or ( $cookie ne $session{_session_id} ) ) {
-$log->debug('Generating new cookie '.$session{_session_id}) if Debug;
+        $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 				my $Cookie = Apache2::Cookie->new($r,
 						-name	=> '_session_id',
 						-value => $session{_session_id},
@@ -75,6 +72,13 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
 					$log->error('No Cookie.  Does db have a sessions table?');
 				} # end if
 			} # end if
+
+      my $uri = misc::get_session_uri($r->uri());
+      foreach my $k (keys %session) {
+        if ($k =~ /^$uri\?(.*)$/) {
+          $page_session{$1} = $session{$k};
+        }
+      }
 		} else {
 			%session = ();
 		} # end if
@@ -180,37 +184,39 @@ $log->debug('Generating new cookie '.$session{_session_id}) if Debug;
     }
   }
 
-  my $ip = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
-  if ($ip) {
-    my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
-    # FIXME :ipv6
-    if ($safe_ip and ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
-      openprint::Host_Interface->lock();
-      my @Interfaces = openprint::Host_Interface->find(ip=>$safe_ip);
-      if ( !@Interfaces ) {
-        $log->debug('No HI found for '.$safe_ip);
-        $Host = openprint::Host->find_one(hostname=>$safe_ip);
-        if (!$Host) {
-          $Host = new openprint::Host();
-          $Host->save({hostname=>$safe_ip});
-        }
+  my @ips = split(',', $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR});
+  $log->debug("@ips");
+  foreach my $ip (@ips) {
+    if ($ip) {
+      my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
+      # FIXME :ipv6
+      if ($safe_ip and ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+        openprint::Host_Interface->lock();
+        my @Interfaces = openprint::Host_Interface->find(ip=>$safe_ip);
+        if ( !@Interfaces ) {
+          $log->debug('No HI found for '.$safe_ip);
+          $Host = openprint::Host->find_one(hostname=>$safe_ip);
+          if (!$Host) {
+            $Host = new openprint::Host();
+            $Host->save({hostname=>$safe_ip});
+          }
 
-        # The logging of the creation of the Host entry will save the host_interface
-        # But it isn't.
-        my $HI = new openprint::Host_Interface();
-        $HI->save({host_id=>$Host->id(), ip=>$safe_ip});
-      } else { 
-        if ( @Interfaces > 1 ) {
-          $log->error("More than 1 Interface with ip $safe_ip");
+          # The logging of the creation of the Host entry will save the host_interface
+          # But it isn't.
+          my $HI = new openprint::Host_Interface();
+          $HI->save({host_id=>$Host->id(), ip=>$safe_ip});
+        } else { 
+          if ( @Interfaces > 1 ) {
+            $log->error("More than 1 Interface with ip $safe_ip");
+          }
+          $Host = $Interfaces[0]->Host();
         }
-        $Host = $Interfaces[0]->Host();
-      }
-      openprint::Host_Interface->unlock();
-    } else {
-      $log->warn("ip and safe ip differ. $ip != $safe_ip bad ip");
-    } # end if safe_ip
-  } # end if ip
-
+        openprint::Host_Interface->unlock();
+      } else {
+        $log->warn("ip and safe ip differ. $ip != $safe_ip bad ip");
+      } # end if safe_ip
+    } # end if ip
+  } # end foreach ip
 } # end sub session_init
 
 sub switch_company {

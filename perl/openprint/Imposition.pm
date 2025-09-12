@@ -12,7 +12,7 @@ require Math::Round;
 require Data::Dumper;
 use SVG;
 use vars qw( $AUTOLOAD %Orientations @RunStyles %ShortStyles %bleed_sides);
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
@@ -102,11 +102,14 @@ sub new {
 sub layout_width {
   $_[0]{layout_width} = $_[1] if @_ > 1;
 
+  $_[0]{perfecting_wheel_space} //= 0;
+
 	if ( ! defined $_[0]{layout_width} ) {
 		if ( $_[0]{image_orientation} == Vertical ) {
 			$_[0]{layout_width} = ( $_[0]{columns} * $_[0]{image_width} ) + $_[0]{perfecting_wheel_space};
-#$_[0]->display();
-#$openprint::log->debug("Layout width $_[0]{layout_width} = ( $_[0]{columns} * $_[0]{image_width} ) + $_[0]{perfecting_wheel_space};") if DEBUG;
+			my ( $caller, undef, $line ) = caller;
+#$_[0]->display("From$caller:$line");
+$openprint::log->debug("from $caller:$line Layout width $_[0]{layout_width} = ( $_[0]{columns} * $_[0]{image_width} ) + $_[0]{perfecting_wheel_space};") if DEBUG;
 			if ( $_[0]{folio_lip} ) {
 				my $folio_size = $_[0]{columns} * ( $_[0]{folio_lip} - ( $_[0]{columns} * $_[0]{bleed_size} ) );
 #$openprint::log->debug("Adding folio lip size to width $folio_size = $_[0]{columns} * ( $_[0]{folio_lip} - $_[0]{bleed_size} );");
@@ -245,7 +248,12 @@ my ( $caller, undef, $line ) = caller;
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{runstyle}, $$self{Paper}->{start_width},$$self{Paper}->{start_height},$self->{Paper}->{width},$self->{Paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{Paper}->minimum_order() ) );
 my ( $caller, undef, $line ) = caller;
 	$openprint::log->debug(sprintf('Imp %s: %d@ %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq rotate: %d layout: %sx%s min: %s %s %s versions: %d from %s:%d', $prefix,
-	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition'},$self->image_orientation_text(),@$self{'page_columns', 'page_rows', 'pages', 'runstyle'}, @$Paper{'start_width','start_height'}, $self->sheet_width(), $self->sheet_height(), $Paper->area(), $$self{rotate_sheet}, $self->layout_width(), $self->layout_height(), $$Paper{minimum_order}, $$self{Press}->{strid}, ( $$self{Price} ? $$self{Price} : '' ), $$self{version_qty}, $caller, $line ) );
+	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition'},
+  $self->image_orientation_text(),
+  @$self{'page_columns', 'page_rows', 'pages', 'runstyle'},
+  @$Paper{'start_width','start_height'}, $self->sheet_width(), $self->sheet_height(), $Paper->area(), $$self{rotate_sheet},
+  $self->layout_width(), $self->layout_height(), ($$Paper{minimum_order} ? $$Paper{minimum_order} : 'none'),
+  $$self{Press}->{strid}, ( $$self{Price} ? $$self{Price} : '' ), ($$self{version_qty} // 0), $caller, $line ) );
 } # end sub display
 
 sub get {
@@ -257,6 +265,9 @@ $openprint::log->debug("someone using get() from $caller:$line");
 
 sub set {
 	my $self = shift;
+		my ( $caller, undef, $line ) = caller;
+    $openprint::log->debug("Whoi s using set? $caller:$line");
+
 	my %hash = @_;
 	foreach my $key ( keys %hash ) {
 		$$self{$key} = $hash{$key} if ( sets::isin( $key, \@fields ) );
@@ -284,83 +295,131 @@ sub Paper {
 	return $_[0]{Paper};
 } # end sub Paper
 
+sub load_from_impositionObject {
+  my ($self, $io) = @_;
+  $openprint::log->debug('compressed imp'.Data::Dumper::Dumper($io));
+  my %map = (
+    cols => 'columns',
+    rows => 'rows',
+    setup => 'imposition',
+    spread_cols => 'spread_columns',
+    spread_rows => 'spread_rows',
+  );
+
+  @$self{values %map} = @$io{keys %map};
+  $$self{Paper} = openprint::Paper->find_one(id=>$$io{paper}{index} );
+}
+
 # Passing in the Project helps us load the Paper by recommendation
 sub load {
 	my ( $self, $specs, $qty_index, $Project ) = @_;
 
+	if ( ! $Project ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->error("No Project passed to Imposition::load from $caller:$line");
+		$Project = new openprint::Project( $$specs{ProjectIndex} );
+	}
+	$$self{Project} = $Project;
+
   $qty_index //= '';
+  # TODO: 
+  $$self{perfecting_wheel_space} = 0;
 
 	$$self{page_quantity} = $$self{quantity} = 1;
 	$$self{specs} = $specs;
-  $openprint::log->debug("Loading stock");
 	my $Paper = $$self{Paper} = openprint::Paper::load_from_signature( $Project, $specs, $qty_index ) if ! $$self{Paper};
   $openprint::log->debug("Paper" . $$self{Paper}->to_string());
 	if ( ! $$self{Press} ) {
-		if ( ! $$specs{'ddmPress'.$qty_index} ) {
-			#$openprint::log->error("No ddmPress for $qty_index for signature $$specs{SignatureIndex}");
-#Carp::cluck("No press in Imposition::load");
-		} else {
-#Carp::cluck("Loading press in Imposition::load");
+		if ( $$specs{'ddmPress'.$qty_index} ) {
 			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>0);
 			if ( ! $$self{Press} ) {
 				$openprint::log->error("load: No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
         $$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>1);
 			} # end if
+    } elsif ( $$specs{hdnPress} ) {
+			$$self{Press} = openprint::Equipment->find_one( id=>$$specs{hdnPress}, deleted=>0);
+			if ( ! $$self{Press} ) {
+				$openprint::log->error("load: No Press found for hdnPress " . $$specs{hdnPress} );
+        $$self{Press} = openprint::Equipment->find_one( id=>$$specs{hdnPress}, deleted=>1);
+			} # end if
 		} # end if
 		$$self{Press} = new openprint::Equipment() if ! $$self{Press};
 	} # end if
-	$$self{SignatureIndex} = $$specs{SignatureIndex};
+	$$self{form} = $$self{SignatureIndex} = $$specs{SignatureIndex} || $$specs{Form} || 1;
 
-	$$self{object_width} = $$specs{txtWidth} ? $$specs{txtWidth} : $$specs{flat_width};
+  $$self{final_width} = $$specs{final_width} || $$specs{txtFinalWidth};
+  $$self{final_height} = $$specs{final_height} || $$specs{txtFinalHeight};
+
+	$$self{object_width} = $$specs{txtWidth} || $$specs{flat_width};
   if (!$$self{object_width}) {
     my $print_service_id = $Project->get_print_container();
-    my $printing_specs = openprint::service::get_specs_ref($Project, $print_service_id);
-    $$self{object_width} = $$printing_specs{flat_width};
-    $$self{object_height} = $$printing_specs{flat_height};
-    $openprint::log->error("Loading from book $$self{object_width}x$$self{object_height}");
+    if ($print_service_id) {
+      my $printing_specs = openprint::service::get_specs_ref($Project, $print_service_id);
+      $$self{object_width} = $$specs{flat_width} = $$printing_specs{flat_width};
+      $$self{object_height} = $$specs{flat_height} = $$printing_specs{flat_height};
+      if (!$$specs{txtFinalWidth}) {
+        @$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'final_width','final_height'};
+      }
+      $openprint::log->debug("object size: $$self{object_width}x$$self{object_height} ");
+    }
   }
 
-	$$self{object_height} = $$specs{txtHeight} ? $$specs{txtHeight} : $$specs{flat_height} if ! $$self{object_height};
-	$$self{image_width} = ($$specs{'txtImageWidth'.$qty_index} ? $$specs{'txtImageWidth'.$qty_index} : $$specs{'txtImageWidth'} );
-	$$self{image_width} = $$self{object_width} if ! $$self{image_width};
-	$$self{image_height} = ($$specs{'txtImageHeight'.$qty_index} ? $$specs{'txtImageHeight'.$qty_index} : $$specs{'txtImageHeight'});
-	$$self{image_height} = $$self{object_height} if ! $$self{image_height};
+	$$self{object_height} = ($$specs{txtHeight} ? $$specs{txtHeight} : $$specs{flat_height}) if ! $$self{object_height};
+
+	$$self{image_width} = $$specs{'txtImageWidth'.$qty_index} || $$specs{txtImageWidth};
+	$$self{image_width} = $$self{object_width} if ! $$self{image_width} or $$self{image_width} <= 1;
+
+	$$self{image_height} = ($$specs{'txtImageHeight'.$qty_index} || $$specs{txtImageHeight});
+  if (!$$self{image_height} or $$self{image_height}<=1) {
+    $$self{image_height} = $$self{object_height}
+    # Need to add bleed
+  }
+  $openprint::log->debug("Image size: $$self{image_width}x$$self{image_height} ");
+
   $$self{colour_bar_size} = $$self{Press}->specification('Colour Bar Size');
   $$self{colour_bar_orientation} = $$self{Press}->specification('Colour Bar Orientation');
 
-	$$self{imposition} = $$specs{'txtImposition'.$qty_index} ? $$specs{'txtImposition'.$qty_index} : $$specs{'hdnImposition'.$qty_index};
-  $$self{imposition} = $$specs{imposition} if ! $$self{imposition};
+	$$self{imposition} = $$specs{'txtImposition'.$qty_index} || $$specs{'hdnImposition'.$qty_index} || $$specs{hdnImposition} || $$specs{imposition};
+  $$self{imposition} //= 0;
 Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::Dumper($specs)) if ! $$self{imposition};
 
 	$$self{version_qty} = $$specs{'Versions'.$qty_index};
-	$$self{start_columns} = $$self{columns} = ($$specs{'hdnImpositionColumns'.$qty_index} ? $$specs{'hdnImpositionColumns'.$qty_index} : $$specs{'hdnImpositionColumns'});
-	$$self{start_rows} = $$self{rows} = ($$specs{'hdnImpositionRows'.$qty_index} ? $$specs{'hdnImpositionRows'.$qty_index} : $$specs{'hdnImpositionRows'});
+	$$self{start_columns} = $$self{columns} = $$specs{'hdnImpositionColumns'.$qty_index} || $$specs{hdnImpositionColumns} || 0;
+	$$self{start_rows} = $$self{rows} = $$specs{'hdnImpositionRows'.$qty_index} || $$specs{hdnImpositionRows} || 0;
 
-	#$$self{columns} = $$self{imposition} / $$self{rows} if $$self{rows} and ! $$self{columns};
-	#$$self{rows} = $$self{imposition} / $$self{columns} if $$self{columns} and ! $$self{rows};
-	$$self{dutch_rows} = $$specs{'hdnImpositionDutchRows'.$qty_index} // 0;
-	$$self{dutch_columns} = $$specs{'hdnImpositionDutchColumns'.$qty_index} // 0;
+  #$$self{columns} = $$self{imposition} / $$self{rows} if $$self{rows} and ! $$self{columns};
+  #$$self{rows} = $$self{imposition} / $$self{columns} if $$self{columns} and ! $$self{rows};
+
+	$$self{dutch_rows} = $$specs{'hdnImpositionDutchRows'.$qty_index} || 0;
+	$$self{dutch_columns} = $$specs{'hdnImpositionDutchColumns'.$qty_index} || 0;
 	$$self{cut_off} = $$specs{'CutOff'.$qty_index};
 	if ( ( $$self{columns} * $$self{rows} ) + ( $$self{dutch_rows} * $$self{dutch_columns} ) != $$self{imposition} ) {
     #$$self{imposition} = 0;
 	}
-  my $imp = Compress::LZF::sthaw(MIME::Base64::decode_base64($$specs{imp}));
-  delete $$imp{Paper};
-  require PQS::Imposition::Node;
-  my $tmp = PQS::Imposition::Node->new(cut => 0, size => [1,1]);
-  undef $tmp;
-  $$imp{tree} = Storable::thaw($$imp{tree});
-  Carp::cluck('compressed imp'.Data::Dumper::Dumper($imp));
+  if (0) {
+  my $imp = Compress::LZF::sthaw(MIME::Base64::decode_base64($$specs{imp})) if $$specs{imp};
+  if ($imp) {
+    delete $$imp{Paper};
+    require PQS::Imposition::Node;
+    my $tmp = PQS::Imposition::Node->new(cut => 0, size => [1,1]);
+    undef $tmp;
+    $$imp{tree} = Storable::thaw($$imp{tree});
+    $openprint::log->debug('compressed imp'.Data::Dumper::Dumper($imp));
+  } else {
+    $openprint::log->debug("No compressed imp");
+  }
+  }
 
-  #'layout_width','layout_height',
-#,'rotate_sheet',
-	$$self{runstyle} = $$specs{'ddmRunStyle'.$qty_index};
-	$$self{runstyle} = 'Sheet Work' if ! $$self{runstyle};
+  $$self{runstyle} = $$specs{'ddmRunStyle'.$qty_index} // 'Sheet Work';
   if ($$self{runstyle} eq 'SW') {
     $$self{runstyle} = 'Sheet Work';
+  } elsif ($$self{runstyle} eq 'WT') {
+    $$self{runstyle} = 'Work & Turn';
+  } elsif ($$self{runstyle} eq 'WF') {
+    $$self{runstyle} = 'Work & Tumble';
   }
 	$$self{image_orientation_text} = $$specs{'hdnImageOrientation'.$qty_index} ? $$specs{'hdnImageOrientation'.$qty_index} : $$specs{hdnImageOrientation};
-	if ( $$self{image_orientation_text} eq 'Vertical' ) {
+	if ( (!$$self{image_orientation_text}) or ($$self{image_orientation_text} eq 'Vertical')) {
 		$$self{image_orientation} = Vertical;
 	} else {
 		$$self{image_orientation} = Horizontal;
@@ -369,7 +428,6 @@ Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::D
 	$$self{bleed_size} = $$specs{'ddmBleedSize'.$qty_index};
 	$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	$$self{printing_type} = $$specs{"PrintingType$qty_index"};
-
 
 	my ( $dutch_width, $dutch_height );
 
@@ -401,12 +459,6 @@ Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::D
 		$$self{layout_height} = $dutch_height if $dutch_height > $$self{layout_height};
 	} # end if
 
-	if ( ! $Project ) {
-		my ( $caller, undef, $line ) = caller;
-		$openprint::log->error("No Project passed to Imposition::load from $caller:$line");
-		$Project = new openprint::Project( $$specs{ProjectIndex} );
-	}
-	$$self{Project} = $Project;
 
 	if ( $$specs{txtSignatureType} ) {
 		if ( ! $$specs{spine} ) {
@@ -418,7 +470,8 @@ Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::D
 			$$self{spine} = 'height' if ! $$self{spine};
 		}
 		$$self{spread_size} = $$specs{txtSpreadSize} // 4; # FIXME
-		$$self{pages} = ($$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index} : $$specs{spreads} * $$specs{spread_size});
+    $$self{spread_size} //= 4;
+		$$self{pages} = ($$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index} : $$specs{spreads} * $$self{spread_size});
 		$$self{spreads} = $$self{pages} / $$self{spread_size} if $$self{spread_size};
 		$$self{spread_rows} = ($$specs{'SpreadRows'.$qty_index} ? $$specs{'SpreadRows'.$qty_index} : $$specs{'SpreadRows'});
 		$$self{spread_columns} = ($$specs{'SpreadCols'.$qty_index} ? $$specs{'SpreadCols'.$qty_index} : $$specs{'SpreadCols'});
@@ -440,31 +493,39 @@ Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::D
 			}
 		}
 	} else {
+    $$specs{final_width} //= $$specs{txtFinalWidth};
+    $$specs{final_height} //= $$specs{txtFinalHeight};
+    $$specs{flat_width} //= $$specs{txtFlatWidth} // $$specs{txtWidth};
+    $$specs{flat_height} //= $$specs{txtFlatHeight} // $$specs{txtHeight};
+    $$self{final_width} = $$specs{final_width};
+    $$self{final_height} = $$specs{final_height};
+    $$self{spine} = 'height' if ! $$self{spine}; #our folding image show the fold lines being on the height
+
 		# It's a brochure or something, so can't be cut.
 		if ( $$self{image_orientation} == Vertical ) {
       #2024-06-19 switch to rounding to nearest quarter because of 717102
       # 2024-06-12 switch to ceil because of job 717036
-      if ($$specs{txtFinalWidth}) {
-        $$self{page_columns} = int($$specs{txtWidth} / $$specs{txtFinalWidth});
-        my $remainder = ($$specs{txtWidth} / $$specs{txtFinalWidth}) - $$self{page_columns};
+      if ($$specs{final_width}) {
+        $$self{page_columns} = int($$specs{flat_width} / $$specs{final_width});
+        my $remainder = ($$specs{flat_width} / $$specs{final_width}) - $$self{page_columns};
         $$self{page_columns} ++ if ($remainder > 0.25);
       }
       #$$self{page_columns} = Math::Round::nearest(1,$$specs{txtWidth} / $$specs{txtFinalWidth}) if $$specs{txtFinalWidth};
       #$$self{page_rows} = Math::Round::nearest(1,$$specs{txtHeight} / $$specs{txtFinalHeight}) if $$specs{txtFinalHeight};
-      if ($$specs{txtFinalHeight}) {
-        $$self{page_rows} = int($$specs{txtHeight} / $$specs{txtFinalHeight});
-        my $remainder = ($$specs{txtHeight} / $$specs{txtFinalHeight}) - $$self{page_rows};
+      if ($$specs{final_height}) {
+        $$self{page_rows} = int($$specs{flat_height} / $$specs{final_height});
+        my $remainder = ($$specs{flat_height} / $$specs{final_height}) - $$self{page_rows};
         $$self{page_rows} ++ if $remainder > 0.25;
       }
     } else {
-      if ($$specs{txtFinalWidth}) {
-        $$self{page_rows} = int($$specs{txtWidth} / $$specs{txtFinalWidth});
-        my $remainder = ($$specs{txtWidth} / $$specs{txtFinalWidth}) - $$self{page_rows};
+      if ($$specs{final_width}) {
+        $$self{page_rows} = int($$specs{flat_width} / $$specs{final_width});
+        my $remainder = ($$specs{flat_width} / $$specs{final_width}) - $$self{page_rows};
         $$self{page_rows} ++ if $remainder > 0.25;
       }
-      if ($$specs{txtFinalHeight}) {
-        $$self{page_columns} = int($$specs{txtHeight} / $$specs{txtFinalHeight});
-        my $remainder = ($$specs{txtHeight} / $$specs{txtFinalHeight}) - $$self{page_columns};
+      if ($$specs{final_height}) {
+        $$self{page_columns} = int($$specs{flat_height} / $$specs{final_height});
+        my $remainder = ($$specs{flat_height} / $$specs{final_height}) - $$self{page_columns};
         $$self{page_columns} ++ if $remainder > 0.25;
       }
 		}
@@ -498,16 +559,16 @@ $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}
 		$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	} # end if
 	$self->spine_direction();
-$$self{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
-$$self{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"};
-$$self{gross_sheets} = $$specs{"StockQuantity$qty_index"};
-if (!$$self{net_sheets}) {
-  $openprint::log->error("No net sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
-}
-if (!$$self{gross_sheets}) {
-  $openprint::log->error("No gross sheets for $qty_index: $$self{impressions} $$self{net_sheets}");
-}
-$self->display('After load') if DEBUG;
+  $$self{impressions} = $$specs{"hdnImpressionQuantity$qty_index"};
+  $$self{net_sheets} = $$specs{"hdnNetSheetCount$qty_index"} ? $$specs{"hdnNetSheetCount$qty_index"} : $$specs{'Net Sheet Count'};
+  $$self{gross_sheets} = $$specs{"StockQuantity$qty_index"} ? $$specs{"StockQuantity$qty_index"} : $$specs{'Gross Sheet Count'};
+  if (!$$self{net_sheets}) {
+    $openprint::log->error("No net sheets for $qty_index: $$self{impressions}");
+  }
+  if (!$$self{gross_sheets}) {
+    $openprint::log->error("No gross sheets for $qty_index: $$self{impressions} net $$self{net_sheets}");
+  }
+  $self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
 
@@ -798,9 +859,11 @@ sub to_string {
 		if ( $_[0]{Paper} ) {
 			my $Paper = $_[0]{Paper};
 			$_[0]{to_string} = sprintf('%s %d@ %dx%d+%dx%d=%dout %s %dx%d=%dpages %sx%s on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]{Press}{strid}: 'unknown equipment' ),
-					@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle'},$_[0]->page_columns(), $_[0]->page_rows(),@$self{'pages','page_width','page_height'},
-					@$Paper{'start_width','start_height', 'type','width','height'},
+					@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle'},
+          $_[0]->page_columns(), $_[0]->page_rows(),@$self{'pages','page_width','page_height'},
+					@$Paper{'start_width','start_height','type','width','height'},
 					$_[0]->image_orientation_text() );
+        $openprint::log->error($_[0]{to_string});
 		} else {
 			if ( $_[0]{quantity} > 1 ) {
 			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]{Press}->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'), 
@@ -935,11 +998,13 @@ sub image_orientation_text {
 sub spine_direction {
 	if ( ! defined $_[0]{spine_direction} ) {
 #$openprint::log->debug("Setting spine direction uusing $_[0]{spine}");
-		if ( !$_[0]{spine}) {
+    if (!$_[0]{spine}) {
+      $_[0]{spine} = 'height';
 			my ( $caller, undef, $line ) = caller;
       $openprint::log->error("No spine in imposition from $caller:$line");
-			$_[0]{spine_direction} = $_[0]{image_orientation};
-    } elsif ( $_[0]{spine} eq 'height' ) {
+      return Vertical;
+    }
+		if ( $_[0]{spine} eq 'height' ) {
 			$_[0]{spine_direction} = $_[0]{image_orientation};
 		} elsif ( $_[0]{spine} eq 'width' ) {
 			$_[0]{spine_direction} = $_[0]{image_orientation} == Vertical ? Horizontal : Vertical;
@@ -1259,6 +1324,45 @@ sub landscape_portrait_square {
 	} else {
 		return 'square';
 	}
+}
+
+sub press_type {
+  my $self = shift;
+  $$self{press_type} = shift if @_;
+
+  return $$self{press_type} if $$self{press_type};
+
+  my $press = $self->Press();
+  if ($$self{press_type} = $press->specification('Printing Type')) {
+    return $$self{press_type};
+  }
+  return $$self{press_type} = $press->type();
+}
+
+sub form {
+  my $self = shift;
+  return undef if ! $$self{specs};
+  return $$self{specs}{Form} || $$self{specs}{SignatureIndex} || 1;
+}
+
+sub width_folds {
+  my $self = shift;
+  $$self{width_folds} = $$self{final_width} ? Math::Round::nearest(1, $$self{object_width}/$$self{final_width})-1 : 0;
+   if ( $$self{height_folds} < 0 ) {
+    $openprint::log->debug("Got negative width_folds from Math::Round::nearest( 1, $$self{object_width}/$$self{final_width})-1");
+    $$self{width_folds} = 0;
+  } # end if
+  return $$self{width_folds};
+}
+
+sub height_folds {
+  my $self = shift;
+  $$self{height_folds} = $$self{final_height} ? Math::Round::nearest(1, $$self{object_height}/$$self{final_height})-1 : 0;
+   if ( $$self{height_folds} < 0 ) {
+    $openprint::log->debug("Got negative width_folds from Math::Round::nearest( 1, $$self{object_height}/$$self{final_height})-1");
+    $$self{height_folds} = 0;
+  } # end if
+  return $$self{height_folds};
 }
 
 1;

@@ -717,9 +717,10 @@ text-align: left;
 td select {
   max-width: 100%;
 }
-select#ddmCustomer, select#company_id,
+select#ddmCustomer,
+select#company_id,
 select#supplier_id {
-  width: calc(100% - 46px);
+  width: calc(100% - 50px);
 }
 a.Today, a.Clear {
 	margin-right: 2px;

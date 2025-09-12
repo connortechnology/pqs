@@ -2235,7 +2235,6 @@ sub display {
 }
 
 sub summary_display {
-
   # This procedure is the main procedure
   # which displays the main 'docket'
   #catID = -2 when it is sending an email
@@ -2244,14 +2243,10 @@ sub summary_display {
   my ($r, $log, $dbh, $variable, $pid, $catID, $qtyIndex) = @_;
 
   return if !$pid;
-
-  #$ssi::INVALID_KEY = 1;
-
   my $category = setup_categories($log, $dbh, $pid, $variable);
 
   # Statement to get the service types in a categroy.
-  my $service_type;
-  $service_type = $dbh->prepare(
+  my $service_type = $dbh->prepare(
     q{
     SELECT lower(t.strid) AS ref, t.strname AS name , p.lngserviceindex AS ID, t.strid AS strID, p.ysnremoved as supplied
     FROM tbl_service_types t, tbl_project_contents p
@@ -2266,15 +2261,13 @@ sub summary_display {
   my ($id, $name);
   $category->bind_columns(\$id, \$name);
   while ($category->fetch) {
-    $services_by_category{$name} =
-    $dbh->selectall_arrayref($service_type, { Slice => {} }, $pid, $name);
+    $services_by_category{$name} = $dbh->selectall_arrayref($service_type, { Slice => {} }, $pid, $name);
   }
-  $services_by_category{'Shipping'} =
-  [shift @{ $services_by_category{'Shipping'} }];
+  $services_by_category{'Shipping'} = [shift @{ $services_by_category{'Shipping'} }];
+
   eprint::print::display_project($log, $dbh, $variable, $pid);
 
-  setup_docket($r, $log, $dbh, $variable, $pid, $catID, $qtyIndex,
-    \%services_by_category);
+  setup_docket($r, $log, $dbh, $variable, $pid, $catID, $qtyIndex, \%services_by_category);
 
   # Done because chris doesn't want additional signatures to show up on
   # quote and order. He just wants printing to show up.
@@ -2287,15 +2280,13 @@ sub summary_display {
             push @printing_services, $subTmp;
           }
         }
-        push @printing_services,
-        { ref  => 'printing',
-          name => 'Printing', };
+        push @printing_services, { ref  => 'printing', name => 'Printing', };
         $tmp->{service_type} = \@printing_services;
       }
     }
   }
   return OK;
-}
+} # end summary_display
 
 # Gets the Categories for the given service type.
 sub setup_categories {

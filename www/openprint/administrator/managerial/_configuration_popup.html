@@ -30,7 +30,7 @@
 		<p class="buttons">
 			<? echo (
 				return join("\n",
-					button( 'SaveNew', { onclick=>q`$j('#config_form').submit();`, text=>'Save' } ),
+     button( 'SaveNew', { type=>'submit', text=>'Save' } ),
 					button( 'CancelNew', { onclick=>q`popupWin.destroy();`, text=>'Cancel' } ),
 				);
 			) ?>

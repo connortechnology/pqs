@@ -26,7 +26,7 @@ sub edit {
 	require openprint::Equipment;
 
 	my $Material = $variable{Material} = new openprint::Material( $param{material_id} );
-	ssi::save_params( $variable{uri}, ( 'ddmSearchCategory' ) );
+	ssi::save_params( $variable{uri}, ( 'ddmSearchCategory', 'type_id','equipment_id' ) ) if !$param{btnFunction};
 
 	if ( $param{btnFunction} ) {
 		if ( $param{btnFunction} eq '<<' ) {
@@ -143,7 +143,7 @@ sub edit {
         #push @pricing_changes, 'Delete price: ' . $Price->to_string();
         #}
         #} else {
-					my %data = map { $_ => $param{join('-', $_, $$Price{id})} } qw( min					max					units				cost				markup			price				discountable);
+					my %data = map { $_ => $param{join('-', $_, $$Price{id})} } qw( min					max					range_units units				cost				markup			price				discountable);
 					my @price_changes = $Price->changes( \%data );
 					if ( @price_changes ) {
 						if ( $Price->set(\%data) ) {
@@ -173,7 +173,7 @@ sub edit {
 								equipment_id	=>	$param{'spec_equipment_id-'.$$Spec{id}},
 								min				=>	$param{'txtSpecificationMin'.$$Spec{id}},
 								max				=>	$param{'txtSpecificationMax'.$$Spec{id}},
-								units			=>	$param{'txtSpecificationUnits'.$$Spec{id}},
+								units			=>	$param{'spec_units-'.$$Spec{id}},
 								name			=>	$param{'txtSpecificationName'.$$Spec{id}},
 								value			=>	$param{'txtSpecificationValue'.$$Spec{id}},
 								interpolate		=>	$param{'interpolate'.$$Spec{id}},
@@ -184,7 +184,7 @@ sub edit {
 									equipment_id	=>	$param{'spec_equipment_id-'.$$Spec{id}},
 									min				=>	$param{'txtSpecificationMin'.$$Spec{id}},
 									max				=>	$param{'txtSpecificationMax'.$$Spec{id}},
-									units			=>	$param{'txtSpecificationUnits'.$$Spec{id}},
+									units			=>	$param{'spec_units-'.$$Spec{id}},
 									name			=>	$param{'txtSpecificationName'.$$Spec{id}},
 									value			=>	$param{'txtSpecificationValue'.$$Spec{id}},
 									interpolate		=>	$param{'interpolate'.$$Spec{id}},
@@ -205,7 +205,7 @@ sub edit {
 			(new openprint::Log())->save({action=>'Save Material', Object=>$Material, note=>join('<br/>', @changes)}) if @changes;
 			sql::end_transaction( $dbh, $ac );
 			if ( ! $variable{error} ) {
-				$variable{ExternalRedirect} = '/administrator/materials/edit.html?material_id='.$Material->id();
+				$variable{ExternalRedirect} = $openprint::config{url_base}.'/administrator/materials/edit.html?material_id='.$Material->id();
 				return;
 			} # end if
 
@@ -228,7 +228,7 @@ sub edit {
 					$variable{error} .= $Spec->save();
 				} # end foreach
 				$Material = $NewMaterial;
-				$variable{ExternalRedirect} = '/administrator/materials/edit.html?material_id='.$Material->id();
+				$variable{ExternalRedirect} = $openprint::config{url_base}.'/administrator/materials/edit.html?material_id='.$Material->id();
 			} # end if
 		} # end if
 	} # end if btnFunction
@@ -287,14 +287,19 @@ sub _prices_per_equipment {
 } # end sub _prices_per_equipment
 
 sub list {
+  my $uri = misc::get_session_uri($r->uri());
+
   _list();
-  $openprint::session{$r->uri().'?deleted'} = '0' if ! exists $openprint::session{$r->uri().'?deleted'};
+  $openprint::session{$uri.'?deleted'} = '0' if ! exists $openprint::session{$r->uri().'?deleted'};
 }
 sub _list {
-  ssi::save_params( '/administrator/materials/list.html', (
-      'deleted', 'material_name', 'equipment_id', 'category_id', 'type_id',
-    ) );
-  return if ! $param{btnFunction};
+  if (!$param{btnFunction}) {
+    my $uri = misc::get_session_uri($r->uri());
+    ssi::save_params( $uri, (
+        'deleted', 'material_name', 'equipment_id', 'category_id', 'type_id',
+      ) );
+    return;
+  }
 
   if ($param{btnFunction} eq 'delete') {
     my @ids = exists($param{'material_id[]'}) ? @{$param{'material_id[]'}} : (

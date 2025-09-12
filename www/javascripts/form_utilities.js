@@ -243,14 +243,26 @@ function isin_ddm ( array, value ) {
 	return true;
 } // end function isin_ddm
 
-function get_option_index ( array, value ) {
+function get_option_by_text(ddm, text) {
+  for ( var i = 0, len = ddm.options.length; i < len; i += 1 ) {
+    const option = ddm.options[i];
+    if (option.text == text) return option;
+  } // end for
+  return null;
+}
+
+function get_option_index_by_value(array, value) {
+  return get_option_index(array, value);
+}
+
+function get_option_index( array, value ) {
 	if ( array ) {
 		for ( var i = 0, len = array.length; i < len; i += 1 ) {
 			if ( array[i] && array[i].value == value )
 				return i;
 		} // end for
 	} else {
-		alert("get_option_index: null array" );
+		console.log("get_option_index: null array" );
 	}
 	return -1;
 } // end function get_option_index
@@ -570,7 +582,7 @@ function clearForm(form) {
 		if ( ! e.type )
 			continue;
 		if ( e.type == 'checkbox' || e.type == 'radio' ) {
-			e.checked = '';
+			e.checked = !e.value;
 		} else if (e.type == 'hidden' || e.type == 'password' || e.type == 'text' || e.type == 'textarea' || e.type == 'number' || e.type == 'email' || e.type == 'url' || e.type == 'tel' ) {
 			e.value = '';
 		} else if ( e.type == 'select-one' ) {
@@ -586,6 +598,8 @@ function clearForm(form) {
 			//alert(e.type);
 		} // end if
 	} // end for
+  const on_change = form.getAttribute('on_change');
+  if (on_change) window[on_change]();
 } // end function clearForm(form)
 
 function update_changed( element ) {
@@ -1862,6 +1876,14 @@ function update_event_bindings() {
 
   document.querySelectorAll("input[data-on-input]").forEach(function(el) {
     const fnName = el.getAttribute("data-on-input");
+    if ( !window[fnName] ) {
+      console.error("Nothing found to bind to " + fnName);
+      return;
+    }
+    el.oninput = window[fnName].bind(el, el);
+  });
+  document.querySelectorAll("input[on_input]").forEach(function(el) {
+    const fnName = el.getAttribute("on_input");
     if ( !window[fnName] ) {
       console.error("Nothing found to bind to " + fnName);
       return;

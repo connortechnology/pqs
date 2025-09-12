@@ -7,7 +7,7 @@ use strict;
 use warnings;
 no warnings qw(uninitialized);
 
-use constant DEBUG=>0;
+use constant DEBUG=>1;
 
 BEGIN {
     use base qw( Exporter );
@@ -1140,7 +1140,7 @@ sub button {
 ' : '</a>
 ';
   if ( $$options{onclick} ) {
-    $html .= '<script'.($r->dir_config('CSP_NONCE') ?' nonce="'.$r->dir_config('CSP_NONCE').'"':'').">
+    $html .= '<script'.($openprint::config{CSP_NONCE} ?' nonce="'.$openprint::config{CSP_NONCE}.'"':'').">
     document.getElementById('Button$name').onclick = function(){
     $$options{onclick};
     };
@@ -1204,7 +1204,7 @@ $label,
 my @input_options = (
   'type','name','id','onblur','onfocus','onkeyup','onkeypress', 'onkeydown','onchange',
   'class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title',
-  'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this', 'on_input_this' );
+  'decimalplaces', 'style', 'data_on_input','data-on-input', 'data_oninput_this', 'on_input_this', 'on_input' );
 
 sub input {
   my %options = @_;
@@ -1367,11 +1367,11 @@ sub save_params {
       next;
     }
     if (ref $param{$_} eq 'ARRAY') {
-      $session{"$url?$_"} = join(',', @{$param{$_}} );
+      $page_session{$_} = $session{"$url?$_"} = join(',', @{$param{$_}} );
 $log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if DEBUG;
     } else {
       s/^\s+//, s/\s+$// for $param{$_};
-      $session{$url.'?'.$_} = $param{$_};
+      $page_session{$_} = $session{$url.'?'.$_} = $param{$_};
 $log->debug("Storing ($_) (".$session{"$url?$_"}.")") if DEBUG;
     } # end if
     $session{$url.'?lastupdated'} = time;
@@ -1634,8 +1634,9 @@ sub return_years {
 } # end sub return_years
 
 sub write_override {
+  return openprint::ssi::write_override(@_);
   my ( $for, $value, $locked_js, $unlocked_js ) = @_;
-  if ( 0 ) {
+  if ( 1 ) {
     return sprintf(q`
       <input type="hidden" id="%1$s" name="%1$s" value="%2$s"/>
       <img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt="" title="Click to override"/>`,

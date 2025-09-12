@@ -1,17 +1,16 @@
 <? eval (
-	my $uri = '/administrator/materials/list.html';
   my %filters = (
-  order	=>	'lower('.$openprint::Material::fields{name}.')',
-		#( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
-		( $session{$uri.'?type_id'} ne '' ? ( type_id => $session{$uri.'?type_id'} ) : () ),
-		( $session{$uri.'?category_id'} ne '' ? ( category_id => $session{$uri.'?category_id'} ) : () ),
-		( $session{$uri.'?equipment_id'} ne '' ? ( 'equipment_id any'=> $session{$uri.'?equipment_id'} ) : () ),
+  #order	=>	'lower('.$openprint::Material::fields{name}.')',
+		#( $page_session{deleted} ne '' ? ( deleted => $page_session{deleted} ) : () ),
+		( $page_session{type_id} ne '' ? ( type_id => $page_session{type_id} ) : () ),
+		( $page_session{category_id} ne '' ? ( category_id => $page_session{category_id} ) : () ),
+		( $page_session{equipment_id} ne '' ? ( 'equipment_id any'=> $page_session{equipment_id} ) : () ),
 		);
-	if (  $session{$uri.'?material_name'} ) {
-		if ( ! ( $session{$uri.'?material_name'}  =~ /%/ ) ) {
-			$filters{'name ilike'} = '%'.$session{$uri.'?material_name'}.'%';
+	if (  $page_session{material_name} ) {
+		if ( ! ( $page_session{material_name}  =~ /%/ ) ) {
+			$filters{'name ilike'} = '%'.$page_session{material_name}.'%';
 		} else {
-			$filters{'name ilike'} = $session{$uri.'?material_name'};
+			$filters{'name ilike'} = $page_session{material_name};
 		}
 	}
 

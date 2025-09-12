@@ -6,30 +6,46 @@
 var openprint_load_content_ajax = null;
 
 function load_page() {
+  console.log('load_page');
 	if ( openprint_load_content_ajax ) { openprint_load_content_ajax.transport.abort(); }
 	openprint_load_content_ajax = new Ajax.Updater( 'Results', '_list.html', { parameters: $('f1').serialize() } );
 } 
 </script>
 <div class="Equipment">
-<form id="f1" name="f1" method="post" action="list.html">
+<form id="f1" name="f1" method="post" action="list.html" on_change="load_page">
 	<fieldset class="filters"><legend>Search</legend>
+    <div class="content">
 		<ul>
-		<li>
-			<label>ID</label>
-			<? echo ( input( type=>'cardinal', name=>'equipment_id', onkeydown=>"if(event.keyCode==13){f1.submit();}" ); ) ?>
-			<? echo ( button( 'Go1',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
-		</li>
-		<li>
-			<label>Name</label>
-			<? echo ( input( type=>'text', name=>'equipment_name', oninput=>'load_page();', onkeydown=>"if(event.keyCode==13){f1.submit();}", value=>$session{$r->uri().'?equipment_id'} ); ) ?>
-			<? echo ( button( 'Go2',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
-		</li>
-		<li> 
-			<label>Created Date</label>
-			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, on_change=>'load_page' } ); ) ?>
-			to
-			<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, on_change=>'load_page' } ); ) ?>
-		</li>
+      <li>
+        <label>ID</label>
+        <? echo ( input( type=>'cardinal', name=>'equipment_id', onkeydown=>"if(event.keyCode==13){f1.submit();}" ); ) ?>
+        <? echo ( button( 'Go1',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
+      </li>
+      <li>
+        <label>Name</label>
+        <? echo ( input( type=>'text', name=>'equipment_name', on_input=>'load_page', onkeydown=>"if(event.keyCode==13){f1.submit();}", value=>$page_session{equipment_name} ); ) ?>
+        <? echo ( return ''; button( 'Go2',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
+      </li>
+    </ul>
+    <ul>
+    <?echo( 
+      my $html = '';
+      my @types = sql::execute(undef,undef, 'SELECT DISTINCT strtype FROM tbl_equipment');
+      if (@types > 1) {
+        return join("\n",   
+        '<li><label>Type</label>',
+         ssi::select(  
+         [map { $_, ucfirst($_) } sort { lc $a cmp lc $b } @types],
+         $page_session{type}, {
+         name=>'type',  
+         prepend=>[ '', 'All' ],
+         on_change=>'load_page',
+         } ),
+         '</li>',
+        );
+      } 
+      return '';
+    ) ?>
 		<li><label>Category</label>
 			<?echo( ssi::select( 
 						openprint::Equipment_Category->dropdown(), 
@@ -41,21 +57,31 @@ function load_page() {
 		</li>
 		<li><label>Service</label>
 			<?echo( ssi::select( 
-           openprint::ServiceType->dropdown(order=>'lower('.$openprint::ServiceType::fields{name}.')'), 
+           openprint::ServiceType->dropdown(), 
 						$session{$r->uri().'?servicetype_id'}, { 
 						name=>'servicetype_id', 
 						prepend=>[ '', 'All' ],
 						on_change=>'load_page',
 						} ); ) ?>
 		</li>
-		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {on_click=>'load_page'} ); ) ?></li>
-		<li><label>Use In Estimating?</label><? echo ( radio( 'useinestimating', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?useinestimating'}, {on_click=>'load_page'} ); ) ?></li>
+    </ul>
+    <ul>
+		<li class="created_on"> 
+			<label>Created Date</label>
+			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, on_change=>'load_page' } ); ) ?>
+			to
+      <? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, on_change=>'load_page' } ); ) ?>
+    </li>
+		<li class="equipment_deleted"><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {on_click=>'load_page'} ); ) ?></li>
+		<li class="use_in_estimating"><label>Use In Estimating?</label><? echo ( radio( 'useinestimating', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?useinestimating'}, {on_click=>'load_page'} ); ) ?></li>
 		</ul>
+  </div>
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'ShowResults', { on_click=>'load_page', text=>'Show Results' } ),
-				button( 'New', { href=>'/administrator/equipment/edit.html', text=>'New' } ),
-				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+				button( 'New', { href=>'edit.html', text=>'New' } ),
+				button( 'Clear', { on_click_this=>'clearElementForm', text=>'Clear' } ),
+				#button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
 		</p>
 	</fieldset>
@@ -63,3 +89,10 @@ function load_page() {
 	<input type="hidden" name="btnFunction"/>
 </form>
 </div>
+<script>
+function clear_button(e) {
+  clearElementForm(e);
+  load_page();
+}
+</script>
+

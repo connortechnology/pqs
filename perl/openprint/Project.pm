@@ -76,6 +76,15 @@ ordered_price	=> undef,
 press_type_id  => 'lngpresstype',
 press_type => undef,
 rfq_only => 'rfq_only',
+prod => 'prod',
+product => 'product',
+supplier => 'supplier',
+digifed  => 'digifed',
+create_to_order => 'create_to_order',
+create_to_quote => 'create_to_quote',
+mail_type => 'mail_type',
+copy_pid => 'copy_pid',
+build => 'build',
 );
 %transforms = (
 	id								=>	[ 's/\D//g', '<2147483647' ],
@@ -1876,7 +1885,7 @@ sub url_to {
 } # end sub url_to
 
 sub link_to {
-	return sprintf('<a href="%1$s?pid=%2$d">%3$s</a>', $_[0]->url_to(), $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
+	return sprintf('<a href="%1$s">%3$s</a>', $_[0]->url_to(), $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
 } # end sub link_to
 
 sub production_link_to {
