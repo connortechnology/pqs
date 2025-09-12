@@ -5,11 +5,11 @@
 <?if user.is_staff?>
 		<p>If you're adding a new stock or modifying an existing stock, please select the button below.</p>
 		
-		  <label for="label" class="checkbox" style="padding-left: 3em;">
-		  <button type="button" class="button" onclick="addstock(this);" >
-        Add, Modify and Delete
-        </button>
-		  </label><p></p><p></p>
+    <label for="add_stock" class="checkbox" style="padding-left: 3em;">
+    <button id="add_stock" type="button" class="button" onclick="addstock(this);" >
+      Add, Modify and Delete
+      </button>
+    </label>
 	<?endif user.is_staff?>
     <ul class="non-list">
       <li>
