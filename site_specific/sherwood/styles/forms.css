@@ -340,7 +340,12 @@ fieldset fieldset select.indent {
 
 
 /* Regular Form Input Element */
-fieldset .input-text {float: left; display: inline; position: relative; width: 14em;}
+fieldset .input-text {
+  /*
+float: left;
+*/
+ display: inline-block;
+ position: relative; width: 14em;}
 fieldset .input-ddm {float: left; display: inline; position: relative;}
 
 fieldset textarea {
@@ -410,7 +415,9 @@ textarea#strSQLCommand {
 
 /* Small Go Buttons */
 .smGo {
+  /*
 	float: left;
+  */
 	display: inline;
 	position: relative;
 
