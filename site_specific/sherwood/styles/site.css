@@ -897,7 +897,7 @@ img.Override {
   vertical-align: middle;
   margin:3px 4px 6px 0;
 }
-.leftColumn, .column {
+.leftColumn, div.column {
 	float: left;
 	width: 48%;
 	min-width: 465px;
@@ -907,7 +907,7 @@ img.Override {
 	width: 48%;
 	min-width: 465px;
 }
-.column {
+div.column {
 	float: left;
 	width: 50%;
 }
