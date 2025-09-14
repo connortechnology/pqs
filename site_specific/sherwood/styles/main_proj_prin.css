@@ -1,0 +1,14 @@
+.bleeds {
+  padding: 0;
+}
+.bleeds div {
+  padding: 0;
+  display: flex;
+}
+.bleeds label {
+  float: left;
+}
+.bleed_sides {
+  flex-direction: column;
+}
+
