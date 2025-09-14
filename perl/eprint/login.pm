@@ -1,5 +1,6 @@
 package eprint::login;
 use strict;
+use warnings;
 use utf8;
 
 use Apache2::Const qw(:common HTTP_MOVED_TEMPORARILY);
@@ -7,7 +8,6 @@ use Apache2::Cookie ();
 use Captcha::reCAPTCHA;
 use Data::Dumper;
 
-#use sql qw(:common);
 require sql;
 require ssi;
 require eprint::obj_customer;
@@ -18,6 +18,7 @@ require MIME::QuotedPrint;
 require crypto;
 require eprint::order;
 
+require openprint;
 require openprint::User;
 
 # displays the login page, and populates the destination variable
@@ -879,11 +880,9 @@ sub verify_user {
 
   # If the user doesn't have a cookie they aren't authenticated.
   if (!$cookie) {
-    print STDERR "No cookie\n";
+    $openprint::log->error("No cookie");
     return;
   }
-
-  my $idletime = configuration::get_value($log, $dbh, 'idletime');
 
   # Retrieve the 'session' information based on the cookie.
   my $session = $dbh->prepare_cached(q{ SELECT lnguserid AS user_id, dtmLastAccessed AS last_visit FROM tbl_Logged_In WHERE strSessionID=?});
@@ -919,18 +918,24 @@ sub verify_user {
   }
   
   if ($user->{user_id}) {
-    my $now = misc::gettime();
-    if (($now-misc::gettime($session->{last_visit})) > $idletime) {
-      $openprint::log->debug("Idle timeout $now = ".misc::gettime($session->{last_visit}) . ' > '.$idletime);
-      logout($log, $dbh, $cookie, $site);
-      $$variable{idletime} = $idletime;
-      $$variable{destination} = misc::get_destination($r, $log);
+    my $idletime = $openprint::config{idletime};
+    if (!$idletime) {
+      $log->error("No idletime setting!");
+      openprint::configuration::dump();
+    } else {
+      my $now = misc::gettime();
+      if (($now-misc::gettime($session->{last_visit})) > $idletime) {
+        $openprint::log->debug("Idle timeout $now = ".misc::gettime($session->{last_visit}) . ' > '.$idletime);
+        logout($log, $dbh, $cookie, $site);
+        $$variable{idletime} = $idletime;
+        $$variable{destination} = misc::get_destination($r, $log);
 
-      $variable->{Redirect} = $site eq 'C' ? '/error/idle_timeout.html'
-      : $site eq 'A' ? '/administrator/error/idle_timeout.html'
-      : $site eq 'E' ? '/employee/error/idle_timeout.html'
-      :                undef;
-      return;
+        $variable->{Redirect} = $site eq 'C' ? '/error/idle_timeout.html'
+        : $site eq 'A' ? '/administrator/error/idle_timeout.html'
+        : $site eq 'E' ? '/employee/error/idle_timeout.html'
+        :                undef;
+        return;
+      }
     }
   }
 
@@ -970,8 +975,7 @@ sub get_login_info {
         FROM tbl_logged_in JOIN tbl_customer USING (lngcustomerid)
         WHERE strsessionid = ?
      });
-   #AND chrsite      = ?
-    my $company = $dbh->selectrow_hashref($company, undef, $cookie);
+    $company = $dbh->selectrow_hashref($company, undef, $cookie);
 
     # User information
     my $user = $dbh->prepare_cached(q{
@@ -1048,7 +1052,7 @@ sub display_select_customer {
   my $sql;
 
   my $company = openprint::Company->find_one(id=>$cust_id);
-  my $is_reseller = $company and ($company->reseller() eq 'Y');
+  my $is_reseller = ($company and ($company->reseller() eq 'Y')) ? 1 : 0;
 
   # Let Admins select anybody.
   if ($variable->{user_type} eq 'A') {
