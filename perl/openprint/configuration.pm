@@ -1,7 +1,9 @@
 use strict;
+use warnings;
 package openprint::configuration;
 
 require openprint;
+require Configuration;
 use vars qw( %config );
 
 require sql;
@@ -12,8 +14,8 @@ sub init {
 	
 	%config = ();
 	if ( $openprint::dbh ) {
-		my $data = $openprint::dbh->selectall_arrayref( 'SELECT strconfigtitle, strconfigdata FROM tbl_configuration', {Slice=>{}} );
-		foreach (@{$data}) {
+    #my $data = $openprint::dbh->selectall_arrayref( 'SELECT strconfigtitle, strconfigdata FROM tbl_configuration', {Slice=>{}} );
+		foreach (Configuration->find()) {
 			$config{$$_{name}} = $$_{value};
 		} # end foreach
 	} # end if
@@ -122,7 +124,7 @@ sub from_db {
 
 sub dump {
 	foreach ( sort { $a cmp $b } keys %config ) {
-		print "$_ => $config{$_}\n";
+		$openprint::log->debug("$_ => $config{$_}");
 	}
 }
 
