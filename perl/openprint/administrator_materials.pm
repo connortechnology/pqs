@@ -195,15 +195,18 @@ sub edit {
 						$variable{error} .= $Spec->delete();
 						push @specs_changes, 'Delete specification: '.$Spec->to_string();
 					} # end if key
+
 					if ( $variable{error} ) {
 						$dbh->rollback();
 						last;
 					} # end if
 				} # end foreach
 			} # end if
-			push @changes, @specs_changes;
-			(new openprint::Log())->save({action=>'Save Material', Object=>$Material, note=>join('<br/>', @changes)}) if @changes;
-			sql::end_transaction( $dbh, $ac );
+      if ( !$variable{error} ) {
+        push @changes, @specs_changes;
+        (new openprint::Log())->save({action=>'Save Material', Object=>$Material, note=>join('<br/>', @changes)}) if @changes;
+      }
+      sql::end_transaction( $dbh, $ac );
 			if ( ! $variable{error} ) {
 				$variable{ExternalRedirect} = $openprint::config{url_base}.'/administrator/materials/edit.html?material_id='.$Material->id();
 				return;
