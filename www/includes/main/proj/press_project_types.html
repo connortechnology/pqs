@@ -4,7 +4,7 @@
 
     <p>What type of equipment would you like to perform the printing of your project?</p>
 
-    <div class="width forths">
+    <div class="press_types width forths" style="display: flex;">
       <?loop press_types ?>
       <label class="no-pad-bot">
           <input type="radio" name="rdbPressType" value="<?press?>" <? if ($$variable{'press'} eq $$variable{'SelectedPress'})?> checked="checked" <? endif ($$variable{'press'} eq $$variable{'SelectedPress'})?> />

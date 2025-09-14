@@ -1,4 +1,5 @@
 <? if ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' or $$variable{'Reseller'} eq 'Y' ) ?>
+<div class="account_selection">
 <form action="/main/account/confirmation_select_customer.html" name="f1" id="f1" method="post">
 	<fieldset>
 		<legend> Account Selection </legend>
@@ -15,7 +16,6 @@
       <input type="submit" value="Go" class="button" />
     </li>
     <li class="form-group"><label>Last 10</label>
-      <ul class="non-list" style="display: flex; flex-direction: column;">
   <? echo (
     my $html = '';
 
@@ -38,21 +38,21 @@
         next if ! $Log->Company()->can_become();
         $companies{$$Log{company_id}} = $Log->company_id();
         last if keys %companies >= 10;
-        $html .= sprintf('<li><a href="/main/account/confirmation_select_customer.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a></li>',
+        $html .= sprintf('<a href="/main/account/confirmation_select_customer.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a><br/>',
           $Log->company_id(), $Log->Company()->name(),
         );
       } # end foreach
     }
     if ( ! $companies{$$openprint::User{company_id}} ) {
-    $html .= sprintf('<li><a href="/main/account/confirmation_select_customer.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a></li>',
+    $html .= sprintf('<a href="/main/account/confirmation_select_customer.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a><br/>',
         $openprint::User->company_id(), $openprint::User->Company()->name(),
       );
     } # end if
     return $html;
     ) ?>
-      </ul>
     </li>
     </ul>
 	</fieldset>
 </form>
+</div>
 <? endif ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' or $$variable{'Reseller'} eq 'Y' ) ?>

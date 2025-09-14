@@ -172,3 +172,15 @@ table .mweight {
 table .size {
   width: 75px;
 }
+.column {
+  width: 30%;
+}
+fieldset ul.non-list li {
+  padding-left: 18.2em;
+}
+fieldset label:not(.radio):not(.radio-inline) {
+  margin-left: -18.2em;
+}
+fieldset select {
+  max-width: 97%;
+}

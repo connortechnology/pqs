@@ -1,0 +1,6 @@
+.account_selection fieldset ul.non-list li {
+  padding-left: 18.2em;
+}
+.account_selection fieldset label {
+  margin-left: -18.2em;
+}

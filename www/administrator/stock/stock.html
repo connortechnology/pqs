@@ -8,8 +8,8 @@
 
   <!--#include virtual="/includes/web_page_meta.html" -->
   <!--#include virtual="/includes/h1-admin-css.html" -->
-  <?echo(ssi::link('/styles/administrator_stock.css');)?>
   <link href="/styles/forms.css" rel="stylesheet" media="screen" />
+  <?echo(ssi::link('/styles/administrator_stock.css');)?>
 
   <!--#include virtual="/includes/h2-js.html" -->
 
@@ -66,7 +66,7 @@ return '';
 	<br class="spacer"/>
 	<div class="Information">
 		<fieldset><legend>Stock Information: (<? echo ( $$variable{Stock}->id(); ) ?>)</legend>
-			<div class="Column">
+			<div class="column">
         <ul class="non-list">
           <li class="name"><label>Id</label><input type="text" name="name" value="<?echo($$variable{Stock}->name())?>" on_input_this="check_name" />
             <span id="name_error"></span>
@@ -199,7 +199,7 @@ return '';
         -->
         </ul>
 			</div><!--left-->
-			<div class="Column">
+			<div class="column">
         <ul class="non-list">
 				<li>
 					<label for="grade">Grade</label>
@@ -279,7 +279,7 @@ return '';
         -->
         </ul>
 			</div><!--left-->
-			<div class="Column">
+			<div class="column">
         <ul class="non-list">
 				<li class="quantity_per_package">
 					<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{Stock}->units() ) ?></span>)</label>

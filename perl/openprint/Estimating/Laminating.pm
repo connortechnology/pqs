@@ -178,6 +178,10 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
   my $services = $Project->services();
   $ServiceType = $Project->ServiceType($service_index);
+  if (ref $specs ne 'HASH') {
+	( $log, $dbh, $variable, $project_index, $service_index, undef, $specs ) = @_;
+  }
+
   $$specs{alert} = '';
 
   my $print_service_id = $Project->get_print_container();

@@ -64,6 +64,7 @@ fieldset div.text {
     width: 18em;
 	margin: 0 0 0 1em;
 	padding: 4px 0 8px 0;
+  vertical-align: top;
 }
 
 fieldset span,
@@ -272,8 +273,10 @@ span.pre-label {
 }
 
 span.post-label {
+  /*
 	float: left;
-	display: inline;
+  */
+	display: inline-block;
 	position: relative;
 
 	margin: -0.5ex -3em -3ex 0;
@@ -337,7 +340,12 @@ fieldset fieldset select.indent {
 
 
 /* Regular Form Input Element */
-fieldset .input-text {float: left; display: inline; position: relative; width: 14em;}
+fieldset .input-text {
+  /*
+float: left;
+*/
+ display: inline-block;
+ position: relative; width: 14em;}
 fieldset .input-ddm {float: left; display: inline; position: relative;}
 
 fieldset textarea {
@@ -407,7 +415,9 @@ textarea#strSQLCommand {
 
 /* Small Go Buttons */
 .smGo {
+  /*
 	float: left;
+  */
 	display: inline;
 	position: relative;
 

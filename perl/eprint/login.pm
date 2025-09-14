@@ -886,7 +886,7 @@ sub verify_user {
   my $idletime = configuration::get_value($log, $dbh, 'idletime');
 
   # Retrieve the 'session' information based on the cookie.
-  my $session = $dbh->prepare_cached(q{ SELECT lnguserid AS user, dtmLastAccessed AS last_visit FROM tbl_Logged_In WHERE strSessionID=?});
+  my $session = $dbh->prepare_cached(q{ SELECT lnguserid AS user_id, dtmLastAccessed AS last_visit FROM tbl_Logged_In WHERE strSessionID=?});
   $session = $dbh->selectrow_hashref($session, {}, $cookie);
 
   # Lookup the user that went with this session.
@@ -900,9 +900,10 @@ sub verify_user {
     WHERE c.lngcustomerid = u.lngcustomerid
     AND u.lnguserid = ?
     });
-  $user = $dbh->selectrow_hashref($user, {}, $session->{user});
+  $user = $dbh->selectrow_hashref($user, {}, $session->{user_id});
 
   if (not $session->{last_visit}) {
+    $openprint::log->debug("No last vist");
     # no logged In information yet, so create some. NOTE: This code is
     # stupid. The 0,0 bit has caused a ton of weird problems.
     sql::insert($log, $dbh, 'tbl_Logged_In',
@@ -914,29 +915,32 @@ sub verify_user {
       strSessionID    => $cookie,);
 
     $variable->{user_type} = '';
-  } elsif ($user->{'user_id'} && (misc::gettime() - misc::gettime($session->{last_visit}) > $idletime)) {
-    logout($log, $dbh, $cookie, $site);
-    $$variable{'idletime'} = $idletime;
-    $$variable{'destination'} = misc::get_destination($r, $log);
+    return;
+  }
+  
+  if ($user->{user_id}) {
+    my $now = misc::gettime();
+    if (($now-misc::gettime($session->{last_visit})) > $idletime) {
+      $openprint::log->debug("Idle timeout $now = ".misc::gettime($session->{last_visit}) . ' > '.$idletime);
+      logout($log, $dbh, $cookie, $site);
+      $$variable{idletime} = $idletime;
+      $$variable{destination} = misc::get_destination($r, $log);
 
-    $variable->{Redirect} = $site eq 'C' ? '/error/idle_timeout.html'
-    : $site eq 'A' ? '/administrator/error/idle_timeout.html'
-    : $site eq 'E' ? '/employee/error/idle_timeout.html'
-    :                undef;
-  } else {
-    $cookie = $dbh->quote($cookie);
-    $site   = $dbh->quote($site);
-
-    # Update the last accessed time.
-    sql::update($log, $dbh, 'tbl_logged_in',
-      "strSessionID = $cookie", # AND chrSite = $site",
-      dtmLastAccessed => 'NOW()');
-
-    # Map the user info into the global storage thingy.
-    $variable->{$_} = $user->{$_} for keys %$user;
+      $variable->{Redirect} = $site eq 'C' ? '/error/idle_timeout.html'
+      : $site eq 'A' ? '/administrator/error/idle_timeout.html'
+      : $site eq 'E' ? '/employee/error/idle_timeout.html'
+      :                undef;
+      return;
+    }
   }
 
-  $$variable{'CUSTOMER_CATEGORY_GREETING'} = eprint::greetings::select_customer_category_greeting($log, $dbh, $user->{cust_id}) if $user->{cust_id};
+  # Update the last accessed time.
+  sql::update($log, $dbh, 'tbl_logged_in', [ 'strSessionID = ?', $cookie], dtmLastAccessed => 'NOW()');
+
+  # Map the user info into the global storage thingy.
+  $variable->{$_} = $user->{$_} for keys %$user;
+
+  $$variable{CUSTOMER_CATEGORY_GREETING} = eprint::greetings::select_customer_category_greeting($log, $dbh, $user->{cust_id}) if $user->{cust_id};
   @openprint::session{'company_id','user_id','email','user_type'} = @$user{'cust_id', 'user_id', 'email', 'user_type'};
 
   return OK;
