@@ -77,7 +77,9 @@ sub display_files {
     my $projdir    = get_path(undef, $dbh, $pid);
 
 
+    eval {
 	mkpath($projdir);
+};
 
     my ($location) = $projdir =~ m|/customers/(.*$)|;
         $location  =~ tr|/|/|s;
@@ -114,7 +116,7 @@ sub display_files {
         VALUES (?, ?, 'Unknown User')
     });
 
-    opendir my $dirhandle, $projdir or die "Couldn't open project directory ($projdir): $!";
+    if (opendir my $dirhandle, $projdir) {
     
     while (my $name = readdir($dirhandle)) {
 
@@ -144,8 +146,10 @@ sub display_files {
             }
         }
     }
-    
     closedir $dirhandle or die "Couldn't close project directory: $!";
+  } else {
+    $openprint::log->error( "Couldn't open project directory ($projdir): $!");
+  }
 
     # Sort the files into their display order (TODO different sort orders).
     $variable->{files} = [ @$files{ sort keys %$files } ];
@@ -474,7 +478,9 @@ sub upload_files {
     my ($r, $dbh, $variable, $pid) = @_;
     my $projdir = get_path(undef, $dbh, $pid);
 
+    eval {
 	mkpath($projdir) unless -e $projdir && -d _;
+    };
 
     die "Project directory doesn't exist or isn't a directory ($projdir)"
         unless -e $projdir && -d _;
