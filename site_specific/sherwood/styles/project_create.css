@@ -62,16 +62,6 @@ fieldset fieldset span.label {
 
 .checkbox label {
 }
-.bleeds div {
-  display: flex;
-}
-.bleeds label {
-  float: left;
-}
-.bleed_sides {
-  display: flex;
-  flex-direction: column;
-}
 #HouseStock div {
   float: left;
 }
@@ -80,7 +70,7 @@ fieldset div {
 	float: left;
   */
 	clear: none;
-	display: inline;
+	display: inline-block;
 	position: relative;
 
 	width: auto;
@@ -785,4 +775,11 @@ width: 55px;
 }
 input[name="name"] {
   width: 50em;
+}
+.press_types {
+  display: flex;
+}
+.additional_services fieldset label,
+#project_types fieldset label {
+  float: left;
 }
