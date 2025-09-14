@@ -5,6 +5,7 @@ use openprint ();
 require openprint::Object;
 require openprint::Log_Action;
 require openprint::Host;
+require openprint::Host_Interface;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
 $debug = 0;
@@ -67,32 +68,39 @@ sub hostname {
 } # end sub hostname
 
 sub ip_address {
-	my $Host = $_[0]->Host();
+  my $self = shift;
+	my $Host = $self->Host();
 
-	if ( @_ > 1 ) {
-		if ( !defined $_[1] ) {
-			$_[1] = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
+	if ( @_ ) {
+    my $new = shift;
+		if ( !defined $new ) {
+      my @ips = split(',', $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR});
+      $_[1] = $ips[0];
 		} # end if
-		if ( (! $_[1]) and $openprint::config{REMOTE_ADDR} ) {
-			$_[1] = $openprint::config{REMOTE_ADDR};
+
+		if ( (! $new) and $openprint::config{REMOTE_ADDR} ) {
+			$new = $openprint::config{REMOTE_ADDR};
 		}
-		return if ! $_[1];
-
-    require openprint::Host_Interface;
-		my $Interface = openprint::Host_Interface->find_one(ip=>$_[1]);
-		if ( !$Interface ) {
-			$Host = openprint::Host->find_one(hostname=>$_[1]);
-			if ( ! $Host ) {
-				$Host = new openprint::Host();
-				$Host->save({hostname=>$_[1], name=>$_[1]});
-			}
-			$Interface = new openprint::Host_Interface();
-			$Interface->save({host_id=>$$Host{id}, ip=>$_[1]});
-		} else {
-			$Host = $Interface->Host();
-		} # end if
-		$_[0]{host_id} = $Host->id();
+		return if ! $new;
+    foreach my $ip (split(/\s*,\s*/, $new)) {
+      my $Interface = openprint::Host_Interface->find_one(ip=>$ip);
+      if ( !$Interface ) {
+        if (!$$Host{id}) {
+          $Host = openprint::Host->find_one(hostname=>$ip);
+          if ( ! $Host ) {
+            $Host = new openprint::Host();
+            $Host->save({hostname=>$ip, name=>$ip});
+          }
+        }
+        $Interface = new openprint::Host_Interface();
+        $Interface->save({host_id=>$$Host{id}, ip=>$ip});
+      } else {
+        $Host = $Interface->Host() if !$$Host{id};
+      } # end if
+    } # end foreach ip
+		$$self{host_id} = $Host->id();
 	} # end if
+
 	return join('<br/>', map { $_->ip() ? $_->ip() : () } $Host->Interfaces());
 } # end sub ip_address
 

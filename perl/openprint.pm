@@ -84,7 +84,8 @@ sub session_init {
 		} # end if
 	} # end if $r
 
-  $session{ip} = $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR};
+  my @ips = split(/\s*,\s*/, $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR});
+  $session{ip} = $ips[0];
   $session{lastupdated} = time;
   $session{HTTP_USER_AGENT} = $ENV{HTTP_USER_AGENT};
 
@@ -184,8 +185,6 @@ sub session_init {
     }
   }
 
-  my @ips = split(',', $ENV{HTTP_X_FORWARDED_FOR} ? $ENV{HTTP_X_FORWARDED_FOR} : $ENV{REMOTE_ADDR});
-  $log->debug("@ips");
   foreach my $ip (@ips) {
     if ($ip) {
       my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
