@@ -26,7 +26,7 @@ sub init {
 sub get_value {
 	my ($log, $dbh, $name) = @_;
 
-  return $config{$name};
+  #return $config{$name};
     my $sth = $dbh->prepare_cached(q{
         SELECT strConfigData 
         FROM tbl_Configuration 
