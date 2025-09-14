@@ -839,8 +839,8 @@ sub get_laminating_imposition {
         ($width < $maximum_sheet_width)
           and
         ($width - $margin >= $film_width) # sheet larger than film
-        #and
-        #($layout_width + $margin <= $film_width) # layout < film
+        and
+        ($layout_width + $margin <= $film_width) # layout < film
       ) {
         $$imposition{length} = $length;
         $$imposition{width} = $width;
@@ -866,8 +866,8 @@ sub get_laminating_imposition {
       ($width < $maximum_sheet_width)
         and
       ($width - $margin >= $film_width)
-      #and
-      #($layout_width + $margin <= $film_width)
+      and
+      ($layout_width + $margin <= $film_width)
     ) {
       $$imposition{length} = $length;
       $$imposition{width} = $width;
