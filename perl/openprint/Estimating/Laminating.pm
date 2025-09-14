@@ -181,9 +181,8 @@ sub calc {
   if (ref $specs ne 'HASH') {
     my ( $caller, undef, $line ) = caller;
     $openprint::log->error("Invalid call structure from $caller:$line");
-	( $log, $dbh, $variable, $project_index, $service_index, undef, $specs ) = @_;
+    ( $log, $dbh, $variable, $project_index, $service_index, undef, $specs ) = @_;
   }
-  $log->debug(Data::Dumper::Dumper($specs));
 
   $$specs{alert} = '';
 
@@ -320,6 +319,7 @@ sub calc {
         $$specs{"film_width-$form"} = $sig_price{film_width};
       } else {
         $log->error("No film width in price?");
+        $$specs{Status} = 'uncalculated';
       }
 
       if ($sig_price{Equipment}) {
@@ -408,7 +408,7 @@ sub signature_calc {
 
     if ($error) {
       $equipment_price{breakdown} .= $error; # WHY
-      %best_equipment_price = %equipment_price if !%best_equipment_price;
+      #%best_equipment_price = %equipment_price if !%best_equipment_price;
       next;
     }
 
@@ -472,7 +472,7 @@ sub signature_calc {
     } # end foreach film_width
     $openprint::log->debug("best laminate price: ".Data::Dumper::Dumper(\%best_laminate_price));
 
-    if ((!%best_equipment_price) or ($best_laminate_price{total} and ($best_equipment_price{total} > $best_laminate_price{total}))) {
+    if ((!$best_equipment_price{total}) or ($best_laminate_price{total} and ($best_equipment_price{total} > $best_laminate_price{total}))) {
       #$openprint::log->debug("Have better equipment price: $best_equipment_price{total} > $best_laminate_price{total} on $$equipment{name}");
       %best_equipment_price = %best_laminate_price;
     } # end if
