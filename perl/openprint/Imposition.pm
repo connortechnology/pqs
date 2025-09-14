@@ -1342,7 +1342,10 @@ sub press_type {
 sub form {
   my $self = shift;
   return undef if ! $$self{specs};
-  return $$self{specs}{Form} || $$self{specs}{SignatureIndex} || 1;
+  return $$self{form} if $$self{form};
+  $$self{form} = $$self{specs}{Form} || $$self{specs}{SignatureIndex} || 1;
+  $$self{form} = 1 if $$self{form} > 10;
+  return $$self{form};
 }
 
 sub width_folds {
