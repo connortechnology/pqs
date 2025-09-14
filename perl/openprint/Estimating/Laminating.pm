@@ -179,8 +179,11 @@ sub calc {
   my $services = $Project->services();
   $ServiceType = $Project->ServiceType($service_index);
   if (ref $specs ne 'HASH') {
+    my ( $caller, undef, $line ) = caller;
+    $openprint::log->error("Invalid call structure from $caller:$line");
 	( $log, $dbh, $variable, $project_index, $service_index, undef, $specs ) = @_;
   }
+  $log->debug(Data::Dumper::Dumper($specs));
 
   $$specs{alert} = '';
 
@@ -192,13 +195,13 @@ sub calc {
   foreach my $signature_service_id (@sigs) {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_id );
     my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
+    $form = $$sig_specs{Form} || 1 if $form > 10;
     my $stock = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
 
     $$specs{"override_film_width-$form"} //= '';
     $$specs{'chkOverrideDimensions-'.$form} //= '';
     $$specs{'override_sheetsize-'.$form} //= '';
     $$specs{'override_calliper-'.$form} //= '';
-
 
     if ($$specs{'chkOverrideDimensions-'.$form} ne 'Y') {
       if ($$sig_specs{final_width} and $$sig_specs{final_height}) {
@@ -229,14 +232,17 @@ sub calc {
       $$specs{"TypeFront-$form"} = $$specs{TypeFront} if $$specs{TypeFront} and ! $$specs{"TypeFront-$form"};
       $$specs{"TypeBack-$form"} = $$specs{Typeback} if $$specs{TypeBack} and !$$specs{"TypeBack-$form"};
     } # end if
+
     $$specs{'TypeFront-'.$form} = '' if $$specs{'TypeFront-'.$form} and $$specs{'TypeFront-'.$form} eq 'None';
     $$specs{'TypeBack-'.$form} = '' if $$specs{'TypeBack-'.$form} and $$specs{'TypeBack-'.$form} eq 'None';
+
     $has_lamination = 1 if $$specs{'TypeFront-'.$form} or $$specs{'TypeBack-'.$form};
 
     $$specs{alert} .= "Please enter object width for form $form.<br/>" if ! $$specs{'txtWidth-'.$form};
     $$specs{alert} .= "Please enter object height for form $form.<br/>" if ! $$specs{'txtHeight-'.$form};
     $$specs{alert} .= "Please enter object calliper for form $form.<br/>" if ! $$specs{'calliper-'.$form};
   } # end foreach signature
+
   $$specs{alert} .= 'Please select lamination types for at least one signature or remove lamination from the project.<br/>' if ! $has_lamination;
 
 	if ( $$specs{alert} ) {
@@ -284,6 +290,8 @@ sub calc {
     foreach my $signature_service_id (@sigs) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_id );
       my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
+      $form = $$sig_specs{Form} || 1 if $form > 10;
+
       if ((!$$specs{"TypeFront-$form"}) and (!$$specs{"TypeBack-$form"})) {
         #$$specs{'hdnBreakdown'.$qty_index} .= " not doing lamination on form $form<br/>";
         next;
@@ -423,7 +431,11 @@ sub signature_calc {
     my $film_width_options = $equipment->specification('Laminate Width') // '';
     my @film_widths = sort { $b <=> $a } map { $_ =~ s/[^\d\.]//; $_ } split(',', $film_width_options) if $film_width_options;
 
-    $openprint::log->debug("Laminate widths on $$equipment{name}: @film_widths from $film_width_options");
+    if (!@film_widths) {
+      $openprint::log->error("Laminate widths on $$equipment{name}: @film_widths from $film_width_options");
+    } else {
+      $openprint::log->debug("Laminate widths on $$equipment{name}: @film_widths from $film_width_options");
+    }
 
     if ($$specs{"override_film_width-$form"} eq 'Y') {
       if ($$specs{"custom_film_width-$form"}) {
@@ -448,6 +460,8 @@ sub signature_calc {
       if ($impo) {
         $laminate_price{breakdown} .= 'Laminate width is '.($$specs{"override_film_width-$form"} eq 'Y'?'overriden to ':'').$film_width .'&quot;<br/>';
         %laminate_price = get_price($equipment, $impo, \%laminate_price, $qty);
+      } else {
+        $openprint::log->debug("No impo for film width $film_width");
       }
 
       if (!$best_laminate_price{total} or ($laminate_price{total} and ($best_laminate_price{total} > $laminate_price{total}))) {
@@ -708,11 +722,11 @@ sub get_laminating_imposition {
 
   my $length;
   my $layout_width;
-  $openprint::log->debug("DOING film width: $film_width");
 
   my $width;
   my $imposition = $sig_imposition->copy();
   my $form = $sig_imposition->form();
+  $openprint::log->debug("DOING film width: $film_width form $form");
   $$imposition{film_width} = $film_width;
   @$imposition{'TypeFront','TypeBack'} = @$specs{"TypeFront-$form","TypeBack-$form"};
   $$imposition{FrontMaterial} = openprint::Material->find_one(name=>$$imposition{TypeFront});
