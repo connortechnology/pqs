@@ -295,10 +295,6 @@ sub fits {
 #
 #   my %cutter = (
 #       id         => int,         # Equipment ID.
-#
-#       lift_depth => sub ($) { }, # Takes a calliper and returns a float lift
-#                                  # depth. Cutting thick stacks of thin stock
-#                                  # can shift and tear it.
 #       cost       => cost,
 #   );
 #
@@ -328,29 +324,10 @@ sub cutter {
     # EQUIPMENT SPECIFICATIONS
     #
     # Get the standard sizing specs. (max/min height/width).
-    my $spec = $dbh->selectall_hashref(q{
-        SELECT strname AS name, strvalue AS value
-        FROM tbl_equipment_specifications
-        WHERE lower(replace(strname, ' ', '')) IN ('maximumsheetlength', 'maximumsheetwidth')
-          AND lngequipmentindex = ?
-    }, 'name', undef, $id);
-    $cutter{max_width}  = $spec->{'Maximum Sheet Width'}{value};
-    $cutter{max_length} = $spec->{'Maximum Sheet Length'}{value};
-
-    # Create a closure for determining the maximum lift depth based on the
-    # stock calliper provided.
-    $cutter{lift_depth} = sub {
-        my $calliper = shift;
-        my $sth = $dbh->prepare(q{
-            SELECT strvalue
-            FROM tbl_equipment_specifications
-            WHERE strname = 'Maximum Lift Depth'
-              AND lngequipmentindex = ?
-              AND  ?::numeric >= coalesce(dblmin, 0)
-              AND (?::numeric <= dblmax OR dblmax IS NULL)
-        });
-        return $dbh->selectrow_array($sth, undef, $id, $calliper, $calliper);
-    };
+    my $equipment = new openprint::Equipment($id);
+    $cutter{equipment} = $equipment;
+    $cutter{max_width}  = $equipment->specification('Maximum Sheet Width');
+    $cutter{max_length} = $equipment->specification('Maximum Sheet Length');
 
     # COSTING
     #
@@ -905,8 +882,11 @@ sub job_cost {
 
     # The maximum calliper of a stack varies with the paper calliper; as
     # cutting thick stacks of thin stocks can shift and tear them.
-    my $lift_depth = &{ $cutter->{lift_depth} }( $job->calliper )
-        or return undef;
+    my $lift_depth = $$cutter{equipment}->specification('Maximum Lift Depth', $job->calliper);
+    if (!$lift_depth) {
+      $openprint::log->debug("Must have lift depth");
+      return undef;
+    }
 
     # A cutter can cut up to it's lift depth at a time, anything remaining
     # gets cut in the next stack, ad naseum.
