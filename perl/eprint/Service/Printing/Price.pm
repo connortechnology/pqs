@@ -117,10 +117,7 @@ sub calc {
   #print STDERR "log: $openprint::log dbh $openprint::dbh\n";
   eprint::Service::Cutting::init($pid);
 
-  my $pricing = get_project_price(
-    $log, $dbh, $variable,
-    $pid, $sid, @$specs{qw(spread versions overrides)}
-  );
+  my $pricing = get_project_price($pid, $sid, @$specs{qw(spread versions overrides)}, $specs);
 
   # Keep Version information. Needed for auto-calc.
   delete $specs->{$_} for grep {! $_ =~ /mv/} keys %$specs;
@@ -134,7 +131,7 @@ sub calc {
 
 # Price the spread.
 sub get_project_price {
-  my ($log, $dbh, $variable, $pid, $sid, $spread, $versions, $overrides) = @_;
+  my ($pid, $sid, $spread, $versions, $overrides, $specs) = @_;
 
   #HANDLE NEW No PRINT PROJECT TYPE
   my $Project = new openprint::Project($pid);
@@ -467,6 +464,7 @@ sub get_project_price {
   $total_imp = scalar @$impositions if TIMINGS;
 
   foreach $imp (@$impositions) {
+    $$imp{specs} = $specs;
     if ( $openprint::r ) {
       $openprint::r->print("");
       if ( $openprint::r->connection()->aborted() ) {
