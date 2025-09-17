@@ -1,7 +1,7 @@
 use strict;
 package openprint::ssi;
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 require Date::Calc;
 require JSON;
@@ -1295,7 +1295,7 @@ sub hash_link {
 		} # end if
 	#} else {
 
-$log->debug("HASH CACHED $path ($$script{cache_file} ($timestamp) ($$script{timestamp}) @stat");
+#$log->debug("HASH CACHED $path ($$script{cache_file} ($timestamp) ($$script{timestamp}) @stat");
 	} # end if
 
 	# cache_path is the url part
@@ -1346,7 +1346,6 @@ sub include_logs_view {
 sub do_css_links {
   my @html;
   my $css = shift;
-  $log->debug("DO css for $css");
 
   $css =~ s/^\///;
   $css =~ s/^openprint\///;
