@@ -112,7 +112,6 @@ sub sql_statement {
 
 	die("Bad dbh") unless $dbh;
 
-  print STDERR "$sql\n";
     my $sth = $dbh->prepare($sql);
        $sth->execute;
 

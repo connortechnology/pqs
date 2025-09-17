@@ -7,7 +7,7 @@ use strict;
 use warnings;
 no warnings qw(uninitialized);
 
-use constant DEBUG=>1;
+use constant DEBUG=>0;
 
 BEGIN {
     use base qw( Exporter );
