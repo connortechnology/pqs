@@ -958,14 +958,6 @@ sub get_login_info {
     # Load the session ID into variable.
     $variable->{cookie} = $cookie;
 
-    # If we're logging into the employee site, also check logins on the
-    # administrator side as we don't want admins to have to double login.
-    $site = 'A' if $site eq 'E'
-                && !$dbh->selectrow_array(q{
-                     SELECT true FROM tbl_logged_in 
-                     WHERE strsessionid = ? AND chrsite = ?
-                     AND chrusertype IN ( 'A', 'E' )}, undef, $cookie, $site);
-
     # Get the company information.
     my $company = $dbh->prepare_cached(q{
         SELECT lngcustomerid                                          AS id,
@@ -989,7 +981,6 @@ sub get_login_info {
         WHERE l.strsessionid = ?
     });
 
-  #AND l.chrsite      = ?
     $user = $dbh->selectrow_hashref($user, undef, $cookie);
     $user->{company}  = $company;
     if ($user) {
