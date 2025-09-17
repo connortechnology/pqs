@@ -991,20 +991,20 @@ sub get_login_info {
 
   #AND l.chrsite      = ?
     $user = $dbh->selectrow_hashref($user, undef, $cookie);
-
-    # die "Invalid session or customer does not exist."
-    #     unless $company->{id} && $user->{id};
-
-    $user->{name}     = "$user->{firstname} $user->{lastname}";
-    $user->{is_staff} = ($user->{type} =~ /^[AE]$/);
     $user->{company}  = $company;
+    if ($user) {
+      $$user{firstname} //= '';
+      $$user{lastname} //= '';
+      $user->{name}     = "$user->{firstname} $user->{lastname}";
+      $user->{is_staff} = $$user{type} ? ($user->{type} =~ /^[AE]$/) : 0;
 
-    # Legacy mappings.
-    $variable->{user}      = $user;
-    $variable->{user_id}   = $user->{id};
-    $variable->{user_type} = $user->{type};
-    $variable->{email}     = $user->{email};
-    $variable->{is_staff}  = $user->{is_staff};
+      # Legacy mappings.
+      $variable->{user}      = $user;
+      $variable->{user_id}   = $user->{id};
+      $variable->{user_type} = $user->{type};
+      $variable->{email}     = $user->{email};
+      $variable->{is_staff}  = $user->{is_staff};
+    }
     $variable->{cust_id}   = $company->{id};
     $variable->{Reseller}  = $company->{is_reseller} ? 'Y' : 'N';
     $variable->{Supplier}  = $company->{is_supplier} ? 'Y' : 'N';
