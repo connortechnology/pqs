@@ -288,8 +288,7 @@ sub price_item {
 
     # Apply the customer's discount if applicable.
     if ($discountable) {
-        my $discount 
-            = eprint::customer::get_discount($dbh, $cid);
+        my $discount = eprint::customer::get_discount($dbh, $cid);
 
         $price *= 1 + ($discount/100) if $discount;
     }
@@ -347,7 +346,7 @@ sub valid_equipment {
   # As this query will potentially be run for every single service for every
   # project created, let's cache the statment.
   my $sth = $dbh->prepare_cached($sql);
-  my @x =  @{ $dbh->selectcol_arrayref($sth, undef, $service_type) };
+  #my @x =  @{ $dbh->selectcol_arrayref($sth, undef, $service_type) };
   return @{ $dbh->selectcol_arrayref($sth, undef, $service_type) };
 }
 

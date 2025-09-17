@@ -9,7 +9,7 @@ convert_to_old        desired_signature_size
 convert_to_signature  lf_imposition
 );
 
-use constant DEBUG=>1;
+use constant DEBUG=>0;
 
 use Data::Dumper;
 use Memoize;
@@ -60,9 +60,9 @@ sub convert_to_old {
     #($rows, $cols) = $imposition->cut ? ($y, $x) : ($x, $y);
     #
     ($cols, $rows) = $imposition->cut ? ($y, $x) : ($x, $y);
-    print STDERR "IMP1: Rows: $rows, COLS: $cols CUT: " . $imposition->cut . " X: $x Y: $y \n" if DEBUG;
+    $openprint::log->debug("IMP1: Rows: $rows, COLS: $cols CUT: " . $imposition->cut . " X: $x Y: $y") if DEBUG;
   } else {
-    print STDERR "CHildren:". Data::Dumper::Dumper($imposition->children)."\n";
+    $openprint::log->debug("CHildren:". Data::Dumper::Dumper($imposition->children)) if DEBUG;
   }
 
   # Multi-version needs it's layouts determined, single version is just the full sheet.

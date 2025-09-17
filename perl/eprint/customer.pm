@@ -68,7 +68,7 @@ sub get_discount {
     my ($dbh, $cid) = @_;
 
     if ($openprint::Company{id} == $cid) {
-      $openprint::log->error("DISCOUNT is : ".$openprint::Company{discount}+$openprint::Pricelist{discount});
+      #$openprint::log->error("DISCOUNT is : ".($openprint::Company{discount}+$openprint::Pricelist{discount}));
       return $openprint::Company{discount}+$openprint::Pricelist{discount};
     }
 
