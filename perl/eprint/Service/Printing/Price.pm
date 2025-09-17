@@ -3050,7 +3050,7 @@ sub spreads_remaining {
   my $project = new openprint::Project($pid);
   return 1 if $project->type() eq 'ScreenItem';
 
-  my $specs = openprint::service::get_specs_ref($log, $dbh, $pid, $sid);
+  my $specs = openprint::service::get_specs_ref($pid, $sid);
   my $type      = $$specs{txtSignatureType};
   if (!$type) {
     $openprint::log->error("No signature type");
