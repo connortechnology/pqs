@@ -323,7 +323,7 @@ sub parse_page {
   my @path     = grep { $_ } split '/', $page;
   my $filename = pop @path;
 
-  shift @path if $path[0] eq 'site_specific';
+  shift @path if @path and $path[0] eq 'site_specific';
   my $first = @path ? shift @path : '';
   my $second = @path ? shift @path : '';
 

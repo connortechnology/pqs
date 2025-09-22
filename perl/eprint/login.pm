@@ -60,14 +60,13 @@ sub verify_login {
   my ($user_id, $cust_id, $salutation, $first_name, $last_name, $user_type) =
   sql::execute($log, $dbh, $_, $email, $password);
 
-  if ($user_id eq '') {
+  if (!$user_id) {
     # user not found. Let's see if we got the password wrong, or the email wrong.
     $_ = "SELECT lngUserID FROM tbl_Customer_Users WHERE strEmail = '$email'";
     ($user_id) = sql::sql_statement($log, $dbh, $_);
-    if ($user_id eq '') {
+    if (!$user_id) {
       $details = "\"$email\" is not a valid account. Please push the back button and try again. If you require assistance please call us at 1-888-500-0999.";
-    }
-    else {
+    } else {
       $details = "The password you entered was not correct.     Please push the back button and try again. If you require assistance please call us at 1-888-500-0999.";
     }
     $error = 'Authentication Failed.';

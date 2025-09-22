@@ -8,7 +8,6 @@ use vars qw( %config );
 
 sub init {
 
-  %config = ();
   if ( $openprint::dbh ) {
     my $data = $openprint::dbh->selectall_arrayref( 'SELECT strconfigTitle AS name, strconfigdata AS value FROM tbl_Configuration', {Slice=>{}} );
     foreach (@{$data}) {

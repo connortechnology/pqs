@@ -97,7 +97,7 @@ sub sql_filters {
 	#$text .= qq{ AND lower(strprojectreference) LIKE  '$searchstring'}  
 
 
-	print STDERR "HAVE TEXT: $text \n";
+  #print STDERR "HAVE TEXT: $text \n";
 	return $text;
 
 }
@@ -222,7 +222,7 @@ sub action {
 	my $dbh = session::dbh;
 	my $r   = session::r;
 
-	print STDERR "HAVE VALUES ", Dumper($action, $value, $list);
+  #print STDERR "HAVE VALUES ", Dumper($action, $value, $list);
 
 	if ( $action eq 'DueDate' ) {
 		foreach my $p ( @{$list} ) {
@@ -317,7 +317,7 @@ sub text_search {
 				SELECT lngprojectindex, lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?
 			}, undef, $ref) : undef;
 
-			print STDERR "HAVE SEARCH: $search_type, PID: $pid, CUST: $cust, REF: $ref \n";
+    #print STDERR "HAVE SEARCH: $search_type, PID: $pid, CUST: $cust, REF: $ref \n";
 
 			if ( $pid ) {
 				$var->{param}{pid} = $pid;
@@ -333,7 +333,7 @@ sub text_search {
 				SELECT lngorderid, lngcustomerid FROM tbl_orders WHERE lngorderid = ?
 			}, undef, $1) : undef;
 
-			print STDERR "HAVE SEARCH: $search_type, ORDER $order, CUST: $cust, REF: $ref \n";
+    #print STDERR "HAVE SEARCH: $search_type, ORDER $order, CUST: $cust, REF: $ref \n";
 
 			if ( $order ) {
 				$var->{param}{order_id} = $order;
@@ -350,7 +350,7 @@ sub text_search {
 				SELECT lngquoteid, lngcustomerid FROM tbl_quotes WHERE lngquoteid = ?
 			}, undef, $1) : undef;
 
-			print STDERR "HAVE SEARCH: $search_type, ORDER $quote, CUST: $ocust, REF: $ref \n";
+    #nprint STDERR "HAVE SEARCH: $search_type, ORDER $quote, CUST: $ocust, REF: $ref \n";
 
 			if ( $quote ) {
 				$var->{param}{quote_id} = $quote;
@@ -364,7 +364,7 @@ sub text_search {
 		if ( $redirect ) {
 			die("have cust: $cust, $var->{cookie} ") unless $cust;
 			eprint::login::select_customer( $r, $log, $dbh, $var->{cookie}, $var, $cust );
-			print STDERR "HAVE REDIRECT: $redirect \n";
+      #print STDERR "HAVE REDIRECT: $redirect \n";
 			$var->{Redirect} = $redirect;
 			return;
 		}
@@ -529,7 +529,7 @@ sub apply_filters {
 	#Moved to sql filter
 	#@{$data} = filter_date($param, $data);
 
-    print STDERR "HAVE PARAMS", Dumper($param);
+  #nprint STDERR "HAVE PARAMS", Dumper($param);
 
 
 }
@@ -551,7 +551,7 @@ sub filter_date {
 	my $sd = DateTime::Format::Strptime->new( pattern=> '%m/%d/%Y' )->parse_datetime($start);
 	my $ed = DateTime::Format::Strptime->new( pattern=> '%m/%d/%Y' )->parse_datetime($end);
 
-	print STDERR "HAVE DATE COMP  START $start -> $sd, END   $end -> $ed \n";
+  #print STDERR "HAVE DATE COMP  START $start -> $sd, END   $end -> $ed \n";
 
 
 	my @newdata;

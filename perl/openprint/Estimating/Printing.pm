@@ -7791,7 +7791,7 @@ sub summary {
 		$html .= $$imposition{runstyle} eq 'Web' ? $imposition->sheet_width().'" Web' : ssi::html_escape($$imposition{runstyle}) ;
 		$html .= '</span>';
 	
-		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{versions};
+		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{versions} and $$specs{"Versions$qty_index"};
 		$html .= ' on '. $imposition->Press()->name() if $imposition->Press()->name();
 
 		my $plate_changes = 0;
