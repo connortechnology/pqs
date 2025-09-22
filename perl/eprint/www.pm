@@ -61,13 +61,6 @@ sub cleanup {
   $openprint::User = new openprint::User;
 } # end sub cleanup
 
-sub show_params {
-  my $r = session::r;
-  map {
-    print STDERR " HAVE PARAM: $_ = " . $r->param($_) . "\n";
-  } $r->param();
-}
-
 sub generate_cookie {
   my ( $r, $log, $dbh ) = @_;
 
@@ -89,7 +82,6 @@ sub generate_cookie {
     -path    => '/',
     -domain  => $domain
   );
-  #print STDERR "Cookie $cookie for $domain Host:".$r->headers_in->{'Host'}." cookiedomain: ".$r->dir_config('cookiedomain')."\n";
   $cookie->bake($r);
 
   # Return the generated session ID.
@@ -165,7 +157,6 @@ sub handler {
       #$log->debug("Parameter $key is (" . $param{$key} . ")" . (utf8::is_utf8($param{$key})||0) );
     } # end if
   } # end foreach
-  #show_params();
   openprint::configuration::init( $r->dir_config() );
   openprint::session_init();
 
@@ -252,10 +243,8 @@ $log->debug("Page $page");
 
     $file_data = ssi::variable_substitution( $r, $r->log, $dbh, $file_data, $variable);
 
-    #print STDERR "CHECK FILL IN FORM \n";
     if ( $variable->{__FillInForm} ) {
       require HTML::FillInForm;
-      #print STDERR "HAVE FILL IN FORM \n";
       my $f = new HTML::FillInForm;
       $file_data = $f->fill(scalarref => \$file_data,
         fdat      => $variable->{__FillInForm} );
@@ -265,7 +254,7 @@ $log->debug("Page $page");
     if ( $filename =~ /\.html/ ) {
       $r->content_type(q{text/html; charset=utf-8});
     } elsif ( $filename =~ /\.json/ ) {
-      $r->content_type(q{text/javascript; charset=utf-8});
+      $r->content_type(q{application/json; charset=utf-8});
     } elsif ( $filename =~ /\.xml/ ) {
       $r->content_type(q{text/xml; charset=utf-8});
     } elsif ( $filename =~ /\.rss/ ) {
@@ -285,10 +274,8 @@ sub word_sub {
   my %words = (split ',', eprint::Config->get(General => 'word_sub'));
 
   map { $variable->{'ws_'.$_}  = $words{$_};
-    #print STDERR "CHANGE: $_ to $words{$_} \n";
   } keys %words;
   map { $file_data =~ s/$_/$words{$_}/g;
-    #print STDERR "CHANGE: $_ to $words{$_} \n";
   } keys %words;
   return $file_data;
 }
@@ -318,7 +305,6 @@ sub parse_page {
   my ($r, $log, $cookie, $dbh, $variable, $page) = @_;
   my $status = OK;
 
-  #print STDERR "START PARSE PAGE \n\n";
   # The module dispatches by 'section' based on the uri.
   my @path     = grep { $_ } split '/', $page;
   my $filename = pop @path;
@@ -327,14 +313,12 @@ sub parse_page {
   my $first = @path ? shift @path : '';
   my $second = @path ? shift @path : '';
 
-  #print STDERR "HAVE SECTIONS FIRST: $first SECOND: $second \n";
   if ( $first eq 'notification' ) {
     require eprint::notification;
     eprint::notification::handler( $variable, $page );
   }
 
   unless ($cookie || $variable->{error}) {
-    print STDERR "COOKIE: $cookie : ERROR: $variable->{error} \n\n";
     my $error_page = configuration::get_value($r->log, $dbh, 'errorpage');
 
     $variable->{error}   = 'Restricted Access';
@@ -377,7 +361,6 @@ sub parse_page {
       return OK;
     }
 
-    #print STDERR "Displaying login\n";
     return eprint::login::login_display($r, $log, $dbh, $cookie, $variable);
   }
 
@@ -426,7 +409,7 @@ sub parse_page {
     $section //= '';
     # If the user isn't authorized for this section, check if the page is public otherwise redirect them to a login page.
     unless (user_allowed($variable->{user}{type}, $section)) {
-      print STDERR "User not allowed: type: ".($variable->{user}{type} ? $variable->{user}{type} : 'none'), ' section: '.$section." page $page\n";
+      $log->debug('User not allowed: type: '.($variable->{user}{type} ? $variable{user}{type} : 'none').' section: '.$section." page $page");
 
       my @public = split /,/, configuration::get_value($log, $dbh, 'public_URIs');
 
@@ -435,7 +418,6 @@ sub parse_page {
 
         my $destination = $r->method eq 'GET' ? 'destination=' . misc::get_destination($r, $log, $page) : '';
 
-        print STDERR "HAVE DEST: $destination \n";
         $r->status(HTTP_MOVED_TEMPORARILY);
         $r->headers_out->set( Location => "/$first/login.html?section=$section;$destination");
 
@@ -451,8 +433,6 @@ sub parse_page {
   #
   if ((!$section) or ($section ne 'A' && $section ne 'E')) {
     # Add banner ads to the customer side.    
-
-
     if ( configuration::get_value($log, $dbh, 'UsesBanners') && !$variable->{BANNER_AD} ) {
       require eprint::banner;
       $variable->{BANNER_AD} = eprint::banner::select_banner($log, $dbh, $variable->{cust_id}, $variable->{user_id});
@@ -461,22 +441,16 @@ sub parse_page {
       # ysnpricingprojectview, ysnpricingquotes from tbl_customer and
       # puts it into the variable hash, for more info see bug 1314
       require eprint::customer;
-      @$variable{qw(isServicePricing isProjectViewPricing isQuotePricing)} 
-      = eprint::customer::get_pricing_display_info(
-        $log, $dbh, $variable->{cust_id}
-      );
+      @$variable{qw(isServicePricing isProjectViewPricing isQuotePricing)} = eprint::customer::get_pricing_display_info( $log, $dbh, $openprint::Company->id());
 
       require eprint::greetings;
       #Make Greeting available on all pages. Requested by Juile for Dominos.
       $$variable{'USER_CATEGORY_GREETING'} = eprint::greetings::select_user_category_greeting($log, $dbh, $variable->{user_id})
       if $variable->{user_id};
     }
-  } else {
-    # Adds the current version information (for use in the admin. footer).
-    $variable->{pqs_version} = configuration::get_value($log, $dbh, 'BuildVersion');
   }
 
-  log_request($page, $variable);
+  #log_request($page, $variable);
 
   # PAGE DISPATCH
   my %section = (
@@ -730,6 +704,7 @@ sub section_employee {
     eprint::employee_support::rma($r, $log, $dbh, $variable)              if $filename eq 'return.html';
     eprint::employee_support::rma_search($r, $log, $dbh, $variable)       if $filename eq 'returns.html';
   } else {
+    $log->debug("Calling openprint code");
     my ( $proc ) = $filename =~ /(.*)\.\w*$/;
     if ( $proc ) {
       my $module = join('_', 'employee', $sub_section);
@@ -744,6 +719,8 @@ sub section_employee {
         }
       };
       $log->error( "Can't $module :: $proc, Reason: $@" ) if $@;
+    } else {
+      $log->debug("No proc $filename");
     } # end if
   }
 
@@ -824,7 +801,6 @@ sub section_main {
   } elsif ($sub_section eq 'dashboard') {
     require eprint::dashboard;
     my $param = map_param();
-    print STDERR "HAVE AP ", Dumper($r->param('actionpid'), scalar $r->param('actionpid') );
     eprint::dashboard::display($variable, $param) if $filename eq 'dashboard.html';
   } elsif ($sub_section eq 'proj') {
     require eprint::print_project;    
@@ -934,10 +910,8 @@ sub section_main {
     eprint::products::design($r, $dbh, $variable, $cookie) if $filename eq 'design.html';
   }
 
-  #print STDERR "Before menu_options\n";
   menu_options($dbh, $variable);
 
-  #print STDERR "CHECK ASR " . $r->param('run_asr') . "-- \n";
   if ( $r->param('asr') and ( $r->param('asr') eq 'mailing')) {
     require eprint::mailing;
     eprint::mailing::handler($r, $dbh, $variable);
@@ -949,10 +923,8 @@ sub section_main {
 sub map_param {
   my $param;
   my $r = session::r;
-  #print STDERR "START MAP \n";
   map { 
     my @p = $r->param($_);
-    #print STDERR "HAVE PARAM P $_ =  " , $r->param($_)  . "\n";
 
     if (@p == 1 ) {
       $param->{$_} = shift @p;
@@ -960,9 +932,6 @@ sub map_param {
       $param->{$_} = \@p;
     }
   } $r->param();
-
-  #print STDERR "HAVE PARAM MAPPED", Dumper($param);
-
 
   return $param;
 }
@@ -1006,7 +975,6 @@ sub check_cart {
     # we may want to look for there last unfinished project (non hybrid)
   }
 
-  #print STDERR "HAVE ORDER: $order_id PID: $pid - $var->{user_id} \n";
 } # end sub check_cart
 
 1;
