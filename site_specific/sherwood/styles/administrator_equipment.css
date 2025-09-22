@@ -5,3 +5,11 @@ li.image,
 .cip3_integration {
   display: none;
 }
+
+fieldset p label:not(.radio):not(.radio-inline):not(.checkbox):not(.checkbox):not(.post-input),
+fieldset ul li label:not(.radio):not(.radio-inline):not(.checkbox):not(.checkbox):not(.post-input) {
+  width: 180px;
+  margin-left: -185px;
+  display: inline-block;
+  text-align: left;
+}
