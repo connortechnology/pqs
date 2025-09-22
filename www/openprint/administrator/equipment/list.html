@@ -19,7 +19,7 @@ function load_page() {
       <li>
         <label>ID</label>
         <? echo ( input( type=>'cardinal', name=>'equipment_id', onkeydown=>"if(event.keyCode==13){f1.submit();}" ); ) ?>
-        <? echo ( button( 'Go1',{ onclick=>"f1.action='edit.html';f1.submit();", text=> 'Go' } ); ) ?>	
+        <? echo ( button( 'Go1',{ onclick=>"if(f1.elements['equipment_id'].value){f1.action='edit.html';f1.submit();}", text=> 'Go' } ); ) ?>	
       </li>
       <li>
         <label>Name</label>
