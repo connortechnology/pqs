@@ -1,0 +1,1 @@
+../openprint/javascripts/pricing.js
