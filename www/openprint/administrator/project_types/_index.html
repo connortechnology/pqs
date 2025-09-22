@@ -15,24 +15,49 @@
 <? else ( @{$$variable{Project_Types}} == 0 ) ?>
 		<? echo ( 
 			my $html;
-$html .= '<div class="Project_Type header"> 
-              <div class="Name">Name</div>
-              <div class="Description">Description</div>
-              <div class="Category">Category</div>
-          </div>';
+      $html .= '<table id="ProjectTypes" class="List"
+      sortable table-striped"
+         data-page-list="[All, 5, 10, 25, 50, 100, 200, 500, 1000]"
+           data-pagination="true"
+             data-search="true"
+               data-show-pagination-switch="true"
+                 data-cookie="true"
+                   data-cookie-same-site="Strict"
+                     data-cookie-id-table="AdminProjectTypesTable"
+                       data-cookie-expire="2y"
+                         data-show-columns="true"
+                           data-show-export="true"
+                             data-columns-hidden="[]"
+                               data-uncheckAll="true"
+                                 data-click-to-select="true"
+                                   data-check-on-init="true"
+                                     data-mobile-responsive="true"
+                                       data-min-width="562"
+                                         data-show-export="true"
+                                           data-uncheckAll="true"
+
+      ><thead>
+        <tr class="Project_Type header"> 
+              <th class="ProjectTypeId">Id</th>
+              <th class="Name">Name</th>
+              <th class="Description">Description</th>
+              <th class="Category">Category</th>
+        </tr></thead><tbody>';
 
 			foreach my $Project_Type ( @{$$variable{Project_Types}} ) {
 
 				$html .= sprintf(q` 
-					<div title="%2$s" class="Project_Type">
-						<div class="Name"><a href="edit.html?ddmProjectType=%1$d">%2$s</a></div>
-						<div class="Description"><a href="edit.html?ddmProjectType=%1$d">%3$s</a></div>
-						<div class="Category"><a href="edit.html?ddmProjectType=%1$d">%4$s</a></div>
-					</div>
+					<tr title="%2$s" class="Project_Type">
+						<td class="ProjectTypeId"><a href="edit.html?ddmProjectType=%1$d">%1$d</a></td>
+						<td class="Name"><a href="edit.html?ddmProjectType=%1$d">%2$s</a></td>
+						<td class="Description"><a href="edit.html?ddmProjectType=%1$d">%3$s</a></td>
+						<td class="Category"><a href="edit.html?ddmProjectType=%1$d">%4$s</a></td>
+					</tr>
 					`, $Project_Type->id(), html_escape($Project_Type->name()), html_escape($Project_Type->description()),
 					$Project_Type->category(),
 				);
 			} # end foreach Project_Types
+      $html .= '</tbody></table>';
 			return $html;
 		) ?>
 <? endif ( @{$$variable{Project_Types}} == 0 ) ?>

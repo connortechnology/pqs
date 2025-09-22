@@ -3,28 +3,46 @@
 <h2>Search</h2>
 </div>
 <script>
-	function delete_confirm(form) {
-		var number_of_deleted_products = 0;
-		for ( var index = 0; index < form.elements.length; index += 1 ) {
-			if ( ! form.elements[index].name )
-				continue;
-			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
-				number_of_deleted_products += 1;
-			} // end if
+function delete_confirm(form) {
+  var number_of_deleted_products = 0;
+  for ( var index = 0; index < form.elements.length; index += 1 ) {
+    if ( ! form.elements[index].name )
+      continue;
+    if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+      number_of_deleted_products += 1;
+    } // end if
 
-		} // end for
-		if ( number_of_deleted_products == 0 ) {
-			alert("To Delete Project_Types, click the checkbox beside the service type.");
-		} else {
-			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_products + " service types?\n") ) {
-				form.submit();
-			} // end if
-		} // end if
-	}
-	function load_products( form ) {
-		$('Project_TypesList').innerHTML = 'Please wait...';
-		new Ajax.Updater('Project_TypesList','_index.html', {parameters:Form.serialize(form)});
-	} // end function
+  } // end for
+  if ( number_of_deleted_products == 0 ) {
+    alert("To Delete Project_Types, click the checkbox beside the service type.");
+  } else {
+    if ( confirm("Are you sure you wish to delete these " + number_of_deleted_products + " service types?\n") ) {
+      form.submit();
+    } // end if
+  } // end if
+}
+
+var load_page_ajax = null;
+
+function load_page() {
+  if ( load_page_ajax ) load_page_ajax.abort();
+  $j('#Project_TypesList').html('Loading');
+  load_page_ajax = $j.ajax({
+    url: '_index.html',
+    data: $j('#f1').serialize(),
+    success: function(data) {
+      load_page_ajax = null;
+      $j('#Project_TypesList').html(data);
+      $j('#ProjectTypes').bootstrapTable({ });
+    }
+  });
+}
+
+addEventListener('DOMContentLoaded', (event) => {
+  $j('#ProjectTypes').bootstrapTable({ });
+});
+</script>
+
 </script>	 
 <?include('/includes/error_reporting.html')?>
 <div class="Project_Types"><div class="Search">
@@ -36,7 +54,7 @@
 					<ul>
 						<? if ( @{$$variable{Categories}} = openprint::ProjectTypeCategory->find( order=>'lower(name)') ) ?>
 						<li><label>Category</label>
-							<select name="category_id" id="category_id" onchange="load_products(this.form);">
+							<select name="category_id" id="category_id" onchange="load_page(this.form);">
 								<option value="">All</option>
 								<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{'/administrator/project_types/index.html?category_id'} ); ) ?>
 							</select>
@@ -48,7 +66,7 @@
 			</div>
 			<p class="buttons">
 				<? echo ( join("\n",
-					button( 'ShowResults', { onclick=> 'load_products(f1);', text=>'Show Results' } ),
+					button( 'ShowResults', { onclick=> 'load_page(f1);', text=>'Show Results' } ),
 					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
 					button( 'New', { href=> 'edit.html', text=>'New Project Type' } ),
 					); ) ?>
