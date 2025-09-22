@@ -15,12 +15,13 @@
 
   my $Configuration;
   if ($service->servicetype_id()) {
-    my $module = $service->ServiceType()->type();
+    my $module = $service->ServiceType()->module();
     if (!$module) {
       $log->error("No service type set for ".$service->name());
     } else {
-      $module =~ s/^openprint::Estimating:://;
-      $module = 'openprint::Estimating::'.$module;
+      if (-1 == index($module, '::')) {
+        $module = 'openprint::Estimating::'.$module;
+      }
       eval ( 'require '.$module.';' );
       $log->error("eval error $@") if $@;
 
