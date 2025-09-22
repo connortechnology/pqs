@@ -45,5 +45,10 @@ sub to_breakdown {
   return (1*$$self{value}).(lc $$self{units} eq 'percent' ? '%' : $$self{units}).'='.(1*$$self{total});
 }
 
+sub help {
+  my $self = shift;
+  return '';
+}
+
 1;
 __END__

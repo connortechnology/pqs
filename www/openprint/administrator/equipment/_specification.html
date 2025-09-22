@@ -4,7 +4,7 @@
 	}
 	return '';
 ) ?>
-<tr<?rowclass?> id="S<? echo ( $$variable{Specification}->id(); ) ?>">
+<tr<?rowclass?> id="S<? echo ( $$variable{Specification}->id(); ) ?>" title="<?echo($$variable{Specification}->help())?>">
   <td class="name"><span class="inplaceeditor" data_id="<? echo ( $$variable{Specification}->id(); ) ?>" id="SName<? echo ( $$variable{Specification}->id() ) ?>"><? hecho ( $$variable{Specification}->name(); ) ?></span></td>
   <td class="min"><span class="inplaceeditor" data_id="<? echo ( $$variable{Specification}->id(); ) ?>" id="SMin<? echo ( $$variable{Specification}->id(); ) ?>"><? echo ( $$variable{Specification}->min() ? $$variable{Specification}->min() : '&nbsp;'; ) ?></span></td>
   <td class="max"><span class="inplaceeditor" data_id="<? echo ( $$variable{Specification}->id(); ) ?>" id="SMax<? echo ( $$variable{Specification}->id(); ) ?>"><? echo ( $$variable{Specification}->max() ? $$variable{Specification}->max() : '&nbsp;'; ) ?></span></td>
