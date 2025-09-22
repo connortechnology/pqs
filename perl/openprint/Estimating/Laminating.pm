@@ -60,7 +60,9 @@ sub MaterialPriceConfiguration {
 }
 
 %Specifications = (
-  'Laminating Count' => { units => ['Net Sheets', 'Gross Sheets'], range_units=>[] },
+  'Laminating Count' => { units => ['Net Sheets', 'Gross Sheets'], range_units=>[],
+    help=>'When determining quantity of items to laminate, do we use the gross sheets from printing, or do net + laminating overs',
+  },
   'Laminating Waste'  => { units => 'Percent' },
   'Laminating Style' => { values => [ 'Sheet','Final Pieces' ] },
   #'Laminating Capable' => { values => [ 'Y'|'N' ] },
