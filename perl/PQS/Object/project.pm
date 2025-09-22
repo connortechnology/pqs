@@ -386,7 +386,7 @@ sub parent_sheet_count {
 
 	my %results = eprint::service::get_specifications_pairs( $log, $dbh, undef, $sid, @specs);
   my $count = $results{hdnPaperBuyQuantity1} || $results{hdnGrossSheetCount1};
-  $count *= $results{txtSignatureQuantity} if  $results{txtSignatureQuantity} > 1;
+  $count *= $results{txtSignatureQuantity} if $results{txtSignatureQuantity} and ( $results{txtSignatureQuantity} > 1);
 
   return $count;
 }
@@ -431,12 +431,7 @@ sub stock_name {
 
 	my %results = eprint::service::get_specifications_pairs( $log, $dbh, undef, $sid, @specs);
 
-	 my $text = $results{stock_name};
-	 $text .= " " . $results{stock_colour};
-	 $text .= " " . $results{stock_finish};
-	 $text .= " " . $results{stock_weight};
-
-	return $text;
+	return join(' ', map { $_ ? $_ : () } @results{qw(stock_name stock_colour stock_finish stock_weight)});
 }
 
 sub delivery_method {
@@ -479,10 +474,11 @@ sub due_date {
 	}
 
 	my $date = PQS::model::order::duedate($self->{id});
-	my $i = $self->order();
-	$date = $i->{dtmrequireddate} unless $date;
-	$date =~ /(\d\d-\d*-\d*)/;
-	#$date =~ s/\-//;
+  if (!$date) {
+    my $o = $self->order();
+    $date = $o->{dtmrequireddate};
+  }
+  $date =~ /(\d\d-\d*-\d*)/ if $date;
 	return $1;
 }
 
