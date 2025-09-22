@@ -39,13 +39,13 @@
         <? echo (
           $$variable{'txtSpecificStockCalliperPT'.$$variable{Signature}} = $$variable{'txtSpecificStockCalliper'.$$variable{Signature}} * 1000;
         return join("\n", 
-          input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature},
+          input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature}, class=>'calliper',
           value=>$$variable{specs}{'txtSpecificStockCalliper'.$$variable{Signature}},
           oninput=>'calliper_onchange(this);' ),
           'inches',
           input( type=>'float', name=>'txtSpecificStockCalliperPT'.$$variable{Signature},
           value=>$$variable{specs}{'txtSpecificStockCalliperPT'.$$variable{Signature}},
-          oninput=>'calliper_onchange(this);' ),
+          oninput=>'calliper_onchange(this);', class=>'calliper_pt' ),
           'PT',
           );
           ) ?>
