@@ -43,10 +43,14 @@
 	a.button:active  { background-color: #0B0D60; border-color: #0B0D60; color: #FFFFFF;}
   button,
   button:not(:disabled),
-  .btn {background-color: #1D23F4; border-color: #0B0D60; color: #FFFFFF; white-space: nowrap !important;
+  .btn {
+    background-color: #1D23F4; border-color: #0B0D60; color: #FFFFFF; white-space: nowrap !important;
     padding: 0.25ex 0.5em 0.5ex 0.5em;
     font-size: 0.85em;
     border-radius: 0;
+  }
+.bootstrap-table button.btn {
+   font-size: var(--bs-btn-font-size);
   }
 
 
