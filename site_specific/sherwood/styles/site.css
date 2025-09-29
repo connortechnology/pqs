@@ -916,9 +916,15 @@ div.column {
 	width: 50%;
 }
 .DateTime {
-    width: 215px;
-      text-align: left;
-    }
-    #Logs .DateTime {
-      width: 110px;
-    }
+  width: 215px;
+  text-align: left;
+}
+#Logs .DateTime {
+  width: 110px;
+}
+table .Date {
+  width: 145px;
+  text-align: left;
+  padding-right: 5px;
+}
+
