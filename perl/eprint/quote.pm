@@ -107,7 +107,7 @@ sub generate_quote {
 		$quote_id = make_quote_from_quote( $r, $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'}, $r->param('quote_id') );
 	} elsif ( $r->param('remove') ne '' ) {
     $quote_id = $r->param('quote_id') || get_unfinished_quote_id( $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'} );
-		my $project_index = $r->param('remove');
+		my $project_id = $r->param('remove');
 		$_ = "DELETE FROM tbl_Quote_Details WHERE lngProjectIndex=? AND lngquoteid=?";
 		sql::execute($log, $dbh, $_, $project_id, $quote_id);
 	} elsif ( $r->param('btnFunction') eq "Process Quote" ) {
