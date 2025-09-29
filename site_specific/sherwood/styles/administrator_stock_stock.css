@@ -1,0 +1,11 @@
+fieldset ul.non-list li {
+  padding-left: 10.2em;
+}
+fieldset label:not(.radio):not(.radio-inline) {
+  margin-left: -10.2em;
+  width: 10em;
+}
+
+.Information fieldset {
+  column-count: 3;
+}
