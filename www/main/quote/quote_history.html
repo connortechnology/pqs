@@ -29,7 +29,7 @@
 			} // end for
 	
 			if ( number_of_deleted_quotes == 0 ) {
-				alert ("To Delete Quotes, click the checkbox beside the quote.");
+				alert ("To Delete quotes, click the checkbox beside the quote.");
 			} else {
 				if ( confirm("Are you sure you wish to delete these " + number_of_deleted_quotes + " quotes from history?") ) {
 					form.submit();
@@ -40,11 +40,11 @@
 </head>
 <body>
 <!--#include virtual="/includes/c1-main-nav.html" -->
-                                    <h1><span class="title-section">Account &#187;</span> Quote History</h1>
+  <h1><span class="title-section">Account &#187;</span> Quote History</h1>
 
-                                    <? if ( $$variable{'user_id'} == 0 ) ?>
-	                                    <p>Only logged in customers have a quote history.</p>
-                                    <? else ( $$variable{'user_id'} == 0 ) ?>
+  <? if ( $$variable{'user_id'} == 0 ) ?>
+    <p>Only logged in customers have a quote history.</p>
+  <? else ( $$variable{'user_id'} == 0 ) ?>
 
 										<form name="f1" id="f1" action="">
 											<fieldset>
@@ -53,6 +53,11 @@
 												</legend>
 
 												<p class="none">&nbsp;</p>
+
+                        <label for="QuoteID">Quote ID</label>
+                        <? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){this.form.submit();};` ); ) ?>
+                        <br/>
+
 
 												<label for="ddmQuotedFor">Quoted for:</label>
 												<select id="ddmQuotedFor" name="ddmQuotedFor" size="1">
@@ -92,10 +97,65 @@
 													</div>
 												<br />
 											</fieldset>
-											
-											
-											<fieldset>
-												<legend>
+
+<? if ( @{$$variable{QUOTES}} == 0 ) ?>
+<? if ( sets::isin( $session{user_type}, ['A','E'] ) and $param{QuoteID} ) ?>
+<? eval (
+  @{$$variable{Quotes}} = openprint::Quote->find( 'id like' => '%'.$param{QuoteID}.'%' ) if $param{QuoteID};
+) ?>
+   There were no quotes matching your search criteria for your currently selected Company.<br/>
+   <? if ( @{$$variable{Quotes}} > 0 ) ?>
+   The following are results belonging to other companies:<br/>
+   <table class="List">
+     <tr>
+       <th class="quote_id">Quote ID</th>
+       <th class="CompanyName">Company</th>
+       <th class="QuotedBy">Quoted By</th>
+       <th class="QuotedFor">Quoted For</th>
+       <th class="Date">Date</th>
+       <th class="Price">Total1</th>
+       <th class="Price">Total2</th>
+       <th class="Price">Total3</th>
+     </tr>
+<? echo (
+     my $html;
+     my $rowclass;
+     foreach my $Quote ( @{$$variable{Quotes}} ) {
+       $html .= sprintf(q`
+       <tr%1$s>
+         <td class="quote_id"><a href="quote_history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%2$d</a></td>
+         <td class="CompanyName"><a href="quote_history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%4$s</a></td>
+         <td class="User QuotedBy"><a href="quote_history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%5$s</a></td>
+         <td class="User QuotedFor"><a href="quote_history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%6$s</a></td>
+         <td class="Date"><a href="quote_history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%7$s</a></td>
+         <td class="Price"><a href="quote_history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%8$s</a></td>
+         <td class="Price"><a href="quote_history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%9$s</a></td>
+         <td class="Price"><a href="quote_history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%10$s</a></td>
+       </tr>
+       <!--
+       <tr%1$s>
+         <td>&nbsp;</td>
+         <td colspan="7">%11$s</td>
+       </tr>
+       -->
+       `, $rowclass, $Quote->id(), $Quote->company_id(), html_escape( $Quote->Company()->name() ),
+       $Quote->User()->name(),
+       html_escape( $Quote->for_name() ),
+       format_date( $Quote->created_on() ),
+       openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
+       openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
+       openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
+       $Quote->description(),
+     );
+     $rowclass = $rowclass ? '' : ' class="colRow"';
+   } # end foreach Quote
+   return $html;
+) ?>
+    </table>
+   <? endif ( @{$$variable{Quotes}} > 0 ) ?>
+<? else ( @{$$variable{QUOTES}} == 0 ) ?>
+<fieldset>
+              <legend>
 													Quote History
 												</legend>
 
