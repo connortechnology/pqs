@@ -19,6 +19,8 @@ require eprint::project;
 require eprint::print;
 require eprint::order;
 
+require openprint::Quote;
+
 # deletes all traces of the specified quote
 sub delete_quote {
 	my ( $log, $dbh, $quote ) = @_; 
@@ -104,9 +106,10 @@ sub generate_quote {
 	if ( $r->param('btnFunction') eq 'Process New Quote' and $r->param('quote_id') ne '' ) {
 		$quote_id = make_quote_from_quote( $r, $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'}, $r->param('quote_id') );
 	} elsif ( $r->param('remove') ne '' ) {
+    $quote_id = $r->param('quote_id') || get_unfinished_quote_id( $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'} );
 		my $project_index = $r->param('remove');
-		$_ = "DELETE FROM tbl_Quote_Details WHERE lngProjectIndex='$project_index'";
-		sql::sql_statement($log, $dbh, $_);
+		$_ = "DELETE FROM tbl_Quote_Details WHERE lngProjectIndex=? AND lngquoteid=?";
+		sql::execute($log, $dbh, $_, $project_id, $quote_id);
 	} elsif ( $r->param('btnFunction') eq "Process Quote" ) {
 
 		$quote_id = add_project_to_quote( $r, $log, $dbh, $$variable{'cust_id'}, $$variable{'user_id'}, $cookie );
@@ -484,9 +487,7 @@ sub submit_quote {
 		return $_ if $_ != OK;
 	} elsif (  $r->param('Delete') ) {
 		my $pid = $r->param('Delete');
-		$dbh->do(q{
-			DELETE FROM tbl_quote_details WHERE lngprojectindex = ? AND lngquoteid = ?
-		}, undef,  $pid, $quote_id);
+		$dbh->do(q{ DELETE FROM tbl_Quote_Details WHERE lngprojectindex = ? AND lngquoteid = ?}, undef,  $pid, $quote_id);
 	} # end if
 
     get_user_by_info( $log, $dbh, $variable, $quote_id );
@@ -942,9 +943,10 @@ sub quote_history {
          			if $variable->{user}{type} eq 'C' && $variable->{user_id} ne '293' && 0;
 
 
-		$_ .= "AND tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName = '$quoted_for'" if $quoted_for ne '';
-		$_ .= "AND date(dtmQuoteDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}')";
-		$_ .= "AND tbl_Quote_Users_For.lngQuoteID = tbl_Quotes.lngQuoteID ORDER BY tbl_Quotes.lngQuoteID DESC";
+		$_ .= " AND tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName = '$quoted_for'" if $quoted_for ne '';
+		$_ .= " AND date(dtmQuoteDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}')";
+    $_ .= " AND lngQuoteId = $openprint::param{QuoteID}" if $openprint::param{QuoteID};
+		$_ .= " AND tbl_Quote_Users_For.lngQuoteID = tbl_Quotes.lngQuoteID ORDER BY tbl_Quotes.lngQuoteID DESC";
 
 print STDERR "QUOTE SQL: \n $_ \n";
 		@{$$variable{'QUOTES'}} = sql::sql_statement( $log, $dbh, $_ );
@@ -1085,11 +1087,8 @@ sub add_project_to_quote {
 	$type = $r->param('ProjectType') if !$type;
 	$type = 'print' if !$type;
 
-	$log->debug(" *** Adding Project to Quote -- $project_index ****" );
-
 	$project_index = $r->param('ProjectIndex') if ! $project_index;
-
-print STDERR "HAVE PROJECT INDEX: $project_index \n";
+	$log->debug(" *** Adding Project to Quote -- $project_index ****" );
 	$project_index = eprint::print_project::get_unfinished_project( $log, $dbh, $cookie ) if ! $project_index;
 
 	$quote_id = get_unfinished_quote_id( $log, $dbh, $cookie, $customer, $user ) if ! $quote_id;
