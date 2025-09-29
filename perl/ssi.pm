@@ -1161,6 +1161,11 @@ sub select( $$$ ) {
   $html .= '</select>';
 } # end sub select($$$)
 
+sub checkbox {
+  my ( $name, $value, $selected, $options ) = @_;
+  return '<input type="checkbox" name="'.$name.'" value="'.$value.'" id="'.$name.$value.'" '. ($selected?'checked="checked"':'').'/>';
+}
+
 sub checkboxes {
   my ( $name, $values, $selected, $options ) = @_;
 
