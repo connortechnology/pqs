@@ -30,6 +30,7 @@ li.name {
 	margin-left: 2px;
 }
 */
+.quantity_per_package,
 .full_packages,
 .minimum_order,
 .fsc_code,
@@ -51,6 +52,7 @@ li.name {
     text-align: right;
 }
 
+.quantity_per_package label:not(.radio):not(.radio-inline),
 .full_packages label:not(.radio):not(.radio-inline),
 .minimum_order label:not(.radio):not(.radio-inline),
 .available_to_order label:not(.radio):not(.radio-inline),
@@ -79,6 +81,10 @@ p.minimum_order label, p.fsc_code label, p.inventory_number label, p.message lab
     width: 200px;
 	margin-left: -200px;
     text-align: left;
+}
+
+.quantity_per_package input {
+  width: 75px;
 }
 
 .manufacturer, .brand, .finish, .colour, .weight {
@@ -114,6 +120,21 @@ width: 55px;
 #Prices .Equipment {
 	display: none;
 }
+table .Price {
+  padding: 1px;
+}
+table .Range {
+  padding: 0;
+  min-width: 105px;
+  text-align: center;
+}
+table .Cost,
+table .Discount,
+table .Markup {
+  padding: 1px;
+    width: 85px;
+    text-align: center;
+}
 .Range input[type="text"],
 .Range input[type="number"],
 .dialog table .Range input[type="text"],
@@ -122,6 +143,8 @@ width: 55px;
 }
 .Discount label {
   width: auto;
+  padding: 0;
+  margin: 0;
 }
 .SetupPrices, .SupplyPrices {
 	display: none;

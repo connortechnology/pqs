@@ -911,3 +911,10 @@ div.column {
 	float: left;
 	width: 50%;
 }
+.DateTime {
+    width: 215px;
+      text-align: left;
+    }
+    #Logs .DateTime {
+      width: 110px;
+    }

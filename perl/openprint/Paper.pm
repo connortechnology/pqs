@@ -194,10 +194,10 @@ $default_sort = join(',', map { $fields{$_} } qw(brand finish colour weight widt
 
 sub new {
   my $self = openprint::Object::new(@_);
-
 	@$self{'start_width','start_height','Supplied'} = ( @$self{'width','height'}, $self );
   return $self;
 }
+
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
@@ -257,6 +257,7 @@ sub save {
 		} # end if
 		@$self{'group_id','group'} = @$Group{'id','name'};
 	} # end if group_id
+
 	if ( $$self{material} and ! $$self{material_id} ) {
 		my $Material = openprint::StockMaterial->find_one('name lc'=>lc openprint::StockMaterial->transform( 'name', $$self{material} ) );
 		if ( ! $Material ) {
@@ -267,6 +268,7 @@ sub save {
 		} # end if
 		@$self{'material_id','material'} = @$Material{'id','name'};
 	} # end if material
+
 	if ( $$self{brand} and ! $$self{brand_id} ) {
 		my $Brand = openprint::StockBrand->find_one('name lc'=>lc openprint::StockBrand->transform( 'name', $$self{brand} ) );
 		if ( ! $Brand ) {
@@ -277,6 +279,7 @@ sub save {
 		} # end if
 		@$self{'brand_id','brand'} = @$Brand{'id','name'};
 	} # end if brand_id
+
 	if ( $$self{finish} and ! $$self{finish_id} ) {
 		my $Finish = openprint::StockFinish->find_one('name lc'=>lc openprint::StockFinish->transform( 'name', $$self{finish} ) );
 		if ( ! $Finish ) {
@@ -287,6 +290,7 @@ sub save {
 		} # end if
 		@$self{'finish_id','finish'} = @$Finish{'id','name'};
 	} # end if finish_id
+
 	if ( $$self{colour} and ! $$self{colour_id} ) {
 		my $Colour = openprint::StockColour->find_one('name lc'=>lc openprint::StockColour->transform( 'name', $$self{colour} ) );
 		if ( ! $Colour ) {
@@ -297,6 +301,7 @@ sub save {
 		} # end if
 		@$self{'colour_id','colour'} = @$Colour{'id','name'};
 	} # end if colour_id
+
 	if ( $$self{weight} and ! $$self{weight_id} ) {
 		my $Weight = openprint::StockWeight->find_one('name lc'=>lc openprint::StockWeight->transform( 'name', $$self{weight} ) );
 		if ( ! $Weight ) {
@@ -307,6 +312,7 @@ sub save {
 		} # end if
 		@$self{'weight_id','weight'} = @$Weight{'id','name'};
 	} # end if weight_id
+
 	if ( $$self{quality} and ! $$self{quality_id} ) {
 		$$self{quality} = openprint::StockQuality->transform( 'name', $$self{quality} );
 		my $Quality = openprint::StockQuality->find_one('name lc'=>lc $$self{quality});
@@ -566,24 +572,23 @@ sub Brand {
 }
 
 sub brand {
-	if ( defined $_[1] ) {
-		$_[1] = openprint::StockBrand->transform(name=>$_[1]);
-    #if ( ! $_[0]{custom} ) {
-			my $Brand = openprint::StockBrand->find_one('name lc'=> lc $_[1] ) if $_[1];
-			if ( $Brand ) {
-				@{$_[0]}{'brand_id','brand'} = @$Brand{'id','name'};
-			} else {
-				@{$_[0]}{'brand_id','brand'} = ( undef, $_[1] );
-			} # end if
-      #} else {
-      #$_[0]{brand} = $_[1];
-      #$_[0]{brand_id} = undef;
-      #} # end if
-	} elsif ( $_[0]{brand_id} and ! $_[0]{brand} ) {
-		$_[0]{Brand} = new openprint::StockBrand( $_[0]{brand_id} );
-		$_[0]{brand} = $_[0]{Brand}->name();
+  my $self = shift;
+  if (@_) {
+    $$self{brand} = openprint::StockBrand->transform(name=>shift);
+    my $Brand = openprint::StockBrand->find_one('name lc'=> lc $$self{brand} ) if $$self{brand};
+    if ( $Brand ) {
+      @$self{'brand_id','brand'} = @$Brand{'id','name'};
+      $$self{Brand} = $Brand;
+    } else {
+      $$self{brand_id} = undef;
+    } # end if
+	}
+
+  if ($$self{brand_id} and !$$self{brand}) {
+		$$self{Brand} = new openprint::StockBrand($$self{brand_id});
+		$$self{brand} = $$self{Brand}->name();
 	} # end if
-	return $_[0]{brand} || '';
+	return $$self{brand} || '';
 } # end sub brand
 
 sub Manufacturer {
@@ -613,48 +618,49 @@ sub manufacturer {
 sub Finish {
 	return new openprint::StockFinish( $_[0]{finish_id} );
 }
+
 sub finish {
-	if ( @_ > 1 ) {
-		$_[1] = openprint::StockFinish->transform( 'name', $_[1] );
-    #if ( ! $_[0]{custom} ) {
-			my $Finish = openprint::StockFinish->find_one('name lc'=> lc $_[1] );
-			if ( $Finish ) {
-				@{$_[0]}{'finish_id','finish'} = @$Finish{'id','name'};
-			} else {
-				@{$_[0]}{'finish_id','finish'} = ( undef, $_[1] );
-			} # end if
-      #} else {
-      #$_[0]{finish} = $_[1];
-      #$_[0]{finish_id} = undef;
-      #} # end if
-	} elsif ( $_[0]{finish_id} and ! $_[0]{finish} ) {
-		$_[0]{finish} = new openprint::StockFinish( $_[0]{finish_id} )->name();
+  my $self = shift;
+  if ( @_ ) {
+    $$self{finish} = openprint::StockFinish->transform(name => shift);
+    my $Finish = openprint::StockFinish->find_one('name lc'=> lc $$self{finish} ) if $$self{finish};
+    if ( $Finish ) {
+      @$self{'finish_id','finish'} = @$Finish{'id','name'};
+    } else {
+      $$self{finish_id} = undef;
+    } # end if
+  }
+
+	if ($$self{finish_id} and !$$self{finish}) {
+		$$self{finish} = new openprint::StockFinish( $$self{finish_id} )->name();
 	} # end if
-	return $_[0]{finish} || '';
+	return $$self{finish} || '';
 } # end sub finish
 
 sub Colour {
 	return new openprint::StockColour( $_[0]{colour_id} );
 }
-sub colour {
 
-	if ( @_ > 1 ) {
-		$_[1] = openprint::StockColour->transform( 'name', $_[1] );
-    #if ( ! $_[0]{custom} ) {
-			my $Colour = openprint::StockColour->find_one('name lc'=> lc $_[1] );
-			if ( $Colour ) {
-				@{$_[0]}{'colour_id','colour'} = @$Colour{'id','name'};
-			} else {
-				$_[0]{colour} = $_[1];
-				$_[0]{colour_id} = undef;
-			} # end if
-      #} else {
-      #$_[0]{colour} = $_[1];
-      #} # end if
-	} elsif ( $_[0]{colour_id} and ! $_[0]{colour} ) {
-		$_[0]{colour} = new openprint::StockColour( $_[0]{colour_id} )->name();
-	} # end if
-	return $_[0]{colour} || '';
+sub colour {
+  my $self = shift;
+
+	if (@_) {
+		$$self{colour} = openprint::StockColour->transform(name=> shift);
+    $openprint::log->debug("Setting colour to ".$$self{colour});
+
+    my $Colour = openprint::StockColour->find_one('name lc'=> lc $$self{colour} ) if $$self{colour};
+    if ($Colour) {
+      @$self{'colour_id','colour'} = @$Colour{'id','name'};
+    } else {
+      $$self{colour_id} = undef;
+    } # end if
+  }
+
+  if ($$self{colour_id} and !$$self{colour}) {
+    $$self{colour} = new openprint::StockColour( $$self{colour_id} )->name();
+  } # end if
+
+  return $$self{colour} // '';
 } # end sub colour
 
 sub Quality {
@@ -684,26 +690,23 @@ sub quality {
 sub Weight {
 	return new openprint::StockWeight( $_[0]{weight_id} );
 }
+
 sub weight {
-	my ( $self, $weight ) = @_;
-	if ( @_ > 1 ) {
-		$weight = openprint::StockWeight->transform(name=>$weight);
-    #if ( ! $_[0]{custom} ) {
-			my $Weight = openprint::StockWeight->find_one('name lc'=>lc $weight);
-			if ( $Weight ) {
-				@{$_[0]}{'weight_id','weight'} = @$Weight{'id','name'};
-			} else {
-				$_[0]{weight} = $weight;
-				$_[0]{weight_id} = '';
-			} # end if
-      #} else {
-      #$_[0]{weight} = $weight;
-      #} # end if
-	} elsif ( $_[0]{weight_id} and ! $_[0]{weight} ) {
-		$_[0]{weight} = new openprint::StockWeight( $_[0]{weight_id} )->name();
+	my $self = shift;
+	if ( @_ ) {
+		$$self{weight} = openprint::StockWeight->transform(name=>shift);
+    my $Weight = openprint::StockWeight->find_one('name lc'=>lc $$self{weight});
+    if ( $Weight ) {
+      @$self{'weight_id','weight'} = @$Weight{'id','name'};
+    } else {
+      $$self{weight_id} = undef;
+    } # end if
+	}
+  if ($$self{weight_id} and ! $$self{weight}) {
+		$$self{weight} = new openprint::StockWeight($$self{weight_id})->name();
 	} # end if
-  $_[0]{weight} //= '';
-	return $_[0]{weight};
+  $$self{weight} //= '';
+	return $$self{weight};
 } # end sub weight
 
 sub width {
@@ -1085,9 +1088,9 @@ sub Recommendations {
 	if ( @_ ) {
 		@{$$self{Recommendations}} = @_;
 	} elsif ( ! exists $$self{Recommendations} ) {
-    $openprint::log->debug('No Recommendations');
 		if ( $$self{id} ) {
 			$$self{Recommendations} = [ openprint::PaperRecommendation->find(paper_id=>$$self{id}) ];
+      $openprint::log->debug('No Recommendations') if !@{$$self{Recommendations}};
 		} else {
       $openprint::log->debug('No id in recommendations');
 			$$self{Recommendations} = [];
@@ -1802,6 +1805,8 @@ sub basis_width {
 			$$self{basis_width} = 17;
     } elsif ($self->is_index()) {
       $$self{basis_width} = 25.5;
+    } elsif ($self->is_tag()) {
+      $$self{basis_width} = 24;
     } elsif ($self->is_bristol()) {
       $$self{basis_width} = 22.5;
 		} else {
@@ -1824,6 +1829,8 @@ sub basis_height {
 			$$self{basis_height} = 22;
     } elsif ($self->is_index()) {
 			$$self{basis_height} = 30.5;
+    } elsif ($self->is_tag()) {
+			$$self{basis_height} = 36;
     } elsif ($self->is_bristol()) {
 			$$self{basis_height} = 28.5;
 		} else {
@@ -2067,6 +2074,13 @@ $openprint::log->debug("basis: " . $Paper->basis_width() . 'x' . $Paper->basis_h
 	if ( $Paper->calliper() < 0.002 ) {
 			push @results, "calliper $$Paper{calliper}  appears to be too low.";
 	}
+  foreach my $field (qw(Brand Finish Colour Weight)) {
+    my $lc_field = lc $field;
+    my $obj = $Paper->$field();
+    if ($Paper->$lc_field() ne $obj->name()) {
+      push @results, "discrepancy in stock $field $$Paper{$lc_field} != $$obj{name}";
+    }
+  }
 
 	return join('<br/>', @results);
 } # end sub check
@@ -2102,6 +2116,15 @@ sub is_index {
 			$Paper->finish() =~ /index/i
 			or 
 			$Paper->weight() =~ /index/i);
+}
+sub is_tag {
+	my $Paper = shift;
+	return 
+			($Paper->brand() =~ /tag/i
+			 or
+			$Paper->finish() =~ /tag/i
+			or 
+			$Paper->weight() =~ /tag/i);
 }
 sub is_bristol {
 	my $Paper = shift;
