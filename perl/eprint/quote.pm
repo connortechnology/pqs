@@ -146,7 +146,7 @@ sub generate_quote {
 
 sub get_unfinished_quote_contents {
 	my ( $log, $dbh, $variable, $quote_id ) = @_;
-	@{$$variable{'PROJECTS'}} = ();
+	@{$$variable{projects}} = ();
 
 	my $subtotal1 = 0;
 	my $subtotal2 = 0;
