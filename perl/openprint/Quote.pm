@@ -24,16 +24,16 @@ require openprint::Currency;
 
 $debug = 0;
 
-$table = 'quotes';
+$table = 'tbl_quotes';
 $serial = 'quotes_id_seq';
 
 %fields = (
-	'id'			=>	'id',
+	'id'			=>	'lngquoteid',
 	'created_on'	=>	'dtmquotedate',
 	'updated_on'	=>	'dtmlastmodified',
-	'company_id'	=>	'company_id',
+	'company_id'	=>	'lngcustomerid',
   for_company_id  =>  'for_company_id',
-	'user_id'		=>	'user_id',
+	'user_id'		=>	'lnguserid',
 	'currency_id'	=>	'currency_id',
 	'status'		=>	'strstatus',
 	'administrator_name'	=>	'stradministratorname',
@@ -83,7 +83,7 @@ $serial = 'quotes_id_seq';
 
 %find_fields = (
 	salesrep_id => '(SELECT salesrep_id FROM companies WHERE id=companyindex)',
-	for_name	=> q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=quotes.id)},
+	for_name	=> q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE lngquoteid=tbl_quotes.lngquoteid)},
 	project_id	=>	'(SELECT project_id FROM tbl_quote_details WHERE quote_id=id)',
 );
 %defaults = (
@@ -105,10 +105,10 @@ sub load {
 
 	@$self{@keys} = @$data{@fields{@keys}};
 
-	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_for WHERE quote_id=?}, {}, $$self{id} );
+	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_for WHERE lngquoteid=?}, {}, $$self{id} );
 	@$self{qw/for_companyname for_firstname for_lastname for_title for_salutation for_address1 for_address2 for_city for_state for_country for_postalcode for_phone for_extension for_fax for_email/} = @$data{qw/strcompanyname strfirstname strlastname strtitle strsalutation straddress straddress2 strcity strstate strcountry strpostalcode strphone strextension strfax stremail/};
 
-	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_by WHERE quote_id=?}, {}, $$self{id} );
+	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_by WHERE lngquoteid=?}, {}, $$self{id} );
 	@$self{qw/by_companyname by_firstname by_lastname by_title by_salutation by_address1 by_address2 by_city by_state by_country by_postalcode by_phone by_extension by_fax by_email/} = @$data{qw/strcompanyname strfirstname strlastname strtitle strsalutation straddress straddress2 strcity strstate strcountry strpostalcode strphone strextension strfax stremail/};
 } # end sub load
 
