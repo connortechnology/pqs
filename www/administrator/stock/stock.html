@@ -144,17 +144,17 @@ return '';
           />
 				</li>
 				<li>
-					<label for="txtColour" onclick="$('txtColour').toggle();$('ddmColour').toggle();">Colour</label>
-					<select id="ddmColour" name="ddmColour" size="1" onchange="f1.txtColour.value='';"
+					<label for="colour_id" onclick="$('colour').toggle();$('colour_id').toggle();">Colour</label>
+					<select id="colour_id" name="colour_id" size="1" onchange="f1.colour.value=this.options[this.selectedIndex].text;"
             <?echo(($$variable{Stock}->colour() and !$$variable{Stock}->colour_id()) ? ' style="display: none;"' : '' )?>
             >
 						<option value="">select</option>
 						<? echo (
-							make_drop_down( openprint::StockColour->dropdown(order=>'lower(name)'), $$variable{Stock}->colour_id() );
+							make_drop_down( openprint::StockColour->dropdown(), $$variable{Stock}->colour_id() );
 						) ?>
 					</select>
-					<input type="text" id="txtColour" name="txtColour"
-            onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmColour);}ddm_select_by_index( f1.ddmColour, 0 );"
+					<input type="text" id="colour" name="colour"
+            onfocus="if(!this.value){this.value=get_ddm_text(f1.colour_id);}ddm_select_by_index( f1.colour_id, 0 );"
             <?echo(($$variable{Stock}->colour() and !$$variable{Stock}->colour_id()) ? '' : ' style="display: none;"' )?>
             value="<?echo($$variable{Stock}->colour())?>"
           />
@@ -333,7 +333,7 @@ return '';
         <!--
 				<li class="perfecting">
 					<label>Is this stock stiff enough to perfect without gutters?</label>
-          <?echo(radio('perfecting', ['1','Yes','0','No'], $$variable{Stock}->perfecting());)?>
+          <?echo(radio('perfecting', ['1','Yes','0','No'], $$variable{Stock}->perfecting() // '0');)?>
 				</li>
 				<li class="scoring">
 					<label>Does this stock require folder scoring before folding?</label>
@@ -349,7 +349,7 @@ return '';
 				</li>
 				<li class="bladecleaning">
 					<label>Does this stock require blade cleaning after cutting?</label>
-					<? echo ( radio( 'bladecleaning', [ 1, 'Yes', 0, 'No' ], $$variable{Stock}->bladecleaning() ); ) ?>
+					<? echo ( radio( 'bladecleaning', [ 1, 'Yes', 0, 'No' ], $$variable{Stock}->bladecleaning() // 0 ); ) ?>
 				</li>
 				<li class="user_type">
 					<label>Required User Type</label>

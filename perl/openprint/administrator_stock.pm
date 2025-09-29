@@ -305,6 +305,7 @@ sub stock {
 
       $Paper = new openprint::Paper() if ! $Paper;
       my @changes = $Paper->changes( \%param );
+      $openprint::log->debug("Changes @changes");
       $Paper->name($param{name});
       $Paper->owner_id( $param{ddmOwner} );
       $Paper->manufacturer( $param{txtManufacturer} ) if $param{txtManufacturer};
@@ -313,14 +314,19 @@ sub stock {
       $Paper->supplier_id( $param{ddmSupplier} );
       $Paper->group( $param{txtGroup} ) if $param{txtGroup};
       $Paper->group_id( $param{Group} ) if ! $param{txtGroup};
-      $Paper->brand( $param{txtBrand} ) if $param{txtBrand};
+
       $Paper->brand_id( $param{ddmBrand} ) if ! $param{txtBrand};
-      $Paper->finish( $param{txtFinish} ) if $param{txtFinish};
+      $Paper->brand( $param{txtBrand} ) if $param{txtBrand};
+
       $Paper->finish_id( $param{ddmFinish} ) if ! $param{txtFinish};
-      $Paper->colour( $param{txtColour} ) if $param{txtColour};
-      $Paper->colour_id( $param{ddmColour} ) if ! $param{txtColour};
-      $Paper->weight( $param{txtWeight} ) if $param{txtWeight};
+      $Paper->finish( $param{txtFinish} ) if $param{txtFinish};
+
+      $Paper->colour_id( $param{colour_id} ) if ! $param{colour_id};
+      $Paper->colour( $param{colour} ) if $param{colour};
+
       $Paper->weight_id( $param{ddmWeight} ) if ! $param{txtWeight};
+      $Paper->weight( $param{txtWeight} ) if $param{txtWeight};
+
       $Paper->quality( $param{txtQuality} ) if $param{txtQuality};
       $Paper->quality_id( $param{ddmQuality} ) if ! $param{txtQuality};
       $Paper->material( $param{material} );
