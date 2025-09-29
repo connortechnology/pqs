@@ -206,7 +206,7 @@ sub load_stylesheet {
 
     my $fh;
     if (!open($fh, $r->document_root . STYLESHEET)) {
-      $openprint::log->error("Couldn't open stylesheet at ".($r->document_root . STYLESHEET)." : $!");
+      #$openprint::log->error("Couldn't open stylesheet at ".($r->document_root . STYLESHEET)." : $!");
       return \'';
     }
    
