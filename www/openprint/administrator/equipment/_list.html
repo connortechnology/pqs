@@ -12,13 +12,21 @@
 		);
 	if (  $session{$uri.'?equipment_name'} ) {
 		if ( ! ( $session{$uri.'?equipment_name'}  =~ /%/ ) ) {
-			$filters{'name ilike'} = $session{$uri.'?equipment_name'}.'%';
+      $filters{or} = {
+        'name ilike' => '%'.$session{$uri.'?equipment_name'}.'%',
+        'strid ilike' => '%'.$session{$uri.'?equipment_name'}.'%',
+        'description ilike' => '%'.$session{$uri.'?equipment_name'}.'%',
+      };
 		} else {
-			$filters{'name ilike'} = $session{$uri.'?equipment_name'};
+      $filters{or} = {
+        'name ilike' => '%'.$session{$uri.'?equipment_name'},
+        'strid ilike' => '%'.$session{$uri.'?equipment_name'},
+        'description ilike' => '%'.$session{$uri.'?equipment_name'},
+      };
 		}
 	}
 
-    $$variable{Equipment} = [ openprint::Equipment->find( %filters ) ];
+  $$variable{Equipment} = [ openprint::Equipment->find( %filters ) ];
 ) ?>	
 <? if ( @{$$variable{Equipment}} ) ?>
 	<table class="List sortable">
