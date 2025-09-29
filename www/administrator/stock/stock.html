@@ -10,10 +10,11 @@
   <!--#include virtual="/includes/h1-admin-css.html" -->
   <link href="/styles/forms.css" rel="stylesheet" media="screen" />
   <?echo(ssi::link('/styles/administrator_stock.css');)?>
+  <?echo(ssi::link('/styles/administrator_stock_stock.css');)?>
 
   <!--#include virtual="/includes/h2-js.html" -->
 
-  <script src="/javascripts/other.js"></script>
+  <script src="<?hash_link(/javascripts/other.js)?>"></script>
 
 </head>
 <body>
@@ -113,23 +114,23 @@ return '';
 				</li>
           -->
 				<li>
-					<label for="txtBrand" onclick="$('txtBrand').toggle();$('ddmBrand').toggle();">Brand</label>
-          <select id="ddmBrand" name="ddmBrand" size="1" onchange="f1.txtBrand.value='';"
+					<label for="brand" onclick="$('brand').toggle();$('brand_id').toggle();">Brand</label>
+          <select id="brand_id" name="brand_id" size="1" onchange="f1.brand.value=this.options[this.selectedIndex].text;"
             <?echo(($$variable{Stock}->brand() and !$$variable{Stock}->brand_id()) ? ' style="display: none;"' : '' )?>>
 						<option value="">select</option>
 						<? echo (
 							make_drop_down( openprint::StockBrand->dropdown(order=>'lower(name)'), $$variable{Stock}->brand_id() );
 						) ?>
 					</select>
-          <input type="text" id="txtBrand" name="txtBrand"
-          onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmBrand);}ddm_select_by_index( f1.ddmBrand, 0 );"
+          <input type="text" id="brand" name="brand"
+          oninput="ddm_select_by_value(this.form.brand_id, this.value);"
           <?echo(($$variable{Stock}->brand() and !$$variable{Stock}->brand_id()) ? '' : ' style="display: none;"' )?>
           value="<?echo($$variable{Stock}->brand())?>"
           />
 				</li>
-				<li>
-					<label for="txtFinish" onclick="$('txtFinish').toggle();$('ddmFinish').toggle();">Finish</label>
-					<select id="ddmFinish" name="ddmFinish" size="1" onchange="f1.txtFinish.value='';"
+				<li class="finish">
+					<label for="finish" onclick="$('finish').toggle();$('finish_id').toggle();">Finish</label>
+					<select id="finish_id" name="finish_id" size="1" onchange="f1.finish.value=this.options[this.selectedIndex].text;"
             <?echo(($$variable{Stock}->finish() and !$$variable{Stock}->finish_id()) ? ' style="display: none;"' : '' )?>
             >
 						<option value="">select</option>
@@ -137,13 +138,13 @@ return '';
 							make_drop_down( openprint::StockFinish->dropdown(order=>'lower(name)'), $$variable{Stock}->finish_id() );
 					) ?>
 					</select>
-					<input type="text" id="txtFinish" name="txtFinish"
-          onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmFinish);}ddm_select_by_index( f1.ddmFinish, 0 );"
+					<input type="text" id="finish" name="finish"
+          oninput="ddm_select_by_value(this.form.finish_id, this.value);"
           <?echo(($$variable{Stock}->finish() and !$$variable{Stock}->finish_id()) ? '' : ' style="display: none;"' )?>
           value="<?echo($$variable{Stock}->finish())?>"
           />
 				</li>
-				<li>
+				<li class="colour">
 					<label for="colour_id" onclick="$('colour').toggle();$('colour_id').toggle();">Colour</label>
 					<select id="colour_id" name="colour_id" size="1" onchange="f1.colour.value=this.options[this.selectedIndex].text;"
             <?echo(($$variable{Stock}->colour() and !$$variable{Stock}->colour_id()) ? ' style="display: none;"' : '' )?>
@@ -154,14 +155,14 @@ return '';
 						) ?>
 					</select>
 					<input type="text" id="colour" name="colour"
-            onfocus="if(!this.value){this.value=get_ddm_text(f1.colour_id);}ddm_select_by_index( f1.colour_id, 0 );"
+            oninput="ddm_select_by_value(this.form.colour_id, this.value);"
             <?echo(($$variable{Stock}->colour() and !$$variable{Stock}->colour_id()) ? '' : ' style="display: none;"' )?>
             value="<?echo($$variable{Stock}->colour())?>"
           />
 				</li>
 				<li>
-					<label for="txtWeight" onclick="$('txtWeight').toggle();$('ddmWeight').toggle();">Weight</label>
-					<select id="ddmWeight" name="ddmWeight" size="1" onchange="f1.txtWeight.value='';"
+					<label for="weight" onclick="$('weight').toggle();$('weight_id').toggle();">Weight</label>
+					<select id="weight_id" name="weight_id" size="1" onchange="f1.weight.value=this.options[this.selectedIndex].text;"
             <?echo(($$variable{Stock}->weight() and !$$variable{Stock}->weight_id()) ? ' style="display: none;"' : '' )?>
             >
 						<option value="">select</option>
@@ -169,8 +170,8 @@ return '';
 							make_drop_down( openprint::StockWeight->dropdown(order=>'lower(name)'), $$variable{Stock}->weight_id() );
 							) ?>
 					</select>
-					<input type="text" id="txtWeight" name="txtWeight"
-            onfocus="ddm_select_by_index( f1.ddmWeight, 0 );"
+					<input type="text" id="weight" name="weight"
+            oninput="ddm_select_by_value(this.form.colour_id, this.value);"
             <?echo(($$variable{Stock}->weight() and !$$variable{Stock}->weight_id()) ? '' : ' style="display: none;"' )?>
             value="<?echo($$variable{Stock}->weight())?>"
             />
@@ -359,7 +360,6 @@ return '';
 				</li>
         -->
         </ul>
-				<hr class="spacer"/>
         <!--
 				<p> <b>Tax Information</b> </p>
 				<p class="taxexempt1">
