@@ -19,12 +19,14 @@
   float: none;
 }
 
+/*
 li.name {
   display: flex;
 }
 .name input {
   flex: 1;;
 }
+*/
 /*
 .Recommendations label.radio {
 	margin-left: 2px;
@@ -77,12 +79,20 @@ li.name {
 p.minimum_order, p.fsc_code, p.inventory_number, p.message, p.available_to_order {
 	padding-left: 200px;
 }
-p.minimum_order label, p.fsc_code label, p.inventory_number label, p.message label, p.available_to_order label {
-    width: 200px;
-	margin-left: -200px;
-    text-align: left;
+p.minimum_order label,
+p.fsc_code label,
+p.inventory_number label,
+p.message label,
+p.available_to_order label {
+  width: 200px;
+  margin-left: -200px;
+  text-align: left;
 }
 
+.name input {
+  width: 95%;
+  margin-left: 4px;
+}
 .quantity_per_package input {
   width: 75px;
 }
