@@ -351,20 +351,19 @@ sub valid_equipment {
 }
 
 sub valid_equipment_dropdown {
-	my ($dbh, $service_type) = @_;
+  my ($dbh, $service_type) = @_;
 
-    # As this query will potentially be run for every single service for every
-    # project created, let's cache the statment.
-    my $sth = $dbh->prepare_cached(q{
-		SELECT e.lngindex, e.strname
-        FROM service_type_equipment s, tbl_service_types t, tbl_equipment e
-        WHERE t.lngindex = s.service_type
-          AND e.lngindex = s.equipment
-          AND t.strid    = ?
+  # As this query will potentially be run for every single service for every
+  # project created, let's cache the statment.
+  my $sth = $dbh->prepare_cached(q{
+    SELECT e.lngindex, e.strname
+    FROM service_type_equipment s, tbl_service_types t, tbl_equipment e
+    WHERE t.lngindex = s.service_type
+    AND e.lngindex = s.equipment
+    AND t.strid    = ?
     });
 
-    return make_drop_down(
-        $dbh->selectcol_arrayref($sth, { Columns => [1,2] }, $service_type) );
+  return make_drop_down($dbh->selectcol_arrayref($sth, { Columns => [1,2] }, $service_type) );
 }
 
 
