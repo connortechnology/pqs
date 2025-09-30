@@ -32,7 +32,7 @@ sub necessary {
   # We only handle multipage project.
 #    return 0 unless is_multipage($log, $dbh, $pid);
 
-#	return 0 if has_no_bindery($log, $dbh, $pid);
+	return 0 if has_no_bindery($log, $dbh, $pid);
 
 
   # Bindery types are currently mutually exclusive (can't bind half the
