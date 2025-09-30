@@ -80,8 +80,9 @@ sub calc {
     }
     $specs->{hdnBreakdown} = '';
 
-    my @possible_equipment =
-      eprint::service::valid_equipment( $log, $dbh, $service_type );
+  my $ServiceType = openprint::ServiceType->find_one(name=>$service_type);
+  my @possible_equipment = openprint::Equipment->find(useinestimating=>1,'servicetype_id @>'=>$ServiceType->id());
+  #eprint::service::valid_equipment( $log, $dbh, $service_type );
     $log->debug("FOIL STAMPING: calc got equipment @possible_equipment");
     foreach my $qty_index ( 1 .. 3 ) {
         my %bestPrice;
@@ -90,14 +91,11 @@ sub calc {
             my $bestEquipment;
             my @equipment = ();
             if ( $specs->{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-                @equipment = ( $specs->{"ddmEquipment$qty_index"});
+                @equipment = map { $_->id() == $specs->{"ddmEquipment$qty_index"} ? $_ : () } @possible_equipment;
             }
             else {
                 @equipment = @possible_equipment;
             }
-
-
-            $log->debug("FOIL STAMPING Equipment: @equipment ");
 
             my %imposition;
             my @impositions = ();
@@ -119,7 +117,7 @@ sub calc {
                 $imp_height = $specs->{"flat_height"};
                 
 
-                foreach my $equipment_index (@equipment) {
+                foreach my $equipment (@equipment) {
 
                     # First, find out if it fits
                     if (
@@ -127,7 +125,7 @@ sub calc {
                             !eprint::equipment::equipment_fits(
                                 $log,
                                 $dbh,
-                                $equipment_index,
+                                $$equipment{id},
                                 $imp_width,
                                 $imp_height,
                                 $printing_specs{txtStockCalliper}
@@ -144,22 +142,20 @@ sub calc {
                             $variable,
                             $service_type,
                             $specs,
-                            eprint::equipment::get_id_by_index(
-                                $log, $dbh, $equipment_index
-                            ),
+                            $$equipment{id},
                             $qty_index,
                             $$imposition{Imposition}
                         );
                         if ( !$bestPrice{txtPrice}
                             or $price{txtPrice} < $bestPrice{txtPrice} )
                         {
-                            $bestEquipment  = $equipment_index;
+                            $bestEquipment  = $$equipment{id};
                             %bestPrice      = %price;
                             %bestImposition = %$imposition;
                         }
                         $specs->{hdnBreakdown} .= 
                                 'Quantity: '    . $specs->{"txtQuantity$qty_index"}
-                            . ', Equipment: '   . eprint::equipment::get_id_by_index($log, $dbh, $equipment_index)
+                            . ', Equipment: '   . $$equipment{name}
                             . ', Imposition: '  . $imposition->{Imposition}
                             . ', Impressions: ' . $price{Impressions}
                             . ', MakeReady: $'  . sprintf( '%.2f', $price{MakeReadyPrice} )
@@ -295,28 +291,31 @@ sub calc_price {
 
 
 sub display {
-    my ($log, $dbh, $service_type, $pid, $sid, $specs ) = @_;
+  my ($log, $dbh, $service_type, $pid, $sid, $specs ) = @_;
 
-    my $pc = eprint::project::get_print_container( $log, $dbh, $pid );
+  my $pc = eprint::project::get_print_container( $log, $dbh, $pid );
 
-    my %page = eprint::service::get_specifications_pairs(
-            $log,            $dbh,
-           	undef,           $pc,
-            'flat_width',    'flat_height',
-            'final_width',   'final_height',
-    );
+  my %page = eprint::service::get_specifications_pairs(
+    $log,            $dbh,
+    undef,           $pc,
+    'flat_width',    'flat_height',
+    'final_width',   'final_height',
+  );
 
-	# Todo: stop putting dims into specs and remove
-	# form fields from page.
-	map  { $specs->{$_} = $page{$_} } keys %page;
+  # Todo: stop putting dims into specs and remove
+  # form fields from page.
+  @$specs{keys %page} = values %page;
+  #map  { $specs->{$_} = $page{$_} } keys %page;
 
+  my $ServiceType = openprint::ServiceType->find_one(name=>$service_type);
+  $$specs{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)',
+      useinestimating=>1,'servicetype_id @>'=>$ServiceType->id() ) ];
+  for my $i (1..3) {
+    $page{"ddmEquipmentOptions$i"} = ssi::make_drop_down([map { $_->id(), $_->name() } @{$$specs{Equipment}}]);
+    #eprint::service::valid_equipment_dropdown($dbh, $service_type);
+  }
 
-    for my $i (1..3) {
-        $page{"ddmEquipmentOptions$i"} =
-                    eprint::service::valid_equipment_dropdown($dbh, $service_type);
-    }
-
-    return \%page;
+  return \%page;
 }
 
 1;
