@@ -10,6 +10,10 @@ use sql                 qw(:common);
 use PQS::model::materials;
 use PQS::model::service;
 
+require openprint::ServiceType;
+require openprint::Equipment;
+require ssi;
+
 sub fill_from_printing_service {
     my ( $log, $dbh, $pid, $sid ) = @_;
     my @signature_indices =
