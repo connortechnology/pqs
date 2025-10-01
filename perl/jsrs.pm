@@ -19,6 +19,8 @@ use PQS::Constants;
 require misc;
 require eprint::login;
 
+require openprint;
+
 # Template locations.
 use constant JSRS_FILE  => 'jsrs.htm';       # Standard template.
 use constant JSRS_ERROR => 'jsrs_error.htm'; # User error template.
@@ -56,6 +58,8 @@ sub handler {
     session::r($r);
     session::log($r->log);
     session::dbh($dbh);
+    $openprint::log = $r->log;
+    $openprint::dbh = $dbh;
 
     # If you don't have a cookies, too bad.
     my $cookie = misc::get_cookie();
