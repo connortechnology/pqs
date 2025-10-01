@@ -2239,5 +2239,25 @@ sub press_type {
   return $$self{press_type};
 }
 
+# Return the chosen project template.
+sub get_template {
+  my $self = shift;
+
+  return $openprint::dbh->selectrow_array(q{
+    SELECT strvalue FROM tbl_service_specifications WHERE strname = 'template' AND lngserviceindex = ?
+    }, undef, get_print_container($log, $dbh, $$self{id}));
+}
+
+sub is_presentation_folder {
+  my $self = shift;
+  my $type = $self->Type();
+  return 1 if $type->name() eq 'PresentationFolders';
+
+  my $template = $self->get_template();
+
+  return 1 if ($template =~ /^PresentationFolderStandard[12]Pocket$/);
+  return 0;
+}
+         
 1;
 __END__
