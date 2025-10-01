@@ -122,6 +122,8 @@ sub handler {
   my $service = uri_to_service($r, $dbh);
   if (!$service) {
     $openprint::log->error("Service not found");
+  } else {
+    $openprint::log->debug(Data::Dumper::Dumper($service));
   }
 
   #map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . " \n"; } $r->param();
@@ -204,8 +206,8 @@ sub uri_to_service {
 
   # Look up the service type.
   my $service = $dbh->selectrow_hashref(q{
-    SELECT lngindex    AS id,     strid       AS type,
-    strname     AS name,   strcategory AS category,
+    SELECT lngindex    AS id,     strid       AS name,
+    strname     AS description,   strcategory AS category,
     strmodule   AS module, lngdep      AS level,
     strurl      AS page
     FROM tbl_service_types
@@ -318,7 +320,7 @@ sub show {
   if ($is_openprint) {
     $display->($r->log, $dbh, $variable, $pid, $sid) if $display;
   } elsif ($display) {
-    $page = $display->($r->log, $dbh, $service->{type}, $pid, $sid, $specs, $variable);
+    $page = $display->($r->log, $dbh, $service->{name}, $pid, $sid, $specs, $variable);
   }
 
 
