@@ -316,9 +316,13 @@ sub display {
   my ($log, $dbh, $service_type, $pid, $sid, $specs) = @_;
 
   my $pc = get_print_container( $log, $dbh, $pid );
+  my $project = new openprint::Project($pid);
+  my $type = $project->Type();
+
+  my $template = get_template($log, $dbh, $pid);
 
   # Presentation folders bear no resemblance to normal die cutting.
-  if (get_template($log, $dbh, $pid)        =~ /^PresentationFolderStandard[12]Pocket$/) {
+  if (($type->name() eq 'PresentationFolders') or ($template =~ /^PresentationFolderStandard[12]Pocket$/)) {
     my $pocket_size = get_specifications($log, $dbh, $pid, $pc, 'rdbPocketSize');
     return { pocket_size => $pocket_size, is_presentationfolder => 1 }
   };
