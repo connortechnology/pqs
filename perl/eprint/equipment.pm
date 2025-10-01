@@ -222,12 +222,12 @@ sub cache_lookup {
 sub get_specifications {
     my ($log, $dbh, $eid, @specs) = @_;
 
+    my ( $caller, undef, $line ) = caller;
     # Basic sanity check, improve on this.
     if (!$eid) {
-      $openprint::log->error("Equipment index must be supplied");
+      $openprint::log->error("Equipment index must be supplied from $caller:$line");
       return ();
     }
-    my ( $caller, undef, $line ) = caller;
     $openprint::log->debug("Getting specs @specs from $eid from $caller:$line");
 
     # Equipment (among others) is weird in having two keys that are used
