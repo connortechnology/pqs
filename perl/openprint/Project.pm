@@ -2245,7 +2245,7 @@ sub get_template {
 
   return $openprint::dbh->selectrow_array(q{
     SELECT strvalue FROM tbl_service_specifications WHERE strname = 'template' AND lngserviceindex = ?
-    }, undef, get_print_container($log, $dbh, $$self{id}));
+    }, undef, $self->get_print_container());
 }
 
 sub is_presentation_folder {
