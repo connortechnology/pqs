@@ -1077,7 +1077,7 @@ sub price {
 
   my $override = $dbh->selectrow_array(q{ SELECT price_override FROM tbl_project_contents WHERE lngserviceindex = ?  }, undef, $sid );
   if ($override ne '') {
-    print STDERR "HAVE PRICE OVERRIDE: FOR SID: $sid $override\n";
+    #print STDERR "HAVE PRICE OVERRIDE: FOR SID: $sid $override\n";
     $specs->{txtPrice1} = $override 
   }
 
@@ -1132,7 +1132,7 @@ sub save {
     # Perform any actions required. eg. create signatures after changing the
     # book specifications.
     if (my $action = $service->{can}->('action')) {
-      print STDERR "Doing action on $$service{type}\n";
+      #print STDERR "Doing action on $$service{type}\n";
         $action->($log, $dbh, $pid, $sid, $service->{type}, $specs);
     }
 
@@ -1162,7 +1162,7 @@ sub to_db {
 
     next if $key =~ /^[ps]id$/i; # Don't save project or service ids.
 
-    print STDERR "inserting $key=>$value\n";
+    #print STDERR "inserting $key=>$value\n";
     # If the spec also exists in the form it was from the user.
     if (!$insert->execute($pid, $sid, $key, $value, (exists $form->{$key} ? 1 : 0))) {
       print STDERR "Failed insert".$dbh->errstr."\n";

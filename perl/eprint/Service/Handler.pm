@@ -321,8 +321,9 @@ sub show {
     $display->($r->log, $dbh, $variable, $pid, $sid) if $display;
   } elsif ($display) {
     $page = $display->($r->log, $dbh, $service->{name}, $pid, $sid, $specs, $variable);
+  } else {
+    $openprint::log->debug("No display function for $$service{name}");
   }
-
 
   $variable->{$_} = $page->{$_} for keys %$page;
 

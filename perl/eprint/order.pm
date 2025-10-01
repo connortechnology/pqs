@@ -106,33 +106,12 @@ sub get_unfinished_order {
   my ( $order_id ) = sql::sql_statement( $log, $dbh, $_ );
 
   if ( ! $order_id ) {
-
     $_ = "SELECT lngOrderID, lngCustomerID, lngUserID FROM tbl_Orders
-    WHERE  strStatus='Incomplete'
+    WHERE strStatus='Incomplete'
     AND lngcustomerid = $my_cust_id
     AND dtmorderdate > now() - interval '7 days'
-    ORDER by lngOrderID Desc Limit 1";
-
-    #        $_ = "SELECT lngOrderID, lngCustomerID, lngUserID FROM tbl_Orders
-    #			  WHERE strSessionID='$cookie' AND strStatus='Incomplete'
-    #			  AND lngcustomerid = $my_cust_id ORDER by lngOrderID Desc Limit 1";
-
-
-    print STDERR "GET UNFINISHED ORDER, Any incomplete order started within las 7 days: $_ \n";
+    ORDER by lngOrderID DESC LIMIT 1";
     ( $order_id, my $cust_id, my $user_id ) = sql::sql_statement( $log, $dbh, $_ );
-
-    print STDERR "GET UNFINISHED ORDER: $_ - $order_id \n";
-
-    #THis no longer makes sense. And is counter productive for administrator.
-    #   if ( $order_id ) {
-    #            if ( $cust_id != $my_cust_id ) {
-    #                sql::update( $log, $dbh, 'tbl_Orders', "lngOrderID = '$order_id'", 'lngCustomerID', $my_cust_id );
-    #            }
-    #            if ( $user_id != $my_user_id ) {
-    #                sql::update( $log, $dbh, 'tbl_Orders', "lngOrderID = '$order_id'", 'lngUserID', $my_user_id );
-    #            }
-    #        }
-
   }
 
   return $order_id;
@@ -210,11 +189,11 @@ sub add_product_to_order {
 
   $qty = $qty * $versions if $versions > 1;
 
-  print STDERR "HAVE: QTY: $qty PRICE: $price QPrice: $quote_price VERSIONS: $versions Name: $jobname \n";
+  #print STDERR "HAVE: QTY: $qty PRICE: $price QPrice: $quote_price VERSIONS: $versions Name: $jobname \n";
   die("No Product Quantity for Product: $product VERSIONS: $versions") unless $qty;
 
 
-  print STDERR "ADDD PRODUCT: $product Q: $qty V: $versions PRICE: $price \n";
+  #print STDERR "ADDD PRODUCT: $product Q: $qty V: $versions PRICE: $price \n";
 
   die("No Price Found for product: $product ", Dumper($prod) ) unless $price or $prod->{specs}{kit} or defined $quote_price;
 
@@ -232,7 +211,7 @@ sub add_product_to_order {
 
   $dbh->do(q{Update tbl_orders SET dtmrequireddate = now() + ?  WHERE lngorderid = ?}, undef, $days, $order_id);
 
-  print STDERR "SET DELIVERY DATE: $days FOR $order_id \n";
+  #print STDERR "SET DELIVERY DATE: $days FOR $order_id \n";
 
   if ( $prod->{specs}{kit} ) {
     map {
@@ -281,7 +260,7 @@ sub add_project_to_order {
 
   $order_id ||= create_order($log, $dbh, $cookie, $variable);
 
-  print STDERR "ADD PROJECT TO ORDER PID: $project_index OID: $order_id \n";
+  #print STDERR "ADD PROJECT TO ORDER PID: $project_index OID: $order_id \n";
 
   # check to make sure project isn't already in the order.
   my ($previous_pid) = $dbh->selectrow_array(q{
@@ -351,19 +330,19 @@ sub make_order_from_quote {
   my $prods = $dbh->selectall_arrayref(q{SELECT * FROM tbl_quote_details WHERE  lngquoteid = ? AND type = 'product'},
     {Slice => {}}, $quote_id);
 
-  print STDERR "HAVE PRODUCTS: ", Dumper($prods);
+  #print STDERR "HAVE PRODUCTS: ", Dumper($prods);
 
   foreach my $p ( @$prods ) {
     my $product =  $p->{product};
     my $qty = $p->{intquantity1};
     my $price =  $p->{dblprice1} / $qty;
 
-    print STDERR "ADD PRODUCT: $product QUANTITY: $qty QUOTE: $p->{dblprice1} Price: $price \n";
+    #print STDERR "ADD PRODUCT: $product QUANTITY: $qty QUOTE: $p->{dblprice1} Price: $price \n";
     ($order_id) = add_product_to_order( $cookie, $variable, $product, $qty, undef, $p->{jobname}, 1, $price );
     #my ( $cookie, $var, $product, $qty, $subgroup, $jobname, $versions, $quote_price, $order_id ) = @_;
   }
 
-  print STDERR "UPDATE CONTACT QUOTE: $quote_id ORDER: $order_id \n";
+  #print STDERR "UPDATE CONTACT QUOTE: $quote_id ORDER: $order_id \n";
 
 
   my $contact = $dbh->selectrow_hashref(q{
@@ -380,7 +359,7 @@ sub make_order_from_quote {
     $dbh->do(qq{update tbl_orders set straddress1 = ? where lngorderid = ?}, undef, $contact->{$_}, $order_id) if $_ eq 'straddress';
     if (exists $order_fields->{$_} ) {
       $dbh->do(qq{update tbl_orders set $_ = ? where lngorderid = ?}, undef, $contact->{$_}, $order_id);
-      print STDERR "HAVE CONTACT ", Dumper($_, $contact->{$_});
+      #print STDERR "HAVE CONTACT ", Dumper($_, $contact->{$_});
     }
 
   } keys %{$contact};
@@ -467,13 +446,13 @@ sub delivery_date {
     FROM   tbl_order_contents WHERE lngorderid = ?  ORDER by 1 LIMIT 1
     }, undef, $order_id);
 
-  print STDERR "DELIVERY DATE: $date \n";
+  #print STDERR "DELIVERY DATE: $date \n";
   $date = $dbh->selectrow_array(q{
     SELECT to_char(dtmrequireddate, 'DD/MM/YYYY' )
     FROM tbl_orders WHERE lngorderid = ?
     }, undef, $order_id) unless $date;
 
-  print STDERR "DELIVERY DATE 2: $date \n";
+  #print STDERR "DELIVERY DATE 2: $date \n";
 
   return $date;
 }
@@ -591,7 +570,7 @@ sub order_info {
     }, undef, $order_id);
 
   if (grep { !$_ } @$quantities) {
-    print STDERR "HAVE INCOMPLETE QTY: HTTP_MOVED_TEMPORARILY TO ORDER SELECTION 358 \n";
+    #print STDERR "HAVE INCOMPLETE QTY: HTTP_MOVED_TEMPORARILY TO ORDER SELECTION 358 \n";
     $variable->{Redirect} = '/main/order/order_selection.html';
     return OK;
   }
@@ -946,7 +925,7 @@ sub fill_contact {
 
   if ($sid ) {
     %ship = eprint::service::get_specifications_pairs(undef, $dbh, $pid, $sid);
-    print STDERR "HAVE SHIP HASH FROM CUST", Dumper(\%ship);
+    #print STDERR "HAVE SHIP HASH FROM CUST", Dumper(\%ship);
   } else {
     my $cust_id = PQS::model::order::get_cust_id($order_id);
     eprint::customer::load($r, $log, $dbh, $cust_id, \%ship);
@@ -963,7 +942,7 @@ sub fill_contact {
       }, undef, $order_id);
   }
 
-  print STDERR "FILL CONTACT: " , Dumper(\%ship);
+  #print STDERR "FILL CONTACT: " , Dumper(\%ship);
 
 
   my %fix_map = (
@@ -1020,7 +999,7 @@ sub verify_order {
   my $order_id = $r->param('hiddenOrderID') || get_unfinished_order(
     $log, $dbh, $cookie, $variable->{cust_id}, $variable->{user_id}
   );
-  print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
+  #print STDERR "TIME TO VERIFY ORDER -- $order_id \n";
   # Start of new code
 
   if ( $r->param('reset') ) {
@@ -1035,7 +1014,7 @@ sub verify_order {
 
 
   if ( $r->param('btnFunction') eq 'Process Order' ) {
-    print STDERR "MAKE QUOTE FORM ORDER  \n";
+    #print STDERR "MAKE QUOTE FORM ORDER  \n";
     my $quote_id = $r->param('quote_id');
     ($order_id) = make_order_from_quote( $r, $log, $dbh, $cookie, $quote_id, $variable );
 
@@ -1067,7 +1046,7 @@ sub verify_order {
 
     my $rate_id;
 
-    print STDERR "VERIFY: Have SHIPPING OVERRIDE: $shipping_override \n";
+    #print STDERR "VERIFY: Have SHIPPING OVERRIDE: $shipping_override \n";
     my $ship_list;
     ($ship_price, $rate_id, $ship_list) = eprint::Service::Shipping::order_ship_cost($order_id, $shipping_override);
 
@@ -1076,7 +1055,7 @@ sub verify_order {
     $variable->{__FillInForm}{shipping_required} = 1;
     PQS::model::order::set_ship_type($order_id, $rate_id );
 
-    print STDERR "VERIFY ORDER - HAVE ORDER SHIP PRICE: $order_id = $ship_price RATEID: $rate_id \n";
+    #print STDERR "VERIFY ORDER - HAVE ORDER SHIP PRICE: $order_id = $ship_price RATEID: $rate_id \n";
   } else
   {
     PQS::model::order::set_ship_type($order_id, "PickUp" );
@@ -1101,7 +1080,7 @@ sub verify_order {
       # This is a hybrid project.
       # Already added to order, just have to update order info before completing.
 
-      print STDERR "PROCESS ORDER: $order_id - $pid \n";
+      #print STDERR "PROCESS ORDER: $order_id - $pid \n";
 
       $order_id = $dbh->selectrow_array(q{
         SELECT MAX(lngorderid) FROM tbl_order_contents
@@ -1127,7 +1106,7 @@ sub verify_order {
       # Shortcut for ordering Custom projects.
       # Skips Order info page.
 
-      print STDERR "PROCESS ORDER: $order_id - $pid \n";
+      #print STDERR "PROCESS ORDER: $order_id - $pid \n";
 
       $order_id = get_unfinished_order( $log, $dbh, $cookie, $variable->{cust_id}, $variable->{user_id} );
 
@@ -1141,7 +1120,7 @@ sub verify_order {
           AND lngorderid = ?
           }, undef, $pid, $order_id);
 
-        print STDERR "HAVE QUANTITY FOR ORDER: $qty == $pid EXISTS: $exists \n";
+        #print STDERR "HAVE QUANTITY FOR ORDER: $qty == $pid EXISTS: $exists \n";
 
         sql::update($log, $dbh,
           'tbl_Order_Contents',
@@ -1151,7 +1130,7 @@ sub verify_order {
         );
 
       }
-      print STDERR "DONE ADDING NOW FILL CONTACT \n";
+      #print STDERR "DONE ADDING NOW FILL CONTACT \n";
 
     }
   } elsif ( $r->param('Return') ) {
@@ -1207,7 +1186,7 @@ sub verify_order {
   );
 
   if ($quantities && grep { !$_ } @$quantities) {
-    print STDERR "HAVE INCOMPLETE QTY: HTTP_MOVED_TEMPORARILY TO ORDER SELECTION 814 \n";
+    #print STDERR "HAVE INCOMPLETE QTY: HTTP_MOVED_TEMPORARILY TO ORDER SELECTION 814 \n";
     $variable->{Redirect} = '/main/order/order_selection.html';
     return OK;
   }
@@ -1244,12 +1223,12 @@ sub verify_order {
 
 sub finalise_order {
   my ( $r, $log, $dbh, $cookie, $variable, $order_id ) = @_;
-  print STDERR "FINALIZE ORDER \n\n";
+  #print STDERR "FINALIZE ORDER \n\n";
 
   $order_id =  $order_id || $r->param('hiddenOrderID');
 
 
-  print STDERR "MY ORDER ID: $order_id \n";
+  #print STDERR "MY ORDER ID: $order_id \n";
   if ( $order_id eq q{} ) {
     $log->debug("No order ID passed, pulling from database.");
     $order_id = get_unfinished_order(
@@ -1286,7 +1265,7 @@ sub finalise_order {
 
 
 
-  print STDERR "CHECK ORDER INFO \n";
+  #print STDERR "CHECK ORDER INFO \n";
   # get order information
   my ( $check_order_id, $status, $ponum, $total ) = $dbh->selectrow_array(q{
     SELECT lngOrderID, strStatus, strPONumber, curTotalSale
@@ -1300,7 +1279,7 @@ sub finalise_order {
   if (   $check_order_id
     && $status eq 'Incomplete' || $status eq 'Re-Opened' ) {
 
-    print STDERR "DO ORDER STUFF NOW \n";
+    #print STDERR "DO ORDER STUFF NOW \n";
 
     my $order_info = get_order_totals(
       $dbh, $variable->{cust_id}, $order_id
@@ -1396,7 +1375,7 @@ sub finalise_order {
       }, undef, $order_id
     );
 
-    print STDERR "HAVE PROJECT LIST FOR ORDER", Dumper($projects);
+    #print STDERR "HAVE PROJECT LIST FOR ORDER", Dumper($projects);
     my $plist = [];
 
     foreach my $pid ( @{ $projects } ) {
@@ -1555,11 +1534,11 @@ sub order_product_list {
 
     my $product = PQS::model::products::get($o->{product});
 
-    print STDERR "HAVE PRODUcT " , Dumper($o, $product->{kit});
+    #print STDERR "HAVE PRODUcT " , Dumper($o, $product->{kit});
 
     if ( $product->{kit} ) {
 
-      print STDERR "HAVE KIT \n";
+      #print STDERR "HAVE KIT \n";
       my $klist = PQS::model::products::kit_list($o->{product});
       #print STDERR "HAVE KIT \n", Dumper($klist);
       foreach my $k ( @{$klist} ) {
@@ -1569,7 +1548,7 @@ sub order_product_list {
 
         die("Missing Kit Qty for kit:  $o->{product} ") unless $qty;
 
-        print STDERR "ADD PRODUCT: $k->{product}, QTY: $qty \n";
+        #print STDERR "ADD PRODUCT: $k->{product}, QTY: $qty \n";
         add_product_to_order( undef, $var, $k->{product}, $k->{qty}, undef, $o->{jobname}, $o->{versions} || 1, 0, $oid )
         unless $have->{$k->{product}};
 
@@ -1597,12 +1576,12 @@ sub make_product_dockets {
 
   my $order = PQS::model::order::get_order($orderid);
 
-  print STDERR "HAVE ORDER LINE: " , Dumper( $order);
+  #print STDERR "HAVE ORDER LINE: " , Dumper( $order);
 
 
 
   foreach my $o ( @{$list} ) {
-    print STDERR "HAVE ORDER LINE: " , Dumper($o, $list, $order);
+    #print STDERR "HAVE ORDER LINE: " , Dumper($o, $list, $order);
     my $prod = new PQS::Object::product($o->{product});
     my $ppid = $prod->{specs}{project};
     my $template = $prod->{specs}{pdftemplate};
@@ -1631,12 +1610,12 @@ sub make_product_dockets {
 
 
     my $versions = $o->{versions};
-    print STDERR "OV1 HAVE VERSIONS: $versions \n";
+    #print STDERR "OV1 HAVE VERSIONS: $versions \n";
     if ( $versions > 1 ) {
       use POSIX;
       my $qty = $o->{intquantity};
       my $perversion = ceil($qty / $versions);
-      print STDERR "OV1 PER VERSIONS: $versions Q: $qty : $perversion \n";
+      #print STDERR "OV1 PER VERSIONS: $versions Q: $qty : $perversion \n";
       my $print 	= eprint::project::check_for_service( undef, $dbh, $pid, 'Printing');
       eprint::service::insert_service_spec( $log, $dbh, $pid, $print, 'is_mv' , 1);
       my $v;
@@ -1647,7 +1626,7 @@ sub make_product_dockets {
       }
 
       eprint::service::insert_service_spec( $log, $dbh, $pid, $print, 'version_quantities' , $v);
-      print STDERR "OV1 PER VERSIONS: $versions Q: $qty : $perversion V: $v \n";
+      #print STDERR "OV1 PER VERSIONS: $versions Q: $qty : $perversion V: $v \n";
     }
 
 
@@ -1661,7 +1640,7 @@ sub make_product_dockets {
 
     my $dm = $type ? 'Standard' : 'Customer Pick-up';
 
-    map { print STDERR "PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
+    #map { print STDERR "PARAM: $_ = " . $r->param($_) . "\n" } $r->param();
 
 
     eprint::service::insert_service_spec( $log, $dbh, $pid, $ship, 'deliverymethod' , $dm);
@@ -1678,7 +1657,7 @@ sub make_product_dockets {
 
     map {
       if ( $_ =~ /strshipping(.*)/ ) {
-        print STDERR "HAVE KEY : $_, $1  		-- $ship \n";
+        #print STDERR "HAVE KEY : $_, $1  		-- $ship \n";
         my $f = "txtShipping" . ucfirst($1);
         my $v =  $order->{$_};
 
@@ -1690,7 +1669,7 @@ sub make_product_dockets {
 
         eprint::service::insert_service_spec( $log, $dbh, $pid, $ship, $f, $v);
       } else {
-        print STDERR "NO MATCH: $_ \n";
+        #print STDERR "NO MATCH: $_ \n";
       }
     } keys %{$order};
 
@@ -1759,7 +1738,7 @@ sub make_rfq {
     SELECT id FROM rfq WHERE pid = ?
     }, undef, $old_pid);
 
-  print STDERR "HAVE OLD RID: $old_rid FROM PID: $old_pid \n";
+  #print STDERR "HAVE OLD RID: $old_rid FROM PID: $old_pid \n";
 
   my $rid = eprint::rfq::copy_rfq($dbh, undef, $old_rid);
 
@@ -1779,7 +1758,7 @@ sub make_rfq {
     }, undef, $pid);
 
 
-  print STDERR "HAVE RFQ: $rfq RID: $rid OLD_RID: $old_rid, OLD PID: $old_pid \n";
+  #print STDERR "HAVE RFQ: $rfq RID: $rid OLD_RID: $old_rid, OLD PID: $old_pid \n";
 
   my $log = $r->log;
   my %spec = eprint::service::get_specifications_pairs($log, $dbh, $pid, $sid);
@@ -1801,7 +1780,7 @@ sub make_rfq {
     VALUES ( ?, ?, ?, ?, true )
     }, undef, $rid, 1, $sup_id, $buy);
 
-  print STDERR "HAVE BUY PRICE: $buy SUP: $sup_id \n";
+  #print STDERR "HAVE BUY PRICE: $buy SUP: $sup_id \n";
 
   my $info = {
     pid => $pid,
@@ -1874,7 +1853,7 @@ sub notify_low_inventory {
   $info->{inventoryID} = $item;
   $info->{current_inv} = $current_qty;
 
-  print STDERR "HAVE SPECS: ", Dumper($info);
+  #print STDERR "HAVE SPECS: ", Dumper($info);
 
   my $file = q{/email/content/inventory_reorder.html};
 
@@ -1905,7 +1884,7 @@ sub notify_cancel {
     TO    	 => configuration::get_value( $log, $dbh, 'CancelEmail'),
     SUBJECT => "Order " . order_rev($dbh, $order_id) . " CANCELLED"
   );
-  print STDERR "SENT CANCEL NOTICE TO: $mail{TO}";
+  #print STDERR "SENT CANCEL NOTICE TO: $mail{TO}";
 
   misc::email_with_template($r, $log, $dbh, $file, \%mail, $info);
 
@@ -1926,7 +1905,7 @@ sub notify_pending_approval {
     TO      => $email,
     SUBJECT => "Order: " . order_rev($dbh, $order_id)
   );
-  print STDERR "SENT PENDING NOTICE TO: $email \n";
+  #print STDERR "SENT PENDING NOTICE TO: $email \n";
 
   misc::email_with_template($r, $log, $dbh, $file, \%mail, $info);
 
@@ -1952,7 +1931,7 @@ sub notify_date_change {
     TO      => $email,
     SUBJECT => "Order " . order_rev($dbh, $order_id) . " - Pending Approval - Date Change"
   );
-  print STDERR "SENT PENDING CHANGE NOTICE TO: $email \n";
+  #print STDERR "SENT PENDING CHANGE NOTICE TO: $email \n";
 
   misc::email_with_template($r, $log, $dbh, $file, \%mail, $info);
 
@@ -2038,7 +2017,7 @@ sub notify_payment {
 }
 sub inventory_checkin {
   my ($r, $log, $dbh, $order_id, $project_index ) = @_;
-  print STDERR "START SUB inventory_checkin \n";
+  #print STDERR "START SUB inventory_checkin \n";
 
   my $type;
   my $checkin = eprint::project::check_for_service( $log, $dbh, $project_index, 'Inventory');
@@ -2058,7 +2037,7 @@ sub inventory_checkin {
       SELECT cursalesprice / intquantity FROM tbl_order_contents WHERE lngorderid = ? and lngprojectindex = ?
       }, undef, $order_id, $project_index);
 
-    print STDERR "HAVE CASE COUNT: $case \n";
+    #print STDERR "HAVE CASE COUNT: $case \n";
 
     $qty = int($qty/$case) if $case;
     $unit_price = sprintf("%4f", $unit_price * $case) if $case;
@@ -2091,7 +2070,7 @@ sub inventory_checkin {
       my $id = $dbh->selectrow_array(q{
         SELECT id FROM tbl_inventory WHERE lngprojectindex = ?
         }, undef, $project_index);
-      print STDERR "UPDATE INVETORY ITEM: $id TO: $desc \n";
+      #print STDERR "UPDATE INVETORY ITEM: $id TO: $desc \n";
       $dbh->do(q{
         INSERT INTO inventory_specs (id, itemid, reorder_notify, reorder_notify_max ) VALUES ( ?, ?, 0, 0)
         }, undef, $id, $desc );
@@ -2101,7 +2080,7 @@ sub inventory_checkin {
     $type = "OUT";
     my $checkout = eprint::project::check_for_service( $log, $dbh, $project_index, 'InventoryCheckOut');
     my $r_qty;
-    print STDERR "HAVE INVENTORY CHECKOUT: $checkout \n";
+    #print STDERR "HAVE INVENTORY CHECKOUT: $checkout \n";
     if ( $checkout ) {
       my ( $qty, $inventory_index, $checkout_index, $itemid, $location )
       = eprint::service::get_specifications( $log, $dbh, undef, $checkout,
@@ -2110,7 +2089,7 @@ sub inventory_checkin {
       $_ = "SELECT lngRemainingQuantity FROM tbl_Inventory WHERE lngInventoryIndex='$inventory_index'";
       ( $r_qty ) = sql::sql_statement( $log, $dbh, $_ );
 
-      print STDERR "HAVE INVENTORY ID: $itemid \n";
+      #print STDERR "HAVE INVENTORY ID: $itemid \n";
 
       if ( $itemid ) {
         my $co = $dbh->prepare(q{
@@ -2144,7 +2123,7 @@ sub inventory_checkin {
 
 
 
-        print STDERR "INVENTORY: QTY: $qty RQTY: $r_qty \n";
+        #print STDERR "INVENTORY: QTY: $qty RQTY: $r_qty \n";
 
         if ( $qty and $qty <= $r_qty ) {
           # $r_qty is now inventory level after check_out.
@@ -2189,7 +2168,7 @@ sub check_inventory_level {
     SELECT reorder_notify FROM inventory_specs WHERE id = ?
     }, undef, $itemid );
 
-  print STDERR "CHECK INVENTORY LEVEL: $inv_level < $reorder \n";
+  #print STDERR "CHECK INVENTORY LEVEL: $inv_level < $reorder \n";
   if ( $inv_level < $reorder ) {
     notify_low_inventory($r, $dbh, $itemid, $inv_level);
   }
@@ -2237,7 +2216,7 @@ sub send_invoice {
 
   }
 
-  print STDERR "CHECK INV_NOT; $inv_not \n\n";
+  #print STDERR "CHECK INV_NOT; $inv_not \n\n";
   my @attachments = ();
 
   my $email_template = misc::load_file($r, '/email/forms/order.html');
@@ -2290,7 +2269,7 @@ sub is_chino {
     }, undef, $sid);
 
 
-  print STDERR "HAVE SUPPLIER FOR PID: $pid - $sup_id SID: $sid \n";
+  #print STDERR "HAVE SUPPLIER FOR PID: $pid - $sup_id SID: $sid \n";
 
   return $sup_id == 142 ? 1 : 0;
 
@@ -2387,7 +2366,7 @@ sub send_sales_order {
     delete $mail{BODY};
 
   } elsif ( $r->param('OrderDateApproved') ) {
-    print STDERR "SEND DATE APPROVAL \n";
+    #print STDERR "SEND DATE APPROVAL \n";
     my %mail = (
       SMTP    => configuration::get_value( $log, $dbh, 'Mail Server'),
       FROM    => configuration::get_value( $log, $dbh, 'OrderingEmail'),
@@ -2396,7 +2375,7 @@ sub send_sales_order {
     );
     misc::send_email_with_attachment($r, $log, \%mail, @body, @project_summaries, @additional_attachments );
   } else {
-    print STDERR "CAN't SEND DATE APPROVAL \n";
+    #print STDERR "CAN't SEND DATE APPROVAL \n";
   }
 }
 
@@ -2457,7 +2436,7 @@ sub order_history {
     $_ .= "AND date(dtmOrderDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}')\n";
     $_ .= "ORDER BY lngOrderID DESC\n";
 
-    print STDERR "have order sql: $_ \n";
+    #print STDERR "have order sql: $_ \n";
 
     @{$$variable{'ORDERS'}} = sql::sql_statement( $log, $dbh, $_ );
 
@@ -2496,7 +2475,7 @@ sub order_history {
     }
   }
 
-  print STDERR "HAVE VAARI", Dumper($variable);
+  #print STDERR "HAVE VAARI", Dumper($variable);
   return OK;
 }
 
@@ -2518,7 +2497,7 @@ sub get_misc {
     FROM tbl_Orders
     WHERE lngOrderID = ?
     }, undef, $order_id);
-  print STDERR "COUNTY TAX: $variable->{CountyTAX} \n";
+  #print STDERR "COUNTY TAX: $variable->{CountyTAX} \n";
 
   $variable->{additionalOrderInformation} =~ s/\r/<br>/g;
 
@@ -2591,7 +2570,7 @@ sub get_misc {
     SELECT name FROM county_taxes WHERE id =
     ( SELECT CountyTax FROM tbl_orders WHERE lngorderid = ?)
     }, undef, $order_id);
-  print STDERR "HAVE COUNTY TAXT NAME: $variable->{CTNAME} \n";
+  #print STDERR "HAVE COUNTY TAXT NAME: $variable->{CTNAME} \n";
 
   $variable->{NotGroupPricing} = $dbh->selectrow_array(q{
     SELECT ShowPricing FROM tbl_orders WHERE lngorderid = ?
@@ -2657,7 +2636,7 @@ sub get_projects {
   $variable->{PROJECTS} = \@line_items;
 
   use Data::Dumper;
-  print STDERR "ORDER GET PROJECTS : ", Dumper(\@line_items);
+  #print STDERR "ORDER GET PROJECTS : ", Dumper(\@line_items);
 
   return \@line_items;
 }
@@ -2764,7 +2743,7 @@ sub history_details {
 
 
 
-    print STDERR "HAVE SHIP DATA", Dumper($variable->{ship_data}, @data);
+    #print STDERR "HAVE SHIP DATA", Dumper($variable->{ship_data}, @data);
   } @pids;
 
   my $payment_info_query
@@ -2784,7 +2763,7 @@ sub history_details {
   my $payment_info = $sth->fetchall_arrayref({});
 
 
-  print STDERR "Payment Info: ", Dumper($payment_info);
+  #print STDERR "Payment Info: ", Dumper($payment_info);
 
   $variable->{payment_info} = $payment_info;
 }
@@ -2809,7 +2788,7 @@ sub packing_slip {
   $oid = $dbh->selectrow_array(q{SELECT lngorderid FROM tbl_order_contents WHERE lngprojectindex = ?  order by 1}, undef, $pid) unless $oid;
 
 
-  print STDERR "HAVE PID: $pid Order: $oid \n";
+  #print STDERR "HAVE PID: $pid Order: $oid \n";
 
   my $PIDS = $dbh->selectall_arrayref(q{
     SELECT lngprojectindex FROM tbl_order_contents WHERE lngorderid = ? order by 1
@@ -2835,7 +2814,7 @@ sub packing_slip {
 
   }
 
-  print STDERR "HAVE PID: $pid PACK: $packid ORDER: $oid \n";
+  #print STDERR "HAVE PID: $pid PACK: $packid ORDER: $oid \n";
 
   my $pack = $dbh->selectrow_hashref(q{SELECT *,
     to_char(pack_date, 'Mon dd, yyyy') as pdate	from packing_slip WHERE id = ? }, undef, $packid) if $packid;
@@ -2843,7 +2822,7 @@ sub packing_slip {
   ##$pid = $pack->{pid} unless $pid;
 
 
-  print STDERR "HAVE PACK: ", Dumper($pack);
+  #print STDERR "HAVE PACK: ", Dumper($pack);
 
 
   #	my $sid = $dbh->selectrow_array(q{SELECT sid FROM ship_address WHERE shipid = ?}, undef, $shipid);
@@ -2877,7 +2856,7 @@ sub packing_slip {
 
 
 
-  print STDERR "HAVE ORDER ID: $variable->{order_id}, $order_id \n";
+  #print STDERR "HAVE ORDER ID: $variable->{order_id}, $order_id \n";
 
   #$variable->{boxes}  = $shipping{"boxes-$shipid"};
   #$variable->{weight} = $shipping{"weight-$shipid"};
@@ -2906,7 +2885,7 @@ sub packing_slip {
 
   $variable->{date} =  $pack->{pdate};
 
-  print STDERR Dumper($pack), "HAVE: $pid, $order_id -- $packid \n";
+  #nnprint STDERR Dumper($pack), "HAVE: $pid, $order_id -- $packid \n";
 
   my $r    = session::r;
   my $log    = session::log;
@@ -2925,7 +2904,7 @@ sub packing_slip {
 
   $variable->{logo} =  $x ? $img : "/images/packing_slip/default.png";
 
-  print STDERR "HAVE PATH:  $path, $x \n";
+  #print STDERR "HAVE PATH:  $path, $x \n";
 
 
 }
@@ -2936,7 +2915,7 @@ sub get_products {
 
   my $data = PQS::model::order::get_order_products($order_id);
 
-  print STDERR "HAVE PRODUCTS: ", Dumper($data);
+  #print STDERR "HAVE PRODUCTS: ", Dumper($data);
 
   map {
     $_->{name} = PQS::model::products::get_name_from_id($_->{product});
@@ -2960,7 +2939,7 @@ sub display_order {
   my $dbh = session::dbh;
 
 
-  print STDERR "HAVE VARS: $r, $log, $dbh \n";
+  #print STDERR "HAVE VARS: $r, $log, $dbh \n";
 
   get_invoice_to( $log, $dbh, $variable, $order_id );
   get_ship_to( $log, $dbh, $variable, $order_id );
@@ -2978,7 +2957,7 @@ sub display_order {
     AND strservicetype = 'Shipping'
     AND o.lngorderid = ?
     }, undef, $order_id );
-  print STDERR "HAVE PID: $spid \n";
+  #print STDERR "HAVE PID: $spid \n";
 
   my @data =  eprint::Service::Shipping::get_ship_info($r, $log, $dbh, $spid, 1);
   $variable->{ship_data} = \@data;
@@ -3027,7 +3006,7 @@ sub display_order {
   $variable->{SLIPS} = $packing_slips;
 
 
-  print STDERR "HAVE QTYS IN VAR", Dumper($variable->{SLIPS});
+  #print STDERR "HAVE QTYS IN VAR", Dumper($variable->{SLIPS});
 
 }
 
@@ -3035,7 +3014,7 @@ sub display_order {
 sub quantity_select_display {
   my ($r, $log, $dbh, $cookie, $variable) = @_;
 
-  print STDERR "Start quantity SELECT display btnFunction: " . $r->param('btnFunction') . " \n";
+  #print STDERR "Start quantity SELECT display btnFunction: " . $r->param('btnFunction') . " \n";
 
   my ($order_id, $error);
 
@@ -3087,7 +3066,7 @@ sub quantity_select_display {
     );
   }
   elsif ($r->param('btnFunction') eq 'Process Order') {
-    print STDERR "GO PROCESS ORDER \n";
+    #print STDERR "GO PROCESS ORDER \n";
     # Normal Order Creation
     ($order_id, $error) = add_project_to_order(
       $log, $dbh, $cookie, $variable, $r->param('ProjectIndex'), undef, 'print'
@@ -3274,7 +3253,7 @@ sub cancel_order {
 sub get_order_totals {
   my ( $dbh, $customer_id, $order_id, $update ) = @_;
 
-  print STDERR "\n\nwSTART ORDER TOTALS FOR PROJECTS \n";
+  #print STDERR "\n\nwSTART ORDER TOTALS FOR PROJECTS \n";
 
 
   my $prov_state = $dbh->selectrow_array(q{SELECT strShippingState FROM tbl_Orders WHERE lngOrderID = ?}, undef, $order_id);
@@ -3292,7 +3271,7 @@ sub get_order_totals {
     )
     },undef, $order_id);
 
-  print STDERR "Have County Tax RATE: $county_rate FOR ORDER: $order_id \n";
+  #print STDERR "Have County Tax RATE: $county_rate FOR ORDER: $order_id \n";
 
   my ( $pst_exempt, $gst_exempt ) = $dbh->selectrow_array(q{
     SELECT ysnPSTExempt, ysnGSTExempt
@@ -3334,7 +3313,7 @@ sub get_order_totals {
   my $discount;
   while ($sth->fetch()) {
 
-    print STDERR "ADD TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PRICE: $prod_price \n";
+    #print STDERR "ADD TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PRICE: $prod_price \n";
 
     my $contentid = $pid || $product;
     my $new_promo = new PQS::Object::promotion();
@@ -3354,7 +3333,7 @@ sub get_order_totals {
       $dbh->do(q{INSERT INTO order_discount ( promo, orderid, contentid, customer, discount ) VALUES (?, ?, ?, ?, ?) }, undef,
         $promo_id, $order_id, $contentid,  $customer_id, $discount);
 
-      print STDERR "HAVE VALID PROMO TOAL DISCOUNT: $discount \n";
+      #print STDERR "HAVE VALID PROMO TOAL DISCOUNT: $discount \n";
 
 
     }
@@ -3372,7 +3351,7 @@ sub get_order_totals {
       Apache2::ServerUtil->server->log, $dbh, $pid
     );
 
-    print STDERR "HAVE PROJECT PRICES: @project_prices FOR PID: $pid \n";
+    #print STDERR "HAVE PROJECT PRICES: @project_prices FOR PID: $pid \n";
 
     #my $price = $pid ? $project_prices[$qtyIndex - 1] : $prod_price;
     my $price = $prod_price ? $prod_price :  $project_prices[$qtyIndex - 1];
@@ -3380,7 +3359,7 @@ sub get_order_totals {
       $price = $project_prices[$qtyIndex - 1];
     }
 
-    print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $prod_price PRICE: $price \n";
+    #print STDERR "NEXT TO TOTAL- PROJECT PID: $pid, PROD: $product QTY: $qty PP: $prod_price PRICE: $price \n";
 
     if ( $pid ) {
 
@@ -3406,7 +3385,7 @@ sub get_order_totals {
       $price -= $shipping;
       $price -= $postage;
 
-      print STDERR "POSTAGE TOTAL: $postage SHIPPING: $shipping: New Price: $price \n";
+      #print STDERR "POSTAGE TOTAL: $postage SHIPPING: $shipping: New Price: $price \n";
 
       $shipping_total += $shipping;
       $postage_total  += $postage;
@@ -3456,7 +3435,7 @@ sub get_order_totals {
 
       if ($$rate) {
 
-        map { print STDERR " $tax HAVE TAX: $$_ \n" } @{ $exemption_ref };
+        #map { print STDERR " $tax HAVE TAX: $$_ \n" } @{ $exemption_ref };
 
         $$amount = grep({ $$_ eq 'Y' || $$_ == 1 } @{ $exemption_ref })
         ? 0
@@ -3466,10 +3445,10 @@ sub get_order_totals {
 
         $$total += $$amount;
       }
-      print STDERR "TAX INFO: $tax Rate: $$rate, Amount: $$amount SHIPPING: $shipping \n";
+      #print STDERR "TAX INFO: $tax Rate: $$rate, Amount: $$amount SHIPPING: $shipping \n";
     }
 
-    print STDERR "HAVE ORDER TOTAL PROJECT PRICE: $price \n";
+    #print STDERR "HAVE ORDER TOTAL PROJECT PRICE: $price \n";
 
     my $line = {
       'index'       => $pid || $product,
@@ -3499,7 +3478,7 @@ sub get_order_totals {
       project_details($dbh, $customer_id, $line, $pid);
     }
 
-    print STDERR "HAVE PROJECT DETAILS: $line->{project_price} FOR PID: $pid \n";
+    #print STDERR "HAVE PROJECT DETAILS: $line->{project_price} FOR PID: $pid \n";
 
 
     push @{ $return_ref->{projects} }, $line;
@@ -3533,7 +3512,7 @@ sub get_order_totals {
   $total          += $order_ship;
   $shipping_total += $order_ship;
 
-  print STDERR "TAX ORDER SHIPPING ADDED TO HST TOTAL SHIPPING COST/HST Rate: $order_ship, $hst_rate \n";
+  #print STDERR "TAX ORDER SHIPPING ADDED TO HST TOTAL SHIPPING COST/HST Rate: $order_ship, $hst_rate \n";
   $hst_total 		+=  $order_ship * $hst_rate / 100;
 
   @$return_ref{qw(
@@ -3700,7 +3679,7 @@ sub get_county_tax_id {
     SELECT countytax FROM tbl_customer WHERE lngcustomerid = ?
     },undef, $cust) || 0;
 
-  print STDERR "Have County Tax: $countytax Cust: $cust User: $user \n";
+  #print STDERR "Have County Tax: $countytax Cust: $cust User: $user \n";
   return $countytax;
 
 }
@@ -3708,7 +3687,7 @@ sub get_county_tax_id {
 sub paypal_error {
   my ($r, $log, $dbh, $cookie, $var, $amount ) = @_;
 
-  print STDERR "HAVE PAYPAL ERROR \n";
+  #print STDERR "HAVE PAYPAL ERROR \n";
 
   my $er;
 
@@ -3734,18 +3713,18 @@ sub paypal_return {
 
   $var->{HISTORY} = 1 if $token_type eq 'history';
 
-  print STDERR "HAVE ORDER: $order_id FROM token: $token PAYMENT: $payment\n";
+  #print STDERR "HAVE ORDER: $order_id FROM token: $token PAYMENT: $payment\n";
 
   $var->{order_id} = $order_id;
 
   map {
     $var->{$_} = $r->param($_);
     $results .= "$_ = " . $r->param($_) . "<br>" ;
-    print STDERR "HAVE RESULTS: $_ = " . $r->param($_) . "\n";
+    #print STDERR "HAVE RESULTS: $_ = " . $r->param($_) . "\n";
   } $r->param();
 
   if ( $payment ) {
-    print STDERR "ALREADY HAVE PAYMENT FOR TOKEN: $token \n";
+    #print STDERR "ALREADY HAVE PAYMENT FOR TOKEN: $token \n";
     return;
   }
 
@@ -3756,7 +3735,7 @@ sub paypal_return {
 
   if ($state eq 'Approved' ) {
 
-    print STDERR "Payment has been Approved \n";
+    #print STDERR "Payment has been Approved \n";
 
     my $session 	= undef;
     my $method 		= 'PayPal';
@@ -3770,7 +3749,7 @@ sub paypal_return {
 
     my $status = PQS::model::order::get_status( $order_id);
 
-    print STDERR "HAVE STATUS: $status \n";
+    #print STDERR "HAVE STATUS: $status \n";
 
     if ( $status eq 'Incomplete' ) {
       $var->{CONFIRM} = 1;
@@ -3781,7 +3760,7 @@ sub paypal_return {
 
     PQS::model::order::set_status( $order_id, $status);
 
-    print STDERR "TIME TO COMPLETE Send Sales Order $order_id \n";
+    #print STDERR "TIME TO COMPLETE Send Sales Order $order_id \n";
     #finalise_order( $r, $log, $dbh, $cookie, $var, $order_id );
 
     #send payment confirmation
@@ -3789,7 +3768,7 @@ sub paypal_return {
 
     send_sales_order( $r, $log, $dbh, $order_id, 1 );
   } else {
-    print STDERR "HAVE PAYAPL RESULT: $results \n";
+    #print STDERR "HAVE PAYAPL RESULT: $results \n";
   }
 
 
@@ -3812,8 +3791,8 @@ sub show_payflow {
   }
   my $amount = sprintf( "%.2f", $totals->{total} );
 
-  print STDERR "SHOW PAYFLOW: Order: $order PAID: $amount_paid Current Payment: $amount \n";
-  print STDERR "HAVE PAYMENT AMOUNT: $amount, Rounded FROM: $totals->{total} \n";
+  #print STDERR "SHOW PAYFLOW: Order: $order PAID: $amount_paid Current Payment: $amount \n";
+  #print STDERR "HAVE PAYMENT AMOUNT: $amount, Rounded FROM: $totals->{total} \n";
 
   die("No Payment Amount") unless $amount;
 
@@ -3835,12 +3814,12 @@ sub show_payflow {
     partner			=> $paypal_partner,
   };
 
-  print STDERR "HAVE PAYAPAL ARGS ", Dumper($args);
+  #print STDERR "HAVE PAYAPAL ARGS ", Dumper($args);
 
 
   my $payments = WebService::PayPal::PaymentsAdvanced->new($args);
 
-  print STDERR "HAVE PAYPAL PARAMS: ", Dumper( $amount );
+  #print STDERR "HAVE PAYPAL PARAMS: ", Dumper( $amount );
 
   my $response = $payments->create_secure_token(
     {
@@ -3857,7 +3836,7 @@ sub show_payflow {
   $var->{order_id} = $order_id;
   my $details =  Dumper($response);
 
-  print STDERR "HAVE TOKEN REPLY: $details";
+  #print STDERR "HAVE TOKEN REPLY: $details";
 
 
   PQS::model::order::set_paypal_token($order_id,  $response->secure_token_id, $type);
