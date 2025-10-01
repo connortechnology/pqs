@@ -40,7 +40,7 @@ sub substrate_lookup : JSRS {
 		$prod = $sid;
 	}
 
-print STDERR "****** IS PROD: $prod PRODUCT Specific Reccomendations have been disabled ********** \n";
+#print STDERR "****** IS PROD: $prod PRODUCT Specific Reccomendations have been disabled ********** \n";
 
 #	my $query = $prod 
 #	   ? substrate_attributes_prod($r, $log, $dbh, $variable, $prod, %attribute )
