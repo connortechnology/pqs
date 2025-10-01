@@ -83,6 +83,8 @@ our %EXPORT_TAGS = (
 use List::Util qw(sum);
 
 require eprint::service;
+require openprint::Project;
+require openprint::Equipment_Type;
 
 # The following set of utility functions are a first attempt at abstracting
 # some of most queried database states from the code. They're a pain to write
@@ -337,6 +339,12 @@ sub is_multipage {
 # Return the given project's type.
 sub get_type {
     my ($log, $dbh, $pid) = @_;
+    my ( $caller, undef, $line ) = caller;
+
+$openprint::log->debug("project::get_type for $pid from $caller:$line");
+my $project = new openprint::Project($pid);
+my $type = $project->Type();
+return wantarray ? ($type->name(), $type->description) : $type->name();
 
     my $sth = $dbh->prepare_cached(q{
         SELECT t.strid, t.strname
@@ -396,29 +404,27 @@ sub get_url {
 # Returns the project's press type. This is an interim measure until such time
 # as we can price for any set of press types.
 sub get_press_type {
-    my ($log, $dbh, $pid, $sid) = @_;
+  my ($log, $dbh, $pid, $sid) = @_;
+  my $project = openprint::Project->find_one(id=>$pid);
+  return undef if !$project;
 
-    my $sth = $dbh->prepare_cached(q{
-        SELECT t.strid 
-        FROM tbl_equipment_type t, tbl_projects p 
-        WHERE p.lngpresstype  = t.lngindex 
-          AND p.lngprojectindex = ?
-    });
-    my $type =  $dbh->selectrow_array($sth, undef, $pid);
+  my $equipment_type = openprint::Equipment_Type->find_one(id=>$project->press_type_id()) if $project->press_type_id();
+  return undef if !$equipment_type;
 
-	if ( $type eq 'web' && $sid ) {
-		my $cover_type = $dbh->selectrow_array(q{
-			SELECT strvalue FROM tbl_service_specifications
-			WHERE lngserviceindex = ? and strname = 'txtSignatureType'
-		},undef,$sid);
+  my $type = $equipment_type->name();
+  if ( $type and ($type eq 'web') and $sid ) {
+    my $cover_type = $dbh->selectrow_array(q{
+      SELECT strvalue FROM tbl_service_specifications
+      WHERE lngserviceindex = ? and strname = 'txtSignatureType'
+      },undef,$sid);
 
-		if ($cover_type eq 'Cover Spreads') {
-			my $config = configuration::get_value($log, $dbh,'WebCoverPressType');
-			$type = $config if $config;
-		}
-	}
+    if ($cover_type eq 'Cover Spreads') {
+      my $config = configuration::get_value($log, $dbh,'WebCoverPressType');
+      $type = $config if $config;
+    }
+  }
 
-    return $type
+  return $type
 }
 
 sub get_cover_sid {
@@ -529,7 +535,6 @@ sub get_product_weight {
 # Get the weight of an individual signature.
 sub get_signature_weight {
     my ($log, $dbh, $pid, $sid) = @_;
-
 
     my $ptype = get_type($log, $dbh, $pid);
 
@@ -752,7 +757,8 @@ sub get_lf_jobsize {
 sub template_service_types {
     my ($log, $dbh, $pid) = @_;
     
-    my $project_type = get_type($log, $dbh, $pid);
+    my $project = new openprint::Project($pid);
+    my $project_type = $project->type();
     my $template     = get_template($log, $dbh, $pid);
     
     # Template specifications without project types apply to all project
@@ -788,11 +794,10 @@ sub template_service_types {
         # Create a hash of specifications for each service type.
         $service_type{$service}{specs}{$key} = $value;
     }
+    $openprint::log->debug('template_service_types:'.Data::Dumper::Dumper(\%service_type));
     
     return wantarray ? %service_type : \%service_type;
 }
-
-
 
 use constant START_DEP => 0;
 
@@ -836,37 +841,37 @@ sub reset_dependencies {
 
 # Get the stock totals (per estimate qty) per signature for the given project.
 sub sig_stock_prices {
-    my ($log, $dbh, $pid) = @_;
-    my (%stock, $sid, $key, $price); 
-    
-    # Lookup any stock prices stored with printing/signatures.
-    my $sth = $dbh->prepare_cached(q{
-        SELECT s.lngserviceindex, s.strname, s.strvalue::NUMERIC
-        FROM tbl_service_specifications s, tbl_project_contents c
-        WHERE s.lngserviceindex = c.lngserviceindex
-          AND s.lngprojectindex = c.lngprojectindex
-          AND c.strservicetype = 'Printing'
-		  AND c.strstatus NOT IN ('uncalculated', 'Deleted')
-          AND s.strvalue NOT IN ('N/A', 'n/a', '')
-          AND c.ysnremoved = FALSE
-          AND s.strname ~ '^txtStockPrice[1-3]$'
-          AND s.lngprojectindex = ?
+  my ($log, $dbh, $pid) = @_;
+  my (%stock, $sid, $key, $price); 
+
+  # Lookup any stock prices stored with printing/signatures.
+  my $sth = $dbh->prepare_cached(q{
+    SELECT s.lngserviceindex, s.strname, s.strvalue::NUMERIC
+    FROM tbl_service_specifications s, tbl_project_contents c
+    WHERE s.lngserviceindex = c.lngserviceindex
+    AND s.lngprojectindex = c.lngprojectindex
+    AND c.strservicetype = 'Printing'
+    AND c.strstatus NOT IN ('uncalculated', 'Deleted')
+    AND s.strvalue NOT IN ('N/A', 'n/a', '')
+    AND c.ysnremoved = FALSE
+    AND s.strname ~ '^txtStockPrice[1-3]$'
+    AND s.lngprojectindex = ?
     });
-    $sth->execute($pid);
-    $sth->bind_columns(\$sid, \$key, \$price);
+  $sth->execute($pid);
+  $sth->bind_columns(\$sid, \$key, \$price);
 
-    # A list of stock prices (one per estimate qty) for each signature.
-    while ($sth->fetch) {
-        $stock{$sid} = [0, 0, 0] unless exists $stock{$sid};
-        $key =~ /([1-3])$/;
-        next unless defined $1;
-        
-        # Our policy now is remove decimals from all stock and service total.
-         $stock{$sid}[$1 - 1] = $price;
-#        $stock{$sid}[$1 - 1] = int($price);
-    }
+  # A list of stock prices (one per estimate qty) for each signature.
+  while ($sth->fetch) {
+    $stock{$sid} = [0, 0, 0] unless exists $stock{$sid};
+    $key =~ /([1-3])$/;
+    next unless defined $1;
 
-    return \%stock;
+    # Our policy now is remove decimals from all stock and service total.
+    $stock{$sid}[$1 - 1] = $price;
+    #        $stock{$sid}[$1 - 1] = int($price);
+  }
+
+  return \%stock;
 }
 
 # Totals service and material (currently only stock) prices for the project.
@@ -962,7 +967,8 @@ sub project_info {
         SELECT t.lngindex     AS id,
                t.strid        AS ref,
                t.strname      AS name,
-               t.ysnmultipage AS is_multipage
+               t.ysnmultipage AS is_multipage,
+               t.strtemplateurl AS templateurl
         FROM tbl_projects p, tbl_projecttypes t
         WHERE p.lngprojecttype = t.lngindex
           AND p.lngprojectindex = ?
