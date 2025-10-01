@@ -939,13 +939,13 @@ sub get_service_full_price {
 sub load_service_type {
     my ($service) = @_;
 
-    $service->{ref} = $service->{type}; # Set an alias.
+    $service->{ref} = $service->{name}; # Set an alias.
 
     my $module = $service->{module};
 
     # Load the given module.
     eval "require $module;";
-    die "Failed requiring $module for $service->{type}\n\n\t$@" if $@;
+    die "Failed requiring $module for $service->{name}\n\n\t$@" if $@;
 
     # Create a $foo->can() type function that works on our non-OO modules.
     $service->{can} = sub {
@@ -970,7 +970,7 @@ sub get_specs {
 
     # Run restore if it's defined for the service.
     if (my $func = $service->{can}->('restore')) {
-        $specs = $func->($dbh, $pid, $sid, $service->{type}, $specs);
+        $specs = $func->($dbh, $pid, $sid, $service->{name}, $specs);
     }
 
     return $specs;
@@ -1002,7 +1002,7 @@ sub _from_db {
 sub price {
   my ($log, $dbh, $variable, $pid, $sid, $service, $specs, $is_save) = @_;
 
-  my $service_type = $service->{type};
+  my $service_type = $service->{name};
   $openprint::log->debug("service::price pid $pid sid $sid, $service, $service_type, $is_save");
 
   # Allow the service to convert the specs whatever dataformat it wants.
