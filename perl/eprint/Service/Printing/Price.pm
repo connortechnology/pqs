@@ -148,6 +148,10 @@ sub get_project_price {
   return {error => 'Rquired Specs not found: colour'}
   unless @{$spread->{side}[0]{colours}} || @{$spread->{side}[1]{colours}} ;
 
+  if (!($spread->{flat}{width} and $spread->{flat}{height})) {
+  return {error => 'Rquired Specs not found: flat width and/or flat height'};
+  }
+
   ## MAPPINGS
   #
   # Translate the (better than 40+ params) data structure into some of the
