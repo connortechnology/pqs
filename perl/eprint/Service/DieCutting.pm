@@ -78,8 +78,10 @@ sub calc {
   && (   $specs->{txtDieCutBends}   <= 0 || $specs->{txtDieCutPunches} <= 0 );
 
   my $ServiceType = openprint::ServiceType->find_one(name=>$service_type);
-  my @possible_equipment = openprint::Equipment->find(useinestimating=>1,'servicetype_id @>'=>$ServiceType->id(),
-    ($standard_pf ? (Specifications => {'Standard Folder Capable'=>'Y'}) : ()),
+  my @possible_equipment = openprint::Equipment->find(useinestimating=>1,
+    ($standard_pf ? (Specifications => {'Standard Folder Capable'=>'Y'}) : (
+    'servicetype_id @>'=>$ServiceType->id(),
+      )),
   );
 
   my $printing_specs = openprint::service::get_specs_ref($project, $printing_service_index);
@@ -315,7 +317,8 @@ sub display {
     my $pocket_size = get_specifications($log, $dbh, $pid, $pc, 'rdbPocketSize');
     %page = ( pocket_size => $pocket_size, is_presentationfolder => 1 );
     $$specs{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)',
-        useinestimating=>1, 'servicetype_id @>'=>$ServiceType->id(),
+        useinestimating=>1,
+#'servicetype_id @>'=>$ServiceType->id(),
         Specifications => {'Standard Folder Capable'=>'Y'}
       ) ];
   } else {
