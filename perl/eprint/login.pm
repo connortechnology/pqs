@@ -1,6 +1,5 @@
 package eprint::login;
 use strict;
-use warnings;
 use utf8;
 
 use Apache2::Const qw(:common HTTP_MOVED_TEMPORARILY);
@@ -8,6 +7,7 @@ use Apache2::Cookie ();
 use Captcha::reCAPTCHA;
 use Data::Dumper;
 
+#use sql qw(:common);
 require sql;
 require ssi;
 require eprint::obj_customer;
@@ -17,9 +17,6 @@ require eprint::user;
 require MIME::QuotedPrint;
 require crypto;
 require eprint::order;
-
-require openprint;
-require openprint::User;
 
 # displays the login page, and populates the destination variable
 sub login_display {
@@ -38,7 +35,7 @@ sub verify_login {
   my ($temp, $error, $details);
 
   # convert the email address to lower case. All email addresses stored in DB will be lower case.
-  my $email = lc openprint::User->transform(email=>$r->param('txtEmail'));
+  my $email = lc $r->param('txtEmail');
   if (!$email) {
     $error = "No password provided. Authentication Failed.";
     return misc::error($log, $dbh, $variable, $error, $details);
@@ -60,13 +57,14 @@ sub verify_login {
   my ($user_id, $cust_id, $salutation, $first_name, $last_name, $user_type) =
   sql::execute($log, $dbh, $_, $email, $password);
 
-  if (!$user_id) {
+  if ($user_id eq '') {
     # user not found. Let's see if we got the password wrong, or the email wrong.
     $_ = "SELECT lngUserID FROM tbl_Customer_Users WHERE strEmail = '$email'";
     ($user_id) = sql::sql_statement($log, $dbh, $_);
-    if (!$user_id) {
+    if ($user_id eq '') {
       $details = "\"$email\" is not a valid account. Please push the back button and try again. If you require assistance please call us at 1-888-500-0999.";
-    } else {
+    }
+    else {
       $details = "The password you entered was not correct.     Please push the back button and try again. If you require assistance please call us at 1-888-500-0999.";
     }
     $error = 'Authentication Failed.';
@@ -112,7 +110,7 @@ sub verify_login {
   # into. In this case, they are logged into the customer site.  An S value
   # is set in the supplier version of this function, and A value is set in
   # the admin version of this function
-  sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID = '$cookie'", # AND chrSite = '$site'",
+  sql::update($log, $dbh, 'tbl_Logged_In', ['strSessionID=?', $cookie],
     chrUserType     => $user_type,
     lngCustomerID   => $cust_id,
     lngUserID       => $user_id,
@@ -186,8 +184,7 @@ sub verify_login {
 sub logout {
     my ($log, $dbh, $cookie, $site) = @_;
 
-    $dbh->do('DELETE FROM tbl_logged_in WHERE strSessionID = ?' # AND chrSite = ?
-    , undef, $cookie);#, $site);
+    $dbh->do('DELETE FROM tbl_logged_in WHERE strSessionID = ?', undef, $cookie);
 
     return OK;
 }
@@ -492,7 +489,7 @@ sub login_app_process {
       && configuration::get_value($log, $dbh, 'NewCustomerAccountActivation')  eq 'Y')
     {
       # auto log in.
-      sql::update( $log, $dbh, 'tbl_Logged_In', "strSessionID='$cookie'", # AND chrSite='C'",
+      sql::update( $log, $dbh, 'tbl_Logged_In', ['strSessionID=?',$cookie],
         lngCustomerID   => $cust_id,
         lngUserID       => $user_id,
         strEmail        => $email,
@@ -615,12 +612,12 @@ sub login_app_process {
         }, undef, $cust_id);
 
       if ($activate_account eq 'Y') {
-        sql::update($log, $dbh, 'tbl_Logged_In', "strSessionID='$cookie'", # AND chrSite='C'",
-          lngCustomerID   =>  $cust_id,
+        sql::update($log, $dbh, 'tbl_Logged_In', ['strSessionID=?', $cookie],
+          lngCustomerID   => $cust_id,
           lngUserID       => $user_id,
           strEmail        => $email,
           dtmLastAccessed => 'NOW()',
-          chrUserType     =>  'C',
+          chrUserType     => 'C',
         );
         get_login_info($log, $dbh, $cookie, $variable, 'C')
       }
@@ -879,12 +876,14 @@ sub verify_user {
 
   # If the user doesn't have a cookie they aren't authenticated.
   if (!$cookie) {
-    $openprint::log->error("No cookie");
+    print STDERR "No cookie\n";
     return;
   }
 
+  my $idletime = configuration::get_value($log, $dbh, 'idletime');
+
   # Retrieve the 'session' information based on the cookie.
-  my $session = $dbh->prepare_cached(q{ SELECT lnguserid AS user_id, dtmLastAccessed AS last_visit FROM tbl_Logged_In WHERE strSessionID=?});
+  my $session = $dbh->prepare_cached(q{ SELECT lnguserid AS user, dtmLastAccessed AS last_visit FROM tbl_Logged_In WHERE strSessionID=?});
   $session = $dbh->selectrow_hashref($session, {}, $cookie);
 
   # Lookup the user that went with this session.
@@ -898,10 +897,9 @@ sub verify_user {
     WHERE c.lngcustomerid = u.lngcustomerid
     AND u.lnguserid = ?
     });
-  $user = $dbh->selectrow_hashref($user, {}, $session->{user_id});
+  $user = $dbh->selectrow_hashref($user, {}, $session->{user});
 
   if (not $session->{last_visit}) {
-    $openprint::log->debug("No last vist");
     # no logged In information yet, so create some. NOTE: This code is
     # stupid. The 0,0 bit has caused a ton of weird problems.
     sql::insert($log, $dbh, 'tbl_Logged_In',
@@ -913,38 +911,27 @@ sub verify_user {
       strSessionID    => $cookie,);
 
     $variable->{user_type} = '';
-    return;
-  }
-  
-  if ($user->{user_id}) {
-    my $idletime = $openprint::config{idletime};
-    if (!$idletime) {
-      $log->error("No idletime setting!");
-      openprint::configuration::dump();
-    } else {
-      my $now = misc::gettime();
-      if (($now-misc::gettime($session->{last_visit})) > $idletime) {
-        $openprint::log->debug("Idle timeout $now = ".misc::gettime($session->{last_visit}) . ' > '.$idletime);
-        logout($log, $dbh, $cookie, $site);
-        $$variable{idletime} = $idletime;
-        $$variable{destination} = misc::get_destination($r, $log);
+  } elsif ($user->{'user_id'} && (misc::gettime() - misc::gettime($session->{last_visit}) > $idletime)) {
+    logout($log, $dbh, $cookie, $site);
+    $$variable{'idletime'} = $idletime;
+    $$variable{'destination'} = misc::get_destination($r, $log);
 
-        $variable->{Redirect} = $site eq 'C' ? '/error/idle_timeout.html'
-        : $site eq 'A' ? '/administrator/error/idle_timeout.html'
-        : $site eq 'E' ? '/employee/error/idle_timeout.html'
-        :                undef;
-        return;
-      }
-    }
+    $variable->{Redirect} = $site eq 'C' ? '/error/idle_timeout.html'
+    : $site eq 'A' ? '/administrator/error/idle_timeout.html'
+    : $site eq 'E' ? '/employee/error/idle_timeout.html'
+    :                undef;
+  } else {
+    $cookie = $dbh->quote($cookie);
+    $site   = $dbh->quote($site);
+
+    # Update the last accessed time.
+    sql::update($log, $dbh, 'tbl_logged_in', ['strSessionID = ?', $cookie], dtmLastAccessed => 'NOW()');
+
+    # Map the user info into the global storage thingy.
+    $variable->{$_} = $user->{$_} for keys %$user;
   }
 
-  # Update the last accessed time.
-  sql::update($log, $dbh, 'tbl_logged_in', [ 'strSessionID = ?', $cookie], dtmLastAccessed => 'NOW()');
-
-  # Map the user info into the global storage thingy.
-  $variable->{$_} = $user->{$_} for keys %$user;
-
-  $$variable{CUSTOMER_CATEGORY_GREETING} = eprint::greetings::select_customer_category_greeting($log, $dbh, $user->{cust_id}) if $user->{cust_id};
+  $$variable{'CUSTOMER_CATEGORY_GREETING'} = eprint::greetings::select_customer_category_greeting($log, $dbh, $user->{cust_id}) if $user->{cust_id};
   @openprint::session{'company_id','user_id','email','user_type'} = @$user{'cust_id', 'user_id', 'email', 'user_type'};
 
   return OK;
@@ -957,6 +944,14 @@ sub get_login_info {
     # Load the session ID into variable.
     $variable->{cookie} = $cookie;
 
+    # If we're logging into the employee site, also check logins on the
+    # administrator side as we don't want admins to have to double login.
+    $site = 'A' if $site eq 'E'
+                && !$dbh->selectrow_array(q{
+                     SELECT true FROM tbl_logged_in 
+                     WHERE strsessionid = ? AND chrsite = ?
+                     AND chrusertype IN ( 'A', 'E' )}, undef, $cookie, $site);
+
     # Get the company information.
     my $company = $dbh->prepare_cached(q{
         SELECT lngcustomerid                                          AS id,
@@ -966,7 +961,8 @@ sub get_login_info {
         FROM tbl_logged_in JOIN tbl_customer USING (lngcustomerid)
         WHERE strsessionid = ?
      });
-    $company = $dbh->selectrow_hashref($company, undef, $cookie);
+   #AND chrsite      = ?
+    my $company = $dbh->selectrow_hashref($company, undef, $cookie);
 
     # User information
     my $user = $dbh->prepare_cached(q{
@@ -980,21 +976,22 @@ sub get_login_info {
         WHERE l.strsessionid = ?
     });
 
+  #AND l.chrsite      = ?
     $user = $dbh->selectrow_hashref($user, undef, $cookie);
-    $user->{company}  = $company;
-    if ($user) {
-      $$user{firstname} //= '';
-      $$user{lastname} //= '';
-      $user->{name}     = "$user->{firstname} $user->{lastname}";
-      $user->{is_staff} = $$user{type} ? ($user->{type} =~ /^[AE]$/) : 0;
 
-      # Legacy mappings.
-      $variable->{user}      = $user;
-      $variable->{user_id}   = $user->{id};
-      $variable->{user_type} = $user->{type};
-      $variable->{email}     = $user->{email};
-      $variable->{is_staff}  = $user->{is_staff};
-    }
+    # die "Invalid session or customer does not exist."
+    #     unless $company->{id} && $user->{id};
+
+    $user->{name}     = "$user->{firstname} $user->{lastname}";
+    $user->{is_staff} = ($user->{type} =~ /^[AE]$/);
+    $user->{company}  = $company;
+
+    # Legacy mappings.
+    $variable->{user}      = $user;
+    $variable->{user_id}   = $user->{id};
+    $variable->{user_type} = $user->{type};
+    $variable->{email}     = $user->{email};
+    $variable->{is_staff}  = $user->{is_staff};
     $variable->{cust_id}   = $company->{id};
     $variable->{Reseller}  = $company->{is_reseller} ? 'Y' : 'N';
     $variable->{Supplier}  = $company->{is_supplier} ? 'Y' : 'N';
@@ -1042,7 +1039,7 @@ sub display_select_customer {
   my $sql;
 
   my $company = openprint::Company->find_one(id=>$cust_id);
-  my $is_reseller = ($company and ($company->reseller() eq 'Y')) ? 1 : 0;
+  my $is_reseller = $company and ($company->reseller() eq 'Y');
 
   # Let Admins select anybody.
   if ($variable->{user_type} eq 'A') {
@@ -1082,10 +1079,8 @@ sub select_customer {
   my ($r, $log, $dbh, $cookie, $variable, $customer) = @_;
 
   my $cust_id = $customer || $r->param('ddmCustomer') || $r->param('SelectCustomer') || $r->param('ddmCompany');
-  if ($cust_id) {
+  if ($cust_id and ($cust_id != $openprint::session{company_id})) {
     sql::update($log, $dbh, 'tbl_Logged_In', ['strSessionID=?', $cookie], lngCustomerID => $cust_id);
-
-    $variable->{cust_id} = $cust_id;
 
     # Update this session's company information to the newly selected one.
     $variable->{user}{company} = $dbh->selectrow_hashref(q{
