@@ -880,7 +880,7 @@ sub verify_user {
   # If the user doesn't have a cookie they aren't authenticated.
   if (!$cookie) {
     $openprint::log->error("No cookie");
-    return;
+    return AUTH_REQUIRED;
   }
 
   # Retrieve the 'session' information based on the cookie.
@@ -913,7 +913,7 @@ sub verify_user {
       strSessionID    => $cookie,);
 
     $variable->{user_type} = '';
-    return;
+    return Apache2::Const::AUTH_REQUIRED;
   }
   
   if ($user->{user_id}) {
@@ -933,7 +933,7 @@ sub verify_user {
         : $site eq 'A' ? '/administrator/error/idle_timeout.html'
         : $site eq 'E' ? '/employee/error/idle_timeout.html'
         :                undef;
-        return;
+        return Apache2::Const::AUTH_REQUIRED;
       }
     }
   }
