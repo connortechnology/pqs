@@ -148,9 +148,6 @@ sub get_project_price {
   return {error => 'Required Specs not found: colour'}
   unless @{$spread->{side}[0]{colours}} || @{$spread->{side}[1]{colours}} ;
 
-  if (!($spread->{flat}{width} and $spread->{flat}{height})) {
-    return {error => 'Required Specs not found: flat width and/or flat height'};
-  }
   if ($Project->is_presentation_folder() and ! $spread->{template}) {
     return {error => 'Required Specs not found: please select the type of presentation folder'};
   }
@@ -373,6 +370,10 @@ sub get_project_price {
     $project->{override}{margin}    = 1;
     $project->{bleed}               = [0,0,0,0];
     $project->{colour_bar}          = 0;
+  } else {
+    if (!($spread->{flat}{width} and $spread->{flat}{height})) {
+      return {error => 'Required Specs not found: flat width and/or flat height'};
+    }
   }
   if (!($project->{width} && $project->{height})) {
     die "No dimensions.";
