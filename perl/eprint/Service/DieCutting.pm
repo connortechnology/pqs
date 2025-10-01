@@ -44,16 +44,18 @@ sub calc {
   my $status = 'calculated';
   $$specs{alert} = '';
 
-  my $standard_pf            = 0;
+  my $project = new openprint::Project($pid);
+  my $standard_pf            = $project->is_presentation_folder();
+
   my $check_failed_equipment = 0;
   my @signature_indices = get_signature_indices( $log, $dbh, $pid );
   my $printing_service_index = shift @signature_indices;
 
   $specs->{template} ||= get_template($log, $dbh, $pid);
 
-  if ($specs->{template} && $specs->{template} =~ /^PresentationFolderStandard[12]Pocket$/ ) {
+
+  if ($standard_pf) {
     $specs->{rdbDieCutting} = 'Simple';
-    $standard_pf = 1;
   }
 
   # Return Uncalculated so that we can collect information needed
@@ -76,22 +78,10 @@ sub calc {
   && (   $specs->{txtDieCutBends}   <= 0 || $specs->{txtDieCutPunches} <= 0 );
 
   my $ServiceType = openprint::ServiceType->find_one(name=>$service_type);
-  my @possible_equipment = openprint::Equipment->find(useinestimating=>1,'servicetype_id @>'=>$ServiceType->id());
+  my @possible_equipment = openprint::Equipment->find(useinestimating=>1,'servicetype_id @>'=>$ServiceType->id(),
+    ($standard_pf ? (Specifications => {'Standard Folder Capable'=>'Y'}) : ()),
+  );
 
-  my @folder_makers;
-
-  if ($standard_pf) {
-    @folder_makers = sql_statement( $log, $dbh, q{
-      SELECT lngEquipmentIndex 
-      FROM tbl_Equipment_Specifications 
-      WHERE strName  = 'Standard Folder Capable' 
-      AND strValue = 'Y' 
-      });
-
-    if (@folder_makers) { @possible_equipment = @folder_makers; }
-  }
-
-  my $project = new openprint::Project($pid);
   my $printing_specs = openprint::service::get_specs_ref($project, $printing_service_index);
 
   $specs->{flat_width} = $$printing_specs{flat_width} unless $specs->{flat_width};
@@ -221,7 +211,7 @@ sub calc_price {
   # The cost of creating the die (for a single project).
   my $die_price = $specs->{"chkOverrideDiePrice$qty_index"} eq 'Y'
   ? $specs->{"txtCustomDiePrice$qty_index"} 
-  : die_price($log, $dbh, $variable, $specs, $eid, $standard_pf);
+  : die_price($log, $dbh, $variable, $specs, $equipment, $standard_pf);
 
   # TODO error handling.
   if (!($specs->{"rdbSuppliedDie"} eq 'Y' || $standard_pf || $die_price)) {
@@ -248,7 +238,6 @@ sub calc_price {
   my $subtotal = $make_ready + $run_price;
   $subtotal = $minimum_price if $subtotal && $minimum_price > $subtotal;
 
-  my %price;
   $price{'DiePrice'}       = $die_price;
   $price{'MakeReadyPrice'} = $make_ready;
 
@@ -315,31 +304,30 @@ sub save {
 sub display {
   my ($log, $dbh, $service_type, $pid, $sid, $specs) = @_;
 
-  my $pc = get_print_container( $log, $dbh, $pid );
   my $project = new openprint::Project($pid);
-  my $type = $project->Type();
+  my %page;
 
-  my $template = get_template($log, $dbh, $pid);
+  my $pc = get_print_container( $log, $dbh, $pid );
+  my $ServiceType = openprint::ServiceType->find_one(name=>$service_type);
 
   # Presentation folders bear no resemblance to normal die cutting.
-  if (($type->name() eq 'PresentationFolders') or ($template =~ /^PresentationFolderStandard[12]Pocket$/)) {
+  if ($project->is_presentation_folder()) {
     my $pocket_size = get_specifications($log, $dbh, $pid, $pc, 'rdbPocketSize');
-    return { pocket_size => $pocket_size, is_presentationfolder => 1 }
-  };
+    %page = ( pocket_size => $pocket_size, is_presentationfolder => 1 );
+    $$specs{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)',
+        useinestimating=>1, 'servicetype_id @>'=>$ServiceType->id(),
+        Specifications => {'Standard Folder Capable'=>'Y'}
+      ) ];
+  } else {
+    %page = get_specifications_pairs( $log, $dbh, undef, $pc,
+      qw( flat_width    flat_height final_width   final_height ));
+    map  { $specs->{$_} = $page{$_} } keys %page;
 
-  my %page = get_specifications_pairs(
-    $log,            $dbh,
-    undef,           $pc,
-    qw( flat_width    flat_height
-    final_width   final_height 
-    ));
-  map  { $specs->{$_} = $page{$_} } keys %page;
+    $page{Glued} = $page{rdbGluedY} ? 'Yes' : 'No';
+    $$specs{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)',
+        useinestimating=>1, 'servicetype_id @>'=>$ServiceType->id()) ];
+  } # end if presentation folder or not
 
-  $page{Glued} = $page{rdbGluedY} ? 'Yes' : 'No';
-
-  my $ServiceType = openprint::ServiceType->find_one(name=>$service_type);
-  $$specs{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)',
-      useinestimating=>1,'servicetype_id @>'=>$ServiceType->id() ) ];
   for my $i (1..3) {
     $page{"ddmEquipmentOptions$i"} = ssi::make_drop_down([map { $_->id(), $_->name() } @{$$specs{Equipment}}]);
   }
