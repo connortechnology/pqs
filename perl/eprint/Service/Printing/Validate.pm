@@ -79,7 +79,7 @@ sub spread {
     $value =~ tr/0-9.//cd;
 
     die "Invalid dimesion for $type $dim. It must be a positive real number."
-    unless defined $value && $value > 0 && $value =~ /^\d+\.?\d*$/;
+    unless defined($value) and ($value > 0) and ($value =~ /^\d+\.?\d*$/);
 
     $spread{$type}{$dim} = $specs->{"${type}_$dim"};
   }
