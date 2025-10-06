@@ -42,10 +42,10 @@ sub save_service {
 
 	$log->debug('***** START OF  save_service ************');
 	my $Project = new openprint::Project($project_index);
-	my $Service = $Project->Service($service_index);
-	my $ServiceType = $Service->ServiceType();
+	my $service = $Project->Service($service_index);
+	my $ServiceType = $service->ServiceType();
 
-	my $specs = $Service->specs();
+	my $specs = $service->specs();
 
 	my $service_type = $openprint::param{ServiceType};
   $service_type = $ServiceType->type() if !$service_type;
@@ -53,12 +53,19 @@ sub save_service {
 		$log->error("No serviceType in params for service $service_index.  Trying to recover");
 	} # end if
 	if ( !$service_type ) {
-		$service_type = $Project->Type()->type();
-	} # end if
-	my $module = 'openprint::Estimating::'.$service_type;
-$openprint::log->debug("Module is: $module");
+    $service_type = $Project->Type()->type();
+  } # end if
 
-	eval ( 'require '.$module.';' );
+  my $module = $service->ServiceType()->module() || $service->service_type();
+  $log->debug("$module from ".Data::Dumper::Dumper($service->ServiceType()));
+  $module = 'openprint::Estimating::'.$module if $module !~ /openprint::Estimating/;
+  eval {
+    my $path = $module;
+    $path =~ s/::/\//g;
+    # FIXME potential security problem here, need to sanitise service_type
+    require $path.'.pm';
+  };
+                       
 	$log->error($@) if $@;
 	my @variables = eval( $module.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
@@ -92,6 +99,7 @@ $log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		$Project->add_service( $service_type );
 	} # end if
 	$Project->add_to_log(@openprint::session{'company_id','user_id'}, $service_type. ' service saved: '.join('<br/>', @changes));
+  $Project->save({build=>1});
 
 	$log->debug('***** END  OF  save_service ************');
 } # end sub save_service
