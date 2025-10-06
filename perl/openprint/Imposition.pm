@@ -1345,6 +1345,7 @@ sub form {
   return $$self{form} if $$self{form};
   $$self{form} = $$self{specs}{Form} || $$self{specs}{SignatureIndex} || 1;
   $$self{form} = 1 if $$self{form} > 10;
+  $$self{specs}{Form} = $$self{form};
   return $$self{form};
 }
 
