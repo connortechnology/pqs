@@ -32,7 +32,6 @@ sub set_material_estimate {
   }
   $qry = "insert into service_materials (sid, mid, qty_index, estimate) values (?, ?, ?, ?)";
   $dbh->do($qry, undef, $sid, $mid, $qty_index, $estimate) or die "Failed to insert into service_materials $!\n";
-  $dbh->commit;
 }
 
 sub set_material_actual {
