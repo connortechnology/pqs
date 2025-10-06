@@ -1,13 +1,13 @@
 
-.Proofs .quantity {
+table .quantity {
 	width: 54px;
 	text-align: left;
 }
-.Proofs .quantity input[type="number"] ,
-.Proofs .quantity input[type="text"] {
+table .quantity input[type="number"] ,
+table .quantity input[type="text"] {
 	width: 54px;
 }
-.Proofs .dimensions {
+table .dimensions {
 	width: 170px;
 	text-align: center;
 }
@@ -17,11 +17,11 @@
 	width: 55px;
 }
 */
-.Proofs .type {
+table .type {
 	text-align: left;
 }
 
-.Proofs .additional td, .Proofs .totals td, .Proofs .breakdown td {
+table .additional td, .Proofs .totals td, .Proofs .breakdown td {
 	text-align: right;
 }
 .Proofs .Price {
