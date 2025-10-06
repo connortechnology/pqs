@@ -370,13 +370,9 @@ sub get_project_price {
     $project->{override}{margin}    = 1;
     $project->{bleed}               = [0,0,0,0];
     $project->{colour_bar}          = 0;
-  } else {
-    if (!($spread->{flat}{width} and $spread->{flat}{height})) {
-      return {error => 'Required Specs not found: flat width and/or flat height'};
-    }
   }
   if (!($project->{width} && $project->{height})) {
-    die "No dimensions.";
+    return {error => 'Required Specs not found: flat width and/or flat height'};
   }
 
   if ($project->{width} < $project->{minwidth} || $project->{height} < $project->{minheight}) {
