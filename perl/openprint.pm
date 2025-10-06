@@ -240,6 +240,7 @@ sub switch_company {
 		$Order->save({session_id => undef });
 	} # end foreach Order
 	my @keys = sets::exclude( [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ], [ keys %session ] );
+  $variable{cust_id} = $session{company_id};
 	delete @session{@keys};
 } # end sub switch_company
 
