@@ -279,8 +279,8 @@ sub add_defaults {
 		$$indexes{$form}[3] = 3;
 	} # end if
 
-  my $binding = $Project->get_book_type();
-  $openprint::log->debug("BINDERY $binding");
+  my $binding = $Project->get_book_type() // '';
+  #$openprint::log->debug("BINDERY $binding");
   if ($binding and sets::isin($binding, ['SaddleStitching', 'LoopStitching', 'PerfectBound', 'PerfectBinding'])
       and $openprint::config{Add_Default_Folding_Proof} eq 'Y') {
     if (!$$indexes{$form}[4]) {
