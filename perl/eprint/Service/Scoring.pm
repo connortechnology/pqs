@@ -181,6 +181,9 @@ sub calc {
             next unless $specs->{"txtScoreQty-$sig"} 
                      || $specs->{"txtPerfQty-$sig"};
 
+            $specs->{"txtScoreQty-$sig"} //= 0;
+            $specs->{"txtPerfQty-$sig"} //= 0;
+
             # I moved this down so we can lookup hdnPress in the same query as
             # everything else, and so that if we aren't scoring this
             # signature, none of this will be done 
