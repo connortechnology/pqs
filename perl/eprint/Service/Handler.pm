@@ -243,28 +243,21 @@ sub response {
 
     # AJAX pricing request.
     if ($r->method_number == M_GET) {
-      #$dbh->rollback; # GET requests don't save.
-
       $specs->{status} = $status; # Send client the status
       $openprint::log->debug("Response: ".Data::Dumper::Dumper($specs));
       my $coder = JSON::XS->new->ascii->pretty->allow_nonref;
-
       my $response = $coder->encode( $specs );
-
       $r->content_type('application/json; charset=utf-8');
       print $response;
-    }
-    # Form submission (save).
-    else {
+    } else {
+      # Form submission (save).
       print STDERR "Saving $status\n";
       # Save the service, set it's state, and continue the project.
       eprint::service::save($r->log, $dbh, $pid, $sid, $service, $form, $specs);
       eprint::service::set_status($r->log, $dbh, $pid, $status, $sid);
-
-      eprint::service::recalc_dependencies($r->log, $dbh, $pid, $sid);
-
-      $dbh->commit;
-
+      if ($status eq 'calculated') {
+        eprint::service::recalc_dependencies($r->log, $dbh, $pid, $sid);
+      }
       my $location = $status eq 'calculated' ? PROJECT_BUILD_PAGE : PROJECT_VIEW_PAGE;
 
       print STDERR "Location $location $status\n";
@@ -272,7 +265,7 @@ sub response {
 
       $location = $r->param('Location') if $r->param('Location');
 
-      $r->headers_out->set(Location => "$location");
+      $r->headers_out->set(Location => $location);
       $r->status(HTTP_MOVED_TEMPORARILY);
     }
   }
