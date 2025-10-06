@@ -118,7 +118,9 @@ sub variables {
   my @v = @variables;
   foreach my $s_s_id ( $Project->signatures() ) {
     my $sig_specs = openprint::service::get_specs_ref($Project, $s_s_id);
-    my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
+    my $imposition = new openprint::Imposition();
+    $imposition->load( $sig_specs, 1, $Project );
+    my $form = $imposition->form();
     push @v, (
       "txtWidth-$form", "txtHeight-$form", "chkOverrideDimensions-$form",
       "sheet_width-$form", "sheet_height-$form", "override_sheetsize-$form",
@@ -153,7 +155,9 @@ sub outputs {
   my $Project = new openprint::Project($p_id);
   foreach my $s_s_id ( $Project->signatures() ) {
     my $sig_specs = openprint::service::get_specs_ref($Project, $s_s_id);
-    my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
+    my $imposition = new openprint::Imposition();
+    $imposition->load( $sig_specs, 1, $Project );
+    my $form = $imposition->form();
     push @o, (
       "txtWidth-$form", "txtHeight-$form",
       "calliper-$form",
@@ -195,9 +199,10 @@ sub calc {
   my @sigs = $Project->signatures({ sort=>1 });
   foreach my $signature_service_id (@sigs) {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_id );
-    my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
-    $form = $$sig_specs{Form} || 1 if $form > 10;
-    my $stock = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
+    my $imposition = new openprint::Imposition();
+    $imposition->load( $sig_specs, 1, $Project );
+    my $form = $imposition->form();
+    my $stock = $imposition->Paper();
 
     $$specs{"override_film_width-$form"} //= '';
     $$specs{'chkOverrideDimensions-'.$form} //= '';
@@ -290,8 +295,9 @@ sub calc {
 
     foreach my $signature_service_id (@sigs) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_id );
-      my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
-      $form = $$sig_specs{Form} || 1 if $form > 10;
+      my $imposition = new openprint::Imposition();
+      $imposition->load( $sig_specs, $qty_index, $Project );
+      my $form = $imposition->form();
 
       if ((!$$specs{"TypeFront-$form"}) and (!$$specs{"TypeBack-$form"})) {
         #$$specs{'hdnBreakdown'.$qty_index} .= " not doing lamination on form $form<br/>";
@@ -364,7 +370,7 @@ sub signature_calc {
   my ($Project, $specs, $qty_index, $imposition) = @_;
 
   my $sig_specs = $$imposition{specs};
-  my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
+  my $form = $imposition->form();
 	my $qty = int $$specs{"txtQuantity$qty_index"};
 
   my %sig_price = (
@@ -439,6 +445,7 @@ sub signature_calc {
       $openprint::log->debug("Laminate widths on $$equipment{name}: @film_widths from $film_width_options");
     }
 
+    $$specs{"override_film_width-$form"} //= '';
     if ($$specs{"override_film_width-$form"} eq 'Y') {
       if ($$specs{"custom_film_width-$form"}) {
         @film_widths = map { $_ =~ s/[^\d\.]//; $_ } ($$specs{"custom_film_width-$form"});
@@ -922,9 +929,11 @@ sub get_laminating_imposition {
   return $imposition;
 } # end sub get_laminating_imposition
 
+
 #($r->log, $dbh, $service->{type}, $pid, $sid, $specs, $variable)
 sub display {
-	my ( $log, $dbh, $type, $project_index, $service_index, $specs, $variable ) = @_;
+  my ( $log, $dbh, $specs, $project_index, $service_index ) = @_;
+ #my ( $log, $dbh, $project_index, $service_index, $specs, $variable ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
   $ServiceType = $Project->ServiceType($service_index);
@@ -932,15 +941,15 @@ sub display {
   my %page;
 	my @equipment = openprint::Equipment->find('servicetype_id any' => $ServiceType->id(), useinestimating=>1, order=>'strName');
 	foreach my $qty_index ( $Project->quantity_indexes() ) {	
-    $page{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->strid(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
+    $page{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->strid(), $_->name() } @equipment ], $$specs{'ddmEquipment'.$qty_index} );
 
     my @sigs = $Project->signatures({ sort=>1 });
     foreach my $signature_service_id (@sigs) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_id );
-      my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
+      my $imposition = new openprint::Imposition();
+      $imposition->load( $sig_specs, $qty_index, $Project );
+      my $form = $imposition->form();
       if (!$$specs{"override_calliper-$form"} or $$specs{"override_calliper-$form"} ne 'Y') {
-        my $imposition = new openprint::Imposition();
-        $imposition->load( $sig_specs, $qty_index, $Project );
         my $stock = $imposition->Paper();
         $$specs{"calliper-$form"} = $stock->calliper();
       }
@@ -956,7 +965,9 @@ sub summary {
   my @sigs = $Project->signatures({ sort=>1 });
   foreach my $signature_service_id (@sigs) {
     my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_id );
-    my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
+    my $imposition = new openprint::Imposition();
+    $imposition->load( $sig_specs, $qty_index, $Project );
+    my $form = $imposition->form();
 
     if ($$specs{"TypeFront-$form"} or $$specs{"TypeBack-$form"}) {
       $summary .= (@sigs > 1) ? 'Form '.$form.' ': '';
@@ -1005,7 +1016,9 @@ sub has_overrides {
     push @v, map { ($$specs{$_.$qty_index} and ($$specs{$_.$qty_index} eq 'Y')) ? $_.$qty_index : () } ( 'OverridePrice' );
     foreach my $s_s_id ( $Project->signatures() ) {
       my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-      my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
+      my $imposition = new openprint::Imposition();
+      $imposition->load( $sig_specs, $qty_index, $Project );
+      my $form = $imposition->form();
       push @v, map { ($$specs{$_} and ($$specs{$_} eq 'Y')) ? $_ : () } (
         "chkOverrideEquipment-$form-$qty_index",
         "chkOverrideDimensions-$form",
