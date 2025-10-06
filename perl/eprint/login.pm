@@ -1090,8 +1090,10 @@ sub select_customer {
   my ($r, $log, $dbh, $cookie, $variable, $customer) = @_;
 
   my $cust_id = $customer || $r->param('ddmCustomer') || $r->param('SelectCustomer') || $r->param('ddmCompany');
-  if ($cust_id and ($cust_id != $openprint::session{company_id})) {
+  #if ($cust_id and ($cust_id != $openprint::session{company_id})) {
+    $openprint::log->debug("Changing customer to $cust_id from $openprint::session{company_id}");
     sql::update($log, $dbh, 'tbl_Logged_In', ['strSessionID=?', $cookie], lngCustomerID => $cust_id);
+    $$variable{cust_id} = $cust_id;
 
     # Update this session's company information to the newly selected one.
     $variable->{user}{company} = $dbh->selectrow_hashref(q{
@@ -1101,7 +1103,7 @@ sub select_customer {
       (CASE WHEN ysnreseller = 'Y' THEN true ELSE false END) AS is_reseller,
       ordercredit
       FROM tbl_customer WHERE lngcustomerid = ?
-      }, undef, $variable->{cust_id});
+      }, undef, $cust_id);
 
     $variable->{strCompanyName} = $variable->{user}{company}{name};
     $variable->{dollarcredit}  = $variable->{user}{company}{ordercredit} // '0.00';
@@ -1115,8 +1117,9 @@ sub select_customer {
 
     my $company = openprint::Company->find_one(id=>$cust_id);
     openprint::switch_company($company) if $company;
-    #print STDERR "VERIFY HAVE ORDER: $order_id OC: $variable->{order_count} \n";
-  }  # end if cust_id
+    #} else {
+    #$openprint::log->debug("Not changing customer");
+    #}  # end if cust_id
   return OK;
 }
 
