@@ -612,12 +612,19 @@ sub parse_page {
 
 					} # end if
 				} elsif ($third eq 'spec') {
-					if ( $filename =~ /^(\w*).html$/ ) {
-            my $module = $1;
+          my $module = $variable{ServiceType}->module();
+          if (!$module and ( $filename =~ /^(\w*).html$/ )) {
+            $module = $1;
+          }
+          if ($module) { 
+            $module = 'openprint::Estimating::'.$module if $module !~ /openprint::Estimating/;
+            my $path = $module;
+            $path =~ s/::/\//g;
             eval {
-              require "openprint/Estimating/$module.pm";
-              if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
-                $function->($log, $dbh, \%variable, $project_index, $service_index );
+              require "$path.pm";
+              if ( my $function = $module->can('display') ) {
+                my %page = $function->($log, $dbh, \%variable, $project_index, $service_index );
+                @variable{keys %page} = values %page;
               } else {
                 $log->error("No display function for $module");
               }

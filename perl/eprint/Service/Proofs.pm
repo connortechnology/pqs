@@ -139,12 +139,9 @@ sub calc_proofs {
   }
 
   foreach my $type (keys %proof_totals) {
-    my $service = $dbh->selectrow_array(q{
-      SELECT lngindex FROM tbl_services WHERE strid = ?
-      }, undef, $type);
-
+    my $service = openprint::Service->find_one(name=>$type);
     my ($price, $units) = eprint::service::price_item(
-      $dbh, $variable->{cust_id}, $service, $proof_totals{$type}{Quantity}
+      $dbh, $variable->{cust_id}, $$service{id}, $proof_totals{$type}{Quantity}
     );
 
     $proof_totals{$type}{Price} = $price;
@@ -160,12 +157,10 @@ sub calc_proofs {
     my $height   = $specs->{"txtProofHeight-$1"};
     my $quantity = $specs->{"txtProofQuantity-$1"};
 
-    my $service = $dbh->selectrow_array(q{
-      SELECT lngindex FROM tbl_services WHERE strid = ?
-      }, undef, $type);
+    my $service = openprint::Service->find_one(name=>$type);
 
     my ($price, $units, $proofer) = eprint::service::price_item(
-      $dbh, $variable->{cust_id}, $service, $width * $height
+      $dbh, $variable->{cust_id}, $$service{id}, $width * $height
     );
 
     if (!$type || !$proofer) {
@@ -226,22 +221,16 @@ sub calc_proofs {
 
   foreach my $key (keys(%$specs)) {
     if ($key =~ /txtProofQuantity-(.*)/) {
-      $$specs{ 'txtProofUnitPrice' . $1 } =
-      sprintf('%.2f', $totalPrice / $totalQuantity)
-      if ($totalQuantity > 0)
-      ;    #added the if for robustness - was crashing system - Duke
+      $$specs{ 'txtProofUnitPrice' . $1 } = sprintf('%.2f', $totalPrice / $totalQuantity) if ($totalQuantity > 0);
     }
   }
-  my $minCharge =
-  eprint::service::get_price($log, $dbh, $variable, 'ProofsMinimumCharge',
-    undef, undef) || 0;
+  my $minCharge = eprint::service::get_price($log, $dbh, $variable, 'ProofsMinimumCharge', undef, undef) || 0;
   if ($totalPrice < $minCharge and $totalQuantity) {
     $totalPrice = $minCharge;
 
     foreach my $key (keys(%$specs)) {
       if ($key =~ /txtProofQuantity-(.*)/) {
-        $$specs{ 'txtProofUnitPrice' . $1 } =
-        sprintf('%.2f', $totalPrice / $totalQuantity);
+        $$specs{ 'txtProofUnitPrice' . $1 } = sprintf('%.2f', $totalPrice / $totalQuantity);
       }
     }
 
@@ -555,20 +544,13 @@ sub insert_layout_proof {
 }
 
 sub insert_new_proof {
-  my ($log,   $dbh, $pid,   $sid,    $proof_index,
-    $index, $qty, $width, $height, $type
-  ) = @_;
+  my ($log,   $dbh, $pid,   $sid,    $proof_index, $index, $qty, $width, $height, $type) = @_;
 
-  eprint::service::insert_service_spec(
-    $log, $dbh, $pid, $sid, "txtProofQuantity-$index-$proof_index", $qty);
-  eprint::service::insert_service_spec(
-    $log, $dbh, $pid, $sid, "txtProofWidth-$index-$proof_index", $width);
-  eprint::service::insert_service_spec(
-    $log, $dbh, $pid, $sid, "txtProofHeight-$index-$proof_index", $height);
-  eprint::service::insert_service_spec(
-    $log, $dbh, $pid, $sid, "ddmProofType-$index-$proof_index", $type);
-  eprint::service::insert_service_spec(
-    $log, $dbh, $pid, $sid, "txtProofArea-$index-$proof_index", $width * $height * $qty);
+  eprint::service::insert_service_spec( $log, $dbh, $pid, $sid, "txtProofQuantity-$index-$proof_index", $qty);
+  eprint::service::insert_service_spec( $log, $dbh, $pid, $sid, "txtProofWidth-$index-$proof_index", $width);
+  eprint::service::insert_service_spec( $log, $dbh, $pid, $sid, "txtProofHeight-$index-$proof_index", $height);
+  eprint::service::insert_service_spec( $log, $dbh, $pid, $sid, "ddmProofType-$index-$proof_index", $type);
+  eprint::service::insert_service_spec( $log, $dbh, $pid, $sid, "txtProofArea-$index-$proof_index", $width * $height * $qty);
 }
 
 

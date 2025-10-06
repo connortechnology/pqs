@@ -400,29 +400,34 @@ sub calc {
 		$Project = openprint::Project->find_one( id=>$param{ProjectIndex} );
 	}
   $Project = new openprint::Project() if !$Project;
-	my $Service;
+	my $service;
 	if ( $param{ServiceIndex} ) {
-		my $Service = $Project->Service( $param{ServiceIndex} );
+		$service = $Project->Service( $param{ServiceIndex} );
+    $log->debug("Get service from ServiceIndex".$service);
 	}
-	if (!$Service and $param{ServiceType}) {
-		$Service = new openprint::Project_Service();
-		$Service->set({ project_id=>$Project->id(), service_type=>openprint::ServiceType->transform(name=>$param{ServiceType}) } );
+	if ((!$service) and $param{ServiceType}) {
+    $log->error("Reconstucting ServiceType");
+		$service = new openprint::Project_Service();
+		$service->set({ project_id=>$Project->id(), service_type=>openprint::ServiceType->transform(name=>$param{ServiceType}) } );
 	}
 
-  if (!($Service and $Service->service_type())) {
+  if (!($service and $service->service_type())) {
     $log->error("Unable to determine service type");
     return (alert=>'Unable to determine service type.');
   }
+  my $module = $service->ServiceType()->module() || $service->service_type();
+  $log->debug("$module from ".Data::Dumper::Dumper($service->ServiceType()));
+  $module = 'openprint::Estimating::'.$module if $module !~ /openprint::Estimating/;
 	eval {
+    my $path = $module;
+    $path =~ s/::/\//g;
     # FIXME potential security problem here, need to sanitise service_type
-		require 'openprint/Estimating/'.$Service->service_type().'.pm';
+		require $path.'.pm';
 	};
   if ($@) {
-    $log->error("Error requiring $$Service{service_type}: $@");
-    return (alert=>"Unable to load code for $$Service{service_ype}.");
+    $log->error("Error requiring $module: $@");
+    return (alert=>"Unable to load code for $module.");
   }
-  my $module = 'openprint::Estimating::'.$Service->service_type();
-
 	$param{method} = 'calc' if ! $param{method};
 # Not sure this is a good idea, but its neccessary for printing... why is it neccessary?
   # I think soas to populte the cache with live values instead of whats in the db

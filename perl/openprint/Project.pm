@@ -2118,17 +2118,25 @@ sub get_book_type {
   my $services = $Project->services();
 
 # the way we cut down the book depends on how it is being bound, so we need this for the signature information.
-  foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound' ) {
+  my @services = ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound' );
+
+  foreach my $service (@services) {
     if ( $$services{$service} ) {
       return $service;
     } # end if
   } # end foreach
 
-  if ( $$services{''} and @{$$services{''}} ) {
-    my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-    if ( $$printing_specs{rdbTemplateType} and ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) ) {
-      return 'PerfectBound';
+  my $sid = $Project->get_print_container();
+  if ($sid) {
+    my $printing_specs = openprint::service::get_specs_ref( $Project, $sid );
+    if ( $$printing_specs{rdbTemplateType} and sets::isin($$printing_specs{rdbTemplateType}, \@services)) {
+      return $$printing_specs{rdbTemplateType};
+    } elsif ( $$printing_specs{template} and sets::isin($$printing_specs{template}, \@services)) {
+      return $$printing_specs{template};
     } # end if
+    $openprint::log->error("Unknown template type $$printing_specs{rdbTemplateType}");
+  } else {
+    $openprint::log->error("No print container");
   } # end if
   return;
 } # end sub get_book_type

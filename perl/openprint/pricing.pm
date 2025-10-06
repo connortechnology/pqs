@@ -35,7 +35,6 @@ sub init_cache {
 	my @Materials = openprint::Material->find();
   my @Pricelists = openprint::Pricelist->find();
   foreach my $Pricelist ( @Pricelists ) {
-    #my $Pricelist = $openprint::Pricelist;
 		foreach my $S ( openprint::ServicePrice->find( 'period_end is null'=>1, 
         #(($openprint::Pricelist and $openprint::Pricelist->id()) ? (pricelist_id=>$openprint::Pricelist->id()):()),
         pricelist_id=>$Pricelist->id(),
@@ -57,10 +56,11 @@ sub init_cache {
 		} # end foreach ServicePrice
   } # end foreach Pricelist
 	foreach my $Service ( @Services ) {
-		$Service->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} : () } @Pricelists ] );
+    my $cache = 
+		$Service->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} ? @{$price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}}} : () } @Pricelists ] );
 	} # end foreach Service
 	foreach my $Material ( @Materials ) {
-		$Material->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} : () } @Pricelists ] );
+		$Material->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} ? @{$price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}}} : () } @Pricelists ] );
 	} # end foreach Material
   $openprint::log->debug("Done picing::init_cahce");
 }

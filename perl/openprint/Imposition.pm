@@ -1342,9 +1342,29 @@ sub press_type {
 sub form {
   my $self = shift;
   return undef if ! $$self{specs};
-  return $$self{form} if $$self{form};
-  $$self{form} = $$self{specs}{Form} || $$self{specs}{SignatureIndex} || 1;
-  $$self{form} = 1 if $$self{form} > 10;
+  #return $$self{form} if $$self{form};
+  my $form = $$self{form} = $$self{specs}{Form} || $$self{specs}{SignatureIndex};
+  if (!$form or $form>100) {
+    if ($$self{specs}{ServiceIndex}) {
+      my $project = $self->Project();
+
+      $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
+      ( $form ) = sql::execute( $openprint::log, $openprint::dbh, $_, $project->id() );
+      $form = $form ? $form+1 : 1;
+      openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project->id(), $$self{specs}{ServiceIndex}, 'Form', $form);
+    } elsif ($form > 100) {
+      my $project = $self->Project();
+      my $sig_id = $form;
+      $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
+      ( $form ) = sql::execute( $openprint::log, $openprint::dbh, $_, $project->id() );
+      $form = $form ? $form+1 : 1;
+      openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project->id(), $sig_id, 'Form', $form);
+    } else {
+      $form = 1;
+    }
+  }
+
+  $$self{specs}{Form} = $$self{form} = $form;
   return $$self{form};
 }
 

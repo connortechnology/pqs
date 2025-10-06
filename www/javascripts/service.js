@@ -1,0 +1,1 @@
+/var/www/pqs/www/openprint/javascripts/service.js
