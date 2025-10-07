@@ -33,9 +33,10 @@ sub view_services {
   my $changed = 0;
 
   if ($project->build()) {
-    $log->debug("Needs build");
     eprint::Build::build($log, $dbh, $pid, $variable, 0);
     $project->save({build=>0});
+  } else {
+    $log->debug("Project $pid does not need bulilding");
   }
 
   if ( $r->param('start') && $r->param('end') ) {
