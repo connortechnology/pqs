@@ -324,6 +324,8 @@ sub action {
   # Check to see if there are INTERIORS before adding.
   if (! $specs->{ INTERIOR() }) {
     #print STDERR "Don't have interior because we removed them!".INTERIOR()."\n";
+    my $project = new openprint::Project($pid);
+    $project->services(undef);
     return 1;
   }
 
@@ -365,6 +367,8 @@ sub action {
 
   # NOTE: The bindery types will take care of themselves.
 
+    my $project = new openprint::Project($pid);
+    $project->services(undef);
   return 1;
 }
 
