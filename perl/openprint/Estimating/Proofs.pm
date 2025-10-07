@@ -687,7 +687,7 @@ sub insert_layout_proof {
   $log->debug("Using $$proofer{name} for equipment");
   my ($width, $height, $sides) = $proofer->specifications(
     'Default Layout Proof Width','Default Layout Proof Height', 'Layout Proof Sides');
-  ($width, $height) = ( $Imposition->sheet_width(), $Imposition->sheet_height()) if (!($width and $height));
+  ($width, $height) = @$Imposition{'sheet_width sheet_height'} if !($width and $height);
 	my $quantity = 0;
 
   $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideOne')] if ! $$sig_specs{SideOneColours};
@@ -1010,12 +1010,12 @@ sub project_summary {
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $form = $$sig_specs{Form};
+		my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
 		foreach my $key ( keys %{$specs} ) {
 			if ( my ($proof_index, $qty_index) = $key =~ /^txtProofIndex-$form-(\d*)-(\d*)$/ ) {
 				next if ! $$specs{"ddmProofType-$form-$proof_index-$qty_index"};
 				next if ! $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
-				if ( my $Service = openprint::Service->find_one('name'=>$$specs{"ddmProofType-$form-$proof_index-$qty_index"}) ) {
+				if ( my $Service = openprint::Service->find_one(name=>$$specs{"ddmProofType-$form-$proof_index-$qty_index"}) ) {
 					$types{$Service->description()} = 1;
 				} # end if
 			} # end if
