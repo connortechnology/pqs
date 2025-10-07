@@ -10,14 +10,16 @@ use eprint::print_project ();
 use eprint::equipment     ();
 use sql                   qw(:common);
 
+require openprint;
+require openprint::Project;
+
 sub necessary {
-    my ($log, $dbh, $pid, $service_type) = @_;
+  my ($log, $dbh, $pid, $service_type) = @_;
 
-    # Die cutting is always required for presentation folders.
-    return 1 if $service_type eq 'DieCutting'
-             && get_type($log, $dbh, $pid) eq 'PresentationFolders';
-
-    return 0;
+  my $project = new openprint::Project($pid);
+  # Die cutting is always required for presentation folders.
+  return 1 if $service_type eq 'DieCutting' && $project->type() eq 'PresentationFolders';
+  return 0;
 }
 
 # use constant COMPLEXITIES => qw(Simple Average Complex);
