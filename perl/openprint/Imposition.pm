@@ -11,7 +11,7 @@ package openprint::Imposition;
 require Math::Round;
 require Data::Dumper;
 use SVG;
-use vars qw( $AUTOLOAD %Orientations @RunStyles %ShortStyles %bleed_sides);
+use vars qw( $AUTOLOAD %Orientations @RunStyles %ShortStyles %LongStyles %bleed_sides);
 use constant DEBUG => 1;
 use constant DEBUG_PERFORMANCE => 1;
 
@@ -37,6 +37,7 @@ use constant Horizontal => 1;
   'Perfecting' => 'PF',
   'Web'   => 'Web',
 );
+%LongStyles = map { $ShortStyles{$_} => $_ } keys %ShortStyles;
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
@@ -246,7 +247,8 @@ my ( $caller, undef, $line ) = caller;
 	my $Paper = $$self{Paper} ? $$self{Paper} : new openprint::Paper();
 	#$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s minimum: %s', $prefix,
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{runstyle}, $$self{Paper}->{start_width},$$self{Paper}->{start_height},$self->{Paper}->{width},$self->{Paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{Paper}->minimum_order() ) );
-my ( $caller, undef, $line ) = caller;
+
+  my ( $caller, undef, $line ) = caller;
 	$openprint::log->debug(sprintf('Imp %s: %d@ %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq rotate: %d layout: %sx%s min: %s %s %s versions: %d from %s:%d', $prefix,
 	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition'},
   $self->image_orientation_text(),
@@ -297,16 +299,22 @@ sub Paper {
 
 sub load_from_impositionObject {
   my ($self, $io) = @_;
-  $openprint::log->debug('compressed imp'.Data::Dumper::Dumper($io));
+  #$openprint::log->debug('compressed imp'.Data::Dumper::Dumper($io));
   my %map = (
     cols => 'columns',
     rows => 'rows',
     setup => 'imposition',
     spread_cols => 'spread_columns',
     spread_rows => 'spread_rows',
+    colour_bar => 'colour_bar_size',
+    gutter => 'gutter',
+    specs => 'specs',
+
   );
 
   @$self{values %map} = @$io{keys %map};
+  $$self{runstyle} = $LongStyles{$$io{run_style}};
+  $$self{Press} = openprint::Equipment->find_one(id=>$$io{press});
   $$self{Paper} = openprint::Paper->find_one(id=>$$io{paper}{index} );
 }
 
@@ -345,23 +353,26 @@ sub load {
 		} # end if
 		$$self{Press} = new openprint::Equipment() if ! $$self{Press};
 	} # end if
-	$$self{form} = $$self{SignatureIndex} = $$specs{SignatureIndex} || $$specs{Form} || 1;
+  my $print_service_id = $Project->get_print_container();
+  my $printing_specs = openprint::service::get_specs_ref($Project, $print_service_id) if $print_service_id;
 
   $$self{final_width} = $$specs{final_width} || $$specs{txtFinalWidth};
   $$self{final_height} = $$specs{final_height} || $$specs{txtFinalHeight};
+  if (!$$self{final_width}) {
+    $$self{final_width} = $$printing_specs{final_width};
+    $$self{final_height} = $$printing_specs{final_height};
+  }
+
+   $openprint::log->debug("final size: $$self{final_width}x$$self{final_height} ");
 
 	$$self{object_width} = $$specs{txtWidth} || $$specs{flat_width};
   if (!$$self{object_width}) {
-    my $print_service_id = $Project->get_print_container();
-    if ($print_service_id) {
-      my $printing_specs = openprint::service::get_specs_ref($Project, $print_service_id);
-      $$self{object_width} = $$specs{flat_width} = $$printing_specs{flat_width};
-      $$self{object_height} = $$specs{flat_height} = $$printing_specs{flat_height};
-      if (!$$specs{txtFinalWidth}) {
-        @$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'final_width','final_height'};
-      }
-      $openprint::log->debug("object size: $$self{object_width}x$$self{object_height} ");
+    $$self{object_width} = $$specs{flat_width} = $$printing_specs{flat_width};
+    $$self{object_height} = $$specs{flat_height} = $$printing_specs{flat_height};
+    if (!$$specs{txtFinalWidth}) {
+      @$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'final_width','final_height'};
     }
+    $openprint::log->debug("object size: $$self{object_width}x$$self{object_height} ");
   }
 
 	$$self{object_height} = ($$specs{txtHeight} ? $$specs{txtHeight} : $$specs{flat_height}) if ! $$self{object_height};
@@ -1341,40 +1352,45 @@ sub press_type {
 
 sub form {
   my $self = shift;
-  return undef if ! $$self{specs};
-  #return $$self{form} if $$self{form};
-  my $form = $$self{form} = $$self{specs}{Form} || $$self{specs}{SignatureIndex};
-  if (!$form or $form>100) {
-    if ($$self{specs}{ServiceIndex}) {
-      my $project = $self->Project();
+  if (! $$self{specs}) {
+    my ( $caller, undef, $line ) = caller;
+    $openprint::log->error("Call to imposition->form with no specs from $caller:$line");
+    return undef;
+  }
+  return $$self{form} if $$self{form};
 
-      $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
-      ( $form ) = sql::execute( $openprint::log, $openprint::dbh, $_, $project->id() );
-      $form = $form ? $form+1 : 1;
-      openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project->id(), $$self{specs}{ServiceIndex}, 'Form', $form);
-    } elsif ($form > 100) {
-      my $project = $self->Project();
-      my $sig_id = $form;
-      $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
-      ( $form ) = sql::execute( $openprint::log, $openprint::dbh, $_, $project->id() );
-      $form = $form ? $form+1 : 1;
-      openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project->id(), $sig_id, 'Form', $form);
+  $$self{form} = $$self{form} || $$self{specs}{Form} || $$self{specs}{SignatureIndex};
+  #$openprint::log->error("FOrm $$self{form} = $$self{form} || $$self{specs}{Form} || $$self{specs}{SignatureIndex}; ");
+  if ((!$$self{form}) or ($$self{form} > 10)) {
+    $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND (strName='SignatureIndex' OR strName='Form')};
+    my ( $signature_count ) = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{Project}->id() );
+    $signature_count //= 0;
+    $signature_count += 1;
+    $$self{form} = $$self{specs}{Form} = $signature_count;
+    $$self{service_id} = $$self{specs}{ServiceIndex} if !$$self{service_id};
+    if ($$self{service_id}) {
+      openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$self{Project}->id(), $$self{service_id}, 'SignatureIndex', $signature_count );
+      openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$self{Project}->id(), $$self{service_id}, 'Form', $signature_count );
     } else {
-      $form = 1;
+      $openprint::log->error("No service id in impo.  Not saving Form");
     }
   }
 
-  $$self{specs}{Form} = $$self{form} = $form;
+  $$self{specs}{Form} = $$self{form};
   return $$self{form};
 }
 
 sub width_folds {
   my $self = shift;
   $$self{width_folds} = $$self{final_width} ? Math::Round::nearest(1, $$self{object_width}/$$self{final_width})-1 : 0;
-   if ( $$self{height_folds} < 0 ) {
+   if ( $$self{width_folds} < 0 ) {
     $openprint::log->debug("Got negative width_folds from Math::Round::nearest( 1, $$self{object_width}/$$self{final_width})-1");
     $$self{width_folds} = 0;
   } # end if
+  if ( ( ! $$self{width_folds} ) and ( $$self{object_width} != $$self{final_width} ) ) {
+    $$self{width_folds} = 1;
+  }
+
   return $$self{width_folds};
 }
 
@@ -1385,6 +1401,9 @@ sub height_folds {
     $openprint::log->debug("Got negative width_folds from Math::Round::nearest( 1, $$self{object_height}/$$self{final_height})-1");
     $$self{height_folds} = 0;
   } # end if
+  if ( ( ! $$self{height_folds}) and ( $$self{object_height} != $$self{final_height} ) ) {
+    $$self{height_folds} = 1;
+  }
   return $$self{height_folds};
 }
 
