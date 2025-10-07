@@ -2158,8 +2158,8 @@ sub create_project {
   my ($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref) = @_;
 
   foreach (1..3) {
-    $qty->[$_-1] = $qty->[$_-1] ? int($qty->[$_-1]) : int($r->param("txtQuantity$_"));
-    }
+    $qty->[$_-1] = $qty->[$_-1] ? int($qty->[$_-1]) : int($r->param("txtQuantity$_") ? $r->param("txtQuantity$_") : 0);
+  }
 
   $projref ||= $r->param('txtProjectReference');
   die('Missing Project Referenece') unless $projref;
