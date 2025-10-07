@@ -4,7 +4,7 @@ use warnings;
 use utf8;
 no warnings qw(uninitialized numeric);
 
-use constant DEBUG=>1;
+use constant DEBUG=>0;
 my $cutters = 0;
 
 use Data::Dumper;
@@ -535,7 +535,7 @@ sub get_project_price {
       $project->{override}{overs}{run},
       $large_format,      $jig_specifics,     $project->{pages}
     );
-    $openprint::log->debug("Price after calc_print_price ".Data::Dumper::Dumper(\%price));
+    $openprint::log->debug("Price after calc_print_price ".Data::Dumper::Dumper(\%price)) if DEBUG;
 
     $price{forms} = $price{txtSignatureQuantity}       = $variable->{SignatureQuantity};
     $price{hdnInkMixColours}           = $pms_price->{'Mixed Colours'};
@@ -585,7 +585,7 @@ sub get_project_price {
       #$$price{'Comparison Log'} .= 'proofs for ' . $sig_count . 'sigs. '. $sig_count * $Results{Total} . ' total: ' . $$price{ComparisonCost} . '<br/>' if COMPARISON_LOG;
       #$$price{'Proofs Breakdown'} .= $Results{Breakdown};
     } else {
-      $log->error("No proofs>!");
+      $log->debug("No proofs>!");
     } # end if
 
     # This is large format stitching, not saddle stitching/bindery.
@@ -1276,7 +1276,7 @@ sub calc_print_price {
     #$price{reject_mv_layout} = 1; #icon disable as it seems to simply reject anything with more than 1 sig
     print STDERR "versions REJECT MV LAYOUT \n", Dumper(\%lay_count);
   } else {
-    print STDERR "versions PASS MV LAYOUT \n";
+    #print STDERR "versions PASS MV LAYOUT \n";
   }
 
   my $lay_versions = scalar(keys %vl);
