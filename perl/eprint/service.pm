@@ -1,12 +1,14 @@
 package eprint::service;
 use strict;
 use warnings;
+
 require openprint;
 use Data::Dumper;
 require Time::HiRes;
 require eprint::project;
+require openprint::service;
 
-no warnings qw(uninitialized);
+#no warnings qw(uninitialized);
 
 use base qw(Exporter);
 
@@ -64,7 +66,6 @@ our %EXPORT_TAGS = (
     calc   => \@calc,
     all    => \@EXPORT_OK,
 );
-
 
 use Data::Dumper;
 use Scalar::Util          qw(looks_like_number);
@@ -244,56 +245,54 @@ sub get_price {
 # Get the pricing (including units and equipment priced on in list context)
 # for a given service applying all customer/pricelist discounts.
 sub price_item {
-    my ($dbh, $cid, $service, $range, $eid, $subservice) = @_;
-    my ($clause, @args);
-    if (defined $eid && $eid) {
-        $clause .= q{ AND lngequipmentindex = ? };
-        push @args, $eid;
-    }
+  my ($dbh, $cid, $service, $range, $eid, $subservice) = @_;
+  my ($clause, @args) = ('');
+  if ($eid) {
+    $clause .= q{ AND lngequipmentindex = ? };
+    push @args, $eid;
+  }
 
-    # TODO make sure subservice is numeric
-    if (defined $subservice) {
-        $clause .= q{ AND lngsubservicetype = ? };
-        push @args, $subservice;
-    }
+  # TODO make sure subservice is numeric
+  if (defined $subservice) {
+    $clause .= q{ AND lngsubservicetype = ? };
+    push @args, $subservice;
+  }
 
-    # If a quantity is supplied check it's in the range Note: ranges are
-    # neither validated nor constrained so you can get 'interesting' results. 
-    if (defined $range && $range ne '' && $range >= 0) {
-        $range = int $range;
+  # If a quantity is supplied check it's in the range Note: ranges are
+  # neither validated nor constrained so you can get 'interesting' results. 
+  if (defined $range && $range ne '' && $range >= 0) {
+    $range = int $range;
 
-        $clause .= q{ 
-            AND (? >= lngmin OR lngmin IS NULL) 
-            AND (? <= lngmax OR lngmax IS NULL)
-        };
-        push @args, $range, $range;
-    }
+    $clause .= q{ 
+    AND (? >= lngmin OR lngmin IS NULL) 
+    AND (? <= lngmax OR lngmax IS NULL)
+    };
+    push @args, $range, $range;
+  }
 
-    my $sth = $dbh->prepare_cached(qq{ 
-         SELECT dblprice, 
-                strunits, 
-                lngequipmentindex,
-                (CASE WHEN ysndiscountable = 'Y' THEN 1 ELSE 0 END)
-          FROM tbl_service_prices p
-          WHERE lngserviceindex = ?
-            AND p.lnglistindex  = ?
-            $clause
-          ORDER BY lngmin
-          LIMIT 1
+  my $sth = $dbh->prepare_cached(qq{ 
+    SELECT dblprice, 
+    strunits, 
+    lngequipmentindex,
+    (CASE WHEN ysndiscountable = 'Y' THEN 1 ELSE 0 END)
+    FROM tbl_service_prices p
+    WHERE lngserviceindex = ?
+    AND p.lnglistindex  = ?
+    $clause
+    ORDER BY lngmin
+    LIMIT 1
     });
 
 
-    my ($price, $units, $equip, $discountable) 
-        = $dbh->selectrow_array($sth, undef, $service, $openprint::Pricelist->id(), @args);
+  my ($price, $units, $equip, $discountable) = $dbh->selectrow_array($sth, undef, $service, $openprint::Pricelist->id(), @args);
 
-    # Apply the customer's discount if applicable.
-    if ($discountable) {
-        my $discount = eprint::customer::get_discount($dbh, $cid);
+  # Apply the customer's discount if applicable.
+  if ($discountable) {
+    my $discount = eprint::customer::get_discount($dbh, $cid);
+    $price *= 1 + ($discount/100) if $discount;
+  }
 
-        $price *= 1 + ($discount/100) if $discount;
-    }
-
-    return wantarray ? ($price, $units, $equip) : $price;
+  return wantarray ? ($price, $units, $equip) : $price;
 }
 
 # Return a list of equipment that offers the given service type.
@@ -314,7 +313,7 @@ sub valid_equipment {
     print STDERR " OVERRRIDE FOUND:  $override \n";
 	}
 
-	my $over_sql = " AND eq.lngindex = $override " if $override;
+	my $over_sql = $override ? " AND eq.lngindex = $override " : '';
 
 	my $sql = qq{
 		SELECT equipment 
@@ -370,34 +369,23 @@ sub valid_equipment_dropdown {
 sub save_service {
     my ($r, $log, $dbh, $pid, $sid) = @_;
 
-    my $insert = $dbh->prepare(q{
-        INSERT INTO tbl_service_specifications 
-            (lngprojectindex, lngserviceindex, strname, strvalue, ui_spec)
-        VALUES (?, ?, ?, ?, true)
-    });
+    my $insert = $dbh->prepare(q{ INSERT INTO tbl_service_specifications (lngprojectindex, lngserviceindex, strname, strvalue, ui_spec) VALUES (?, ?, ?, ?, true) });
 
-    my $delete = $dbh->prepare(q{
-        DELETE FROM tbl_service_specifications 
-        WHERE lngprojectindex = ? AND lngserviceindex = ? AND strname = ?
-    });
+    my $delete = $dbh->prepare(q{ DELETE FROM tbl_service_specifications WHERE lngprojectindex = ? AND lngserviceindex = ? AND strname = ?  });
 
     # Remove all user specified keys on each save (stops now unchecked
     # checkboxes from remaining checked -- as they aren't defined this save, so
     # wouldn't otherwise be overwritten).
-    $dbh->do(q{
-        DELETE FROM tbl_service_specifications
-        WHERE lngprojectindex = ? AND lngserviceindex = ? AND ui_spec = true
-    }, undef, $pid, $sid);
+    $dbh->do(q{ DELETE FROM tbl_service_specifications WHERE lngprojectindex = ? AND lngserviceindex = ? AND ui_spec = true }, undef, $pid, $sid);
     
     foreach my $key ( $r->param() ) {
-        # Prevent insertion of duplictes (this is instead of an exist +
-        # update/insert type construct).
+        # Prevent insertion of duplictes (this is instead of an exist + update/insert type construct).
         $delete->execute($pid, $sid, $key);
         $insert->execute($pid, $sid, $key, scalar $r->param($key));
     }
 
     # Make sure anyone who depends on us is set to the approriate state.
-    recalc_dependencies($log, $dbh, $pid, $sid);
+    #recalc_dependencies($log, $dbh, $pid, $sid);
 
     return 1;
 }
@@ -421,6 +409,7 @@ sub get_service_url {
 
 # Returns a list of values for the requested specs (in given order).
 sub get_specifications {
+  #return openprint::service::get_specifications(@_);
     my ($log, $dbh, $pid, $sid, @specs) = @_;
 
     die "Can't get service specs without service id" unless $sid;
@@ -432,6 +421,7 @@ sub get_specifications {
 
 # Returns a list of key => value pairs for the requested keys (unordered).
 sub get_specifications_pairs {
+  #return openprint::service::get_specifications_pairs(@_);
     my ( $log, $dbh, $pid, $sid, @specs ) = @_;
 
     die "Can't get service specs without service id" unless $sid;
@@ -465,6 +455,7 @@ sub get_spec {
 
 
 sub insert_service_spec {
+  return openprint::service::insert_service_spec(@_);
     my ( $log, $dbh, $pid, $sid, $name, $value, $no_delete, $ui_spec) = @_;
 
     die "Can't insert spec into service without id" unless $sid;
@@ -516,15 +507,16 @@ sub set_status {
   # We can't set what we don't get.
   return 0 unless @sids;
 
+  $openprint::log->debug("Setting status of @sids to $status");
   # Update the specified project services with the status.
+  my $sth = $dbh->prepare_cached(q{
+    UPDATE tbl_project_contents
+    SET strstatus = ? 
+    WHERE lngprojectindex = ?
+    AND lngserviceindex = ?
+    AND strstatus <> ?
+    });
   foreach my $sid (@sids) {
-    my $sth = $dbh->prepare_cached(q{
-      UPDATE tbl_project_contents
-      SET strstatus = ? 
-      WHERE lngprojectindex = ?
-      AND lngserviceindex = ?
-      AND strstatus <> ?
-      });
     $sth->execute($status, $pid, $sid, $status);
   }
 }
@@ -537,7 +529,10 @@ sub recalc_dependencies {
   my ($status, $level) = $dbh->selectrow_array(q{SELECT status, level FROM project_service_status WHERE project=? AND id=?}, undef, $pid, $sid);
 
   # If it's not there complain about it.
-  die "No project ($pid) service with ID ($sid) exists" unless $status;
+  if (!$status) {
+    $log->error("No project ($pid) service with ID ($sid) exists in project_service_status table");
+    return 0;
+  }
 
   # If we're not part of the dependency tree we don't need to be here.
   return 0 unless defined $level;
@@ -546,9 +541,9 @@ sub recalc_dependencies {
 
 	if ($p->no_service_dependencies()) {
 		my $service = $dbh->selectall_arrayref(q{
-			SELECT id, level FROM project_service_status WHERE project = ?  ORDER BY level }, { Slice => {} }, $pid);
+			SELECT id, level FROM project_service_status WHERE project=? ORDER BY level }, { Slice => {} }, $pid);
     set_status($log, $dbh, $pid, 'calculated', map { $_->{id} } @{$service});
-		return 1
+		return 1;
 	}
 
   # If we're calculated but there are other uncalculated services on the
@@ -571,17 +566,19 @@ sub recalc_dependencies {
   # time through or we've been recalculated. Either way the next level down
   # needs to calculate (maybe again) and lower is still dependent.
   if ($status eq 'calculated') {
-    # Get the next level to allow.
-    $level = $service->[0]{level};
+    if (@{$service}) {
+      # Get the next level to allow.
+      $level = $service->[0]{level};
+      $log->debug("Are calculated, level is $level, ".Data::Dumper::Dumper($service));
 
-    # As everything on the current level is calculated, the next level is
-    # now allowed to calculate/required to calculate again.
-    set_status($log, $dbh, $pid, 'uncalculated',
-      map { $_->{id} } grep { $_->{level} <= $level} @{$service});
+      # As everything on the current level is calculated, the next level is
+      # now allowed to calculate/required to calculate again.
+      # ICON Does this not set the state of the just now calculated service?
+      set_status($log, $dbh, $pid, 'uncalculated', map { $_->{id} } grep { $_->{level} <= $level} @{$service});
 
-    # All services below the allowed level are dependent on it. Ensure it.
-    set_status($log, $dbh, $pid, 'dependent',
-      map { $_->{id} } grep { $_->{level}  > $level} @{$service});
+      # All services below the allowed level are dependent on it. Ensure it.
+      set_status($log, $dbh, $pid, 'dependent', map { $_->{id} } grep { $_->{level}  > $level} @{$service});
+    }
   } else {
   # If we aren't calculated or we're errored out, we need to make sure all
   # the levels below are still marked as dependent on us.
@@ -628,32 +625,24 @@ sub set_need {
     }, {}, $need, $sid);
 }
 
-# Takes a price and quantity and return good little conformistly formatted
-# total and unit price.
+# Takes a price and quantity and return good little conformistly formatted total and unit price.
 sub format_pricing {
-    my ($price, $qty) = @_;
+  my ($price, $qty) = @_;
 
-    # There is an absolutely amazing ammount of diversity in rounding
-    # (ceiling, floor, int, etc.) and formatting of service total and unit
-    # pricing. We aim to crush and uterly annihilate such individualism and
-    # diversity!
+  # There is an absolutely amazing ammount of diversity in rounding
+  # (ceiling, floor, int, etc.) and formatting of service total and unit
+  # pricing. We aim to crush and uterly annihilate such individualism and
+  # diversity!
 
-    return qw(0.00 0.00) unless $price 
-                             && looks_like_number($price)
-                             && $price > 0;
+  return qw(0.00 0.00) unless $price && looks_like_number($price) && $price > 0;
 
-    $qty = 1 unless $qty 
-                 && looks_like_number($qty)
-                 && $qty > 0;
+  $qty = 1 unless $qty && looks_like_number($qty) && $qty > 0;
 
-# Safeway does not want prices rounded.
-    $price = sprintf '%.2f', $price;
-#    $price = sprintf '%.2f', ceil $price;
+  $price = sprintf($openprint::config{ProjectMoneyFormat}, $price);
 
-    my $unit_price = sprintf '%.2f', $price / $qty;
-       $unit_price = '< 0.01' unless $unit_price >= 0.01;
+  my $unit_price = sprintf($openprint::config{UnitPriceFormat}, $price / $qty);
 
-    return ($price, $unit_price);
+  return ($price, $unit_price);
 }
 
 
@@ -988,12 +977,15 @@ sub _from_db {
 sub price {
   my ($log, $dbh, $variable, $pid, $sid, $service, $specs, $is_save) = @_;
 
-  my $service_type = $service->{name};
+  my $service_type = $service->{module};
+  #my $service_type = $service->{name};
+  $is_save //= 0;
   $openprint::log->debug("service::price pid $pid sid $sid, $service, $service_type, $is_save");
 
   # Allow the service to convert the specs whatever dataformat it wants.
   eval {
     if (my $munge = $service->{can}->('munge')) {
+      $openprint::log->debug("munge for $service_type");
       $munge->($log, $dbh, $variable, $pid, $sid, $service_type, $specs);
     }
   };
@@ -1009,6 +1001,7 @@ sub price {
   # print/book service and throws specs into it's own. As it modifies the DB
   # we only allow it during internal pricing/saving.
   if ($is_save) {
+    $openprint::log->debug("Is save");
     if (my $func = $service->{can}->('fill_from_printing_service')) {
       $func->($log, $dbh, $pid, $sid);
     }
@@ -1026,17 +1019,23 @@ sub price {
   my $start_time = Time::HiRes::time();
   # Allow the service to convert the specs whatever dataformat it wants.
   eval {
+    $openprint::log->debug("Can init");
     if (my $init = $service->{can}->('init')) {
       $init->($pid, $sid, $specs);
     }
   };
   $log->error("Error from init: $@") if $@;
+  my $is_openprint = (-1 != index($$service{module}, 'openprint'));
   my $status;
   # Calculate the service.
   my $calc   = $service->{can}->('calc');
   if ($calc) {
-    $status = eval { 
-      $calc->($log, $dbh, $variable, $pid, $sid, $service_type, $specs);
+    eval { 
+      if ($is_openprint) {
+        $status = $calc->($log, $dbh, $variable, $pid, $sid, $specs);
+      } else {
+        $status = $calc->($log, $dbh, $variable, $pid, $sid, $$service{name}, $specs);
+      }
     };
     if ($@) {
       #if (DEBUG) { die $@ }
@@ -1061,7 +1060,7 @@ sub price {
     print STDERR "Service $service->{module}::calc() does not exist\n";
   }
 
-  my $override = $dbh->selectrow_array(q{ SELECT price_override FROM tbl_project_contents WHERE lngserviceindex = ?  }, undef, $sid );
+  my $override = $dbh->selectrow_array(q{ SELECT price_override FROM tbl_project_contents WHERE lngserviceindex = ?  }, undef, $sid ) // '';
   if ($override ne '') {
     #print STDERR "HAVE PRICE OVERRIDE: FOR SID: $sid $override\n";
     $specs->{txtPrice1} = $override 
@@ -1101,14 +1100,14 @@ sub save {
     # Some actions need to look at the state of the service or remove control
     # specifications before the service is changed/saved.
     if (my $func = $service->{can}->('preaction')) {
-        $func->($log, $dbh, $pid, $sid, $service->{type}, $specs);
+        $func->($log, $dbh, $pid, $sid, $service->{name}, $specs);
     }
 
     # Allow the service to modify the specs for saving. ie. serializing arrays
     # (eugh), storable()ing complex structures, etc.
     my $store = $service->{can}->('store');
     
-    $specs = $store->($log, $dbh, $pid, $sid, $service->{type}, $specs) if $store;
+    $specs = $store->($log, $dbh, $pid, $sid, $service->{name}, $specs) if $store;
 
     # TODO Save the actual specs (user specified) as such, and the
     # anything that's new after pricing as not.
@@ -1118,8 +1117,8 @@ sub save {
     # Perform any actions required. eg. create signatures after changing the
     # book specifications.
     if (my $action = $service->{can}->('action')) {
-      #print STDERR "Doing action on $$service{type}\n";
-        $action->($log, $dbh, $pid, $sid, $service->{type}, $specs);
+      #print STDERR "Doing action on $$service{name}\n";
+        $action->($log, $dbh, $pid, $sid, $service->{name}, $specs);
     }
 
     return 1;
@@ -1129,6 +1128,9 @@ sub save {
 # be marked as coming from the user.
 sub to_db {
   my ($dbh, $pid, $sid, $form, $specs) = @_;
+
+  my $cache = openprint::service::get_specs_ref( $pid, $sid );
+  %{$cache} = ();
 
   # Remove all the specs before we (re)insert (instead of update check).
   $dbh->do(q{
@@ -1142,6 +1144,7 @@ sub to_db {
     VALUES (?, ?, ?, ?, ?)
     });
 
+
   while (my ($key, $value) = each %$specs) {
     # Only handle simple values that are defined.
     next if ref $value || ! defined $value || $value eq ''; 
@@ -1153,6 +1156,7 @@ sub to_db {
     if (!$insert->execute($pid, $sid, $key, $value, (exists $form->{$key} ? 1 : 0))) {
       print STDERR "Failed insert".$dbh->errstr."\n";
     }
+    $$cache{$key} = $value;
   }
 
   return 1;
