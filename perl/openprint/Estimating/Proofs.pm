@@ -193,14 +193,11 @@ sub calc {
 			$Imposition->load($sig_specs, $qty_index, $Project);
       my $form = $Imposition->form();
 
-			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $form";
 			if (!$$Imposition{imposition}) {
 				# Remove it so we don't have to test for it later
-				$$specs{'hdnBreakdown'.$qty_index} .= 'No proofs needed because there is no imposition<br/>';
 				next;
 			} # end if
       my $Equipment = $Imposition->Press();
-			$$specs{'hdnBreakdown'.$qty_index} .= ' printed '.$Imposition->to_string().'</br>';
 
       add_defaults($Project, $ServiceType, $specs, $sig_specs, $qty_index, \%proof_indexes, $Equipment, $Imposition);
 
@@ -222,12 +219,15 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index, $Project );
+      my $form = $Imposition->form();
+			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $form";
 			if (!$$Imposition{imposition}) {
 				# Remove it so we don't have to test for it later
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No proofs needed because there is no imposition<br/>';
 				next;
 			} # end if
 			my $Equipment = $Imposition->Press();
+			$$specs{'hdnBreakdown'.$qty_index} .= ' printed '.$Imposition->to_string().'</br>';
 			my %Results = signature_calc( $Project, $ServiceType, $specs, $sig_specs, $qty_index, \%proof_indexes, \%proof_totals, $Equipment, $Imposition );
 			$totalPrice += $Results{total};
 			$$specs{"hdnBreakdown$qty_index"} .= $Results{Breakdown};
