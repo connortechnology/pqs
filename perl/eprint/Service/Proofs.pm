@@ -161,7 +161,7 @@ sub calc_proofs {
 
     my ($price, $units, $proofer) = eprint::service::price_item(
       $dbh, $variable->{cust_id}, $$service{id}, $width * $height
-    );
+    ) if $service;
 
     if (!$type || !$proofer) {
       $$specs{ 'txtProofUnitPrice-' . $1 } = '0.00';
@@ -451,9 +451,7 @@ sub insert_layout_proof {
     }, undef, $signature_service_index);
 
 
-  my ($press) =
-  eprint::service::get_specifications($log, $dbh, undef,
-    $signature_service_index, 'hdnPress');
+  my ($press) = eprint::service::get_specifications($log, $dbh, undef, $signature_service_index, 'hdnPress');
 
   #2-sided dylux modifications
   my $sides_to_print =
@@ -497,16 +495,9 @@ sub insert_layout_proof {
       'hdnSheetSizeHeight');
   }
 
-  my $default_proof_type =
-  eprint::equipment::get_specification($log, $dbh,
-    'Default Layout Proof',
-    '', $press) if $press;
+  my $default_proof_type = eprint::equipment::get_specification($log, $dbh, 'Default Layout Proof', '', $press) if $press;
   if ($sides_to_print == 2) {
-    my $two_sided_proof =
-    eprint::equipment::get_specification($log, $dbh,
-      '2 Sided Layout Proof',
-      '', $press) if $press;
-
+    my $two_sided_proof = eprint::equipment::get_specification($log, $dbh, '2 Sided Layout Proof', '', $press) if $press;
     $default_proof_type = $two_sided_proof if $two_sided_proof ne '';
   }
 
