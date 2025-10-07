@@ -914,7 +914,7 @@ sub service_prices {
   });
 
   my @qty = (undef, get_quantities(undef, $dbh, $pid));
-  $openprint::log->debug("Quantities for $pid @qty");
+  #$openprint::log->debug("Quantities for $pid @qty");
 
   # Ensure a three element array(where Q2 could be missing).
   my @prices;
@@ -925,10 +925,10 @@ sub service_prices {
     };
 
     my $price = $dbh->selectall_hashref($sth, 'sid', {}, $i, $pid);
-    $openprint::log->debug(Data::Dumper::Dumper($price));
-    foreach my $sid (keys %{$price}) {
-    $openprint::log->debug(Data::Dumper::Dumper($$price{$sid}));
-    }
+    #$openprint::log->debug(Data::Dumper::Dumper($price));
+    #foreach my $sid (keys %{$price}) {
+    #$openprint::log->debug(Data::Dumper::Dumper($$price{$sid}));
+    #}
     push @prices, $price;
   }
 
