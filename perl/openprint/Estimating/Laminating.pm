@@ -303,8 +303,6 @@ sub calc {
         #$$specs{'hdnBreakdown'.$qty_index} .= " not doing lamination on form $form<br/>";
         next;
       }
-      my $imposition = new openprint::Imposition();
-      $imposition->load( $sig_specs, $qty_index, $Project );
       my $stock = $imposition->Paper();
       $$stock{calliper} = $$specs{"calliper-$form"}; # Overrides done earlier
 
