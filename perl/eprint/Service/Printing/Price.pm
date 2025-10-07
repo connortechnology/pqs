@@ -566,6 +566,7 @@ sub get_project_price {
  
     my $sig_specs = openprint::service::get_specs_ref($pid, $sid);
     my $imposition = new openprint::Imposition();
+    $$imposition{Project} = $Project;
     $imposition->load_from_impositionObject($imp);
 
     if ( 0 and $$project{HasCutting} ) {
@@ -594,7 +595,7 @@ sub get_project_price {
       #$log->debug("Has no cutting") if DEBUG;
     } # end if
         
-    if ( 0 and $$project{HasProofs} ) {
+    if ( 1 and $$project{HasProofs} ) {
       my $Press = new openprint::Equipment($press);
       # Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
       my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $Project->ServiceType($$project{HasProofs}), $$project{ProofsSpecs}, $sig_specs, 1,
@@ -606,8 +607,6 @@ sub get_project_price {
       $openprint::log->error("Proofs alert $Results{alert}") if $Results{alert};
       #$$price{'Comparison Log'} .= 'proofs for ' . $sig_count . 'sigs. '. $sig_count * $Results{Total} . ' total: ' . $$price{ComparisonCost} . '<br/>' if COMPARISON_LOG;
       #$$price{'Proofs Breakdown'} .= $Results{Breakdown};
-    } else {
-      $log->debug("No proofs>!");
     } # end if
 
     # This is large format stitching, not saddle stitching/bindery.
