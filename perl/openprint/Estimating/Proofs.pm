@@ -481,12 +481,13 @@ sub insert_folding_proof {
   } elsif (DEBUG) {
     $openprint::log->debug('Default Folding Proof for ' . $equipment->strid().' is ' .$default_proof_type ) if $equipment;
   }
+  return if $default_proof_type and ($default_proof_type eq 'None');
 
   my $proofer = $equipment;
 
   # Layout proof might be a reduced laser. Need to get size from the proofer or press
   my $service = openprint::Service->find_one(name=>$default_proof_type) if $default_proof_type;
-  $log->error("No service foudn for $default_proof_type") if (!$service);
+  $log->error("No service foudn for $default_proof_type from $$equipment{name}") if !$service;
   my %prices_by_equipment_id = map { $$_{equipment_id} => $_ } $service->Prices() if $service;
   if (exists $prices_by_equipment_id{$$equipment{id}}) {
     $proofer = $equipment;
@@ -563,7 +564,8 @@ sub insert_colour_proof {
 
 	my ( $default_proof_type ) = $Equipment->specification('Default Colour Proof') // '' if $Equipment;
   $openprint::log->debug("Default proof type on $$Equipment{name} $default_proof_type") if DEBUG;
-	if ( $default_proof_type ) {
+
+	if ( $default_proof_type and $default_proof_type ne 'None') {
 		if ( $$specs{RequireColourProofs} and($$specs{RequireColourProofs} eq 'N')) {
 			$quantity = 0;
     } else {
@@ -669,11 +671,12 @@ sub insert_layout_proof {
 	if ( ! $default_proof_type ) {
 		$openprint::log->debug('No Default Layout Proof for ' . $equipment->strid() ) if DEBUG and $equipment;
 	} elsif (DEBUG) {
-		$openprint::log->debug('Default Layout Proof for ' . $equipment->strid().' is ' .$default_proof_type ) if $equipment;
+		$openprint::log->debug('Default Layout Proof for ' . $equipment->strid().' is (' .$default_proof_type.')' ) if $equipment;
   }
+  return if $default_proof_type and ($default_proof_type eq 'None');
 
   my $proofer = $equipment;
-  # Layout proof might be a reduced laser. Need to get size from the proofer or press
+  # Layout proof might be a reduced laser. Need to get size from the proofer or press
   my $service = openprint::Service->find_one(name=>$default_proof_type) if $default_proof_type;
   $log->error("No service foudn for $default_proof_type") if (!$service);
   my %prices_by_equipment_id = map { $$_{equipment_id} => $_ } $service->Prices() if $service;
