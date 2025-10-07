@@ -85,6 +85,7 @@ create_to_quote => 'create_to_quote',
 mail_type => 'mail_type',
 copy_pid => 'copy_pid',
 build => 'build',
+eid =>  'eid',
 );
 %transforms = (
 	id								=>	[ 's/\D//g', '<2147483647' ],
