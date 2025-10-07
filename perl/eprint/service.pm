@@ -502,45 +502,31 @@ sub insert_service_specs {
 }
 
 sub set_status {
-    my ($log, $dbh, $pid, $status, @sids) = @_;
+  my ($log, $dbh, $pid, $status, @sids) = @_;
 
-    # We'll contrain valid service statuses here until the DB does.
-    die "Invalid status: $status." unless grep { $status eq $_ } STATUSES;
+  # We'll contrain valid service statuses here until the DB does.
+  die "Invalid status: $status." unless grep { $status eq $_ } STATUSES;
 
-    # As we're directly interpolating, make sure we get what we think we are.
-    $pid =~ tr/0-9//cd;
-    die "An integer project ID is needed." unless $pid;
+  # As we're directly interpolating, make sure we get what we think we are.
+  $pid =~ tr/0-9//cd;
+  die "An integer project ID is needed." unless $pid;
 
-    @sids = grep {$_} map { tr/0-9//cd; $_ } @sids;
+  @sids = grep {$_} map { tr/0-9//cd; $_ } @sids;
 
-    # We can't set what we don't get.
-    return 0 unless @sids;
+  # We can't set what we don't get.
+  return 0 unless @sids;
 
-    # Update the specified project services with the status.
-    if (@sids == 1) {
-        my $sth = $dbh->prepare_cached(q{
-            UPDATE tbl_project_contents
-            SET strstatus = ? 
-            WHERE lngprojectindex = ?
-              AND lngserviceindex = ?
-              AND strstatus <> ?
-        });
-        $sth->execute($status, $pid, $sids[0], $status);
-
-        return 1;
-    }
-    else {
-        # we are going to hell for this, you know that, right?
-        local $" = ', ';
-
-        return $dbh->do(qq{
-            UPDATE tbl_project_contents
-            SET strstatus = ? 
-            WHERE lngprojectindex = ?
-              AND lngserviceindex IN (@sids)
-              AND strstatus <> ?
-        }, undef, $status, $pid, $status);
-    }
+  # Update the specified project services with the status.
+  foreach my $sid (@sids) {
+    my $sth = $dbh->prepare_cached(q{
+      UPDATE tbl_project_contents
+      SET strstatus = ? 
+      WHERE lngprojectindex = ?
+      AND lngserviceindex = ?
+      AND strstatus <> ?
+      });
+    $sth->execute($status, $pid, $sid, $status);
+  }
 }
 
 # Given a project and project service, set any dependency changes needed.
