@@ -173,7 +173,7 @@ sub delete_service_spec {
 } # end sub delete_service_spec
 
 sub insert_service_spec {
-	my ( $log, $dbh, $project_index, $service_index, $name, $value, $noDelete ) = @_;
+	my ( $log, $dbh, $project_index, $service_index, $name, $value, $noDelete, $ui_spec ) = @_;
 
 	if ( ! exists $specs_cache{$service_index} ) {
 		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
@@ -196,10 +196,13 @@ sub insert_service_spec {
 					'lngProjectIndex',	$project_index,
 					'lngServiceIndex',	$service_index,
 					'strName',			$name,
-					'strValue',			$value] ) if $value;
+					'strValue',			$value,
+          ui_spec         => ($ui_spec || 0)
+      ] );
 	#} # end if
 	$specs_cache{$service_index}{$name} = $value;
-} # end sub
+  return 1;
+} # end sub insert_service_spec
 
 sub auto_calculate {
 	my ( $Project, $exclude ) = @_;
