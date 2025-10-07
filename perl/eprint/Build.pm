@@ -307,6 +307,7 @@ sub build {
       } else {
         $log->debug("Status from process is $status");
       }
+      $project->services(undef);
     } # end while service
   } # end foreach service type
 
@@ -430,7 +431,7 @@ sub needed {
     # Template need is determined by the project type and template specifications.
     my $need = $template->{required} || NOT_NEEDED;
 
-    $log->debug("Need from template $need ".Data::Dumper::Dumper($template));
+    #$log->debug("Need from template $need ".Data::Dumper::Dumper($template));
     # If we're already needed (highest state) that's all there is to it.
     return $need if $need == NEEDED;
 
@@ -438,7 +439,7 @@ sub needed {
     my $func      = $service->{can}->('necessary') // 0;
     my $necessary = $func ? $func->($log, $dbh, $pid, $service->{name}) : 0;
 
-    $log->debug("Need from necessary $necessary func: $func type:$$service{module} name:$$service{name}");
+    $log->debug("Need from necessary $necessary func: $func type:$$service{module} name:$$service{name}") if DEBUG;
 
     # TODO: Eventually these functions should return a need
     # state but  for now we use it as a boolean.
