@@ -1359,17 +1359,20 @@ sub form {
   }
   return $$self{form} if $$self{form};
 
-  $$self{form} = $$self{form} || $$self{specs}{Form} || $$self{specs}{SignatureIndex};
-  #$openprint::log->error("FOrm $$self{form} = $$self{form} || $$self{specs}{Form} || $$self{specs}{SignatureIndex}; ");
-  if ((!$$self{form}) or ($$self{form} > 10)) {
-    $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND (strName='SignatureIndex' OR strName='Form')};
+  $$self{form} = $$self{form} || $$self{specs}{Form};
+#|| $$self{specs}{SignatureIndex};
+  $openprint::log->error("FOrm $$self{form} = $$self{form} || $$self{specs}{Form} || $$self{specs}{SignatureIndex}; ");
+  if ((!$$self{form}) or ($$self{form} > 100)) {
+    $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
     my ( $signature_count ) = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{Project}->id() );
     $signature_count //= 0;
     $signature_count += 1;
     $$self{form} = $$self{specs}{Form} = $signature_count;
-    $$self{service_id} = $$self{specs}{ServiceIndex} if !$$self{service_id};
+
+    #$$self{service_id} = $$self{specs}{ServiceIndex} if !$$self{service_id};
+    $$self{service_id} = $$self{form} if !$$self{service_id} and $$self{form} > 100;
     if ($$self{service_id}) {
-      openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$self{Project}->id(), $$self{service_id}, 'SignatureIndex', $signature_count );
+      #openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$self{Project}->id(), $$self{service_id}, 'SignatureIndex', $signature_count );
       openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$self{Project}->id(), $$self{service_id}, 'Form', $signature_count );
     } else {
       $openprint::log->error("No service id in impo.  Not saving Form");
