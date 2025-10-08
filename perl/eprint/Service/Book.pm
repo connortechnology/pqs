@@ -226,7 +226,7 @@ sub action {
   #print STDERR 'prev'.Data::Dumper::Dumper($prev);
 
   # TODO We should be able to only remove all printing services and this will "just work".
-  for my $service (qw(Printing Folding Proofs Film)) {
+  for my $service (qw(Printing Folding)) {
     delete_service($log, $dbh, $pid, $_) for check_for_service($log, $dbh, $pid, $service);
   }
 
