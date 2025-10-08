@@ -43,6 +43,7 @@
 
           my $Imposition = new openprint::Imposition();
           $Imposition->load( $sig_specs, $qty_index, $Project );
+          $$Imposition{service_id} = $s_id;
           my $form = $Imposition->form();
 
 					my $signature_index = $form;
