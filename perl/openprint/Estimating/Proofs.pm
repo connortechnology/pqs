@@ -88,8 +88,11 @@ sub variables {
 	} # end foreach qty_index
 
 	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $form = $$sig_specs{Form};
+    my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+    my $Imposition = new openprint::Imposition();
+    $Imposition->load($sig_specs, 1, $Project);
+    $$Imposition{service_id} = $ss_id;
+    my $form = $Imposition->form();
 		foreach my $key ( keys %{$specs} ) {
 			if ( $key =~ /^txtProofIndex\-$form\-(\d+)\-(\d+)$/ ) {
 				my ( $proof_index, $qty_index ) = ( $1, $2 );
@@ -121,7 +124,10 @@ sub outputs {
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $form = $$sig_specs{Form} // 1;
+    my $Imposition = new openprint::Imposition();
+    $Imposition->load($sig_specs, 1, $Project);
+    $$Imposition{service_id} = $ss_id;
+    my $form = $Imposition->form();
 		foreach my $key ( keys %{$specs} ) {
 			if ( $key =~ /^txtProofIndex\-$form\-(\d+)\-(\d+)$/ ) {
 				my ( $proof_index, $qty_index ) = ( $1, $2 );
@@ -191,6 +197,7 @@ sub calc {
 
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load($sig_specs, $qty_index, $Project);
+      $$Imposition{service_id} = $signature_service_index;
       my $form = $Imposition->form();
 
 			if (!$$Imposition{imposition}) {
@@ -219,6 +226,7 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index, $Project );
+      $$Imposition{service_id} = $signature_service_index;
       my $form = $Imposition->form();
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $form";
 			if (!$$Imposition{imposition}) {
@@ -770,6 +778,7 @@ sub display {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load($sig_specs, $qty_index, $Project);
+      $$Imposition{service_id} = $signature_service_index;
       my $form = $Imposition->form();
 			if (!$$Imposition{imposition}) {
 				$log->warn("No imposition in signature $form") if DEBUG;
@@ -881,6 +890,7 @@ sub summary {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load($sig_specs, $qty_index, $Project);
+      $$Imposition{service_id} = $ss_id;
 			if (!$Imposition->imposition()) {
 				next;
 			} # end if
