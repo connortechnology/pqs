@@ -43,7 +43,7 @@ make_drop_down( openprint::Currency->dropdown(order=>'lower(name)'), $param{curr
 			<label>Sales Reps</label>
 			<select name="salesrep_id" size="1">
 				<option value="">All Employees</option>
-			<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales'], order=>'lower(firstname),lower(lastname)'), $param{salesrep_id} ); ) ?>
+			<? echo ( make_drop_down( openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>['Sales']), $param{salesrep_id} ); ) ?>
 			</select>
 		</p>
 		<p> 
@@ -61,9 +61,9 @@ make_drop_down( openprint::Currency->dropdown(order=>'lower(name)'), $param{curr
 		</p>
 		<p> 
 			<label>Range Total</label>
-			<input type="text" name="total_start" size="12" value="<? echo ( $param{'total_start'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g, '');" />
+			<input type="number" name="total_start" size="12" value="<? echo ( $param{'total_start'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g, '');" step="any"/>
 			to
-			<input type="text" name="total_end" size="12" value="<? echo ( $param{'total_end'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g, '');" />
+			<input type="number" name="total_end" size="12" value="<? echo ( $param{'total_end'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g, '');" step="any"/>
 		</p>
 
 		<p class="buttons">
