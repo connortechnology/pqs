@@ -169,10 +169,10 @@ sub check_status {
 	my $self = shift;
 
 	my $oid = $self->order_id;
-	my $order = new PQS::Object::order($oid);
 
 	my $status  = '';
 	if ( $oid ) {
+    my $order = new PQS::Object::order($oid);
 		#If paymnet has not been made, do not allow order to go into production
 		if ( $order->pending_deposit ) {
 		   	$status =  'PD'
@@ -351,10 +351,10 @@ print STDERR "UPDATE PROJECT STATUS: $pid =  $status \n";
 		$self->set_status($status::project->{$status});
 	}
 
-	my $out = PQS::model::project::get_status($pid);
+  my $project = new openprint::Project($pid);
+	my $out = $$project{status};
 	print STDERR "UPDATE PROJECT STATUS: $pid =  $out \n";
-	#return 	PQS::model::project::get_status($pid);
-	return 	$out;
+	return $out;
 }
 
 sub order {

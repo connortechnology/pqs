@@ -203,13 +203,15 @@ sub is_predefined { return project_state(@_) eq 'predefined' }
 sub is_complete {
     my ($log, $dbh, $pid) = @_;
 
-   return $dbh->selectrow_array(qq{
-        SELECT count(*) = 0
+   my @incomplete = sql::execute(undef,undef, q{
+        SELECT lngServiceIndex, strStatus
         FROM tbl_Project_Contents
         WHERE lngProjectIndex = ?
           AND strStatus NOT IN ( 'calculated',    'Complete', 
                                  'In Production', 'Pending Deposit', 'Pending Date Approval', 'Waiting For Files' )
-    }, undef, $pid);
+    }, $pid);
+  $openprint::log->debug("Incomplete: @incomplete");
+  return !@incomplete;
 }
 
 # Returns true if the project has any of the price setting services on it.
@@ -884,7 +886,7 @@ sub project_price {
 
   $total[$_] = ($service[$_] // 0) + ($material[$_]//0) for 0..(scalar @service); 
 
-  #print STDERR "HAVE PROJECT PRICES: ", Dumper(\@material, \@service, \@total);
+  print STDERR "HAVE PROJECT PRICES: ", Dumper(\@material, \@service, \@total);
 
   return @total;
 }
@@ -912,16 +914,22 @@ sub service_prices {
   });
 
   my @qty = (undef, get_quantities(undef, $dbh, $pid));
+  #$openprint::log->debug("Quantities for $pid @qty");
 
   # Ensure a three element array(where Q2 could be missing).
   my @prices;
   for my $i (1..3) {
-    unless ($qty[$i] && $qty[$i] > 0) {
+    unless ($qty[$i] && ($qty[$i] > 0)) {
       push @prices, undef;
       next;
     };
 
-    push @prices, $dbh->selectall_hashref($sth, 'sid', {}, $i, $pid);
+    my $price = $dbh->selectall_hashref($sth, 'sid', {}, $i, $pid);
+    #$openprint::log->debug(Data::Dumper::Dumper($price));
+    #foreach my $sid (keys %{$price}) {
+    #$openprint::log->debug(Data::Dumper::Dumper($$price{$sid}));
+    #}
+    push @prices, $price;
   }
 
   return \@prices;

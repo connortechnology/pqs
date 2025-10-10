@@ -21,6 +21,13 @@ require eprint::project;
 require openprint;
 require openprint::configuration;
 require openprint::ServiceType;
+use eprint::project       qw( get_type      check_for_service      is_complete
+                              get_template  template_service_types );
+use eprint::print_project qw(insert_service remove_service);
+use eprint::service       qw(:all);
+
+# The posisition where non-dependent services will be calculated.
+use constant NON_DEPENDENT_LEVEL => 10;
 
 use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *variable = \%openprint::variable;
@@ -42,8 +49,6 @@ use constant QUOTE_PAGE          => '/main/quote/quote_submit.html';
 sub cleanup {
   if ( $r->connection->aborted( ) ) {
     $log->debug('Was aborted');
-  } elsif ( DEBUG ) {
-    $log->debug('cleanup');
   } # end if
   %openprint::variable = ();
   %openprint::param = ();
@@ -52,8 +57,6 @@ sub cleanup {
     untie %session;
     if ( ! $dbh->{AutoCommit} ) {
       $log->error('Uncommited transaction');
-    } elsif ( DEBUG ) {
-      $log->debug('Finished cleanup');
     } # end if
     $dbh->disconnect();
   } else {
@@ -190,13 +193,6 @@ sub handler {
   }
 }
 
-use eprint::project       qw( get_type      check_for_service      is_complete
-                              get_template  template_service_types );
-use eprint::print_project qw(insert_service remove_service);
-use eprint::service       qw(:all);
-
-# The posisition where non-dependent services will be calculated.
-use constant NON_DEPENDENT_LEVEL => 10;
 
 sub build {
   my ($log, $dbh, $pid, $variable, $start) = @_;
@@ -237,7 +233,10 @@ sub build {
     my $type = $$service{name};
 
     # If we have any unfinished (uncalc, error) services we can't advance to the next dependency level (non-dependent are immune).
-    last SERVICE_TYPE if defined($level) && defined($service->{level}) && $unfinished && ($service->{level} > $level);
+    if ( defined($level) && defined($service->{level}) && $unfinished && ($service->{level} > $level)) {
+      $log->error("Last servicetype because $$service{level} $unfinished $$service{name}");
+      last SERVICE_TYPE ;
+    }
 
     $level = $service->{level} if $service->{level};
 
@@ -245,7 +244,7 @@ sub build {
     eval {
       $service = load_service_type($service);
       $service->{is_needed} = needed($log, $dbh, $pid, $service, $template{$type});
-      $log->debug("Needed $$service{is_needed}");
+      $log->debug("Needed $$service{is_needed} for $$service{name}");
     };
     if ($@) {
       if (DEBUG) { $log->debug($@); }
@@ -256,13 +255,15 @@ sub build {
           need_level     => NEEDED,
         });
 
-      set_status($log, $dbh, $pid, 'error', @sids);
+      $log->debug("Set status error @sids");
+      eprint::service::set_status($log, $dbh, $pid, 'error', @sids);
 
       if   ($service->{level}) { last SERVICE_TYPE }
       else                     { next SERVICE_TYPE } # No dependencies.
     }
     # Add a service if we're needed and none exist.
     elsif ($service->{is_needed} && !service_exists($dbh, $pid, $type)) {
+      $log->debug("Inserting service $type");
       my $sid = insert_service($log, $dbh, $pid, $type, {
           user_requested => 0,
           need_level     => $service->{is_needed},
@@ -286,30 +287,36 @@ sub build {
         next SERVICE;
       }
 
+      $log->debug("Processing $sid $$service{name}");
       # Get the specs and price the service. FIX
       my $status = process($log, $dbh, $variable, $pid, $sid, $service);
 
       # Track the first unfinished service we find.
       if ($status eq 'uncalculated') {
+        $log->error("Have uncalculated for $sid $$service{name}");
         $unfinished = { sid => $sid, type => $service->{name} };
 
         last SERVICE_TYPE;
       } elsif ($status eq 'error' && $service->{level}) {
+        $log->error("$status for $$service{name}");
         # Set rest of services to a consistant state.
         recalc_dependencies($log, $dbh, $pid, $sid);
 
         undef $unfinished; # Clear our uncalculated tracking.
         last SERVICE_TYPE;
+      } else {
+        $log->debug("Status from process is $status");
       }
-    }
-  }
-  $sth->finish;
+      $project->services(undef);
+    } # end while service
+  } # end foreach service type
+
   # If we have an uncalculated service, handle the dependent services then
   # send the user to it's page to supply the information it's missing.
   if ($unfinished) {
     recalc_dependencies($log, $dbh, $pid, $unfinished->{sid});
 
-    $dbh->do(q{ UPDATE tbl_projects SET strstatus = 'uncalculated' WHERE lngprojectindex = ?  }, undef, $pid);
+    $project->set_status('uncalculated');
     my $prod = $$project{product};
 
     if ($prod && ($unfinished->{type} ne 'Shipping')) {
@@ -320,7 +327,10 @@ sub build {
     return "$unfinished->{type}?pid=$pid;sid=$unfinished->{sid}";
   } else {
     # Change the project status if we've just completed it.
-    $dbh->do(q{ UPDATE tbl_projects SET strstatus = 'Unordered' WHERE lngprojectindex = ? AND strStatus = 'uncalculated' }, undef, $pid) if is_complete($log, $dbh, $pid);
+    my $complete = eprint::project::is_complete($log, $dbh, $pid);
+
+    $log->debug("Complete? $complete");
+    $project->set_status('Unordered') if $complete;
   }
 
   my $p = new PQS::Object::project($pid);
@@ -421,15 +431,15 @@ sub needed {
     # Template need is determined by the project type and template specifications.
     my $need = $template->{required} || NOT_NEEDED;
 
-    $log->debug("Need from template $need ".Data::Dumper::Dumper($template));
+    #$log->debug("Need from template $need ".Data::Dumper::Dumper($template));
     # If we're already needed (highest state) that's all there is to it.
     return $need if $need == NEEDED;
 
     # Does the service think it's needed?
-    my $func      = $service->{can}->('necessary');
-    my $necessary = $func->($log, $dbh, $pid, $service->{name}) if defined $func;
+    my $func      = $service->{can}->('necessary') // 0;
+    my $necessary = $func ? $func->($log, $dbh, $pid, $service->{name}) : 0;
 
-    $log->debug("Need from necessary $necessary func: $func type:$$service{module} name:$$service{name}");
+    $log->debug("Need from necessary $necessary func: $func type:$$service{module} name:$$service{name}") if DEBUG;
 
     # TODO: Eventually these functions should return a need
     # state but  for now we use it as a boolean.
@@ -448,30 +458,32 @@ sub user_requested {
 # Get the next service of the given type that needs attention. Note: Used instead
 # of checking once as
 sub next_service {
-    my ($log, $dbh, $pid, $type) = @_;
+  my ($log, $dbh, $pid, $type) = @_;
 
-    # my @sids = grep { get_status($log, $dbh, $_) ne 'calculated' }
-    #                 check_for_service($log, $dbh, $pid, $type);
-    #
-    # return $sids[0];
+  # my @sids = grep { get_status($log, $dbh, $_) ne 'calculated' }
+  #                 check_for_service($log, $dbh, $pid, $type);
+  #
+  # return $sids[0];
 
-    my $sth = $dbh->prepare_cached(q{
-        SELECT lngserviceindex
-        FROM tbl_project_contents
-        WHERE strstatus <> 'calculated'
-          AND lngprojectindex = ?
-          AND strservicetype  = ?
-        ORDER BY dtmlastmodified DESC, lngserviceindex DESC
-        LIMIT 1
-    });
-
-    return $dbh->selectrow_array($sth, undef, $pid, $type);
+  my ($sid)  = sql::execute( undef, undef, 
+    q{
+    SELECT lngserviceindex
+    FROM tbl_project_contents
+    WHERE strstatus <> 'calculated'
+    AND lngprojectindex = ?
+    AND strservicetype  = ?
+    ORDER BY dtmlastmodified DESC, lngserviceindex DESC
+    LIMIT 1
+    }, $pid, $type);
+  $openprint::log->debug("Status sid $sid for $type") if $sid;
+  return $sid;
 }
 
 # Get the specs and price the given service.
 sub process {
   my ($log, $dbh, $variable, $pid, $sid, $service) = @_;
 
+  $log->debug("processing $$service{name}");
   my $status = eval {
     set_need($dbh, $sid, $service->{is_needed}); # Set (new) need level.
 
@@ -479,7 +491,8 @@ sub process {
     my $specs = get_specs($dbh, $pid, $sid, $service);    # All specs
 
     # Price the service.
-    my $state = price($log, $dbh, $variable, $pid, $sid, $service, $specs, 1);
+    my $state = eprint::service::price($log, $dbh, $variable, $pid, $sid, $service, $specs, 1);
+    $log->debug("State from pricing $$service{name} = $state");
 
     # Save the specifications and pricing.
     save($log, $dbh, $pid, $sid, $service, $form, $specs) if $state eq 'calculated';
@@ -487,16 +500,17 @@ sub process {
     return $state;
   };
   if ($@) {
-    $log->debug($@);
-    warn "Failed to process $service->{name} ($sid)";
+    $log->error("Failed to process $service->{name} ($sid) $@ $!");
     $status = 'error';
   } elsif ($status eq 'uncalculated' && !$service->{url}) {
     # If the service doesn't have a page the user can't fix an uncalculated service, so it's an error.
-    warn "$service->{type} ($sid) without page won't calculate.";
+    $log->error("$service->{type} ($sid) without page won't calculate.");
     $status = 'error';
+  } else {
+    $log->debug("Status from pric $status");
   }
 
-  set_status($log, $dbh, $pid, $status, $sid) if $status; # Mark the service.
+  eprint::service::set_status($log, $dbh, $pid, $status, $sid) if $status; # Mark the service.
 
   # If we're debugging rethrow the error.
   if ($@ && DEBUG) {

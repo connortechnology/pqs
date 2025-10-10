@@ -18,6 +18,7 @@ require configuration;
 require eprint::print_project;
 require eprint::customer;
 require PQS::model::change_order;
+require openprint;
 
 sub view_services {
   my ($r, $log, $dbh, $cookie, $variable) = @_;
@@ -33,9 +34,10 @@ sub view_services {
   my $changed = 0;
 
   if ($project->build()) {
-    $log->debug("Needs build");
     eprint::Build::build($log, $dbh, $pid, $variable, 0);
     $project->save({build=>0});
+  } else {
+    $log->debug("Project $pid does not need bulilding");
   }
 
   if ( $r->param('start') && $r->param('end') ) {
@@ -73,26 +75,28 @@ sub view_services {
 
   #print STDERR "HAVE DIGIFED: $digifed PMS: $pms ************\n";
 
-
   if ( $digifed && !$pms ) {
     $project->save({digifed=>0});
     $qtys->[0] = $q1;
 
-    my $press_type = 41;
+    my $digital_press_type = openprint::Equipment_Type->find_one(name=>'digital');
+    if ($digital_press_type) {
+      eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys, $$digital_press_type{id});
+      my ($digital_pid) = sql::execute(undef, undef, q{SELECT MAX(lngprojectindex) FROM tbl_projects WHERE eid=?}, $pid);
+      if (!$digital_pid) {
+        $log->error("No project from copying to digital.");
+      } else {
+        my $digital_project = new openprint::Project($digital_pid);
 
-    eprint::print_project::add_qty($r, $log, $dbh, $cookie, $variable, $pid, $qtys, $press_type);
-    my ($sfpid, $status) = $dbh->selectrow_array(q{
-      SELECT lngprojectindex, strstatus FROM tbl_projects WHERE eid = (
-      SELECT eid FROM tbl_projects WHERE lngprojectindex = ?
-      ) and lngprojectindex <> ?
-      },undef, $pid, $pid);
-
-    my @dprice = project_price($log, $dbh, $pid);
-    my @sprice = project_price($log, $dbh, $sfpid) ;
-    if ($sprice[0] < $dprice[0] && $status eq 'Unordered') {
-      $pid = $sfpid
-    }
-    #print STDERR "PRICE COMP, $dprice[0], $sprice[0], $pid \n";
+        my @dprice = eprint::project::project_price($log, $dbh, $digital_pid);
+        my @sprice = eprint::project::project_price($log, $dbh, $pid);
+        $log->debug("PRICE COMP, digital $dprice[0], sf $sprice[0], $digital_pid $pid ".$digital_project->status());
+        if ($dprice[0] < $sprice[0] && ($digital_project->status() eq 'Unordered')) {
+          $pid = $digital_pid;
+          $project = $digital_project;
+        }
+      }
+    } # end if digital_press_type
   }
 
   $variable->{pqtys} = $dbh->selectall_arrayref(q{
@@ -109,7 +113,7 @@ sub view_services {
 
   #Only admin/employee can select customer account.
   #Prevent errors when admin makes project and then customer places order.
-  eprint::login::select_customer( $r, $log, $dbh, $cookie, $variable, $project->company_id() ) if $variable->{user_type} =~ /^[AE]$/;
+  eprint::login::select_customer( $r, $log, $dbh, $cookie, $variable, $project->company_id() ) if ($project->company_id() != $openprint::session{company_id}) and ($openprint::session{user_type} =~ /^[AE]$/);
 
   #print STDERR "USER DUMPER" , Dumper($variable);
   # Determine if the project is currently in a quote or order and therefor

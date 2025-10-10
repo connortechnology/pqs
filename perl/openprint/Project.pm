@@ -85,6 +85,7 @@ create_to_quote => 'create_to_quote',
 mail_type => 'mail_type',
 copy_pid => 'copy_pid',
 build => 'build',
+eid =>  'eid',
 );
 %transforms = (
 	id								=>	[ 's/\D//g', '<2147483647' ],
@@ -633,14 +634,17 @@ require openprint::Estimating::MultiPage;
 		} # end if
 	} # end if
 
+	return $self->set_status($new_status);
+} # end sub update_project_status
+
+sub set_status {
+  my ($self, $new_status) = @_;
 	if ( $$self{status} ne $new_status ) {
 		$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked $new_status from $$self{status}" );
-		$$self{status} = $new_status;
-		$self->save();
+		$self->save({status=>$new_status});
 	} # end if
-	return $$self{status};
-
-} # end sub update_project_status
+  return $$self{status};
+}
 
 sub save {
 	my ( $self, $hash ) = @_;
@@ -2134,7 +2138,7 @@ sub get_book_type {
     } elsif ( $$printing_specs{template} and sets::isin($$printing_specs{template}, \@services)) {
       return $$printing_specs{template};
     } # end if
-    $openprint::log->error("Unknown template type $$printing_specs{rdbTemplateType}");
+    #$openprint::log->error("Unknown template type $$printing_specs{rdbTemplateType}");
   } else {
     $openprint::log->error("No print container");
   } # end if

@@ -113,6 +113,9 @@
 							<input type="submit" class="button" value="Custom Sort" name="add_custom_sort" />
 						</form>
 					<?endif custom_sort?>
+          <?echo(
+             button( 'Log', { onclick=>qq`popup_window('/openprint/main/project/_view_log.html?project_id=$$variable{pid}', '', { width:800, height:600 } );`, text=>'View Log' } );
+          ) ?>
 					<input type="button" value="Project Files" class="button right" onclick="window.location='/main/proj/files.html?pid=<?pid?>';" />
 				<? if has_pdf_template ?>
 					<input type="button" value="Edit Data" class="button right" onclick="window.location='/template/main.html?pid=<?pid?>';" />

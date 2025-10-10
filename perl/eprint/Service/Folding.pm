@@ -11,6 +11,7 @@ use POSIX                    qw(ceil);
 use eprint::Service::Spiral  qw(SPIRAL);
 use callback;
 require openprint;
+require openprint::Project;
 
 # Default spacing gap if one isn't provided on the machine.
 use constant DEFAULT_GAP => eprint::Config->get(Folding => 'default_gap');
@@ -37,8 +38,9 @@ sub necessary {
   # The user doesn't want any post-press services. DEPRECATED
   return 0 if has_no_bindery($log, $dbh, $pid);
 
+  my $project = new openprint::Project($pid);
   # Some project types simply can't be folded.
-  my $project_type = get_type($log, $dbh, $pid);
+  my $project_type = $project->type();
 
   # Large format projects don't get folding, nor do these others.
   return 0 if $project_type =~ m/^LF[_-]/

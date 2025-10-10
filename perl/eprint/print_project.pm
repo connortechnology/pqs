@@ -1265,7 +1265,7 @@ sub edit_process {
 
   # TODO: Are there any actions other than recalculating we need to take when changing between supplied media?
 
-  my $services_modified = modify_services($r, $log, $dbh, $cookie, $variable, $pid) if !$add_qty;;
+  my $services_modified = modify_services($r, $log, $dbh, $cookie, $variable, $pid) if !$add_qty;
 
   # The level of recalculation required.
   return $modified > $services_modified ? $modified : $services_modified;
@@ -2158,8 +2158,8 @@ sub create_project {
   my ($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref) = @_;
 
   foreach (1..3) {
-    $qty->[$_-1] = $qty->[$_-1] ? int($qty->[$_-1]) : int($r->param("txtQuantity$_"));
-    }
+    $qty->[$_-1] = $qty->[$_-1] ? int($qty->[$_-1]) : int($r->param("txtQuantity$_") ? $r->param("txtQuantity$_") : 0);
+  }
 
   $projref ||= $r->param('txtProjectReference');
   die('Missing Project Referenece') unless $projref;
@@ -2254,6 +2254,7 @@ sub edit_project {
   my ($r, $log, $dbh, $cookie, $variable, $pid) = @_;
 
   my $modified = edit_process(@_);
+  $log->debug("Modified $modified");
 
   # Send for a full recalculate if the quantities have changed. Otherwise
   # the build process will just pickup any added services.
@@ -2530,32 +2531,38 @@ sub project_notification {
 }
 
 sub add_qty {
-  my ($r, $log, $dbh, $cookie, $var, $pid, $qtys, $press_type) = @_;
+  my ($r, $log, $dbh, $cookie, $var, $pid, $qtys, $press_type_id) = @_;
 
   my ($new, $changed) = copy_project($dbh, $var, $pid, {
       name      => ($r->param('name')    || ''),
       comments   => ($r->param('comments') || ''),
       no_assets => !$r->param('copy_assets'),
     });
+  $log->debug("Back from copy_projectn new pid is $new");
 
   my $src_project = new openprint::Project($pid);
   my $new_project = new openprint::Project($new);
 
   my $old_q1 = $src_project->quantity1();
 
-  $pid = $new;
-
-  edit_process($r, $log, $dbh, $cookie, $var, $pid, 1, $qtys);
+  $log->error("start edit_process");
+  edit_process($r, $log, $dbh, $cookie, $var, $new, 1, $qtys);
+  $log->error("endrt edit_process");
 
   # edit process can reset lngpresstype
-  $new_project->save({eid=>$pid, ($press_type ? (press_type_id=>$press_type) : ())});
+  $log->debug("Saving eid to $pid $press_type_id ".Data::Dumper::Dumper(\$new_project));
+  $_ = $new_project->save({eid=>$pid, ($press_type_id ? (press_type_id=>$press_type_id) : ())});
+  if ($_) {
+    $log->error($_);
+  }
+  $log->debug("Saving eid to $pid");
 
   my $new_q1 = $new_project->quantity1();
 
   my $mv = $dbh->selectrow_array(q{
     SELECT strvalue FROM tbl_service_specifications
     WHERE  lngprojectindex = ? AND strname = 'version_quantities'
-    }, undef, $pid);
+    }, undef, $new);
 
   if ($mv) {
     my @data = split /,/,$mv;
@@ -2583,13 +2590,13 @@ sub add_qty {
     $dbh->do(q{
       UPDATE tbl_service_specifications SET strvalue = $1
       WHERE lngprojectindex = $2 AND strname = 'version_quantities'
-      },undef,$new_mv,$pid);
+      },undef,$new_mv,$new);
   }
 
-  $dbh->do(q{DELETE FROM tbl_service_specifications WHERE lngprojectindex = $1 AND strname ~ 'override'},undef,$pid);
-  $dbh->do(q{DELETE FROM tbl_service_specifications WHERE lngprojectindex = $1 AND strname = 'press'},undef,$pid);
+  $dbh->do(q{DELETE FROM tbl_service_specifications WHERE lngprojectindex = $1 AND strname ~ 'override'},undef,$new);
+  $dbh->do(q{DELETE FROM tbl_service_specifications WHERE lngprojectindex = $1 AND strname = 'press'},undef,$new);
 
-  eprint::Build::build($log, $dbh, $pid, $var, 0);
+  eprint::Build::build($log, $dbh, $new, $var, 0);
 
   # Recalculate the project if the customer has changed.
   return '/main/proj/proj_hist.html';

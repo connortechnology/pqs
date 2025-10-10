@@ -88,8 +88,11 @@ sub variables {
 	} # end foreach qty_index
 
 	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $form = $$sig_specs{Form};
+    my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+    my $Imposition = new openprint::Imposition();
+    $Imposition->load($sig_specs, 1, $Project);
+    $$Imposition{service_id} = $ss_id;
+    my $form = $Imposition->form();
 		foreach my $key ( keys %{$specs} ) {
 			if ( $key =~ /^txtProofIndex\-$form\-(\d+)\-(\d+)$/ ) {
 				my ( $proof_index, $qty_index ) = ( $1, $2 );
@@ -121,7 +124,10 @@ sub outputs {
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $form = $$sig_specs{Form} // 1;
+    my $Imposition = new openprint::Imposition();
+    $Imposition->load($sig_specs, 1, $Project);
+    $$Imposition{service_id} = $ss_id;
+    my $form = $Imposition->form();
 		foreach my $key ( keys %{$specs} ) {
 			if ( $key =~ /^txtProofIndex\-$form\-(\d+)\-(\d+)$/ ) {
 				my ( $proof_index, $qty_index ) = ( $1, $2 );
@@ -191,16 +197,14 @@ sub calc {
 
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load($sig_specs, $qty_index, $Project);
+      $$Imposition{service_id} = $signature_service_index;
       my $form = $Imposition->form();
 
-			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $form";
 			if (!$$Imposition{imposition}) {
 				# Remove it so we don't have to test for it later
-				$$specs{'hdnBreakdown'.$qty_index} .= 'No proofs needed because there is no imposition<br/>';
 				next;
 			} # end if
       my $Equipment = $Imposition->Press();
-			$$specs{'hdnBreakdown'.$qty_index} .= ' printed '.$Imposition->to_string().'</br>';
 
       add_defaults($Project, $ServiceType, $specs, $sig_specs, $qty_index, \%proof_indexes, $Equipment, $Imposition);
 
@@ -222,12 +226,16 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index, $Project );
+      $$Imposition{service_id} = $signature_service_index;
+      my $form = $Imposition->form();
+			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $form";
 			if (!$$Imposition{imposition}) {
 				# Remove it so we don't have to test for it later
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No proofs needed because there is no imposition<br/>';
 				next;
 			} # end if
 			my $Equipment = $Imposition->Press();
+			$$specs{'hdnBreakdown'.$qty_index} .= ' printed '.$Imposition->to_string().'</br>';
 			my %Results = signature_calc( $Project, $ServiceType, $specs, $sig_specs, $qty_index, \%proof_indexes, \%proof_totals, $Equipment, $Imposition );
 			$totalPrice += $Results{total};
 			$$specs{"hdnBreakdown$qty_index"} .= $Results{Breakdown};
@@ -481,12 +489,13 @@ sub insert_folding_proof {
   } elsif (DEBUG) {
     $openprint::log->debug('Default Folding Proof for ' . $equipment->strid().' is ' .$default_proof_type ) if $equipment;
   }
+  return if $default_proof_type and ($default_proof_type eq 'None');
 
   my $proofer = $equipment;
 
   # Layout proof might be a reduced laser. Need to get size from the proofer or press
   my $service = openprint::Service->find_one(name=>$default_proof_type) if $default_proof_type;
-  $log->error("No service foudn for $default_proof_type") if (!$service);
+  $log->error("No service foudn for $default_proof_type from $$equipment{name}") if !$service;
   my %prices_by_equipment_id = map { $$_{equipment_id} => $_ } $service->Prices() if $service;
   if (exists $prices_by_equipment_id{$$equipment{id}}) {
     $proofer = $equipment;
@@ -563,7 +572,8 @@ sub insert_colour_proof {
 
 	my ( $default_proof_type ) = $Equipment->specification('Default Colour Proof') // '' if $Equipment;
   $openprint::log->debug("Default proof type on $$Equipment{name} $default_proof_type") if DEBUG;
-	if ( $default_proof_type ) {
+
+	if ( $default_proof_type and $default_proof_type ne 'None') {
 		if ( $$specs{RequireColourProofs} and($$specs{RequireColourProofs} eq 'N')) {
 			$quantity = 0;
     } else {
@@ -669,11 +679,12 @@ sub insert_layout_proof {
 	if ( ! $default_proof_type ) {
 		$openprint::log->debug('No Default Layout Proof for ' . $equipment->strid() ) if DEBUG and $equipment;
 	} elsif (DEBUG) {
-		$openprint::log->debug('Default Layout Proof for ' . $equipment->strid().' is ' .$default_proof_type ) if $equipment;
+		$openprint::log->debug('Default Layout Proof for ' . $equipment->strid().' is (' .$default_proof_type.')' ) if $equipment;
   }
+  return if $default_proof_type and ($default_proof_type eq 'None');
 
   my $proofer = $equipment;
-  # Layout proof might be a reduced laser. Need to get size from the proofer or press
+  # Layout proof might be a reduced laser. Need to get size from the proofer or press
   my $service = openprint::Service->find_one(name=>$default_proof_type) if $default_proof_type;
   $log->error("No service foudn for $default_proof_type") if (!$service);
   my %prices_by_equipment_id = map { $$_{equipment_id} => $_ } $service->Prices() if $service;
@@ -687,7 +698,7 @@ sub insert_layout_proof {
   $log->debug("Using $$proofer{name} for equipment");
   my ($width, $height, $sides) = $proofer->specifications(
     'Default Layout Proof Width','Default Layout Proof Height', 'Layout Proof Sides');
-  ($width, $height) = ( $Imposition->sheet_width(), $Imposition->sheet_height()) if (!($width and $height));
+  ($width, $height) = @$Imposition{'sheet_width sheet_height'} if !($width and $height);
 	my $quantity = 0;
 
   $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours($sig_specs, 'SideOne')] if ! $$sig_specs{SideOneColours};
@@ -767,6 +778,7 @@ sub display {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load($sig_specs, $qty_index, $Project);
+      $$Imposition{service_id} = $signature_service_index;
       my $form = $Imposition->form();
 			if (!$$Imposition{imposition}) {
 				$log->warn("No imposition in signature $form") if DEBUG;
@@ -878,6 +890,7 @@ sub summary {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load($sig_specs, $qty_index, $Project);
+      $$Imposition{service_id} = $ss_id;
 			if (!$Imposition->imposition()) {
 				next;
 			} # end if
@@ -1010,12 +1023,12 @@ sub project_summary {
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $form = $$sig_specs{Form};
+		my $form = $$sig_specs{SignatureIndex} || $$sig_specs{Form} || 1;
 		foreach my $key ( keys %{$specs} ) {
 			if ( my ($proof_index, $qty_index) = $key =~ /^txtProofIndex-$form-(\d*)-(\d*)$/ ) {
 				next if ! $$specs{"ddmProofType-$form-$proof_index-$qty_index"};
 				next if ! $$specs{"txtProofQuantity-$form-$proof_index-$qty_index"};
-				if ( my $Service = openprint::Service->find_one('name'=>$$specs{"ddmProofType-$form-$proof_index-$qty_index"}) ) {
+				if ( my $Service = openprint::Service->find_one(name=>$$specs{"ddmProofType-$form-$proof_index-$qty_index"}) ) {
 					$types{$Service->description()} = 1;
 				} # end if
 			} # end if
