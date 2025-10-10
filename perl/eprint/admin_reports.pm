@@ -606,8 +606,8 @@ sub quotes_report {
     my @bind_params = ( $variable->{StartDate}, $variable->{EndDate} );
 
 	if ( $r->param('search') ) {
-		$query .= q{ AND lower(strProjectReference) ~ ? };
-		push @bind_params, lc($r->param('search'));
+		$query .= q{ AND (lower(strProjectReference) ~ ? OR lngquoteid ~ ?)};
+		push @bind_params, lc($r->param('search')), $r->param('search');
 		$variable->{search} = $r->param('search');
 	}
 
