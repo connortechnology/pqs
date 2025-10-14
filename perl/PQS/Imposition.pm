@@ -385,7 +385,7 @@ sub fill_box :Private {
   # If we've already been calculated just reference our table entry.
   return $cache->{$size} if exists $cache->{$size};
 
-  $openprint::log->debug("Images on $size ".Data::Dumper::Dumper(\@images));
+  #$openprint::log->debug("Images on $size ".Data::Dumper::Dumper(\@images));
   IMAGE:
   for my $image (@images) {
 
@@ -433,6 +433,12 @@ sub fill_box :Private {
             children => [$n, $p],
           );
 
+          if (!@forest) {
+            push @forest, $node;
+            next;
+          }
+
+
           # Can we be compared? If so are we better?
           my $has_similar;
 
@@ -456,7 +462,7 @@ sub fill_box :Private {
           }
 
           # Add us if we're first or no comparable node exists.
-          if (!@forest or !$has_similar) {
+          if (!$has_similar) {
             push @forest, $node;
           }
         } # end foreach p
