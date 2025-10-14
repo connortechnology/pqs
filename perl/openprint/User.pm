@@ -57,14 +57,15 @@ $default_sort	=	'lower(strfirstname),lower(strlastname),lngUserId';
 	deleted						=>	'deleted',
 	last_logged_in		=>	undef,
 ); # end %fields
+
 %find_fields = (
-	name	=>	q`firstname || ' ' || lastname`,
+	name	=>	q`strfirstname || ' ' || strlastname`,
 	#usergroup_id	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
 	usergroup_id	=>	'id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=?)',
-	usergroup		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
-	last_online	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
-	profile_field	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
-	company_deleted	=>	'(SELECT deleted FROM Companies WHERE Companies.id=company_id)',
+	usergroup		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id='.$table.'.'.$fields{id}.'))',
+	last_online	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id='.$table.'.id)',
+	profile_field	=>	'(SELECT value FROM User_Profiles WHERE user_id='.$table.'.'.$fields{id}.' AND field_id=?)',
+	company_deleted	=>	'(SELECT deleted FROM '.$openprint::Company::table.' WHERE '.$openprint::Company::table.'.'.$openprint::Company::fields{id}.'=company_id)',
 );
 
 %transforms = (
