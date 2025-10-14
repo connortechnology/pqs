@@ -392,12 +392,7 @@ sub registration {
 		} # end if Company has users or not
 	} # end if has email first or last name
 
-	if ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) ) {
-		# If I'm a salesrep, then only change my company, not the user.
-    # ICON 2022-12-16 I don't think this is good.  Should just show them the switch company dropdown
-    #$session{company_id} = $Company->id();
-    #$variable{information} .= 'You are now representing '.$Company->name().'<br/>';
-	} elsif (
+	if (
 			( (! $session{company_id} ) or ( $session{company_id} == $Company->id() ) )
 			and (!$session{user_id})
 			) {
