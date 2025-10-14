@@ -30,3 +30,15 @@ div#pricing .breakdowns {
 div#pricing label {
   border-bottom: 1px solid #0B0D60;
 }
+.PageTitle {
+  display: flex;
+
+}
+.PageTitle h1,
+.PageTitle h2{
+  font-size: 1.4em;color: #0B0D60;font-weight: bold;
+  margin-right: 5px;
+}
+.PageTitle h1:after {
+  content: ' »';
+}

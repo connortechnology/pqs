@@ -17,6 +17,20 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *param = \%openprint::param;
 *config = \%openprint::config;
 
+sub quotes {
+  if ($param{btnFunction}) {
+	} else {
+		ssi::setup_date_select( $r->uri(), 'created_on_start', -30 );
+		ssi::save_params( $r->uri(), ( 'company_id',
+					( map { 'created_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
+					( map { 'created_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		) );
+  }
+}
+
+sub _quotes {
+}
+
 sub orders {
 	if ( $param{btnFunction} eq 'Download in CSV format' ) {
 		my @header = ('OrderID', 'Docket', 'Order Date', 'CSR', 'Company Name', 'Status', 'Total', 'Currency');

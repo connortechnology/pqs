@@ -1,15 +1,3 @@
-.PageTitle {
-  display: flex;
-
-}
-.PageTitle h1,
-.PageTitle h2{
-  font-size: 1.4em;color: #0B0D60;font-weight: bold;
-  margin-right: 5px;
-}
-.PageTitle h1:after {
-  content: ' »';
-}
 
 .Service ul li label.radio-inline {
   width: auto;

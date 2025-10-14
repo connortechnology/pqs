@@ -1,6 +1,6 @@
 <? eval ( 
     my %filters = (
-            'order'=>'id',
+      order=>$openprint::Quote::fields{id},
             );
     $filters{'status'} = $param{'ddmStatus'} if $param{'ddmStatus'};
     $filters{'company_id'} = $param{'ddmCustomers'} if $param{'ddmCustomers'};

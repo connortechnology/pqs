@@ -26,43 +26,39 @@ my @lookup  :Field(Name => 'lookup');
 
 # TEMP: Replace these package variables with private object variables.
 our (@images, $cache);
+our $round_to;
 
 use constant ID    => 2; # REMOVE - When image is an object.
 use constant BLEED => 3; # REMOVE
 use constant GRAIN => 4; # REMOVE
+use constant DEBUG => 0;
 
+sub get_precision {
+  return map {
+    # Assume a valid number, so only 1 decimal.
+    my $decimal_pos = index($_, '.');
+    ($decimal_pos == -1 ? 0 : (length($_) - $decimal_pos)-1);
+  } @_;
+}
 
 sub _init :Init {
   my ($self, $args_ref, ) = @_;
 
-  # TODO Use the :InitArgs construct and do some type checking and
-  # validation on these arguements.
-
-  my $start_time = $args_ref->{start};
-
+  # TODO Use the :InitArgs construct and do some type checking and validation on these arguements.
   # Save a reference to the project for later use.
   $self->set(\@project, $args_ref->{project});
 
   my $project = $args_ref->{project};
 
   # Our imposition code wasn't in an object before, we'll wrap it in
-  # it's own little closure type environment until we have time to
-  # refactor it.
+  # it's own little closure type environment until we have time to refactor it.
   local @images = ();
   local $cache  = {};
 
-  {
-    my $end =  Time::HiRes::time() - $start_time;
-    print STDERR "START PQS \ IMPOSE 1: $end  \n";
-  }
-
-
   # Screen items surfaces are the size they are.
   if ($project->{type} eq 'ScreenItem' || $project->{type} eq 'Envelopes') {
-    my @dims = @$project{qw(width height)};
-
     $lookup[$$self] = [ PQS::Imposition::Node->new(
-        size  => \@dims,
+        size  => [@$project{qw(width height)}],
         image => 1,
         bleed => [0,0,0,0],
         grain => undef,
@@ -70,50 +66,30 @@ sub _init :Init {
     return $self;
   }
 
-  {
-    my $end =  Time::HiRes::time() - $start_time;
-    print STDERR "START PQS \ IMPOSE 2: $end  \n";
-  }
+  my $start_time = $args_ref->{start};
 
   # Our file cache (shared between children).
   my $result_cache = Cache::FileCache->new({ namespace => 'imposition' }) or die "Couldn't initialise cache: $!";
 
-  {
-    my $end =  Time::HiRes::time() - $start_time;
-    print STDERR "START PQS \ IMPOSE 2a: $end  \n";
-  }
+  my $max_precision = List::Util::max(get_precision(@$project{qw(width height trim)}));
+  $round_to = 1/(10**$max_precision);
+  $openprint::log->debug("START PQS IMPOSE 1: ".(Time::HiRes::time() - $start_time)." max precision $max_precision") if DEBUG;
 
   # width x height - bleed size - trim size - multipage - bleed sides
-  my $key = sprintf("%06.3fx%06.3f-%4.3f-%d-%s",
+  my $key = sprintf("%06.${max_precision}fx%06.${max_precision}f-%4.${max_precision}f-%d-%s",
     @$project{qw(width height trim)},
     $project->{is_multipage} ? 1 : 0,
     join(',', @{ $project->{bleed} })
   );
 
-  {
-    my $end =  Time::HiRes::time() - $start_time;
-    print STDERR "START PQS \ IMPOSE 2b: $end KEY: *$key*  \n";
-  }
-
   my $have_cache = $result_cache->get($key);
 
-  {
-    my $end =  Time::HiRes::time() - $start_time;
-    print STDERR "START PQS \ IMPOSE 2c: $end HAVE CACHE: $have_cache  \n";
-  }
-
-
+  $openprint::log->debug("START PQS IMPOSE 2: ".(Time::HiRes::time() - $start_time)) if DEBUG;
   # Retrieve cached results if we've seen this before.
   if ($have_cache) {
     $lookup[$$self] = $have_cache;
     return $self;
   }
-
-  {
-    my $end =  Time::HiRes::time() - $start_time;
-    print STDERR "START PQS \ IMPOSE 3: $end  \n";
-  }
-
 
   # A kludge to handle multi-page books the way they were previously. We do
   # two rounds of imposition, one for each grain direction.
@@ -125,55 +101,32 @@ sub _init :Init {
   IMPOSITION: {
     @images = $self->images($grain);
 
-    {
-      my $end =  Time::HiRes::time() - $start_time;
-      print STDERR "START PQS \ IMPOSE 4: $end  \n";
-    }
+    $openprint::log->debug("START PQS IMPOSE 3: ".(Time::HiRes::time() - $start_time) . ' '.Data::Dumper::Dumper(\@images)) if DEBUG;
 
     my $trees = fill_box(BOUNDS); # Impose.
 
-    {
-      my $end =  Time::HiRes::time() - $start_time;
-      print STDERR "START PQS \ IMPOSE 5: $end  \n";
-    }
+    $openprint::log->debug("START PQS IMPOSE 4: ".(Time::HiRes::time() - $start_time). ' '.Data::Dumper::Dumper($trees)) if DEBUG;
 
     # TEMP: The sub-node generation is currently generating impositions with
     # spacing and sub-optimal results. We'll do a simple post-processing prune
     # of the cache to remove the worst of these.
     push @valid, post_process($trees, $cache);
 
-    {
-      my $end =  Time::HiRes::time() - $start_time;
-      print STDERR "START PQS \ IMPOSE 6: $end  \n";
-    }
-
+    $openprint::log->debug("START PQS IMPOSE 5: ".(Time::HiRes::time() - $start_time)) if DEBUG;
     # If we're multipage, try the rotated image appending any results.
     if ($is_special && $grain != 1 ) {
       $grain = 1;
       $cache = {};
       redo IMPOSITION;
     }
-  }
+  } # end IMPOSITION
 
-  {
-    my $end =  Time::HiRes::time() - $start_time;
-    print STDERR "START PQS \ IMPOSE 7: $end  \n";
-  }
+  $openprint::log->debug("START PQS IMPOSE 6: ".(Time::HiRes::time() - $start_time)) if DEBUG;
 
   $lookup[$$self] = \@valid;           # Impositions
-
-  {
-    my $end =  Time::HiRes::time() - $start_time;
-    print STDERR "START PQS \ IMPOSE 8: $end  \n";
-  }
-
   $result_cache->set($key => \@valid); # Store to cache.
 
-  {
-    my $end =  Time::HiRes::time() - $start_time;
-    print STDERR "START PQS \ IMPOSE 9: $end  \n";
-  }
-
+  $openprint::log->debug("START PQS IMPOSE 7: ".(Time::HiRes::time() - $start_time)) if DEBUG;
   return $self;
 }
 
@@ -431,10 +384,16 @@ sub fill_box :Private {
   # If we've already been calculated just reference our table entry.
   return $cache->{$size} if exists $cache->{$size};
 
+  $openprint::log->debug("Images on $size ".Data::Dumper::Dumper(\@images));
   IMAGE:
   for my $image (@images) {
+
+    my $image_size = join('x', $image->[W], $image->[H]);
     # Don't bother with this image if it can't fit.
-    next IMAGE if $image->[W] > $box->[W] or $image->[H] > $box->[H];
+    if ($image->[W] > $box->[W] or $image->[H] > $box->[H]) {
+      $openprint::log->debug("Image $image_size doesn't fit on $size");
+      next IMAGE;
+    }
 
     # TODO: If we prepopulate the cache with these nodes and mark the
     # cache as incomplete (as other images may be able to fit within the
@@ -453,6 +412,7 @@ sub fill_box :Private {
     for my $dir (VERTICAL, HORIZONTAL) {
       my ($bound, $len) = ($box->[$dir], $image->[$dir]); # -| to cut.
 
+      $openprint::log->debug("box $size image size $image_size bound: $bound len:$len dir:$dir");
       next DIRECTION if $bound == $len;
 
       # Fill the sub-boxes made by paritioning the box.
@@ -460,7 +420,7 @@ sub fill_box :Private {
       fill_box($dir ? [ $box->[W], $_        ] # Horizontal cut.
       : [ $_,        $box->[H] ] # Vertical cut.
       );
-      } ($len, $bound - $len);
+      } ($len, Math::Round::round($round_to, $bound - $len));
 
       # Compare each pairing (cartesian product) of the two partitions
       # and choose the best ones.
