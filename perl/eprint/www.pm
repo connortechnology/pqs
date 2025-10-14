@@ -427,7 +427,7 @@ sub parse_page {
 
   } else {
     eprint::login::get_login_info($log, $dbh, $cookie, $variable, 'C');
-  }
+  } # end if section
 
   # EXTRA STUFF IN $VARIABLE
   #
@@ -445,8 +445,7 @@ sub parse_page {
 
       require eprint::greetings;
       #Make Greeting available on all pages. Requested by Juile for Dominos.
-      $$variable{'USER_CATEGORY_GREETING'} = eprint::greetings::select_user_category_greeting($log, $dbh, $variable->{user_id})
-      if $variable->{user_id};
+      $$variable{'USER_CATEGORY_GREETING'} = eprint::greetings::select_user_category_greeting($log, $dbh, $variable->{user_id}) if $variable->{user_id};
     }
   }
 
@@ -492,6 +491,7 @@ sub parse_page {
 } # end sub parse_page
 
 sub section_error {
+  return OK;
 }
 
 sub section_templating {
