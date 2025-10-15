@@ -248,9 +248,7 @@ sub admin_customer_edit {
     } 
     elsif ( $r->param('btnFunction') eq 'Save' ) {
 
-my $ls = $r->param('linescreen');
-
-print STDERR  "HAVE LINE SCREEN: $ls \n";
+      my $ls = $r->param('linescreen');
 
         my $customer = eprint::obj_customer->new($log, $dbh, $index);
 
@@ -319,7 +317,6 @@ print STDERR  "HAVE LINE SCREEN: $ls \n";
 
         my %params;
         foreach my $field ( keys %fields ) {
-			print STDERR "CHECK FILED: $field = " . $r->param($field) . "\n";
             $params{$fields{$field}} = $r->param($field) if defined $r->param($field);
         }
 
