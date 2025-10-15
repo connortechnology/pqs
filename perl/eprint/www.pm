@@ -65,11 +65,9 @@ sub generate_cookie {
   my ( $r, $log, $dbh ) = @_;
 
   # Get the domain from Apache config or, failing that, the database.
-  my ($user, $pass, $host, $port) = $r->headers_in->{'Host'}
-  =~ /(?:([^:]+):([^\@]+)\@)?([^\@:]+)(?::(\d+))?/;
+  my ($user, $pass, $host, $port) = $r->headers_in->{'Host'} =~ /(?:([^:]+):([^\@]+)\@)?([^\@:]+)(?::(\d+))?/ if $r->headers_in->{'Host'};
 
-  my $domain = 
-  $host
+  my $domain = $host
   || $r->dir_config('cookiedomain')
   || configuration::get_value($log, $dbh, 'cookiedomain');
  
