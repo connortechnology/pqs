@@ -12,7 +12,7 @@ require Math::Round;
 require Data::Dumper;
 use SVG;
 use vars qw( $AUTOLOAD %Orientations @RunStyles %ShortStyles %LongStyles %bleed_sides);
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
@@ -363,7 +363,7 @@ sub load {
     $$self{final_height} = $$printing_specs{final_height};
   }
 
-   $openprint::log->debug("final size: $$self{final_width}x$$self{final_height} ");
+  #$openprint::log->debug("final size: $$self{final_width}x$$self{final_height} ");
 
 	$$self{object_width} = $$specs{txtWidth} || $$specs{flat_width};
   if (!$$self{object_width}) {
@@ -372,7 +372,7 @@ sub load {
     if (!$$specs{txtFinalWidth}) {
       @$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'final_width','final_height'};
     }
-    $openprint::log->debug("object size: $$self{object_width}x$$self{object_height} ");
+    #$openprint::log->debug("object size: $$self{object_width}x$$self{object_height} ");
   }
 
 	$$self{object_height} = ($$specs{txtHeight} ? $$specs{txtHeight} : $$specs{flat_height}) if ! $$self{object_height};
@@ -385,7 +385,7 @@ sub load {
     $$self{image_height} = $$self{object_height}
     # Need to add bleed
   }
-  $openprint::log->debug("Image size: $$self{image_width}x$$self{image_height} ");
+  #$openprint::log->debug("Image size: $$self{image_width}x$$self{image_height} ");
 
   $$self{colour_bar_size} = $$self{Press}->specification('Colour Bar Size');
   $$self{colour_bar_orientation} = $$self{Press}->specification('Colour Bar Orientation');
@@ -1361,7 +1361,7 @@ sub form {
 
   $$self{form} = $$self{form} || $$self{specs}{Form};
 #|| $$self{specs}{SignatureIndex};
-  $openprint::log->debug("FOrm $$self{form} = $$self{form} || $$self{specs}{Form} ");
+  $openprint::log->debug("FOrm $$self{form} = $$self{form} || $$self{specs}{Form} ") if DEBUG;
   if ((!$$self{form}) or ($$self{form} > 100)) {
     $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
     my ( $signature_count ) = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{Project}->id() );
