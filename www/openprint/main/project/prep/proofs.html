@@ -7,12 +7,27 @@
   <form id="f1" name="f1" method="post" action="<?echo($config{url_base})?>/main/project/view.html">
     <ul>
       <li><label>Do you require colour proofs?</label>
-			<? echo ( radio( 'RequireColourProofs', ['Y','Yes','N','No','A','Auto'], $$variable{RequireColourProofs}, { on_click=>'calc_proofs', default=>'A' } ); ) ?>
+			<? echo ( radio( 'RequireColourProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequireColourProofs}, { on_click=>'calc_proofs', default=>'' } ); ) ?>
+      </li>
+      <li><label>Do you require layout proofs?</label>
+			<? echo ( radio( 'RequireLayoutProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequireLayoutProofs}, { on_click=>'calc_proofs', default=>'' } ); ) ?>
       </li>
       <li><label>Do you require press proofs?</label>
         <? echo ( radio( 'RequirePressProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequirePressProofs}, {
         on_click=>'calc_proofs',
         default=>($$variable{Project}->Company()->add_press_proofs() ? $$variable{Project}->Company()->add_press_proofs()->value() : '' )
+        } ); ) ?>
+      </li>
+      <li><label>Do you require pdf proofs?</label>
+        <? echo ( radio( 'RequirePDFProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequirePDFProofs}, {
+        on_click=>'calc_proofs',
+        default=>''
+        } ); ) ?>
+      </li>
+      <li><label>Do you require folding proofs?</label>
+        <? echo ( radio( 'RequireFoldingProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequireFoldingProofs}, {
+        on_click=>'calc_proofs',
+        default=>'',
         } ); ) ?>
       </li>
     </ul>
