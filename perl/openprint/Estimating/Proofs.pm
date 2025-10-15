@@ -550,14 +550,14 @@ sub insert_folding_proof {
 
   # Layout proof might be a reduced laser. Need to get size from the proofer or press
   my $service = openprint::Service->find_one(name=>$default_proof_type) if $default_proof_type;
-  $log->error("No service foudn for $default_proof_type from $$equipment{name}") if !$service;
+  $log->debug("No service foudn for $default_proof_type from $$equipment{name}") if !$service;
   my %prices_by_equipment_id = map { $$_{equipment_id} => $_ } $service->Prices() if $service;
   if (exists $prices_by_equipment_id{$$equipment{id}}) {
     $proofer = $equipment;
   } elsif ( 1 == keys %prices_by_equipment_id) {
     $proofer = (values %prices_by_equipment_id)[0]->Equipment();
   } else {
-    $log->error("Unable to choose default folding proof equipment" . Data::Dumper::Dumper(\%prices_by_equipment_id));
+    $log->debug("Unable to choose default folding proof equipment" . Data::Dumper::Dumper(\%prices_by_equipment_id));
   }
 
   $log->debug("Using $$proofer{name} for equipment");
