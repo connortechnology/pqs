@@ -77,10 +77,10 @@ sub handler {
 
     # Get a refrence to the function.
     my $func = qualify_to_ref( $name, __PACKAGE__ );
-    $log->debug("Func $name => $func");
+    $log->debug("Func ".(defined($name)?$name:'undef').' => '.(defined($func)?$func:'undef'));
 
     # Verify that the function requested exists, if not return a 404.
-    return NOT_FOUND unless defined &$func;
+    return NOT_FOUND unless $func and defined &$func;
 
     # Unless the user is a valid user, throw them back to the login.
     # TEMPORARY: This will be handled in auth handlers.
