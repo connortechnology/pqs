@@ -19,6 +19,7 @@ use strict;
 use warnings;
 $Data::Dumper::Maxdepth = 1;
 
+use constant DEBUG => 0;
 use openprint::Imposition;
 require openprint::Equipment;
 require openprint::service;
@@ -303,12 +304,17 @@ sub calc {
         #$$specs{'hdnBreakdown'.$qty_index} .= " not doing lamination on form $form<br/>";
         next;
       }
+
+      $$specs{"chkOverrideEquipment-$form-$qty_index"} //= '';
+
+      $log->error("Doing form $form");
       my $stock = $imposition->Paper();
       $$stock{calliper} = $$specs{"calliper-$form"}; # Overrides done earlier
 
-      $$specs{'hdnBreakdown'.$qty_index} .= 'Signature ' . $form . ' printed: ' .openprint::service::summary( $Project, $signature_service_id, $qty_index ).'. Imposition image dimensions are '.$$imposition{layout_width}.'&quot; x '.$$imposition{layout_height}.'&quot;<br/>';
+      $totalPrice{breakdown} .= '<b>Signature ' . $form . '</b> printed: ' .openprint::service::summary( $Project, $signature_service_id, $qty_index ).'. Imposition image dimensions are '.$$imposition{layout_width}.'&quot; x '.$$imposition{layout_height}.'&quot;<br/>';
+
       if (!$$imposition{imposition}) {
-        $$specs{'hdnBreakdown'.$qty_index} .= 'No imposition loaded.<br/>';
+        $totalPrice{breakdown} .= 'No imposition loaded.<br/>';
         next;
       }
       my %sig_price = signature_calc($Project, $specs, $qty_index, $imposition);
@@ -379,23 +385,22 @@ sub signature_calc {
   );
 
   my @equipment = ();
-  if ($$specs{"chkOverrideEquipment-$form-$qty_index"} and ($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' and $$specs{"ddmEquipment-$form-$qty_index"})) {
+  if (($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y') and $$specs{"ddmEquipment-$form-$qty_index"}) {
+    $openprint::log->debug("Overriden for $form $qty_index");
     @equipment = openprint::Equipment->find(id=>$$specs{"ddmEquipment-$form-$qty_index"});
   } else {
     @equipment = @all_equipment;
   } # end if
+
   if (!@equipment) {
     $sig_price{alert} .= 'No equipment found for form '.$form.' quantity '.$qty_index.'.<br/>';
     return %sig_price;
   }
 
-  my %best_equipment_price;
-  my %equipment_price;
+  my @suitable_equipment;
+  my %reasons;
 
   foreach my $equipment (@equipment) {
-    %equipment_price = %sig_price;
-    $equipment_price{Equipment} = $equipment;
-
     my $error = '';
 
     my $style = $equipment->specification('Laminating Style') // 'Final Pieces';
@@ -412,19 +417,34 @@ sub signature_calc {
       } # end if
     }
 
-    if ($error) {
-      $equipment_price{breakdown} .= $error; # WHY
-      #%best_equipment_price = %equipment_price if !%best_equipment_price;
-      next;
-    }
-
     my $sides = $equipment->specification('Laminating Sides') // 'Single';
     if ((( !$$specs{"TypeFront-$form"}) or (!$$specs{"TypeBack-$form"})) and ( $sides eq 'Both' ) ) {
-      if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} and ($$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y')) {
-        $equipment_price{alert} .= 'The chosen laminator must do both sides.  You have chosen no lamination for one of the sides.<br/>';
-      } # end if
-      next;
+      $error .= 'The chosen laminator must do both sides.  You have chosen no lamination for one of the sides.<br/>';
     } # end if
+
+    if ($error) {
+      $reasons{$$equipment{id}} = $error;
+      $sig_price{alert} .= $error if $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y';
+      $openprint::log->error("Reason for ! $$equipment{name} $error") if DEBUG;
+      next;
+    }
+    push @suitable_equipment, $equipment;
+  } # end foreach equipment
+
+  if (!@suitable_equipment) {
+    $sig_price{alert} .= 'No suitable equipment found for form '.$form.' quantity '.$qty_index.'.<br/>';
+    foreach my $equipment (@equipment) {
+      $sig_price{breakdown} .= $$equipment{name} .': '.$reasons{$$equipment{id}};
+    }
+    return %sig_price;
+  }
+
+  my %best_equipment_price;
+  my %equipment_price;
+
+  foreach my $equipment (@suitable_equipment) {
+    %equipment_price = %sig_price;
+    $equipment_price{Equipment} = $equipment;
 
     my $maximum_sheet_width = $equipment->specification('Maximum Sheet Width') // '';
     my $maximum_sheet_length= $equipment->specification('Maximum Sheet Length') // '';
@@ -440,7 +460,7 @@ sub signature_calc {
     if (!@film_widths) {
       $openprint::log->error("Laminate widths on $$equipment{name}: @film_widths from $film_width_options");
     } else {
-      $openprint::log->debug("Laminate widths on $$equipment{name}: @film_widths from $film_width_options");
+      $openprint::log->debug("Laminate widths on $$equipment{name}: @film_widths from $film_width_options") if DEBUG;
     }
 
     $$specs{"override_film_width-$form"} //= '';
@@ -477,7 +497,7 @@ sub signature_calc {
       } # end if
       last if $laminate_price{total}; # HACK, have valid, widest
     } # end foreach film_width
-    $openprint::log->debug("best laminate price: ".Data::Dumper::Dumper(\%best_laminate_price));
+    $openprint::log->debug("best laminate price: ".Data::Dumper::Dumper(\%best_laminate_price)) if DEBUG;
 
     if ((!$best_equipment_price{total}) or ($best_laminate_price{total} and ($best_equipment_price{total} > $best_laminate_price{total}))) {
       #$openprint::log->debug("Have better equipment price: $best_equipment_price{total} > $best_laminate_price{total} on $$equipment{name}");
