@@ -36,6 +36,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades $default_sort );
 
 use constant DEBUG_PRICING => 0;
+use constant DEBUG => 0;
 
 $debug = 1;
 $table = 'tbl_paper';
@@ -1525,7 +1526,7 @@ sub load_from_signature {
 			#Carp::cluck("load_from_signature called without qty_index:$qty_index and paper_id:". $$specs{'paper_id'.$qty_index});
 		}
     if ( $$specs{hdnPaperIndex}) {
-      $openprint::log->debug("Load by hdnPaper Index");
+      $openprint::log->debug("Load by hdnPaper Index") if DEBUG;
 			$Paper = openprint::Paper->find_one( id=>$$specs{hdnPaperIndex} );
 			if ( !$Paper ) {
 				$openprint::log->warn('Loading by paper id but not found: ' . $$specs{hdnPaperIndex} );
@@ -1544,7 +1545,7 @@ sub load_from_signature {
 			$Paper = openprint::Paper->find_one( id=>$$specs{paper}{index} );
     }
     if ($Paper) {
-      $openprint::log->debug("Returning paper ".$Paper->to_string());
+      $openprint::log->debug("Returning paper ".$Paper->to_string()) if DEBUG;
       return $Paper;
     }
 
