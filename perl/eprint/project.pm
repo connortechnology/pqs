@@ -886,7 +886,7 @@ sub project_price {
 
   $total[$_] = ($service[$_] // 0) + ($material[$_]//0) for 0..(scalar @service); 
 
-  print STDERR "HAVE PROJECT PRICES: ", Dumper(\@material, \@service, \@total);
+  #print STDERR "HAVE PROJECT PRICES: ", Dumper(\@material, \@service, \@total);
 
   return @total;
 }

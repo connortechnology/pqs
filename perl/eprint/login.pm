@@ -468,6 +468,8 @@ sub login_app_process {
       SMTP    => configuration::get_value($log, $dbh, 'Mail Server'),
       FROM    => $agent,
       TO      => $email,
+      #'RCPT TO' => $agent.' NOTIFY=NEVER',
+      'ReplyTo'=> '<>',
       SUBJECT => "New Login Application"
     );
     misc::send_email_with_attachment($r, $log, \%mail, ('', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable'));
@@ -481,7 +483,8 @@ sub login_app_process {
 
     %mail = (SMTP    => configuration::get_value($log, $dbh, 'Mail Server'),
       FROM    => $agent,
-      TO      => $agent,
+      #TO      => $agent,
+      TO => 'iconnor@connortechnology.com',
       SUBJECT => "New Login Application");
     misc::send_email_with_attachment($r, $log, \%mail, ('', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable'));
 
@@ -569,8 +572,8 @@ sub login_app_process {
     my %mail = (
       SMTP    => configuration::get_value($log, $dbh, 'Mail Server'),
       FROM    => $agent,
-      TO      => $agent,
-      BCC => 'iconnor@connortechnology.com',
+      #TO      => $agent,
+      TO => 'iconnor@connortechnology.com',
       SUBJECT => 'New Login Application' 
     );
     misc::send_email_with_attachment($r, $log, \%mail, ('', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable'));
