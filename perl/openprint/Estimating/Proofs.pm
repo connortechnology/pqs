@@ -169,6 +169,10 @@ $openprint::log->debug(Data::Dumper::Dumper($indexes));
 
 sub necessary {
   my ($project) = @_;
+  if (@_ == 4) {
+    my ($log, $dbh, $pid, $service_type) = @_;
+    $project = new openprint::Project($pid);
+  }
 
   my $type = $project->press_type();
 
@@ -741,7 +745,7 @@ sub insert_layout_proof {
   my $proofer = $equipment;
   # Layout proof might be a reduced laser. Need to get size from the proofer or press
   my $service = openprint::Service->find_one(name=>$default_proof_type) if $default_proof_type;
-  $log->error("No service foudn for $default_proof_type") if (!$service);
+  $log->error("No service foudn for $default_proof_type") if $default_proof_type and !$service;
   my %prices_by_equipment_id = map { $$_{equipment_id} => $_ } $service->Prices() if $service;
   if (exists $prices_by_equipment_id{$$equipment{id}}) {
     $proofer = $equipment;
