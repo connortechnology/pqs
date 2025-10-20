@@ -72,6 +72,7 @@ sub _init :Init {
   my $result_cache = Cache::FileCache->new({ namespace => 'imposition' }) or die "Couldn't initialise cache: $!";
 
   my $max_precision = List::Util::max(get_precision(@$project{qw(width height trim)}));
+  $max_precision = 4 if $max_precision < 4;
   $round_to = 1/(10**$max_precision);
   $openprint::log->debug("START PQS IMPOSE 1: ".(Time::HiRes::time() - $start_time)." max precision $max_precision") if DEBUG;
 
@@ -420,7 +421,10 @@ sub fill_box :Private {
       fill_box($dir ? [ $box->[W], $_        ] # Horizontal cut.
       : [ $_,        $box->[H] ] # Vertical cut.
       );
-      } ($len, Math::Round::round($round_to, $bound - $len));
+      } ($len, 
+        Math::Round::nearest($round_to, $bound - $len)
+        #($round_to, $bound - $len)
+      );
 
       # Compare each pairing (cartesian product) of the two partitions
       # and choose the best ones.
