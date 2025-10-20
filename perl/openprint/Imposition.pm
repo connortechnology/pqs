@@ -12,7 +12,7 @@ require Math::Round;
 require Data::Dumper;
 use SVG;
 use vars qw( $AUTOLOAD %Orientations @RunStyles %ShortStyles %LongStyles %bleed_sides);
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
@@ -733,68 +733,78 @@ sub layout_area {
 }
 
 sub sheet_width {
-	my $self = shift;
+  my $self = shift;
 
-	$$self{start_columns} = $$self{columns} if ! $$self{start_columns};
-	$$self{start_rows} = $$self{rows} if ! $$self{start_rows};
+  $$self{sheet_width} = shift if @_;
+  if (!$$self{sheet_width}) {
 
-	if ( ! $$self{Paper} ) {
-		my ( $caller, undef, $line ) = caller;
-		$openprint::log->error("No Paper in Imposition::sheet_width $caller: $line");
-		return 0;
-	}
-	if ( $$self{rotate_sheet} ) {
-		$$self{Paper}->height( @_ ) if @_;
-		if ( $$self{start_columns} and $$self{columns} and $$self{start_columns} != $$self{columns} ) {
-			return $$self{sheet_width} = Math::Round::nearest( 0.0001, $$self{Paper}{height} / ( $$self{start_columns} / $$self{columns} ) );
-		} else {
-			return $$self{sheet_width} = $$self{Paper}->height();
-		} # end if
-	} else {
-		$$self{Paper}->width( @_ ) if @_;
-		if ( $$self{start_columns} and $$self{columns} and $$self{start_columns} != $$self{columns} ) {
-			return $$self{sheet_width} = Math::Round::nearest( 0.0001, $$self{Paper}{width} / ( $$self{start_columns} / $$self{columns} ) );
-		} else {
-			return $$self{sheet_width} = $$self{Paper}{width};
-		} # end if
-	} # end if
+    $$self{start_columns} = $$self{columns} if ! $$self{start_columns};
+    $$self{start_rows} = $$self{rows} if ! $$self{start_rows};
+
+    if ( ! $$self{Paper} ) {
+      my ( $caller, undef, $line ) = caller;
+      $openprint::log->error("No Paper in Imposition::sheet_width $caller: $line");
+      return 0;
+    }
+    if ( $$self{rotate_sheet} ) {
+      $$self{Paper}->height( @_ ) if @_;
+      if ( $$self{start_columns} and $$self{columns} and $$self{start_columns} != $$self{columns} ) {
+        return $$self{sheet_width} = Math::Round::nearest( 0.0001, $$self{Paper}{height} / ( $$self{start_columns} / $$self{columns} ) );
+      } else {
+        return $$self{sheet_width} = $$self{Paper}->height();
+      } # end if
+    } else {
+      $$self{Paper}->width( @_ ) if @_;
+      if ( $$self{start_columns} and $$self{columns} and $$self{start_columns} != $$self{columns} ) {
+        return $$self{sheet_width} = Math::Round::nearest( 0.0001, $$self{Paper}{width} / ( $$self{start_columns} / $$self{columns} ) );
+      } else {
+        return $$self{sheet_width} = $$self{Paper}{width};
+      } # end if
+    } # end if
+  } # end if
+  return $$self{sheet_width};
 } # end sub sheet_width
 
 sub sheet_height {
 	my $self = shift;
-	$$self{start_columns} = $$self{columns} if ! $$self{start_columns};
-	$$self{start_rows} = $$self{rows} if ! $$self{start_rows};
+  $$self{sheet_height} = shift if @_;
 
-	if ( ! $$self{Paper} ) {
-		my ( $caller, undef, $line ) = caller;
-		$openprint::log->error("No Paper in Imposition::sheet_height from $caller:$line");
-		return 0;
-	}
-	if ( $$self{rotate_sheet} ) {
-		# I don't like the following line
-		$$self{Paper}->width( @_ ) if @_;
+  if (!$$self{sheet_height}) {
+    $$self{start_columns} = $$self{columns} if ! $$self{start_columns};
+    $$self{start_rows} = $$self{rows} if ! $$self{start_rows};
 
-		if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
-			return $$self{sheet_height} = Math::Round::nearest( 0.0001, $$self{Paper}{width} / ( $$self{start_rows} / $$self{rows} ) );
-		} else {
-			return $$self{sheet_height} = $$self{Paper}{width};
-		} # end if
-	} else {
-		$$self{Paper}->height( @_ ) if @_;
-		if ( ! $$self{Paper}{height} ) {
-			if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
-        return $$self{sheet_height} = Math::Round::nearest( 0.0001, $$self{cut_off} / ( $$self{start_rows} / $$self{rows} ) );
-			} else {
-				return $$self{sheet_height} = $$self{cut_off};
-			} # end if
-		} else {
-			if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
-				return $$self{sheet_height} = Math::Round::nearest( 0.0001, $$self{Paper}{height} / ( $$self{start_rows} / $$self{rows} ) );
-			} else {
-				return $$self{sheet_height} = $$self{Paper}{height};
-			} 
-		} # end if
-	} # end if
+    if ( ! $$self{Paper} ) {
+      my ( $caller, undef, $line ) = caller;
+      $openprint::log->error("No Paper in Imposition::sheet_height from $caller:$line");
+      return 0;
+    }
+    if ( $$self{rotate_sheet} ) {
+      # I don't like the following line
+      $$self{Paper}->width( @_ ) if @_;
+
+      if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
+        return $$self{sheet_height} = Math::Round::nearest( 0.0001, $$self{Paper}{width} / ( $$self{start_rows} / $$self{rows} ) );
+      } else {
+        return $$self{sheet_height} = $$self{Paper}{width};
+      } # end if
+    } else {
+      $$self{Paper}->height( @_ ) if @_;
+      if ( ! $$self{Paper}{height} ) {
+        if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
+          return $$self{sheet_height} = Math::Round::nearest( 0.0001, $$self{cut_off} / ( $$self{start_rows} / $$self{rows} ) );
+        } else {
+          return $$self{sheet_height} = $$self{cut_off};
+        } # end if
+      } else {
+        if ( $$self{start_rows} and $$self{rows} and $$self{start_rows} != $$self{rows} ) {
+          return $$self{sheet_height} = Math::Round::nearest( 0.0001, $$self{Paper}{height} / ( $$self{start_rows} / $$self{rows} ) );
+        } else {
+          return $$self{sheet_height} = $$self{Paper}{height};
+        } 
+      } # end if
+    } # end if
+  } # end if
+  return $$self{sheet_height};
 } # end sub sheet_height
 
 sub sheet_area {
