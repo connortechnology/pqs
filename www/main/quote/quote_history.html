@@ -99,7 +99,7 @@
 											</fieldset>
 
 <? if ( @{$$variable{QUOTES}} == 0 ) ?>
-<? if ( sets::isin( $session{user_type}, ['A','E'] ) and $param{QuoteID} ) ?>
+<? if ( sets::isin($session{user_type}, ['A','E']) and $param{QuoteID} ) ?>
 <? eval (
   @{$$variable{Quotes}} = openprint::Quote->find( 'id like' => '%'.$param{QuoteID}.'%' ) if $param{QuoteID};
 ) ?>
@@ -152,7 +152,8 @@
    return $html;
 ) ?>
     </table>
-   <? endif ( @{$$variable{Quotes}} > 0 ) ?>
+  <? endif ( @{$$variable{Quotes}} > 0 ) ?>
+  <? endif ( sets::isin($session{user_type}, ['A','E']) and $param{QuoteID} ) ?>
 <? else ( @{$$variable{QUOTES}} == 0 ) ?>
 <fieldset>
               <legend>
