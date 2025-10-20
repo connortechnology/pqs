@@ -540,7 +540,7 @@ Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::D
         $$self{page_columns} ++ if $remainder > 0.25;
       }
 		}
-$openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}");
+$openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}") if DEBUG;
 
 		#if ( 1 ) {
 #20170125 have just gona back to this as it seems like the more correct thing to do
@@ -556,8 +556,8 @@ $openprint::log->debug("Got page layout $$self{page_columns} x $$self{page_rows}
 		$$self{pages} = $$self{spreads} * $$self{spread_size};
 		$openprint::log->debug("spread_rows $$self{spread_rows} x $$self{spread_columns} = $$self{spread_size} spreads: $$self{spreads} pages: $$self{pages} ");
 	} # end if
-	$$self{page_width} = $$specs{txtFinalWidth};
-	$$self{page_height} = $$specs{txtFinalHeight};
+	$$self{page_width} = $$specs{txtFinalWidth} || $$specs{final_width};
+	$$self{page_height} = $$specs{txtFinalHeight} || $$specs{final_height};
 	$$self{sheet_width} = $$Paper{width};
 	$$self{sheet_height} = $$self{cut_off} ? $$self{cut_off} : $$Paper{height};
 	if ( ! exists $$specs{"RotateSheet$qty_index"} ) {
@@ -881,10 +881,11 @@ sub to_string {
 			my $Paper = $_[0]{Paper};
 			$_[0]{to_string} = sprintf('%s %d@ %dx%d+%dx%d=%dout %s %dx%d=%dpages %sx%s on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]{Press}{strid}: 'unknown equipment' ),
 					@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle'},
-          $_[0]->page_columns(), $_[0]->page_rows(),@$self{'pages','page_width','page_height'},
+          $_[0]->page_columns(), $_[0]->page_rows(),
+          @$self{'pages','page_width','page_height'},
 					@$Paper{'start_width','start_height','type','width','height'},
 					$_[0]->image_orientation_text() );
-        $openprint::log->error($_[0]{to_string});
+        #$openprint::log->error($_[0]{to_string});
 		} else {
 			if ( $_[0]{quantity} > 1 ) {
 			$_[0]{to_string} = sprintf('%s %d @ %dx%d+%dx%d=%dout %s %dx%d=%dpages %s spine %s', ( $_[0]{Press} ? $_[0]{Press}->strid() : 'unknown equipment' ), $_[0]->get('quantity','columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height'), 
