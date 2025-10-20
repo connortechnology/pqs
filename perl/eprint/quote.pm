@@ -948,7 +948,7 @@ sub quote_history {
     $_ .= " AND lngQuoteId = $openprint::param{QuoteID}" if $openprint::param{QuoteID};
 		$_ .= " AND tbl_Quote_Users_For.lngQuoteID = tbl_Quotes.lngQuoteID ORDER BY tbl_Quotes.lngQuoteID DESC";
 
-print STDERR "QUOTE SQL: \n $_ \n";
+#print STDERR "QUOTE SQL: \n $_ \n";
 		@{$$variable{'QUOTES'}} = sql::sql_statement( $log, $dbh, $_ );
 	} # end if
 
@@ -962,7 +962,7 @@ print STDERR "QUOTE SQL: \n $_ \n";
 		}, {Slice=>{}}, $$variable{'QUOTES'}[$index] );
 
 		unless ( @{$data} > 0 ) {
-			print STDERR "GET DATA \n";
+      #print STDERR "GET DATA \n";
 			$data = $dbh->selectall_arrayref(q{
 				SELECT label as reference FROM tbl_quote_details WHERE lngquoteid = ?
 			},  {Slice=>{}}, $$variable{'QUOTES'}[$index] );
@@ -974,7 +974,7 @@ print STDERR "QUOTE SQL: \n $_ \n";
 
 	}
 
-	print STDERR "HAVE QUOTES", Dumper($variable->{QUOTES});
+  #print STDERR "HAVE QUOTES", Dumper($variable->{QUOTES});
  
 	( $$variable{'CurrencyName'}, $$variable{'CurrencySymbol'}, undef ) = eprint::customer::get_currency( $log, $dbh, $$variable{'cust_id'} );
 	return OK;
