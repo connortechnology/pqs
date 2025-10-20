@@ -456,19 +456,6 @@ sub service_types_by_category {
   # Get the list of service types in each category TODO Get everything in
   # one query and use the group() util function.
   for my $cat (@$categories) {
-    print STDERR "qq{
-    SELECT DISTINCT lngindex       AS id,
-    strid          AS ref,
-    strname        AS name,
-    strdescription AS description
-    FROM tbl_service_types t JOIN
-    service_type_equipment e ON (lngindex = service_type)
-    WHERE ysncreatevisible = 'Y'
-    --   AND strtype <> 'bind'
-    AND strcategory = '$$cat{ref}'
-    $clause for $project_type
-    ORDER BY strname
-    \n";
     my @services
     = @{ $dbh->selectall_arrayref($services, {Slice => {}},
     $cat->{ref},
@@ -937,7 +924,6 @@ sub api_xml {
 
   my $x = XMLin($var->{xml});
   my $y = XMLout($x);
-  print STDERR "MY Y: $y \n";
   $var->{xml} = $y;
 
 }
@@ -1227,7 +1213,6 @@ sub edit_process {
         update($log, $dbh, 'tbl_service_specifications', "lngprojectindex = $pid AND strname = 'txtQuantity$i'", strvalue => $new[$i],);
         update($log, $dbh, 'tbl_service_specifications', "lngprojectindex = $pid AND strname = 'hdnQuantity$i'", strvalue => $new[$i],);
         my $sq = $dbh->selectrow_array(q{ SELECT Count(*) FROM tbl_service_specifications WHERE lngprojectindex = ? AND strname ~ 'add_qty1' }, undef, $pid);
-        print STDERR "MY QTYS: $sq \n";
 
         if ( $sq == 1 ) {
           update($log, $dbh, 'tbl_service_specifications', "lngprojectindex = $pid AND strname ~ 'add_qty$i'", strvalue => $new[$i],);
@@ -2046,7 +2031,6 @@ sub complete_project {
 
 sub update_order {
   my ($r, $log, $dbh, $cookie, $var, $pid) = @_;
-  print STDERR "UPDATE MY ORDER - $cookie - $pid \n";
   eprint::order::update_order($r, $log, $dbh, $cookie, $var, $pid);
   return "/main/proj/view.html?pid=$pid";
 }
@@ -2080,10 +2064,7 @@ sub reorder {
 
   my  $pid = $r->param('pid');
 
-
-  print STDERR "RE ORDER PID: $pid \n";
   ($pid) = copy_project($dbh, $variable, $pid, {});
-  print STDERR "RE ORDER NEW PID: $pid \n";
 
   make_order($r, $log, $dbh, $cookie, $variable, $pid);
 
@@ -2110,7 +2091,6 @@ sub dummy_project {
     UPDATE tbl_projects SET cookie = ? where lngprojectindex = ?
     }, undef, $cookie, $pid);
 
-  print STDERR "HAVE $pid FROM STRING: $pid_str COOKIE: $cookie \n";
   return $pid;
 }
 
@@ -2125,7 +2105,6 @@ sub create_multiple {
     next unless $r->param($field) && $field =~ /txtQuantity1_(\d*)/;
 
     my $id = $1;
-    print STDERR "HAVE ID: $id - $1 \n";
 
     my $qty  = $r->param("txtQuantity1_$id");
     my $prod = $r->param("predefined_$id");
@@ -2193,7 +2172,6 @@ sub create_project {
 
     $variable->{new_pid} = $pid;
   } else {
-    print STDERR "CREATE PROCESS ", Dumper(@_);
     $pid = create_process($r, $log, $dbh, $cookie, $variable, $qty, $predefined, $projref);
   }
   die "Couldn't create project" unless $pid;
@@ -2369,16 +2347,12 @@ sub edit_line_item {
 
   map { $have_price = 1 if $_ eq 'price' } $r->param();
 
-  print STDERR "HAVE PRICE: $have_price , PRice: $price \n";
-
   if ( $r->param('edit_service') ) {
     #Display input for selected service unless we are saving price
     $edit =  $r->param('edit_service') unless $have_price;
 
     #if saving price field but it is empty, reset price override.
     if ( ($have_price &&  $price eq '') || $r->param('reset') ) {
-      print STDERR "RESET PRICE OVERRIDE: $sid \n";
-
       $dbh->do(q{UPDATE tbl_project_contents set price_override = NULL where lngserviceindex = ?},
         undef, $sid);
 
@@ -2404,7 +2378,6 @@ sub edit_line_item {
       undef, $price, $sid);
   }
 
-  map { print STDERR "HAVE PARAM: $_  = " . $r->param($_) . "\n"; } $r->param();
   #return BUILD_PAGE . "?pid=$pid;edit=11111";
   #
   return "/main/proj/view.html?pid=$pid;edit=$edit";
