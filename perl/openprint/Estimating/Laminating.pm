@@ -299,6 +299,7 @@ sub calc {
       my $imposition = new openprint::Imposition();
       $imposition->load( $sig_specs, $qty_index, $Project );
       my $form = $imposition->form();
+      @$imposition{'sheet_width','sheet_height'} = @$specs{"sheet_width-$form", "sheet_height-$form"} if $$specs{"override_sheetsize-$form"} eq 'Y';
 
       if ((!$$specs{"TypeFront-$form"}) and (!$$specs{"TypeBack-$form"})) {
         #$$specs{'hdnBreakdown'.$qty_index} .= " not doing lamination on form $form<br/>";
@@ -690,18 +691,20 @@ sub get_price {
 
         next;
       } # end if
+      $price{breakdown} .= '<tr><td class="desc">Material on Front: '.$$FrontMaterial{name};
+
       if ( $$FrontMaterialPrice{units} eq 'per square foot' ) {
         $$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $laminate_area / 144;
-        $price{breakdown} .= sprintf('<tr><td class="desc">Material on Front: $%1$.6f %2$s * %4$s square feet</td><td class="Price">$%3$.2f</td></tr>',
+        $price{breakdown} .= sprintf(' $%1$.6f %2$s * %4$s square feet</td><td class="Price">$%3$.2f</td></tr>',
           @$FrontMaterialPrice{'Price','units','Total'},
           Number::Format::format_number($laminate_area/144) );
       } elsif ( $$FrontMaterialPrice{units} eq 'per m square inches' ) {
         $$FrontMaterialPrice{Total} = $$FrontMaterialPrice{Price} * $laminate_area / 1000;
-        $price{breakdown} .= sprintf('<tr><td class="desc">Material on Front: $%1$.5f %2$s * %4$s square inches</td><td class="Price">$%3$.2f</td></tr>',
+        $price{breakdown} .= sprintf(' $%1$.5f %2$s * %4$s square inches</td><td class="Price">$%3$.2f</td></tr>',
           @$FrontMaterialPrice{'Price','units','Total'},
           Number::Format::format_number($laminate_area) );
       } else {
-        $price{breakdown} .= sprintf('<tr><td colspan="2">Material on Front: unknown units: (%s)</td></tr>', $FrontMaterialPrice->to_string() );
+        $price{breakdown} .= sprintf('unknown units: (%s)</td><td></td></tr>', $FrontMaterialPrice->to_string() );
       } # end if
       $price{total} += $$FrontMaterialPrice{Total};
       $price{MPrice} += ( 1000 / $$imposition{imposition} ) * $$FrontMaterialPrice{Total}/$sheets;
@@ -720,18 +723,19 @@ sub get_price {
           #} # end if
         next;
       } # end if
+      $price{breakdown} .= '<tr><td class="desc">Material on Back: '.$$BackMaterial{name}.' ';
       if ( $$BackMaterialPrice{units} eq 'per square foot' ) {
         $$BackMaterialPrice{Total} = $$BackMaterialPrice{Price} * $laminate_area / 144;
-        $price{breakdown} .= sprintf('<tr><td class="desc">Material on Back: $%1$.5f %2$s * %4$s square feet</td><td class="Price">$%3$.2f</td></tr>',
+        $price{breakdown} .= sprintf('$%1$.5f %2$s * %4$s square feet</td><td class="Price">$%3$.2f</td></tr>',
           @$BackMaterialPrice{'Price','units','Total'},
           Number::Format::format_number($laminate_area/144) );
       } elsif ( $$BackMaterialPrice{units} eq 'per m square inches' ) {
         $$BackMaterialPrice{Total} = $$BackMaterialPrice{Price} * $laminate_area / 1000;
-        $price{breakdown} .= sprintf('<tr><td class="desc">Material on Back: $%1$.5f %2$s * %4$s square inches</td><td class="Price">$%3$.2f</td></tr>',
+        $price{breakdown} .= sprintf('$%1$.5f %2$s * %4$s square inches</td><td class="Price">$%3$.2f</td></tr>',
           @$BackMaterialPrice{'Price','units','Total'},
           Number::Format::format_number($laminate_area) );
       } else {
-        $price{breakdown} .= sprintf('<tr><td class="warn" colspan="2">Material on Back: unknown units: (%s)</td></tr>', $$BackMaterialPrice{units} );
+        $price{breakdown} .= sprintf('unknown units: (%s)</td><td></td></tr>', $$BackMaterialPrice{units} );
       } # end if
       $price{total} += $$BackMaterialPrice{Total};
       $price{MPrice} += ( 1000 / $$imposition{imposition} ) * $$BackMaterialPrice{Total}/$sheets;
