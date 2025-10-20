@@ -2924,11 +2924,7 @@ sub get_imposition_charge {
         eprint::service::get_price($log, $dbh, $variable,
           'TrappingMakeReady', $imageHeight * $imageWidth, $press);
       }
-
-    }
-    else {
-
-      print STDERR "START PER PAGE CHARGE TOTAL: $imposition_charge \n";
+    } else {
       $imposition_charge =
       $multisignature_imposition;    #this covers the make-ready
       my $per_page_charge =
