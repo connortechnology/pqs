@@ -30,7 +30,7 @@ sub handler {
   #authenticate security key
   my $key = configuration::get_value($r->log, $dbh, "cron_key");
   unless ($key) {
-    $log->debug("No cron_key found in the configuartion table");
+    $r->log->debug("No cron_key found in the configuartion table");
     $r->status(FORBIDDEN);
     $dbh->disconnect;
     return FORBIDDEN;
