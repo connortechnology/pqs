@@ -388,12 +388,13 @@ sub add_defaults {
 			} elsif ( $proof_index == FOLDING_PROOF ) {
 				insert_folding_proof($Project, $sig_specs, FOLDING_PROOF, $qty_index, $specs, $Imposition);
 			} elsif ( $proof_index == PDF_PROOF ) {
-				insert_folding_proof($Project, $sig_specs, PDF_PROOF, $qty_index, $specs, $Imposition);
+				insert_pdf_proofs($Project, $sig_specs, PDF_PROOF, $qty_index, $specs, $Imposition);
       } else {
         # Not one of the defined 4 types, so just an extra...How can we do defaults for a random proof type?
-        my $paper = $Imposition->Paper();
-        insert_new_proof( $specs, $proof_index, $form, $signature_quantity, $paper->width(), $paper->height(), 
-          $$specs{"ddmProofType-$form-$proof_index-$qty_index"}, $qty_index );
+        # How about we don't?
+        #my $paper = $Imposition->Paper();
+        #insert_new_proof( $specs, $proof_index, $form, $signature_quantity, $paper->width(), $paper->height(), 
+        #$$specs{"ddmProofType-$form-$proof_index-$qty_index"}, $qty_index );
 			} # end if
     } else {
       my $force_qty = $openprint::config{'Force'.$$specs{"ddmProofType-$form-$proof_index-$qty_index"}.'Quantity'};
@@ -449,7 +450,7 @@ sub signature_calc {
 				%price = $ProofService->get_price($$totals{$type}{Quantity}, $Equipment);
 			} else {
 				%price = $ProofService->get_price($$totals{$type}{Quantity});
-        if ($price{range_units} eq 'square inches') {
+        if ($price{range_units} and ($price{range_units} eq 'square inches')) {
 				  %price = $ProofService->get_price($proof_width * $proof_height);
         }
 			} # end if
@@ -617,16 +618,68 @@ sub insert_press_proof {
 	insert_new_proof($specs, $proof_index, $form, $quantity, $Imposition->sheet_width(), $Imposition->sheet_height(), 'PressProof', $qty_index );
 } # end sub insert_press_proof
 
-# Colour proofs are generally used for CMYK jobs, not black/PMS only
-sub insert_colour_proof {
+sub insert_pdf_proofs {
 	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs, $Imposition ) = @_;
-
+  my $Equipment = $Imposition->Press();
   my $form = $Imposition->form();
 	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
 	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
 
-	$log->debug("*** Inserting Colour Proof *******" .@{$$sig_specs{SideOneColours}}.'/'.@{$$sig_specs{SideTwoColours}});
-	my $Equipment = $Imposition->Press();
+  my $quantity = 0;
+  my $proof_type = $$specs{"ddmProofType-$form"};
+  if (!$proof_type) {
+    my ( $default_proof_type ) = $Equipment->specification('Default PDF Proof') // '' if $Equipment;
+    $openprint::log->debug("Default proof type on $$Equipment{name} is: $default_proof_type") if DEBUG;
+    $proof_type ||= $default_proof_type;
+  }
+  if ( $proof_type and ($proof_type ne 'None')) {
+    if ($$specs{RequirePDFProofs} eq 'N') {
+      $quantity = 0;
+    } elsif ($$specs{RequirePDFProofs} ne 'N') {
+      # Auto or Y
+      $quantity += 1 if $$sig_specs{chkProcessColourSideOne} or $$sig_specs{s0_process};
+      $quantity += 1 if $$sig_specs{chkProcessColourSideTwo} or ($$sig_specs{s1_process}) or ($$sig_specs{s0_process} and $$sig_specs{side_link});
+    } # end if
+  }
+
+  my $proof_service = openprint::Service->find_one(name=>$proof_type);
+  if (!$proof_service) {
+    $$specs{alert} .= 'No proof service for '.$proof_type.'<br/>';
+    $proof_type =~ s/\s//g;
+    $proof_service = openprint::Service->find_one(name=>$proof_type);
+  }
+  if (!$proof_service) {
+    $$specs{alert} .= 'No proof service for '.$proof_type.'<br/>';
+    return;
+  }
+  my @prices = $proof_service->Prices();
+
+  my %prices_by_equipment_id = map { $$_{equipment_id} => $_ } $proof_service->Prices() if $proof_service;
+
+  my $proofer;
+  if (exists $prices_by_equipment_id{$$Equipment{id}}) {
+    $proofer = $Equipment;
+  } elsif ( 1 == keys %prices_by_equipment_id) {
+    $proofer = (values %prices_by_equipment_id)[0]->Equipment();
+  } else {
+    $proofer = $prices[0]->Equipment();
+  }
+  my $signature_quantity = $$sig_specs{txtSignatureQuantity} || 1;
+  $quantity *= $signature_quantity;
+
+  insert_new_proof( $specs, $proof_index, $form, $quantity,  '', '', $proof_type, $qty_index );
+} # end sub insert_pdf_proofs
+
+# Colour proofs are generally used for CMYK jobs, not black/PMS only
+sub insert_colour_proof {
+  my ( $Project, $sig_specs, $proof_index, $qty_index, $specs, $Imposition ) = @_;
+
+  my $form = $Imposition->form();
+  $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+  $$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+
+  $log->debug("*** Inserting Colour Proof *******" .@{$$sig_specs{SideOneColours}}.'/'.@{$$sig_specs{SideTwoColours}});
+  my $Equipment = $Imposition->Press();
 	if (!$Equipment) {
 		$openprint::log->error('No equipment in insert_colour_proof');
 		$Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if $$sig_specs{'ddmPress'.$qty_index};
@@ -798,8 +851,8 @@ sub insert_new_proof {
 	my ( $specs, $proof_index, $form, $qty, $width, $height, $type, $qty_index ) = @_;
   $form //= 1;
 	$$specs{"txtProofQuantity-$form-$proof_index-$qty_index"} = $qty;
-	$$specs{"txtProofWidth-$form-$proof_index-$qty_index"} = defined($width) ? 1*$width : '';
-	$$specs{"txtProofHeight-$form-$proof_index-$qty_index"} = defined($height) ? 1*$height : '';
+	$$specs{"txtProofWidth-$form-$proof_index-$qty_index"} = defined($width) ? $width : '';
+	$$specs{"txtProofHeight-$form-$proof_index-$qty_index"} = defined($height) ? $height : '';
 	$$specs{"ddmProofType-$form-$proof_index-$qty_index"} = $type;
 	$$specs{"txtProofIndex-$form-$proof_index-$qty_index"} = $proof_index;
 } # end sub insert_new_proof
