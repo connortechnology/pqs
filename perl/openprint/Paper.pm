@@ -1461,7 +1461,7 @@ sub load_from_signature {
 	#$qty_index = $Project->ordered_quantity_index() if ! $qty_index;
 
 	my $Paper;
-  if ($Project->type() eq 'NoPrint') {
+  if ($Project and ($Project->type() eq 'NoPrint')) {
     $Paper = new openprint::Paper();
     $Paper->calliper($$specs{txtStockCalliper});
     $$Paper{width} = $$specs{flat_width};
