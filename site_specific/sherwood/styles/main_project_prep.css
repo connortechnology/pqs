@@ -10,3 +10,9 @@
 .Service .dimensions input[type="number"] {
   width: 40%;
 }
+
+#pricing li.quantity,
+#pricing li.serviceprice,
+#pricing li.markup {
+  width: 190px;
+}
