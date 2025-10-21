@@ -1461,6 +1461,14 @@ sub load_from_signature {
 	#$qty_index = $Project->ordered_quantity_index() if ! $qty_index;
 
 	my $Paper;
+  if ($Project->type() eq 'NoPrint') {
+    $Paper = new openprint::Paper();
+    $Paper->calliper($$specs{txtStockCalliper});
+    $$Paper{width} = $$specs{flat_width};
+    $$Paper{height} = $$specs{flat_height};
+
+    return $Paper;
+  }
 	if ($$specs{rdbSpecificStock} and ($$specs{rdbSpecificStock} eq 'Y')) {
 		$Paper = new openprint::Paper();
 		$$Paper{custom} = 1;

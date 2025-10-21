@@ -335,6 +335,7 @@ sub load {
 
 	$$self{page_quantity} = $$self{quantity} = 1;
 	$$self{specs} = $specs;
+
 	my $Paper = $$self{Paper} = openprint::Paper::load_from_signature( $Project, $specs, $qty_index ) if ! $$self{Paper};
   $openprint::log->debug("Paper" . $$self{Paper}->to_string());
 	if ( ! $$self{Press} ) {
@@ -385,50 +386,56 @@ sub load {
     $$self{image_height} = $$self{object_height}
     # Need to add bleed
   }
-  $openprint::log->debug("Image size: $$self{image_width}x$$self{image_height} ");
-
-  $$self{colour_bar_size} = $$self{Press}->specification('Colour Bar Size');
-  $$self{colour_bar_orientation} = $$self{Press}->specification('Colour Bar Orientation');
-
-	$$self{imposition} = $$specs{'txtImposition'.$qty_index} || $$specs{'hdnImposition'.$qty_index} || $$specs{hdnImposition} || $$specs{imposition};
-  $$self{imposition} //= 0;
-Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::Dumper($specs)) if ! $$self{imposition};
-
-	$$self{version_qty} = $$specs{'Versions'.$qty_index};
-	$$self{start_columns} = $$self{columns} = $$specs{'hdnImpositionColumns'.$qty_index} || $$specs{hdnImpositionColumns} || 0;
-	$$self{start_rows} = $$self{rows} = $$specs{'hdnImpositionRows'.$qty_index} || $$specs{hdnImpositionRows} || 0;
-
-  #$$self{columns} = $$self{imposition} / $$self{rows} if $$self{rows} and ! $$self{columns};
-  #$$self{rows} = $$self{imposition} / $$self{columns} if $$self{columns} and ! $$self{rows};
-
-	$$self{dutch_rows} = $$specs{'hdnImpositionDutchRows'.$qty_index} || 0;
-	$$self{dutch_columns} = $$specs{'hdnImpositionDutchColumns'.$qty_index} || 0;
-	$$self{cut_off} = $$specs{'CutOff'.$qty_index};
-	if ( ( $$self{columns} * $$self{rows} ) + ( $$self{dutch_rows} * $$self{dutch_columns} ) != $$self{imposition} ) {
-    #$$self{imposition} = 0;
-	}
-  if (0) {
-  my $imp = Compress::LZF::sthaw(MIME::Base64::decode_base64($$specs{imp})) if $$specs{imp};
-  if ($imp) {
-    delete $$imp{Paper};
-    require PQS::Imposition::Node;
-    my $tmp = PQS::Imposition::Node->new(cut => 0, size => [1,1]);
-    undef $tmp;
-    $$imp{tree} = Storable::thaw($$imp{tree});
-    $openprint::log->debug('compressed imp'.Data::Dumper::Dumper($imp));
-  } else {
-    $openprint::log->debug("No compressed imp");
-  }
-  }
-
-  $$self{runstyle} = $$specs{'ddmRunStyle'.$qty_index} // 'Sheet Work';
-  if ($$self{runstyle} eq 'SW') {
+  if ($Project->type() eq 'NoPrint') {
+    $$self{imposition} = $$self{columns} = $$self{rows} = 1;
     $$self{runstyle} = 'Sheet Work';
-  } elsif ($$self{runstyle} eq 'WT') {
-    $$self{runstyle} = 'Work & Turn';
-  } elsif ($$self{runstyle} eq 'WF') {
-    $$self{runstyle} = 'Work & Tumble';
-  }
+  } else {
+    #$openprint::log->debug("Image size: $$self{image_width}x$$self{image_height} ");
+
+    $$self{colour_bar_size} = $$self{Press}->specification('Colour Bar Size');
+    $$self{colour_bar_orientation} = $$self{Press}->specification('Colour Bar Orientation');
+
+    $$self{imposition} = $$specs{'txtImposition'.$qty_index} || $$specs{'hdnImposition'.$qty_index} || $$specs{hdnImposition} || $$specs{imposition};
+    $$self{imposition} //= 0;
+    Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::Dumper($specs)) if ! $$self{imposition};
+
+    $$self{version_qty} = $$specs{'Versions'.$qty_index};
+    $$self{start_columns} = $$self{columns} = $$specs{'hdnImpositionColumns'.$qty_index} || $$specs{hdnImpositionColumns} || 0;
+    $$self{start_rows} = $$self{rows} = $$specs{'hdnImpositionRows'.$qty_index} || $$specs{hdnImpositionRows} || 0;
+
+    #$$self{columns} = $$self{imposition} / $$self{rows} if $$self{rows} and ! $$self{columns};
+    #$$self{rows} = $$self{imposition} / $$self{columns} if $$self{columns} and ! $$self{rows};
+
+    $$self{dutch_rows} = $$specs{'hdnImpositionDutchRows'.$qty_index} || 0;
+    $$self{dutch_columns} = $$specs{'hdnImpositionDutchColumns'.$qty_index} || 0;
+    $$self{cut_off} = $$specs{'CutOff'.$qty_index};
+    if ( ( $$self{columns} * $$self{rows} ) + ( $$self{dutch_rows} * $$self{dutch_columns} ) != $$self{imposition} ) {
+      #$$self{imposition} = 0;
+    }
+    if (0) {
+      my $imp = Compress::LZF::sthaw(MIME::Base64::decode_base64($$specs{imp})) if $$specs{imp};
+      if ($imp) {
+        delete $$imp{Paper};
+        require PQS::Imposition::Node;
+        my $tmp = PQS::Imposition::Node->new(cut => 0, size => [1,1]);
+        undef $tmp;
+        $$imp{tree} = Storable::thaw($$imp{tree});
+        $openprint::log->debug('compressed imp'.Data::Dumper::Dumper($imp));
+      } else {
+        $openprint::log->debug("No compressed imp");
+      }
+    }
+
+    $$self{runstyle} = $$specs{'ddmRunStyle'.$qty_index} // 'Sheet Work';
+    if ($$self{runstyle} eq 'SW') {
+      $$self{runstyle} = 'Sheet Work';
+    } elsif ($$self{runstyle} eq 'WT') {
+      $$self{runstyle} = 'Work & Turn';
+    } elsif ($$self{runstyle} eq 'WF') {
+      $$self{runstyle} = 'Work & Tumble';
+    }
+  } # end if noPrint or Not
+
 	$$self{image_orientation_text} = $$specs{'hdnImageOrientation'.$qty_index} ? $$specs{'hdnImageOrientation'.$qty_index} : $$specs{hdnImageOrientation};
 	if ( (!$$self{image_orientation_text}) or ($$self{image_orientation_text} eq 'Vertical')) {
 		$$self{image_orientation} = Vertical;
