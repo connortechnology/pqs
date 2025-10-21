@@ -443,7 +443,7 @@ sub service_types_by_category {
     strdescription AS description
     FROM tbl_service_types t JOIN
     service_type_equipment e ON (lngindex = service_type)
-    WHERE ysncreatevisible = 'Y'
+    WHERE ysncreatevisible = 'Y' AND deleted != true
     --   AND strtype <> 'bind'
     AND strcategory = ?
     $clause
