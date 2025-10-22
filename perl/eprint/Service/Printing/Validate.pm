@@ -34,7 +34,7 @@ sub munge {
     my $spread    = spread($dbh, $press_type, $project_type, $specs, $pid);
     my $versions  = versions($specs, $qtys[0]);
     my $overrides = overrides($specs, $variable->{user_type});
-    $openprint::log->debug("HAVE OVERRIDES: ", Dumper($overrides)) if %$overrides;
+    $openprint::log->debug("HAVE OVERRIDES: ". Dumper($overrides)) if %$overrides;
 
     #delete $specs->{$_} for keys %$specs;
 
@@ -386,12 +386,12 @@ sub stock {
       $openprint::log->debug("Per sheet price from $$specs{CustomStockPrice} * $$specs{txtCustomMWeight} / (100*1000)=".$stock{Price}{Price});
 
   } else {
-    $stock{name} = $specs->{stock_name} or warn "No stock name selected.";
-    $stock{colour} = $specs->{stock_colour} or warn "No stock colour selected.";
+    $stock{name} = $specs->{stock_name} or $openprint::log->debug( "No stock name selected.");
+    $stock{colour} = $specs->{stock_colour} or $openprint::log->debug( "No stock colour selected.");
 
     # In addition to setting our stock coating, we'll tell each side of the
     # spread whether they're coated or not.
-    $stock{finish} = $specs->{stock_finish} or warn "No stock finish selected.";
+    $stock{finish} = $specs->{stock_finish} or $openprint::log->debug("No stock finish selected.");
 
     # $spread{side}[0]{coated_paper} = ($stock{coating} >= 1);
     # $spread{side}[1]{coated_paper} = ($stock{coating} >= 2);
