@@ -7,8 +7,6 @@ use vars qw( $r %variable %session %page_session %param %config $log $dbh $User 
 
 use constant Debug => 0;
 
-require openprint::Host;
-require openprint::Host_Interface;
 
 require Apache2::Cookie;
 require Apache::Session::Postgres;
@@ -185,6 +183,8 @@ sub session_init {
     }
   }
 
+  require openprint::Host;
+  require openprint::Host_Interface;
   foreach my $ip (@ips) {
     if ($ip) {
       my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
