@@ -6,25 +6,25 @@
 	Please enter the specifications for your proofs. In most cases these are automatically chosen, but if you would like to modify them, check the override and make your changes.
   <form id="f1" name="f1" method="post" action="<?echo($config{url_base})?>/main/project/view.html">
     <ul>
-      <li><label>Do you require colour proofs?</label>
-			<? echo ( radio( 'RequireColourProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequireColourProofs}, { on_click=>'calc_proofs', default=>'' } ); ) ?>
-      </li>
-      <li><label>Do you require layout proofs?</label>
+      <li class="layout_proofs"><label>Do you require layout proofs?</label>
 			<? echo ( radio( 'RequireLayoutProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequireLayoutProofs}, { on_click=>'calc_proofs', default=>'' } ); ) ?>
       </li>
-      <li><label>Do you require press proofs?</label>
+      <li class="colour_proofs"><label>Do you require colour proofs?</label>
+			<? echo ( radio( 'RequireColourProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequireColourProofs}, { on_click=>'calc_proofs', default=>'' } ); ) ?>
+      </li>
+      <li class="press_proofs"><label>Do you require press proofs?</label>
         <? echo ( radio( 'RequirePressProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequirePressProofs}, {
         on_click=>'calc_proofs',
         default=>($$variable{Project}->Company()->add_press_proofs() ? $$variable{Project}->Company()->add_press_proofs()->value() : '' )
         } ); ) ?>
       </li>
-      <li><label>Do you require pdf proofs?</label>
+      <li class="pdf_proofs"><label>Do you require pdf proofs?</label>
         <? echo ( radio( 'RequirePDFProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequirePDFProofs}, {
         on_click=>'calc_proofs',
         default=>''
         } ); ) ?>
       </li>
-      <li><label>Do you require folding proofs?</label>
+      <li class="folding_proofs"><label>Do you require folding proofs?</label>
         <? echo ( radio( 'RequireFoldingProofs', ['Y','Yes','N','No','','Auto'], $$variable{RequireFoldingProofs}, {
         on_click=>'calc_proofs',
         default=>'',
@@ -81,7 +81,7 @@
 								<th class="Price MR">MR (%1$s)</th>
 								<th class="Price">Service (%1$s)</th>
 								<th class="Units">&nbsp;</th>
-								<th class="Price">Total (%1$s)</th>
+								<th class="Price Total">Total (%1$s)</th>
 								<th class="Override">&nbsp;</th>
 							</tr>
               </thead>
@@ -98,13 +98,13 @@
 								<td class="Price MR">%8$s</td>
 								<td class="Price">%9$s</td>
 								<td class="Units"><span id="ServiceUnits-%1$d-%3$d-%2$d"></span></td>
-								<td class="Price">%10$s</td>
+								<td class="Price Total">%10$s</td>
 								<td class="Override"> %11$s <input type="hidden" name="txtProofIndex-%1$s-%3$d-%2$d" value="%3$d"/></td>
 							</tr>
 							`, $signature_index, $qty_index, $proof_index,
-								input( type=>'cardinal', name=>"txtProofQuantity-$signature_index-$proof_index-$qty_index", value=>$proof_quantity, onkeyup=>'calc(this.form.name);' ),
-								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
-								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
+								input( type=>'cardinal', name=>"txtProofQuantity-$signature_index-$proof_index-$qty_index", value=>$proof_quantity, oninput=>'calc(this.form.name);' ),
+								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, oninput=>'calc(this.form.name);', step=>'0.0001' ),
+								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, oninput=>'calc(this.form.name);', step=>'0.0001' ),
                 make_drop_down( \@ddm_options, $proof_type ),
 								input( type=>'float', name=>"MRPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', decimalplaces=>2 ),
 								input( type=>'float', name=>"ServicePrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01', decimalplaces=>2 ),
@@ -118,7 +118,7 @@
 					$html .= sprintf(q`
 						<div class="additional">
 							<label>Additional proofs?</label>
-              <button type="button" id="additional-%1$d" onclick="add_proof(%1$d);" >Additional Proof</button>
+              <button type="button" id="additional-%1$d" onclick="add_proof(%1$d);">Additional Proof</button>
         <!--
 								<input type="radio" id="rdbAdditional-%1$s-%2$dY" name="rdbAdditional-%1$d-%2$d" value="Yes" />
 								<label class="radio" for="rdbAdditional-%1$s-%2$dY">Yes</label>
@@ -128,41 +128,27 @@
 						</div>
 					`, $signature_index, $qty_index );
 				} # end foreach Signature
+			} # end foreach qty_index
 
-				$html .= sprintf( q`
-					<table>
-						<tr class="totals">
-							<td>Total Service Price (%2$s)</td>
-							<td class="Price">%1$s</td>
-              <!--<td class="Override">&nbsp;</td>-->
-						</tr>
-					</table>
-					%3$s
-				</fieldset>
-					`, 
-					input( type=>'float', name=>"txtPrice$qty_index", value=>$$variable{"txtPrice$qty_index"}, readonly=>'readonly', step=>'0.01', decimalplaces=>2 ),
-					$$variable{CurrencySymbol},
-					input( type=>'hidden', name=>'txtQuantity'.$qty_index, value=>$$variable{"txtQuantity$qty_index"} ), 
-					#sets::isin($session{user_type}, ['A','E'] ) ? button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown('$qty_index');", text=>'Breakdown' } ) : ''
-					
-					);
-				  $html .= include('/includes/main/proj/_breakdown.html');
-				} # end foreach qty_index
-				$html .= include('/includes/main/proj/add_to_project.html');
-				$html .= include('/includes/main/proj/hdn_fields_prepress.html');
-			
-				return $html;
-			) ?>
+      $html .= include('/openprint/includes/main/proj/proofs_prices.html');
+      $html .= include('/includes/main/proj/service_comment.html');
+      $html .= include('/includes/main/proj/_breakdown.html');
+      $html .= include('/includes/main/proj/add_to_project.html');
+      $html .= include('/includes/main/proj/hdn_fields_prepress.html');
+    
+      return $html;
+) ?>
 
 	</form>
 </div></div><!--Service-->
-<script src="<? echo ( hash_link('/openprint/javascripts/service.js') ) ?>"></script>
+<script src="<?hash_link(/openprint/javascripts/service.js)?>"></script>
 <script>
   const purposes = ['Unknown',
       'Layout',
       'Colour',
       'Press',
       'Folding',
+      'Final Review',
       ];
   function calc_proofs() {
       calc('f1');
