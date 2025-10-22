@@ -167,7 +167,7 @@ sub calc {
   # TODO Spiral projects actually have two two page cover spreads.
 
   # Calculate the number of spreads based on the bindery type chosen.
-  my $spreads = $specs->{rdbGateFold} eq 'Yes' ? $specs->{txtTotalSpreadQuantity} : $pages / $pages_per_spread;
+  my $spreads = ($specs->{rdbGateFold} and ($specs->{rdbGateFold} eq 'Yes')) ? $specs->{txtTotalSpreadQuantity} : $pages / $pages_per_spread;
 
   return 'uncalculated' unless $spreads && ($spreads > 0);
 
