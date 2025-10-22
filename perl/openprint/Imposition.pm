@@ -397,7 +397,7 @@ sub load {
 
     $$self{imposition} = $$specs{'txtImposition'.$qty_index} || $$specs{'hdnImposition'.$qty_index} || $$specs{hdnImposition} || $$specs{imposition};
     $$self{imposition} //= 0;
-    Carp::cluck("Loading imposition $qty_index in Imposition::load". Data::Dumper::Dumper($specs)) if ! $$self{imposition};
+    Carp::cluck("Loading imposition without impo for qty $qty_index in Imposition::load". Data::Dumper::Dumper($specs)) if ! $$self{imposition};
 
     $$self{version_qty} = $$specs{'Versions'.$qty_index};
     $$self{start_columns} = $$self{columns} = $$specs{'hdnImpositionColumns'.$qty_index} || $$specs{hdnImpositionColumns} || 0;
