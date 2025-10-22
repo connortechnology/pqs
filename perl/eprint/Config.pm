@@ -68,7 +68,8 @@ sub get {
     $class = $singleton unless ref $class;
 
     unless (exists $class->{config}{ $section }{ $key }) {
-        warn "Key ($key) doesn't exist in section ($section)";
+      my ( $caller, undef, $line ) = caller;
+        warn "Key ($key) doesn't exist in section ($section) from $caller:$line";
         return undef;
     }
 
