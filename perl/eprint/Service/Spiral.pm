@@ -331,7 +331,7 @@ sub job_cost {
     # The run pricing itself is simple.
     my $total = $job->{qty} * &{ $cost->{run} }( $job->{qty} );
 
-    callback::call('service_calc_end', $pid, $sid, \$total, \{$cost->{make_ready}});
+    callback::call('service_calc_end', $pid, $sid, \$total, \$cost->{make_ready});
 
     # a machine make ready.
     $total += $cost->{make_ready};
