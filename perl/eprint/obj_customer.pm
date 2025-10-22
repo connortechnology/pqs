@@ -235,7 +235,7 @@ sub set {
             if (exists $set_fields{strCompanyName}) {
                 mv("$path/" . $self->path($old_name), # From
                    "$path/" . $self->path)            # To
-                      or die "Moving customer directory failed: $!";
+                      or $openprint::log->error( "Moving customer directory from "."$path/" . $self->path($old_name) .' to '. ("$path/" . $self->path)." failed: $!");
             }
         }
     }
