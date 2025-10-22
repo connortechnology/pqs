@@ -35,3 +35,9 @@ table .additional td, .Proofs .totals td, .Proofs .breakdown td {
 	width: 100%;
 	text-align: right;
 }
+.Proofs .Total input[type="text"],
+.Proofs .Total input[type="number"] {
+	width: 100%;
+	text-align: right;
+  border: none;
+}
