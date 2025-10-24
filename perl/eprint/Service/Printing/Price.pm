@@ -310,8 +310,15 @@ sub get_project_price {
     # If we're multi-page and have a bindery type, find out if we need trim.
     # TODO This should really be stored as at compile-time and only looked up
     # in the imposition code.
-    $project->{trim} = eprint::Config->get(Imposition => lc "trim_$BINDERY_CLASS{$bind_type}") || 0;
-  } else { $project->{trim} = 0;
+    if ($bind_type) {
+      if ($BINDERY_CLASS{$bind_type}) {
+        $project->{trim} = eprint::Config->get(Imposition => lc "trim_$BINDERY_CLASS{$bind_type}") || 0;
+      } else {
+        $openrpint::log->error("No bindery class for $bind_type");
+      }
+    }
+  } else {
+    $project->{trim} = 0;
   } # end if multipage
 
   if (!($project->{width} && $project->{height})) {

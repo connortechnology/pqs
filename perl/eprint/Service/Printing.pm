@@ -64,17 +64,18 @@ sub store {
         # For now mirror the JS precisely. Note: Multiple labels of the
         # same name are allowed and treated as different versions.
         for my $i (0 .. $#qty) {
-            my $name    = $name[$i];
-            my $qty     = int($qty[$i]);
+          next if ! $qty[$i];
+          my $name    = $name[$i];
+          my $qty     = int($qty[$i]);
 
-            next unless $qty > 0;
+          next unless $qty > 0;
 
-            my $percent = ($qty / $total) * 100;
+          my $percent = ($qty / $total) * 100;
 
-            if ($name and $percent and ceil($percent) > 0) {
-                push @versions,   $name => $percent;
-                push @quantities, $name => $qty;
-            }
+          if ($name and $percent and ceil($percent) > 0) {
+            push @versions,   $name => $percent;
+            push @quantities, $name => $qty;
+          }
         }
 		print STDERR "STORE FOR Printing Servcie: START MV @versions \n";
         $specs->{versions}           = join(',', @versions);

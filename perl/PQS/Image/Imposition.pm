@@ -114,12 +114,10 @@ sub handler {
 
     # If we can't find the service, it's not the correct type of service, or
     # it doesn't have the object we expected we'll say we can't find it.
-    return NOT_FOUND 
-        unless defined $imp 
-           && ref $imp eq 'eprint::impositionObject'
-           && defined $imp->{layout}[$n];
+    return NOT_FOUND unless defined $imp && ref $imp eq 'eprint::impositionObject' && defined $imp->{layout}[$n];
 
     my ($filetype) = ($r->filename =~ /\.(svgz?|png)$/);
+    $openprint::log->debug("FIletype: $filetype");
 
     # Generate the imposition image.
     my $image = generate($imp, $n, ($filetype eq 'png' ? load_stylesheet($r) : ()));
@@ -138,8 +136,7 @@ sub handler {
 
         $r->content_type('image/svg+xml; charset=utf-8');
         $r->headers_out->{'Content-Length'} = length $image;
-    }
-    elsif ($filetype eq 'png') {
+    } elsif ($filetype eq 'png') {
         # Render a PNG for clients that don't support SVG (IE for example).
         require Image::Magick;
 
@@ -158,8 +155,9 @@ sub handler {
         # Set the file size, modification time, etc. headers for the client.
         $r->content_type('image/png');
         $r->headers_out->{'Content-Length'} = length $image;
+    } else {
+      die "Filetype ($filetype) not supported."
     }
-    else { die "Filetype ($filetype) not supported." }
 
     $r->headers_out->{'Content-Disposition'} = qq{inline; filename="imposition-$sid-$n.$filetype"};
 
@@ -277,7 +275,7 @@ sub generate {
     
     my $colours = slot_colours($imposition, $n);
 
-print STDERR "HAVE N: $n \n", Dumper($versions, $imposition);
+#print STDERR "HAVE N: $n \n", Dumper($versions, $imposition);
 
     my $group = $define->group(id => 'imposition');
 
@@ -372,7 +370,7 @@ print STDERR "HAVE N: $n \n", Dumper($versions, $imposition);
  		)->cdata("$w\"");
 
 
-		print STDERR "HAVE IMP: ", Dumper($imposition);
+    #print STDERR "HAVE IMP: ", Dumper($imposition);
 
 		#)->cdata("$style</bold> Stock Width: $w Height $h ");
     
@@ -668,7 +666,7 @@ sub slot_colours {
                       @{$imp->{layout}[$n]};
 
 
-print STDERR "SLOT COLOURS", Dumper(\@versions);
+#print STDERR "SLOT COLOURS", Dumper(\@versions);
     # Bump the colour generator until we get to our current layout (if we're
     # the 0th layout this will be skipped due to invalid range). Kludgy but
     # it works.
