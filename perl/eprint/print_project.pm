@@ -2518,9 +2518,7 @@ sub add_qty {
 
   my $old_q1 = $src_project->quantity1();
 
-  $log->error("start edit_process");
   edit_process($r, $log, $dbh, $cookie, $var, $new, 1, $qtys);
-  $log->error("endrt edit_process");
 
   # edit process can reset lngpresstype
   $log->debug("Saving eid to $pid $press_type_id ".Data::Dumper::Dumper(\$new_project));
