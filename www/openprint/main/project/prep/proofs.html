@@ -43,6 +43,7 @@
       'Colour',
       'Press',
       'Folding',
+      'Final Review',
       );
 
       my $Project = $$variable{Project};
@@ -106,10 +107,10 @@
 								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, oninput=>'calc(this.form.name);', step=>'0.0001' ),
 								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, oninput=>'calc(this.form.name);', step=>'0.0001' ),
                 make_drop_down( \@ddm_options, $proof_type ),
-								input( type=>'float', name=>"MRPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', decimalplaces=>2 ),
-								input( type=>'float', name=>"ServicePrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01', decimalplaces=>2 ),
-								input( type=>'float', name=>"txtProofUnitPrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01', decimalplaces=>2 ),
-								write_override( 'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index, $$variable{'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index}, '', "calc('f1');", 1 ),
+                input( type=>'float', name=>"MRPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', step=>'0.01', decimalplaces=>2 ),
+								input( type=>'float', name=>"ServicePrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', step=>'0.01', decimalplaces=>2 ),
+								input( type=>'float', name=>"txtProofUnitPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', step=>'0.01', decimalplaces=>2 ),
+								write_override( 'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index, $$variable{'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index}, 'override_clicked(this);', "override_clicked(this);", 1 ),
                 $purposes[$proof_index] ? $purposes[$proof_index] : '',
 							);
 					} # end while proofs
@@ -153,6 +154,11 @@
   function calc_proofs() {
       calc('f1');
     }
+
+  function override_clicked(override) {
+    console.log(override);
+    calc('f1');
+  }
 
   results_callback = function cbProofResults(results) {
       const form = getFormObj('f1');
