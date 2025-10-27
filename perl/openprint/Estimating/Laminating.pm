@@ -916,22 +916,6 @@ sub get_laminating_imposition {
       return $imposition;
     }
 
-    if ($$imposition{sheet_width} < $maximum_sheet_width) {
-      if ($$imposition{sheet_width} - $margin < $film_width) {
-        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches less than the sheet width $$imposition{sheet_width}<br/>";
-      }
-      if ($$imposition{layout_width} + $margin > $film_width) {
-        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches greater than the layout width $$imposition{layout_width}<br/>";
-      }
-    }
-    if ($$imposition{sheet_height} < $maximum_sheet_width) {
-      if ($$imposition{sheet_height} - $margin < $film_width) {
-        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches less than the sheet height $$imposition{sheet_height}<br/>";
-      }
-      if ($$imposition{layout_height} + $margin > $film_width) {
-        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches greater than the layout height $$imposition{layout_height}<br/>";
-      }
-    }
     if ($$specs{"override_film_width-$form"} eq 'Y') {
       $$imposition{length} = $length;
       $$imposition{width} = $width;
@@ -946,6 +930,33 @@ sub get_laminating_imposition {
       }
       return $imposition;
     }
+
+    if ($$imposition{sheet_width} < $maximum_sheet_width) {
+
+      if (
+        ($$imposition{sheet_width} - $margin < $film_width)
+          and
+        ($$imposition{sheet_height} - $margin < $film_width)
+      ) {
+        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches less than the sheet width $$imposition{sheet_width}<br/>";
+      }
+      if ($$imposition{layout_width} + $margin > $film_width) {
+        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches greater than the layout width $$imposition{layout_width}<br/>";
+      }
+    }
+    if ($$imposition{sheet_height} < $maximum_sheet_width) {
+      if (
+        ($$imposition{sheet_width} - $margin < $film_width)
+          and
+        ($$imposition{sheet_height} - $margin < $film_width)
+      ) {
+        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches less than the sheet height $$imposition{sheet_height}<br/>";
+      }
+      if ($$imposition{layout_height} + $margin > $film_width) {
+        $$price{alert} .= "Laminate width $film_width must be at least ".2*$margin." inches greater than the layout height $$imposition{layout_height}<br/>";
+      }
+    }
+
     return undef;
   } # end style
   return $imposition;
