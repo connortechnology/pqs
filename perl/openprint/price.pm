@@ -102,6 +102,4 @@ sub copy {
 } # end sub copy
 
 1;
-
 __END__
-~       
