@@ -143,7 +143,7 @@ sub to_string {
 sub range_units {
   my $self = shift;
   $$self{range_units} = shift if @_;
-  if (!  $$self{range_units}) {
+  if (!$$self{range_units}) {
     my ($unit, $service_unit) = sql::execute(undef, undef, ' SELECT u.name FROM unit u, service_unit s WHERE s.unit=u.id AND s.service=? AND s.ranged=?', $$self{service_id}, $self->Service()->ranged());
     $openprint::log->debug("range units $unit $service_unit");
     $$self{range_units} = $unit;
