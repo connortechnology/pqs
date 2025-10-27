@@ -83,7 +83,6 @@
 								<th class="Price">Service (%1$s)</th>
 								<th class="Units">&nbsp;</th>
 								<th class="Price Total">Total (%1$s)</th>
-								<th class="Override">&nbsp;</th>
 							</tr>
               </thead>
               <tbody>
@@ -92,25 +91,25 @@
 					while ( my ( $proof_index, $proof_quantity, $proof_width, $proof_height, $proof_type ) = splice @{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}},0,5 ) {
 						$html .= sprintf( q`
 							<tr>
-                <td class="purpose">%12$s</td>
+                <td class="purpose">%13$s</td>
 								<td class="quantity">%4$s</td>
-								<td class="dimensions">%5$s x %6$s</td>
-								<td class="type"><select name="ddmProofType-%1$s-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%7$s</select></td>
-								<td class="Price MR">%8$s</td>
-								<td class="Price">%9$s</td>
+								<td class="dimensions">%5$s x %6$s %7$s</td>
+								<td class="type"><select name="ddmProofType-%1$s-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%8$s</select></td>
+								<td class="Price MR">%9$s</td>
+								<td class="Price">%10$s %11$s</td>
 								<td class="Units"><span id="ServiceUnits-%1$d-%3$d-%2$d"></span></td>
-								<td class="Price Total">%10$s</td>
-								<td class="Override"> %11$s <input type="hidden" name="txtProofIndex-%1$s-%3$d-%2$d" value="%3$d"/></td>
+								<td class="Price Total">%12$s</td>
 							</tr>
 							`, $signature_index, $qty_index, $proof_index,
 								input( type=>'cardinal', name=>"txtProofQuantity-$signature_index-$proof_index-$qty_index", value=>$proof_quantity, oninput=>'calc(this.form.name);' ),
 								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, oninput=>'calc(this.form.name);', step=>'0.0001' ),
 								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, oninput=>'calc(this.form.name);', step=>'0.0001' ),
+								write_override( 'OverrideSize-'.$signature_index.'-'.$proof_index.'-'.$qty_index, $$variable{'OverrideSize-'.$signature_index.'-'.$proof_index.'-'.$qty_index}, 'override_size_clicked(this);', "override_size_clicked(this);", 1 ),
                 make_drop_down( \@ddm_options, $proof_type ),
                 input( type=>'float', name=>"MRPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', step=>'0.01', decimalplaces=>2 ),
 								input( type=>'float', name=>"ServicePrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', step=>'0.01', decimalplaces=>2 ),
+								write_override( 'OverridePrice-'.$signature_index.'-'.$proof_index.'-'.$qty_index, $$variable{'OverridePrice-'.$signature_index.'-'.$proof_index.'-'.$qty_index}, 'override_price_clicked(this);', "override_price_clicked(this);", 1 ),
 								input( type=>'float', name=>"txtProofUnitPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', step=>'0.01', decimalplaces=>2 ),
-								write_override( 'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index, $$variable{'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index}, 'override_clicked(this);', "override_clicked(this);", 1 ),
                 $purposes[$proof_index] ? $purposes[$proof_index] : '',
 							);
 					} # end while proofs
@@ -155,7 +154,11 @@
       calc('f1');
     }
 
-  function override_clicked(override) {
+  function override_size_clicked(override) {
+    console.log(override);
+    calc('f1');
+  }
+  function override_price_clicked(override) {
     console.log(override);
     calc('f1');
   }
