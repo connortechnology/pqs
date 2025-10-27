@@ -18,7 +18,7 @@ use vars qw( $log $dbh %config );
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my %price_cache;
 
@@ -228,6 +228,7 @@ sub get_best_prices {
     }
     foreach my $p ( @pricing ) {
       $$p{Price} = $$p{price};
+      $$p{Cost} = $$p{cost};
     }
 	} else {
 $log->warn("Request for old style price for $Object");
@@ -241,7 +242,7 @@ $log->warn("Request for old style price for $Object");
 	}
 if ( DEBUG ) {
 foreach my $p ( @pricing ) {
-$log->debug("Price $$p{id} service_id:$$p{service_id} price $$p{price}/$$p{Price} interpolate:$$p{interpolate}; $$p{equipment_id}=?$equipment_id");
+$log->debug("Price $$p{id} service_id:$$p{service_id} cost: $$p{cost}/$$p{Cost} price $$p{price}/$$p{Price} interpolate:$$p{interpolate}; $$p{equipment_id}=?$equipment_id");
 }
 }
 
@@ -397,7 +398,7 @@ sub get_best_price_object {
 	if ( DEBUG ) {
 		$openprint::log->debug("Prices in get_best_price_object for qty $qty : " . @$prices);
 		foreach my $price ( @$prices ) {
-			$openprint::log->debug("service: $$price{service_id} min: $$price{min} max: $$price{max} price:$$price{Price} units: $$price{units} interpolate: $$price{interpolate}");
+			$openprint::log->debug("service: $$price{service_id} min: $$price{min} max: $$price{max} range_units:$$price{range_units} price:$$price{Price} units: $$price{units} interpolate: $$price{interpolate}");
 		} # end foreach
 	}
 
@@ -410,6 +411,8 @@ sub get_best_price_object {
 					 ( ( $price->{max} eq '' or ! defined $price->{max} ) or 1*$price->{max} >= $qty )
 					)
 					) ) {
+			$openprint::log->debug("matched service: $$price{service_id} min: $$price{min} max: $$price{max} range_units:$$price{range_units} price:$$price{price}/$$price{Price} units: $$price{units} interpolate: $$price{interpolate} for $qty");
+      $$price{price} = $$price{Price} if ! $$price{price};
 			if ( $$price{mode} eq 'Interpolate' ) {
 $log->error("Using interpolate $$price{max}");
 				if ( $$price{max} and $i <= ( @$prices - 1 ) ) {
@@ -420,15 +423,18 @@ $log->error("Using interpolate $$price{max}");
 					my $ya = $$price{Price};
 					my $yb = $$price{Next}{Price};
 
-					$price->{Price} = $ya + ($yb - $ya)*( ($qty - $xa ) / ( $xb - $xa ) );
+					$$price{price} = $price->{Price} = $ya + ($yb - $ya)*( ($qty - $xa ) / ( $xb - $xa ) );
 $log->error("Using interpolate $price->{Price} = $ya + ($yb - $ya)*( ($qty - $xa ) / ( $xb - $xa ) );");
 				}
 			} elsif ( $$price{mode} eq 'Stepped' ) {
+$log->error("Using Stepped $$price{max}");
 				# Store these for later processing
 				$$price{index} = $i;
 				$$price{prices} = $prices;
 			}
 			return %$price;
+    } else {
+			$openprint::log->debug("Not matched service: $$price{service_id} min: $$price{min} max: $$price{max} range_units:$$price{range_units} price:$$price{Price} units: $$price{units} interpolate: $$price{interpolate} for $qty");
 		} # end if
 	} # end foreach
 	return;
