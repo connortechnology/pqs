@@ -107,7 +107,8 @@ sub variables {
 				 'ddmProofType',
 				 'txtProofUnitPrice',
 				 'txtProofIndex',
-				 'chkOverride',
+				 'OverridePrice',
+				 'OverrideSize',
 				);
 			} # end if
 		} # end foreach key
@@ -141,7 +142,7 @@ sub outputs {
 						"ddmProofType-$form-$proof_index-$qty_index",
 						"txtProofUnitPrice-$form-$proof_index-$qty_index",
 						"txtProofIndex-$form-$proof_index-$qty_index",
-						"chkOverride-$form-$proof_index-$qty_index",
+            #"Override-$form-$proof_index-$qty_index",
 						);
 			} # end if
 		} # end foreach key
@@ -377,8 +378,11 @@ sub add_defaults {
 	$log->debug('297 Proof indexes for form '.$form.':'.join(',', map { $_ ? $_ : () } @{$$indexes{$form}})) if DEBUG;
 	foreach my $proof_index ( @{$$indexes{$form}} ) {
 		next if ! ($proof_index and $$indexes{$form}[$proof_index]);
-    $$specs{"chkOverride-$form-$proof_index-$qty_index"} //= '';
-		if ($$specs{"chkOverride-$form-$proof_index-$qty_index"} ne 'Y') {
+    $$specs{"OverridePrice-$form-$proof_index-$qty_index"} //= '';
+    $$specs{"OverrideSize-$form-$proof_index-$qty_index"} //= '';
+    $$specs{"OverrideQuantity-$form-$proof_index-$qty_index"} //= '';
+
+		if ($$specs{"OverrideQuantity-$form-$proof_index-$qty_index"} ne 'Y') {
 			if ( $proof_index == LAYOUT_PROOF ) {
 				insert_layout_proof($sig_specs, LAYOUT_PROOF, $qty_index, $specs, $Imposition);
 			} elsif ( $proof_index == COLOUR_PROOF ) {
@@ -450,8 +454,13 @@ sub signature_calc {
 				%price = $ProofService->get_price($$totals{$type}{Quantity}, $Equipment);
 			} else {
 				%price = $ProofService->get_price($$totals{$type}{Quantity});
-        if ($price{range_units} and ($price{range_units} eq 'square inches')) {
+        if ($price{range_units} and (lc $price{range_units} eq 'square inches')) {
+          #$openprint::log->error("Getting price by range_units $proof_width, $proof_height = ".($proof_width * $proof_height));
+
 				  %price = $ProofService->get_price($proof_width * $proof_height);
+          $openprint::log->error("Getting price by range_units $proof_width, $proof_height = ".($proof_width * $proof_height).Data::Dumper::Dumper(\%price));
+        } else {
+          $openprint::log->error("Not Getting price by range_units $price{range_units} $proof_width, $proof_height = ".($proof_width * $proof_height).Data::Dumper::Dumper(\%price));
         }
 			} # end if
 		} # end if
@@ -545,6 +554,7 @@ sub insert_scanning_proof {
 
 sub insert_folding_proof {
   my ( $Project, $sig_specs, $proof_index, $qty_index, $specs, $Imposition ) = @_;
+  my $form = $Imposition->form();
 
   my $equipment = $Imposition->Press();
   if ( ! $equipment ) {
@@ -581,6 +591,9 @@ sub insert_folding_proof {
   my ($width, $height, $sides) = $proofer->specifications(
     'Default Folding Proof Width','Default Folding Proof Height', 'Folding Proof Sides');
   ($width, $height) = ( $Imposition->sheet_width(), $Imposition->sheet_height()) if (!($width and $height));
+  if ($$specs{"OverrideSize-$form-$proof_index-$qty_index"} eq 'Y') {
+    ($width, $height) = @$specs{"txtProofWidth-$form-$proof_index-$qty_index", "txtProofHeight-$form-$proof_index-$qty_index"};
+  }
 
   $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
   $$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
@@ -626,7 +639,7 @@ sub insert_pdf_proofs {
 	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
 
   my $quantity = 0;
-  my $proof_type = $$specs{"ddmProofType-$form"};
+  my $proof_type = $$specs{"ddmProofType-$form-$proof_index-$qty_index"};
   if (!$proof_type) {
     my ( $default_proof_type ) = $Equipment->specification('Default PDF Proof') // '' if $Equipment;
     $openprint::log->debug("Default proof type on $$Equipment{name} is: $default_proof_type") if DEBUG;
@@ -641,6 +654,10 @@ sub insert_pdf_proofs {
       $quantity += 1 if $$sig_specs{chkProcessColourSideTwo} or ($$sig_specs{s1_process}) or ($$sig_specs{s0_process} and $$sig_specs{side_link});
     } # end if
   }
+  if (!$proof_type) {
+    $$specs{alert} .= 'No proof type for pdf proofs<br/>';
+    return;
+  }
 
   my $proof_service = openprint::Service->find_one(name=>$proof_type);
   if (!$proof_service) {
@@ -653,8 +670,7 @@ sub insert_pdf_proofs {
     return;
   }
   my @prices = $proof_service->Prices();
-
-  my %prices_by_equipment_id = map { $$_{equipment_id} => $_ } $proof_service->Prices() if $proof_service;
+  my %prices_by_equipment_id = map { $$_{equipment_id} => $_ } $proof_service->Prices();
 
   my $proofer;
   if (exists $prices_by_equipment_id{$$Equipment{id}}) {
@@ -694,14 +710,19 @@ sub insert_colour_proof {
 	my $quantity = 0;
   my ( $proof_style ) = $Equipment->specification('Colour Proof Style') // '';
 
-  my $proof_type = $$specs{"ddmProofType-$form"};
+  my $proof_type = $$specs{"ddmProofType-$form-$proof_index-$qty_index"};
   if (!$proof_type) {
     my ( $default_proof_type ) = $Equipment->specification('Default Colour Proof') // '' if $Equipment;
+    ( $default_proof_type ) = $openprint::config{'Default Colour Proof'} if !$default_proof_type;
     $openprint::log->debug("Default proof type on $$Equipment{name} is: $default_proof_type") if DEBUG;
     $proof_type ||= $default_proof_type;
   }
+  if (!$proof_type) {
+    $$specs{alert} .= 'No proof type for colour proofs.<br/>';
+    return;
+  }
 
-	if ( $proof_type and ($proof_type ne 'None')) {
+	if ($proof_type ne 'None') {
 		if ($$specs{RequireColourProofs} eq 'N') {
 			$quantity = 0;
     } elsif ($$specs{RequireColourProofs} ne 'N') {
@@ -782,8 +803,12 @@ sub insert_colour_proof {
 
     ($width, $height) = @$Imposition{'object_width','object_height'} if !($width and $height);
 	} # end if has default proof type
+
+  if ($$specs{"OverrideSize-$form-$proof_index-$qty_index"} eq 'Y') {
+    ($width, $height) = @$specs{"txtProofWidth-$form-$proof_index-$qty_index", "txtProofHeight-$form-$proof_index-$qty_index"};
+  }
   # only if project requires 4 colour process.
-	insert_new_proof( $specs, $proof_index, $form, $quantity, $width, $height, $proof_type, $qty_index );
+	insert_new_proof($specs, $proof_index, $form, $quantity, $width, $height, $proof_type, $qty_index);
 } # end sub insert_colour_proof
 
 sub insert_layout_proof {
@@ -799,7 +824,7 @@ sub insert_layout_proof {
 		} # end if
 	} # end if
 
-  my $proof_type = $$specs{"ddmProofType-$form"};
+  my $proof_type = $$specs{"ddmProofType-$form-$proof_index-$qty_index"};
   if (!$proof_type) {
     my ( $default_proof_type ) = $equipment->specification('Default Layout Proof') if $equipment;
     if ( ! $default_proof_type ) {
@@ -827,6 +852,9 @@ sub insert_layout_proof {
   my ($width, $height, $sides) = $proofer->specifications(
     'Default Layout Proof Width','Default Layout Proof Height', 'Layout Proof Sides');
   ($width, $height) = @$Imposition{'sheet_width sheet_height'} if !($width and $height);
+  if ($$specs{"OverrideSize-$form-$proof_index-$qty_index"} eq 'Y') {
+    ($width, $height) = @$specs{"txtProofWidth-$form-$proof_index-$qty_index", "txtProofHeight-$form-$proof_index-$qty_index"};
+  }
 	my $quantity = 0;
   if (($$specs{RequireLayoutProofs} eq 'Y') or
     (($$specs{RequireLayoutProofs} ne 'N') and $openprint::config{Add_Default_Layout_Proof} and ($openprint::config{Add_Default_Layout_Proof} eq 'Y'))
@@ -1184,9 +1212,9 @@ sub has_overrides {
 		foreach my $key ( keys %{$specs} ) {
 			if ( $key =~ /^txtProofIndex-$form-(\d+)-$qty_index$/ ) {
 				my ( $proof_index ) = ( $1 );
-				if ( $$specs{"chkOverride-$form-$proof_index-$qty_index"} ) {
-					push @v, "chkOverride-$form-$proof_index-$qty_index";
-				} # end if
+        foreach my $field ('OverrideSize','OverridePrice') {
+					push @v, "$field-$form-$proof_index-$qty_index" if $$specs{"$field-$form-$proof_index-$qty_index"};
+				} # end foreach field
 			} # end if
 		} # end foreach key
 	} # end foreach signature
