@@ -39,15 +39,15 @@ use constant PDF_PROOF => 5;
 
 my %ServicePrices = (
   'ColourLaser' => { 
-    range_units =>[ 'square inches', 'proof quantity' ],
+    range_units =>[ 'square inches', 'proof quantity', 'pages' ],
     units=>['each','per proof', 'per square inch', 'per square foot'],
   },
   'DigitalDylux' => {
-    range_units =>[ 'square inches', 'proof quantity' ],
+    range_units =>[ 'square inches', 'proof quantity', 'pages' ],
     units=>['each','per proof', 'per square inch', 'per square foot'],
   },
   '.*Proof' => {
-    range_units =>[ 'square inches', 'proof quantity' ],
+    range_units =>[ 'square inches', 'proof quantity', 'pages' ],
     units=>['each','per proof', 'per square inch', 'per square foot'],
   },
 );
@@ -643,6 +643,7 @@ sub insert_pdf_proofs {
   if (!$proof_type) {
     my ( $default_proof_type ) = $Equipment->specification('Default PDF Proof') // '' if $Equipment;
     $openprint::log->debug("Default proof type on $$Equipment{name} is: $default_proof_type") if DEBUG;
+    $default_proof_type = $openprint::config{'Default_PDF_Proof'} // '' if ! $default_proof_type;
     $proof_type ||= $default_proof_type;
   }
   if ( $proof_type and ($proof_type ne 'None')) {
@@ -651,7 +652,7 @@ sub insert_pdf_proofs {
     } elsif ($$specs{RequirePDFProofs} ne 'N') {
       # Auto or Y
       $quantity += 1 if $$sig_specs{chkProcessColourSideOne} or $$sig_specs{s0_process};
-      $quantity += 1 if $$sig_specs{chkProcessColourSideTwo} or ($$sig_specs{s1_process}) or ($$sig_specs{s0_process} and $$sig_specs{side_link});
+      #$quantity += 1 if $$sig_specs{chkProcessColourSideTwo} or ($$sig_specs{s1_process}) or ($$sig_specs{s0_process} and $$sig_specs{side_link});
     } # end if
   }
   if (!$proof_type) {
