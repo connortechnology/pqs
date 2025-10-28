@@ -293,7 +293,7 @@ sub build {
 
       # Track the first unfinished service we find.
       if ($status eq 'uncalculated') {
-        $log->error("Have uncalculated for $sid $$service{name}");
+        #$log->debug("Have uncalculated for $sid $$service{name}");
         $unfinished = { sid => $sid, type => $service->{name} };
 
         last SERVICE_TYPE;
