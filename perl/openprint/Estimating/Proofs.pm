@@ -785,6 +785,8 @@ sub insert_colour_proof {
       $proofer = $prices[0]->Equipment();
     }
     $openprint::log->debug("Proofer: ".$proofer->name(). ' style: '.$proof_style) if DEBUG;
+  } elsif ($$specs{RequireColourProofs} eq 'Y') {
+    $$specs{alert} .= "Please select colour proof type for signature $form<br/>";
   }
 
 
