@@ -722,9 +722,7 @@ sub insert_colour_proof {
 		} # end if
 	} # end if
 
-  my $width = $$Imposition{object_width};
-  my $height = $$Imposition{object_height};
-  my ( $proof_style ) = $Equipment->specification('Colour Proof Style') // '';
+  my $proof_style = $Equipment->specification('Colour Proof Style') // '';
 
   my $proof_type = $$specs{"ddmProofType-$form-$proof_index-$qty_index"};
   if (!$proof_type) {
@@ -762,6 +760,8 @@ sub insert_colour_proof {
     $$specs{alert} .= 'No proof type for colour proofs.<br/>';
   }
 
+  my $proofer = $Equipment;
+
   if ($proof_type and ($proof_type ne 'None')) {
     my $proof_service = openprint::Service->find_one(name=>$proof_type);
     if (!$proof_service) {
@@ -777,54 +777,59 @@ sub insert_colour_proof {
 
     my %prices_by_equipment_id = map { $$_{equipment_id} => $_ } $proof_service->Prices() if $proof_service;
 
-    my $proofer;
     if (exists $prices_by_equipment_id{$$Equipment{id}}) {
       $proofer = $Equipment;
     } elsif ( 1 == keys %prices_by_equipment_id) {
       $proofer = (values %prices_by_equipment_id)[0]->Equipment();
-      ($width, $height) = $proofer->specifications('Default Layout Proof Width','Default Layout Proof Height');
     } else {
       $proofer = $prices[0]->Equipment();
     }
     $openprint::log->debug("Proofer: ".$proofer->name(). ' style: '.$proof_style) if DEBUG;
+  }
 
-    if ($proof_style and ($proof_style eq 'Multiple')) {
-      # Select the first proofer sorted by strid that has pricing for our Proof Type to get our Max size from.
 
-      # Get max size for the proofer.
-      my ( $maxwidth, $maxheight ) = $proofer->specifications('Maximum Sheet Width', 'Maximum Sheet Length') if $proofer;
-      if ($maxwidth and $maxheight) {
-        # If our Proof Style is multiple then increase our proof size until we have everything down to 1 proof
-        # or we have hit the max size for the proofer.
-        my $w = $width;
-        my $h = $height;
-        my $q = $quantity;
-        my $x = $q % 2;
+  my $width_setting = $proofer->specification('Default Colour Proof Width') // '';
+  my $height_setting = $proofer->specification('Default Colour Proof Height') // '';
 
-        # Keep going checking quantity and with/height or
-        # rotated with/height against our max dimensions
-        while (($q > 1) && ($x == 0) && ( ($h <= $maxheight && $w <= $maxwidth) or ($w <= $maxheight && $h <= $maxwidth))) {
-          # Store the current valid sizes.
-          $width = $w;
-          $height = $h;
-          $quantity = $q;
-          # Make a squareish proof by increasing the smaller side each time.
-          if ( $w < $h ) { $w *= 2; } else { $h *= 2 }
+  my $width = $width_setting eq 'Sheet Width' ? $$Imposition{sheet_width} : $$Imposition{object_width};
+  my $height = $height_setting eq 'Sheet Height' ? $$Imposition{sheet_height} : $$Imposition{object_height};
 
-          # Right now we are only handling multiples of 2.
-          # So unless our $qty can be diveded evenly by 2 then we must stop.
-          $x = $q % 2;
+  if ($proof_style and ($proof_style eq 'Multiple')) {
+    # Select the first proofer sorted by strid that has pricing for our Proof Type to get our Max size from.
 
-          # Cut the quantity of proofs in half cause we have double the size of the proof
-          $q /= 2;
-        } # end while
-      } # end if maxwidth and height
-    } else {
-      ($width, $height) = $proofer->specifications('Default Layout Proof Width','Default Layout Proof Height');
-    } # end if style = Multiple
+    # Get max size for the proofer.
+    my ( $maxwidth, $maxheight ) = $proofer->specifications('Maximum Sheet Width', 'Maximum Sheet Length') if $proofer;
+    if ($maxwidth and $maxheight) {
+      # If our Proof Style is multiple then increase our proof size until we have everything down to 1 proof
+      # or we have hit the max size for the proofer.
+      my $w = $width;
+      my $h = $height;
+      my $q = $quantity;
+      my $x = $q % 2;
 
-    ($width, $height) = @$Imposition{'object_width','object_height'} if !($width and $height);
-	} # end if has default proof type
+      # Keep going checking quantity and with/height or
+      # rotated with/height against our max dimensions
+      while (($q > 1) && ($x == 0) && ( ($h <= $maxheight && $w <= $maxwidth) or ($w <= $maxheight && $h <= $maxwidth))) {
+        # Store the current valid sizes.
+        $width = $w;
+        $height = $h;
+        $quantity = $q;
+        # Make a squareish proof by increasing the smaller side each time.
+        if ( $w < $h ) { $w *= 2; } else { $h *= 2 }
+
+        # Right now we are only handling multiples of 2.
+        # So unless our $qty can be diveded evenly by 2 then we must stop.
+        $x = $q % 2;
+
+        # Cut the quantity of proofs in half cause we have double the size of the proof
+        $q /= 2;
+      } # end while
+    } # end if maxwidth and height
+  } else {
+    ($width, $height) = $proofer->specifications('Default Layout Proof Width','Default Layout Proof Height');
+  } # end if style = Multiple
+
+  ($width, $height) = @$Imposition{'object_width','object_height'} if !($width and $height);
 
   if ($$specs{"OverrideSize-$form-$proof_index-$qty_index"} eq 'Y') {
     ($width, $height) = @$specs{"txtProofWidth-$form-$proof_index-$qty_index", "txtProofHeight-$form-$proof_index-$qty_index"};
