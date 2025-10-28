@@ -102,13 +102,8 @@
     return $html;
 )?>
 
-    <div id="pricing">
-		<fieldset><legend>Pricing</legend>
-			<ul>
-		  <?include(/includes/main/proj/quantities_prices.html) ?>
-			</ul>
-		</fieldset>
-    </div>
+		<?include(/includes/main/proj/service_pricing.html) ?>
+    <?echo (include('/includes/main/proj/service_comment.html'); )?>
 		<hr/>
 		<?include(/includes/main/proj/add_to_project.html) ?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>

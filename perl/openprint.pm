@@ -189,7 +189,11 @@ sub session_init {
     if ($ip) {
       my $safe_ip = openprint::Host_Interface->transform(ip=>$ip);
       # FIXME :ipv6
-      if ($safe_ip and ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+      if ($safe_ip and (
+          ($safe_ip =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)
+            or
+          ($safe_ip =~ /^[:0-9a-fA-F]+$/)
+        )) {
         openprint::Host_Interface->lock();
         my @Interfaces = openprint::Host_Interface->find(ip=>$safe_ip);
         if ( !@Interfaces ) {
@@ -212,7 +216,7 @@ sub session_init {
         }
         openprint::Host_Interface->unlock();
       } else {
-        $log->warn("ip and safe ip differ. $ip != $safe_ip bad ip");
+        $log->warn("Unrecognized ip. $ip != $safe_ip bad ip");
       } # end if safe_ip
     } # end if ip
   } # end foreach ip

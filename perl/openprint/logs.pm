@@ -69,5 +69,13 @@ sub insertLogRecord {
 	return 1;
 }
 
+sub index {
+  if ($param{action}) {
+    if ($param{action} eq 'create') {
+      $log->error(Data::Dumper::Dumper(\%param));
+    }
+  }
+}
+
 1;
 __END__

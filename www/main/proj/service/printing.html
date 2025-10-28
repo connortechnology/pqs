@@ -33,7 +33,10 @@
 	<!--#include virtual="/includes/c1-main-nav.html" -->
 	<h1>
 		<span class="title-section">Projects &#187;</span> 
+    <?echo($$variable{Project}->link_to())?> &#187;
+    <?if(service.type.name)?>
 		<?service.type.name?> &#187; 
+    <?endif(service.type.name)?>
 		<?if project.is_multipage ?>
 			<?spec.txtSignatureType?>
       <?if(!$$variable{spec}{txtSignatureType})?>

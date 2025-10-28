@@ -4,7 +4,7 @@
 	<? echo ( my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 	$html .= '<span class="'.$$variable{Columns}.'Columns">';
-	$html .= input( type=>'float', name=>"Markup$qty_index", value=>$$variable{'Markup'.$qty_index}, onkeyup=>q`calc(this.form.name);` ).'%';
+	$html .= input( type=>'float', name=>"Markup$qty_index", value=>$$variable{'Markup'.$qty_index}, oninput=>q`calc(this.form.name);` ).'%';
 		$html .= '</span>';
 	} # end foreach
 	return $html;

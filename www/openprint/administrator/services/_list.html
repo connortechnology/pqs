@@ -5,11 +5,17 @@
 		( $session{$uri.'?servicetype_id'} ne '' ? ( 'servicetype_id' => $session{$uri.'?servicetype_id'} ) : () ),
 		( $session{$uri.'?category_id'} ne '' ? ( 'category_id' => $session{$uri.'?category_id'} ) : () ),
 		);
-	if (  $session{$uri.'?service_name'} ) {
-		if ( ! ( $session{$uri.'?service_name'}  =~ /%/ ) ) {
-			$filters{'name ilike'} = $session{$uri.'?service_name'}.'%';
+	if ( $session{$uri.'?service_name'} ) {
+		if ($session{$uri.'?service_name'} !~ /%/) {
+      $filters{or} = {
+        'name ilike' => '%'.$session{$uri.'?service_name'}.'%',
+        'description ilike' => '%'.$session{$uri.'?service_name'}.'%',
+      };
 		} else {
-			$filters{'name ilike'} = $session{$uri.'?service_name'};
+      $filters{or} => {
+        'name ilike' => $session{$uri.'?service_name'},
+        'description ilike' => $session{$uri.'?service_name'},
+      };
 		}
 	}
 

@@ -1323,33 +1323,9 @@ sub html_escape {
   $thing =~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
   return $thing;
 }
+
 sub slurp_content {
-  my ( $file ) = @_;
-
-#$log->debug("Slurping file $file");
-
-  if ( ! ( $file =~ /^\// ) ) {
-    # Use a path relative to the current page
-    my $path = $variable{uri};
-    $path =~ s/(.*\/).*/$1/;
-    $file = $path . $file;
-  } # end if
-  my $content = '';
-  if ( -e $config{SkinPath}.$file ) {
-    $content = File::Slurp::read_file($config{SkinPath}.$file, err_mode => 'carp' );
-  } elsif ( -e $config{SkinPath}.'/html/'.$file ) {
-    $content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file, err_mode => 'carp' );
-  } elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
-    $content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file, err_mode => 'carp' );
-  } elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
-    $content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file, err_mode => 'carp' );
-  } else {
-    $content = File::Slurp::read_file($file, err_mode => 'carp');
-  } # end if
-  if ( ! $content ) {
-    $log->warn( "No content found for $file" );
-  }
-  return $content;
+  return openprint::ssi::slurp_content(@_);
 } # end sub slurp_content
 
 sub include {

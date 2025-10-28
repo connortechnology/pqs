@@ -32,6 +32,12 @@ table .additional td, .Proofs .totals td, .Proofs .breakdown td {
 }
 .Proofs .Price input[type="text"],
 .Proofs .Price input[type="number"] {
+	width: calc(100% - 30px);
+	text-align: right;
+}
+.Proofs .Total input[type="text"],
+.Proofs .Total input[type="number"] {
 	width: 100%;
 	text-align: right;
+  border: none;
 }

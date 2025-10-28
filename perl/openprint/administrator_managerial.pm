@@ -1206,7 +1206,8 @@ sub _user_logs {
 } # end sub _logs
 
 sub users {
-	$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
+  #$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
+	$session{$r->uri().'?deleted'} = '0' if ! exists $session{$r->uri().'?deleted'};
 	_users();
 
 	if ( $param{btnFunction} ) {
