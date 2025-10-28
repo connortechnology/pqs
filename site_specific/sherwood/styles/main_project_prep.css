@@ -18,3 +18,7 @@
 #pricing li.markup {
   width: 190px;
 }
+
+.Units {
+  text-transform: capitalize;
+}
