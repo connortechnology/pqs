@@ -91,17 +91,18 @@
 					while ( my ( $proof_index, $proof_quantity, $proof_width, $proof_height, $proof_type ) = splice @{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}},0,5 ) {
 						$html .= sprintf( q`
 							<tr>
-                <td class="purpose">%13$s</td>
-								<td class="quantity">%4$s</td>
-								<td class="dimensions">%5$s x %6$s %7$s</td>
-								<td class="type"><select name="ddmProofType-%1$s-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%8$s</select></td>
-								<td class="Price MR">%9$s</td>
-								<td class="Price">%10$s %11$s</td>
+                <td class="purpose">%14$s</td>
+								<td class="quantity">%4$s %5$s</td>
+								<td class="dimensions">%6$s x %7$s %8$s</td>
+								<td class="type"><select name="ddmProofType-%1$s-%3$d-%2$d" onchange="calc(this.form.name);"><option value="None">None</option>%9$s</select></td>
+								<td class="Price MR">%10$s</td>
+								<td class="Price">%11$s %12$s</td>
 								<td class="Units"><span id="ServiceUnits-%1$d-%3$d-%2$d"></span></td>
-								<td class="Price Total">%12$s</td>
+								<td class="Price Total">%13$s</td>
 							</tr>
 							`, $signature_index, $qty_index, $proof_index,
 								input( type=>'cardinal', name=>"txtProofQuantity-$signature_index-$proof_index-$qty_index", value=>$proof_quantity, oninput=>'calc(this.form.name);' ),
+								write_override( 'OverrideQuantity-'.$signature_index.'-'.$proof_index.'-'.$qty_index, $$variable{'OverrideQuantity-'.$signature_index.'-'.$proof_index.'-'.$qty_index}, 'override_quantity_clicked(this);', "override_quantity_clicked(this);", 1 ),
 								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, oninput=>'calc(this.form.name);', step=>'0.0001' ),
 								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, oninput=>'calc(this.form.name);', step=>'0.0001' ),
 								write_override( 'OverrideSize-'.$signature_index.'-'.$proof_index.'-'.$qty_index, $$variable{'OverrideSize-'.$signature_index.'-'.$proof_index.'-'.$qty_index}, 'override_size_clicked(this);', "override_size_clicked(this);", 1 ),
@@ -154,6 +155,10 @@
       calc('f1');
     }
 
+  function override_quantity_clicked(override) {
+    console.log(override);
+    calc('f1');
+  }
   function override_size_clicked(override) {
     console.log(override);
     calc('f1');
