@@ -79,8 +79,8 @@ sub configuration {
             if ( (!$$C{value}) and $new_value ) {
               if ( 0 ) {
                 eval {
-require Authen::Passphrase;
-require Authen::Passphrase::BlowfishCrypt;
+                  require Authen::Passphrase;
+                  require Authen::Passphrase::BlowfishCrypt;
                   # Special case need to update everyone's passwords
                   foreach my $User ( openprint::User->find() ) {
                     my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $$User{password} );
@@ -108,14 +108,16 @@ require Authen::Passphrase::BlowfishCrypt;
 	} elsif ( $param{action} eq 'delete' ) {
     my $entry = Configuration->find_one(name=>$param{name});
     $entry->delete();
-		new openprint::Log()->save({action=>'Delete Configuration'});
+		new openprint::Log()->save({action=>'Delete Configuration', notes=>$entry->to_string()});
     $variable{ExternalRedirect} = '/openprint/administrator/managerial/configuration.html';
 	} # end if
 } # end sub configuration
 
 sub _configuration {
 	if ( $param{action} eq 'delete' ) {
-		sql::execute( undef, undef, 'DELETE FROM Configuration WHERE name=?', $param{name} );
+    my $entry = Configuration->find_one(name=>$param{name});
+    $entry->delete();
+		new openprint::Log()->save({action=>'Delete Configuration', notes=>$entry->to_string()});
 	} # end if
 } # end sub _configuration
 
