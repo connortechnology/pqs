@@ -5,7 +5,6 @@ our @ISA = qw( openprint::Object );
 require openprint::Object;
 #require openprint::User_in_UserGroup;
 require openprint::Company;
-require openprint::Email;
 
 use openprint ();
 use vars qw( $log $dbh %config $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD $default_sort );
@@ -127,6 +126,7 @@ sub save {
 		$info{ReplacementText} = ssi::include( '/email_content/usertype_system_notification.html', \%info );
 		my $email_template = ssi::include( '/email_template.html', \%info );
 
+require openprint::Email;
 		new openprint::Email()->send(
 				FROM    => $openprint::config{LoginEmail},
 				TO      => $openprint::config{LoginEmail},
@@ -163,6 +163,7 @@ sub notify_activation_change {
   $info{ReplacementText} = ssi::include( '/email_content/'.$_, \%info );
   my $email_template = ssi::include( '/email_template.html', \%info  );
 
+require openprint::Email;
   new openprint::Email()->send(
     FROM    => $openprint::config{AdministratorEmail},
     TO      => sprintf( '"%s %s" <%s>', @$self{'firstame','lastname','email'} ),

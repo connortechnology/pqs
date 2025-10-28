@@ -3,7 +3,9 @@
 .m { text-align: center !important; }
 
 table.breakdown {
+  /*
     width: 720px;
+    */
     font-size: 0.85em;
     border: 1px solid #0B0D60;
 }
@@ -88,7 +90,9 @@ table#versions tr.layout_form th {
 
 #comparisons {
     table-layout: fixed;
+    /*
     width: 900px;
+    */
     margin-bottom: 0;
     border: 1px solid #0B0D60 !important;
 }
