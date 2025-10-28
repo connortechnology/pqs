@@ -156,11 +156,11 @@ sub calc {
   my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 
   my $pages            = $specs->{txtTotalPageQuantity} || 0;
-  my $pages_per_spread = $specs->{template} =~ /^(loop|saddle)stitching/i ? 4 : 2;
+  my $pages_per_spread = ($$specs{template} and ($specs->{template} =~ /^(loop|saddle)stitching/i)) ? 4 : 2;
 
   # Do we want a cover with separate specifications? This is not an option
   # for perfect bound books, all have a separate cover.
-  my $cover = $specs->{rdbCover} eq 'DifferentCover' || 0;
+  my $cover = ($$specs{rdbCover} and ($specs->{rdbCover} eq 'DifferentCover')) || 0;
 
   $pages -= 4 if $cover; # Remove the four page cover spread.
 
