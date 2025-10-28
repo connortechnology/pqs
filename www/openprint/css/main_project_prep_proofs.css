@@ -1,11 +1,10 @@
 
 table .quantity {
-	width: 54px;
-	text-align: left;
+	width: 85px;
 }
 table .quantity input[type="number"] ,
 table .quantity input[type="text"] {
-	width: 54px;
+	width: 30px;
 }
 table .dimensions {
 	width: 170px;
