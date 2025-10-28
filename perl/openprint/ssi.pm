@@ -945,7 +945,7 @@ sub write_override {
 	if ( 1 ) {
     my $html = sprintf('<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/>', $for, ((defined($value) and sets::isin($value, ['Y', '1' ]) ) ? 'Y' : '' ));
     if ((!$employee_only) or ($session{user_type} eq 'E' or $session{user_type} eq 'A')) {
-      $html .= sprintf(q`<img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt="" title="Click to override"/>`, 
+      $html .= sprintf(q`<img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" data_field_name="$1$s" alt="" title="Click to override"/>`, 
 				$for,
 				((defined($value) and sets::isin($value, ['Y', '1' ]) ) ? 'Y' : '' ),
 				((defined($value) and sets::isin($value, ['Y', '1' ])) ? 'locked' : 'unlocked'),
