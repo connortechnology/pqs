@@ -34,9 +34,9 @@
 	<h1>
 		<span class="title-section">Projects &#187;</span> 
     <?echo($$variable{Project}->link_to())?> &#187;
-    <?if(service.type.name)?>
+    <?if($$variable{service}{type}{name})?>
 		<?service.type.name?> &#187; 
-    <?endif(service.type.name)?>
+    <?endif($$variable{service}{type}{name})?>
 		<?if project.is_multipage ?>
 			<?spec.txtSignatureType?>
       <?if(!$$variable{spec}{txtSignatureType})?>

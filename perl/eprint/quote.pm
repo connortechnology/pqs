@@ -283,14 +283,14 @@ sub user_quote_info {
 	my $quote_id;
 
 
-	print STDERR "ACTION IS: $action \n";
+  #print STDERR "ACTION IS: $action \n";
 
 	if ($action eq 'Product Quote') {
 		$quote_id = create_quote( $log, $dbh, $cookie,  $$variable{'cust_id'}, $$variable{'user_id'} );
 		my $order_id ||= eprint::order::get_unfinished_order( $log, $dbh, $cookie, $variable->{cust_id}, $variable->{user_id});
 		my $list = PQS::model::order::get_order_products($order_id);
 
-		print STDERR "HAVE LIST", Dumper($list);
+    #print STDERR "HAVE LIST", Dumper($list);
 		foreach my $o ( @{$list} ) {
 
 				my $pname = PQS::model::products::get_name_from_id($o->{product});
@@ -529,7 +529,7 @@ sub get_products {
 			SELECT * FROM tbl_quote_details  WHERE type = 'product' AND lngquoteid = ?
 	}, {Slice => {}}, $quote_id);
 
-print STDERR "HAVE PRODUCTS: ", Dumper($data);
+#print STDERR "HAVE PRODUCTS: ", Dumper($data);
 	return $data;
 	
 }
@@ -633,7 +633,7 @@ sub get_finished_quote_contents {
 			my $expired = eprint::project::validate_project_price($log, $dbh, $project_index);
 			$$variable{'InvalidPrices'} = 1 if $expired;
 
-print STDERRR "ADDING PROJECT PRICES - $project_index \n";
+#print STDERRR "ADDING PROJECT PRICES - $project_index \n";
 			push @{$$variable{"PROJECT_PRICES_$project_index"}}, $markup1, $qty1, $price1, $newprice1, $expired, $markup2, $qty2, $price2, $newprice2, $expired, $markup3, $qty3, $price3, $newprice3, $expired;
 			my $lastindex =3;
 			$lastindex = 2 

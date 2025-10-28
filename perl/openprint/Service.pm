@@ -48,8 +48,8 @@ $default_sort = 'lower(strname)';
     ranged          =>  'ysnranged',
 	 	);	
 %find_fields = (
-		category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
-		equipment_id	=> '(SELECT equipment_id FROM service_prices WHERE service_id=services.id)',
+		category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id='.$fields{category_id}.')',
+		equipment_id	=> '(SELECT equipment_id FROM service_prices WHERE service_id='.$table.'.'.$fields{id}.')',
 );
 
 
@@ -209,14 +209,14 @@ sub get_price {
 
 sub next {
 	my ($self, $params) = shift;
-	my $sql = q{SELECT min(name) FROM Services WHERE name > ?};
+	my $sql = 'SELECT min('.$fields{name}.') FROM '.$table.' WHERE '.$fields{name}.' > ?';
 	my @values = ($$self{name});
 	if ( $params and $$params{category_id} ) {
 		$sql .= ' AND category=?';
 		push @values, $$params{category_id};
 	} # end if
     my ($name) = sql::execute( undef, undef, $sql, @values );
-	( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Services WHERE name=?}, $name );
+	( $_ ) = sql::execute( undef, undef, 'SELECT '.$fields{id}.' FROM '.$table.' WHERE '.$fields{name}.'=?', $name );
     return $_;
 } # end sub next
 
@@ -227,14 +227,14 @@ sub Next {
 
 sub prev {
     my ( $self, $params ) = shift;
-	my $sql = q{SELECT max(name) FROM Services WHERE name < ?};
+	my $sql = 'SELECT max('.$fields{name}.') FROM '.$table.' WHERE '.$fields{name}.' < ?';
 	my @values = ($$self{name});
 	if ( $params and $$params{category_id} ) {
 		$sql .= ' AND category=?';
 		push @values, $$params{category_id};
 	} # end if
     my ($name) = sql::execute( undef, undef, $sql, @values );
-	( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Services WHERE name=?}, $name );
+	( $_ ) = sql::execute( undef, undef, 'SELECT '.$fields{id}.' FROM '.$table.' WHERE '.$fields{name}.'=?', $name );
     return $_;
 } # end sub next
 

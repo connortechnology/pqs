@@ -37,8 +37,8 @@
 		<p class="buttons">
 			<? echo ( 
 				my $html = '';
-				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
-				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
+				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'&lt;&lt;' } );
+        $html .= button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'&gt;&gt;' } );
 				$html .= button( 'New1', { href=>'/administrator/services/edit.html', text=>'New' } );
 				$html .= button( 'Save1', { onclick=>q`f2.btnFunction.value='Save';f2.submit();`, text=>'Save' } );
 				if ( $$variable{Service}->id() ) {
