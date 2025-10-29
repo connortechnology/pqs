@@ -314,7 +314,7 @@ sub get_project_price {
       if ($BINDERY_CLASS{$bind_type}) {
         $project->{trim} = eprint::Config->get(Imposition => lc "trim_$BINDERY_CLASS{$bind_type}") || 0;
       } else {
-        $openrpint::log->error("No bindery class for $bind_type");
+        $openprint::log->error("No bindery class for $bind_type");
       }
     }
   } else {
