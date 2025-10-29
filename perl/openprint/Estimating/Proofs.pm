@@ -969,7 +969,7 @@ sub display {
 		my %proof_indexes;
 		foreach my $key ( keys %$specs ) {
 			if ( $key =~ /^ddmProofType-(\d+)-(\d+)-$qty_index$/ ) {
-				$proof_indexes{$1}[$$specs{$key}] = $$specs{$key};
+				$proof_indexes{$1}[$2] = $2;
 			} # end if
 		} # end foreach
 
