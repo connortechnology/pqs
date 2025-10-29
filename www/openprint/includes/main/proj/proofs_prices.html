@@ -1,0 +1,11 @@
+<div id="pricing">
+  <fieldset><legend>Pricing</legend>
+    <ul>
+<? echo ( join("\n",
+include('/includes/main/proj/_quantities.html'),
+include('/includes/main/proj/_markup.html'),
+include('/includes/main/proj/_service_price.html'),
+); ) ?>
+    </ul>
+  </fieldset>
+</div>
