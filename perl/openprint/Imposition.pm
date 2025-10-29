@@ -1385,9 +1385,7 @@ sub form {
     my ( $signature_count ) = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{Project}->id() );
     $signature_count //= 0;
     $signature_count += 1;
-    $$self{form} = $$self{specs}{Form} = $signature_count;
-
-    #$$self{service_id} = $$self{specs}{ServiceIndex} if !$$self{service_id};
+    $$self{form} = $signature_count;
     $$self{service_id} = $$self{form} if !$$self{service_id} and $$self{form} > 100;
     if ($$self{service_id}) {
       #openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$self{Project}->id(), $$self{service_id}, 'SignatureIndex', $signature_count );
