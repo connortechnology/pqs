@@ -608,7 +608,7 @@ sub get_project_price {
       my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $Project->ServiceType($$project{HasProofs}), $$project{ProofsSpecs}, $sig_specs, 1,
         {}, # Indexes
         undef, #Totals,
-        $Press, $imposition );
+        $imposition );
       $price{'Comparison Cost'} += $sig_count * $Results{total};
       $openprint::log->debug("Proofs pricing: $Results{total} * $sig_count");
       $openprint::log->error("Proofs alert $Results{alert}") if $Results{alert};
