@@ -216,8 +216,7 @@ sub action {
 
   my $needed   = get_specifications($log, $dbh, $pid, $book, $spread_type);
   my $current  = count_completed_spreads($log, $dbh, $spread_type, $pid, $sid);
-  my $provided = $specs->{spreads_in_group} 
-  * ($specs->{txtSignatureQuantity} || 1);
+  my $provided = $specs->{spreads_in_group} * ($specs->{txtSignatureQuantity} || 1);
 
   $current += $provided;
 
@@ -228,8 +227,7 @@ sub action {
     # We have too many signatures. Remove everyone but us.
     delete_service($log, $dbh, $pid, $_) for @signatures;
 
-    insert_signature($log, $dbh, $pid, $book, $sid, $specs)
-    if $provided < $needed;
+    #insert_signature($log, $dbh, $pid, $book, $sid, $specs) if $provided < $needed;
 
     $log->warn("Too many spreads in p:$book while processing s:$sid\n");
   } elsif ($current < $needed) {
@@ -253,12 +251,11 @@ sub insert_signature {
     @signature{@fields} = @$specs{@fields};
 
     # Insert a new signatue
-    my $sid = insert_service($log, $dbh, $pid, 'Printing', {
-        user_requested => 1,
-    }, \%signature);
+    my $sid = insert_service($log, $dbh, $pid, 'Printing', { user_requested => 1 }, \%signature);
 
     # Update the signature number TODO Get rid of this legacy nonsense.
     insert_service_spec($log, $dbh, $pid, $sid, SignatureIndex => $sid);
+
 
     # Only copy the user specified fields and no overrides.
     $dbh->do(qq{
@@ -273,6 +270,12 @@ sub insert_signature {
                                      'spreads_in_group', 'spreads', 'forms' )
                 AND strname !~ '^txtSignatureQ')
     }, undef, $template);
+
+    my $ptd = $dbh->selectall_hashref(q{ SELECT strfieldname as name, strdefaultvalue as value FROM tbl_projecttype_defaults WHERE lngprojecttypeindex IS NULL }, 'name');
+
+    my %defaults;
+    map { $defaults{$_} = $ptd->{$_}{value} } keys %$ptd;
+    insert_service_specs($log, $dbh, $pid, $sid, %defaults);
 
     # If there's a numbered description, update to next.
     if ($specs->{txtServiceDescription} =~ /(\d+)$/) {
