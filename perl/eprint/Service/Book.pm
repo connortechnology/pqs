@@ -384,7 +384,7 @@ sub previous_specs {
       SELECT strname as name, strvalue as value
       FROM tbl_service_specifications 
       WHERE (ui_spec = true OR strname = 'version_quantities' OR strname LIKE 'override%') 
-      AND strname NOT IN ( 'substrate', 'spreads_in_group', 'hdnRunStyleCheck' )
+      AND strname NOT IN ( 'spreads_in_group', 'hdnRunStyleCheck' )
       AND lngserviceindex = ?
       }, { Columns => [1,2] }, $sig_id) };
 
