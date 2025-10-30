@@ -436,7 +436,7 @@ sub needed {
     return $need if $need == NEEDED;
 
     # Does the service think it's needed?
-    my $func      = $service->{can}->('necessary') // 0;
+    my $func      = $$service{can} ? $service->{can}->('necessary') // 0 : 0;
     my $necessary = $func ? $func->($log, $dbh, $pid, $service->{name}) : 0;
 
     $log->debug("Need from necessary $necessary func: $func type:$$service{module} name:$$service{name}") if DEBUG;
