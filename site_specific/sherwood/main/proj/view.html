@@ -10,8 +10,8 @@
 	<!--#include virtual="/includes/web_page_meta.html" -->
 	<!--#include virtual="/includes/h1-main-css.html" -->
 
-	<link href="/styles/project.css" rel="stylesheet" type="text/css" />
-	<link href="/styles/pricing.css" rel="stylesheet" type="text/css" media="screen" />
+  <link href="<?hash_link(/styles/project.css)?>" rel="stylesheet" type="text/css" />
+  <link href="<?hash_link(/styles/pricing.css)?>" rel="stylesheet" type="text/css" media="screen" />
 
 	<style media="screen" type="text/css">
 		#add-line-item {
@@ -24,8 +24,8 @@
 
 	<!--#include virtual="/includes/h2-js.html" -->
 
-	<script type="text/javascript" src="/javascripts/other.js"></script>
-	<script  type="text/javascript">
+  <script src="<?hash_link(/javascripts/other.js)?>"></script>
+	<script>
 		function delete_confirm(form) {
 			return confirm("Are you sure you want to delete this project?");
 		}
@@ -38,7 +38,6 @@
 			window.open('/main/proj/proj_view_printer_friendly.html?ProjectIndex=<?pid?>&Category=-1','printerfriendlyprojectview','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 		}
 		function mail_to(user) {
-
 			var email = user.options[user.selectedIndex].value;
 			window.open('mailto:'+email+'?subject=Project <?pid?> ');
 		}
@@ -210,7 +209,6 @@
 		</div>
 		
 		<br class="clear" />
-		
 <br />
 
 		<!--#include virtual="/includes/main/proj/project_comments.html" -->
