@@ -223,20 +223,20 @@ sub action {
   # Preserve the information from the first spread if we're editing. TODO
   # Check that we're not saving for the first time.
   my $prev = previous_specs($log, $dbh, $pid);
-  #print STDERR 'prev'.Data::Dumper::Dumper($prev);
 
   # TODO We should be able to only remove all printing services and this will "just work".
   for my $service (qw(Printing Folding)) {
     delete_service($log, $dbh, $pid, $_) for check_for_service($log, $dbh, $pid, $service);
   }
 
-  # Get the stanadard project type defaults for insertion into
+  # Get the standard project type defaults for insertion into
   # all of the signature services ( Interior/Cover/GF ).
   # This will get us our bleed & other defaults.
-  my $ptd = $dbh->selectall_hashref(q{ SELECT strfieldname as name, strdefaultvalue as value FROM tbl_projecttype_defaults WHERE lngprojecttypeindex IS Null }, 'name');
+  my $ptd = $dbh->selectall_hashref(q{ SELECT strfieldname as name, strdefaultvalue as value FROM tbl_projecttype_defaults WHERE lngprojecttypeindex IS NULL }, 'name');
 
   my %defaults;
   map { $defaults{$_} = $ptd->{$_}{value} } keys %$ptd;
+  #print STDERR 'ptd'.Data::Dumper::Dumper(\%defaults);
 
   # Add a cover spread if needed.
   if ($specs->{ COVER() }) {
@@ -343,10 +343,10 @@ sub action {
   #print STDERR "Interior index $interior\n";
   insert_service_spec( $log, $dbh, $pid, $interior, SignatureIndex => $interior);
   insert_service_specs($log, $dbh, $pid, $interior, %defaults);
-    $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
-    my ( $form ) = sql::execute( $log, $dbh, $_, $pid );
-    $form  = $form ? $form+1 : 1;
-    openprint::service::insert_service_spec( $log, $dbh, $pid, $interior, 'Form', $form );
+  $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
+  my ( $form ) = sql::execute( $log, $dbh, $_, $pid );
+  $form  = $form ? $form+1 : 1;
+  openprint::service::insert_service_spec( $log, $dbh, $pid, $interior, 'Form', $form );
 
   map { 
     if ( $_ =~ /mv/ || $_ =~ /version/ || /version_quantities/ ) {
@@ -357,9 +357,7 @@ sub action {
   # Insert previous specs if we're redoing this book.
   if (exists $prev->{INTERIOR()}) {
     while (my ($name, $value) = each %{ $prev->{INTERIOR()} }) {
-      insert_service_spec(
-        $log, $dbh, $pid, $interior, $name => $value, undef, 1
-      );
+      insert_service_spec($log, $dbh, $pid, $interior, $name => $value, undef, 1);
     }
   }
 
@@ -367,8 +365,8 @@ sub action {
 
   # NOTE: The bindery types will take care of themselves.
 
-    my $project = new openprint::Project($pid);
-    $project->services(undef);
+  my $project = new openprint::Project($pid);
+  $project->services(undef);
   return 1;
 }
 
@@ -377,28 +375,32 @@ sub action {
 sub previous_specs {
   my ($log, $dbh, $pid) = @_;
 
-  my $sigs = signatures_of_type($log, $dbh, $pid);
+  my $sigs = eprint::Service::Printing::Price::signatures_of_type($log, $dbh, $pid);
 
   for my $type (keys %$sigs) {
-    my %specs = @{ $dbh->selectcol_arrayref(q{
-    SELECT strname as name, strvalue as value
-    FROM tbl_service_specifications 
-    WHERE (ui_spec = true OR strname = 'version_quantities' OR strname LIKE 'override%') 
-    AND strname NOT IN ( 'substrate', 'spreads_in_group', 'hdnRunStyleCheck' )
-    AND lngserviceindex = ?
-    }, { Columns => [1,2] }, $sigs->{$type}[0]) };
+    my $sig_id = shift @{$sigs->{$type}};
+    #foreach my $sig_id ( @{$sigs->{$type}} ) {
+      my %specs = @{ $dbh->selectcol_arrayref(q{
+      SELECT strname as name, strvalue as value
+      FROM tbl_service_specifications 
+      WHERE (ui_spec = true OR strname = 'version_quantities' OR strname LIKE 'override%') 
+      AND strname NOT IN ( 'substrate', 'spreads_in_group', 'hdnRunStyleCheck' )
+      AND lngserviceindex = ?
+      }, { Columns => [1,2] }, $sig_id) };
 
-    # If there are form size overrides make sure we step through the
-    # project (but don't re-apply the overrides).
-    if ($specs{spreads} || $specs{forms}) {
-      $specs{needs_view} = 1;
+      # If there are form size overrides make sure we step through the
+      # project (but don't re-apply the overrides).
+      if ($specs{spreads} || $specs{forms}) {
+        $specs{needs_view} = 1;
 
-      #delete @specs{qw(spreads forms)};
-    }
+        #delete @specs{qw(spreads forms)};
+      }
 
-    #$specs{override_press} = 1 if $specs{press};
+      #$specs{override_press} = 1 if $specs{press};
 
-    $sigs->{$type} = \%specs;
+      $sigs->{$type} = \%specs;
+      #print STDERR 'prev'.$type.' '.$sig_id.' '.Data::Dumper::Dumper(\%specs);
+      #}
   }
 
   return $sigs;
