@@ -893,8 +893,9 @@ sub summary {
 		my $summary = $self->Type()->description();
 
 		my $services = $self->services();
-		if ( $$services{''} and @{$$services{''}} ) {
-			my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
+    my $sid = $self->get_print_container();
+		if ( $sid ) {
+			my $printing_specs = openprint::service::get_specs_ref( $self, $sid );
 			if ( $$printing_specs{Versions} ) {
 				$summary .= ' '.$$printing_specs{Versions}.' versions ';
 			} # end if
@@ -907,6 +908,8 @@ sub summary {
 			} # end if
 
 			if ( $$printing_specs{txtTotalPageQuantity} ) {
+        $$printing_specs{txtFinalWidth} //= $$printing_specs{final_width};
+        $$printing_specs{txtFinalHeight} //= $$printing_specs{final_height};
 				$summary .= sprintf(' %s&quot;x%s&quot; ', 1*$$printing_specs{txtFinalWidth},1*$$printing_specs{txtFinalHeight});
 				if ( $$printing_specs{rdbCover} eq 'Different' ) {
 					my $cover_pages = 0;
@@ -926,12 +929,14 @@ sub summary {
 
 				$summary .= '<br/>';
 			} # end if
+
 			my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{id}, 'Group' );
+      push @groups, '' if ! @groups;
 
 # I believe the point of this is to stick the Printed Web or Sheetfed into the summary.	Nastily executed.
 # The logic is, each group has to be either all sheetfed, or all web (or digital, etc).	
 			foreach my $group_id ( sort @groups ) {
-				my @sigs = $self->signatures({Group=>$group_id});
+				my @sigs = $self->signatures({$group_id ? (Group=>$group_id) : ()});
 				if ( ! @sigs ) {
 					$openprint::log->error( "No sigs for Group $group_id, but there pretty much to be since we have this group index.  Signatures must be out of date");
 					$self->services(undef);
@@ -956,6 +961,8 @@ sub summary {
 			foreach my $ServiceType ( openprint::ServiceType->find(category_id=>$Category->id()) ) {
 				next if ! $$services{$ServiceType->name()};
 				next if ! $ServiceType->summary_visible();
+				next if $ServiceType->view_visible() eq 'N';
+
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
 					my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
