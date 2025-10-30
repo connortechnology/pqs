@@ -495,8 +495,11 @@ sub insert_service_specs {
 sub set_status {
   my ($log, $dbh, $pid, $status, @sids) = @_;
 
-  # We'll contrain valid service statuses here until the DB does.
-  die "Invalid status: $status." unless grep { $status eq $_ } STATUSES;
+  if (! grep { $status eq $_ } STATUSES) {
+    # We'll contrain valid service statuses here until the DB does.
+    $openprint::log->error("Invalid status: $status.");
+    return;
+  }
 
   # As we're directly interpolating, make sure we get what we think we are.
   $pid =~ tr/0-9//cd;
@@ -912,30 +915,34 @@ sub get_service_full_price {
 # Given the service type hash ref, try to load the module and add some helper
 # attributes and methods.
 sub load_service_type {
-    my ($service) = @_;
+  my ($service) = @_;
 
-    $service->{ref} = $service->{name}; # Set an alias.
+  $service->{ref} = $service->{name}; # Set an alias.
 
-    my $module = $service->{module};
+  my $module = $service->{module};
+  if ($module) {
 
     # Load the given module.
     eval "require $module;";
-    die "Failed requiring $module for $service->{name}\n\n\t$@" if $@;
+    $openprint::log->error( "Failed requiring $module for $service->{name}\n\n\t$@") if $@;
 
     # Create a $foo->can() type function that works on our non-OO modules.
     $service->{can} = sub {
-        my $function_name = shift;
+      my $function_name = shift;
 
-        # If the module is an OO class see if can perform the named method,
-        # otherwise get the code ref out of the module's symbol table.
-        my $obj  = $module->can('new') ? $module->new : undef;
-        my $func = $obj ? $module->can($function_name)
-                        : *{qualify_to_ref($function_name, $module)}{CODE};
+      # If the module is an OO class see if can perform the named method,
+      # otherwise get the code ref out of the module's symbol table.
+      my $obj  = $module->can('new') ? $module->new : undef;
+      my $func = $obj ? $module->can($function_name)
+      : *{qualify_to_ref($function_name, $module)}{CODE};
 
-        return $obj && $func ? sub { $func->($obj, @_) } : $func;
+      return $obj && $func ? sub { $func->($obj, @_) } : $func;
     };
+  } else {
+    $openprint::log->error("NO module in service".Data::Dumper::Dumper($service));
+  }
 
-    return $service;
+  return $service;
 }
 
 sub get_specs {
