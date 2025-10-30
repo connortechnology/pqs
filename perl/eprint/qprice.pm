@@ -771,10 +771,7 @@ print STDERR "HAVE STUFF" , Dumper($x);
 #		} qw(name finish colour weight);
 
 	if ( $r->param('CoverType') =~ /Self/ && $r->param('BackCoverType') =~ /Self/ ) {
-print STDERR "HAVE SELF COVER HERE \n\n";
-		$up->execute('SelfCover', 'rdbCover', $pid);
-	} else {
-print STDERR "NOOO HAVE SELF COVER HERE \n\n";
+		$up->execute('Self', 'rdbCover', $pid);
 	}
 
 	foreach my $p ( $r->param() ) {
@@ -804,7 +801,7 @@ print STDERR "QUESTION: $question $spec - Answer: $answer $value \n";
 				if ( $r->param('Bindery') eq 'SaddleStitching' ) {
 print STDERR "UPDATING SPREAD WIDTH: $w * 2 \n";
 					$up->execute($w * 2, 'flat_width', $pid);
-					$up->execute('DifferentCover', 'rdbCover', $pid);
+					$up->execute('Different', 'rdbCover', $pid);
 
 				}
 			}

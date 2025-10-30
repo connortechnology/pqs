@@ -146,7 +146,7 @@ sub munge {
   }
 
   # Make sure the cover spec is set, and correctly when perfect bound. 
-  $specs->{rdbCover} = $specs->{template} eq 'PerfectBinding' ? 'DifferentCover' : $specs->{rdbCover} ? $specs->{rdbCover} : 'SelfCover';
+  $specs->{rdbCover} = $specs->{template} eq 'PerfectBinding' ? 'Different' : $specs->{rdbCover} ? $specs->{rdbCover} : 'Self';
 
   return 1;  
 }
@@ -160,7 +160,7 @@ sub calc {
 
   # Do we want a cover with separate specifications? This is not an option
   # for perfect bound books, all have a separate cover.
-  my $cover = ($$specs{rdbCover} and ($specs->{rdbCover} eq 'DifferentCover')) || 0;
+  my $cover = ($$specs{rdbCover} and ($specs->{rdbCover} eq 'Different')) || 0;
 
   $pages -= 4 if $cover; # Remove the four page cover spread.
 

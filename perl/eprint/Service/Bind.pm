@@ -505,9 +505,7 @@ sub display {
 
   my $book = get_print_container($log, $dbh, $pid);
 
-  $page{has_cover} 
-  = get_specifications($log, $dbh, $pid, $book, 'rdbCover')
-  eq 'DifferentCover';
+  $page{has_cover} = get_specifications($log, $dbh, $pid, $book, 'rdbCover') eq 'Different';
 
   my $sql = qq{ SELECT strId, strName FROM tbl_Materials WHERE lngtype = 
   (SELECT id FROM material_type WHERE name = 'Binders') };
