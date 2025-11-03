@@ -4,6 +4,7 @@
 	<p>If the ink on your project <span class="tip" title="Layout, type or pictures that extend beyond the trim marks on a page. Illustrations that spread to the edge of the paper without margins are referred to as 'bled off'.">bleed</span> off the edge, please specify the amount and locations</p>
 
   <div class="bleeds">
+    <p>
 	<label for="bleed_size">Bleed Size:</label>
 	<select id="bleed_size" name="bleed_size" size="1" onchange="check_bleeds.apply(this);" >
         
@@ -38,27 +39,29 @@
         <label for="bleed_sides_bottom"><input type="checkbox" name="bleed_sides" id="bleed_sides_bottom" value="2" />Bottom</label><br />
       </div>
     </div>
+    </p>
   </div>
-	<fieldset class="hidden-details dnd-fieldset">
-		<legend>Additional Details</legend>
 
 		<!-- Colour Bars -->
 		<!--#include virtual="/includes/main/proj/colour_bars.html"-->
 
 		<? if ( $$variable{'PressType'} ne 'screen') ?>
+    <div class="grain_direction">
 			<!-- Grain Direction -->
 			<p>Certain projects can benefit from having a specific <span class="tip" title="The alignment of the fibres during the manufacturing process.">grain</span> directions. Business cards are best printed with the grain running along their width for a stiffer card. Perfect bound books are best with the grain parallel to the spine (height) to prevent paper distortion due to glueing. Please choose a specific direction or choose &#8221;No Preference&#8222; if the grain direction isn&#8217;t a factor.</p>
-			<span class="label">Grain Direction:</span>
+			<label>Grain Direction:</label>
 			<div>
 				<label class="radio"><input type="radio" name="grain_direction" value="" />No Preference</label><br />
 				<label class="radio"><input type="radio" name="grain_direction" value="0" />Width</label><br />
 				<label class="radio"><input type="radio" name="grain_direction" value="1" />Height</label><br />
 			</div>
 			<br />
+    </div>
 	
+    <div class="ignore_margins">
 			<!-- Margins -->
 			<label for="ignore_margins">Ignore Grip, Tail Whip and Gutters:</label>
 			<label for="ignore_margins" class="checkbox"><input name="ignore_margins" id="ignore_margins" type="checkbox" value="1" onclick="ignore_margins_mutex(this.form);" />Ignore Grip, Tail Whip and Gutters</label><br />
 		<? endif ( $$variable{'PressType'} ne 'screen') ?>
-	</fieldset>
+    </div>
 </fieldset>

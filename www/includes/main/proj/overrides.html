@@ -1,5 +1,5 @@
 <?if is_staff?>
-<fieldset class="hidden-details">
+<fieldset>
 	<legend>Price Overrides</legend>
 
   <label for="chargefor">Charge For:</label>
@@ -12,7 +12,7 @@
 </fieldset>
 <?endif is_staff?>
 
-<fieldset class="hidden-details">
+<fieldset>
 	<legend>Production Overrides</legend>
 
 	<p style="margin-bottom: 3ex;">The most cost effective options have been automatically selected. If you would like to override the production select an option those presented. The overridden option may not result in a valid production method.</p>
@@ -86,7 +86,7 @@
 				<br />
 		    <span>	
 				<label for="forms">Forms: </label>
-				<input id="forms" name="forms" type="number" min="1" step="1" size="9" class="numeric" value="" /> = <span id="used_spreads"><?used_spreads?></span>
+				<input id="forms" name="forms" type="number" min="0" step="1" size="9" class="numeric" value="" /> = <span id="used_spreads"><?used_spreads?></span>
         </span>
         <label for="override_forms" class="checkbox override">
         <input type="checkbox" id="override_forms" name="override_forms" on_click_this="overrides_chkbox" value="1" />
