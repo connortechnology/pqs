@@ -5,6 +5,7 @@ use warnings;
 use Date::Calc        qw(Delta_Days Today Add_Delta_Days Month_to_Text);
 use JSON::API;
 use JSON;
+	use Data::Dumper;
 
 use eprint::Config;
 use eprint::project  qw(get_weight get_print_container get_quantities);
@@ -30,20 +31,15 @@ use constant MINIMUM_SHIP_WEIGHT   => eprint::Config->get(Shipping => 'min_ship_
 use constant POUNDS_PER_PROOF_INCH => eprint::Config->get(Shipping => 'pounds_per_proof_inch'); # Based on 100lb text 
 
 sub necessary {
-    my ($log, $dbh, $pid, $service_type) = @_;
+  my ($log, $dbh, $pid, $service_type) = @_;
 
 #	my $project_type = eprint::project::get_type($log, $dbh, $pid);
 #	return 0 if $project_type eq 'InventoryCheckOut';
-	
-	my $u = $dbh->selectrow_array(q{
-		SELECT lnguserindex FROM tbl_projects WHERE lngprojectindex = ?
-	}, undef, $pid);
 
-#	return 0 if $u ==2;
-	
-	#Make Shipping Not required for now.
+  #Make Shipping Not required for now.
+  ##ICON: I think because pickup is a shipping type
 #    return 0;
-    return 1;
+  return 1;
 }
 
 sub add_ship_address {
@@ -281,10 +277,10 @@ sub import_export {
 
 			@data{@fields} = split q{,}, $_;
 			foreach my $key (@keys) {
-				$ins->execute($pid, $sid, "$key-$id", trim($data{$key}));
+				$ins->execute($pid, $sid, "$key-$id", misc::trim($data{$key}));
 				delete $data{$key};
 			}
-print STDERR "HAVE INSERT DATA" ,Dumper(\%data);
+#print STDERR "HAVE INSERT DATA" ,Dumper(\%data);
 
 			sql::insert($log, $dbh, 'tbl_addresses', %data);
 			sql::insert($log, $dbh, 'ship_address', ( shipid => $id, sid => $sid ) );
@@ -298,30 +294,20 @@ print STDERR "HAVE INSERT DATA" ,Dumper(\%data);
 	$var->{sid} = $sid;
 
 }
-sub trim {
-	my $string = shift;
-	$string =~ s/^\s+//;
-	$string =~ s/\s+$//;
-	return $string;
-}
 
 sub insert_address {
-	my ($log, $dbh,$sid, $specs) = @_;
+	my ($log, $dbh, $sid, $specs) = @_;
 
 	my $add = new eprint::address( $log, $dbh );
 	my $index = $add->{index};
-
-
 
 	$add->form_set($specs);
 	my $price = $specs->{txtShipmentPrice};
 	my $qty = $specs->{add_qty1};
 
-	$dbh->do(qq{
-		INSERT INTO ship_address values ( $sid, $index, 0, $price, $qty )
-	});
+	$dbh->do(qq{ INSERT INTO ship_address values ( $sid, $index, 0, $price, $qty ) });
 
-print STDERR "INSERT NEW ADDRESS SID: $sid I: - $index PRICE: $price QTY: $qty \n";
+#print STDERR "INSERT NEW ADDRESS SID: $sid I: - $index PRICE: $price QTY: $qty \n";
 
 	update_shipnum($sid);
 
@@ -340,9 +326,9 @@ print STDERR "INSERT NEW ADDRESS SID: $sid I: - $index PRICE: $price QTY: $qty \
 		SELECT lngprojectindex FROM tbl_project_contents WHERE lngserviceindex = ?
 	}, undef, $sid);
 
-	my $sth = $dbh->prepare(q{
-		INSERT INTO tbl_service_specifications VALUES ( ?, ? ,?,?, true)
-	});
+#my $sth = $dbh->prepare(q{
+#INSERT INTO tbl_service_specifications VALUES ( ?, ? ,?,?, true)
+#});
 
 #	$sth->execute($pid, $sid, "boxes-$index", 1);$specs->{cost_center};
 
@@ -351,7 +337,7 @@ print STDERR "INSERT NEW ADDRESS SID: $sid I: - $index PRICE: $price QTY: $qty \
 	#die();
 	#
 	#
-	my $carton_sid 	= eprint::project::check_for_service( $log, $dbh, $pid, 'PlainCartons');
+	my $carton_sid = eprint::project::check_for_service( $log, $dbh, $pid, 'PlainCartons');
 
 	my %cartons = $carton_sid 
 				? eprint::service::get_specifications_pairs($log, $dbh, $pid, $carton_sid)
@@ -416,11 +402,8 @@ sub fill_testing_specs {
 	return;
 }
 
-
-
 sub preaction {
-    my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
-	use Data::Dumper;
+  my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
 
 	my $r = session::r;
 	my $cid = $dbh->selectrow_array(q{SELECT lngcustomerid FROM tbl_projects WHERE lngprojectindex = ?}, undef, $pid);
@@ -485,19 +468,21 @@ sub preaction {
 sub from_address {
 	my $log = session::log;
 	my $dbh = session::dbh;
+  
+  my $phone = $openprint::Owner->phone();
+  $phone =~ s/\D//g;
 	return {      
-      "companyName"=> 	configuration::get_value($log, $dbh, 'CompanyName'),
-      "address1"=>   	configuration::get_value($log, $dbh, 'Address1'),
-      "address2"=> 		configuration::get_value($log, $dbh, 'Address2'),
-      "postalCode"=>	configuration::get_value($log, $dbh, 'PostalCode'),
-      "countryCode"=> 	configuration::get_value($log, $dbh, 'CountryCode'),
-      "phone"=> 		configuration::get_value($log, $dbh, 'Phone'),
-      "attention"=>		configuration::get_value($log, $dbh, 'Attention'),
-      "emailAddress"=> 	configuration::get_value($log, $dbh, 'Email'),
-      "city"=> 			configuration::get_value($log, $dbh, 'City'),
-      "provinceCode"=> 	configuration::get_value($log, $dbh, 'ProvinceCode'),
+      companyName => 	$openprint::Owner->name(),
+      address1    => 	$openprint::Owner->address1(),
+      address2    => 	$openprint::Owner->address2(),
+      postalCode  =>	$openprint::Owner->postalcode(),
+      countryCode => 	$openprint::Owner->country(),
+      phone       => 	$phone,
+      attention   =>	configuration::get_value($log, $dbh, 'Attention'),
+      emailAddress=> 	configuration::get_value($log, $dbh, 'Email'),
+      city        =>	$openprint::Owner->city(),
+      provinceCode=> 	$openprint::Owner->state(),
    };
-
 }
 
 sub packages {
@@ -645,10 +630,9 @@ sub ic_login {
 sub ic_api {
 	my ($specs )  = @_;
 
-	print STDERR "\n***********************CALL SHIPPING API NOW ************************\n\n";
+  #print STDERR "\n***********************CALL SHIPPING API NOW ************************\n\n";
 
 	my $api = JSON::API->new("https://soluship.com/api/v1/getRatesMobile/");
-
 	my $token = ic_login();
 
 	#New sanity check to make sure we get logged in first.
@@ -686,8 +670,6 @@ sub ic_api {
       "mobileRatesType"=>"mobileAPI"
    };
 
-
-
 	my $from = from_address();
 	my $to 	 = to_address($specs);
 	my $packages = packages($specs);
@@ -699,6 +681,7 @@ sub ic_api {
 			packages 	=> $packages
 	};
 
+  $openprint::log->debug("Posting ".Data::Dumper::Dumper($obj));
 	if ($api->post("", $obj,$h)) {
 		#Have Repsonse from API
 		print STDERR "HAVE API FROM REQUEST:", Dumper($h); 
@@ -799,22 +782,17 @@ sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $service_type, $specs) = @_;
 print STDERR "CALC MY SHIPPING SERVICE $specs->{shipping_required}\n" if DEBUG;
 
-
 	my $status;
 
 	#$status = 'calculated' if $specs->{deliverymethod} eq 'Customer Pick-up';
 	#
 	if ( !$specs->{shipping_required} ) {
-			print STDERR "SERVICE: Shipping: Calc: No Shipping Required. Skipping all calcuations \n";
 			$$specs{"txtPrice1"} = 0;
 			return 'calculated';
 	}
 
 	my $totals = [0.0.0,0];
-	my @qty = ( undef,
-				$$specs{txtQuantity1},
-				$$specs{txtQuantity2},
-				$$specs{txtQuantity3});
+	my @qty = ( undef, $$specs{txtQuantity1}, $$specs{txtQuantity2}, $$specs{txtQuantity3});
 
 	my $rates;
 
@@ -823,18 +801,14 @@ print STDERR "CALC MY SHIPPING SERVICE $specs->{shipping_required}\n" if DEBUG;
 	}
 	
 	#@{$rates} = sort { $a->{Total} <=> $a->{Total} } @{$rates};
-	print STDERR "HAE RATES: " , Dumper($rates);
+  #print STDERR "HAE RATES: " , Dumper($rates);
 	my $results;
 	my $rate_over;
 
-
-
-
-	if ( defined $rates) {
-
+	if (defined $rates) {
 		foreach my $rate ( @{$rates} ) {
 
-			  print STDERR "RATE: " , $rate->{carrierName} , ": ", "$rate->{serviceName} = $rate->{Total} ", "\n";
+      #print STDERR "RATE: " , $rate->{carrierName} , ": ", "$rate->{serviceName} = $rate->{Total} ", "\n";
 			  $results .= "RATE:  $rate->{carrierName} : $rate->{serviceName} = $rate->{Total} \n";
 
 
@@ -858,19 +832,10 @@ print STDERR "CALC MY SHIPPING SERVICE $specs->{shipping_required}\n" if DEBUG;
 	#uncomment this line to display in results box
 	$results .= "Packages:   $specs->{debug} ";
 
-	my $ship_total = $dbh->selectrow_array(q{SELECT sum(price) from ship_address WHERE sid = ? }, undef, $sid);
-
-
+	my $ship_total = $dbh->selectrow_array(q{SELECT sum(price) from ship_address WHERE sid = ? }, undef, $sid) // 0;
 	my $rate = $rate_over || shift @{$rates};
-
-
-	my $ship_price = process_rate($rate);
-
-
-
+	my $ship_price = process_rate($rate) // 0;
 	my $total = $ship_total + $ship_price;
-		
-
 
 	map { $$specs{"txtPrice$_"}    = $total } (1..3);
 
@@ -1583,8 +1548,6 @@ sub display {
 		SELECT * FROM user_cost_center WHERE user_id = ? ORDER BY cost_center;
 	},{Slice => {}}, $variable->{user_id});
 
-
-
 	map {$specs->{$_} = $variable->{$_}; } keys %{$variable};
 
 	my $user_id;
@@ -1684,8 +1647,8 @@ sub print_labels {
 
 	# Right now we only have one address per shipping service.
 	@{$variable->{SHIP_ADR}} = { map { $_->[0], $_->[1]} @{$address} };
-
 }
+
 sub get_ship_info {
 	my ($r, $log, $dbh, $pid, $qid) = @_;
 
@@ -1707,8 +1670,7 @@ sub get_ship_info {
 		map {
 			my $shipid = shift @{$_};
 			my $sid    = shift @{$_};
-			my %shipping 	= eprint::service::get_specifications_pairs(
-													$log, $dbh, $pid, $sid);
+			my %shipping 	= eprint::service::get_specifications_pairs($log, $dbh, $pid, $sid);
 
 			my $ship_qty = $shipping{"add_qty${qid}-$shipid"};
 			my $add = eprint::address->new($log, $dbh, $shipid);
@@ -1723,14 +1685,11 @@ sub get_ship_info {
 				#weight  	=> sprintf("%.1f",$ship_qty * $cartons{hdnProjectWeight}),
 				address 	=> $address 
 			};
-
-
 	
 		} @{$ships};
 
 		return @data;
-
-
 }
 
 1;
+__END__
