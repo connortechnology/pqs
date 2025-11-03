@@ -492,7 +492,7 @@ sub get_project_price {
         next;
       }
       if ($project->{override}{spreads} && ($imp->{spreads} != $project->{override}{spreads})) {
-        $openprint::log->debug("spreads $$imp{spreads} != override ".$project->{override}{spreads}) if $openprint::log;
+        $openprint::log->debug("spreads $$imp{spreads} != override ".$project->{override}{spreads}) if $openprint::log and DEBUG;
         next;
         #} else {
         #$openprint::log->debug("$$imp{spreads} == ".$project->{override}{spreads}) if $openprint::log;
