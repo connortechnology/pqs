@@ -81,10 +81,6 @@ use constant SHEETS_PER_UNIT_PANTONE  => eprint::Config->get(Printing => 'sheets
 use constant SHEETS_PER_UNIT_METALLIC => eprint::Config->get(Printing => 'sheets_per_unit_metallic');
 
 
-use constant WEB_COLOUR_BAR_SIZE =>
-eprint::Config->get(Imposition => 'web_colour_bar_size');
-use constant STD_COLOUR_BAR_SIZE =>
-eprint::Config->get(Imposition => 'std_colour_bar_size');
 
 
 # Map the individual bindery types to the class of bindery they belong to.
@@ -216,6 +212,8 @@ sub get_project_price {
   # PROJECT
   # Create a much more useful project info hash. TODO Hopefully to become a
   # heirarchy of object soon. (Service type info broken from project etc.)
+  my $WEB_COLOUR_BAR_SIZE = $openprint::config{web_colour_bar_size} // eprint::Config->get(Imposition => 'web_colour_bar_size');
+  my $STD_COLOUR_BAR_SIZE = $openprint::config{std_colour_bar_size} // eprint::Config->get(Imposition => 'std_colour_bar_size');
   my $project = {
     id           => $pid,
     type         => scalar($type),
@@ -232,10 +230,7 @@ sub get_project_price {
 
     template     => $spread->{template},
 
-    colour_bar   => ($spread->{colour_bar} ? $press_type eq 'web'
-      ? WEB_COLOUR_BAR_SIZE
-      : STD_COLOUR_BAR_SIZE
-      : 0),
+    colour_bar   => ($spread->{colour_bar} ? $press_type eq 'web' ? $WEB_COLOUR_BAR_SIZE : $STD_COLOUR_BAR_SIZE : 0),
 
     versions     => $versions,
     colours      => \@colours,
@@ -898,6 +893,7 @@ sub get_project_price {
   }
 
   insert_service_spec($log, $dbh, $pid, $sid, "imp", $best_price->{imp});
+  $$best_price{colour_bar_size} = $$project{colour_bar};
 
   return post_process(
     $log, $dbh, $pid, $sid,
