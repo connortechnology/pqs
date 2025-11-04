@@ -1404,16 +1404,12 @@ sub price_breakdown {
   my %specs = eprint::service::get_specifications_pairs($log, $dbh, $pid, $sid);
   @$variable{ keys %specs } = values %specs;
 
-  # Retrieve this services imposition information and the comparison costs
-  # that went with it.
-  my ($imp, $runs) =
-  map { sthaw(decode_base64($_)) } @$variable{qw(imp hdnRunStyleCheck)};
+  # Retrieve this services imposition information and the comparison costs that went with it.
+  my ($imp, $runs) = map { sthaw(decode_base64($_)) } @$variable{qw(imp hdnRunStyleCheck)};
 
   # Get the Press Type
   $variable->{PressType} = get_press_type($log, $dbh, $pid);
-
-  $variable->{substrateType} = 'roll' if $variable->{PressType} eq 'web'
-    or $variable->{PressType} eq 'inkjetprinter';
+  $variable->{substrateType} = 'roll' if $variable->{PressType} eq 'web' or $variable->{PressType} eq 'inkjetprinter';
 
   # PRICE BREAKDOWN TABLES
   #
@@ -1429,17 +1425,9 @@ sub price_breakdown {
   + $variable->{hdnWorkTurnDryCharge};
 
   for my $i (1..3) {
-    $variable->{"hdnTotalSetupCost$i"}
-    = $variable->{hdnTotalSetupCost}
-    + $variable->{"hdnWorkTurnDryCharge$i"};
-
-    $variable->{"hdnPressSheetsOvers$i"}
-    = $variable->{"hdnGrossSheetCount$i"}
-    - $variable->{"hdnNetSheetCount$i"};
-
-    $variable->{"hdnPaperDiscount$i"}
-    = $variable->{"hdnPaperTotal$i"}
-    - $variable->{"hdnPaperCost$i"};
+    $variable->{"hdnTotalSetupCost$i"} = $variable->{hdnTotalSetupCost} + $variable->{"hdnWorkTurnDryCharge$i"};
+    $variable->{"hdnPressSheetsOvers$i"} = $variable->{"hdnGrossSheetCount$i"} - $variable->{"hdnNetSheetCount$i"};
+    $variable->{"hdnPaperDiscount$i"} = $variable->{"hdnPaperTotal$i"} - $variable->{"hdnPaperCost$i"};
 
     $variable->{"hdnStandardRunningPrice$i"}
     = $variable->{"hdnTotalRunPrice$i"}
@@ -1450,9 +1438,8 @@ sub price_breakdown {
     - $variable->{"hdnVarnishRunningPrice$i"};
   }
 
-  @$variable{qw(hdnSheetSizeWidth hdnSheetSizeHeight)} =
-  @$variable{qw(hdnSheetSizeHeight hdnSheetSizeWidth)};
-
+  #WTH?
+  @$variable{qw(hdnSheetSizeWidth hdnSheetSizeHeight)} = @$variable{qw(hdnSheetSizeHeight hdnSheetSizeWidth)};
 
   # IMPOSITION IMAGE DISPLAY (image generation handled separately)
   #
@@ -1490,13 +1477,23 @@ sub price_breakdown {
   # COMPARISON COST TABLE
   #
   # Runs are stored as a flat array in the following field order.
-  my @fields = qw(press   run_style  plates  card      layouts  wastage
+  my @fields = qw(press   run_style  plates  card  layouts  wastage
   width   height     gross   printing  stock    comparison
   cuts    width_original     height_original    chosen
   spreadcount priceperspread
   );
 
-  return unless $runs;
+  return unless $runs and @$runs;
+    $openprint::log->debug("Size of row" . @{$runs->[0]});
+  if (@{$runs->[0]} == 19) {
+    @fields = qw(press   run_style  plates  card  grain layouts  wastage
+    width   height     gross   printing  stock    comparison
+    cuts    width_original     height_original    chosen
+    spreadcount priceperspread
+    );
+  } else {
+    $openprint::log->debug("Size of row" . @{$runs->[0]});
+  }
 
   # We need to replace equipment index with strid for display.
   my $press_list = $dbh->selectall_hashref(q{ SELECT lngindex, strID from tbl_equipment }, 'lngindex', {});
@@ -1519,7 +1516,6 @@ sub price_breakdown {
 
     @comp{ @fields } = @$_;
 
-
     # Sheet stock information.
     $comp{paper}{$_} = sprintf "%.2f", $comp{$_} for qw(width height);
     $comp{paper}{wastage} = sprintf "%5.2f", $comp{wastage};
@@ -1539,11 +1535,10 @@ sub price_breakdown {
 
     #	$comp{price}{comparison} = $comp{priceperspread};
 
-    #print STDERR "HAVE COMP: ", Dumper(\%comp);
+    print STDERR "HAVE COMP: ", Dumper(\%comp);
 
     \%comp;
-  }
-  @$runs if @$runs;
+  } @$runs if @$runs;
 
   $variable->{comparisons} = \@comparisons;
 

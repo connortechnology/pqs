@@ -495,8 +495,10 @@ sub get_project_price {
       $variable->{SignatureQuantity} = $project->{override}{forms} ? $project->{override}{forms} : int($spreads_remaining / $imp->{spreads});
     }
     if ($project->{override}{imposition} and ($setup != $project->{override}{imposition})) {
-      #$openprint::log->debug("imposition $setup != ".$project->{override}{imposition}) if $openprint::log;
+      $openprint::log->debug("imposition $setup != ".$project->{override}{imposition}) if $openprint::log;
       next;
+    } else {
+      $openprint::log->debug("imposition $setup == ".$project->{override}{imposition});
     }
 
     if (! defined $pms_prices{$press} ) {    # Pantone Matching System (PMS)
@@ -630,7 +632,9 @@ sub get_project_price {
 
       # Imposition info.
       $price{imp}{setup},
-      scalar @{ $price{imp}{layout} }, $price{sheet_wastage},
+      $price{img}{grain_direction},
+      scalar @{ $price{imp}{layout} },
+      $price{sheet_wastage},
 
       # Stock info.
       $$paper{width},
@@ -929,8 +933,7 @@ sub fill_price_hash {
   # Imposition
   $price->{imp}                 = $imp;
 
-  $price->{hdnGrainDirection}   = $price->{grainDirection}
-  = $imp->{grain_direction};
+  $price->{hdnGrainDirection} = $price->{grain_direction}   = $price->{grainDirection} = $imp->{grain_direction};
 
   $price->{txtImageWidth}       = $imp->{image_width};
   $price->{txtImageHeight}      = $imp->{image_height};
