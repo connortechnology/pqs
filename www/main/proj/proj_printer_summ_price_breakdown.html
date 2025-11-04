@@ -442,6 +442,7 @@ a.svg {
 
 		<colgroup id="imposition">
 			<col id="geometry" />
+			<col id="grain" />
 			<col id="layouts" />
 			<col id="wastage" />
 		</colgroup>
@@ -463,13 +464,14 @@ a.svg {
 				<th rowspan="2" class="l"> Press </th>
 				<th rowspan="2" title="Run Style" class="l"> RS </th>
 				<th rowspan="2" title="Plate count."> P </th>
-				<th colspan="3" class="m"> Imposition </th>
+				<th colspan="4" class="m"> Imposition </th>
 				<th colspan="3" class="m"> Stock </th>
 				<th colspan="4" class="m"> Pricing ($) </th>
 			</tr>
 
 			<tr class="second" data-sort-method='thead'>
 				<th class="m" title="Number of images in the imposition."> n </th>
+        <th class="grain" title="Grain"> g </th>
 				<th title="Number of forms."> f </th>
 				<th title="Percent version image wastage."> %w </th>
 				<th class="m" title="Sheet dimensions (height &#215; width)."> (h&#215;w) </th>
@@ -489,6 +491,7 @@ a.svg {
 					<td class="l"><?run_style?></td>
 					<td><?plates?></td>
 					<td class="m"><?card?><?if spreadcount?>x<?spreadcount?><?endif spreadcount?></td>
+					<td class="g"><?grain?></td>
 					<td><?layouts?></td>
 					<td><?paper.wastage?></td>
 					<td class="c"><?float:paper.height?>
