@@ -23,6 +23,8 @@ use Apache2::RequestIO ();
 #use Apache::Session::Postgres ();
 use Apache2::Cookie ();
 use Apache2::Upload ();
+use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
 
 # The location of Perl modules for this client.
 use lib '/var/www/pqs/perl';
