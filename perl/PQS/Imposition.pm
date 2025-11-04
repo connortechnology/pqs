@@ -488,15 +488,14 @@ sub post_process :Private {
 
   my (@nodes, %seen);
 
-  SIZE:
   while (my ($size, $nodes) = each %{ $cache }) {
-    next SIZE unless ref $nodes eq 'ARRAY';
+    next if ref $nodes ne 'ARRAY';
 
-    NODE:
-    for my $i (0..$#{ $nodes }) {
-      my $node = $nodes->[$i];
+    foreach my $node (@$nodes) {
+      #for my $i (0 .. $#{ $nodes }) {
+      #my $node = $nodes->[$i];
 
-      next NODE if !$node; # Skip invalid.
+      next if !$node; # Skip invalid.
 
       # Skip through trim nodes (nodes that contain only one other
       # container node to trim off one side).
@@ -505,17 +504,14 @@ sub post_process :Private {
       # If the node is an image (leaf) add it to our lookup.
       if ($node->is_sink) {
         my $id = join 'x', @{ $node->size };
-
-        next NODE if $seen{$id};
-
-        $seen{$id} = 1;
-
-        push @nodes, $node; # Add to valid list.
-        next NODE;
+        if (!$seen{$id}) {
+          $seen{$id} = 1;
+          push @nodes, $node; # Add to valid list.
+        }
+        next;
       }
 
-      # Now we'll look for extraneous white space, both parallel and
-      # perpendicular to the initial cut.
+      # Now we'll look for extraneous white space, both parallel and perpendicular to the initial cut.
       my ($w, $h) = @{ $node->size };
       my $dir     = $node->cut;
 
@@ -544,7 +540,7 @@ sub post_process :Private {
         my $id             = join 'x', @box;   # New ID.
 
         # This size optimized node already exists.
-        next NODE if exists $seen{$id};
+        next if exists $seen{$id};
 
         # Create trimmed down (y dimension) children.
         my @children;
