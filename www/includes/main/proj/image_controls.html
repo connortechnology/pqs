@@ -51,9 +51,17 @@
 			<p>Certain projects can benefit from having a specific <span class="tip" title="The alignment of the fibres during the manufacturing process.">grain</span> directions. Business cards are best printed with the grain running along their width for a stiffer card. Perfect bound books are best with the grain parallel to the spine (height) to prevent paper distortion due to glueing. Please choose a specific direction or choose &#8221;No Preference&#8222; if the grain direction isn&#8217;t a factor.</p>
 			<label>Grain Direction:</label>
 			<div>
-				<label class="radio"><input type="radio" name="grain_direction" value="" />No Preference</label><br />
-				<label class="radio"><input type="radio" name="grain_direction" value="0" />Width</label><br />
-				<label class="radio"><input type="radio" name="grain_direction" value="1" />Height</label><br />
+        <?echo(ssi::radio('grain_direction', [
+          ''=>'No Preference',
+          'Mixed' => 'Mixed',
+          'NotMixed' => 'Not Mixed',
+          '0' => 'Width',
+          '1' => 'Height',
+        ], $$variable{spec}{grain_direction}, {
+          default=>'',
+          onclick=>"calc('f1');",
+          });
+        )?>
 			</div>
 			<br />
     </div>
