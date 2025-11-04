@@ -75,12 +75,17 @@ sub _init :Init {
   $max_precision = 4 if $max_precision < 4;
   $round_to = 1/(10**$max_precision);
   $openprint::log->debug("START PQS IMPOSE 1: ".(Time::HiRes::time() - $start_time)." max precision $max_precision") if DEBUG;
+  # A kludge to handle multi-page books the way they were previously. We do
+  # two rounds of imposition, one for each grain direction.
+  my $is_special = $project->{is_multipage} && !defined $project->{grain};
+  my $grain = $is_special ? 0 : $project->{grain};
 
   # width x height - bleed size - trim size - multipage - bleed sides
-  my $key = sprintf("%06.${max_precision}fx%06.${max_precision}f-%4.${max_precision}f-%d-%s",
+  my $key = sprintf("%06.${max_precision}fx%06.${max_precision}f-%4.${max_precision}f-%d-%s-%d",
     @$project{qw(width height trim)},
     $project->{is_multipage} ? 1 : 0,
-    join(',', @{ $project->{bleed} })
+    join(',', @{ $project->{bleed} }),
+    $grain,
   );
 
   my $have_cache = $result_cache->get($key);
@@ -92,13 +97,8 @@ sub _init :Init {
     return $self;
   }
 
-  # A kludge to handle multi-page books the way they were previously. We do
-  # two rounds of imposition, one for each grain direction.
-  my $is_special = $project->{is_multipage} && !defined $project->{grain};
 
   my @valid;
-  my $grain = $is_special ? 0 : $project->{grain};
-
   IMPOSITION: {
     @images = $self->images($grain);
 
