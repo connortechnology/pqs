@@ -1041,8 +1041,48 @@ sub create_impositions {
 
   foreach my $entry (@{$iter_or_array}) {
     #sub convert_to_old { my ($dbh, $project, $press, $sheet, $style, $imposition, $rotation) = @_;
-    my @converted = $func->($dbh, $project, @{$entry});
-    push @impositions, @converted;
+    push @impositions, $func->($dbh, $project, @{$entry});
+  }
+
+  # MULTI-VERSION TEMP: For now we'll constrain business cards to layout
+  # on as few sheets as possible. Note: This equation was just pulled
+  # out of "where the sun don't shine". It tends towards laying
+  # everything out on one sheet as slots increase above the number of
+  # versions.
+  if ($project->{type} eq 'BusinessCards' and keys %{ $project->{versions} }) {
+    @impositions = map {
+    my $d = ($_->{run_style} =~ /^W/) ? 2 : 1;
+    my $n = ceil(  (keys %{$project->{versions}}) / ($_->{setup} / ($d*1.8)));
+
+    (@{$_->{layout}} > $n) ? () : $_;
+    } @impositions;
+  }
+
+  #print STDERR "HAVE IMPOSTIONS BEFORE FILTER  2 " . scalar @impositions . "\n";
+  if ($desired_size > 0) {
+    my $signature_size = desired_signature_size($desired_size, \@impositions);
+
+    $signature_size = 1 if $signature_size && $project->{press_type} eq 'digital'
+    && $project->{bind_type} !~ /^(Loop|Saddle)Stitching$/
+    && configuration::get_value(undef, $dbh, 'Digital2PageSignatures');
+
+    #print STDERR "HAVE IMPOSTIONS BEFORE FILTER  3 " . scalar @impositions . "\n";
+    # For books with more than one spread in the signature, we need to
+    # convert the raw impositions of the single spread dimesions into
+    # images of multiple spreads.
+    my @converted_impositions;
+    my $smallest = $signature_size > 2 ? int($signature_size/3) : 1;
+    foreach my $sig_size ($smallest .. $signature_size) {
+      #print STDERR "converting to $sig_size\n";
+      my @new_impositions = map { convert_to_signature($sig_size, $_->clone(), $project) } @impositions;
+      push @converted_impositions, @new_impositions;
+      foreach my $imp (@new_impositions) {
+        print STDERR "Imp setup:$$imp{setup} spreads:$$imp{spreads} style:$$imp{run_style}\n";
+      }
+    }
+    @impositions = @converted_impositions;
+  } else {
+    $openprint::log->debug("No desired size: $desired_size");
   }
 
   return \@impositions;
