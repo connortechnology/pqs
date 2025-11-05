@@ -4,18 +4,20 @@
 	<p>If the ink on your project <span class="tip" title="Layout, type or pictures that extend beyond the trim marks on a page. Illustrations that spread to the edge of the paper without margins are referred to as 'bled off'.">bleed</span> off the edge, please specify the amount and locations</p>
 
   <div class="bleeds">
-    <label for="bleed_size">Bleed Size:</label>
-    <select id="bleed_size" name="bleed_size" size="1" onchange="check_bleeds.apply(this);" >
-        
-      <option value="0"      >No Bleed</option>
-      <option value="0.125"  >1/8"</option>
-      <option value="0.0625" >1/16"</option>
-    </select>
-    <br />
+    <div class="bleed_size">
+      <label for="bleed_size">Bleed Size:</label>
+      <select id="bleed_size" name="bleed_size" size="1" onchange="check_bleeds.apply(this);" >
+        <option value="0"      >No Bleed</option>
+        <option value="0.125"  >1/8"</option>
+        <option value="0.0625" >1/16"</option>
+      </select>
+    </div>
 
-    <label>Bleed Locations:</label>
-    <div class="bleed_sides">
-      <?echo(checkboxes('bleed_sides', [3=>'Left',1=>'RIght', 0=>'Top', 2=>'Bottom'], $$variable{spec}{bleed_sides}, { onclick=>"calc('f1');"});)?>
+    <div class="bleed_locations">
+      <label>Bleed Locations:</label>
+      <div class="bleed_sides">
+        <?echo(checkboxes('bleed_sides', [3=>'Left',1=>'RIght', 0=>'Top', 2=>'Bottom'], $$variable{spec}{bleed_sides}, { onclick=>"calc('f1');"});)?>
+      </div>
     </div>
   </div>
 

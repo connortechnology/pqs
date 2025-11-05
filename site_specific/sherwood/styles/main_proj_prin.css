@@ -4,13 +4,31 @@
 .bleeds div {
   padding: 0;
   display: flex;
+  align-items: center;
 }
 .bleeds label {
   /*
   float: left;
   */
+  padding-left: 1.5em;
+}
+.bleed_locations {
+  float: none;
+}
+.bleed_sides label {
+  padding-left: 0;
+  width: 6em;
+}
+.bleed_sides input {
+  margin-right: 5px;
 }
 .bleed_sides {
+  /*
   flex-direction: column;
+  */
 }
 
+.grain_direction label:not(.radio-inline),
+.ignore_margins label {
+  padding-left: 1.5em;
+}
