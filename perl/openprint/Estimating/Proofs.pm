@@ -30,7 +30,7 @@ require openprint::service;
 require openprint::Estimating::Printing;
 use Data::Dumper;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant LAYOUT_PROOF => 1;
 use constant COLOUR_PROOF => 2;
 use constant PRESS_PROOF => 3;
