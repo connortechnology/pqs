@@ -1039,15 +1039,9 @@ sub create_impositions {
     return \@impositions;
   }
 
-  # using the same conversion functions that existed before.
   foreach my $entry (@{$iter_or_array}) {
-    # convert_to_old / lf_imposition may return a list or arrayref
-    my @converted;
     #sub convert_to_old { my ($dbh, $project, $press, $sheet, $style, $imposition, $rotation) = @_;
     my @converted = $func->($dbh, $project, @{$entry});
-
-    $openprint::log->debug("Have @converted");
-
     push @impositions, @converted;
   }
 
