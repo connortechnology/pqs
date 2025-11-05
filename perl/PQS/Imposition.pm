@@ -426,8 +426,8 @@ sub fill_box :Private {
         #($round_to, $bound - $len)
       );
 
-      # Generate each pairing (cartesian product) of the two partitions
-      # and keep all valid layouts.
+      # Compare each pairing (cartesian product) of the two partitions
+      # and choose the best ones.
       for my $n (@{ $partitions[HORIZONTAL] }) {
         for my $p (@{ $partitions[VERTICAL] }) {
           my $node = PQS::Imposition::Node->new( # Faster than copying.
@@ -436,9 +436,38 @@ sub fill_box :Private {
             children => [$n, $p],
           );
 
-          # Add all generated layout nodes to preserve all alternatives.
-          # This ensures both rotated and non-rotated layouts are returned.
-          push @forest, $node;
+          if (!@forest) {
+            push @forest, $node;
+            next;
+          }
+
+
+          # Can we be compared? If so are we better?
+          my $has_similar;
+
+          COMPARISON:
+          for my $i (0..$#forest) {
+            # The overloaded version of calling the comparison
+            # somehow wasn't seeing private data.
+            #
+            # my $cmp = $node <=> $potential;
+
+            my $cmp = PQS::Imposition::Node::compare($node, $forest[$i]);
+
+            if (defined $cmp) {
+              # We're better than the previous in our group - replace it.
+              if ($cmp > 0) { $forest[$i] = $node; }
+
+              # We've found our group, mark it and we're done.
+              $has_similar = 1;
+              last COMPARISON;
+            }
+          }
+
+          # Add us if we're first or no comparable node exists.
+          if (!$has_similar) {
+            push @forest, $node;
+          }
         } # end foreach p
       } # end foreach n
     }

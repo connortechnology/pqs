@@ -249,6 +249,12 @@ sub compare { # Class method
   my ($n, $p) = @_;
   my ($x, $y) = ($$n, $$p);
 
+  # If both nodes have defined grains and they differ, they are incomparable.
+  # This ensures both rotated and non-rotated layouts are preserved.
+  if (defined $grain[$x] && defined $grain[$y] && $grain[$x] != $grain[$y]) {
+    return undef;
+  }
+
   my $cmp = $card[$x] <=> $card[$y];
   #     compare_cardinality($card[$x], $card[$y]);
   #    my $cmp = compare_cardinality_pp($x, $y);
