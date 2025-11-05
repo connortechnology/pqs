@@ -51,9 +51,8 @@ sub convert_to_old {
     if (@children) {
       $x = scalar @children              || 1; # Child count.
       $y = scalar $children[0]->children || 1; # First child's children count.
-    }
-    # If the image fits exactly to the sheet.
-    elsif ($imposition->card == 1) {
+    } elsif ($imposition->card == 1) {
+      # If the image fits exactly to the sheet.
       ($x, $y) = (1,1);
     } else { die "Invalid imposition.\n"; }
 
@@ -76,6 +75,9 @@ sub convert_to_old {
           final     => 100,
           slots     => $n,
         }]]);
+  if (!@layouts) {
+    $openprint::log->error("No layouts from version_layouts");
+  }
 
   # TEMPORARY: For now we'll treat each as a totally new imposition.
   # Really we want to only recalculate the running costs so the
@@ -518,6 +520,7 @@ memoize('version_layouts',
   LIST_CACHE   => 'MEMORY',
   SCALAR_CACHE => 'MEMORY',
 );
+
 sub version_layouts {
   my ($slots, $versions, $multipage) = @_;
 
@@ -592,7 +595,7 @@ sub version_layouts {
     # Determine the layout wastage. final is the percentage
     my $wastage = sum( map { map { $_->{final} } @$_ } @layout ) - 100;
 
-    $openprint::log->debug("Wasteage $wastage <= ? $max_waste");
+    #$openprint::log->debug("Wasteage $wastage <= ? $max_waste");
     # Subsequent layouts use the same or more plates, so they must use
     # less waste or they aren't worth considering.
     #if (not defined $max_waste or $wastage <= $max_waste) {
