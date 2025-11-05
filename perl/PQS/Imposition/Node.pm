@@ -249,6 +249,11 @@ sub compare { # Class method
   my ($n, $p) = @_;
   my ($x, $y) = ($$n, $$p);
 
+  if ((defined $grain[$x] and !defined $grain[$y]) or ($grain[$x] != $grain[$y])) {
+    $openprint::log->debug("Not Comparing cardinality x:$x size:$size[$x] $card[$x] grain: $grain[$x] cuts:$cut[$x] <=> y:$y size:$size[$y] $card[$y] grain: $grain[$y] cuts: $cut[$y] size of array: ".scalar @card);
+    return undef;
+  }
+
   my $cmp = $card[$x] <=> $card[$y];
   #     compare_cardinality($card[$x], $card[$y]);
   #    my $cmp = compare_cardinality_pp($x, $y);

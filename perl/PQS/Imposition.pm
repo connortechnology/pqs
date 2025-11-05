@@ -31,6 +31,7 @@ our $round_to;
 use constant ID    => 2; # REMOVE - When image is an object.
 use constant BLEED => 3; # REMOVE
 use constant GRAIN => 4; # REMOVE
+
 use constant DEBUG => 0;
 
 sub get_precision {
@@ -292,13 +293,16 @@ sub best_fit {
       }
 
       #print STDERR "TIME TO FIND FIT: $w x $h \n";
-      my $node = $self->find_fit($w, $h, $grain, $rotated, $is_one_up);
-      $node = $node->work_and(TURN) if $node && $style eq 'WT';
-      $node = $node->work_and(FLOP) if $node && $style eq 'WF';
+      foreach my $node ( $self->find_fit($w, $h, $grain, $rotated, $is_one_up) ) {
+        #$openprint::log->debug("from Find fit from $w x $h grain $grain rotated $rotated ".$node->card);
 
-      #print STDERR "STEP BEST FIT: $w x $h \n";
-      #print STDERR "ADD NODE TO POSSIBLE LIST \n";
-      push @possible, [ $style, $node, $rotated ];
+        $node = $node->work_and(TURN) if $node && $style eq 'WT';
+        $node = $node->work_and(FLOP) if $node && $style eq 'WF';
+
+        #print STDERR "STEP BEST FIT: $w x $h \n";
+        #print STDERR "ADD NODE TO POSSIBLE LIST \n";
+        push @possible, [ $style, $node, $rotated ];
+      }
 
       # Try the rotated version to see if feeding that way is better.
       if (!$rotated) {
@@ -310,6 +314,11 @@ sub best_fit {
     }
   }
 
+  my $override_imposition = $project->{override}{imposition};
+  if ($project->{override}{imposition}) {
+    #$openprint::log->debug("FIltering by imposition: $override_imposition");
+    @possible = grep { $_->[1]->card == $override_imposition} @possible;
+  }
   # We want the most images that will fit on this sheet. TODO Right now we
   # blindly prefer WT over WF when really it should be the cutting
   # complexity and bindery options that have first say.
@@ -359,14 +368,18 @@ sub find_fit {
     $b->card      <=> $a->card        # Max cardinality
   }
   grep {    
+  #$openprint::log->debug("Find fit from $w x $h grain $grain rotated $rotation ".$_->card. " thinggrain: ".$_->grain . "tinwidht ".$_->size->[W].'x'.$_->size->[H] );
+
     #print STDERR "FIND FIT NODE: ", Dumper($_->size->[W],  $_->size->[H] ,  $_->grain, $_->card);
     ($_->size->[W] <= $w && $_->size->[H] <= $h) 
-    && (!defined $grain ? 1 
-    :    defined $_->grain 
-    && $_->grain == $rotation)
+    && (!defined $grain ? 1 :    defined $_->grain && $_->grain == $rotation)
     && ($is_one_up ? $_->card == 1 : 1) 
   } @{ $lookup[$$self] };
+  #for (@nodes) {
+  #$openprint::log->debug("Got Find fit from $w x $h grain $grain rotated $rotation ".$_->card);
+#}
 
+  return @nodes;
   return scalar @nodes ? $nodes[0] : undef;
 }
 
@@ -413,7 +426,7 @@ sub fill_box :Private {
     for my $dir (VERTICAL, HORIZONTAL) {
       my ($bound, $len) = ($box->[$dir], $image->[$dir]); # -| to cut.
 
-      $openprint::log->debug("box $size image size $image_size bound: $bound len:$len dir:$dir");
+      #$openprint::log->debug("box $size image size $image_size bound: $bound len:$len dir:$dir");
       next DIRECTION if $bound == $len;
 
       # Fill the sub-boxes made by paritioning the box.
@@ -443,37 +456,40 @@ sub fill_box :Private {
 
 
           # Can we be compared? If so are we better?
-          my $has_similar;
+          # Modified: preserve different orientations and comparable-but-worse nodes.
+          # We only treat a node as an exact duplicate when both size and cut axis
+          # are identical; in that case we compare and may replace the existing one.
+          my $is_exact_duplicate = 0;
 
-          COMPARISON:
-          for my $potential (@forest) {
-            # The overloaded version of calling the comparison
-            # somehow wasn't seeing private data.
-            #
-            # my $cmp = $node <=> $potential;
-
-            my $cmp = PQS::Imposition::Node::compare($node, $potential);
-
-            if (defined $cmp) {
-              # We're better than the previous in our group.
-              if ($cmp > 0) { $potential = $node; }
-
-              # We've found our group, mark it and we're done.
-              $has_similar = 1;
-              last COMPARISON;
+          for my $i (0 .. $#forest) {
+            my $potential = $forest[$i];
+            # If exact same size and same cut axis, compare and possibly replace.
+            # Otherwise preserve both - different cuts/orientations are kept for diversity.
+            if (same_size($node->size, $potential->size) && defined($potential->cut) && defined($node->cut) && $potential->cut == $node->cut) {
+              my $cmp = PQS::Imposition::Node::compare($node, $potential);
+              if (defined $cmp) {
+                # If the new node is better, replace the existing one.
+                if ($cmp > 0) {
+                  $forest[$i] = $node;
+                }
+                $is_exact_duplicate = 1;
+                last;
+              }
             }
           }
 
           # Add us if we're first or no comparable node exists.
-          if (!$has_similar) {
-            push @forest, $node;
-          }
+          push @forest, $node if !$is_exact_duplicate;
         } # end foreach p
       } # end foreach n
     }
   }
   # If nothing matched, we're a blank node (represented as undefined).
   @forest = (undef) unless @forest;
+  $openprint::log->debug("$size => ".Data::Dumper::Dumper(\@forest));
+  foreach my $node ( @forest) {
+    $openprint::log->debug("forest $size => ".$node->card) if $node;
+  }
 
   return $cache->{$size} = \@forest;
 }
