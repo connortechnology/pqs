@@ -929,8 +929,7 @@ sub fill_price_hash {
   # Imposition
   $price->{imp}                 = $imp;
 
-  $price->{hdnGrainDirection}   = $price->{grainDirection}
-  = $imp->{grain_direction};
+  $price->{grain_direction} = $price->{hdnGrainDirection} = $price->{grainDirection} = $imp->{grain_direction};
 
   $price->{txtImageWidth}       = $imp->{image_width};
   $price->{txtImageHeight}      = $imp->{image_height};
