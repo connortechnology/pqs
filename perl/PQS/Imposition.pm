@@ -31,7 +31,8 @@ our $round_to;
 use constant ID    => 2; # REMOVE - When image is an object.
 use constant BLEED => 3; # REMOVE
 use constant GRAIN => 4; # REMOVE
-use constant DEBUG => 0;
+
+use constant DEBUG => 1;
 
 sub get_precision {
   return map {
@@ -42,7 +43,7 @@ sub get_precision {
 }
 
 sub _init :Init {
-  my ($self, $args_ref, ) = @_;
+  my ($self, $args_ref) = @_;
 
   # TODO Use the :InitArgs construct and do some type checking and validation on these arguements.
   # Save a reference to the project for later use.
@@ -74,14 +75,16 @@ sub _init :Init {
   my $max_precision = List::Util::max(get_precision(@$project{qw(width height trim)}));
   $max_precision = 4 if $max_precision < 4;
   $round_to = 1/(10**$max_precision);
-  $openprint::log->debug("START PQS IMPOSE 1: ".(Time::HiRes::time() - $start_time)." max precision $max_precision") if DEBUG;
   # A kludge to handle multi-page books the way they were previously. We do
   # two rounds of imposition, one for each grain direction.
   my $is_special = $project->{is_multipage} && !defined $project->{grain};
   my $grain = $is_special ? 0 : $project->{grain};
+  $openprint::log->debug("START PQS IMPOSE 1: ".(Time::HiRes::time() - $start_time)." max precision $max_precision grain:".(defined $grain ? $grain : undef)) if DEBUG;
 
+  # Incoming grain, can be undef == No preference, 'Mixed', 'Unmixed', 0=>Width, 1=>Heihgt
+  #imposition grain has to be either Mixed, 0 or 1
   # width x height - bleed size - trim size - multipage - bleed sides
-  my $key = sprintf("%06.${max_precision}fx%06.${max_precision}f-%4.${max_precision}f-%d-%s-%d",
+  my $key = sprintf("%06.${max_precision}fx%06.${max_precision}f-%4.${max_precision}f-%d-%s-%s",
     @$project{qw(width height trim)},
     $project->{is_multipage} ? 1 : 0,
     join(',', @{ $project->{bleed} }),
@@ -94,9 +97,8 @@ sub _init :Init {
   # Retrieve cached results if we've seen this before.
   if ($have_cache) {
     $lookup[$$self] = $have_cache;
-    return $self;
+    #return $self;
   }
-
 
   my @valid;
   IMPOSITION: {
@@ -157,26 +159,26 @@ sub images { # :Private
 
   my @images;
 
-  if (($grain eq '') || $grain == 0) {
+  if (($grain eq '') || ($grain == 0) || ($grain eq 'Mixed')) {
     push @images, [ $w, $h, 0, \@bleed, 0 ];
   }
 
   # If the grain direction isn't constrained and we're not a multipage
   # project (not handled yet) we can try the rotated version as well. TODO
   # The image format is an array of stuff, make it an object or something.
-  if (($grain eq '') || $grain == 1) {
+  if (($grain eq '') || $grain == 1 || ($grain eq 'Mixed')) {
     push @images, [ $h, $w, 0, [ @bleed[R, B, L, T] ], 1 ];
   }
 
   return @images;
-}
+} # end sub images
 
 # Add an image to the imposition (invalidates the cache and calculations).
 # sub add_image { }
 
 sub best_fit {
   my ($self, $press, $style, $sheet) = @_;
-  my $project                        = $project[$$self];
+  my $project = $project[$$self];
 
   #print STDERR "START BEST FIT: ", Dumper($press, $style, $sheet);
 
@@ -186,12 +188,12 @@ sub best_fit {
   #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
 
   my @possible;
-  my $override = $project->{override}{runstyle};
+  my $override_runstyle = $project->{override}{runstyle};
 
   # While work & turn/flop are identical in how they run on the press,
   # they aren't in terms of imposition. If we haven't been overriden expand them
   # out now. TODO Move this section into Print::Impose.
-  my @styles = $style ne 'Wx' ? ($style) : $override ? ($override) : qw(WT WF);
+  my @styles = $style ne 'Wx' ? ($style) : $override_runstyle ? ($override_runstyle) : qw(WT WF);
 
   #print STDERR "SETP BEST FIT: $press->{name}, $style \n";
   # Digital presses with inline bindery are currently overriden to HAVE to
@@ -227,7 +229,6 @@ sub best_fit {
 
     my $rotated  = 0;
     my @dims     = qw(width height);
-
 
     BEST_FIT:
     {
@@ -292,13 +293,15 @@ sub best_fit {
       }
 
       #print STDERR "TIME TO FIND FIT: $w x $h \n";
-      my $node = $self->find_fit($w, $h, $grain, $rotated, $is_one_up);
-      $node = $node->work_and(TURN) if $node && $style eq 'WT';
-      $node = $node->work_and(FLOP) if $node && $style eq 'WF';
+      foreach my $node ( $self->find_fit($w, $h, $grain, $rotated, $is_one_up) ) {
+        #$openprint::log->debug("Find fit from $w x $h grain $grain rotated $rotated ".$node->card);
+        $node = $node->work_and(TURN) if $node && $style eq 'WT';
+        $node = $node->work_and(FLOP) if $node && $style eq 'WF';
 
-      #print STDERR "STEP BEST FIT: $w x $h \n";
-      #print STDERR "ADD NODE TO POSSIBLE LIST \n";
-      push @possible, [ $style, $node, $rotated ];
+        #print STDERR "STEP BEST FIT: $w x $h \n";
+        #print STDERR "ADD NODE TO POSSIBLE LIST \n";
+        push @possible, [ $style, $node, $rotated ] if $node->card;
+      }
 
       # Try the rotated version to see if feeding that way is better.
       if (!$rotated) {
@@ -310,25 +313,29 @@ sub best_fit {
     }
   }
 
+  my $override_imposition = $project->{override}{imposition};
+  if ($override_imposition) {
+    @possible = grep { $_->card == $override_imposition } @possible;
+  }
+
   # We want the most images that will fit on this sheet. TODO Right now we
   # blindly prefer WT over WF when really it should be the cutting
   # complexity and bindery options that have first say.
 
   #Swapped Sort order, card is top of list, then check wt/wf
   #reversed back to the what it was in older versions.
-  my $node = (
+  my @best = (
     sort { $b->[1]->card <=> $a->[1]->card }
     sort { $b->[0]       cmp $a->[0]       } # Prefere WT over WF
     grep { $_->[1] }
     @possible
-  )[0];
-
+  );
 
   #no warnings qw(uninitialized);
   #print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ", Dumper(@possible);
 
   # TEMP: Simple call for now.
-  return $node->[0] ? @$node : (undef, undef);
+  return @best ? (shift @best) : ();
 }
 
 # Determine if a given sheet size will fit on the given press.
@@ -367,7 +374,7 @@ sub find_fit {
     && ($is_one_up ? $_->card == 1 : 1) 
   } @{ $lookup[$$self] };
 
-  return scalar @nodes ? $nodes[0] : undef;
+  return @nodes;
 }
 
 
@@ -380,11 +387,11 @@ sub fill_box :Private {
   my ($box) = @_;              # Bounding box (w×h)
   my $size  = join 'x', @$box; # Node size.
 
-  my @forest;                  # Possible impositions for size.
-
   # If we've already been calculated just reference our table entry.
+  # ICON: This is a negative cache as well, 
   return $cache->{$size} if exists $cache->{$size};
 
+  my @forest;                  # Possible impositions for size.
   #$openprint::log->debug("Images on $size ".Data::Dumper::Dumper(\@images));
   IMAGE:
   for my $image (@images) {
@@ -405,12 +412,13 @@ sub fill_box :Private {
         size  => $box,
         image => $image->[ID],
         bleed => $image->[BLEED],
-        grain => $image->[GRAIN],
+        grain => $image->[GRAIN], # 0 width, 1 height
       );
+      return $cache->{$size} = \@forest;
     }
 
     DIRECTION:
-    for my $dir (VERTICAL, HORIZONTAL) {
+    for my $dir (VERTICAL, HORIZONTAL) { # TODO grain override
       my ($bound, $len) = ($box->[$dir], $image->[$dir]); # -| to cut.
 
       $openprint::log->debug("box $size image size $image_size bound: $bound len:$len dir:$dir");
@@ -418,7 +426,8 @@ sub fill_box :Private {
 
       # Fill the sub-boxes made by paritioning the box.
       my @partitions = map {
-      fill_box($dir ? [ $box->[W], $_        ] # Horizontal cut.
+      fill_box($dir ?
+      [ $box->[W], $_        ] # Horizontal cut.
       : [ $_,        $box->[H] ] # Vertical cut.
       );
       } ($len, 
@@ -426,21 +435,27 @@ sub fill_box :Private {
         #($round_to, $bound - $len)
       );
 
-      # Compare each pairing (cartesian product) of the two partitions
-      # and choose the best ones.
+      $openprint::log->debug("Parititons: ".Data::Dumper::Dumper(\@partitions));
+
+
+      # Compare each pairing (cartesian product) of the two partitions and choose the best ones.
+      # ICON: If we are overriding to 9 out, but there exists a 10 out, this code would prevent that.
       for my $n (@{ $partitions[HORIZONTAL] }) {
+      $openprint::log->debug("Partition n ".$n->card) if $n;
         for my $p (@{ $partitions[VERTICAL] }) {
+      $openprint::log->debug("Partition p ".$p->card) if $p;
           my $node = PQS::Imposition::Node->new( # Faster than copying.
             size     => $box,
             cut      => $dir,
             children => [$n, $p],
           );
+      $openprint::log->debug("Partition node ".$node->card);
 
           if (!@forest) {
+            $openprint::log->debug("No forest, just adding ".($n ? $n->card : 'none') . ' p '.($p  ? $p->card : 'none'). ' node:'.$node->card);
             push @forest, $node;
             next;
           }
-
 
           # Can we be compared? If so are we better?
           # Modified: preserve different orientations and comparable-but-worse nodes.
@@ -463,19 +478,23 @@ sub fill_box :Private {
                 last;
               }
             }
-          }
+          } # end foreach comparison
 
           # Add node unless we already handled exact duplicate replacement above.
           push @forest, $node unless $is_exact_duplicate;
         } # end foreach p
       } # end foreach n
-    }
-  }
+    } # end foreach direction
+  } # end foreach image
   # If nothing matched, we're a blank node (represented as undefined).
   @forest = (undef) unless @forest;
+  #$openprint::log->debug("$size => ".Data::Dumper::Dumper(\@forest));
+  #foreach my $node ( @forest) {
+  #$openprint::log->debug("forest $size => ".$node->card) if $node;
+#}
 
   return $cache->{$size} = \@forest;
-}
+} # end fill_box
 
 # TEMP: The sub-node generation is currently generating impositions with
 # spacing and sub-optimal results. We'll do a simple post-processing prune of
