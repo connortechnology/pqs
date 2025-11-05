@@ -443,31 +443,30 @@ sub fill_box :Private {
 
 
           # Can we be compared? If so are we better?
-          my $has_similar;
+          # Modified: preserve different orientations and comparable-but-worse nodes.
+          # We only treat a node as an exact duplicate when both size and cut axis
+          # are identical; in that case we compare and may replace the existing one.
+          my $is_exact_duplicate = 0;
 
-          COMPARISON:
           for my $potential (@forest) {
-            # The overloaded version of calling the comparison
-            # somehow wasn't seeing private data.
-            #
-            # my $cmp = $node <=> $potential;
-
-            my $cmp = PQS::Imposition::Node::compare($node, $potential);
-
-            if (defined $cmp) {
-              # We're better than the previous in our group.
-              if ($cmp > 0) { $potential = $node; }
-
-              # We've found our group, mark it and we're done.
-              $has_similar = 1;
-              last COMPARISON;
+            # If exact same size and same cut axis, compare and possibly replace.
+            if (same_size($node->size, $potential->size) && $potential->cut == $node->cut) {
+              my $cmp = PQS::Imposition::Node::compare($node, $potential);
+              if (defined $cmp) {
+                # If the new node is better, replace the existing one.
+                if ($cmp > 0) {
+                  $potential = $node;
+                }
+                $is_exact_duplicate = 1;
+                last;
+              }
             }
+            # If nodes are comparable but have different cut/orientation, do not discard either.
+            # Intentionally preserve both entries so rotated and non-rotated possibilities remain.
           }
 
-          # Add us if we're first or no comparable node exists.
-          if (!$has_similar) {
-            push @forest, $node;
-          }
+          # Add node unless we already handled exact duplicate replacement above.
+          push @forest, $node unless $is_exact_duplicate;
         } # end foreach p
       } # end foreach n
     }
