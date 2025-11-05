@@ -248,7 +248,7 @@ sub compare { # Class method
   my ($x, $y) = ($$n, $$p);
 
   if ((defined $grain[$x] and !defined $grain[$y]) or ($grain[$x] != $grain[$y])) {
-  $openprint::log->debug("Not Comparing cardinality x:$x size:$size[$x] $card[$x] grain: $grain[$x] cuts:$cut[$x] <=> y:$y size:$size[$y] $card[$y] grain: $grain[$y] cuts: $cut[$y] size of array: ".scalar @card);
+    #$openprint::log->debug("Not Comparing cardinality x:$x size:$size[$x] $card[$x] grain: $grain[$x] cuts:$cut[$x] <=> y:$y size:$size[$y] $card[$y] grain: $grain[$y] cuts: $cut[$y] size of array: ".scalar @card);
     return undef;
   }
   #return undef if $cut[$x] != $cut[$y];
@@ -256,7 +256,7 @@ sub compare { # Class method
   #     compare_cardinality($card[$x], $card[$y]);
   #    my $cmp = compare_cardinality_pp($x, $y);
 
-  $openprint::log->debug("Comparing cardinality cmp:$cmp x:$x size:$size[$x] $card[$x] grain: $grain[$x] cuts:$cut[$x] <=> y:$y size:$size[$y] $card[$y] grain: $grain[$y] cuts: $cut[$y] size of array: ".scalar @card);
+  #$openprint::log->debug("Comparing cardinality cmp:$cmp x:$x size:$size[$x] $card[$x] grain: $grain[$x] cuts:$cut[$x] <=> y:$y size:$size[$y] $card[$y] grain: $grain[$y] cuts: $cut[$y] size of array: ".scalar @card);
   return undef if $cut[$x] != $cut[$y];
 
   #return $cmp unless defined $cmp and $cmp == 0;
