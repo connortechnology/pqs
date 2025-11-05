@@ -315,7 +315,7 @@ sub best_fit {
 
   my $override_imposition = $project->{override}{imposition};
   if ($override_imposition) {
-    @possible = grep { $_->card == $override_imposition } @possible;
+    @possible = grep { $_->[1]->card == $override_imposition } @possible;
   }
 
   # We want the most images that will fit on this sheet. TODO Right now we
