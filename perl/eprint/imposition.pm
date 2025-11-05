@@ -587,7 +587,7 @@ sub version_layouts {
 
       # Determine how the selected version get laid out on the sheet.
       my $layout = match_versions($slots, $selected);
-      print STDERR "Layout: $slots, $selected: " . Dumper($layout)."\n";
+      $openprint::log->debug("Layout: $slots, $selected: " . Dumper($layout)) if DEBUG;
       push @layout, $layout;
     }
     #icon: Can't optimise by wastage here, should just calculate it for later. 
