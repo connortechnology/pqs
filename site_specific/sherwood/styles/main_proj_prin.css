@@ -6,7 +6,9 @@
   display: flex;
 }
 .bleeds label {
+  /*
   float: left;
+  */
 }
 .bleed_sides {
   flex-direction: column;
