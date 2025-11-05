@@ -77,7 +77,7 @@ sub _init :Init {
   $round_to = 1/(10**$max_precision);
   # A kludge to handle multi-page books the way they were previously. We do
   # two rounds of imposition, one for each grain direction.
-  my $is_special = $project->{is_multipage} && !defined $project->{grain};
+  my $is_special = $project->{is_multipage} && (!defined $project->{grain} or $project->{grain} eq '');
   my $grain = $is_special ? 0 : $project->{grain};
   $openprint::log->debug("START PQS IMPOSE 1: ".(Time::HiRes::time() - $start_time)." max precision $max_precision grain:".(defined $grain ? $grain : undef)) if DEBUG;
 
@@ -160,6 +160,7 @@ sub images { # :Private
   my @images;
 
   if (($grain eq '') || ($grain == 0) || ($grain eq 'Mixed')) {
+    $openprint::log->debug("Grain $grain so adding vertical");
     push @images, [ $w, $h, 0, \@bleed, 0 ];
   }
 
@@ -167,6 +168,7 @@ sub images { # :Private
   # project (not handled yet) we can try the rotated version as well. TODO
   # The image format is an array of stuff, make it an object or something.
   if (($grain eq '') || $grain == 1 || ($grain eq 'Mixed')) {
+    $openprint::log->debug("Grain $grain so adding horizcal");
     push @images, [ $h, $w, 0, [ @bleed[R, B, L, T] ], 1 ];
   }
 
