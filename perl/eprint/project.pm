@@ -644,7 +644,7 @@ sub check_for_service {
         FROM tbl_project_contents
         WHERE lngprojectindex = ?
           AND strservicetype = ?
-        ORDER BY lngserviceindex
+        ORDER BY lngserviceindex ASC
     });
     $sth->execute($pid, $service_type);
     $sth->bind_col(1, \$sid);

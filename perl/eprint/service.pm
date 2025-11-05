@@ -456,6 +456,7 @@ sub get_spec {
 
 sub insert_service_spec {
   return openprint::service::insert_service_spec(@_);
+
     my ( $log, $dbh, $pid, $sid, $name, $value, $no_delete, $ui_spec) = @_;
 
     die "Can't insert spec into service without id" unless $sid;

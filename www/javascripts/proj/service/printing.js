@@ -642,6 +642,7 @@ function colour_bar_mutex_ignore_margins(form) {
     if (form.colour_bar.checked)
         form.ignore_margins.checked = false;
 
+    calc('f1');
     return true;
 }
 

@@ -45,14 +45,6 @@
 			<span style="padding-left: 10px; font-size: 1.5em; font-weight: bold "> Master QTY:  <?HeaderInfo.qty1?></span>
 	</div>
 
-
-
-
-
-
-
-
-
 	<table class="docket no-formatting">
 		<colgroup class="column" >
 			<col class="header" />
@@ -142,6 +134,11 @@
 				<col class="data2" />
 			</colgroup>
 			<tbody>
+        <tr>
+          <th>Summary:</th>
+          <td colspan="5"><?echo(new openprint::Project($$variable{pid})->summary(undef))?></td>
+        </tr>
+
 				<tr>
 					<th>Format:</th>
 					<td><?HeaderInfo.design?></td>
