@@ -2,9 +2,7 @@ package eprint::Service::Printing::Impose;
 use strict;
 use warnings;
 
-use Iterator;
-use Iterator::Util;
-use Iterator::Misc;
+# Removed Iterator usage - using plain arrays and map/grep instead.
 use Readonly;
 use Memoize;
 use List::Util   qw(min max sum);
@@ -32,6 +30,7 @@ use constant COATINGS => qw(aqueous uv softtouch);
 
 
 # Given project specs. generate the set of possible impositions.
+# Returns an arrayref of imposition entries (each an arrayref similar to original shape).
 sub impositions {
   my ($dbh, $project, $start_time) = @_;
 
@@ -39,8 +38,10 @@ sub impositions {
   #print STDERR "START Printing \ IMPOSE: $end \n ";
 
   my %reasons;
-  my $presses    = get_presses($dbh, $project, \%reasons); # Potential printers.
-  $$project{error} .= join("\n", values %reasons ) if !$presses->isnt_exhausted;
+  my $presses    = get_presses($dbh, $project, \%reasons); # arrayref of Potential printers.
+  if (!@{$presses}) {
+    $$project{error} .= join("\n", values %reasons );
+  }
 
   my $substrates = get_substrates($dbh, $project); # Fits image at least.
   #print STDERR "HAVE NO PAPER \n" unless @{$substrates};
@@ -51,8 +52,6 @@ sub impositions {
   my @styles     = get_runstyles($project);
   $openprint::log->debug("RS: @styles");
 
-  my $empty = Iterator->new(sub { Iterator::is_done });
-
   # Inkjet printers don't impose the same way as others (due to tiling being
   # allowed) so currently need a number of special exceptions.
   my $is_inkjet = $project->{press_type} eq 'inkjetprinter';
@@ -61,14 +60,14 @@ sub impositions {
   #print STDERR "START Printing \ IMPOSE 2: $end  \n";
 
   # Generate all possible impositions for the project (except inkjet).
-  my $impositions = !$is_inkjet ? PQS::Imposition->new(project => $project, start => $start_time) : undef;
+  my $impositions_obj = !$is_inkjet ? PQS::Imposition->new(project => $project, start => $start_time) : undef;
   #$openprint::log->debug('impositions: '.Data::Dumper::Dumper($impositions));
 
   $end =  Time::HiRes::time() - $start_time;
-  #nprint STDERR "START Printing \ IMPOSE 3: $end  \n";
+  #print STDERR "START Printing \ IMPOSE 3: $end  \n";
 
   # A press run is the set of valid run styles X sheet sizes for that press.
-  # Returns [press, sheet, style, node tree, is_rotated]
+  # Returns list of entries like [press, sheet, style, node_tree, is_rotated]
   my $run = sub {
     my $press = shift;
 
@@ -79,37 +78,52 @@ sub impositions {
     my @s = map  { fit_to_press   ($_,     $press      ) } @$substrates;
     $openprint::log->debug("HAVE R: ". Dumper(@r). " S: ". Dumper(@s));
 
-    return $empty unless @r && @s;
+    return [] unless @r && @s;
 
     # Each (run style, sheet size) combination is a setup to test.
-    my $setup = cross_product(\@r, \@s);
+    my @setup = map { my $r = $_; map { [$r, $_] } @s } @r;
 
     # Inkjet printers have their own imposition generation currently.
     if ($is_inkjet) {
-      return imap { [$press, reverse(@$_), undef, undef ] } $setup;
+      my @out = map { [$press, $_->[1], $_->[0], undef, undef ] } @setup;
+      return \@out;
     }
 
-    $openprint::log->debug("HAVE SETUP: ". Dumper($setup));
+    $openprint::log->debug("HAVE SETUP: ". Dumper(\@setup));
 
     # Find the best (if any) imposition for each setup. TODO We try WT/WF
     # that obviously won't work as the image check should be half the
     # sheet size for them.
-    my $valid = igrep { $_->[-2] } imap { [$press, $_->[1], $impositions->best_fit($press, @$_)] } $setup;
-    $openprint::log->debug("HAVE Valid: ". Dumper($valid));
-    return $valid;
+    my @valid;
+    for my $st (@setup) {
+      my ($style, $sheet) = @$st;
+      for my $node ( $impositions_obj->best_fit($press, $style, $sheet)) {
+        if ($node) {
+          # Keep [press, sheet, node] shape consistent with original code (-2 index)
+          push @valid, [$press, $sheet, @{$node}];
+        }
+      }
+    }
+    $openprint::log->debug("HAVE Valid: ". Dumper(\@valid));
+    return \@valid;
   };
 
-  #print STDERR "TIME TO VALIDATE DATA \n";
+  # Flatten the press runs into a list of impositions.
+  my @all;
+  for my $press (@{$presses}) {
+    my $runs = $run->($press); # arrayref
+    push @all, grep { $_ } @{$runs}; # grep removes undefs
+  }
 
-  # Flatten the press runs into a stream of impositions.
-  return igrep { $_ } iflatten ( igrep { $_->isnt_exhausted } imap  { $run->($_)         } $presses );
+  # Return arrayref of impositions (each element is an arrayref describing the setup)
+  return \@all;
 }
 
 #
 # PRESSES
 #
 
-# Return an iterator over the set of presses that fit enough specs to attempt
+# Return an arrayref over the set of presses that fit enough specs to attempt
 # to run the project.
 sub get_presses {
   my ($dbh, $project, $reasons) = @_;
@@ -120,7 +134,9 @@ sub get_presses {
 
   #print STDERR "HAVE PRESS LIST: ", Dumper(\@ids);
 
-  return igrep { can_print_project ($dbh, $_, $project, $reasons) } imap { get_equipment($dbh, $_) } ilist (@ids);
+  my @equip = map { get_equipment($dbh, $_) } @ids;
+  my @valid = grep { can_print_project ($dbh, $_, $project, $reasons) } @equip;
+  return \@valid;
 }
 
 # Get a list of presses (number ids) of a given press type.
@@ -178,7 +194,7 @@ sub can_print_project {
   # Inkjet printers ignore this as they're allowed to tile their images.
   if ($press->{type} != INKJET
     && ($press->{maximum_image_area_length} and
-      ( $project->{height} > $press->{maximum_image_area_length} 
+      ( $project->{height} > $press->{maximum_image_area_length}
         || $project->{width}  > $press->{maximum_image_area_length} )
       && ($press->{maximum_image_area_width} and (
           $project->{width} > $press->{maximum_image_area_width}
@@ -199,7 +215,7 @@ sub can_print_project {
   #print STDERR "Pass Min Project Size Test \n";
 
   # Check if the press has pricing for the required coatings.
-  # return if grep {    ($project->{$_}{side_one} || $project->{$_}{side_two}) 
+  # return if grep {    ($project->{$_}{side_one} || $project->{$_}{side_two})
   if (grep { $project->{$_} && ! can_coat($dbh, $press, $_) } COATINGS) {
     $$reasons{$$press{id}} = $$press{name} . ' failed coatings test';
     return 0;
@@ -221,7 +237,7 @@ sub can_print_project {
   # We do not support offline Corner Stitching.
   # So we will only allow presses with inline corner stitching.
   if (   $press->{type} == DIGITAL
-    && defined $project->{bind_type} 
+    && defined $project->{bind_type}
     && $project->{bind_type} eq 'CornerStitching'
     && ! grep { $_ eq 'CornerStitching' } @{$press->{services}} ) {
     $$reasons{$$press{id}} = $$press{name} .= ' failed corner stitching test';
@@ -266,7 +282,6 @@ sub can_print_project_type {
   return if $project_type eq 'ScreenItem'
   && (   $press->{type}      != SCREEN
     || $press->{operation} =~ /^Auto/i );
-  #print STDERR "PRESS $press->{name} PASSED CHECK \n";
 
   # If we've survived the gauntlet we can at least try this project type.
   return 1;
@@ -286,32 +301,17 @@ sub can_print_project_type {
   sub can_print_style {
     my ($press, $style, $project) = @_;
 
-    #print STDERR "CHECK CAN PRINT STYLE: $press, $style, $project \n";
-    # TODO Multi-pass overrides colour checks?
-    # TODO Double hit colours use two press units
-    #print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
-
-    my @s1 = $project->{drytrap}[0] 
+    my @s1 = $project->{drytrap}[0]
     ? grep !/Varnish/,  @{$project->{colours}[0]}
-    : @{$project->{colours}[0]}; 
+    : @{$project->{colours}[0]};
 
-    my @s2 = $project->{drytrap}[1] 
+    my @s2 = $project->{drytrap}[1]
     ? grep !/Varnish/,  @{$project->{colours}[1]}
-    : @{$project->{colours}[1]}; 
+    : @{$project->{colours}[1]};
 
-    #        map {
-    #            push @s1, $project->{$_}{side_one} if (    $project->{$_}{side_one}
-    #                                                    && !$press->{aqueous_coating} );
-    #            push @s2, $project->{$_}{side_two} if (    $project->{$_}{side_two}
-    #                                                    && !$press->{aqueous_coating} );
-    #        } COATINGS;
-
-
-    #print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
     # Are there enough press units to run the project this way?
     return unless $ENOUGH_UNITS_FOR{ $style }->($press->{number_of_colours}, (\@s1, \@s2));
 
-    #print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
     # Not all presses of a type that can perfect, do.
     if ($style eq 'PF' &&  $press->{type} != WEB) {
 
@@ -320,9 +320,7 @@ sub can_print_project_type {
       # Can the paper fit through the change-over unit?
       return if $project->{paper}{calliper} > $press->{maximum_calliper_perfecting};
     }
-    #print STDERR "STEP CAN PRINT STYLE: $press, $style\n ";
 
-    #print STDERR "PASS CAN PRINT STYLE: $press->{name}, $style\n ";
     return 1;
   }
 }
@@ -333,7 +331,6 @@ sub can_coat {
   my ($dbh, $press, $coating) = @_;
 
   # If we have aq pricing in any price list then we can_aq
-  #return scalar $dbh->selectrow_array(q{
   my @can_coat = $dbh->selectrow_array(qq{
     SELECT count(p.*) > 1 AS can_$coating
     FROM tbl_services s, tbl_service_prices p

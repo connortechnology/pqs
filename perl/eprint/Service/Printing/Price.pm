@@ -409,7 +409,7 @@ sub get_project_price {
 
   my $impositions = create_impositions($dbh, $project, $desired_size);
 
-  #print STDERR "DONE IMPOSE 4 create_impositions \n" . Data::Dumper::Dumper($impositions);
+  print STDERR "DONE IMPOSE 4 create_impositions \n" . Data::Dumper::Dumper($impositions);
 
   $te_impose = Time::HiRes::time() if TIMINGS;
 
@@ -1026,63 +1026,30 @@ sub create_impositions {
   my ($dbh, $project, $desired_size) = @_;
 
   my $start_time = Time::HiRes::time();
-  # Get an iterator that generates imposition possibilities.
-  #print STDERR "START IMPOSE $project->{id}\n";
-
+  # Choose conversion function depending on press type.
   my $func = $project->{press_type} eq 'inkjetprinter' ? \&lf_imposition : \&convert_to_old;
 
   my @impositions;
-  my $iter = impositions($dbh, $project, $start_time);
-  # For now just flatten the iterator into a list of old 'impositionObjects'.
-  while ($iter->isnt_exhausted) {
-    #$openprint::log->debug(Data::Dumper::Dumper($iter->value));
-    push @impositions, $func->($dbh, $project, @{ $iter->value });
+
+  my $iter_or_array = impositions($dbh, $project, $start_time);
+
+  if (!defined $iter_or_array) {
+    $openprint::log->error("No results from impositions:");
+    # nothing returned
+    return \@impositions;
   }
 
-  # MULTI-VERSION TEMP: For now we'll constrain business cards to layout
-  # on as few sheets as possible. Note: This equation was just pulled
-  # out of "where the sun don't shine". It tends towards laying
-  # everything out on one sheet as slots increase above the number of
-  # versions.
-  if ($project->{type} eq 'BusinessCards' and keys %{ $project->{versions} }) {
-    @impositions = map {
-      my $d = ($_->{run_style} =~ /^W/) ? 2 : 1;
-      my $n = ceil(  (keys %{$project->{versions}}) / ($_->{setup} / ($d*1.8)));
+  # using the same conversion functions that existed before.
+  foreach my $entry (@{$iter_or_array}) {
+    # convert_to_old / lf_imposition may return a list or arrayref
+    my @converted;
+    #sub convert_to_old { my ($dbh, $project, $press, $sheet, $style, $imposition, $rotation) = @_;
+    my @converted = $func->($dbh, $project, @{$entry});
 
-      (@{$_->{layout}} > $n) ? () : $_;
-    } @impositions;
+    $openprint::log->debug("Have @converted");
+
+    push @impositions, @converted;
   }
-
-  #print STDERR "HAVE IMPOSTIONS BEFORE FILTER  2 " . scalar @impositions . "\n";
-  if ($desired_size > 0) {
-    my $signature_size = desired_signature_size($desired_size, \@impositions);
-
-    $signature_size = 1 if $signature_size && $project->{press_type} eq 'digital'
-    && $project->{bind_type} !~ /^(Loop|Saddle)Stitching$/
-    && configuration::get_value(undef, $dbh, 'Digital2PageSignatures');
-
-    #print STDERR "HAVE IMPOSTIONS BEFORE FILTER  3 " . scalar @impositions . "\n";
-    # For books with more than one spread in the signature, we need to
-    # convert the raw impositions of the single spread dimesions into
-    # images of multiple spreads.
-    my @converted_impositions;
-    my $smallest = $signature_size > 2 ? int($signature_size/3) : 1;
-    foreach my $sig_size ($smallest .. $signature_size) {
-      #print STDERR "converting to $sig_size\n";
-      my @new_impositions = map { convert_to_signature($sig_size, $_->clone(), $project) } @impositions;
-      push @converted_impositions, @new_impositions;
-      foreach my $imp (@new_impositions) {
-        #print STDERR "Imp setup:$$imp{setup} spreads:$$imp{spreads} style:$$imp{run_style}\n";
-      }
-    }
-    @impositions = @converted_impositions;
-  } else {
-    $openprint::log->debug("No desired size: $desired_size");
-  }
-
-  #print STDERR "HAVE IMPOS.TIONS BEFORE FILTER 99 " . scalar @impositions . "\n", Dumper(\@impositions);
-  @impositions = grep { $_->{setup} > 0 } @impositions;
-  #print STDERR "HAVE IMPOSITIONS TOTAL " . scalar @impositions . "\n";
 
   return \@impositions;
 }
