@@ -19,6 +19,11 @@ my @card   :Field(Get => 'card');  # Image count.
 my @rot    :Field(Get => 'rot');   # Aggregate cut rotations.
 my @grain  :Field(Get => 'grain');
 
+sub to_string {
+  my $self = shift;
+  my $id = $$self;
+  return "id $id Size: $size[$id] card: $card[$id] grain: $grain[$id]";
+}
 sub _init :Init {
     my ($self, $args_ref) = @_;
 
@@ -36,12 +41,10 @@ sub _init :Init {
     if (exists $args_ref->{image}) {
         # $card[$$self]->[ $args_ref->{image} ] = 1;
         $card[$$self] = 1;
-
-        $bleeds[$$self] = exists $args_ref->{bleed} 
-            ? $args_ref->{bleed} 
-            : [0,0,0,0];
+        $bleeds[$$self] = exists $args_ref->{bleed} ? $args_ref->{bleed} : [0,0,0,0];
     }
 
+    # undef == mixed? That is unclear but works. 
     $grain[$$self] = exists $args_ref->{grain} ? $args_ref->{grain} : undef;
 
     if ($args_ref->{children}) {
@@ -60,9 +63,8 @@ sub _init :Init {
         ];
     }
 
-    
     return $self;
-}
+} # end init
 
 # Add an edge from ourselves to the target.
 sub add_edge {
@@ -78,11 +80,7 @@ sub add_edge {
         
         # If the parent containes images, the grain should be set to mixed if
         # it's already mixed or if the parent doesn't match the child.
-        $grain[$id] 
-            = $card[$id] && (   !defined $grain[$id] 
-                             || !defined $grain[$n] 
-                             || $grain[$id] != $grain[$n] )
-                ? undef : $grain[$n];
+        $grain[$id] = ($card[$id] && ( !defined $grain[$id] || !defined $grain[$n] || $grain[$id] != $grain[$n] )) ? undef : $grain[$n];
         
         # Add the child's rotations plus one if the cut axis is different.
         if (@{ $edges[$n] }) {
@@ -95,9 +93,8 @@ sub add_edge {
         # If we're not yet defined, we're the same as our first child.
         if (!defined $k || !scalar @$k) {
             $bleeds[$id] = [ @$p ];
-        }
-        # Common bleeds are maintained as-is, otherwise 0 for no relation.
-        else {
+        } else {
+          # Common bleeds are maintained as-is, otherwise 0 for no relation.
             for my $i (0 .. 3) {
                 my $m = $k->[$i];
 
@@ -111,6 +108,7 @@ sub add_edge {
         # my ($x, $y) = ($card[$id], $card[$n]);
         
         # $x->[$_] += $y->[$_] for 0 .. $#{ $x }; # In-place modify.
+        #$cut[$id] += $cut[$n];
     }
 
     # Increment (or initialize) the edge count for the given nodes. Note:
@@ -189,7 +187,7 @@ sub work_and {
 
     my $node = PQS::Imposition::Node->new(
         size => \@size,
-        cut  => $self->cut, # Maybe daddy will pay attention to me now.
+        cut  => $self->cut,
     );
 
     # If the mirror/merge axis is parallel to the first cut we simply append
@@ -249,11 +247,19 @@ sub compare { # Class method
   my ($n, $p) = @_;
   my ($x, $y) = ($$n, $$p);
 
+  if ((defined $grain[$x] and !defined $grain[$y]) or ($grain[$x] != $grain[$y])) {
+  $openprint::log->debug("Not Comparing cardinality x:$x size:$size[$x] $card[$x] grain: $grain[$x] cuts:$cut[$x] <=> y:$y size:$size[$y] $card[$y] grain: $grain[$y] cuts: $cut[$y] size of array: ".scalar @card);
+    return undef;
+  }
+  #return undef if $cut[$x] != $cut[$y];
   my $cmp = $card[$x] <=> $card[$y];
   #     compare_cardinality($card[$x], $card[$y]);
   #    my $cmp = compare_cardinality_pp($x, $y);
 
-  return $cmp unless defined $cmp and $cmp == 0;
+  $openprint::log->debug("Comparing cardinality cmp:$cmp x:$x size:$size[$x] $card[$x] grain: $grain[$x] cuts:$cut[$x] <=> y:$y size:$size[$y] $card[$y] grain: $grain[$y] cuts: $cut[$y] size of array: ".scalar @card);
+  return undef if $cut[$x] != $cut[$y];
+
+  #return $cmp unless defined $cmp and $cmp == 0;
 
   # Maximize images, minimize rotations, prefer parallel cuts.
   $cmp ||=  $rot[$y]        <=> $rot[$x]        # Min.
