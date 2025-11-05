@@ -448,21 +448,21 @@ sub fill_box :Private {
           # are identical; in that case we compare and may replace the existing one.
           my $is_exact_duplicate = 0;
 
-          for my $potential (@forest) {
+          for my $i (0 .. $#forest) {
+            my $potential = $forest[$i];
             # If exact same size and same cut axis, compare and possibly replace.
-            if (same_size($node->size, $potential->size) && $potential->cut == $node->cut) {
+            # Otherwise preserve both - different cuts/orientations are kept for diversity.
+            if (same_size($node->size, $potential->size) && defined($potential->cut) && defined($node->cut) && $potential->cut == $node->cut) {
               my $cmp = PQS::Imposition::Node::compare($node, $potential);
               if (defined $cmp) {
                 # If the new node is better, replace the existing one.
                 if ($cmp > 0) {
-                  $potential = $node;
+                  $forest[$i] = $node;
                 }
                 $is_exact_duplicate = 1;
                 last;
               }
             }
-            # If nodes are comparable but have different cut/orientation, do not discard either.
-            # Intentionally preserve both entries so rotated and non-rotated possibilities remain.
           }
 
           # Add node unless we already handled exact duplicate replacement above.
