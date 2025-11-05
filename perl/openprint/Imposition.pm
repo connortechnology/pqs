@@ -1391,7 +1391,7 @@ sub form {
       #openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$self{Project}->id(), $$self{service_id}, 'SignatureIndex', $signature_count );
       openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$self{Project}->id(), $$self{service_id}, 'Form', $signature_count );
     } else {
-      $openprint::log->error("No service id in impo.  Not saving Form");
+      $openprint::log->debug("No service id in impo.  Not saving Form");
     }
   }
 
