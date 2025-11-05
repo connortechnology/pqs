@@ -436,8 +436,8 @@ sub fill_box :Private {
             children => [$n, $p],
           );
 
-          # Add all valid layouts regardless of comparison results.
-          # This ensures both rotated and non-rotated layouts are preserved.
+          # Add all generated layout nodes to preserve all alternatives.
+          # This ensures both rotated and non-rotated layouts are returned.
           push @forest, $node;
         } # end foreach p
       } # end foreach n
