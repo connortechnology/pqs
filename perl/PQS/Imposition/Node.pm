@@ -245,14 +245,58 @@ sub work_and {
 # imposition types will use different comparisons, they should be put in that
 # package and be switched out to the appropriate one at imposition creation
 # time.
+# Helper function to collect the set of grains used in a node's leaf images.
+# Returns a hash with keys 0 and/or 1 indicating which grain orientations are present.
+sub _collect_grains {
+  my ($node) = @_;
+  my $id = $$node;
+  my %grains;
+
+  # If this is a leaf node (image), record its grain if defined
+  if ($node->is_sink) {
+    if (defined $grain[$id]) {
+      $grains{$grain[$id]} = 1;
+    }
+    return %grains;
+  }
+
+  # For non-leaf nodes, collect grains from all children
+  for my $child ($node->children) {
+    next if $child->is_empty;
+    my %child_grains = _collect_grains($child);
+    %grains = (%grains, %child_grains);
+  }
+
+  return %grains;
+}
+
 sub compare { # Class method
   my ($n, $p) = @_;
   my ($x, $y) = ($$n, $$p);
 
-  # If both nodes have defined grains and they differ, they are incomparable.
-  # This ensures both rotated and non-rotated layouts are preserved.
-  if (defined $grain[$x] && defined $grain[$y] && $grain[$x] != $grain[$y]) {
+  # Check if nodes have different grain compositions.
+  # undef grain means mixed, so we need to look at child nodes.
+  my $grain_x = $grain[$x];
+  my $grain_y = $grain[$y];
+
+  # If both have defined (non-mixed) grains and they differ, incomparable
+  if (defined $grain_x && defined $grain_y && $grain_x != $grain_y) {
     return undef;
+  }
+
+  # If either has mixed grain (undef), we need to check leaf grain composition
+  if (!defined $grain_x || !defined $grain_y) {
+    my %grains_x = _collect_grains($n);
+    my %grains_y = _collect_grains($p);
+
+    # If one uses only grain 0 and the other uses only grain 1, incomparable
+    if (keys(%grains_x) == 1 && keys(%grains_y) == 1) {
+      my ($gx) = keys %grains_x;
+      my ($gy) = keys %grains_y;
+      if ($gx != $gy) {
+        return undef;
+      }
+    }
   }
 
   my $cmp = $card[$x] <=> $card[$y];
