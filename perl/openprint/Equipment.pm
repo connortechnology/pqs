@@ -404,7 +404,7 @@ sub Specification {
 	my $Spec = openprint::misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );
 	$Specification_cache{$key} = $Spec;
 	return $Spec;
-} # end sub specification
+} # end sub Specification
 
 sub copy {
 	my $self = shift;

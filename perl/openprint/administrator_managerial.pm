@@ -51,6 +51,8 @@ sub configuration {
         (exists $param{value} ? ( value	=>	$param{value} ) : () ),
       });
 	} elsif ( $param{btnFunction} eq 'Save' ) {
+    my @changes;
+
 		foreach my $C ( Configuration->find() ) {
 			my $name = $$C{name};
 			if ( $name =~ /%20/ ) {

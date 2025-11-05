@@ -54,12 +54,9 @@ function loadwithpage() {
 
 	</script>
     
-	<script type="text/javascript">
+	<script>
 
 	var service = new Service('<?service.ref?>');
-
-
-
 
 function check_text (f,n) {
 //		alert('checktext start --' + f);
@@ -114,8 +111,6 @@ function check_information () {
 			msg += 'Please Select a Contact State/Province' + '\n';
 		}
 return msg;
-
-		
 }
 
 // Stuff to do before adding this shipment to multiple shipment list.
@@ -136,8 +131,6 @@ function check_ship_to () {
       	document.f1.Location.value='/service/shipping?pid=<?pid?>;sid=<?sid?>';
 
 }
-
-
 
 function my_validate() {
 	if (!document.getElementsByName('delete')) return;
@@ -278,7 +271,7 @@ function overrides (id) {
 	
 	
 </script>
-	<script type="text/javascript" src="/javascripts/proj/service/shipping.js"></script>
+<script src="<?hash_link(/javascripts/proj/service/shipping.js)?>"></script>
 </head>
 
 <body>
@@ -498,7 +491,7 @@ function overrides (id) {
                            <td valign="top">Ship Via:</td>
                            <td>   
                             
-                 <select class="form" id="ddmShipVia1" name="ddmShipVia1" onchange="overrides(1);" style="width:14em">
+                 <select class="form" id="ddmShipVia1" name="ddmShipVia1" onchange="overrides(1);">
 			<option value="">- Select -</option>
 				<?SHIP_OPTIONS?>
 		</select>

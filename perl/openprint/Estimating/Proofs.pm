@@ -31,6 +31,7 @@ require openprint::Estimating::Printing;
 use Data::Dumper;
 
 use constant DEBUG => 0;
+
 use constant LAYOUT_PROOF => 1;
 use constant COLOUR_PROOF => 2;
 use constant PRESS_PROOF => 3;
@@ -58,9 +59,9 @@ sub ServicePriceConfiguration {
   my $name = shift;
   return $ServicePrices{$name} if $ServicePrices{$name};
   foreach my $key (keys %ServicePrices) {
-    $log->debug("$key $name");
+    $log->debug("$key $name") if DEBUG;
     return $ServicePrices{$key} if ($name =~ /$key/i);
-    $log->debug("$key $name");
+    $log->debug("$key $name") if DEBUG;
   }
   return undef;
 }
@@ -83,7 +84,7 @@ my @variables = (
 sub variables {
 	my ( $p_id, $s_id, $old_specs, $specs ) = @_;
 
-  $openprint::log->debug(Data::Dumper::Dumper($specs));
+  $openprint::log->debug(Data::Dumper::Dumper($specs)) if DEBUG;
 	my $Project = new openprint::Project( $p_id );
 	my @v = @variables;
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -97,10 +98,8 @@ sub variables {
     $$Imposition{service_id} = $ss_id;
     my $form = $Imposition->form();
 		foreach my $key ( keys %{$specs} ) {
-      $log->debug("Ley $key");
 			if ( $key =~ /^ddmProofType\-$form\-(\d+)\-(\d+)$/ ) {
 				my ( $proof_index, $qty_index ) = ( $1, $2 );
-        $log->debug("Have proof index $proof_index");
 
 				push @v, map { join('-', $_, $form, $proof_index, $qty_index) }
 				(
@@ -160,7 +159,6 @@ sub get_indexes {
 	my ( $specs, $qty_index, $indexes, $types ) = @_;
 	foreach my $key ( keys %{$specs} ) {
 		if ( $key =~ /^ddmProofType\-(\d+)\-(\d+)\-$qty_index$/ ) {
-      $openprint::log->debug("$key $1 $2");
 			$$indexes{$1}[$2] = $2;
 			push @{$$types{$1}}, $$specs{"ddmProofType-$1-$2-$qty_index"};
 		} # end if
@@ -365,7 +363,7 @@ sub add_defaults {
       $$indexes{$form}[FOLDING_PROOF] = FOLDING_PROOF;
     } else {
       #$$indexes{$form}[FOLDING_PROOF] = undef;
-      $log->debug("Not adding folding proof");
+      $log->debug("Not adding folding proof") if DEBUG;
     } # end if
   } # end if
 
@@ -458,7 +456,7 @@ sub signature_calc {
 
 		my $ProofService = $ProofServices{$type};
 		if ( $ProofService ) {
-      $openprint::log->debug("Proofs service: $$ProofService{name}");
+      $openprint::log->debug("Proofs service: $$ProofService{name}") if DEBUG;
 			if ( $type eq 'PressProof' ) {
         my $press = $Imposition->Press();
 				%price = $ProofService->get_price($$totals{$type}{Quantity}, $press);
@@ -646,7 +644,7 @@ sub insert_press_proof {
       } # end if
     } # end if
   } # end if
-  $log->debug("insert_new_proof($specs, $proof_index, $form, $quantity, $Imposition->sheet_width(), $Imposition->sheet_height(), 'PressProof', $qty_index )");
+  $log->debug("insert_new_proof($specs, $proof_index, $form, $quantity, $Imposition->sheet_width(), $Imposition->sheet_height(), 'PressProof', $qty_index )") if DEBUG;
 	insert_new_proof($specs, $proof_index, $form, $quantity, $Imposition->sheet_width(), $Imposition->sheet_height(), 'PressProof', $qty_index );
 } # end sub insert_press_proof
 
@@ -886,7 +884,7 @@ sub insert_layout_proof {
     }
   }
 
-  $log->debug("Using $$proofer{name} for equipment");
+  $log->debug("Using $$proofer{name} for equipment") if DEBUG;
   my ($width, $height, $sides) = $proofer->specifications(
     'Default Layout Proof Width','Default Layout Proof Height', 'Layout Proof Sides');
   ($width, $height) = @$Imposition{'sheet_width','sheet_height'} if !($width and $height);
@@ -992,7 +990,7 @@ sub display {
 				my ( $quantity, $width, $height, $type ) = @$specs{map{join('-',$_,$form,$proof_index,$qty_index)}
 					('txtProofQuantity', 'txtProofWidth', 'txtProofHeight', 'ddmProofType')
 				};
-$openprint::log->debug("Have $quantity $width x $height $type for form $form qty $qty_index");
+$openprint::log->debug("Have $quantity $width x $height $type for form $form qty $qty_index") if DEBUG;
 				push @{$$variable{'Proofs-'.$form.'-'.$qty_index}}, $proof_index, $quantity, 1*$width, 1*$height, $type;
 			} # end foreach proof
 		} # end foreach signature
@@ -1021,7 +1019,7 @@ $openprint::log->debug("Have $quantity $width x $height $type for form $form qty
 sub save {
 	my ( $project_index, $service_index, $new_specs ) = @_;
 
-	$log->debug('In Save Proof Specs');
+	$log->debug('In Save Proof Specs') if DEBUG;
 
 	my $Project = new openprint::Project($project_index);
 	my $Service = $Project->Service($service_index);
