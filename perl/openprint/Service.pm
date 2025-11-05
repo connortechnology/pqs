@@ -23,7 +23,7 @@ foreach my $service ( keys %ServicePrices) {
   $log->debug("Have a price definition for $service");
 }
 
-$debug = 1;
+$debug = 0;
 $cached = 0;
 
 $table = 'tbl_services';
