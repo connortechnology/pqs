@@ -4,42 +4,21 @@
 	<p>If the ink on your project <span class="tip" title="Layout, type or pictures that extend beyond the trim marks on a page. Illustrations that spread to the edge of the paper without margins are referred to as 'bled off'.">bleed</span> off the edge, please specify the amount and locations</p>
 
   <div class="bleeds">
-    <p>
-	<label for="bleed_size">Bleed Size:</label>
-	<select id="bleed_size" name="bleed_size" size="1" onchange="check_bleeds.apply(this);" >
-        
-       <? if ($variable->{project}{press_type}{ref} eq 'web') ?>
+    <div class="bleed_size">
+      <label for="bleed_size">Bleed Size:</label>
+      <select id="bleed_size" name="bleed_size" size="1" onchange="check_bleeds.apply(this);" >
+        <option value="0"      >No Bleed</option>
+        <option value="0.125"  >1/8"</option>
+        <option value="0.0625" >1/16"</option>
+      </select>
+    </div>
 
-       <!-- TS Wants to have only 1/16 as a bleed option for web printing -->
-
-       <? eval( $variable->{spec}{bleed_size} = '0.0625' if $variable->{spec}{bleed_size} == '0.0625'; ) ?>
-
-
-		<option value="0"      >No Bleed</option>
-		<option value="0.0625" selected="selected" >
-            Bleeds 
-        </option>
-        <!-- Web Only Options -->
-       <? else ($variable->{project}{press_type}{ref} eq 'web') ?>
-		<option value="0"      >No Bleed</option>
-		<option value="0.125"  >1/8"</option>
-		<option value="0.0625" >1/16"</option>
-       <? endif ($variable->{project}{press_type}{ref} eq 'web') ?>
-	</select>
-	<br />
-
-    <label>Bleed Locations:</label>
-    <div class="bleed_sides">
-      <div class="checkbox pad-right">
-        <label for="bleed_sides_left"><input type="checkbox" name="bleed_sides" id="bleed_sides_left" value="3" />Left</label><br />
-        <label for="bleed_sides_right"><input type="checkbox" name="bleed_sides" id="bleed_sides_right" value="1" />Right</label><br />
-      </div>
-      <div class="checkbox">
-        <label for="bleed_sides_top"><input type="checkbox" name="bleed_sides" id="bleed_sides_top" value="0" />Top</label><br />
-        <label for="bleed_sides_bottom"><input type="checkbox" name="bleed_sides" id="bleed_sides_bottom" value="2" />Bottom</label><br />
+    <div class="bleed_locations">
+      <label>Bleed Locations:</label>
+      <div class="bleed_sides">
+        <?echo(checkboxes('bleed_sides', [3=>'Left',1=>'RIght', 0=>'Top', 2=>'Bottom'], $$variable{spec}{bleed_sides}, { onclick=>"calc('f1');"});)?>
       </div>
     </div>
-    </p>
   </div>
 
 		<!-- Colour Bars -->
@@ -51,9 +30,20 @@
 			<p>Certain projects can benefit from having a specific <span class="tip" title="The alignment of the fibres during the manufacturing process.">grain</span> directions. Business cards are best printed with the grain running along their width for a stiffer card. Perfect bound books are best with the grain parallel to the spine (height) to prevent paper distortion due to glueing. Please choose a specific direction or choose &#8221;No Preference&#8222; if the grain direction isn&#8217;t a factor.</p>
 			<label>Grain Direction:</label>
 			<div>
-				<label class="radio"><input type="radio" name="grain_direction" value="" />No Preference</label><br />
-				<label class="radio"><input type="radio" name="grain_direction" value="0" />Width</label><br />
-				<label class="radio"><input type="radio" name="grain_direction" value="1" />Height</label><br />
+        <?echo(join("\n",
+           ssi::radio('want_grain_direction', [
+          ''=>'No Preference',
+          #'Mixed' => 'Mixed',
+          #'NotMixed' => 'Not Mixed',
+          '0' => 'Width',
+          '1' => 'Height',
+        ], $$variable{spec}{want_grain_direction}, {
+          default=>'',
+          onclick=>"calc('f1');",
+          }),
+          ssi::input(name=>'grain_direction', type=>'hidden', value=>$$variable{specs}{grain_direction}),
+          );
+        )?>
 			</div>
 			<br />
     </div>

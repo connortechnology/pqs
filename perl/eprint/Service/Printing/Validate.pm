@@ -123,7 +123,7 @@ sub spread {
   }
 
   # The user's grain direction preference.
-  $spread{grain} = $specs->{grain_direction};
+  $spread{grain} = $specs->{want_grain_direction};
 
   # Do they want a colour bar for this spread?
   $spread{colour_bar} = ($specs->{colour_bar}) ? 1 : 0;
