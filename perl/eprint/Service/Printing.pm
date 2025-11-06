@@ -208,14 +208,12 @@ sub action {
   # SIGNATURES
   #
   # Get all signatures of our type (excluding us) and those not completed.
-  my @signatures = grep { $_ != $sid } 
-  signatures_of_type($log, $dbh, $pid, $spread_type);
-
-  my @unfinished = grep { get_status($log, $dbh, $_) ne 'calculated' }
-  @signatures;
+  my @signatures = grep { $_ != $sid } signatures_of_type($log, $dbh, $pid, $spread_type);
+  my @unfinished = grep { get_status($log, $dbh, $_) ne 'calculated' } @signatures;
 
   my $needed   = get_specifications($log, $dbh, $pid, $book, $spread_type);
   my $current  = count_completed_spreads($log, $dbh, $spread_type, $pid, $sid);
+  #FIXME: Not sure about the || 1
   my $provided = $specs->{spreads_in_group} * ($specs->{txtSignatureQuantity} || 1);
 
   $current += $provided;
