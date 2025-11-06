@@ -32,7 +32,7 @@ use constant ID    => 2; # REMOVE - When image is an object.
 use constant BLEED => 3; # REMOVE
 use constant GRAIN => 4; # REMOVE
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 sub get_precision {
   return map {
@@ -78,7 +78,7 @@ sub _init :Init {
 
   # A kludge to handle multi-page books the way they were previously. We do
   # two rounds of imposition, one for each grain direction.
-  my $is_special = $project->{is_multipage} && (!defined $project->{grain} or $$project{grain} eq '');
+  my $is_special = $project->{is_multipage} && (!defined $project->{grain} or $$project{grain} eq '' or $$project{grain} eq 'Mixed');
   my $grain = $is_special ? 0 : $project->{grain};
 
   $openprint::log->debug("START PQS IMPOSE 1: ".(Time::HiRes::time() - $start_time)." max precision $max_precision is_special: $is_special is_multipage: $$project{is_multipage} grain:".(defined $grain?$grain:'undef')) if DEBUG;
@@ -98,7 +98,6 @@ sub _init :Init {
     $lookup[$$self] = $have_cache;
     return $self;
   }
-
 
   my @valid;
 
@@ -170,7 +169,6 @@ sub images { # :Private
   if (($grain eq '') || $grain == 1) {
     push @images, [ $h, $w, 0, [ @bleed[R, B, L, T] ], 1 ];
   }
-
   return @images;
 }
 
