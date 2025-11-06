@@ -32,7 +32,7 @@ use constant ID    => 2; # REMOVE - When image is an object.
 use constant BLEED => 3; # REMOVE
 use constant GRAIN => 4; # REMOVE
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 sub get_precision {
   return map {
@@ -75,7 +75,13 @@ sub _init :Init {
   my $max_precision = List::Util::max(get_precision(@$project{qw(width height trim)}));
   $max_precision = 4 if $max_precision < 4;
   $round_to = 1/(10**$max_precision);
-  $openprint::log->debug("START PQS IMPOSE 1: ".(Time::HiRes::time() - $start_time)." max precision $max_precision") if DEBUG;
+
+  # A kludge to handle multi-page books the way they were previously. We do
+  # two rounds of imposition, one for each grain direction.
+  my $is_special = $project->{is_multipage} && (!defined $project->{grain} or $$project{grain} eq '');
+  my $grain = $is_special ? 0 : $project->{grain};
+
+  $openprint::log->debug("START PQS IMPOSE 1: ".(Time::HiRes::time() - $start_time)." max precision $max_precision is_special: $is_special is_multipage: $$project{is_multipage} grain:".(defined $grain?$grain:'undef')) if DEBUG;
 
   # width x height - bleed size - trim size - multipage - bleed sides
   my $key = sprintf("%06.${max_precision}fx%06.${max_precision}f-%4.${max_precision}f-%d-%s",
@@ -93,12 +99,8 @@ sub _init :Init {
     return $self;
   }
 
-  # A kludge to handle multi-page books the way they were previously. We do
-  # two rounds of imposition, one for each grain direction.
-  my $is_special = $project->{is_multipage} && !defined $project->{grain};
 
   my @valid;
-  my $grain = $is_special ? 0 : $project->{grain};
 
   IMPOSITION: {
     @images = $self->images($grain);
