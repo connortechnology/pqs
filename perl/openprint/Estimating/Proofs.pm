@@ -804,7 +804,7 @@ sub insert_colour_proof {
 
     # Get max size for the proofer.
     my ( $maxwidth, $maxheight ) = $proofer->specifications('Maximum Sheet Width', 'Maximum Sheet Length') if $proofer;
-    if ($maxwidth and $maxheight) {
+    if ($maxwidth and $maxheight and $width and $height) {
       # If our Proof Style is multiple then increase our proof size until we have everything down to 1 proof
       # or we have hit the max size for the proofer.
       my $w = $width;
