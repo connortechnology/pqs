@@ -150,9 +150,10 @@
 	<? if ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' ) ?>
 		<? if ( $$variable{project}{press_type}{ref} ne 'digital' && $$variable{project}{press_type}{ref} ne 'screen') ?>
 			<? if project.is_multipage ?>
+  <div class="add_plates">
 				<label for="add_plates" class="tip" title="Plates are the carriers of the images that are to be printed on paper. One printing plate is required for each ink <?ws_colour?> printed. Metal plates are currently the only way to produce high quality close-register printed images. Plates can also be made out of plastic and paper.">Additional Plates:</label>
 				<input id="add_plates" name="add_plates" type="text" size="9" class="smBox" />
-				<br />
+  </div>
 			<? endif project.is_multipage ?>
 		<? endif ( $$variable{project}{press_type}{ref} ne 'digital' && $$variable{project}{press_type}{ref} ne 'screen') ?>
 	<? endif ( $$variable{'user_type'} eq 'E' or $$variable{'user_type'} eq 'A' ) ?>
