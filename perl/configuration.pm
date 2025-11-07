@@ -98,4 +98,36 @@ sub entry_exists {
     return $dbh->selectrow_array($sth, undef, $name);
 }
 
+sub merge {
+  @config{keys %{$_[0]}} = values %{$_[0]};
+} # end sub merge
+
+sub merge_defaults {
+  foreach my $k ( keys %{$_[0]} ) {
+    $config{$k} = $_[0]{$k} if ! $config{$k};
+  } # end foreach
+} # end sub merge_defaults
+
+sub from_file {
+  my $file = $_[0];
+  # Process the contents of the config file
+  our %Config;
+  my $rc = do($file);
+
+  # Check for errors
+  if ($@) {
+    $openprint::log->error( "ERROR: Failure compiling '$file' - $@" );
+    return "ERROR: Failure compiling '$file' - $@";
+  } elsif (! defined($rc)) {
+    $openprint::log->error( "ERROR: Failure reading '$file' - $!" );
+    return "ERROR: Failure reading '$file' - $!";
+  } elsif (! $rc) {
+    $openprint::log->error( "ERROR: Failure processing '$file'" );
+    return "ERROR: Failure processing '$file'";
+  }
+  @config{keys %Config} = values %Config;
+  return;
+} # end sub from_file
+
+
 1;
