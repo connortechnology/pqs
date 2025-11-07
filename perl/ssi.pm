@@ -39,7 +39,7 @@ use vars qw( $r %variable %session %page_session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *config = \%openprint::config;
 *r = \$openprint::r;
-$dbh = session::dbh;
+*dbh = \$openprint::dbh;
 
 # If set to 1, SSI will die on keys that don't exists, otherwise we silently
 # ignore them.
@@ -630,7 +630,7 @@ sub select_options {
 	my $col1 	= shift;
 	my $col2 	= shift;
 	
-	my $dbh = session::dbh;
+  #my $dbh = $openprint::dbh;
 
 	my $sql = qq{SELECT $col1, $col2 FROM $table order by $col2};
 	my $data = $dbh->selectall_arrayref($sql);
@@ -953,8 +953,6 @@ sub get_start_end_dates {
 sub hash_link {
   my ( $path ) = @_;
 
-  my $r = session::r;
-  my $log = session::log;
   my $skin_path = $r->dir_config('SkinPath');
 
   my $src;
@@ -1088,8 +1086,6 @@ sub checked {
 sub button {
   my ( $name, $options ) = @_;
 
-  my $r = session::r;
-  my $log = session::log;
   if ( $$options{href} ) {
     my ( $href ) = $$options{href} =~ /^([^\?]+)/;
     #if ( ! ( $href =~ /^\// ) ) {
