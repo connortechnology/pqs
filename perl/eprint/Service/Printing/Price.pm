@@ -8,7 +8,7 @@ use constant DEBUG=>0;
 my $cutters = 0;
 
 use Data::Dumper;
-$Data::Dumper::Sortkeys = 1;
+
 use Compress::LZF         qw(:compress :freeze);
 use Storable              qw(freeze);
 use List::Util            qw(sum);
@@ -60,6 +60,7 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *r = \$openprint::r;
 my $variable = \%variable;
 
+my $global_iterator;
 
 use base qw(Exporter);
 our @EXPORT      = 'calc';
@@ -1028,7 +1029,7 @@ sub create_impositions {
   my $func = $project->{press_type} eq 'inkjetprinter' ? \&lf_imposition : \&convert_to_old;
 
   my @impositions;
-  my $iter = impositions($dbh, $project, $start_time);
+  my $iter = $global_iterator = impositions($dbh, $project, $start_time);
   # For now just flatten the iterator into a list of old 'impositionObjects'.
   while ($iter->isnt_exhausted) {
     #$openprint::log->debug(Data::Dumper::Dumper($iter->value));
@@ -1077,11 +1078,13 @@ sub create_impositions {
   }
 
   #print STDERR "HAVE IMPOS.TIONS BEFORE FILTER 99 " . scalar @impositions . "\n", Dumper(\@impositions);
-  @impositions = grep { $_->{setup} > 0 } @impositions;
-  #print STDERR "HAVE IMPOSITIONS TOTAL " . scalar @impositions . "\n";
+  #@impositions = grep { $_->{setup} > 0 } @impositions;
+  print STDERR "HAVE IMPOSITIONS TOTAL " . scalar @impositions . "\n";
+
+  #$DB::single = 1;
 
   return \@impositions;
-}
+} # end sub create_impositions
 
 sub post_process {
   my ($log, $dbh, $pid, $sid, $press_type, $project, $remaining_spreads, $specs) = @_;
