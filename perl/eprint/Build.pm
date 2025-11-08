@@ -216,7 +216,7 @@ sub build {
     CASE WHEN lngdep IS NULL THEN } . NON_DEPENDENT_LEVEL . q{
     ELSE lngdep END AS sorted
     FROM tbl_service_types
-    WHERE strmodule IS NOT NULL
+    WHERE strmodule IS NOT NULL AND deleted=false
     AND ( CASE WHEN lngdep IS NULL THEN } . NON_DEPENDENT_LEVEL . q{
     ELSE lngdep
     END >= ? )
