@@ -93,9 +93,10 @@ Readonly my %BINDERY_CLASS => (
 
   Cerlox          => 'Spiral',
   DoubleLoopWire  => 'Spiral',
+  PlasticCoil     => 'Spiral',
   MetalCoil       => 'Spiral',
   '3HolePunch'   	=> 'Spiral',
-  'SingleHole'   	=> 'Spiral',
+  SingleHole   	=> 'Spiral',
   CornerStitching => 'Spiral',
   Proclick     	=> 'Spiral',
 );
