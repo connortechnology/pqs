@@ -238,7 +238,7 @@ sub response {
   } else {
     my $form   = param_hashref($r);
     my $specs  = { %$form };
-    print STDERR "Calling price".Data::Dumper::Dumper($specs)."\n";
+    #print STDERR "Calling price".Data::Dumper::Dumper($specs)."\n";
     my $status = eprint::service::price($r->log, $dbh, $variable, $pid, $sid, $service, $specs);
 
     # AJAX pricing request.
