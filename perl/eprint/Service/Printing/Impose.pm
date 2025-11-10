@@ -49,7 +49,7 @@ sub impositions {
   #print STDERR "HAVE PAPER: $subs PRESSES: $presses \n", Dumper($substrates);
 
   my @styles     = get_runstyles($project);
-  $openprint::log->debug("RS: @styles");
+  #$openprint::log->debug("RS: @styles");
 
   my $empty = Iterator->new(sub { Iterator::is_done });
 
@@ -77,7 +77,7 @@ sub impositions {
     # Get the run styles we can do and sheet sizes that fit on the press.
     my @r = grep { can_print_style($press, $_, $project) } @styles;
     my @s = map  { fit_to_press   ($_,     $press      ) } @$substrates;
-    $openprint::log->debug("HAVE R: ". Dumper(@r). " S: ". Dumper(@s));
+    #$openprint::log->debug("HAVE R: ". Dumper(@r). " S: ". Dumper(@s));
 
     return $empty unless @r && @s;
 
@@ -89,7 +89,7 @@ sub impositions {
       return imap { [$press, reverse(@$_), undef, undef ] } $setup;
     }
 
-    $openprint::log->debug("HAVE SETUP: ". Dumper($setup));
+    #$openprint::log->debug("HAVE SETUP: ". Dumper($setup));
 
     # Find the best (if any) imposition for each setup. TODO We try WT/WF
     # that obviously won't work as the image check should be half the

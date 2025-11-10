@@ -458,7 +458,7 @@ sub signature_calc {
 
 		my $ProofService = $ProofServices{$type};
 		if ( $ProofService ) {
-      $openprint::log->debug("Proofs service: $$ProofService{name}");
+      $openprint::log->debug("Proofs service: $$ProofService{name}") if DEBUG;
 			if ( $type eq 'PressProof' ) {
         my $press = $Imposition->Press();
 				%price = $ProofService->get_price($$totals{$type}{Quantity}, $press);
