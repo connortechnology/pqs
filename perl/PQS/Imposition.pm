@@ -542,8 +542,12 @@ sub post_process :Private {
 
         # Perpendicular _|_.
         my $len_y = 0;
-        for my $grandchild ($child->children) {
-          $len_y += $grandchild->size->[!$dir];
+        if ($child->children) {
+          for my $grandchild ($child->children) {
+            $len_y += $grandchild->size->[!$dir];
+          }
+        } else {
+          $len_y = $child->size->[!$dir];
         }
 
         # Find the largest child perpendicular child.
