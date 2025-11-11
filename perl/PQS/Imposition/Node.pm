@@ -6,7 +6,6 @@ our $VERSION = '0.01';
 
 use Object::InsideOut 3.37 qw(Storable);
 use PQS::Imposition::Constants;
-use Data::Dumper;
 use List::Util qw(sum);
 
 my @edges :Field(Get => 'edges'); # Out edges.
@@ -198,10 +197,8 @@ sub work_and {
         $node->add_edge($self, $self->mirror($axis));
         $cut[$$node] = $axis;
     } elsif ($axis == $self->cut) {
-      $openprint::log->debug("Axis $axis == ".$self->cut);
         $node->add_edge($_) for $self->mirror($axis)->children, $self->children;
     } elsif ($axis != $self->cut) {
-      $openprint::log->debug("Not align on qxis");
       # Otherwise we'll extend the bounding boxes along the axis and append the
       # children of those and it's mirrors.
         # for my $child ( $self->children ) {
