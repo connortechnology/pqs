@@ -32,7 +32,7 @@ use constant ID    => 2; # REMOVE - When image is an object.
 use constant BLEED => 3; # REMOVE
 use constant GRAIN => 4; # REMOVE
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 sub get_precision {
   return map {
@@ -95,8 +95,8 @@ sub _init :Init {
   $openprint::log->debug("START PQS IMPOSE 2: ".(Time::HiRes::time() - $start_time)) if DEBUG;
   # Retrieve cached results if we've seen this before.
   if ($have_cache) {
-    $lookup[$$self] = $have_cache;
-    return $self;
+    #$lookup[$$self] = $have_cache;
+    #return $self;
   }
 
   my @valid;
@@ -297,7 +297,9 @@ sub best_fit {
       }
 
       #print STDERR "TIME TO FIND FIT: $w x $h \n";
-      foreach my $node ( $self->find_fit($w, $h, $grain, $rotated, $is_one_up) ) {
+      my $nodes = $self->find_fit($w, $h, $grain, $rotated, $is_one_up);
+      $openprint::log->debug("Nodes to consider".scalar @{$nodes});
+      foreach my $node (@{$nodes}) {
         #$openprint::log->debug("from Find fit from $w x $h grain $grain rotated $rotated ".$node->card);
 
         $node = $node->work_and(TURN) if $node && ($style eq 'WT');
@@ -337,7 +339,7 @@ sub best_fit {
   )[0];
 
   #no warnings qw(uninitialized);
-  print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ", Dumper(@possible);
+  print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ". scalar @possible;
 
   # TEMP: Simple call for now.
   return $node->[0] ? @$node : (undef, undef);
@@ -367,20 +369,23 @@ sub find_fit {
     $b->card      <=> $a->card        # Max cardinality
   }
   grep {    
-  $openprint::log->debug("Find fit from $w x $h grain $grain rotated $rotation ".$_->card. " thinggrain: ".$_->grain . "tinwidht ".$_->size->[W].'x'.$_->size->[H] ) if DEBUG;
+  #$openprint::log->debug("Find fit from $w x $h grain $grain rotated $rotation ".$_->card. " thinggrain: ".$_->grain . "tinwidht ".$_->size->[W].'x'.$_->size->[H] ) if DEBUG;
 
     #print STDERR "FIND FIT NODE: ", Dumper($_->size->[W],  $_->size->[H] ,  $_->grain, $_->card);
     ($_->size->[W] <= $w && $_->size->[H] <= $h) 
+    #&& ($_->size->[W] >= $w-2 && $_->size->[H] >= $h-2) 
     && (!defined $grain ? 1 :    defined $_->grain && $_->grain == $rotation)
     && ($is_one_up ? $_->card == 1 : 1) 
   } @{ $lookup[$$self] };
+
   if (DEBUG) {
     for (@nodes) {
       $openprint::log->debug("Got Find fit from $w x $h grain $grain rotated $rotation ".$_->card . ' on '.join('x', @{$_->size}));
     }
   }
 
-  return @nodes;
+
+  return [ splice @nodes, 0, 10 ];
   return scalar @nodes ? $nodes[0] : undef;
 }
 
@@ -456,32 +461,59 @@ sub fill_box :Private {
             next;
           }
 
+          my $has_similar = 0;
 
-          # Can we be compared? If so are we better?
-          # Modified: preserve different orientations and comparable-but-worse nodes.
-          # We only treat a node as an exact duplicate when both size and cut axis
-          # are identical; in that case we compare and may replace the existing one.
-          my $is_exact_duplicate = 0;
+          COMPARISON:
+          for my $potential (@forest) {
+            # The overloaded version of calling the comparison
+            # somehow wasn't seeing private data.
+            #
+            # my $cmp = $node <=> $potential;
 
-          for my $i (0 .. $#forest) {
-            my $potential = $forest[$i];
-            # If exact same size and same cut axis, compare and possibly replace.
-            # Otherwise preserve both - different cuts/orientations are kept for diversity.
-            if (same_size($node->size, $potential->size) && defined($potential->cut) && defined($node->cut) && $potential->cut == $node->cut) {
-              my $cmp = PQS::Imposition::Node::compare($node, $potential);
-              if (defined $cmp) {
-                # If the new node is better, replace the existing one.
-                if ($cmp > 0) {
-                  $forest[$i] = $node;
-                }
-                $is_exact_duplicate = 1;
-                last;
-              }
+            my $cmp = PQS::Imposition::Node::compare($node, $potential);
+
+            if (defined $cmp) {
+              # We're better than the previous in our group.
+              if ($cmp > 0) { $potential = $node; }
+
+              # We've found our group, mark it and we're done.
+              $has_similar = 1;
+              last COMPARISON;
             }
           }
 
           # Add us if we're first or no comparable node exists.
-          push @forest, $node if !$is_exact_duplicate;
+          push @forest, $node if !$has_similar;
+                                       
+          if (0) {
+
+
+            # Can we be compared? If so are we better?
+            # Modified: preserve different orientations and comparable-but-worse nodes.
+            # We only treat a node as an exact duplicate when both size and cut axis
+            # are identical; in that case we compare and may replace the existing one.
+            my $is_exact_duplicate = 0;
+
+            for my $i (0 .. $#forest) {
+              my $potential = $forest[$i];
+              # If exact same size and same cut axis, compare and possibly replace.
+              # Otherwise preserve both - different cuts/orientations are kept for diversity.
+              if (same_size($node->size, $potential->size) && defined($potential->cut) && defined($node->cut) && $potential->cut == $node->cut) {
+                my $cmp = PQS::Imposition::Node::compare($node, $potential);
+                if (defined $cmp) {
+                  # If the new node is better, replace the existing one.
+                  if ($cmp > 0) {
+                    $forest[$i] = $node;
+                  }
+                  $is_exact_duplicate = 1;
+                  last;
+                }
+              }
+            }
+
+            # Add us if we're first or no comparable node exists.
+            push @forest, $node if !$is_exact_duplicate;
+          }
         } # end foreach p
       } # end foreach n
     }
