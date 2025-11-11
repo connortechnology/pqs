@@ -32,7 +32,7 @@ use constant ID    => 2; # REMOVE - When image is an object.
 use constant BLEED => 3; # REMOVE
 use constant GRAIN => 4; # REMOVE
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 sub get_precision {
   return map {
@@ -95,8 +95,8 @@ sub _init :Init {
   $openprint::log->debug("START PQS IMPOSE 2: ".(Time::HiRes::time() - $start_time)) if DEBUG;
   # Retrieve cached results if we've seen this before.
   if ($have_cache) {
-    #$lookup[$$self] = $have_cache;
-    #return $self;
+    $lookup[$$self] = $have_cache;
+    return $self;
   }
 
   my @valid;
