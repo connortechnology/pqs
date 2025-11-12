@@ -385,7 +385,7 @@ sub find_fit {
   }
 
 
-  return [ splice @nodes, 0, 10 ];
+  return [ splice @nodes, 0, 3 ];
   return scalar @nodes ? $nodes[0] : undef;
 }
 
