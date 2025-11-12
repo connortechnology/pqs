@@ -4,7 +4,7 @@
 </div>
 <?include('/includes/error_reporting.html')?>
 <? if ( $session{user_id} ) ?>
-<form id="f1" name="f1" method="post" action="/main/project/history.html">
+<form id="f1" name="f1" method="post" action="history.html">
   <div class="Project"><div class="History">
     <fieldset class="filters"><legend>Select Search Criteria</legend>
       <div class="content">
@@ -38,7 +38,7 @@
         <label>Type</label>
         <select id="type_id" name="type_id" onchange="load_projects();">
           <option value="">All</option>
-          <? echo ( make_drop_down( openprint::ProjectType->dropdown( order=>'lower(name)' ), $session{$r->uri().'?type_id'} ); ) ?>
+          <? echo ( make_drop_down( openprint::ProjectType->dropdown(), $session{$r->uri().'?type_id'} ); ) ?>
         </select>
       </li>
       </ul>
@@ -104,7 +104,7 @@
       </li>
 <? endif ( @{$$variable{Users}} > 1 ) ?>
       <li><label>Contains</label>
-        <? echo ( ssi::select( openprint::ServiceType->dropdown(order=>'lower(name)'), $session{$r->uri().'?servicetype_id'}, { name=>'servicetype_id', prepend=>['','All'], onchange=>'load_projects();' } ); ) ?>
+        <? echo ( ssi::select( openprint::ServiceType->dropdown(), $session{$r->uri().'?servicetype_id'}, { name=>'servicetype_id', prepend=>['','All'], onchange=>'load_projects();' } ); ) ?>
       </li>
       </ul>
       </div>
@@ -123,11 +123,11 @@
   </div>
   <input type="hidden" name="btnFunction" />
 </form>
-<form id="f2" name="f2" method="post" action="/main/project/history.html">
+<form id="f2" name="f2" method="post" action="history.html">
     <div id="ProjectList"><? include('_history.html') ?></div>
   <input type="hidden" name="btnFunction" />
 </form>
 <? else ( $session{user_id} ) ?>
 Only logged in customers have a project history.
 <? endif ( $session{user_id} ) ?>
-<script src="<?hash_link(/main/project/history.js)?>"></script>
+<script src="<?hash_link(history.js)?>"></script>
