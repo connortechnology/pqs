@@ -2203,7 +2203,7 @@ sub get_run_price {
 
     # $log->error("1: Could not Find Impression Price For Service: $s on Press: $press Qty Range: $press_sheets") if ( $running_price == 0 );
 
-    $running_price /= 2;
+    #$running_price /= 2;
 
   } else {
     if ($side_one_colours) {
@@ -2240,7 +2240,7 @@ sub get_run_price {
         if ($mod_colours) {
           $running_price += eprint::service::get_price($log, $dbh, $variable, $mod_colours . $impression_service, $press_sheets, $press);
         }
-        $running_price /= 2 if $side_one_colours;
+        #$running_price /= 2 if $side_one_colours;
       }
     }
   }
