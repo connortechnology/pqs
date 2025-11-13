@@ -7,6 +7,7 @@ require openprint;
 require sets;
 require openprint::Object_Type;
 require openprint::Log;
+require Scalar::Util;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
@@ -407,19 +408,33 @@ $log->warn('Object::changes called on an object with no fields');
 			}
 		} else {
       my $newvalue = $self->transform($field=>$$params{$field});
-      if ( $$self{$field} ne $newvalue ) {
-        if ( $field eq 'password' ) {
-          push @results, "$field changed";
+      if (Scalar::Util::looks_like_number($$self{$field}) and Scalar::Util::looks_like_number($newvalue)) {
+        if ( $$self{$field} != $newvalue ) {
+          if ( $field eq 'password' ) {
+            push @results, "$field changed";
+          } else {
+            push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$newvalue.'\'';
+          }
         } else {
-          push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$newvalue.'\'';
-        }
+          if ( $debug ) {
+            $log->debug("$field eq $$self{$field} to $newvalue");
+          }
+        } # end if
       } else {
-        if ( $debug ) {
-          $log->debug("$field eq $$self{$field} to $newvalue");
-        }
-      } # end if
-		} # end if
-	} # end foreach field
+        if ( $$self{$field} ne $newvalue ) {
+          if ( $field eq 'password' ) {
+            push @results, "$field changed";
+          } else {
+            push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$newvalue.'\'';
+          }
+        } else {
+          if ( $debug ) {
+            $log->debug("$field eq $$self{$field} to $newvalue");
+          }
+        } # end if
+      } # end if looks like a number
+    } # end if
+  } # end foreach field
 	return @results;
 }
 sub set_no_defaults {
