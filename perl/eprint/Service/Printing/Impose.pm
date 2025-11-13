@@ -95,7 +95,7 @@ sub impositions {
     # that obviously won't work as the image check should be half the
     # sheet size for them.
     my $valid = igrep { $_->[-2] } imap { [$press, $_->[1], $impositions->best_fit($press, @$_)] } $setup;
-    $openprint::log->debug("HAVE Valid: ". Dumper($valid));
+    #$openprint::log->debug("HAVE Valid: ". Dumper($valid));
     return $valid;
   };
 

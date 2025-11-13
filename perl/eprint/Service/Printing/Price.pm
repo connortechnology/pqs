@@ -2196,13 +2196,10 @@ sub get_run_price {
     $log->error( "PRINTING: FATAL ERROR: Could Not Get 'Number of Colours' for Press: $press");
     return %run_price;
   }
-  my $impression_service =
-  $is_perfecting ? 'ColourImpressionPerfecting' : 'ColourImpression';
+  my $impression_service = $is_perfecting ? 'ColourImpressionPerfecting' : 'ColourImpression';
   if ( $press_type ne 'web' && $is_perfecting && $side_two_colours ) {
     my $s = $side_one_colours.'-'.$side_two_colours . $impression_service;
-    $running_price =
-    eprint::service::get_price($log, $dbh, $variable,$s,
-      $press_sheets, $press);
+    $running_price = eprint::service::get_price($log, $dbh, $variable,$s, $press_sheets, $press);
 
     # $log->error("1: Could not Find Impression Price For Service: $s on Press: $press Qty Range: $press_sheets") if ( $running_price == 0 );
 
@@ -2216,43 +2213,34 @@ sub get_run_price {
       my $s = $run_colours . $impression_service;
 
       if ( $full_runs ) {
-        $running_price = eprint::service::get_price($log, $dbh, $variable,
-          $s, $press_sheets, $press) * $full_runs;
+        $running_price = eprint::service::get_price($log, $dbh, $variable, $s, $press_sheets, $press) * $full_runs;
 
         # $log->error("2: Could not Find Impression Price For Service: $s on Press: $press Qty Range: $press_sheets Run Price: $running_price ") if ( $running_price == 0 );
-
       }
 
       my $mod_colours = $side_one_colours % $max_colours;
       if ($mod_colours) {
         $s =  $mod_colours . $impression_service;
-        my $m_price = eprint::service::get_price($log, $dbh, $variable,
-          $s, $press_sheets, $press);
-
+        my $m_price = eprint::service::get_price($log, $dbh, $variable, $s, $press_sheets, $press);
         # $log->error("3:. Could not Find Impression Price For Service: $s on Press: $press Qty Range: $press_sheets") if ( $m_price == 0 );
-
         $running_price += $m_price;
       }
+      $openprint::log->error("1 Running price = $running_price") if !$running_price;
     }
 
     if ($side_two_colours) {
       my $full_runs   = int($side_two_colours / $max_colours);
-      my $run_colours =
-      $side_two_colours > $max_colours ? $max_colours : $side_two_colours;
-      $running_price +=
-      eprint::service::get_price($log, $dbh, $variable,
-        $run_colours . $impression_service,
-        $press_sheets, $press) * $full_runs;
-      my $mod_colours = $side_two_colours % $max_colours;
-      if ($mod_colours) {
-        $running_price +=
-        eprint::service::get_price($log, $dbh, $variable,
-          $mod_colours . $impression_service,
-          $press_sheets, $press);
-      }
-      if ($side_one_colours) {
-        $running_price /= 2;
-
+      my $run_colours = $side_two_colours > $max_colours ? $max_colours : $side_two_colours;
+      my $side_two_running_price = eprint::service::get_price($log, $dbh, $variable, $run_colours . $impression_service, $press_sheets, $press);
+      $running_price += $side_two_running_price * $full_runs;
+      if (!$side_two_running_price) {
+        $openprint::log->error("No Side 2 running price for $run_colours $impression_service $press_sheets $press = $side_two_running_price");
+      } else {
+        my $mod_colours = $side_two_colours % $max_colours;
+        if ($mod_colours) {
+          $running_price += eprint::service::get_price($log, $dbh, $variable, $mod_colours . $impression_service, $press_sheets, $press);
+        }
+        $running_price /= 2 if $side_one_colours;
       }
     }
   }

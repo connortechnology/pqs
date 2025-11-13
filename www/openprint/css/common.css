@@ -2,7 +2,9 @@ input:invalid {
 	color:red;
 }
 input, textarea {
+  /*
 	font-size: small;
+  */
 }
 textarea {
   box-sizing: border-box;
@@ -94,6 +96,11 @@ table.List {
 
 table.List tr {
   margin: 2px 0;
+  border: none;
+}
+table.List th,
+table.List td {
+  border: none;
 }
 th {
   vertical-align: top;
@@ -602,7 +609,6 @@ input.changed:focus {
 input[type="text"].filter, 
 .Service input[type="text"].filter,
 fieldset p input.filter {
-  line-height: 1.7;
 	width: 40px;
 }
 

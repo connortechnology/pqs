@@ -10,8 +10,8 @@ require sql;
 
 use vars qw( $log $dbh $debug $table $serial %fields %find_fields %defaults %transforms );
 $debug = 1;
-$table = 'products';
-$serial = 'products_id_seq';
+$table = 'tbl_products';
+$serial = 'tbl_products_id_seq';
 
 %fields = (
 	id				=>	'id',
