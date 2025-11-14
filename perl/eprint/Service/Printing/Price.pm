@@ -463,6 +463,11 @@ sub get_project_price {
   $total_imp = scalar @$impositions if TIMINGS;
 
   foreach $imp (@$impositions) {
+    $openprint::log->debug("$imp " . ref $imp);
+    if (!($imp and ref $imp eq 'eprint::impositionObject')) {
+      $openprint::log->error(Data::Dumper::Dumper($imp));
+      next;
+    }
     $$imp{specs} = $specs;
     if ( $openprint::r ) {
       $openprint::r->print("");
