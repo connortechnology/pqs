@@ -886,7 +886,7 @@ sub insert_layout_proof {
     }
   }
 
-  $log->debug("Using $$proofer{name} for equipment");
+  $log->debug("Using $$proofer{name} for equipment".$proofer->to_string()) if DEBUG;
   my ($width, $height, $sides) = $proofer->specifications(
     'Default Layout Proof Width','Default Layout Proof Height', 'Layout Proof Sides');
   ($width, $height) = @$Imposition{'sheet_width','sheet_height'} if !($width and $height);
