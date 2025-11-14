@@ -272,23 +272,16 @@ sub colours_coatings {
             };
         }
 
-		$specs->{"s${s}_varnish_spot"} = [ 
-                                            $specs->{"s${s}_varnish_spot_gloss"} , 
-                                            $specs->{"s${s}_varnish_spot_matte"} ]; 
-
-#			unless ref($specs->{"s${s}_varnish_spot"}) eq 'ARRAY';
-
         # Spot varnishes get the default coverage.
-        for my $name (@{$specs->{"s${s}_varnish_spot"}}) {
+        for my $name ($specs->{"s${s}_varnish_spot_gloss"}, $specs->{"s${s}_varnish_spot_matte"}) {
+          # If it's not a valid varnish (eg. gloss) ignore it.
+          next unless grep { $name eq $_ } VARNISHES;
 
-            # If it's not a valid varnish (eg. gloss) ignore it.
-            next unless grep { $name eq $_ } VARNISHES;
-
-            push @colours, { 
-                type      => 'varnish',
-                name      => $name,
-                coverage  => DEFAULT_COVERAGE,
-            }
+          push @colours, { 
+            type      => 'varnish',
+            name      => $name,
+            coverage  => DEFAULT_COVERAGE,
+          }
         }
 
         $side{colours} = \@colours; # Store the colours.
