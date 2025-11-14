@@ -119,18 +119,12 @@ sub display {
     $page{stock} = get_paper_options($log, $dbh, $variable, $pid, $sid, $specs);
 
     # Is the user allowed to supply their own stock?
-    $page{can_supply_stock} 
-        = !configuration::get_value($log, $dbh, 'HideSuppliedStock');
-
+    $page{can_supply_stock} = !configuration::get_value($log, $dbh, 'HideSuppliedStock');
 
     # OVERRIDES
-    #
-    # Create and populate the press drowbox.
-    $page{presses} = presses($dbh, $press_type);
 
-    $page{substrate} = substrate_override($dbh, $specs->{substrate})
-        if $specs->{override_substrate};
-
+    $page{substrate} = substrate_override($dbh, $specs->{substrate});
+    #if $specs->{override_substrate};
 
     # LARGE FORMAT
     #
@@ -387,19 +381,7 @@ sub substrate_override {
     $h = (sprintf "%.3f", $h )+0;
 
     # The correctly named option.
-    return qq{<option value="$substrate" selected="selected">$w x $h </option>};
-}
-
-# Creates an HTML <option> list of press IDs/string IDs based on the press
-# type of the supplied project.
-sub presses {
-    my ($dbh, $press_type) = @_; 
-
-    my $presses = $dbh->selectcol_arrayref(q{
-        SELECT lngindex, strid FROM tbl_equipment WHERE strtype = ?
-    }, { Columns => [1,2] }, $press_type);
-
-    return { @$presses };
+    return qq{<option value="$substrate" selected="selected">$w x $h</option>};
 }
 
 1;
