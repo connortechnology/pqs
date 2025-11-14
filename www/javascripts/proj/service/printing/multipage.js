@@ -2,6 +2,7 @@
 Event.observe(window, 'load', function () {
   var form      = $('f1');
   var templates = form.template;
+  if (!templates) return true;
 
   for (var i=0; i < templates.length; i++) {
     var template = templates[i];
@@ -54,4 +55,3 @@ Event.observe(window, 'load', function () {
 
     return true;
 });
-
