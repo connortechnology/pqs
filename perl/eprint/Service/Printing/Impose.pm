@@ -127,7 +127,7 @@ sub get_presses {
 sub press_ids {
   my ($dbh, $press_type, $rfq_only) = @_;
 
-  my $sql  = 'SELECT lngindex FROM tbl_equipment WHERE (useinestimating IS NULL OR useinestimating=1)';
+  my $sql  = 'SELECT lngindex FROM tbl_equipment WHERE (useinestimating IS NULL OR useinestimating=true)';
   $sql .= ' AND strtype=?' if $press_type;
   $sql .= " AND strsupplier <> 'RFQ Required'" unless $rfq_only;
   #$openprint::log->error($sql.$press_type);
