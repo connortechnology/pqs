@@ -66,7 +66,8 @@ sub convert_to_old {
 
   # Multi-version needs it's layouts determined, single version is just the full sheet.
   my $versions = $project->{versions};
-  my $n        = $style =~ /^W[TF]$/ ? $slots/2 : $slots;
+  my $is_wt = ($style eq 'WT' or $style eq 'WF') ? 1 : 0;
+  my $n        = $is_wt ? $slots/2 : $slots;
 
   my @layouts  = (%$versions) ? version_layouts($n, $versions, $project->{is_multipage})
   : ([[{ n         => 0,
@@ -89,9 +90,7 @@ sub convert_to_old {
     # Mirror back across the slots (*2) to display W&T/F
     # correctly. Note: Quick and Dirty deep copy needed as the
     # return is memoized.
-    my $corrected = ($style =~ /^W[TF]$/)
-    ? [map{[map{$a={%$_};$a->{slots}*=2;$a}@$_]}@$layout]
-    : $layout;
+    my $corrected = $is_wt ? [map{[map{$a={%$_};$a->{slots}*=2;$a}@$_]}@$layout] : $layout;
 
     # Create the new imposition.
     my $imp = eprint::impositionObject->new($press->{id});
@@ -267,19 +266,14 @@ sub convert_to_signature {
     $$imp{columns} = $$imp{cols} = $cols;
     $$imp{setup} = $$imp{imposition} = $rows * $cols;
 
-    if ((    $imp->{RotateSheet}
-          and $imp->{GrainDirection} eq 'width')
-        or (    $imp->{RotateSheet} == 0
-          and $imp->{GrainDirection} eq 'height')
-    )
-    {
+    if (($imp->{RotateSheet} and $imp->{GrainDirection} eq 'width')
+        or ($imp->{RotateSheet} == 0 and $imp->{GrainDirection} eq 'height')
+    ) {
       $imp->setImageWidth($imp->{image_width} / $imp->{cols});
       $imp->setImageHeight($imp->{image_height} / $imp->{rows});
-    }
-    else {
+    } else {
       $imp->setImageWidth($imp->{image_width} / $imp->{rows});
       $imp->setImageHeight($imp->{image_height} / $imp->{cols});
-
     }
 
     #Update this latere, change 1 to sig setup rows * cols
@@ -299,7 +293,7 @@ sub convert_to_signature {
         print STDERR "HAVE VALID SLOTS: $l->{slots} SIG SIZE: $sig_size DSS: $desired_signature_size \n" if DEBUG;
       } else {
         print STDERR "INVALID SLOTS: $l->{slots} SIG SIZE: $sig_size DSS: $desired_signature_size \n" if DEBUG;
-        return {};
+        return ();
       }
     }
     } @{$imp->{layout}};
