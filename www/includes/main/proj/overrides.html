@@ -30,9 +30,9 @@
 	<label for="press">Press:</label>
 	<select id="press" name="press" size="1" onchange="overrides.apply(this);">
 		<option value="">Auto-select</option>
-		<? loop presses ?>
-			<option value="<?key?>"><?value?></option>
-		<? endloop presses ?>
+    <?echo(
+          return make_drop_down(openprint::Equipment->dropdown(type=>$variable->{project}{press_type}{ref}), $$variable{specs}{press});
+          )?>
 	</select>
 	<label for="override_press" class="checkbox override">
 	<input type="checkbox" name="override_press" id="override_press" on_click_this="overrides_chkbox" value="1" />Override</label>
