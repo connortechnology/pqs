@@ -365,7 +365,7 @@ sub text_search {
 			die("have cust: $cust, $var->{cookie} ") unless $cust;
 			eprint::login::select_customer( $r, $log, $dbh, $var->{cookie}, $var, $cust );
       #print STDERR "HAVE REDIRECT: $redirect \n";
-			$var->{Redirect} = $redirect;
+			$var->{ExternalRedirect} = $redirect;
 			return;
 		}
 	}
@@ -378,7 +378,7 @@ sub display {
 
 	if ( $param->{textsearch} ) {
 		text_search($param, $var);
-		return if $var->{Redirect};
+		return if $var->{ExternalRedirect} or $var->{Redirect};
 	}
 
 	my ($action, $value )  =  split /:/,  $param->{action};
