@@ -45,6 +45,8 @@ $serial = 'lngProjectIndex_seq';
 	quantity1				=>	'intquantity1',
 	quantity2				=>	'intquantity2',
 	quantity3				=>	'intquantity3',
+  q2              =>  'q2',
+  q3              =>  'q3',
 	status					=>	'strstatus',
   #mode						=>	'strmode',
 	programs				=>	'strprograms',
@@ -86,6 +88,8 @@ mail_type => 'mail_type',
 copy_pid => 'copy_pid',
 build => 'build',
 eid =>  'eid',
+created_by  => 'strcreatedby',
+linescreen => 'linescreen',
 );
 %transforms = (
 	id								=>	[ 's/\D//g', '<2147483647' ],
