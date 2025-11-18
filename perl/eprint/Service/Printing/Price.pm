@@ -604,7 +604,7 @@ sub get_project_price {
       #$log->debug("Has no cutting") if DEBUG;
     } # end if
         
-    if ( 1 and $$project{HasProofs} ) {
+    if ($$project{HasProofs}) {
       my $Press = new openprint::Equipment($press);
       # Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
       my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $Project->ServiceType($$project{HasProofs}), $$project{ProofsSpecs}, $sig_specs, 1,
@@ -612,8 +612,8 @@ sub get_project_price {
         undef, #Totals,
         $imposition );
       $price{'Comparison Cost'} += $sig_count * $Results{total};
-      $openprint::log->debug("Proofs pricing: $Results{total} * $sig_count");
-      $openprint::log->error("Proofs alert $Results{alert}") if $Results{alert};
+      #$openprint::log->debug("Proofs pricing: $Results{total} * $sig_count");
+      #$openprint::log->error("Proofs alert $Results{alert}") if $Results{alert};
       #$$price{'Comparison Log'} .= 'proofs for ' . $sig_count . 'sigs. '. $sig_count * $Results{Total} . ' total: ' . $$price{ComparisonCost} . '<br/>' if COMPARISON_LOG;
       #$$price{'Proofs Breakdown'} .= $Results{Breakdown};
     } # end if
@@ -2261,41 +2261,22 @@ sub get_run_price {
         $variable, 'DischargeUnderbase', $press_sheets)) * $sides;
   }
 
-
-  if ($side_one_colours > $max_colours or $side_two_colours > $max_colours) {
-    $run_price{'MultiPass Run'} = 1;
-
-  }
-  else {
-    $run_price{'MultiPass Run'} = 0;
-  }
+  $run_price{'MultiPass Run'} = ($side_one_colours > $max_colours or $side_two_colours > $max_colours) ? 1 : 0;
 
   # Now work out the press run speed.
   my ($std_speed, $run_speed) = (0, 0);
-  $std_speed = eprint::equipment::get_specification(
-    $log, $dbh, 'Press Standard Run Speed', '', $press
-  );
+  $std_speed = eprint::equipment::get_specification($log, $dbh, 'Press Standard Run Speed', '', $press);
 
   # There will be no additional runspeed for envelopes at all and they will
   # not use the additional runspeed for non-envelopes.
   if ($project_type eq 'Envelopes') {
-    $run_speed = eprint::equipment::get_specification(
-      $log, $dbh, 'Envelope Run Speed Override', '', $press
-    );
+    $run_speed = eprint::equipment::get_specification($log, $dbh, 'Envelope Run Speed Override', '', $press);
+  } else {
+    $run_speed = eprint::equipment::get_specification($log, $dbh, 'Press Additional Run Speed', $paper_calliper, $press);
   }
-  else {
-    $run_speed = eprint::equipment::get_specification(
-      $log, $dbh, 'Press Additional Run Speed', $paper_calliper, $press
-    );
-  }
-  if ($std_speed and $run_speed) {
-
-    $running_price *= ($std_speed / $run_speed);
-
-  }
+  $running_price *= ($std_speed / $run_speed) if ($std_speed and $run_speed);
   $run_price{'Impression Price'} = $running_price;
   $run_price{'Run Speed'} = $run_speed ? $run_speed : $std_speed;
-
 
   return %run_price;
 }
@@ -2494,8 +2475,7 @@ sub calc_sheet_qty {
   # by the number of press sheets.
   my $over_range = $net_sheets;
   my $over_rate =
-  eprint::equipment::get_specification($log, $dbh, 'Press Run Overs',
-    $over_range, $press);
+  eprint::equipment::get_specification($log, $dbh, 'Press Run Overs', $over_range, $press);
 
   $over_rate = $run_overs_OR if $run_overs_OR ne '';
   my $run_overs = ceil($net_sheets * $over_rate);

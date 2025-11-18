@@ -538,6 +538,7 @@ sub _list {
   my $uri = misc::get_session_uri($r->uri());
   ssi::save_params( $uri,(
       ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+      'equipment_id',
       'deleted', 'equipment_name', 'servicetype_id', 'category_id', 'useinestimating','type',
     ) );
 }

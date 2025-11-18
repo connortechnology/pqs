@@ -258,12 +258,10 @@ sub do_new_substitution {
         my $loop = $1;
 
         # Allow the loop name to be in the foo.bar.baz form.
-        my $array = ($loop =~ /\./) ? dereference($log, $variable, $loop)
-                                    : $variable->{$loop};
+        my $array = ($loop =~ /\./) ? dereference($log, $variable, $loop) : $variable->{$loop};
 
         # Convert a hash into an array of hashes.
         $array = [ map { { key => $_, value => $array->{$_} } } keys %$array ] if ref $array eq 'HASH';
-
 
         # Following the other structures the loop gets terminated by an
         # 'endloop' directive.
@@ -304,8 +302,7 @@ sub do_new_substitution {
             $variable->{"_last_$loop"}  = (@$array == $i+1);
             $i++;
 
-            $replace .= variable_substitution( $r, $log, $dbh,
-                                               $inside_tag, $variable );
+            $replace .= variable_substitution( $r, $log, $dbh, $inside_tag, $variable );
         }
 
         return $replace . variable_substitution( $r, $log, $dbh,
@@ -670,6 +667,8 @@ sub make_drop_down {
   for (my $i = 0; $i < @{$data}; $i++) {
     my $value;
     my $label;
+    $log->debug(ref $data);
+    $log->debug(ref $$data[$i]);
     if ( ref $$data[$i] eq 'ARRAY' ) {
       my $row = $$data[$i];
       $value = $$row[0];

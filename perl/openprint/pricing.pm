@@ -411,7 +411,7 @@ sub get_best_price_object {
 					 ( ( $price->{max} eq '' or ! defined $price->{max} ) or 1*$price->{max} >= $qty )
 					)
 					) ) {
-			$openprint::log->debug("matched service: $$price{service_id} min: $$price{min} max: $$price{max} range_units:$$price{range_units} price:$$price{price}/$$price{Price} units: $$price{units} interpolate: $$price{interpolate} for $qty");
+			$openprint::log->debug("matched service: $$price{service_id} min: $$price{min} max: $$price{max} range_units:$$price{range_units} price:$$price{price}/$$price{Price} units: $$price{units} interpolate: $$price{interpolate} for $qty") if DEBUG;
       $$price{price} = $$price{Price} if ! $$price{price};
 			if ( $$price{mode} eq 'Interpolate' ) {
 $log->error("Using interpolate $$price{max}");

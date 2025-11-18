@@ -280,7 +280,7 @@ sub insert_signature {
         my $count = $1 + 1;
 
         my $name = $specs->{txtServiceDescription};
-           $name =~ s/\d+$/$count/;
+        $name =~ s/\d+$/$count/;
 
         insert_service_spec($log, $dbh, $pid, $sid, txtServiceDescription => $name);
     }

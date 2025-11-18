@@ -298,7 +298,7 @@ sub best_fit {
 
       #print STDERR "TIME TO FIND FIT: $w x $h \n";
       my $nodes = $self->find_fit($w, $h, $grain, $rotated, $is_one_up);
-      $openprint::log->debug("Nodes to consider".scalar @{$nodes});
+      #$openprint::log->debug("Nodes to consider".scalar @{$nodes});
       foreach my $node (@{$nodes}) {
         #$openprint::log->debug("from Find fit from $w x $h grain $grain rotated $rotated ".$node->card);
 
@@ -339,7 +339,7 @@ sub best_fit {
   )[0];
 
   #no warnings qw(uninitialized);
-  print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ". scalar @possible;
+  #print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ". scalar @possible;
 
   # TEMP: Simple call for now.
   return $node->[0] ? @$node : (undef, undef);
