@@ -38,6 +38,7 @@ sub cache_field {
 sub conversions {
 	my ( $self, $to, $period ) = @_;
 	return 1 if $$self{id} == $to;
+	return 1 if !$$self{id};
 	if ( ! exists $$self{Conversions} ) {
 		if ( $$self{id} ) {
 			%{$$self{Conversions}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=? AND period_end IS NULL}, $$self{id} );
