@@ -486,14 +486,18 @@ sub create_edit_process {
 	$param{quantity2} =~ s/\D//g;
 	$param{quantity3} =~ s/\D//g;
 
+  my $create = 0;
 	my $error = '';
 	$error .= 'No quantities specified.<br/>' if $param{quantity1} eq '' and $param{quantity2} eq '' and $param{quantity3} eq '';
 	$error .= 'Invalid Quantity 1.<br/>' if $param{quantity1} and ! int $param{quantity1};
 	$error .= 'Invalid Quantity 2.<br/>' if $param{quantity2} and ! int $param{quantity2};
 	$error .= 'Invalid Quantity 3.<br/>' if $param{quantity3} and ! int $param{quantity3};
 	if ( ! $error ) {
-		$Project = new openprint::Project( int $param{ProjectIndex} );
-		$error .= $Project->save() if ! $Project->id();
+    $Project = new openprint::Project( int $param{ProjectIndex} );
+    if (!$Project->id()) {
+      $create = 1;
+      $error .= $Project->save();
+    }
 	} # end if
 	if ( $error ne '' ) {
 		$variable{Redirect} = '/main/project/create_edit.html';
@@ -595,7 +599,7 @@ sub create_edit_process {
 		$recalculate = 1;
 	} # end if
 
-	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited: '.join('<br/>', @changes) );
+	$Project->add_to_log( @session{'company_id','user_id'}, ($create ? 'Created: ':'Edited: ').join('<br/>', @changes) );
 
 	if ( $ProjectType->type() eq 'MultiPage' ) {
 		my $book_type = $Project->get_book_type();
