@@ -85,13 +85,11 @@ function quantity_validation (qty_elem) {
     return true;
 }
 
-
-
-
-
 // Design Format - When Other is Selected, Other Format TxT comes up.
 Event.observe(window, 'load', function () {
     var format = $('ddmFormat');
+    if (!format) return;
+
     var other  = $('other_program');
 
     var is_other = function () {
