@@ -2257,6 +2257,7 @@ sub send_invoice {
 
 }
 sub is_chino {
+  return 0;
   # Add special flag for Chino/Norcal supplier that changes
   # Contact info sent out with email.
   my ($dbh, $pid) = @_;
