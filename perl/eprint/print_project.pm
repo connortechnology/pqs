@@ -1584,6 +1584,7 @@ sub copy_project {
 
   $dbh->begin_work;
 
+  my $Project = new openprint::Project($pid);
   # Source project attributes.
   my $orig = $dbh->selectrow_hashref(q{
     SELECT strprojectreference, strcomments,   lngcustomerid,
@@ -1622,8 +1623,14 @@ sub copy_project {
 
   insert(undef, $dbh, 'tbl_projects', (%$orig, %copy));
 
+
   # Get the next insert id in the sequence.
   my $new = $dbh->last_insert_id('', qw(public tbl_projects lngProjectIndex), {sequence=>'lngProjectIndex_seq'});
+  my $NewProject = new openprint::Project($new);
+  my @changes = $Project->changes($NewProject, 'created_on','copy_pid','id','updated_on','user_id');
+
+  $NewProject->add_to_log( @openprint::session{'company_id','user_id'}, 'Copied from project '.$Project->link_to(). ' with the following changes '.join(',', @changes ) );
+  $Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->link_to() );
 
   # Copy all the services for the project (blanks shipping if new owner).
   copy_project_services($dbh, $pid, $new, $has_new_owner);
