@@ -378,7 +378,7 @@ sub get {
 } # end sub get
 
 sub changes {
-	my ( $self, $params ) = @_;
+	my ( $self, $params, @ignore ) = @_;
 
 	my $type = ref $self;
 	if ( ! $type ) {
@@ -393,7 +393,10 @@ $log->warn('Object::changes called on an object with no fields');
 	#my %defaults = eval('%'.$type.'::defaults');
 	my @results;
 
-	foreach my $field ( sort keys %$fields ) {
+  my @fields_to_check = keys %$fields;
+  @fields_to_check = sets::exclude(\@ignore, \@fields_to_check) if @ignore;
+
+	foreach my $field ( sort @fields_to_check ) {
 		if ( ! exists $$params{$field} ) {
 			$log->debug("$field does not exist in params") if $debug;
 			next;
