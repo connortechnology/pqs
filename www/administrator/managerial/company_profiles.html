@@ -28,6 +28,7 @@
 	All fields marked with an Asterisk (*) are required. Blank or Null values are
 not acceptable, however "0" is valid.
 	</p>
+  <?include(/openprint/includes/error_reporting.html)?>
 
 	<form id="f1" name="f1" method="post" onsubmit="return fmCheck(f1);" action="/administrator/managerial/company_profiles.html">
 
@@ -71,7 +72,7 @@ not acceptable, however "0" is valid.
 			<p><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">User Profile Page</a></p>
 
 			<label for="txtCompanyName">* Company Name:</label>
-			<input type="text" size="30" class="input-text" id="txtCompanyName" name="txtCompanyName" value="<?txtCompanyName?>" />
+			<input type="text" size="30" class="input-text" id="txtCompanyName" name="txtCompanyName" value="<?txtCompanyName?>" required/>
 			<br />
 
 			<label for="txtAccountNum">Account Number:</label>
@@ -84,14 +85,14 @@ not acceptable, however "0" is valid.
 			<br />
 
 			<label for="ddmSalesPerson">* Sales Representative:</label>
-			<select id="ddmSalesPerson" name="ddmSalesPerson" onchange="fmChange=1;">
+			<select id="ddmSalesPerson" name="ddmSalesPerson" onchange="fmChange=1;" required>
 				<option value=""> Select a sales person </option>
 				<?ddmSalesPeople?>
 			</select>
 			<br />
 
 			<label for="ddmCSR">CSR:</label>
-			<select id="ddmCSR" name="ddmCSR" onchange="fmChange=1;">
+			<select id="ddmCSR" name="ddmCSR" onchange="fmChange=1;" required>
 				<option value=""> Select a CSR </option>
 				<?ddmCSR?>
 			</select>
@@ -177,7 +178,7 @@ not acceptable, however "0" is valid.
 			<br />
             
 			<label for="ddmPriceList">* Price List:</label>
-			<select id="ddmPriceList" name="ddmPriceList" onchange="fmChange=1;">
+			<select id="ddmPriceList" name="ddmPriceList" onchange="fmChange=1;" required>
 				<option value=""> Select a Price list </option>
 				<option value=""> -------------------------- </option>
 				<?ddmPriceList?>
