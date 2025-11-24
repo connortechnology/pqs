@@ -641,6 +641,7 @@ sub select_options {
 # what should be pairs, a SINGLE value to select, and an option maximum label
 # length.
 sub make_drop_down {
+  return openprint::ssi::make_drop_down(@_);
 	require HTML::Entities;
 	my ( $data, $checkval, $options ) = @_;
 	$options = {} if ! $options;
@@ -667,8 +668,8 @@ sub make_drop_down {
   for (my $i = 0; $i < @{$data}; $i++) {
     my $value;
     my $label;
-    $log->debug(ref $data);
-    $log->debug(ref $$data[$i]);
+    #$log->debug(ref $data);
+    #$log->debug(ref $$data[$i]);
     if ( ref $$data[$i] eq 'ARRAY' ) {
       my $row = $$data[$i];
       $value = $$row[0];
@@ -1625,6 +1626,9 @@ sub write_override {
   } # end if
 } # end sub write_override
 
+sub writeTip {
+  return openprint::ssi::writeTip(@_);
+}
 
 1;
 __END__
