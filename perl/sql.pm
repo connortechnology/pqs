@@ -138,7 +138,18 @@ sub insert {
   my $dbh   = shift;
   $dbh = $openprint::dbh if ! $dbh;
   my $table = shift; # The table name to operate on (may contain schema)
-  my %data  = @_ == 1 ? @{$_[0]} : @_;    # Field and value pairs
+  my %data;
+  if (@_ == 1) {
+     if (ref eq 'ARRAY') {
+      %data = @{$_[0]};
+    } elsif ( ref $_[0] eq 'HASH' ) {
+      %data = %{$_[0]};
+    } else {
+  $openprint::log->debug("$table ".Data::Dumper::Dumper($_[0]));
+    }
+  } else {
+    %data = @_;    # Field and value pairs
+  }
 
   # Identifiers (schema, table, fields, etc.) are lowercased before they're
   # quoted as some section of the code use mixed case, relying on Pg's case
@@ -156,7 +167,15 @@ sub insert {
 
   $openprint::log->debug("$sql ".join(',', keys %data).'='.join(',',values %data)) if DEBUG;
   my $sth = $dbh->prepare($sql);
-  $sth->execute( values %data );
+  if (!$sth) {
+    $log->error( "Error Preparing SQL Statement: ($sql):" . $dbh->errstr ) if $log;
+    return undef;
+  }
+  if (!$sth->execute( values %data )) {
+    $log->error( "Error Executing SQL Statement: ($sql):" . $dbh->errstr.Data::Dumper::Dumper(\%data) ) if $log;
+    
+    return undef;
+  }
 
   # We should think about returning the number of records effected.
   return 1;
