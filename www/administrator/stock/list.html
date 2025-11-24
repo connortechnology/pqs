@@ -320,7 +320,7 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{$r->uri().'?OrLarger'}, { oncl
 				button( 'New', { href=>'stock.html', text=>'Add A New Stock' } ),
 				button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text=>'Delete Checked Stocks' } ),
 				#button( 'Save', { onclick=>"show_div('StockRecommendations', event );",text=>'Set Stock Recommendations' } ),
-				#button( "Copy", { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
+				#button( 'Copy', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
 				button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ),
 				button( 'ExportPrices', { onclick=>"f1.btnFunction.value='Export Prices';f1.submit();", text=>'Export Prices' } ),
 			); ) ?>
