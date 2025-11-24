@@ -1,4 +1,6 @@
 use strict;
+use warnings;
+
 package openprint::Company;
 our @ISA = qw( openprint::Object );
 
@@ -10,8 +12,11 @@ require openprint;
 require sql;
 require openprint::Object;
 require openprint::User;
+require openprint::Project;
+require openprint::Quote;
+require openprint::Order;
 
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(strcompanyname)';
 $table = 'tbl_customer';
 $serial = 'tbl_Customer_lngCustomerID_seq';
@@ -50,8 +55,8 @@ $serial = 'tbl_Customer_lngCustomerID_seq';
 		business_form				=>	'strbusinessnature',
 		established				=>	'dtmbusinessstartdate',
 		president_owner			=>	'strpresidentowner',
-		created_on				=>	'created_on',
-		updated_on				=>	'updated_on',
+		created_on				=>	'dtmdateentered',
+		updated_on				=>	'dtmlastmodified',
 		bank_name					=>	'strbankname',
 		bank_branch				=>	'strbankbranch',
 		bank_account			=>	'strbankaccountno',
@@ -81,9 +86,9 @@ $serial = 'tbl_Customer_lngCustomerID_seq';
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
-	last_ordered_on	=>	'(SELECT created_on FROM Orders WHERE orders.id=last_order_id)',
-	last_project_on	=>	'(SELECT dtmcreationdate FROM Projects WHERE projects.id=last_project_id)',
-	last_quoted_on	=>	'(SELECT MAX(dtmquotedate) FROM Quotes WHERE company_id=companies.id)',
+	last_ordered_on	=>	'(SELECT '.$openprint::Order::fields{created_on}.' FROM '.$openprint::Order::table.' WHERE '.$openprint::Order::table.'.'.$openprint::Oder::fields{id}.'=last_order_id)',
+	last_project_on	=>	'(SELECT dtmcreationdate FROM '.$openprint::Project::table.' WHERE '.$openprint::Project::table.'.'.$openprint::Project::fields{id}.'=last_project_id)',
+	last_quoted_on	=>	'(SELECT MAX('.$openprint::Quote::fields{created_on}.') FROM '.$openprint::Quote::table.' WHERE '.$openprint::Quote::fields{company_id}.'='.$table.'.'.$fields{id}.')',
 	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
 	last_invoiced_on	=>	'(SELECT MAX(created_on) FROM invoices WHERE invoicee_id=companies.id)',
   last_expense_on   =>  '(SELECT MAX(created_on) FROM expenses WHERE recipient_Id=companies.id)',
@@ -125,6 +130,11 @@ $serial = 'tbl_Customer_lngCustomerID_seq';
 	last_invoice_id	=>	undef,
 	csr_commission	=>	undef,
 	credit_card_fee	=>	undef,
+  ysnpricingservices => 1,
+  ysnpricingprojectview => 0,
+  ysnpricingquotes => 0,
+
+
 );
 
 sub Currency {
@@ -202,14 +212,14 @@ sub save {
 sub next {
 	my $self = shift;
 
-    ( $_ ) = sql::execute( undef, undef, 'SELECT id FROM Companies WHERE Name = ( SELECT MIN(Name) FROM Companies WHERE Name > (SELECT Name FROM Companies WHERE id=? ) )', $$self{id} );
-    return $_;
+  ( $_ ) = sql::execute( undef, undef, 'SELECT '.$fields{id}.' FROM '.$table.' WHERE '.$fields{name}.' = ( SELECT MAX('.$fields{name}.') FROM '.$table.' WHERE '.$fields{name}.' > (SELECT '.$fields{name}.' FROM '.$table.' WHERE '.$fields{id}.'=? ) )', $$self{id} );
+  return $_;
 } # end sub next
 
 sub prev {
-    my $self = shift;
-    ( $_ ) = sql::execute( undef, undef, 'SELECT id FROM Companies WHERE name = ( SELECT MAX(name) FROM Companies WHERE name < (SELECT name FROM Companies WHERE id=? ) )', $$self{id} );
-    return $_;
+  my $self = shift;
+  ( $_ ) = sql::execute( undef, undef, 'SELECT '.$fields{id}.' FROM '.$table.' WHERE '.$fields{name}.' = ( SELECT MAX('.$fields{name}.') FROM '.$table.' WHERE '.$fields{name}.' < (SELECT '.$fields{name}.' FROM '.$table.' WHERE '.$fields{id}.'=? ) )', $$self{id} );
+  return $_;
 } # end sub prev
 
 sub load_tradereferences {
@@ -224,28 +234,28 @@ sub load_tradereferences {
 			'tradereference'.$index.'_email',
 			'tradereference'.$index.'_creditlimit',
 			} = sql::execute( undef, undef, 
-		'SELECT CompanyName, Contact, Phone, Ext, Fax, Email, CreditLimit FROM Trade_References WHERE company_id = ? AND ID = ?', $$self{id}, $index );
+		'SELECT strCompanyName, strContact, strPhone, strExt, strFax, strEmail, dblCreditLimit FROM tbl_Trade_References WHERE lngcustomerid = ? AND lngreferenceid = ?', $$self{id}, $index );
 } # end load_tradereferences
 
 sub save_tradereferences {
 	my ( $self, $param ) = @_;
 
 	my $ac = sql::start_transaction( $dbh );
-    sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE company_id=?', $$self{id} );
+    sql::execute( undef, undef, 'DELETE FROM tbl_Trade_References WHERE lngcustomerid=?', $$self{id} );
 	foreach my $tr ( 1 .. 3 ) {
 		my %sql = (
-			'CompanyName'	=>	$$param{'tradereference'.$tr.'_companyname'},
-			'Contact'		=>	$$param{'tradereference'.$tr.'_contact'},
-			'Phone'			=>	$$param{'tradereference'.$tr.'_phone'},
-			'Ext'			=>	$$param{'tradereference'.$tr.'_ext'},
-			'Fax',			=>	$$param{'tradereference'.$tr.'_fax'},
-			'Email',		=>	$$param{'tradereference'.$tr.'_email'},
-			'CreditLimit'	=>	$$param{'tradereference'.$tr.'_creditlimit'},
-			'company_id'	=>	$$self{id},
-			'id'			=>	$tr,
+			'strCompanyName'	=>	$$param{'tradereference'.$tr.'_companyname'},
+			'strContact'		=>	$$param{'tradereference'.$tr.'_contact'},
+			'strPhone'			=>	$$param{'tradereference'.$tr.'_phone'},
+			'strExt'			=>	$$param{'tradereference'.$tr.'_ext'},
+			'strFax',			=>	$$param{'tradereference'.$tr.'_fax'},
+			'strEmail',		=>	$$param{'tradereference'.$tr.'_email'},
+			'dblCreditLimit'	=>	$$param{'tradereference'.$tr.'_creditlimit'},
+			'lngcustomerid'	=>	$$self{id},
+			'lngreferenceid'			=>	$tr,
 			);
 
-		sql::insert( undef, undef, 'Trade_References', \%sql );
+		sql::insert( undef, undef, 'tbl_Trade_References', \%sql );
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 	return;
@@ -520,26 +530,48 @@ sub tax_code {
 } # end if
 
 sub admin_link_to {
-	return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ssi::html_escape( @_ > 1 ? $_[1] : $_[0]{name} ) );
+	return sprintf('<a href="%s/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>',
+   ($openprint::config{url_base} ? $openprint::config{url_base} : ''),
+   $_[0]{id}, ssi::html_escape( @_ > 1 ? $_[1] : $_[0]{name} )
+ );
 } # end sub link_to
 
 sub link_to {
 	if ( $openprint::session{user_type} eq 'A' ) {
-		return sprintf('<a href="/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>', $_[0]{id}, ssi::html_escape( @_ > 1 ? $_[1] : $_[0]{name} ) );
+		return sprintf('<a href="%s/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>',
+      ($openprint::config{url_base} ? $openprint::config{url_base} : ''),
+      $_[0]{id}, ssi::html_escape( @_ > 1 ? $_[1] : $_[0]{name} ) );
 	}
 	return sprintf('<a href="/account/company_profile.html?company_id=%d">%s</a>', $_[0]{id}, ssi::html_escape($_[0]{name}) );
 } # end sub link_to
 
+sub last_project {
+  my $self = shift;
+  $$self{last_project} = shift if @_;
+  $$self{last_project} = openprint::Project->find_one(company_id=>$_[0]{id},
+    order=>$openprint::Project::fields{created_on}.' DESC') if (!$$self{last_project}) and $_[0]{id};
+  return $$self{last_project};
+}
+
 sub last_project_on {
 	if ( ! exists $_[0]{last_project_on} ) {
-		(  $_[0]{last_project_on} ) = sql::execute( undef, undef, 'SELECT MAX(dtmCreationDate) FROM Projects WHERE company_id=?', $_[0]{id} );
-	}
-	return $_[0]{last_project_on};
+    my $last = $_[0]->last_project();
+    $_[0]{last_project_on} = $last->created_on() if $last;
+  }
+  return $_[0]{last_project_on};
 } # end sub last_project_on
+
+sub last_quote {
+  my $self = shift;
+  $$self{last_quote} = shift if @_;
+  $$self{last_quote} = openprint::Quote->find_one(company_id=>$$self{id}, order=>$openrpint::Quote::fields{id}.' DESC') if $$self{id} and !$$self{last_quote};
+  return $$self{last_quote};
+}
 
 sub last_quoted_on {
 	if ( ! exists $_[0]{last_quoted_on} ) {
-		(  $_[0]{last_quoted_on} ) = sql::execute( undef, undef, 'SELECT MAX(dtmQuoteDate) FROM Quotes WHERE companyindex=?', $_[0]{id} );
+    my $last = $_[0]->last_quote();
+		$_[0]{last_quoted_on} = $last->created_on() if $last;
 	}
 	return $_[0]{last_quoted_on};
 } # end sub last_quoted_on
