@@ -12,7 +12,7 @@ function destroy_clicked() {
     alert('Please select a company to destroy');
   } else {
     $j('#Results').html('Destroying...');
-    jQuery('#Results').load('/administrator/managerial/_companies.html?action=destroy', { company_id: selected } );
+    jQuery('#Results').load('_companies.html?action=destroy', { company_id: selected } );
   }
 }
 function undelete_clicked() {
@@ -21,7 +21,7 @@ function undelete_clicked() {
     alert('Please select a company to undelete');
   } else {
     $j('#Results').html('Undeleting...');
-    jQuery('#Results').load('/administrator/managerial/_companies.html?action=undelete', { company_id: selected } );
+    jQuery('#Results').load('_companies.html?action=undelete', { company_id: selected } );
   }
 }
 function delete_clicked() {
@@ -30,7 +30,7 @@ function delete_clicked() {
     alert('Please select a company to delete');
   } else {
     $j('#Results').html('Deleting...');
-    jQuery('#Results').load('/administrator/managerial/_companies.html?action=delete', { company_id: selected } );
+    jQuery('#Results').load('_companies.html?action=delete', { company_id: selected } );
   }
 }
 
@@ -94,7 +94,7 @@ function delete_clicked() {
 		<p class="buttons">
 			<? echo ( join("\n",
 				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
-				button( 'New', { href=>'/administrator/managerial/company_profiles.html', text=>'New' } ),
+				button( 'New', { href=>'company_profiles.html', text=>'New' } ),
 				button( 'DownloadCSV', { onclick=>"f1.btnFunction.value='Download';f1.submit();", text=>'Download in CSV Format' } ),
 				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
