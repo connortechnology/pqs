@@ -1,8 +1,8 @@
 <? eval (
-  my $uri = '/administrator/managerial/companies.html';
+  my $uri = misc::get_session_uri($r->uri());
   my %filters = (
     columns => "*, $openprint::Company::find_fields{last_project_on} AS last_project_on, $openprint::Company::find_fields{last_quoted_on} AS last_quoted_on",
-		order	=>	'lower(name)',
+    order	=>	'lower('.$openprint::Company::fields{name}.')',
 		( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
 		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
 		( $session{$uri.'?supplier'} ne '' ? ( supplier => $session{$uri.'?supplier'} ) : () ),
