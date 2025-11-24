@@ -378,7 +378,7 @@ sub user_profiles_action {
       email::save($User->email(), \%param);
     } # end if
 
-    my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
+    my @categories = map { $$_{id} } openprint::Marketing_Category->find();
     sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
 
 		# add them back in
@@ -491,7 +491,7 @@ sub user_profiles {
 	} # end if
 
 	# Get Marketing Category Inforamation - get all categories, and highlight the ones this user is in.
-	my @available_categories = sql::execute( $log, $dbh, 'SELECT id, name FROM Marketing_Categories' );
+	my @available_categories = map { $_->id() => $_->name() } openprint::MarketingCategory->find();
 
 	# get categories this customer is in we do it this way to limit databse transaction to 2.
 	my @users_categories;
@@ -510,7 +510,8 @@ sub user_profiles {
 
 sub company_profiles {
 
-	ssi::save_params( '/administrator/managerial/company_profiles.html', ( 'search_salesrep_id','deleted' ) );
+  my $uri = misc::get_session_uri($r->uri());
+	ssi::save_params( $uri, ( 'search_salesrep_id','deleted' ) );
   # form field to db field mappings
 	my %shipping_fields = (
 			'txtShippingCompanyName'	=>	'CompanyName',
@@ -600,7 +601,8 @@ sub company_profiles {
 			my @changes = $Company->changes( \%param );
 			if ( @changes ) {
 				$variable{error} .= $Company->save( \%param );
-				(new openprint::Log())->save({object_id=>$$Company{id},object_type=>ref$Company, action=>'Edit Company', note=>join('<br/>', @changes) });
+				(new openprint::Log())->save({object_id=>$$Company{id},object_type=>ref$Company,
+            action=>($index ? 'Edit':'Create').' Company', note=>join('<br/>', @changes) });
 			}
 			$index = $Company->id();
 
@@ -610,7 +612,7 @@ sub company_profiles {
 # Otherwise Error!
 # Customer Categories
 # I was trying to do this the hard way.	Then it occurred to me: Just delete them all from the table, and add back in the ones we want.
-				my @customercategories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
+				my @customercategories = map { $_->id() } openprint::MarketingCategory->find();
 
 				sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
 				if ( $param{selectCustomerCategories} ) {
@@ -633,8 +635,8 @@ sub company_profiles {
 
 				$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
-				foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
-					my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$Supplier->id() } );
+				foreach my $Supplier ( openprint::Company->find(offers_credit=>1) ) {
+					my $Credit = new openprint::Company_Credit( {company_id=>$index, supplier_id=>$Supplier->id() } );
 
 					if (
 							( $Credit->terms() != openprint::Company_Credit->transform('terms', $param{'terms-'.$$Supplier{id}} ) ) or
@@ -972,7 +974,8 @@ sub page_settings {
 } # end sub page_settings
 
 sub _page_settings {
-	ssi::save_params( '/administrator/managerial/page_settings.html', ( 'url' ) );
+  my $uri = misc::get_session_uri($r->uri());
+	ssi::save_params( $uri, ( 'url' ) );
 
 } # end sub _page_Settings
 
@@ -998,15 +1001,17 @@ sub user_relationships {
 		} # end if
 	} # end if
 } # end sub user_relationships
+
 sub upload_log {
-	ssi::save_params( '/administrator/managerial/upload_log.html', (
+  my $uri = misc::get_session_uri($r->uri());
+	ssi::save_params( $uri, (
 		( map { 'uploaded_on_start_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
 		( map { 'uploaded_on_end_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
 		'company_id','type',
 	) );
 
-	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_start', -1 );
-	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_end', '' );
+	ssi::setup_date_select( $uri, 'uploaded_on_start', -1 );
+	ssi::setup_date_select( $uri, 'uploaded_on_end', '' );
 } # end sub upload_log
 
 sub promo_codes {
@@ -1039,13 +1044,15 @@ sub promo_codes {
 } # end sub promo_codes
 
 sub logs {
-	ssi::setup_date_select( $r->uri, 'date_start', -1 );
-	ssi::setup_date_select( $r->uri, 'date_end', '' );
+  my $uri = misc::get_session_uri($r->uri());
+	ssi::setup_date_select( $uri, 'date_start', -1 );
+	ssi::setup_date_select( $uri, 'date_end', '' );
   _logs();
 } # end sub logs
 
 sub _logs {
-	ssi::save_params( '/administrator/managerial/logs.html', (
+  my $uri = misc::get_session_uri($r->uri());
+	ssi::save_params( $uri, (
         'log_actions', 'user_id', 'company_id',
 				( map { 'date_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'date_end_' . $_ } ( 'year','month','day' ) ),
@@ -1079,8 +1086,10 @@ sub authorizations {
 		$variable{ExternalRedirect} = '/administrator/managerial/authorizations.html';
 	} # end if
 } # end sub authorizations
+
 sub _authorizations {
-	ssi::save_params( '/administrator/managerial/authorizations.html', ( 'object_type_id' ) );
+  my $uri = misc::get_session_uri($r->uri());
+	ssi::save_params( $uri, ( 'object_type_id' ) );
 } # end sub _authorizations
 
 sub companies {
@@ -1090,7 +1099,7 @@ sub companies {
 			my $uri = $r->uri();
 
       my %filters = (
-        order =>  'lower(name)',
+        order =>  'lower('.$openprint::Company::fields{name}.')',
         ( $session{$uri.'?salesrep_id'} ? ( salesrep_id => $session{$uri.'?salesrep_id'} ) : () ),
         ( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
         ( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
@@ -1117,10 +1126,10 @@ sub companies {
 			my @header = ( 'Company Name','Contact Name', 'Phone #', 'Email','City','State','Registration Date','Account Rep','# of Projects','Last Project', '# of Orders','Last Order');
 			my @data;
 			foreach my $Company ( @Companies ) {
-				my $User = openprint::User->find_one( company_id=>$$Company{id}, order=>'id' );
+				my $User = openprint::User->find_one( company_id=>$$Company{id}, order=>$openprint::User::fields{id} );
 				my $CSR = $Company->CSR();
-				my @Projects = openprint::Project->find( company_id=>$$Company{id}, order=>'id DESC' );
-				my @Orders = openprint::Order->find( company_id=>$$Company{id}, order=>'id DESC' );
+				my @Projects = openprint::Project->find( company_id=>$$Company{id}, order=>$openprint::Project::fields{id}.' DESC' );
+				my @Orders = openprint::Order->find( company_id=>$$Company{id}, order=>$openprint::Order::fields{id}.' DESC' );
 
 				push @data, $Company->name(), ($User ? $User->name() : ''), $Company->phone(), ($User ? $User->email() : '' ), $Company->city(), $Company->state(),
 						 ssi::format_date( $Company->created_on() ),
@@ -1135,7 +1144,8 @@ sub companies {
 } # end sub companies
 
 sub _companies {
-	ssi::save_params( '/administrator/managerial/companies.html', (
+  my $uri = misc::get_session_uri($r->uri());
+	ssi::save_params( $uri, (
 				'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted','supplier',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
@@ -1181,7 +1191,8 @@ sub folds {
 
 sub _folds {
   require openprint::Fold;
-	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type', 'imposition',
+  my $uri = misc::get_session_uri($r->uri());
+	ssi::save_params( $uri, ( 'equipment_id', 'type', 'imposition',
    'stitching','perfectbind','spinepaste' ) );
   return if !$param{action};
   if ($param{action} eq 'delete') {
