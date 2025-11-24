@@ -1,6 +1,6 @@
 <div class="CompanyProfiles">
 <?include(/includes/error_reporting.html)?>
-<form id="f1" name="f1" method="post" action="/administrator/managerial/company_profiles.html">
+<form id="f1" name="f1" method="get" action="company_profiles.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
@@ -19,8 +19,8 @@
         </select>
       </li>
 <? echo (
-    my @salesrep_ids = sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies');
-		$$variable{SalesReps} = [openprint::User->find(
+  my @salesrep_ids = sql::execute( undef, undef, 'SELECT DISTINCT '.$openprint::Company::fields{salesrep_id}.' FROM '.$openprint::Company::table);
+	$$variable{SalesReps} = [openprint::User->find(
 			id=>\@salesrep_ids,
 			deleted=>exists($session{$r->uri().'?deleted_salresrep_id'}) ? $session{$r->uri().'?deleted_salresrep_id'} : 0
 			)] if @salesrep_ids;
@@ -51,7 +51,7 @@ Deleted? :'.
       <select id="ddmCustomer" name="ddmCustomer" data-on-change="ddmCustomer_onchange">
 				<option value=""> select </option>
 				<? echo ( 
-if ( 0 ) {
+if ( 1 ) {
 					my %params = (
 							( $session{$r->uri().'?search_salesrep_id'} ? ( salesrep_id=>$session{$r->uri().'?search_salesrep_id'} ) : () ),
 							( $session{$r->uri().'?deleted'} ne '' ? ( deleted=>$session{$r->uri().'?deleted'} ) : () ),
@@ -65,7 +65,7 @@ if ( 0 ) {
 						$params{reseller} = 'N';
 					} # end if
 					my @Companies = @{$$variable{Companies}} = openprint::Company->find( %params );
-					if ( ! sets::isin( $param{ddmCustomer}, map { $_->id() } @Companies ) ) {
+          if ( $param{ddmCustomer} and ! sets::isin( $param{ddmCustomer}, map { $_->id() } @Companies ) ) {
 						unshift @Companies, new openprint::Company( $param{ddmCustomer} );
 					} # end if
 
@@ -103,18 +103,18 @@ if ( 0 ) {
 		</p>
 		<? echo (
 			if ( $$variable{Company}->id() ) {
-				my @Companies = openprint::Company->find( name=>$$variable{Company}->name(), order=>'id');
+				my @Companies = openprint::Company->find( name=>$$variable{Company}->name());
 				if ( @Companies > 1 ) {
 					my $html = '<div class="warning">There are duplicate companies!<br/>';
 					foreach my $C ( @Companies ) {
 						next if $C->id() == $$variable{Company}->id();
-						$html .= sprintf(q`<p><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%1$d">%1$d : %2$s</a><br/>
+						$html .= sprintf(q`<p><a href="company_profiles.html?ddmCustomer=%1$d">%1$d : %2$s</a><br/>
 %3$s<br/>%4$d Users %5$d Projects %6$d Quotes %7$d Orders<br/>%8$s</p>`, $C->id(), $C->name(), join(' ', $C->get('address1','address2','city','state','country','postalcode')),
 scalar openprint::User->find( company_id=>$C->id()),
 scalar openprint::Project->find( company_id=>$C->id()),
 scalar openprint::Quote->find( company_id=>$C->id()),
 scalar openprint::Order->find( company_id=>$C->id()),
-button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.html?company_id='.$$variable{Company}->id().'&amp;merge_company_id='.$C->id().'&amp;btnFunction=merge', text=>'Merge' } ) );
+button( 'merge'.$C->id(), { href=>'company_profiles.html?company_id='.$$variable{Company}->id().'&amp;merge_company_id='.$C->id().'&amp;btnFunction=merge', text=>'Merge' } ) );
 					} # end foreach C
 					$html .= '</div>';
 					return $html;
@@ -124,7 +124,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		) ?>
 	</fieldset>
 </form>
-<form id="f2" name="f2" method="post" action="/administrator/managerial/company_profiles.html">
+<form id="f2" name="f2" method="post" action="company_profiles.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="company_id" id="company_id" value="<?CustomerIndex?>" />
 	<div class="SalesInformation">
@@ -136,8 +136,26 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 	<div class="leftColumn">
 		<ul>
 			<? if ( $$variable{Company}->id() ) ?>
-			<li><label>ID #</label><?CustomerIndex?></li>
+			<li><label>Internal ID #</label><?CustomerIndex?></li>
 			<? endif ( $$variable{Company}->id() ) ?>
+			<li> 
+				<label>Account #</label>
+				<input type="text" name="accountnumber" value="<? echo ( $$variable{Company}->accountnumber() ) ?>" />
+			</li>
+			<li class="company_category"><label>Company Category</label>
+				<select name="category_id" id="category_id">
+					<option value="">select</option>
+				<? echo ( make_drop_down( openprint::Company_Category->dropdown( order=>'lower(name)'), $$variable{Company}->category_id() ); ) ?>
+				</select>
+			</li>
+			<li class="internal_name" title="Internal will be used in dropdowns and internal informal situations to save space. It should be a simplified version of the Legal Name."> 
+				<label>Internal Name</label>
+				<input type="text" name="name" value="<? echo ( $$variable{Company}->name() ) ?>" required />
+			</li>
+			<li class="business_name" title="Legal Name should be the proper name of the company and will be used on quotes and orders."> 
+				<label>Legal Name</label>
+				<input type="text" name="business_name" value="<? echo ( $$variable{Company}->business_name() ) ?>" />
+			</li>
 			<li class="activation"> 
 				<label>Account Activated</label>
 				<? echo ( radio( 'activation', ['Y','Yes','N','No'], $$variable{Company}->activation(), {default=>'N'} ); ) ?>
@@ -148,19 +166,19 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<label>Is this a Reseller?</label>
 				<? echo ( radio( 'reseller', ['Y','Yes','N','No'], $$variable{Company}->reseller(), {default=>'N'} ); ) ?>
 			</li>
-			<li><label>Offers Credit</label>
+			<li class="offers_credit"><label>Offers Credit</label>
 			<? echo ( radio( 'offers_credit', ['1','Yes','0','No'], $$variable{Company}->offers_credit() ); ) ?>
 			</li><li> 
 				<label>Price List</label>
 				<select name="pricelist_id">
 					<option value="">select</option>
-					<? echo ( make_drop_down( openprint::Pricelist->dropdown( order=>'lower(name)'), $$variable{Company}->pricelist_id() ); ) ?>
+          <? echo ( make_drop_down( openprint::Pricelist->dropdown(), $$variable{Company}->pricelist_id(), {auto_select_if_singleton=>1} ); ) ?>
 				</select>
 			</li><li> 
 				<label>Preferred Currency</label>
 				<select name="currency_id">
 					<option value=""> select </option>
-					<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Company}->currency_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Currency->dropdown(), $$variable{Company}->currency_id() ); ) ?>
 				</select>
 			</li>
 			<li class="discount"> 
@@ -213,7 +231,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		</li>
 		<? if ( $$variable{Company}->id() ) ?>
 			<? eval (
-				@{$$variable{Orders}} = openprint::Order->find('company_id'=>$$variable{CustomerIndex},'order'=>'id DESC');
+        @{$$variable{Orders}} = openprint::Order->find(company_id=>$$variable{CustomerIndex}, order=>$openprint::Order::fields{id}.' DESC');
 			) ?>
 			<li class="orders"><label># of Orders</label>
 				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Orders}} ) ?></a>
@@ -222,7 +240,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( format_date( $$variable{Orders}[0]->created_on()); ) ?></a>
 				<? endif ( @{$$variable{Orders}} ) ?>
 			</li>
-			<? eval ( @{$$variable{Projects}} = openprint::Project->find(company_id=>$$variable{CustomerIndex},order=>'id DESC'); ) ?>
+      <? eval ( @{$$variable{Projects}} = openprint::Project->find(company_id=>$$variable{CustomerIndex},order=>$openprint::Project::fields{id}.' DESC'); ) ?>
 			<li class="projects"><label># of Projects</label>
 				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{Projects}} ) ?></a>
 				<? if ( @{$$variable{Projects}} ) ?>
@@ -240,26 +258,8 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 	</fieldset>
 </div>
 <div class="CompanyInformation">
-	<fieldset><legend>Company Information</legend>
+	<fieldset><legend>Contact Information</legend>
 		<ul>
-			<li> 
-				<label>Account #</label>
-				<input type="text" name="accountnumber" value="<? echo ( $$variable{Company}->accountnumber() ) ?>" />
-			</li>
-			<li><label>Company Category</label>
-				<select name="category_id" id="category_id">
-					<option value="">select</option>
-				<? echo ( make_drop_down( openprint::Company_Category->dropdown( order=>'lower(name)'), $$variable{Company}->category_id() ); ) ?>
-				</select>
-			</li>
-			<li> 
-				<label>Internal Name</label>
-				<input type="text" name="name" value="<? echo ( $$variable{Company}->name() ) ?>" />
-			</li>
-			<li> 
-				<label>Legal Name</label>
-				<input type="text" name="business_name" value="<? echo ( $$variable{Company}->business_name() ) ?>" />
-			</li>
 			<li> 
 				<label>Address</label>
 				<input type="text" name="address1" value="<? echo ( $$variable{Company}->address1() ) ?>" />
@@ -311,7 +311,6 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		</ul>
 	</fieldset>
 </div>
-<?include('/account/_company_profile_edit.html')?>
 <div class="BusinessInformation">
 	<fieldset><legend>Business Information</legend>
 		<ul>
@@ -354,6 +353,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		</ul>
 	</fieldset>
 </div>
+<?include('/account/_company_profile_edit.html')?>
 <div class="MarketingInformation">
 	<fieldset><legend>Marketing Information</legend>
 		<ul>
@@ -481,4 +481,4 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 <? echo ( include_logs( $$variable{Company} ); ) ?>
 <? endif ( $$variable{CustomerIndex} ) ?>
 </div>
-<script src="<? hash_link(/administrator/managerial/company_profiles.js) ?>"></script>
+<script src="<? hash_link(company_profiles.js) ?>"></script>
