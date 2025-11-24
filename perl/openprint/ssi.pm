@@ -304,7 +304,12 @@ sub make_drop_down {
 		$check_array = [ $checkval ];
 	} # end if
 
-	my %selected = map { $_ => $_ } @$check_array;
+	my %selected = map { defined($_) ? ($_ => $_) : () } @$check_array;
+  if ($$options{auto_select_if_singleton}) {
+    $log->error("auto_select_if_singleton ".@{$check_array}. ' data'.@{$data} . " checkbal $checkval");
+    $selected{$$data[0]} = $$data[0] if ( (!(@{$check_array} and $checkval)) and (@{$data} == 2)) ;
+  }
+  $log->debug("selected:".Data::Dumper::Dumper(\%selected));
 
 	my $html = '';
 	if ( $$options{prepend} ) {
