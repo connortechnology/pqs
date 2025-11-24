@@ -28,9 +28,7 @@
 #. openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $session{user_id} ) . join(',', openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $session{user_id} ) ) );
   } # end if
 
-	if ( ! $param{order} ) {
-		$sql{order} = 'lower(name)';
-	}
+  $sql{order} = 'lower('.$openprint::Company::fields{name}.')' if ( ! $param{order} );
 	if ( $param{name} ) {
 		if ( $param{name} =~ /%/ ) {
 			$sql{'name ilike'} = $param{name};
