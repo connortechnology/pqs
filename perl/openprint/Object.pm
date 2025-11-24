@@ -209,7 +209,7 @@ sub save {
 							) );
 			}
 		} else {
-			$log->debug('No data after set');
+			$log->debug('No data in save');
 		}
 	} # end if DEBUG
 
@@ -507,10 +507,10 @@ sub set {
 $log->debug("field: $field, param: ".(defined $$params{$field} ? $$params{$field} : 'undef')) if $debug;
 		if ( exists $$params{$field} ) {
 $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$field}) if $debug;
-			if ( ( ! defined $$self{$field} ) or (!defined($$params{$field})) or ($$self{$field} ne $params->{$field}) ) {
+			if ( (!defined $$self{$field}) or (!defined($$params{$field})) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
 				if ( defined $fields{$field} ) {
-					$$self{$field} = $$params{$field} if defined $fields{$field};
+					$$self{$field} = $$params{$field};
 					push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
 				} # end if
 $openprint::log->debug("Running $field with $$params{$field}") if $debug;
@@ -520,15 +520,10 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 			} # end if
 		} # end if
 
-		if ( defined $fields{$field} ) {
-			if ( $$self{$field} ) {
-				$$self{$field} = transform($type, $field, $$self{$field});
-			} # end if $$self{field}
-		}
+		$$self{$field} = transform($type, $field, $$self{$field}) if $$self{$field} and $fields{$field};
 	} # end foreach field
 
 	foreach my $field ( keys %defaults ) {
-
 		if ( ( ! exists $$self{$field} ) or (!defined $$self{$field}) or ( $$self{$field} eq '' ) ) {
 			$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 			if ( defined $defaults{$field} ) {
