@@ -80,8 +80,8 @@ not acceptable, however "0" is valid.
 			<br />
 
 			<label>* Reseller:</label>
-			<label for="rdbResellerYes" class="radio"><input type="radio" id="rdbResellerYes" name="rdbReseller" value="Y" <?rdbResellerY?> />Yes</label>
-			<label for="rdbResellerNo" class="radio"><input type="radio" id="rdbResellerNo" name="rdbReseller" value="N" <?rdbResellerN?> />No</label>
+			<label for="rdbResellerYes" class="radio"><input type="radio" id="rdbResellerYes" name="rdbReseller" value="Y" <?rdbResellerY?> required />Yes</label>
+			<label for="rdbResellerNo" class="radio"><input type="radio" id="rdbResellerNo" name="rdbReseller" value="N" <?rdbResellerN?> required />No</label>
 			<br />
 
 			<label for="ddmSalesPerson">* Sales Representative:</label>
@@ -91,7 +91,7 @@ not acceptable, however "0" is valid.
 			</select>
 			<br />
 
-			<label for="ddmCSR">CSR:</label>
+			<label for="ddmCSR">* CSR:</label>
 			<select id="ddmCSR" name="ddmCSR" onchange="fmChange=1;" required>
 				<option value=""> Select a CSR </option>
 				<?ddmCSR?>
@@ -99,24 +99,20 @@ not acceptable, however "0" is valid.
 			<br />
             
             <label>* Activated Account:</label>
-			<label for="rdbAccountActivationYes" class="radio"><input type="radio" id="rdbAccountActivationYes" name="rdbAccountActivation" value="Y" <?rdbAccountActivationY?> />Yes</label>
-			<label for="rdbAccountActivationNo" class="radio"><input type="radio" id="rdbAccountActivationNo" name="rdbAccountActivation" value="N" <?rdbAccountActivationN?> />No</label>
+			<label for="rdbAccountActivationYes" class="radio"><input type="radio" id="rdbAccountActivationYes" name="rdbAccountActivation" value="Y" <?rdbAccountActivationY?> required />Yes</label>
+			<label for="rdbAccountActivationNo" class="radio"><input type="radio" id="rdbAccountActivationNo" name="rdbAccountActivation" value="N" <?rdbAccountActivationN?> required />No</label>
 			<br />
             
             <label for="txtNotificationEmail">Notification E-mail:</label>
 			<input type="text" size="30" class="input-text" id="txtNotificationEmail" name="txtNotificationEmail" value="<?txtNotificationEmail?>" />
 			<br />
 			<label>* Division: </label>
-			<select id="ddmDivision" name="ddmDivision" onchange="fmChange=1;">
+			<select id="ddmDivision" name="ddmDivision" onchange="fmChange=1;" required>
 				<option value=""> Select a Division</option>
 				<?ddmDivision?>
 			</select>
 
 			<br />
-
-            
-            
-            
 		</fieldset>
         
 		<fieldset>
@@ -126,29 +122,23 @@ not acceptable, however "0" is valid.
             
             <p>Is this company also a supplier for outsorced services and materials?</p>
             
-            <label>* Supplier:</label>
+            <label>Supplier:</label>
 			<label for="rdbSupplierYes" class="radio"><input type="radio" id="rdbSupplierYes" name="rdbSupplier" value="Y" <?rdbSupplierY?> />Yes</label>
-			<label for="rdbSupplierNo" class="radio"><input type="radio" id="rdbSupplierNo" name="rdbSupplier" value="N" <?rdbSupplierN?> />No</label>
+      <label for="rdbSupplierNo" class="radio"><input type="radio" id="rdbSupplierNo" name="rdbSupplier" value="N" <?echo($$variable{rdbSupplier} ne 'Y' ? ' checked="checked"' : '')?> />No</label>
 			<br />
            
-       	</fieldset>
-
-
-			<fieldset>
+    </fieldset>
+		<fieldset>
 
 			<legend> New Product Category Mark-up/Discount </legend>
-            	<label>Markup Group:</label>
-				<select id="markup_group" name="markup_group" onchange="fmChange=1;">
+        <label>Markup Group:</label>
+				<select id="markup_group" name="markup_group" onchange="fmChange=1;" required>
 					<option value=""> Select</option>
 					<?ddmMarkupGroup?>
 				</select> <br>
-
-				
-
-
 				<!--
 				<?loop new_product_categories?>
-						<label for="txtPricingLevel"><?name?>: </label>
+						<label><?name?>: </label>
 						<input type="text" size="9" readonly class="smBox" id="txtMarkup-<?id?>" name="txtMarkup-<?id?>" value="<?markup?>" />%<br />
 				<?endloop new_product_categories?>
 				-->
@@ -161,8 +151,6 @@ not acceptable, however "0" is valid.
 						<input type="text" size="9" class="smBox" id="txtMarkup-<?id?>" name="txtMarkup-<?id?>" value="<?markup?>" />%<br />
 				<?endloop product_categories?>
 			</fieldset>
-
-
 		<fieldset>
 			<legend>
 				Pricing Information
@@ -186,7 +174,7 @@ not acceptable, however "0" is valid.
 			<br />
 
 			<label for="txtPricingLevel">* Markup/Discount:</label>
-			<input type="text" size="9" class="smBox" id="txtPricingLevel" name="txtPricingLevel" value="<?txtPricingLevel?>" />
+			<input type="text" size="9" class="smBox" id="txtPricingLevel" name="txtPricingLevel" value="<?txtPricingLevel?>" required />
 			<br />
 
 			<span class="label">Federal/GST Tax Exempt:</span>
@@ -241,7 +229,7 @@ not acceptable, however "0" is valid.
 			<p class="none">&nbsp;</p>
 
 			<label for="txtTerms">* Terms:</label>
-			<input type="text" size="30" class="smBox" id="txtTerms" name="txtTerms" value="<?txtTerms?>" />
+			<input type="text" size="30" class="smBox" id="txtTerms" name="txtTerms" value="<?txtTerms?>" required />
 			<label for="" class="label">&nbsp;Days</label>
 			<br />
 
@@ -258,12 +246,12 @@ not acceptable, however "0" is valid.
 			<br />
 
 			<label>* Credit Hold:</label>
-			<label for="rdbCreditHoldYes" class="radio"><input type="radio" id="rdbCreditHoldYes" name="rdbCreditHold" value="Y" <?rdbCreditHoldY?> />Yes</label>
-			<label for="rdbCreditHoldNo" class="radio"><input type="radio" id="rdbCreditHoldNo" name="rdbCreditHold" value="N" <?rdbCreditHoldN?> />No</label>
+			<label for="rdbCreditHoldYes" class="radio"><input type="radio" id="rdbCreditHoldYes" name="rdbCreditHold" value="Y" <?rdbCreditHoldY?> required />Yes</label>
+			<label for="rdbCreditHoldNo" class="radio"><input type="radio" id="rdbCreditHoldNo" name="rdbCreditHold" value="N" <?rdbCreditHoldN?> required />No</label>
 			<br />
 
 			<label for="txtDownpayment">* Required Downpayment:</label>
-			<input type="text" size="30" class="smBox" id="txtDownpayment" name="txtDownpayment" value="<?txtDownpayment?>" />
+			<input type="text" size="30" class="smBox" id="txtDownpayment" name="txtDownpayment" value="<?txtDownpayment?>" required />
 			<label for="" class="label">&nbsp;%</label>
 			<br />
 		</fieldset>
@@ -353,9 +341,9 @@ not acceptable, however "0" is valid.
 
 			<label>Legal Form:</label>
 			<div>
-				<label for="rdbLegalFormCorporation" class="radio"><input type="radio" id="rdbLegalFormCorporation" name="rdbLegalForm" value="Corporation" <?rdbLegalFormCorporation?> />Corporation</label><br />
-				<label for="rdbLegalFormSoleProprietor" class="radio"><input type="radio" id="rdbLegalFormSoleProprietor" name="rdbLegalForm" value="SoleProprietor" <?rdbLegalFormSoleProprietor?> />Sole Proprietor</label><br />
-				<label for="rdbLegalFormPartnership" class="radio"><input type="radio" id="rdbLegalFormPartnership" name="rdbLegalForm" value="Partnership" <?rdbLegalFormPartnership?> />Partnership</label><br />
+				<label for="rdbLegalFormCorporation" class="radio"><input type="radio" id="rdbLegalFormCorporation" name="rdbLegalForm" value="Corporation" <?rdbLegalFormCorporation?> />Corporation</label>
+				<label for="rdbLegalFormSoleProprietor" class="radio"><input type="radio" id="rdbLegalFormSoleProprietor" name="rdbLegalForm" value="SoleProprietor" <?rdbLegalFormSoleProprietor?> />Sole Proprietor</label>
+				<label for="rdbLegalFormPartnership" class="radio"><input type="radio" id="rdbLegalFormPartnership" name="rdbLegalForm" value="Partnership" <?rdbLegalFormPartnership?> />Partnership</label>
 			</div>
 			<br />
 
