@@ -140,12 +140,12 @@ sub insert {
   my $table = shift; # The table name to operate on (may contain schema)
   my %data;
   if (@_ == 1) {
-     if (ref eq 'ARRAY') {
+     if (ref $_[0] eq 'ARRAY') {
       %data = @{$_[0]};
     } elsif ( ref $_[0] eq 'HASH' ) {
       %data = %{$_[0]};
     } else {
-  $openprint::log->debug("$table ".Data::Dumper::Dumper($_[0]));
+      $openprint::log->debug("UNKNOWN $table ".Data::Dumper::Dumper($_[0]));
     }
   } else {
     %data = @_;    # Field and value pairs
