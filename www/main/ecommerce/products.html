@@ -1,20 +1,20 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-<title>
-<!--#include virtual="/includes/web_page_title.html" -->
-Products
-<!--#include virtual="/includes/web_page_title_end.html" -->
-</title>
-<!--#include virtual="/includes/web_page_meta.html" -->
-<!--#include virtual="/includes/h1-main-css.html" -->
-<!--#include virtual="/includes/h2-js.html" -->
-<script type="text/javascript" src="/javascripts/other.js"></script>
-<script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
-<script type="text/javascript" src="/javascripts/JSAN.js"></script>
-<link href="/styles/products-v2.css" rel="stylesheet" type="text/css" />
+  <title>
+  <!--#include virtual="/includes/web_page_title.html" -->
+  Products
+  <!--#include virtual="/includes/web_page_title_end.html" -->
+  </title>
+  <!--#include virtual="/includes/web_page_meta.html" -->
+  <!--#include virtual="/includes/h1-main-css.html" -->
+  <!--#include virtual="/includes/h2-js.html" -->
+  <script src="/javascripts/other.js"></script>
+  <script src="<?hash_link(/javascripts/proj/proj_create.js)?>"></script>
+  <script src="/javascripts/JSAN.js"></script>
+  <link href="/styles/products-v2.css" rel="stylesheet" type="text/css" />
 </head>
-<script type="text/javascript">
+<script>
 
 
 function open_price_window( i ) {
@@ -23,7 +23,6 @@ function open_price_window( i ) {
 }
 
 function open_discount_window( i ) {
-
 	if ( i == "" ) {
 		alert("Missing product id");
 		return;
