@@ -886,6 +886,16 @@ sub get_colours {
 		} # end if
   } # end foreach
 
+  if ($$specs{"s${s}_black"}) {
+    my $colour = 'Black';
+			push @colours, { 
+				type	=>	'CMYK',
+				name	=>"$colour Spot Colour",
+				coverage => $$specs{$colour.'Spot'.$side.'Coverage'},
+				coverage_key	=> $colour.'Spot'.$side.'Coverage',
+			};
+  }
+
   if ($$specs{'chkProcessColour'.$side} or $$specs{"s${s}_process"}) {
     push @colours, map { { 
         type	=>	'CMYK',
