@@ -1306,7 +1306,7 @@ sub calc_print_price {
   }
   if (scalar(keys %lay_count) > 1 ) {
     #$price{reject_mv_layout} = 1; #icon disable as it seems to simply reject anything with more than 1 sig
-    print STDERR "versions REJECT MV LAYOUT \n", Dumper(\%lay_count);
+    print STDERR "versions REJECT MV LAYOUT \n", Dumper(\%lay_count) if DEBUG;
   } else {
     #print STDERR "versions PASS MV LAYOUT \n";
   }
