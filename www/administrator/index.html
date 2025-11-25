@@ -15,7 +15,7 @@
 
 	<script src="/javascripts/other.js"></script>
 </head>
-<body onload="document.f1.txtEmail.focus();">
+<body>
       <? if ( $$variable{user_type} eq 'A' ) ?>
 <!--#include virtual="/includes/c1-admin-nav.html" -->
       <? else ( $$variable{user_type} eq 'A' ) ?>
@@ -74,9 +74,16 @@
 			<br />
 		</fieldset>
 	</form>
+<script nonce="<?php echo $cspNonce ?>">
+window.addEventListener("DOMContentLoaded",
+ function() {
+   document.getElementById('txtEmail').focus();
+ });
+</script>
       <? endif ( $$variable{user_type} eq 'A' ) ?>
 </div>
 
 <!--#include virtual="/includes/administrator/admin-footer.html" -->
+
 </body>
 </html>
