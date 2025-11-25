@@ -3,7 +3,7 @@ package openprint::www;
 use utf8;
 use open ( ':encoding(UTF-8)', ':std' );
 
-use constant Debug => 1;
+use constant Debug => 0;
 
 #use Benchmark;
 #use diagnostics;

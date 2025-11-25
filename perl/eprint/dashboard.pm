@@ -356,8 +356,6 @@ sub text_search {
 				$var->{param}{quote_id} = $quote;
 				$redirect = "/main/quote/quote_history_details.html?quote_id=$quote";
 				$cust = $ocust;
-				print STDERR "SELECT CUST NUMBER: $cust *****\n";
-
 			}
 		}
 

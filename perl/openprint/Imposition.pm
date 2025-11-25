@@ -12,7 +12,7 @@ require Math::Round;
 require Data::Dumper;
 use SVG;
 use vars qw( $AUTOLOAD %Orientations @RunStyles %ShortStyles %LongStyles %bleed_sides);
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;

@@ -866,8 +866,6 @@ sub shipping {
 
   $specs{ADDRESSES} = $dbh->selectall_arrayref($sql,{Slice => {}}, $sid);
 
-  print STDERR "HAVE ADDRESS", Dumper($specs{ADDRESSES}, \%specs);
-
   my @keys = qw(add_price1 add_price2 add_price3 add_qty1 add_qty2 add_qty3 cost_center pickup manualcostcenter accountnumber storemailinstructions department);
 
   map { 
