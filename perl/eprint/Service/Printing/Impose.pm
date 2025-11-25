@@ -224,7 +224,7 @@ sub can_print_project {
     && defined $project->{bind_type} 
     && $project->{bind_type} eq 'CornerStitching'
     && ! grep { $_ eq 'CornerStitching' } @{$press->{services}} ) {
-    $$reasons{$$press{id}} = $$press{name} .= ' failed corner stitching test';
+    $$reasons{$$press{id}} = $$press{name} . ' failed corner stitching test';
     return 0;
   }
 
@@ -234,7 +234,7 @@ sub can_print_project {
   # that exactly match the quality rating we are looking for.
 
   if ( (!$project->{product_only}) && $press->{product_only} ) {
-    $$reasons{$$press{id}} = $$press{name} .= ' failed product only test';
+    $$reasons{$$press{id}} = $$press{name} . ' failed product only test';
     return 0;
   }
 
