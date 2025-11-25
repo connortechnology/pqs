@@ -223,12 +223,13 @@ sub set {
 
             # Create their customer and project directories.
             unless (-e "$path/$dir_name/projects") {
-                mkpath("$path/$dir_name/projects")
-                    or die "Couldn't create customer directories: $!";
+              eval {
+                mkpath("$path/$dir_name/projects");
+              };
+              $openprint::log->error( "Couldn't create customer directories at $path/$dir_name/projects: $! $@") if $@;
             }
-        } 
+        } else {
         # Edit an existing customer.
-        else {
             my $rows = sql::update($self->{log}, $self->{dbh}, 'tbl_Customer', "lngCustomerID = $self->{index}", 
                 dtmLastModified => 'NOW', 
                 %set_fields 
