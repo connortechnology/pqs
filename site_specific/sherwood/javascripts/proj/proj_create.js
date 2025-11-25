@@ -93,8 +93,7 @@ Event.observe(window, 'load', function () {
     var other  = $('other_program');
 
     var is_other = function () {
-        other.style.display 
-                = format[format.selectedIndex].value == 'Other' ? '' : 'none'; 
+        other.style.display = format[format.selectedIndex].value == 'Other' ? '' : 'none'; 
     }
 
     Event.observe(format, 'change', is_other);
