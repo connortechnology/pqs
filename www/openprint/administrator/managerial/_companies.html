@@ -46,6 +46,7 @@
 			<th class="User CSR">CSR</th>
 			<th class="Date">Created</th>
 			<th class="Date">Updated</th>
+			<th class="Activated">Activated</th>
 			<th class="Date">Last Project On</th>
 			<th class="Date">Last Quote On</th>
 		</tr>
@@ -63,8 +64,9 @@
 	<td class="User CSR">%5$s</td>
 	<td class="Date">%6$s</td>
 	<td class="Date">%7$s</td>
-	<td class="Date">%8$s</td>
+  <td class="Activated">%8$s</td>
 	<td class="Date">%9$s</td>
+	<td class="Date">%10$s</td>
 </tr>
     `, $rowclass, $Company->id(),
       $Company->admin_link_to( $$Company{accountnumber} ),
@@ -72,6 +74,7 @@
       $Company->CSR()->name(),
       format_date($$Company{created_on}),
       format_date($$Company{updated_on}),
+      ($$Company{activated} eq 'Y' ? 'Yes' : 'No'),
       format_date($Company->last_project_on()),
       format_date($Company->last_quoted_on()),
     );
