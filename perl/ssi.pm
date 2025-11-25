@@ -667,8 +667,8 @@ sub make_drop_down {
   for (my $i = 0; $i < @{$data}; $i++) {
     my $value;
     my $label;
-    $log->debug(ref $data);
-    $log->debug(ref $$data[$i]);
+    #$log->debug(ref $data);
+    #$log->debug(ref $$data[$i]);
     if ( ref $$data[$i] eq 'ARRAY' ) {
       my $row = $$data[$i];
       $value = $$row[0];
