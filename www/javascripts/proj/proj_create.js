@@ -102,8 +102,11 @@ Event.observe(window, 'load', function () {
 
     for (var i=0; i < quantities.length; i++) {
         quantity = quantities[i];
+        if (!quantity) continue;
+        console.log(quantity);
 
-        Event.observe(quantity, 'focus', function () {
+        Event.observe(quantity, 'focus', function (thing) {
+          console.log(this, thing);
             for (var j=0; j < quantities.length; j++) {
                 if (this == quantities[j]) {
                     return;
@@ -203,6 +206,7 @@ Event.observe(window, 'load', function () {
 // Design Format - When Other is Selected, Other Format TxT comes up.
 Event.observe(window, 'load', function () {
     var format = $('ddmFormat');
+    if (!format) return;
     var other  = $('other_program');
 
     var is_other = function () {
