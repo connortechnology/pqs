@@ -500,11 +500,10 @@ sub user_profiles {
 	} # end if
 	$variable{selectUserCategories} = ssi::make_drop_down( \@available_categories, \@users_categories );
 
-	$session{$r->uri().'?company_id'} = $param{ddmCustomer};
-
-	ssi::setup_date_select( $r->uri, 'log_created_on_start', -31 );
-	ssi::setup_date_select( $r->uri, 'log_created_on_end', '' );
-
+  my $uri = misc::get_session_uri($r->uri());
+	$session{$uri.'?company_id'} = $param{ddmCustomer};
+	ssi::setup_date_select( $uri, 'log_created_on_start', -31 );
+	ssi::setup_date_select( $uri, 'log_created_on_end', '' );
 } # end sub user_profiles
 
 
@@ -1144,18 +1143,19 @@ sub companies {
 } # end sub companies
 
 sub _companies {
-  my $uri = misc::get_session_uri($r->uri());
-	ssi::save_params( $uri, (
-				'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted','supplier',
-				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
-				( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
-				( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
-				( map { 'updated_on_end_' . $_ } ( 'year','month','day' ) ),
-				( map { 'last_project_on_start_' . $_ } ( 'year','month','day' ) ),
-				( map { 'last_project_on_end_' . $_ } ( 'year','month','day' ) ),
-				) );
-	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
-  if ($param{action} eq 'delete') {
+  if (!$param{action}) {
+    my $uri = misc::get_session_uri($r->uri());
+    ssi::save_params( $uri, (
+        'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted','supplier',
+        ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+        ( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
+        ( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),
+        ( map { 'updated_on_end_' . $_ } ( 'year','month','day' ) ),
+        ( map { 'last_project_on_start_' . $_ } ( 'year','month','day' ) ),
+        ( map { 'last_project_on_end_' . $_ } ( 'year','month','day' ) ),
+      ) );
+    $session{$uri.'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+  } elsif ($param{action} eq 'delete') {
     foreach my $Company ( openprint::Company->find( id=> (ref $param{company_id} eq 'ARRAY') ? $param{company_id} : $param{company_id}) ) {
       $Company->delete();
     }
@@ -1219,8 +1219,9 @@ sub _user_logs {
 } # end sub _logs
 
 sub users {
+  my $uri = misc::get_session_uri($r->uri());
   #$session{$r->uri().'?company_id'} = $session{company_id} if ! exists $session{$r->uri().'?company_id'};
-	$session{$r->uri().'?deleted'} = '0' if ! exists $session{$r->uri().'?deleted'};
+	$session{$uri.'?deleted'} = '0' if ! exists $session{$uri.'?deleted'};
 	_users();
 
 	if ( $param{btnFunction} ) {
