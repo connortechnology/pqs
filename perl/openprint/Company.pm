@@ -86,7 +86,7 @@ $serial = 'tbl_Customer_lngCustomerID_seq';
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
-	last_ordered_on	=>	'(SELECT '.$openprint::Order::fields{created_on}.' FROM '.$openprint::Order::table.' WHERE '.$openprint::Order::table.'.'.$openprint::Oder::fields{id}.'=last_order_id)',
+	last_ordered_on	=>	'(SELECT '.$openprint::Order::fields{created_on}.' FROM '.$openprint::Order::table.' WHERE '.$openprint::Order::table.'.'.$openprint::Order::fields{id}.'=last_order_id)',
 	last_project_on	=>	'(SELECT dtmcreationdate FROM '.$openprint::Project::table.' WHERE '.$openprint::Project::table.'.'.$openprint::Project::fields{id}.'=last_project_id)',
 	last_quoted_on	=>	'(SELECT MAX('.$openprint::Quote::fields{created_on}.') FROM '.$openprint::Quote::table.' WHERE '.$openprint::Quote::fields{company_id}.'='.$table.'.'.$fields{id}.')',
 	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
@@ -94,11 +94,12 @@ $serial = 'tbl_Customer_lngCustomerID_seq';
   last_expense_on   =>  '(SELECT MAX(created_on) FROM expenses WHERE recipient_Id=companies.id)',
 	credit_app_on	=>	'(SELECT MAX(dtmcreationdate) FROM creditapplications WHERE company_id=companies.id)',
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id='.$table.'.'.$fields{id}.')',
-	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id='.$table.'.'.$fields{id}.' AND field_id=?)',
-	last_article_id	=>	'(SELECT MAX(id) FROM Articles WHERE company_id='.$table.'.'.$fields{id}.')',
-	last_timetrack_id	=>	'(SELECT MAX(id) FROM timetracks WHERE company_id='.$table.'.'.$fields{id}.')',
+  profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id='.$table.'.'.$fields{id}.' AND field_id=?)',
+  last_article_id	=>	'(SELECT MAX(id) FROM Articles WHERE company_id='.$table.'.'.$fields{id}.')',
+  last_timetrack_id	=>	'(SELECT MAX(id) FROM timetracks WHERE company_id='.$table.'.'.$fields{id}.')',
 	is_invoiced=> 'id IN (SELECT invoicee_id FROM invoices)',
 );
+
 %transforms = (
 	address1					=>	[ 's/^\s+//', 's/\s+$//' ],
 	address2					=>	[ 's/^\s+//', 's/\s+$//' ],
