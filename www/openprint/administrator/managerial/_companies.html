@@ -6,6 +6,8 @@
 		( $session{$uri.'?company_name'} ? ( 'name ilike' => '%'.$session{$uri.'?company_name'}.'%' ) : () ),
 		( $session{$uri.'?deleted'} ne '' ? ( deleted => $session{$uri.'?deleted'} ) : () ),
 		( $session{$uri.'?supplier'} ne '' ? ( supplier => $session{$uri.'?supplier'} ) : () ),
+		( $session{$uri.'?reseller'} ne '' ? ( reseller => $session{$uri.'?reseller'} ) : () ),
+		( $session{$uri.'?activated'} ne '' ? ( activated => $session{$uri.'?activated'} ) : () ),
 		( $session{$uri.'?marketing_category_id'} ? ( 'marketing_category_id any'=> $session{$uri.'?marketing_category_id'} ) : () ),
 		date_filter( $uri.'?created_on_end', 'created_on <=' ),
 		date_filter( $uri.'?created_on_start', 'created_on >=' ),

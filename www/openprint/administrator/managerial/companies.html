@@ -89,6 +89,8 @@ function delete_clicked() {
 		<? endif ( openprint::MarketingCategory->find_one() ) ?>
 		<li><label>Country</label><? echo ( ssi::select( [ map { $_->id(), $_->name() } openprint::Location->find(type=>'country', order=>'lower(name)') ], $session{$r->uri().'?country'}, { name=>'country_id', prepend=>['','All'] } ); ) ?></li>
 		<li><label>Supplier?</label><? echo ( radio( 'supplier', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?supplier'}, {on_click=>'load_page'} ); ) ?></li>
+		<li><label>Reseller?</label><? echo ( radio( 'reseller', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?reseller'}, {on_click=>'load_page'} ); ) ?></li>
+		<li><label>Activated?</label><? echo ( radio( 'activated', [ 'Y','Yes', 'N', 'No', '', 'Both' ], $session{$r->uri().'?activated'}, {on_click=>'load_page'} ); ) ?></li>
 		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>'load_page();'} ); ) ?></li>
 		</ul>
 		<p class="buttons">

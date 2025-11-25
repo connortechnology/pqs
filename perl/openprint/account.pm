@@ -218,7 +218,7 @@ sub registration {
 
 			$Company = new openprint::Company();
 			$Company->set( \%param );
-			$Company->activation( $config{NewCustomerAccountActivation} );
+			$Company->activated( $config{NewCustomerAccountActivation} );
 			if ( $session{user_type} and sets::isin($session{user_type}, ['E','A']) and ! $Company->salesrep_id() ) {
 				$Company->salesrep_id($session{user_id});
 			} # end if
@@ -258,7 +258,7 @@ sub registration {
 		$Company->save();
 		$Company->name( $Company->id() );
 		$Company->set( \%param );
-		$Company->activation( $config{NewCustomerAccountActivation} );
+		$Company->activated( $config{NewCustomerAccountActivation} );
 		if ( my $error = $Company->save() ) {
 			$variable{error} .= $error;
 			return;
@@ -397,7 +397,7 @@ sub registration {
 			and (!$session{user_id})
 			) {
 		# auto log in.
-		if ( $User->web_active() eq 'Y' and $Company->activation() eq 'Y') {
+		if ( $User->web_active() eq 'Y' and $Company->activated() eq 'Y') {
 			@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
 			(new openprint::Log())->save({action=>'Login', note=>'Automatic login after registration.'});
 			$variable{information} .= '<p>Your account has been activated and you have been automatically logged in.</p>';

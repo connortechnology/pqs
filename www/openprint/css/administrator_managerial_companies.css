@@ -1,3 +1,6 @@
 table .Account {
 	width: 75px;
 }
+.filters ul {
+  column-count: 2;
+}

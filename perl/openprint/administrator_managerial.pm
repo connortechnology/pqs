@@ -1146,7 +1146,7 @@ sub _companies {
   if (!$param{action}) {
     my $uri = misc::get_session_uri($r->uri());
     ssi::save_params( $uri, (
-        'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted','supplier',
+        'salesrep_id', 'marketing_category_id', 'company_name', 'country', 'deleted','supplier','reseller','activated',
         ( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
         ( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
         ( map { 'updated_on_start_' . $_ } ( 'year','month','day' ) ),

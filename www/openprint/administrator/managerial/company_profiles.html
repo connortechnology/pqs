@@ -156,9 +156,9 @@ button( 'merge'.$C->id(), { href=>'company_profiles.html?company_id='.$$variable
 				<label>Legal Name</label>
 				<input type="text" name="business_name" value="<? echo ( $$variable{Company}->business_name() ) ?>" />
 			</li>
-			<li class="activation"> 
+			<li class="activated"> 
 				<label>Account Activated</label>
-				<? echo ( radio( 'activation', ['Y','Yes','N','No'], $$variable{Company}->activation(), {default=>'N'} ); ) ?>
+				<? echo ( radio( 'activated', ['Y','Yes','N','No'], $$variable{Company}->activated(), {default=>'N'} ); ) ?>
 			</li><li>
 				<label>Is this a Supplier?</label>
 				<? echo ( radio( 'supplier', ['Y','Yes','N','No'], $$variable{Company}->supplier(), {default=>'N'} ); ) ?>

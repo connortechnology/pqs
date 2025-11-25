@@ -160,13 +160,13 @@ sub verify_login {
 
 	# Have a valid user now.
   if ( $User->company_id()) {
-    if ( $User->Company()->activation() eq 'N' ) {
+    if ( $User->Company()->activated() eq 'N' ) {
       $$variable{error} = 'Company not activated.';
       $$variable{information} = 'Your company account has not been looked over and activated by an administrator yet. You will be notified when your application has been approved.';
       (new openprint::Log())->save({Object=>$User, action=>'Login Failed', note=>'Company Account Not Activated', user_id=>$User->id(), company_id=>$User->company_id() } );
       return;
-    } elsif ( $User->Company()->activation() ne 'Y' ) {
-      $$variable{error} = 'Company Account activation status is unknown.('.$User->Company()->activation().')';
+    } elsif ( $User->Company()->activated() ne 'Y' ) {
+      $$variable{error} = 'Company Account activation status is unknown.('.$User->Company()->activated().')';
       $$variable{information} = 'Please report this error.';
       return;
     } # end if
