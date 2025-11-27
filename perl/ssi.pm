@@ -890,8 +890,9 @@ sub get_dates {
 
 
 sub get_start_end_dates {
-    my ( $log, $dbh, $variable, $startYear, $startMonth, $startDay, $endYear,
-         $endMonth, $endDay ) = @_;
+    my ( $log, $dbh, $variable,
+      $startYear, $startMonth, $startDay,
+      $endYear, $endMonth, $endDay ) = @_;
 
     my @current_date = localtime(time);
 
