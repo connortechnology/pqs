@@ -856,19 +856,16 @@ sub get_project_price {
   # already gotten this early, just save it then instead of refetching.
   my $press     = get_equipment($dbh, $best_price->{press});
 
-  my $substrate = $best_price->{paper}{id};
-  $$best_price{substrate} = $substrate;
+  my $substrate = $$best_price{substrate} = $best_price->{paper}{id};
 
   # Get the substrates for the press, sort them, and serialize the list.
-  $best_price->{sheet_sizes} = join q{_} =>
-  map  { join q{,} => $_->{id},                                # ID
+  $best_price->{sheet_sizes} = join '_' =>
+  map  { join ',' => $_->{id},                                # ID
     (join 'x' => $_->{width}, $_->{height}), # (W x H)
     ($substrate eq $_->{id})                 # Checked
   }
   sort { $a->{width} <=> $b->{width} || $a->{height} <=> $b->{height} }
-  map  { fit_to_press($_, $press)                                     }
-  @{ get_substrates($dbh, $project) };
-  $openprint::log->debug("Sheet sizes: ".Data::Dumper::Dumper($best_price->{sheet_sizes}));
+  map  { fit_to_press($_, $press) } @{ get_substrates($dbh, $project) };
 
   $best_price->{press} = $press->{id};
 
