@@ -205,3 +205,6 @@ input[type="text"] {
 #nav li.company_profiles a {
   width: auto;
 }
+table th {
+  text-align: left;
+}
