@@ -365,7 +365,7 @@ sub add_defaults {
       $$indexes{$form}[FOLDING_PROOF] = FOLDING_PROOF;
     } else {
       #$$indexes{$form}[FOLDING_PROOF] = undef;
-      $log->debug("Not adding folding proof");
+      $log->debug("Not adding folding proof") if DEBUG;
     } # end if
   } # end if
 

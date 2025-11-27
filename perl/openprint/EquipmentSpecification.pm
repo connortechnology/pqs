@@ -7,7 +7,7 @@ require openprint::Equipment;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'tbl_Equipment_Specifications';
 $serial = 'EquipmentSpecification_seq';
 
