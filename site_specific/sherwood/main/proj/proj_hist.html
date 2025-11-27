@@ -14,9 +14,9 @@
 
 	<!--#include virtual="/includes/h2-js.html" -->
 
-	<script type="text/javascript" src="/javascripts/other.js"></script>
+	<script src="/javascripts/other.js"></script>
 
-	<script type="text/javascript">
+	<script>
 		function delete_confirm(form) {
 			var count = 0;
 			var len = form['delete'].length;
@@ -32,9 +32,7 @@
 			alert("To Delete Projects, click the checkbox beside the project.");
 			return false;
 		}
-		
-		</script>
-      
+	</script>
 </head>
 <body>
 	<!--#include virtual="/includes/c1-main-nav.html" -->
@@ -75,8 +73,8 @@ To delete projects from history check the appropriate project(s) and select dele
 			
 			<input type="hidden" id="action" name="action" size="9" class="smBox" value="add_qty" />
             <input type="hidden" id="qpid" name="pid" size="9" class="smBox" value="5189" />
-			<label for="pid" style="width:6em ; padding-left:12em">Quantity:</label>
-            <input id="txtQuantity1" name="txtQuantity1" size="9" class="smBox" />
+			<label for="txtQuantity1" style="width:6em ; padding-left:12em">Quantity:</label>
+            <input id="txtQuantity1" name="txtQuantity1" size="9" class="smBox" type="number" min="1" step="1" required/>
 			<label for="pid" style="width:8em ;">Project Name:</label>
 			<input id="pref" name="txtProjectReference" size="25" />
 			<label for="ptype" style="width:4em ;">Press:</label>
@@ -160,7 +158,7 @@ To delete projects from history check the appropriate project(s) and select dele
 						<td style="text-align: left;" id="mpid"><a href="/main/proj/view.html?pid=<?pid?>"><?pid?></a></td>
 						<td style="text-align: left;"><a href="/main/proj/view.html?pid=<?pid?>"><?reference?></a></td>
 						<td style="text-align: right;"><input type="hidden" value="<?escape_html:reference?>" id="ref-<?pid?>" name="reference"/>
-                        <?qty?> <a heref="#" onclick="$('qpid').value=<?pid?>;$('pref').value=$('ref-<?pid?>').value;$('fsq').show();$('txtQuantity1').focus();" onmouseover="this.style.cursor='pointer'"; >+</a></td>
+              <?qty?> <a href="#" onclick="$('qpid').value=<?pid?>;$('txtQuantity1').value='<?qty?>';$('pref').value=$('ref-<?pid?>').value;$('fsq').show();$('txtQuantity1').focus();" onmouseover="this.style.cursor='pointer'"; >+</a></td>
 						<td style="text-align: right;"><?money:price?></td>
 						<td style="text-align: center;"><?press_type?></td>
 						<td style="text-align: center;"><?status?></td>
