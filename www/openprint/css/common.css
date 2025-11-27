@@ -726,7 +726,7 @@ td select {
 select#ddmCustomer,
 select#company_id,
 select#supplier_id {
-  width: calc(100% - 50px);
+  max-width: calc(100% - 50px);
 }
 a.Today, a.Clear {
 	margin-right: 2px;
