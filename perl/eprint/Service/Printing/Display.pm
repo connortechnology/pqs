@@ -125,7 +125,7 @@ sub display {
 
     if ($specs->{override_substrate}) {
       $page{substrate} = substrate_override($dbh, $specs->{substrate});
-    } else {
+    } elsif ($$specs{hdnSheetSizeWidth} and $$specs{hdnSheetSizeHeight}) {
       $page{substrate} = '<option value="'.
       join('-', $$specs{hdnPaperIndex},
         ($$specs{hdnSuppliedStockWidth}/$$specs{hdnSheetSizeWidth} > 1 ? 'W'.int($$specs{hdnSuppliedStockWidth}/$$specs{hdnSheetSizeWidth}) : () ),
