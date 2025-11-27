@@ -45,51 +45,47 @@ sub restore {
 }
 
 sub store {
-    my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
+  my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
 
-    # Special case for bleeds, stringify selected bleed sides.        
-    $specs->{bleed_sides} = defined $specs->{bleed_sides} 
-        ? join(',', @{ $specs->{bleed_sides} }) : undef;
+  # Special case for bleeds, stringify selected bleed sides.        
+  $specs->{bleed_sides} = defined $specs->{bleed_sides} ? join(',', @{ $specs->{bleed_sides} }) : undef;
 
-	print STDERR "STORE FOR Printing Servcie: PID: $pid SID: $sid \n";
-    # Very, very simple multi-version input processing.
-    if ($specs->{is_mv}) {
-	print STDERR "STORE FOR Printing Servcie: START MV \n";
-        my @name  = @{ $specs->{mv_name} } if $specs->{mv_name};
-        my @qty   = @{ $specs->{mv_qty}  } if $specs->{mv_qty};
-        my $total = (get_quantities($log, $dbh, $pid))[0];
+  #print STDERR "STORE FOR Printing Servcie: PID: $pid SID: $sid \n";
+  # Very, very simple multi-version input processing.
+  if ($specs->{is_mv}) {
+    #print STDERR "STORE FOR Printing Servcie: START MV \n";
+    my @name  = @{ $specs->{mv_name} } if $specs->{mv_name};
+    my @qty   = @{ $specs->{mv_qty}  } if $specs->{mv_qty};
+    my $total = (get_quantities($log, $dbh, $pid))[0];
 
-        my (@versions, @quantities);
+    my (@versions, @quantities);
 
-        # For now mirror the JS precisely. Note: Multiple labels of the
-        # same name are allowed and treated as different versions.
-        for my $i (0 .. $#qty) {
-          next if ! $qty[$i];
-          my $name    = $name[$i];
-          my $qty     = int($qty[$i]);
+    # For now mirror the JS precisely. Note: Multiple labels of the
+    # same name are allowed and treated as different versions.
+    for my $i (0 .. $#qty) {
+      next if ! $qty[$i];
+      my $name    = $name[$i];
+      my $qty     = int($qty[$i]);
 
-          next unless $qty > 0;
+      next unless $qty > 0;
 
-          my $percent = ($qty / $total) * 100;
+      my $percent = ($qty / $total) * 100;
 
-          if ($name and $percent and ceil($percent) > 0) {
-            push @versions,   $name => $percent;
-            push @quantities, $name => $qty;
-          }
-        }
-		print STDERR "STORE FOR Printing Servcie: START MV @versions \n";
-        $specs->{versions}           = join(',', @versions);
-        $specs->{version_quantities} = join(',', @quantities); # For UI
-
-		$specs->{s0_black_mv} = 'on' if ref $specs->{s0_black_mv} eq 'ARRAY';
-		$specs->{s1_black_mv} = 'on' if ref $specs->{s1_black_mv} eq 'ARRAY';
-		
-
+      if ($name and $percent and ceil($percent) > 0) {
+        push @versions,   $name => $percent;
+        push @quantities, $name => $qty;
+      }
     }
+    #print STDERR "STORE FOR Printing Servcie: START MV @versions \n";
+    $specs->{versions}           = join(',', @versions);
+    $specs->{version_quantities} = join(',', @quantities); # For UI
 
-    return $specs;
+    $specs->{s0_black_mv} = 'on' if ref $specs->{s0_black_mv} eq 'ARRAY';
+    $specs->{s1_black_mv} = 'on' if ref $specs->{s1_black_mv} eq 'ARRAY';
+  }
+
+  return $specs;
 }
-
 
 sub preaction {
     my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
@@ -141,20 +137,14 @@ sub preaction {
             # If any template specifications are present for this service we
             # should insert them now.
             if (exists $template{$name}{specs}) {
-                insert_service_specs(
-                    $log, $dbh, $pid, $sid, %{ $template{$name}{specs} }
-                );
+                insert_service_specs( $log, $dbh, $pid, $sid, %{ $template{$name}{specs} });
             }
         }
 
         # As we've changed a bunch of project services and specs out from
         # under the user we'll reset their removal statuses to indicate they
         # should check it over again before removing it again or not.
-        $dbh->do(q{ UPDATE tbl_project_contents
-                    SET ysnremoved = FALSE
-                    WHERE ysnremoved = TRUE
-                      AND lngprojectindex = ?
-        }, undef, $pid);
+        $dbh->do(q{ UPDATE tbl_project_contents SET ysnremoved = FALSE WHERE ysnremoved = TRUE AND lngprojectindex = ?  }, undef, $pid);
     }
 
     return 1;
