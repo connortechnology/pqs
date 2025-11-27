@@ -62,14 +62,20 @@ function clear_gate_fold(form) {
 Event.observe(window, 'load', function () {
     var form      = $('f1');
     var cover     = $('cover');
-
+console.log(cover);
     var templates = form.template;
     var types     = form.rdbCover;
 
     var set_cover = function () {
         var is_pb = this.value == 'PerfectBinding';
            
-        cover.display(!is_pb); // Show/hide the cover question.
+        if (!is_pb) {
+          cover.show();
+        } else {
+          cover.hide();
+        }
+
+        //cover.display(!is_pb); // Show/hide the cover question.
 
         for (var i=0; i < types.length; i++)
             types[i].disabled = is_pb;
