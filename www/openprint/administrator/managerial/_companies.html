@@ -69,7 +69,7 @@
 	<td class="Date">%10$s</td>
 </tr>
     `, $rowclass, $Company->id(),
-      $Company->admin_link_to( $$Company{accountnumber} ),
+      $Company->admin_link_to( $$Company{accountnumber} || '' ),
       $Company->admin_link_to( $$Company{name}.($Company->deleted()?' (deleted)':'') ), 
       $Company->CSR()->name(),
       format_date($$Company{created_on}),
