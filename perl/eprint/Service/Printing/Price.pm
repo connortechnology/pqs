@@ -2230,7 +2230,7 @@ sub get_run_price {
         # $log->error("3:. Could not Find Impression Price For Service: $s on Press: $press Qty Range: $press_sheets") if ( $m_price == 0 );
         $running_price += $m_price;
       }
-      $openprint::log->error("1 Running price = $running_price") if !$running_price;
+      $openprint::log->error("1 Running price = $running_price $s on $press") if !$running_price;
     }
 
     if ($side_two_colours) {
