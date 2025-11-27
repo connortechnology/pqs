@@ -123,8 +123,15 @@ sub display {
 
     # OVERRIDES
 
-    $page{substrate} = substrate_override($dbh, $specs->{substrate});
-    #if $specs->{override_substrate};
+    if ($specs->{override_substrate}) {
+      $page{substrate} = substrate_override($dbh, $specs->{substrate});
+    } else {
+      $page{substrate} = '<option value="'.
+      join('-', $$specs{hdnPaperIndex},
+        ($$specs{hdnSuppliedStockWidth}/$$specs{hdnSheetSizeWidth} > 1 ? 'W'.int($$specs{hdnSuppliedStockWidth}/$$specs{hdnSheetSizeWidth}) : () ),
+        ($$specs{hdnSuppliedStockHeight}/$$specs{hdnSheetSizeHeight} > 1 ? 'H'.int($$specs{hdnSuppliedStockHeight}/$$specs{hdnSheetSizeHeight}) : () ),
+      ).'" selected="selected">'.join('x', @$specs{'hdnSheetSizeWidth','hdnSheetSizeHeight'}).'</option>';
+    }
 
     # LARGE FORMAT
     #
@@ -363,9 +370,12 @@ sub substrate_override {
 
     # The first part of the id is the paper index.  Get the paper
     # dimensions to create the text for the select option.
-    my ($w, $h) = $dbh->selectrow_array(q{
-        SELECT dblWidth, dblHeight FROM tbl_paper WHERE lngindex = ?
-    }, undef, shift @id);
+    my $paper = openprint::Paper->find_one(id=>$id[0]);
+    if (!$paper) {
+      $openprint::log->error("No stock found in system from $substrate $id[0]");
+      return;
+    }
+    my ($w, $h) = $paper->get('width','height');
 
     # The optional second and third parts are the number of cuts along the
     # specified edge of the paper i.e ( W2 | H3 )
@@ -373,7 +383,8 @@ sub substrate_override {
         my $i = shift @id;
         $w /= substr($i,1) if substr($i,0,1) eq 'W';
         $h /= substr($i,1) if substr($i,0,1) eq 'H';
-    }   
+    }
+    #$openprint::log->debug("Got $w x $h from $substrate @$paper{'width','height'}");
 
     # Format the dims the same way they will appear when supplied by the
     # pricing request.
