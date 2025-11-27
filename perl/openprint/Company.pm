@@ -531,9 +531,10 @@ sub tax_code {
 } # end if
 
 sub admin_link_to {
+  my $self = shift;
 	return sprintf('<a href="%s/administrator/managerial/company_profiles.html?ddmCustomer=%d">%s</a>',
    ($openprint::config{url_base} ? $openprint::config{url_base} : ''),
-   $_[0]{id}, ssi::html_escape( @_ > 1 ? $_[1] : $_[0]{name} )
+   $$self{id}, ssi::html_escape( @_ ? $_[0] : $$self{name} )
  );
 } # end sub link_to
 
@@ -559,7 +560,7 @@ sub last_project_on {
     my $last = $_[0]->last_project();
     $_[0]{last_project_on} = $last->created_on() if $last;
   }
-  return $_[0]{last_project_on};
+  return $_[0]{last_project_on} || '';
 } # end sub last_project_on
 
 sub last_quote {
@@ -574,7 +575,7 @@ sub last_quoted_on {
     my $last = $_[0]->last_quote();
 		$_[0]{last_quoted_on} = $last->created_on() if $last;
 	}
-	return $_[0]{last_quoted_on};
+	return $_[0]{last_quoted_on} || '';
 } # end sub last_quoted_on
 
 sub last_ordered_on {
