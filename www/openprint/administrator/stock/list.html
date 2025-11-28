@@ -45,30 +45,26 @@
 
 	var stock_filter_ajax = null;
 	function calc(formName) {
-		if ( stock_filter_ajax ) { stock_filter_ajax.abort(); }
+		if ( stock_filter_ajax && stock_filter_ajax.abort ) { stock_filter_ajax.abort(); }
 
     const div = $j('#Stocks');
     div.html('Loading...');
 
     stock_filter_ajax = div.load('/administrator/stock/_stocks.html', $j('#f1').serialize(),
         function(){
-        stock_filter_ajax = null;
-        $j('#StocksTable').bootstrapTable({ });
+          stock_filter_ajax = null;
+          if ($j('#StocksTable').bootstrapTable) {
+            $j('#StocksTable').bootstrapTable({ });
+          }
         });
 
   }
-function reset() {
-  const f1 = document.getElementById('f1');
-  for (let i=0, len = f1.elements.length; i<len; i++) {
-    const element = f1.elements[i];
-    set_value( element, '' );
-  }
-  calc();
-}
 function body_onLoad() {
 	}
 addEventListener('DOMContentLoaded', (event) => {
-  $j('#StocksTable').bootstrapTable({ });
+  if ($j('#StocksTable').bootstrapTable)
+    $j('#StocksTable').bootstrapTable({ });
+  
 });
 </script>
 <?include('/includes/error_reporting.html')?>
@@ -92,7 +88,7 @@ addEventListener('DOMContentLoaded', (event) => {
         if (@company_ids > 1) {
           $session{$r->uri().'?Owner'} = $session{company_id} if ! exists $session{$r->uri().'?Owner'};
 
-          my @Companies = openprint::Company->find( id=>\@company_ids, order=>'lower(name)' );
+          my @Companies = openprint::Company->find( id=>\@company_ids );
           if ( $session{$r->uri().'?owner_id'} and ! sets::isin( $session{$r->uri().'?owner_id'}, \@company_ids ) ) {
             $session{$r->uri().'?owner_id'} = '';
           } # end if
@@ -142,7 +138,7 @@ return join("\n",
 		'<li><label>Supplier</label>
 			<select id="supplier_id" name="supplier_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>',
-				make_drop_down( openprint::Company->dropdown( id=> \@stock_supplier_ids, order=>'lower(name)', supplier=>'Y'), $session{$r->uri().'?supplier_id'} ), 
+				make_drop_down( openprint::Company->dropdown( id=> \@stock_supplier_ids, supplier=>'Y'), $session{$r->uri().'?supplier_id'} ), 
 			'</select>
 		</li>' );
 	} # end if
@@ -196,14 +192,14 @@ return join("\n",
 ) ?>
 		<li class="type"> 
 			<label>Type</label>
-			<? echo ( checkboxes( 'Types', ['Sheet','Sheet','Roll','Roll'], [ split(',', $session{$r->uri().'?Types'} ) ], { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( checkboxes( 'Types', ['Sheet','Sheet','Roll','Roll','Envelope','Envelope'], [ split(',', $session{$r->uri().'?Types'} ) ], { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>Size</label>
 			<? echo ( join("\n",
-input( type=>'float', name=>'width', id=>'width', value=>$session{$r->uri().'?width'}, onkeyup=>'calc(this.form.name);' ),
+input( type=>'float', name=>'width', id=>'width', value=>$session{$r->uri().'?width'}, oninput=>'calc(this.form.name);' ),
 'x',
-input( type=>'float', name=>'height', id=>'height', value=>$session{$r->uri().'?height'}, onkeyup=>'calc(this.form.name);' ),
+input( type=>'float', name=>'height', id=>'height', value=>$session{$r->uri().'?height'}, oninput=>'calc(this.form.name);' ),
 checkboxes( 'OrLarger', [1,'Or Larger'], $session{$r->uri().'?OrLarger'}, { onclick=>'calc(this.form.name);' } ),
 ); ) ?>
 			
