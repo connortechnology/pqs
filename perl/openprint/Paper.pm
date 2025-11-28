@@ -1981,7 +1981,7 @@ sub waste {
 
 sub Unit_Cost {
 	my $self = shift;
-	my $Price = $self->get_price( service=>'Material',weight=>1);
+	my $Price = $self->get_price( service=>['','Material'],weight=>1);
 	if( ! $Price ) {
 		my @SC = openprint::SkidContent->find(paper_id=>$$self{id});
 		foreach my $SC ( @SC ) {
