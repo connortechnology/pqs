@@ -529,6 +529,15 @@ fieldset.dnd-fieldset legend { display: none; }
   display: inline-block;
   float: none;
 }
+#logs_form ul,
+#logs_form li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#logs_form li {
+  padding-left: 10.2em;
+}
 #logs_form select,
 .DateSelector select,
 .DateSelectorC select,
