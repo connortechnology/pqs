@@ -49,6 +49,7 @@ $serial = 'tbl_paper_prices_id_seq';
 	markup => 0,
 	interpolate	=>	'1',
 	discountable	=>	q`'Y'`,
+  service => q`'Material'`,
 );
 
 sub Pricelist {
@@ -161,6 +162,13 @@ sub id_string {
 		}
 	} # end if
 	return $Price->Pricelist()->name() . ' '. $price_desc . ' on ' . $Price->Equipment()->strid();
+}
+
+sub service {
+  my $self = shift;
+  $$self{service} = shift if @_;
+  $$self{service} = 'Material' if ! $$self{service};
+  return $$self{service};
 }
 
 1;
