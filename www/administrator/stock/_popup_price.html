@@ -1,17 +1,1 @@
-<tr class="price" id="Price-<? echo ( $param{pricelist_id} ) ?>-<? echo ( $param{id} ) ?>">
-	<td class="Service"><? echo ( ssi::select( [ map { $_, $_ } ( 'Setup', 'Supply', 'Material' ) ], 'Material', { name=>join('-', 'service', $param{pricelist_id},$param{id} ) } ); ) ?></td>
-	<td class="Range">
-		<? echo ( join( ' to ',
-		input( type=>'cardinal', name=>'min-'.$param{pricelist_id}.'-'.$param{id} ),
-		input( type=>'cardinal', name=>'max-'.$param{pricelist_id}.'-'.$param{id} ),
-		) ) ?>
-	</td>
-  <td class="RangeUnits"><?echo( input(type=>'text', name=>join('-','units',$param{pricelist_id},$param{id}));)?></td>
-	<td class="Cost"><? echo ( input( type=>'float', name=>join('-','cost',$param{pricelist_id},$param{id} ), oninput=>'calc_price(this);' ); ) ?></td>
-	<td class="Markup"><? echo ( input( type=>'float', name=>join('-','markup',$param{pricelist_id},$param{id} ), oninput=>'calc_price(this);' ); ) ?></td>
-	<td class="Price"><? echo ( input( type=>'float', name=>join('-', 'price',$param{pricelist_id},$param{id} ), oninput=>'calc_price(this);' ); ) ?></td>
-	<td class="Discount">
-		<? echo ( radio( join('-', 'discount', $param{pricelist_id},$param{id} ), ['Y','Yes','N','No' ], 'Y' ); ) ?>
-	</td>
-	<td>&nbsp;</td>
-</tr>
+../../openprint/administrator/stock/_popup_price.html
