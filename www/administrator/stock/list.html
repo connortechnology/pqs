@@ -121,7 +121,7 @@ addEventListener('DOMContentLoaded', (event) => {
         if (@company_ids > 1) {
           $session{$r->uri().'?Owner'} = $session{company_id} if ! exists $session{$r->uri().'?Owner'};
 
-          my @Companies = openprint::Company->find( id=>\@company_ids, order=>'lower(name)' );
+          my @Companies = openprint::Company->find( id=>\@company_ids );
           if ( $session{$r->uri().'?owner_id'} and ! sets::isin( $session{$r->uri().'?owner_id'}, \@company_ids ) ) {
             $session{$r->uri().'?owner_id'} = '';
           } # end if
@@ -171,7 +171,7 @@ return join("\n",
 		'<li><label>Supplier</label>
 			<select id="supplier_id" name="supplier_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>',
-				make_drop_down( openprint::Company->dropdown( id=> \@stock_supplier_ids, order=>'lower(name)', supplier=>'Y'), $session{$r->uri().'?supplier_id'} ), 
+				make_drop_down( openprint::Company->dropdown( id=> \@stock_supplier_ids, supplier=>'Y'), $session{$r->uri().'?supplier_id'} ), 
 			'</select>
 		</li>' );
 	} # end if
