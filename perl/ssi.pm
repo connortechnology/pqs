@@ -801,7 +801,7 @@ sub getmonths {
 
     # Either the month is a valid selection or it's not defined (for just
     # populating the drop box).
-    die "Selected month must be between 1 and 12\n"
+    $log->error("Selected month $selected must be between 1 and 12")
         unless  (not defined $selected or $selected eq '') or ($selected >= 1 && $selected <= 12);
 
     $months .= sprintf qq|<option value="%02d"%s>%s</option>\n|,
