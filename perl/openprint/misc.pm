@@ -245,6 +245,12 @@ sub trim {
 	return @results;
 }
 
+sub only_digits {
+  my $value = shift;
+  $value =~ s/\D//g;
+  return $value;
+}
+
 sub moneyfilter {
 	$_ = shift;
 	if (/.*?(?:\$\s*)?(\-?[0-9]+(\.[0-9]{1,2})?).*?/) {
