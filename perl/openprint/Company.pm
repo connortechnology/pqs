@@ -417,8 +417,17 @@ sub taxexempt2 {
 } # end sub taxexempt2
 
 sub address {
-return join(', ', map { $_ ? $_ : () } @{$_[0]}{'address1','address2','city','state','postalcode','country'} );
+  return join(', ', map { $_ ? $_ : () } @{$_[0]}{'address1','address2','city','state','postalcode','country'} );
 } # end sub address
+
+sub state_name {
+  my $self = shift;
+  if (($self->country() eq 'US') and $states::states{$self->state()}) {
+    return $states::states{$self->state()};
+  } elsif (($self->country() eq 'CA') and $provinces::provinces{$self->state()}) {
+    return $provinces::provinces{$self->state()};
+  }
+} # end sub state_name
 
 sub can_view_all {
 	return 1 if $openprint::session{user_type} eq 'A';
