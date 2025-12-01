@@ -47,24 +47,31 @@
 					<tr>
 						<td><address><?BySalutation?> <?ByFirstName?> <?ByLastName?><br />
 								<?ByCompanyName?><br />
-								<? if ( $$variable{'ByAddress1'} ) ?><?ByAddress1?><? endif ( $$variable{'ByAddress1'} ) ?>,
-								<? if ( $$variable{'ByAddress2'} ) ?> <?ByAddress2?><? endif ( $$variable{'ByAddress2'} ) ?>,
+                <?echo(join(', ', (
+                          ($$variable{'ByAddress1'} ? $$variable{'ByAddress1'} : () ),
+                    ($$variable{'ByAddress2'} ? $$variable{'ByAddress2'} : () ),
+                    ));)?>
                                 <?ByCubicle?><br />
 								<?CCITYPROV?><br/>
                                 <?ByPostalCode?><br />
-								<? if ( $$variable{'ByPhone'} ) ?>T:<?ByPhone?><? if ( $$variable{'ByExtension'} ) ?> &nbsp;Ext. <?ByExtension?><? endif ( $$variable{'ByExtension'} ) ?><br /><? endif ( $$variable{'ByPhone'} ) ?>
-								<? if ( $$variable{'ByFax'} ) ?>F:<?ByFax?><br /><? endif ( $$variable{'ByFax'} ) ?>
+                                <? if ( $$variable{'ByPhone'} ) ?>T:
+                                <a href="tel:<?echo( openprint::misc::only_digits($$variable{ByPhone});)?>"><?ByPhone?></a>
+                                <? if ( $$variable{'ByExtension'} ) ?> &nbsp;Ext. <?ByExtension?>
+                                <? endif ( $$variable{'ByExtension'} ) ?><br /><? endif ( $$variable{'ByPhone'} ) ?>
+								<? if ( $$variable{'ByFax'} ) ?>F: <?ByFax?><br /><? endif ( $$variable{'ByFax'} ) ?>
 								<?ByEmail?><br />
 								</address>
 						</td>
 						<td><address><?ForSalutation?> <?ForFirstName?> <?ForLastName?><br />
 								<?ForCompanyName?><br />
-								<? if ( $$variable{'ForAddress1'} ) ?><?ForAddress1?>, <? endif ( $$variable{'ForAddress1'} ) ?>
-								<? if ( $$variable{'ForAddress2'} ne '' ) ?><?ForAddress2?>, <? endif ( $$variable{'ForAddress2'} ne '' ) ?>
+                <?echo(join(', ', (
+                          ($$variable{'ForAddress1'} ? $$variable{'ForAddress1'} : () ),
+                    ($$variable{'ForAddress2'} ? $$variable{'ForAddress2'} : () ),
+                    ));)?>
                                 <?ForCubicle?><br />
                                 <?FCITYPROV?> <br />
                                 <?ForPostalCode?><br />
-								<? if ( $$variable{'ForPhone'} ) ?>T: <?ForPhone?><? if ( $$variable{'ForExtension'} ) ?> &nbsp;Ext. <?ForExtension?><? endif ( $$variable{'ForExtension'} ) ?><br /><? endif ( $$variable{'ForPhone'} ) ?>
+                                <? if ( $$variable{'ForPhone'} ) ?>T: <a href="tel:<?echo(openprint::misc::only_digits($$variable{ForPhone});)?>"><?ForPhone?></a><? if ( $$variable{'ForExtension'} ) ?> &nbsp;Ext. <?ForExtension?><? endif ( $$variable{'ForExtension'} ) ?><br /><? endif ( $$variable{'ForPhone'} ) ?>
 								<? if ( $$variable{'ForFax'} ) ?>F: <?ForFax?><br /><? endif ( $$variable{'ForFax'} ) ?>
 								<?ForEmail?><br />
 								</address>

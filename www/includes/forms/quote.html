@@ -59,12 +59,15 @@
 						</td>
 						<td><address><?ForSalutation?> <?ForFirstName?> <?ForLastName?><br />
 								<?ForCompanyName?><br />
-								<? if ( $$variable{'ForAddress1'} ) ?><?ForAddress1?>, <? endif ( $$variable{'ForAddress1'} ) ?>
-								<? if ( $$variable{'ForAddress2'} ne '' ) ?><?ForAddress2?>, <? endif ( $$variable{'ForAddress2'} ne '' ) ?>
+                <?echo(join(', ', (
+          ($$variable{'ForAddress1'} ? $$variable{'ForAddress1'} : () ),
+          ($$variable{'ForAddress2'} ? $$variable{'ForAddress2'} : () ),
+          ));)?>
+
                                 <?ForCubicle?><br />
                                 <?FCITYPROV?> <br />
                                 <?ForPostalCode?><br />
-								<? if ( $$variable{'ForPhone'} ) ?>T: <?ForPhone?><? if ( $$variable{'ForExtension'} ) ?> &nbsp;Ext. <?ForExtension?><? endif ( $$variable{'ForExtension'} ) ?><br /><? endif ( $$variable{'ForPhone'} ) ?>
+                                <? if ( $$variable{'ForPhone'} ) ?>T: <a href="tel:<?ForPhone?>"><?ForPhone?></a><? if ( $$variable{'ForExtension'} ) ?> &nbsp;Ext. <?ForExtension?><? endif ( $$variable{'ForExtension'} ) ?><br /><? endif ( $$variable{'ForPhone'} ) ?>
 								<? if ( $$variable{'ForFax'} ) ?>F: <?ForFax?><br /><? endif ( $$variable{'ForFax'} ) ?>
 								<?ForEmail?><br />
 								</address>
