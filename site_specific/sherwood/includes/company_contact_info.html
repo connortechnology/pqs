@@ -1,4 +1,9 @@
-<strong>Sherwood Printers</strong><br />
-240 Brunel Road<br />
-Mississauga, Ontario<br />
-L4Z 1T5
+<?echo(
+join("<br/>\n", '<strong>'.$openprint::Owner->name().'</strong>',
+  ($openprint::Owner->address1() ? $openprint::Owner->address1() : ()),
+  ($openprint::Owner->address2() ? $openprint::Owner->address1() : ()),
+  join(', ', map { $_ ? $_ : () } ( $openprint::Owner->city(), $openprint::Owner->state_name())
+  ),
+  $openprint::Owner->postalcode(),
+);
+)?>
