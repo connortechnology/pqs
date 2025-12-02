@@ -162,7 +162,7 @@ Service.prototype = {
       for (const [field, value] of Object.entries(data)) {
         var elem = form.elements[field] ? form.elements[field] : document.getElementById(field);
         if (!elem) {
-          console.log("No element found for "+field);
+          //console.log("No element found for "+field);
           continue;
         }
 
