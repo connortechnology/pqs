@@ -471,53 +471,52 @@ sub store_user_for_info {
 } # end sub store_user_for_info
 
 sub submit_quote {
-	my ( $r, $log, $dbh, $cookie, $variable ) = @_;
-	
-	my $quote_id = get_unfinished_quote_id( $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'} );
-	
-	if (!$quote_id && $r->param('ProjectIndex') ) {
-		$variable->{Redirect} = '/main/proj/view.html';
-		return;
-	}
+  my ( $r, $log, $dbh, $cookie, $variable ) = @_;
 
-    $variable->{quote_id} = $quote_id;
+  my $quote_id = get_unfinished_quote_id( $log, $dbh, $cookie, $$variable{'cust_id'}, $$variable{'user_id'} );
 
-	if ( $r->param('btnFunction') eq 'Continue' ) {
-		$_ = store_quote_info( $r, $log, $dbh, $quote_id, $variable );
-		return $_ if $_ != OK;
-	} elsif (  $r->param('Delete') ) {
-		my $pid = $r->param('Delete');
-		$dbh->do(q{ DELETE FROM tbl_Quote_Details WHERE lngprojectindex = ? AND lngquoteid = ?}, undef,  $pid, $quote_id);
-	} # end if
+  if (!$quote_id && $r->param('ProjectIndex') ) {
+    $variable->{Redirect} = '/main/proj/view.html';
+    return;
+  }
 
-    get_user_by_info( $log, $dbh, $variable, $quote_id );
-    get_user_for_info( $log, $dbh, $variable, $quote_id );
-	get_misc_info( $log, $dbh, $variable, $quote_id );
-    $$variable{'CCITYPROV'} = misc::build_city_prov_country(@$variable{'ByCity','ByStateProvince','ByCountry'} );
-    $$variable{'FCITYPROV'} = misc::build_city_prov_country(@$variable{'ForCity','ForStateProvince','ForCountry'} );
-    my @pids =  @{$dbh->selectcol_arrayref(q{
-        SELECT lngprojectindex
-        FROM tbl_quote_details
-        WHERE lngquoteid= ? and type = 'print'
-    }, undef, $quote_id)};
-    for my $pid (@pids) {   
-	my %hash;
-	$hash{cust_id} = $$variable{cust_id};
-	eprint::docket::summary_display($r, $log, $dbh, \%hash, $pid, undef, -1);
-	push @{$$variable{attachedProjects}}, \%hash;
-		$variable->{supplier_chino} = eprint::order::is_chino($dbh, $pid);
-    }
+  $variable->{quote_id} = $quote_id;
 
-	$variable->{PRODUCTS} = get_products( $quote_id );
+  if ( $r->param('btnFunction') eq 'Continue' ) {
+    $_ = store_quote_info( $r, $log, $dbh, $quote_id, $variable );
+    return $_ if $_ != OK;
+  } elsif (  $r->param('Delete') ) {
+    my $pid = $r->param('Delete');
+    $dbh->do(q{ DELETE FROM tbl_Quote_Details WHERE lngprojectindex = ? AND lngquoteid = ?}, undef,  $pid, $quote_id);
+  } # end if
 
-    if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) {
-        $_ = "SELECT strFirstName || ' ' || strLastName FROM tbl_Customer_Users WHERE lngUserID='$$variable{'user_id'}'";
-        @$variable{'AdministratorName'} = sql::sql_statement( $log, $dbh, $_ );
-    } # end if
+  get_user_by_info( $log, $dbh, $variable, $quote_id );
+  get_user_for_info( $log, $dbh, $variable, $quote_id );
+  get_misc_info( $log, $dbh, $variable, $quote_id );
+  $$variable{'CCITYPROV'} = misc::build_city_prov_country(@$variable{'ByCity','ByStateProvince','ByCountry'} );
+  $$variable{'FCITYPROV'} = misc::build_city_prov_country(@$variable{'ForCity','ForStateProvince','ForCountry'} );
+  my @pids =  @{$dbh->selectcol_arrayref(q{
+  SELECT lngprojectindex
+  FROM tbl_quote_details
+  WHERE lngquoteid= ? and type = 'print'
+  }, undef, $quote_id)};
+  for my $pid (@pids) {   
+    my %hash;
+    $hash{cust_id} = $$variable{cust_id};
+    eprint::docket::summary_display($r, $log, $dbh, \%hash, $pid, undef, -1);
+    push @{$$variable{attachedProjects}}, \%hash;
+    #$variable->{supplier_chino} = eprint::order::is_chino($dbh, $pid);
+  }
 
-	get_unfinished_quote_contents( $log, $dbh, $variable, $quote_id );
+  $variable->{PRODUCTS} = get_products( $quote_id );
 
-	return OK;
+  if ( $$variable{'user_type'} eq 'A' or $$variable{'user_type'} eq 'E' ) {
+    @$variable{'AdministratorName'} = $openprint::User->name();
+  } # end if
+
+  get_unfinished_quote_contents( $log, $dbh, $variable, $quote_id );
+
+  return OK;
 } # end submit_quote
 
 
