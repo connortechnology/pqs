@@ -307,13 +307,10 @@ sub display_project {
   my $is_multipage = $variable->{is_multipage} = is_multipage($log, $dbh, $pid);
   my $press_type   = $variable->{press_type}   = get_press_type($log, $dbh, $pid);
 
-  @$variable{qw(ProjectTypeID ProjectTypeName)} = get_type($log, $dbh, $pid);
+  my $type = $project->Type();
+  @$variable{qw(ProjectTypeID ProjectTypeName)} = ($type->id(), $type->name());
 
   my $project_type = $variable->{ProjectTypeID};
-
-  my ($project_name, $project_type_url) = $dbh->selectrow_array(qq{
-    SELECT strname, strurl FROM tbl_projecttypes WHERE strid = ?
-    }, undef, $project_type);
 
   my $has_locked_services = $variable->{is_fixed_price} = has_locked_services($dbh, $pid);
 

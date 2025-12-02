@@ -1785,11 +1785,11 @@ sub header_info {
   $hash{num_versions} = $prod_versions if $prod_versions;
   $hash{num_versions} = $prod_versions if $prod_versions;
 
+  @hash{qw(interior_spreads gatefolded_spreads)} = @hash{"Interior Spreads", "GateFolded Spreads"};
 
-  @hash{qw(interior_spreads gatefolded_spreads)}
-  = @hash{"Interior Spreads", "GateFolded Spreads"};
-
-  @hash{qw(ptype ProjectType)} = get_type($log, $dbh, $pid);
+  my $project = new openprint::Project($pid);
+  my $type = $project->Type();
+  @hash{qw(ptype ProjectType)} = ($type->id(), $type->name());
 
   my %hash2;
   my $ps = project_summary($dbh, $pid);
