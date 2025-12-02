@@ -1,7 +1,9 @@
 JSAN.use('DOM.Events', 'addListener');
 
 Event.observe(window, 'load', function () {
-	Event.observe(document.forms['f1'], 'submit', function (e) {
+  var form = document.forms['f1'];
+  if (!form) return;
+	Event.observe(form, 'submit', function (e) {
 			if (Event.element(e).name == "ProjectIndex") return true;
 
 			var form = document.forms['f1'];
@@ -35,6 +37,7 @@ Event.observe(window, 'load', function () {
 
 addListener(window, 'load', function () {
     var form = document.forms['f1'];
+    if (!form) return;
 
     for (var i = 0; i < form.elements.length; i++) {
         var elem = form.elements[i];
