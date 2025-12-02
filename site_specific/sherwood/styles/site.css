@@ -843,17 +843,20 @@ button[disabled='disabled'] {
   background-color: grey;
 }
 
-.Service ul,
+.Service ul {
+  list-style: none;
+  margin: 5px 0 0 5px;
+  padding:0;
+}
 .Service ul li {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: 2px 0;
+  padding: 0 0 0 185px;
 }
 .Service ul li label {
   float: none;
-}
-.Service ul li label {
-  width: 175px;
+  width: 185px;
+  margin-left: -185px;
   display: inline-block;
 }
 
@@ -897,7 +900,7 @@ table .Price {
 }
 
 img.Override {
-  width: 17px;
+  height: 17px;
   vertical-align: middle;
   margin:3px 4px 6px 0;
 }
