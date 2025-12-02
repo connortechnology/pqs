@@ -150,10 +150,9 @@ sub builder {
 
 #print STDERR "START PRODUCT BUILDER \n";
 
-map { 
+#map { 
 #print STDERR "HAVE PARAM: $_ = " . $r->param($_) . " \n";
-} $r->param();
-
+#} $r->param();
 
 
   my $fid = $r->param('Edit') || $r->param('fid');
