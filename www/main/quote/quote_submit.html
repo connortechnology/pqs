@@ -17,25 +17,9 @@
 
 	<script src="/javascripts/other.js"></script>
 	<script>
-function loadwithpage() {
-  needhelp();
-}
-
-    window.onload=loadwithpage;
-
 		function open_printer_friendly_version() {
 			window.open('/main/quote/quote_printer_friendly.html?quote_id=<?quote_id?>','printerfriendlyquote','newWin,left=140,width=680,top=50,height=400,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 		}
-		
-		function helpmsg() {
-      alert("If you require assistance with your project please call us at <?echo($openprint::Owner->phone())?>.");
-	}
-	
-	function needhelp() {
-    window.onload = function () {
-        setTimeout(helpmsg, 300000); //Then set it to run again after ten minutes
-    }
-	}
 	</script>
 </head>
 
