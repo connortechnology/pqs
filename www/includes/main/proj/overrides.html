@@ -19,7 +19,7 @@
 
 	<? if (! ($variable->{project}{press_type}{ref} eq 'screen' || $variable->{project}{press_type}{ref} eq 'web')) ?>
 			<label for="substrate">Press Sheet Size:</label>
-			<select id="substrate" name="substrate" size="1" onchange="overrides.apply(this);">
+			<select id="substrate" name="substrate" size="1" on_change_this="overrides">
 				<option value="">Auto-select</option>
 				<?substrate?>
 			</select>
@@ -28,7 +28,7 @@
 	<? endif (! ($variable->{project}{press_type}{ref} eq 'screen' || $variable->{project}{press_type}{ref} eq 'web')) ?>
 
 	<label for="press">Press:</label>
-	<select id="press" name="press" size="1" onchange="overrides.apply(this);">
+	<select id="press" name="press" size="1" on_change_this="overrides">
 		<option value="">Auto-select</option>
     <?echo(
           return make_drop_down(openprint::Equipment->dropdown(type=>$variable->{project}{press_type}{ref}, 'useinestimating is null or ='=>1), $$variable{specs}{press});
@@ -40,7 +40,7 @@
 
 	<? if ($$variable{project}{press_type}{ref} ne 'web') ?>
 		<label for="runstyle" title="Run style is the style in which a press sheet runs through the printing press. It can be either Work and Turn, Work and Tumble, or Sheet Work.">Run Style:</label>
-		<select id="runstyle" name="runstyle" size="1" class="form" onchange="overrides.apply(this);">
+		<select id="runstyle" name="runstyle" size="1" class="form" on_change_this="overrides">
 			<option value="">Auto-select</option>
 			<option value="SW">Sheet Work</option>
 			<option value="WT">Work &amp; Turn</option>
@@ -48,7 +48,7 @@
 			<option value="PF">Perfecting</option>
 		</select>
 		<label for="override_runstyle" class="checkbox override">
-		<input type="checkbox" id="override_runstyle" name="override_runstyle" onclick="overrides_chkbox.apply(this);" size="1" value="1" />Override</label>
+		<input type="checkbox" id="override_runstyle" name="override_runstyle" on_click_this="overrides_chkbox" size="1" value="1" />Override</label>
 		<br />
 		<label>Imposition</label>
     <span>
@@ -137,13 +137,13 @@
 	        # If there is more than 1 rating in the system then display the override. -->
 
 		<label for="quality" title="Quality Selection">Quality Rating:</label>
-		<select id="quality" name="quality" size="1" class="form" onchange="overrides.apply(this);">
+		<select id="quality" name="quality" size="1" class="form" on_change_this="overrides">
 			<option value="">Auto-select</option>
 			<? loop press_quality ?>
 				<option value="<?strvalue?>"><?strvalue?></option>
 			<? endloop press_quality ?>
 		</select>
-		<label for="override_quality" class="checkbox override"><input type="checkbox" id="override_quality" name="override_quality" onclick="overrides_chkbox.apply(this);" size="1" />Override</label>
+		<label for="override_quality" class="checkbox override"><input type="checkbox" id="override_quality" name="override_quality" on_click_this="overrides_chkbox" size="1" />Override</label>
 		<br />
 	<? endif ($variable->{project}{press_type}{ref} eq 'digital' && $variable->{press_quality} ) ?>
 
