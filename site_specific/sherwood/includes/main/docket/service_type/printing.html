@@ -342,11 +342,11 @@ No Printing <!-- <?chargefor?> -->
 	<? if ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
 		&nbsp;No Preference
 	<? else ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
-		<? if ( $$variable{'grain_direction'} == 1 ) ?>
+  <? if ( $$variable{'grain_direction'} eq '1' or $$variable{'grain_direction'} eq 'Height' ) ?>
 			&nbsp;Height
-		<? else ( $$variable{'grain_direction'} == 1 ) ?>
+  <? else ( $$variable{'grain_direction'} eq '1' or $$variable{'grain_direction'} eq 'Height' ) ?>
 			&nbsp;Width
-		<? endif ( $$variable{'grain_direction'} == 1 ) ?>
+  <? endif ( $$variable{'grain_direction'} eq '1' or $$variable{'grain_direction'} eq 'Height' ) ?>
 	<? endif ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?></td>
 	<? endif ($variable->{pressType} ne 'inkjetprinter') ?>
 <td><? if ($$variable{'stock_supplied'})?>

@@ -239,11 +239,11 @@ Version Information: <?mvmpinfo?>
 		<? if ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
 			No Preference
 		<? else ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
-			<? if ( $$variable{'grain_direction'} == 1 ) ?>
+    <? if ( $$variable{'grain_direction'} eq '1' or $$variable{'grain_direction'} eq 'Height' ) ?>
 				Height
-			<? else ( $$variable{'grain_direction'} == 1 ) ?>
+    <? else ( $$variable{'grain_direction'} eq '1' or $$variable{'grain_direction'} eq 'Height' ) ?>
 				Width
-			<? endif ( $$variable{'grain_direction'} == 1 ) ?>
+    <? endif ( $$variable{'grain_direction'} eq '1' or $$variable{'grain_direction'} eq 'Height' ) ?>
 <tr><td style="border:none !important;">
 <?if is_staff ?>
 	<a href="/main/proj/proj_printer_summ_price_breakdown.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>#chosen">
@@ -469,11 +469,11 @@ Version Information: <?mvmpinfo?>
 		<? if ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
 			No Preference
 		<? else ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
-			<? if ( $$variable{'grain_direction'} == 1 ) ?>
+    <? if ( $$variable{'grain_direction'} eq '1' or $$variable{'grain_direction'} eq 'Height' ) ?>
 				Height
-			<? else ( $$variable{'grain_direction'} == 1 ) ?>
+    <? else ( $$variable{'grain_direction'} eq '1' or $$variable{'grain_direction'} eq 'Height' ) ?>
 				Width
-			<? endif ( $$variable{'grain_direction'} == 1 ) ?>
+    <? endif ( $$variable{'grain_direction'} eq '1' or $$variable{'grain_direction'} eq 'Height' ) ?>
 		<? endif ( ( !defined $$variable{'grain_direction'} ) || ( $$variable{'grain_direction'} eq '' ) ) ?>
         </td></tr>
 	<? endif ($variable->{pressType} ne 'inkjetprinter') ?>
