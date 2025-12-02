@@ -45,7 +45,7 @@ sub necessary {
   return 1 if $service_type eq '3HolePunch' and get_template($log, $dbh, $pid) eq '3HolePunchBinder';
   return 1 if $service_type eq 'SingleHole' and get_template($log, $dbh, $pid) eq 'SingleHole';
 
-  print STDERR "BIND CHECK: $service_type \n";
+  #print STDERR "BIND CHECK: $service_type \n";
   # Any other cases?
 
   return 0;
