@@ -37,7 +37,7 @@ sub save_categories {
       my $footer = $r->param("footer-$id") || undef;
       my $productinfo = $r->param("productinfo-$id") || undef;
 
-      print STDERR "SET NAME: $id = $name \n ";
+      #print STDERR "SET NAME: $id = $name \n ";
 
       PQS::model::categories::set_name($id, $name);  
       PQS::model::categories::set_parent($id, $parent);  
@@ -99,7 +99,7 @@ sub save_filters {
   PQS::model::product_filter::delete_options($fid) if $fid;
 
   map { 
-print STDERR "INSERTING OPTOINS FOR : $fid -- $_ \n ";
+#print STDERR "INSERTING OPTOINS FOR : $fid -- $_ \n ";
     PQS::model::product_filter::insert_option( $_, $fid) if $_;
   } @opts;
 
@@ -119,7 +119,7 @@ sub copy_filters {
     my $option = PQS::model::product_filter::get_options($_->{id});
 
     map { 
-      print STDERR "Insert Options", Dumper($_);
+    #print STDERR "Insert Options", Dumper($_);
       PQS::model::product_filter::insert_option($_->{name}, $fid );
     } @{ $option };
 
@@ -148,10 +148,10 @@ sub load_filters {
 sub builder { 
   my ($r, $dbh, $var) = @_;
 
-print STDERR "START PRODUCT BUILDER \n";
+#print STDERR "START PRODUCT BUILDER \n";
 
 map { 
-  print STDERR "HAVE PARAM: $_ = " . $r->param($_) . " \n";
+#print STDERR "HAVE PARAM: $_ = " . $r->param($_) . " \n";
 } $r->param();
 
 
@@ -167,7 +167,7 @@ map {
     $var->{filter} = PQS::model::product_filter::get($fid);
     $var->{filter}{options} = PQS::model::product_filter::get_options($fid);
 
-    print STDERR "HAVE FILTER ", Dumper($var->{filter});
+    #print STDERR "HAVE FILTER ", Dumper($var->{filter});
 
     # Add blanks to add new options.
     push @{$var->{filter}{options}}, ( {name => undef}, {name => undef}, {name => undef}); 
@@ -234,7 +234,7 @@ map {
     
     copy_filters($catid, $cat, $r, $dbh, $var);
 
-    print STDERR "COPYING FILTERS FROM $catid TO $cat \n";
+    #print STDERR "COPYING FILTERS FROM $catid TO $cat \n";
 
     load_filters($cat, $r, $dbh, $var);
 
@@ -295,7 +295,7 @@ sub insert_products {
 
   foreach my $f ( $r->param() ) {
     if ( $f =~ /discount-(.*)/  ) {
-      print STDERR "AHVE DISCOUNT: $f - $1 \n";
+      #print STDERR "AHVE DISCOUNT: $f - $1 \n";
       my $row = [ 
         $r->param("min-$1") || undef,
         $r->param("max-$1") || undef,
@@ -308,7 +308,7 @@ sub insert_products {
 
   }
 
-  print STDERR "HAVE DISCOUNTS: ", Dumper(\@discounts);
+  #print STDERR "HAVE DISCOUNTS: ", Dumper(\@discounts);
 
 
 
@@ -326,7 +326,7 @@ sub insert_products {
       my $id = $f->{fname};
       my $val = $new->{$id};
       $p->set($id, $val) if $val;
-      print STDERR "SET ID: $id VAL: $val \n";
+      #print STDERR "SET ID: $id VAL: $val \n";
     }
     $p->set('category_id', $new->{category});
 
@@ -347,7 +347,7 @@ sub insert_products {
 
     next;
 
-    print STDERR "SAVE PRODUCT NEW RPODUCT $new->{key} \n", Dumper($new->{filters});
+    #print STDERR "SAVE PRODUCT NEW RPODUCT $new->{key} \n", Dumper($new->{filters});
   }
 
 
@@ -368,8 +368,8 @@ sub build_products {
     
       my $x   = $r->param($field);
       my $val = $r->param($field);
-print STDERR "\n\nBUILD SUB:\n";
-print STDERR "\n\nBUILD SUB: START: $x, \n";
+#print STDERR "\n\nBUILD SUB:\n";
+#print STDERR "\n\nBUILD SUB: START: $x, \n";
 
       while ( $x =~ /(\[([\w\s]+)\])/g ) {;
        my $f = "\\\[$2\\\]";
@@ -378,30 +378,30 @@ print STDERR "\n\nBUILD SUB: START: $x, \n";
 
        $val =~ s/$f/$n/;
        
-print STDERR "BUILD SUB: $x, $val : F: $f, N: $n \n";
+#print STDERR "BUILD SUB: $x, $val : F: $f, N: $n \n";
       
       }
       $p->{$field} = $val;
     }
 
     my $key_count = scalar ( keys %{$all} );
-    print STDERR "HAVE ALL PRODUCTS", Dumper($all, keys %{$all}, $key_count );
+    #print STDERR "HAVE ALL PRODUCTS", Dumper($all, keys %{$all}, $key_count );
 
     $all->{tmp} = ['p0'] unless $key_count > 0;
     $all->{tmp1} = ['p1'] unless scalar $key_count > 1;
 
     
-    print STDERR "HAVE ALL PRODUCTS", Dumper($all);
+    #print STDERR "HAVE ALL PRODUCTS", Dumper($all);
 
 
     require Set::CrossProduct;
     my $list =  Set::CrossProduct->new($all);
 
-  print STDERR "HAVE PRODUCTS: ", Dumper($all, defined $list);
+    #nprint STDERR "HAVE PRODUCTS: ", Dumper($all, defined $list);
 
     return unless defined $list;
 
-  print STDERR "HAVE PRODUCTS: ", Dumper($list, defined $list);
+    #print STDERR "HAVE PRODUCTS: ", Dumper($list, defined $list);
 
     until ($list->done ) {
       my %p = $list->get;
@@ -419,7 +419,7 @@ print STDERR "BUILD SUB: $x, $val : F: $f, N: $n \n";
       push @{$var->{list}}, \%p;
 
     }
-print STDERR "HAVE LIST ", Dumper($var->{list});
+#print STDERR "HAVE LIST ", Dumper($var->{list});
 }
 
 sub quick_price { 
@@ -452,7 +452,7 @@ sub discount_admin {
     my $d = $r->param('delete');
     $d =~ /(\d+)-(\d+)/;
 
-    print STDERR "DEL $1 $2 \n";
+    #print STDERR "DEL $1 $2 \n";
 
     PQS::model::product_discount::delete($1, $2);
 
@@ -500,14 +500,14 @@ sub price_admin {
     PQS::model::pricing::delete_item_price($id);
 
 
-    print STDERR "MAKE COpy: $cid \n";
+    #print STDERR "MAKE COpy: $cid \n";
 
     my $p = new PQS::Object::product($cid);
     my $copy = $p->price_export($pricelist);
     map {
 
       $_->{sell} *= $markup if  $markup;
-      print STDERR "ADDING PRICE SELL: $_->{sell} M: $markup \n";
+      #print STDERR "ADDING PRICE SELL: $_->{sell} M: $markup \n";
 
     my $price = [$list, $id, $_->{min}, $_->{max}, $_->{cost}, $_->{sell}, $_->{discountable}, $_->{pricelist}];
 
@@ -535,14 +535,14 @@ sub price_admin {
 
   $var->{PRODUCT_LIST} = ssi::make_drop_down($plist);
 
-  print STDERR "HAVE LIST ", Dumper($prices );
+  #print STDERR "HAVE LIST ", Dumper($prices );
 
 }
 
 sub category_admin {
   my ($r, $dbh, $var) = @_;
   
-print STDERR "START CATEGORY ADMIN \n", Dumper($r->param());
+#print STDERR "START CATEGORY ADMIN \n", Dumper($r->param());
   if ( $r->param('Delete') ) {
     PQS::model::categories::delete($r->param('Delete'));
   } elsif ( $r->param('Save')) {
@@ -559,7 +559,7 @@ print STDERR "START CATEGORY ADMIN \n", Dumper($r->param());
     my $childs = shift;
     my $cat = shift;
 
-print STDERR "GOT CHILDREN --  \n", Dumper($childs,$var->{__FillInForm} );
+#print STDERR "GOT CHILDREN --  \n", Dumper($childs,$var->{__FillInForm} );
 
     $level++;
 
@@ -592,7 +592,7 @@ print STDERR "GOT CHILDREN --  \n", Dumper($childs,$var->{__FillInForm} );
   $var->{parents} = ssi::make_drop_down(PQS::model::categories::select_list());
   
 
-print STDERR "HAVE CATEGORIES: " , Dumper($list, $var->{__FillInForm});
+#print STDERR "HAVE CATEGORIES: " , Dumper($list, $var->{__FillInForm});
   return;
 
 
@@ -605,7 +605,7 @@ sub kit_select {
   my $show_all = $r->param('show_all');
   my $kit = $r->param('kit_id');
 
-print STDERR "START KIT SELECT \n";
+#print STDERR "START KIT SELECT \n";
 
 #  update($r, $dbh, $var) if $r->param('Save');
 
@@ -644,7 +644,7 @@ print STDERR "START KIT SELECT \n";
 
   
 
-  print STDERR "HAVE PRODUCTS: ", Dumper($var->{__FillInForm}, $var->{kit});
+  #print STDERR "HAVE PRODUCTS: ", Dumper($var->{__FillInForm}, $var->{kit});
 
   
 }
@@ -660,7 +660,7 @@ sub list {
   my $show_all = $r->param('show_all');
 
 
-print STDERR "START PRODUCT LIST \n";
+#print STDERR "START PRODUCT LIST \n";
 
   update($r, $dbh, $var) if $r->param('Save');
 
@@ -686,10 +686,10 @@ print STDERR "START PRODUCT LIST \n";
       $p->{qprice} = 'noshow';
     }
 
-    print STDERR "HAVE DATA: ", Dumper($data);
+    #print STDERR "HAVE DATA: ", Dumper($data);
   } 
 
-print STDERR "HAVE LIST PRODUCTS: ", Dumper($var->{products});
+#print STDERR "HAVE LIST PRODUCTS: ", Dumper($var->{products});
 
 
 
@@ -718,7 +718,7 @@ print STDERR "HAVE LIST PRODUCTS: ", Dumper($var->{products});
   $var->{__FillInForm}{sort_dir} = $sort_desc;
   $var->{__FillInForm}{show_all} = $show_all;
 
-  print STDERR "HAVE PRODUCTS 1: ", Dumper($s, $sort_desc);
+  #print STDERR "HAVE PRODUCTS 1: ", Dumper($s, $sort_desc);
 
   
 }
@@ -776,7 +776,7 @@ sub update {
     my $p = new PQS::Object::product();
     foreach my $f ( @field_list ) {
       my $val = $r->param("$f");
-      print STDERR "UPDATTE F: $f = $val \n";
+      #print STDERR "UPDATTE F: $f = $val \n";
       $p->set($f, $val);
     }
     $p->set('category_id', $r->param('category'));
@@ -803,7 +803,7 @@ sub details {
 
   $var->{product}{image}  = $p->image(1);
  
- print STDERR "HAVE PRODUCT DETAILS  FOR ID: $id ", Dumper($var->{product});
+  #print STDERR "HAVE PRODUCT DETAILS  FOR ID: $id ", Dumper($var->{product});
 
   
 }
@@ -885,7 +885,7 @@ sub design {
   my $prod = PQS::model::products::get($product);
 
   my ($pid) = eprint::print_project::copy_project($dbh, $var, $prod->{project});
-print STDERR "HAVE PRODUCT PID: $pid FOR: $prod->{id} OCID: $ocid   \n", Dumper($prod);
+#print STDERR "HAVE PRODUCT PID: $pid FOR: $prod->{id} OCID: $ocid   \n", Dumper($prod);
 
   PQS::model::order::set_mw_session($ocid, $session);
 
@@ -971,7 +971,7 @@ sub cat_chain {
   push @{$var->{cat_chain}}, { id => $parent, name => $name};
 
 
-  print STDERR " CAT CHAIN " , Dumper($var->{cat_chain});
+  #print STDERR " CAT CHAIN " , Dumper($var->{cat_chain});
 
   while ( $parent ) {
     $parent = PQS::model::categories::get_parent_from_id($parent);
@@ -1006,7 +1006,7 @@ sub display_categories {
   push @{$var->{cat_chain}}, { id => $parent, name => $name};
 
 
-  print STDERR " CAT CHAIN " , Dumper($var->{cat_chain});
+  #print STDERR " CAT CHAIN " , Dumper($var->{cat_chain});
 
   while ( $parent ) {
     $parent = PQS::model::categories::get_parent_from_id($parent);
@@ -1033,7 +1033,7 @@ sub display_categories {
   $var->{cat}       = $cat;
   $var->{info} = PQS::model::categories::get($cat);
 
-  print STDERR "HAVE CAT DATA", Dumper($var->{info});
+  #print STDERR "HAVE CAT DATA", Dumper($var->{info});
 
 }
 
@@ -1062,7 +1062,7 @@ sub display {
   if ( $product ) { 
     my $p = new PQS::Object::product($product);
     $cat = $p->spec('category_id');
-    print STDERR "LOAD PRODUCT: $product, CAT=$cat \n", Dumper($p->{specs});
+    #print STDERR "LOAD PRODUCT: $product, CAT=$cat \n", Dumper($p->{specs});
   }
   
   #Set categories for left nav.
@@ -1077,18 +1077,18 @@ sub display {
   while ($parent) {
     $parent = PQS::model::categories::get_parent_from_id($parent);
 
-    print STDERR "HAVE PARENT: $parent \n";
+    #print STDERR "HAVE PARENT: $parent \n";
     next unless $parent;
     $name =  PQS::model::categories::get_name_from_id($parent);    
 
     unshift @{$var->{cat_chain}}, { id => $parent, name => $name};
   }
 
-  print STDERR "TIME FOR CHILDREN ", Dumper($children);
+  #print STDERR "TIME FOR CHILDREN ", Dumper($children);
 
   map {
     my $c = PQS::model::categories::get($_);
-    print STDERR "HAVE CAT: " , Dumper($c);
+    #print STDERR "HAVE CAT: " , Dumper($c);
     push @{$var->{cat_children}}, $c;
   } @{$children};
 
@@ -1096,7 +1096,7 @@ sub display {
   #Parent Categorys should not have products under sherwood model.
   $cat = @{$children}[0] if  @{$children};
 
-  print STDERR "HAVE CAT: $cat PRODUCT: $product \n";
+  #print STDERR "HAVE CAT: $cat PRODUCT: $product \n";
 
   if ($product) {
     #skip straight to the product we are looking for.
@@ -1107,10 +1107,10 @@ sub display {
     $var->{products} =  PQS::model::categories::products_in_cat($cat, $product);
   }
 
-  print STDERR "HAVE PRODUCTS TO DISPLAY: ", Dumper($var->{products});
+  #print STDERR "HAVE PRODUCTS TO DISPLAY: ", Dumper($var->{products});
   $var->{products} = filter_products($r, $var, $var->{products});
 
-  print STDERR "HAVE DISPLAY: ", Dumper($var->{products});
+  #print STDERR "HAVE DISPLAY: ", Dumper($var->{products});
 
   my $total_qty;
 
@@ -1139,7 +1139,7 @@ sub display {
     $var->{kit_list} = $prod->kit_list();  
   } # end foreach product
 
-  print STDERR "Data from Kit List " , Dumper($var->{kit_list});
+  #print STDERR "Data from Kit List " , Dumper($var->{kit_list});
   
   my $filters = PQS::model::product_filter::get_category($cat);
   foreach my $f (@{$filters}) {
@@ -1169,7 +1169,7 @@ sub display {
   #reload job name is product selection form is reloded.
   $var->{jobname}      = $r->param('tmpjobname');
 
-  print STDERR "CSAT: " , Dumper($var->{category});
+  #print STDERR "CSAT: " , Dumper($var->{category});
 }
 
 
@@ -1183,7 +1183,7 @@ sub filter_products {
       my $fid = $1;
       my $oid = $r->param($_);
 
-      print STDERR "FILTER PRODUCTS: FILTER: $fid VALUE $oid FROM $_ \n";
+      #print STDERR "FILTER PRODUCTS: FILTER: $fid VALUE $oid FROM $_ \n";
       $have_filter = 1;
 
       $var->{__FillInForm}{"filter-$fid"} = $oid;
@@ -1199,7 +1199,7 @@ sub filter_products {
         @list = @{$match};
       }
 
-      print STDERR "HAVE FILTER: $oid \n", Dumper($match, \@list);
+      #print STDERR "HAVE FILTER: $oid \n", Dumper($match, \@list);
     } # end if its a filter
   } $r->param();
 
@@ -1289,7 +1289,7 @@ sub price_export {
 sub price_import {
   my ($r, $dbh, $variable) = @_;
   
-  print STDERR "START PRICE IMPORT NOW \n";
+  #print STDERR "START PRICE IMPORT NOW \n";
   
   my $csv = Text::CSV_XS->new({binary => 1});
   my $fh = $r->upload("price_import")->fh;
@@ -1305,7 +1305,7 @@ sub price_import {
   my $line = 1;
   
   while (my $row = $csv->getline($fh)) {
-  print STDERR "HAVE ROW", Dumper($row);
+    #print STDERR "HAVE ROW", Dumper($row);
 
   #skip if no sell price
   #skip if no id, (blank lines)
@@ -1331,7 +1331,7 @@ sub price_import {
   
   }
 
-print STDERR "INSERTING PRICE: ", Dumper($data);
+#print STDERR "INSERTING PRICE: ", Dumper($data);
 
     map { 
     my $id = $_;
