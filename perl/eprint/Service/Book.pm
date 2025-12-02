@@ -193,8 +193,7 @@ sub calc {
 
   my $tabs = $specs->{txtTabsQuantity};
 
-  my $gatefold = $specs->{rdbGateFold} eq 'Yes' 
-  ? $specs->{txtGateFoldedSpreadQuantity} || $tabs || 0 : 0;
+  my $gatefold = ($specs->{rdbGateFold} and ($specs->{rdbGateFold} eq 'Yes')) ? $specs->{txtGateFoldedSpreadQuantity} || $tabs || 0 : 0;
   my $interior = $spreads - $gatefold;
 
   # return 'uncalculated' unless $interior && $interior > 0;

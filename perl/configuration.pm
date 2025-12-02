@@ -44,10 +44,6 @@ sub get_category {
         SELECT  *, strconfigdata as value
         FROM tbl_Configuration 
         WHERE category = ? ORDER by sortval } , { Slice => {} }, $id );
-
-	use Data::Dumper;
-	print STDERR "RESULTS", Dumper($results);
-
     return $results; 
 }
 

@@ -143,7 +143,7 @@ sub send_email_with_attachment {
 
   $mail->{TO} = join ',', keys %{$list};
 
-  print STDERR "SEND MAIL TO: $mail->{TO} FROM $mail->{FROM} SUBJECT: $mail->{SUBJECT} $mail->{subject} \n";
+  $log->debug("SEND MAIL TO: $mail->{TO} FROM $mail->{FROM} SUBJECT: $mail->{SUBJECT} $mail->{subject}");
 
   my $message = $mail->{BODY};
 

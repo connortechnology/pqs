@@ -32,8 +32,6 @@ sub calc {
 
     my $projectWeight = $project_type eq 'NoPrint' ? 1 : get_weight($log, $dbh, $pid, 'Project');
 
-print STDERR "HAVE PROJECT TYPE: $project_type \n";
-    
     # Get the maximum weight for the current package type.
     my $maxWeight = 0;
     if ($service_type eq 'PlainCartons') {
