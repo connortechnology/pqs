@@ -689,8 +689,10 @@ Event.observe(window, 'load', function () {
 //
 
 function overrides (e) {
-    var override = $('override_' + this.name);
-    override.checked  = this.options[this.selectedIndex].value;
+  console.log(this, e);
+    const override = document.getElementById('override_' + this.name);
+    if (!override) console.log('no override found', new Error().stack);
+    override.checked = this.options[this.selectedIndex].value;
     //override.disabled = !override.checked;
     calc();
 
@@ -703,6 +705,9 @@ function overrides_chkbox (e) {
         //this.disabled = true;
         //this.checked = false;
     //}
+    if (!e) {
+      console.log(new Error().stack);
+    }
     if (!e.checked) calc();
 }
 
