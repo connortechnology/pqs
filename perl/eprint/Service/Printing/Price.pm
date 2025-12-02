@@ -1082,7 +1082,7 @@ sub create_impositions {
 
   #print STDERR "HAVE IMPOS.TIONS BEFORE FILTER 99 " . scalar @impositions . "\n", Dumper(\@impositions);
   #@impositions = grep { $_->{setup} > 0 } @impositions;
-  print STDERR "HAVE IMPOSITIONS TOTAL " . scalar @impositions . "\n";
+  $openprint::log->debug( "HAVE IMPOSITIONS TOTAL " . scalar @impositions) if DEBUG;
 
   #$DB::single = 1;
 
