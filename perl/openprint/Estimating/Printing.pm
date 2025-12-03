@@ -7909,7 +7909,7 @@ sub summary {
     );
     if (!(
         ($$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom})
-          or (4 == split(',', $$specs{bleed_sides}))
+          or ($$specs{bleed_sides} and (4 == split(',', $$specs{bleed_sides})))
       )) {
       if ($$specs{ddmBleedSize}) {
         $special_string .= 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) );
