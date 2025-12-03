@@ -16,7 +16,7 @@ use vars qw( $log $dbh $timing );
 
 
 use base qw(Exporter);
-use constant DEBUG=>1;
+use constant DEBUG=>0;
 use constant TIMING=>1;
 
 our @EXPORT_OK = qw(
