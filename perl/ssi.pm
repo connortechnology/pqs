@@ -1499,38 +1499,7 @@ sub date_select {
 } # end sub date_select
 
 sub date_filter {
-  my ( $field, $sql_field, $hash ) = @_;
-  $sql_field = $field if ! $sql_field;
-  if ( ! $hash ) {
-    $hash = \%openprint::session;
-    #$log->debug('ssi::date_filter: using session for hash');
-  } # end if
-    #foreach my $k ( keys %$hash ) {
-      #$log->debug("ssi::date_filter hash{$k} => $$hash{$k}");
-    #} # end foreach
-  if ( ! ( $$hash{$field.'_year'} and $$hash{$field.'_month'} and $$hash{$field.'_day'} ) ) {
-#$log->debug("ssi::date_filter: No date specified for $field");
-    return ();
-  } # end if
-  my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
-#$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
-  if ( $field =~ /end$/ ) {
-    $hour = 23 if ( ! defined $hour ) or $hour eq '';
-    $minute = 59 if ( ! defined $minute ) or $minute eq '';
-    $second = 59 if ( ! defined $second ) or $second eq '';
-  } else {
-    $hour = 0 if ( ! defined $hour ) or $hour eq '';
-    $minute = 0 if ( ! defined $minute ) or $minute eq '';
-    $second = 0 if ( ! defined $second ) or $second eq '';
-  } # end if
-#$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
-
-  my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
-  my $datetime = DateTime->new( time_zone => $TZ,
-      ( year => $year, month=>$month, day=>$day, hour=>$hour, minute=>$minute, second=>$second )
-      );
-
-  return ( $sql_field, $parser->format_datetime( $datetime ) );
+  return openprint::ssi::date_filter(@_);
 } # end sub date_filter
 
 sub datetime_select {
