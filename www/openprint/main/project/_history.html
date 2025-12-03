@@ -1,5 +1,6 @@
 <? eval (
-	my $uri = $$variable{uri} = '/main/project/history.html';
+
+my $uri = $$variable{uri} = openprint::misc::get_session_uri($r->uri());
 	if ( $param{project_id} ) {
 		if ( $param{project_id} =~ /\%/ ) {
 			$$variable{Projects} = [ openprint::Project->find(
@@ -17,19 +18,22 @@
 		}
 	} else {
 		my %sql = (
-			date_filter( $uri.'?created_on_end', 'created_on <=' ),
-			date_filter( $uri.'?created_on_start', 'created_on >=' ),
-			date_filter( $uri.'?updated_on_end', 'updated_on <=' ),
-			date_filter( $uri.'?updated_on_start', 'updated_on >=' ),
+			date_filter( 'created_on_end', 'created_on <=', \%page_session ),
+			date_filter( 'created_on_start', 'created_on >=', \%page_session ),
+			date_filter( 'updated_on_end', 'updated_on <=', \%page_session ),
+			date_filter( 'updated_on_start', 'updated_on >=', \%page_session ),
 
+      ( $page_session{press_id} ? ('estimated_press_id any' => $page_session{press_id} ) : () ),
 			( sets::isin( $session{user_type}, [ 'A', 'E' ] ) ? ( 
 				$page_session{company_id} ? ( company_id => $page_session{company_id} ) : ()
 			) : ( 
 				company_id		=>  $session{company_id}
 			) ),
 			( $page_session{servicetype_id} ? ( 'servicetype_id	any'=> $page_session{servicetype_id} ) : () ),
+      ($page_session{quantity_end} ? ( 'quantity1 <='=>$page_session{quantity_end} ) : () ),
+      ($page_session{quantity_start} ? ( 'quantity1 >='=>$page_session{quantity_start} ) : () ),
       order		   => $openprint::Project::fields{id}.' DESC',
-      limit=>1000,
+      limit=>100,
 		);
 		$sql{status} = [ split(',', $page_session{ddmStatus} ) ] if $page_session{ddmStatus};
 		$sql{type_id} = $page_session{type_id} if $page_session{type_id};
@@ -38,12 +42,11 @@
 		$sql{user_id} = $page_session{user_id} if $page_session{user_id};
 		$sql{salesrep_id} = $page_session{salesrep_id} if $page_session{salesrep_id};
 
-		$$variable{Projects} = [ openprint::Project->find(%sql) ];
+    $$variable{Projects} = [ openprint::Project->find(%sql) ];
 	} # end if
 
 	$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
 ) ?>
-
 <? if ( @{$$variable{Projects}} == 0 ) ?>
 	<? if ( sets::isin( $session{user_type}, ['A','E'] ) and $param{project_id} ) ?>
 		<? eval (
@@ -80,7 +83,7 @@
 			foreach my $Project ( @{$$variable{Projects}} ) {
 				$html .= sprintf(q`
 <tr%1$s> 
-	<td class="project_id"><a href="/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>
+	<td class="project_id">%2$s</td>
 	<td class="Company">%3$s</td>
 	<td class="description">%4$s</td>
 	<td class="Price">%5$s</td>
@@ -91,15 +94,15 @@
 </tr>
 <tr%1$s> 
 	<td>&nbsp;</td>
-	<td colspan="6"><a href="/main/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
+	<td colspan="6">%10$s</td>
 	<td class="User">%11$s</td>
 </tr>`,
-$rowclass, $Project->id(), $Project->link_to($Project->Company()->name()), $Project->link_to($Project->reference()),
+$rowclass, $Project->link_to($Project->id()), $Project->link_to($Project->Company()->name()), $Project->link_to($Project->reference()),
 					( $Project->quantity(1) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(1) ) ) : '' ),
 					( $Project->quantity(2) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(2) ) ) : '' ),
 					( $Project->quantity(3) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(3) ) ) : '' ),
 					$Project->status(), format_date( $Project->created_on() ),
-					$Project->summary(),
+          $Project->link_to($Project->summary()),
 					$Project->User()->name(),
 				);
 				$rowclass = $rowclass ? ' class="colRow"' : '';
@@ -121,9 +124,9 @@ $rowclass, $Project->id(), $Project->link_to($Project->Company()->name()), $Proj
 	<table class="List">
 		<tr> 
 			<th class="project_id">Project #</th>
-<? if ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+<? if ( ( ! $page_session{company_id} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<th class="Company">Company</th>
-<? endif ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+<? endif ( ( ! $page_session{company_id} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<th class="description">Description</th>
 			<th class="Price">Price 1</th>
 			<th class="Price">Price 2</th>
@@ -143,9 +146,9 @@ if ( $Project->can_view() ) {
 $count += 1;
 				push @html, sprintf(q`
 <tr%1$s> 
-	<td class="project_id"><a href="/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>`, $rowclass, $Project->id() );
+  <td class="project_id">%2$s</td>`, $rowclass, $Project->link_to($Project->id()));
 
-				if ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) {
+				if ( ( ! $page_session{company_id} ) and sets::isin( $session{user_type}, ['E','A'] ) ) {
         push @html, sprintf( '<td class="Company">%2$s</td>', $Project->id(), $Project->link_to($Project->Company()->name()));
 				} # end if
 	push @html, sprintf( q`
@@ -159,7 +162,7 @@ $count += 1;
 </tr>
 <tr%1$s> 
 	<td colspan="%10$d">&nbsp;</td>
-	<td colspan="5"><a href="/main/project/view.html?ProjectIndex=%2$d">%11$s</a></td>
+	<td colspan="5">%11$s</td>
   <td class="User">%12$s</td>
   <td class="checkbox"></td>
 </tr>`,
@@ -171,17 +174,17 @@ $rowclass, $Project->id(), $Project->link_to($Project->reference()),
 					format_date($Project->created_on() ),
 					format_datetime($Project->created_on() ),
 					( ( ( ! $page_session{company_id} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '2' : '1' ),
-					$Project->summary(), 
+          $Project->link_to($Project->summary()), 
 					$Project->User()->name(),
 				);
 } else {
                 push @html, sprintf(q`
 <tr%1$s>
-    <td class="project_id">%2$d</td>`, $rowclass, $Project->id() );
+  <td class="project_id">%2$d</td>`, $rowclass, $Project->link_to($Project->id()));
 
-                if ( ( ! $page_session{company_id} ) and sets::isin( $session{user_type}, ['E','A'] ) ) {
-                    push @html, sprintf( '<td class="Company"><a href="/main/project/view.html?ProjectIndex=%1$d">%2$s</a></td>', $Project->id(), $Project->Company()->name() );
-                } # end if
+          if ( ( ! $page_session{company_id} ) and sets::isin( $session{user_type}, ['E','A'] ) ) {
+          push @html, sprintf( '<td class="Company">%2$s</td>', $Project->id(), $Project->link_to($Project->Company()->name()));
+          } # end if
     push @html, sprintf( q`
     <td class="description">%3$s</td>
     <td class="Price" colspan="3">You are not allowed to view this project.</td>
