@@ -186,7 +186,7 @@ sub handler {
     $r->content_type('text/html');
     $r->print(qq{ <a href="$page">$page</a> } );
   } else {
-    print STDERR "Location $page " .Apache2::Const::HTTP_SEE_OTHER."\n";
+    #print STDERR "Location $page " .Apache2::Const::HTTP_SEE_OTHER."\n";
     $r->headers_out->set(Location => $page);
     $r->status(Apache2::Const::HTTP_SEE_OTHER);
     return OK;

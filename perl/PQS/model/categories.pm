@@ -59,7 +59,6 @@ sub get {
   my ($id, $showall) = @_;
 
   my $active =  $showall ? '' : ' AND ACTIVE ';
-  print STDERR "Get ACTIVE: $active \n";
   return $dbh->selectrow_hashref("select * from categories where id = ? $active ", undef, $id);
 }
 
@@ -68,7 +67,6 @@ sub get_children_from_id {
 
   my $active =  $showall ? '' : ' AND ACTIVE ';
 
-  print STDERR "GC ACTIVE: $active \n";
   my $list;
   if ( $id ) {
   	$list = $dbh->selectcol_arrayref("select id from categories where parent = ?  $active  ORDER BY name ", undef, $id);
@@ -114,8 +112,6 @@ sub get_all {
     $cats->{$cat}{children} = $children;
   }
  
-#print STDERR "HAVE MY CATS", Dumper($cats);
-
   return $cats;
 }
 
