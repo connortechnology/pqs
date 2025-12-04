@@ -944,7 +944,7 @@ sub quote_history {
 
 		$_ .= " AND tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName = '$quoted_for'" if $quoted_for ne '';
 		$_ .= " AND date(dtmQuoteDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}')";
-    $_ .= " AND lngQuoteId = $openprint::param{QuoteID}" if $openprint::param{QuoteID};
+    $_ .= " AND tbl_Quotes.lngQuoteId = $openprint::param{QuoteID}" if $openprint::param{QuoteID};
 		$_ .= " AND tbl_Quote_Users_For.lngQuoteID = tbl_Quotes.lngQuoteID ORDER BY tbl_Quotes.lngQuoteID DESC";
 
 #print STDERR "QUOTE SQL: \n $_ \n";
