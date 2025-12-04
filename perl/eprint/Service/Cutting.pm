@@ -70,7 +70,7 @@ sub necessary {
       ScreenTShirts ScreenHoodies ScreenSweatShirts 
       ScreenMisc ScreenCoffeeMugs ScreenMousePads))
     || $type =~ /^LF/ ) {
-    return (wantarray ? () : undef);
+    return (wantarray ? () : 0);
   };
 
   # Retrieve the project quantities with the indices they use (it can not be treated as a list).
