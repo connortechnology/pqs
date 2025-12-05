@@ -175,7 +175,7 @@ sub compare_equipment{
 		}
 		my $tp_mr = $tp ? price($e->{ref}, 'VariableTextStreamMakeReady') : 0;
 		my $ip_mr = $ip ? price($e->{ref}, 'VariableImageStreamMakeReady') : 0;
-print STDERR "tp_mr $tp_mr ip_mr $ip_mr tp: $tp ip $ip\n";
+#print STDERR "tp_mr $tp_mr ip_mr $ip_mr tp: $tp ip $ip\n";
 
 		callback::call('service_calc_end', $j->{pid}, $j->{sid}, \$tp_mr, \$tp);
 		callback::call('service_calc_end', $j->{pid}, $j->{sid}, \$ip_mr, \$ip);
@@ -193,7 +193,7 @@ print STDERR "tp_mr $tp_mr ip_mr $ip_mr tp: $tp ip $ip\n";
 			my $click_factor = int ( ($e->{max_width} * $e->{max_length}) / ($j->width * $j->height) );
 			my $click_charge = price($e->{ref}, '1ColourImpression', $j->qty) * $j->qty / 1000;
 			$click_charge /= $click_factor if $click_factor > 1;
-print STDERR "Adding click factor $click_factor, $click_charge\n";
+#print STDERR "Adding click factor $click_factor, $click_charge\n";
 			$total += $click_charge;
 
 		}
