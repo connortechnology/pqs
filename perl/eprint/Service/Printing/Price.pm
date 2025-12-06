@@ -332,7 +332,7 @@ sub get_project_price {
   my %paper = %{ $spread->{stock} };
 
   # Colour bars and ignoring margins don't mix.
-  if ($project->{override}{margin}) { $project->{colour_bar} = 0 }
+  $project->{colour_bar} = 0 if $project->{override}{margin};
 
   # Envelope projects get an image width the same size as the envelope.
   if ($project->{type} eq 'Envelopes') {
