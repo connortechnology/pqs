@@ -621,7 +621,8 @@ sub insert_folding_proof {
       $quantity += 1;
     } # end if
     my $signature_quantity = $$sig_specs{txtSignatureQuantity} || 1;
-    $quantity *= $signature_quantity;
+    my $form_quantity = $$sig_specs{hdnNumRuns} || 1;
+    $quantity *= $signature_quantity * $form_quantity;
   }
 
 	insert_new_proof( $specs, $proof_index, $Imposition->form(), $quantity, $width, $height, $default_proof_type, $qty_index );
@@ -702,7 +703,8 @@ sub insert_pdf_proofs {
     return;
   }
   my $signature_quantity = $$sig_specs{txtSignatureQuantity} || 1;
-  $quantity *= $signature_quantity;
+  my $form_quantity = $$sig_specs{hdnNumRuns} || 1;
+  $quantity *= $signature_quantity * $form_quantity;
 
   insert_new_proof( $specs, $proof_index, $form, $quantity,  '', '', $proof_type, $qty_index );
 } # end sub insert_pdf_proofs
@@ -910,7 +912,8 @@ sub insert_layout_proof {
         $quantity += 1 if @{$$sig_specs{SideOneColours}} or @{$$sig_specs{SideTwoColours}};
       } # end if
       my $signature_quantity = $$sig_specs{txtSignatureQuantity} || 1;
-      $quantity *= $signature_quantity;
+      my $form_quantity = $$sig_specs{hdnNumRuns} || 1;
+      $quantity *= $signature_quantity * $form_quantity;
     }
   }
 
