@@ -92,8 +92,7 @@ var end;
 						</span>
 
 						<?if ($$variable{url} and $$variable{flags}{can_edit}) ?>
-							<a href="/service/<?lc:ref?>?pid=<?pid?>;sid=<?id?>" >
-								<?name?></a>
+							<a href="/service/<?lc:ref?>?pid=<?pid?>;sid=<?id?>"><?name?></a>
 						<?else ($$variable{url} and $$variable{flags}{can_edit}) ?>
 
 								<?if ( $variable->{edit} == $variable->{id} ) ?>
@@ -105,7 +104,6 @@ var end;
 										<textarea name="docket" 
 											style="margin-left: 20px; width: 300px; height: 70px"
 										><?custom_service.docket?></textarea>
-									<?else not:custom_service.hide_docket?>
 									<?endif not:custom_service.hide_docket?>
 										<input type="checkbox" name="hide_docket" value="1">Hide
 										<input type="submit" name="submit" value="save">
