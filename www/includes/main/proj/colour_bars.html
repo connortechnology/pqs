@@ -3,5 +3,5 @@
 <label class="checkbox">
   <input type="checkbox" name="colour_bar" value="1" onclick="colour_bar_mutex_ignore_margins(this.form);" <?echo($$variable{specs}{colour_bar} ? ' checked="checked"' : '')?>/>
   Yes, Add <?ws_Colour?> Bars. Size used:</label>
-<input type="number" name="colour_bar_size" value="<?colour_bar_size?>" step="any" min="0" readonly="readonly" size="6"/>
+<input type="number" name="colour_bar_size" value="<?specs.colour_bar_size?>" step="any" min="0" readonly="readonly" size="6"/>
 </p>
