@@ -198,7 +198,7 @@ sub view {
 				my $service_index = $param{ServiceIndex};
 				if ( ! $Service ) {
 					$variable{error} .= $param{ServiceType} . ' service ' . $service_index . ' is no longer in project. It may have been removed while you were editing it.  Your changes may not have been saved.<br/>';
-					$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_id;
+					$variable{ExternalRedirect} = $Project->url_to();
 					return;
 				} # end if
 
