@@ -1099,36 +1099,44 @@ sub clean_calc {
 
 
 sub save {
-    my ($log, $dbh, $pid, $sid, $service, $form, $specs) = @_;
+  my ($log, $dbh, $pid, $sid, $service, $form, $specs) = @_;
 
-    # Merge the original user specified specs into the pricing (for storage).    
-    $specs->{$_} = $form->{$_} for keys %$form;
+  my @changes; 
+  foreach my $key (keys %$form) {
+    if ($$specs{$key} ne $$form{$key}) {
+      #s/^\s+//, s/\s+$// for $openprint::param{$key};
+      push @changes, "$key : $$specs{$key} => $$form{$key}";
+    } # end if changed
+    $specs->{$key} = $form->{$key};
+  }  # end foreach
 
-    # Some actions need to look at the state of the service or remove control
-    # specifications before the service is changed/saved.
-    if (my $func = $service->{can}->('preaction')) {
-        $func->($log, $dbh, $pid, $sid, $service->{name}, $specs);
-    }
+  my $project = openprint::Project->find_one(id=>$pid);
+	$project->add_to_log(@openprint::session{'company_id','user_id'}, $service->{ref}. ' service saved: '.join('<br/>', @changes));
 
-    # Allow the service to modify the specs for saving. ie. serializing arrays
-    # (eugh), storable()ing complex structures, etc.
-    my $store = $service->{can}->('store');
-    
-    $specs = $store->($log, $dbh, $pid, $sid, $service->{name}, $specs) if $store;
+  # Some actions need to look at the state of the service or remove control
+  # specifications before the service is changed/saved.
+  if (my $func = $service->{can}->('preaction')) {
+    $func->($log, $dbh, $pid, $sid, $service->{name}, $specs);
+  }
 
-    # TODO Save the actual specs (user specified) as such, and the
-    # anything that's new after pricing as not.
-    
-    to_db($dbh, $pid, $sid, $form, $specs); # Insert into DB.
+  # Allow the service to modify the specs for saving. ie. serializing arrays
+  # (eugh), storable()ing complex structures, etc.
+  my $store = $service->{can}->('store');
+  $specs = $store->($log, $dbh, $pid, $sid, $service->{name}, $specs) if $store;
 
-    # Perform any actions required. eg. create signatures after changing the
-    # book specifications.
-    if (my $action = $service->{can}->('action')) {
-      #print STDERR "Doing action on $$service{name}\n";
-        $action->($log, $dbh, $pid, $sid, $service->{name}, $specs);
-    }
+  # TODO Save the actual specs (user specified) as such, and the
+  # anything that's new after pricing as not.
 
-    return 1;
+  to_db($dbh, $pid, $sid, $form, $specs); # Insert into DB.
+
+  # Perform any actions required. eg. create signatures after changing the
+  # book specifications.
+  if (my $action = $service->{can}->('action')) {
+    #print STDERR "Doing action on $$service{name}\n";
+    $action->($log, $dbh, $pid, $sid, $service->{name}, $specs);
+  }
+
+  return 1;
 }
 
 # Save a batch of service specifications to the DB. Optionally the batch can
@@ -1150,7 +1158,6 @@ sub to_db {
     (lngprojectindex, lngserviceindex, strname, strvalue, ui_spec)
     VALUES (?, ?, ?, ?, ?)
     });
-
 
   while (my ($key, $value) = each %$specs) {
     # Only handle simple values that are defined.
