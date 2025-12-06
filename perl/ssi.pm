@@ -1365,6 +1365,23 @@ sub format_datetime {
   return $_[0] ? Date::Format::time2str( $format, Date::Parse::str2time( $_[0] ) ) : $_[1];
 } # end sub format_datetime
 
+sub format_telephone {
+  my $number = shift;
+  $number =~ s/\D//g;
+  if (length($number) == 12) {
+    $number =~ s/(\d{2})(\d{3})(\d{3})(\d{4})/+$1 ($2) $3-$4/;
+  } elsif (length($number) == 11) {
+    $number =~ s/(\d)(\d{3})(\d{3})(\d{4})/+$1 ($2) $3-$4/;
+  } elsif (length($number) == 10) {
+    # Format as (XXX) XXX-XXXX
+    $number =~ s/(\d{3})(\d{3})(\d{4})/($1) $2-$3/;
+  } elsif (length($number) == 7) {
+    # Format as XXX-XXXX
+    $number =~ s/(\d{3})(\d{4})/$1-$2/;
+  }
+  return $number;
+}
+
 sub format_time {
   return $_[0] ? Date::Format::time2str('%H:%M', Date::Parse::str2time($_[0])) : '';
 } # end sub format_time
