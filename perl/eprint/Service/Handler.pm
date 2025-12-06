@@ -122,8 +122,8 @@ sub handler {
   my $service = uri_to_service($r, $dbh);
   if (!$service) {
     $openprint::log->error("Service not found");
-  } else {
-    $openprint::log->debug(Data::Dumper::Dumper($service));
+    #} else {
+    #$openprint::log->debug(Data::Dumper::Dumper($service));
   }
 
   #map { print STDERR "HAVE PARAM: $_ = " . $r->param($_) . " \n"; } $r->param();
@@ -137,16 +137,10 @@ sub handler {
   }
 
   # Make sure the service exists in the project.
-  unless ($dbh->selectrow_array(q{
-      SELECT true 
-      FROM tbl_project_contents 
-      WHERE lngprojectindex = ?
-      AND lngserviceindex = ?
-      }, undef, $pid, $sid))
-  {
+  unless (openprint::Project_Service->find_one(project_id=>$pid, service_id=>$sid)) {
     print STDERR "Service not found for $pid/$sid\n";
-    if ($dbh->selectrow_array('SELECT true from tbl_projects WHERE lngprojectindex=?', undef, $pid)) {
-      $r->headers_out->set(Location => '/main/proj/view.html?pid='.$pid);
+    if (my $project = openprint::Project->find_one(id=>$pid)) {
+      $r->headers_out->set(Location => $project->url_to());
       $r->status(Apache2::Const::REDIRECT); #302
       return Apache2::Const::OK;
     }
