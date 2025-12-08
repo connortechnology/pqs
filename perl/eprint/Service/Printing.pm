@@ -18,10 +18,10 @@ require openprint;
 
 sub necessary {
     my ($log, $dbh, $pid, $service_type) = @_;
-
-    # Printing is currently always needed unless we're checking out a
-    # pre-printed project.
-    return get_type($log, $dbh, $pid) ne 'InventoryCheckOut';
+    # Printing is currently always needed unless we're checking out a pre-printed project.
+    my $project = openprint::Project->find_one(id=>$pid);
+    my $type = $project->type() if $project;
+    return $type ne 'InventoryCheckOut';
 }
 
 
@@ -164,7 +164,6 @@ sub action {
 
   print STDERR "Invalid multipage project $pid book:$book spread type: $spread_type\n" unless $book && $spread_type;
 
-
   # If we're cover spreads there can only be one of us so we're done.
   return if $spread_type eq COVER;
 
@@ -219,8 +218,7 @@ sub action {
 
     $log->warn("Too many spreads in p:$book while processing s:$sid\n");
   } elsif ($current < $needed) {
-    # We still need signatures, add a new one unless another unfinished
-    # one already exists.
+    # We still need signatures, add a new one unless another unfinished one already exists.
     insert_signature($log, $dbh, $pid, $book, $sid, $specs) unless @unfinished;
   } else {
     # Just right. We can remove any unfinished signatures there might be.
@@ -231,66 +229,70 @@ sub action {
 }
 
 sub insert_signature {
-    my ($log, $dbh, $pid, $book, $template, $specs) = @_;
+  my ($log, $dbh, $pid, $book, $template_sid, $specs) = @_;
 
-    my @fields = qw( txtSignatureType txtSignatureSize 
-                     txtSpreadWidth txtSpreadHeight );
-    my %signature;
-    @signature{@fields} = @$specs{@fields};
+  $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
+  my ( $form ) = sql::execute( $log, $dbh, $_, $pid );
+  $form  = $form ? $form+1 : 1;
 
-    # Insert a new signatue
-    my $sid = insert_service($log, $dbh, $pid, 'Printing', { user_requested => 1 }, \%signature);
+  $openprint::log->error("SIg specs: ".Data::Dumper::Dumper($specs));
+  my @fields = qw( txtSignatureType txtSignatureSize txtSpreadWidth txtSpreadHeight );
+  my %signature;
+  @signature{@fields} = @$specs{@fields};
+  $signature{Form} = $form;
 
-    # Update the signature number TODO Get rid of this legacy nonsense.
-    insert_service_spec($log, $dbh, $pid, $sid, SignatureIndex => $sid);
+  # Insert a new signatue
+  my $sid = insert_service($log, $dbh, $pid, 'Printing', { user_requested => 1 }, \%signature);
+
+  # Update the signature number TODO Get rid of this legacy nonsense.
+  insert_service_spec($log, $dbh, $pid, $sid, SignatureIndex => $sid);
+
+  # Only copy the user specified fields and no overrides.
+  my $prev = $dbh->selectall_hashref(q`SELECT strname AS name, strvalue AS value, 1 AS nodelete, ui_spec AS ui
+    FROM tbl_service_specifications
+    WHERE lngserviceindex = ?
+    AND ui_spec = true 
+    AND strname !~ '^override'
+    AND strname NOT IN ( 'press', 'runstyle', 'substrate', 'spreads_in_group', 'spreads', 'forms' )
+    AND strname !~ '^txtSignatureQ'
+    `, 'name', {}, $template_sid);
+
+  $openprint::log->error("PREV $template_sid".Data::Dumper::Dumper($prev));
+  #my $ptd = $dbh->selectall_hashref(q{ SELECT strfieldname as name, strdefaultvalue as value FROM tbl_projecttype_defaults WHERE lngprojecttypeindex IS NULL }, 'name');
+  #my %defaults = map { $_ => $ptd->{$_}{value} } keys %$ptd;
+  #foreach my $k (keys %$prev) {
+  #$defaults{$k} = $$prev{$k};
+  #}
+  $openprint::log->error("Defaults: $sid ".Data::Dumper::Dumper(\$prev));
+  openprint::service::insert_service_specs($pid, $sid, $prev);
+
+  # If there's a numbered description, update to next.
+  if ($specs->{txtServiceDescription} =~ /(\d+)$/) {
+    my $count = $1 + 1;
+
+    my $name = $specs->{txtServiceDescription};
+    $name =~ s/\d+$/$count/;
+
+    insert_service_spec($log, $dbh, $pid, $sid, txtServiceDescription => $name);
+  }
+
+  #ICON: This is bad as you know.  
+  # Override the press to the same as other signatures of this type.
+  # This is done to ensure a consistant look and registration of the
+  # final project.
+  #insert_service_spec($log, $dbh, $pid, $sid, press          => $specs->{press}, undef, 1);
+  #insert_service_spec($log, $dbh, $pid, $sid, override_press => 1,               undef, 1);
 
 
-    # Only copy the user specified fields and no overrides.
-    $dbh->do(qq{
-        INSERT INTO tbl_service_specifications 
-            (lngprojectindex, lngserviceindex, strname, strvalue, ui_spec)
-            ( SELECT lngprojectindex, $sid, strname, strvalue, ui_spec
-              FROM tbl_service_specifications
-              WHERE lngserviceindex = ?
-                AND ui_spec = true 
-                AND strname !~ '^override'
-                AND strname NOT IN ( 'press', 'runstyle', 'substrate', 
-                                     'spreads_in_group', 'spreads', 'forms' )
-                AND strname !~ '^txtSignatureQ')
-    }, undef, $template);
+  # 'DETAILED' MODE
+  #
+  # 'Detailed' mode sets a kludgy flag to stop calculation until the
+  # display() function removes the flag (meaning a user has seen it).
+  if ($specs->{spreads} || $specs->{forms}) {
+    insert_service_spec($log, $dbh, $pid, $sid, needs_view => 1, undef, 1);
+  }
 
-    my $ptd = $dbh->selectall_hashref(q{ SELECT strfieldname as name, strdefaultvalue as value FROM tbl_projecttype_defaults WHERE lngprojecttypeindex IS NULL }, 'name');
-
-    my %defaults;
-    map { $defaults{$_} = $ptd->{$_}{value} } keys %$ptd;
-    insert_service_specs($log, $dbh, $pid, $sid, %defaults);
-
-    # If there's a numbered description, update to next.
-    if ($specs->{txtServiceDescription} =~ /(\d+)$/) {
-        my $count = $1 + 1;
-
-        my $name = $specs->{txtServiceDescription};
-        $name =~ s/\d+$/$count/;
-
-        insert_service_spec($log, $dbh, $pid, $sid, txtServiceDescription => $name);
-    }
-
-    # Override the press to the same as other signatures of this type.
-    # This is done to ensure a consistant look and registration of the
-    # final project.
-    insert_service_spec($log, $dbh, $pid, $sid, press          => $specs->{press}, undef, 1);
-    insert_service_spec($log, $dbh, $pid, $sid, override_press => 1,               undef, 1);
-
-
-    # 'DETAILED' MODE
-    #
-    # 'Detailed' mode sets a kludgy flag to stop calculation until the
-    # display() function removes the flag (meaning a user has seen it).
-    if ($specs->{spreads} || $specs->{forms}) {
-        insert_service_spec($log, $dbh, $pid, $sid, needs_view => 1, undef, 1);
-    }
-
-    return $sid;
+  return $sid;
 }
 
 1;
