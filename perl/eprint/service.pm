@@ -456,30 +456,6 @@ sub get_spec {
 
 sub insert_service_spec {
   return openprint::service::insert_service_spec(@_);
-    my ( $log, $dbh, $pid, $sid, $name, $value, $no_delete, $ui_spec) = @_;
-
-    die "Can't insert spec into service without id" unless $sid;
-
-    if (!$no_delete) {
-        my $sth = $dbh->prepare_cached(qq{
-            DELETE FROM tbl_Service_Specifications 
-            WHERE lngProjectIndex = ?
-              AND lngServiceIndex = ?
-              AND strName         = ?
-        });
-
-        $sth->execute($pid, $sid, $name);
-    }
-    insert($log, $dbh, 'tbl_Service_Specifications',
-            lngProjectIndex => $pid,
-            lngServiceIndex => $sid,
-            strName         => $name,
-            strValue        => $value,
-            ui_spec         => ($ui_spec || 0)
-    );
-    #print STDERR "INSERTING SPECS: $name - $value - $ui_spec \n";
-
-    return 1;
 }
 
 sub insert_service_specs {
@@ -1103,7 +1079,16 @@ sub save {
 
   my @changes; 
   foreach my $key (keys %$form) {
-    if ($$specs{$key} ne $$form{$key}) {
+		if ( ref $$form{$key} eq 'ARRAY'  ) {
+      my @old_value = ($$specs{$key} and ref $$specs{$key} eq 'ARRAY' ? @{$$specs{$key}} : ( $$specs{$key} ));
+      my @new_value = @{$$specs{$key}};
+      my @intersection = sets::intersection(@old_value, @new_value);
+			if ( @old_value != @intersection or @new_value != @intersection) {
+				push @changes, $key.' : '.join(',', @old_value).' => '.join(',', @new_value);
+			}
+    } elsif (
+      (defined($$specs{$key}) != defined($$form{key})) or ($$specs{$key} and ($$specs{$key} ne $$form{$key}))
+    ) {
       #s/^\s+//, s/\s+$// for $openprint::param{$key};
       push @changes, "$key : $$specs{$key} => $$form{$key}";
     } # end if changed
