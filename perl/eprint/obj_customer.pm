@@ -209,27 +209,34 @@ sub set {
             die "Invalid customer ID ($self->{index})" unless $self->{index};
 
             # Create the new customer.           
-            sql::insert($self->{log}, $self->{dbh}, 'tbl_Customer', 
+            my $rows = sql::insert($self->{log}, $self->{dbh}, 'tbl_Customer', 
                 lngCustomerID   => $self->{index}, 
                 dtmDateEntered  => 'NOW',
                 dtmLastModified => 'NOW',
                 %set_fields 
             );
+            if (!defined($rows)) {
+              return 0;
+            }
 
             my $dir_name = $self->path;
 
             # Create their customer and project directories.
             unless (-e "$path/$dir_name/projects") {
-                mkpath("$path/$dir_name/projects")
-                    or die "Couldn't create customer directories: $!";
+              eval {
+                mkpath("$path/$dir_name/projects");
+              };
+              $openprint::log->error( "Couldn't create customer directories at $path/$dir_name/projects: $! $@") if $@;
             }
-        } 
+        } else {
         # Edit an existing customer.
-        else {
-            sql::update($self->{log}, $self->{dbh}, 'tbl_Customer', "lngCustomerID = $self->{index}", 
+            my $rows = sql::update($self->{log}, $self->{dbh}, 'tbl_Customer', "lngCustomerID = $self->{index}", 
                 dtmLastModified => 'NOW', 
                 %set_fields 
-            );
+              );
+              if (!defined($rows)) {
+                return 0;
+              }
 
             # Rename customer directory if name has changed. TODO locking?
             if (exists $set_fields{strCompanyName}) {

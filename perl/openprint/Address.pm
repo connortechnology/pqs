@@ -4,11 +4,11 @@ our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 0;
-$table = 'addresses';
+$table = 'tbl_addresses';
 $serial = 'addresses_id_seq';
 
 %fields = (
-	id			=>	'id',
+	id			=>	'lngindex',
 	location_id	=>	'location_id',
 	company_id	=>	'company_id',
 	user_id		=>	'user_id',

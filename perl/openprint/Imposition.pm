@@ -12,7 +12,7 @@ require Math::Round;
 require Data::Dumper;
 use SVG;
 use vars qw( $AUTOLOAD %Orientations @RunStyles %ShortStyles %LongStyles %bleed_sides);
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PERFORMANCE => 1;
 
 use constant Vertical => 0;
@@ -1391,7 +1391,7 @@ sub form {
       #openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$self{Project}->id(), $$self{service_id}, 'SignatureIndex', $signature_count );
       openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$self{Project}->id(), $$self{service_id}, 'Form', $signature_count );
     } else {
-      $openprint::log->error("No service id in impo.  Not saving Form");
+      $openprint::log->debug("No service id in impo.  Not saving Form");
     }
   }
 

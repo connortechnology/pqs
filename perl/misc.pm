@@ -35,6 +35,9 @@ use session;
 
 use strict;
 use POSIX qw( ceil floor strftime );
+require countries;
+require states;
+require provinces;
 
 # strftime()'s "pretty date" format.  (I use the term pretty date loosely.)
 use constant PRETTY_DATE => '%A %B %d %Y %I:%M%P';
@@ -143,7 +146,7 @@ sub send_email_with_attachment {
 
   $mail->{TO} = join ',', keys %{$list};
 
-  print STDERR "SEND MAIL TO: $mail->{TO} FROM $mail->{FROM} SUBJECT: $mail->{SUBJECT} $mail->{subject} \n";
+  $log->debug("SEND MAIL TO: $mail->{TO} FROM $mail->{FROM} SUBJECT: $mail->{SUBJECT} $mail->{subject}");
 
   my $message = $mail->{BODY};
 
@@ -238,7 +241,13 @@ sub gen_session_id {
 }
 
 sub build_city_prov_country {
-    return join q{, }, grep { $_ } @_;
+  my ( $city, $state, $country ) = @_;
+
+  return join(', ', 
+    ($city ? $city : ()),
+    ( $state ? ( ($country and ($country eq 'CA' or lc $country eq 'canada') and $provinces::provinces{$state}) ? $provinces::provinces{$state} : $state) : () ),
+    ($country ? ($countries::countries{$country} ? $countries::countries{$country} : $country) : () ),
+  );
 }
 
 sub gettime {

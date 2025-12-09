@@ -304,7 +304,12 @@ sub make_drop_down {
 		$check_array = [ $checkval ];
 	} # end if
 
-	my %selected = map { $_ => $_ } @$check_array;
+	my %selected = map { defined($_) ? ($_ => $_) : () } @$check_array;
+  if ($$options{auto_select_if_singleton}) {
+    $log->error("auto_select_if_singleton ".@{$check_array}. ' data'.@{$data} . " checkbal $checkval");
+    $selected{$$data[0]} = $$data[0] if ( (!(@{$check_array} and $checkval)) and (@{$data} == 2)) ;
+  }
+  $log->debug("selected:".Data::Dumper::Dumper(\%selected));
 
 	my $html = '';
 	if ( $$options{prepend} ) {
@@ -704,6 +709,7 @@ sub writeTip {
 
 sub setup_datetime_select {
 	my ( $page, $prefix, $delta_seconds ) = @_;
+  $page = misc::get_session_uri($page);
 
   my @fields = ( 'year','month','day','hour','minute','second');
 	if ( ( 
@@ -730,6 +736,7 @@ sub setup_datetime_select {
 
 sub setup_date_select {
 	my ( $page, $prefix, $delta ) = @_;
+  $page = misc::get_session_uri($page);
 	if ( ( ! ( exists $session{$page.'?'.$prefix.'_year'} and exists $session{$page.'?'.$prefix.'_month'} and exists $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
 		if ( $delta ne '' ) {
 			@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1*$delta );
@@ -819,11 +826,14 @@ sub date_select {
 
 sub date_select_session {
 	my ( $page, $prefix, $options ) = @_;
+  $page = misc::get_session_uri($page);
+  $log->error("Page $page");
 	return date_select( $prefix, [ @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} ], $options );
 } # end sub date_select_session
 
 sub datetime_select_session {
 	my ( $page, $prefix, $options ) = @_;
+  $page = misc::get_session_uri($page);
 	return datetime_select( $prefix, [ @session{
 			$page.'?'.$prefix.'_year',
 			$page.'?'.$prefix.'_month',

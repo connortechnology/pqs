@@ -1,9 +1,11 @@
 <? echo (
 	my $html;
-	my @Equipment = openprint::Equipment->find( order=>'lower(strid)');
+  require openprint::Equipment;
+	my @Equipment = openprint::Equipment->find(order=>'lower(strid)');
 	$$variable{Equipment} = \@Equipment;
-	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( 'supplier'=>'Y', 'order'=>'lower(name)' ) ];
-	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find(supplier=>'Y') ];
+
+	foreach my $Pricelist ( openprint::Pricelist->find() ) {
 		$$variable{Pricelist} = $Pricelist;
 		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
 		foreach my $service ( 'Setup', 'Supply', 'Material' ) {
@@ -14,7 +16,7 @@
 						<th class="Range">Quantity Range</th>
 						<th class="Units">Units</th>
 					';
-			if ( $service ne 'Material' ) {
+			if ( $service and ($service ne 'Material')) {
 				$html .= '
 						<th class="Cost">Cost</th>
 						<th class="Markup">Mark up</th>
@@ -42,7 +44,11 @@
 				<th class="Discount">Discount?</th>
 				<th class="buttons">
 				';
-			$html .= button( 'NewPrice'.$service.$Pricelist->id(), {onclick=>"newPrice( '$service', '$$Pricelist{id}');", text=>'New Price' } );
+			$html .= button( 'NewPrice'.$service.$Pricelist->id(), { text=>'New Price', 
+      ($$variable{Stock}->id() ? (
+        onclick=>"newPrice( '$service', '$$Pricelist{id}');", 
+      ) : ( disabled=>'disabled', title=>'Please save the stock before entering more pricing.')
+      ) } );
 			$html .= qq`</th></tr></thead><tfoot><tr></tr></tfoot><tbody id="prices-$service-$$Pricelist{id}">\n`;
 			$html .= include( '/administrator/stock/_prices_table_body.html' );
 			$html .= '</tbody></table>';

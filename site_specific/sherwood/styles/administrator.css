@@ -193,3 +193,20 @@ table .Supplier {
 #ServicePrices .Mode {
   display: none;
 }
+
+input[type="text"] {
+  line-height: 16px;
+}
+
+#nav li.company_profiles,
+#nav li.user_profiles {
+  display: flex;
+  justify-content: space-between;
+}
+#nav li.company_profiles a,
+#nav li.user_profiles a {
+  width: auto;
+}
+table th {
+  text-align: left;
+}

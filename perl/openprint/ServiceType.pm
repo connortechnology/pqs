@@ -7,7 +7,7 @@ require openprint::ServiceType_Default;
 
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field $dropdown_field $default_sort);
 
-$debug = 1;
+$debug = 0;
 $table = 'tbl_service_types';
 $serial = 'servicetypeindex';
 $dropdown_field = 'description';

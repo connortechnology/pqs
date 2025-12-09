@@ -84,7 +84,7 @@ $serial = 'quotes_id_seq';
 %find_fields = (
 	salesrep_id => '(SELECT salesrep_id FROM companies WHERE id=companyindex)',
 	for_name	=> q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE lngquoteid=tbl_quotes.lngquoteid)},
-	project_id	=>	'(SELECT project_id FROM tbl_quote_details WHERE quote_id=id)',
+	project_id	=>	'(SELECT lngprojectindex FROM tbl_quote_details WHERE tbl_quote_details.lngquoteid=tbl_quotes.lngquoteid)',
 );
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
@@ -198,7 +198,7 @@ sub Quoted_Projects {
 		$_[0]{Quoted_Projects} = $_[1];
 	} 
 	if ( ! $_[0]{Quoted_Projects} ) {
-		$_[0]{Quoted_Projects} = [ openprint::QuotedProject->find(quote_id=>$_[0]{id},order=>'project_id') ];
+		$_[0]{Quoted_Projects} = [ openprint::QuotedProject->find(quote_id=>$_[0]{id}, order=>$openprint::QuotedProject::fields{project_id}) ];
 	} # end if
 	return @{$_[0]{Quoted_Projects}};
 } # end sub Quoted_Projects

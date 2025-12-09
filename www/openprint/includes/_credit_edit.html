@@ -1,11 +1,11 @@
 <? echo (
     my $html;
-    my @Suppliers = openprint::Company->find( offers_credit=>1, order=>'id');
+    my @Suppliers = openprint::Company->find( offers_credit=>1);
     foreach my $Supplier ( @Suppliers ) {
-		next if $$variable{Company}->id() == $Supplier->id();
-        my $Credit = $$variable{Company}->Credit($Supplier->id());
+		  next if $$variable{Company}->id() == $Supplier->id();
+      my $Credit = $$variable{Company}->Credit($Supplier->id());
 
-        $html .= sprintf(q`
+      $html .= sprintf(q`
     <div class="Credit"><fieldset><legend>Credit Information for %2$s:</legend>
         <ul>
             <li><label>Terms</label>%3$s Days</li>

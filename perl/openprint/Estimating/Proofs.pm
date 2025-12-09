@@ -619,7 +619,8 @@ sub insert_folding_proof {
       $quantity += 1;
     } # end if
     my $signature_quantity = $$sig_specs{txtSignatureQuantity} || 1;
-    $quantity *= $signature_quantity;
+    my $form_quantity = $$sig_specs{hdnNumRuns} || 1;
+    $quantity *= $signature_quantity * $form_quantity;
   }
 
 	insert_new_proof( $specs, $proof_index, $Imposition->form(), $quantity, $width, $height, $default_proof_type, $qty_index );
@@ -700,7 +701,8 @@ sub insert_pdf_proofs {
     return;
   }
   my $signature_quantity = $$sig_specs{txtSignatureQuantity} || 1;
-  $quantity *= $signature_quantity;
+  my $form_quantity = $$sig_specs{hdnNumRuns} || 1;
+  $quantity *= $signature_quantity * $form_quantity;
 
   insert_new_proof( $specs, $proof_index, $form, $quantity,  '', '', $proof_type, $qty_index );
 } # end sub insert_pdf_proofs
@@ -802,7 +804,7 @@ sub insert_colour_proof {
 
     # Get max size for the proofer.
     my ( $maxwidth, $maxheight ) = $proofer->specifications('Maximum Sheet Width', 'Maximum Sheet Length') if $proofer;
-    if ($maxwidth and $maxheight) {
+    if ($maxwidth and $maxheight and $width and $height) {
       # If our Proof Style is multiple then increase our proof size until we have everything down to 1 proof
       # or we have hit the max size for the proofer.
       my $w = $width;
@@ -884,7 +886,7 @@ sub insert_layout_proof {
     }
   }
 
-  $log->debug("Using $$proofer{name} for equipment") if DEBUG;
+  $log->debug("Using $$proofer{name} for equipment".$proofer->to_string()) if DEBUG;
   my ($width, $height, $sides) = $proofer->specifications(
     'Default Layout Proof Width','Default Layout Proof Height', 'Layout Proof Sides');
   ($width, $height) = @$Imposition{'sheet_width','sheet_height'} if !($width and $height);
@@ -908,7 +910,8 @@ sub insert_layout_proof {
         $quantity += 1 if @{$$sig_specs{SideOneColours}} or @{$$sig_specs{SideTwoColours}};
       } # end if
       my $signature_quantity = $$sig_specs{txtSignatureQuantity} || 1;
-      $quantity *= $signature_quantity;
+      my $form_quantity = $$sig_specs{hdnNumRuns} || 1;
+      $quantity *= $signature_quantity * $form_quantity;
     }
   }
 

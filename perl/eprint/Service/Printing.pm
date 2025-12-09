@@ -18,10 +18,10 @@ require openprint;
 
 sub necessary {
     my ($log, $dbh, $pid, $service_type) = @_;
-
-    # Printing is currently always needed unless we're checking out a
-    # pre-printed project.
-    return get_type($log, $dbh, $pid) ne 'InventoryCheckOut';
+    # Printing is currently always needed unless we're checking out a pre-printed project.
+    my $project = openprint::Project->find_one(id=>$pid);
+    my $type = $project->type() if $project;
+    return $type ne 'InventoryCheckOut';
 }
 
 
@@ -45,51 +45,47 @@ sub restore {
 }
 
 sub store {
-    my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
+  my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
 
-    # Special case for bleeds, stringify selected bleed sides.        
-    $specs->{bleed_sides} = defined $specs->{bleed_sides} 
-        ? join(',', @{ $specs->{bleed_sides} }) : undef;
+  # Special case for bleeds, stringify selected bleed sides.        
+  $specs->{bleed_sides} = defined $specs->{bleed_sides} ? join(',', @{ $specs->{bleed_sides} }) : undef;
 
-	print STDERR "STORE FOR Printing Servcie: PID: $pid SID: $sid \n";
-    # Very, very simple multi-version input processing.
-    if ($specs->{is_mv}) {
-	print STDERR "STORE FOR Printing Servcie: START MV \n";
-        my @name  = @{ $specs->{mv_name} } if $specs->{mv_name};
-        my @qty   = @{ $specs->{mv_qty}  } if $specs->{mv_qty};
-        my $total = (get_quantities($log, $dbh, $pid))[0];
+  #print STDERR "STORE FOR Printing Servcie: PID: $pid SID: $sid \n";
+  # Very, very simple multi-version input processing.
+  if ($specs->{is_mv}) {
+    #print STDERR "STORE FOR Printing Servcie: START MV \n";
+    my @name  = @{ $specs->{mv_name} } if $specs->{mv_name};
+    my @qty   = @{ $specs->{mv_qty}  } if $specs->{mv_qty};
+    my $total = (get_quantities($log, $dbh, $pid))[0];
 
-        my (@versions, @quantities);
+    my (@versions, @quantities);
 
-        # For now mirror the JS precisely. Note: Multiple labels of the
-        # same name are allowed and treated as different versions.
-        for my $i (0 .. $#qty) {
-          next if ! $qty[$i];
-          my $name    = $name[$i];
-          my $qty     = int($qty[$i]);
+    # For now mirror the JS precisely. Note: Multiple labels of the
+    # same name are allowed and treated as different versions.
+    for my $i (0 .. $#qty) {
+      next if ! $qty[$i];
+      my $name    = $name[$i];
+      my $qty     = int($qty[$i]);
 
-          next unless $qty > 0;
+      next unless $qty > 0;
 
-          my $percent = ($qty / $total) * 100;
+      my $percent = ($qty / $total) * 100;
 
-          if ($name and $percent and ceil($percent) > 0) {
-            push @versions,   $name => $percent;
-            push @quantities, $name => $qty;
-          }
-        }
-		print STDERR "STORE FOR Printing Servcie: START MV @versions \n";
-        $specs->{versions}           = join(',', @versions);
-        $specs->{version_quantities} = join(',', @quantities); # For UI
-
-		$specs->{s0_black_mv} = 'on' if ref $specs->{s0_black_mv} eq 'ARRAY';
-		$specs->{s1_black_mv} = 'on' if ref $specs->{s1_black_mv} eq 'ARRAY';
-		
-
+      if ($name and $percent and ceil($percent) > 0) {
+        push @versions,   $name => $percent;
+        push @quantities, $name => $qty;
+      }
     }
+    #print STDERR "STORE FOR Printing Servcie: START MV @versions \n";
+    $specs->{versions}           = join(',', @versions);
+    $specs->{version_quantities} = join(',', @quantities); # For UI
 
-    return $specs;
+    $specs->{s0_black_mv} = 'on' if ref $specs->{s0_black_mv} eq 'ARRAY';
+    $specs->{s1_black_mv} = 'on' if ref $specs->{s1_black_mv} eq 'ARRAY';
+  }
+
+  return $specs;
 }
-
 
 sub preaction {
     my ($log, $dbh, $pid, $sid, $service_type, $specs) = @_;
@@ -141,20 +137,14 @@ sub preaction {
             # If any template specifications are present for this service we
             # should insert them now.
             if (exists $template{$name}{specs}) {
-                insert_service_specs(
-                    $log, $dbh, $pid, $sid, %{ $template{$name}{specs} }
-                );
+                insert_service_specs( $log, $dbh, $pid, $sid, %{ $template{$name}{specs} });
             }
         }
 
         # As we've changed a bunch of project services and specs out from
         # under the user we'll reset their removal statuses to indicate they
         # should check it over again before removing it again or not.
-        $dbh->do(q{ UPDATE tbl_project_contents
-                    SET ysnremoved = FALSE
-                    WHERE ysnremoved = TRUE
-                      AND lngprojectindex = ?
-        }, undef, $pid);
+        $dbh->do(q{ UPDATE tbl_project_contents SET ysnremoved = FALSE WHERE ysnremoved = TRUE AND lngprojectindex = ?  }, undef, $pid);
     }
 
     return 1;
@@ -173,7 +163,6 @@ sub action {
   $openprint::log->debug("Spread type in action: $spread_type");
 
   print STDERR "Invalid multipage project $pid book:$book spread type: $spread_type\n" unless $book && $spread_type;
-
 
   # If we're cover spreads there can only be one of us so we're done.
   return if $spread_type eq COVER;
@@ -208,14 +197,12 @@ sub action {
   # SIGNATURES
   #
   # Get all signatures of our type (excluding us) and those not completed.
-  my @signatures = grep { $_ != $sid } 
-  signatures_of_type($log, $dbh, $pid, $spread_type);
-
-  my @unfinished = grep { get_status($log, $dbh, $_) ne 'calculated' }
-  @signatures;
+  my @signatures = grep { $_ != $sid } signatures_of_type($log, $dbh, $pid, $spread_type);
+  my @unfinished = grep { get_status($log, $dbh, $_) ne 'calculated' } @signatures;
 
   my $needed   = get_specifications($log, $dbh, $pid, $book, $spread_type);
   my $current  = count_completed_spreads($log, $dbh, $spread_type, $pid, $sid);
+  #FIXME: Not sure about the || 1
   my $provided = $specs->{spreads_in_group} * ($specs->{txtSignatureQuantity} || 1);
 
   $current += $provided;
@@ -231,8 +218,7 @@ sub action {
 
     $log->warn("Too many spreads in p:$book while processing s:$sid\n");
   } elsif ($current < $needed) {
-    # We still need signatures, add a new one unless another unfinished
-    # one already exists.
+    # We still need signatures, add a new one unless another unfinished one already exists.
     insert_signature($log, $dbh, $pid, $book, $sid, $specs) unless @unfinished;
   } else {
     # Just right. We can remove any unfinished signatures there might be.
@@ -243,66 +229,70 @@ sub action {
 }
 
 sub insert_signature {
-    my ($log, $dbh, $pid, $book, $template, $specs) = @_;
+  my ($log, $dbh, $pid, $book, $template_sid, $specs) = @_;
 
-    my @fields = qw( txtSignatureType txtSignatureSize 
-                     txtSpreadWidth txtSpreadHeight );
-    my %signature;
-    @signature{@fields} = @$specs{@fields};
+  $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Form'};
+  my ( $form ) = sql::execute( $log, $dbh, $_, $pid );
+  $form  = $form ? $form+1 : 1;
 
-    # Insert a new signatue
-    my $sid = insert_service($log, $dbh, $pid, 'Printing', { user_requested => 1 }, \%signature);
+  $openprint::log->error("SIg specs: ".Data::Dumper::Dumper($specs));
+  my @fields = qw( txtSignatureType txtSignatureSize txtSpreadWidth txtSpreadHeight );
+  my %signature;
+  @signature{@fields} = @$specs{@fields};
+  $signature{Form} = $form;
 
-    # Update the signature number TODO Get rid of this legacy nonsense.
-    insert_service_spec($log, $dbh, $pid, $sid, SignatureIndex => $sid);
+  # Insert a new signatue
+  my $sid = insert_service($log, $dbh, $pid, 'Printing', { user_requested => 1 }, \%signature);
+
+  # Update the signature number TODO Get rid of this legacy nonsense.
+  insert_service_spec($log, $dbh, $pid, $sid, SignatureIndex => $sid);
+
+  # Only copy the user specified fields and no overrides.
+  my $prev = $dbh->selectall_hashref(q`SELECT strname AS name, strvalue AS value, 1 AS nodelete, ui_spec AS ui
+    FROM tbl_service_specifications
+    WHERE lngserviceindex = ?
+    AND ui_spec = true 
+    AND strname !~ '^override'
+    AND strname NOT IN ( 'press', 'runstyle', 'substrate', 'spreads_in_group', 'spreads', 'forms' )
+    AND strname !~ '^txtSignatureQ'
+    `, 'name', {}, $template_sid);
+
+  $openprint::log->error("PREV $template_sid".Data::Dumper::Dumper($prev));
+  #my $ptd = $dbh->selectall_hashref(q{ SELECT strfieldname as name, strdefaultvalue as value FROM tbl_projecttype_defaults WHERE lngprojecttypeindex IS NULL }, 'name');
+  #my %defaults = map { $_ => $ptd->{$_}{value} } keys %$ptd;
+  #foreach my $k (keys %$prev) {
+  #$defaults{$k} = $$prev{$k};
+  #}
+  $openprint::log->error("Defaults: $sid ".Data::Dumper::Dumper(\$prev));
+  openprint::service::insert_service_specs($pid, $sid, $prev);
+
+  # If there's a numbered description, update to next.
+  if ($specs->{txtServiceDescription} =~ /(\d+)$/) {
+    my $count = $1 + 1;
+
+    my $name = $specs->{txtServiceDescription};
+    $name =~ s/\d+$/$count/;
+
+    insert_service_spec($log, $dbh, $pid, $sid, txtServiceDescription => $name);
+  }
+
+  #ICON: This is bad as you know.  
+  # Override the press to the same as other signatures of this type.
+  # This is done to ensure a consistant look and registration of the
+  # final project.
+  #insert_service_spec($log, $dbh, $pid, $sid, press          => $specs->{press}, undef, 1);
+  #insert_service_spec($log, $dbh, $pid, $sid, override_press => 1,               undef, 1);
 
 
-    # Only copy the user specified fields and no overrides.
-    $dbh->do(qq{
-        INSERT INTO tbl_service_specifications 
-            (lngprojectindex, lngserviceindex, strname, strvalue, ui_spec)
-            ( SELECT lngprojectindex, $sid, strname, strvalue, ui_spec
-              FROM tbl_service_specifications
-              WHERE lngserviceindex = ?
-                AND ui_spec = true 
-                AND strname !~ '^override'
-                AND strname NOT IN ( 'press', 'runstyle', 'substrate', 
-                                     'spreads_in_group', 'spreads', 'forms' )
-                AND strname !~ '^txtSignatureQ')
-    }, undef, $template);
+  # 'DETAILED' MODE
+  #
+  # 'Detailed' mode sets a kludgy flag to stop calculation until the
+  # display() function removes the flag (meaning a user has seen it).
+  if ($specs->{spreads} || $specs->{forms}) {
+    insert_service_spec($log, $dbh, $pid, $sid, needs_view => 1, undef, 1);
+  }
 
-    my $ptd = $dbh->selectall_hashref(q{ SELECT strfieldname as name, strdefaultvalue as value FROM tbl_projecttype_defaults WHERE lngprojecttypeindex IS NULL }, 'name');
-
-    my %defaults;
-    map { $defaults{$_} = $ptd->{$_}{value} } keys %$ptd;
-    insert_service_specs($log, $dbh, $pid, $sid, %defaults);
-
-    # If there's a numbered description, update to next.
-    if ($specs->{txtServiceDescription} =~ /(\d+)$/) {
-        my $count = $1 + 1;
-
-        my $name = $specs->{txtServiceDescription};
-           $name =~ s/\d+$/$count/;
-
-        insert_service_spec($log, $dbh, $pid, $sid, txtServiceDescription => $name);
-    }
-
-    # Override the press to the same as other signatures of this type.
-    # This is done to ensure a consistant look and registration of the
-    # final project.
-    insert_service_spec($log, $dbh, $pid, $sid, press          => $specs->{press}, undef, 1);
-    insert_service_spec($log, $dbh, $pid, $sid, override_press => 1,               undef, 1);
-
-
-    # 'DETAILED' MODE
-    #
-    # 'Detailed' mode sets a kludgy flag to stop calculation until the
-    # display() function removes the flag (meaning a user has seen it).
-    if ($specs->{spreads} || $specs->{forms}) {
-        insert_service_spec($log, $dbh, $pid, $sid, needs_view => 1, undef, 1);
-    }
-
-    return $sid;
+  return $sid;
 }
 
 1;

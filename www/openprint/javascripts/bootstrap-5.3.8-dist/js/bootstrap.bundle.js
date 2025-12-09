@@ -736,6 +736,10 @@
   };
   const SelectorEngine = {
     find(selector, element = document.documentElement) {
+      if (!Element.prototype.querySelectorAll) {
+          console.log("Selector Engine no querySeleectorAll", new Error().stack, Element.prototype);
+          return [];
+      }
       return [].concat(...Element.prototype.querySelectorAll.call(element, selector));
     },
     findOne(selector, element = document.documentElement) {

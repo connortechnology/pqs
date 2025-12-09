@@ -1,10 +1,19 @@
 "use strict";
 
+function check_name(element) {
+  $j.get('stock.json', {
+    action: 'find',
+    name: element.value,
+    'id !=': element.form.elements['id']
+    });
+}
+
 function check_price( element ) {
 	const form = element.form;
-  const matches = element.name.match( /^\w+\-(\d+)$/ );
+  const matches = element.name.match( /^\w+\-(\d*)$/ );
 	if (matches) {
 		const id = matches[1];
+    console.log(id);
 		if ( 
 			element_changed( form.elements['discountable-'+id] ) ||
 			element_changed( form.elements['price-'+id] ) ||
@@ -14,12 +23,12 @@ function check_price( element ) {
 			element_changed( form.elements['units-'+id] ) ||
 			element_changed( form.elements['equipment_id-'+id] ) 
 		   ) {
-			$('paperprice-'+id).addClassName('changed');
+			$j('#paperprice-'+id).addClass('changed');
 		} else {
-			$('paperprice-'+id).removeClassName('changed');
+			$j('#paperprice-'+id).removeClass('changed');
 		} // end if
 	} else {
-		alert('Not matched' + element.name);
+		console.log('Not matched' + element.name);
 	} // end if
 }
 
@@ -32,6 +41,14 @@ function basis_weight_to_gsm( form ) {
 
 	const gsm = Math.round((basis_weight/1000)/(basis_width*basis_height)*70306450)/100;
 	form.elements['gsm'].value = gsm;
+  const type = get_value( form.elements['type'] );
+  console.log(type);
+  if (type == 'Envelope') {
+    console.log("Can't auto calc for envelopes");
+    //gsm *= 2;
+    //return;
+  }
+
 	form.elements['mweight'].value = Math.round((gsm/703064.5)*(width*height)*100000)/100;
 	form.elements['wpsi'].value = gsm / 703064.5;
 	recalc_prices( form );
@@ -55,10 +72,13 @@ function mweight_to_gsm( form ) {
 	form.elements['gsm'].value = gsm;
 	form.elements['wpsi'].value = gsm / 703064.5;
 
-	//const basis_mweight = Math.round(wpsi*(width*height)*100000)/100;
-	const basis_width = parseFloat(1*form.elements['basis_width'].value);
-	const basis_height = parseFloat(1*form.elements['basis_height'].value);
-	form.elements['basis_mweight'].value = Math.round( (gsm / 703064.5) * basis_width *basis_height *1000);
+  const type = get_value( form.elements['type'] );
+  if (type != 'Envelope') {
+    //const basis_mweight = Math.round(wpsi*(width*height)*100000)/100;
+    const basis_width = parseFloat(1*form.elements['basis_width'].value);
+    const basis_height = parseFloat(1*form.elements['basis_height'].value);
+    form.elements['basis_mweight'].value = Math.round( (gsm / 703064.5) * basis_width *basis_height *1000);
+  }
 	recalc_prices( form );
 }
 
@@ -67,8 +87,11 @@ function gsm_to_mweight( form ) {
 	const basis_height = parseFloat(1*form.elements['basis_height'].value);
 	const gsm = parseFloat(1*form.elements['gsm'].value);
 	const wpsi = gsm/703064.5;
-	const basis_mweight = Math.round(wpsi*(basis_width*basis_height)*1000);
-	form.elements['basis_mweight'].value = basis_mweight;
+  const type = get_value( form.elements['type'] );
+  if (type != 'Envelope') {
+    const basis_mweight = Math.round(wpsi*(basis_width*basis_height)*1000);
+    form.elements['basis_mweight'].value = basis_mweight;
+  }
 
 	const width = parseFloat(1*form.elements['width'].value);
 	const height = parseFloat(1*form.elements['height'].value);
@@ -233,3 +256,51 @@ function calc_price( element ) {
 		} // end if
 	} // end if
 } // end function
+//
+function stock_type_change(input) {
+  if (input.value=='Sheet'){
+    $j('#StockHeight').show();
+    $j('#MWeight').show();
+    $j('#QuantityPerPackageUnits').html('sheets');
+    $j('#MinimumOrderUnits').html('sheets');
+    $j('.multipart').show();
+    $j('.doublesided').show();
+    $j('.cuttable').show();
+  } else if (input.value == 'Envelope' ) {
+    $j('#StockHeight').show();
+    $j('#MWeight').show();
+    $j('.multipart').hide();
+    $j('.doublesided').hide();
+    $j('.cuttable').hide();
+    $j('#QuantityPerPackageUnits').html('envelopes');
+    $j('#MinimumOrderUnits').html('envelopes');
+  } else if (input.value == 'Roll' ) {
+    $j('#StockHeight').hide();
+    $j('#BasisSize').show();
+    $j('#MWeight').hide();
+    $j('#QuantityPerPackageUnits').html('lbs');
+    $j('#MinimumOrderUnits').html('lbs');
+    $j('.multipart').hide();
+    $j('.doublesided').show();
+    $j('.cuttable').hide();
+  } else {
+    alert('Unknown stock type');
+  }
+}
+
+function calliper_onchange(element) {
+  console.log('calliper_onchange');
+  const form = element.form;
+  if (element.name == 'calliper_pt') {
+    form.elements['calliper'].value = element.value/1000;
+    form.elements['calliper_mm'].value = do_decimals(element.value*0.0254,3);
+  } else if (element.name == 'calliper_mm') {
+    form.elements['calliper'].value = do_decimals( element.value*0.0393701, 4 );
+    form.elements['calliper_pt'].value = do_decimals( element.value*39.3701, 1 );
+  } else if (element.name == 'calliper') {
+    form.elements['calliper_pt'].value = element.value*1000;
+    form.elements['calliper_mm'].value = do_decimals(element.value*25.4,3);
+  } else {
+    console.log("No match");
+  }
+}

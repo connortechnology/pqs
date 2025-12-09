@@ -307,13 +307,10 @@ sub display_project {
   my $is_multipage = $variable->{is_multipage} = is_multipage($log, $dbh, $pid);
   my $press_type   = $variable->{press_type}   = get_press_type($log, $dbh, $pid);
 
-  @$variable{qw(ProjectTypeID ProjectTypeName)} = get_type($log, $dbh, $pid);
+  my $type = $project->Type();
+  @$variable{qw(ProjectTypeID ProjectTypeName)} = ($type->id(), $type->name());
 
   my $project_type = $variable->{ProjectTypeID};
-
-  my ($project_name, $project_type_url) = $dbh->selectrow_array(qq{
-    SELECT strname, strurl FROM tbl_projecttypes WHERE strid = ?
-    }, undef, $project_type);
 
   my $has_locked_services = $variable->{is_fixed_price} = has_locked_services($dbh, $pid);
 
@@ -337,8 +334,7 @@ sub display_project {
     $stock_price = eprint::project::sig_stock_prices($log, $dbh, $pid);
   } else {
   # Otherwise we need the final totals for display.
-    @$variable{qw(stock_price1 stock_price2 stock_price3)} =
-    stock_price($log, $dbh, $pid);
+    @$variable{qw(stock_price1 stock_price2 stock_price3)} = stock_price($log, $dbh, $pid);
   }
 
   #loads the change orders
@@ -375,12 +371,13 @@ sub display_project {
 
       if ($is_multipage) {
         # Signature information.
-        my ($name, $spread_size, $spread_qty, $qty, $run_style, $rows, $cols)
+        my ($name, $spread_size, $spread_qty, $qty, $run_style, $rows, $cols, $runs)
         = get_specifications($log, $dbh, $pid, $print->{id},
           qw( txtServiceDescription
           txtSignatureSize       spreads_in_group
           txtSignatureQuantity   runstyle
           hdnImpositionRows      hdnImpositionColumns
+          hdnNumRuns
           ));
 
         # The signature name is a composite of it's description, the
@@ -400,18 +397,23 @@ sub display_project {
         $print->{name} .= " - $run_style" unless $press_type eq 'web';
 
         $pages = ($pages > 1) ? "${pages}pg"  : '';
+        $runs //= 1;
+        $qty *= $runs;
         $qty   = ($qty   > 1) ? "&#215; $qty" : '';
+
         $n_out = ($n_out > 1) ? "$n_out-out"  : '';
 
         my $desc = '- ' . join(q{ }, (grep { $_ } $pages, $n_out, $qty));
 
         $print->{name} .= " $desc" if length $desc > 2;
       } else {
+        my $specs = openprint::service::get_specs_ref($pid, $print->{id});
         # Get the string representation of the press. TODO: Really there should be a utility function for this.
         my $sth = $dbh->prepare_cached(q{ SELECT strname FROM tbl_equipment_type WHERE strid = ? });
         my $press_type_name = $dbh->selectrow_array( $sth, undef, $variable->{PressType});
         # The project and press type become our display name.
         $print->{name} = "$variable->{ProjectTypeName} &#8211; $press_type_name";
+        $print->{name} .= (($$specs{hdnNumRuns} > 1) ? ' x '.$$specs{hdnNumRuns} : '');
       }
 
       return $print;

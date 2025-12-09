@@ -246,8 +246,6 @@ sub calc {
 
             foreach my $imposition (@impositions) {
 
-				print STDERR "HAVE IMPOSTION", Dumper($imposition);
-
 
 				($imp_over, $width, $height)  = eprint::equipment::bindery_imp($imp_over, $specs);
 
@@ -260,8 +258,6 @@ sub calc {
                     my $equipment_type = $dbh->selectrow_array(q{
                         SELECT strtype FROM tbl_equipment WHERE lngindex = ?
                     }, undef, $eid);
-
-					print STDERR "PRICE EQUIPMENT $eid $equipment_type \n";
 
                     next EQUIPMENT unless eprint::equipment::equipment_fits(
                             $log, $dbh, $eid, $width, $height, $calliper

@@ -137,7 +137,8 @@ sub no_service_dependencies {
 	my $log = session::log;
 
 	my $pid = $self->{id};
-	my $project_type = eprint::project::get_type($log, $dbh, $pid);
+  my $project = openprint::Project->find_one(id=>$pid);
+	my $project_type = $project->type() if $project;
 
 	return 1 if $project_type eq 'NoPrint';
 	

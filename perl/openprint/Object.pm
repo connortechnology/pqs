@@ -7,6 +7,7 @@ require openprint;
 require sets;
 require openprint::Object_Type;
 require openprint::Log;
+require Scalar::Util;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
@@ -208,7 +209,7 @@ sub save {
 							) );
 			}
 		} else {
-			$log->debug('No data after set');
+			$log->debug('No data in save');
 		}
 	} # end if DEBUG
 
@@ -377,7 +378,7 @@ sub get {
 } # end sub get
 
 sub changes {
-	my ( $self, $params ) = @_;
+	my ( $self, $params, @ignore ) = @_;
 
 	my $type = ref $self;
 	if ( ! $type ) {
@@ -392,7 +393,10 @@ $log->warn('Object::changes called on an object with no fields');
 	#my %defaults = eval('%'.$type.'::defaults');
 	my @results;
 
-	foreach my $field ( sort keys %$fields ) {
+  my @fields_to_check = keys %$fields;
+  @fields_to_check = sets::exclude(\@ignore, \@fields_to_check) if @ignore;
+
+	foreach my $field ( sort @fields_to_check ) {
 		if ( ! exists $$params{$field} ) {
 			$log->debug("$field does not exist in params") if $debug;
 			next;
@@ -407,19 +411,33 @@ $log->warn('Object::changes called on an object with no fields');
 			}
 		} else {
       my $newvalue = $self->transform($field=>$$params{$field});
-      if ( $$self{$field} ne $newvalue ) {
-        if ( $field eq 'password' ) {
-          push @results, "$field changed";
+      if (Scalar::Util::looks_like_number($$self{$field}) and Scalar::Util::looks_like_number($newvalue)) {
+        if ( $$self{$field} != $newvalue ) {
+          if ( $field eq 'password' ) {
+            push @results, "$field changed";
+          } else {
+            push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$newvalue.'\'';
+          }
         } else {
-          push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$newvalue.'\'';
-        }
+          if ( $debug ) {
+            $log->debug("$field eq $$self{$field} to $newvalue");
+          }
+        } # end if
       } else {
-        if ( $debug ) {
-          $log->debug("$field eq $$self{$field} to $newvalue");
-        }
-      } # end if
-		} # end if
-	} # end foreach field
+        if ( $$self{$field} ne $newvalue ) {
+          if ( $field eq 'password' ) {
+            push @results, "$field changed";
+          } else {
+            push @results, $field.' changed from \''.$$self{$field}.'\' to \''.$newvalue.'\'';
+          }
+        } else {
+          if ( $debug ) {
+            $log->debug("$field eq $$self{$field} to $newvalue");
+          }
+        } # end if
+      } # end if looks like a number
+    } # end if
+  } # end foreach field
 	return @results;
 }
 sub set_no_defaults {
@@ -489,10 +507,10 @@ sub set {
 $log->debug("field: $field, param: ".(defined $$params{$field} ? $$params{$field} : 'undef')) if $debug;
 		if ( exists $$params{$field} ) {
 $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$field}) if $debug;
-			if ( ( ! defined $$self{$field} ) or (!defined($$params{$field})) or ($$self{$field} ne $params->{$field}) ) {
+			if ( (!defined $$self{$field}) or (!defined($$params{$field})) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
 				if ( defined $fields{$field} ) {
-					$$self{$field} = $$params{$field} if defined $fields{$field};
+					$$self{$field} = $$params{$field};
 					push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
 				} # end if
 $openprint::log->debug("Running $field with $$params{$field}") if $debug;
@@ -502,15 +520,10 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 			} # end if
 		} # end if
 
-		if ( defined $fields{$field} ) {
-			if ( $$self{$field} ) {
-				$$self{$field} = transform($type, $field, $$self{$field});
-			} # end if $$self{field}
-		}
+		$$self{$field} = transform($type, $field, $$self{$field}) if $$self{$field} and $fields{$field};
 	} # end foreach field
 
 	foreach my $field ( keys %defaults ) {
-
 		if ( ( ! exists $$self{$field} ) or (!defined $$self{$field}) or ( $$self{$field} eq '' ) ) {
 			$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 			if ( defined $defaults{$field} ) {

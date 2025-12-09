@@ -8,7 +8,7 @@ use constant DEBUG=>0;
 my $cutters = 0;
 
 use Data::Dumper;
-$Data::Dumper::Sortkeys = 1;
+
 use Compress::LZF         qw(:compress :freeze);
 use Storable              qw(freeze);
 use List::Util            qw(sum);
@@ -60,6 +60,7 @@ use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *r = \$openprint::r;
 my $variable = \%variable;
 
+my $global_iterator;
 
 use base qw(Exporter);
 our @EXPORT      = 'calc';
@@ -92,9 +93,10 @@ Readonly my %BINDERY_CLASS => (
 
   Cerlox          => 'Spiral',
   DoubleLoopWire  => 'Spiral',
+  PlasticCoil     => 'Spiral',
   MetalCoil       => 'Spiral',
   '3HolePunch'   	=> 'Spiral',
-  'SingleHole'   	=> 'Spiral',
+  SingleHole   	=> 'Spiral',
   CornerStitching => 'Spiral',
   Proclick     	=> 'Spiral',
 );
@@ -330,7 +332,7 @@ sub get_project_price {
   my %paper = %{ $spread->{stock} };
 
   # Colour bars and ignoring margins don't mix.
-  if ($project->{override}{margin}) { $project->{colour_bar} = 0 }
+  $project->{colour_bar} = 0 if $project->{override}{margin};
 
   # Envelope projects get an image width the same size as the envelope.
   if ($project->{type} eq 'Envelopes') {
@@ -461,6 +463,11 @@ sub get_project_price {
   $total_imp = scalar @$impositions if TIMINGS;
 
   foreach $imp (@$impositions) {
+    #$openprint::log->debug("$imp " . ref $imp);
+    if (!($imp and ref $imp eq 'eprint::impositionObject')) {
+      $openprint::log->error(Data::Dumper::Dumper($imp));
+      next;
+    }
     $$imp{specs} = $specs;
     if ( $openprint::r ) {
       $openprint::r->print("");
@@ -599,7 +606,7 @@ sub get_project_price {
       #$log->debug("Has no cutting") if DEBUG;
     } # end if
         
-    if ( 1 and $$project{HasProofs} ) {
+    if ($$project{HasProofs}) {
       my $Press = new openprint::Equipment($press);
       # Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
       my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $Project->ServiceType($$project{HasProofs}), $$project{ProofsSpecs}, $sig_specs, 1,
@@ -607,8 +614,8 @@ sub get_project_price {
         undef, #Totals,
         $imposition );
       $price{'Comparison Cost'} += $sig_count * $Results{total};
-      $openprint::log->debug("Proofs pricing: $Results{total} * $sig_count");
-      $openprint::log->error("Proofs alert $Results{alert}") if $Results{alert};
+      #$openprint::log->debug("Proofs pricing: $Results{total} * $sig_count");
+      #$openprint::log->error("Proofs alert $Results{alert}") if $Results{alert};
       #$$price{'Comparison Log'} .= 'proofs for ' . $sig_count . 'sigs. '. $sig_count * $Results{Total} . ' total: ' . $$price{ComparisonCost} . '<br/>' if COMPARISON_LOG;
       #$$price{'Proofs Breakdown'} .= $Results{Breakdown};
     } # end if
@@ -853,19 +860,16 @@ sub get_project_price {
   # already gotten this early, just save it then instead of refetching.
   my $press     = get_equipment($dbh, $best_price->{press});
 
-  my $substrate = $best_price->{paper}{id};
-  $$best_price{substrate} = $substrate;
+  my $substrate = $$best_price{substrate} = $best_price->{paper}{id};
 
   # Get the substrates for the press, sort them, and serialize the list.
-  $best_price->{sheet_sizes} = join q{_} =>
-  map  { join q{,} => $_->{id},                                # ID
+  $best_price->{sheet_sizes} = join '_' =>
+  map  { join ',' => $_->{id},                                # ID
     (join 'x' => $_->{width}, $_->{height}), # (W x H)
     ($substrate eq $_->{id})                 # Checked
   }
   sort { $a->{width} <=> $b->{width} || $a->{height} <=> $b->{height} }
-  map  { fit_to_press($_, $press)                                     }
-  @{ get_substrates($dbh, $project) };
-  $openprint::log->debug("Sheet sizes: ".Data::Dumper::Dumper($best_price->{sheet_sizes}));
+  map  { fit_to_press($_, $press) } @{ get_substrates($dbh, $project) };
 
   $best_price->{press} = $press->{id};
 
@@ -933,7 +937,7 @@ sub fill_price_hash {
   # Imposition
   $price->{imp}                 = $imp;
 
-  $price->{hdnGrainDirection} = $price->{grain_direction}   = $price->{grainDirection} = $imp->{grain_direction};
+  $price->{grain_direction} = $price->{hdnGrainDirection} = $price->{grainDirection} = $imp->{grain_direction};
 
   $price->{txtImageWidth}       = $imp->{image_width};
   $price->{txtImageHeight}      = $imp->{image_height};
@@ -1081,12 +1085,16 @@ sub create_impositions {
       }
     }
     @impositions = @converted_impositions;
-  } else {
-    $openprint::log->debug("No desired size: $desired_size");
+    #} else {
+    #$openprint::log->debug("No desired size: $desired_size");
   }
 
+  #print STDERR "HAVE IMPOS.TIONS BEFORE FILTER 99 " . scalar @impositions . "\n", Dumper(\@impositions);
+  #@impositions = grep { $_->{setup} > 0 } @impositions;
+  $openprint::log->debug( "HAVE IMPOSITIONS TOTAL " . scalar @impositions) if DEBUG;
+
   return \@impositions;
-}
+} # end sub create_impositions
 
 sub post_process {
   my ($log, $dbh, $pid, $sid, $press_type, $project, $remaining_spreads, $specs) = @_;
@@ -1302,7 +1310,7 @@ sub calc_print_price {
   }
   if (scalar(keys %lay_count) > 1 ) {
     #$price{reject_mv_layout} = 1; #icon disable as it seems to simply reject anything with more than 1 sig
-    print STDERR "versions REJECT MV LAYOUT \n", Dumper(\%lay_count);
+    print STDERR "versions REJECT MV LAYOUT \n", Dumper(\%lay_count) if DEBUG;
   } else {
     #print STDERR "versions PASS MV LAYOUT \n";
   }
@@ -2197,13 +2205,10 @@ sub get_run_price {
     $log->error( "PRINTING: FATAL ERROR: Could Not Get 'Number of Colours' for Press: $press");
     return %run_price;
   }
-  my $impression_service =
-  $is_perfecting ? 'ColourImpressionPerfecting' : 'ColourImpression';
+  my $impression_service = $is_perfecting ? 'ColourImpressionPerfecting' : 'ColourImpression';
   if ( $press_type ne 'web' && $is_perfecting && $side_two_colours ) {
     my $s = $side_one_colours.'-'.$side_two_colours . $impression_service;
-    $running_price =
-    eprint::service::get_price($log, $dbh, $variable,$s,
-      $press_sheets, $press);
+    $running_price = eprint::service::get_price($log, $dbh, $variable,$s, $press_sheets, $press);
 
     # $log->error("1: Could not Find Impression Price For Service: $s on Press: $press Qty Range: $press_sheets") if ( $running_price == 0 );
 
@@ -2217,43 +2222,34 @@ sub get_run_price {
       my $s = $run_colours . $impression_service;
 
       if ( $full_runs ) {
-        $running_price = eprint::service::get_price($log, $dbh, $variable,
-          $s, $press_sheets, $press) * $full_runs;
+        $running_price = eprint::service::get_price($log, $dbh, $variable, $s, $press_sheets, $press) * $full_runs;
 
         # $log->error("2: Could not Find Impression Price For Service: $s on Press: $press Qty Range: $press_sheets Run Price: $running_price ") if ( $running_price == 0 );
-
       }
 
       my $mod_colours = $side_one_colours % $max_colours;
       if ($mod_colours) {
         $s =  $mod_colours . $impression_service;
-        my $m_price = eprint::service::get_price($log, $dbh, $variable,
-          $s, $press_sheets, $press);
-
+        my $m_price = eprint::service::get_price($log, $dbh, $variable, $s, $press_sheets, $press);
         # $log->error("3:. Could not Find Impression Price For Service: $s on Press: $press Qty Range: $press_sheets") if ( $m_price == 0 );
-
         $running_price += $m_price;
       }
+      $openprint::log->error("1 Running price = $running_price $s on $press") if !$running_price;
     }
 
     if ($side_two_colours) {
       my $full_runs   = int($side_two_colours / $max_colours);
-      my $run_colours =
-      $side_two_colours > $max_colours ? $max_colours : $side_two_colours;
-      $running_price +=
-      eprint::service::get_price($log, $dbh, $variable,
-        $run_colours . $impression_service,
-        $press_sheets, $press) * $full_runs;
-      my $mod_colours = $side_two_colours % $max_colours;
-      if ($mod_colours) {
-        $running_price +=
-        eprint::service::get_price($log, $dbh, $variable,
-          $mod_colours . $impression_service,
-          $press_sheets, $press);
-      }
-      if ($side_one_colours) {
-        $running_price /= 2;
-
+      my $run_colours = $side_two_colours > $max_colours ? $max_colours : $side_two_colours;
+      my $side_two_running_price = eprint::service::get_price($log, $dbh, $variable, $run_colours . $impression_service, $press_sheets, $press);
+      $running_price += $side_two_running_price * $full_runs;
+      if (!$side_two_running_price) {
+        $openprint::log->error("No Side 2 running price for $run_colours $impression_service $press_sheets $press = $side_two_running_price");
+      } else {
+        my $mod_colours = $side_two_colours % $max_colours;
+        if ($mod_colours) {
+          $running_price += eprint::service::get_price($log, $dbh, $variable, $mod_colours . $impression_service, $press_sheets, $press);
+        }
+        $running_price /= 2 if $side_one_colours;
       }
     }
   }
@@ -2269,41 +2265,22 @@ sub get_run_price {
         $variable, 'DischargeUnderbase', $press_sheets)) * $sides;
   }
 
-
-  if ($side_one_colours > $max_colours or $side_two_colours > $max_colours) {
-    $run_price{'MultiPass Run'} = 1;
-
-  }
-  else {
-    $run_price{'MultiPass Run'} = 0;
-  }
+  $run_price{'MultiPass Run'} = ($side_one_colours > $max_colours or $side_two_colours > $max_colours) ? 1 : 0;
 
   # Now work out the press run speed.
   my ($std_speed, $run_speed) = (0, 0);
-  $std_speed = eprint::equipment::get_specification(
-    $log, $dbh, 'Press Standard Run Speed', '', $press
-  );
+  $std_speed = eprint::equipment::get_specification($log, $dbh, 'Press Standard Run Speed', '', $press);
 
   # There will be no additional runspeed for envelopes at all and they will
   # not use the additional runspeed for non-envelopes.
   if ($project_type eq 'Envelopes') {
-    $run_speed = eprint::equipment::get_specification(
-      $log, $dbh, 'Envelope Run Speed Override', '', $press
-    );
+    $run_speed = eprint::equipment::get_specification($log, $dbh, 'Envelope Run Speed Override', '', $press);
+  } else {
+    $run_speed = eprint::equipment::get_specification($log, $dbh, 'Press Additional Run Speed', $paper_calliper, $press);
   }
-  else {
-    $run_speed = eprint::equipment::get_specification(
-      $log, $dbh, 'Press Additional Run Speed', $paper_calliper, $press
-    );
-  }
-  if ($std_speed and $run_speed) {
-
-    $running_price *= ($std_speed / $run_speed);
-
-  }
+  $running_price *= ($std_speed / $run_speed) if ($std_speed and $run_speed);
   $run_price{'Impression Price'} = $running_price;
   $run_price{'Run Speed'} = $run_speed ? $run_speed : $std_speed;
-
 
   return %run_price;
 }
@@ -2502,8 +2479,7 @@ sub calc_sheet_qty {
   # by the number of press sheets.
   my $over_range = $net_sheets;
   my $over_rate =
-  eprint::equipment::get_specification($log, $dbh, 'Press Run Overs',
-    $over_range, $press);
+  eprint::equipment::get_specification($log, $dbh, 'Press Run Overs', $over_range, $press);
 
   $over_rate = $run_overs_OR if $run_overs_OR ne '';
   my $run_overs = ceil($net_sheets * $over_rate);

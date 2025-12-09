@@ -52,20 +52,25 @@
                                 <?ByCubicle?><br />
 								<?CCITYPROV?><br/>
                                 <?ByPostalCode?><br />
-								<? if ( $$variable{'ByPhone'} ) ?>T:<?ByPhone?><? if ( $$variable{'ByExtension'} ) ?> &nbsp;Ext. <?ByExtension?><? endif ( $$variable{'ByExtension'} ) ?><br /><? endif ( $$variable{'ByPhone'} ) ?>
-								<? if ( $$variable{'ByFax'} ) ?>F:<?ByFax?><br /><? endif ( $$variable{'ByFax'} ) ?>
+                                <? if ( $$variable{'ByPhone'} ) ?>T: <a href="tel:<?ByPhone?>"><?echo( format_telephone( $$variable{ByPhone} ); ) ?></a>
+                                <? if ( $$variable{'ByExtension'} ) ?> &nbsp;Ext. <?ByExtension?><? endif ( $$variable{'ByExtension'} ) ?><br /><? endif ( $$variable{'ByPhone'} ) ?>
+                                <? if ( $$variable{'ByFax'} ) ?>F: <?echo( format_telephone( $$variable{ByFax} ); ) ?>?><br /><? endif ( $$variable{'ByFax'} ) ?>
 								<?ByEmail?><br />
 								</address>
 						</td>
 						<td><address><?ForSalutation?> <?ForFirstName?> <?ForLastName?><br />
 								<?ForCompanyName?><br />
-								<? if ( $$variable{'ForAddress1'} ) ?><?ForAddress1?>, <? endif ( $$variable{'ForAddress1'} ) ?>
-								<? if ( $$variable{'ForAddress2'} ne '' ) ?><?ForAddress2?>, <? endif ( $$variable{'ForAddress2'} ne '' ) ?>
+                <?echo(join(', ', (
+          ($$variable{'ForAddress1'} ? $$variable{'ForAddress1'} : () ),
+          ($$variable{'ForAddress2'} ? $$variable{'ForAddress2'} : () ),
+          ));)?>
+
                                 <?ForCubicle?><br />
                                 <?FCITYPROV?> <br />
                                 <?ForPostalCode?><br />
-								<? if ( $$variable{'ForPhone'} ) ?>T: <?ForPhone?><? if ( $$variable{'ForExtension'} ) ?> &nbsp;Ext. <?ForExtension?><? endif ( $$variable{'ForExtension'} ) ?><br /><? endif ( $$variable{'ForPhone'} ) ?>
-								<? if ( $$variable{'ForFax'} ) ?>F: <?ForFax?><br /><? endif ( $$variable{'ForFax'} ) ?>
+                                <? if ( $$variable{'ForPhone'} ) ?>T: <a href="tel:<?ForPhone?>"><?echo( format_telephone($$variable{ForPhone}); )?></a>
+                                <? if ( $$variable{'ForExtension'} ) ?> &nbsp;Ext. <?ForExtension?><? endif ( $$variable{'ForExtension'} ) ?><br /><? endif ( $$variable{'ForPhone'} ) ?>
+                                <? if ( $$variable{'ForFax'} ) ?>F: <?echo(format_telephone($$variable{ForFax}); )?>?><br /><? endif ( $$variable{'ForFax'} ) ?>
 								<?ForEmail?><br />
 								</address>
 					</td>
@@ -86,20 +91,17 @@
 					  </tr>
 					</thead>
 					<tbody>
-						
-                         
-                         <?loop attachedProjects?>
+            <?loop attachedProjects?>
 							<tr>
 								<!-- <? if (($$variable{index} == $$variable{lastindex}) && (! ($$variable{_last})))?>class="project"<?endif (($$variable{index} == $$variable{lastindex}) && (! ($$variable{_last})))?>>  -->
 								
-                                <td>
-                                
+                <td>
 									<table>
-        	<tr><td style="text-align:left !important;border:none !important;" width="600px">
+                    <tr><td style="text-align:left !important;border:none !important;" width="600px">
                                     
-                                    <? if ( $$variable{'ResellerForEndUser'} ne 'Y')?>
+                     <? if ( $$variable{'ResellerForEndUser'} ne 'Y')?>
 										 <a href="<?siteURL?>/main/proj/view.html?Issue_Cookie=true&ProjectIndex=<?HeaderInfo.id?>">
-									<? endif ( $$variable{'ResellerForEndUser'} ne 'Y')?>
+									  <? endif ( $$variable{'ResellerForEndUser'} ne 'Y')?>
                                     
           <em><Strong><?HeaderInfo.id?> - <?HeaderInfo.reference?></Strong></em> <? if ( $$variable{'ResellerForEndUser'} ne 'Y')?> </a><? endif ( $$variable{'ResellerForEndUser'} ne 'Y')?>
 		<?if ( $variable->{status} ne 'Complete' ) ?>
@@ -157,15 +159,10 @@
           </td></tr>
            <?endif not:is_invoice?>
            
-         
-           
-           
          <tr><td style="text-align:left !important;border:none !important;">
           <?dockethash.Shipping.html?>
           </td></tr>
           </table>
-										
-									
 								</td>
 								<?eval( my $id = 'PROJECT_PRICES_' . $variable->{pid}; $variable->{proj} = $variable->{$id} ) ?>
 

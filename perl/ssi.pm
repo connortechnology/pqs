@@ -39,7 +39,7 @@ use vars qw( $r %variable %session %page_session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *config = \%openprint::config;
 *r = \$openprint::r;
-$dbh = session::dbh;
+*dbh = \$openprint::dbh;
 
 # If set to 1, SSI will die on keys that don't exists, otherwise we silently
 # ignore them.
@@ -258,12 +258,10 @@ sub do_new_substitution {
         my $loop = $1;
 
         # Allow the loop name to be in the foo.bar.baz form.
-        my $array = ($loop =~ /\./) ? dereference($log, $variable, $loop)
-                                    : $variable->{$loop};
+        my $array = ($loop =~ /\./) ? dereference($log, $variable, $loop) : $variable->{$loop};
 
         # Convert a hash into an array of hashes.
         $array = [ map { { key => $_, value => $array->{$_} } } keys %$array ] if ref $array eq 'HASH';
-
 
         # Following the other structures the loop gets terminated by an
         # 'endloop' directive.
@@ -304,8 +302,7 @@ sub do_new_substitution {
             $variable->{"_last_$loop"}  = (@$array == $i+1);
             $i++;
 
-            $replace .= variable_substitution( $r, $log, $dbh,
-                                               $inside_tag, $variable );
+            $replace .= variable_substitution( $r, $log, $dbh, $inside_tag, $variable );
         }
 
         return $replace . variable_substitution( $r, $log, $dbh,
@@ -630,7 +627,7 @@ sub select_options {
 	my $col1 	= shift;
 	my $col2 	= shift;
 	
-	my $dbh = session::dbh;
+  #my $dbh = $openprint::dbh;
 
 	my $sql = qq{SELECT $col1, $col2 FROM $table order by $col2};
 	my $data = $dbh->selectall_arrayref($sql);
@@ -644,6 +641,7 @@ sub select_options {
 # what should be pairs, a SINGLE value to select, and an option maximum label
 # length.
 sub make_drop_down {
+  return openprint::ssi::make_drop_down(@_);
 	require HTML::Entities;
 	my ( $data, $checkval, $options ) = @_;
 	$options = {} if ! $options;
@@ -670,6 +668,8 @@ sub make_drop_down {
   for (my $i = 0; $i < @{$data}; $i++) {
     my $value;
     my $label;
+    #$log->debug(ref $data);
+    #$log->debug(ref $$data[$i]);
     if ( ref $$data[$i] eq 'ARRAY' ) {
       my $row = $$data[$i];
       $value = $$row[0];
@@ -801,7 +801,7 @@ sub getmonths {
 
     # Either the month is a valid selection or it's not defined (for just
     # populating the drop box).
-    die "Selected month must be between 1 and 12\n"
+    $log->error("Selected month $selected must be between 1 and 12")
         unless  (not defined $selected or $selected eq '') or ($selected >= 1 && $selected <= 12);
 
     $months .= sprintf qq|<option value="%02d"%s>%s</option>\n|,
@@ -890,8 +890,9 @@ sub get_dates {
 
 
 sub get_start_end_dates {
-    my ( $log, $dbh, $variable, $startYear, $startMonth, $startDay, $endYear,
-         $endMonth, $endDay ) = @_;
+    my ( $log, $dbh, $variable,
+      $startYear, $startMonth, $startDay,
+      $endYear, $endMonth, $endDay ) = @_;
 
     my @current_date = localtime(time);
 
@@ -953,8 +954,6 @@ sub get_start_end_dates {
 sub hash_link {
   my ( $path ) = @_;
 
-  my $r = session::r;
-  my $log = session::log;
   my $skin_path = $r->dir_config('SkinPath');
 
   my $src;
@@ -1088,8 +1087,6 @@ sub checked {
 sub button {
   my ( $name, $options ) = @_;
 
-  my $r = session::r;
-  my $log = session::log;
   if ( $$options{href} ) {
     my ( $href ) = $$options{href} =~ /^([^\?]+)/;
     #if ( ! ( $href =~ /^\// ) ) {
@@ -1368,6 +1365,23 @@ sub format_datetime {
   return $_[0] ? Date::Format::time2str( $format, Date::Parse::str2time( $_[0] ) ) : $_[1];
 } # end sub format_datetime
 
+sub format_telephone {
+  my $number = shift;
+  $number =~ s/\D//g;
+  if (length($number) == 12) {
+    $number =~ s/(\d{2})(\d{3})(\d{3})(\d{4})/+$1 ($2) $3-$4/;
+  } elsif (length($number) == 11) {
+    $number =~ s/(\d)(\d{3})(\d{3})(\d{4})/+$1 ($2) $3-$4/;
+  } elsif (length($number) == 10) {
+    # Format as (XXX) XXX-XXXX
+    $number =~ s/(\d{3})(\d{3})(\d{4})/($1) $2-$3/;
+  } elsif (length($number) == 7) {
+    # Format as XXX-XXXX
+    $number =~ s/(\d{3})(\d{4})/$1-$2/;
+  }
+  return $number;
+}
+
 sub format_time {
   return $_[0] ? Date::Format::time2str('%H:%M', Date::Parse::str2time($_[0])) : '';
 } # end sub format_time
@@ -1502,38 +1516,7 @@ sub date_select {
 } # end sub date_select
 
 sub date_filter {
-  my ( $field, $sql_field, $hash ) = @_;
-  $sql_field = $field if ! $sql_field;
-  if ( ! $hash ) {
-    $hash = \%openprint::session;
-    #$log->debug('ssi::date_filter: using session for hash');
-  } # end if
-    #foreach my $k ( keys %$hash ) {
-      #$log->debug("ssi::date_filter hash{$k} => $$hash{$k}");
-    #} # end foreach
-  if ( ! ( $$hash{$field.'_year'} and $$hash{$field.'_month'} and $$hash{$field.'_day'} ) ) {
-#$log->debug("ssi::date_filter: No date specified for $field");
-    return ();
-  } # end if
-  my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
-#$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
-  if ( $field =~ /end$/ ) {
-    $hour = 23 if ( ! defined $hour ) or $hour eq '';
-    $minute = 59 if ( ! defined $minute ) or $minute eq '';
-    $second = 59 if ( ! defined $second ) or $second eq '';
-  } else {
-    $hour = 0 if ( ! defined $hour ) or $hour eq '';
-    $minute = 0 if ( ! defined $minute ) or $minute eq '';
-    $second = 0 if ( ! defined $second ) or $second eq '';
-  } # end if
-#$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
-
-  my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
-  my $datetime = DateTime->new( time_zone => $TZ,
-      ( year => $year, month=>$month, day=>$day, hour=>$hour, minute=>$minute, second=>$second )
-      );
-
-  return ( $sql_field, $parser->format_datetime( $datetime ) );
+  return openprint::ssi::date_filter(@_);
 } # end sub date_filter
 
 sub datetime_select {
@@ -1630,6 +1613,9 @@ sub write_override {
   } # end if
 } # end sub write_override
 
+sub writeTip {
+  return openprint::ssi::writeTip(@_);
+}
 
 1;
 __END__

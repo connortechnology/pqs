@@ -1,0 +1,18 @@
+.offers_credit, 
+.credit_card_fee,
+.csr_commission,
+.company_category {
+  display: none;
+}
+.TradeReference {
+  clear: both;
+}
+
+fieldset {
+  margin: 1ex;
+}
+
+fieldset div {
+  float: none;
+  display: block;
+}

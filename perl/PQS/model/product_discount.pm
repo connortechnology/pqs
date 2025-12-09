@@ -12,7 +12,6 @@ use Data::Dumper;
 
 sub insert {
 	my @row = @_;
-print STDERR "HAVE ROW: ", Dumper(@row);
 	my $dbh = session::dbh;
 	$dbh->do(q{Insert INTO product_discount VALUES ( ?, ?, ?, ? ) }, undef, @row);
 }
@@ -42,8 +41,6 @@ sub get_discount {
 		SELECT discount FRom product_discount WHERE product = ? 
 		AND (min <= ? OR min is NULL ) AND (MAX >= ? OR MAX is NULL) 
 	}, undef, $product,  $q, $q );
-
-	print STDERR "VERSIOINS ", Dumper($product, $q, $d );
 
 	return $d;
 }

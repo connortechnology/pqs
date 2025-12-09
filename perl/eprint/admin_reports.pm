@@ -490,6 +490,7 @@ sub project_report {
             tbl_projects.lngcustomerid             AS customer,
             tbl_projects.lngprojectindex           AS pid,
             substr(strprojectreference, 0, 50)     AS reference,
+            intquantity1                           AS q1,
             strcompanyname                         AS company,
             TO_CHAR(dtmcreationdate, 'mm/dd/yyyy') AS creationdate,
 	    strstatus				   AS status
@@ -1747,14 +1748,15 @@ sub initialise_drop_downs {
     my ( $r, $log, $dbh, $variable ) = @_;
 
     require ssi;
+    my @current_date = localtime(time);
     ssi::get_start_end_dates(
         $log, $dbh, $variable,
         $r->param('ddmStartYear')  || undef,
         $r->param('ddmStartMonth') || undef,
-        $r->param('ddmStartDay')   || undef,
+        $r->param('ddmStartDay')   || $current_date[3],
         $r->param('ddmEndYear')    || undef,
         $r->param('ddmEndMonth')   || undef,
-        $r->param('ddmEndDay')     || undef,
+        $r->param('ddmEndDay')     || $current_date[3],
     );
 
     my ($start) = configuration::get_value($log, $dbh, 'startYear') || 2003;

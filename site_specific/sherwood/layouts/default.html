@@ -13,48 +13,10 @@
     <link href="/base_css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 
     <?include(/includes/web_page_meta.html)?>
-    <?include(/includes/h1-main-css.html)?>
-
-    <script src="<?hash_link(/openprint/javascripts/logger.js)?>"></script>
-
-    <!--<script src="<?hash_link(/javascripts/detect.js)?>"></script>-->
-    <!--<script src="<?hash_link(/javascripts/other.js)?>"></script>-->
-
     <link href="<?hash_link(/styles/products.css)?>" rel="stylesheet" type="text/css" media="screen" />
-    <? echo ( do_css_links( $$variable{uri} ); ) ?>
-    <style type="text/css">
-		/* Nav  Tabs */
-
-		#nav #home:hover, #nav #home.sfhover {background-color: transparent;}
-		#homeAdmin, #accountTab, #projectTab {display: none;}	
-
-		/* Panels */
-
-		#main-panel .one-third .panel {padding-bottom: 3ex;}
-		
-		#main-panel .two-thirds .panel {border: 0;}
-		#main-panel .two-thirds .panel p {text-align: left;}
-
-		#main-panel .one-third .panel form {
-			display: block;
-			width: 80%;
-			margin: auto;
-			text-align: left;
-		}
-
-		#main-panel .one-third .panel input {width: 100%;}
-		#main-panel .one-third .panel .button-bar input {width: auto;}
-		
-		#registration h1 { background-color: #1D23F4; padding: 0.5em; border-bottom: 1px solid #0B0D60; }
-		
-		#registration h1 a:link {color: #FFFFFF;}
-		#registration h1 a:visited {color: #FFFFFF;}
-		#registration h1 a:hover {color:#AACCFF;}
-		#registration h1 a:active {color:#AACCFF;}
-
-		#pqs-logo { display: block; }
-
-    </style>
+    <!--<link href="<?hash_link(/base_css/common.css)?>" rel="stylesheet" type="text/css" media="screen" />-->
+    <!--<link href="<?hash_link(/styles/common.css)?>" rel="stylesheet" type="text/css" media="screen" />-->
+    <?include(/includes/h1-main-css.html)?>
   </head>
   <body>
     <?include(/includes/c1-main-nav.html)?>
@@ -72,11 +34,12 @@
 	
 	  <?include(/includes/f2-main.html)?>
     <script src="/javascripts/jquery-3.7.1.min.js"></script>
+    <script src="<?hash_link(/openprint/javascripts/logger.js)?>"></script>
     <script src="/openprint/javascripts/bootstrap-table-1.23.5/bootstrap-table.min.js"></script>
     <script src="/openprint/javascripts/chosen/chosen.jquery.js"></script>
     <link href="/openprint/javascripts/chosen/chosen.css" rel="stylesheet" type="text/css" />
 
-    <script src="/javascripts/prototype.js"></script>
+    <script src="<?hash_link(/openprint/javascripts/prototype.js)?>"></script>
     <!--<script src="/javascripts/menu.js"></script>-->
     <script src="<?hash_link(/javascripts/form_utilities.js)?>"></script>
     <script src="<?hash_link(/javascripts/window.js)?>"></script>

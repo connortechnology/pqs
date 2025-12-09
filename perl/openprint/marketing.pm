@@ -325,7 +325,7 @@ sub subscriptions {
       if (!$User->id()) {
         if ($User->email()) {
           my $Company = new openprint::Company();
-          $Company->save({name=>$User->email(), activation=>$config{NewCustomerAccountActivation}});
+          $Company->save({name=>$User->email(), activated=>$config{NewCustomerAccountActivation}});
           $variable{error} .= $User->save({company_id=>$Company->id()});
           if (!$variable{error}) {
             openprint::login::login($User);
@@ -387,7 +387,7 @@ sub subscriptions {
       } # end if not logged in
       if (!$User->id()) {
         my $Company = new openprint::Company();
-        $Company->save({name=>$User->email(), activation=>$config{NewCustomerAccountActivation}});
+        $Company->save({name=>$User->email(), activated=>$config{NewCustomerAccountActivation}});
         $variable{error} .= $User->save({email=>$param{email}, company_id=>$Company->id(), password=>$param{password}});
         if (!$variable{error}) {
           openprint::login::login($User);

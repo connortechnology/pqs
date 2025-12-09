@@ -46,60 +46,57 @@
     <p>Only logged in customers have a quote history.</p>
   <? else ( $$variable{'user_id'} == 0 ) ?>
 
-										<form name="f1" id="f1" action="">
-											<fieldset>
-												<legend>
-													Search
-												</legend>
+  <form name="f1" id="f1" action="">
+    <input type="hidden" name="btnFunction" />
+    <fieldset>
+      <legend> Search </legend>
 
-												<p class="none">&nbsp;</p>
+      <p class="none">&nbsp;</p>
 
-                        <label for="QuoteID">Quote ID</label>
-                        <? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){this.form.submit();};` ); ) ?>
-                        <br/>
+      <label for="QuoteID">Quote ID</label>
+      <? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){this.form.submit();};` ); ) ?>
+      <br/>
 
+      <label for="ddmQuotedFor">Quoted for:</label>
+      <select id="ddmQuotedFor" name="ddmQuotedFor" size="1">
+        <option value=""> Quoted For </option>
+        <?ddmQuotedForOptions?>
+      </select>
+      <br />
 
-												<label for="ddmQuotedFor">Quoted for:</label>
-												<select id="ddmQuotedFor" name="ddmQuotedFor" size="1">
-													<option value=""> Quoted For </option>
-													<?ddmQuotedForOptions?>
-												</select>
-												<br />
-	
-												<label for="ddmStartMonth">Start Date:</label>
-												<select id="ddmStartMonth" name="ddmStartMonth">
-													<?ddmStartMonth?>
-												</select>
-												<select name="ddmStartDay">
-													<?ddmStartDay?>
-												</select>
-												<select name="ddmStartYear">
-													<?ddmStartYear?>
-												</select>
-												<br />
-	
-												<label for="ddmEndMonth">End Date:</label>
-												<select id="ddmEndMonth" name="ddmEndMonth">
-													<?ddmEndMonth?>
-												</select>
-												<select name="ddmEndDay">
-													<?ddmEndDay?>
-												</select>
-												<select name="ddmEndYear">
-													<?ddmEndYear?>
-												</select>
-												<br />
-	
-												<div class="button-bar indent-regular">
-													<input type="reset" class="button" value="Reset" />
-													<input type="submit" class="button" value="Show Results" />
-													<br />
-													</div>
-												<br />
-											</fieldset>
+      <label for="ddmStartMonth">Start Date:</label>
+      <select id="ddmStartMonth" name="ddmStartMonth">
+        <?ddmStartMonth?>
+      </select>
+      <select name="ddmStartDay">
+        <?ddmStartDay?>
+      </select>
+      <select name="ddmStartYear">
+        <?ddmStartYear?>
+      </select>
+      <br />
 
-<? if ( @{$$variable{QUOTES}} == 0 ) ?>
-<? if ( sets::isin($session{user_type}, ['A','E']) and $param{QuoteID} ) ?>
+      <label for="ddmEndMonth">End Date:</label>
+      <select id="ddmEndMonth" name="ddmEndMonth">
+        <?ddmEndMonth?>
+      </select>
+      <select name="ddmEndDay">
+        <?ddmEndDay?>
+      </select>
+      <select name="ddmEndYear">
+        <?ddmEndYear?>
+      </select>
+      <br />
+
+      <div class="button-bar indent-regular">
+        <input type="reset" class="button" value="Reset" />
+        <input type="submit" class="button" value="Show Results" />
+        <br />
+        </div>
+      <br />
+    </fieldset>
+
+<? if ( @{$$variable{QUOTES}} == 0 and sets::isin($session{user_type}, ['A','E']) and $param{QuoteID} ) ?>
 <? eval (
   @{$$variable{Quotes}} = openprint::Quote->find( 'id like' => '%'.$param{QuoteID}.'%' ) if $param{QuoteID};
 ) ?>
@@ -152,80 +149,76 @@
    return $html;
 ) ?>
     </table>
-  <? endif ( @{$$variable{Quotes}} > 0 ) ?>
-  <? endif ( sets::isin($session{user_type}, ['A','E']) and $param{QuoteID} ) ?>
-<? else ( @{$$variable{QUOTES}} == 0 ) ?>
+   <? endif ( @{$$variable{Quotes}} > 0 ) ?>
+<? else ( @{$$variable{QUOTES}} == 0 and sets::isin($session{user_type}, ['A','E']) and $param{QuoteID} ) ?>
 <fieldset>
-              <legend>
-													Quote History
-												</legend>
+  <legend> Quote History </legend>
 
-												<p class="none">&nbsp;</p>
+  <p class="none">&nbsp;</p>
 
-												<? if ( @{$$variable{'QUOTES'}} == 0 ) ?>
-													<p>There are no quotes which match your search criteria.</p>
-												<? else ( @{$$variable{'QUOTES'}} == 0 ) ?>
-	
-													<p>Please click on a <strong> Quote ID # </strong> to view its details. <br />
-													To delete quotes from history check the appropriate quote(s) and click delete.</p>
+  <? if ( @{$$variable{'QUOTES'}} == 0 ) ?>
+    <p>There are no quotes which match your search criteria.</p>
+  <? else ( @{$$variable{'QUOTES'}} == 0 ) ?>
 
-													<table cellpadding="0" cellspacing="0" border="0">
-														<tr>
-															<th>Quote ID</th>
-															<th>Project</th>
-															<th>Date</th>
-															<th>Quoted For</th>
-															<th>Total 1</th>
-															<th>Total 2</th>
-															<th>Total 3</th>
-															<th><input class="button right" type="button" value="Delete" onclick="delete_confirm(f1);" /></th>
-														</tr>
-	
-														<? while ( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice @{$$variable{'QUOTES'}},0,7; ) ?>
-	
-															<tr>
-																<td style="text-align: left;"><a href="/main/quote/quote_history_details.html?quote_id=<?quote_id?>"><?quote_id?></a></td>
-																<td style="text-align: left;"><? loop projects ?><a href="/main/proj/view.html?ProjectIndex=<?pid?>"><?pid?>  <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
-																<td style="text-align: center;"><?date?></td>
-																<td style="text-align: left;"><?name?></td>
-																<td style="text-align: right;"><?CurrencySymbol?><?total1?></td>
-																<td style="text-align: right;"><?CurrencySymbol?><?total2?></td>
-																<td style="text-align: right;"><?CurrencySymbol?><?total3?></td>
-																<td style="text-align: center;"><input type="checkbox" name="chkDelete<?quote_id?>" class="checkbox" /></td>
-															</tr>
-	
-															<?if( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice(@{$$variable{QUOTES}},0,7) ) ?>
-	
-																<tr class="colRow">
-																	<td style="text-align: left;"><a href="/main/quote/quote_history_details.html?quote_id=<?quote_id?>"><?quote_id?></a></td>
-																	<td style="text-align: left;"><? loop projects ?><a href="/main/proj/view.html?ProjectIndex=<?pid?>"><?pid?>  <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
-																	<td style="text-align: center;"><?date?></td>
-																	<td style="text-align: left;"><?name?></td>
-																	<td style="text-align: right;"><?CurrencySymbol?><?total1?></td>
-																	<td style="text-align: right;"><?CurrencySymbol?><?total2?></td>
-																	<td style="text-align: right;"><?CurrencySymbol?><?total3?></td>
-																	<td style="text-align: center;"><input type="checkbox" name="chkDelete<?quote_id?>" class="checkbox" /></td>
-																</tr>
-															<?endif( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice(@{$$variable{QUOTES}},0,7) ) ?>
-														<? endwhile ( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice @{$$variable{'QUOTES'}},0,7; ) ?>
+    <p>Please click on a <strong> Quote ID # </strong> to view its details. <br />
+    To delete quotes from history check the appropriate quote(s) and click delete.</p>
 
-														<tr class="no-formatting">
-															<td colspan="8">&nbsp;</td>
-														</tr>
+    <table cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <th>Quote ID</th>
+        <th>Project</th>
+        <th>Date</th>
+        <th>Quoted For</th>
+        <th>Total 1</th>
+        <th>Total 2</th>
+        <th>Total 3</th>
+        <th><input class="button right" type="button" value="Delete" onclick="delete_confirm(f1);" /></th>
+      </tr>
 
-														<tr class="no-formatting align-right">
-															<td colspan="8" class="align-right">All prices listed in <?CurrencyName?>.</td>
-														</tr>
-													</table>
-												<? endif ( @{$$variable{'QUOTES'}} == 0 ) ?>
+      <? while ( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice @{$$variable{'QUOTES'}},0,7; ) ?>
 
-												<input type="hidden" name="btnFunction" />
-												<br />
-											</fieldset>
-										</form>
-                                    <? endif ( $$variable{'user_id'} == 0 ) ?>
-                                    <!--#include virtual="/includes/f1-main.html" -->
-                                        <!--#include virtual="/includes/main/account.html" -->
-                                        <!--#include virtual="/includes/f2-main.html" -->
+        <tr>
+          <td style="text-align: left;"><a href="/main/quote/quote_history_details.html?quote_id=<?quote_id?>"><?quote_id?></a></td>
+          <td style="text-align: left;"><? loop projects ?><a href="/main/proj/view.html?ProjectIndex=<?pid?>"><?pid?>  <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
+          <td style="text-align: center;"><?date?></td>
+          <td style="text-align: left;"><?name?></td>
+          <td style="text-align: right;"><?CurrencySymbol?><?total1?></td>
+          <td style="text-align: right;"><?CurrencySymbol?><?total2?></td>
+          <td style="text-align: right;"><?CurrencySymbol?><?total3?></td>
+          <td style="text-align: center;"><input type="checkbox" name="chkDelete<?quote_id?>" class="checkbox" /></td>
+        </tr>
+
+        <?if( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice(@{$$variable{QUOTES}},0,7) ) ?>
+
+          <tr class="colRow">
+            <td style="text-align: left;"><a href="/main/quote/quote_history_details.html?quote_id=<?quote_id?>"><?quote_id?></a></td>
+            <td style="text-align: left;"><? loop projects ?><a href="/main/proj/view.html?ProjectIndex=<?pid?>"><?pid?>  <?reference?></a><?if not:_last?><br /><?endif not:_last?><? endloop projects ?></td>
+            <td style="text-align: center;"><?date?></td>
+            <td style="text-align: left;"><?name?></td>
+            <td style="text-align: right;"><?CurrencySymbol?><?total1?></td>
+            <td style="text-align: right;"><?CurrencySymbol?><?total2?></td>
+            <td style="text-align: right;"><?CurrencySymbol?><?total3?></td>
+            <td style="text-align: center;"><input type="checkbox" name="chkDelete<?quote_id?>" class="checkbox" /></td>
+          </tr>
+        <?endif( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice(@{$$variable{QUOTES}},0,7) ) ?>
+      <? endwhile ( @$variable{'quote_id','date','name','total1','total2','total3','projects'} = splice @{$$variable{'QUOTES'}},0,7; ) ?>
+
+      <tr class="no-formatting">
+        <td colspan="8">&nbsp;</td>
+      </tr>
+
+      <tr class="no-formatting align-right">
+        <td colspan="8" class="align-right">All prices listed in <?CurrencyName?>.</td>
+      </tr>
+    </table>
+  <? endif ( @{$$variable{'QUOTES'}} == 0 ) ?>
+
+</fieldset>
+<? endif ( @{$$variable{QUOTES}} == 0 and sets::isin($session{user_type}, ['A','E']) and $param{QuoteID} ) ?>
+</form>
+  <? endif ( $$variable{'user_id'} == 0 ) ?>
+  <!--#include virtual="/includes/f1-main.html" -->
+  <!--#include virtual="/includes/main/account.html" -->
+  <!--#include virtual="/includes/f2-main.html" -->
 </body>
 </html>

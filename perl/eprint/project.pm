@@ -681,6 +681,8 @@ sub get_finished_calliper {
         );
     }
 
+    my $Project = new openprint::Project($pid);
+    $project_type = $Project->type() if ! $project_type;
     $project_type = get_type($log, $dbh, $pid) unless $project_type;
 
     my @signatures = check_for_service($log, $dbh, $pid, 'Printing');

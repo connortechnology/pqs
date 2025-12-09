@@ -69,16 +69,16 @@ sub save_service {
 	$log->error($@) if $@;
 	my @variables = eval( $module.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
-$log->debug("variables: @variables");
+$log->debug("variables: @variables") if Debug;
 # We cannot lock tbl_service_specifications or tbl_project_contents.  Just too nasty.  So use tbl_Projects as the contention point.
 	# make this fast by doing it in one transaction, locking does the tranasaction for us
 	$Project->lock();
 	my @changes;
   my @deleted_specs;
 	foreach my $key ( sort { $a cmp $b } @variables) {
-$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
+$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})") if Debug;
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
+$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})") if Debug;
 		} elsif ( ! exists $openprint::param{$key} ) {
       push @deleted_specs, $key;
 		} else {
@@ -101,7 +101,7 @@ $log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 	$Project->add_to_log(@openprint::session{'company_id','user_id'}, $service_type. ' service saved: '.join('<br/>', @changes));
   $Project->save({build=>1});
 
-	$log->debug('***** END  OF  save_service ************');
+	$log->debug('***** END OF save_service ************');
 } # end sub save_service
 
 sub get_specifications {
@@ -193,16 +193,40 @@ sub insert_service_spec {
 			sql::execute( $log, $dbh, $_, $project_index, $service_index, $name );
 		} # end if
 		sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-					'lngProjectIndex',	$project_index,
-					'lngServiceIndex',	$service_index,
-					'strName',			$name,
-					'strValue',			$value,
+					lngProjectIndex =>	$project_index,
+					lngServiceIndex =>	$service_index,
+					strName =>			$name,
+					strValue =>			$value,
           ui_spec         => ($ui_spec || 0)
       ] );
 	#} # end if
 	$specs_cache{$service_index}{$name} = $value;
   return 1;
 } # end sub insert_service_spec
+
+sub insert_service_specs {
+  my $pid = shift;
+  my $sid = shift;
+  if (@_ == 1) {
+    my $specs = shift;
+    if ( ref $specs eq 'ARRAY') {
+      foreach my $spec (@$specs) {
+        insert_service_spec($openprint::log, $openprint::dbh, $pid, $sid, $$spec{name}, $$spec{value}, $$spec{nodelete}//0, $$spec{ui});
+      }
+    } elsif ( ref $specs eq 'HASH') {
+      foreach my $spec_name (sort { $a cmp $b } keys %$specs) {
+        my $spec = $$specs{$spec_name};
+        insert_service_spec($openprint::log, $openprint::dbh, $pid, $sid, $$spec{name}, $$spec{value}, $$spec{nodelete}//0, $$spec{ui});
+      }
+    } else {
+      $openprint::log->error("Unknown specs $specs");
+    }
+  } else {
+    foreach my $spec (@_) {
+      insert_service_spec($openprint::log, $openprint::dbh, $pid, $sid, $$spec{name}, $$spec{value}, $$spec{nodelete}//0, $$spec{ui});
+    }
+  }
+}
 
 sub auto_calculate {
 	my ( $Project, $exclude ) = @_;

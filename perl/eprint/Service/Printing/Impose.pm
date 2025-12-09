@@ -50,7 +50,7 @@ sub impositions {
   #print STDERR "HAVE PAPER: $subs PRESSES: $presses \n", Dumper($substrates);
 
   my @styles     = get_runstyles($project);
-  $openprint::log->debug("RS: @styles");
+  #$openprint::log->debug("RS: @styles");
 
   # Inkjet printers don't impose the same way as others (due to tiling being
   # allowed) so currently need a number of special exceptions.
@@ -76,7 +76,7 @@ sub impositions {
     # Get the run styles we can do and sheet sizes that fit on the press.
     my @r = grep { can_print_style($press, $_, $project) } @styles;
     my @s = map  { fit_to_press   ($_,     $press      ) } @$substrates;
-    $openprint::log->debug("HAVE R: ". Dumper(@r). " S: ". Dumper(@s));
+    #$openprint::log->debug("HAVE R: ". Dumper(@r). " S: ". Dumper(@s));
 
     return [] unless @r && @s;
 
@@ -89,7 +89,7 @@ sub impositions {
       return \@out;
     }
 
-    $openprint::log->debug("HAVE SETUP: ". Dumper(\@setup));
+    #$openprint::log->debug("HAVE SETUP: ". Dumper($setup));
 
     # Find the best (if any) imposition for each setup. TODO We try WT/WF
     # that obviously won't work as the image check should be half the
@@ -143,7 +143,7 @@ sub get_presses {
 sub press_ids {
   my ($dbh, $press_type, $rfq_only) = @_;
 
-  my $sql  = 'SELECT lngindex FROM tbl_equipment WHERE TRUE';
+  my $sql  = 'SELECT lngindex FROM tbl_equipment WHERE (useinestimating IS NULL OR useinestimating=true)';
   $sql .= ' AND strtype=?' if $press_type;
   $sql .= " AND strsupplier <> 'RFQ Required'" unless $rfq_only;
   #$openprint::log->error($sql.$press_type);
@@ -240,7 +240,7 @@ sub can_print_project {
     && defined $project->{bind_type}
     && $project->{bind_type} eq 'CornerStitching'
     && ! grep { $_ eq 'CornerStitching' } @{$press->{services}} ) {
-    $$reasons{$$press{id}} = $$press{name} .= ' failed corner stitching test';
+    $$reasons{$$press{id}} = $$press{name} . ' failed corner stitching test';
     return 0;
   }
 
@@ -250,7 +250,7 @@ sub can_print_project {
   # that exactly match the quality rating we are looking for.
 
   if ( (!$project->{product_only}) && $press->{product_only} ) {
-    $$reasons{$$press{id}} = $$press{name} .= ' failed product only test';
+    $$reasons{$$press{id}} = $$press{name} . ' failed product only test';
     return 0;
   }
 

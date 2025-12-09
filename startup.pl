@@ -25,6 +25,7 @@ use Apache2::Cookie ();
 use Apache2::Upload ();
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
+$Data::Dumper::Maxdepth = 2;
 
 # The location of Perl modules for this client.
 use lib '/var/www/pqs/perl';

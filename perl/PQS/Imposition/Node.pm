@@ -6,7 +6,6 @@ our $VERSION = '0.01';
 
 use Object::InsideOut 3.37 qw(Storable);
 use PQS::Imposition::Constants;
-use Data::Dumper;
 use List::Util qw(sum);
 
 my @edges :Field(Get => 'edges'); # Out edges.
@@ -80,7 +79,10 @@ sub add_edge {
         
         # If the parent containes images, the grain should be set to mixed if
         # it's already mixed or if the parent doesn't match the child.
-        $grain[$id] = ($card[$id] && ( !defined $grain[$id] || !defined $grain[$n] || $grain[$id] != $grain[$n] )) ? undef : $grain[$n];
+        $grain[$id] = $card[$id] && (   !defined $grain[$id] 
+                             || !defined $grain[$n] 
+                             || $grain[$id] != $grain[$n] )
+                ? undef : $grain[$n];
         
         # Add the child's rotations plus one if the cut axis is different.
         if (@{ $edges[$n] }) {
@@ -184,25 +186,23 @@ sub work_and {
     # the opposite axis.
     my @size = @{ $self->size };
     $size[$axis] *= 2;
+    #$openprint::log->debug("work_and new size ".join('x', @size));
 
     my $node = PQS::Imposition::Node->new(
         size => \@size,
         cut  => $self->cut,
     );
 
-    # If the mirror/merge axis is parallel to the first cut we simply append
-    # the mirrored copy.
+    # If the mirror/merge axis is parallel to the first cut we simply append # the mirrored copy.
     if ($self->is_sink) {
+      # one out?
         $node->add_edge($self, $self->mirror($axis));
         $cut[$$node] = $axis;
-    }
-    elsif ($axis == $self->cut) {
-        $node->add_edge($_) 
-            for $self->mirror($axis)->children, $self->children;
-    }
-    # Otherwise we'll extend the bounding boxes along the axis and append the
-    # children of those and it's mirrors.
-    elsif ($axis != $self->cut) {
+    } elsif ($axis == $self->cut) {
+        $node->add_edge($_) for $self->mirror($axis)->children, $self->children;
+    } elsif ($axis != $self->cut) {
+      # Otherwise we'll extend the bounding boxes along the axis and append the
+      # children of those and it's mirrors.
         # for my $child ( $self->children ) {
         # 
         #     my @box = @{ $child->size };
@@ -228,8 +228,7 @@ sub work_and {
         # colouring. Eventually we probably want to combine children as above. 
         $cut[ $$node ] = !$cut[ $$node ] || 0;
 
-        $node->add_edge($_) 
-         for $self->mirror($axis), $self;
+        $node->add_edge($_) for $self->mirror($axis), $self;
     }
 
     return $node;
@@ -246,6 +245,11 @@ sub work_and {
 sub compare { # Class method
   my ($n, $p) = @_;
   my ($x, $y) = ($$n, $$p);
+  
+  #if (!(defined $grain[$x] and defined $grain[$y] and  ($grain[$x] == $grain[$y]))) {
+    #$openprint::log->debug("Not Comparing cardinality x:$x size:".join('x', @{$size[$x]})." card:$card[$x] grain: $grain[$x] cuts:$cut[$x] <=> y:$y size:".join('x',@{$size[$y]})." $card[$y] grain: $grain[$y] cuts: $cut[$y] size of array: ".scalar @card);
+    #return undef;
+    #}
 
   if ((defined $grain[$x] and !defined $grain[$y]) or ($grain[$x] != $grain[$y])) {
     #$openprint::log->debug("Not Comparing cardinality x:$x size:$size[$x] $card[$x] grain: $grain[$x] cuts:$cut[$x] <=> y:$y size:$size[$y] $card[$y] grain: $grain[$y] cuts: $cut[$y] size of array: ".scalar @card);

@@ -32,7 +32,7 @@ use constant ID    => 2; # REMOVE - When image is an object.
 use constant BLEED => 3; # REMOVE
 use constant GRAIN => 4; # REMOVE
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 sub get_precision {
   return map {
@@ -75,11 +75,13 @@ sub _init :Init {
   my $max_precision = List::Util::max(get_precision(@$project{qw(width height trim)}));
   $max_precision = 4 if $max_precision < 4;
   $round_to = 1/(10**$max_precision);
+
   # A kludge to handle multi-page books the way they were previously. We do
   # two rounds of imposition, one for each grain direction.
-  my $is_special = $project->{is_multipage} && (!defined $project->{grain} or $project->{grain} eq '');
+  my $is_special = $project->{is_multipage} && (!defined $project->{grain} or $$project{grain} eq '' or $$project{grain} eq 'Mixed');
   my $grain = $is_special ? 0 : $project->{grain};
-  $openprint::log->debug("START PQS IMPOSE 1: ".(Time::HiRes::time() - $start_time)." max precision $max_precision grain:".(defined $grain ? $grain : undef)) if DEBUG;
+
+  $openprint::log->debug("START PQS IMPOSE 1: ".(Time::HiRes::time() - $start_time)." max precision $max_precision is_special: $is_special is_multipage: $$project{is_multipage} grain:".(defined $grain?$grain:'undef')) if DEBUG;
 
   # Incoming grain, can be undef == No preference, 'Mixed', 'Unmixed', 0=>Width, 1=>Heihgt
   #imposition grain has to be either Mixed, 0 or 1
@@ -171,7 +173,6 @@ sub images { # :Private
     $openprint::log->debug("Grain $grain so adding horizcal");
     push @images, [ $h, $w, 0, [ @bleed[R, B, L, T] ], 1 ];
   }
-
   return @images;
 } # end sub images
 
@@ -279,26 +280,34 @@ sub best_fit {
       }
 
       #print STDERR "STEP BEST FIT: $w x $h \n";
-      $w /= 2 if $style eq 'WT'; # Mirrored edge to edge.
-      $h /= 2 if $style eq 'WF'; # Mirrored head to tail.
-
-      # TODO If we're running perfecting and the sheet isn't stiff enough to
-      # hold it's form during a flip, we may need one or more rollers to guide
-      # it. As the ink is wet the roller can't be over printable area.
-      if (!$sheet->{perfecting} and $style eq 'PF') {
+      if ($style eq 'WT') {
+        $w /= 2; # Mirrored edge to edge.
+        #$openprint::log->debug("Want WT new width $w");
+      } elsif ($style eq 'WF') {
+        $h /= 2; # Mirrored head to tail.
+        #$openprint::log->debug("Want WF new hgieht $h");
+      } elsif (!$sheet->{perfecting} and $style eq 'PF') {
+        # TODO If we're running perfecting and the sheet isn't stiff enough to
+        # hold it's form during a flip, we may need one or more rollers to guide
+        # it. As the ink is wet the roller can't be over printable area.
         # We'll need to look at the cutting tree as we'll need vertical cuts and
         # more than one child at the first level so we can guaruntee the roller a
         # clear path.
 
         # If the roller can't be near the middle of the sheet, we can use multiple
         # rollers spaced somewhat evenly across the sheet.
+        #} else { 
+        #$openprint::log->error("Other");
       }
 
       #print STDERR "TIME TO FIND FIT: $w x $h \n";
-      foreach my $node ( $self->find_fit($w, $h, $grain, $rotated, $is_one_up) ) {
-        #$openprint::log->debug("Find fit from $w x $h grain $grain rotated $rotated ".$node->card);
-        $node = $node->work_and(TURN) if $node && $style eq 'WT';
-        $node = $node->work_and(FLOP) if $node && $style eq 'WF';
+      my $nodes = $self->find_fit($w, $h, $grain, $rotated, $is_one_up);
+      #$openprint::log->debug("Nodes to consider".scalar @{$nodes});
+      foreach my $node (@{$nodes}) {
+        #$openprint::log->debug("from Find fit from $w x $h grain $grain rotated $rotated ".$node->card);
+
+        $node = $node->work_and(TURN) if $node && ($style eq 'WT');
+        $node = $node->work_and(FLOP) if $node && ($style eq 'WF');
 
         #print STDERR "STEP BEST FIT: $w x $h \n";
         #print STDERR "ADD NODE TO POSSIBLE LIST \n";
@@ -334,7 +343,7 @@ sub best_fit {
   );
 
   #no warnings qw(uninitialized);
-  #print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ", Dumper(@possible);
+  #print STDERR "SETP BEST FIT: $press->{name}, $style POSSIBLE: ". scalar @possible;
 
   # TEMP: Simple call for now.
   return @best ? (shift @best) : ();
@@ -359,24 +368,29 @@ sub find_fit {
   # constraint (as width and height of the sheet are reversed).
   $rotation = $grain ^ $rotation if defined $grain;
 
-  # TODO Gang-run related stuff.
-
-  #print STDERR "FIND FIT:  $w, $h, $grain, $rotation, $is_one_up \n";
-
   # TODO Handle 1-up earlier so we don't have to do as much work.
   my @nodes = sort {
     $b->card      <=> $a->card        # Max cardinality
   }
   grep {    
+  #$openprint::log->debug("Find fit from $w x $h grain $grain rotated $rotation ".$_->card. " thinggrain: ".$_->grain . "tinwidht ".$_->size->[W].'x'.$_->size->[H] ) if DEBUG;
+
     #print STDERR "FIND FIT NODE: ", Dumper($_->size->[W],  $_->size->[H] ,  $_->grain, $_->card);
     ($_->size->[W] <= $w && $_->size->[H] <= $h) 
-    && (!defined $grain ? 1 
-    :    defined $_->grain 
-    && $_->grain == $rotation)
+    #&& ($_->size->[W] >= $w-2 && $_->size->[H] >= $h-2) 
+    && (!defined $grain ? 1 :    defined $_->grain && $_->grain == $rotation)
     && ($is_one_up ? $_->card == 1 : 1) 
   } @{ $lookup[$$self] };
 
-  return @nodes;
+  if (DEBUG) {
+    for (@nodes) {
+      $openprint::log->debug("Got Find fit from $w x $h grain $grain rotated $rotation ".$_->card . ' on '.join('x', @{$_->size}));
+    }
+  }
+
+
+  return [ splice @nodes, 0, 3 ];
+  return scalar @nodes ? $nodes[0] : undef;
 }
 
 
@@ -410,6 +424,7 @@ sub fill_box :Private {
     # space taken by a large image), will it be less expensive then
     # checking this for every image on every node?
     if ($image->[W] == $box->[W] and $image->[H] == $box->[H]) {
+      $openprint::log->debug("Image $image_size fits on $size");
       push @forest, PQS::Imposition::Node->new(
         size  => $box,
         image => $image->[ID],
@@ -423,7 +438,7 @@ sub fill_box :Private {
     for my $dir (VERTICAL, HORIZONTAL) { # TODO grain override
       my ($bound, $len) = ($box->[$dir], $image->[$dir]); # -| to cut.
 
-      $openprint::log->debug("box $size image size $image_size bound: $bound len:$len dir:$dir");
+      $openprint::log->debug("box $size image size $image_size bound: $bound len:$len dir:$dir") if DEBUG;
       next DIRECTION if $bound == $len;
 
       # Fill the sub-boxes made by paritioning the box.
@@ -459,31 +474,59 @@ sub fill_box :Private {
             next;
           }
 
-          # Can we be compared? If so are we better?
-          # Modified: preserve different orientations and comparable-but-worse nodes.
-          # We only treat a node as an exact duplicate when both size and cut axis
-          # are identical; in that case we compare and may replace the existing one.
-          my $is_exact_duplicate = 0;
+          my $has_similar = 0;
 
-          for my $i (0 .. $#forest) {
-            my $potential = $forest[$i];
-            # If exact same size and same cut axis, compare and possibly replace.
-            # Otherwise preserve both - different cuts/orientations are kept for diversity.
-            if (same_size($node->size, $potential->size) && defined($potential->cut) && defined($node->cut) && $potential->cut == $node->cut) {
-              my $cmp = PQS::Imposition::Node::compare($node, $potential);
-              if (defined $cmp) {
-                # If the new node is better, replace the existing one.
-                if ($cmp > 0) {
-                  $forest[$i] = $node;
-                }
-                $is_exact_duplicate = 1;
-                last;
-              }
+          COMPARISON:
+          for my $potential (@forest) {
+            # The overloaded version of calling the comparison
+            # somehow wasn't seeing private data.
+            #
+            # my $cmp = $node <=> $potential;
+
+            my $cmp = PQS::Imposition::Node::compare($node, $potential);
+
+            if (defined $cmp) {
+              # We're better than the previous in our group.
+              if ($cmp > 0) { $potential = $node; }
+
+              # We've found our group, mark it and we're done.
+              $has_similar = 1;
+              last COMPARISON;
             }
           } # end foreach comparison
 
-          # Add node unless we already handled exact duplicate replacement above.
-          push @forest, $node unless $is_exact_duplicate;
+          # Add us if we're first or no comparable node exists.
+          push @forest, $node if !$has_similar;
+                                       
+          if (0) {
+
+
+            # Can we be compared? If so are we better?
+            # Modified: preserve different orientations and comparable-but-worse nodes.
+            # We only treat a node as an exact duplicate when both size and cut axis
+            # are identical; in that case we compare and may replace the existing one.
+            my $is_exact_duplicate = 0;
+
+            for my $i (0 .. $#forest) {
+              my $potential = $forest[$i];
+              # If exact same size and same cut axis, compare and possibly replace.
+              # Otherwise preserve both - different cuts/orientations are kept for diversity.
+              if (same_size($node->size, $potential->size) && defined($potential->cut) && defined($node->cut) && $potential->cut == $node->cut) {
+                my $cmp = PQS::Imposition::Node::compare($node, $potential);
+                if (defined $cmp) {
+                  # If the new node is better, replace the existing one.
+                  if ($cmp > 0) {
+                    $forest[$i] = $node;
+                  }
+                  $is_exact_duplicate = 1;
+                  last;
+                }
+              }
+            }
+
+            # Add us if we're first or no comparable node exists.
+            push @forest, $node if !$is_exact_duplicate;
+          }
         } # end foreach p
       } # end foreach n
     } # end foreach direction
@@ -491,9 +534,9 @@ sub fill_box :Private {
   # If nothing matched, we're a blank node (represented as undefined).
   @forest = (undef) unless @forest;
   #$openprint::log->debug("$size => ".Data::Dumper::Dumper(\@forest));
-  #foreach my $node ( @forest) {
-  #$openprint::log->debug("forest $size => ".$node->card) if $node;
-#}
+  foreach my $node (@forest) {
+    $openprint::log->debug("forest $size => ".$node->card) if $node;
+  }
 
   return $cache->{$size} = \@forest;
 } # end fill_box
@@ -511,24 +554,25 @@ sub post_process :Private {
   while (my ($size, $nodes) = each %{ $cache }) {
     next if ref $nodes ne 'ARRAY';
 
-    foreach my $node (@$nodes) {
-      #for my $i (0 .. $#{ $nodes }) {
-      #my $node = $nodes->[$i];
+    NODE:
+    for my $i (0..$#{ $nodes }) {
+      my $node = $nodes->[$i];
+      next NODE if !$node; # Skip invalid.
 
-      next if !$node; # Skip invalid.
-
+      my $id = join 'x', @{ $node->size };
+      $openprint::log->debug("Post process " . $node->card . ' '.$id) if DEBUG;
       # Skip through trim nodes (nodes that contain only one other
       # container node to trim off one side).
       $node = ($node->children)[0] while $node->children == 1;
 
       # If the node is an image (leaf) add it to our lookup.
       if ($node->is_sink) {
-        my $id = join 'x', @{ $node->size };
-        if (!$seen{$id}) {
-          $seen{$id} = 1;
-          push @nodes, $node; # Add to valid list.
-        }
-        next;
+        next NODE if $seen{$id};
+
+        $seen{$id} = 1;
+
+        push @nodes, $node; # Add to valid list.
+        next NODE;
       }
 
       # Now we'll look for extraneous white space, both parallel and perpendicular to the initial cut.
@@ -542,16 +586,22 @@ sub post_process :Private {
 
         # Perpendicular _|_.
         my $len_y = 0;
-        for my $grandchild ($child->children) {
-          $len_y += $grandchild->size->[!$dir];
+        if ($child->children) {
+          for my $grandchild ($child->children) {
+            $len_y += $grandchild->size->[!$dir];
+          }
+        } else {
+          $len_y = $child->size->[!$dir];
         }
 
         # Find the largest child perpendicular child.
         $max_y = $len_y if $max_y < $len_y;
+        $openprint::log->debug("Post process child " . $child->card . ' '.join('x', @{$child->size}). " lenx: $len_x len_y: $len_y dir: $dir") if DEBUG;
       }
       $max_y = $node->size->[!$dir] unless $max_y;
 
       my ($width, $height) = $dir ? ($max_y, $len_x) : ($len_x, $max_y);
+      $openprint::log->debug("Post process " . $node->card . ' '.$id. " width: $width height:$height dir:$dir") if DEBUG;
 
       # Now we'll create a new box sized exactly to the nodes.
       if ($len_x < $w || $h > $max_y) {
@@ -580,6 +630,7 @@ sub post_process :Private {
               grain => $child->grain,
             );
             $new->add_edge( $child->children );
+      $openprint::log->debug("Post process create new " . $new->card . ' '.join('x', @{$new->size()})) if DEBUG;
           }
 
           push @children, $new;
@@ -592,12 +643,14 @@ sub post_process :Private {
           grain => $node->grain,
         );
         $new->add_edge( @children );
+      $openprint::log->debug("Post process create new " . $new->card . ' '.join('x', @{$new->size()})) if DEBUG;
 
         # Mark that we've seen this node size (invalid for gang-run).
         $seen{$id} = 1;
 
         # Add whitespace nodes for accurate cutting and mirroring.
         $new->mark_whitespace;
+      $openprint::log->debug("Post process create new " . $new->card . ' '.join('x', @{$new->size()})) if DEBUG;
 
         push @nodes, $new; # Add to valid list.
       }

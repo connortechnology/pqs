@@ -27,7 +27,7 @@
 	<? endif ( $$variable{'rdbBusinessCardSlot'} ne 'None' ) ?>
 
 <? else ( $$variable{'template'} =~ /PresentationFolder/ ) ?>
-	<? if ($$variable{'rdbSuppliedDie'} ne 'Yes') ?>
+	<? if ($$variable{'rdbSuppliedDie'} ne 'Y') ?>
 		<span class="label">Image Size</span>
 		<?txtDieWidth?>x<?txtDieHeight?>"
 	

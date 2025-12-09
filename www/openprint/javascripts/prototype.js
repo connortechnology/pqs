@@ -5875,7 +5875,7 @@ var Insertion = {
   }
 };
 
-var $continue = new Error('"throw $continue" is deprecated, use "return" instead');
+//var $continue = new Error('"throw $continue" is deprecated, use "return" instead');
 
 var Position = {
   includeScrollOffsets: false,

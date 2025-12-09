@@ -119,18 +119,19 @@ sub display {
     $page{stock} = get_paper_options($log, $dbh, $variable, $pid, $sid, $specs);
 
     # Is the user allowed to supply their own stock?
-    $page{can_supply_stock} 
-        = !configuration::get_value($log, $dbh, 'HideSuppliedStock');
-
+    $page{can_supply_stock} = !configuration::get_value($log, $dbh, 'HideSuppliedStock');
 
     # OVERRIDES
-    #
-    # Create and populate the press drowbox.
-    $page{presses} = presses($dbh, $press_type);
 
-    $page{substrate} = substrate_override($dbh, $specs->{substrate})
-        if $specs->{override_substrate};
-
+    if ($specs->{override_substrate}) {
+      $page{substrate} = substrate_override($dbh, $specs->{substrate});
+    } elsif ($$specs{hdnSheetSizeWidth} and $$specs{hdnSheetSizeHeight}) {
+      $page{substrate} = '<option value="'.
+      join('-', $$specs{hdnPaperIndex},
+        ($$specs{hdnSuppliedStockWidth}/$$specs{hdnSheetSizeWidth} > 1 ? 'W'.int($$specs{hdnSuppliedStockWidth}/$$specs{hdnSheetSizeWidth}) : () ),
+        ($$specs{hdnSuppliedStockHeight}/$$specs{hdnSheetSizeHeight} > 1 ? 'H'.int($$specs{hdnSuppliedStockHeight}/$$specs{hdnSheetSizeHeight}) : () ),
+      ).'" selected="selected">'.join('x', @$specs{'hdnSheetSizeWidth','hdnSheetSizeHeight'}).'</option>';
+    }
 
     # LARGE FORMAT
     #
@@ -369,9 +370,12 @@ sub substrate_override {
 
     # The first part of the id is the paper index.  Get the paper
     # dimensions to create the text for the select option.
-    my ($w, $h) = $dbh->selectrow_array(q{
-        SELECT dblWidth, dblHeight FROM tbl_paper WHERE lngindex = ?
-    }, undef, shift @id);
+    my $paper = openprint::Paper->find_one(id=>$id[0]);
+    if (!$paper) {
+      $openprint::log->error("No stock found in system from $substrate $id[0]");
+      return;
+    }
+    my ($w, $h) = $paper->get('width','height');
 
     # The optional second and third parts are the number of cuts along the
     # specified edge of the paper i.e ( W2 | H3 )
@@ -379,7 +383,8 @@ sub substrate_override {
         my $i = shift @id;
         $w /= substr($i,1) if substr($i,0,1) eq 'W';
         $h /= substr($i,1) if substr($i,0,1) eq 'H';
-    }   
+    }
+    #$openprint::log->debug("Got $w x $h from $substrate @$paper{'width','height'}");
 
     # Format the dims the same way they will appear when supplied by the
     # pricing request.
@@ -387,19 +392,7 @@ sub substrate_override {
     $h = (sprintf "%.3f", $h )+0;
 
     # The correctly named option.
-    return qq{<option value="$substrate" selected="selected">$w x $h </option>};
-}
-
-# Creates an HTML <option> list of press IDs/string IDs based on the press
-# type of the supplied project.
-sub presses {
-    my ($dbh, $press_type) = @_; 
-
-    my $presses = $dbh->selectcol_arrayref(q{
-        SELECT lngindex, strid FROM tbl_equipment WHERE strtype = ?
-    }, { Columns => [1,2] }, $press_type);
-
-    return { @$presses };
+    return qq{<option value="$substrate" selected="selected">$w x $h</option>};
 }
 
 1;

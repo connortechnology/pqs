@@ -456,31 +456,6 @@ sub get_spec {
 
 sub insert_service_spec {
   return openprint::service::insert_service_spec(@_);
-
-    my ( $log, $dbh, $pid, $sid, $name, $value, $no_delete, $ui_spec) = @_;
-
-    die "Can't insert spec into service without id" unless $sid;
-
-    if (!$no_delete) {
-        my $sth = $dbh->prepare_cached(qq{
-            DELETE FROM tbl_Service_Specifications 
-            WHERE lngProjectIndex = ?
-              AND lngServiceIndex = ?
-              AND strName         = ?
-        });
-
-        $sth->execute($pid, $sid, $name);
-    }
-    insert($log, $dbh, 'tbl_Service_Specifications',
-            lngProjectIndex => $pid,
-            lngServiceIndex => $sid,
-            strName         => $name,
-            strValue        => $value,
-            ui_spec         => ($ui_spec || 0)
-    );
-    #print STDERR "INSERTING SPECS: $name - $value - $ui_spec \n";
-
-    return 1;
 }
 
 sub insert_service_specs {
@@ -1100,36 +1075,53 @@ sub clean_calc {
 
 
 sub save {
-    my ($log, $dbh, $pid, $sid, $service, $form, $specs) = @_;
+  my ($log, $dbh, $pid, $sid, $service, $form, $specs) = @_;
 
-    # Merge the original user specified specs into the pricing (for storage).    
-    $specs->{$_} = $form->{$_} for keys %$form;
+  my @changes; 
+  foreach my $key (keys %$form) {
+		if ( ref $$form{$key} eq 'ARRAY'  ) {
+      my @old_value = ($$specs{$key} and ref $$specs{$key} eq 'ARRAY' ? @{$$specs{$key}} : ( $$specs{$key} ));
+      my @new_value = @{$$specs{$key}};
+      my @intersection = sets::intersection(@old_value, @new_value);
+			if ( @old_value != @intersection or @new_value != @intersection) {
+				push @changes, $key.' : '.join(',', @old_value).' => '.join(',', @new_value);
+			}
+    } elsif (
+      (defined($$specs{$key}) != defined($$form{key})) or ($$specs{$key} and ($$specs{$key} ne $$form{$key}))
+    ) {
+      #s/^\s+//, s/\s+$// for $openprint::param{$key};
+      push @changes, "$key : $$specs{$key} => $$form{$key}";
+    } # end if changed
+    $specs->{$key} = $form->{$key};
+  }  # end foreach
 
-    # Some actions need to look at the state of the service or remove control
-    # specifications before the service is changed/saved.
-    if (my $func = $service->{can}->('preaction')) {
-        $func->($log, $dbh, $pid, $sid, $service->{name}, $specs);
-    }
+  my $project = openprint::Project->find_one(id=>$pid);
+	$project->add_to_log(@openprint::session{'company_id','user_id'}, $service->{ref}. ' service saved: '.join('<br/>', @changes));
 
-    # Allow the service to modify the specs for saving. ie. serializing arrays
-    # (eugh), storable()ing complex structures, etc.
-    my $store = $service->{can}->('store');
-    
-    $specs = $store->($log, $dbh, $pid, $sid, $service->{name}, $specs) if $store;
+  # Some actions need to look at the state of the service or remove control
+  # specifications before the service is changed/saved.
+  if (my $func = $service->{can}->('preaction')) {
+    $func->($log, $dbh, $pid, $sid, $service->{name}, $specs);
+  }
 
-    # TODO Save the actual specs (user specified) as such, and the
-    # anything that's new after pricing as not.
-    
-    to_db($dbh, $pid, $sid, $form, $specs); # Insert into DB.
+  # Allow the service to modify the specs for saving. ie. serializing arrays
+  # (eugh), storable()ing complex structures, etc.
+  my $store = $service->{can}->('store');
+  $specs = $store->($log, $dbh, $pid, $sid, $service->{name}, $specs) if $store;
 
-    # Perform any actions required. eg. create signatures after changing the
-    # book specifications.
-    if (my $action = $service->{can}->('action')) {
-      #print STDERR "Doing action on $$service{name}\n";
-        $action->($log, $dbh, $pid, $sid, $service->{name}, $specs);
-    }
+  # TODO Save the actual specs (user specified) as such, and the
+  # anything that's new after pricing as not.
 
-    return 1;
+  to_db($dbh, $pid, $sid, $form, $specs); # Insert into DB.
+
+  # Perform any actions required. eg. create signatures after changing the
+  # book specifications.
+  if (my $action = $service->{can}->('action')) {
+    #print STDERR "Doing action on $$service{name}\n";
+    $action->($log, $dbh, $pid, $sid, $service->{name}, $specs);
+  }
+
+  return 1;
 }
 
 # Save a batch of service specifications to the DB. Optionally the batch can
@@ -1151,7 +1143,6 @@ sub to_db {
     (lngprojectindex, lngserviceindex, strname, strvalue, ui_spec)
     VALUES (?, ?, ?, ?, ?)
     });
-
 
   while (my ($key, $value) = each %$specs) {
     # Only handle simple values that are defined.

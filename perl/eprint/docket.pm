@@ -866,8 +866,6 @@ sub shipping {
 
   $specs{ADDRESSES} = $dbh->selectall_arrayref($sql,{Slice => {}}, $sid);
 
-  print STDERR "HAVE ADDRESS", Dumper($specs{ADDRESSES}, \%specs);
-
   my @keys = qw(add_price1 add_price2 add_price3 add_qty1 add_qty2 add_qty3 cost_center pickup manualcostcenter accountnumber storemailinstructions department);
 
   map { 
@@ -1039,10 +1037,10 @@ sub make_header {
 sub printing {
   my ($r, $log, $dbh, $pid, $sid, $qtyIndex, $form_count, $variable) = @_;
 
-  my $type = eprint::project::get_type($log, $dbh, $pid);
+  my $project = new openprint::Project($pid);
+  my $type = $project->type();
 
   return {NoPrint => 1}, [] if $type eq 'NoPrint';
-
 
   if ( $r->param('customovers') ne '' ) {
     my $overs = $r->param('customovers');
@@ -1066,8 +1064,7 @@ sub printing {
 
   my %hash;
   my $signatureIndex            = 0;
-  my @signature_service_indices =
-  eprint::project::get_signature_indices($log, $dbh, $pid);
+  my @signature_service_indices = eprint::project::get_signature_indices($log, $dbh, $pid);
   my $multi = is_multipage($log, $dbh, $pid);
   my $userType = scalar $dbh->selectrow_array(
     q{
@@ -1788,11 +1785,11 @@ sub header_info {
   $hash{num_versions} = $prod_versions if $prod_versions;
   $hash{num_versions} = $prod_versions if $prod_versions;
 
+  @hash{qw(interior_spreads gatefolded_spreads)} = @hash{"Interior Spreads", "GateFolded Spreads"};
 
-  @hash{qw(interior_spreads gatefolded_spreads)}
-  = @hash{"Interior Spreads", "GateFolded Spreads"};
-
-  @hash{qw(ptype ProjectType)} = get_type($log, $dbh, $pid);
+  my $project = new openprint::Project($pid);
+  my $type = $project->Type();
+  @hash{qw(ptype ProjectType)} = ($type->id(), $type->name());
 
   my %hash2;
   my $ps = project_summary($dbh, $pid);
@@ -2330,35 +2327,18 @@ sub setup_docket {
   $qtyIndex = $r->param('rdbQtyType') if ($qtyIndex == undef);
   my $order_id = $r->param('order_id');
   if ($order_id == undef) {
-    $order_id = scalar $dbh->selectrow_array( q{
-      SELECT lngorderid
-      FROM tbl_order_contents
-      WHERE lngprojectindex = ?
-      }, undef, $pid);
+    $order_id = scalar $dbh->selectrow_array( q{ SELECT lngorderid FROM tbl_order_contents WHERE lngprojectindex = ?  }, undef, $pid);
   }
   $variable->{order_id}  = $order_id;
   $variable->{docket_id} = $order_id . "-" . $pid;
   if ($qtyIndex == undef) {
-    $qtyIndex = scalar $dbh->selectrow_array( q{
-      SELECT intquantityIndex
-      FROM tbl_order_contents
-      WHERE lngprojectindex = ?
-      }, undef, $pid);
+    $qtyIndex = scalar $dbh->selectrow_array( q{ SELECT intquantityIndex FROM tbl_order_contents WHERE lngprojectindex = ?  }, undef, $pid);
   }
   $variable->{QtyIndex} = $qtyIndex;
   $variable->{"ddmQtyIndex$qtyIndex"} = 'checked="checked"';
 
-  #    $variable->{InternalID} = scalar $dbh->selectrow_array( q{
-  #        SELECT internalid FROM tbl_projects WHERE lngprojectindex = ?
-  #    }, undef, $pid);
-
   my $pressType = scalar $dbh->selectrow_array( q{
-    SELECT strid
-    FROM tbl_equipment_type
-    WHERE lngindex = (
-    SELECT lngpresstype
-    FROM tbl_projects
-    WHERE lngprojectindex = ? )
+    SELECT strid FROM tbl_equipment_type WHERE lngindex = ( SELECT lngpresstype FROM tbl_projects WHERE lngprojectindex = ? )
     }, undef, $pid);
   $variable->{pressType} = $pressType;
   $variable->{HeaderInfo} = header_info($log, $dbh, $pid);
@@ -2371,44 +2351,28 @@ sub setup_docket {
   for my $cat (map { $_->{name} } @{ $variable->{CategoryMenu} }) {
     my $services = $$services_by_category{$cat};
 
-
-
-    my $catNumericalID = scalar $dbh->selectrow_array(q{
-      SELECT lngindex
-      FROM tbl_service_categories
-      WHERE strname = ?
-      }, undef, $cat);
+    my $catNumericalID = scalar $dbh->selectrow_array(q{ SELECT lngindex FROM tbl_service_categories WHERE strname = ? }, undef, $cat);
     if (($catID == undef) || ($catNumericalID == $catID) || ($catID == -1) || $catID == -3) {
 
       #Collect the material information for ALL services when viewing the 'Other' category
       if ( $catID == -3 ) {
-
         foreach my $service (@$services) {
-          my ($ref, $name, $id, $supplied, $desc) 
-          = @$service{qw(ref name id supplied desc)};
+          my ($ref, $name, $id, $supplied, $desc) = @$service{qw(ref name id supplied desc)};
 
-          my ($data, $material) =
-          summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count);
+          $openprint::log->debug("summary $name");
+          my ($data, $material) = summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count);
           for my $m (@{$material}) {
             push @materials, $m;
           }
         }
       }
 
-
-
       my @service_types;
       my @supplied_service_types;
 
       foreach my $service (@$services) {
-        my ($ref, $name, $id, $supplied, $desc) 
-        = @$service{qw(ref name id supplied desc)};
-
-
-
-
+        my ($ref, $name, $id, $supplied, $desc) = @$service{qw(ref name id supplied desc)};
         next if ($ref eq 'inkmixing' && $cat eq 'Printing');
-
 
         #IF using a project with Custom Sorting for services
         #all serivces will be in a 'Custom' cateogry,
@@ -2422,10 +2386,8 @@ sub setup_docket {
         my ($filename, $data, $material);
         eval {
           $filename = "/includes/main/docket/service_type/$ref.html";
-
           # Get the service information.
-          ($data, $material) =
-          summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count, $variable);
+          ($data, $material) = summary($r, $log, $dbh, $pid, $id, $qtyIndex, $name, \$form_count, $variable);
         };
 
         $data->{is_docket} = $variable->{is_docket};

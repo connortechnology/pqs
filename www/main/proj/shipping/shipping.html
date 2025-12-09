@@ -36,9 +36,9 @@
 	}
 	</style>
     
-	<script type="text/javascript" src="/javascripts/proj/service.js"></script>
-    <script type="text/javascript" src="/javascripts/proj/utilities.js"></script>
-    <script type="text/javascript">
+	<script src="/javascripts/proj/service.js"></script>
+  <script src="/javascripts/proj/utilities.js"></script>
+  <script>
 
 function loadwithpage() {
 //	needhelp(); 
@@ -46,16 +46,11 @@ function loadwithpage() {
 	//total_qtys();
 	ship();
 //	accountnumber1();
-	getmymethod();
+	//getmymethod();
 }
 
     window.onload=loadwithpage;
 	
-
-	</script>
-    
-	<script>
-
 	var service = new Service('<?service.ref?>');
 
 function check_text (f,n) {
@@ -67,12 +62,10 @@ function check_text (f,n) {
 			return 'Please Enter a ' + n + '\n';
 		}
 		return '';
-		
 }
 function check_shipping () {
 		var msg = '';
 		
-
 		if(document.getElementById("multiple").checked == true){
 				msg += check_text('add_qty1','Quantity to Ship to this Address');
 		}
@@ -178,10 +171,6 @@ function valid_qty (Q) {
 		
 }
 
-
-
-
-
 //displays for single vs multiple shipping addresses
 function singlemultiple() {
 
@@ -208,24 +197,19 @@ function singlemultiplesing() {
 		setDisplay(elements1, "none");
 		setDisplay(elements, "");
 	}
-	 
-
 }
 
 //runs before call price calculations
 service.validate = function validate(e) {
-
 	$('txtShipmentPrice').value = '';
 	$('txtResults').innerHTML = '...';
 	if(document.getElementById("multiple").checked == true) {
-
 		if(document.getElementById("multiple").checked == true){
 			if ($('add_qty1').value == 0) {
 				$('txtResults').innerHTML = 'Please select Quantity to Ship';
 				return 0;
 			}
 		}
-
 	}
 	return 1;
 }
@@ -264,11 +248,6 @@ function overrides (id) {
 
 	return true;
 }
-
-
-
-
-	
 	
 </script>
 <script src="<?hash_link(/javascripts/proj/service/shipping.js)?>"></script>

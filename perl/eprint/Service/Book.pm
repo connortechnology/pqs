@@ -193,8 +193,7 @@ sub calc {
 
   my $tabs = $specs->{txtTabsQuantity};
 
-  my $gatefold = $specs->{rdbGateFold} eq 'Yes' 
-  ? $specs->{txtGateFoldedSpreadQuantity} || $tabs || 0 : 0;
+  my $gatefold = ($specs->{rdbGateFold} and ($specs->{rdbGateFold} eq 'Yes')) ? $specs->{txtGateFoldedSpreadQuantity} || $tabs || 0 : 0;
   my $interior = $spreads - $gatefold;
 
   # return 'uncalculated' unless $interior && $interior > 0;
@@ -380,27 +379,22 @@ sub previous_specs {
   for my $type (keys %$sigs) {
     my $sig_id = shift @{$sigs->{$type}};
     #foreach my $sig_id ( @{$sigs->{$type}} ) {
-      my %specs = @{ $dbh->selectcol_arrayref(q{
+      my %specs = sql::execute(undef, undef, q{
       SELECT strname as name, strvalue as value
       FROM tbl_service_specifications 
       WHERE (ui_spec = true OR strname = 'version_quantities' OR strname LIKE 'override%') 
       AND strname NOT IN ( 'spreads_in_group', 'hdnRunStyleCheck' )
       AND lngserviceindex = ?
-      }, { Columns => [1,2] }, $sig_id) };
+      }, $sig_id);
 
       # If there are form size overrides make sure we step through the
       # project (but don't re-apply the overrides).
       if ($specs{spreads} || $specs{forms}) {
         $specs{needs_view} = 1;
-
-        #delete @specs{qw(spreads forms)};
       }
-
-      #$specs{override_press} = 1 if $specs{press};
 
       $sigs->{$type} = \%specs;
       #print STDERR 'prev'.$type.' '.$sig_id.' '.Data::Dumper::Dumper(\%specs);
-      #}
   }
 
   return $sigs;

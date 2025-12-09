@@ -1,20 +1,20 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-<title>
-<!--#include virtual="/includes/web_page_title.html" -->
-Products
-<!--#include virtual="/includes/web_page_title_end.html" -->
-</title>
-<!--#include virtual="/includes/web_page_meta.html" -->
-<!--#include virtual="/includes/h1-main-css.html" -->
-<!--#include virtual="/includes/h2-js.html" -->
-<script type="text/javascript" src="/javascripts/other.js"></script>
-<script type="text/javascript" src="/javascripts/proj/proj_create.js"></script>
-<script type="text/javascript" src="/javascripts/JSAN.js"></script>
-<link href="/styles/products-v2.css" rel="stylesheet" type="text/css" />
+  <title>
+  <!--#include virtual="/includes/web_page_title.html" -->
+  Products
+  <!--#include virtual="/includes/web_page_title_end.html" -->
+  </title>
+  <!--#include virtual="/includes/web_page_meta.html" -->
+  <!--#include virtual="/includes/h1-main-css.html" -->
+  <!--#include virtual="/includes/h2-js.html" -->
+  <script src="/javascripts/other.js"></script>
+  <script src="<?hash_link(/javascripts/proj/proj_create.js)?>"></script>
+  <script src="/javascripts/JSAN.js"></script>
+  <link href="/styles/products-v2.css" rel="stylesheet" type="text/css" />
 </head>
-<script type="text/javascript">
+<script>
 
 
 function open_price_window( i ) {
@@ -23,7 +23,6 @@ function open_price_window( i ) {
 }
 
 function open_discount_window( i ) {
-
 	if ( i == "" ) {
 		alert("Missing product id");
 		return;
@@ -260,8 +259,6 @@ select.failed {
 
 				<div id="header">
 			<!--#include virtual="/includes/main/main-header.html" -->
-
-
 				</div>
 				<div id="wrapper1" style="top:5px; width:100%">
 						<div id="wrapper2" style="top:30px; width:100%">
@@ -284,7 +281,6 @@ select.failed {
 													</div>
 												</div>
 											<? endif ( $$variable{user_type} )?>
-
 										</div>
 
 					<h1>
@@ -341,15 +337,7 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 
 <div id="horizontal-spacer1" style="height: 50px; width=100%; "></div>
 
-
-
 <div class="right" style="float:right; width:390px;   margin-top: -0px; min-height:550px" > 
-
-
-
-
-
-
 <div>
 	<form action="products.html" style="font-size:1.8em;" >
 	<?loop filters?>
@@ -463,20 +451,8 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 	<?endif is_staff?>
 
 </div>
-
-
-
-
-
-
-
-
-
 </div>
-
-
-
-<div id="main2" style="width: 500px; min-height: 400px">
+<div id="main2" style="min-height: 400px">
                 <div style="display:none">
                     <?id?>
                     <?description?>
@@ -492,11 +468,6 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
                     <?productgroup?>
                     Image -- <?image?>
                 </div>
-
-                   
-                
-         
-         
 			<!--
              <a href="product_details.html?id=<?id?>"> 
 			 -->
@@ -562,13 +533,13 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
 </div>
 <!-- end .center -->
 
-<div class="left" style="margin-top: 30px">
+<div class="left" >
 	<div class="container-left">
 
 		<div class="textpadder">
-			<div id='sidebar' style="height:100%; position:relative">
+			<div id="sidebar" style="height:100%; position:relative">
 
-                <div id="leftmenu" style="transform: translateY(-600px)">
+                <div id="leftmenu">
                 <!--#include virtual="/includes/ecomm_leftmenu.html" -->
                 </div>
 
@@ -594,17 +565,10 @@ style="background-color: #3E98E6; width:60%; float:none; border-radius: 5px; hei
         <div id="footer" style="margin-top: 20px">
 			<!--#include virtual="/includes/main/main-footer.html" -->
 		</div>
-
-
 <!-- end #wrapper2 --> </div> 
 
         </div>
-
-		
-    </div>
-    <!-- end #expander -->
-</div>
-<!-- end #sizer -->
-
+    </div> <!-- end #expander -->
+</div> <!-- end #sizer -->
 </body>
 </html>

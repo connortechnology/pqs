@@ -64,7 +64,7 @@ sub list {
 		my @header = ( 'ID', 'Owner','Manufacturer','Supplier','Group','Brand', 'Finish', 'Colour', 'Weight', 'Quality', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
 		my @data;
 
-		foreach my $Stock ( openprint::Paper->find( order=>'brand,finish,colour,weight,width,height', 
+		foreach my $Stock ( openprint::Paper->find( order=>'brand,finish,colour,weight,'.$openprint::Paper::fields{width}.','.$openprint::Paper::fields{height}, 
 					columns=>'*,(SELECT name FROM StockBrands WHERE Stockbrands.id=brand_id) AS brand,(SELECT name FROM StockFinishes WHERE StockFinishes.id=finish_id) AS finish,(SELECT name FROM StockColours WHERE StockColours.id=colour_id) AS colour,(SELECT name FROM StockWeights WHERE StockWeights.id=weight_id) AS weight ',
 					( $param{group_id} ? ( group_id => $param{group_id} ) : () ),
 					( $param{owner_id} ? ( owner_id => $param{owner_id} ) : () ),
@@ -82,7 +82,6 @@ sub list {
 					( $param{height} ? ( height=>$param{height} ) : () ),
 					( $param{grain_direction} ? ( grain_direction => $param{grain_direction} ) : () ),
 					( $param{digital} ne '' ? ( digital=>$param{digital} ) : () ),
-					'order'         => 'brand,finish,colour,weight, width, height'
 					) ) {
 			next if $param{recommendations} eq '0' and $Stock->recommendations();
 			next if $param{recommendations} eq '1' and ! $Stock->recommendations();

@@ -335,7 +335,7 @@ sub alias {
 	} else {
 		return $_[0]->email();
 	} # end if
-} # end sub name
+} # end sub alias
 
 sub name {
 	if ( $_[0]{firstname} and $_[0]{lastname} ) {

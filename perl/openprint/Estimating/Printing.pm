@@ -886,6 +886,16 @@ sub get_colours {
 		} # end if
   } # end foreach
 
+  if ($$specs{"s${s}_black"}) {
+    my $colour = 'Black';
+			push @colours, { 
+				type	=>	'CMYK',
+				name	=>"$colour Spot Colour",
+				coverage => $$specs{$colour.'Spot'.$side.'Coverage'},
+				coverage_key	=> $colour.'Spot'.$side.'Coverage',
+			};
+  }
+
   if ($$specs{'chkProcessColour'.$side} or $$specs{"s${s}_process"}) {
     push @colours, map { { 
         type	=>	'CMYK',
@@ -7899,7 +7909,7 @@ sub summary {
     );
     if (!(
         ($$specs{BleedLeft} and $$specs{BleedRight} and $$specs{BleedTop} and $$specs{BleedBottom})
-          or (4 == split(',', $$specs{bleed_sides}))
+          or ($$specs{bleed_sides} and (4 == split(',', $$specs{bleed_sides})))
       )) {
       if ($$specs{ddmBleedSize}) {
         $special_string .= 'no bleed on ' . join(', ', map { $$specs{"Bleed$_"} ? '': $_ } ( 'Top','Bottom','Left','Right' ) );

@@ -70,7 +70,7 @@ sub necessary {
       ScreenTShirts ScreenHoodies ScreenSweatShirts 
       ScreenMisc ScreenCoffeeMugs ScreenMousePads))
     || $type =~ /^LF/ ) {
-    return (wantarray ? () : undef);
+    return (wantarray ? () : 0);
   };
 
   # Retrieve the project quantities with the indices they use (it can not be treated as a list).
@@ -395,6 +395,8 @@ sub project {
 
   # PROJECT INFORMATION
   #
+  my $Project = new openprint::Project($pid);
+  #
   my %project = ( id => $pid, signatures => [] );
 
   # We'll need the 'Print' container for basic project dimensions (Yes it
@@ -402,7 +404,7 @@ sub project {
   my $print = get_print_container($log, $dbh, $pid);
 
   # The project type and estimate quantity.
-  $project{type}       = get_type($log, $dbh, $pid); 
+  $project{type}       = $Project->type(); 
   $project{press_type} = get_press_type($log, $dbh, $pid); 
   $project{qty}        = (get_quantities($log, $dbh, $pid))[$i-1];
 

@@ -1,9 +1,9 @@
 <div class="AccountInformation">
-<fieldset><legend>Account Infromation</legend>
+<fieldset><legend>Account Information</legend>
 	<ul>
-		<li class="activation">
+		<li class="activated">
 			<label>Account Activated</label>
-			<? echo ( radio( 'activation', ['Y','Yes','N','No'], $$variable{Company}->activation(), {default=>'N'} ); ) ?>
+			<? echo ( radio( 'activated', ['Y','Yes','N','No'], $$variable{Company}->activated(), {default=>'N'} ); ) ?>
 		</li>
 		<li class="last_login"><label>Last login</label>
 			<? echo ( format_datetime( $variable{Company}->last_online() ); ) ?>
