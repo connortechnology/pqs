@@ -1,4 +1,4 @@
-Event.observe(window, 'load', function () {
+window.addEventListener('load', function () {
 	var add_payment = document.getElementById('add_payment');
 	if (!add_payment) return;
 
@@ -24,7 +24,7 @@ Event.observe(window, 'load', function () {
 	}
 
 
-	Event.observe(add_payment, 'change', function () {
+	add_payment.addEventListener('change', function () {
 		var order_id;	// Each Orders Individual ID
 		var payment;	// Payment to be Aplpied, in Cents
 
@@ -101,7 +101,7 @@ Event.observe(window, 'load', function () {
 
 
 		// When Payment Applied to Specific Order
-		Event.observe(order_elem, 'change', function () {
+		order_elem.addEventListener('change', function () {
 			var total = 0;	// All Applied Payments, Totalled Up
 			var order_payment;	// Each Order's Applied Payment
 
@@ -163,7 +163,7 @@ Event.observe(window, 'load', function () {
 		}.bind(order_elem));
 
 
-		Event.observe(applied_elem, 'change', function () {
+		applied_elem.addEventListener('change', function () {
 			var order_id = this.id.substr(this.id.indexOf('_') + 1);
 
 			var order_total_elem = document.getElementById('total_' + order_id);
@@ -188,7 +188,7 @@ Event.observe(window, 'load', function () {
 	}
 	
 	// Form Validation
-	Event.observe(add_payment.form, 'submit', function () {
+	add_payment.form.addEventListener('submit', function () {
 		if (error) {
 			alert(error_over_payment + '\nThis must be corrected before proceeding.');	
 			add_payment.focus();

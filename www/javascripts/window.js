@@ -1,3 +1,12 @@
+// NOTE: This library (window.js) depends on Prototype.js for its core functionality.
+// It uses Prototype's Class.create(), Element methods, Event.observe(), Ajax.Request,
+// Object.extend(), and other Prototype-specific features throughout.
+// 
+// The rest of the application has been migrated away from Prototype.js to use
+// native JavaScript and jQuery. Prototype.js is currently only loaded to support
+// this windowing library. Future work could replace this with a modern alternative
+// like jQuery UI Dialog, Bootstrap Modal, or similar.
+//
 // Copyright (c) 2006 Sébastien Gruhier (http://xilinus.com, http://itseb.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining
