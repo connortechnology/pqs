@@ -576,7 +576,10 @@ function clearElementForm(element) {
   clearForm(element.form);
 }
 function clearForm(form) {
-	form = $(form);
+	// Support both element and id string
+	if (typeof form === 'string') {
+		form = document.getElementById(form);
+	}
 	for ( let i=0, len = form.elements.length; i < len; i += 1 ) {
 		const e = form.elements[i];
 		if ( ! e.type )
@@ -739,7 +742,7 @@ function checkLoginData( usernameInput, passwordInput ) {
 		div.hide();
 	}
 
-	div = $j ? $j('missingPasswordMessage') : $('missingPasswordMessage')
+	div = $j ? $j('#missingPasswordMessage') : document.getElementById('missingPasswordMessage')
 	if( passwordInput && ! passwordInput.value ) {
 		// Display login password error.
 		if ( div ) div.show();
@@ -881,17 +884,33 @@ function country_onchange_this(country_ddm) {
 
 function Country_onchange( country_ddm, state ) {
 	const country = get_ddm_value( country_ddm );
-	const state_label = $(country_ddm.name + '_state');
-	const postal_label = $(country_ddm.name + '_postal');
+	const state_label = document.getElementById(country_ddm.name + '_state');
+	const postal_label = document.getElementById(country_ddm.name + '_postal');
 	const onchange = state.getAttribute('onchange');
 	if ( country == 'US' ) {
-		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
-		new Ajax.Updater( state.id, '/includes/_states.html' );
+		const container = document.getElementById(state.name+'_container');
+		if (container) {
+			container.innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+		}
+		$j.ajax({
+			url: '/includes/_states.html',
+			success: function(data) {
+				$j('#' + state.id).html(data);
+			}
+		});
 		if ( state_label ) state_label.innerHTML='State';
 		if ( postal_label ) postal_label.innerHTML='ZIP Code';
 	} else if ( country == 'CA' ) {
-		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
-		new Ajax.Updater( state.id, '/includes/_provinces.html' );
+		const container = document.getElementById(state.name+'_container');
+		if (container) {
+			container.innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+		}
+		$j.ajax({
+			url: '/includes/_provinces.html',
+			success: function(data) {
+				$j('#' + state.id).html(data);
+			}
+		});
 		if ( state_label ) state_label.innerHTML='Province';
 		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} else {
@@ -912,20 +931,21 @@ function Location_onchange( parent_element, type, options ) {
 
 	if ( ! options ) options = {};
 	var parameters = {};
-	parameters.parent_id = parent_element.getValue();
+	parameters.parent_id = parent_element.value;
 	parameters.parent_element = parent_element.id;
 	parameters.type = type;
 	if ( options.state_element ) parameters.state_element = options.state_element;
 	if ( options.city_element ) parameters.city_element = options.city_element;
 
-	new Ajax.Request( '/location/_ddm.json', { 
-		parameters: parameters, onSuccess: options.onSuccess,
-		}
-		);
+	$j.ajax({
+		url: '/location/_ddm.json',
+		data: parameters,
+		success: options.onSuccess
+	});
 	//} // end if
 	if ( type == 'country' ) {
-		var state_label = $(parent_element.name + '_state');
-		var postal_label = $(parent_element.name + '_postal');
+		var state_label = document.getElementById(parent_element.name + '_state');
+		var postal_label = document.getElementById(parent_element.name + '_postal');
 		var country = get_ddm_text( parent_element );
 		if ( country == 'United States' ) {
 			if ( state_label ) state_label.innerHTML='State';
@@ -1186,8 +1206,8 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 		do_time = 1;
 	} // end if
 
-	var starting_time_elem = $(starting_prefix+suffix+'_time');
-	var ending_time_elem = $(ending_prefix+suffix+'_time');
+	var starting_time_elem = document.getElementById(starting_prefix+suffix+'_time');
+	var ending_time_elem = document.getElementById(ending_prefix+suffix+'_time');
 
 	var start_year = form.elements[starting_prefix+suffix+'_year'] ? form.elements[starting_prefix+suffix+'_year'].value : 0;
 	var start_month = form.elements[starting_prefix+suffix+'_month'] ? form.elements[starting_prefix+suffix+'_month'].value : 0;
@@ -1209,18 +1229,19 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 
 	if ( do_time ) {
 		if ( unknown_time ) {
-			if ( starting_time_elem ) starting_time_elem.hide();
-			if ( ending_time_elem ) ending_time_elem.hide();
+			if ( starting_time_elem ) starting_time_elem.style.display = 'none';
+			if ( ending_time_elem ) ending_time_elem.style.display = 'none';
 
 			if ( form.elements[starting_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[starting_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_minute'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], 0 );
 		} else {
-			if ( starting_time_elem ) starting_time_elem.show();
-			if ( ending_time_elem ) ending_time_elem.show();
+			if ( starting_time_elem ) starting_time_elem.style.display = '';
+			if ( ending_time_elem ) ending_time_elem.style.display = '';
 		} // end if
-		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').show();
+		var duration_time_elem = document.getElementById('duration'+suffix+'_time');
+		if ( duration_time_elem ) duration_time_elem.style.display = '';
 		difference -= days * ( 60*60*24 );
 		var hours = parseInt( difference/(60*60) );
 		difference -= hours * (60*60);
@@ -1232,7 +1253,7 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 				ddm_select_by_value( form.elements['duration'+suffix+'_minutes'], minutes );
 			}
 		} else {
-			var duration = $('duration'+suffix);
+			var duration = document.getElementById('duration'+suffix);
 			if ( duration ) {
 				if ( duration.type == 'text' ) {
 					duration.value = days+'day'+(days==1?'':'s')+' ' + hours+':'+ minutes;
@@ -1243,16 +1264,17 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 		} // end if
 	} else {
 		if(starting_time_elem){
-			starting_time_elem.hide();
+			starting_time_elem.style.display = 'none';
 		}
-		if(ending_time_elem)ending_time_elem.hide();
-		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').hide(); 
+		if(ending_time_elem) ending_time_elem.style.display = 'none';
+		var duration_time_elem = document.getElementById('duration'+suffix+'_time');
+		if ( duration_time_elem ) duration_time_elem.style.display = 'none'; 
 		if ( form.elements['duration'+suffix+'_days'] ) {
 			form.elements['duration'+suffix+'_days'].value=days;
 			if ( form.elements['duration'+suffix+'_hours'] ) ddm_select_by_value( form.elements['duration'+suffix+'_hours'], 0 );
 			if ( form.elements['duration'+suffix+'_minutes'] ) ddm_select_by_value( form.elements['duration'+suffix+'_minutes'], 0 );
 		} else {
-			var duration = $('duration'+suffix);
+			var duration = document.getElementById('duration'+suffix);
 			if ( duration ) {
 				if ( duration.type == 'text' ) {
 				duration.value = days +'day'+(days==1?'':'s');
@@ -1268,7 +1290,7 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 function filter_days( form, prefix, options ) {
 	var date = new Date( form.elements[prefix+'_year'].value, form.elements[prefix+'_month'].value-1, form.elements[prefix+'_day'].value );
 	var changed = false;
-	var date_alert = $(prefix+'_alert');
+	var date_alert = document.getElementById(prefix+'_alert');
 	if ( date_alert )
 		date_alert.innerHTML = '';
 	if ( options && options.businessonly ) {
@@ -1375,23 +1397,23 @@ function disable_rightclick() {
 } // end function disable_rightclick
 
 function remove_div( divname ) {
-	var div = $(divname);
+	var div = document.getElementById(divname);
 	if ( div ) {
-		div.hide();
+		div.style.display = 'none';
 	} // end if
 	return div;
 }
 function add_div( divname ) {
-	var div = $(divname);
+	var div = document.getElementById(divname);
 	if ( div ) {
-		div.show();
+		div.style.display = '';
 	} // end if
 	return div;
 }
 
 // also positions it
 function show_div( divname, e ) {
-	var div = $(divname);
+	var div = document.getElementById(divname);
 	if ( div ) {
 	
 		var posx = 0;
@@ -1417,7 +1439,7 @@ function show_div( divname, e ) {
 			posy += 10; // to move it south of the mouse cursor
 			div.style.top = posy + 'px';
 		} // end if
-		div.show();
+		div.style.display = '';
 	} else {
 		alert("Div not found: " + divname );
 	} // end if
@@ -1429,7 +1451,7 @@ function open_window(url,title,options) {
 }
 
 function toggleContent( divID, show_url, inputs, hide_url ) {
-	var div = $( divID );
+	var div = document.getElementById(divID);
 
 	var params = new Array();
 	if ( inputs ) {
@@ -1439,12 +1461,33 @@ function toggleContent( divID, show_url, inputs, hide_url ) {
 	} // end if
 
 	if ( div.style.display == 'none' ) {
-		div.show();
-		new Ajax.Updater( divID, show_url, { parameters: params.join('&'), evalScripts: true } );
+		div.style.display = '';
+		$j.ajax({
+			url: show_url,
+			data: params.join('&'),
+			success: function(data) {
+				$j('#' + divID).html(data);
+				// Evaluate scripts in the returned HTML
+				$j('#' + divID + ' script').each(function() {
+					eval(this.text || this.textContent || this.innerHTML || '');
+				});
+			}
+		});
 	} else {
-		div.hide();
-		if ( hide_url )
-			new Ajax.Updater( divID, hide_url, { parameters: params.join('&'), evalScripts: true } );
+		div.style.display = 'none';
+		if ( hide_url ) {
+			$j.ajax({
+				url: hide_url,
+				data: params.join('&'),
+				success: function(data) {
+					$j('#' + divID).html(data);
+					// Evaluate scripts in the returned HTML
+					$j('#' + divID + ' script').each(function() {
+						eval(this.text || this.textContent || this.innerHTML || '');
+					});
+				}
+			});
+		}
 	} // end if
 } // end function toggleContent
 
@@ -1513,7 +1556,7 @@ function popup_window( url, parameters, options ) {
 			 recenterAuto:false
 		}
 
-		Object.extend( defaults, options );
+		Object.assign( defaults, options );
 		popupWin = new Window(defaults);
 
 		// Set up a windows observer, check ou debug window to get messages
@@ -1542,11 +1585,9 @@ function popup_window( url, parameters, options ) {
 	} else {
 		if ( parameters ) {
 			if ( parameters == '[object HTMLFormElement]' ) {
-				var p = parameters.serialize(true);
-				if ( p )
-					parameters = $H(p).toQueryString();
+				parameters = $j(parameters).serialize();
 			} else if ( typeof parameters == 'object' ) {
-				parameters = $H(parameters).toQueryString();
+				parameters = $j.param(parameters);
 			}
 			url += '?' + parameters;
 		}
@@ -1555,40 +1596,31 @@ function popup_window( url, parameters, options ) {
 } // end function popup_window
 
 function toggle_input( ddm, txt ) {
-	ddm.toggle();
-	txt.toggle();
-  if ( ddm.visible ) {
-    if ( ddm.visible() ) {
-      ddm.focus();
-      txt.value = '';
-    } 
-    if ( txt.visible() ) {
-      txt.focus();
-      ddm.selectedIndex = -1;
-    }
-  } else {
-console.log("Using jquery visible");
-    if ( ddm.is(':visible') ) {
-console.log("ddm is visible");
-      ddm.focus();
-      txt.value = '';
-    } 
-    if ( txt.is(':visible') ) {
-console.log("txt is visible");
-      txt.focus();
-      ddm.prop('selectedIndex', 0 );
-    }
+	// Toggle using jQuery
+	$j(ddm).toggle();
+	$j(txt).toggle();
+  
+  if ( $j(ddm).is(':visible') ) {
+    ddm.focus();
+    txt.value = '';
+  } 
+  if ( $j(txt).is(':visible') ) {
+    txt.focus();
+    ddm.selectedIndex = -1;
   }
 }
 function getValues( form, element_names, more_values ) {
-	form = $(form);
-	const results = new Hash( more_values );
+	// Support both element and id string
+	if (typeof form === 'string') {
+		form = document.getElementById(form);
+	}
+	const results = Object.assign({}, more_values || {});
 	if ( element_names.constructor == Array ) {
 		for ( let index = element_names.length; index; index -- ) {
 			const form_element = form.elements[element_names[index-1]];
 			if ( form_element ) {
         console.log(form_element.name, get_value( form_element ));
-				results.set(element_names[index-1], get_value( form_element ) );
+				results[element_names[index-1]] = get_value( form_element );
 			} else {
 				console.log(element_names[index-1] + ' was not found in form' );
 			} // end if
@@ -1596,7 +1628,7 @@ function getValues( form, element_names, more_values ) {
 	} else if ( element_names.constructor == RegExp ) {
 		for ( let index = 0, len = form.elements.length; index < len; index += 1 ) {
 			if ( element_names.exec( form.elements[index].name ) ) {
-				results.set(form.elements[index].name, get_value( form.elements[index] ) );
+				results[form.elements[index].name] = get_value( form.elements[index] );
 			} // end if	
 		} // end foreach element
 	} // end if ARRAY or Regexp
@@ -1627,9 +1659,9 @@ function toggletinymce(textarea_id, toggle ) {
 function changed( e, div ) {
 	if ( ! div ) div = e;
 	if(e.value!=e.defaultValue){
-		e.addClassName('changed');
+		e.classList.add('changed');
 	} else {
-		e.removeClassName('changed');
+		e.classList.remove('changed');
 	} // end if
 } // end function changed
 
@@ -1658,7 +1690,7 @@ function get_form_element_array( form, name ) {
 			values = new Array()
 			values.push( form.elements[name].value );
 		} else {
-			values = $A(form.elements[name]).map( function( e ) { return e.value; } );
+			values = Array.from(form.elements[name]).map( function( e ) { return e.value; } );
 		}
 	} else {
 		values = new Array()
@@ -1788,8 +1820,8 @@ Ajax.Request.prototype.abort = function() {
 
 function get_date_value( prefix ) {
 	var date = new Array();
-	[ 'year', 'month', 'day' ].each( function(suffix) {
-		var e = $(prefix+'_'+suffix);
+	['year', 'month', 'day'].forEach( function(suffix) {
+		var e = document.getElementById(prefix+'_'+suffix);
 		if ( ! e ) { 
 			alert( 'No ' + prefix+'_'+suffix );
 			return '';
@@ -1806,19 +1838,29 @@ function get_date_value( prefix ) {
 
 function getSelectedLocation(text, li) {
 	if ( li.id ) {
-		new Ajax.Request( '/location/_load_location.json', { parameters: { location_id: li.id } } );
+		$j.ajax({
+			url: '/location/_load_location.json',
+			data: { location_id: li.id }
+		});
 	} // end if
 }
 
 var filter_ajax = null;
 function filter_companies( e, p ) {
-    if ( filter_ajax ) { filter_ajax.transport.abort(); }
+    if ( filter_ajax ) { filter_ajax.abort(); }
         
-    filter_ajax = new Ajax.Updater( e, '/includes/_company_ddm.html', { parameters: p, onSuccess:function(){filter_ajax = null;} } );
+    filter_ajax = $j.ajax({
+			url: '/includes/_company_ddm.html',
+			data: p,
+			success: function(data) {
+				$j(e).html(data);
+				filter_ajax = null;
+			}
+		});
 }
 function stop_filter_companies() {
     if ( filter_ajax ) { 
-		filter_ajax.transport.abort();
+		filter_ajax.abort();
 		filter_ajax = null;
 	}
 } 
