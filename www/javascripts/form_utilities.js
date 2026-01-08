@@ -1520,80 +1520,225 @@ function photo_popup( asset_id, album_id ) {
   popup_window('/photo_albums/_view_photo.html?asset_id='+asset_id+'&amp;album_id='+album_id, '', { width: window.innerWidth-100, height: window.innerHeight-100 } );
 } // end function photo_popup
 
+// jQuery UI Dialog-based popup window replacement
 var popupWin;
 function popup_window( url, parameters, options ) {
-  /*
-  let d = $j('#dialog');
-  console.log('hi');
-  if (!d.length) {
-    console.log("Creating dialog element");
-
-    $j('body').append('<div id="dialog"></div>' );
-    d = $j('#dialog');
-  } else {
-    console.log("Dialog is " + d.length);
-  }
-
-  d.load(url);
-  d.dialog(options);
-  update_event_bindings();
-  */
-
 	if ( ! options ) options = {};
-	if ( (! options.width) && ! ( options.left && options.right) ) options.width = 600;
-	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 600;
-
-	if ( ! popupWin ) {
-		var defaults = {
-			maximizable: false,
-			 resizable: true,
-			 hideEffect:Element.hide,
-			 showEffect:Element.show,
-			 destroyOnClose: true,
-			 className:"alphacube",
-			 width:400,
-			 height:400, 
-			 recenterAuto:false
+	
+	// Set default dimensions
+	var width = options.width || 600;
+	var height = options.height || 600;
+	
+	// Create dialog container if it doesn't exist
+	var dialogId = 'jqueryui-popup-dialog';
+	var $dialog = $j('#' + dialogId);
+	if ($dialog.length === 0) {
+		$j('body').append('<div id="' + dialogId + '" style="display:none;"></div>');
+		$dialog = $j('#' + dialogId);
+	}
+	
+	// Prepare URL with parameters
+	if ( parameters ) {
+		if ( parameters == '[object HTMLFormElement]' ) {
+			parameters = $j(parameters).serialize();
+		} else if ( typeof parameters == 'object' ) {
+			parameters = $j.param(parameters);
 		}
-
-		Object.assign( defaults, options );
-		popupWin = new Window(defaults);
-
-		// Set up a windows observer, check ou debug window to get messages
-		var myObserver = {
-      onDestroy: function(eventName, win) {
-				if (win == popupWin) {
-					popupWin = null;
-					Windows.removeObserver(this);
-				}
-			}
-		}
-		Windows.addObserver(myObserver);
-	} // end if
-	popupWin.setHTMLContent('Loading... please wait');
-	if ( options && options.center != "" ) {
-		if ( options.center == "true" ) {
-			popupWin.showCenter();
-		} else {
-			popupWin.show();
-		} // end if
-	} else {
-		popupWin.showCenter();
-	} // end if
+		url += '?' + parameters;
+	}
+	
+	// Handle content option
 	if ( options && options.content ) {
-		popupWin.setHTMLContent( options.content );
+		$dialog.html(options.content);
+		showDialog();
 	} else {
-		if ( parameters ) {
-			if ( parameters == '[object HTMLFormElement]' ) {
-				parameters = $j(parameters).serialize();
-			} else if ( typeof parameters == 'object' ) {
-				parameters = $j.param(parameters);
+		// Load content via AJAX
+		$dialog.html('Loading... please wait');
+		$j.ajax({
+			url: url,
+			success: function(data) {
+				$dialog.html(data);
+				// Evaluate scripts in the returned HTML
+				$dialog.find('script').each(function() {
+					eval(this.text || this.textContent || this.innerHTML || '');
+				});
+				update_event_bindings();
+			},
+			error: function() {
+				$dialog.html('Error loading content');
 			}
-			url += '?' + parameters;
+		});
+		showDialog();
+	}
+	
+	function showDialog() {
+		// Configure dialog options
+		var dialogOptions = {
+			width: width,
+			height: height,
+			modal: true,
+			resizable: options.resizable !== false,
+			draggable: true,
+			close: function() {
+				$j(this).dialog('destroy');
+				popupWin = null;
+			}
+		};
+		
+		// Add title if provided
+		if (options.title) {
+			dialogOptions.title = options.title;
 		}
-		popupWin.setAjaxContent(url, null , true);
-	} // end if
+		
+		// Initialize or update dialog
+		if ($dialog.hasClass('ui-dialog-content') && $dialog.dialog('isOpen')) {
+			$dialog.dialog('option', dialogOptions);
+		} else {
+			$dialog.dialog(dialogOptions);
+		}
+		
+		popupWin = $dialog;
+	}
 } // end function popup_window
+
+// Compatibility layer for Window class
+var Window = function(options) {
+	this.options = options || {};
+	this.dialogId = 'window-dialog-' + Math.random().toString(36).substr(2, 9);
+	this.$dialog = null;
+	this.visible = false;
+};
+
+Window.prototype = {
+	setHTMLContent: function(html) {
+		if (!this.$dialog) {
+			this._createDialog();
+		}
+		this.$dialog.html(html);
+	},
+	
+	setAjaxContent: function(url, ajaxOptions, evalScripts) {
+		var self = this;
+		if (!this.$dialog) {
+			this._createDialog();
+		}
+		this.$dialog.html('Loading... please wait');
+		$j.ajax({
+			url: url,
+			success: function(data) {
+				self.$dialog.html(data);
+				if (evalScripts) {
+					self.$dialog.find('script').each(function() {
+						eval(this.text || this.textContent || this.innerHTML || '');
+					});
+				}
+				update_event_bindings();
+			}
+		});
+	},
+	
+	show: function(modal) {
+		if (!this.$dialog) {
+			this._createDialog();
+		}
+		if (!this.$dialog.hasClass('ui-dialog-content') || !this.$dialog.dialog('isOpen')) {
+			var dialogOptions = {
+				width: this.options.width || 400,
+				height: this.options.height || 400,
+				modal: modal !== false,
+				resizable: this.options.resizable !== false,
+				draggable: this.options.draggable !== false,
+				close: this._onClose.bind(this)
+			};
+			this.$dialog.dialog(dialogOptions);
+		}
+		this.visible = true;
+	},
+	
+	showCenter: function(modal) {
+		this.show(modal);
+		if (this.$dialog && this.$dialog.dialog('isOpen')) {
+			this.$dialog.dialog('option', 'position', { my: 'center', at: 'center', of: window });
+		}
+	},
+	
+	hide: function() {
+		if (this.$dialog && this.$dialog.hasClass('ui-dialog-content')) {
+			this.$dialog.dialog('close');
+		}
+		this.visible = false;
+	},
+	
+	close: function() {
+		this.hide();
+	},
+	
+	destroy: function() {
+		if (this.$dialog) {
+			if (this.$dialog.hasClass('ui-dialog-content')) {
+				this.$dialog.dialog('destroy');
+			}
+			this.$dialog.remove();
+		}
+		this.$dialog = null;
+	},
+	
+	_createDialog: function() {
+		if (!this.$dialog) {
+			$j('body').append('<div id="' + this.dialogId + '" style="display:none;"></div>');
+			this.$dialog = $j('#' + this.dialogId);
+		}
+	},
+	
+	_onClose: function() {
+		this.visible = false;
+		if (this.options.destroyOnClose) {
+			this.destroy();
+		}
+		// Notify observers
+		if (Windows && Windows.observers) {
+			Windows.observers.forEach(function(observer) {
+				if (observer.onDestroy) {
+					observer.onDestroy('onDestroy', this);
+				}
+			}.bind(this));
+		}
+	}
+};
+
+// Windows manager compatibility
+var Windows = {
+	observers: [],
+	
+	addObserver: function(observer) {
+		if (this.observers.indexOf(observer) === -1) {
+			this.observers.push(observer);
+		}
+	},
+	
+	removeObserver: function(observer) {
+		var index = this.observers.indexOf(observer);
+		if (index !== -1) {
+			this.observers.splice(index, 1);
+		}
+	},
+	
+	close: function(id, event) {
+		// Close dialog by ID or close all
+		if (id) {
+			var $dialog = $j('#' + id);
+			if ($dialog.length && $dialog.hasClass('ui-dialog-content')) {
+				$dialog.dialog('close');
+			}
+		} else {
+			$j('.ui-dialog-content').dialog('close');
+		}
+		if (event) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+	}
+};
 
 function toggle_input( ddm, txt ) {
 	// Toggle using jQuery

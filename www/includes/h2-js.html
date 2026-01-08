@@ -1,18 +1,8 @@
-<!-- 
-  NOTE: Prototype.js is currently loaded ONLY for compatibility with window.js,
-  which is a legacy windowing library that depends heavily on Prototype.js.
-  
-  The rest of the application has been migrated to use native JavaScript and jQuery.
-  Future work should replace window.js with a modern alternative (e.g., jQuery UI Dialog,
-  Bootstrap Modal, or similar) to allow complete removal of Prototype.js.
-  
-  window.js has 107+ usage points across the application, making it a significant
-  dependency that requires careful migration planning.
--->
-<script src="/openprint/javascripts/prototype.js"></script>
-<script src="/javascripts/window.js"></script>
-<!--<script src="/javascripts/menu.js"></script>-->
+<!-- jQuery and jQuery UI -->
 <script src="/javascripts/jquery-3.7.1.min.js"></script>
+<script src="/openprint/javascripts/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+<link href="/openprint/javascripts/jquery-ui-1.12.1/jquery-ui.min.css" rel="stylesheet" type="text/css" />
+<link href="/openprint/javascripts/jquery-ui-1.12.1/jquery-ui.theme.min.css" rel="stylesheet" type="text/css" />
 <script src="/openprint/javascripts/chosen/chosen.jquery.js"></script>
 <link href="/openprint/javascripts/chosen/chosen.css" rel="stylesheet" type="text/css" />
 <script>
